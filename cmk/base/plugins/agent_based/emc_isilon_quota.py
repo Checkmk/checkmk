@@ -5,9 +5,10 @@
 
 from typing import Any, Mapping, NamedTuple, Sequence
 
-from .agent_based_api.v1 import contains, get_value_store, register, SNMPTree
+from .agent_based_api.v1 import get_value_store, register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import df_check_filesystem_list, df_discovery, FILESYSTEM_DEFAULT_PARAMS
+from .utils.emc import DETECT_ISILON
 
 
 class IsilonQuota(NamedTuple):
@@ -59,7 +60,7 @@ register.snmp_section(
             "13",  # quotaUsage
         ],
     ),
-    detect=contains(".1.3.6.1.2.1.1.1.0", "isilon"),
+    detect=DETECT_ISILON,
 )
 
 

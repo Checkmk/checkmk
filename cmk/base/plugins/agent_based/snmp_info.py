@@ -5,8 +5,9 @@
 
 from typing import NamedTuple, Optional
 
-from .agent_based_api.v1 import Attributes, exists, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import Attributes, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .utils.detection import HAS_SYSDESC
 from .utils.device_types import get_device_type_label
 
 
@@ -37,7 +38,7 @@ register.snmp_section(
         base=".1.3.6.1.2.1.1",
         oids=["1", "2", "4", "5", "6"],
     ),
-    detect=exists(".1.3.6.1.2.1.1.1.0"),
+    detect=HAS_SYSDESC,
 )
 
 

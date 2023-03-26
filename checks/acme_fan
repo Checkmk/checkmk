@@ -46,6 +46,5 @@ check_info["acme_fan"] = {
             "5",  # ACMEPACKET-ENVMON-MIB::apEnvMonFanState
         ],
     ),
-    "snmp_scan_function": scan_acme,
     "group": "hw_fans_perc",
 }

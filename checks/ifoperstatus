@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
+
 # targetstate is 1 (up)
 
 ifoperstatus_monitor_unused = False
@@ -43,13 +45,11 @@ def check_ifoperstatus(item, targetstate, info):
 
 # Never inventorize automatically. let if/if64 be the default
 
-NEVER = not_matches(".1.3.6.1.2.1.1.1.0", ".*")
-
 check_info["ifoperstatus"] = {
-    "detect": NEVER,
+    # Never inventorize automatically. let if/if64 be the default
+    "detect": DETECT_NEVER,
     "check_function": check_ifoperstatus,
     "inventory_function": inventory_ifoperstatus,
     "service_description": "Interface %s",
     "snmp_info": (".1.3.6.1.2.1.2.2.1", [2, 3, 8]),
-    "snmp_scan_function": lambda oid: False,
 }

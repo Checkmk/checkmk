@@ -33,5 +33,4 @@ check_info["pulse_secure_log_util"] = {
             "1",  # logFullPercent
         ],
     ),
-    "snmp_scan_function": pulse_secure.scan_pulse_secure,
 }

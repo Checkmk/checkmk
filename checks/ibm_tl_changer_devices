@@ -39,5 +39,4 @@ check_info["ibm_tl_changer_devices"] = {
             "9",  # SNIA-SML-MIB::changerDevice-OperationalStatus
         ],
     ),
-    "snmp_scan_function": scan_ibm_tape_library,
 }

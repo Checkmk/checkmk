@@ -27,5 +27,4 @@ check_info["mcafee_emailgateway_spam_mcafee"] = {
             "11",  # spam-mcafee-rules-version
         ],
     ),
-    "snmp_scan_function": scan_mcafee_emailgateway,
 }

@@ -37,20 +37,10 @@ def check_cisco_ucs_cpu(item, _no_params, info):
 
 
 check_info["cisco_ucs_cpu"] = {
-    "detect": any_of(
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1682"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1683"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1684"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1685"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2178"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2424"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2492"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2493"),
-    ),
+    "detect": DETECT,
     "check_function": check_cisco_ucs_cpu,
     "inventory_function": inventory_cisco_ucs_cpu,
     "service_description": "CPU %s",
-    "snmp_scan_function": scan_cisco_ucs,
     "snmp_info": (
         ".1.3.6.1.4.1.9.9.719.1.41.9.1",
         [

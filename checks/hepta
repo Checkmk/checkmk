@@ -75,7 +75,6 @@ check_info["hepta"] = {
             "3.5.0",  # SyncModuleTimeSyncState
         ],
     ),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12527"),
 }
 
 # .

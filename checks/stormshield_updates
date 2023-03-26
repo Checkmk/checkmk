@@ -53,5 +53,4 @@ check_info["stormshield_updates"] = {
         ["2", "3", "4"],  # SubSystem  # State  # LastUpdate
     ),
     "group": "stormshield_updates",
-    "snmp_scan_function": stormshield_scan_function,
 }

@@ -94,5 +94,4 @@ check_info["stormshield_disk"] = {
             ],
         ),
     ],
-    "snmp_scan_function": stormshield_scan_function,
 }

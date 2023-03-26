@@ -7,7 +7,7 @@
 
 from typing import Final, Iterable, Mapping, NamedTuple
 
-from cmk.base.check_legacy_includes.cisco_ucs import map_operability, scan_cisco_ucs
+from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 _HOT_SPARE_VALUES: Final = {3, 4}
@@ -62,21 +62,11 @@ def check_cisco_ucs_hdd(item: str, _no_params, section: Section):
 
 
 check_info["cisco_ucs_hdd"] = {
-    "detect": any_of(
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1682"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1683"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1684"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1685"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2178"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2424"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2492"),
-        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2493"),
-    ),
+    "detect": DETECT,
     "parse_function": parse_cisco_ucs_hdd,
     "inventory_function": discover_cisco_ucs_hdd,
     "check_function": check_cisco_ucs_hdd,
     "service_description": "HDD %s",
-    "snmp_scan_function": scan_cisco_ucs,
     "snmp_info": (
         ".1.3.6.1.4.1.9.9.719.1.45.4.1",
         [

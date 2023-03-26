@@ -73,6 +73,5 @@ check_info["blade_bx_temp"] = {
             7,  # crit react
         ],
     ),
-    "snmp_scan_function": scan_blade_bx_temp,
     "group": "temperature",
 }

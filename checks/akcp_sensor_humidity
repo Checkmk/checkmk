@@ -19,7 +19,6 @@ check_info["akcp_sensor_humidity"] = {
     "check_function": check_akcp_humidity,
     "inventory_function": inventory_akcp_humidity,
     "service_description": "Humidity %s",
-    "snmp_scan_function": snmp_scan_akcp_sensor,
     "snmp_info": (
         ".1.3.6.1.4.1.3854.1.2.2.1.17.1",
         [

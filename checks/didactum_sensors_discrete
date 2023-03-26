@@ -56,5 +56,4 @@ check_info["didactum_sensors_discrete"] = {
             "6",  # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretState
         ],
     ),
-    "snmp_scan_function": scan_didactum,
 }

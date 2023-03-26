@@ -51,5 +51,4 @@ check_info["stormshield_policy"] = {
         ],
     ),
     "group": "stormshield",
-    "snmp_scan_function": stormshield_scan_function,
 }

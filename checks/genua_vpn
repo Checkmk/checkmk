@@ -77,5 +77,4 @@ check_info["genua_vpn"] = {
             "6",  # vpn status (2:OK, 1:FAULT)
         ],
     ),
-    "snmp_scan_function": scan_genua,
 }

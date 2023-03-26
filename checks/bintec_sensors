@@ -62,7 +62,6 @@ check_info["bintec_sensors.fan"] = {
     "inventory_function": inventory_bintec_sensors_fan,
     "service_description": "%s",
     "snmp_info": bintec_sensors_info,
-    "snmp_scan_function": bintec_sensors_scan,
     "default_levels_variable": "bintec_sensors_fan_default_levels",
     "group": "hw_fans",
 }
@@ -101,7 +100,6 @@ check_info["bintec_sensors.temp"] = {
     "service_description": "Temperature %s",
     "group": "temperature",
     "snmp_info": bintec_sensors_info,
-    "snmp_scan_function": bintec_sensors_scan,
     "default_levels_variable": "bintec_sensors_temp_default_levels",
 }
 
@@ -143,7 +141,6 @@ check_info["bintec_sensors.voltage"] = {
     "inventory_function": inventory_bintec_sensors_voltage,
     "service_description": "Voltage %s",
     "snmp_info": bintec_sensors_info,
-    "snmp_scan_function": bintec_sensors_scan,
 }
 
 # .

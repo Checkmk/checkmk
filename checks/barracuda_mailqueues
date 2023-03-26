@@ -63,10 +63,6 @@ check_info["barracuda_mailqueues"] = {
             "60",  # dailySent
         ],
     ),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
-        ".1.3.6.1.4.1.8072.3.2.10"
-    )
-    and "barracuda" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "default_levels_variable": "barracuda_mailq_default_levels",
     "group": "mail_queue_length",
 }

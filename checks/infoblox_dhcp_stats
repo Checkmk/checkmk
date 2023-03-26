@@ -61,5 +61,4 @@ check_info["infoblox_dhcp_stats"] = {
             "9",  # IB-DHCPONE-MIB::ibDhcpTotalNoOfOthers
         ],
     ),
-    "snmp_scan_function": scan_infoblox,
 }

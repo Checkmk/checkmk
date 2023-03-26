@@ -6,6 +6,7 @@
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.11.2.1.1.0 Good --> FE-FIREEYE-MIB::feRaidStatus.0
 # .1.3.6.1.4.1.25597.11.2.1.2.0 1 --> FE-FIREEYE-MIB::feRaidIsHealthy.0
@@ -49,7 +50,7 @@ def check_fireeye_raid(_no_item, _no_params, parsed):
 
 
 check_info["fireeye_raid"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25597.1"),
+    "detect": DETECT,
     "parse_function": parse_fireeye_raid,
     "inventory_function": lambda parsed: inventory_fireeye_generic(parsed.get("raid", []), False),
     "check_function": check_fireeye_raid,
@@ -71,7 +72,6 @@ check_info["fireeye_raid"] = {
             ],
         ),
     ],
-    "snmp_scan_function": scan_fireeye,
 }
 
 # .

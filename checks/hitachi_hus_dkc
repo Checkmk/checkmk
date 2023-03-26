@@ -30,5 +30,4 @@ check_info["hitachi_hus_dkc"] = {
             9,  # dkcHWEnvironment
         ],
     ),
-    "snmp_scan_function": scan_hitachi_hus,
 }

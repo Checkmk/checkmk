@@ -15,8 +15,8 @@ from cmk.base.plugins.agent_based.liebert_system import (
     check_liebert_system,
     discover_liebert_system,
     parse_liebert_system,
-    SystemSection,
 )
+from cmk.base.plugins.agent_based.utils.liebert import SystemSection
 
 
 @pytest.mark.parametrize(

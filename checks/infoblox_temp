@@ -108,7 +108,6 @@ check_info["infoblox_temp"] = {
             "41",  # IB-PLATFORMONE-MIB::ibNodeService[Desc/Status].sys-temp
         ],
     ),
-    "snmp_scan_function": scan_infoblox,
     "group": "temperature",
     "default_levels_variable": "infoblox_temp_default_levels",
 }

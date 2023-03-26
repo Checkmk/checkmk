@@ -43,5 +43,4 @@ check_info["dell_compellent_controller"] = {
             7,  # DELL-STORAGE-SC-MIB::scCtlrModel
         ],
     ),
-    "snmp_scan_function": dell_compellent.scan,
 }

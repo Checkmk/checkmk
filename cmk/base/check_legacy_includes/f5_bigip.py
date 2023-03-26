@@ -3,9 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains
+
 F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS = {
     "type": "active_standby",
 }
+
+DETECT = all_of(
+    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375.2"),
+    contains(".1.3.6.1.4.1.3375.2.1.4.1.0", "big-ip"),
+)
 
 
 def get_conn_rate_params(params):

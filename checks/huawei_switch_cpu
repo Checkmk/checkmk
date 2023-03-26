@@ -41,7 +41,6 @@ check_info["huawei_switch_cpu"] = {
             [OID_END, "5"],
         )
     ),
-    "snmp_scan_function": huawei_switch_scan_function,
     "group": "cpu_utilization_multiitem",
     "default_levels_variable": "huawei_switch_cpu_default_levels",
 }

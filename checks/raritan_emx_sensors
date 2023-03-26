@@ -45,7 +45,6 @@ check_info["raritan_emx_sensors"] = {
             "1.2.1.1.23",  # externalSensorUpperWarningThreshold
         ],
     ),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.8",
 }
 
 # .

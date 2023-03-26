@@ -42,5 +42,4 @@ check_info["mcafee_emailgateway_av_authentium"] = {
             "6",  # av-authentium-dat-version
         ],
     ),
-    "snmp_scan_function": scan_mcafee_emailgateway,
 }

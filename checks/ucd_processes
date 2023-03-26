@@ -71,5 +71,4 @@ check_info["ucd_processes"] = {
             "101",  # prErrMessage
         ],
     ),
-    "snmp_scan_function": prefer_hr_else_ucd,
 }

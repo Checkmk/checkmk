@@ -83,7 +83,6 @@ check_info["didactum_sensors_analog"] = {
             "13",  # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogHighAlarm
         ],
     ),
-    "snmp_scan_function": scan_didactum,
     "group": "temperature",
 }
 

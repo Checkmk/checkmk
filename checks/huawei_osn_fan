@@ -41,5 +41,4 @@ check_info["huawei_osn_fan"] = {
             "2",  # OPTIX-OSN902-FUNCTION-MIB::optixWDMGetFanSpeed
         ],
     ),
-    "snmp_scan_function": huawei_osn_scan_function,
 }

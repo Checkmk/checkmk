@@ -54,7 +54,6 @@ check_info["vutlan_ems_humidity"] = {
             ],
         ),
     ],
-    "snmp_scan_function": lambda oid: "vutlan ems" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "group": "humidity",
     "default_levels_variable": "vutlan_ems_humidity_default_levels",
 }

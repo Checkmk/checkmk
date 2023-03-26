@@ -51,6 +51,5 @@ check_info["mcafee_webgateway"] = {
             "5",  # MCAFEE-MWG-MIB::stConnectionsBlocked
         ],
     ),
-    "snmp_scan_function": scan_mcafee_webgateway,
     "group": "mcafee_web_gateway",
 }

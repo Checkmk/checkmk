@@ -8,6 +8,7 @@ import collections
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.11.5.1.5.0 456.180 --> FE-FIREEYE-MIB::feSecurityContentVersion.0
 # .1.3.6.1.4.1.25597.11.5.1.6.0 1 --> FE-FIREEYE-MIB::feLastContentUpdatePassed.0
@@ -57,7 +58,7 @@ def check_fireeye_content(_no_item, params, parsed):
 
 
 check_info["fireeye_content"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25597.1"),
+    "detect": DETECT,
     "parse_function": parse_fireeye_content,
     "inventory_function": discover_single,
     "check_function": check_fireeye_content,
@@ -70,6 +71,5 @@ check_info["fireeye_content"] = {
             "7",  # FE-FIREEYE-MIB::feLastContentUpdateTime
         ],
     ),
-    "snmp_scan_function": scan_fireeye,
     "group": "fireeye_content",
 }

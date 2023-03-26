@@ -5,7 +5,7 @@
 
 from typing import Any, Mapping, Sequence
 
-from .agent_based_api.v1 import get_value_store, register, SNMPTree, startswith
+from .agent_based_api.v1 import get_value_store, register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import (
     df_check_filesystem_list,
@@ -14,6 +14,7 @@ from .utils.df import (
     FILESYSTEM_DEFAULT_PARAMS,
     FSBlocks,
 )
+from .utils.netscaler import SNMP_DETECT
 
 #
 # Example Output:
@@ -40,7 +41,7 @@ register.snmp_section(
             "3",  # sysHealthDiskAvail
         ],
     ),
-    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5951.1"),
+    detect=SNMP_DETECT,
 )
 
 

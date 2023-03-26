@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils.emc import DETECT_ISILON
+
 # the check handles only power supply input voltage currently, but there
 # are sensors for 1.0V, 1.5V, 3.3V, 12V, ... outputs.
 emc_isilon_power_default_levels = (0.5, 0.0)
@@ -45,7 +47,7 @@ def check_emc_isilon_power(item, params, info):
 
 
 check_info["emc_isilon_power"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
+    "detect": DETECT_ISILON,
     "check_function": check_emc_isilon_power,
     "inventory_function": inventory_emc_isilon_power,
     "service_description": "Voltage %s",
@@ -56,6 +58,5 @@ check_info["emc_isilon_power"] = {
             4,  # powerSensorValue
         ],
     ),
-    "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "group": "evolt",
 }

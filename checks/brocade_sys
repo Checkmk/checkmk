@@ -104,6 +104,5 @@ check_info["brocade_sys"] = {
             "6",  # swMemoryUsage
         ],
     ),
-    "snmp_scan_function": scan_brocade_sys,
     "group": "cpu_utilization",
 }

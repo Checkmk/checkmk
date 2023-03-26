@@ -41,5 +41,4 @@ check_info["infoblox_grid_status"] = {
             "16",  # IB-PLATFORMONE-MIB::ibGridReplicationState
         ],
     ),
-    "snmp_scan_function": scan_infoblox,
 }

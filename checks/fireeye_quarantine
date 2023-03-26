@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.fireeye import scan_fireeye
+from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.13.1.40.0 1
 
@@ -27,7 +27,7 @@ def check_fireeye_quarantine(no_item, params, info):
 
 
 check_info["fireeye_quarantine"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25597.1"),
+    "detect": DETECT,
     "inventory_function": discover_fireeye_quarantine,
     "check_function": check_fireeye_quarantine,
     "service_description": "Quarantine Usage",
@@ -39,5 +39,4 @@ check_info["fireeye_quarantine"] = {
             "0",  # FE-FIREEYE-MIB::feeQuarantineUsage
         ],
     ),
-    "snmp_scan_function": scan_fireeye,
 }

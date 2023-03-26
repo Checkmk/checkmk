@@ -23,7 +23,5 @@ check_info["netapp_cpu"] = {
     "inventory_function": lambda info: [(None, "netapp_cpu_default_levels")],
     "service_description": "CPU utilization",
     "group": "cpu_utilization",
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("NetApp Release")
-    and oid(".1.3.6.1.4.1.789.1.2.1.3.0"),
     "snmp_info": (".1.3.6.1.4.1.789.1.2.1", [3]),
 }

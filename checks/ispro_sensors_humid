@@ -41,6 +41,5 @@ check_info["ispro_sensors_humid"] = {
             "1.2.1.4",  # ISPRO-MIB::isDeviceMonitorHumidityAlarm
         ],
     ),
-    "snmp_scan_function": ispro_scan_function,
     "group": "humidity",
 }

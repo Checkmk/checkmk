@@ -96,6 +96,5 @@ check_info["cisco_fru_powerusage"] = {
             ],
         ),
     ],
-    "snmp_scan_function": lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "group": "el_inphase",
 }

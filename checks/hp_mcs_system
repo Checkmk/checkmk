@@ -43,5 +43,4 @@ check_info["hp_mcs_system"] = {
             "11.2.10.3",  # CPQHOST-MIB::cpqHoGUID
         ],
     ),
-    "snmp_scan_function": hp_mcs_scan_function,
 }

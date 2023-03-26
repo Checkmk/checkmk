@@ -7,6 +7,7 @@ import typing
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.hp_proliant import DETECT
 
 
 class HpProRaid(typing.NamedTuple):
@@ -82,11 +83,7 @@ def check_hp_proliant_raid(item, _no_params, parsed):
 
 
 check_info["hp_proliant_raid"] = {
-    "detect": any_of(
-        contains(".1.3.6.1.4.1.232.2.2.4.2.0", "proliant"),
-        contains(".1.3.6.1.4.1.232.2.2.4.2.0", "storeeasy"),
-        contains(".1.3.6.1.4.1.232.2.2.4.2.0", "synergy"),
-    ),
+    "detect": DETECT,
     "parse_function": parse_hp_proliant_raid,
     "check_function": check_hp_proliant_raid,
     "inventory_function": inventory_hp_proliant_raid,
@@ -101,5 +98,4 @@ check_info["hp_proliant_raid"] = {
             "12",  # CPQIDA-MIB::cpqDaLogDrvPercentRebuild
         ],
     ),
-    "snmp_scan_function": hp_proliant_scan_function,
 }

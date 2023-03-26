@@ -70,7 +70,6 @@ check_info["acme_sbc_snmp"] = {
             "4",  # APSYSMGMT-MIB::apSysRedundancy
         ],
     ),
-    "snmp_scan_function": scan_acme,
     "group": "acme_sbc_snmp",
     "default_levels_variable": "acme_sbc_snmp_default_levels",
 }

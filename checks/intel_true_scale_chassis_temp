@@ -53,5 +53,4 @@ check_info["intel_true_scale_chassis_temp"] = {
             "2",  # ICS-CHASSIS-MIB::icsChassisTemperatureWarning
         ],
     ),
-    "snmp_scan_function": scan_intel_true_scale,
 }

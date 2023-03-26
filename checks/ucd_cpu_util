@@ -115,6 +115,5 @@ check_info["ucd_cpu_util"] = {
             "61",  # ssCpuRawSoftIRQ
         ],
     ),
-    "snmp_scan_function": prefer_hr_else_ucd,
     "group": "cpu_iowait",
 }

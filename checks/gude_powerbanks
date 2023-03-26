@@ -110,8 +110,6 @@ check_info["gude_powerbanks"] = {
             ],
         ),
     ],
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.19")
-    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.38"),
     "default_levels_variable": "gude_powerbank_default_levels",
     "group": "el_inphase",
 }

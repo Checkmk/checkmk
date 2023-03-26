@@ -39,8 +39,6 @@ check_info["cmc_temp"] = {
     "group": "temperature",
     "default_levels_variable": "cmc_temp_default_levels",
     "service_description": "Temperature Sensor %s",
-    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.2606.1" in oid(".1.3.6.1.2.1.1.2.0"),
-    #  valueTemperature1,  valueTemperature2
     "snmp_info": [
         (".1.3.6.1.4.1.2606.1.1", [1, 2]),
         # setpointHighTemperature1, setpointLowTemperature1, setpointHighTemperature2, setpointLowTemperature2

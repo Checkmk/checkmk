@@ -48,7 +48,6 @@ check_info["ucd_disk"] = {
             "7",  # dskAvail -> in kBytes
         ],
     ),
-    "snmp_scan_function": prefer_hr_else_ucd,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

@@ -88,5 +88,4 @@ check_info["intel_true_scale_fans"] = {
             "4",  # ICS-CHASSIS-MIB::icsChassisFanSpeed
         ],
     ),
-    "snmp_scan_function": scan_intel_true_scale,
 }

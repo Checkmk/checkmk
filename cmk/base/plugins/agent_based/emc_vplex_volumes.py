@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import all_of, equals, exists, register, SNMPTree
+from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
 from .utils.diskstat import Section
+from .utils.emc import DETECT_VPLEX
 
 
 def parse_emc_vplex_volumes(string_table: StringTable) -> Section:
@@ -40,10 +41,7 @@ register.snmp_section(
     name="emc_vplex_volumes",
     parse_function=parse_emc_vplex_volumes,
     parsed_section_name="diskstat_io_volumes",
-    detect=all_of(
-        equals(".1.3.6.1.2.1.1.1.0", ""),
-        exists(".1.3.6.1.4.1.1139.21.2.2.8.1.*"),
-    ),
+    detect=DETECT_VPLEX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1139.21.2.2.8.1",
         oids=[

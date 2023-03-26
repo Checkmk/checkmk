@@ -138,7 +138,6 @@ check_info["wagner_titanus_topsense.info"] = {
     "inventory_function": inventory_wagner_titanus_topsense_info,
     "service_description": "Topsense Info",
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
 # .
@@ -178,7 +177,6 @@ check_info["wagner_titanus_topsense.overall_status"] = {
     "inventory_function": inventory_wagner_titanus_topsense_overall_status,
     "service_description": "Overall Status",
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
 # .
@@ -233,7 +231,6 @@ check_info["wagner_titanus_topsense.alarm"] = {
     "inventory_function": inventory_wagner_titanus_topsense_alarm,
     "service_description": "Alarm Detector %s",
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
 # .
@@ -280,7 +277,6 @@ check_info["wagner_titanus_topsense.smoke"] = {
     "inventory_function": inventory_wagner_titanus_topsense_smoke,
     "service_description": "Smoke Detector %s",
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
 # .
@@ -321,7 +317,6 @@ check_info["wagner_titanus_topsense.chamber_deviation"] = {
     "inventory_function": inventory_wagner_titanus_topsense_chamber_deviation,
     "service_description": "Chamber Deviation Detector %s",
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
 # .
@@ -375,7 +370,6 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = {
     "service_description": "Airflow Deviation Detector %s",
     "group": "airflow_deviation",
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
 # .
@@ -423,7 +417,6 @@ check_info["wagner_titanus_topsense.temp"] = {
     "service_description": "Temperature %s",
     "group": "temperature",
     "snmp_info": wagner_titanus_topsense_info,
-    "snmp_scan_function": wagner_titanus_topsense_scan,
 }
 
 # .

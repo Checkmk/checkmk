@@ -68,6 +68,5 @@ check_info["acme_temp"] = {
             "5",  # ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusState
         ],
     ),
-    "snmp_scan_function": scan_acme,
     "group": "temperature",
 }

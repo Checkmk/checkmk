@@ -13,10 +13,7 @@ import cmk.base.api.agent_based.register.section_plugins as section_plugins
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import StringTable
-
-
-def old_school_scan_function(oid):
-    return oid(".1.2.3.4.5").startswith("norris")
+from cmk.base.api.agent_based.utils import startswith
 
 
 def old_school_parse_function(_info):
@@ -102,8 +99,8 @@ def test_create_snmp_section_plugin_from_legacy() -> None:
         {
             "parse_function": old_school_parse_function,
             "inventory_function": old_school_discover_function,
+            "detect": startswith(".1.2.3.4.5", "norris"),
         },
-        old_school_scan_function,
         (".1.2.3.4.5", ["2", 3]),
         validate_creation_kwargs=True,
     )

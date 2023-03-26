@@ -85,7 +85,6 @@ check_info["brocade.fan"] = {
     "service_description": "FAN %s",
     "group": "hw_fans",
     "snmp_info": brocade_info,
-    "snmp_scan_function": brocade_scan,
 }
 
 
@@ -118,7 +117,6 @@ check_info["brocade.power"] = {
     "inventory_function": inventory_brocade_power,
     "service_description": "Power supply %s",
     "snmp_info": brocade_info,
-    "snmp_scan_function": brocade_scan,
 }
 
 factory_settings["brocade_temp_default_levels"] = {"levels": (55.0, 60.0)}
@@ -150,6 +148,5 @@ check_info["brocade.temp"] = {
     "service_description": "Temperature Ambient %s",
     "group": "temperature",
     "snmp_info": brocade_info,
-    "snmp_scan_function": brocade_scan,
     "default_levels_variable": "brocade_temp_default_levels",
 }

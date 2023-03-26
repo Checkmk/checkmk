@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import List
 
-from .agent_based_api.v1 import all_of, equals, exists, OIDEnd, register, SNMPTree, type_defs
+from .agent_based_api.v1 import OIDEnd, register, SNMPTree, type_defs
 from .utils import interfaces
+from .utils.emc import DETECT_VPLEX
 
 
 def parse_emc_vplex_if(
@@ -64,9 +65,6 @@ register.snmp_section(
             ],
         ),
     ],
-    detect=all_of(
-        equals(".1.3.6.1.2.1.1.1.0", ""),
-        exists(".1.3.6.1.4.1.1139.21.2.2.8.1.*"),
-    ),
+    detect=DETECT_VPLEX,
     supersedes=["if", "if64"],
 )

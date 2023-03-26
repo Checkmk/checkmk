@@ -4,21 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable
 from typing import Final
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains
 
-def scan_cisco_ucs(oid: Callable[[str], str]) -> bool:
-    return (
-        ".1.3.6.1.4.1.9.1.1682" in oid(".1.3.6.1.2.1.1.2.0")
-        or ".1.3.6.1.4.1.9.1.1683" in oid(".1.3.6.1.2.1.1.2.0")
-        or ".1.3.6.1.4.1.9.1.1684" in oid(".1.3.6.1.2.1.1.2.0")
-        or ".1.3.6.1.4.1.9.1.1685" in oid(".1.3.6.1.2.1.1.2.0")
-        or ".1.3.6.1.4.1.9.1.2178" in oid(".1.3.6.1.2.1.1.2.0")
-        or ".1.3.6.1.4.1.9.1.2424" in oid(".1.3.6.1.2.1.1.2.0")
-        or ".1.3.6.1.4.1.9.1.2492" in oid(".1.3.6.1.2.1.1.2.0")
-        or ".1.3.6.1.4.1.9.1.2493" in oid(".1.3.6.1.2.1.1.2.0")
-    )
+DETECT = any_of(
+    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1682"),
+    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1683"),
+    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1684"),
+    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1685"),
+    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2178"),
+    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2424"),
+    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2492"),
+    contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2493"),
+)
 
 
 map_operability: Final = {

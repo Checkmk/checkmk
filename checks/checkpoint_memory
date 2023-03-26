@@ -58,7 +58,6 @@ check_info["checkpoint_memory"] = {
     # Some devices are reporting wrong data on
     # HOST-RESOURCES-MIB. Use CHECKPOINT-MIB in these
     # cases instead
-    "snmp_scan_function": scan_checkpoint,
     "default_levels_variable": "checkpoint_memory_default_levels",
     "group": "memory_simple",
 }

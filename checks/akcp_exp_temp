@@ -25,7 +25,6 @@ check_info["akcp_exp_temp"] = {
     "inventory_function": inventory_akcp_sensor_temp,
     "service_description": "Temperature %s",
     "default_levels_variable": "akcp_temp_default_levels",
-    "snmp_scan_function": snmp_scan_akcp_exp,
     "snmp_info": (
         ".1.3.6.1.4.1.3854.2.3.2.1",
         [

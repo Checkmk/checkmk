@@ -6,6 +6,7 @@
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
 
 def fireeye_counter_generic(value, what, average):
@@ -58,7 +59,7 @@ def check_fireeye_mail(_no_item, params, info):
 
 
 check_info["fireeye_mail"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25597.1"),
+    "detect": DETECT,
     "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
     "check_function": check_fireeye_mail,
     "service_description": "Received Mail Rates",
@@ -84,7 +85,6 @@ check_info["fireeye_mail"] = {
             "52",  # 15 FE-FIREEYE-MIB::feSamplingEmailReceivedRate
         ],
     ),
-    "snmp_scan_function": scan_fireeye,
 }
 
 #   .--attachment----------------------------------------------------------.

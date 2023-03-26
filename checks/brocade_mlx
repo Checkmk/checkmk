@@ -75,7 +75,6 @@ check_info["brocade_mlx.module_status"] = {
     "inventory_function": inventory_brocade_mlx_module,
     "service_description": "Status Module %s",
     "snmp_info": brocade_mlx_info,
-    "snmp_scan_function": brocade_mlx_scan,
 }
 
 # .
@@ -165,7 +164,6 @@ check_info["brocade_mlx.module_mem"] = {
     "inventory_function": inventory_brocade_mlx_module_mem,
     "service_description": "Memory Module %s",
     "snmp_info": brocade_mlx_info,
-    "snmp_scan_function": brocade_mlx_scan,
     "group": "memory_multiitem",
 }
 
@@ -257,6 +255,5 @@ check_info["brocade_mlx.module_cpu"] = {
     "inventory_function": inventory_brocade_mlx_module_cpu,
     "service_description": "CPU utilization Module %s",
     "snmp_info": brocade_mlx_info,
-    "snmp_scan_function": brocade_mlx_scan,
     "group": "cpu_utilization_multiitem",
 }

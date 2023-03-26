@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils.emc import DETECT_ISILON
+
 emc_isilon_info = [
     (
         ".1.3.6.1.4.1.12124.1.1",
@@ -10,10 +12,6 @@ emc_isilon_info = [
     ),  # onlineNodes
     (".1.3.6.1.4.1.12124.2.1", [1, 2]),  # nodeName  # nodeHealth
 ]
-
-
-def emc_isilon_scan(oid):
-    return "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower()
 
 
 #   .--ClusterHealth------------------------------------------------------.
@@ -37,12 +35,11 @@ def check_emc_isilon_clusterhealth(item, _no_params, info):
 
 
 check_info["emc_isilon.clusterhealth"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
+    "detect": DETECT_ISILON,
     "check_function": check_emc_isilon_clusterhealth,
     "inventory_function": inventory_emc_isilon_clusterhealth,
     "service_description": "Cluster Health",
     "snmp_info": emc_isilon_info,
-    "snmp_scan_function": emc_isilon_scan,
 }
 
 # .
@@ -73,7 +70,6 @@ check_info["emc_isilon.nodehealth"] = {
     "inventory_function": inventory_emc_isilon_nodehealth,
     "service_description": "Node Health",
     "snmp_info": emc_isilon_info,
-    "snmp_scan_function": emc_isilon_scan,
 }
 
 # .
@@ -99,7 +95,6 @@ check_info["emc_isilon.nodes"] = {
     "inventory_function": inventory_emc_isilon_nodes,
     "service_description": "Nodes",
     "snmp_info": emc_isilon_info,
-    "snmp_scan_function": emc_isilon_scan,
 }
 
 # .
@@ -120,7 +115,6 @@ check_info["emc_isilon.names"] = {
     "inventory_function": inventory_emc_isilon_names,
     "service_description": "Isilon Info",
     "snmp_info": emc_isilon_info,
-    "snmp_scan_function": emc_isilon_scan,
 }
 
 # .

@@ -96,7 +96,6 @@ check_info["orion_system"] = {
             "8",  # ORION-BASE-MIB::dcSystemPower
         ],
     ),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20246"),
     "group": "temperature",
 }
 

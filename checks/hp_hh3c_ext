@@ -96,10 +96,6 @@ check_info["hp_hh3c_ext"] = {
             ],
         ),
     ],
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
-        ".1.3.6.1.4.1.25506.11.1.239"
-    )
-    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.25506.11.1.87"),
     "group": "temperature",
 }
 

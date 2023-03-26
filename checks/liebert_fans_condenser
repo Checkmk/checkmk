@@ -6,6 +6,7 @@
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.liebert import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
 
 factory_settings["liebert_fans_condenser_default_levels"] = {
     "levels": (80, 90),
@@ -19,7 +20,7 @@ def check_liebert_fans_condenser(_item, params, data):
 
 
 check_info["liebert_fans_condenser"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.476.1.42"),
+    "detect": DETECT_LIEBERT,
     "parse_function": parse_liebert_wrapper,
     "inventory_function": discover(),
     "check_function": check_liebert_fans_condenser,
@@ -32,7 +33,6 @@ check_info["liebert_fans_condenser"] = {
             "30.1.2.1.5276",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
         ],
     ),
-    "snmp_scan_function": scan_liebert,
     "group": "hw_fans_perc",
     "default_levels_variable": "liebert_fans_condenser_default_levels",
 }

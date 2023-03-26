@@ -147,5 +147,4 @@ check_info["genua_carp"] = {
             ],
         ),
     ],
-    "snmp_scan_function": scan_genua,
 }

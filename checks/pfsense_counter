@@ -93,6 +93,5 @@ check_info["pfsense_counter"] = {
     "check_function": check_pfsense_counter,
     "service_description": "pfSense Firewall Packet Rates",
     "snmp_info": (".1.3.6.1.4.1.12325.1.200.1", [OID_END, 2]),
-    "snmp_scan_function": lambda oid: "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     "group": "pfsense_counter",
 }

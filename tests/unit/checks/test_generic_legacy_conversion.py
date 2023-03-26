@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
-
 import pytest
 
 from tests.unit.conftest import FixPluginLegacy, FixRegister
@@ -13,18 +11,8 @@ from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import SectionName
 
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
-from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (
-    _explicit_conversions,
-    create_detect_spec,
-)
 from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
-from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (
-    _has_table_2,
-    _is_cisco,
-    _is_cisco_nexus,
-)
-from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc
 
 pytestmark = pytest.mark.checks
 
@@ -56,9 +44,9 @@ def test_create_section_plugin_from_legacy(
             assert original_parse_function.__name__ == section.parse_function.__name__
 
 
-def test_snmp_info_snmp_scan_functions_equal(fix_plugin_legacy: FixPluginLegacy) -> None:
+def test_snmp_info_snmp_detect_equal(fix_plugin_legacy: FixPluginLegacy) -> None:
     for check_info_element in fix_plugin_legacy.check_info.values():
-        assert (check_info_element.get("snmp_scan_function") is None) is (
+        assert (check_info_element.get("detect") is None) is (
             check_info_element.get("snmp_info") is None
         )
 
@@ -73,53 +61,13 @@ def test_snmp_tree_translation(fix_plugin_legacy: FixPluginLegacy) -> None:
         assert all(isinstance(tree, SNMPTree) for tree in new_trees)
 
 
-def test_scan_function_translation(fix_plugin_legacy: FixPluginLegacy) -> None:
-    for name, check_info_element in fix_plugin_legacy.check_info.items():
-        if (scan_func := check_info_element.get("snmp_scan_function")) is None:
-            continue
-        if name in (
-            # these are already migrated manually:
-            "ucd_mem",
-            "hr_mem",
-            "cisco_vpn_sessions",
-            "apc_rackpdu_power",
-        ):
-            continue
-
-        assert scan_func is not None
-
-        # make sure we can convert the scan function
-        _ = create_detect_spec(name, scan_func, [])
-
-
-@pytest.mark.parametrize(
-    "func",
-    [
-        _is_fsc_or_windows,
-        is_fsc,
-        _has_table_2,
-        _is_cisco,
-        _is_cisco_nexus,
-    ],
-)
-def test_explicit_conversion(func: Callable[[str], str]) -> None:
-    created = create_detect_spec("unit-test", func, [])
-    explicit = _explicit_conversions(func.__name__)
-    assert created == explicit
-
-
 def test_subcheck_snmp_info_consistent(fix_plugin_legacy: FixPluginLegacy) -> None:
     ref_info: dict = {section_name_of(name): {} for name in fix_plugin_legacy.check_info}
     for name, check_info_element in fix_plugin_legacy.check_info.items():
         if info := check_info_element.get("snmp_info"):
             assert info == ref_info[section_name_of(name)].setdefault("snmp_info", info)
-        if scan := check_info_element.get("snmp_scan_function"):
-            assert (
-                scan.__code__.co_code
-                == ref_info[section_name_of(name)]
-                .setdefault("snmp_scan_function", scan)
-                .__code__.co_code
-            )
+        if detect := check_info_element.get("detect"):
+            assert detect == ref_info[section_name_of(name)].setdefault("detect", detect)
 
 
 def test_all_checks_migrated(fix_plugin_legacy: FixPluginLegacy, fix_register: FixRegister) -> None:

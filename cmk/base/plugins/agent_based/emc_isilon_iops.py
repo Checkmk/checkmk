@@ -6,8 +6,9 @@
 from contextlib import suppress
 from typing import Mapping
 
-from .agent_based_api.v1 import check_levels, contains, register, Service, SNMPTree
+from .agent_based_api.v1 import check_levels, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.emc import DETECT_ISILON
 
 Section = Mapping[str, int]
 
@@ -22,10 +23,7 @@ def parse_emc_isilon_iops(string_table: StringTable) -> Section:
 
 register.snmp_section(
     name="emc_isilon_iops",
-    detect=contains(
-        ".1.3.6.1.2.1.1.1.0",
-        "isilon",
-    ),
+    detect=DETECT_ISILON,
     fetch=SNMPTree(
         ".1.3.6.1.4.1.12124.2.2.52.1",
         [

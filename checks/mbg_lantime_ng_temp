@@ -42,5 +42,4 @@ check_info["mbg_lantime_ng_temp"] = {
             1,  # MBG-SNMP-LTNG-MIB::mbgLtNgSysTempCelsius
         ],
     ),
-    "snmp_scan_function": snmp_scan_mbg_lantime_ng_hw,
 }

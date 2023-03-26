@@ -43,5 +43,4 @@ check_info["dell_compellent_enclosure"] = {
             9,  # DELL-STORAGE-SC-MIB::scEnclServiceTag
         ],
     ),
-    "snmp_scan_function": dell_compellent.scan,
 }

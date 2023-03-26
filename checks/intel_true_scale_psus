@@ -97,6 +97,5 @@ check_info["intel_true_scale_psus"] = {
             "6",  # ICS-CHASSIS-MIB::icsChassisPowerSupplyOutputPower
         ],
     ),
-    "snmp_scan_function": scan_intel_true_scale,
     "group": "el_inphase",
 }

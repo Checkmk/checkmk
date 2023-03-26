@@ -3,11 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping
-
-
-def scan(oid: Callable[[str], str]) -> bool:
-    return bool(oid(".1.3.6.1.4.1.674.*")) and bool(oid(".1.3.6.1.4.1.674.11000.2000.500.1.2.1.0"))
+from collections.abc import Mapping
 
 
 def discover(info):

@@ -71,7 +71,6 @@ check_info["dell_om_power"] = {
             ],
         ),
     ],
-    "snmp_scan_function": scan_dell_om,
 }
 
 

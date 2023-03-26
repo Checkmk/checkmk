@@ -103,5 +103,4 @@ check_info["hp_psu"] = {
             "4",  # hpicfPsTemp
         ],
     ),
-    "snmp_scan_function": scan_hp,
 }

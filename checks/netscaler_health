@@ -10,6 +10,7 @@ from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-imp
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
 
 #
 # Based on contribution by Karsten Schöke <karsten.schoeke@geobasis-bb.de>
@@ -74,12 +75,11 @@ def check_netscaler_health_fan(item, params, info):
 
 
 check_info["netscaler_health.fan"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5951.1"),
+    "detect": SNMP_DETECT,
     "inventory_function": inventory_netscaler_health_fan,
     "check_function": check_netscaler_health_fan,
     "service_description": "FAN %s",
     "snmp_info": netscaler_health_info,
-    "snmp_scan_function": netscaler_health_scan,
     "default_levels_variable": "netscaler_health_fan_default_levels",
     "group": "hw_fans",
 }
@@ -119,7 +119,6 @@ check_info["netscaler_health.temp"] = {
     "service_description": "Temperature %s",
     "group": "temperature",
     "snmp_info": netscaler_health_info,
-    "snmp_scan_function": netscaler_health_scan,
     "default_levels_variable": "netscaler_health_temp_default_levels",
 }
 
@@ -165,5 +164,4 @@ check_info["netscaler_health.psu"] = {
     "inventory_function": inventory_netscaler_health_psu,
     "service_description": "Power Supply %s",
     "snmp_info": netscaler_health_info,
-    "snmp_scan_function": netscaler_health_scan,
 }

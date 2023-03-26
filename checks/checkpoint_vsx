@@ -7,6 +7,7 @@
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
 
 # .1.3.6.1.4.1.2620.1.16.22.1.1.1.1.0 0
 # .1.3.6.1.4.1.2620.1.16.22.1.1.2.1.0 0
@@ -122,10 +123,8 @@ def check_checkpoint_vsx(item, _no_params, parsed):
         yield 0, "%s: %s" % (infotext, value)
 
 
-NEVER = not_matches(".1.3.6.1.2.1.1.1.0", ".*")
-
 check_info["checkpoint_vsx"] = {
-    "detect": NEVER,
+    "detect": DETECT_NEVER,
     "parse_function": parse_checkpoint_vsx,
     "inventory_function": discover(lambda k, values: "vs_name" in values),
     "check_function": check_checkpoint_vsx,
@@ -162,7 +161,6 @@ check_info["checkpoint_vsx"] = {
             ],
         ),
     ],
-    "snmp_scan_function": lambda oid: False,  # already migrated!
 }
 # .
 #   .--connections---------------------------------------------------------.

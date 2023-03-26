@@ -5,7 +5,9 @@
 
 from typing import Mapping, TypedDict
 
-from .agent_based_api.v1 import register, Result, Service, SNMPTree, startswith, State
+from cmk.base.plugins.agent_based.utils.apc import DETECT
+
+from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # .1.3.6.1.4.1.318.1.1.13.3.1.2.1.3.1 Power Source B Failure
@@ -36,7 +38,7 @@ register.snmp_section(
     name="apc_inrow_system_events",
     parse_function=parse_apc_inrow_system_events,
     fetch=SNMPTree(base=".1.3.6.1.4.1.318.1.1.13.3.1.2.1", oids=["3"]),  # airIRAlarmDescription
-    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3"),
+    detect=DETECT,
 )
 
 register.check_plugin(

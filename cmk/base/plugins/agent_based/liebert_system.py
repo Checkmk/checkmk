@@ -17,20 +17,20 @@ from typing import List
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.liebert import DETECT_LIEBERT, parse_liebert_without_unit, SystemSection
+from .utils import liebert
 
 
-def parse_liebert_system(string_table: List[StringTable]) -> SystemSection:
-    return parse_liebert_without_unit(string_table, str)
+def parse_liebert_system(string_table: List[StringTable]) -> liebert.SystemSection:
+    return liebert.parse_liebert_without_unit(string_table, str)
 
 
-def discover_liebert_system(section: SystemSection) -> DiscoveryResult:
+def discover_liebert_system(section: liebert.SystemSection) -> DiscoveryResult:
     model = section.get("System Model Number")
     if model:
         yield Service(item=model)
 
 
-def check_liebert_system(item: str, section: SystemSection) -> CheckResult:
+def check_liebert_system(item: str, section: liebert.SystemSection) -> CheckResult:
     # Variable 'item' is used to generate the service description.
     # However, only one item per host is expected, which is why it is not
     # used in this check funtion.
@@ -43,7 +43,7 @@ def check_liebert_system(item: str, section: SystemSection) -> CheckResult:
 
 register.snmp_section(
     name="liebert_system",
-    detect=DETECT_LIEBERT,
+    detect=liebert.DETECT_LIEBERT,
     parse_function=parse_liebert_system,
     fetch=[
         SNMPTree(

@@ -7,6 +7,7 @@
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.11.1.1.4.0 32 --> FE-FIREEYE-MIB::feTemperatureValue.0
 # .1.3.6.1.4.1.25597.11.1.1.5.0 Good --> FE-FIREEYE-MIB::feTemperatureStatus.0
@@ -39,7 +40,7 @@ def check_fireeye_temp(item, params, info):
 
 
 check_info["fireeye_temp"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25597.1"),
+    "detect": DETECT,
     "inventory_function": inventory_fireeye_temp,
     "check_function": check_fireeye_temp,
     "service_description": "Temperature %s",
@@ -51,6 +52,5 @@ check_info["fireeye_temp"] = {
             "6",  # FE-FIREEYE-MIB::feTemperatureIsHealthy
         ],
     ),
-    "snmp_scan_function": scan_fireeye,
     "group": "temperature",
 }

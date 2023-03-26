@@ -50,7 +50,6 @@ check_info["domino_mailqueues"] = {
     "check_function": check_domino_mailqueues,
     "service_description": "Domino Queue %s",
     "default_levels_variable": "domino_mailqueues_defaults",
-    "snmp_scan_function": scan_domino,
     "snmp_info": (
         ".1.3.6.1.4.1.334.72.1.1.4",
         [

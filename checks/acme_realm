@@ -51,5 +51,4 @@ check_info["acme_realm"] = {
             "30",  # APSYSMGMT-MIB::apSigRealmStatsRealmStatus
         ],
     ),
-    "snmp_scan_function": scan_acme,
 }

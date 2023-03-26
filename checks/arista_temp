@@ -61,6 +61,5 @@ check_info["arista_temp"] = {
             "99.1.1.1.4",  # ENTITY-SENSOR-MIB::entPhySensorValue
         ],
     ),
-    "snmp_scan_function": arista_temp_scan_function,
     "group": "temperature",
 }

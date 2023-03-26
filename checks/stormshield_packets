@@ -61,5 +61,4 @@ check_info["stormshield_packets"] = {
             "24",  # UdpConnCount
         ],
     ),
-    "snmp_scan_function": stormshield_scan_function,
 }

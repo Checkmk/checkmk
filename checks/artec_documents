@@ -45,5 +45,4 @@ check_info["artec_documents"] = {
             "1",  # artecDocumentsValues
         ],
     ),
-    "snmp_scan_function": artec_scan_function,
 }

@@ -95,7 +95,6 @@ check_info["wut_webtherm"] = {
             "1.8.1.1",  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroTempValuePkt
         ],
     ),
-    "snmp_scan_function": detect_webtherm,
     "group": "temperature",
 }
 

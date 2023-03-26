@@ -10,6 +10,7 @@ from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wild
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ups_in_voltage import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
 
 ups_in_voltage_default_levels = (210, 180)  # warning / critical
 
@@ -20,27 +21,10 @@ def inventory_ups_in_voltage(entry):
 
 
 check_info["ups_in_voltage"] = {
-    "detect": any_of(
-        any_of(
-            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.165.3"),
-            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.476.1.42"),
-            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.1"),
-            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.935"),
-            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
-            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2254.2.5"),
-            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12551.4.0"),
-        ),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.2.1.33"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.2"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5491"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.818.1.100.1"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.935"),
-    ),
+    "detect": DETECT_UPS_GENERIC,
     "inventory_function": inventory_ups_in_voltage,
     "check_function": check_ups_in_voltage,
     "service_description": "IN voltage phase %s",
     "group": "evolt",
     "snmp_info": (".1.3.6.1.2.1.33.1.3.3.1", [0, 3]),
-    "snmp_scan_function": ups_generic_scan_function,
 }

@@ -44,5 +44,4 @@ check_info["huawei_switch_psu"] = {
             [OID_END, "2"],  # hwEntityOperStatus
         )
     ),
-    "snmp_scan_function": huawei_switch_scan_function,
 }

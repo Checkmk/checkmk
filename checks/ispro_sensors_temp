@@ -57,6 +57,5 @@ check_info["ispro_sensors_temp"] = {
             "2.2.1.6",  # ISPRO-MIB::isDeviceConfigTemperatureHighCritical
         ],
     ),
-    "snmp_scan_function": ispro_scan_function,
     "group": "temperature",
 }

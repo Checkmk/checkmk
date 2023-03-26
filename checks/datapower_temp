@@ -5,11 +5,8 @@
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.datapower_scan import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.datapower import DETECT
 
 #
 
@@ -47,11 +44,7 @@ def check_datapower_temp(item, params, info):
 
 
 check_info["datapower_temp"] = {
-    "detect": any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14685.1.8"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14685.1.7"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14685.1.3"),
-    ),
+    "detect": DETECT,
     "inventory_function": inventory_datapower_temp,
     "check_function": check_datapower_temp,
     "service_description": "Temperature %s",
@@ -66,6 +59,5 @@ check_info["datapower_temp"] = {
             6,  # dpStatusEnvironmentalSensorsUpperCriticalThreshold
         ],
     ),
-    "snmp_scan_function": scan_datapower,
     "default_levels_variable": "datapower_temp_default_levels",
 }

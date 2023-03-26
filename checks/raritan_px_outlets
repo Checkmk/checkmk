@@ -85,6 +85,5 @@ check_info["raritan_px_outlets"] = {
             "31",  # outletWattHours
         ],
     ),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.4",
     "group": "el_inphase",
 }

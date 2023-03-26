@@ -71,5 +71,4 @@ check_info["stormshield_cluster"] = {
             "8",  # snsHASyncStatus
         ],
     ),
-    "snmp_scan_function": stormshield_cluster_scan_function,
 }

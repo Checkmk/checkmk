@@ -1875,7 +1875,6 @@ def _extract_agent_and_snmp_sections(
                     create_snmp_section_plugin_from_legacy(
                         section_name,
                         check_info_dict,
-                        check_info_dict["snmp_scan_function"],
                         checks_snmp_info,
                         validate_creation_kwargs=validate_creation_kwargs,
                     )

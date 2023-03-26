@@ -78,5 +78,4 @@ check_info["dell_compellent_disks"] = {
             ],
         ),
     ],
-    "snmp_scan_function": dell_compellent.scan,
 }

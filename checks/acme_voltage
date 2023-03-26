@@ -83,6 +83,5 @@ check_info["acme_voltage"] = {
             "5",  # ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState
         ],
     ),
-    "snmp_scan_function": scan_acme,
     "group": "el_inphase",
 }

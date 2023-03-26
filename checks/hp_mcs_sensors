@@ -77,7 +77,6 @@ check_info["hp_mcs_sensors"] = {
             "7",  # CPQWCRM-MIB::waterCoolUnitSensorSetLow
         ],
     ),
-    "snmp_scan_function": hp_mcs_scan_function,
     "group": "temperature",
 }
 

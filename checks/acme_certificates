@@ -71,7 +71,6 @@ check_info["acme_certificates"] = {
             "7",  # APSECURITY-MIB::apSecurityCertificateCertIssuer
         ],
     ),
-    "snmp_scan_function": scan_acme,
     "default_levels_variable": "acme_certificates_default_levels",
     "group": "acme_certificates",
 }

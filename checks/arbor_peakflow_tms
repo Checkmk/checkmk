@@ -60,7 +60,6 @@ check_info["arbor_peakflow_tms"] = {
             ],
         ),
     ],
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Peakflow"),
 }
 
 check_info["arbor_peakflow_tms.disk_usage"] = {

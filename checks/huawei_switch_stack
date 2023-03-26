@@ -59,5 +59,4 @@ check_info["huawei_switch_stack"] = {
             [OID_END, "3"],  # hwMemberStackRole
         ),
     ],
-    "snmp_scan_function": huawei_switch_scan_function,
 }

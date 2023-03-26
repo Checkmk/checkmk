@@ -60,5 +60,4 @@ check_info["hp_proliant"] = {
             "2.2.2.1.0",  # CPQSINFO-MIB::cpqSiSysSerialNum
         ],
     ),
-    "snmp_scan_function": proliant_general_scan_function,
 }

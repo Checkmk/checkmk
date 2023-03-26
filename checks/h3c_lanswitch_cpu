@@ -72,7 +72,5 @@ check_info["h3c_lanswitch_cpu"] = {
         ".1.3.6.1.4.1.43.45.1.6.1.1.1",
         [OID_END, "3"],  # 5-min average load.
     ),
-    "snmp_scan_function": lambda oid: "3com s" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    # Reasonably low warning and crit levels
     "default_levels_variable": "switch_cpu_default_levels",
 }

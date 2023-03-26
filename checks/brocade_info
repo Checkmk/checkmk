@@ -98,5 +98,4 @@ check_info["brocade_info"] = {
             ],
         ),
     ],
-    "snmp_scan_function": scan_brocade_info,
 }

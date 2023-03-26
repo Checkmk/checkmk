@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import contains, register, SNMPTree
+from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
 from .utils.df import FSBlock
+from .utils.emc import DETECT_ISILON
 
 MIBI = 1024**2
 
@@ -20,7 +21,7 @@ def parse_emc_isilon_ifs(string_table: StringTable) -> FSBlock | None:
 register.snmp_section(
     name="emc_isilon_ifs",
     parse_function=parse_emc_isilon_ifs,
-    detect=contains(".1.3.6.1.2.1.1.1.0", "isilon"),
+    detect=DETECT_ISILON,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12124.1.3",
         oids=[

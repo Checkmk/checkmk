@@ -44,8 +44,5 @@ check_info["emerson_temp"] = {
     "service_description": "Temperature %s",
     "group": "temperature",
     "snmp_info": (".1.3.6.1.4.1.6302.2.1.2", ["7"]),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.4.1.6302.2.1.1.1.0", "").startswith(
-        "Emerson Network Power"
-    ),
     "default_levels_variable": "emerson_temp_default",
 }

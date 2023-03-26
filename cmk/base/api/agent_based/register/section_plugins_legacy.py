@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-style section based on config.check_info
 """
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple
 
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
@@ -19,8 +19,7 @@ from cmk.base.api.agent_based.type_defs import (
     StringTable,
 )
 
-from ..utils_legacy import CheckInfoElement
-from .convert_scan_functions import create_detect_spec
+from .utils_legacy import CheckInfoElement
 
 LayoutRecoverSuboids = List[Tuple[str]]
 
@@ -224,9 +223,7 @@ def create_agent_section_plugin_from_legacy(
 def create_snmp_section_plugin_from_legacy(
     check_plugin_name: str,
     check_info_element: CheckInfoElement,
-    snmp_scan_function: Callable,
     snmp_info: Any,
-    scan_function_fallback_files: Optional[List[str]] = None,
     *,
     validate_creation_kwargs: bool,
 ) -> SNMPSectionPlugin:
@@ -243,20 +240,10 @@ def create_snmp_section_plugin_from_legacy(
         handle_empty_info=bool(check_info_element.get("handle_empty_info")),
     )
 
-    detect_spec = (
-        check_info_element["detect"]
-        if "detect" in check_info_element
-        else create_detect_spec(
-            check_plugin_name,
-            snmp_scan_function,
-            scan_function_fallback_files or [],
-        )
-    )
-
     return create_snmp_section_plugin(
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
         fetch=trees,
-        detect_spec=detect_spec,
+        detect_spec=check_info_element["detect"],
         validate_creation_kwargs=validate_creation_kwargs,
     )

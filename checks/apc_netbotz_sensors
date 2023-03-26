@@ -155,9 +155,6 @@ check_info["apc_netbotz_sensors"] = {
             "7",  # NETBOTZV2-MIB::*ValueStr; empty if sensor is not plugged in
         ],
     ),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
-        ".1.3.6.1.4.1.5528.100.20.10"
-    ),
     "default_levels_variable": "apc_netbotz_sensors_temp_default_levels",
     "group": "temperature",
 }

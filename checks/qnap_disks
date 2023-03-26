@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes import qnap
-
 
 def inventory_qnap_disks(info):
     return [(x[0], None) for x in info if x[2] != "-5"]
@@ -50,5 +48,4 @@ check_info["qnap_disks"] = {
             7,  # Status Text
         ],
     ),
-    "snmp_scan_function": qnap.scan,
 }

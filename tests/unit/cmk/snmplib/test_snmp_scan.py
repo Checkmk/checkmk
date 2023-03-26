@@ -22,31 +22,10 @@ from cmk.utils.type_defs import HostName, SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_scan as snmp_scan
-from cmk.snmplib.type_defs import (
-    OID,
-    SNMPBackend,
-    SNMPBackendEnum,
-    SNMPDecodedString,
-    SNMPHostConfig,
-)
+from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 from cmk.snmplib.utils import evaluate_snmp_detection
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (
-    create_detect_spec,
-)
-
-
-def test_detect_spec_consistency_in_legacy_checks(
-    fix_plugin_legacy: FixPluginLegacy,
-) -> None:
-    """Make sure that a new-style detect spec is consistent to the scan function, if present"""
-    for name, check_info_element in fix_plugin_legacy.check_info.items():
-        if (scan_function := check_info_element.get("snmp_scan_function")) is None:
-            continue
-
-        print(name)
-        assert check_info_element["detect"] == create_detect_spec(name, scan_function, [])
 
 
 @pytest.mark.parametrize(
@@ -137,20 +116,13 @@ def test_evaluate_snmp_detection(
     oids_data: dict[str, str | None],
     expected_result: bool,
 ) -> None:
-    def oid_function(
-        oid: OID, _default: SNMPDecodedString | None = None, _name: SectionName | None = None
-    ) -> SNMPDecodedString | None:
-        return oids_data.get(oid)
-
-    scan_function = fix_plugin_legacy.check_info[name]["snmp_scan_function"]
-    assert bool(scan_function(oid_function)) is expected_result
-
-    converted_detect_spec = create_detect_spec(name, scan_function, [])
-    actual_result = evaluate_snmp_detection(
-        detect_spec=converted_detect_spec,
-        oid_value_getter=oids_data.get,
+    assert (
+        evaluate_snmp_detection(
+            detect_spec=fix_plugin_legacy.check_info[name]["detect"],
+            oid_value_getter=oids_data.get,
+        )
+        is expected_result
     )
-    assert actual_result is expected_result
 
 
 # C/P from `test_snmplib_snmp_table`.

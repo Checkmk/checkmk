@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes import dell_compellent
-
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -42,7 +40,6 @@ check_info["dell_compellent_folder"] = {
             6,  # DELL-STORAGE-SC-MIB::scDiskFolderSUUsedSpace2
         ],
     ),
-    "snmp_scan_function": dell_compellent.scan,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

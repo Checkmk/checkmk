@@ -48,5 +48,4 @@ check_info["mbg_lantime_ng_state"] = {
             4,  # MBG-SNMP-LTNG-MIB::mbgLtNgNtpRefclockOffset
         ],
     ),
-    "snmp_scan_function": snmp_scan_mbg_lantime_ng_hw,
 }

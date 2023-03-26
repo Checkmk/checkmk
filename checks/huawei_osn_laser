@@ -75,7 +75,6 @@ check_info["huawei_osn_laser"] = {
             "2.253",  # OPTIX-GLOBAL-NGWDM-MIB::laser_groupPer15mCurMonValue.afterFECCorrectErrorRatio
         ],
     ),
-    "snmp_scan_function": huawei_osn_scan_function,
     "default_levels_variable": "huawei_osn_laser_default_levels",
     "group": "huawei_osn_laser",
 }

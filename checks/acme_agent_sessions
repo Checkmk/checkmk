@@ -42,5 +42,4 @@ check_info["acme_agent_sessions"] = {
             "22",  # APSYSMGMT-MIB::apSipSAStatsSessionAgentStatus
         ],
     ),
-    "snmp_scan_function": scan_acme,
 }

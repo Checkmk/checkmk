@@ -37,6 +37,5 @@ check_info["cisco_oldcpu"] = {
     "snmp_info": (".1.3.6.1.4.1.9.2.1", ["57"]),
     # For old cisco catalyst devices (1745) which do not support newer snmp data
     # e.g. 'Cisco Catalyst 3850 Series Switches'
-    "snmp_scan_function": snmp_scan_cisco_oldcpu,
     "group": "cpu_utilization",
 }

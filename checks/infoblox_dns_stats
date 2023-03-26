@@ -48,5 +48,4 @@ check_info["infoblox_dns_stats"] = {
             "7",  # IB-DNSONE::ibBindZoneFailure
         ],
     ),
-    "snmp_scan_function": scan_infoblox,
 }

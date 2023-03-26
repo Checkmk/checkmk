@@ -51,7 +51,6 @@ check_info["arbor_pravail"] = {
             "39.0",  # pravailOverrunDropRatePps
         ],
     ),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Pravail"),
 }
 
 check_info["arbor_pravail.disk_usage"] = {

@@ -37,5 +37,4 @@ check_info["acme_powersupply"] = {
             "4",  # ACMEPACKET-ENVMON-MIB::apEnvMonPowerSupplyState
         ],
     ),
-    "snmp_scan_function": scan_acme,
 }

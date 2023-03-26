@@ -5,9 +5,9 @@
 
 from typing import Optional
 
-from .agent_based_api.v1 import exists, register, SNMPTree
+from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
-from .utils import uptime
+from .utils import detection, uptime
 
 
 def parse_snmp_uptime(string_table: StringTable) -> Optional[uptime.Section]:
@@ -58,5 +58,5 @@ register.snmp_section(
             "25.1.1",  # HOST-RESOURCES-MIB::hrSystemUptime
         ],
     ),
-    detect=exists(".1.3.6.1.2.1.1.1.0"),
+    detect=detection.HAS_SYSDESC,
 )

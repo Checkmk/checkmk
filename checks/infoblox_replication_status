@@ -70,5 +70,4 @@ check_info["infoblox_replication_status"] = {
             "6",  # IB-PLATFORMONE-MIB::ibNodeLastRepTimeToMaster
         ],
     ),
-    "snmp_scan_function": scan_infoblox,
 }

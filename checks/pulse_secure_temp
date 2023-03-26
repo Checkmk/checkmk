@@ -33,7 +33,6 @@ check_info["pulse_secure_temp"] = {
             "42",  # iveTemperature
         ],
     ),
-    "snmp_scan_function": pulse_secure.scan_pulse_secure,
     "group": "temperature",
     "default_levels_variable": "pulse_secure_temp_def_levels",
 }

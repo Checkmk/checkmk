@@ -87,7 +87,7 @@ You should find an example configuration file at
 '../cfg_examples/filestats.cfg' relative to this file.
 """
 
-__version__ = "2.2.0b3"
+__version__ = "2.3.0b1"
 
 import collections
 import configparser
@@ -526,29 +526,35 @@ def output_aggregator_file_stats(group_name, files_iter):
 def output_aggregator_extremes_only(group_name, files_iter):
     yield "[[[extremes_only %s]]]" % group_name
 
-    count = 0
-    for count, filestat in enumerate(files_iter, 1):
-        if count == 1:  # init
-            min_age = max_age = min_size = max_size = filestat
-        if filestat.age < min_age.age:
+    files = list(files_iter)
+    count = len(files)
+
+    if not count:
+        yield repr({"type": "summary", "count": count})
+        return
+
+    min_age = max_age = min_size = max_size = files[0]
+
+    for filestat in files[1:]:
+        if filestat.age is None:
+            continue
+
+        if min_age.age is None or filestat.age < min_age.age:
             min_age = filestat
-        elif filestat.age > max_age.age:
+        if max_age.age is None or filestat.age > max_age.age:
             max_age = filestat
-        if filestat.size < min_size.size:
+        if min_size.size is None or filestat.size < min_size.size:
             min_size = filestat
-        elif filestat.size > max_size.size:
+        if max_size.size is None or filestat.size > max_size.size:
             max_size = filestat
 
-    extremes = set((min_age, max_age, min_size, max_size)) if count else ()
-    for extreme_file in extremes:
+    for extreme_file in set((min_age, max_age, min_size, max_size)):
         yield extreme_file.dumps()
     yield repr({"type": "summary", "count": count})
 
 
 def output_aggregator_single_file(group_name, files_iter):
-
     for lazy_file in files_iter:
-
         count_format_specifiers = group_name.count("%s")
 
         if count_format_specifiers == 0:
@@ -638,12 +644,10 @@ def iter_config_section_dicts(cfg_file=None):
 
 
 def main():
-
     args = parse_arguments()
 
     sys.stdout.write("<<<filestats:sep(0)>>>\n")
     for config_section_name, config in iter_config_section_dicts(args["cfg_file"]):
-
         # 1 input
         files_iter = get_file_iterator(config)
 

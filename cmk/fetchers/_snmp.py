@@ -167,10 +167,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             backend=self._backend,
         )
 
-    def _update_snmpwalk_cache(self, mode: Mode) -> bool:
-        """Decide whether to load data from the SNMP walk cache"""
-        return mode is not Mode.CHECKING
-
     def _get_selection(self, mode: Mode) -> frozenset[SectionName]:
         """Determine the sections fetched unconditionally (without detection)"""
         if mode is Mode.CHECKING:
@@ -235,10 +231,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         section_names |= self._detect(select_from=self._get_detected_sections(mode) - section_names)
 
         walk_cache = snmp_table.WalkCache(self._backend.hostname)
-        if self._update_snmpwalk_cache(mode):
-            walk_cache.clear()
-            walk_cache_msg = "SNMP walk cache cleared"
-        else:
+        if mode is Mode.CHECKING:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
             walk_cache.load(
                 trees=(
@@ -247,6 +240,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                     for tree in self.plugin_store[section_name].trees
                 ),
             )
+        else:
+            walk_cache.clear()
+            walk_cache_msg = "SNMP walk cache cleared"
 
         fetched_data: MutableMapping[SectionName, Sequence[SNMPRawDataSection]] = {}
         for section_name in self._sort_section_names(section_names):

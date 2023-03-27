@@ -11,12 +11,12 @@ from collections.abc import Collection, Iterable, Mapping, MutableMapping, Seque
 from pathlib import Path
 from typing import Any, Final
 
-from cmk.utils.exceptions import OnError
+from cmk.utils.exceptions import MKFetcherError, OnError
 from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names
-from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPRawData, SNMPRawDataSection
 
 from cmk.fetchers import Fetcher, Mode
 
@@ -84,7 +84,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             section_store_path,
             logger=self._logger,
         )
-        self._backend = make_backend(self.snmp_config, self._logger)
+        self._backend: SNMPBackend | None = None
 
     @property
     def disabled_sections(self) -> frozenset[SectionName]:
@@ -153,18 +153,20 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         }
 
     def open(self) -> None:
-        pass
+        self._backend = make_backend(self.snmp_config, self._logger)
 
     def close(self) -> None:
-        pass
+        self._backend = None
 
-    def _detect(self, *, select_from: Collection[SectionName]) -> frozenset[SectionName]:
+    def _detect(
+        self, *, select_from: Collection[SectionName], backend: SNMPBackend
+    ) -> frozenset[SectionName]:
         """Detect the applicable sections for the device in question"""
         return gather_available_raw_section_names(
             sections=[(name, self.plugin_store[name].detect_spec) for name in select_from],
             on_error=self.on_error,
             missing_sys_description=self.missing_sys_description,
-            backend=self._backend,
+            backend=backend,
         )
 
     def _get_selection(self, mode: Mode) -> frozenset[SectionName]:
@@ -221,6 +223,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
            which are fetched for checking anyway.
 
         """
+        if self._backend is None:
+            raise MKFetcherError("missing backend")
+
         now = int(time.time())
         persisted_sections = (
             self._section_store.load()
@@ -228,7 +233,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             else PersistedSections[SNMPRawDataSection]({})
         )
         section_names = self._get_selection(mode)
-        section_names |= self._detect(select_from=self._get_detected_sections(mode) - section_names)
+        section_names |= self._detect(
+            select_from=self._get_detected_sections(mode) - section_names, backend=self._backend
+        )
 
         walk_cache = snmp_table.WalkCache(self._backend.hostname)
         if mode is Mode.CHECKING:

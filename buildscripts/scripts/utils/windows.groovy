@@ -35,11 +35,11 @@ def build(Map args) {
                 "python-3.cab,python-3.4.cab"] :
             (args.TARGET == "agent_with_sign") ? [
                 "agents/wnx",
-                "call build_release.cmd tribe29.pfx ${args.PASSWORD}",
+                "call run.cmd --all --sign tribe29.pfx ${args.PASSWORD}",
                 "cmk-agent-ctl.exe,check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe,unit_tests_results.zip,OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe"] :
             (args.TARGET == "agent_no_sign") ? [
                  "agents/wnx",
-                 "call build_release.cmd",
+                 "call run.cmd --all",
                  "cmk-agent-ctl.exe,check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"] :
             (args.TARGET == "cmk_agent_ctl_no_sign") ? [
                 "packages/cmk-agent-ctl",
@@ -47,16 +47,12 @@ def build(Map args) {
                  ""] :
             (args.TARGET == "test_unit") ? [
                  "agents/wnx",
-                 "call call_unit_tests.cmd -*_Long:*Integration:*IntegrationExt:*Flaky",
+                 "call run.cmd --test",
                  "unit_tests_results.zip"] :
             (args.TARGET == "test_integration") ? [
                 "agents/wnx",
                 "call run_integration_tests.cmd all",
                  "integration_tests_results.zip"] :
-            (args.TARGET == "test_build") ? [
-                "agents/wnx",
-                "call call_test_build.cmd",
-                ""] :
             raise("${args.TARGET} is not known!")
         )
 

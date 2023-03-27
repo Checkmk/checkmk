@@ -46,6 +46,13 @@ def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATT
 }
 
 def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT) {
+    println("""
+        ||== upload_version_dir ================================================================
+        || SOURCE_PATH = |${SOURCE_PATH}|
+        || UPLOAD_DEST = |${UPLOAD_DEST}|
+        || PORT =        |${PORT}|
+        ||==========================================================================================
+        """.stripMargin());
     stage('Upload to download server') {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
             sh """

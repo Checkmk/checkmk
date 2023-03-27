@@ -5,6 +5,7 @@
 
 """Wrapper for a page, with some often used functionality"""
 
+import re
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Literal, Optional, Pattern
@@ -30,23 +31,23 @@ class LocatorHelper(ABC):
         """check for a success div and its content"""
         expect(self.locator("div.success")).to_have_text(message, timeout=timeout_ms)
 
-    def check_error(self, message: str | Pattern) -> None:
+    def check_error(self, message: str | Pattern, timeout_ms: int = 15000) -> None:
         """check for an error div and its content"""
-        expect(self.locator("div.error")).to_have_text(message)
+        expect(self.locator("div.error")).to_have_text(message, timeout=timeout_ms)
 
-    def check_warning(self, message: str | Pattern) -> None:
+    def check_warning(self, message: str | Pattern, timeout_ms: int = 15000) -> None:
         """check for a warning div and its content"""
-        expect(self.locator("div.warning")).to_have_text(message)
+        expect(self.locator("div.warning")).to_have_text(message, timeout=timeout_ms)
 
     def get_input(self, input_name: str) -> Locator:
         return self.locator(f'input[name="{input_name}"]')
 
     def get_suggestion(self, suggestion: str) -> Locator:
-        return self.locator(f"#suggestions >> text={suggestion}")
+        return self.locator("#suggestions .suggestion").filter(has_text=re.compile(suggestion))
 
     def get_text(self, text: str, is_visible: bool = True) -> Locator:
         is_visible_str = ">> visible=true" if is_visible else ""
-        return self.locator(f"text={text}" + is_visible_str)
+        return self.locator(f"text={text} {is_visible_str}").first
 
     def get_element_including_texts(self, element_id: str, texts: list[str]) -> Locator:
         has_text_str = "".join([f":has-text('{t}')" for t in texts])
@@ -360,7 +361,7 @@ class PPage(LocatorHelper):
                 try:
                     if navigate:
                         expect(self.page).not_to_have_url(url)
-                    elif expected_locator:
+                    if expected_locator:
                         expect(expected_locator).to_be_visible()
                     self.page.wait_for_load_state("networkidle")
                     return
@@ -369,8 +370,7 @@ class PPage(LocatorHelper):
 
             try:
                 if reload_on_error:
-                    self.page.reload()
-                    self.page.wait_for_load_state("networkidle")
+                    self.page.reload(wait_until="networkidle")
             except _api_types.Error:
                 continue
 

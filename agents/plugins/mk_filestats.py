@@ -526,21 +526,26 @@ def output_aggregator_file_stats(group_name, files_iter):
 def output_aggregator_extremes_only(group_name, files_iter):
     yield "[[[extremes_only %s]]]" % group_name
 
-    count = 0
-    for count, filestat in enumerate(files_iter, 1):
-        if count == 1:  # init
-            min_age = max_age = min_size = max_size = filestat
-        if filestat.age < min_age.age:
+    files = list(files_iter)
+    count = len(files)
+
+    if not count:
+        yield repr({"type": "summary", "count": count})
+        return
+
+    min_age = max_age = min_size = max_size = files[0]
+
+    for filestat in files[1:]:
+        if filestat.age is not None and filestat.age < min_age.age:
             min_age = filestat
-        elif filestat.age > max_age.age:
+        elif filestat.age is not None and filestat.age > max_age.age:
             max_age = filestat
-        if filestat.size < min_size.size:
+        if filestat.size is not None and filestat.size < min_size.size:
             min_size = filestat
-        elif filestat.size > max_size.size:
+        elif filestat.size is not None and filestat.size > max_size.size:
             max_size = filestat
 
-    extremes = set((min_age, max_age, min_size, max_size)) if count else ()
-    for extreme_file in extremes:
+    for extreme_file in set((min_age, max_age, min_size, max_size)):
         yield extreme_file.dumps()
     yield repr({"type": "summary", "count": count})
 

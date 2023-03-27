@@ -337,3 +337,53 @@ def test_explicit_null_in_filestat(val):
 
     assert not mk_filestats.SizeFilter(">=1024").matches(filestat)
     assert not mk_filestats.AgeFilter(">=1024").matches(filestat)
+
+
+@pytest.mark.parametrize(
+    "files,expected_header,expected_dicts",
+    [
+        pytest.param(
+            [
+                mk_filestats.FileStat("/tmp/file1", "ok", 512, 600),
+                mk_filestats.FileStat("/tmp/file2", "file_vanished"),
+            ],
+            "[[[extremes_only MYGROUP]]]",
+            [
+                {
+                    "type": "file",
+                    "path": "/tmp/file1",
+                    "stat_status": "ok",
+                    "size": 512,
+                    "age": 600,
+                    "mtime": None,
+                },
+                {"type": "summary", "count": 2},
+            ],
+            id="file without metrics",
+        ),
+        pytest.param(
+            [
+                mk_filestats.FileStat("/tmp/file1", "file_vanished"),
+            ],
+            "[[[extremes_only MYGROUP]]]",
+            [
+                {
+                    "type": "file",
+                    "path": "/tmp/file1",
+                    "stat_status": "file_vanished",
+                    "size": None,
+                    "age": None,
+                    "mtime": None,
+                },
+                {"type": "summary", "count": 1},
+            ],
+            id="only file without metrics",
+        ),
+    ],
+)
+def test_output_aggregator_extremes_only(files, expected_header, expected_dicts):
+    result = list(mk_filestats.output_aggregator_extremes_only("MYGROUP", files))
+
+    assert result[0] == expected_header
+    for result_dict_repr, expected_dict in zip(result[1:], expected_dicts):
+        assert ast.literal_eval(result_dict_repr) == expected_dict

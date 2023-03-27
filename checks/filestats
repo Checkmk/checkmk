@@ -103,8 +103,12 @@ def check_filestats_extremes(files, params, show_files=False):
         ("size", get_bytes_human_readable, "smallest", "largest"),
         ("age", get_age_human_readable, "newest", "oldest"),
     ):
-        files.sort(key=lambda f: f.get(key))  # pylint: disable=cell-var-from-loop
-        for efile, label in ((files[0], minlabel), (files[-1], maxlabel)):
+        files_with_metric = [f for f in files if f.get(key) is not None]
+        if not files_with_metric:
+            continue
+
+        files_with_metric.sort(key=lambda f: f.get(key))  # pylint: disable=cell-var-from-loop
+        for efile, label in ((files_with_metric[0], minlabel), (files_with_metric[-1], maxlabel)):
             levels = params.get("max%s_%s" % (key, label), (None, None)) + params.get(
                 "min%s_%s" % (key, label), (None, None)
             )
@@ -122,7 +126,7 @@ def check_filestats_extremes(files, params, show_files=False):
         min_label_levels = params.get("max%s_%s" % (key, minlabel), (None, None)) + params.get(
             "min%s_%s" % (key, minlabel), (None, None)
         )
-        for efile in files:
+        for efile in files_with_metric:
             state, _text, _no_perf = check_levels(
                 efile[key],
                 None,
@@ -141,7 +145,7 @@ def check_filestats_extremes(files, params, show_files=False):
         max_label_levels = params.get("max%s_%s" % (key, maxlabel), (None, None)) + params.get(
             "min%s_%s" % (key, maxlabel), (None, None)
         )
-        for efile in reversed(files):
+        for efile in reversed(files_with_metric):
             state, _text, _no_perf = check_levels(
                 efile[key],
                 None,
@@ -250,9 +254,16 @@ def check_filestats_single(_item, params, data):
         yield 1, "Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats)."
 
     single_stat = [i for i in reported_lines if i.get("type") == "file"][0]
+    if single_stat.get("size") is None and single_stat.get("age") is None:
+        yield 0, f'Status: {single_stat.get("stat_status")}'
+        return
+
     for key, hr_function in (("size", get_bytes_human_readable), ("age", get_age_human_readable)):
+        if (value := single_stat.get(key)) is None:
+            continue
+
         yield check_levels(
-            single_stat.get(key),
+            value,
             key if key == "size" else None,
             (
                 params.get("max_%s" % key, (None, None))[0],

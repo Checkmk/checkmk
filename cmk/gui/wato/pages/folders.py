@@ -1075,33 +1075,19 @@ class ModeFolder(WatoMode):
                 )
             html.icon_button(host.services_url(), msg, image)
 
-        action_menu_show_flags: list[str] = []
         if not host.locked():
             if user.may("wato.edit_hosts") and user.may("wato.move_hosts"):
                 self._show_move_to_folder_action(host)
 
             if user.may("wato.manage_hosts"):
-                action_menu_show_flags.append("show_delete_link")
-
                 if user.may("wato.clone_hosts"):
-                    action_menu_show_flags.append("show_clone_link")
-
-        if not self._folder.locked_hosts() and user.may("wato.parentscan"):
-            action_menu_show_flags.append("show_parentscan_link")
-
-        if user.may("wato.manage_hosts"):
-            action_menu_show_flags.append("show_remove_tls_link")
-
-        if action_menu_show_flags:
-            url_vars = [
-                ("hostname", host.name()),
-                *[(flag_name, True) for flag_name in action_menu_show_flags],
-            ]
-            html.popup_trigger(
-                html.render_icon("menu", _("Open the host action menu"), cssclass="iconbutton"),
-                "host_action_menu",
-                MethodAjax(endpoint="host_action_menu", url_vars=url_vars),
-            )
+                    html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
+                delete_url = make_confirm_delete_link(
+                    url=make_action_link([("mode", "folder"), ("_delete_host", host.name())]),
+                    title=_("Delete host"),
+                    suffix=host.name(),
+                )
+                html.icon_button(delete_url, _("Delete this host"), "delete")
 
     def _delete_hosts(self, host_names) -> ActionResult:  # type: ignore[no-untyped-def]
         self._folder.delete_hosts(host_names, automation=delete_hosts)

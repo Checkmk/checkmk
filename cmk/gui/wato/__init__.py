@@ -257,7 +257,6 @@ from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility wit
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.painter.v0.base import PainterRegistry
 from cmk.gui.views.sorter import SorterRegistry
-from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .views import (
@@ -285,8 +284,6 @@ def register(
     icon_registry.register(DownloadAgentOutputIcon)
     icon_registry.register(DownloadSnmpWalkIcon)
     icon_registry.register(WatoIcon)
-
-    page_registry.register_page_handler("ajax_popup_host_action_menu", ajax_popup_host_action_menu)
 
 
 # .

@@ -860,8 +860,3 @@ export function querySelectorAllByClassName<T extends HTMLElement>(
 ) {
     return document.querySelectorAll<T>(`.${className}`);
 }
-
-export interface FunctionSpec {
-    function: (...args: any[]) => void;
-    arguments: any[];
-}

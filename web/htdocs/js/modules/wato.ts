@@ -290,7 +290,7 @@ export function open_folder(event: Event | undefined, link: string) {
 }
 
 export function toggle_folder(
-    event: Event | undefined,
+    _event: Event | undefined,
     oDiv: HTMLElement,
     on: boolean
 ) {

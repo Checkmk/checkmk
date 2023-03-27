@@ -255,12 +255,18 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     path_params=[PATH_FOLDER_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[401],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a folder"""
     user.need_permission("wato.edit")
-    folder = params["folder"]
-    parent = folder.parent()
+    folder: CREFolder = params["folder"]
+    if (parent := folder.parent()) is None:
+        raise ProblemException(
+            title="Problem deleting folder.",
+            detail="Deleting the root folder is not permitted.",
+            status=401,
+        )
     parent.delete_subfolder(folder.name())
     return Response(status=204)
 

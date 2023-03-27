@@ -143,40 +143,9 @@ exporter_registry.register(
 )
 
 
-class CSVRenderer:
-    def show(self, view: "View", rows: Rows) -> None:
-        csv_separator = request.get_str_input_mandatory("csv_separator", ";")
-        first = True
-        resp = []
-        for cell in view.group_cells + view.row_cells:
-            if first:
-                first = False
-            else:
-                resp.append(csv_separator)
-            title = cell.export_title()
-            resp.append('"%s"' % self._format_for_csv(title))
-
-        for row in rows:
-            resp.append("\n")
-            first = True
-            for cell in view.group_cells + view.row_cells:
-                if first:
-                    first = False
-                else:
-                    resp.append(csv_separator)
-                resp.append(
-                    '"%s"' % self._format_for_csv(cell.render_for_csv_export(join_row(row, cell)))
-                )
-
-        response.set_data("".join(resp))
-
-    def _format_for_csv(self, raw_data: str | HTML) -> str:
-        return escaping.strip_tags(unescape(str(raw_data))).replace("\n", "").replace('"', '""')
-
-
 def _export_csv_export(view: "View", rows: Rows) -> None:
     output_csv_headers(view.spec)
-    CSVRenderer().show(view, rows)
+    _export_csv(view, rows)
 
 
 exporter_registry.register(
@@ -188,7 +157,29 @@ exporter_registry.register(
 
 
 def _export_csv(view: "View", rows: Rows) -> None:
-    CSVRenderer().show(view, rows)
+    csv_separator = request.get_str_input_mandatory("csv_separator", ";")
+    resp = []
+    first = True
+    for cell in view.group_cells + view.row_cells:
+        if first:
+            first = False
+        else:
+            resp.append(csv_separator)
+        resp.append(f'"{_format_for_csv(cell.export_title())}"')
+    for row in rows:
+        resp.append("\n")
+        first = True
+        for cell in view.group_cells + view.row_cells:
+            if first:
+                first = False
+            else:
+                resp.append(csv_separator)
+            resp.append(f'"{_format_for_csv(cell.render_for_csv_export(join_row(row, cell)))}"')
+    response.set_data("".join(resp))
+
+
+def _format_for_csv(raw_data: str | HTML) -> str:
+    return escaping.strip_tags(unescape(str(raw_data))).replace("\n", "").replace('"', '""')
 
 
 exporter_registry.register(

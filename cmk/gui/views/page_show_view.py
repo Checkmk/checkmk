@@ -401,7 +401,7 @@ def _export_view(view: View, rows: Rows) -> None:
             "output_format", _("Output format '%s' not supported") % html.output_format
         )
 
-    exporter.handler(view, rows)
+    exporter.handler(view.row_cells, view.group_cells, rows, view.name, view.spec)
 
 
 def _is_ec_unrelated_host_view(view_spec: ViewSpec) -> bool:

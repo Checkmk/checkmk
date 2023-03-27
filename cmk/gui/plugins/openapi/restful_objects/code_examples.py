@@ -246,7 +246,7 @@ session = requests.session()
 session.headers['Authorization'] = f"Bearer {USERNAME} {PASSWORD}"
 session.headers['Accept'] = '{{ endpoint.content_type }}'
 {%- if endpoint.does_redirects %}
-session.max_redirects = 50
+session.max_redirects = 100  # increase if necessary
 {%- endif %}
 {%- set method = request_method | lower %}
 

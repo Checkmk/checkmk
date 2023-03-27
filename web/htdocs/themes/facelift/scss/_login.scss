@@ -49,46 +49,6 @@ body.login {
       height: auto;
     }
 
-    div.trial_expiration_info {
-      margin: 24px 0;
-      padding: 12px 16px;
-      text-align: left;
-      background-color: $bg-color;
-      border-radius: $theme-border-radius;
-
-      span.remaining_days {
-        font-weight: $font-weight-bold;
-        color: $success-dimmed;
-      }
-
-      div.time_bar {
-        div {
-          display: inline-block;
-          height: 4px;
-
-          &.passed {
-            background-color: $navbar-color;
-          }
-
-          &.remaining {
-            background-color: $success-dimmed;
-          }
-        }
-      }
-
-      &.warning {
-        color: $font-color;
-
-        span.remaining_days {
-          color: $trial-expiration-warn-color;
-        }
-
-        div.time_bar div.remaining {
-          background-color: $trial-expiration-warn-color;
-        }
-      }
-    }
-
     table {
       margin: 1.3 * $spacing 0;
       border-spacing: 0;
@@ -157,7 +117,7 @@ body.login {
     }
   }
 
-  div#saml_button {
+  #_saml2_login_button {
     margin-top: 20px;
   }
 

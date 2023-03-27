@@ -102,34 +102,21 @@ def make_confirmed_form_submit_link(
             json.dumps(form_name),
             json.dumps(button_name),
             json.dumps(
-                confirmed_form_submit_options(
-                    title, suffix, message, confirm_button, cancel_button, icon, warning
-                )
+                {
+                    "title": get_confirm_link_title(title, suffix),
+                    "html": escaping.escape_text(message),
+                    "confirmButtonText": confirm_button if confirm_button else _("Delete"),
+                    "cancelButtonText": cancel_button if cancel_button else _("Cancel"),
+                    "icon": "warning" if warning else "question",
+                    "customClass": {
+                        "confirmButton": "confirm_warning" if warning else "confirm_question",
+                        "icon": "confirm_icon"
+                        + (" confirm_warning" if warning else " confirm_question"),
+                    },
+                }
             ),
         )
     )
-
-
-def confirmed_form_submit_options(
-    title: str | None = None,
-    suffix: str | None = None,
-    message: str | None = None,
-    confirm_button: str | None = None,
-    cancel_button: str | None = None,
-    icon: str | None = None,
-    warning: bool = False,
-) -> dict[str, str | dict[str, str]]:
-    return {
-        "title": get_confirm_link_title(title, suffix),
-        "html": escaping.escape_text(message),
-        "confirmButtonText": confirm_button if confirm_button else _("Delete"),
-        "cancelButtonText": cancel_button if cancel_button else _("Cancel"),
-        "icon": "warning" if warning else "question",
-        "customClass": {
-            "confirmButton": "confirm_warning" if warning else "confirm_question",
-            "icon": "confirm_icon" + (" confirm_warning" if warning else " confirm_question"),
-        },
-    }
 
 
 @dataclass

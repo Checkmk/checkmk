@@ -39,6 +39,7 @@ def check_perle_modules_mgt(item, _no_params, info):
 
 
 check_info["perle_modules_mgt"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1966.20"),
     "inventory_function": inventory_perle_modules_mgt,
     "check_function": check_perle_modules_mgt,
     "service_description": "Chassis slot %s MGT",

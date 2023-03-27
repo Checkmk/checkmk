@@ -22,6 +22,7 @@ def check_emc_isilon_diskstatus(item, _no_params, info):
 
 
 check_info["emc_isilon_diskstatus"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "check_function": check_emc_isilon_diskstatus,
     "inventory_function": inventory_emc_isilon_diskstatus,
     "service_description": "Disk bay %s Status",

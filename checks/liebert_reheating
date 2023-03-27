@@ -30,6 +30,7 @@ def check_liebert_reheating(_no_item, params, parsed):
 
 
 check_info["liebert_reheating"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.476.1.42"),
     "parse_function": parse_liebert_wrapper,
     "inventory_function": inventory_liebert_reheating,
     "check_function": check_liebert_reheating,

@@ -30,6 +30,11 @@ def check_artec_documents(_no_item, _no_params, info):
 
 
 check_info["artec_documents"] = {
+    "detect": all_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
+        contains(".1.3.6.1.2.1.1.1.0", "version"),
+        contains(".1.3.6.1.2.1.1.1.0", "serial"),
+    ),
     "inventory_function": inventory_artec_documents,
     "check_function": check_artec_documents,
     "service_description": "Documents",

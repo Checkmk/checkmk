@@ -24,6 +24,7 @@ def check_netextreme_temp(item, params, info):
 
 
 check_info["netextreme_temp"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1916.2"),
     "inventory_function": inventory_netextreme_temp,
     "check_function": check_netextreme_temp,
     "service_description": "Temperature %s",

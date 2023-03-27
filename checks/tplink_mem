@@ -33,6 +33,7 @@ def check_tplink_mem(_no_item, params, info):
 
 
 check_info["tplink_mem"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11863.5"),
     "check_function": check_tplink_mem,
     "inventory_function": inventory_tplink_mem,
     "service_description": "Memory",

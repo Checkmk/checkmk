@@ -28,6 +28,7 @@ def check_dell_idrac_raid(item, _no_params, info):
 
 
 check_info["dell_idrac_raid"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10892.5"),
     "inventory_function": inventory_dell_idrac_raid,
     "check_function": check_dell_idrac_raid,
     "service_description": "Raid Controller %s",

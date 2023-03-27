@@ -34,6 +34,7 @@ def check_fireeye_lic_expiration(item, params, info):
 
 
 check_info["fireeye_lic_expiration"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25597.1"),
     "inventory_function": inventory_fireeye_lic_expiration,
     "check_function": check_fireeye_lic_expiration,
     "service_description": "License Expiration %s",

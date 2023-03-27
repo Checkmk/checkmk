@@ -41,6 +41,7 @@ def check_apc_netbotz_other_sensors(_no_item, _no_params, info):
 
 
 check_info["apc_netbotz_other_sensors"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
     "inventory_function": inventory_apc_netbotz_other_sensors,
     "check_function": check_apc_netbotz_other_sensors,
     "service_description": "Numeric sensors summary",

@@ -22,6 +22,10 @@ def check_barracuda_system_cpu_util(_no_item, params, info):
 
 
 check_info["barracuda_system_cpu_util"] = {
+    "detect": all_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
+        contains(".1.3.6.1.2.1.1.1.0", "barracuda"),
+    ),
     "inventory_function": inventory_barracuda_system_cpu_util,
     "check_function": check_barracuda_system_cpu_util,
     "service_description": "CPU utilization",

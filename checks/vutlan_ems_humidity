@@ -39,6 +39,7 @@ def check_vutlan_ems_humidity(item, params, parsed):
 
 
 check_info["vutlan_ems_humidity"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "vutlan ems"),
     "parse_function": parse_vutlan_ems_humidity,
     "inventory_function": discover_vutlan_ems_humidity,
     "check_function": check_vutlan_ems_humidity,

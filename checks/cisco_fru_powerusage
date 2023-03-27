@@ -72,6 +72,7 @@ def inventory_cisco_fru_powerusage(parsed):
 
 
 check_info["cisco_fru_powerusage"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "cisco"),
     "parse_function": parse_cisco_fru_powerusage,
     "inventory_function": inventory_cisco_fru_powerusage,
     "check_function": check_elphase,

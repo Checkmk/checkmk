@@ -71,6 +71,10 @@ def check_fast_lta_headunit_status(item, _no_params, info):
 
 
 check_info["fast_lta_headunit.status"] = {
+    "detect": all_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
+        any_of(exists(".1.3.6.1.4.1.27417.2.1"), exists(".1.3.6.1.4.1.27417.2.1.0")),
+    ),
     "check_function": check_fast_lta_headunit_status,
     "inventory_function": inventory_fast_lta_headunit_status,
     "service_description": "Fast LTA Headunit Status",
@@ -123,6 +127,10 @@ def check_fast_lta_headunit_replication(item, _no_params, info):
 
 
 check_info["fast_lta_headunit.replication"] = {
+    "detect": all_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
+        any_of(exists(".1.3.6.1.4.1.27417.2.1"), exists(".1.3.6.1.4.1.27417.2.1.0")),
+    ),
     "check_function": check_fast_lta_headunit_replication,
     "inventory_function": inventory_fast_lta_headunit_replication,
     "service_description": "Fast LTA Replication",

@@ -21,6 +21,7 @@ def check_h3c_lanswitch_sensors(item, params, info):
 
 
 check_info["h3c_lanswitch_sensors"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "3com s"),
     "inventory_function": inventory_h3c_lanswitch_sensors,
     "check_function": check_h3c_lanswitch_sensors,
     "service_description": "%s",

@@ -30,6 +30,7 @@ def parse_netextreme_psu_in(info):
 
 
 check_info["netextreme_psu_in"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1916.2"),
     "parse_function": parse_netextreme_psu_in,
     "inventory_function": discover(),
     "check_function": check_elphase,

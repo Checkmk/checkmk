@@ -55,6 +55,11 @@ def check_cisco_asa_conn(item, _no_params, parsed):
 
 
 check_info["cisco_asa_conn"] = {
+    "detect": any_of(
+        startswith(".1.3.6.1.2.1.1.1.0", "cisco adaptive security"),
+        startswith(".1.3.6.1.2.1.1.1.0", "cisco firewall services"),
+        contains(".1.3.6.1.2.1.1.1.0", "cisco pix security"),
+    ),
     "parse_function": parse_cisco_asa_conn,
     "inventory_function": inventory_cisco_asa_conn,
     "check_function": check_cisco_asa_conn,

@@ -23,6 +23,7 @@ def check_avaya_45xx_temp(item, params, info):
 
 
 check_info["avaya_45xx_temp"] = {
+    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.45.3"),
     "check_function": check_avaya_45xx_temp,
     "inventory_function": inventory_avaya_45xx_temp,
     "service_description": "Temperature Chassis %s",

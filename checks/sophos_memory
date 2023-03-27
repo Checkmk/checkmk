@@ -22,6 +22,7 @@ def check_sophos_memory(_item, params, parsed):
 
 
 check_info["sophos_memory"] = {
+    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21067.2"),
     "parse_function": parse_sophos_memory,
     "inventory_function": lambda parsed: [(None, {})] if parsed is not None else None,
     "check_function": check_sophos_memory,

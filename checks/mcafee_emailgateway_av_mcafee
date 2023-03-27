@@ -21,6 +21,7 @@ def check_mcafee_emailgateway_av_mcafee(item, params, info):
 
 
 check_info["mcafee_emailgateway_av_mcafee"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "mcafee email gateway"),
     "inventory_function": inventory_mcafee_gateway_generic,
     "check_function": check_mcafee_emailgateway_av_mcafee,
     "service_description": "AV McAfee",

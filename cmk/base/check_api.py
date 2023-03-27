@@ -67,6 +67,7 @@ from cmk.base.api.agent_based.utils import (  # noqa: F401 # pylint: disable=unu
     not_contains,
     not_equals,
     not_exists,
+    not_matches,
     startswith,
 )
 

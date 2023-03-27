@@ -72,6 +72,7 @@ def check_tcw241_analog(item, params, sensor):
 
 
 check_info["teracom_tcw241_analog"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "Teracom"),
     "parse_function": parse_tcw241_analog,
     "check_function": check_tcw241_analog,
     "inventory_function": discover(),

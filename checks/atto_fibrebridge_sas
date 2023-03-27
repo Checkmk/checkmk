@@ -63,6 +63,7 @@ def check_atto_fibrebridge_sas(item, _no_params, parsed):
 
 
 check_info["atto_fibrebridge_sas"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
     "parse_function": parse_atto_fibrebridge_sas,
     "inventory_function": inventory_atto_fibrebridge_sas,
     "check_function": check_atto_fibrebridge_sas,

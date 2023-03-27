@@ -59,6 +59,7 @@ def check_alcatel_timetra_chassis(item, _no_params, info):
 
 
 check_info["alcatel_timetra_chassis"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "TiMOS"),
     "check_function": check_alcatel_timetra_chassis,
     "inventory_function": inventory_alcatel_timetra_chassis,
     "service_description": "Device %s",

@@ -8,6 +8,9 @@
 from cmk.base.check_legacy_includes.akcp_sensor import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 check_info["akcp_sensor_drycontact"] = {
+    "detect": all_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1"), not_exists(".1.3.6.1.4.1.3854.2.*")
+    ),
     "check_function": check_akcp_sensor_drycontact,
     "inventory_function": inventory_akcp_sensor_no_params,
     "service_description": "Dry Contact %s",

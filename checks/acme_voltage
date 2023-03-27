@@ -71,6 +71,7 @@ def check_acme_voltage(item, params, info):
 
 
 check_info["acme_voltage"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9148"),
     "inventory_function": inventory_acme_voltage,
     "check_function": check_acme_voltage,
     "service_description": "Voltage %s",

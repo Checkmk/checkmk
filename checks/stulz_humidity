@@ -22,6 +22,7 @@ def check_stulz_humidity(item, params, info):
 
 
 check_info["stulz_humidity"] = {
+    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.29462.10"),
     "check_function": check_stulz_humidity,
     "inventory_function": inventory_stulz_humidity,
     "service_description": "Humidity %s ",

@@ -67,6 +67,7 @@ def check_cisco_stackpower(item, params, info):
 
 
 check_info["cisco_stackpower"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.516"),
     "inventory_function": inventory_cisco_stackpower,
     "check_function": check_cisco_stackpower,
     "service_description": "Stackpower Interface %s",

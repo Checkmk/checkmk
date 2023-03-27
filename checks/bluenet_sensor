@@ -51,6 +51,7 @@ def check_bluenet_sensor_temp(item, params, info):
 
 
 check_info["bluenet_sensor"] = {
+    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
     "inventory_function": inventory_bluenet_sensor_temp,
     "check_function": check_bluenet_sensor_temp,
     "service_description": "Temperature %s",

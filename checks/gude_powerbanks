@@ -78,6 +78,10 @@ def inventory_gude_powerbanks(parsed):
 
 
 check_info["gude_powerbanks"] = {
+    "detect": any_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),
+    ),
     "parse_function": parse_gude_powerbanks,
     "inventory_function": inventory_gude_powerbanks,
     "check_function": check_elphase,

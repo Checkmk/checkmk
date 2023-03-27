@@ -24,6 +24,7 @@ def check_climaveneta_fan(item, params, info):
 
 
 check_info["climaveneta_fan"] = {
+    "detect": equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
     "check_function": check_climaveneta_fan,
     "inventory_function": inventory_climaveneta_fan,
     "service_description": "Fan %s",

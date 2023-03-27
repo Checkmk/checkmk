@@ -47,6 +47,7 @@ def check_kentix_motion(item, params, info):
 
 
 check_info["kentix_motion"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.332.11.6"),
     "inventory_function": inventory_kentix_motion,
     "check_function": check_kentix_motion,
     "service_description": "Motion Detector %s",

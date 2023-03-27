@@ -143,6 +143,7 @@ def check_security_master(item, _no_params, parsed):
 
 
 check_info["security_master"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.35491"),
     "parse_function": parse_security_master,
     "check_function": check_security_master,
     "inventory_function": lambda parsed: inventory_security_master_sensors(parsed, "smoke"),

@@ -34,6 +34,12 @@ def check_fortigate_sensors(item, params, info):
 
 
 check_info["fortigate_sensors"] = {
+    "detect": any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.1000"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.5004"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.5006"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.10004"),
+    ),
     "inventory_function": inventory_fortigate_sensors,
     "check_function": check_fortigate_sensors,
     "service_description": "Sensor Summary",

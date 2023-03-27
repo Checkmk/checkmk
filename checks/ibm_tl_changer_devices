@@ -27,6 +27,7 @@ def check_ibm_tl_changer_devices(item, params, info):
 
 
 check_info["ibm_tl_changer_devices"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
     "inventory_function": inventory_ibm_tl_changer_devices,
     "check_function": check_ibm_tl_changer_devices,
     "service_description": "Changer device %s",

@@ -37,6 +37,7 @@ def check_emc_isilon_clusterhealth(item, _no_params, info):
 
 
 check_info["emc_isilon.clusterhealth"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "check_function": check_emc_isilon_clusterhealth,
     "inventory_function": inventory_emc_isilon_clusterhealth,
     "service_description": "Cluster Health",
@@ -67,6 +68,7 @@ def check_emc_isilon_nodehealth(item, _no_params, info):
 
 
 check_info["emc_isilon.nodehealth"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "check_function": check_emc_isilon_nodehealth,
     "inventory_function": inventory_emc_isilon_nodehealth,
     "service_description": "Node Health",
@@ -92,6 +94,7 @@ def check_emc_isilon_nodes(item, _no_params, info):
 
 
 check_info["emc_isilon.nodes"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "check_function": check_emc_isilon_nodes,
     "inventory_function": inventory_emc_isilon_nodes,
     "service_description": "Nodes",
@@ -112,6 +115,7 @@ def check_emc_isilon_names(item, _no_params, info):
 
 
 check_info["emc_isilon.names"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "check_function": check_emc_isilon_names,
     "inventory_function": inventory_emc_isilon_names,
     "service_description": "Isilon Info",

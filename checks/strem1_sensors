@@ -61,6 +61,7 @@ def check_strem1_sensors(item, params, info):
 
 
 check_info["strem1_sensors"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "Sensatronics EM1"),
     "check_function": check_strem1_sensors,
     "inventory_function": inventory_strem1_sensors,
     "service_description": "Sensor - %s",

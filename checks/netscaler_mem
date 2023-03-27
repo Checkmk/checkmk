@@ -36,6 +36,7 @@ def check_netscaler_mem(_no_item, params, info):
 
 
 check_info["netscaler_mem"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5951.1"),
     "check_function": check_netscaler_mem,
     "inventory_function": inventory_netscaler_mem,
     "service_description": "Memory",

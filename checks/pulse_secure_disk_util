@@ -25,6 +25,7 @@ def check_pulse_secure_disk_util(item, params, parsed):
 
 
 check_info["pulse_secure_disk_util"] = {
+    "detect": pulse_secure.DETECT_PULSE_SECURE,
     "parse_function": lambda info: pulse_secure.parse_pulse_secure(info, METRIC_PULSE_SECURE_DISK),
     "inventory_function": discover_single,
     "check_function": check_pulse_secure_disk_util,

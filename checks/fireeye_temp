@@ -39,6 +39,7 @@ def check_fireeye_temp(item, params, info):
 
 
 check_info["fireeye_temp"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25597.1"),
     "inventory_function": inventory_fireeye_temp,
     "check_function": check_fireeye_temp,
     "service_description": "Temperature %s",

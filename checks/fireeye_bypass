@@ -26,6 +26,7 @@ def check_fireeye_bypass(_no_item, params, info):
 
 
 check_info["fireeye_bypass"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25597.1"),
     "inventory_function": inventory_bypass,
     "check_function": check_fireeye_bypass,
     "service_description": "Bypass Mail Rate",

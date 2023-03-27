@@ -36,6 +36,7 @@ def check_acme_realm(item, params, info):
 
 
 check_info["acme_realm"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9148"),
     "inventory_function": inventory_acme_realm,
     "check_function": check_acme_realm,
     "service_description": "Realm %s",

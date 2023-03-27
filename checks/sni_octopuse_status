@@ -35,6 +35,7 @@ def check_octopus_status(_no_item, _no_params_info, info):
 
 
 check_info["sni_octopuse_status"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "agent for hipath"),
     "check_function": check_octopus_status,
     "inventory_function": inventory_octopus_status,
     "service_description": "Global status",

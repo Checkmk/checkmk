@@ -28,6 +28,10 @@ def check_qlogic_sanbox_fabric_element(item, _no_params, info):
 
 
 check_info["qlogic_sanbox_fabric_element"] = {
+    "detect": any_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.14"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.8"),
+    ),
     "check_function": check_qlogic_sanbox_fabric_element,
     "inventory_function": inventory_qlogic_sanbox_fabric_element,
     "service_description": "Fabric Element %s",

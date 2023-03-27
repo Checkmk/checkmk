@@ -7,6 +7,7 @@
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
 
 factory_settings["checkpoint_temp_default_levels"] = {"levels": (50.0, 60.0)}
 
@@ -41,6 +42,7 @@ def check_checkpoint_temp(item, params, info):
 
 
 check_info["checkpoint_temp"] = {
+    "detect": DETECT,
     "check_function": check_checkpoint_temp,
     "inventory_function": inventory_checkpoint_temp,
     "service_description": "Temperature %s",

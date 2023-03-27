@@ -30,6 +30,10 @@ def check_mbg_lantime_ng_state(_no_item, params, info):
 
 
 check_info["mbg_lantime_ng_state"] = {
+    "detect": any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.30"),
+    ),
     "check_function": check_mbg_lantime_ng_state,
     "inventory_function": inventory_mbg_lantime_ng_state,
     "service_description": "LANTIME State",

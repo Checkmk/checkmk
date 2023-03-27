@@ -8,6 +8,7 @@
 from cmk.base.check_legacy_includes.perle import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 check_info["perle_modules_cm1000"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1966.20"),
     "inventory_function": inventory_perle_cm_modules,
     "check_function": check_perle_cm_modules,
     "service_description": "Chassis slot %s CM1000",

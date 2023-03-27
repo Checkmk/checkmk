@@ -130,6 +130,10 @@ def check_wagner_titanus_topsense_info(item, _no_params, info):
 
 
 check_info["wagner_titanus_topsense.info"] = {
+    "detect": any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
+    ),
     "check_function": check_wagner_titanus_topsense_info,
     "inventory_function": inventory_wagner_titanus_topsense_info,
     "service_description": "Topsense Info",
@@ -166,6 +170,10 @@ def check_wagner_titanus_topsense_overall_status(item, _no_params, info):
 
 
 check_info["wagner_titanus_topsense.overall_status"] = {
+    "detect": any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
+    ),
     "check_function": check_wagner_titanus_topsense_overall_status,
     "inventory_function": inventory_wagner_titanus_topsense_overall_status,
     "service_description": "Overall Status",
@@ -217,6 +225,10 @@ def check_wagner_titanus_topsense_alarm(item, _no_params, info):
 
 
 check_info["wagner_titanus_topsense.alarm"] = {
+    "detect": any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
+    ),
     "check_function": check_wagner_titanus_topsense_alarm,
     "inventory_function": inventory_wagner_titanus_topsense_alarm,
     "service_description": "Alarm Detector %s",
@@ -260,6 +272,10 @@ def check_wagner_titanus_topsense_smoke(item, _no_params, info):
 
 
 check_info["wagner_titanus_topsense.smoke"] = {
+    "detect": any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
+    ),
     "check_function": check_wagner_titanus_topsense_smoke,
     "inventory_function": inventory_wagner_titanus_topsense_smoke,
     "service_description": "Smoke Detector %s",
@@ -297,6 +313,10 @@ def check_wagner_titanus_topsense_chamber_deviation(item, _no_params, info):
 
 
 check_info["wagner_titanus_topsense.chamber_deviation"] = {
+    "detect": any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
+    ),
     "check_function": check_wagner_titanus_topsense_chamber_deviation,
     "inventory_function": inventory_wagner_titanus_topsense_chamber_deviation,
     "service_description": "Chamber Deviation Detector %s",
@@ -346,6 +366,10 @@ def check_wagner_titanus_topsense_airflow_deviation(item, params, info):
 
 
 check_info["wagner_titanus_topsense.airflow_deviation"] = {
+    "detect": any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
+    ),
     "check_function": check_wagner_titanus_topsense_airflow_deviation,
     "inventory_function": inventory_wagner_titanus_topsense_airflow_deviation,
     "service_description": "Airflow Deviation Detector %s",
@@ -389,6 +413,10 @@ def check_wagner_titanus_topsense_temp(item, params, info):
 
 
 check_info["wagner_titanus_topsense.temp"] = {
+    "detect": any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
+    ),
     "check_function": check_wagner_titanus_topsense_temp,
     "default_levels_variable": "wagner_titanus_topsense_temperature_default_values",
     "inventory_function": inventory_wagner_titanus_topsense_temp,

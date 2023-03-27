@@ -33,6 +33,7 @@ def check_emc_datadomain_fans(item, _no_params, info):
 
 
 check_info["emc_datadomain_fans"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.1.0", "Data Domain OS"),
     "check_function": check_emc_datadomain_fans,
     "inventory_function": inventory_emc_datadomain_fans,
     "service_description": "FAN %s",

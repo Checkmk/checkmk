@@ -39,6 +39,7 @@ def check_mcafee_webgateway(_no_item, params, parsed):
 
 
 check_info["mcafee_webgateway"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "mcafee web gateway"),
     "parse_function": parse_mcaffee_webgateway,
     "inventory_function": inventory_mcafee_gateway_generic,
     "check_function": check_mcafee_webgateway,

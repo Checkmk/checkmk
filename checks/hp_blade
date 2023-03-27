@@ -39,6 +39,7 @@ def check_hp_blade_general(item, params, info):
 
 
 check_info["hp_blade"] = {
+    "detect": contains(".1.3.6.1.2.1.1.2.0", ".11.5.7.1.2"),
     "check_function": check_hp_blade_general,
     "inventory_function": inventory_hp_blade_general,
     "service_description": "General Status",

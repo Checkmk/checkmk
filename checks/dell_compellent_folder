@@ -28,6 +28,9 @@ def check_dell_compellent_folder(item, params, info):
 
 
 check_info["dell_compellent_folder"] = {
+    "detect": all_of(
+        exists(".1.3.6.1.4.1.674.*"), exists(".1.3.6.1.4.1.674.11000.2000.500.1.2.1.0")
+    ),
     "inventory_function": inventory_dell_compellent_folder,
     "check_function": check_dell_compellent_folder,
     "service_description": "Folder %s",

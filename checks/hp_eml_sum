@@ -35,6 +35,7 @@ def check_hp_eml_sum(_no_item, _no_param, info):
 
 
 check_info["hp_eml_sum"] = {
+    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11.10.2.1.3.20"),
     "check_function": check_hp_eml_sum,
     "inventory_function": inventory_hp_eml_sum,
     "service_description": "Summary Status",

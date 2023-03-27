@@ -32,6 +32,7 @@ def check_pulse_secure_mem(item, params, parsed):
 
 
 check_info["pulse_secure_mem_util"] = {
+    "detect": pulse_secure.DETECT_PULSE_SECURE,
     "parse_function": lambda info: pulse_secure.parse_pulse_secure(
         info,
         *METRICS_INFO_NAMES_PULSE_SECURE_MEM[0],

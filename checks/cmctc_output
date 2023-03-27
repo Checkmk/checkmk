@@ -185,6 +185,7 @@ def check_cmctc_output(item, params, parsed):
 
 
 check_info["cmctc_output"] = {
+    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2606.4"),
     "parse_function": parse_cmctc_output,
     "inventory_function": inventory_cmctc_output,
     "check_function": check_cmctc_output,

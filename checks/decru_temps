@@ -25,6 +25,7 @@ def check_decru_temps(item, params, info):
 
 
 check_info["decru_temps"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "datafort"),
     "check_function": check_decru_temps,
     "inventory_function": inventory_decru_temps,
     "service_description": "Temperature %s",

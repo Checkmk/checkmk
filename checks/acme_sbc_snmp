@@ -59,6 +59,7 @@ def check_acme_sbc_snmp(_no_item, params, info):
 
 
 check_info["acme_sbc_snmp"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9148"),
     "inventory_function": inventory_acme_sbc_snmp,
     "check_function": check_acme_sbc_snmp,
     "service_description": "ACME SBC health",

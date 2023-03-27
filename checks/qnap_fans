@@ -28,6 +28,9 @@ def check_qnap_fans(_item, params, data):
 
 
 check_info["qnap_fans"] = {
+    "detect": any_of(
+        startswith(".1.3.6.1.2.1.1.1.0", "Linux TS-"), startswith(".1.3.6.1.2.1.1.1.0", "NAS Q")
+    ),
     "inventory_function": discover(),
     "parse_function": parse_qnap_fans,
     "check_function": check_qnap_fans,

@@ -26,6 +26,9 @@ def check_dell_compellent_enclosure(item, _no_params, info):
 
 
 check_info["dell_compellent_enclosure"] = {
+    "detect": all_of(
+        exists(".1.3.6.1.4.1.674.*"), exists(".1.3.6.1.4.1.674.11000.2000.500.1.2.1.0")
+    ),
     "inventory_function": dell_compellent.discover,
     "check_function": check_dell_compellent_enclosure,
     "service_description": "Enclosure %s",

@@ -8,6 +8,11 @@
 from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 check_info["hp_proliant_fans"] = {
+    "detect": any_of(
+        contains(".1.3.6.1.4.1.232.2.2.4.2.0", "proliant"),
+        contains(".1.3.6.1.4.1.232.2.2.4.2.0", "storeeasy"),
+        contains(".1.3.6.1.4.1.232.2.2.4.2.0", "synergy"),
+    ),
     "check_function": check_hp_proliant_fans,
     "inventory_function": inventory_hp_proliant_fans,
     "service_description": "HW FAN%s",

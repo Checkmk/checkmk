@@ -59,6 +59,10 @@ def check_mbg_lantime_ng_fan(item, _no_params, parsed):
 
 
 check_info["mbg_lantime_ng_fan"] = {
+    "detect": any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.30"),
+    ),
     "check_function": check_mbg_lantime_ng_fan,
     "parse_function": parse_mbg_lantime_ng_fan,
     "inventory_function": discover(lambda k, value: value["status"]["name"] != "not available"),

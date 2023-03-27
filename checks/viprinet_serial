@@ -15,6 +15,7 @@ def check_viprinet_serial(_no_item, _no_params, info):
 
 
 check_info["viprinet_serial"] = {
+    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.35424"),
     "check_function": check_viprinet_serial,
     "inventory_function": inventory_viprinet_serial,
     "service_description": "Serial Number",

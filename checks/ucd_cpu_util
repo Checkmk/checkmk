@@ -10,6 +10,7 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 
 #    UCD-SNMP-MIB::ssCpuRawUser.0 = Counter32: 219998591
 #    UCD-SNMP-MIB::ssCpuRawNice.0 = Counter32: 0
@@ -94,6 +95,7 @@ def check_ucd_cpu_util(item, params, parsed):
 
 
 check_info["ucd_cpu_util"] = {
+    "detect": ucd_hr_detection.PREFER_HR_ELSE_UCD,
     "parse_function": parse_ucd_cpu_util,
     "inventory_function": inventory_ucd_cpu_util,
     "check_function": check_ucd_cpu_util,

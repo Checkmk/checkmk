@@ -19,6 +19,7 @@ def check_bluecoat_diskcpu(item, _no_params, info):
 
 
 check_info["bluecoat_diskcpu"] = {
+    "detect": contains(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.3417.1.1"),
     "check_function": check_bluecoat_diskcpu,
     "inventory_function": inventory_bluecoat_diskcpu,
     "service_description": "%s",

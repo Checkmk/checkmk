@@ -10,6 +10,7 @@ from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-imp
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
@@ -70,6 +71,7 @@ def check_ucd_mem(item, params, parsed):
 
 # This check plugin uses the migrated section in cmk/base/plugins/agent_based/ucd_mem.py!
 check_info["ucd_mem"] = {
+    "detect": ucd_hr_detection.USE_UCD_MEM,
     "parse_function": parse_ucd_mem,
     "inventory_function": inventory_ucd_mem,
     "check_function": check_ucd_mem,

@@ -26,6 +26,7 @@ def check_fireeye_sys_image(_no_item, _no_params, info):
 
 
 check_info["fireeye_sys_image"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25597.1"),
     "inventory_function": lambda info: inventory_fireeye_generic(info, False),
     "check_function": check_fireeye_sys_image,
     "service_description": "System image",

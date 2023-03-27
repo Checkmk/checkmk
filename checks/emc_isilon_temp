@@ -56,6 +56,7 @@ factory_settings["emc_isilon_temp_default_levels"] = {
 }
 
 check_info["emc_isilon_temp"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "inventory_function": lambda info: inventory_isilon_temp(info, is_cpu=False),
     "check_function": check_isilon_temp,
     "service_description": "Temperature %s",

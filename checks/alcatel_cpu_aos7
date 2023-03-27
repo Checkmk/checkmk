@@ -8,6 +8,7 @@
 from cmk.base.check_legacy_includes.alcatel import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 check_info["alcatel_cpu_aos7"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6486.801"),
     "check_function": check_alcatel_cpu,
     "inventory_function": inventory_alcatel_cpu,
     "service_description": "CPU utilization",

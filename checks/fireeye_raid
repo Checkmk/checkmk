@@ -49,6 +49,7 @@ def check_fireeye_raid(_no_item, _no_params, parsed):
 
 
 check_info["fireeye_raid"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25597.1"),
     "parse_function": parse_fireeye_raid,
     "inventory_function": lambda parsed: inventory_fireeye_generic(parsed.get("raid", []), False),
     "check_function": check_fireeye_raid,

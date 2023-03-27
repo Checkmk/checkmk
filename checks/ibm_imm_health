@@ -36,6 +36,9 @@ def check_ibm_imm_health(_no_item, _no_params, info):
 
 
 check_info["ibm_imm_health"] = {
+    "detect": any_of(
+        endswith(".1.3.6.1.2.1.1.1.0", " mips"), endswith(".1.3.6.1.2.1.1.1.0", " sh4a")
+    ),
     "check_function": check_ibm_imm_health,
     "inventory_function": inventory_ibm_imm_health,
     "service_description": "System health",

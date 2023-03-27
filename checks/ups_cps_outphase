@@ -27,6 +27,7 @@ def inventory_ups_cps_outphase(parsed):
 
 
 check_info["ups_cps_outphase"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3808.1.1.1"),
     "parse_function": parse_ups_cps_outphase,
     "inventory_function": inventory_ups_cps_outphase,
     "check_function": check_elphase,

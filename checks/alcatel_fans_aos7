@@ -8,6 +8,7 @@
 from cmk.base.check_legacy_includes.alcatel import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 check_info["alcatel_fans_aos7"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6486.801"),
     "check_function": check_alcatel_fans,
     "inventory_function": inventory_alcatel_fans,
     "service_description": "Fan %s",

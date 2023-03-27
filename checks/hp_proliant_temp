@@ -12,6 +12,11 @@ from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wild
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 check_info["hp_proliant_temp"] = {
+    "detect": any_of(
+        contains(".1.3.6.1.4.1.232.2.2.4.2.0", "proliant"),
+        contains(".1.3.6.1.4.1.232.2.2.4.2.0", "storeeasy"),
+        contains(".1.3.6.1.4.1.232.2.2.4.2.0", "synergy"),
+    ),
     "check_function": check_hp_proliant_temp,
     "inventory_function": inventory_hp_proliant_temp,
     "service_description": "Temperature %s",

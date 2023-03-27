@@ -14,6 +14,10 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # Note: this check is obsolete, please use cmciii.temp_in_out instead
 
 check_info["cmciii_lcp_airout"] = {
+    "detect": all_of(
+        startswith(".1.3.6.1.2.1.1.1.0", "Rittal LCP"),
+        startswith(".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6", "Air.Temperature.DescName"),
+    ),
     "check_function": check_cmciii_lcp_fanunit,
     "inventory_function": lambda info: inventory_cmciii_lcp_fanunit("Air", "Out", info),
     "service_description": "Temperature %s",

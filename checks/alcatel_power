@@ -66,6 +66,7 @@ def check_alcatel_power(item, _no_params, device):
 
 
 check_info["alcatel_power"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6486.800"),
     "parse_function": parse_alcatel_power,
     "check_function": check_alcatel_power,
     "inventory_function": inventory_alcatel_power,

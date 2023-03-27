@@ -264,6 +264,7 @@ def check_icom_repeater(_no_item, _no_params, parsed):
 
 
 check_info["icom_repeater"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "fr5000"),
     "parse_function": parse_icom_repeater,
     "inventory_function": inventory_icom_repeater,
     "check_function": check_icom_repeater,

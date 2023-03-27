@@ -82,6 +82,7 @@ def check_mcafee_emailgateway_entities(item, params, parsed):
 
 
 check_info["mcafee_emailgateway_entities"] = {
+    "detect": contains(".1.3.6.1.2.1.1.1.0", "mcafee email gateway"),
     "parse_function": parse_mcafee_emailgateway_entities,
     "inventory_function": inventory_mcafee_emailgateway_entities,
     "check_function": check_mcafee_emailgateway_entities,

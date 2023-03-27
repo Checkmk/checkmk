@@ -30,6 +30,10 @@ def check_enterasys_temp(item, params, info):
 
 
 check_info["enterasys_temp"] = {
+    "detect": any_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5624.2.1"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5624.2.2"),
+    ),
     "check_function": check_enterasys_temp,
     "inventory_function": inventory_enterasys_temp,
     "default_levels_variable": "enterasys_temp_default_levels",

@@ -13,6 +13,9 @@ from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcar
 # ["Humdity1 Description", "0",    "0",    "2"]
 
 check_info["akcp_sensor_humidity"] = {
+    "detect": all_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1"), not_exists(".1.3.6.1.4.1.3854.2.*")
+    ),
     "check_function": check_akcp_humidity,
     "inventory_function": inventory_akcp_humidity,
     "service_description": "Humidity %s",

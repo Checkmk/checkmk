@@ -69,6 +69,7 @@ def check_ups_socomec_capacity(item, params, info):
 
 
 check_info["ups_socomec_capacity"] = {
+    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4555.1.1.1"),
     "check_function": check_ups_socomec_capacity,
     "inventory_function": inventory_ups_socomec_capacity,
     "default_levels_variable": "ups_capacity_default_levels",

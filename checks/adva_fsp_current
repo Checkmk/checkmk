@@ -42,6 +42,7 @@ def check_adva_fsp_current(item, _no_params, info):
 
 
 check_info["adva_fsp_current"] = {
+    "detect": equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
     "inventory_function": inventory_adva_fsp_current,
     "check_function": check_adva_fsp_current,
     "service_description": "Power Supply %s",

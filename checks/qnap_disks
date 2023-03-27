@@ -33,6 +33,9 @@ def check_qnap_disks(item, _no_params, info):
 
 
 check_info["qnap_disks"] = {
+    "detect": any_of(
+        startswith(".1.3.6.1.2.1.1.1.0", "Linux TS-"), startswith(".1.3.6.1.2.1.1.1.0", "NAS Q")
+    ),
     "check_function": check_qnap_disks,
     "inventory_function": inventory_qnap_disks,
     "service_description": "Disk %s",

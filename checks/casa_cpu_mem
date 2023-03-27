@@ -42,6 +42,7 @@ def check_casa_cpu_mem(item, params, data):
 
 
 check_info["casa_cpu_mem"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20858.2."),
     "parse_function": parse_casa_cpu_mem,
     "inventory_function": inventory_casa_cpu_mem,
     "check_function": check_casa_cpu_mem,

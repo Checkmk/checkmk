@@ -6,6 +6,7 @@
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
 
 
 def inventory_checkpoint_svn_status(info):
@@ -25,6 +26,7 @@ def check_checkpoint_svn_status(item, params, info):
 
 
 check_info["checkpoint_svn_status"] = {
+    "detect": DETECT,
     "check_function": check_checkpoint_svn_status,
     "inventory_function": inventory_checkpoint_svn_status,
     "service_description": "SVN Status",

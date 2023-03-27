@@ -15,6 +15,10 @@ fortigate_cpu_base_default_levels = {"util": (80.0, 90.0)}
 
 
 check_info["fortigate_cpu_base"] = {
+    "detect": all_of(
+        contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
+        exists(".1.3.6.1.4.1.12356.101.4.1.3.0"),
+    ),
     "inventory_function": inventory_fortigate_cpu,
     "check_function": check_fortigate_cpu,
     "service_description": "CPU utilization",

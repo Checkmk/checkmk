@@ -40,6 +40,11 @@ def check_domino_mailqueues(_item, params, data):
 
 
 check_info["domino_mailqueues"] = {
+    "detect": any_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.1.10"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
+    ),
     "parse_function": parse_domino_mailqueues,
     "inventory_function": discover(),
     "check_function": check_domino_mailqueues,

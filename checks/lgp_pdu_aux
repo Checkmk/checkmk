@@ -162,6 +162,7 @@ def check_lgp_pdu_aux(item, params, info):
 
 
 check_info["lgp_pdu_aux"] = {
+    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.476.1.42"),
     "check_function": check_lgp_pdu_aux,
     "inventory_function": inventory_lgp_pdu_aux,
     "service_description": "Liebert PDU AUX %s",

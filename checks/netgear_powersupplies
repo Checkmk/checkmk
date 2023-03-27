@@ -35,6 +35,7 @@ def check_netgear_powersupplies(item, params, parsed):
 
 
 check_info["netgear_powersupplies"] = {
+    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4526.100"),
     "parse_function": parse_netgear_powersupplies,
     "inventory_function": inventory_netgear_powersupplies,
     "check_function": check_netgear_powersupplies,

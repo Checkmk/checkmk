@@ -62,7 +62,9 @@ def main() {
             "",
         ]);
 
-    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, distro_key);
+    // Build all distros in case we're building from a git tag aka release
+    def edition = (VERSION == "daily") ? EDITION : "enterprise";
+    def distros = versioning.configured_or_overridden_distros(edition, OVERRIDE_DISTROS, distro_key);
 
     def deploy_to_website = (
         !params.SKIP_DEPLOY_TO_WEBSITE &&
@@ -324,9 +326,9 @@ def main() {
                 assert_no_dirty_files(checkout_dir);
                 artifacts_helper.download_version_dir(
                     upload_path,
-                    INTERNAL_DEPLOY_PORT, cmk_version, "${WORKSPACE}/versions/${cmk_version}")
+                    INTERNAL_DEPLOY_PORT, cmk_version_rc_aware, "${WORKSPACE}/versions/${cmk_version_rc_aware}")
                 artifacts_helper.upload_version_dir(
-                    "${WORKSPACE}/versions/${cmk_version}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT);
+                    "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT);
                 if (deploy_to_website) {
                     artifacts_helper.deploy_to_website(cmk_version_rc_aware);
                 }

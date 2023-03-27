@@ -1441,11 +1441,13 @@ class ModeBIEditRule(ABCBIMode):
 class BIRuleForm(Dictionary):
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
+        html.javascript("new cmk.bi.BIRulePreview('#form_birule', '%s')" % varprefix)
 
 
 class BIAggregationForm(Dictionary):
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
+        html.javascript("new cmk.bi.BIAggregationPreview('#form_biaggr', '%s')" % varprefix)
 
 
 @page_registry.register_page("ajax_bi_rule_preview")

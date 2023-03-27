@@ -473,7 +473,10 @@ def _parameter_valuespec_logwatch_ec() -> Alternative:
                     ),
                 ],
                 optional_keys=[
+                    "method",
+                    "facility",
                     "restrict_logfiles",
+                    "monitor_logfilelist",
                     "expected_logfiles",
                     "logwatch_reclassify",
                     "separate_checks",

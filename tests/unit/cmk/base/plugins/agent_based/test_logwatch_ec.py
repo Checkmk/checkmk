@@ -175,7 +175,7 @@ def test_check_logwatch_ec_common_single_node() -> None:
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            {},
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(INFO1),
             },
@@ -192,7 +192,7 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
     assert not list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            {},
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(INFO2),
             },
@@ -206,7 +206,7 @@ def test_check_logwatch_ec_common_multiple_nodes() -> None:
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            {},
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(INFO1),
                 "node2": parse_logwatch(INFO1),
@@ -224,7 +224,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
     assert not list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            {},
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(INFO2),
                 "node2": parse_logwatch(INFO2),
@@ -239,7 +239,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            {},
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(INFO1),
                 "node2": parse_logwatch(INFO2),
@@ -260,6 +260,7 @@ def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None
         logwatch_ec.check_logwatch_ec_common(
             "log1",
             {
+                **logwatch_ec.CHECK_DEFAULT_PARAMETERS,
                 "method": "spool:",
             },
             {

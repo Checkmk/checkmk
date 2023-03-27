@@ -37,6 +37,8 @@ class StoredWalkSNMPBackend(SNMPBackend):
         self.path: Final = (
             path if path is not None else Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
         )
+        if not self.path.exists():
+            raise MKSNMPError(f"No snmpwalk file {self.path}")
 
     def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
         walk = self.walk(oid)

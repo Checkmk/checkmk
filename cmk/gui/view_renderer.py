@@ -638,7 +638,7 @@ class GUIViewRenderer(ABCViewRenderer):
         # TODO
         # menu.add_doc_reference(title=_("Host administration"), doc_ref=DocReference.WATO_HOSTS)
         # menu.add_youtube_reference(title=_("Episode 4: Monitoring Windows in Checkmk"),
-        #                           youtube_id="Nxiq7Jb9mB4")
+        #                           youtube_ref=YouTubeReference.MONITORING_WINDOWS)
         pass
 
 

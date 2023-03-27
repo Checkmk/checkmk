@@ -63,6 +63,7 @@ from cmk.gui.utils.urls import (
     makeactionuri,
     makeuri,
     makeuri_contextless,
+    YouTubeReference,
 )
 from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
 from cmk.gui.watolib.agent_registration import remove_tls_registration
@@ -208,10 +209,11 @@ class ModeFolder(WatoMode):
 
         menu.add_youtube_reference(
             title=_("Episode 1: Installing Checkmk and monitoring your first host"),
-            youtube_id="opO-SOgOJ1I",
+            youtube_ref=YouTubeReference.INSTALLING_CHECKMK,
         )
         menu.add_youtube_reference(
-            title=_("Episode 4: Monitoring Windows in Checkmk"), youtube_id="Nxiq7Jb9mB4"
+            title=_("Episode 4: Monitoring Windows in Checkmk"),
+            youtube_ref=YouTubeReference.MONITORING_WINDOWS,
         )
 
     def _search_folder_page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

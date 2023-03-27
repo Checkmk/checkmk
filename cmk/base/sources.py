@@ -15,7 +15,7 @@ from typing import assert_never, Final
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import HostAddress, HostAgentConnectionMode, HostName, SectionName
 
-from cmk.snmplib.type_defs import SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPRawDataSection
 
 from cmk.fetchers import FetcherType, SNMPFetcher
 from cmk.fetchers.cache import SectionStore
@@ -196,26 +196,35 @@ class _Builder:
     def _initialize_snmp_based(self) -> None:
         if not self.config_cache.is_snmp_host(self.host_name):
             return
-        if self.simulation_mode:
-            # Instead of a global "simulation mode" boolean, we should really have
-            # a special agent that takes canned data similar to the "create random
-            # monitoring data" one.
+
+        self._initialize_snmp_plugin_store()
+
+        if (
+            self.simulation_mode
+            or self.config_cache.get_snmp_backend(self.host_name) is SNMPBackendEnum.STORED_WALK
+        ):
+            # Here, we bypass NO_IP and silently set the IP to localhost.  This is to accomodate
+            # our file-based simulation modes.  However, NO_IP should really be treated as a
+            # configuration error with SNMP.  We should try to find a better solution in the future.
             self._add(
                 SNMPSource(
                     self.config_cache,
                     self.host_name,
-                    "127.0.0.1",
+                    self.ipaddress or "127.0.0.1",
                     max_age=self.max_age_snmp,
                     on_scan_error=self.on_scan_error,
                     selected_sections=self.selected_sections,
                 )
             )
+            return
+
         if self.address_family is AddressFamily.NO_IP:
             return
+
         if self.ipaddress is None:
             self._add(MissingIPSource(self.host_name, self.ipaddress, "snmp"))
             return
-        self._initialize_snmp_plugin_store()
+
         self._add(
             SNMPSource(
                 self.config_cache,

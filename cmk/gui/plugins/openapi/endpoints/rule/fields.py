@@ -820,7 +820,7 @@ class InputRuleObject(base.BaseSchema):
 
     ruleset = fields.String(
         description="Name of rule set.",
-        example="host_config",
+        example="checkgroup_parameters:ups_test",
         required=True,
     )
     folder = gui_fields.FolderField(required=True, example="~router")

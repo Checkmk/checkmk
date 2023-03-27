@@ -1,4 +1,4 @@
-Title: elasticsearch_nodes: Check plugin didn't consider ruleset
+Title: elasticsearch_nodes: Check plugin didn't consider the values from `Expected cpu usage` ruleset
 Class: fix
 Compatible: compat
 Component: checks
@@ -10,4 +10,4 @@ Version: 2.3.0b1
 
 The parameter name in the WATO ruleset and in the check plugin were different.
 Because of that the check plugin didn't consider the values from the ruleset.
-This has now been fixed and the check plugin now considers the ruleset values.
+This has now been fixed and the check plugin now considers the values from the `Expected cpu usage` ruleset.

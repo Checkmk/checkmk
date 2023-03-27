@@ -7,14 +7,11 @@ from __future__ import annotations
 import contextlib
 import http.client
 from collections.abc import Iterator
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.cee.licensing.constants import TRIAL_LENGTH
 from cmk.utils.crypto.password import Password
-from cmk.utils.licensing.handler import LicenseStateError
-from cmk.utils.licensing.registry import get_remaining_trial_time
 from cmk.utils.site import omd_site, url_prefix
 from cmk.utils.type_defs import UserId
 
@@ -241,11 +238,6 @@ class LoginPage(Page):
         )
         html.close_a()
 
-        try:
-            _show_remaining_trial_time(get_remaining_trial_time())
-        except LicenseStateError:
-            pass
-
         html.begin_form("login", method="POST", add_transid=False, action="login.py")
         html.hidden_field("_login", "1")
         html.hidden_field("_origtarget", origtarget)
@@ -332,30 +324,6 @@ class LoginPage(Page):
         html.close_div()
 
         html.footer()
-
-
-def _show_remaining_trial_time(remaining_trial_time: timedelta) -> None:
-    remaining_days: int = remaining_trial_time.days
-    remaining_percentage: float = remaining_days / TRIAL_LENGTH * 100
-
-    html.open_div(class_="trial_expiration_info" + (" warning" if remaining_days < 8 else ""))
-    html.span(_("%d days") % remaining_days, class_="remaining_days")
-    html.span(_(" left in your free trial"))
-
-    html.open_div(class_="time_bar")
-    html.div(
-        "",
-        class_="passed",
-        style="width: %d%%;" % (100 - remaining_percentage),
-    )
-    html.div(
-        "",
-        class_="remaining",
-        style="width: %d%%;" % remaining_percentage,
-    )
-    html.close_div()
-
-    html.close_div()
 
 
 @page_registry.register_page("logout")

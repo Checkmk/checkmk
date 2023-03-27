@@ -201,7 +201,7 @@ def test_check_logwatch_ec_common_single_node() -> None:
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            {},
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
             },
@@ -220,7 +220,7 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
     assert not list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            {},
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
@@ -278,7 +278,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
         list(
             logwatch_ec.check_logwatch_ec_common(
                 "log1",
-                {},
+                logwatch_ec.CHECK_DEFAULT_PARAMETERS,
                 cluster_section,
                 service_level=10,
                 value_store={},
@@ -347,7 +347,7 @@ def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
         list(
             logwatch_ec.check_logwatch_ec_common(
                 None,
-                {},
+                logwatch_ec.CHECK_DEFAULT_PARAMETERS,
                 cluster_section,
                 service_level=10,
                 value_store={},
@@ -363,7 +363,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
     assert not list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            {},
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
@@ -380,7 +380,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            {},
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
@@ -402,6 +402,7 @@ def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None
         logwatch_ec.check_logwatch_ec_common(
             "log1",
             {
+                **logwatch_ec.CHECK_DEFAULT_PARAMETERS,
                 "method": "spool:",
             },
             {

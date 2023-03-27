@@ -485,7 +485,6 @@ class ErrorReporter:
         ("check", "liebert_humidity_air", "checkgroup_parameters:humidity"),
         ("check", "lnx_quota", "checkgroup_parameters:lnx_quota"),
         ("check", "logins", "checkgroup_parameters:logins"),
-        ("check", "logwatch_ec", "checkgroup_parameters:logwatch_ec"),
         ("check", "lvm_vgs", "checkgroup_parameters:volume_groups"),
         ("check", "mikrotik_signal", "checkgroup_parameters:signal_quality"),
         ("check", "mongodb_collections", "checkgroup_parameters:mongodb_collections"),

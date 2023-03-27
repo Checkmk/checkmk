@@ -63,6 +63,12 @@ from .utils import logwatch
 ClusterSection = Dict[Optional[str], logwatch.Section]
 _MAX_SPOOL_SIZE = 1024**2
 
+CHECK_DEFAULT_PARAMETERS = {
+    "facility": 17,  # default to "local1"
+    "method": "",  # local site
+    "monitor_logfilelist": False,
+}
+
 
 def discover_group(
     section: logwatch.Section,
@@ -104,7 +110,7 @@ register.check_plugin(
     sections=["logwatch"],
     discovery_function=discover_group,
     check_function=check_logwatch_ec,
-    check_default_parameters={},
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="logwatch_ec",
     cluster_check_function=cluster_check_logwatch_ec,
 )
@@ -156,7 +162,7 @@ register.check_plugin(
     sections=["logwatch"],
     discovery_function=discover_single,
     check_function=check_logwatch_ec_single,
-    check_default_parameters={},
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     cluster_check_function=cluster_check_logwatch_ec_single,
 )
 
@@ -246,7 +252,7 @@ class LogwatchFordwardResult:
 class MessageForwaderProto(Protocol):
     def __call__(
         self,
-        method: Union[str, tuple, None],
+        method: Union[str, tuple],
         messages: Sequence[SyslogMessage],
     ) -> LogwatchFordwardResult:
         ...
@@ -297,7 +303,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         )
 
     # Check if the number of expected files matches the actual one
-    if params.get("monitor_logfilelist"):
+    if params["monitor_logfilelist"]:
         if "expected_logfiles" not in params:
             yield Result(
                 state=State.WARN,
@@ -325,7 +331,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     # 3. create syslog message of each line
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasas
     # <facility+priority> timestamp hostname logfile: message
-    facility = params.get("facility", 17)  # default to "local1"
+    facility = params["facility"]
     syslog_messages = []
     cur_time = int(time.time())
 
@@ -396,7 +402,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         else:
             logfile_info = ""
 
-        result = message_forwarder(params.get("method"), syslog_messages)
+        result = message_forwarder(params["method"], syslog_messages)
 
         yield Result(
             state=State.OK,
@@ -447,7 +453,7 @@ class MessageForwarder:
 
     def __call__(
         self,
-        method: Union[None, str, Tuple],
+        method: Union[str, Tuple],
         messages: Sequence[SyslogMessage],
     ) -> LogwatchFordwardResult:
         if not method:

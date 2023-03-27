@@ -1,0 +1,19 @@
+Title: logwatch_ec: Invalid parameters issue during discovery and update config
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680701826
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p26
+
+The WATO ruleset of the logwatch EC forwarding performed a too strict validation.
+This led to errors during update config and the service discovery, if corresponding services where discovered.
+Update config would report
+
+<tt>Transform failed: host='myHost', plugin='logwatch_ec', ruleset='logwatch_ec', params={'expected_logfiles': [...']}, error=MKUserError(None, 'Found no matching alternative.')</tt>
+
+while the parameters column of the disocvery page reports "<i>Invalid check parameter</i>".
+
+With this werk those messages disappear - until then they can safely be ignored.

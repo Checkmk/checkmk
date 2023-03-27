@@ -466,3 +466,22 @@ def doc_reference_url(doc_ref: DocReference | None = None) -> str:
     if "#" not in doc_ref.value:
         return f"{base}/{doc_ref.value}.html"
     return f"{base}/{doc_ref.value.replace('#', '.html#', 1)}"
+
+
+class YouTubeReference(Enum):
+    """All references to youtube videos must be listed in YouTubeReference. The string must hold a
+    valid video id."""
+
+    INSTALLING_CHECKMK = "opO-SOgOJ1I"
+    MONITORING_WINDOWS = "Nxiq7Jb9mB4"
+
+    @classmethod
+    def has_key(cls, key: str) -> bool:
+        return key in cls._member_names_
+
+
+def youtube_reference_url(youtube_ref: YouTubeReference | None = None) -> str:
+    # Default to the Checkmk youtube channel
+    if youtube_ref is None:
+        return "https://youtube.com/@checkmk-channel"
+    return "https://youtu.be/%s" % youtube_ref.value

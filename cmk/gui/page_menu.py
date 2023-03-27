@@ -35,6 +35,8 @@ from cmk.gui.utils.urls import (
     makeuri,
     makeuri_contextless,
     requested_file_with_query,
+    youtube_reference_url,
+    YouTubeReference,
 )
 
 
@@ -288,13 +290,13 @@ class PageMenu:
             )
         )
 
-    def add_youtube_reference(self, title: str, youtube_id: str) -> None:
+    def add_youtube_reference(self, title: str, youtube_ref: YouTubeReference) -> None:
         help_dropdown = self.get_dropdown_by_name("help", make_help_dropdown())
         help_dropdown.topics[2].entries.append(
             PageMenuEntry(
                 title=title,
                 icon_name="video",
-                item=make_external_link("https://youtu.be/%s" % youtube_id),
+                item=make_external_link(youtube_reference_url(youtube_ref)),
             )
         )
 

@@ -43,6 +43,7 @@ def test_discover_mongodb_replica_set(
     assert list(check_plugin.discovery_function(section)) == [Service()]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_mongodb_replica_set(
     check_plugin: CheckPlugin,
     section: Mapping[str, Any],

@@ -131,6 +131,7 @@ def test_wmi_timeout_exceptions(check_name: str, info: StringTable) -> None:
         CheckResult(check.run_check(None, {}, check.run_parse(info)))
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "check_name, expected",
     [

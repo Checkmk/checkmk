@@ -42,6 +42,7 @@ result_parsed_over_time = [
 ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params, first_result_change, second_result_change",
     [

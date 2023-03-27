@@ -30,6 +30,7 @@ _SECTION = {
 }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params, expected_result",
     [

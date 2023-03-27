@@ -12,6 +12,7 @@ from cmk.base.api.agent_based.type_defs import StringTable
 pytestmark = pytest.mark.checks
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, expected_check_result",
     [

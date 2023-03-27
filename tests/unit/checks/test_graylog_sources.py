@@ -22,6 +22,7 @@ def _graylog_sources_check_plugin(fix_register: FixRegister) -> CheckPlugin:
     return fix_register.check_plugins[CheckPluginName("graylog_sources")]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, item, expected_check_result",
     [

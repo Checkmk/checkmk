@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, TypedDict, Union
+from typing import Any, Literal, NamedTuple, NotRequired, TypedDict, Union
 
 from pydantic import BaseModel
 
@@ -188,7 +188,7 @@ class UserSpec(TypedDict, total=False):
     icons_per_item: Literal["entry"] | None
 
 
-class UserObjectValue(TypedDict, total=True):
+class UserObjectValue(TypedDict):
     attributes: UserSpec
     is_new_user: bool
 
@@ -207,7 +207,14 @@ InfoName = str
 SingleInfos = Sequence[InfoName]
 
 
-class _VisualMandatory(TypedDict):
+class LinkFromSpec(TypedDict, total=False):
+    single_infos: SingleInfos
+    host_labels: Labels
+    has_inventory_tree: Sequence[SDPath]
+    has_inventory_tree_history: Sequence[SDPath]
+
+
+class Visual(TypedDict):
     owner: UserId
     name: str
     context: VisualContext
@@ -223,16 +230,6 @@ class _VisualMandatory(TypedDict):
     hidebutton: bool
     public: bool | tuple[Literal["contact_groups"], Sequence[str]]
     packaged: bool
-
-
-class LinkFromSpec(TypedDict, total=False):
-    single_infos: SingleInfos
-    host_labels: Labels
-    has_inventory_tree: Sequence[SDPath]
-    has_inventory_tree_history: Sequence[SDPath]
-
-
-class Visual(_VisualMandatory):
     link_from: LinkFromSpec
 
 
@@ -434,7 +431,11 @@ class SorterSpec:
         return str(self.to_raw())
 
 
-class _ViewSpecMandatory(Visual):
+class _InventoryJoinMacrosSpec(TypedDict):
+    macros: list[tuple[str, str]]
+
+
+class ViewSpec(Visual):
     datasource: str
     layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
     group_painters: Sequence[ColumnSpec]
@@ -443,22 +444,15 @@ class _ViewSpecMandatory(Visual):
     num_columns: int
     column_headers: Literal["off", "pergroup", "repeat"]
     sorters: Sequence[SorterSpec]
-
-
-class _InventoryJoinMacrosSpec(TypedDict):
-    macros: list[tuple[str, str]]
-
-
-class ViewSpec(_ViewSpecMandatory, total=False):
-    add_headers: str
+    add_headers: NotRequired[str]
     # View editor only adds them in case they are truish. In our builtin specs these flags are also
     # partially set in case they are falsy
-    mobile: bool
-    mustsearch: bool
-    force_checkboxes: bool
-    user_sortable: bool
-    play_sounds: bool
-    inventory_join_macros: _InventoryJoinMacrosSpec
+    mobile: NotRequired[bool]
+    mustsearch: NotRequired[bool]
+    force_checkboxes: NotRequired[bool]
+    user_sortable: NotRequired[bool]
+    play_sounds: NotRequired[bool]
+    inventory_join_macros: NotRequired[_InventoryJoinMacrosSpec]
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]
@@ -578,25 +572,22 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 UnitRenderFunc = Callable[[Any], str]
 
 
-class _UnitInfoRequired(TypedDict):
-    title: str
-    symbol: str
-    render: UnitRenderFunc
-    js_render: str
-
-
 GraphTitleFormat = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
 GraphUnitRenderFunc = Callable[[list[float]], tuple[str, list[str]]]
 
 
-class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
-    id: str
-    stepping: str
-    color: str
-    graph_unit: GraphUnitRenderFunc
-    description: str
-    valuespec: Any  # TODO: better typing
-    conversions: Mapping[str, Callable[[float | int], float | int]]
+class UnitInfo(TypedDict):
+    title: str
+    symbol: str
+    render: UnitRenderFunc
+    js_render: str
+    id: NotRequired[str]
+    stepping: NotRequired[str]
+    color: NotRequired[str]
+    graph_unit: NotRequired[GraphUnitRenderFunc]
+    description: NotRequired[str]
+    valuespec: NotRequired[Any]  # TODO: better typing
+    conversions: NotRequired[Mapping[str, Callable[[float | int], float | int]]]
 
 
 class _TranslatedMetricRequired(TypedDict):
@@ -645,44 +636,37 @@ class GraphSpec(TypedDict):
     pass
 
 
-class _TemplateGraphSpecMandatory(GraphSpec):
+class TemplateGraphSpec(GraphSpec):
     site: str | None
     host_name: HostName
     service_description: ServiceName
+    graph_index: NotRequired[int | None]
+    graph_id: NotRequired[str | None]
 
 
-class TemplateGraphSpec(_TemplateGraphSpecMandatory, total=False):
-    graph_index: int | None
-    graph_id: str | None
-
-
-class ExplicitGraphSpec(GraphSpec, total=False):
-    # This is added during run time by GraphIdentificationExplicit.create_graph_recipes. Where is it
-    # used?
-    specification: tuple[Literal["explicit"], GraphSpec]  # TODO: Correct would be ExplicitGraphSpec
+class ExplicitGraphSpec(GraphSpec):
+    # This is added during run time by GraphIdentificationExplicit.create_graph_recipes. Where is it used?
+    specification: NotRequired[tuple[Literal["explicit"], GraphSpec]]  # TODO: Use ExplicitGraphSpec
     # I'd bet they are not mandatory. Needs to be figured out
-    title: str
-    unit: str
-    consolidation_function: GraphConsoldiationFunction | None
-    explicit_vertical_range: tuple[float | None, float | None]
-    omit_zero_metrics: bool
-    horizontal_rules: list  # TODO: Be more specific
-    context: VisualContext
-    add_context_to_title: bool
-    metrics: list  # TODO: Be more specific
+    title: NotRequired[str]
+    unit: NotRequired[str]
+    consolidation_function: NotRequired[GraphConsoldiationFunction | None]
+    explicit_vertical_range: NotRequired[tuple[float | None, float | None]]
+    omit_zero_metrics: NotRequired[bool]
+    horizontal_rules: NotRequired[list]  # TODO: Be more specific
+    context: NotRequired[VisualContext]
+    add_context_to_title: NotRequired[bool]
+    metrics: NotRequired[list]  # TODO: Be more specific
 
 
-class _CombinedGraphSpecMandatory(GraphSpec):
+class CombinedGraphSpec(GraphSpec):
     datasource: str
     single_infos: SingleInfos
     presentation: GraphPresentation
     context: VisualContext
-
-
-class CombinedGraphSpec(_CombinedGraphSpecMandatory, total=False):
-    selected_metric: MetricDefinition
-    consolidation_function: GraphConsoldiationFunction
-    graph_template: str
+    selected_metric: NotRequired[MetricDefinition]
+    consolidation_function: NotRequired[GraphConsoldiationFunction]
+    graph_template: NotRequired[str]
 
 
 class _SingleTimeseriesGraphSpecMandatory(GraphSpec):
@@ -735,7 +719,7 @@ class ViewProcessTracking:
     duration_view_render: Snapshot = Snapshot.null()
 
 
-class CustomAttr(TypedDict, total=True):
+class CustomAttr(TypedDict):
     title: str
     help: str
     name: str

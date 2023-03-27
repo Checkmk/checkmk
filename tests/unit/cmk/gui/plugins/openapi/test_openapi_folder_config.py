@@ -832,3 +832,16 @@ def test_bake_agent_package_attribute_regression(
         headers={"Accept": "application/json"},
         status=200,
     )
+
+
+def test_delete_root_folder(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    resp = aut_user_auth_wsgi_app.delete(
+        url=base + "/objects/folder_config/~",
+        headers={"Accept": "application/json"},
+        status=401,
+    )
+    assert resp.json["title"] == "Problem deleting folder."
+    assert resp.json["detail"] == "Deleting the root folder is not permitted."

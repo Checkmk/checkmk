@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Abstract classes and types."""
 
+import logging
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Final
 
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
@@ -13,7 +15,14 @@ from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.type_defs import AgentRawData, SectionName
 
-from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib.type_defs import (
+    OID,
+    SNMPBackend,
+    SNMPContextName,
+    SNMPHostConfig,
+    SNMPRawValue,
+    SNMPRowInfo,
+)
 
 from ._utils import strip_snmp_value
 
@@ -21,6 +30,10 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 
 class StoredWalkSNMPBackend(SNMPBackend):
+    def __init__(self, snmp_config: SNMPHostConfig, logger: logging.Logger) -> None:
+        super().__init__(snmp_config, logger)
+        self.path: Final = Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
+
     def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
         walk = self.walk(oid)
         # get_stored_snmpwalk returns all oids that start with oid but here
@@ -93,11 +106,10 @@ class StoredWalkSNMPBackend(SNMPBackend):
         return lines
 
     def read_walk_data(self) -> Sequence[str]:
-        path = Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
         try:
-            return self.read_walk_from_path(path)
+            return self.read_walk_from_path(self.path)
         except OSError:
-            raise MKSNMPError("No snmpwalk file %s" % path)
+            raise MKSNMPError("No snmpwalk file %s" % self.path)
 
     @staticmethod
     def _compare_oids(a: OID, b: OID) -> int:

@@ -407,6 +407,10 @@ Keys 'optional1', 'required1' occur more than once.
 
     """
 
+    default_error_messages = {
+        "type": "Incompatible data type. Received a(n) '{type}', but an associative value is required. Maybe you quoted a value that is meant to be an object?"
+    }
+
     class ValidateOnDump(BaseSchema):
         cast_to_dict = True
         validate_on_dump = True
@@ -593,10 +597,16 @@ Keys 'optional1', 'required1' occur more than once.
             type=value.__class__.__name__,
         )
 
-    def _load_schemas(self, scalar: Result, partial=None) -> Result:  # type: ignore[no-untyped-def]
+    def _load_schemas(  # pylint: disable=too-many-branches
+        self, scalar: Result, partial: bool | typing.Sequence[str] | set[str] | None = None
+    ) -> Result:
         rv = {}
         error_store = ErrorStore()
-        value = dict(scalar)
+
+        try:
+            value = dict(scalar)
+        except ValueError:
+            raise self.make_error("type", type=type(scalar).__name__)
         value_initially_empty = not value
 
         for schema in self._nested_schemas():

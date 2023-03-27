@@ -1305,3 +1305,24 @@ def test_openapi_host_with_non_existing_site(
 
 def test_openapi_bulk_create_permission_missmatch_regression(api_client: RestApiClient) -> None:
     api_client.bulk_create_hosts()
+
+
+def test_openapi_host_config_attributes_as_string_crash_regression(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
+) -> None:
+    resp = aut_user_auth_wsgi_app.post(
+        f"{base}/domain-types/host_config/collections/all",
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+        params=json.dumps(
+            {
+                "folder": "/",
+                "host_name": "example.com",
+                "attributes": "{'ipaddress':'192.168.0.123'}",  # note that this is a str
+            }
+        ),
+        status=400,
+    )
+    assert resp.json["fields"]["attributes"] == [
+        "Incompatible data type. Received a(n) 'str', but an associative value is required. Maybe you quoted a value that is meant to be an object?"
+    ]

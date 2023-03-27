@@ -450,7 +450,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                             "aghash 38bf6e44175732bc",
                             "pending_hash 1234abcd5678efgh",
                             "update_url https://server/site/check_mk",
-                            "error 503 Server Error: Service Unavailable",
+                            "error 503 Server Error: Service Unavailable\nSomething for second line",
                         )
                     )
                 },
@@ -459,7 +459,11 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
         )
 
     assert actual == [
-        Result(state=State.WARN, summary="Update error: 503 Server Error: Service Unavailable"),
+        Result(
+            state=State.WARN,
+            summary="Update error: 503 Server Error: Service Unavailable",
+            details="503 Server Error: Service Unavailable\nSomething for second line",
+        ),
         Result(
             state=State.WARN,
             summary="Time since last update check: 9 days 6 hours (warn/crit at 2 days 0 hours/never)",

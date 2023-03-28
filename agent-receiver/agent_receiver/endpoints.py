@@ -62,7 +62,13 @@ from starlette.status import (
     HTTP_501_NOT_IMPLEMENTED,
 )
 
-from .certs import extract_cn_from_csr, serialize_to_pem, sign_agent_csr, site_root_certificate
+from .certs import (
+    agent_root_ca,
+    extract_cn_from_csr,
+    serialize_to_pem,
+    sign_agent_csr,
+    site_root_certificate,
+)
 
 # pylint does not understand the syntax of agent_receiver.checkmk_rest_api.log_http_exception
 # pylint: disable=too-many-function-args
@@ -85,6 +91,7 @@ def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
             f"uuid={uuid} Querying agent controller certificate settings failed",
             internal_credentials(),
         ).lifetime_in_months,
+        agent_root_ca(),
     )
 
 

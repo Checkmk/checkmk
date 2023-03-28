@@ -32,8 +32,9 @@ def site_root_certificate() -> Certificate:
 def sign_agent_csr(
     csr: CertificateSigningRequest,
     lifetime_in_months: int,
+    keypair: tuple[Certificate, RSAPrivateKey],
 ) -> Certificate:
-    root_cert, root_key = _agent_root_ca()
+    root_cert, root_key = keypair
     return (
         (
             CertificateBuilder()
@@ -71,6 +72,6 @@ def extract_cn_from_csr(csr: CertificateSigningRequest) -> str:
 
 
 @lru_cache
-def _agent_root_ca() -> tuple[Certificate, RSAPrivateKey]:
+def agent_root_ca() -> tuple[Certificate, RSAPrivateKey]:
     pem_bytes = agent_ca_path().read_bytes()
     return load_pem_x509_certificate(pem_bytes), load_pem_private_key(pem_bytes, None)

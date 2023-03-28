@@ -1426,12 +1426,14 @@ def CheckMKVersion(
     # ValueSpec
     title: _Optional[str] = None,
     default_value: Union[Sentinel, str] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc] = None,
 ):
     return TextInput(
         regex=r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$",
         regex_error=_("This is not a valid Checkmk version number"),
         title=title,
         default_value=default_value,
+        validate=validate,
     )
 
 

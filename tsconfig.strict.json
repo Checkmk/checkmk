@@ -20,7 +20,7 @@
         //"./web/htdocs/js/modules/graphs.ts",
         "./web/htdocs/js/modules/wato.ts",
         "./web/htdocs/js/modules/element_dragging.ts",
-        //"./web/htdocs/js/modules/password_meter.ts",
+        "./web/htdocs/js/modules/password_meter.ts",
         //"./web/htdocs/js/modules/forms.ts",
         //"./web/htdocs/js/modules/service_discovery.ts",
         "./web/htdocs/js/modules/utils.ts",

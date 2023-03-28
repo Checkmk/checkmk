@@ -360,6 +360,18 @@ class Site:
             raise subprocess.CalledProcessError(p.returncode, p.args, stdout, stderr)
         return stdout
 
+    @contextmanager
+    def copy_file(self, name: str, target: str) -> Iterator[None]:
+        """Copies a file from the same directory as the caller to the site"""
+        caller_file = Path(inspect.stack()[2].filename)
+        source = caller_file.parent / name
+        self.makedirs(os.path.dirname(target))
+        self.write_text_file(target, source.read_text())
+        try:
+            yield
+        finally:
+            self.delete_file(target)
+
     def python_helper(self, name: str) -> PythonHelper:
         caller_file = Path(inspect.stack()[1].filename)
         helper_file = caller_file.parent / name

@@ -235,7 +235,9 @@ class ProxyTcp:
         if self.port:
             proxyconfigtcp["port"] = self.port
             proxyconfigtcp["only_from"] = self.only_from
-            proxyconfigtcp["tls"] = self.tls
+
+            if self.tls:
+                proxyconfigtcp["tls"] = self.tls
 
         return proxyconfigtcp
 

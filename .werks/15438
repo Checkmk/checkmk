@@ -1,0 +1,16 @@
+Title: site_connection: Wrong configuration was being set when creating a site with livestatus proxy daemon
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1680000308
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b2
+
+This werk fixes an issue with the create a site connection endpoint.  Previously when
+configuring a proxy with encryption disabled, a wrong config was being saved. This
+werk addresses this by writing the correct config to file.
+
+

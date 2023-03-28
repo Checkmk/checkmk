@@ -207,7 +207,7 @@ class FailedHosts(BaseSchema):
     )
     failed_hosts = fields.Dict(
         keys=fields.String(description="Name of the host"),
-        values=fields.List(fields.String(description="The error messages")),
+        values=fields.String(description="The error message"),
         description="Detailed error messages on hosts failing the action",
     )
 

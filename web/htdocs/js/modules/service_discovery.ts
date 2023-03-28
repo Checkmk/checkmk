@@ -12,10 +12,10 @@ import * as async_progress from "async_progress";
 
 interface Check {
     site: string;
-    folder_path;
+    folder_path: string;
     hostname: string;
     checktype: string;
-    item;
+    item: any;
     divid: string;
 }
 
@@ -23,15 +23,63 @@ interface Check {
 // code to render the current page. It will be sent back to the python
 // code for further actions. It contains the check_table which actions of
 // the user are based on.
-let g_service_discovery_result = null;
+let g_service_discovery_result: string | null = null;
 let g_show_updating_timer: number | null = null;
 
+type DiscoveryAction =
+    | ""
+    | "stop"
+    | "fix_all"
+    | "refresh"
+    | "tabula_rasa"
+    | "single_update"
+    | "bulk_update"
+    | "update_host_labels"
+    | "update_services";
+
+interface DiscoveryOptions {
+    action: DiscoveryAction;
+    show_checkboxes: boolean;
+    show_parameters: boolean;
+    show_discovered_labels: boolean;
+    show_plugin_names: boolean;
+    ignore_errors: boolean;
+}
+interface AjaxServiceDiscovery {
+    is_finished: boolean;
+    job_state: any;
+    message: string | null;
+    body: string;
+    fixall: string;
+    page_menu: string;
+    pending_changes_info: string | null;
+    pending_changes_tooltip: string;
+    discovery_options: DiscoveryOptions;
+    discovery_result: string;
+}
+
+interface ServiceDiscoveryHandlerData {
+    update_url: string;
+    error_function: (response: AjaxServiceDiscovery) => void;
+    update_function: (
+        update_data: ServiceDiscoveryHandlerData,
+        response: AjaxServiceDiscovery
+    ) => void;
+    is_finished_function: (response: AjaxServiceDiscovery) => void;
+    finish_function: (response: AjaxServiceDiscovery) => void;
+    post_data: string;
+    start_time?: number;
+    host_name: string;
+    folder_path: string;
+    transid: string;
+}
+
 export function start(
-    host_name,
-    folder_path,
-    discovery_options,
-    transid,
-    request_vars
+    host_name: string,
+    folder_path: string,
+    discovery_options: DiscoveryOptions,
+    transid: string,
+    request_vars: Record<string, any> | null
 ) {
     // When we receive no response for 2 seconds, then show the updating message
     g_show_updating_timer = window.setTimeout(function () {
@@ -48,7 +96,8 @@ export function start(
         folder_path: folder_path,
         transid: transid,
         start_time: utils.time(),
-        is_finished_function: response => response.is_finished,
+        is_finished_function: (response: AjaxServiceDiscovery) =>
+            response.is_finished,
         update_function: update,
         finish_function: finish,
         error_function: error,
@@ -63,13 +112,13 @@ export function start(
 }
 
 function get_post_data(
-    host_name,
-    folder_path,
-    discovery_options,
-    transid,
-    request_vars
+    host_name: string,
+    folder_path: string,
+    discovery_options: DiscoveryOptions,
+    transid: string,
+    request_vars: Record<string, any> | null
 ) {
-    let request = {
+    let request: Record<string, any> = {
         host_name: host_name,
         folder_path: folder_path,
         discovery_options: discovery_options,
@@ -103,9 +152,9 @@ function get_post_data(
     return post_data;
 }
 
-function finish(response) {
+function finish(response: AjaxServiceDiscovery) {
     if (response.job_state == "exception" || response.job_state == "stopped") {
-        async_progress.show_error(response.message);
+        async_progress.show_error(response.message!);
     } else {
         //async_progress.hide_msg();
     }
@@ -115,14 +164,17 @@ function finish(response) {
     lock_controls(false, get_state_independent_controls());
 }
 
-function error(response) {
+function error(response: string) {
     if (g_show_updating_timer) {
         clearTimeout(g_show_updating_timer);
     }
     async_progress.show_error(response);
 }
 
-function update(handler_data, response) {
+function update(
+    handler_data: ServiceDiscoveryHandlerData,
+    response: AjaxServiceDiscovery
+) {
     if (g_show_updating_timer) {
         clearTimeout(g_show_updating_timer);
     }
@@ -193,19 +245,24 @@ function get_state_independent_controls() {
         )
     );
     elements = elements.concat(
-        Array.prototype.slice.call(document.getElementsByClassName("toggle"), 0)
+        Array.prototype.slice.call<
+            HTMLCollectionOf<Element>,
+            [number],
+            HTMLElement[]
+        >(document.getElementsByClassName("toggle"), 0)
     );
     return elements;
 }
 
 function get_page_menu_controls() {
-    return Array.prototype.slice.call(
-        document.getElementsByClassName("action"),
-        0
-    );
+    return Array.prototype.slice.call<
+        HTMLCollectionOf<Element>,
+        [number],
+        HTMLElement[]
+    >(document.getElementsByClassName("action"), 0);
 }
 
-function lock_controls(lock, elements) {
+function lock_controls(lock: boolean, elements: HTMLElement[]) {
     let element;
     for (let i = 0; i < elements.length; i++) {
         element = elements[i];
@@ -214,6 +271,7 @@ function lock_controls(lock, elements) {
         if (lock) utils.add_class(element, "disabled");
         else utils.remove_class(element, "disabled");
 
+        //@ts-ignore
         element.disabled = lock;
     }
 }
@@ -221,12 +279,12 @@ function lock_controls(lock, elements) {
 const g_delayed_active_checks: Check[] = [];
 
 export function register_delayed_active_check(
-    site,
-    folder_path,
-    hostname,
-    checktype,
-    item,
-    divid
+    site: string,
+    folder_path: string,
+    hostname: string,
+    checktype: string,
+    item: string | null,
+    divid: string
 ) {
     // Register event listeners on first call
     if (g_delayed_active_checks.length == 0) {
@@ -265,7 +323,7 @@ function trigger_delayed_active_checks() {
     return true;
 }
 
-export function execute_active_check(entry) {
+export function execute_active_check(entry: Check) {
     const div = document.getElementById(entry.divid);
     ajax.call_ajax("wato_ajax_execute_check.py", {
         post_data:
@@ -285,7 +343,7 @@ export function execute_active_check(entry) {
     });
 }
 
-function handle_execute_active_check(oDiv, response_json) {
+function handle_execute_active_check(oDiv: HTMLElement, response_json: string) {
     const response = JSON.parse(response_json);
 
     let state, statename, output;
@@ -303,16 +361,16 @@ function handle_execute_active_check(oDiv, response_json) {
     oDiv.innerHTML = output;
 
     // Change name and class of status columns
-    const oTr = oDiv.parentNode.parentNode;
+    const oTr = oDiv.parentNode!.parentNode as HTMLElement;
     if (utils.has_class(oTr, "even0")) utils.add_class(oTr, "even" + state);
     else utils.add_class(oTr, "odd" + state);
 
-    const oTdState = oTr.getElementsByClassName("state")[0];
+    const oTdState = oTr.getElementsByClassName("state")[0] as HTMLElement;
     utils.remove_class(oTdState, "statep");
     utils.add_class(oTdState, "state" + state);
 
     const span = document.createElement("span");
     utils.add_class(span, "state_rounded_fill");
     span.innerHTML = statename;
-    oTdState.replaceChild(span, oTdState.firstChild);
+    oTdState.replaceChild(span, oTdState.firstChild!);
 }

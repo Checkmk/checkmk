@@ -185,7 +185,6 @@ del /Q %arte%\*.exe > nul
 del /Q %arte%\*.yml > nul
 del /Q %arte%\*.log > nul
 del /Q %arte%\*.log > nul
-del /Q %arte%\*.cab > nul
 powershell Write-Host "Done." -Foreground Green
 goto :eof
 

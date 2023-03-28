@@ -43,6 +43,17 @@ INFO_1 = [
 ]
 
 
+def default_parameters(
+    *, ignore_waittypes: list[str] | None = None, waittime: tuple[float, float] | None = None
+) -> Params:
+    params = DEFAULT_PARAMETERS.copy()
+    if ignore_waittypes is not None:
+        params["ignore_waittypes"] = ignore_waittypes
+    if waittime is not None:
+        params["waittime"] = waittime
+    return params
+
+
 def test_mssql_blocked_sessions_default(
     fix_register: FixRegister,
 ) -> None:
@@ -93,7 +104,7 @@ def test_mssql_blocked_sessions_waittime(fix_register: FixRegister) -> None:
     assert list(
         check_mssql_blocked_sessions(
             item="",
-            params={**DEFAULT_PARAMETERS, "waittime": (10, 100)},  # type: ignore[misc]
+            params=default_parameters(waittime=(10, 100)),
             section={
                 "": [
                     DBInstance(
@@ -118,7 +129,7 @@ def test_mssql_blocked_sessions_ignore_waittype(fix_register: FixRegister) -> No
     assert list(
         check_mssql_blocked_sessions(
             item="",
-            params={**DEFAULT_PARAMETERS, "ignore_waittypes": ["smth1"]},  # type: ignore[misc]
+            params=default_parameters(ignore_waittypes=["smth1"]),
             section={
                 "": [
                     DBInstance(

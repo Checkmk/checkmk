@@ -111,8 +111,6 @@ def check_mssql_blocked_sessions(
             ignored_waittypes.add(db_inst.wait_type)
             continue
 
-        # if check_type == CheckType.WAIT_TIME
-        # (we need to check levels for mypy support)
         (result,) = check_levels(
             db_inst.wait_duration,
             levels_upper=params.get("waittime"),

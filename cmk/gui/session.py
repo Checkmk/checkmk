@@ -19,7 +19,7 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.userdb.session  # NOQA  # pylint: disable=unused-import
 from cmk.gui import config, userdb
-from cmk.gui.auth import _check_auth, check_parsed_auth_cookie, user_from_cookie
+from cmk.gui.auth import check_auth, parse_and_check_cookie
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.type_defs import AuthType, SessionId, SessionInfo
@@ -206,7 +206,7 @@ class FileBasedSession(SessionInterface):
         config.initialize()
 
         try:
-            user_name, auth_type = _check_auth()
+            user_name, auth_type = check_auth()
         except MKAuthException as exc:
             # Authentication failed.
             return self.session_class.create_empty_session(exc=exc)
@@ -227,8 +227,7 @@ class FileBasedSession(SessionInterface):
 
         # From here on out, we know we received a cookie. We'll verify its integrity.
         try:
-            check_parsed_auth_cookie(*user_from_cookie(cookie_value))
-            user_name, session_id, _cookie_hash = user_from_cookie(cookie_value)
+            user_name, session_id, _cookie_hash = parse_and_check_cookie(cookie_value)
             userdb.on_access(user_name, session_id, datetime.now())
         except MKAuthException as exc:
             # The cookie is not considered valid, timed out, etc. So we don't auto-renew it.
@@ -302,16 +301,6 @@ class FileBasedSession(SessionInterface):
 # Casting the original LocalProxy, so "from flask import session" and our own
 # session object will always return the same objects.
 session: CheckmkFileBasedSession = cast(CheckmkFileBasedSession, flask.session)
-
-
-def auth_cookie_is_valid(cookie_text: str) -> bool:
-    try:
-        check_parsed_auth_cookie(*user_from_cookie(cookie_text))
-        return True
-    except MKAuthException:
-        return False
-    except Exception:
-        return False
 
 
 @contextlib.contextmanager

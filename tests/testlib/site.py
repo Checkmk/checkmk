@@ -528,6 +528,14 @@ class Site:
         p = self.execute(["mkdir", "-p", self.path(rel_path)])
         return p.wait() == 0
 
+    def listdir(self, rel_path: str) -> list[str]:
+        p = self.execute(["ls", "-1", self.path(rel_path)], stdout=subprocess.PIPE)
+        output = p.communicate()[0].strip()
+        assert p.wait() == 0
+        if not output:
+            return []
+        return output.split("\n")
+
     def system_temp_dir(self) -> Iterator[str]:
         p = self.execute(
             ["mktemp", "-d", "cmk-system-test-XXXXXXXXX", "-p", "/tmp"], stdout=subprocess.PIPE

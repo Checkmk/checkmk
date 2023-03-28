@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-from pathlib import Path
-
 import pytest
 
 from tests.testlib.site import Site
@@ -94,6 +91,4 @@ from tests.testlib.site import Site
     ],
 )
 def test_monitoring_plugins(site: Site, plugin: str) -> None:
-    plugin_path = Path(site.root, "lib", "nagios", "plugins", plugin)
-    assert plugin_path.exists()
-    assert os.access(plugin_path, os.X_OK)
+    assert site.execute(["test", "-x", site.path(f"lib/nagios/plugins/{plugin}")]).wait() == 0

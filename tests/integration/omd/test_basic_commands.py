@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-
 from tests.testlib.site import Site
 
 
@@ -18,9 +16,8 @@ def test_basic_commands(site: Site) -> None:
         "bin/cmk-update-config",
     ]
 
-    if site.version.is_enterprise_edition():
+    if not site.version.is_raw_edition():
         commands.append("bin/fetcher")
 
     for rel_path in commands:
-        path = os.path.join(site.root, rel_path)
-        assert os.path.exists(path)
+        assert site.file_exists(rel_path)

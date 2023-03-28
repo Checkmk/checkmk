@@ -1,0 +1,16 @@
+Title: host_tag: update multiple tag choices with rule dependency
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1679999330
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b2
+
+Prior to this werk, removing multiple tag choices with at least one tag choice
+dependency in a rule caused a crash in both the user interface as well as
+the REST API. This werk fixes this error.
+
+

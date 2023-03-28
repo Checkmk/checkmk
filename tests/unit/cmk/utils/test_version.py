@@ -4,8 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from pathlib import Path
+
 import pytest
 
+import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils.version import parse_check_mk_version, Version
 
 
@@ -157,3 +161,14 @@ class TestVersion:
 )
 def test_parse_check_mk_version(version_string: str, expected: int) -> None:
     assert parse_check_mk_version(version_string) == expected
+
+
+def test_omd_version_reads_from_version_link(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    link_path = tmp_path / "version"
+    monkeypatch.setattr(cmk.utils.paths, "omd_root", link_path.parent)
+    link_path.symlink_to("/omd/versions/2016.09.12.cee")
+    # Is set dynamically by testlib.fake_version_and_paths
+    assert cmk_version.orig_omd_version() == "2016.09.12.cee"  # type: ignore[attr-defined]
+    link_path.unlink()

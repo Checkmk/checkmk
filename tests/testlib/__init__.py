@@ -96,6 +96,7 @@ def fake_version_and_paths() -> None:
     else:
         edition_short = "cre"
 
+    monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
     monkeypatch.setattr(
         cmk_version, "omd_version", lambda: f"{cmk_version.__version__}.{edition_short}"
     )

@@ -360,7 +360,10 @@ def heartbeat_crm_parse_resources(info, show="resources"):
                 # Clone set
                 resource = _title(parts[2])
                 resources[resource] = []
-                mode = "cloneset"
+                if parts[-1] == "(promotable):":
+                    mode = "masterslaveset"
+                else:
+                    mode = "cloneset"
             elif line.startswith("Master/Slave Set:"):
                 # Master/Slave set
                 resource = _title(parts[2])

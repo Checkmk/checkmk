@@ -155,8 +155,10 @@ export function update_argument_hints() {
                 .selectAll("input.text")
                 .nodes();
             while (required_inputs >= nodes.length) {
-                valuespecs.list_of_strings_add_new_field(
-                    nodes[nodes.length - 1]
+                valuespecs.list_of_strings_extend(
+                    nodes[nodes.length - 1],
+                    false,
+                    ""
                 );
                 nodes = rule_body
                     .selectAll("div.listofstrings")

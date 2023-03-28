@@ -147,7 +147,11 @@ function list_of_strings_remove_event_handlers(input) {
 
 /* Is called when the last input field in a ListOfString gets focus.
    In that case a new input field is being appended. */
-function list_of_strings_extend(input, split_on_paste, split_separators) {
+export function list_of_strings_extend(
+    input,
+    split_on_paste,
+    split_separators
+) {
     var new_input = list_of_strings_add_new_field(input);
 
     /* Move focus function from old last to new last input field */
@@ -159,7 +163,7 @@ function list_of_strings_extend(input, split_on_paste, split_separators) {
     list_of_strings_remove_event_handlers(input);
 }
 
-export function list_of_strings_add_new_field(input) {
+function list_of_strings_add_new_field(input) {
     /* The input field has a unique name like "extra_emails_2" for the field with
        the index 2. We need to convert this into "extra_emails_3". */
 

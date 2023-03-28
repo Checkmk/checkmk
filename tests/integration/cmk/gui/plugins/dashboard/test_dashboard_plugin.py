@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import subprocess
 from collections.abc import Iterator
 
 import pytest
@@ -13,7 +12,9 @@ from tests.testlib.site import Site
 
 @pytest.fixture()
 def plugin_path(site: Site) -> Iterator[str]:
-    path = "local/lib/check_mk/gui/plugins/dashboard/test_plugin.py"
+    base_dir = "local/lib/check_mk/gui/plugins/dashboard"
+    site.makedirs(base_dir)
+    path = f"{base_dir}/test_plugin.py"
     site.write_text_file(
         path,
         """
@@ -53,34 +54,18 @@ class TestDashlet(Dashlet):
     site.delete_file(path)
 
 
-@pytest.fixture(name="test_script")
-def fixture_test_script(site: Site) -> Iterator[str]:
-    path = "test_script"
-    site.write_text_file(
-        path,
-        """
-from cmk.gui import main_modules
-main_modules.load_plugins()
-
-from cmk.gui.plugins.dashboard.utils import dashlet_registry
-print("test" in dashlet_registry)
-    """,
-    )
-    yield path
-    site.delete_file(path)
-
-
 @pytest.mark.usefixtures("plugin_path")
-def test_load_dashboard_plugin(site: Site, test_script: str) -> None:
+def test_load_dashboard_plugin(site: Site) -> None:
     assert (
-        subprocess.check_output(["python3", site.path(test_script)], encoding="utf-8").rstrip()
-        == "True"
+        site.python_helper("helper_test_load_dashboard_plugin.py").check_output().rstrip() == "True"
     )
 
 
 @pytest.fixture()
 def legacy_plugin_path(site: Site) -> Iterator[str]:
-    path = "local/share/check_mk/web/plugins/dashboard/test_plugin.py"
+    base_dir = "local/share/check_mk/web/plugins/dashboard"
+    site.makedirs(base_dir)
+    path = f"{base_dir}/test_plugin.py"
     site.write_text_file(
         path,
         """
@@ -121,8 +106,7 @@ class TestDashlet(Dashlet):
 
 
 @pytest.mark.usefixtures("legacy_plugin_path")
-def test_load_legacy_dashboard_plugin(site: Site, test_script: str) -> None:
+def test_load_legacy_dashboard_plugin(site: Site) -> None:
     assert (
-        subprocess.check_output(["python3", site.path(test_script)], encoding="utf-8").rstrip()
-        == "True"
+        site.python_helper("helper_test_load_dashboard_plugin.py").check_output().rstrip() == "True"
     )

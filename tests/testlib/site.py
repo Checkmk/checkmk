@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import ast
 import glob
+import inspect
 import logging
 import os
 import pwd
@@ -16,9 +17,9 @@ import sys
 import time
 import urllib.parse
 from collections.abc import Callable, Mapping, MutableMapping
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Iterator, Literal
 
 import pytest
 
@@ -347,6 +348,23 @@ class Site:
         kwargs["shell"] = True
         return subprocess.Popen(cmd_txt, *args, **kwargs)
 
+    def check_output(self, cmd: list[str]) -> str:
+        """Mimics behavior of of subprocess.check_output
+
+        Seems to be OK for now but we should find a better abstraction than just
+        wrapping self.execute().
+        """
+        p = self.execute(cmd, encoding="utf-8", stdout=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            raise subprocess.CalledProcessError(p.returncode, p.args, stdout, stderr)
+        return stdout
+
+    def python_helper(self, name: str) -> PythonHelper:
+        caller_file = Path(inspect.stack()[1].filename)
+        helper_file = caller_file.parent / name
+        return PythonHelper(self, helper_file)
+
     def omd(self, mode: str, *args: str) -> int:
         sudo, site_id = ([], []) if self._is_running_as_site_user() else (["sudo"], [self.id])
         cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
@@ -378,6 +396,16 @@ class Site:
                 raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
             return p.stdout.read() if p.stdout is not None else ""
         return open(self.path(rel_path)).read()
+
+    def read_binary_file(self, rel_path: str) -> bytes:
+        if self._is_running_as_site_user():
+            raise NotImplementedError()
+
+        p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE, encoding=None)
+        stdout = p.communicate()[0]
+        if p.returncode != 0:
+            raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.returncode))
+        return stdout
 
     def delete_file(self, rel_path: str, missing_ok: bool = False) -> None:
         if not self._is_running_as_site_user():
@@ -1246,3 +1274,36 @@ def get_site_factory(
         else update_from_git,
         install_test_python_modules=install_test_python_modules,
     )
+
+
+class PythonHelper:
+    """Execute a python helper script executed in the site context
+
+    Several tests need to execute some python code in the context
+    of the Checkmk site under test. This object helps to copy
+    and execute the script."""
+
+    def __init__(self, site: Site, helper_path: Path) -> None:
+        self.site: Final = site
+        self.helper_path: Final = helper_path
+        self.site_path: Final = Path(site.root, self.helper_path.name)
+
+    @contextmanager
+    def copy_helper(self) -> Iterator[None]:
+        self.site.write_text_file(
+            str(self.site_path.relative_to(self.site.root)),
+            self.helper_path.read_text(),
+        )
+        try:
+            yield
+        finally:
+            self.site.delete_file(str(self.site_path))
+
+    def check_output(self) -> str:
+        with self.copy_helper():
+            return self.site.check_output(["python3", str(self.site_path)])
+
+    @contextmanager
+    def execute(self) -> Iterator[subprocess.Popen]:
+        with self.copy_helper():
+            yield self.site.execute(["python3", str(self.site_path)])

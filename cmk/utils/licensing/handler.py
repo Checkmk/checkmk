@@ -83,7 +83,9 @@ class LicensingHandler(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def effect(self, changes: PendingChanges | None = None) -> UserEffect:
+    def effect(
+        self, changes: PendingChanges | None = None, licensing_settings_link: str | None = None
+    ) -> UserEffect:
         raise NotImplementedError()
 
     @property

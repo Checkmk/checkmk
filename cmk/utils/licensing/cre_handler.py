@@ -29,7 +29,9 @@ class CRELicensingHandler(LicensingHandler):
     def effect_core(self, num_services: int, num_hosts_shadow: int) -> UserEffect:
         return UserEffect(header=None, email=None, block=None)
 
-    def effect(self, changes: PendingChanges | None = None) -> UserEffect:
+    def effect(
+        self, changes: PendingChanges | None = None, licensing_settings_link: str | None = None
+    ) -> UserEffect:
         return UserEffect(header=None, email=None, block=None)
 
     @property

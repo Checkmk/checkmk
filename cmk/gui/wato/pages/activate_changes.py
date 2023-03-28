@@ -186,7 +186,12 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 self._license_usage_report_validity
                 != LicenseUsageReportValidity.older_than_five_days
             )
-            block_effect = get_licensing_user_effect(changes=self._changes)
+            block_effect = get_licensing_user_effect(
+                changes=self._changes,
+                licensing_settings_link=makeuri_contextless(
+                    request, [("mode", "edit_licensing_settings")], filename="wato.py"
+                ),
+            )
             return block_effect.block is None and license_usage_report_valid
 
         return True
@@ -417,7 +422,12 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         errors = []
         warnings = []
 
-        if block_effect := get_licensing_user_effect(changes=self._changes).block:
+        if block_effect := get_licensing_user_effect(
+            changes=self._changes,
+            licensing_settings_link=makeuri_contextless(
+                request, [("mode", "edit_licensing_settings")], filename="wato.py"
+            ),
+        ).block:
             errors.append(block_effect.message)
 
         if is_cloud_edition():

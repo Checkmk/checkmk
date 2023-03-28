@@ -1068,6 +1068,7 @@ function select2_vs_autocomplete(container) {
 export function initialize_autocompleters(container) {
     select2_vs_autocomplete(container);
 }
+
 //TODO change any after fixing colorpicker problem
 //colorpicker functionalities are copied into a
 // js file instead of being used through package.json
@@ -1269,7 +1270,7 @@ export function toggle_label_row_opacity(
     const tbody: HTMLTableSectionElement = tr.closest("tbody")!;
     if (tbody.lastChild !== tr) return;
 
-    if (is_active === true) {
+    if (is_active) {
         utils.add_class(tr, "active");
     } else {
         utils.remove_class(tr, "active");
@@ -1279,7 +1280,7 @@ export function toggle_label_row_opacity(
 export function label_group_delete(
     varprefix: string,
     index: string,
-    first_elem_choices_or_label: string[][] | string
+    first_elem_choices_or_label: [string, string][] | string
 ) {
     const tr = document.getElementById(
         varprefix + "_entry_" + index
@@ -1302,12 +1303,10 @@ export function label_group_delete(
         const next_row_select: HTMLSelectElement = tbody.children[1]
             .getElementsByClassName("bool")![0]
             .getElementsByTagName("select")![0];
-        if (first_elem_choices_or_label instanceof Object) {
+        if (typeof first_elem_choices_or_label !== "string") {
             // first element has dropdown choices -> adjust the dropdown choices
-            // eslint-disable-next-line
-            const first_elem_choices: Object = Object.fromEntries(
-                first_elem_choices_or_label
-            );
+            const first_elem_choices: Record<string, string> =
+                Object.fromEntries(first_elem_choices_or_label);
             const options: HTMLOptionsCollection = next_row_select.options;
             for (let i = 0; i < options.length; i++) {
                 if (

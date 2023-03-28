@@ -524,6 +524,12 @@ class Site:
 
         return os.path.exists(self.path(rel_path))
 
+    def file_mode(self, rel_path: str) -> int:
+        return int(self.check_output(["stat", "-c", "%f", self.path(rel_path)]).rstrip(), base=16)
+
+    def inode(self, rel_path: str) -> int:
+        return int(self.check_output(["stat", "-c", "%i", self.path(rel_path)]).rstrip())
+
     def makedirs(self, rel_path: str) -> bool:
         p = self.execute(["mkdir", "-p", self.path(rel_path)])
         return p.wait() == 0

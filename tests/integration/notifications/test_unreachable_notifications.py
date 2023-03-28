@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
+import subprocess
 import time
 from collections.abc import Iterator
 
@@ -95,14 +95,14 @@ def initial_state_fixture(
     # Before each test: Clear logs
     if site.core_name() == "cmc":
         # The command is processed asynchronously -> Wait for completion
-        inode_before = os.stat(site.path("var/check_mk/core/history")).st_ino
+        inode_before = site.inode("var/check_mk/core/history")
         site.live.command("[%d] ROTATE_LOGFILE" % time.time())
 
         def rotated_log():
             try:
-                return inode_before != os.stat(site.path("var/check_mk/core/history")).st_ino
-            except FileNotFoundError:
-                return False
+                return inode_before != site.inode("var/check_mk/core/history")
+            except subprocess.CalledProcessError:
+                return False  # File may vanish while waiting
 
         wait_until(rotated_log, timeout=10)
     else:

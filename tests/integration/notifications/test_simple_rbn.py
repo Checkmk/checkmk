@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-import os
 from collections.abc import Iterator
 from typing import Final
 
@@ -19,9 +18,11 @@ def fake_sendmail_fixture(site: Site) -> Iterator[None]:
     site.write_text_file(
         "local/bin/sendmail", '#!/bin/bash\nset -e\necho "sendmail called with: $@"\n'
     )
-    os.chmod(site.path("local/bin/sendmail"), 0o775)
-    yield
-    site.delete_file("local/bin/sendmail")
+    try:
+        assert site.execute(["chmod", "0775", site.path("local/bin/sendmail")]).wait() == 0
+        yield
+    finally:
+        site.delete_file("local/bin/sendmail")
 
 
 @pytest.fixture(name="test_user")

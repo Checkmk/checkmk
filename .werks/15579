@@ -1,0 +1,17 @@
+Title: mk_mongodb: Added possibility to configure port via the GUI
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1680167457
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Now it is possible to configure the port via the GUI in the existing ruleset.
+
+
+
+
+

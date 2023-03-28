@@ -17,7 +17,7 @@ from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, Extra, Field, validator
 
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
@@ -84,6 +84,21 @@ class Manifest(BaseModel):
     @property
     def id(self) -> PackageID:
         return PackageID(name=self.name, version=self.version)
+
+    @validator("version_min_required")
+    @classmethod
+    def fixup_missunderstood_major_version_requirement(cls, raw: str) -> str:
+        """
+        This tries to fix up a missunderstood version requirement:
+        A required version of "2.2.0" would mean the MKP is not allowed in "2.2.0b1",
+        as "2.2.0" is the specific version released after the last beta release, and
+        before the first patch release.
+
+        This function can be removed once "2.2.0" is actually released.
+        For the future, we plan to implement a dialog to ask the user whether they really mean
+        to exclude beta releases.
+        """
+        return "2.2.0b1" if raw == "2.2.0" else raw
 
 
 def manifest_template(

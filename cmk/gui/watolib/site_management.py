@@ -25,6 +25,7 @@ from livestatus import (
     UnixSocketInfo,
 )
 
+from cmk.utils import version
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -37,6 +38,9 @@ from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import prepare_raw_site_config, SiteManagementFactory
+
+if version.is_managed_edition():
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
 class SiteDoesNotExistException(Exception):
@@ -333,17 +337,29 @@ class Proxy:
 class BasicSettings:
     alias: str
     site_id: str
+    customer: str | None = None
 
     @classmethod
     def from_internal(cls, site_id: SiteId, internal_config: SiteConfiguration) -> BasicSettings:
+        if version.is_managed_edition():
+            return cls(
+                alias=internal_config["alias"],
+                site_id=site_id,
+                customer=internal_config.get("customer", managed.default_customer_id()),
+            )
         return cls(alias=internal_config["alias"], site_id=site_id)
 
     def to_external(self) -> Iterator[tuple[str, str]]:
         yield "alias", self.alias
         yield "site_id", self.site_id
+        if version.is_managed_edition() and self.customer is not None:
+            yield "customer", self.customer
 
     def to_internal(self) -> SiteConfiguration:
         configid: SiteConfiguration = {"alias": self.alias, "id": SiteId(self.site_id)}
+        if version.is_managed_edition() and self.customer is not None:
+            configid["customer"] = self.customer
+
         return configid
 
 

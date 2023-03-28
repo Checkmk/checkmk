@@ -3,13 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+from typing import Any, TypedDict
+
+from cmk.utils import version
 
 
-def default_config_example() -> dict[str, Any]:
-    return {
+class SiteConfig(TypedDict):
+    basic_settings: dict[str, str]
+    status_connection: dict[str, Any]
+    configuration_connection: dict[str, Any]
+
+
+class APISiteConfig(TypedDict):
+    site_config: SiteConfig
+
+
+def default_config_example() -> APISiteConfig:
+    r: APISiteConfig = {
         "site_config": {
-            "basic_settings": {"alias": "Die remote site 1", "site_id": "site_id_1"},
+            "basic_settings": {
+                "alias": "Die remote site 1",
+                "site_id": "site_id_1",
+            },
             "status_connection": {
                 "connection": {
                     "socket_type": "tcp",
@@ -53,3 +68,8 @@ def default_config_example() -> dict[str, Any]:
             },
         },
     }
+
+    if version.is_managed_edition():
+        r["site_config"]["basic_settings"].update({"customer": "provider"})
+
+    return r

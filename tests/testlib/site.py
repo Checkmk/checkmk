@@ -325,20 +325,33 @@ class Site:
         return pwd.getpwuid(os.getuid()).pw_name == self.id
 
     def execute(  # type: ignore[no-untyped-def]
-        self, cmd: list[str], *args, **kwargs
+        self, cmd: list[str], *args, preserve_env: list[str] | None = None, **kwargs
     ) -> subprocess.Popen:
         assert isinstance(cmd, list), "The command must be given as list"
+
+        if preserve_env:
+            sudo_env_args = [f"--preserve-env={','.join(preserve_env)}"]
+            su_env_args = ["--whitelist-environment", ",".join(preserve_env)]
+        else:
+            sudo_env_args = []
+            su_env_args = []
 
         kwargs.setdefault("encoding", "utf-8")
         cmd_txt = (
             subprocess.list2cmdline(cmd)
             if self._is_running_as_site_user()
-            else " ".join(  #
+            else " ".join(
                 [
                     "sudo",
+                ]
+                + sudo_env_args
+                + [
                     "su",
                     "-l",
                     self.id,
+                ]
+                + su_env_args
+                + [
                     "-c",
                     shlex.quote(" ".join(shlex.quote(p) for p in cmd)),
                 ]
@@ -514,6 +527,21 @@ class Site:
     def makedirs(self, rel_path: str) -> bool:
         p = self.execute(["mkdir", "-p", self.path(rel_path)])
         return p.wait() == 0
+
+    def system_temp_dir(self) -> Iterator[str]:
+        p = self.execute(
+            ["mktemp", "-d", "cmk-system-test-XXXXXXXXX", "-p", "/tmp"], stdout=subprocess.PIPE
+        )
+        assert p.wait() == 0
+        assert p.stdout is not None
+        path = p.stdout.read().strip()
+
+        try:
+            yield path
+        finally:
+            p = self.execute(["rm", "-rf", path])
+            if p.wait() != 0:
+                raise Exception("Failed to delete directory %s. Exit-Code: %d" % (path, p.wait()))
 
     def cleanup_if_wrong_version(self) -> None:
         if not self.exists():

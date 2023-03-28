@@ -3,14 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pxlint: disable=redefined-outer-name
-
-import fcntl
 import fnmatch
 import os
 import re
 import subprocess
-import tarfile
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 
@@ -23,20 +19,18 @@ from cmk.utils.paths import mkbackup_lock_dir
 
 
 @contextmanager
-def simulate_backup_lock(site_id):
-    with open(mkbackup_lock_dir / f"mkbackup-{site_id}.lock", "ab") as flock:
-        fcntl.flock(flock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        yield flock
+def simulate_backup_lock(site: Site) -> Iterator[None]:
+    with site.execute(
+        ["flock", "-x", "-n", str(mkbackup_lock_dir / f"mkbackup-{site.id}.lock"), "sleep", "300"]
+    ) as p:
+        yield None
+        p.terminate()
+        p.wait()
 
 
 @pytest.fixture(name="backup_path")
-def backup_path_fixture(tmp_path):
-    backup_path = str(tmp_path / "backup")
-
-    if not os.path.exists(backup_path):
-        os.makedirs(backup_path)
-
-    return backup_path
+def backup_path_fixture(site: Site) -> Iterator[str]:
+    yield from site.system_temp_dir()
 
 
 @pytest.fixture(
@@ -181,6 +175,7 @@ def _execute_restore(
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         env=env,
+        preserve_env=["MKBACKUP_PASSPHRASE"],
         encoding="utf-8",
     )
     stdout, stderr = p.communicate()
@@ -211,7 +206,8 @@ def _execute_restore(
 #   '----------------------------------------------------------------------'
 
 
-def test_mkbackup_help(site: Site, test_cfg: None) -> None:
+@pytest.mark.usefixtures("test_cfg")
+def test_mkbackup_help(site: Site) -> None:
     p = site.execute(["mkbackup"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr == "ERROR: Missing operation mode\n"
@@ -272,8 +268,7 @@ def test_mkbackup_list_jobs(site: Site) -> None:
     assert "Tästjob" in stdout
 
 
-@pytest.mark.usefixtures("test_cfg")
-@pytest.mark.usefixtures("backup_lock_dir")
+@pytest.mark.usefixtures("test_cfg", "backup_lock_dir")
 def test_mkbackup_simple_backup(site: Site) -> None:
     _execute_backup(site)
 
@@ -311,8 +306,11 @@ def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) ->
 
     tar_path = os.path.join(backup_path, backup_id, "site-%s.tar" % site.id)
 
-    with tarfile.open(tar_path) as tar_file:
-        member_names = [m.name for m in tar_file.getmembers()]
+    p = site.execute(["tar", "-tvf", tar_path], stdout=subprocess.PIPE)
+    stdout = p.communicate()[0]
+    assert p.returncode == 0
+    member_names = [l.split(" ")[-1] for l in stdout.split("\n")]
+
     history = [n for n in member_names if fnmatch.fnmatch(n, "*/var/check_mk/core/archive/*")]
     logs = [n for n in member_names if fnmatch.fnmatch(n, "*/var/log/*.log")]
     rrds = [n for n in member_names if n.endswith(".rrd")]
@@ -327,7 +325,7 @@ def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) ->
 @pytest.mark.usefixtures("test_cfg")
 def test_mkbackup_locking(site: Site) -> None:
     backup_id = _execute_backup(site, job_id="testjob-no-history")
-    with simulate_backup_lock(site.id):
+    with simulate_backup_lock(site):
         with pytest.raises(AssertionError) as locking_issue:
             _execute_backup(site)
         assert "Failed to get the exclusive backup lock" in str(locking_issue)

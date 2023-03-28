@@ -1386,6 +1386,7 @@ multisite_builtin_views.update(
 
 def cleanup_topology_layouts() -> None:
     """Topology layouts are currently restricted to a maximum number of 10000"""
+    topology_dir.mkdir(parents=True, exist_ok=True)
     last_run = topology_dir / ".last_run"
     if not last_run.exists():
         last_run.touch(exist_ok=True)

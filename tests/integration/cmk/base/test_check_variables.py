@@ -11,12 +11,8 @@ from tests.testlib import create_linux_test_host
 from tests.testlib.site import Site
 
 from cmk.utils import version as cmk_version
-from cmk.utils.type_defs import HostName
 
-from cmk.checkers.discovery import AutochecksStore
-
-import cmk.base.check_api as check_api
-import cmk.base.config as config
+from cmk.checkers.discovery._autochecks import _AutochecksSerializer
 
 
 # Test whether or not registration of check configuration variables works
@@ -58,21 +54,17 @@ check_info["test_check_1"] = {
 """,
     )
 
-    config.load_checks(check_api.get_check_api_context, [f"{site.root}/{test_check_path}"])
-    config.load(with_conf_d=False)
+    # Should better be tested separately in a unit test
+    with site.python_helper("helper_verify_check_1.py").execute() as p:
+        assert p.wait() == 0
+
     site.activate_changes_and_wait_for_core_reload()
-
-    # Verify that the default variable is in the check context and
-    # not in the global checks module context.
-    assert "test_check_1_default_levels" not in config.__dict__
-    assert "test_check_1" in config._check_contexts
-    assert "test_check_1_default_levels" in config._check_contexts["test_check_1"]
-    assert config._check_contexts["test_check_1"]["test_check_1_default_levels"] == (10.0, 20.0)
-
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
     assert str(entries[0].check_plugin_name) == "test_check_1"
     assert entries[0].item is None
     assert entries[0].parameters == (10.0, 20.0)
@@ -100,7 +92,9 @@ check_info["test_check_1"] = {
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
     site.openapi.discover_services_and_wait_for_completion(host_name)
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
     assert entries[0].parameters == (5.0, 30.1)
 
 
@@ -143,20 +137,18 @@ check_info["test_check_2"] = {
 """,
     )
 
-    config.load_checks(check_api.get_check_api_context, [f"{site.root}/{test_check_path}"])
-    config.load(with_conf_d=False)
+    # Should better be tested separately in a unit test
+    with site.python_helper("helper_verify_check_2.py").execute() as p:
+        assert p.wait() == 0
+
     site.activate_changes_and_wait_for_core_reload()
-
-    # Verify that the default variable is in the check context and
-    # not in the global checks module context
-    assert "discover_service" not in config.__dict__
-    assert "test_check_2" in config._check_contexts
-    assert "discover_service" in config._check_contexts["test_check_2"]
-
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Should have discovered nothing so far
-    assert AutochecksStore(HostName(host_name)).read() == []
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
+    assert entries == []
 
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
@@ -166,7 +158,9 @@ check_info["test_check_2"] = {
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
     assert str(entries[0].check_plugin_name) == "test_check_2"
     assert entries[0].item is None
     assert entries[0].parameters == {}
@@ -215,20 +209,17 @@ check_info["test_check_3"] = {
 """,
     )
 
-    config.load_checks(check_api.get_check_api_context, [f"{site.root}/{test_check_path}"])
-    config.load(with_conf_d=False)
+    # Should better be tested separately in a unit test
+    with site.python_helper("helper_verify_factory_settings.py").execute() as p:
+        assert p.wait() == 0
+
     site.activate_changes_and_wait_for_core_reload()
-
-    # Verify that the default variable is in the check context and
-    # not in the global checks module context
-    assert "test_check_3_default_levels" not in config.__dict__
-    assert "test_check_3" in config._check_contexts
-    assert "test_check_3_default_levels" in config._check_contexts["test_check_3"]
-
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
     assert str(entries[0].check_plugin_name) == "test_check_3"
     assert entries[0].item is None
     assert entries[0].parameters == {}

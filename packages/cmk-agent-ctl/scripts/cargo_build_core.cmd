@@ -39,9 +39,9 @@ rustup update 1.66.0
 cd
 cargo -V
 rustc -V
-echo arg_build=%arg_build%
-echo arg_clippy=%arg_clippy%
-echo arg_test=%arg_test%
+echo ctl_arg_build=%ctl_arg_build%
+echo ctl_arg_clippy=%ctl_arg_clippy%
+echo ctl_arg_test=%ctl_arg_test%
 
 :: Disable assert()s in C/C++ parts (e.g. wepoll-ffi), they map to _assert()/_wassert(),
 :: which is not provided by libucrt. The latter is needed for static linking.
@@ -49,25 +49,25 @@ echo arg_test=%arg_test%
 set CFLAGS=-DNDEBUG
 
 :: Clean
-if "%arg_clean%" == "1" (
+if "%ctl_arg_clean%" == "1" (
     powershell Write-Host "Run Rust clean" -Foreground White
     cargo clean
 )
 
 :: Check Format
-if "%arg_check_format%" == "1" (
+if "%ctl_arg_check_format%" == "1" (
     powershell Write-Host "Run Rust check format" -Foreground White
     cargo fmt -- --check
 )
 
 :: Format
-if "%arg_format%" == "1" (
+if "%ctl_arg_format%" == "1" (
     powershell Write-Host "Run Rust format" -Foreground White
     cargo fmt
 )
 
 :: Clippy
-if "%arg_clippy%" == "1" (
+if "%ctl_arg_clippy%" == "1" (
     powershell Write-Host "Run Rust clippy" -Foreground White
     cargo clippy --release --target %target% -- --deny warnings 
     if ERRORLEVEL 1 (
@@ -80,7 +80,7 @@ if "%arg_clippy%" == "1" (
 )
 
 :: Build
-if "%arg_build%" == "1" (
+if "%ctl_arg_build%" == "1" (
     rem On windows we want to kill exe before starting rebuild. 
     rem Use case CI starts testing, for some reasoms process hangs up longer as expected thus 
     rem rebuild/retest will be not possible: we get strange/inconsistent results.
@@ -99,7 +99,7 @@ if "%arg_build%" == "1" (
 )
 
 :: Test
-if "%arg_test%" == "1" (
+if "%ctl_arg_test%" == "1" (
 rem Validate elevation, because full testing is possible only in elevated mode!
     net session > nul 2>&1 
     IF ERRORLEVEL 1 (
@@ -118,9 +118,9 @@ rem Validate elevation, because full testing is possible only in elevated mode!
 )
 
 :: [optional] Signing
-if not "%arg_sign%" == "" (
+if "%ctl_arg_sign%" == "1" (
     powershell Write-Host "Signing Rust executables" -Foreground White
-    @call ..\wnx\sign_windows_exe c:\common\store\%1 %arg_sign% %exe%
+    @call ..\wnx\sign_windows_exe c:\common\store\%ctl_arg_sign_file% %ctl_arg_sign_secret% %exe%
     if ERRORLEVEL 1 ( 
         powershell Write-Host "Failed signing %exe%" -Foreground Red 
         exit /b 20
@@ -130,7 +130,7 @@ if not "%arg_sign%" == "" (
 )
 
 :: 5. Storing artifacts
-if "%arg_build%" == "1" (
+if "%ctl_arg_build%" == "1" (
     powershell Write-Host "Uploading artifacts: [ %exe% ] ..." -Foreground White
     copy %exe% %arte%\%exe_name%
     powershell Write-Host "Done." -Foreground Green
@@ -139,7 +139,7 @@ if "%arg_build%" == "1" (
 )
 
 :: Documentation
-if "%arg_doc%" == "1" (
+if "%ctl_arg_doc%" == "1" (
     powershell Write-Host "Creating documentation" -Foreground White
     cargo doc
 ) else (

@@ -93,6 +93,7 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.ntop import is_ntop_configured
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
@@ -2694,7 +2695,12 @@ def get_restapi_response_for_activation_id(
 
 
 def _raise_for_license_block(changes: Sequence[tuple[str, Mapping[str, Any]]]) -> None:
-    if block_effect := get_licensing_user_effect(changes=changes).block:
+    if block_effect := get_licensing_user_effect(
+        changes=changes,
+        licensing_settings_link=makeuri_contextless(
+            _request, [("mode", "edit_licensing_settings")], filename="wato.py"
+        ),
+    ).block:
         raise MKLicensingError(block_effect.message)
 
 

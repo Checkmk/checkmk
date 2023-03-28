@@ -12,11 +12,13 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import Request
+from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuPopupsRenderer, PageMenuRenderer
 from cmk.gui.page_state import PageState, PageStateRenderer
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import makeuri_contextless
 
 from .debug_vars import debug_vars
 from .generator import HTMLWriter
@@ -83,9 +85,13 @@ def top_heading(
 
 
 def _may_show_license_expiry(writer: HTMLWriter) -> None:
-    if (header_effect := get_licensing_user_effect().header) and (
-        set(header_effect.roles).intersection(user.role_ids)
-    ):
+    if (
+        header_effect := get_licensing_user_effect(
+            licensing_settings_link=makeuri_contextless(
+                _request, [("mode", "edit_licensing_settings")], filename="wato.py"
+            )
+        ).header
+    ) and (set(header_effect.roles).intersection(user.role_ids)):
         writer.show_warning(header_effect.message)
 
 

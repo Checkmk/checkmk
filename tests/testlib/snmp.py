@@ -20,15 +20,12 @@ from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
 
 class _StringSNMPBackend(StoredWalkSNMPBackend):
-    counter = 0  # bust that cache!
-
     def __init__(self, data_string):
         self.lines = [l for l in data_string.split("\n") if l]
-        _StringSNMPBackend.counter += 1
         super().__init__(
             SNMPHostConfig(
                 False,
-                f"unittest-{_StringSNMPBackend.counter}",
+                "unittest",
                 "127.0.0.1",
                 "",
                 0,

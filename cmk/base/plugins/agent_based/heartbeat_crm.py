@@ -145,7 +145,7 @@ def heartbeat_crm_parse_resources(  # pylint: disable=too-many-branches
             # Clone set
             resource = _title(parts[2])
             resources[resource] = []
-            mode = "cloneset"
+            mode = "masterslaveset" if "(promotable)" in parts[-1] else "cloneset"
         elif line.startswith("Master/Slave Set:"):
             # Master/Slave set
             resource = _title(parts[2])

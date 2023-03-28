@@ -156,8 +156,10 @@ export function update_argument_hints() {
             .selectAll<HTMLInputElement, unknown>("input.text")
             .nodes();
         while (required_inputs >= newNodes.length) {
-            valuespecs.list_of_strings_add_new_field(
-                newNodes[newNodes.length - 1] as HTMLInputElement
+            valuespecs.list_of_strings_extend(
+                nodes[nodes.length - 1],
+                false,
+                ""
             );
             newNodes = rule_body
                 .selectAll<HTMLDivElement, unknown>("div.listofstrings")

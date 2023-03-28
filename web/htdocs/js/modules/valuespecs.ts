@@ -338,7 +338,7 @@ function list_of_strings_remove_event_handlers(input: HTMLElement) {
 
 /* Is called when the last input field in a ListOfString gets focus.
    In that case a new input field is being appended. */
-function list_of_strings_extend(
+export function list_of_strings_extend(
     input: HTMLInputElement | HTMLSelectElement,
     split_on_paste: boolean,
     split_separators: string
@@ -354,7 +354,7 @@ function list_of_strings_extend(
     list_of_strings_remove_event_handlers(input);
 }
 
-export function list_of_strings_add_new_field(
+function list_of_strings_add_new_field(
     input: HTMLInputElement | HTMLSelectElement
 ) {
     /* The input field has a unique name like "extra_emails_2" for the field with

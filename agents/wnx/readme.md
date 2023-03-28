@@ -19,7 +19,7 @@ Run *windows_setup.cmd*. This is **Simplest** method to install some required Wi
 Alternatively you can **choco install make** and use Makefile
 
 ## Build Scripts
-1. run.cmd - to build/test agent
+1. build_release.cmd - to build MSI in ../artefacts
 2. build_watest.cmd- to build 32-bit watest to be used later
 
 

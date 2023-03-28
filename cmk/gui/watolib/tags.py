@@ -441,7 +441,10 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):  # pylint: disabl
         if not old_tag:
             continue
 
-        current_value = rule.conditions.host_tags[operation.tag_group_id]
+        current_value = rule.conditions.host_tags.get(operation.tag_group_id)
+        if current_value is None:
+            continue
+
         if current_value not in (old_tag, {"$ne": old_tag}):
             continue  # old_tag id is not configured
 

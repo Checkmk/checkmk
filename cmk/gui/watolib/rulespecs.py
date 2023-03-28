@@ -10,6 +10,7 @@ from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.licensing.registry import is_free, is_trial
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -287,6 +288,7 @@ class Rulespec(abc.ABC):
         item_help: Callable[[], str] | None,
         is_optional: bool,
         is_deprecated: bool,
+        is_cloud_edition_only: bool,
         is_for_services: bool,
         is_binary_ruleset: bool,
         factory_default: Any,
@@ -326,6 +328,7 @@ class Rulespec(abc.ABC):
         self._item_help = item_help
         self._is_optional = is_optional
         self._is_deprecated = is_deprecated
+        self._is_cloud_edition_only = is_cloud_edition_only
         self._is_binary_ruleset = is_binary_ruleset
         self._is_for_services = is_for_services
         self._factory_default = factory_default
@@ -349,6 +352,8 @@ class Rulespec(abc.ABC):
         plain_title = self._title() if self._title else self.valuespec.title()
         if self._is_deprecated:
             return "%s: %s" % (_("Deprecated"), plain_title)
+        if self._is_cloud_edition_only and (is_trial() or is_free()):
+            return f"{plain_title} (Cloud Edition)"
         return plain_title
 
     @property
@@ -440,6 +445,10 @@ class Rulespec(abc.ABC):
         return self._is_deprecated
 
     @property
+    def is_cloud_edition_only(self) -> bool:
+        return self._is_cloud_edition_only
+
+    @property
     def doc_references(self) -> dict[DocReference, str]:
         """Doc references of this rulespec and their titles"""
         return self._doc_references or {}
@@ -459,6 +468,7 @@ class HostRulespec(Rulespec):
         is_optional: bool = False,
         is_deprecated: bool = False,
         is_binary_ruleset: bool = False,
+        is_cloud_edition_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
         doc_references: dict[DocReference, str] | None = None,
@@ -471,6 +481,7 @@ class HostRulespec(Rulespec):
             match_type=match_type,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            is_cloud_edition_only=is_cloud_edition_only,
             is_binary_ruleset=is_binary_ruleset,
             factory_default=factory_default,
             help_func=help_func,
@@ -502,6 +513,7 @@ class ServiceRulespec(Rulespec):
         item_help: Callable[[], str] | None = None,
         is_optional: bool = False,
         is_deprecated: bool = False,
+        is_cloud_edition_only: bool = False,
         is_binary_ruleset: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
@@ -520,6 +532,7 @@ class ServiceRulespec(Rulespec):
             item_help=item_help,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            is_cloud_edition_only=is_cloud_edition_only,
             factory_default=factory_default,
             help_func=help_func,
             doc_references=doc_references,
@@ -670,6 +683,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         item_type: Literal["item", "service"] = "item",
         is_optional: bool = False,
         is_deprecated: bool = False,
+        is_cloud_edition_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         create_manual_check: bool = True,
     ) -> None:
@@ -693,6 +707,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
             item_spec=item_spec,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            is_cloud_edition_only=is_cloud_edition_only,
             # Excplicit set
             is_binary_ruleset=False,
             match_type=match_type or "first",

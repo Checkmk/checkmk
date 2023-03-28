@@ -1,4 +1,4 @@
-title: GCP HTTP/S LB: Summary
+title: GCP HTTP(S) Load Balancer: Summary
 agents: gcp
 catalog: cloud/gcp
 license: GPLv2

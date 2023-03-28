@@ -546,11 +546,20 @@ class RestApiClient:
         )
 
     # TODO: add optional parameters
-    def create_user(self, username: str, fullname: str, expect_ok: bool = True) -> Response:
-        body = {
+    def create_user(
+        self,
+        username: str,
+        fullname: str,
+        authorized_sites: Sequence[str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, str | Sequence[str]] = {
             "username": username,
             "fullname": fullname,
         }
+
+        if authorized_sites is not None:
+            body["authorized_sites"] = authorized_sites
 
         if version.is_managed_edition():
             body["customer"] = "provider"
@@ -598,9 +607,16 @@ class RestApiClient:
         username: str,
         fullname: str | None = None,
         contactgroups: list[str] | None = None,
+        authorized_sites: Sequence[str] | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        body = {"fullname": fullname, "contactgroups": contactgroups}
+        body: dict[str, str | Sequence[str] | None] = {
+            "fullname": fullname,
+            "contactgroups": contactgroups,
+        }
+
+        if authorized_sites is not None:
+            body["authorized_sites"] = authorized_sites
 
         # if there is no object, there's probably no etag.
         # But we want the 404 from the request below!

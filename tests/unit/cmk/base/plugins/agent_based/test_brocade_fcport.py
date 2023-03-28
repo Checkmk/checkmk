@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -457,12 +459,12 @@ def _get_check_result(section: bf.Section, item: str) -> list[IgnoreResults | Me
     )
 
 
-def test_interface_speed(fix_register: FixRegister) -> None:
-    assert snmp_is_detected(SectionName("brocade_fcport"), DATA_0)
+def test_interface_speed(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
+    assert snmp_is_detected(SectionName("brocade_fcport"), as_path(DATA_0))
     plugin = fix_register.check_plugins[CheckPluginName("brocade_fcport")]
-    parsed = get_parsed_snmp_section(SectionName("brocade_fcport"), DATA_0)
+    parsed = get_parsed_snmp_section(SectionName("brocade_fcport"), as_path(DATA_0))
     assert parsed is not None
-    assert list(plugin.discovery_function(DISCOVERY_DEFAULT_PARAMETERS, parsed,)) == [
+    assert list(plugin.discovery_function(DISCOVERY_DEFAULT_PARAMETERS, parsed)) == [
         Service(item="2 port2", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}),
         Service(item="3 port3", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}),
         Service(item="4 ISL port4", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}),

@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+from pathlib import Path
+
 import pytest
 
 from tests.testlib.snmp import get_parsed_snmp_section
@@ -126,8 +129,8 @@ def test_check_role_is_ok_even_if_not_initialized(role: str, expected: State) ->
     assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected
 
 
-def test_disk_health_status(fix_register: FixRegister) -> None:
-    parsed = get_parsed_snmp_section(SectionName("synology_disks"), DATA_0)
+def test_disk_health_status(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
+    parsed = get_parsed_snmp_section(SectionName("synology_disks"), as_path(DATA_0))
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 3", {}, parsed)) == [
         Metric("temp", 26.0),
@@ -138,8 +141,10 @@ def test_disk_health_status(fix_register: FixRegister) -> None:
     ]
 
 
-def test_disk_health_status_missing(fix_register: FixRegister) -> None:
-    parsed = get_parsed_snmp_section(SectionName("synology_disks"), DATA_1)
+def test_disk_health_status_missing(
+    fix_register: FixRegister, as_path: Callable[[str], Path]
+) -> None:
+    parsed = get_parsed_snmp_section(SectionName("synology_disks"), as_path(DATA_1))
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 1", {}, parsed)) == [
         Metric("temp", 27.0),
@@ -150,8 +155,8 @@ def test_disk_health_status_missing(fix_register: FixRegister) -> None:
     ]
 
 
-def test_hotspare(fix_register: FixRegister) -> None:
-    parsed = get_parsed_snmp_section(SectionName("synology_disks"), DATA_2)
+def test_hotspare(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
+    parsed = get_parsed_snmp_section(SectionName("synology_disks"), as_path(DATA_2))
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 4", {}, parsed)) == [
         Metric("temp", 35.0),

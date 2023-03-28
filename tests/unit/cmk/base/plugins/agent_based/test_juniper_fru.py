@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+from pathlib import Path
 
 from tests.testlib.snmp import get_parsed_snmp_section, snmp_is_detected
 
@@ -116,10 +118,10 @@ DATA_1 = """
 """
 
 
-def test_juniper_fru(fix_register: FixRegister) -> None:
-    assert snmp_is_detected(SectionName("juniper_fru"), DATA_1)
+def test_juniper_fru(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
+    assert snmp_is_detected(SectionName("juniper_fru"), as_path(DATA_1))
     plugin = fix_register.check_plugins[CheckPluginName("juniper_fru")]
-    parsed = get_parsed_snmp_section(SectionName("juniper_fru"), DATA_1)
+    parsed = get_parsed_snmp_section(SectionName("juniper_fru"), as_path(DATA_1))
     assert list(plugin.discovery_function(parsed)) == [
         Service(item="PEM 0"),
         Service(item="PEM 1"),
@@ -131,10 +133,10 @@ def test_juniper_fru(fix_register: FixRegister) -> None:
     ]
 
 
-def test_juniper_fru_18(fix_register: FixRegister) -> None:
-    assert snmp_is_detected(SectionName("juniper_fru"), DATA_0)
+def test_juniper_fru_18(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
+    assert snmp_is_detected(SectionName("juniper_fru"), as_path(DATA_0))
     plugin = fix_register.check_plugins[CheckPluginName("juniper_fru")]
-    parsed = get_parsed_snmp_section(SectionName("juniper_fru"), DATA_0)
+    parsed = get_parsed_snmp_section(SectionName("juniper_fru"), as_path(DATA_0))
     assert list(plugin.discovery_function(parsed)) == [
         Service(item="PSM 1"),
         Service(item="PSM 1 INP0"),

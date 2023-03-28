@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Callable
+from pathlib import Path
+
 import pytest
 
 from tests.testlib.snmp import snmp_is_detected
@@ -29,5 +32,5 @@ DATA1 = """
         pytest.param(DATA1, id="data1"),
     ],
 )
-def test_apc_symmetra_power_detect(walk: str) -> None:
-    assert snmp_is_detected(SectionName("apc_symmetra_power"), walk)
+def test_apc_symmetra_power_detect(walk: str, as_path: Callable[[str], Path]) -> None:
+    assert snmp_is_detected(SectionName("apc_symmetra_power"), as_path(walk))

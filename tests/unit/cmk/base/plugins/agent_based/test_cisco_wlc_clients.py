@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Callable
+from pathlib import Path
+
 import pytest
 
 from tests.testlib.snmp import get_parsed_snmp_section, snmp_is_detected
@@ -204,15 +207,15 @@ DATA = """
 
 
 @pytest.mark.usefixtures("fix_register")
-def test_cisco_wlc_client_with_snmp_walk() -> None:
+def test_cisco_wlc_client_with_snmp_walk(as_path: Callable[[str], Path]) -> None:
     plugin = agent_based_register.get_check_plugin(CheckPluginName("wlc_clients"))
     assert plugin
 
     # test detect
-    assert snmp_is_detected(SectionName("cisco_wlc_9800_clients"), DATA)
+    assert snmp_is_detected(SectionName("cisco_wlc_9800_clients"), as_path(DATA))
 
     # parse
-    parsed = get_parsed_snmp_section(SectionName("cisco_wlc_9800_clients"), DATA)
+    parsed = get_parsed_snmp_section(SectionName("cisco_wlc_9800_clients"), as_path(DATA))
 
     # test discovery
     assert list(plugin.discovery_function(parsed)) == [

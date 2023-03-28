@@ -8,9 +8,7 @@ import pytest
 from tests.testlib import create_linux_test_host
 from tests.testlib.site import Site
 
-from cmk.utils.type_defs import HostName
-
-from cmk.checkers.discovery import AutochecksStore
+from cmk.checkers.discovery._autochecks import _AutochecksSerializer
 
 
 def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) -> None:
@@ -63,7 +61,9 @@ register.check_plugin(
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_1":
             assert entry.item == "Parameters({'default': 42})"
@@ -80,7 +80,9 @@ register.check_plugin(
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
     site.openapi.discover_services_and_wait_for_completion(host_name)
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_1":
             assert entry.item == "Parameters({'default': 42, 'levels': (1, 2)})"
@@ -141,7 +143,9 @@ register.check_plugin(
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
 
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_2":
@@ -159,7 +163,9 @@ register.check_plugin(
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
     site.openapi.discover_services_and_wait_for_completion(host_name)
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_2":
             assert entry.item == (

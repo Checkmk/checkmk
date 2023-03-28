@@ -985,12 +985,17 @@ class SiteField(base.String):
         presence: Literal[
             "should_exist", "should_not_exist", "might_not_exist", "ignore"
         ] = "should_exist",
+        allow_all_value: bool = False,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.presence = presence
+        self.allow_all_value = allow_all_value
 
     def _validate(self, value):
+        if self.allow_all_value and value == "all":
+            return
+
         if self.presence == "might_not_exist":
             return
 

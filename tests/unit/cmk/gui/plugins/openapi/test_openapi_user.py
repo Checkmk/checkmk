@@ -1360,6 +1360,18 @@ def test_openapi_edit_non_existing_user_regression(api_client: RestApiClient) ->
     ).assert_status_code(404)
 
 
+def test_openapi_all_authorized_sites(api_client: RestApiClient) -> None:
+    api_client.create_user(
+        username="user1", fullname="User 1", authorized_sites=["all"], expect_ok=True
+    )
+    api_client.create_user(
+        username="user2", fullname="User 2", authorized_sites=["NO_SITE"], expect_ok=True
+    )
+    api_client.edit_user(
+        username="user2", fullname="User 2", authorized_sites=["all"], expect_ok=True
+    )
+
+
 @pytest.fixture(name="mock_users_config")
 def fixture_mock_users_config(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(

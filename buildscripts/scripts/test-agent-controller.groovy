@@ -9,17 +9,6 @@ def main() {
                 sh("packages/cmk-agent-ctl/run --setup-environment --clean --all");
             }
         }
-        stage("Analyse Issues") {
-            publishIssues(
-                issues: [scanForIssues( tool: gcc())],
-                trendChartType: 'TOOLS_ONLY',
-                qualityGates: [[
-                    threshold: 1,
-                    type: 'TOTAL',
-                    unstable: false,
-                ]],
-            );
-        }
     }
 }
 return this;

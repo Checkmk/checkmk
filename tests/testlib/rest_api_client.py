@@ -985,6 +985,13 @@ class HostTagGroupTestClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def delete(self, ident: str, repair: bool = False, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{ident}?repair={repair}",
+            expect_ok=expect_ok,
+        )
+
     def edit(
         self,
         ident: str,

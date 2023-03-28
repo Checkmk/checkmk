@@ -213,11 +213,27 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
     affected = change_host_tags(OperationRemoveTagGroup(ident), TagCleanupMode.CHECK)
     if any(affected):
         if not params["repair"]:
+            affected_folder, affected_hosts, affected_rulesets = affected
+            affected_occurrences = []
+
+            if affected_folder:
+                affected_occurrences.append(
+                    f"folders ({', '.join(f.name() for f in affected_folder)})"
+                )
+            if affected_hosts:
+                affected_occurrences.append(
+                    f"hosts ({', '.join(h.name() for h in affected_hosts)})"
+                )
+            if affected_rulesets:
+                affected_occurrences.append(
+                    f"rulesets ({', '.join(r.name for r in affected_rulesets)})"
+                )
+
             return problem(
                 status=401,
                 title=f'Deleting this host tag group "{ident}" requires additional authorization',
                 detail=(
-                    "The host tag group you intend to delete is used by other instances. You must "
+                    f"The host tag group you intend to delete is used in the following occurrences: {', '.join(affected_occurrences)}. You must "
                     "authorize Checkmk to update the relevant instances using the repair parameter"
                 ),
             )

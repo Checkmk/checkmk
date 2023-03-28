@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from tests.testlib.rest_api_client import HostTagGroupTestClient
+from tests.testlib.rest_api_client import HostTagGroupTestClient, RestApiClient
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -416,4 +416,28 @@ def test_openapi_host_tag_group_empty_tags(host_tag_group_client: HostTagGroupTe
         ident="group_id999",
         tags=[],
         expect_ok=False,
+    )
+
+
+def test_openapi_delete_dependant_host_tag(
+    api_client: RestApiClient, host_tag_group_client: HostTagGroupTestClient
+) -> None:
+    host_tag_group_client.create(
+        ident="group_id999",
+        title="Kubernetes",
+        help_text="Kubernetes Pods",
+        tags=[{"ident": "pod", "title": "Pod"}],
+    )
+    api_client.create_host(
+        host_name="example.com",
+        attributes={"tag_group_id999": "pod"},
+    )
+    resp = host_tag_group_client.delete(
+        ident="group_id999",
+        repair=False,
+        expect_ok=False,
+    ).assert_status_code(401)
+
+    assert resp.json["detail"].startswith(
+        "The host tag group you intend to delete is used in the following occurrences: hosts (example.com)."
     )

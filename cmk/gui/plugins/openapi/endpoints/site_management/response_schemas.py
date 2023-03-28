@@ -170,6 +170,7 @@ class BasicSettingsAttributes(BaseSchema):
         description="The alias of the site.",
         example="Site Alias",
     )
+    customer = gui_fields.customer_field()
 
 
 class StatusConnectionAttributes(BaseSchema):

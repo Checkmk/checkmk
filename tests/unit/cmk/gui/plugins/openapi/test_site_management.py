@@ -13,6 +13,8 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.utils import version
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi.endpoints.site_management.common import (
     default_config_example as _default_config,
@@ -212,9 +214,7 @@ def test_site_post(post_site: Callable, collection_base: str) -> None:
 
 def test_site_post_site_already_exists(post_site: Callable, collection_base: str) -> None:
     post_site(url=collection_base, params=json.dumps(_default_config()))
-    post_site(
-        url=collection_base, params=json.dumps(_default_config()), status=400
-    )  # Site id needs to be checked for POST requests
+    post_site(url=collection_base, params=json.dumps(_default_config()), status=400)
 
 
 keys_to_remove = ("basic_settings", "status_connection", "configuration_connection")
@@ -225,7 +225,7 @@ def test_site_post_site_missing_settings(
     key: str, post_site: Callable, collection_base: str
 ) -> None:
     config = _default_config()
-    config["site_config"].pop(key)
+    config["site_config"].pop(key)  # type: ignore
     post_site(url=collection_base, params=json.dumps(config), status=400)
 
 
@@ -650,7 +650,7 @@ config_cnx_test_data_400 = (
 
 @pytest.mark.parametrize("data", config_cnx_test_data_200)
 def test_put_configuration_connection_200(
-    data: Mapping[str, Any],
+    data: dict[str, Any],
     post_site: Callable,
     collection_base: str,
     object_base: str,
@@ -666,7 +666,7 @@ def test_put_configuration_connection_200(
 
 @pytest.mark.parametrize("data", config_cnx_test_data_400)
 def test_put_configuration_connection_400(
-    data: Mapping[str, Any],
+    data: dict[str, Any],
     post_site: Callable,
     object_base: str,
     collection_base: str,
@@ -786,3 +786,21 @@ def test_put_update_url_prefix_400(
 
     config["site_config"]["status_connection"]["url_prefix"] = "/remote_site_1"
     put_site(url=f"{object_base}{site_id}", params=json.dumps(config), status=400)
+
+
+def test_post_site_config_customer_field(
+    post_site: Callable,
+    collection_base: str,
+) -> None:
+    config = _default_config()
+    if version.is_managed_edition():
+        r = post_site(url=collection_base, params=json.dumps(config), status=200)
+        assert "customer" in r.json["extensions"]["basic_settings"]
+        del config["site_config"]["basic_settings"]["customer"]
+        post_site(url=collection_base, params=json.dumps(config), status=400)
+
+    else:
+        r = post_site(url=collection_base, params=json.dumps(config), status=200)
+        assert "customer" not in r.json["extensions"]["basic_settings"]
+        config["site_config"]["basic_settings"].update({"customer": "provider"})
+        post_site(url=collection_base, params=json.dumps(config), status=400)

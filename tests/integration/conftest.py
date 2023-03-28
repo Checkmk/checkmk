@@ -43,6 +43,7 @@ def fixture_site() -> Site:
             site = sf.get_site("test")
         else:
             logging.info("Reuse existing site")
+            site.set_livestatus_port_from_config()
             site.start()
     else:
         if site.exists():

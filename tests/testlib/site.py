@@ -361,14 +361,18 @@ class Site:
         kwargs["shell"] = True
         return subprocess.Popen(cmd_txt, *args, **kwargs)
 
-    def check_output(self, cmd: list[str]) -> str:
+    def check_output(
+        self, cmd: list[str], input: str | None = None  # pylint: disable=redefined-builtin
+    ) -> str:
         """Mimics behavior of of subprocess.check_output
 
         Seems to be OK for now but we should find a better abstraction than just
         wrapping self.execute().
         """
-        p = self.execute(cmd, encoding="utf-8", stdout=subprocess.PIPE)
-        stdout, stderr = p.communicate()
+        p = self.execute(
+            cmd, encoding="utf-8", stdout=subprocess.PIPE, stdin=subprocess.PIPE if input else None
+        )
+        stdout, stderr = p.communicate(input)
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, p.args, stdout, stderr)
         return stdout
@@ -1354,9 +1358,9 @@ class PythonHelper:
         finally:
             self.site.delete_file(str(self.site_path))
 
-    def check_output(self) -> str:
+    def check_output(self, input: str | None = None) -> str:  # pylint: disable=redefined-builtin
         with self.copy_helper():
-            return self.site.check_output(["python3", str(self.site_path)])
+            return self.site.check_output(["python3", str(self.site_path)], input)
 
     @contextmanager
     def execute(self) -> Iterator[subprocess.Popen]:

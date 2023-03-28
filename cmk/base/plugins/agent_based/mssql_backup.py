@@ -145,8 +145,17 @@ def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -
             state=State.OK,
             summary=f"{backup_type_info} Last backup: {render.datetime(backup.timestamp)}",
         )
+        if backup.timestamp is None:
+            return
+        if (age := time.time() - backup.timestamp) < 0:
+            yield Result(
+                state=State.WARN,
+                summary="Cannot reasonably calculate time since last backup (hosts time is running ahead), "
+                f"Time since last backup: -{render.timespan(abs(age))}",
+            )
+            return
         yield from check_levels(
-            time.time() - backup.timestamp,  # type: ignore[operator]  # aparrently this does not happen
+            age,
             metric_name=perfkey,
             levels_upper=params.get(backup_type_var),
             render_func=render.timespan,
@@ -210,8 +219,17 @@ def check_mssql_backup_per_type(
                     state=State.OK,
                     summary=f"Last backup: {render.datetime(backup.timestamp)}",
                 )
+                if backup.timestamp is None:
+                    return
+                if (age := time.time() - backup.timestamp) < 0:
+                    yield Result(
+                        state=State.WARN,
+                        summary="Cannot reasonably calculate time since last backup (hosts time is running ahead), "
+                        f"Time since last backup: -{render.timespan(abs(age))}",
+                    )
+                    return
                 yield from check_levels(
-                    time.time() - backup.timestamp,  # type: ignore[operator]  # aparrently this does not happen
+                    age,
                     metric_name="backup_age",
                     levels_upper=params.get("levels"),
                     render_func=render.timespan,

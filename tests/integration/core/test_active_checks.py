@@ -25,14 +25,12 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
     )
 
     site.activate_changes_and_wait_for_core_reload()
-    yield
-
-    #
-    # Cleanup code
-    #
-    print("Cleaning up test config")
-
-    site.openapi.delete_host("test-host")
+    try:
+        yield
+    finally:
+        print("Cleaning up test config")
+        site.openapi.delete_host("test-host")
+        site.activate_changes_and_wait_for_core_reload()
 
 
 @pytest.mark.usefixtures("web")

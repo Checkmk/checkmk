@@ -177,7 +177,10 @@ class ProxyParams:
     cache: bool | None = None
 
     @classmethod
-    def from_internal(cls, internal_config: ProxyConfigParams) -> ProxyParams:
+    def from_internal(cls, internal_config: ProxyConfigParams | None) -> ProxyParams:
+        if internal_config is None:
+            return cls()
+
         hb = internal_config.get("heartbeat")
         return cls(
             channels=internal_config.get("channels"),
@@ -252,26 +255,19 @@ class Proxy:
     @classmethod
     def from_external(cls, external_config: Mapping[str, Any]) -> Proxy:
         direct_or_with_proxy = external_config["use_livestatus_daemon"]
+        global_settings = (
+            external_config["global_settings"] if direct_or_with_proxy == "with_proxy" else None
+        )
 
-        if params := external_config.get("params"):
-            if heartbeat := params.get("heartbeat"):
-                params["heartbeat"] = Heartbeat(**heartbeat)
-            proxyparams = ProxyParams(**params)
-            global_settings = False
-        else:
-            proxyparams = ProxyParams()
-            global_settings = True
-
-        if tcp := external_config.get("tcp"):
-            tcp_val = ProxyTcp(**tcp)
-        else:
-            tcp_val = ProxyTcp()
+        params = external_config.get("params", {})
+        if heartbeat := params.get("heartbeat"):
+            params["heartbeat"] = Heartbeat(**heartbeat)
 
         return cls(
             direct_or_with_proxy=direct_or_with_proxy,
             global_settings=global_settings,
-            params=proxyparams,
-            tcp=tcp_val,
+            params=ProxyParams(**params),
+            tcp=ProxyTcp(**external_config.get("tcp", {})),
         )
 
     @classmethod
@@ -283,23 +279,11 @@ class Proxy:
             "with_proxy" if "params" in internal_config else "direct"
         )
 
-        if proxyconfigparams := internal_config.get("params"):
-            proxyparams = ProxyParams.from_internal(proxyconfigparams)
-            global_settings = False
-        else:
-            proxyparams = ProxyParams()
-            global_settings = True
-
-        if tcp := internal_config.get("tcp"):
-            tcp_val = ProxyTcp(**tcp)
-        else:
-            tcp_val = ProxyTcp()
-
         return cls(
             direct_or_with_proxy=direct_or_with_proxy,
-            global_settings=global_settings,
-            params=proxyparams,
-            tcp=tcp_val,
+            global_settings=bool(internal_config.get("params") is None),
+            params=ProxyParams.from_internal(internal_config.get("params", {})),
+            tcp=ProxyTcp(**internal_config.get("tcp", {})),
         )
 
     def to_external(self) -> Iterator[tuple[str, str | bool | None | dict]]:
@@ -321,11 +305,14 @@ class Proxy:
             return None
 
         proxyconfig: ProxyConfig = {}
+        proxyconfig["params"] = {}
+
+        if self.global_settings:
+            proxyconfig["params"] = None
+
         if self.params:
             if paramsdict := self.params.to_internal():
                 proxyconfig["params"] = paramsdict
-            else:
-                proxyconfig["params"] = None
 
         if self.tcp:
             if tcpdict := self.tcp.to_internal():

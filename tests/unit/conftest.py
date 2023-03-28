@@ -7,7 +7,7 @@ import copy
 import logging
 import os
 import shutil
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 from typing import Generator
 
@@ -45,6 +45,21 @@ def enable_debug_fixture():
     cmk.utils.debug.enable()
     yield
     cmk.utils.debug.debug_mode = debug_mode
+
+
+@pytest.fixture
+def as_path(tmp_path: Path) -> Callable[[str], Path]:
+    """See Also:
+    * https://docs.pytest.org/en/7.2.x/how-to/fixtures.html#factories-as-fixtures
+
+    """
+
+    def _as_path(walk: str) -> Path:
+        data = tmp_path / "data"
+        data.write_text(walk)
+        return data
+
+    return _as_path
 
 
 @pytest.fixture

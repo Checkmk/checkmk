@@ -30,9 +30,13 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 
 class StoredWalkSNMPBackend(SNMPBackend):
-    def __init__(self, snmp_config: SNMPHostConfig, logger: logging.Logger) -> None:
+    def __init__(
+        self, snmp_config: SNMPHostConfig, logger: logging.Logger, path: Path | None = None
+    ) -> None:
         super().__init__(snmp_config, logger)
-        self.path: Final = Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
+        self.path: Final = (
+            path if path is not None else Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
+        )
 
     def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
         walk = self.walk(oid)

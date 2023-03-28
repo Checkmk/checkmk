@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Sequence
-from typing import Any
+from pathlib import Path
+from typing import Any, Final
 
 from cmk.utils.type_defs import SectionName
 
@@ -18,38 +18,28 @@ from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
-
-class _StringSNMPBackend(StoredWalkSNMPBackend):
-    def __init__(self, data_string):
-        self.lines = [l for l in data_string.split("\n") if l]
-        super().__init__(
-            SNMPHostConfig(
-                False,
-                "unittest",
-                "127.0.0.1",
-                "",
-                0,
-                False,
-                False,
-                0,
-                {},
-                {},
-                [],
-                None,
-                SNMPBackendEnum.STORED_WALK,
-            ),
-            logging.getLogger("tbd"),
-        )
-
-    def read_walk_data(self) -> Sequence[str]:
-        return self.lines
+SNMP_HOST_CONFIG: Final = SNMPHostConfig(
+    False,
+    "unittest",
+    "127.0.0.1",
+    "",
+    0,
+    False,
+    False,
+    0,
+    {},
+    {},
+    [],
+    None,
+    SNMPBackendEnum.STORED_WALK,
+)
 
 
-def snmp_is_detected(section_name: SectionName, snmp_walk: str) -> bool:
+def snmp_is_detected(section_name: SectionName, snmp_walk: Path) -> bool:
     section = agent_based_register.get_snmp_section_plugin(section_name)
     assert isinstance(section, SNMPSectionPlugin)
 
-    backend = _StringSNMPBackend(snmp_walk)
+    backend = StoredWalkSNMPBackend(SNMP_HOST_CONFIG, logging.getLogger("test"), snmp_walk)
 
     def oid_value_getter(oid: str) -> str | None:
         value = backend.get(oid)
@@ -63,8 +53,8 @@ def snmp_is_detected(section_name: SectionName, snmp_walk: str) -> bool:
     )
 
 
-def get_parsed_snmp_section(section_name: SectionName, snmp_walk: str) -> Any | None:
-    backend = _StringSNMPBackend(snmp_walk)
+def get_parsed_snmp_section(section_name: SectionName, snmp_walk: Path) -> Any | None:
+    backend = StoredWalkSNMPBackend(SNMP_HOST_CONFIG, logging.getLogger("test"), snmp_walk)
 
     section = agent_based_register.get_snmp_section_plugin(section_name)
     assert isinstance(section, SNMPSectionPlugin)

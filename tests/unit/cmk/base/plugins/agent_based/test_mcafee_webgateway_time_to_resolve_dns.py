@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import typing
+from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
@@ -37,23 +39,26 @@ WALK = """
 """
 
 
-def test_detect(fix_register: FixRegister) -> None:
-    assert snmp_is_detected(SectionName("mcafee_webgateway_misc"), WALK)
+def test_detect(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
+    assert snmp_is_detected(SectionName("mcafee_webgateway_misc"), as_path(WALK))
 
 
-def test_parse(fix_register: FixRegister) -> None:
+def test_parse(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
     # Act
-    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), WALK)
+    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), as_path(WALK))
+
     # Assert
     assert section is not None
 
 
-def test_discovery(fix_register: FixRegister) -> None:
+def test_discovery(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
     # Assemble
-    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), WALK)
+    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), as_path(WALK))
     assert section is not None
+
     # Act
     services = list(mcafee_webgateway_time_to_resolve_dns.discovery(section=section))
+
     # Assert
     assert services == [v1.Service()]
 
@@ -99,27 +104,31 @@ def test_check_results(
     fix_register: FixRegister,
     params_misc: dict[str, object],
     expected_results: list[v1.Result],
+    as_path: Callable[[str], Path],
 ) -> None:
     # Assemble
     params = typing.cast(
         mcafee_gateway.MiscParams, mcafee_gateway.MISC_DEFAULT_PARAMS | params_misc
     )
-    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), WALK)
+    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), as_path(WALK))
     assert section is not None
+
     # Act
     results = [
         r
         for r in mcafee_webgateway_time_to_resolve_dns.check(params=params, section=section)
         if isinstance(r, v1.Result)
     ]
+
     # Assert
     assert results == expected_results
 
 
-def test_check_metrics(fix_register: FixRegister) -> None:
+def test_check_metrics(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
     # Assemble
-    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), WALK)
+    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), as_path(WALK))
     assert section is not None
+
     # Act
     metrics = [
         r
@@ -128,5 +137,6 @@ def test_check_metrics(fix_register: FixRegister) -> None:
         )
         if isinstance(r, v1.Metric)
     ]
+
     # Assert
     assert metrics == [v1.Metric("time_to_resolve_dns", 2.0, levels=(1.5, 2.0))]

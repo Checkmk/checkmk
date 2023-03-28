@@ -9,6 +9,7 @@ from functools import partial
 from typing import Generic, Literal, NamedTuple, Protocol
 
 from cmk.utils.cpu_tracking import Snapshot
+from cmk.utils.structured_data import StructuredDataNode
 from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginName,
@@ -192,6 +193,12 @@ class PDiscoveryPlugin(Protocol):
 class PInventoryResult(Protocol):
     @property
     def path(self) -> Sequence[str]:
+        ...
+
+    def populate_inventory_tree(self, tree: StructuredDataNode) -> None:
+        ...
+
+    def populate_status_data_tree(self, tree: StructuredDataNode) -> None:
         ...
 
 

@@ -47,6 +47,7 @@ from cmk.checkers import (
     HostKey,
     ParserFunction,
     PInventoryPlugin,
+    PInventoryResult,
     PSectionPlugin,
     SourceType,
     SummarizerFunction,
@@ -62,7 +63,6 @@ from cmk.checkers.sectionparser import (
 )
 from cmk.checkers.sectionparserutils import check_parsing_errors, get_cache_info, get_section_kwargs
 
-from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import ConfigCache
 
 __all__ = [
@@ -304,7 +304,7 @@ def inventorize_status_data_of_real_host(
 
 @dataclass(frozen=True)
 class ItemsOfInventoryPlugin:
-    items: list[Attributes | TableRow]
+    items: list[PInventoryResult]
     raw_cache_info: tuple[int, int] | None
 
 
@@ -384,11 +384,9 @@ def _collect_inventory_plugin_items(
             console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok\n")
 
 
-def _parse_inventory_plugin_item(item: object, expected_class_name: str) -> Attributes | TableRow:
-    if not isinstance(item, (Attributes, TableRow)):
-        # can't happen, inventory results are filtered
-        raise NotImplementedError()
-
+def _parse_inventory_plugin_item(
+    item: PInventoryResult, expected_class_name: str
+) -> PInventoryResult:
     if item.__class__.__name__ != expected_class_name:
         raise TypeError(
             f"Cannot create {item.__class__.__name__} at path {item.path}:"
@@ -423,25 +421,8 @@ def _create_trees_from_inventory_plugin_items(
 
     for items_of_inventory_plugin in items_of_inventory_plugins:
         for item in items_of_inventory_plugin.items:
-            if isinstance(item, Attributes):
-                if item.inventory_attributes:
-                    node = inventory_tree.setdefault_node(tuple(item.path))
-                    node.attributes.add_pairs(item.inventory_attributes)
-
-                if item.status_attributes:
-                    node = status_data_tree.setdefault_node(tuple(item.path))
-                    node.attributes.add_pairs(item.status_attributes)
-
-            elif isinstance(item, TableRow):
-                # do this always, it sets key_columns!
-                node = inventory_tree.setdefault_node(tuple(item.path))
-                node.table.add_key_columns(sorted(item.key_columns))
-                node.table.add_rows([{**item.key_columns, **item.inventory_columns}])
-
-                if item.status_columns:
-                    node = status_data_tree.setdefault_node(tuple(item.path))
-                    node.table.add_key_columns(sorted(item.key_columns))
-                    node.table.add_rows([{**item.key_columns, **item.status_columns}])
+            item.populate_inventory_tree(inventory_tree)
+            item.populate_status_data_tree(status_data_tree)
 
     return InventoryTrees(
         inventory=inventory_tree,

@@ -340,17 +340,7 @@ def assertDiscoveryResultsEqual(check, actual, expected):
 
     for enta, ente in zip(actual.entries, expected.entries):
         item_a, default_params_a = enta
-        if isinstance(default_params_a, str):
-            default_params_a = eval(  # pylint: disable=eval-used
-                default_params_a, check.context, check.context
-            )
-
         item_e, default_params_e = ente
-        if isinstance(default_params_e, str):
-            default_params_e = eval(  # pylint: disable=eval-used
-                default_params_e, check.context, check.context
-            )
-
         assert item_a == item_e, f"items differ: {item_a!r} != {item_e!r}"
         assert (
             default_params_a == default_params_e

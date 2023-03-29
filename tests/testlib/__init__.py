@@ -322,7 +322,6 @@ class Check(BaseCheck):
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
         self.info = config.check_info[self.name]
-        self.context = config._check_contexts[self.name]
         self._migrated_plugin = register.get_check_plugin(
             CheckPluginName(self.name.replace(".", "_"))
         )

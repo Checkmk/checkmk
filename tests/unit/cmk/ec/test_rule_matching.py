@@ -23,7 +23,14 @@ from cmk.ec.rule_matcher import (
     "message,result,match_message,cancel_message,match_result,cancel_groups",
     [
         # No pattern, match
-        ("bla CRIT", MatchSuccess(cancelling=False, match_groups={}), "", None, (), None),
+        (
+            "bla CRIT",
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            "",
+            None,
+            (),
+            None,
+        ),
         # Non regex, no match
         (
             "bla CRIT",
@@ -45,7 +52,7 @@ from cmk.ec.rule_matcher import (
         # None regex, no match, cancel match
         (
             "bla CRIT",
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             "blub",
             "bla CRIT",
             False,
@@ -54,7 +61,7 @@ from cmk.ec.rule_matcher import (
         # regex, no match, cancel match
         (
             "bla CRIT",
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             "blub$",
             "bla CRIT$",
             False,
@@ -63,7 +70,7 @@ from cmk.ec.rule_matcher import (
         # Non regex -> no match group
         (
             "bla CRIT",
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             "bla CRIT",
             "bla OK",
             (),
@@ -71,7 +78,7 @@ from cmk.ec.rule_matcher import (
         ),
         (
             "bla OK",
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             "bla CRIT",
             "bla OK",
             False,
@@ -80,7 +87,7 @@ from cmk.ec.rule_matcher import (
         # Regex without match group
         (
             "bla CRIT",
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             "bla CRIT$",
             "bla OK$",
             (),
@@ -88,7 +95,7 @@ from cmk.ec.rule_matcher import (
         ),
         (
             "bla OK",
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             "bla CRIT$",
             "bla OK$",
             False,
@@ -97,7 +104,7 @@ from cmk.ec.rule_matcher import (
         # Regex With match group
         (
             "bla CRIT",
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             "(bla) CRIT$",
             "(bla) OK$",
             ("bla",),
@@ -105,14 +112,21 @@ from cmk.ec.rule_matcher import (
         ),
         (
             "bla OK",
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             "(bla) CRIT$",
             "(bla) OK$",
             False,
             ("bla",),
         ),
         # regex, both match
-        ("bla OK", MatchSuccess(cancelling=False, match_groups={}), "bla .*", "bla OK", (), ()),
+        (
+            "bla OK",
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            "bla .*",
+            "bla OK",
+            (),
+            (),
+        ),
     ],
 )
 def test_match_message(
@@ -194,14 +208,14 @@ def test_match_priority(
             {"match": ""},
             {"match_groups_message": ()},
             MatchPriority(has_match=True, has_canceling_match=False),
-            MatchSuccess(cancelling=False, match_groups={"match_groups_message": ()}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups(match_groups_message=())),
         ),
         # Both configured but positive matches
         (
             {"match": "abc A abc", "match_ok": "abc X abc"},
             {"match_groups_message": ()},
             MatchPriority(has_match=True, has_canceling_match=False),
-            MatchSuccess(cancelling=False, match_groups={"match_groups_message": ()}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups(match_groups_message=())),
         ),
         # Both configured but  negative matches
         (
@@ -210,10 +224,10 @@ def test_match_priority(
             MatchPriority(has_match=True, has_canceling_match=False),
             MatchSuccess(
                 cancelling=True,
-                match_groups={
-                    "match_groups_message": False,
-                    "match_groups_message_ok": (),
-                },
+                match_groups=MatchGroups(
+                    match_groups_message=False,
+                    match_groups_message_ok=(),
+                ),
             ),
         ),
         # Both match
@@ -223,10 +237,10 @@ def test_match_priority(
             MatchPriority(has_match=True, has_canceling_match=False),
             MatchSuccess(
                 cancelling=True,
-                match_groups={
-                    "match_groups_message": (),
-                    "match_groups_message_ok": (),
-                },
+                match_groups=MatchGroups(
+                    match_groups_message=(),
+                    match_groups_message_ok=(),
+                ),
             ),
         ),
     ],
@@ -244,9 +258,9 @@ def test_match_outcome(
 @pytest.mark.parametrize(
     "result,rule",
     [
-        (MatchSuccess(cancelling=False, match_groups={}), {}),
+        (MatchSuccess(cancelling=False, match_groups=MatchGroups()), {}),
         (MatchFailure(reason="The site does not match."), {"match_site": []}),
-        (MatchSuccess(cancelling=False, match_groups={}), {"match_site": ["NO_SITE"]}),
+        (MatchSuccess(cancelling=False, match_groups=MatchGroups()), {"match_site": ["NO_SITE"]}),
         (MatchFailure(reason="The site does not match."), {"match_site": ["dong"]}),
     ],
 )
@@ -259,32 +273,48 @@ def test_match_site(rule: Rule, result: MatchResult) -> None:
 @pytest.mark.parametrize(
     "result,rule,event",
     [
-        (MatchSuccess(cancelling=False, match_groups={}), {}, {"host": "abc"}),
+        (MatchSuccess(cancelling=False, match_groups=MatchGroups()), {}, {"host": "abc"}),
         # TODO weird the empty string in the rule seems to be interpreted as 'no match_host specified', which is clearly incorrect.
-        (MatchSuccess(cancelling=False, match_groups={}), {"match_host": ""}, {"host": "abc"}),
-        (MatchSuccess(cancelling=False, match_groups={}), {"match_host": ""}, {"host": ""}),
+        (
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            {"match_host": ""},
+            {"host": "abc"},
+        ),
+        (
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            {"match_host": ""},
+            {"host": ""},
+        ),
         (
             MatchFailure(reason="Did not match because of wrong host 'aaaabc' (need 'abc')"),
             {"match_host": "abc"},
             {"host": "aaaabc"},
         ),
-        (MatchSuccess(cancelling=False, match_groups={}), {"match_host": ".bc"}, {"host": "xbc"}),
+        (
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            {"match_host": ".bc"},
+            {"host": "xbc"},
+        ),
         (
             MatchFailure(reason="Did not match because of wrong host 'abcc' (need 'abc')"),
             {"match_host": "abc"},
             {"host": "abcc"},
         ),
         (
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             {"match_host": "abc.*"},
             {"host": "abcc"},
         ),
         (
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             {"match_host": ".*abc.*"},
             {"host": "ccabcc"},
         ),
-        (MatchSuccess(cancelling=False, match_groups={}), {"match_host": "^abc$"}, {"host": "abc"}),
+        (
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            {"match_host": "^abc$"},
+            {"host": "abc"},
+        ),
         (
             MatchFailure(reason="Did not match because of wrong host 'abx' (need '^abc$')"),
             {"match_host": "^abc$"},
@@ -307,24 +337,24 @@ def test_match_host(result: MatchResult, rule: Rule, event: Event) -> None:
 @pytest.mark.parametrize(
     "result,rule,event",
     [
-        (MatchSuccess(cancelling=False, match_groups={}), {}, {"ipaddress": "10.3.3.4"}),
+        (MatchSuccess(cancelling=False, match_groups=MatchGroups()), {}, {"ipaddress": "10.3.3.4"}),
         (
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             {"match_ipaddress": "10.3.3.4"},
             {"ipaddress": "10.3.3.4"},
         ),
         (
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             {"match_ipaddress": "10.3.3.0/24"},
             {"ipaddress": "10.3.3.4"},
         ),
         (
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             {"match_ipaddress": "2001:db00::0/24"},
             {"ipaddress": "2001:db00::1"},
         ),
         (
-            MatchSuccess(cancelling=False, match_groups={}),
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             {"match_ipaddress": "10.0.0.0/8"},
             {"ipaddress": "10.3.3.4"},
         ),
@@ -366,8 +396,12 @@ def test_match_ipaddress(result: MatchResult, rule: Rule, event: Event) -> None:
 @pytest.mark.parametrize(
     "result,rule,event",
     [
-        (MatchSuccess(cancelling=False, match_groups={}), {}, {"facility": 1}),
-        (MatchSuccess(cancelling=False, match_groups={}), {"match_facility": 1}, {"facility": 1}),
+        (MatchSuccess(cancelling=False, match_groups=MatchGroups()), {}, {"facility": 1}),
+        (
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            {"match_facility": 1},
+            {"facility": 1},
+        ),
         (
             MatchFailure(reason="Did not match because of wrong syslog facility"),
             {"match_facility": 2},

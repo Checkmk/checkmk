@@ -26,7 +26,7 @@ def event_rule_matches(
     if rule.get("invert_matching"):
         if isinstance(result, ec.MatchSuccess):
             return ec.MatchFailure(reason=_("The rule would match, but matching is inverted."))
-        return ec.MatchSuccess(cancelling=False, match_groups={})
+        return ec.MatchSuccess(cancelling=False, match_groups=ec.MatchGroups())
     return result
 
 
@@ -59,7 +59,7 @@ def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
             if match_groups is True:
                 match_groups = ()
             return ec.MatchSuccess(
-                cancelling=True, match_groups={"match_groups_message": match_groups}
+                cancelling=True, match_groups=ec.MatchGroups(match_groups_message=match_groups)
             )
 
     try:
@@ -95,7 +95,9 @@ def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
 
     if match_groups is True:
         match_groups = ()  # no matching groups
-    return ec.MatchSuccess(cancelling=False, match_groups={"match_groups_message": match_groups})
+    return ec.MatchSuccess(
+        cancelling=False, match_groups=ec.MatchGroups(match_groups_message=match_groups)
+    )
 
 
 def check_timeperiod(tpname: str) -> str | None:

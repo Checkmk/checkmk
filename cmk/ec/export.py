@@ -10,6 +10,7 @@ from .config import (
     ConfigFromWATO,
     ECRulePack,
     ECRulePackSpec,
+    MatchGroups,
     MkpRulePackProxy,
     Rule,
     TextMatchResult,

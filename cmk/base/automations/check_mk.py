@@ -139,7 +139,7 @@ class DiscoveryAutomation(Automation):
         if config_cache.is_cluster(host_name):
             return
 
-        discovery.schedule_discovery_check(host_name)
+        discovery.livestatus.schedule_discovery_check(host_name)
 
 
 def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]]:

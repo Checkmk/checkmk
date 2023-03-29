@@ -81,6 +81,7 @@ from cmk.base.agent_based.confcheckers import (
     InventoryPluginMapper,
     SectionPluginMapper,
 )
+from cmk.base.agent_based.discovery.livestatus import schedule_discovery_check
 from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import ConfigCache
@@ -1531,6 +1532,7 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         host_label_plugins=HostLabelPluginMapper(),
         plugins=DiscoveryPluginMapper(),
         get_service_description=config.service_description,
+        schedule_discovery_check=schedule_discovery_check,
         on_error=OnError.IGNORE,
     )
 

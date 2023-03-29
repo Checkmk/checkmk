@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import socket
 import time
 from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
@@ -60,7 +59,7 @@ from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
 from .utils import DiscoveryMode, QualifiedDiscovery
 
-__all__ = ["schedule_discovery_check", "get_host_services"]
+__all__ = ["get_host_services"]
 
 _BasicTransition = Literal["old", "new", "vanished"]
 _Transition = Union[
@@ -74,27 +73,6 @@ _L = TypeVar("_L", bound=str)
 ServicesTableEntry = tuple[_L, AutocheckEntry, list[HostName]]
 ServicesTable = dict[ServiceID, ServicesTableEntry[_L]]
 ServicesByTransition = dict[_Transition, list[AutocheckServiceWithNodes]]
-
-
-# TODO: Move to livestatus module!
-def schedule_discovery_check(host_name: HostName) -> None:
-    now = int(time.time())
-    service = (
-        "Check_MK Discovery"
-        if "cmk_inventory" in config.use_new_descriptions_for
-        else "Check_MK inventory"
-    )
-    # Ignore missing check and avoid warning in cmc.log
-    cmc_try = ";TRY" if config.monitoring_core == "cmc" else ""
-    command = f"SCHEDULE_FORCED_SVC_CHECK;{host_name};{service};{now}{cmc_try}"
-
-    try:
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(cmk.utils.paths.livestatus_unix_socket)
-        s.send(f"COMMAND [{now}] {command}\n".encode())
-    except Exception:
-        if cmk.utils.debug.enabled():
-            raise
 
 
 # determine changed services on host.
@@ -375,6 +353,7 @@ def discover_marked_hosts(
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    schedule_discovery_check: Callable[[HostName], object],
     on_error: OnError,
 ) -> None:
     """Autodiscovery"""
@@ -413,6 +392,7 @@ def discover_marked_hosts(
                 host_label_plugins=host_label_plugins,
                 plugins=plugins,
                 get_service_description=get_service_description,
+                schedule_discovery_check=schedule_discovery_check,
                 autodiscovery_queue=autodiscovery_queue,
                 reference_time=rediscovery_reference_time,
                 oldest_queued=oldest_queued,
@@ -460,6 +440,7 @@ def _discover_marked_host(
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    schedule_discovery_check: Callable[[HostName], object],
     autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,

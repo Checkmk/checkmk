@@ -3,13 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from . import livestatus
 from ._discovery import execute_check_discovery
-from .autodiscovery import (
-    automation_discovery,
-    discover_marked_hosts,
-    get_host_services,
-    schedule_discovery_check,
-)
+from .autodiscovery import automation_discovery, discover_marked_hosts, get_host_services
 from .commandline import commandline_discovery
 from .preview import get_check_preview, SourcesFailedError
 from .utils import DiscoveryMode, QualifiedDiscovery
@@ -24,5 +20,5 @@ __all__ = [
     "execute_check_discovery",
     "get_check_preview",
     "get_host_services",
-    "schedule_discovery_check",
+    "livestatus",
 ]

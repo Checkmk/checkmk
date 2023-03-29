@@ -160,15 +160,20 @@ def user_from_basic_header(auth_header: str) -> tuple[UserId, Password]:
         >>> user_from_basic_header("Basic Zm9vYmF6YmFyOmZvb2JhemJhcg==")  # doctest: +ELLIPSIS
         ('foobazbar', <cmk.utils.crypto...>)
 
-        >>> import pytest
-        >>> with pytest.raises(MKAuthException):
-        ...     user_from_basic_header("Basic SGFsbG8gV2VsdCE=")  # 'Hallo Welt!'
+        >>> user_from_basic_header("Basic SGFsbG8gV2VsdCE=")  # 'Hallo Welt!'
+        Traceback (most recent call last):
+            ...
+        cmk.gui.exceptions.MKAuthException: Not a valid Basic token.
 
-        >>> with pytest.raises(MKAuthException):
-        ...     user_from_basic_header("Basic foobazbar")
+        >>> user_from_basic_header("Basic foobazbar")
+        Traceback (most recent call last):
+            ...
+        cmk.gui.exceptions.MKAuthException: Not a valid Basic token.
 
-        >>> with pytest.raises(MKAuthException):
-        ...      user_from_basic_header("Basic     ")
+        >>> user_from_basic_header("Basic     ")
+        Traceback (most recent call last):
+            ...
+        cmk.gui.exceptions.MKAuthException: Not a valid Basic token.
 
     Args:
         auth_header:

@@ -502,12 +502,10 @@ class _LiveStatusColumn(base.String):
         >>> _LiveStatusColumn(table=Hosts).deserialize('name')
         'name'
 
-        >>> import pytest
-        >>> with pytest.raises(ValidationError) as exc:
-        ...     _LiveStatusColumn(table=Hosts).deserialize('bar')
-        >>> exc.value.messages
-        ['Unknown column: hosts.bar']
-
+        >>> _LiveStatusColumn(table=Hosts).deserialize('bar')
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: Unknown column: hosts.bar
     """
 
     default_error_messages = {

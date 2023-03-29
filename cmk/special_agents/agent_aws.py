@@ -715,9 +715,11 @@ class AWSSection(DataCache):
         """
         What this is all about:
         https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricStat.html
-        >>> import pytest
-        >>> with pytest.raises(AssertionError):
-        ...     [AWSSection.validate_period(p, r) for p, r in [(34, "low"), (45, "high"), (120.0, "low")]]
+        >>> [AWSSection.validate_period(p, r) for p, r in [(34, "low"), (45, "high"), (120.0, "low")]]
+        Traceback (most recent call last):
+        ...
+        AssertionError: Period must be a multiple of 60 or equal to 1, 5, 10, 30, 60 in case of high resolution.
+
         >>> AWSSection.validate_period(1234, resolution_type="foo bar")
         Traceback (most recent call last):
             ...

@@ -226,10 +226,11 @@ def _make_url(
         ...
         ValueError: Parameter 'host' (required path-parameter), not found in path '/foo'
 
-        >>> import pytest
         >>> # This exceptions gets thrown by another function, so we don't care about the wording.
-        >>> with pytest.raises(ValueError):
-        ...     _make_url('/foo/{host}', [], {'host': 'example.com'})
+        >>> _make_url('/foo/{host}', [], {'host': 'example.com'})  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        ValueError: ...
 
     Args:
         path:

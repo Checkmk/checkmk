@@ -314,14 +314,17 @@ def attr_openapi_schema(
 
         Unknown attributes lead to an error:
 
-            >>> import pytest
-            >>> with pytest.raises(ValidationError):
-            ...     schema_obj.load({'foo': 'bar'})
+            >>> schema_obj.load({'foo': 'bar'})
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: {'foo': ['Unknown field.']}
 
         Wrong values on tag groups also lead to an error:
 
-            >>> with pytest.raises(ValidationError):
-            ...     schema_obj.load({'tag_address_family': 'ip-v5-only'})
+            >>> schema_obj.load({'tag_address_family': 'ip-v5-only'})
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: {'tag_address_family': ["'ip-v5-only' is not one of the enum values: ['ip-v4-only', 'ip-v6-only', 'ip-v4v6', 'no-ip']"]}
 
     Args:
         object_type:

@@ -308,9 +308,6 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
 
         Setting the `many` param will turn this into a list:
 
-            >>> import pytest
-            >>> from marshmallow import ValidationError
-
             >>> class Bulk(Schema):
             ...      entries = Nested(Service,
             ...                       many=True, uniqueItems=True,
@@ -322,11 +319,10 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
             ...     {'host': 'host', 'description': 'CPU load'}
             ... ]
 
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bulk().load({'entries': entries})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #2: \
-{'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
+            >>> Bulk().load({'entries': entries})
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: {'entries': ["Duplicate entry found at entry #2: {'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
 
             >>> schema = Bulk()
             >>> assert schema.fields['entries'].load_default is not fields.missing_
@@ -366,27 +362,25 @@ class List(OpenAPIAttributes, fields.List, UniqueFields):
             ...      id = String()
             ...      lists = List(String(), uniqueItems=True)
 
-            >>> import pytest
-            >>> from marshmallow import ValidationError
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Foo().load({'lists': ['2', '2']})
-            >>> exc.value.messages
-            {'lists': ["Duplicate entry found at entry #2: '2'"]}
+            >>> Foo().load({'lists': ['2', '2']})
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: {'lists': ["Duplicate entry found at entry #2: '2'"]}
 
         With nested schemas:
 
             >>> class Bar(Schema):
             ...      entries = List(Nested(Foo), allow_none=False, required=True, uniqueItems=True)
 
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bar().load({'entries': [{'id': '1'}, {'id': '2'}, {'id': '2'}]})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #3: {'id': '2'}"]}
+            >>> Bar().load({'entries': [{'id': '1'}, {'id': '2'}, {'id': '2'}]})
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: {'entries': ["Duplicate entry found at entry #3: {'id': '2'}"]}
 
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bar().load({'entries': [{'lists': ['2']}, {'lists': ['2']}]})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #2: {'lists': ['2']}"]}
+            >>> Bar().load({'entries': [{'lists': ['2']}, {'lists': ['2']}]})
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: {'entries': ["Duplicate entry found at entry #2: {'lists': ['2']}"]}
 
         Some more examples:
 
@@ -398,16 +392,14 @@ class List(OpenAPIAttributes, fields.List, UniqueFields):
             >>> class Bulk(Schema):
             ...      entries = List(Nested(Service), uniqueItems=True)
 
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bulk().load({"entries": [
-            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
-            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'day'},
-            ...         {'host': 'host', 'description': 'CPU load'}
-            ...     ]})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #2: \
-{'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
-
+            >>> Bulk().load({"entries": [
+            ...     {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
+            ...     {'host': 'example', 'description': 'CPU load', 'recur': 'day'},
+            ...     {'host': 'host', 'description': 'CPU load'}
+            ... ]})
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: {'entries': ["Duplicate entry found at entry #2: {'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
     """
 
     default_error_messages = {

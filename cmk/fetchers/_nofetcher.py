@@ -25,7 +25,7 @@ class NoFetcherError(enum.Enum):
     The messages are visible in the UI and should be user friendly.
     """
 
-    NO_FETCHER = "no valid datasource configured"
+    NO_FETCHER = "host configuration requires a datasource but none configured"
     MISSING_IP = "Failed to lookup IP address and no explicit IP address configured"
 
 

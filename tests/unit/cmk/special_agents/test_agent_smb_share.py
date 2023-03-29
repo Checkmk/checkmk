@@ -255,6 +255,7 @@ def test_parse_arguments() -> None:
             ["Subfolder1", "**", "some_file"],
             True,
             {
+                (f"{SHARE_BASE}\\Subfolder1\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file", "some_file"),
@@ -372,6 +373,7 @@ def test_parse_arguments() -> None:
             ["Subfolder1", "**", "*"],
             True,
             {
+                (f"{SHARE_BASE}\\Subfolder1\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file", "some_file"),
@@ -415,6 +417,9 @@ def test_parse_arguments() -> None:
             ["Subfolder1", "**", "**", "some_file"],
             True,
             {
+                (f"{SHARE_BASE}\\Subfolder1\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file", "some_file"),
                 (
@@ -505,14 +510,18 @@ def test_parse_arguments() -> None:
             ["Subfolder1", "**", "Subfolder*", "**", "some_file"],
             True,
             {
-                (
-                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\some_file",
-                    "some_file",
-                ),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
                 (
                     f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\Subfolder7\\some_file",
                     "some_file",
                 ),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\some_file",
+                    "some_file",
+                ),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file", "some_file"),
             },
             id="double star globbing twice, with a folder in between",
         ),
@@ -554,7 +563,11 @@ def test_parse_arguments() -> None:
             [],
             ["**"],
             True,
-            set(),
+            {
+                (f"{SHARE_BASE}\\Subfolder1\\file3", "file3"),
+                (f"{SHARE_BASE}\\file1", "file1"),
+                (f"{SHARE_BASE}\\file2", "file2"),
+            },
             id="match only directories and no files with **",
         ),
         pytest.param(

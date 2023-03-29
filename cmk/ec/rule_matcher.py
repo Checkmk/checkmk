@@ -115,7 +115,7 @@ class RuleMatcher:
         match_priority = self.event_rule_determine_match_priority(rule, event)
         if match_priority is None:
             # Abort on negative outcome, neither positive nor negative
-            result = MatchFailure("The syslog priority does not match")
+            result = MatchFailure(reason="The syslog priority does not match")
             self._log_rule_matching(result.reason)
             return result
 
@@ -139,7 +139,9 @@ class RuleMatcher:
                 result = MatchSuccess(cancelling=False, match_groups={})
                 self._log_rule_matching("Rule would not match, but due to inverted matching does.")
             else:
-                result = MatchFailure("Rule would match, but due to inverted matching does not.")
+                result = MatchFailure(
+                    reason="Rule would match, but due to inverted matching does not."
+                )
                 self._log_rule_matching(result.reason)
         return result
 
@@ -197,7 +199,7 @@ class RuleMatcher:
                 self._log_rule_matching("did not cancel event, because of wrong cancel priority")
 
         # TODO: create a better reason
-        return MatchFailure("Unknown")
+        return MatchFailure(reason="Unknown")
 
     def event_rule_matches_generic(self, rule: Rule, event: Event) -> MatchResult:
         """
@@ -244,12 +246,12 @@ class RuleMatcher:
     def event_rule_matches_site(self, rule: Rule, event: Event) -> MatchResult:
         if "match_site" not in rule or self._omd_site in rule["match_site"]:
             return MatchSuccess(cancelling=False, match_groups={})
-        return MatchFailure("The site does not match.")
+        return MatchFailure(reason="The site does not match.")
 
     def event_rule_matches_host(self, rule: Rule, event: Event) -> MatchResult:
         if match(rule.get("match_host"), event["host"], complete=True) is False:
             return MatchFailure(
-                f"Did not match because of wrong host {event['host']!r} (need {format_pattern(rule.get('match_host'))!r})"
+                reason=f"Did not match because of wrong host {event['host']!r} (need {format_pattern(rule.get('match_host'))!r})"
             )
 
         return MatchSuccess(cancelling=False, match_groups={})
@@ -257,14 +259,14 @@ class RuleMatcher:
     def event_rule_matches_ip(self, rule: Rule, event: Event) -> MatchResult:
         if not match_ip_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
             return MatchFailure(
-                f"Did not match because of wrong source IP address {event['ipaddress']!r} (need {rule.get('match_ipaddress')!r})"
+                reason=f"Did not match because of wrong source IP address {event['ipaddress']!r} (need {rule.get('match_ipaddress')!r})"
             )
 
         return MatchSuccess(cancelling=False, match_groups={})
 
     def event_rule_matches_facility(self, rule: Rule, event: Event) -> MatchResult:
         if "match_facility" in rule and event["facility"] != rule["match_facility"]:
-            return MatchFailure("Did not match because of wrong syslog facility")
+            return MatchFailure(reason="Did not match because of wrong syslog facility")
 
         return MatchSuccess(cancelling=False, match_groups={})
 
@@ -276,7 +278,7 @@ class RuleMatcher:
             p = event.get("sl", 0)
             if p < sl_from or p > sl_to:
                 return MatchFailure(
-                    f"Did not match because of wrong service level {p} (need {sl_from}..{sl_to})"
+                    reason=f"Did not match because of wrong service level {p} (need {sl_from}..{sl_to})"
                 )
 
         return MatchSuccess(cancelling=False, match_groups={})
@@ -284,7 +286,7 @@ class RuleMatcher:
     def event_rule_matches_timeperiod(self, rule: Rule, event: Event) -> MatchResult:
         if "match_timeperiod" in rule and not self._is_active_time_period(rule["match_timeperiod"]):
             return MatchFailure(
-                f"The time period {rule['match_timeperiod']} is not is not known or is currently not active"
+                reason=f"The time period {rule['match_timeperiod']} is not is not known or is currently not active"
             )
         return MatchSuccess(cancelling=False, match_groups={})
 
@@ -327,7 +329,7 @@ class RuleMatcher:
             match_groups.get("match_groups_syslog_application", False) is False
             and match_groups.get("match_groups_syslog_application_ok", False) is False
         ):
-            return MatchFailure("did not match, syslog application does not match")
+            return MatchFailure(reason="did not match, syslog application does not match")
 
         return MatchSuccess(cancelling=False, match_groups={})
 
@@ -350,6 +352,6 @@ class RuleMatcher:
             match_groups["match_groups_message"] is False
             and match_groups.get("match_groups_message_ok", False) is False
         ):
-            return MatchFailure("did not match, message text does not match")
+            return MatchFailure(reason="did not match, message text does not match")
 
         return MatchSuccess(cancelling=False, match_groups={})

@@ -275,7 +275,7 @@ def match_event_rule(rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event) -
         )
         site_customer_id = managed.get_customer_id(active_config.sites[event["site"]])
         if rule_customer_id not in (managed.SCOPE_GLOBAL, site_customer_id):
-            return ec.MatchFailure(_("Wrong customer"))
+            return ec.MatchFailure(reason=_("Wrong customer"))
     return event_rule_matches(rule, event)
 
 

@@ -25,8 +25,8 @@ def event_rule_matches(
     result = event_rule_matches_non_inverted(rule, event)
     if rule.get("invert_matching"):
         if isinstance(result, ec.MatchSuccess):
-            return ec.MatchFailure(_("The rule would match, but matching is inverted."))
-        return ec.MatchSuccess(False, {})
+            return ec.MatchFailure(reason=_("The rule would match, but matching is inverted."))
+        return ec.MatchSuccess(cancelling=False, match_groups={})
     return result
 
 
@@ -35,16 +35,16 @@ def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
     event: ec.Event,
 ) -> ec.MatchResult:
     if not ec.match_ip_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
-        return ec.MatchFailure(_("The source IP address does not match."))
+        return ec.MatchFailure(reason=_("The source IP address does not match."))
 
     if match(rule.get("match_host"), event["host"], complete=True) is False:
-        return ec.MatchFailure(_("The host name does not match."))
+        return ec.MatchFailure(reason=_("The host name does not match."))
 
     if match(rule.get("match_application"), event["application"], complete=False) is False:
-        return ec.MatchFailure(_("The application (syslog tag) does not match"))
+        return ec.MatchFailure(reason=_("The application (syslog tag) does not match"))
 
     if "match_facility" in rule and event["facility"] != rule["match_facility"]:
-        return ec.MatchFailure(_("The syslog facility does not match"))
+        return ec.MatchFailure(reason=_("The syslog facility does not match"))
 
     # First try cancelling rules
     if "match_ok" in rule or "cancel_priority" in rule:
@@ -58,14 +58,16 @@ def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
         if match_groups is not False and cp:
             if match_groups is True:
                 match_groups = ()
-            return ec.MatchSuccess(True, {"match_groups_message": match_groups})
+            return ec.MatchSuccess(
+                cancelling=True, match_groups={"match_groups_message": match_groups}
+            )
 
     try:
         match_groups = match(rule.get("match"), event["text"], complete=False)
     except Exception as e:
-        return ec.MatchFailure(_("Invalid regular expression: %s") % e)
+        return ec.MatchFailure(reason=_("Invalid regular expression: %s") % e)
     if match_groups is False:
-        return ec.MatchFailure(_("The message text does not match the required pattern."))
+        return ec.MatchFailure(reason=_("The message text does not match the required pattern."))
 
     if "match_priority" in rule:
         prio_from, prio_to = rule["match_priority"]
@@ -73,7 +75,7 @@ def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
             prio_to, prio_from = prio_from, prio_to
         p = event["priority"]
         if p < prio_from or p > prio_to:
-            return ec.MatchFailure(_("The syslog priority is not in the required range."))
+            return ec.MatchFailure(reason=_("The syslog priority is not in the required range."))
 
     if "match_sl" in rule:
         sl_from, sl_to = rule["match_sl"]
@@ -82,7 +84,9 @@ def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
         p = event.get("sl", 0)
 
         if p < sl_from or p > sl_to:
-            return ec.MatchFailure(_("Wrong service level %d (need %d..%d)") % (p, sl_from, sl_to))
+            return ec.MatchFailure(
+                reason=_("Wrong service level %d (need %d..%d)") % (p, sl_from, sl_to)
+            )
 
     if "match_timeperiod" in rule:
         reason = check_timeperiod(rule["match_timeperiod"])
@@ -91,7 +95,7 @@ def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
 
     if match_groups is True:
         match_groups = ()  # no matching groups
-    return ec.MatchSuccess(False, {"match_groups_message": match_groups})
+    return ec.MatchSuccess(cancelling=False, match_groups={"match_groups_message": match_groups})
 
 
 def check_timeperiod(tpname: str) -> str | None:

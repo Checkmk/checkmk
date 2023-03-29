@@ -1329,7 +1329,7 @@ class EventServer(ECServerThread):
                 result = self.event_rule_matches(rule, event)
             except Exception as e:
                 result = MatchFailure(
-                    f"Rule would match, but due to inverted matching does not. {e}"
+                    reason=f"Rule would match, but due to inverted matching does not. {e}"
                 )
                 self._logger.exception(result.reason)
 

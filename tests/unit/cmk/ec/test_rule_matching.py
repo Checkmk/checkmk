@@ -27,7 +27,7 @@ from cmk.ec.rule_matcher import (
         # Non regex, no match
         (
             "bla CRIT",
-            MatchFailure("did not match, message text does not match"),
+            MatchFailure(reason="did not match, message text does not match"),
             "blub",
             None,
             False,
@@ -36,7 +36,7 @@ from cmk.ec.rule_matcher import (
         # Regex, no match
         (
             "bla CRIT",
-            MatchFailure("did not match, message text does not match"),
+            MatchFailure(reason="did not match, message text does not match"),
             "blub$",
             None,
             False,

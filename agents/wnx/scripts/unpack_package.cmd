@@ -45,6 +45,7 @@ powershell Write-Host "Unpacking '%tgz%' to %out_root_dir%" -ForegroundColor Dar
 if not exist "%tar%" powershell Write-Host "'%tar%' not found, decompression failed" -ForegroundColor Red && goto exit:
 powershell Write-Host "Unpacking '%tar%' to %out_root_dir%%out_folder%" -ForegroundColor DarkGreen
 %unpacker% "%tar%" -aos -o"%out_root_dir%%out_folder%" > nul
+del %tar%
 if "%out_folder%" == "" (
 powershell Write-Host "Renaming %src_file_name%" "%out_dir_name%" -ForegroundColor DarkGreen
 rename "%out_root_dir%\%src_file_name%" "%out_dir_name%"
@@ -63,6 +64,6 @@ powershell Write-Host "Usage:" -ForegroundColor DarkGreen
 powershell Write-Host "unpack_package.cmd file_name target_dir_name sourcedir_name" -ForegroundColor DarkGreen
 powershell Write-Host "sourcedir_name is subdirectory in ..\omd\packages" -ForegroundColor DarkGreen
 powershell Write-Host "Example with folder in tarball:" -ForegroundColor DarkGreen
-powershell Write-Host "       unpack_package.cmd 7z ..\..\..\third_party\googletest googletest-71140c3ca7-patched.tar.gz ..\packages2 googletest" -ForegroundColor DarkGreen
-powershell Write-Host "Example without folder in tarball: unpack_package.cmd simpleini-2af65fc        simpleini  simpleini  7-zip\7z.exe ..\packagesx simpleini" -ForegroundColor DarkGreen
+powershell Write-Host "       unpack_package.cmd 7z ..\..\..\third_party\googletest googletest-71140c3ca7-patched.tar.gz ..\packages2 googletest *" -ForegroundColor DarkGreen
+powershell Write-Host "Example without folder in tarball: unpack_package.cmd simpleini-2af65fc simpleini simpleini 7-zip\7z.exe ..\packagesx simpleini" -ForegroundColor DarkGreen
 :exit

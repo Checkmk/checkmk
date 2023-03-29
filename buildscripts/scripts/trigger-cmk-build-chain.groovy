@@ -46,21 +46,6 @@ def main() {
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY_ONLY', value: params.PUSH_TO_REGISTRY_ONLY],
     ];
 
-    // TODO: Remove the managed nightly trigger as soon as we're out of beta phase
-    def job_parameters_managed = [
-        [$class: 'StringParameterValue', name: 'EDITION', value: 'managed'],
-        [$class: 'StringParameterValue',  name: 'VERSION', value: VERSION],
-        [$class: 'StringParameterValue',  name: 'OVERRIDE_DISTROS', value: params.OVERRIDE_DISTROS],
-        [$class: 'BooleanParameterValue', name: 'SKIP_DEPLOY_TO_WEBSITE', value: params.SKIP_DEPLOY_TO_WEBSITE],
-        [$class: 'BooleanParameterValue', name: 'DEPLOY_TO_WEBSITE_ONLY', value: params.DEPLOY_TO_WEBSITE_ONLY],
-        [$class: 'BooleanParameterValue', name: 'FAKE_WINDOWS_ARTIFACTS', value: params.FAKE_WINDOWS_ARTIFACTS],
-        [$class: 'StringParameterValue',  name: 'DOCKER_TAG', value: DOCKER_TAG],
-        [$class: 'StringParameterValue',  name: 'DOCKER_TAG_BUILD', value: params.DOCKER_TAG_BUILD],
-        [$class: 'BooleanParameterValue', name: 'SET_LATEST_TAG', value: params.SET_LATEST_TAG],
-        [$class: 'BooleanParameterValue', name: 'SET_BRANCH_LATEST_TAG', value: params.SET_BRANCH_LATEST_TAG],
-        [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: params.PUSH_TO_REGISTRY],
-        [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY_ONLY', value: params.PUSH_TO_REGISTRY_ONLY],
-    ];
     // TODO we should take this list from a single source of truth
     assert edition in ["enterprise", "raw", "free", "managed", "cloud"] : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}")
@@ -86,8 +71,7 @@ def main() {
     def success = true;
 
     stage("Build Packages") {
-        build(job: "${base_folder}/build-cmk-packages", parameters:job_parameters);
-        build(job: "${base_folder}/build-cmk-packages", parameters:job_parameters_managed);
+        build(job: "${base_folder}/build-cmk-packages", parameters: job_parameters);
     }
 
     success &= smart_stage(

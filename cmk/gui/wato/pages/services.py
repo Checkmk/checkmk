@@ -698,12 +698,26 @@ class DiscoveryPageRenderer:
             )
             return
 
+        if self._is_first_attempt(api_request):
+            html.show_message(
+                _("Could not find any service for this host. You might need to trigger a rescan.")
+            )
+            return
+
         html.show_message(
-            _("Could not find any service for this host. You might need to trigger a rescan.")
+            _(
+                "No services found. "
+                "If you expect this host to have (vanished) services, it probably means that one "
+                "of the confured data sources is not operating as expected. "
+                "Take a look at the <i>Check_MK</i> service to see what is wrong."
+            )
         )
 
     def _is_active(self, discovery_result):
         return discovery_result.job_status["is_active"]
+
+    def _is_first_attempt(self, api_request: dict) -> bool:
+        return api_request["discovery_result"] is None
 
     def _group_check_table_by_state(
         self, check_table: Iterable[CheckPreviewEntry]

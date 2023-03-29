@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-07-11 16:38+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
+"PO-Revision-Date: 2023-03-29 06:00+0000\n"
+"Last-Translator: Thomas Lippert <thomas.lippert@tribe29.com>\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/"
 "software/fr/>\n"
 "Language: fr\n"
@@ -29,9 +29,8 @@ msgstr " (%d temps)"
 msgid " (Copy)"
 msgstr " (copie)"
 
-#, fuzzy
 msgid " (Data incomplete, maximum number of nodes reached)"
-msgstr "Le nombre maximum de noeuds est dépassé %d/%d"
+msgstr " Le nombre maximum de noeuds est dépassé %d/%d"
 
 #, python-format
 msgid " (Duration: %s)"
@@ -68,9 +67,8 @@ msgstr " (en relation avec tous les paquets (succès + erreur))"
 msgid " (in relation to all successful packets)"
 msgstr " (en relation avec tous les paquets correctement installés)"
 
-#, fuzzy
 msgid " (packaged)"
-msgstr "Paquet"
+msgstr " Paquet"
 
 #, python-format
 msgid " (worst state: %s)"
@@ -88,10 +86,11 @@ msgstr ""
 msgid " Activate this option"
 msgstr " Activer cette option"
 
+#, fuzzy
 msgid ""
-" An identifier of your choice. This identifier is used by the Check_MK "
-"checks to access and identify the single values. The identifier needs to be "
-"unique within a group of VALUETYPES."
+" An identifier of your choice. This identifier is used by the Checkmk checks "
+"to access and identify the single values. The identifier needs to be unique "
+"within a group of VALUETYPES."
 msgstr ""
 " Un identifiant de votre choix. Cet identifiant est utilisé par les "
 "contrôles Check_MK pour accéder aux valeurs individuelles et les identifier. "
@@ -166,6 +165,9 @@ msgstr " en relation avec %s"
 
 msgid " larger than"
 msgstr " plus grand que"
+
+msgid " left in your free trial"
+msgstr ""
 
 msgid " next week"
 msgstr " semaine prochaine"
@@ -351,6 +353,10 @@ msgstr "%d conditions"
 #, python-format
 msgid "%d custom service attributes"
 msgstr "%d attributs de services personnalisés"
+
+#, fuzzy, python-format
+msgid "%d days"
+msgstr "en %d jours"
 
 #, python-format
 msgid "%d days ago"
@@ -564,8 +570,8 @@ msgstr "%s étiquettes correspondantes : %s"
 msgid "%s may be missing, if must not be empty if it is set."
 msgstr "%s peut être manquant, s'il ne doit pas être vide s'il est défini."
 
-#, python-format
-msgid "%s not in the selected WATO folders."
+#, fuzzy, python-format
+msgid "%s not in the selected Setup folders."
 msgstr "%s ne se trouve pas dans les dossiers WATO sélectionnés."
 
 #, python-format
@@ -700,6 +706,11 @@ msgstr ""
 
 msgid "&lt;None&gt;"
 msgstr "&lt;None&gt ;"
+
+msgid ""
+"'Activate Changes' is blocked. Distributed monitoring is not available after "
+"trial expiration, including hosts added via CMCDUmp"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -1166,12 +1177,12 @@ msgstr ""
 "vous donc que vous avez une sauvegarde ou que vous n'avez plus besoin de "
 "cette clé."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "<b>Beware:</b> The folder contains <b>%d</b> hosts, which will also be "
 "deleted!"
 msgstr ""
-" Les dossiers qui contiennent <b>%d</b> hôtes, seront également supprimés !"
+"Les dossiers qui contiennent <b>%d</b> hôtes, seront également supprimés !"
 
 #, fuzzy
 msgid ""
@@ -1372,9 +1383,10 @@ msgstr ""
 "d'utilisateurs, des adresses de messagerie ou des numéros de téléphone et "
 "sont marqués d'un 'M'."
 
+#, fuzzy
 msgid ""
-"<br>Please note that Check_MK needs this password in clear<br>text during "
-"normal operation and thus stores it unencrypted<br>on the Check_MK server."
+"<br>Please note that Checkmk needs this password in clear<br>text during "
+"normal operation and thus stores it unencrypted<br>on the Checkmk server."
 msgstr ""
 "<br>Veuillez noter que Check_MK a besoin de ce mot de passe en "
 "clair<br>pendant le fonctionnement normal et le stocke donc en clair<br>sur "
@@ -1495,8 +1507,9 @@ msgstr ""
 "être définie. Sinon, un avertissement peut s'afficher si le fichier de la "
 "journée en cours n'est pas encore présent.</p>"
 
+#, fuzzy
 msgid ""
-"<p>In distributed WATO setups it is possible to synchronize the extensions "
+"<p>In distributed Setup setups it is possible to synchronize the extensions "
 "(MKPs and files in <tt>~/local/</tt>) to the slave sites. These files are "
 "synchronized on every replication with a slave site and can possibly slow "
 "down the synchronization in case the files are large. You could either "
@@ -3952,6 +3965,10 @@ msgstr "Temps d'arrêt ponctuel"
 msgid "Adhoc for %d minutes"
 msgstr "Adhoc pendant %d minutes"
 
+#, fuzzy
+msgid "Admin States"
+msgstr "Etat administratif"
+
 msgid "Admin state"
 msgstr "Etat administratif"
 
@@ -4038,8 +4055,9 @@ msgstr ""
 "que les étalonnages se produisant juste avant minuit ne déclenchent pas de "
 "fausses alarmes."
 
+#, fuzzy
 msgid ""
-"After a gateway has been found, Check_MK checks if it is reachable via PING. "
+"After a gateway has been found, Checkmk checks if it is reachable via PING. "
 "If not, it is skipped and the next gateway nearer to the monitoring core is "
 "being tried. You can disable this check by setting the number of PING probes "
 "to 0."
@@ -4836,14 +4854,14 @@ msgstr "Tous les services"
 msgid "All sites"
 msgstr "Tous les sites"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "All supported linux distributions provide a mechanism of managing trusted "
 "CAs. Depending on your linux distributions the paths where these CAs are "
 "stored and the commands to manage the CAs differ. Please check out the "
 "documentation of your linux distribution in case you want to customize "
 "trusted CAs system wide. You can choose here to trust the system wide CAs "
-"here. Check_MK will search these directories for system wide CAs: %s"
+"here. Checkmk will search these directories for system wide CAs: %s"
 msgstr ""
 "Toutes les distributions linux supportées fournissent un mécanisme de "
 "gestion des CA de confiance. Selon votre distribution linux, les chemins où "
@@ -4916,7 +4934,8 @@ msgstr "Permet de voir l'icône %s dans les vues des hôtes et des services"
 msgid "Allow unencrypted legacy communication"
 msgstr "Autoriser les communications non cryptées de l'héritage"
 
-msgid "Allow upload of insecure WATO snapshots"
+#, fuzzy
+msgid "Allow upload of insecure Setup snapshots"
 msgstr "Autoriser le téléchargement d'instantanés WATO non sécurisés"
 
 msgid "Allowed Ciphers"
@@ -5267,9 +5286,10 @@ msgstr "Analysez"
 msgid "Analyze configuration"
 msgstr "Analyser la configuration"
 
+#, fuzzy
 msgid ""
 "Analyze configuration can only be used with the local site and distributed "
-"WATO slave sites. You currently have no such site configured."
+"Setup slave sites. You currently have no such site configured."
 msgstr ""
 "La configuration d'Analyze ne peut être utilisée qu'avec le site local et "
 "les sites esclaves WATO distribués. Vous n'avez actuellement aucun site de "
@@ -6130,7 +6150,7 @@ msgstr ""
 "Recréer automatiquement le cache du référentiel de données des capteurs (SDR)"
 
 msgid ""
-"Automatically remove hosts whose Check_MK service has been in the state "
+"Automatically remove hosts whose 'Check_MK' service has been in the state "
 "CRITICAL for longer than the configured time period."
 msgstr ""
 
@@ -6559,6 +6579,9 @@ msgstr "Utilisation de la mémoire"
 
 msgid "BBcredit zero"
 msgstr "BBcredit zéro"
+
+msgid "BGP Peer State Mapping"
+msgstr ""
 
 msgid "BI"
 msgstr "BI"
@@ -7301,38 +7324,17 @@ msgstr "Par groupe d'accueil"
 msgid "By Service group"
 msgstr "Par groupe de service"
 
+#, fuzzy
 msgid ""
 "By activating a matching entry here you can <b>restrict</b> the hosts that "
 "we should send updates to. <b>Note</b>: The properties from the hosts are "
 "being taken from the <b>activated changes</b>, not from the current settings "
-"in WATO!"
+"in Setup!"
 msgstr ""
 "En activant une entrée correspondante ici, vous pouvez <b>restricter</b> les "
 "hôtes auxquels nous devons envoyer des mises à jour. <b>Note</b> : Les "
 "propriétés des hôtes sont prises à partir des <b>modifications activées</b>, "
 "et non à partir des paramètres actuels dans WATO !"
-
-msgid ""
-"By activating averaging, Check_MK will compute the average of the message "
-"count over a given interval. If you define alerting levels then these will "
-"automatically be applied on the averaged value. This helps to mask out short "
-"peaks. "
-msgstr ""
-"En activant le calcul de la moyenne, Check_MK calculera la moyenne du nombre "
-"de messages sur un intervalle donné. Si vous définissez des niveaux "
-"d'alerte, ceux-ci seront automatiquement appliqués à la valeur moyenne. Cela "
-"permet de masquer les pics courts. "
-
-msgid ""
-"By activating averaging, Check_MK will compute the average of the message "
-"count over a given interval. If you define alerting levels they will "
-"automatically be applied on the averaged value. This helps to mask out short "
-"peaks."
-msgstr ""
-"En activant le calcul de la moyenne, Check_MK calculera la moyenne du nombre "
-"de messages sur un intervalle donné. Si vous définissez des niveaux "
-"d'alerte, ils seront automatiquement appliqués à la valeur moyenne. Cela "
-"permet de masquer les pics courts."
 
 #, fuzzy
 msgid ""
@@ -7381,6 +7383,30 @@ msgstr ""
 "l'utilisation totale du CPU sur un intervalle donné. Si vous avez défini des "
 "niveaux d'alerte, ceux-ci seront automatiquement appliqués à la valeur "
 "moyenne. Cela permet de masquer les pics courts. "
+
+#, fuzzy
+msgid ""
+"By activating averaging, Checkmk will compute the average of the message "
+"count over a given interval. If you define alerting levels then these will "
+"automatically be applied on the averaged value. This helps to mask out short "
+"peaks. "
+msgstr ""
+"En activant le calcul de la moyenne, Check_MK calculera la moyenne du nombre "
+"de messages sur un intervalle donné. Si vous définissez des niveaux "
+"d'alerte, ceux-ci seront automatiquement appliqués à la valeur moyenne. Cela "
+"permet de masquer les pics courts. "
+
+#, fuzzy
+msgid ""
+"By activating averaging, Checkmk will compute the average of the message "
+"count over a given interval. If you define alerting levels they will "
+"automatically be applied on the averaged value. This helps to mask out short "
+"peaks."
+msgstr ""
+"En activant le calcul de la moyenne, Check_MK calculera la moyenne du nombre "
+"de messages sur un intervalle donné. Si vous définissez des niveaux "
+"d'alerte, ils seront automatiquement appliqués à la valeur moyenne. Cela "
+"permet de masquer les pics courts."
 
 msgid ""
 "By activating the computation of averages, the levels on broad- and "
@@ -7475,8 +7501,9 @@ msgstr ""
 "En configurant cette règle pour un hôte - au lieu de l'agent normal "
 "Check_MK, des données de surveillance aléatoires seront créées."
 
+#, fuzzy
 msgid ""
-"By default Check_MK does not use a specific context during SNMPv3 queries, "
+"By default Checkmk does not use a specific context during SNMPv3 queries, "
 "but some devices are offering their information in different SNMPv3 "
 "contexts. This rule can be used to configure, based on hosts and SNMP "
 "sections, which SNMPv3 contexts Checkmk should ask for when getting "
@@ -7488,12 +7515,13 @@ msgstr ""
 "fonction des hôtes et des sections SNMP, les contextes SNMPv3 que Checkmk "
 "doit demander lorsqu'il obtient des informations via SNMPv3."
 
+#, fuzzy
 msgid ""
-"By default Check_MK treats space that is reserved for the <tt>root</tt> user "
+"By default Checkmk treats space that is reserved for the <tt>root</tt> user "
 "on Linux and Unix as used space. Usually, 5% are being reserved for root "
 "when a new filesystem is being created. With this option you can have "
-"Check_MK exclude the current amount of reserved but yet unused space from "
-"the calculations regarding the used space percentage."
+"Checkmk exclude the current amount of reserved but yet unused space from the "
+"calculations regarding the used space percentage."
 msgstr ""
 "Par défaut, Check_MK traite l'espace qui est réservé à l'utilisateur "
 "<tt>root</tt> sur Linux et Unix comme un espace utilisé. Habituellement, 5% "
@@ -7501,15 +7529,6 @@ msgstr ""
 "fichiers. Avec cette option, vous pouvez demander à Check_MK d'exclure la "
 "quantité actuelle d'espace réservé mais encore inutilisé des calculs "
 "concernant le pourcentage d'espace utilisé."
-
-msgid ""
-"By default Check_MK uses the community \"public\" to contact hosts via SNMP "
-"v1/v2. This rule can be used to customize the credentials to be used when "
-"contacting hosts via SNMP."
-msgstr ""
-"Par défaut, Check_MK utilise la communauté \"public\" ; pour contacter les "
-"hôtes via SNMP v1/v2. Cette règle peut être utilisée pour personnaliser les "
-"informations d'identification à utiliser pour contacter les hôtes via SNMP."
 
 msgid ""
 "By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
@@ -7553,6 +7572,16 @@ msgstr ""
 "notre abonnement.<b>Note:</b> Cette option est dépréciée et a été remplacée "
 "par '%s'. Les modifications apportées à cette option n'auront aucun effet "
 "sur le comportement de Checkmk."
+
+#, fuzzy
+msgid ""
+"By default Checkmk uses the community \"public\" to contact hosts via SNMP "
+"v1/v2. This rule can be used to customize the credentials to be used when "
+"contacting hosts via SNMP."
+msgstr ""
+"Par défaut, Check_MK utilise la communauté \"public\" ; pour contacter les "
+"hôtes via SNMP v1/v2. Cette règle peut être utilisée pour personnaliser les "
+"informations d'identification à utiliser pour contacter les hôtes via SNMP."
 
 msgid ""
 "By default all multiple graphs in emails are displayed floating nearby. You "
@@ -8711,6 +8740,13 @@ msgstr "Chaîne de certificats"
 msgid "Certificate details"
 msgstr "Détails du certificat"
 
+#, fuzzy
+msgid "Certificate is expired"
+msgstr "Détails du certificat"
+
+msgid "Certificate is not signed by trusted authority"
+msgstr ""
+
 msgid "Certificate to sign requests (PEM)"
 msgstr ""
 
@@ -9131,9 +9167,10 @@ msgstr ""
 msgid "Check specific host(s)"
 msgstr "Vérifier le(s) hôte(s) spécifique(s)"
 
+#, fuzzy
 msgid ""
 "Check submission of HTML forms via HTTP/HTTPS using the plugin "
-"<tt>check_form_submit</tt> provided with Check_MK. This plugin provides more "
+"<tt>check_form_submit</tt> provided with Checkmk. This plugin provides more "
 "functionality than <tt>check_http</tt>, as it automatically follows HTTP "
 "redirect, accepts and uses cookies, parses forms from the requested pages, "
 "changes vars and submits them to check the response afterwards."
@@ -9148,9 +9185,10 @@ msgstr ""
 msgid "Check the URL"
 msgstr "Vérifiez l'URL"
 
+#, fuzzy
 msgid ""
 "Check the number of sent notifications per contact using the plugin "
-"<tt>check_notify_count</tt> provided with Check_MK. This plugin counts the "
+"<tt>check_notify_count</tt> provided with Checkmk. This plugin counts the "
 "total number of notifications sent by the local monitoring core and creates "
 "graphs for each individual contact. You can configure thresholds on the "
 "number of notifications per contact in a defined time interval. This plugin "
@@ -9235,10 +9273,11 @@ msgstr ""
 "implémentation SNMP. Vous pouvez utiliser cette règle pour désactiver Inline "
 "SNMP pour ces hôtes."
 
+#, fuzzy
 msgid ""
 "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux "
 "and Unix as used space. Usually, 5% are being reserved for root when a new "
-"filesystem is being created. With this option you can have Check_MK display "
+"filesystem is being created. With this option you can have Checkmk display "
 "the current amount of reserved but yet unused space."
 msgstr ""
 "Check_MK traite l'espace qui est réservé à l'utilisateur <tt>root</tt> sur "
@@ -9247,12 +9286,13 @@ msgstr ""
 "pouvez demander à Check_MK d'afficher la quantité actuelle d'espace réservé "
 "mais encore inutilisé."
 
+#, fuzzy
 msgid ""
-"Check_MK usually uses an interval of one minute for the active Check_MK "
-"check and for legacy checks. Here you can specify a larger interval. Please "
-"note, that this setting only applies to active checks (those with the "
-"reschedule button). If you want to change the check interval of the Check_MK "
-"service only, specify <tt><b>Check_MK$</b></tt> in the list of services."
+"Check_MK usually uses an interval of one minute for the active Checkmk check "
+"and for legacy checks. Here you can specify a larger interval. Please note, "
+"that this setting only applies to active checks (those with the reschedule "
+"button). If you want to change the check interval of the 'Check_MK' service "
+"only, specify <tt><b>Check_MK$</b></tt> in the list of services."
 msgstr ""
 "Check_MK utilise généralement un intervalle d'une minute pour le contrôle "
 "actif de Check_MK et pour les contrôles hérités. Vous pouvez spécifier ici "
@@ -9634,13 +9674,14 @@ msgstr ""
 "correspondent à ce nœud). L'état passera à l'état d'avertissement, si le "
 "mode diffère."
 
+#, fuzzy
 msgid ""
 "Choose how to monitor the docker node. You can uncheck individual sections, "
 "if you do not need the corresponding services. The respectice checkboxes "
 "belong to the check plugins by the name starting with 'docker_node_' (e.g. "
 "the 'Disk usage:' checkbox belongs to 'docker_node_disk_usage'). Note that "
 "the disk usage section is notoriously long running. If you are experiencing "
-"performance issues, consider disabeling it."
+"performance issues, consider disabling it."
 msgstr ""
 "Choisissez comment surveiller le nœud Docker. Vous pouvez décocher des "
 "sections individuelles, si vous n'avez pas besoin des services "
@@ -9756,11 +9797,12 @@ msgstr ""
 "Choisissez les périodes pendant lesquelles un service est autorisé à se "
 "trouver dans un état d'\"activation\"."
 
+#, fuzzy
 msgid ""
-"Choose what kind of ouput data is sent to the Check_MK server: Only count "
-"the files, only report count and extrem files (i.e. the oldest, newest, "
-"largest and smallest, report the the full stats on all files, or sent "
-"information about a single file only."
+"Choose what kind of ouput data is sent to the Checkmk server: Only count the "
+"files, only report count and extrem files (i.e. the oldest, newest, largest "
+"and smallest, report the the full stats on all files, or sent information "
+"about a single file only."
 msgstr ""
 "Choisissez quel type de données de sortie est envoyé au serveur Check_MK : "
 "Compter uniquement les fichiers, rapporter uniquement le nombre et les "
@@ -10668,9 +10710,10 @@ msgstr "Description de la configuration manquante ou illisible"
 msgid "Configuration error"
 msgstr "Erreur de configuration"
 
+#, fuzzy
 msgid ""
 "Configuration error. You treat us as a <b>remote</b>, but we have an own "
-"distributed WATO configuration!"
+"distributed Setup configuration!"
 msgstr ""
 "Erreur de configuration. Vous nous traitez comme un <b>distant</b>, mais "
 "nous avons une propre configuration WATO distribuée !"
@@ -10835,8 +10878,9 @@ msgstr ""
 "Configurer les actions possibles qui peuvent être exécutées lorsqu'une règle "
 "se déclenche et aussi manuellement par un utilisateur."
 
+#, fuzzy
 msgid ""
-"Configure the DNS domain name of your Active directory domain here, Check_MK "
+"Configure the DNS domain name of your Active directory domain here, Checkmk "
 "will then query this domain for it's closest domain controller to "
 "communicate with."
 msgstr ""
@@ -11174,10 +11218,11 @@ msgstr "Connexion à des sites distants"
 msgid "Connect to site url"
 msgstr "Se connecter à l'url du site"
 
+#, fuzzy
 msgid ""
 "Connect to the LDAP server with a SSL encrypted connection. The <a href="
 "\"wato.py?mode=edit_configvar&site=&varname=trusted_certificate_authorities"
-"\">trusted certificates authorities</a> configured in Check_MK will be used "
+"\">trusted certificates authorities</a> configured in Checkmk will be used "
 "to validate the certificate provided by the LDAP server."
 msgstr ""
 "Se connecter au serveur LDAP avec une connexion cryptée SSL. Les <a href="
@@ -11188,8 +11233,9 @@ msgstr ""
 msgid "Connect to the local Event Console"
 msgstr "Connectez-vous à la console d'événements locale"
 
+#, fuzzy
 msgid ""
-"Connect to the local or a remote monitoring host, which uses Check_MK BI to "
+"Connect to the local or a remote monitoring host, which uses Checkmk BI to "
 "aggregate several states to a single BI aggregation, which you want to show "
 "up as a single service."
 msgstr ""
@@ -11599,9 +11645,8 @@ msgstr "Copie des règles d'événements du maître dans la configuration locale
 msgid "Copies a view to a dashboard element"
 msgstr "Copie une vue sur un élément du tableau de bord"
 
-#, fuzzy
 msgid "Copy"
-msgstr " (copie)"
+msgstr "(copie)"
 
 #, fuzzy
 msgid "Copy all event rules from the central site"
@@ -11986,14 +12031,15 @@ msgstr "Créer une copie de cette règle"
 msgid "Create a copy of this user"
 msgstr "Créer une copie de cet utilisateur"
 
-msgid "Create a customized copy of this"
-msgstr "Créez une copie personnalisée de cette"
-
 msgid "Create a new event for each incident - never merge"
 msgstr "Créer un nouvel événement pour chaque incident - ne jamais fusionner"
 
 msgid "Create a notification"
 msgstr "Créer une notification"
+
+#, fuzzy
+msgid "Create a private copy of this"
+msgstr "Créez une copie personnalisée de cette"
 
 msgid "Create a separate check for each logfile"
 msgstr "Créer une vérification distincte pour chaque fichier journal"
@@ -13446,6 +13492,10 @@ msgstr "Plage de dates"
 msgid "Date/Time"
 msgstr "Date/heure"
 
+#, fuzzy, python-format
+msgid "Date: %s"
+msgstr "Noms"
+
 msgid "Datenbaustein"
 msgstr "Datenbaustein"
 
@@ -13492,8 +13542,7 @@ msgid ""
 "changes.<br><br>If you haven't extended your license yet, please contact the "
 "Checkmk sales team at %s to ensure that your license is extended in time."
 "<br><br>If you purchased your license through a Checkmk partner or reseller, "
-"you can find their name on the licensing page (%s).<br><br>Sincerely, your "
-"Checkmk Server"
+"you can find their name on the %s.<br><br>Sincerely, your Checkmk Server"
 msgstr ""
 
 #, python-format
@@ -13501,9 +13550,9 @@ msgid ""
 "Dear Checkmk user,<br><br>Your Checkmk trial of site %s expires in %d days."
 "<br><br>If you want to continue using Checkmk as today, you will need to %s. "
 "In case you already have a license, please enter your license credentials on "
-"the product's licensing page (%s).<br><br>Otherwise, you will have to reduce "
-"the number of services from the current %d services to fit within the free "
-"license service limit of %d.<br><br>Sincerely, your Checkmk Server"
+"the product's %s.<br><br>Otherwise, you will have to reduce the number of "
+"services from the current %d services to fit within the free license service "
+"limit of %d.<br><br>Sincerely, your Checkmk Server"
 msgstr ""
 
 msgid "Debug"
@@ -13637,6 +13686,10 @@ msgstr "Style de ligne par défaut"
 
 msgid "Default metric color"
 msgstr "Couleur métrique par défaut"
+
+#, fuzzy
+msgid "Default parameters"
+msgstr "Paramètres du modèle"
 
 msgid "Default parameters for detected services"
 msgstr "Paramètres par défaut pour les services détectés"
@@ -14034,9 +14087,9 @@ msgstr "Règle supprimée %s"
 msgid "Delete job"
 msgstr "Supprimer ce travail"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Delete job #%d"
-msgstr "Supprimer le travail %s%s ?"
+msgstr "Supprimer le travail %d"
 
 msgid "Delete last alert handler rule"
 msgstr "Supprimer la dernière règle de traitement des alertes"
@@ -14054,9 +14107,9 @@ msgstr "Supprimer l'événement le plus ancien, créer un nouvel événement"
 msgid "Delete processed messages"
 msgstr "Supprimer les messages traités"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Delete report schedule entry #%d"
-msgstr "Supprimer l'entrée du calendrier des rapports '%s' ?"
+msgstr "Supprimer l'entrée du calendrier des rapports '%d'"
 
 #, fuzzy, python-format
 msgid "Delete role #%d"
@@ -14085,9 +14138,9 @@ msgstr ""
 "balise est utilisée dans un sens positif. Supprimez simplement la balise si "
 "elle est utilisée dans un sens négatif."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Delete scheduled report #%d"
-msgstr "Supprimer le rapport programmé '%s' ?"
+msgstr "Supprimer le rapport programmé '%d'"
 
 msgid "Delete selected"
 msgstr "Supprimer la sélection"
@@ -14650,8 +14703,9 @@ msgstr "Déprécié"
 msgid "Deprecated HW/SW inventory plugins"
 msgstr "Plugins d'inventaire HW/SW obsolètes"
 
-#, python-format
-msgid "Deprecated WATO modes found: %r. They need to be refactored to new API."
+#, fuzzy, python-format
+msgid ""
+"Deprecated Setup modes found: %r. They need to be refactored to new API."
 msgstr ""
 "Modes WATO obsolètes trouvés : %r. Ils doivent être adaptés à la nouvelle "
 "API."
@@ -14986,9 +15040,9 @@ msgstr "Répertoire où sauvegarder la sauvegarde"
 msgid "Directory type"
 msgstr "Type de répertoire"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Directory: <tt>%s</tt>."
-msgstr " Le répertoire est  <tt>%s</tt>."
+msgstr "Le répertoire est <tt>%s</tt>."
 
 msgid "Directs links to all host groups"
 msgstr "Dirige les liens vers tous les groupes d'hôtes"
@@ -15014,9 +15068,8 @@ msgstr "Désactiver TLS/SSL"
 msgid "Disable active checks"
 msgstr "Désactiver les contrôles actifs"
 
-#, fuzzy
 msgid "Disable all"
-msgstr "Désactivé "
+msgstr "Désactivé"
 
 #, fuzzy
 msgid "Disable automatic host removal"
@@ -15033,7 +15086,8 @@ msgstr "Désactiver les promenades en vrac sur SNMPv2c/v3"
 msgid "Disable certificate validation"
 msgstr "Désactiver la validation du certificat"
 
-msgid "Disable configuration via WATO on this site"
+#, fuzzy
+msgid "Disable configuration via Setup on this site"
 msgstr "Désactiver la configuration via WATO sur ce site"
 
 #, fuzzy
@@ -16450,7 +16504,7 @@ msgid "Duration levels"
 msgstr "Niveaux de durée"
 
 #, fuzzy
-msgid "Duration of CRITICAL state of Check_MK service"
+msgid "Duration of CRITICAL state of 'Check_MK' service"
 msgstr "Configuration des bases de données RRD des services"
 
 msgid "Duration of backup"
@@ -16477,7 +16531,6 @@ msgstr ""
 "situent dans le passé. De tels événements seront manqués par l'agent si leur "
 "âge dépasse la valeur spécifiée ici."
 
-#, fuzzy
 msgid ""
 "During each run, the agent will fetch logs which are at maximum this old. "
 "The agent memorizes logs already fetched during the last run, s.t. no logs "
@@ -16491,7 +16544,7 @@ msgstr ""
 "l'intervalle de vérification de l'hôte, des événements manqueront. Notez "
 "également que l'API Datadog permet de créer de nouveaux événements qui se "
 "situent dans le passé. De tels événements seront manqués par l'agent si leur "
-"âge dépasse la valeur spécifiée ici."
+"âge dépasse la valeur spécifiée ici. "
 
 msgid ""
 "During monitoring there are several dedicated files created for each host. "
@@ -16657,11 +16710,12 @@ msgid ""
 "identifies the EC2 instance. It is not possible to ping this host name."
 msgstr ""
 
+#, fuzzy
 msgid ""
 "Each SNMPv3 device has it's own engine ID. This is normally automatically "
 "generated, but can also be configured manually for some devices. As the "
 "engine ID is used for the encryption of SNMPv3 traps sent by the devices, "
-"Check_MK needs to know the engine ID to be able to decrypt the SNMP traps."
+"Checkmk needs to know the engine ID to be able to decrypt the SNMP traps."
 "<br>The engine IDs have to be configured as hex strings like "
 "<tt>8000000001020304</tt>."
 msgstr ""
@@ -17245,7 +17299,7 @@ msgid "Elements to show"
 msgstr "Éléments à montrer"
 
 msgid "Email"
-msgstr "Courriel :"
+msgstr "Courriel"
 
 msgid "Email Address"
 msgstr "Adresse électronique"
@@ -17531,8 +17585,9 @@ msgstr ""
 "Cela permet de réduire le nombre de notifications dans les cas où de "
 "nombreux problèmes (liés) surviennent dans un court laps de temps."
 
+#, fuzzy
 msgid ""
-"Enabling this option results in additional performance data for the Check_MK "
+"Enabling this option results in additional performance data for the Checkmk "
 "output, giving information regarding the process times. It provides the "
 "following fields: user_time, system_time, children_user_time and "
 "children_system_time"
@@ -17762,9 +17817,10 @@ msgstr ""
 "dans \"Projets\" - \"Voir tous les projets\" - colonne : \"Projet\". Ce "
 "champ n'est pas sensible à la casse"
 
+#, fuzzy
 msgid ""
 "Enter the host names of the cluster nodes. These hosts must be present in "
-"WATO."
+"Setup."
 msgstr ""
 "Entrez les noms d'hôtes des nœuds du cluster. Ces hôtes doivent être "
 "présents dans le WATO."
@@ -18152,7 +18208,7 @@ msgid ""
 "\n"
 "It is recommended to set it at least to the check interval (which is 60 "
 "seconds by default). Note that if you set this to <i>N</i> times the check "
-"intervall, the amount of data sent will be about <i>N</i> times as much (not "
+"interval, the amount of data sent will be about <i>N</i> times as much (not "
 "taking into account the compression by the agent controller)."
 msgstr ""
 
@@ -18207,7 +18263,8 @@ msgstr "Exemple de requête PromQL : up{job=\"node_exporter\"}"
 msgid "Example configuration for systemd"
 msgstr "Exemple de configuration pour systemd"
 
-msgid "Example for Parameters"
+#, fuzzy
+msgid "Example for parameters"
 msgstr "Exemple pour les paramètres"
 
 msgid "Exc."
@@ -18243,6 +18300,10 @@ msgstr "Exceptions pour les hôtes en ferroutage (VMs, ...)"
 
 #, fuzzy
 msgid "Excl. shadow hosts"
+msgstr "Exclure les hôtes"
+
+#, fuzzy
+msgid "Excl. shadow services"
 msgstr "Exclure les hôtes"
 
 msgid "Exclude"
@@ -18552,7 +18613,7 @@ msgid "Expired objects"
 msgstr "Objets périmés"
 
 msgid "Expires"
-msgstr "Expiration :"
+msgstr "Expiration"
 
 msgid "Explanation for event action"
 msgstr "Explication de l'action de l'événement"
@@ -19823,9 +19884,10 @@ msgstr ""
 "exemple <tt>C:/</tt>) ou par le nom du périphérique sous Linux/UNIX (par "
 "exemple <tt>/dev/sda</tt>)."
 
+#, fuzzy
 msgid ""
-"For agent based checks Check_MK allows you to specify an alternative program "
-"that should be called by Check_MK instead of connecting the agent via TCP. "
+"For agent based checks Checkmk allows you to specify an alternative program "
+"that should be called by Checkmk instead of connecting the agent via TCP. "
 "That program must output the agent's data on standard output in the same "
 "format the agent would do. This is for example useful for monitoring via SSH."
 msgstr ""
@@ -19887,17 +19949,6 @@ msgstr ""
 "aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html."
 
 msgid ""
-"For running Check_MK based checks via the Micro Core keeps a pool of "
-"specialized helpers that speed up Check_MK by avoiding process creations. "
-"The size of this pool is configured here. This is identical with the maximum "
-"number of concurrent Real-Time checks."
-msgstr ""
-"Pour exécuter les vérifications basées sur Check_MK via le Micro Core "
-"conserve un pool d'assistants spécialisés qui accélèrent Check_MK en évitant "
-"la création de processus. La taille de ce pool est configurée ici. Elle est "
-"identique au nombre maximum de vérifications simultanées en temps réel."
-
-msgid ""
 "For running Checkmk based checks the Microcore keeps a pool of specialized "
 "helper processes for fetching the needed information from the monitored "
 "systems. The size of this pool is configured here."
@@ -19916,8 +19967,21 @@ msgstr ""
 "pool de processus d'aide spécialisés pour interpréter et évaluer les "
 "informations recueillies par les aides de récupération."
 
+#, fuzzy
 msgid ""
-"For sake of optimal performance Check_MK Micro Core keeps all current state "
+"For running Checkmk based checks via the Micro Core keeps a pool of "
+"specialized helpers that speed up Checkmk by avoiding process creations. The "
+"size of this pool is configured here. This is identical with the maximum "
+"number of concurrent Real-Time checks."
+msgstr ""
+"Pour exécuter les vérifications basées sur Check_MK via le Micro Core "
+"conserve un pool d'assistants spécialisés qui accélèrent Check_MK en évitant "
+"la création de processus. La taille de ce pool est configurée ici. Elle est "
+"identique au nombre maximum de vérifications simultanées en temps réel."
+
+#, fuzzy
+msgid ""
+"For sake of optimal performance Checkmk Micro Core keeps all current state "
 "data in the main memory of the core. Before a regular shut down this state "
 "is saved to disk. In order to prevent data loss in a case of a system crash "
 "the state is also saved to disk on a regular base. The interval for this is "
@@ -20376,9 +20440,9 @@ msgstr ""
 msgid "From:"
 msgstr "De :"
 
-#, fuzzy, python-format
+#, python-format
 msgid "From: %s"
-msgstr "De : "
+msgstr "De : %s"
 
 msgid "From: email address"
 msgstr "De : adresse e-mail"
@@ -21686,7 +21750,7 @@ msgid ""
 "disable sending so-called context messages. When at least one new relevant "
 "message is being found in an Eventlog, the agent usually sends <i>all</i> "
 "new messages from that check cycle. This makes it more convenient when "
-"viewing the messages in Check_MK. In high-volume logfiles it might be "
+"viewing the messages in Checkmk. In high-volume logfiles it might be "
 "necessary to switch the context off in order to save networking and disk "
 "resources. <b>Note</b>: When several configuration tuning entries match for "
 "a logfile then only the first one is being executed. So it does not make "
@@ -21706,13 +21770,14 @@ msgstr ""
 "Cela n'a donc pas de sens de créer plus d'une entrée pour <i>Tous les "
 "journaux d'événements</i>."
 
+#, fuzzy
 msgid ""
 "Here you can configure which performance counter objects the Windows agent "
-"should extract and provide to the Check_MK server. You can either specify "
+"should extract and provide to the Checkmk server. You can either specify "
 "counter numbers or names. Note: numbers might be host-specific. Names are "
 "language-specific. Also note that you need to specify names of counter "
 "<i>objects</i>, not of single counters. In order to make use of the counters "
-"you need a matching check plugin on the Check_MK server."
+"you need a matching check plugin on the Checkmk server."
 msgstr ""
 "Vous pouvez configurer ici les objets de compteur de performance que l'agent "
 "Windows doit extraire et fournir au serveur Check_MK. Vous pouvez spécifier "
@@ -21992,8 +22057,9 @@ msgstr ""
 "Ici vous pouvez imposer différents niveaux aux résultats rapportés par le "
 "plugin mk_filstats. Notez que ces niveaux ne concernent qu'un seul fichier."
 
+#, fuzzy
 msgid ""
-"Here you can make sure that all of your Check_MK agents are running one "
+"Here you can make sure that all of your Checkmk agents are running one "
 "specific version. Agents running  a different version return a non-OK state."
 msgstr ""
 "Ici, vous pouvez vous assurer que tous vos agents Check_MK utilisent une "
@@ -22020,9 +22086,10 @@ msgstr ""
 "l'enregistrement ou de la mise à jour. Cette liste sera utilisée par l'agent "
 "de mise à jour pour vérifier les connexions HTTPS aux sites Checkmk."
 
+#, fuzzy
 msgid ""
 "Here you can see a list of all deprecated rulesets (which are not used by "
-"Check_MK anymore). If you have defined some rules here, you might have to "
+"Checkmk anymore). If you have defined some rules here, you might have to "
 "migrate the rules to their successors. Please refer to the release notes or "
 "context help of the rulesets for details."
 msgstr ""
@@ -22225,9 +22292,10 @@ msgstr ""
 "de configuration <tt>sqlnet.ora</tt> et <tt>tnsnames.ora</tt>. En omettant "
 "ce vide, on retombe sur <tt>/etc/check_mk</tt>."
 
+#, fuzzy
 msgid ""
 "Here you can specify an alternative user that the agent should be run as. "
-"Please note that only root has enough priviledges for all commands and "
+"Please note that only root has enough privileges for all commands and "
 "plugins. When run as another user then some information will be missing."
 msgstr ""
 "Ici, vous pouvez spécifier un utilisateur alternatif sous lequel l'agent "
@@ -22235,7 +22303,8 @@ msgstr ""
 "privilèges pour toutes les commandes et tous les plugins. Lorsqu'il est "
 "exécuté sous un autre utilisateur, certaines informations seront manquantes."
 
-msgid "Here you can specify debugging options of the Check_MK check helpers."
+#, fuzzy
+msgid "Here you can specify debugging options of the Checkmk check helpers."
 msgstr ""
 "Ici, vous pouvez spécifier les options de débogage des aides à la "
 "vérification Check_MK."
@@ -22366,23 +22435,6 @@ msgstr ""
 "les règles situées plus bas dans la liste sont écrasées par les règles "
 "situées plus haut."
 
-#, python-format
-msgid ""
-"Here, you can specify how Checkmk will translate the exit code of a task "
-"into a monitoring state. This will overwrite the default mapping used by the "
-"check plugin. You can also decide to only partially overwrite the default "
-"mapping by only specifying the new monitoring state. The default text will "
-"be kept as the summary, then.<br><br>The following exit codes/monitoring "
-"states/summaries are specified as default:<br>%s"
-msgstr ""
-"Ici, vous pouvez spécifier comment Checkmk traduira le code de sortie d'une "
-"tâche en un état de surveillance. Cela écrasera le mappage par défaut "
-"utilisé par le plugin de contrôle. Vous pouvez également décider de ne "
-"remplacer que partiellement le mapping par défaut en ne spécifiant que le "
-"nouvel état de surveillance. Le texte par défaut sera alors conservé comme "
-"résumé.<br><br>Les codes de sortie/états de surveillance/résumés suivants "
-"sont spécifiés par défaut:<br>%s"
-
 msgid "Hidden"
 msgstr "Caché"
 
@@ -22407,7 +22459,8 @@ msgstr "Masquer de l'interface graphique d'état"
 msgid "Hide help text of rules in list views"
 msgstr "Masquer le texte d'aide des règles dans les vues en liste"
 
-msgid "Hide hosttags in WATO folder view"
+#, fuzzy
+msgid "Hide hosttags in Setup folder view"
 msgstr "Masquer les balises d'hôtes dans la vue du dossier WATO"
 
 msgid "Hide in report"
@@ -22799,8 +22852,8 @@ msgstr "L'hôte est en panne"
 msgid "Host is missing"
 msgstr "L'hôte est absent"
 
-#, python-format
-msgid "Host is not managed by WATO. Click <a href=\"%s\">here</a> to go back."
+#, fuzzy, python-format
+msgid "Host is not managed by Setup. Click <a href=\"%s\">here</a> to go back."
 msgstr ""
 "L'hôte n'est pas géré par WATO. Cliquez sur <a href=\"%s\">ici</a> pour "
 "revenir en arrière."
@@ -23904,8 +23957,9 @@ msgstr ""
 "sur le serveur de surveillance, mais peut entraîner un trafic important sur "
 "les fichiers journaux contenant de nouveaux messages fréquents."
 
+#, fuzzy
 msgid ""
-"If enabled, Check_MK will create one additional service per host that does a "
+"If enabled, Checkmk will create one additional service per host that does a "
 "periodic check, if the service discovery would find new services that are "
 "currently not monitored."
 msgstr ""
@@ -23914,9 +23968,9 @@ msgstr ""
 "permet de trouver de nouveaux services qui ne sont pas actuellement "
 "surveillés."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"If enabled, Check_MK will create one additional service per host that does a "
+"If enabled, Checkmk will create one additional service per host that does a "
 "regular check, if the service discovery would find new services currently un-"
 "monitored. <b>Note:</b> This option is deprecated and has been replaced by "
 "the rule set <a href='%s'>Periodic Service Discovery</a>, which allows a per-"
@@ -24192,10 +24246,11 @@ msgstr ""
 "temps d'arrêt que vous avez définis manuellement pour ce contrôle ne sont "
 "pas affectés."
 
+#, fuzzy
 msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
 "check cycle but just every time the configured age has expired. Furthermore "
-"the plugin will be executed asynchronously as a backbround process. This is "
+"the plugin will be executed asynchronously as a background process. This is "
 "useful for plugins that have a long execution time."
 msgstr ""
 "Si cette option est activée, le plugin de vérification ne sera pas exécuté à "
@@ -24235,8 +24290,9 @@ msgstr ""
 "Si cette option est activée, l'état d'une entrée pendant la découverte sera "
 "évalué comme OK. Tous les autres états donneront lieu à CRIT."
 
+#, fuzzy
 msgid ""
-"If this option is enabled, Check_MK BI will create a log with details about "
+"If this option is enabled, Checkmk BI will create a log with details about "
 "compiling BI aggregations. This includes statistics and details for each "
 "executed compilation."
 msgstr ""
@@ -24324,8 +24380,9 @@ msgstr ""
 "pendant la découverte. Le service passera à l'état d'avertissement, si elles "
 "changent."
 
+#, fuzzy
 msgid ""
-"If this option is set to a non-zero number, then Check_MK keeps the last "
+"If this option is set to a non-zero number, then Checkmk keeps the last "
 "<i>X</i> notifications for later reference. You can replay these "
 "notifications and analyse your set of notifications rules. This only works "
 "with rulebased notifications. Note: only notifications sent out by the local "
@@ -24480,15 +24537,17 @@ msgstr ""
 "Si vous exécutez la console d'événements en tant que non-root (comme dans un "
 "site OMD), veuillez choisir un numéro de port supérieur à 1024."
 
+#, fuzzy
 msgid ""
 "If you are using rule based notifications with and <i>Bulk Notifications</i> "
-"then Check_MK will check for ripe notification bulks to be sent out at "
-"latest every this interval."
+"then Checkmk will check for ripe notification bulks to be sent out at latest "
+"every this interval."
 msgstr ""
 "Si vous utilisez des notifications basées sur des règles avec et "
 "<i>Notifications groupées</i>, Check_MK vérifiera si des notifications "
 "groupées mûres doivent être envoyées au plus tard à chaque intervalle."
 
+#, fuzzy
 msgid ""
 "If you are using the Agent bakery, the configuration will be used for "
 "restricting network access to the baked agents. On Linux, a systemd "
@@ -24499,7 +24558,7 @@ msgid ""
 "agent network service (Linux)\" ruleset. Even if you don't use the bakery, "
 "the configured IP address restrictions of a host will be verified against "
 "the allowed IP addresses reported by the agent. This is done during "
-"monitoring by the Check_MK service."
+"monitoring by the 'Check_MK' service."
 msgstr ""
 "Si vous utilisez la boulangerie d'agents, la configuration sera utilisée "
 "pour restreindre l'accès réseau aux agents cuits. Sous Linux, une "
@@ -24751,13 +24810,14 @@ msgstr ""
 "activera le traitement des événements si le maître est inaccessible pendant "
 "le nombre de secondes configuré."
 
+#, fuzzy
 msgid ""
-"If you enable this option, then Check_MK will not directly Python-"
-"bytecompile all host checks when activating the configuration and restarting "
-"Nagios. Instead it will delay this to the first time the host is actually "
-"checked being by Nagios.<p>This reduces the time needed for the operation, "
-"but on the other hand will lead to a slightly higher load of Nagios for the "
-"first couple of minutes after the restart. "
+"If you enable this option, then Checkmk will not directly Python-bytecompile "
+"all host checks when activating the configuration and restarting Nagios. "
+"Instead it will delay this to the first time the host is actually checked "
+"being by Nagios.<p>This reduces the time needed for the operation, but on "
+"the other hand will lead to a slightly higher load of Nagios for the first "
+"couple of minutes after the restart. "
 msgstr ""
 "Si vous activez cette option, alors Check_MK ne compilera pas directement en "
 "Python-bytecompile tous les contrôles d'hôtes lors de l'activation de la "
@@ -24946,11 +25006,12 @@ msgstr ""
 "Si vous régénérez des codes de sauvegarde, vous invalidez automatiquement "
 "les codes existants."
 
+#, fuzzy
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
 "services in that contact group will be sent to the event console. <b>Note</"
 "b>: you still need to create a rule matching those messages in order to have "
-"events created. <b>Note (2)</b>: If you are using the Check_MK Micro Core "
+"events created. <b>Note (2)</b>: If you are using the Checkmk Micro Core "
 "then this setting is deprecated. Please use the notification plugin "
 "<i>Forward Notification to Event Console</i> instead."
 msgstr ""
@@ -25010,8 +25071,9 @@ msgstr ""
 "effectuée au lieu d'utiliser l'adresse IP de l'hôte telle que configurée "
 "dans les propriétés de votre hôte."
 
+#, fuzzy
 msgid ""
-"If you specify a notification period for a Check_MK service then results "
+"If you specify a notification period for a 'Check_MK' service then results "
 "will be processed only within this period."
 msgstr ""
 "Si vous spécifiez une période de notification pour un service Check_MK, les "
@@ -25032,11 +25094,12 @@ msgstr ""
 "notification (vous pouvez considérer la période de notification comme le "
 "'temps de service')."
 
+#, fuzzy
 msgid ""
 "If you specify a notification period for a service then active checks of "
 "that service will only be done in that period. Please note, that the checks "
-"driven by Check_MK are passive checks and are not affected by this rule. You "
-"can use the rule for the active Check_MK check, however."
+"driven by Checkmk are passive checks and are not affected by this rule. You "
+"can use the rule for the active Checkmk check, however."
 msgstr ""
 "Si vous spécifiez une période de notification pour un service, les contrôles "
 "actifs de ce service ne seront effectués que pendant cette période. Veuillez "
@@ -25058,11 +25121,12 @@ msgstr ""
 "sont pas dans leur période de notification (vous pouvez considérer la "
 "période de notification comme le \"temps de service\")."
 
+#, fuzzy
 msgid ""
 "If you specify an URL prefix here, then several parts of the email body are "
-"armed with hyperlinks to your Check_MK GUI, so that the recipient of the "
-"email can directly visit the host or service in question in Check_MK. "
-"Specify an absolute URL including the <tt>.../check_mk/</tt>"
+"armed with hyperlinks to your Checkmk GUI, so that the recipient of the "
+"email can directly visit the host or service in question in Checkmk. Specify "
+"an absolute URL including the <tt>.../check_mk/</tt>"
 msgstr ""
 "Si vous spécifiez un préfixe d'URL ici, alors plusieurs parties du corps de "
 "l'email sont armées d'hyperliens vers votre interface graphique Check_MK, de "
@@ -25084,12 +25148,13 @@ msgstr ""
 "Si vous décochez cette option, les utilisateurs ne sont pas autorisés à "
 "désactiver les notifications créées par cette règle."
 
+#, fuzzy
 msgid ""
 "If you use <b>Automatic HTTP/s</b>, the URL prefix for host and service "
 "links within the notification is filled automatically. If you specify an URL "
 "prefix here, then several parts of the notification are armed with "
-"hyperlinks to your Check_MK GUI. In both cases, the recipient of the "
-"notification can directly visit the host or service in question in Check_MK. "
+"hyperlinks to your Checkmk GUI. In both cases, the recipient of the "
+"notification can directly visit the host or service in question in Checkmk. "
 "Specify an absolute URL including the <tt>.../check_mk/</tt>."
 msgstr ""
 "Si vous utilisez <b>HTT automatique/s</b>, le préfixe URL pour les liens "
@@ -25154,6 +25219,7 @@ msgstr ""
 "local. Les processus ayant un accès en lecture à ce fichier seront en mesure "
 "d'utiliser Multisite comme un webservice sans autre configuration."
 
+#, fuzzy
 msgid ""
 "If you want to run your own custom agent plugins on Windows, simply put them "
 "into the subdirectory <tt>plugins</tt> of your agent's installation "
@@ -25161,7 +25227,7 @@ msgid ""
 "<tt>local</tt>. Plugins that are deployed with the agent bakery are "
 "installed by the MSI installer into the same directory. This ruleset limits "
 "the file extensions that the agent will run. This for example avoids "
-"starting a Notepad when a file with the extention <tt>.txt</tt> is found. "
+"starting a Notepad when a file with the extension <tt>.txt</tt> is found. "
 "<b>Note:</b> If you remove some of the default extensions, not all of the "
 "shipped agent plugins will continue to work!<br><br>Specify the extensions "
 "in lower case and without a leading dot."
@@ -25178,13 +25244,12 @@ msgstr ""
 "tous les plugins d'agent livrés ne continueront pas à fonctionner!"
 "<br><br>Spécifiez les extensions en minuscules et sans point de tête."
 
-#, fuzzy
 msgid ""
 "If you want you can copy the ruleset of the central site into your local "
 "configuration: "
 msgstr ""
 "Voulez-vous vraiment copier toutes les règles d'événements du maître et "
-"remplacer votre configuration locale par celles-ci ?"
+"remplacer votre configuration locale par celles-ci ? "
 
 msgid ""
 "If you want, you can specify a name that will be used in the <tt>define "
@@ -25572,8 +25637,9 @@ msgstr ""
 msgid "In downtime"
 msgstr "En temps d'arrêt"
 
+#, fuzzy
 msgid ""
-"In earlier versions of Check_MK users had to enable SNI explicitly. We now "
+"In earlier versions of Checkmk users had to enable SNI explicitly. We now "
 "assume users allways want SNI support. If you don't, you can disable it with "
 "this option."
 msgstr ""
@@ -25676,7 +25742,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"In order to keep the core simple, Check_MK pre-computes all transitions for "
+"In order to keep the core simple, Checkmk pre-computes all transitions for "
 "all time periods in advance. Since that cannot be done until infinity you "
 "need to specify the number of days for the precomputation. After that time "
 "all periods remain in their last state. Make sure that you <i>Activate "
@@ -25688,8 +25754,9 @@ msgstr ""
 "précalcul. Après ce temps, toutes les périodes restent dans leur dernier "
 "état. Assurez-vous que vous <i>Activer les changements</i> avant ce moment."
 
+#, fuzzy
 msgid ""
-"In order to make Check_MK more consistent, the descriptions of several "
+"In order to make Checkmk more consistent, the descriptions of several "
 "services have been renamed in newer Check_MK versions. One example is the "
 "filesystem services that have been renamed from <tt>fs_</tt> into "
 "<tt>Filesystem</tt>. But since renaming of existing services has many "
@@ -26338,9 +26405,10 @@ msgstr ""
 "l'avantage supplémentaire que la valeur configurée est accessible dans le "
 "contexte de notification."
 
+#, fuzzy
 msgid ""
 "Instead of using the regular logwatch check all lines received by logwatch "
-"can be forwarded to a Check_MK event console daemon to be processed. The "
+"can be forwarded to a Checkmk event console daemon to be processed. The "
 "target event console can be configured for each host in a separate rule."
 msgstr ""
 "Au lieu d'utiliser la vérification habituelle de logwatch, toutes les lignes "
@@ -26746,6 +26814,10 @@ msgstr "Règle non valide <tt>%s</tt>."
 msgid "Invalid sidebar element %s"
 msgstr "Élément de barre latérale non valide %s"
 
+#, fuzzy
+msgid "Invalid signature of response"
+msgstr "Règles de notification globale"
+
 msgid "Invalid site"
 msgstr "Site non valide"
 
@@ -26986,8 +27058,9 @@ msgstr ""
 "Il n'est pas utile d'ajouter une configuration en bloc pour l'annulation des "
 "règles."
 
+#, fuzzy
 msgid ""
-"It is a good idea to disable access to WATO completely on the remote site. "
+"It is a good idea to disable access to Setup completely on the remote site. "
 "Otherwise a user who does not now about the replication could make local "
 "changes that are overridden at the next configuration activation."
 msgstr ""
@@ -27019,13 +27092,14 @@ msgstr ""
 "d'un événement programmé mais de supprimer le message après que l'événement "
 "se soit produit."
 
+#, fuzzy
 msgid ""
 "It is possible to fetch several attributes of users, like Email or full "
 "names, from the LDAP directory. This is done by plugins which can "
 "individually enabled or disabled. When enabling a plugin, it is used upon "
 "the next synchonisation of user accounts for gathering their attributes. The "
-"user options which get imported into Check_MK from LDAP will be locked in "
-"WATO."
+"user options which get imported into Checkmk from LDAP will be locked in "
+"Setup."
 msgstr ""
 "Il est possible de récupérer plusieurs attributs des utilisateurs, comme "
 "l'email ou les noms complets, à partir du répertoire LDAP. Ceci est fait par "
@@ -27819,6 +27893,10 @@ msgid "Last user synchronization ran into an exception: "
 msgstr ""
 "La dernière synchronisation de l'utilisateur a rencontré une exception : "
 
+#, fuzzy
+msgid "Last verification failed"
+msgstr "Notification de l'utilisateur"
+
 msgid "Last week"
 msgstr "La semaine dernière"
 
@@ -28601,6 +28679,10 @@ msgstr "État de la licence"
 msgid "License state"
 msgstr "État de la licence"
 
+#, fuzzy
+msgid "License state \"Free\""
+msgstr "État de la licence"
+
 msgid "License usage"
 msgstr "Utilisation de la licence"
 
@@ -28943,9 +29025,10 @@ msgstr ""
 "Suivi en direct des performances globales de tous les serveurs de "
 "surveillance"
 
+#, fuzzy
 msgid ""
-"Live monitor of the performance statistics of the Check_MK Micro Core. Note: "
-"this snapin only works if <b>all</b> of your sites are running the Check_MK "
+"Live monitor of the performance statistics of the Checkmk Micro Core. Note: "
+"this snapin only works if <b>all</b> of your sites are running the Checkmk "
 "Cores"
 msgstr ""
 "Surveillance en direct des statistiques de performance du micro-cœur "
@@ -30599,7 +30682,7 @@ msgid ""
 "monitoring system is active. The Time Period definitions are taken from the "
 "monitoring core that is running on the same host or OMD site as the event "
 "daemon. Please note, that this selection only offers time periods that are "
-"defined with WATO."
+"defined with Setup."
 msgstr ""
 "Faites correspondre cette règle uniquement pendant les périodes où la "
 "période sélectionnée dans le système de surveillance est active. Les "
@@ -31556,9 +31639,6 @@ msgstr "Niveaux minimaux de charge en pourcentage"
 msgid "Minimum Page Life Expectancy"
 msgstr "Durée de vie minimale des pages"
 
-msgid "Minimum Required Checkmk version"
-msgstr "Version minimale requise Checkmk"
-
 msgid "Minimum allowed age"
 msgstr "Âge minimum autorisé"
 
@@ -31609,6 +31689,10 @@ msgstr "Valeur minimale possible"
 
 msgid "Minimum read wait time"
 msgstr "Temps d'attente minimum pour la lecture"
+
+#, fuzzy
+msgid "Minimum required Checkmk version"
+msgstr "Version minimale requise Checkmk"
 
 msgid "Minimum required uptime"
 msgstr "Temps de fonctionnement minimum requis"
@@ -31803,6 +31887,18 @@ msgstr "Mode trouvé lors de l'inventaire"
 
 msgid "Mode of the Check"
 msgstr "Mode de contrôle"
+
+#, fuzzy
+msgid "Mode: Background job"
+msgstr "Travail de fond"
+
+#, fuzzy
+msgid "Mode: Manual online verification"
+msgstr "Vérification du certificat SSL"
+
+#, fuzzy
+msgid "Mode: Offline verification"
+msgstr "Vérification du certificat SSL"
 
 msgid "Model and revsion"
 msgstr "Modèle et révsion"
@@ -35679,8 +35775,9 @@ msgstr "Paramètres facultatifs"
 msgid "Optional variable prefix"
 msgstr "Préfixe de variable facultatif"
 
+#, fuzzy
 msgid ""
-"Optionally choose the format of the agent updater excecutable file. Relevant "
+"Optionally choose the format of the agent updater executable file. Relevant "
 "for Linux only. On other OSes, the executable format will be chosen "
 "automatically regardless of this rule. The binary formats yield a broader "
 "compatibility whereas the python script is small an editable. Please note "
@@ -36725,6 +36822,10 @@ msgstr "Pd"
 
 msgid "Peak value of active sessions"
 msgstr "Valeur maximale des sessions actives"
+
+#, fuzzy
+msgid "Peer States"
+msgstr "État du travail"
 
 msgid "Peers"
 msgstr "Pairs"
@@ -37862,12 +37963,12 @@ msgstr "Veuillez spécifier les extensions en minuscules et sans point."
 msgid "Please specify the name of the status host."
 msgstr "Veuillez spécifier le nom de l'hôte d'état."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
 "replaced with the host name the inventory has been done for. If you use a "
-"relative path then that will be relative to Check_MK's directory for "
-"variable data, which is <tt>%s</tt>."
+"relative path then that will be relative to Checkmk's directory for variable "
+"data, which is <tt>%s</tt>."
 msgstr ""
 "Veuillez spécifier le chemin d'accès au fichier d'exportation. Le texte "
 "<tt>[HOST]</tt> sera remplacé par le nom de l'hôte pour lequel l'inventaire "
@@ -38036,10 +38137,11 @@ msgstr "Niveaux spécifiques à la politique (Clustermode uniquement)"
 msgid "Pool name"
 msgstr "Nom de la piscine"
 
+#, fuzzy
 msgid ""
-"Populates the alias attribute of the WATO user by synchronizing an attribute "
-"from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is "
-"used."
+"Populates the alias attribute of the Setup user by synchronizing an "
+"attribute from the LDAP user account. By default the LDAP attribute <tt>cn</"
+"tt> is used."
 msgstr ""
 "Remplit l'attribut alias de l'utilisateur WATO en synchronisant un attribut "
 "du compte utilisateur LDAP. Par défaut, l'attribut LDAP <tt>cn</tt> est "
@@ -40091,7 +40193,8 @@ msgstr "Renommé %d %s aux endroits suivants:<br><ul>%s</ul> ;"
 msgid "Renaming Operations"
 msgstr "Opérations de renommage"
 
-msgid "Renaming WATO configuration..."
+#, fuzzy
+msgid "Renaming Setup configuration..."
 msgstr "Renommer la configuration du WATO..."
 
 msgid "Renaming host(s) in BI aggregations..."
@@ -40334,10 +40437,6 @@ msgstr "Rapport à créer"
 
 msgid "Report to schedule"
 msgstr "Rapport sur le calendrier"
-
-#, fuzzy
-msgid "Report verification result"
-msgstr "Règles de notification globale"
 
 msgid "Reporting"
 msgstr "Reporting"
@@ -41824,6 +41923,10 @@ msgstr ""
 
 msgid "Saved read only settings"
 msgstr "Sauvegarde des paramètres en lecture seule"
+
+#, fuzzy
+msgid "Saved space"
+msgstr "Espace utilisé"
 
 msgid "Scale to width of page"
 msgstr "S'adapte à la largeur de la page"
@@ -43640,8 +43743,9 @@ msgstr "Afficher les messages d'erreur de MK Livestatus"
 msgid "Show Manpage"
 msgstr "Afficher la page d'accueil"
 
-msgid "Show WATO icon"
-msgstr "Afficher l'icône WATO"
+#, fuzzy
+msgid "Show Setup icon"
+msgstr "Montrez-vous à"
 
 msgid "Show a colored status label"
 msgstr "Afficher une étiquette d'état en couleur"
@@ -43781,7 +43885,8 @@ msgstr "Montrer les valeurs historiques"
 msgid "Show host status"
 msgstr "Afficher l'état de l'hôte"
 
-msgid "Show icon linking to WATO parameter editor for services"
+#, fuzzy
+msgid "Show icon linking to Setup parameter editor for services"
 msgstr ""
 "Afficher l'icône qui renvoie à l'éditeur de paramètres WATO pour les services"
 
@@ -44188,8 +44293,9 @@ msgstr ""
 "cela, les erreurs sont enregistrées dans <tt>var/log/web.log</tt>. En plus "
 "de cela, les erreurs sont affichées ici."
 
+#, fuzzy
 msgid ""
-"Since Check_MK 1.6 it is possible to encrypt the TCP Livestatus connections "
+"Since Checkmk 1.6 it is possible to encrypt the TCP Livestatus connections "
 "using SSL. This is enabled by default for sites that enable Livestatus via "
 "TCP with 1.6 or newer. Sites that already have this option enabled keep the "
 "communication unencrypted for compatibility reasons. However, it is highly "
@@ -44537,8 +44643,9 @@ msgstr "La plus petite taille de fichier ci-dessous"
 msgid "Smart PING (only with Checkmk Micro Core)"
 msgstr "Smart PING (uniquement avec Checkmk Micro Core)"
 
+#, fuzzy
 msgid ""
-"Smart PING is the default method for host checks when using the Check_MK "
+"Smart PING is the default method for host checks when using the Checkmk "
 "Micro Core. The Core sends out ICMP echo requests (PING) at the rate "
 "configured with <i>Normal check interval for host checks</i> (or <i>Retry "
 "check interval for host checks</i> while the host is in soft non-UP state). "
@@ -44633,11 +44740,12 @@ msgstr ""
 "limitant la taille du bulk), car les bulk walks sont beaucoup plus "
 "performants."
 
+#, fuzzy
 msgid ""
 "Some agent commands or plugins may follow the environment variable TMPDIR "
 "for storage of temporary files. For some reasons, you might want to adapt "
 "this path. Namely, the agent updater won't work with a \"/tmp\" dir that is "
-"mounted with a \"noexec\"-flag. Please note that the Check_MK Agent does no "
+"mounted with a \"noexec\"-flag. Please note that the Checkmk Agent does no "
 "automatic cleaning on this custom path."
 msgstr ""
 "Certaines commandes d'agent ou plugins peuvent suivre la variable "
@@ -44964,6 +45072,10 @@ msgstr ""
 "Espace dans la base de données qui n'a pas été réservé pour les objets de la "
 "base de données."
 
+#, fuzzy
+msgid "Space savings"
+msgstr "Utilisation de l'espace Flash"
+
 msgid "Spaces in hostnames"
 msgstr "Espaces dans les noms d'hôtes"
 
@@ -45246,6 +45358,24 @@ msgstr ""
 "Spécifiez les plages de fréquence par la limite supérieure de la plage à "
 "laquelle les niveaux de tension doivent s'appliquer. La liste est triée "
 "automatiquement lors de la sauvegarde."
+
+#, fuzzy, python-format
+msgid ""
+"Specify how Checkmk will translate the exit code of a task into a monitoring "
+"state. This will overwrite the default mapping used by the check plugin. You "
+"can also decide to only partially overwrite the default mapping by only "
+"specifying the new monitoring state. The default text will be kept as the "
+"summary, then.\n"
+"\n"
+" The defaults are shown in the checks man page (see <i>%s</i>)."
+msgstr ""
+"Ici, vous pouvez spécifier comment Checkmk traduira le code de sortie d'une "
+"tâche en un état de surveillance. Cela écrasera le mappage par défaut "
+"utilisé par le plugin de contrôle. Vous pouvez également décider de ne "
+"remplacer que partiellement le mapping par défaut en ne spécifiant que le "
+"nouvel état de surveillance. Le texte par défaut sera alors conservé comme "
+"résumé.<br><br>Les codes de sortie/états de surveillance/résumés suivants "
+"sont spécifiés par défaut:<br>%s"
 
 msgid "Specify input state evaluation"
 msgstr "Spécifier l'évaluation de l'état d'entrée"
@@ -46079,9 +46209,8 @@ msgstr "État lorsque le canal est inactif"
 msgid "State if mode is Active-Passive"
 msgstr ""
 
-#, fuzzy
 msgid "State if mode is Disabled"
-msgstr "État en cas de désactivation du mode Archivelogmode : "
+msgstr "État en cas de désactivation du mode Archivelog:"
 
 msgid "State if no backup found"
 msgstr "État si aucune sauvegarde n'a été trouvée"
@@ -47064,6 +47193,10 @@ msgstr "Mise à jour réussie des adresses IP de %d hôtes."
 msgid "Successfully updated user profile."
 msgstr "La mise à jour du profil utilisateur a été effectuée avec succès."
 
+#, fuzzy
+msgid "Successfully verified signature"
+msgstr "Agents cuits avec succès"
+
 msgid "Suggested tutorial videos"
 msgstr "Vidéos tutorielles suggérées"
 
@@ -47656,8 +47789,9 @@ msgid "Tags IDs must be unique. You've used \"%s\" twice."
 msgstr ""
 "Les ID des balises doivent être uniques. Vous avez utilisé \"%s\" deux fois."
 
+#, fuzzy
 msgid ""
-"Tags are the basis of Check_MK's rule based configuration. If the first step "
+"Tags are the basis of Checkmk's rule based configuration. If the first step "
 "you define arbitrary tag groups. A host has assigned exactly one tag out of "
 "each group. These tags can later be used for defining parameters for hosts "
 "and services, such as <i>disable notifications for all hosts with the tags "
@@ -47896,9 +48030,8 @@ msgstr "Essais"
 msgid "Text"
 msgstr "Texte"
 
-#, fuzzy
 msgid "Text is not valid XML"
-msgstr "La valeur de cette règle n'est pas valide. "
+msgstr "La valeur de cette règle n'est pas valide."
 
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr "Fichiers journaux textuels (Linux, Solaris, Windows)"
@@ -48115,8 +48248,9 @@ msgstr ""
 "sont toujours appliqués sur l'utilisation moyenne depuis la dernière "
 "vérification - qui est généralement d'une minute."
 
+#, fuzzy
 msgid ""
-"The Check_MK Agent supports a feature called Real-Time Checks where it sends "
+"The Checkmk Agent supports a feature called Real-Time Checks where it sends "
 "status updates of specific monitoring information more often than the "
 "regular check interval of the host, for example in an interval of 1 second."
 "This operation mode requires the communication between the agent and the "
@@ -48133,25 +48267,13 @@ msgstr ""
 "utilisé pour crypter les données envoyées afin de pouvoir les recevoir et "
 "les décrypter."
 
+#, fuzzy
 msgid ""
-"The Check_MK Managed Services Edition can only be connected with other sites "
+"The Checkmk Managed Services Edition can only be connected with other sites "
 "using the CME."
 msgstr ""
 "L'édition Check_MK Managed Services ne peut être connectée à d'autres sites "
 "qu'en utilisant le CME."
-
-msgid ""
-"The Check_MK agent supports executing Nagios plugins on the remote host like "
-"you might have done it before when monitoring via NRPE. This feature is "
-"called MRPE (MK's Remote Plugin Executor). This rule can be used to "
-"configure the agent to execute plugins of your choice using the given "
-"arguments."
-msgstr ""
-"L'agent Check_MK permet d'exécuter les plugins Nagios sur l'hôte distant "
-"comme vous l'avez peut-être fait auparavant lors de la surveillance via "
-"NRPE. Cette fonctionnalité est appelée MRPE (MK's Remote Plugin Executor). "
-"Cette règle peut être utilisée pour configurer l'agent afin qu'il exécute "
-"les plugins de votre choix en utilisant les arguments donnés."
 
 msgid "The Checkmk Micro Core"
 msgstr "Le micro noyau Checkmk"
@@ -48257,6 +48379,20 @@ msgstr ""
 "cette règle pour configurer les agents cuites pour envoyer des données en "
 "temps réel au serveur Checkmk."
 
+#, fuzzy
+msgid ""
+"The Checkmk agent supports executing Nagios plugins on the remote host like "
+"you might have done it before when monitoring via NRPE. This feature is "
+"called MRPE (MK's Remote Plugin Executor). This rule can be used to "
+"configure the agent to execute plugins of your choice using the given "
+"arguments."
+msgstr ""
+"L'agent Check_MK permet d'exécuter les plugins Nagios sur l'hôte distant "
+"comme vous l'avez peut-être fait auparavant lors de la surveillance via "
+"NRPE. Cette fonctionnalité est appelée MRPE (MK's Remote Plugin Executor). "
+"Cette règle peut être utilisée pour configurer l'agent afin qu'il exécute "
+"les plugins de votre choix en utilisant les arguments donnés."
+
 msgid ""
 "The Checkmk discovery will automatically find and configure services to be "
 "checked on your hosts and may also discover host labels."
@@ -48292,10 +48428,11 @@ msgstr "Console d'événement"
 msgid "The Event Console Daemon is currently not running. "
 msgstr "Le démon de la console d'événements n'est pas en cours d'exécution. "
 
+#, fuzzy
 msgid ""
-"The Event Console can have events create notifications in Check_MK. These "
+"The Event Console can have events create notifications in Checkmk. These "
 "notifications will be processed by the rule based notification system of "
-"Check_MK. This matching option helps you distinguishing and also gives you "
+"Checkmk. This matching option helps you distinguishing and also gives you "
 "access to special event fields."
 msgstr ""
 "La console d'événements peut faire en sorte que des événements créent des "
@@ -48625,6 +48762,19 @@ msgstr ""
 msgid "The Section name will be used as the item name by Check_MK"
 msgstr "Le nom de la section sera utilisé comme nom de l'élément par Check_MK."
 
+#, fuzzy
+msgid ""
+"The Setup configuration can be set to read only mode for all users that are "
+"not permitted to ignore the read only mode. All users that are permitted to "
+"set the read only can disable it again when another permitted user enabled "
+"it before."
+msgstr ""
+"La configuration WATO peut être définie en mode lecture seule pour tous les "
+"utilisateurs qui ne sont pas autorisés à ignorer le mode lecture seule. Tous "
+"les utilisateurs qui sont autorisés à définir le mode lecture seule peuvent "
+"le désactiver à nouveau lorsqu'un autre utilisateur autorisé l'a activé "
+"auparavant."
+
 msgid ""
 "The TCP Port the SMTP server is listening on. Defaulting to <tt>25</tt>."
 msgstr ""
@@ -48709,18 +48859,6 @@ msgid "The Virtual Machine"
 msgstr "La machine virtuelle"
 
 msgid ""
-"The WATO configuration can be set to read only mode for all users that are "
-"not permitted to ignore the read only mode. All users that are permitted to "
-"set the read only can disable it again when another permitted user enabled "
-"it before."
-msgstr ""
-"La configuration WATO peut être définie en mode lecture seule pour tous les "
-"utilisateurs qui ne sont pas autorisés à ignorer le mode lecture seule. Tous "
-"les utilisateurs qui sont autorisés à définir le mode lecture seule peuvent "
-"le désactiver à nouveau lorsqu'un autre utilisateur autorisé l'a activé "
-"auparavant."
-
-msgid ""
 "The Webhook-URL must begin with <tt>https://alert.victorops.com/"
 "integrations</tt>"
 msgstr ""
@@ -48734,12 +48872,13 @@ msgstr ""
 "Le plugin Windows Multipath vérifie le nombre de chemins dans un MPIO "
 "(Microsoft Multipath IO)."
 
+#, fuzzy
 msgid ""
 "The Windows Updates plugin checks for the number of pending updates. The "
-"default configuration will include the asynchronious execution and caching "
-"of the output for 4 hours (14400 seconds). You can still change these values "
-"with the WATO rulesets <i>Set cache age for plugins and local checks</i> and "
-"<i>Set execution mode for plugins and local checks</i>."
+"default configuration will include the asynchronous execution and caching of "
+"the output for 4 hours (14400 seconds). You can still change these values "
+"with the Setup rulesets <i>Set cache age for plugins and local checks</i> "
+"and <i>Set execution mode for plugins and local checks</i>."
 msgstr ""
 "Le plugin Windows Updates vérifie le nombre de mises à jour en attente. La "
 "configuration par défaut comprendra l'exécution asynchrone et la mise en "
@@ -49694,9 +49833,10 @@ msgstr ""
 "mises à jour dans l'intervalle configuré ici et sont disponibles dans le "
 "snapin de la barre latérale <i>Performances de la console d'événements</i>."
 
+#, fuzzy
 msgid ""
 "The event socket is an alternative way for sending events to the Event "
-"Console. It is used by the Check_MK logwatch check when forwarding log "
+"Console. It is used by the Checkmk logwatch check when forwarding log "
 "messages to the Event Console. This setting defines the number of unaccepted "
 "connections to be queued before refusing new connections."
 msgstr ""
@@ -49783,6 +49923,7 @@ msgstr ""
 "Le chemin du système de fichiers, préfixé par <i>Fichier </i> ou <i>Dossier "
 "</i>."
 
+#, fuzzy
 msgid ""
 "The first choice of a tag group will be its default value. If a tag group "
 "has only one choice, it will be displayed as a checkbox and set or not set "
@@ -49790,7 +49931,7 @@ msgid ""
 "A host with that choice will not get any tag of this group.<br><br>The tag "
 "ID must contain only of letters, digits and underscores.<br><br><b>Renaming "
 "tags ID:</b> if you want to rename the ID of a tag, then please make sure "
-"that you do not change its title at the same time! Otherwise WATO will not "
+"that you do not change its title at the same time! Otherwise Setup will not "
 "be able to detect the renaming and cannot exchange the tags in all folders, "
 "hosts and rules accordingly."
 msgstr ""
@@ -50097,10 +50238,11 @@ msgstr "L'hôte était en panne"
 msgid "The host was in a scheduled downtime"
 msgstr "L'hôte était en arrêt programmé"
 
+#, fuzzy
 msgid ""
 "The host/service must be in one of the selected contact groups. This only "
-"works with Check_MK Micro Core. If you don't use the CMC that filter will "
-"not apply"
+"works with Checkmk Micro Core. If you don't use the CMC that filter will not "
+"apply"
 msgstr ""
 "L'hôte/service doit faire partie de l'un des groupes de contacts "
 "sélectionnés. Ceci ne fonctionne qu'avec Check_MK Micro Core. Si vous "
@@ -50406,37 +50548,42 @@ msgstr ""
 "Le niveau d'enregistrement pour le traitement des temps d'arrêt dans le "
 "Checkmk Micro Core."
 
+#, fuzzy
 msgid ""
-"The log level for general stuff within the Check_MK Micro Core, basically "
+"The log level for general stuff within the Checkmk Micro Core, basically "
 "everything which didn't fit elsewhere"
 msgstr ""
 "Le niveau d'enregistrement pour les éléments généraux du micro-noyau "
 "Check_MK, c'est-à-dire tout ce qui n'a pas sa place ailleurs."
 
+#, fuzzy
 msgid ""
-"The log level for the communication between the Check_MK Micro Core and "
+"The log level for the communication between the Checkmk Micro Core and "
 "external Graphite servers"
 msgstr ""
 "Le niveau de journalisation pour la communication entre le Micro Core "
 "Check_MK et les serveurs Graphite externes."
 
+#, fuzzy
 msgid ""
-"The log level for the communication between the Check_MK Micro Core and its "
+"The log level for the communication between the Checkmk Micro Core and its "
 "InfluxDB database"
 msgstr ""
 "Le niveau de log pour la communication entre le Micro Core Check_MK et sa "
 "base de données InfluxDB."
 
+#, fuzzy
 msgid ""
-"The log level for the communication between the Check_MK Micro Core and its "
+"The log level for the communication between the Checkmk Micro Core and its "
 "RRD helper and the RRD cache daemon"
 msgstr ""
 "Le niveau de journalisation pour la communication entre le micro-cœur "
 "Check_MK, son assistant RRD et le démon de cache RRD."
 
+#, fuzzy
 msgid ""
-"The log level for the communication of the Check_MK Micro Core with its "
-"check helpers"
+"The log level for the communication of the Checkmk Micro Core with its check "
+"helpers"
 msgstr ""
 "Le niveau de journalisation pour la communication du micro-cœur Check_MK "
 "avec ses aides de vérification."
@@ -50837,9 +50984,10 @@ msgstr ""
 "Le délai d'attente du réseau en secondes lors de la communication avec "
 "AppDynamics, la valeur par défaut est de 30 secondes."
 
+#, fuzzy
 msgid ""
 "The network timeout in seconds when communicating with vSphere or to the "
-"Check_MK Agent. The default is 60 seconds. Please note that this is not a "
+"Checkmk Agent. The default is 60 seconds. Please note that this is not a "
 "total timeout but is applied to each individual network transation."
 msgstr ""
 "Le délai d'attente du réseau en secondes lors de la communication avec "
@@ -51144,7 +51292,6 @@ msgstr ""
 "Le mot de passe n'utilise pas suffisamment de groupes de caractères. Vous "
 "devez définir un mot de passe qui utilise au moins %d d'entre eux."
 
-#, fuzzy
 msgid ""
 "The password entered here is stored in clear text within the monitoring "
 "site. This is necessary because the monitoring process must have access to "
@@ -51154,7 +51301,7 @@ msgstr ""
 "Le mot de passe saisi ici est stocké en texte clair sur le site de "
 "surveillance. Ceci est généralement nécessaire car le processus de "
 "surveillance doit avoir accès au mot de passe non crypté car il doit le "
-"soumettre pour s'authentifier auprès des systèmes distants. "
+"soumettre pour s'authentifier auprès des systèmes distants."
 
 msgid "The password or API key of the user."
 msgstr "Le mot de passe ou la clé API de l'utilisateur."
@@ -51807,9 +51954,9 @@ msgstr "Le site est marqué comme mort. Je n'essaie pas de le répliquer."
 msgid "The site of the status host does not exist."
 msgstr "Le site de l'hôte d'état n'existe pas."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"The sites %s are not using the Check_MK Microcore. You will not be able to "
+"The sites %s are not using the Checkmk Microcore. You will not be able to "
 "use metrics of hosts monitored by these sites."
 msgstr ""
 "Les sites %s n'utilisent pas le Check_MK Microcore. Vous ne pourrez pas "
@@ -51957,9 +52104,10 @@ msgstr ""
 "Les niveaux de tablespace ne seront jamais élevés au-dessus de ces valeurs, "
 "lorsque le facteur magique est utilisé et que le tablespace est très petit."
 
+#, fuzzy
 msgid ""
 "The tactical overview snapin is reporing about notifications that could not "
-"be sent by Check_MK. Users with the permission \"See failed Notifications "
+"be sent by Checkmk. Users with the permission \"See failed Notifications "
 "(all)\" get the number of failed notification within the configured horizon."
 msgstr ""
 "Le snapin d'aperçu tactique signale les notifications qui n'ont pas pu être "
@@ -52139,8 +52287,9 @@ msgstr ""
 msgid "The title of the column displayed in the view."
 msgstr "Le titre de la colonne affichée dans la vue."
 
+#, fuzzy
 msgid ""
-"The title under which the value will appear in Check_MK. Defaults to path if "
+"The title under which the value will appear in Checkmk. Defaults to path if "
 "unspecified."
 msgstr ""
 "Le titre sous lequel la valeur apparaîtra dans Check_MK. La valeur par "
@@ -52159,10 +52308,10 @@ msgstr "La taille totale de tous les index de la collection."
 msgid ""
 "The trial period of Checkmk has expired on %s.<br><br>If you want to "
 "continue using Checkmk as today, you must %s. In case you already have a "
-"license, please enter your license credentials on the product's licensing "
-"page (%s).<br><br>Otherwise, you will need to reduce the number of services "
-"to fit within the free license service limit of %d. You have exceeded this "
-"limit with %d."
+"license, please enter your license credentials on the product's %s."
+"<br><br>Otherwise, you will need to reduce the number of services to fit "
+"within the free license service limit of %d. You have exceeded this limit "
+"with %d."
 msgstr ""
 
 #, python-format
@@ -52320,9 +52469,9 @@ msgstr "La valeur de %s doit être comprise entre %d et %d."
 msgid "The value is not of type dict."
 msgstr "La valeur n'est pas de type dict."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The value is not valid: '%s'"
-msgstr "La valeur de cette règle n'est pas valide. "
+msgstr "La valeur de cette règle n'est pas valide : %s"
 
 #, python-format
 msgid "The value must be of type dict, but it has type %s"
@@ -52507,7 +52656,8 @@ msgstr ""
 "Aucune information sur les prévisions n'est actuellement disponible pour ce "
 "service."
 
-msgid "There is no WATO snapshot to be restored."
+#, fuzzy
+msgid "There is no Setup snapshot to be restored."
 msgstr "Il n'y a pas d'instantané WATO à restaurer."
 
 msgid "There is no backup job configured"
@@ -52683,16 +52833,18 @@ msgstr ""
 "Ces services sont mappés à un hôte de cluster par une règle dans l'un des "
 "ensembles de règles <i>%s</i> ou <i>%s</i>."
 
+#, fuzzy
 msgid ""
-"These services do not use the Check_MK agent or Check_MK-SNMP engine but "
+"These services do not use the Checkmk agent or Checkmk-SNMP engine but "
 "actively call a classical check plugin, that you have installed yourself."
 msgstr ""
 "Ces services n'utilisent pas l'agent Check_MK ou le moteur Check_MK-SNMP "
 "mais appellent activement un plugin de vérification classique, que vous avez "
 "installé vous-même."
 
+#, fuzzy
 msgid ""
-"These services do not use the Check_MK agent or Check_MK-SNMP engine but "
+"These services do not use the Checkmk agent or Checkmk-SNMP engine but "
 "actively call a classical check plugin, that you have installed yourself. "
 "These services have been disabled by creating a rule in the rule set "
 "<i>Disabled services</i> oder <i>Disabled checks</i>."
@@ -52703,20 +52855,22 @@ msgstr ""
 "l'ensemble de règles <i>Services désactivés</i> ou <i>Contrôles désactivés</"
 "i>."
 
+#, fuzzy
 msgid ""
-"These services do not use the Check_MK agent or Check_MK-SNMP engine but "
+"These services do not use the Checkmk agent or Checkmk-SNMP engine but "
 "actively call classical check plugins. They have been added by a rule in the "
-"section <i>Active checks</i> or implicitely by Check_MK."
+"section <i>Active checks</i> or implicitely by Checkmk."
 msgstr ""
 "Ces services n'utilisent pas l'agent Check_MK ou le moteur Check_MK-SNMP "
 "mais appellent activement les plugins de vérification classiques. Ils ont "
 "été ajoutés par une règle dans la section <i>Contrôles actifs</i> ou "
 "implicitement par Check_MK."
 
+#, fuzzy
 msgid ""
-"These services do not use the Check_MK agent or Check_MK-SNMP engine but "
+"These services do not use the Checkmk agent or Checkmk-SNMP engine but "
 "actively call classical check plugins. They have been added by a rule in the "
-"section <i>Active checks</i> or implicitely by Check_MK. These services have "
+"section <i>Active checks</i> or implicitely by Checkmk. These services have "
 "been disabled by creating a rule in the rule set <i>Disabled services</i> "
 "oder <i>Disabled checks</i>."
 msgstr ""
@@ -53127,9 +53281,10 @@ msgstr ""
 "partage réseau en utilisant NFS, Samba ou similaire. Mais vous devrez vous "
 "occuper vous-même du montage du partage réseau."
 
+#, fuzzy
 msgid ""
 "This catalog of check plugins gives you a complete listing of all plugins "
-"that are shipped with your Check_MK installation. It also allows you to "
+"that are shipped with your Checkmk installation. It also allows you to "
 "access the rule sets for configuring the parameters of the checks and to "
 "manually create services in case you cannot or do not want to rely on the "
 "automatic service discovery."
@@ -53164,9 +53319,10 @@ msgstr ""
 "Vous pouvez également soumettre un rapport d'incident à l'équipe de "
 "développement si vous le souhaitez."
 
+#, fuzzy
 msgid ""
-"This check crashed. Please inform a Check_MK user that is allowed to view "
-"and submit crash reports to the development team."
+"This check crashed. Please inform a Checkmk user that is allowed to view and "
+"submit crash reports to the development team."
 msgstr ""
 "Ce contrôle s'est écrasé. Veuillez informer un utilisateur de Check_MK qui "
 "est autorisé à voir et à soumettre des rapports de crash à l'équipe de "
@@ -53178,8 +53334,9 @@ msgstr "Ce contrôle n'a pas de paramètres."
 msgid "This check is not configurable via WATO"
 msgstr "Cette vérification n'est pas configurable via WATO"
 
+#, fuzzy
 msgid ""
-"This check is part of the Check_MK Event Console and monitors whether there "
+"This check is part of the Checkmk Event Console and monitors whether there "
 "are any open events for a particular host. The overall state of the service "
 "generated by the check reflects the most critical status of any open event "
 "for that host."
@@ -53320,9 +53477,10 @@ msgstr ""
 "Cette condition fait que la règle ne correspond qu'aux hôtes des sites "
 "sélectionnés."
 
+#, fuzzy
 msgid ""
-"This condition makes the rule match only hosts that are managed via WATO and "
-"that are contained in this folder - either directly or in one of its "
+"This condition makes the rule match only hosts that are managed via Setup "
+"and that are contained in this folder - either directly or in one of its "
 "subfolders."
 msgstr ""
 "Cette condition fait que la règle ne correspond qu'aux hôtes qui sont gérés "
@@ -53653,14 +53811,15 @@ msgid "This is a top-level rule. Show rule tree"
 msgstr ""
 "Il s'agit d'une règle de niveau supérieur. Afficher l'arborescence des règles"
 
+#, fuzzy
 msgid ""
 "This is essentially the raw agent updater script that gets packaged within "
 "the binary versions. You have to care for the dependencies by yourself. The "
 "script requires a Python 3.4 (or greater) installation and matching python "
 "packages \"requests\", \"PySocks\" and \"pyOpenSSL\" installed on the target "
-"hosts. Requirements may change eventually without anouncement. However, this "
-"might be the right choice for experienced users or users that want to run "
-"the agent updater on architectures like ARM, ppc or others."
+"hosts. Requirements may change eventually without announcement. However, "
+"this might be the right choice for experienced users or users that want to "
+"run the agent updater on architectures like ARM, ppc or others."
 msgstr ""
 "Il s'agit essentiellement du script brut de mise à jour de l'agent qui est "
 "emballé dans les versions binaires. Vous devez vous occuper vous-même des "
@@ -53678,9 +53837,6 @@ msgstr ""
 "Ceci n'est qu'un test ! L'agent enverra alors toujours tous les messages "
 "historiques, et pas seulement les nouveaux. Cela conduit à d'énormes "
 "quantités de données."
-
-msgid "This is not a valid Checkmk version number"
-msgstr "Ce numéro de version de Checkmk n'est pas valide."
 
 #, fuzzy
 msgid "This is not a valid Nagios time period day specification."
@@ -53892,8 +54048,9 @@ msgid "This might take some time and involves a core restart..."
 msgstr ""
 "Cela peut prendre un certain temps et implique un redémarrage du noyau..."
 
+#, fuzzy
 msgid ""
-"This module can be used to define conditions for Check_MK rules in a central "
+"This module can be used to define conditions for Checkmk rules in a central "
 "place. You can then refer to these conditions from different rulesets. Using "
 "these predefined conditions may save you a lot of redundant conditions when "
 "you need them in multiple rulesets."
@@ -54119,11 +54276,12 @@ msgstr ""
 "toutes les données de tous les sites n'ont pas été affichées. D'autres "
 "personnes - cependant - trouvent ces messages distrayants. "
 
+#, fuzzy
 msgid ""
 "This option defines the interval of the LDAP synchronization. This setting "
 "is only used by sites which have the <a href=\"wato.py?mode=sites"
 "\">Automatic User Synchronization</a> enabled.<br><br>Please note: Passwords "
-"of the users are never stored in WATO and therefor never cached!"
+"of the users are never stored in Setup and therefor never cached!"
 msgstr ""
 "Cette option définit l'intervalle de la synchronisation LDAP. Ce paramètre "
 "n'est utilisé que par les sites qui ont la <a href=\"wato.py?mode=sites"
@@ -54156,12 +54314,13 @@ msgstr ""
 "des hôtes et des services. Cela accélère considérablement les requêtes de "
 "disponibilité pour les grandes installations."
 
+#, fuzzy
 msgid ""
 "This option enables the Event Console - The event processing and "
-"classification daemon of Check_MK. You can also configure whether or not the "
+"classification daemon of Checkmk. You can also configure whether or not the "
 "Event Console shal listen for incoming SNMP traps or syslog messages. Please "
-"note that only a single Check_MK site per Check_MK server can listen for "
-"such messages."
+"note that only a single Checkmk site per Check_MK server can listen for such "
+"messages."
 msgstr ""
 "Cette option active l'Event Console - le démon de traitement et de "
 "classification des événements de Check_MK. Vous pouvez également indiquer si "
@@ -54220,12 +54379,13 @@ msgstr ""
 msgid "This option is needed in case you work without the Agent Bakery"
 msgstr "Cette option est nécessaire si vous travaillez sans l'Agent Bakery."
 
+#, fuzzy
 msgid ""
 "This option is only relevant if you have file grouping enabled and you wish "
 "to use the character \"@\" in any of your subgroup names. If this is the "
 "case, please choose any ASCII character that is NOT used in any of your "
 "subgroup names. You can also specify a combination of characters. For "
-"information: the subgroup delimiter is used to seperate the subgroup name "
+"information: the subgroup delimiter is used to separate the subgroup name "
 "from the main section name in the configuration file. For example: [My "
 "Subgroup@My Main Section]."
 msgstr ""
@@ -54250,15 +54410,17 @@ msgstr ""
 msgid "This option is set by default."
 msgstr "Cette option est définie par défaut."
 
+#, fuzzy
 msgid ""
-"This option lets Check_MK add the string \"ISL\" to the service description "
+"This option lets Checkmk add the string \"ISL\" to the service description "
 "for interswitch links."
 msgstr ""
 "Cette option permet à Check_MK d'ajouter la chaîne \"ISL\" à la description "
 "du service pour les liaisons inter-commutateurs."
 
+#, fuzzy
 msgid ""
-"This option lets Check_MK use the port name as item instead of the port "
+"This option lets Checkmk use the port name as item instead of the port "
 "number. If no description is available then the port number is used anyway."
 msgstr ""
 "Cette option permet à Check_MK d'utiliser le nom du port comme élément au "
@@ -54452,12 +54614,13 @@ msgstr ""
 "licences et plans de service de MS Office 365 en utilisant le module "
 "PowerShell MSOnline."
 
+#, fuzzy
 msgid ""
 "This plugin can be used to collect information of all running MSSQL servers "
 "on the local system. The current implementation of the check uses the "
 "\"trusted authentication\" where no user/password needs to be created in the "
 "MSSQL server instance by default. Using this method, you needed to grant the "
-"user as which the Check_MK windows agent service is running access to the "
+"user as which the Checkmk windows agent service is running access to the "
 "MSSQL database. Otherwise you can configure the credentials of a database "
 "user which has the permission to read the needed information from the server "
 "instance."
@@ -54497,12 +54660,13 @@ msgid "This plugin checks the last return state of Windows task scripts"
 msgstr ""
 "Ce plugin vérifie le dernier état de retour des scripts de tâches Windows."
 
+#, fuzzy
 msgid ""
 "This plugin checks the replication of Active Directory. To be able to run "
 "this check you need appropriate credentials in the target domain. Normally "
-"the Check_MK agent runs as sevice with local system credentials which are "
-"not sufficient for this check. To solve this problem you can do e.g. change "
-"the account the service is being started with to a domain user account with "
+"the Checkmk agent runs as sevice with local system credentials which are not "
+"sufficient for this check. To solve this problem you can do e.g. change the "
+"account the service is being started with to a domain user account with "
 "enough permissions on the DC."
 msgstr ""
 "Ce plugin vérifie la réplication d'Active Directory. Pour être en mesure "
@@ -54627,9 +54791,10 @@ msgstr ""
 "de cet outil. Vous pouvez le télécharger gratuitement à partir de <a "
 "href='http://gnuwin32.sourceforge.net/packages/dmidecode.htm'>ici</a>. "
 
+#, fuzzy
 msgid ""
 "This plugin synchronizes a field of the users LDAP account to the pager "
-"attribute of the WATO user accounts, which is then forwarded to the "
+"attribute of the Setup user accounts, which is then forwarded to the "
 "monitoring core and can be usedfor notifications. By default the LDAP "
 "attribute <tt>mobile</tt> is used."
 msgstr ""
@@ -55164,14 +55329,13 @@ msgstr ""
 "que vous pouvez configurer ici ne sont pas applicables à toutes les "
 "vérifications."
 
-#, fuzzy
 msgid ""
 "This rule configures levels for the CPU utilization (not load) for Nutanix "
 "cluster systems. The utilization percentage is shown for the whole cluster."
 msgstr ""
 "Cette règle configure les niveaux d'utilisation des CPU (et non la charge) "
 "pour les systèmes hôtes VMWare ESX. Le pourcentage d'utilisation est calculé "
-"par rapport au nombre total de CPU. "
+"par rapport au nombre total de CPU."
 
 #, fuzzy
 msgid ""
@@ -55388,29 +55552,33 @@ msgstr ""
 "xml/sensordata.xml du dispositif par HTTP et extrait les informations de "
 "surveillance nécessaires de ce fichier."
 
+#, fuzzy
 msgid ""
-"This rule selects the Agent HP MSA instead of the normal Check_MK Agent "
-"which collects the data through the HP MSA web interface"
+"This rule selects the Agent HP MSA instead of the normal Checkmk Agent which "
+"collects the data through the HP MSA web interface"
 msgstr ""
 "Cette règle sélectionne l'agent HP MSA au lieu de l'agent normal Check_MK "
 "qui collecte les données via l'interface web HP MSA."
 
+#, fuzzy
 msgid ""
-"This rule selects the Agent IPMI Sensors instead of the normal Check_MK "
-"Agent which collects the data through the FreeIPMI resp. IPMItool command"
+"This rule selects the Agent IPMI Sensors instead of the normal Checkmk Agent "
+"which collects the data through the FreeIPMI resp. IPMItool command"
 msgstr ""
 "Cette règle sélectionne l'agent IPMI Sensors au lieu de l'agent normal "
 "Check_MK qui collecte les données via la commande FreeIPMI resp. IPMItool."
 
+#, fuzzy
 msgid ""
-"This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK "
+"This rule selects the Agent Ruckus Spot agent instead of the normal Checkmk "
 "Agent which collects the data through the Ruckus Spot web interface"
 msgstr ""
 "Cette règle sélectionne l'agent Ruckus Spot au lieu de l'agent Check_MK "
 "normal qui collecte les données via l'interface web Ruckus Spot."
 
+#, fuzzy
 msgid ""
-"This rule selects the EMC VNX agent instead of the normal Check_MK Agent and "
+"This rule selects the EMC VNX agent instead of the normal Checkmk Agent and "
 "allows monitoring of EMC VNX storage systems by calling naviseccli "
 "commandline tool locally on the monitoring system. Make sure it is installed "
 "and working. You can configure your connection settings here."
@@ -55428,8 +55596,9 @@ msgstr ""
 "Cette règle sélectionne l'agent Fritz!Box, qui utilise UPNP pour recueillir "
 "des informations sur la configuration et l'état de la connexion."
 
+#, fuzzy
 msgid ""
-"This rule selects the Siemens PLC agent instead of the normal Check_MK Agent "
+"This rule selects the Siemens PLC agent instead of the normal Checkmk Agent "
 "and allows monitoring of Siemens PLC using the Snap7 API. You can configure "
 "your connection settings and values to fetch here."
 msgstr ""
@@ -55438,8 +55607,9 @@ msgstr ""
 "Vous pouvez configurer vos paramètres de connexion et les valeurs à "
 "récupérer ici."
 
+#, fuzzy
 msgid ""
-"This rule selects the UCS Bladecenter agent instead of the normal Check_MK "
+"This rule selects the UCS Bladecenter agent instead of the normal Checkmk "
 "Agent which collects the data through the UCS Bladecenter Web API"
 msgstr ""
 "Cette règle sélectionne l'agent UCS Bladecenter au lieu de l'agent Check_MK "
@@ -55526,9 +55696,10 @@ msgstr ""
 "console d'événements. Cette règle ne transporte pas d'objets de contact ou "
 "de groupes de contact, mais constitue un champ de commentaire libre."
 
+#, fuzzy
 msgid ""
 "This rule set selects the <tt>ibmsvc</tt> agent instead of the normal "
-"Check_MK Agent and allows monitoring of IBM SVC / V7000 storage systems by "
+"Checkmk Agent and allows monitoring of IBM SVC / V7000 storage systems by "
 "calling ls* commands there over SSH. Make sure you have SSH key "
 "authentication enabled for your monitoring user. That means: The user your "
 "monitoring is running under on the monitoring system must be able to ssh to "
@@ -55543,13 +55714,13 @@ msgstr ""
 "système de stockage comme l'utilisateur que vous avez donné ci-dessous sans "
 "mot de passe."
 
+#, fuzzy
 msgid ""
-"This rule set selects the NetApp special agent instead of the normal "
-"Check_MK Agent and allows monitoring via the NetApp Web API. To access the "
-"data the user requires permissions to several API classes. They are shown "
-"when you call the agent with <tt>agent_netapp --help</tt>. The agent itself "
-"is located in the site directory under <tt>~/share/check_mk/agents/special</"
-"tt>."
+"This rule set selects the NetApp special agent instead of the normal Checkmk "
+"Agent and allows monitoring via the NetApp Web API. To access the data the "
+"user requires permissions to several API classes. They are shown when you "
+"call the agent with <tt>agent_netapp --help</tt>. The agent itself is "
+"located in the site directory under <tt>~/share/check_mk/agents/special</tt>."
 msgstr ""
 "Cet ensemble de règles sélectionne l'agent spécial NetApp au lieu de l'agent "
 "normal Check_MK et permet la surveillance via l'API Web NetApp. Pour accéder "
@@ -55558,17 +55729,19 @@ msgstr ""
 "--help</tt>. L'agent lui-même est situé dans le répertoire du site sous "
 "<tt>~/share/check_mk/agents/special</tt>."
 
+#, fuzzy
 msgid ""
 "This rule set selects the special agent for HPE StoreOnce Applainces instead "
-"of the normal Check_MK agent and allows monitoring via Web API. "
+"of the normal Checkmk agent and allows monitoring via Web API. "
 msgstr ""
 "Cet ensemble de règles sélectionne l'agent spécial pour HPE StoreOnce "
 "Applainces au lieu de l'agent normal Check_MK et permet la surveillance via "
 "l'API Web. "
 
+#, fuzzy
 msgid ""
 "This rule set selects the special agent for HPE StoreOnce Appliances instead "
-"of the normal Check_MK agent and allows monitoring via REST API v4.x or "
+"of the normal Checkmk agent and allows monitoring via REST API v4.x or "
 "higher. "
 msgstr ""
 "Cet ensemble de règles sélectionne l'agent spécial pour les appliances HPE "
@@ -55708,7 +55881,7 @@ msgid ""
 "This ruleset allows you to configure explicit PING monitoring of hosts. "
 "Usually a PING is being used as a host check, so this is not necessary. "
 "There are some situations, however, where this can be useful. One of them is "
-"when using the Check_MK Micro Core with SMART Ping and you want to track "
+"when using the Checkmk Micro Core with SMART Ping and you want to track "
 "performance data of the PING to some hosts, nevertheless."
 msgstr ""
 "Ce jeu de règles vous permet de configurer une surveillance PING explicite "
@@ -55718,15 +55891,16 @@ msgstr ""
 "SMART Ping et vous souhaitez néanmoins suivre les données de performance du "
 "PING sur certains hôtes."
 
+#, fuzzy
 msgid ""
 "This ruleset allows you to install executable scripts on your target "
-"machines that can be called by the Check_MK server via an alert handler. "
-"That way you can for example automatically restart a crashed process or "
-"similary things upon a critical check. The alert handlers are prepared to be "
-"called via SSH with command restriction. The SSH key pair for this is "
-"directly created within each rule. The alert handlers are scripts that need "
-"to be put in the directory <tt>local/share/check_mk/agents/linux/"
-"alert_handlers</tt> and made executable."
+"machines that can be called by the Checkmk server via an alert handler. That "
+"way you can for example automatically restart a crashed process or similary "
+"things upon a critical check. The alert handlers are prepared to be called "
+"via SSH with command restriction. The SSH key pair for this is directly "
+"created within each rule. The alert handlers are scripts that need to be put "
+"in the directory <tt>local/share/check_mk/agents/linux/alert_handlers</tt> "
+"and made executable."
 msgstr ""
 "Ce jeu de règles vous permet d'installer des scripts exécutables sur vos "
 "machines cibles qui peuvent être appelés par le serveur Check_MK via un "
@@ -55934,13 +56108,14 @@ msgstr ""
 "qu'un hôte est connecté, par exemple lorsque l'adresse IP de l'hôte est "
 "dynamique et peut changer."
 
+#, fuzzy
 msgid ""
-"This ruleset specifies the total status of the Check_MK services "
+"This ruleset specifies the total status of the 'Check_MK' services "
 "<i>Check_MK</i>, <i>Check_MK Discovery</i> and <i>Check_MK HW/SW Inventory</"
 "i> in case of various error situations. One use case is the monitoring of "
-"hosts that are not always up. You can have Check_MK an OK status here if the "
+"hosts that are not always up. You can have Checkmk an OK status here if the "
 "host is not reachable. Note: the <i>Timeout</i> setting only works when "
-"using the Check_MK Micro Core."
+"using the Checkmk Micro Core."
 msgstr ""
 "Ce jeu de règles spécifie l'état total des services Check_MK <i>Check_MK</"
 "i>, <i>Check_MK Discovery</i> et <i>Check_MK HW/SW Inventory</i> dans le cas "
@@ -55949,12 +56124,13 @@ msgstr ""
 "OK ici si l'hôte n'est pas joignable. Remarque : le paramètre <i>Timeout</i> "
 "ne fonctionne que lors de l'utilisation du Micro Core Check_MK."
 
+#, fuzzy
 msgid ""
 "This ruleset will deploy the agent plugin <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
 "SAP NetWeaver RFCSDK (nwrfcsdk) and the Python module sapnwrfc. Both is "
 "explained in an <a href='http://mathias-kettner.de/checkmk_sap_r3."
-"html'>article in the Check_MK documentation</a>."
+"html'>article in the Checkmk documentation</a>."
 msgstr ""
 "Ce jeu de règles déploiera le plugin agent <tt>mk_sap</tt> pour la "
 "surveillance (locale) des instances SAP R/3. Remarque : vous devez encore "
@@ -56129,10 +56305,11 @@ msgstr ""
 "normal pour un service. La valeur par défaut est de 60 secondes, ce qui "
 "correspond à l'intervalle de contrôle par défaut."
 
+#, fuzzy
 msgid ""
 "This setting decides which types of messages to log into the daemon log of "
-"the Check_MK Micro Core. The object history (service alerts, events, etc.) "
-"is <b>not</b> affected by this setting."
+"the Checkmk Micro Core. The object history (service alerts, events, etc.) is "
+"<b>not</b> affected by this setting."
 msgstr ""
 "Ce paramètre décide des types de messages à consigner dans le journal du "
 "démon du Micro Core Check_MK. L'historique des objets (alertes de service, "
@@ -56300,9 +56477,10 @@ msgstr ""
 "Ce site a besoin d'un redémarrage pour activer les changements. Démarrez-le "
 "maintenant."
 
+#, fuzzy
 msgid ""
-"This snapin shows the folders defined in WATO. It can be used to open views "
-"filtered by the WATO folder. It works standalone, without interaction with "
+"This snapin shows the folders defined in Setup. It can be used to open views "
+"filtered by the Setup folder. It works standalone, without interaction with "
 "any other snapin."
 msgstr ""
 "Ce snapin montre les dossiers définis dans WATO. Il peut être utilisé pour "
@@ -56398,9 +56576,10 @@ msgstr ""
 msgid "This value differs between the selected hosts."
 msgstr "Cette valeur diffère selon les hôtes sélectionnés."
 
+#, fuzzy
 msgid ""
 "This variable allows to specify a timeout for the TCP connection to the "
-"Check_MK agent on a per-host-basis.If the agent does not respond within this "
+"Checkmk agent on a per-host-basis.If the agent does not respond within this "
 "time, it is considered to be unreachable."
 msgstr ""
 "Cette variable permet de spécifier un délai d'attente pour la connexion TCP "
@@ -56428,8 +56607,9 @@ msgstr ""
 "Cette variable permet de spécifier le port TCP à utiliser pour se connecter "
 "à l'agent sur une base par hôte. "
 
+#, fuzzy
 msgid ""
-"This variable allows you to configure the numbr of OIDs Check_MK should "
+"This variable allows you to configure the numbr of OIDs Checkmk should "
 "request at once. This rule only applies to SNMP hosts that are configured to "
 "be bulk walk hosts.You may want to use this rule to tune SNMP performance. "
 "Be aware: A higher value is not always better. It may decrease the "
@@ -56495,21 +56675,23 @@ msgstr ""
 "Ce nom sera utilisé comme description du service dans Check_MK. Il doit "
 "s'agir d'un nom unique par hôte."
 
+#, fuzzy
 msgid ""
-"This will be used as service description within Check_MK. It must be a "
-"unique name per host."
+"This will be used as service description within Checkmk. It must be a unique "
+"name per host."
 msgstr ""
 "Ce nom sera utilisé comme description du service dans Check_MK. Il doit "
 "s'agir d'un nom unique par hôte."
 
+#, fuzzy
 msgid ""
-"This will deploy and configure the Check_MK agent plugin <tt>mk_jolokia</"
-"tt>. In order to use this you need the Jolokia <tt>.war</tt> file from the "
-"<a href='http://www.jolokia.org/index.html'>Jolokia Project Homepage</a> "
+"This will deploy and configure the Checkmk agent plugin <tt>mk_jolokia</tt>. "
+"In order to use this you need the Jolokia <tt>.war</tt> file from the <a "
+"href='http://www.jolokia.org/index.html'>Jolokia Project Homepage</a> "
 "deployed in your JVMs. Currently at least Tomcat, JBoss and BEA Weblogic are "
-"supported. Please note: The Check_MK <tt>mk_jolokia</tt> plugin requires "
-"both the requests python library on the host running the plugin <b>and</b> "
-"the WAR file on the JVMs."
+"supported. Please note: The Checkmk <tt>mk_jolokia</tt> plugin requires both "
+"the requests python library on the host running the plugin <b>and</b> the "
+"WAR file on the JVMs."
 msgstr ""
 "Ceci va déployer et configurer le plugin d'agent Check_MK <tt>mk_jolokia</"
 "tt>. Pour l'utiliser, vous avez besoin du fichier Jolokia <tt>.war</tt> de "
@@ -56519,8 +56701,9 @@ msgstr ""
 "<tt>mk_jolokia</tt> nécessite à la fois la bibliothèque python requests sur "
 "l'hôte qui exécute le plugin <b>et</b> le fichier WAR sur les JVM."
 
+#, fuzzy
 msgid ""
-"This will deploy and configure the Check_MK agent plugin <tt>mk_sap_hana</"
+"This will deploy and configure the Checkmk agent plugin <tt>mk_sap_hana</"
 "tt>. To make this plugin work you have to configure default credentials that "
 "are used for all databases or configure credentials per database. To "
 "configure credentials specify USERSTOREKEY or USER and PASSWORD, ie. "
@@ -56542,8 +56725,9 @@ msgstr ""
 "est celle par défaut.  Utilisez le FQDN dans la requête si HOSTNAME n'est "
 "pas défini, sinon le nom d'hôte court."
 
+#, fuzzy
 msgid ""
-"This will deploy and configure the Check_MK agent plugin <tt>mk_saprouter</"
+"This will deploy and configure the Checkmk agent plugin <tt>mk_saprouter</"
 "tt>. The plugin runs below the specified user's environment. Furthermore you "
 "have to to determine the path to sapgenpse. It's recommended to run the "
 "plugin asynchronously."
@@ -56553,8 +56737,9 @@ msgstr ""
 "outre, vous devez déterminer le chemin vers sapgenpse. Il est recommandé "
 "d'exécuter le plugin de manière asynchrone."
 
+#, fuzzy
 msgid ""
-"This will deploy and configure the Check_MK agent plugin "
+"This will deploy and configure the Checkmk agent plugin "
 "<tt>mk_site_object_counts</tt>. The plugin runs below the specified user's "
 "environment. Furthermore you have to to determine host tags or service check "
 "commands."
@@ -56661,16 +56846,18 @@ msgstr ""
 msgid "This will replace your local configuration"
 msgstr "Utilisez la configuration globale"
 
+#, fuzzy
 msgid ""
-"This will result in all files whos full file path does match the regular "
-"expression beeing dismissed."
+"This will result in all files whose full file path does match the regular "
+"expression being dismissed."
 msgstr ""
 "Ainsi, tous les fichiers dont le chemin d'accès complet correspond à "
 "l'expression régulière seront rejetés."
 
+#, fuzzy
 msgid ""
-"This will result in all files whos full file path does not match the regular "
-"expression beeing dismissed."
+"This will result in all files whose full file path does not match the "
+"regular expression being dismissed."
 msgstr ""
 "Ainsi, tous les fichiers dont le chemin d'accès complet ne correspond pas à "
 "l'expression régulière seront rejetés."
@@ -56693,13 +56880,14 @@ msgstr ""
 "correspond pas à la spécification. Les spécifications sont au format "
 "[OPERATOR][SIZE_IN_BYTES], par exemple '>=1024' ;."
 
+#, fuzzy
 msgid ""
-"This will send the notification to a Check_MK Event Console on a remote host "
+"This will send the notification to a Checkmk Event Console on a remote host "
 "by using syslog. <b>Note</b>: this setting will only be applied if no Event "
 "Console is running locally in this site! That way you can use the same "
 "global settings on your central and decentralized system and makes "
-"distributed WATO easier. Please also make sure that <b>Send notifications to "
-"Event Console</b> is enabled."
+"distributed Setup easier. Please also make sure that <b>Send notifications "
+"to Event Console</b> is enabled."
 msgstr ""
 "Cela enverra la notification à une console d'événements Check_MK sur un hôte "
 "distant en utilisant syslog. <b>Note</b> : ce paramètre ne sera appliqué que "
@@ -57118,8 +57306,9 @@ msgstr ""
 "inaccessible. Remarque : Ceci ne <b>pas</b> limite le temps dont l'agent a "
 "besoin pour générer sa sortie."
 
+#, fuzzy
 msgid ""
-"Timeout for TCP connect to the Check_MK agent in seconds. If the connection "
+"Timeout for TCP connect to the Checkmk agent in seconds. If the connection "
 "to the agent cannot be established within this time, it is considered to be "
 "unreachable. Note: This does <b>not</b> limit the time the agent needs to "
 "generate its output. This rule can be used to specify a timeout on a per-"
@@ -58207,10 +58396,11 @@ msgstr "Temps alloué"
 msgid "URL of remote site"
 msgstr "URL du site distant"
 
+#, fuzzy
 msgid ""
-"URL of the remote Check_MK including <tt>/check_mk/</tt>. This URL is in "
-"many cases the same as the URL-Prefix but with <tt>check_mk/</tt> appended, "
-"but it must always be an absolute URL. Please note, that that URL will be "
+"URL of the remote Checkmk including <tt>/check_mk/</tt>. This URL is in many "
+"cases the same as the URL-Prefix but with <tt>check_mk/</tt> appended, but "
+"it must always be an absolute URL. Please note, that that URL will be "
 "fetched by the Apache server of the local site itself, whilst the URL-Prefix "
 "is used by your local Browser."
 msgstr ""
@@ -60412,7 +60602,7 @@ msgid ""
 "to talk to for creating hosts and so on. This setting controls on which "
 "sites the objects will be created. In single site setups you can set this to "
 "\"local site\".In distributed setups you will have to configure the REST API "
-"of the central WATO site from the view of the remote site."
+"of the central Setup site from the view of the remote site."
 msgstr ""
 "Utilisez ce paramètre pour indiquer à la configuration dynamique à laquelle "
 "l'API Web Check_MK doit s'adresser pour créer des hôtes, etc. Ce paramètre "
@@ -60539,6 +60729,10 @@ msgstr "Niveaux des baux utilisés en pourcentage"
 msgid "Used log files: Absolute or relative upper levels"
 msgstr "Fichiers journaux utilisés : Niveaux supérieurs absolus ou relatifs"
 
+#, fuzzy
+msgid "Used logical space"
+msgstr "Espace de stockage utilisé"
+
 msgid "Used meta data"
 msgstr "Méta-données utilisées"
 
@@ -60661,7 +60855,8 @@ msgstr "Profil de l'utilisateur"
 msgid "User profile cleanup"
 msgstr "Nettoyage du profil de l'utilisateur"
 
-msgid "User profiles can not be edited (WATO is disabled)."
+#, fuzzy
+msgid "User profiles can not be edited (Setup is disabled)."
 msgstr ""
 "Les profils des utilisateurs ne peuvent pas être modifiés (le WATO est "
 "désactivé)."
@@ -61163,9 +61358,6 @@ msgstr "Journalisation verbeuse (également notifications spooled)"
 msgid "Verbosity of logging"
 msgstr "Verbosité de la journalisation"
 
-msgid "Verfiy Certificates"
-msgstr "Certificats Verfiy"
-
 #, fuzzy
 msgid "Verification"
 msgstr "Notification de l'utilisateur"
@@ -61191,6 +61383,10 @@ msgid "Verification mode"
 msgstr "Notification de l'utilisateur"
 
 #, fuzzy
+msgid "Verification response does not match request"
+msgstr "Ce paquet ne peut pas être installé : %s"
+
+#, fuzzy
 msgid "Verification result"
 msgstr "Inscription réussie"
 
@@ -61203,8 +61399,8 @@ msgid "Verification time"
 msgstr "Notification de l'utilisateur"
 
 #, fuzzy
-msgid "Verified verification response"
-msgstr "Règles de notification globale"
+msgid "Verify Certificates"
+msgstr "Vérifier les certificats"
 
 msgid "Verify certificates"
 msgstr "Vérifier les certificats"
@@ -61226,7 +61422,8 @@ msgstr "Vérifier le certificat"
 msgid "Veritas Cluster Server"
 msgstr "Veritas Cluster Server"
 
-msgid "Veritas Volume Manger (Linux, HP-UX)"
+#, fuzzy
+msgid "Veritas Volume Manager (Linux, HP-UX)"
 msgstr "Veritas Volume Manger (Linux, HP-UX)"
 
 msgid "Veritas cluster server"
@@ -61538,7 +61735,6 @@ msgstr "WARN/CRIT"
 msgid "WARNING"
 msgstr "AVERTISSEMENT"
 
-#, fuzzy
 msgid ""
 "WARNING: This Event Console is currently running as a remote replication. "
 "The rules edited here will not be used. Instead a copy of the rules of the "
@@ -61550,7 +61746,7 @@ msgstr ""
 "Au lieu de cela, une copie des règles du maître sont utilisées dans le cas "
 "d'une prise de contrôle. Il en va de même pour les actions d'événement dans "
 "les paramètres globaux.<br><br>Si vous le souhaitez, vous pouvez copier le "
-"jeu de règles du maître dans votre configuration esclave locale : "
+"jeu de règles du maître dans votre configuration esclave locale."
 
 msgid "WCU"
 msgstr "WCU"
@@ -62069,9 +62265,10 @@ msgstr ""
 "d'indisponibilité soient également remontées au cas où un tel nœud passerait "
 "en état WARN."
 
+#, fuzzy
 msgid ""
-"When connecting to Check_MK versions older than 1.6 you can only use plain "
-"text transport. Starting with Check_MK 1.6 it is possible to use encrypted "
+"When connecting to Checkmk versions older than 1.6 you can only use plain "
+"text transport. Starting with Checkmk 1.6 it is possible to use encrypted "
 "Livestatus communication. Sites created with 1.6 will automatically use "
 "encrypted communication by default. Sites created with previous versions "
 "need to be configured manually to enable the encryption. Have a look at <a "
@@ -62106,8 +62303,9 @@ msgstr ""
 "le fichier avec ce nom de fichier. L'extension doit toujours être <tt>pdf</"
 "tt>."
 
+#, fuzzy
 msgid ""
-"When disabled, WATO shows the help texts of rules also in the list views."
+"When disabled, Setup shows the help texts of rules also in the list views."
 msgstr ""
 "Lorsqu'il est désactivé, WATO affiche les textes d'aide des règles également "
 "dans les vues de liste."
@@ -62163,11 +62361,12 @@ msgstr ""
 "et tous ses sous-dossiers. Cependant, le sous-dossier est affiché si "
 "l'utilisateur a des droits sur l'un de ses sous-dossiers."
 
+#, fuzzy
 msgid ""
 "When enabled, all changes of configuration files are tracked with the "
 "version control system GIT. You need to make sure that git is installed on "
 "your monitoring server. The version history currently cannot be viewed via "
-"the web GUI. Please use git command line tools within your Check_MK "
+"the web GUI. Please use git command line tools within your Checkmk "
 "configuration directory. If you want easier tracking of configuration file "
 "changes simply enable the global settings option <tt>Pretty print "
 "configuration files</tt>"
@@ -62182,7 +62381,8 @@ msgstr ""
 "d'activer l'option de paramètres globaux <tt>Pretty print configuration "
 "files</tt>."
 
-msgid "When enabled, hosttags are no longer shown within the WATO folder view"
+#, fuzzy
+msgid "When enabled, hosttags are no longer shown within the Setup folder view"
 msgstr ""
 "Lorsqu'elle est activée, les étiquettes d'hôte ne sont plus affichées dans "
 "la vue du dossier WATO."
@@ -62199,17 +62399,19 @@ msgstr ""
 "le temps d'exécution. Toute manipulation du contenu - volontaire ou "
 "involontaire (attaque XSS) - présente un risque sérieux pour la sécurité."
 
+#, fuzzy
 msgid ""
-"When enabled, internal configuration variable names of Check_MK are hidden "
+"When enabled, internal configuration variable names of Checkmk are hidden "
 "from the user (for example in the rule editor)"
 msgstr ""
 "Lorsqu'il est activé, les noms des variables de configuration internes de "
 "Check_MK sont cachés à l'utilisateur (par exemple dans l'éditeur de règles)."
 
+#, fuzzy
 msgid ""
 "When enabled, most of the configuration files are pretty printed and easier "
 "to read. On the downside, however, pretty printing bigger configurations can "
-"be quite slow - so the overall WATO GUI performance will decrease."
+"be quite slow - so the overall Setup GUI performance will decrease."
 msgstr ""
 "Lorsqu'elle est activée, la plupart des fichiers de configuration sont "
 "joliment imprimés et plus faciles à lire. Cependant, l'impression de "
@@ -62223,8 +62425,9 @@ msgstr ""
 "Lorsqu'elle est activée, l'en-tête de chaque page affiche également la date "
 "en plus de l'heure."
 
+#, fuzzy
 msgid ""
-"When enabled, then the internal names of WATO folder in the filesystem are "
+"When enabled, then the internal names of Setup folder in the filesystem are "
 "not shown. They will automatically be derived from the name of the folder "
 "when a new folder is being created. Disable this option if you want to see "
 "and set the filenames manually."
@@ -62333,8 +62536,9 @@ msgstr ""
 "avec un en-tête HTTP If-Match. Ce comportement peut être désactivé, mais "
 "cela permettra au \"problème de mise à jour perdue\" de se produire."
 
+#, fuzzy
 msgid ""
-"When performing walks on an OID during checking, Check_MK fetches all sub "
+"When performing walks on an OID during checking, Checkmk fetches all sub "
 "OIDs regardless whether these values are needed or not. For example, if you "
 "monitor a single network interface of a switch with hundreds of ports, the "
 "check will fetch the information for all the interfaces, while only one is "
@@ -62498,8 +62702,9 @@ msgstr ""
 "paramètre définit le nombre de connexions non acceptées à mettre en file "
 "d'attente avant de refuser les nouvelles connexions."
 
+#, fuzzy
 msgid ""
-"When the WATO module of the Event Console saves rules to the file "
+"When the Setup module of the Event Console saves rules to the file "
 "<tt>mkeventd.d/wato/rules.mk</tt> it usually prints the Python "
 "representation of the rules-list into one single line by using the native "
 "Python code generator. Enabling this option switches to <tt>pprint</tt>, "
@@ -62700,8 +62905,9 @@ msgstr ""
 "les hôtes et les services pour lesquels l'utilisateur est un contact, même "
 "s'il a le droit de voir tous les objets."
 
+#, fuzzy
 msgid ""
-"When this option is enabled (which is the default), then Check_MK tries to "
+"When this option is enabled (which is the default), then Checkmk tries to "
 "prevent IP address lookups during the configuration generation. This can "
 "speed up this process greatly when you have a larger number of hosts. The "
 "cache is stored in a simple file. Note: when the cache is enabled then "
@@ -62731,9 +62937,10 @@ msgstr ""
 "ne peuvent pas être traduites, par exemple parce qu'une MIB est manquante, "
 "sont écrites telles quelles dans le message d'événement."
 
+#, fuzzy
 msgid ""
 "When this option is enabled then after each change of the service "
-"configuration of a host via WATO - may it be via manual changes or a bulk "
+"configuration of a host via Setup - may it be via manual changes or a bulk "
 "discovery - the service discovery check is automatically rescheduled in "
 "order to reflect the new service state correctly immediately."
 msgstr ""
@@ -62850,8 +63057,9 @@ msgstr ""
 "fortement recommandé d'activer le protocole SSL pour sécuriser les données "
 "transportées."
 
+#, fuzzy
 msgid ""
-"When you configure dual-stack host (IPv4 + IPv6) monitoring in Check_MK, "
+"When you configure dual-stack host (IPv4 + IPv6) monitoring in Checkmk, "
 "normally IPv4 is used as primary address family to communicate with this "
 "host. The other family, IPv6, is just being pinged. You can use this rule to "
 "invert this behaviour to use IPv6 as primary address family."
@@ -62862,8 +63070,9 @@ msgstr ""
 "ping. Vous pouvez utiliser cette règle pour inverser ce comportement et "
 "utiliser IPv6 comme famille d'adresses primaire."
 
+#, fuzzy
 msgid ""
-"When you define HA clusters in WATO then you also have to specify which "
+"When you define HA clusters in Setup then you also have to specify which "
 "services of a node should be assigned to the cluster and which services to "
 "the physical node. This is done by this ruleset. Please note that the rule "
 "will be applied to the <i>nodes</i>, not to the cluster.<br><br>Please make "
@@ -62896,8 +63105,9 @@ msgstr ""
 "b> les groupes de contact sont spécifiés dans la règle, alors généralement "
 "les groupes de contact de l'hôte ont la priorité. "
 
+#, fuzzy
 msgid ""
-"When you point your browser to the Check_MK GUI, usually the dashboard is "
+"When you point your browser to the Checkmk GUI, usually the dashboard is "
 "shown in the main (right) frame. You can replace this with any other URL you "
 "like here."
 msgstr ""
@@ -62944,11 +63154,11 @@ msgstr ""
 "nécessaire de configurer les informations d'identification pour décrypter "
 "les traps entrants."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Whenever a server component of Check_MK opens a SSL connection it uses the "
+"Whenever a server component of Checkmk opens a SSL connection it uses the "
 "certificate authorities configured here for verifying the SSL certificate of "
-"the destination server. This is used for example when performing WATO "
+"the destination server. This is used for example when performing Setup "
 "replication to slave sites or when special agents are communicating via "
 "HTTPS. The CA certificates configured here will be written to the CA bundle "
 "%s."
@@ -62982,9 +63192,10 @@ msgstr ""
 "protéger le serveur contre les requêtes inutiles avec des ensembles de "
 "résultats énormes."
 
+#, fuzzy
 msgid ""
 "Whenever you successfully activate changes a snapshot of the configuration "
-"will be created. You can also create snapshots manually. WATO will delete "
+"will be created. You can also create snapshots manually. Setup will delete "
 "old snapshots when the maximum number of snapshots is reached."
 msgstr ""
 "Chaque fois que vous activez avec succès des changements, un instantané de "
@@ -63021,8 +63232,9 @@ msgstr ""
 "Si l'utilisateur est autorisé ou non à voir le nombre d'événements ouverts "
 "dans l'élément \"Aperçu\" de la barre latérale."
 
+#, fuzzy
 msgid ""
-"Whether or not this site should be started during startup of the Check_MK "
+"Whether or not this site should be started during startup of the Checkmk "
 "server."
 msgstr ""
 "Si ce site doit être lancé ou non lors du démarrage du serveur Check_MK."
@@ -63393,10 +63605,11 @@ msgstr ""
 "sortie, tout paramètre de configuration faisant référence à <i>Lecture "
 "d'attente</i> n'aura aucun effet."
 
+#, fuzzy
 msgid ""
 "With this ruleset you can configure \"classical Monitoring checks\" to be "
 "executed directly on your monitoring server. These checks will not use "
-"Check_MK. It is also possible to configure passive checks that are fed with "
+"Checkmk. It is also possible to configure passive checks that are fed with "
 "data from external sources via the command pipe of the monitoring core."
 msgstr ""
 "Avec ce jeu de règles, vous pouvez configurer des \"contrôles classiques de "
@@ -63668,6 +63881,9 @@ msgstr "Ecritures/sec"
 msgid "Writing connections"
 msgstr "Connexions d'écriture"
 
+msgid "Wrong certificate's subject alt name"
+msgstr ""
+
 msgid "Wrong customer"
 msgstr "Mauvais client"
 
@@ -63717,8 +63933,9 @@ msgstr "Vous avez déjà un élément avec l'ID <b>%s</b>."
 msgid "You are analysing this notification"
 msgstr "Vous analysez cette notification"
 
+#, fuzzy
 msgid ""
-"You are currently not using the Check_MK Micro Core, but this snapshot uses "
+"You are currently not using the Checkmk Micro Core, but this snapshot uses "
 "the Check_MK Micro Core. If you need to migrate your data, you could "
 "consider changing the core, restoring the snapshot and changing the core "
 "back again."
@@ -63728,8 +63945,9 @@ msgstr ""
 "pouvez envisager de changer le noyau, de restaurer l'instantané et de "
 "changer à nouveau le noyau."
 
+#, fuzzy
 msgid ""
-"You are currently using the Check_MK Micro Core, but this snapshot does not "
+"You are currently using the Checkmk Micro Core, but this snapshot does not "
 "use the Check_MK Micro Core. If you need to migrate your data, you could "
 "consider changing the core, restoring the snapshot and changing the core "
 "back again."
@@ -63828,9 +64046,9 @@ msgstr "Vous n'êtes pas autorisé à voir les notifications échouées."
 msgid "You are not authenticated."
 msgstr "Vous n'êtes pas authentifié."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"You are not authorized to use the Check_MK GUI. Sorry. You are logged in as "
+"You are not authorized to use the Checkmk GUI. Sorry. You are logged in as "
 "<b>%s</b>."
 msgstr ""
 "Vous n'êtes pas autorisé à utiliser l'interface graphique de Check_MK. "
@@ -64312,10 +64530,11 @@ msgstr ""
 "Vous ne pouvez pas utiliser \"public\" comme premier niveau d'un chemin "
 "personnalisé."
 
+#, fuzzy
 msgid ""
 "You can not use the graph designer, because none of your sites is using the "
-"Check_MK Microcore. The graph designer can only be used with sites using the "
-"Check_MK Microcore."
+"Checkmk Microcore. The graph designer can only be used with sites using the "
+"Checkmk Microcore."
 msgstr ""
 "Vous ne pouvez pas utiliser le concepteur de graphiques, car aucun de vos "
 "sites n'utilise le Check_MK Microcore. Le concepteur de graphiques ne peut "
@@ -64837,6 +65056,14 @@ msgstr "Vous ne pouvez pas supprimer ces hôtes : %s"
 #, python-format
 msgid "You cannot delete this %s group."
 msgstr "Vous ne pouvez pas supprimer ce groupe %s."
+
+#, fuzzy, python-format
+msgid ""
+"You cannot delete this auxiliary tag. It is being used by the following tag "
+"groups: \"%s\""
+msgstr ""
+"Vous ne pouvez pas supprimer cette balise auxiliaire. Elle est utilisée dans "
+"le groupe de balises <b>%s</b>."
 
 #, python-format
 msgid ""
@@ -65402,10 +65629,11 @@ msgstr ""
 "Vous devez fournir un \"hostname\" ; valide. Seuls les lettres, les "
 "chiffres, le tiret, l'underscore et le point sont autorisés."
 
+#, fuzzy
 msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "
-"target=\"_blank\">Pushover</a>, thn create your Check_MK installation as "
+"target=\"_blank\">Pushover</a>, thn create your Checkmk installation as "
 "application and obtain your API key."
 msgstr ""
 "Vous devez fournir une clé API valide pour pouvoir envoyer des notifications "
@@ -65485,7 +65713,7 @@ msgid ""
 "able to make any configuration changes.<br><br>Please contact the Checkmk "
 "sales team at %s to ensure that your license is extended in time.<br><br>If "
 "you purchased your license through a Checkmk partner or reseller, you can "
-"find their name on the licensing page (%s)."
+"find their name on the %s."
 msgstr ""
 
 #, python-format
@@ -65499,16 +65727,16 @@ msgstr ""
 msgid ""
 "Your Checkmk license has been suspended.<br><br>Please contact the Checkmk "
 "sales team at %s.<br><br>If you purchased your license through a Checkmk "
-"partner or reseller, you can find their name on the licensing page (%s)."
+"partner or reseller, you can find their name on the %s."
 msgstr ""
 
 #, python-format
 msgid ""
 "Your Checkmk trial expires in %d days.<br><br>If you want to continue using "
 "Checkmk as today, you will need to %s. In case you already have a license, "
-"please enter your license credentials in the product's licensing page (%s)."
-"<br><br>Otherwise, you will have to reduce the number of services from the "
-"current %d services to fit within the free license service limit of %d."
+"please enter your license credentials in the product's %s.<br><br>Otherwise, "
+"you will have to reduce the number of services from the current %d services "
+"to fit within the free license service limit of %d."
 msgstr ""
 
 msgid "Your WebAuthn credential is already in use"
@@ -65594,8 +65822,9 @@ msgstr "Votre nom de fichier ne doit pas se terminer par une barre oblique."
 msgid "Your hostname has an invalid format."
 msgstr "Votre nom d'hôte a un format invalide."
 
+#, fuzzy
 msgid ""
-"Your icon conflicts with a Check_MK builtin icon. Please choose another name "
+"Your icon conflicts with a Checkmk builtin icon. Please choose another name "
 "for your icon."
 msgstr ""
 "Votre icône entre en conflit avec une icône intégrée de Check_MK. Veuillez "
@@ -65609,7 +65838,7 @@ msgid ""
 "Your license has expired since %s.<br><br>Please contact the Checkmk sales "
 "team at %s to ensure that your license will be extended.<br><br>If you "
 "purchased your license through a Checkmk partner or reseller, you can find "
-"their name on the licensing page (%s)."
+"their name on the %s."
 msgstr ""
 
 #, fuzzy
@@ -66415,9 +66644,8 @@ msgstr "espace libre"
 msgid "freeze the following %d aggregations?"
 msgstr "supprimer les éléments suivants %d %s ?"
 
-#, fuzzy
 msgid "freeze the following aggregation?"
-msgstr "Supprimer cette agrégation"
+msgstr "Supprimer cette agrégation?"
 
 msgid "from the beginning"
 msgstr "depuis le début"
@@ -67778,6 +68006,32 @@ msgstr "%s est trop faible. La valeur minimale autorisée est de %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
+#~ msgid "Show WATO icon"
+#~ msgstr "Afficher l'icône WATO"
+
+#~ msgid ""
+#~ "This will be used as service description within Check_MK. It must be a "
+#~ "unique name per host."
+#~ msgstr ""
+#~ "Ce nom sera utilisé comme description du service dans Check_MK. Il doit "
+#~ "s'agir d'un nom unique par hôte."
+
+#~ msgid "Verfiy Certificates"
+#~ msgstr "Certificats Verfiy"
+
+#, fuzzy
+#~| msgid "Global notification rules"
+#~ msgid "Verified verification response"
+#~ msgstr "Règles de notification globale"
+
+#, fuzzy
+#~| msgid "Global notification rules"
+#~ msgid "Report verification result"
+#~ msgstr "Règles de notification globale"
+
+#~ msgid "This is not a valid Checkmk version number"
+#~ msgstr "Ce numéro de version de Checkmk n'est pas valide."
+
 #, fuzzy
 #~| msgid "SSL certificate verification"
 #~ msgid "License verification mode"
@@ -68133,11 +68387,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #~ msgstr "Patronage"
 
 #, fuzzy, python-format
-#~| msgid "This package cannot be installed: %s"
-#~ msgid "This verification response cannot be uploaded: %s"
-#~ msgstr "Ce paquet ne peut pas être installé : %s"
-
-#, fuzzy, python-format
 #~| msgid "User notification"
 #~ msgid "Verification %s: %s"
 #~ msgstr "Notification de l'utilisateur"
@@ -68185,11 +68434,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Abort"
 #~ msgstr "Abandonner"
-
-#, fuzzy, python-format
-#~| msgid "Global notification rules"
-#~ msgid "Invalid verification response: %s"
-#~ msgstr "Règles de notification globale"
 
 #, fuzzy
 #~| msgid "This package cannot be installed: %s"
@@ -69811,9 +70055,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #~ msgid "Background Job"
 #~ msgstr "Travail de fond"
 
-#~ msgid "Background job"
-#~ msgstr "Travail de fond"
-
 #~ msgid "The background job is missing a logger instance"
 #~ msgstr "Il manque une instance de logger à la tâche d'arrière-plan"
 
@@ -69916,9 +70157,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #, python-format
 #~ msgid "Site id not found: %s"
 #~ msgstr "L'identifiant du site n'a pas été trouvé : %s"
-
-#~ msgid "Successfully baked agents"
-#~ msgstr "Agents cuits avec succès"
 
 #, python-format
 #~ msgid "The SLA id %s is unknown or not visible to this user"

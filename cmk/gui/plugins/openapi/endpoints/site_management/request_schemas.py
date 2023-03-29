@@ -437,7 +437,7 @@ class SiteConnectionRequestCreate(BaseSchema):
         SiteConfigAttributesCreate,
         required=True,
         description="A site's connection.",
-        example=default_config_example()["site_config"],
+        example=default_config_example(),
     )
 
 
@@ -446,5 +446,5 @@ class SiteConnectionRequestUpdate(BaseSchema):
         SiteConfigAttributesUpdate,
         required=True,
         description="A site's connection.",
-        example=default_config_example()["site_config"],
+        example=default_config_example(),
     )

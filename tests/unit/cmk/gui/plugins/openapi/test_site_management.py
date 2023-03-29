@@ -3,17 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-from collections.abc import Callable, Mapping
-from functools import partial
 from typing import Any
 
 import pytest
 from pytest import MonkeyPatch
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils import version
+from cmk.utils.type_defs.rest_api_types.site_connection import (
+    ConfigurationConnection,
+    Connection,
+    Proxy,
+    SiteConfig,
+    StatusHost,
+)
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi.endpoints.site_management.common import (
@@ -23,81 +27,18 @@ from cmk.gui.plugins.openapi.endpoints.site_management.common import (
 DOMAIN_TYPE = "site_connection"
 
 
-@pytest.fixture(name="object_base")
-def user_role_object_base(base: str) -> str:
-    return f"{base}/objects/{DOMAIN_TYPE}/"
+def _default_config_with_site_id() -> tuple[SiteConfig, str]:
+    config = _default_config()
+    return config, config["basic_settings"]["site_id"]
 
 
-@pytest.fixture(name="collection_base")
-def user_role_collection_base(base: str) -> str:
-    return f"{base}/domain-types/{DOMAIN_TYPE}/collections/all"
-
-
-@pytest.fixture(name="get_site")
-def partial_get(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.get,
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-
-@pytest.fixture(name="get_sites")
-def partial_list(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.get,
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-
-@pytest.fixture(name="post_site")
-def partial_post(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.post,
-        status=200,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-    )
-
-
-@pytest.fixture(name="delete_site")
-def partial_delete(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.post,
-        status=204,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-    )
-
-
-@pytest.fixture(name="logout_site")
-def partial_logout(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.post,
-        status=204,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-    )
-
-
-@pytest.fixture(name="put_site")
-def partial_put(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Callable:
-    return partial(
-        aut_user_auth_wsgi_app.put,
-        status=200,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-    )
-
-
-def test_get_a_site(get_site: Callable, object_base: str) -> None:
+def test_get_a_site_connection(clients: ClientRegistry) -> None:
     site_id = "NO_SITE"
-    resp = get_site(url=f"{object_base}{site_id}")
+    resp = clients.SiteManagement.get(site_id=site_id)
     assert resp.json["domainType"] == DOMAIN_TYPE
     assert resp.json["id"] == site_id
 
-    example_config = _default_config()["site_config"]
+    example_config = _default_config()
     assert set(resp.json["extensions"].keys()) == set(example_config.keys())
     assert set(resp.json["extensions"]["basic_settings"].keys()) == set(
         example_config["basic_settings"].keys()
@@ -110,17 +51,20 @@ def test_get_a_site(get_site: Callable, object_base: str) -> None:
     )
 
 
-def test_get_a_site_that_doesnt_exist(get_site: Callable, object_base: str) -> None:
-    get_site(url=object_base + "NO_EXIST_SITE", status=404)
+def test_get_site_connection_that_doesnt_exist(clients: ClientRegistry) -> None:
+    clients.SiteManagement.get(site_id="NON_SITE", expect_ok=False).assert_status_code(404)
 
 
-def test_get_sites(get_sites: Callable, collection_base: str) -> None:
-    resp = get_sites(url=collection_base)
+def test_get_site_connections(clients: ClientRegistry) -> None:
+    resp = clients.SiteManagement.get_all()
     assert resp.json["domainType"] == DOMAIN_TYPE
     assert resp.json["value"][0]["id"] == "NO_SITE"
 
 
-def test_site_login(post_site: Callable, object_base: str, monkeypatch: MonkeyPatch) -> None:
+def test_login(
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.restful_objects.request_schemas.load_users", lambda: ["cmkadmin"]
     )
@@ -128,30 +72,31 @@ def test_site_login(post_site: Callable, object_base: str, monkeypatch: MonkeyPa
         "cmk.gui.watolib.site_management.do_site_login",
         lambda site_id, username, password: "watosecret",
     )
-    site_id = "NO_SITE"
-    post_site(
-        status=204,
-        url=f"{object_base}{site_id}/actions/login/invoke",
-        params=json.dumps({"username": "cmkadmin", "password": "cmk"}),
+    clients.SiteManagement.login(
+        site_id="NO_SITE",
+        username="cmkadmin",
+        password="cmk",
     )
 
 
-def test_site_login_site_doesnt_exist(
-    post_site: Callable, object_base: str, monkeypatch: MonkeyPatch
+def test_login_site_doesnt_exist(
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.restful_objects.request_schemas.load_users", lambda: ["cmkadmin"]
     )
-    site_id = "NO_EXIST_SITE"
-    post_site(
-        status=404,
-        url=f"{object_base}{site_id}/actions/login/invoke",
-        params=json.dumps({"username": "cmkadmin", "password": "cmk"}),
-    )
+    clients.SiteManagement.login(
+        site_id="NON_SITE",
+        username="cmkadmin",
+        password="cmk",
+        expect_ok=False,
+    ).assert_status_code(404)
 
 
-def test_site_login_problem(
-    post_site: Callable, object_base: str, monkeypatch: MonkeyPatch
+def test_login_site_problem(
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.restful_objects.request_schemas.load_users", lambda: ["cmkadmin"]
@@ -165,35 +110,34 @@ def test_site_login_problem(
         "cmk.gui.watolib.site_management.do_site_login",
         MockLoginException,
     )
-
-    site_id = "NO_SITE"
-    post_site(
-        status=400,
-        url=f"{object_base}{site_id}/actions/login/invoke",
-        params=json.dumps({"username": "cmkadmin", "password": "cmk"}),
-    )
-
-
-def test_logout_site(logout_site: Callable, object_base: str) -> None:
-    site_id = "NO_SITE"
-    logout_site(url=f"{object_base}{site_id}/actions/logout/invoke")
+    clients.SiteManagement.login(
+        site_id="NO_SITE",
+        username="cmkadmin",
+        password="cmk",
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
-def test_logout_site_that_doesnt_exist(post_site: Callable, object_base: str) -> None:
-    site_id = "NO_EXIST_SITE"
-    post_site(url=f"{object_base}{site_id}/actions/logout/invoke", status=404)
+def test_logout_site(clients: ClientRegistry) -> None:
+    clients.SiteManagement.logout(site_id="NO_SITE")
 
 
-def test_site_delete(
-    post_site: Callable, delete_site: Callable, object_base: str, collection_base: str
-) -> None:
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(_default_config()))
-    delete_site(url=f"{object_base}{site_id}/actions/delete/invoke")
+def test_logout_site_that_doesnt_exist(clients: ClientRegistry) -> None:
+    clients.SiteManagement.logout(
+        site_id="NO_EXIST_SITE",
+        expect_ok=False,
+    ).assert_status_code(404)
 
 
-def test_site_delete_problem(
-    post_site: Callable, object_base: str, collection_base: str, monkeypatch: MonkeyPatch
+def test_delete_site_connection(clients: ClientRegistry) -> None:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    clients.SiteManagement.delete(site_id=site_id)
+
+
+def test_delete_site_connection_problem(
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     class MockDeleteException:
         def __init__(self, *args, **kwargs):
@@ -203,75 +147,77 @@ def test_site_delete_problem(
         "cmk.gui.watolib.sites.SiteManagement.delete_site",
         MockDeleteException,
     )
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(_default_config()))
-    post_site(url=f"{object_base}{site_id}/actions/delete/invoke", status=404)
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    clients.SiteManagement.delete(
+        site_id=site_id,
+        expect_ok=False,
+    ).assert_status_code(404)
 
 
-def test_site_post(post_site: Callable, collection_base: str) -> None:
-    post_site(url=collection_base, params=json.dumps(_default_config()))
+def test_create_site_connection(clients: ClientRegistry) -> None:
+    clients.SiteManagement.create(site_config=_default_config())
 
 
-def test_site_post_site_already_exists(post_site: Callable, collection_base: str) -> None:
-    post_site(url=collection_base, params=json.dumps(_default_config()))
-    post_site(url=collection_base, params=json.dumps(_default_config()), status=400)
+def test_create_site_connection_that_already_exists(
+    clients: ClientRegistry,
+) -> None:
+    clients.SiteManagement.create(site_config=_default_config())
+    clients.SiteManagement.create(
+        site_config=_default_config(),
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
 keys_to_remove = ("basic_settings", "status_connection", "configuration_connection")
 
 
 @pytest.mark.parametrize("key", keys_to_remove)
-def test_site_post_site_missing_settings(
-    key: str, post_site: Callable, collection_base: str
+def test_create_site_connection_missing_config(
+    clients: ClientRegistry,
+    key: str,
 ) -> None:
     config = _default_config()
-    config["site_config"].pop(key)  # type: ignore
-    post_site(url=collection_base, params=json.dumps(config), status=400)
+    config.pop(key)  # type: ignore
+    clients.SiteManagement.create(
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
-def test_post_then_get_site(
-    post_site: Callable, collection_base: str, object_base: str, get_site: Callable
+def test_create_then_get_site_connection(clients: ClientRegistry) -> None:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    resp = clients.SiteManagement.get(site_id=site_id)
+    assert resp.json["extensions"] == config
+
+
+def test_update_site_connection(clients: ClientRegistry) -> None:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+    assert resp.json["extensions"] == config
+
+
+def test_update_site_connection_that_doesnt_exist(
+    clients: ClientRegistry,
 ) -> None:
-    site_id = "site_id_1"
-    siteconfig = _default_config()
-    post_site(url=collection_base, params=json.dumps(siteconfig))
-    resp = get_site(url=f"{object_base}{site_id}")
-    assert resp.json["extensions"] == siteconfig["site_config"]
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.update(
+        site_id=site_id, site_config=config, expect_ok=False
+    ).assert_status_code(404)
 
 
-def test_put_site(
-    post_site: Callable, put_site: Callable, collection_base: str, object_base: str
-) -> None:
-    site_id = "site_id_1"
-    siteconfig = _default_config()
-    post_site(url=collection_base, params=json.dumps(siteconfig))
-    resp = put_site(url=f"{object_base}{site_id}", params=json.dumps(siteconfig))
-    assert resp.json["extensions"] == siteconfig["site_config"]
+def test_update_site_connection_alias(clients: ClientRegistry) -> None:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["basic_settings"]["alias"] = "edited alias"
+    clients.SiteManagement.update(site_id=site_id, site_config=config)
+    resp = clients.SiteManagement.get(site_id=site_id)
+    assert resp.json["extensions"] == config
 
 
-def test_put_site_when_doesnt_exist(put_site: Callable, object_base: str) -> None:
-    site_id = "site_id_1"
-    siteconfig = _default_config()
-    put_site(url=f"{object_base}{site_id}", params=json.dumps(siteconfig), status=404)
-
-
-def test_put_update_alias(
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
-    get_site: Callable,
-) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-    config["site_config"]["basic_settings"]["alias"] = "edited alias"
-    put_site(url=f"{object_base}{site_id}", params=json.dumps(config))
-    resp = get_site(url=f"{object_base}{site_id}")
-    assert resp.json["extensions"]["basic_settings"]["alias"] == "edited alias"
-
-
-connection_test_data_200 = (
+connection_test_data_200: list[Connection] = [
     {
         "socket_type": "tcp6",
         "host": "5402:1db8:95a3:0000:0000:9a2e:0480:8334",
@@ -294,9 +240,22 @@ connection_test_data_200 = (
     },
     {"socket_type": "tcp", "host": "192.168.1.200", "port": 54321, "encrypted": False},
     {"socket_type": "unix", "path": "/abc/def/ghi"},
-)
+]
 
-connection_test_data_400 = (
+
+@pytest.mark.parametrize("data", connection_test_data_200)
+def test_update_site_connection_status_connection_200(
+    clients: ClientRegistry,
+    data: Connection,
+) -> None:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["status_connection"]["connection"] = data
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+    assert resp.json["extensions"] == config
+
+
+connection_test_data_400: list[Connection] = [
     {
         "socket_type": "tcp6",
         "host": "192.167.23.2",
@@ -311,48 +270,32 @@ connection_test_data_400 = (
         "encrypted": False,
         "verify": False,
     },
-    {"socket_type": "electrical_socket"},
+    {"socket_type": "electrical_socket"},  # type: ignore
     {"socket_type": "unix"},
     {"socket_type": "tcp"},
     {"socket_type": "tcp6"},
     {"socket_type": "tcp6", "host": "5402:1db8:95a3:NOPE:9a2e:0480:8334"},
     {"socket_type": "tcp6", "host": "5402:1db8:95a3:0000:0000:9a2e:0480:8334", "port": 123456},
     {"host": "192.168.1.200", "port": 1234512345, "encrypted": False, "verify": False},
-)
-
-
-@pytest.mark.parametrize("data", connection_test_data_200)
-def test_put_update_connection_200(
-    data: Mapping[str, Any],
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
-) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-    config["site_config"]["status_connection"]["connection"] = data
-    resp = put_site(url=f"{object_base}{site_id}", params=json.dumps(config))
-    assert resp.json["extensions"]["status_connection"]["connection"] == data
+]
 
 
 @pytest.mark.parametrize("data", connection_test_data_400)
-def test_put_update_connection_400(
-    data: Mapping[str, Any],
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
+def test_update_site_connection_status_connection_400(
+    clients: ClientRegistry,
+    data: Connection,
 ) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-    config["site_config"]["status_connection"]["connection"] = data
-    put_site(url=f"{object_base}{site_id}", params=json.dumps(config), status=400)
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["status_connection"]["connection"] = data
+    clients.SiteManagement.update(
+        site_id=site_id,
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
-proxy_test_data_200 = (
+proxy_test_data_200: list[Proxy] = [
     {
         "use_livestatus_daemon": "with_proxy",
         "global_settings": False,
@@ -431,9 +374,9 @@ proxy_test_data_200 = (
         "global_settings": True,
         "tcp": {"port": 6565, "only_from": ["192.168.1.1", "192.168.1.2"], "tls": False},
     },
-)
+]
 
-proxy_test_data_400 = (
+proxy_test_data_400: list[Proxy] = [
     {
         "use_livestatus_daemon": "with_proxy",
         "global_settings": False,
@@ -444,7 +387,7 @@ proxy_test_data_400 = (
     {
         "use_livestatus_daemon": "with_proxy",
         "global_settings": False,
-        "params": {"invalid_param": True},
+        "params": {"invalid_param": True},  # type: ignore
     },
     {
         "use_livestatus_daemon": "direct",
@@ -475,62 +418,47 @@ proxy_test_data_400 = (
         "global_settings": True,
         "tcp": {"port": 44232, "only_from": ["192.168.1.abc", "192.168.1.2"]},
     },
-)
+]
 
 
 @pytest.mark.parametrize("data", proxy_test_data_200)
-def test_put_update_proxy_200(
-    data: Mapping[str, Any],
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
+def test_update_site_connection_proxy_200(
+    clients: ClientRegistry,
+    data: Proxy,
 ) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-    config["site_config"]["status_connection"]["proxy"] = data
-    resp = put_site(url=f"{object_base}{site_id}", params=json.dumps(config))
-    assert resp.json["extensions"]["status_connection"]["proxy"] == data
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["status_connection"]["proxy"] = data
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+    assert resp.json["extensions"] == config
 
 
 @pytest.mark.parametrize("data", proxy_test_data_400)
-def test_put_update_proxy_400(
-    data: Mapping[str, Any],
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
+def test_update_site_connection_proxy_400(
+    clients: ClientRegistry,
+    data: Proxy,
 ) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-    config["site_config"]["status_connection"]["proxy"] = data
-    put_site(url=f"{object_base}{site_id}", params=json.dumps(config), status=400)
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["status_connection"]["proxy"] = data
+    clients.SiteManagement.update(
+        site_id=site_id,
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
-def test_put_disable_user_sync(
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
-    get_site: Callable,
-) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
+def test_update_site_connection_user_sync(clients: ClientRegistry) -> None:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
     edited_user_sync = {"sync_with_ldap_connections": "disabled"}
-    config["site_config"]["configuration_connection"]["user_sync"] = edited_user_sync
-    put_site(url=f"{object_base}{site_id}", params=json.dumps(config))
-    resp = get_site(url=f"{object_base}{site_id}")
-    assert resp.json["extensions"]["configuration_connection"]["user_sync"] == edited_user_sync
+    config["configuration_connection"]["user_sync"] = edited_user_sync
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+    assert resp.json["extensions"] == config
 
 
-def test_put_user_sync_with_ldap_connections_200(
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
+def test_update_site_connection_user_sync_with_ldap_connections_200(
+    clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
@@ -542,36 +470,35 @@ def test_put_user_sync_with_ldap_connections_200(
         ],
     )
 
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
     edited_user_sync = {
         "sync_with_ldap_connections": "ldap",
         "ldap_connections": ["LDAP_1", "LDAP_2", "LDAP_3"],
     }
-    config["site_config"]["configuration_connection"]["user_sync"] = edited_user_sync
-    resp = put_site(url=f"{object_base}{site_id}", params=json.dumps(config))
-    assert resp.json["extensions"]["configuration_connection"]["user_sync"] == edited_user_sync
+    config["configuration_connection"]["user_sync"] = edited_user_sync
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+    assert resp.json["extensions"] == config
 
 
-def test_put_user_sync_with_ldap_connections_400(
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
+def test_update_site_connection_user_sync_with_ldap_connections_400(
+    clients: ClientRegistry,
 ) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
     edited_user_sync = {
         "sync_with_ldap_connections": "ldap",
-        "ldap_connections": ["LDAP_1", "LDAP_2", "LDAP_4"],
+        "ldap_connections": ["LDAP_1", "LDAP_2", "LDAP_3"],
     }
-    config["site_config"]["configuration_connection"]["user_sync"] = edited_user_sync
-    put_site(url=f"{object_base}{site_id}", params=json.dumps(config), status=400)
+    config["configuration_connection"]["user_sync"] = edited_user_sync
+    clients.SiteManagement.update(
+        site_id=site_id,
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
-config_cnx_test_data_200 = (
+config_cnx_test_data_200: list[ConfigurationConnection] = [
     {
         "enable_replication": True,
         "url_of_remote_site": "http://localhost/heute_remote_site_id_1/check_mk/",
@@ -608,9 +535,22 @@ config_cnx_test_data_200 = (
         "replicate_event_console": True,
         "replicate_extensions": True,
     },
-)
+]
 
-config_cnx_test_data_400 = (
+
+@pytest.mark.parametrize("data", config_cnx_test_data_200)
+def test_update_configuration_connection_200(
+    clients: ClientRegistry,
+    data: ConfigurationConnection,
+) -> None:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["configuration_connection"] = data
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+    assert resp.json["extensions"] == config
+
+
+config_cnx_test_data_400: list[ConfigurationConnection] = [
     {
         "user_sync": {
             "sync_with_ldap_connections": "all",
@@ -632,7 +572,7 @@ config_cnx_test_data_400 = (
         },
         "replicate_event_console": False,
         "replicate_extensions": False,
-        "invalid_attribute": True,
+        "invalid_attribute": True,  # type: ignore
     },
     {
         "enable_replication": True,
@@ -645,56 +585,26 @@ config_cnx_test_data_400 = (
         "replicate_event_console": True,
         "replicate_extensions": True,
     },
-)
-
-
-@pytest.mark.parametrize("data", config_cnx_test_data_200)
-def test_put_configuration_connection_200(
-    data: dict[str, Any],
-    post_site: Callable,
-    collection_base: str,
-    object_base: str,
-    put_site: Callable,
-) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-    config["site_config"]["configuration_connection"] = data
-    resp = put_site(url=f"{object_base}{site_id}", params=json.dumps(config))
-    assert resp.json["extensions"]["configuration_connection"] == data
+]
 
 
 @pytest.mark.parametrize("data", config_cnx_test_data_400)
-def test_put_configuration_connection_400(
-    data: dict[str, Any],
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
+def test_update_configuration_connection_400(
+    clients: ClientRegistry,
+    data: ConfigurationConnection,
 ) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-    config["site_config"]["configuration_connection"] = data
-    put_site(url=f"{object_base}{site_id}", params=json.dumps(config), status=400)
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["configuration_connection"] = data
+    clients.SiteManagement.update(
+        site_id=site_id,
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
-status_host_test_data = (
-    ({"status_host_set": "enabled", "site": "NO_SITE", "host": "host1"}, 200),
-    ({"status_host_set": "disabled", "site": "NO_SITE", "host": "host1"}, 400),
-    ({"status_host_set": "enabled", "site": "NO_SITE"}, 400),
-    ({"status_host_set": "enabled", "host": "host1"}, 400),
-)
-
-
-@pytest.mark.parametrize("data, status_code", status_host_test_data)
-def test_put_status_host(
-    data: Mapping[str, Any],
-    status_code: int,
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
+def test_update_status_host_200(
+    clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
     class MockHost:
@@ -704,103 +614,115 @@ def test_put_status_host(
 
     monkeypatch.setattr("cmk.gui.fields.definitions.Host", MockHost)
 
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-
-    config["site_config"]["status_connection"]["status_host"] = data
-    resp = put_site(url=f"{object_base}{site_id}", params=json.dumps(config), status=status_code)
-    if status_code == 200:
-        assert resp.json["extensions"]["status_connection"]["status_host"] == data
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    data: StatusHost = {"status_host_set": "enabled", "site": "NO_SITE", "host": "host1"}
+    config["status_connection"]["status_host"] = data
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+    assert resp.json["extensions"] == config
 
 
-url_of_remote_site_test_data_200 = (
+status_host_test_data: list[StatusHost] = [
+    {"status_host_set": "disabled", "site": "NO_SITE", "host": "host1"},
+    {"status_host_set": "enabled", "site": "NO_SITE"},
+    {"status_host_set": "enabled", "host": "host1"},
+]
+
+
+@pytest.mark.parametrize("data", status_host_test_data)
+def test_update_status_host_400(
+    clients: ClientRegistry,
+    data: StatusHost,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    class MockHost:
+        @classmethod
+        def host(cls, *args: Any) -> bool:
+            return True
+
+    monkeypatch.setattr("cmk.gui.fields.definitions.Host", MockHost)
+
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["status_connection"]["status_host"] = data
+    clients.SiteManagement.update(
+        site_id=site_id,
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+url_of_remote_site_test_data_200: list[str] = [
     "http://localhost/abc/check_mk/",
     "https://localhost/abc/check_mk/",
-)
-url_of_remote_site_test_data_400 = (
+]
+
+
+@pytest.mark.parametrize("data", url_of_remote_site_test_data_200)
+def test_update_url_of_remote_site_200(
+    clients: ClientRegistry,
+    data: str,
+) -> None:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["configuration_connection"]["url_of_remote_site"] = data
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+    assert resp.json["extensions"] == config
+
+
+url_of_remote_site_test_data_400: list[str] = [
     "http://localhost/abc/123",
     "https://localhost/abc/123",
     "http//localhost/abc/123",
     "https:localhost/abc/123",
     "httpss://localhost/abc/123",
     "htttp://localhost/abc/123",
-)
-
-
-@pytest.mark.parametrize("data", url_of_remote_site_test_data_200)
-def test_put_update_url_of_remote_site_200(
-    data: Mapping[str, Any],
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
-) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-    config["site_config"]["configuration_connection"]["url_of_remote_site"] = data
-    resp = put_site(url=f"{object_base}{site_id}", params=json.dumps(config))
-    assert resp.json["extensions"]["configuration_connection"]["url_of_remote_site"] == data
+]
 
 
 @pytest.mark.parametrize("data", url_of_remote_site_test_data_400)
-def test_put_update_url_of_remote_site_400(
-    data: Mapping[str, Any],
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
+def test_update_url_of_remote_site_400(
+    clients: ClientRegistry,
+    data: str,
 ) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-    config["site_config"]["configuration_connection"]["url_of_remote_site"] = data
-    put_site(url=f"{object_base}{site_id}", params=json.dumps(config), status=400)
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["configuration_connection"]["url_of_remote_site"] = data
+    clients.SiteManagement.update(
+        site_id=site_id,
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
-def test_put_update_url_prefix_200(
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
-) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-
-    config["site_config"]["status_connection"]["url_prefix"] = "/remote_site_1/"
-    resp = put_site(url=f"{object_base}{site_id}", params=json.dumps(config))
-    assert resp.json["extensions"]["status_connection"]["url_prefix"] == "/remote_site_1/"
+def test_update_url_prefix_200(clients: ClientRegistry) -> None:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["status_connection"]["url_prefix"] = "/remote_site_1/"
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+    assert resp.json["extensions"] == config
 
 
-def test_put_update_url_prefix_400(
-    post_site: Callable,
-    object_base: str,
-    collection_base: str,
-    put_site: Callable,
-) -> None:
-    config = _default_config()
-    site_id = "site_id_1"
-    post_site(url=collection_base, params=json.dumps(config))
-
-    config["site_config"]["status_connection"]["url_prefix"] = "/remote_site_1"
-    put_site(url=f"{object_base}{site_id}", params=json.dumps(config), status=400)
+def test_update_url_prefix_400(clients: ClientRegistry) -> None:
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+    config["status_connection"]["url_prefix"] = "/remote_site_1"
+    clients.SiteManagement.update(
+        site_id=site_id,
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
-def test_post_site_config_customer_field(
-    post_site: Callable,
-    collection_base: str,
-) -> None:
+def test_post_site_config_customer_field(clients: ClientRegistry) -> None:
     config = _default_config()
     if version.is_managed_edition():
-        r = post_site(url=collection_base, params=json.dumps(config), status=200)
+        r = clients.SiteManagement.create(site_config=config)
         assert "customer" in r.json["extensions"]["basic_settings"]
-        del config["site_config"]["basic_settings"]["customer"]
-        post_site(url=collection_base, params=json.dumps(config), status=400)
-
+        del config["basic_settings"]["customer"]
+        clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(400)
     else:
-        r = post_site(url=collection_base, params=json.dumps(config), status=200)
+        r = clients.SiteManagement.create(site_config=config)
         assert "customer" not in r.json["extensions"]["basic_settings"]
-        config["site_config"]["basic_settings"].update({"customer": "provider"})
-        post_site(url=collection_base, params=json.dumps(config), status=400)
+        config["basic_settings"].update({"customer": "provider"})
+        clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(400)

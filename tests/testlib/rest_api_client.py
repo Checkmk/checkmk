@@ -17,6 +17,7 @@ from typing import Any, cast, Literal, NoReturn, Sequence, TypedDict
 
 from cmk.utils import version
 from cmk.utils.type_defs import HTTPMethod
+from cmk.utils.type_defs.rest_api_types.site_connection import SiteConfig
 
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
@@ -39,6 +40,7 @@ API_DOMAIN = Literal[
     "host_group_config",
     "service_group_config",
     "contact_group_config",
+    "site_connection",
 ]
 
 
@@ -1131,6 +1133,63 @@ class ContactGroupClient(GroupConfig):
     domain: Literal["contact_group_config"] = "contact_group_config"
 
 
+@register_client
+class SiteManagementClient(RestApiClient):
+    domain: API_DOMAIN = "site_connection"
+
+    def get(self, site_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{site_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def login(self, site_id: str, username: str, password: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{site_id}/actions/login/invoke",
+            body={"username": username, "password": password},
+            expect_ok=expect_ok,
+        )
+
+    def logout(self, site_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{site_id}/actions/logout/invoke",
+            expect_ok=expect_ok,
+        )
+
+    def create(self, site_config: SiteConfig, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body={"site_config": site_config},
+            expect_ok=expect_ok,
+        )
+
+    def update(self, site_id: str, site_config: SiteConfig, expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{site_id}",
+            body={"site_config": site_config},
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, site_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{site_id}/actions/delete/invoke",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -1149,6 +1208,7 @@ class ClientRegistry:
     HostGroup: HostGroupClient
     ServiceGroup: ServiceGroupClient
     ContactGroup: ContactGroupClient
+    SiteManagement: SiteManagementClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:

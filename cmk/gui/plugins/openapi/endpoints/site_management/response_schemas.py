@@ -299,7 +299,7 @@ class SiteConnectionResponse(DomainObject):
     extensions = fields.Nested(
         SiteConfigAttributes,
         description="The configuration attributes of a site.",
-        example=default_config_example()["site_config"],
+        example=default_config_example(),
     )
 
 
@@ -318,7 +318,7 @@ class SiteConnectionResponseCollection(DomainObjectCollection):
                 "id": "prod",
                 "title": "Site Alias",
                 "members": {},
-                "extensions": default_config_example()["site_config"],
+                "extensions": default_config_example(),
             }
         ],
     )

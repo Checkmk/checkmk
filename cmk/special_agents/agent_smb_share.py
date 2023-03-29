@@ -81,13 +81,14 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
 
 
 def get_child_dirs(conn, share_name, subdir):
+    yield subdir
+
     for shared_file in conn.listPath(share_name, subdir):
         if shared_file.filename in (".", ".."):
             continue
 
         relative_path = f"{subdir}{shared_file.filename}"
         if shared_file.isDirectory:
-            yield f"{relative_path}\\"
             yield from get_child_dirs(conn, share_name, f"{relative_path}\\")
 
 
@@ -99,6 +100,11 @@ def iter_shared_files(conn, hostname, share_name, pattern, subdir="", recursive=
                 yield from iter_shared_files(
                     conn, hostname, share_name, pattern[1:], subdir=child_dir, recursive=recursive
                 )
+                continue
+
+            yield from iter_shared_files(
+                conn, hostname, share_name, ["*"], subdir=child_dir, recursive=False
+            )
         return
 
     for shared_file in conn.listPath(share_name, subdir):

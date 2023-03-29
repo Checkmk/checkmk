@@ -2006,7 +2006,7 @@ bool KillProcess(uint32_t pid, int exit_code) noexcept {
     auto *handle = ::OpenProcess(PROCESS_TERMINATE, FALSE, pid);
     if (handle == nullptr) {
         if (::GetLastError() == 5) {
-            XLOG::d("Can't open process for termination ACCESS is DENIED [{}]",
+            XLOG::d("Can't open process for termination: ACCESS is DENIED [{}]",
                     pid);
         }
         return false;
@@ -2225,7 +2225,7 @@ fs::path GetCurrentExePath() {
     if (WCHAR path[MAX_PATH]; ::GetModuleFileNameW(nullptr, path, MAX_PATH)) {
         return {path};
     }
-    XLOG::l("Can't determine exe path [{}]", ::GetLastError());
+    XLOG::d("Can't determine exe path [{}]", ::GetLastError());
     return {};
 }
 
@@ -2238,7 +2238,7 @@ std::optional<PROCESS_MEMORY_COUNTERS_EX> GetProcessMemoryCounters(
                                static_cast<PROCESS_MEMORY_COUNTERS *>(
                                    static_cast<void *>(&counters)),
                                counters.cb) == 0) {
-        XLOG::l("Can't read process memory, error [{}]", ::GetLastError());
+        XLOG::d("Can't read process memory, error [{}]", ::GetLastError());
         return {};
     }
     return counters;
@@ -2252,21 +2252,19 @@ std::optional<PROCESS_MEMORY_COUNTERS_EX> GetProcessMemoryCounters(
 /// https://docs.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-process_memory_counters_ex
 /// PrivateUsage(PageFileUsage for newer OS) means Commit Charge
 size_t GetCommitCharge(uint32_t pid) noexcept {
-    UniqueHandle h{
+    const UniqueHandle h{
         ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid)};
 
     if (!h) {
-        XLOG::l("Can't open process with pid [{}], error [{}]", pid,
-                ::GetLastError());
         return 0;
     }
 
-    auto counters = GetProcessMemoryCounters(h.get());
+    const auto counters = GetProcessMemoryCounters(h.get());
     return counters ? counters->PrivateUsage : 0;
 }
 
 size_t GetOwnVirtualSize() noexcept {
-    auto counters = GetProcessMemoryCounters(GetCurrentProcess());
+    const auto counters = GetProcessMemoryCounters(GetCurrentProcess());
     return counters ? counters->WorkingSetSize : 0;
 }
 

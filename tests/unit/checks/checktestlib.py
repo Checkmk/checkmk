@@ -2,12 +2,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 import copy
 import os
 import types
-from collections.abc import Callable
-from typing import Any, NamedTuple, Sequence
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any, NamedTuple
 from unittest import mock
 
 import pytest
@@ -37,8 +38,14 @@ class Tuploid:
 class PerfValue(Tuploid):
     """Represents a single perf value"""
 
-    def __init__(  # type: ignore[no-untyped-def]
-        self, key, value, warn=None, crit=None, minimum=None, maximum=None
+    def __init__(
+        self,
+        key: str,
+        value: int | float | None,
+        warn: int | float | None = None,
+        crit: int | float | None = None,
+        minimum: int | float | None = None,
+        maximum: int | float | None = None,
     ) -> None:
         # assign first, so __repr__ won't crash
         self.key = key
@@ -124,7 +131,9 @@ class BasicCheckResult(Tuploid):
     'Infotext contains...'
     """
 
-    def __init__(self, status, infotext, perfdata=None) -> None:  # type: ignore[no-untyped-def]
+    def __init__(
+        self, status: int, infotext: str, perfdata: None | Sequence[tuple | PerfValue] = None
+    ) -> None:
         """We perform some basic consistency checks during initialization"""
         # assign first, so __repr__ won't crash
         self.status = status
@@ -213,7 +222,7 @@ class CheckResult:
      generator-induced laziness.
     """
 
-    def __init__(self, result) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, result: Iterable | None | CheckResult) -> None:
         """
         Initializes a list of subresults using BasicCheckResult.
 
@@ -243,6 +252,7 @@ class CheckResult:
                     subresult = BasicCheckResult(*subresult)
                 self.subresults.append(subresult)
         else:
+            assert isinstance(result, tuple)
             self.subresults.append(BasicCheckResult(*result))
 
     def __repr__(self) -> str:
@@ -452,8 +462,11 @@ class MockHostExtraConf:
     See for example 'test_df_check.py'.
     """
 
-    def __init__(  # type: ignore[no-untyped-def]
-        self, check, mock_config, target="host_extra_conf"
+    def __init__(
+        self,
+        check: object,
+        mock_config: Callable | dict[object, object],
+        target: str = "host_extra_conf",
     ) -> None:
         self.target = target
         self.context: Any = None  # TODO: Figure out the right type

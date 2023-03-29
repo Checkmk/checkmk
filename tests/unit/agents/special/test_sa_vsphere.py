@@ -5,6 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
+from collections.abc import Sequence
+
 import pytest
 
 from cmk.special_agents import agent_vsphere
@@ -80,7 +82,9 @@ def test_parse_arguments(argv, expected_non_default_args) -> None:  # type: igno
         ["--vm_piggyname", "MissPiggy"],
     ],
 )
-def test_parse_arguments_invalid(invalid_argv, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_parse_arguments_invalid(
+    invalid_argv: Sequence[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr("cmk.special_agents.utils.vcrtrace", lambda **vcr_init_kwargs: None)
     with pytest.raises(SystemExit):
         agent_vsphere.parse_arguments(invalid_argv)

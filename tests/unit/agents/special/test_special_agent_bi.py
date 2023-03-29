@@ -5,6 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
+from collections.abc import Mapping
+
 import pytest
 
 from cmk.special_agents.agent_bi import AggregationData
@@ -543,7 +545,7 @@ latest_response_example = {
         latest_response_example,
     ],
 )
-def test_bi_legacy_webapi_data_parsing(webapi_data) -> None:  # type: ignore[no-untyped-def]
+def test_bi_legacy_webapi_data_parsing(webapi_data: Mapping[str, object]) -> None:
     assert "missing_aggr" in webapi_data
     assert "missing_sites" in webapi_data
 

@@ -612,28 +612,8 @@ class DiscoveryPageRenderer:
         return
 
     def _show_discovery_details(self, discovery_result: DiscoveryResult, api_request: dict) -> None:
-        if not discovery_result.check_table and self._is_active(discovery_result):
-            return
-
-        if not discovery_result.check_table and self._host.is_cluster():
-            html.br()
-            url = folder_preserving_link(
-                [("mode", "edit_ruleset"), ("varname", "clustered_services")]
-            )
-            html.show_message(
-                _(
-                    "Could not find any service for your cluster. You first need to "
-                    "specify which services of your nodes shal be added to the "
-                    'cluster. This is done using the <a href="%s">%s</a> ruleset.'
-                )
-                % (url, _("Clustered services"))
-            )
-            return
-
         if not discovery_result.check_table:
-            html.show_message(
-                _("Could not find any service for this host. You might need to trigger a rescan.")
-            )
+            self._show_discovery_empty(discovery_result, api_request)
             return
 
         # We currently don't get correct information from cmk.base (the data sources). Better
@@ -674,6 +654,29 @@ class DiscoveryPageRenderer:
                 self._toggle_bulk_action_page_menu_entries(entry.table_group)
             html.hidden_fields()
             html.end_form()
+
+    def _show_discovery_empty(self, discovery_result: DiscoveryResult, api_request: dict) -> None:
+        if self._is_active(discovery_result):
+            return
+
+        if self._host.is_cluster():
+            html.br()
+            url = folder_preserving_link(
+                [("mode", "edit_ruleset"), ("varname", "clustered_services")]
+            )
+            html.show_message(
+                _(
+                    "Could not find any service for your cluster. You first need to "
+                    "specify which services of your nodes shal be added to the "
+                    'cluster. This is done using the <a href="%s">%s</a> ruleset.'
+                )
+                % (url, _("Clustered services"))
+            )
+            return
+
+        html.show_message(
+            _("Could not find any service for this host. You might need to trigger a rescan.")
+        )
 
     def _is_active(self, discovery_result: DiscoveryResult) -> bool:
         return discovery_result.job_status["is_active"]

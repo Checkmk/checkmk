@@ -8,7 +8,7 @@ from __future__ import annotations
 import enum
 import logging
 from collections.abc import Mapping
-from typing import assert_never, Final, NoReturn
+from typing import Final, NoReturn
 
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData
@@ -20,8 +20,13 @@ __all__ = ["NoFetcherError", "NoFetcher"]
 
 @enum.unique
 class NoFetcherError(enum.Enum):
-    NO_FETCHER = enum.auto()
-    MISSING_IP = enum.auto()
+    """Enumeration of possible error messages
+
+    The messages are visible in the UI and should be user friendly.
+    """
+
+    NO_FETCHER = "no valid datasource configured"
+    MISSING_IP = "Failed to lookup IP address and no explicit IP address configured"
 
 
 class NoFetcher(Fetcher[AgentRawData]):
@@ -43,13 +48,4 @@ class NoFetcher(Fetcher[AgentRawData]):
         pass
 
     def _fetch_from_io(self, mode: Mode) -> NoReturn:
-        match self._canned:
-            # The messages are visible in the UI and should be user friendly.
-            case NoFetcherError.NO_FETCHER:
-                raise MKFetcherError("no valid datasource configured")
-            case NoFetcherError.MISSING_IP:
-                raise MKFetcherError(
-                    "Failed to lookup IP address and no explicit IP address configured"
-                )
-            case _:
-                assert_never(self._canned)
+        raise MKFetcherError(self._canned.value)

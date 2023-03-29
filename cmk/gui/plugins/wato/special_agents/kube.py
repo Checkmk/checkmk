@@ -107,7 +107,7 @@ def _migrate_usage_endpoint(p: dict[str, object]) -> dict[str, object]:
 def _openshift() -> tuple[str, str, Dictionary]:
     return (
         "prometheus",
-        _("Use data from OpenShift"),
+        _("Use data from OpenShift (Cloud Edition)"),
         Dictionary(
             elements=[
                 (

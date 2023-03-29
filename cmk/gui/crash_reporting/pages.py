@@ -12,7 +12,7 @@ import tarfile
 import time
 import traceback
 from collections.abc import Iterator, Mapping
-from typing import TypedDict
+from typing import Final, TypedDict
 
 import livestatus
 from livestatus import SiteId
@@ -59,6 +59,8 @@ from cmk.gui.valuespec import Dictionary, EmailAddress, TextInput
 from .helpers import local_files_involved_in_crash
 from .views import CrashReportsRowTable
 
+CrashReportRow = dict[str, str]
+
 
 class ReportSubmitDetails(TypedDict):
     name: str
@@ -68,34 +70,32 @@ class ReportSubmitDetails(TypedDict):
 class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
     def __init__(self) -> None:
         super().__init__()
-        self._crash_id = request.get_str_input_mandatory("crash_id")
-        self._site_id = request.get_str_input_mandatory("site")
+        self._crash_id: Final = request.get_str_input_mandatory("crash_id")
+        self._site_id: Final = request.get_str_input_mandatory("site")
 
-    def _get_crash_info(self, row) -> CrashInfo:  # type: ignore[no-untyped-def]
+    def _get_crash_info(self, row: CrashReportRow) -> CrashInfo:
         return json.loads(row["crash_info"])
 
     def _get_crash_row(self):
-        row = self._get_crash_report_row(self._crash_id, self._site_id)
-        if not row:
-            raise MKUserError(
-                None,
-                _(
-                    "Could not find the requested crash %s on site %s. "
-                    "Maybe the automatic cleanup found more than 200 crash reports "
-                    "below ~/var/check_mk/crashes and already deleted the requested crash report."
-                )
-                % (self._crash_id, self._site_id),
+        if row := self._get_crash_report_row(self._crash_id, site_id=self._site_id):
+            return row
+        raise MKUserError(
+            None,
+            _(
+                "Could not find the requested crash %s on site %s. "
+                "Maybe the automatic cleanup found more than 200 crash reports "
+                "below ~/var/check_mk/crashes and already deleted the requested crash report."
             )
-        return row
+            % (self._crash_id, self._site_id),
+        )
 
-    def _get_crash_report_row(self, crash_id: str, site_id: str) -> dict[str, str] | None:
-        rows = CrashReportsRowTable().get_crash_report_rows(
+    def _get_crash_report_row(self, crash_id: str, *, site_id: str) -> CrashReportRow | None:
+        if rows := CrashReportsRowTable().get_crash_report_rows(
             only_sites=[SiteId(site_id)],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id),
-        )
-        if not rows:
-            return None
-        return rows[0]
+        ):
+            return rows[0]
+        return None
 
     def _get_serialized_crash_report(self):
         return {
@@ -130,7 +130,7 @@ class PageCrash(ABCCrashReportPage):
             return
 
         if request.has_var("_report") and transactions.check_transaction():
-            details = self._handle_report_form(crash_info)
+            details = self._handle_report_form()
         else:
             details = ReportSubmitDetails(name="", mail="")
 
@@ -216,8 +216,8 @@ class PageCrash(ABCCrashReportPage):
         renderer = self._crash_type_renderer(crash_info["crash_type"])
         yield from renderer.page_menu_entries_related_monitoring(crash_info, self._site_id)
 
-    def _handle_report_form(self, crash_info: CrashInfo) -> ReportSubmitDetails:
-        details: ReportSubmitDetails
+    def _handle_report_form(self) -> ReportSubmitDetails:
+        details = ReportSubmitDetails(name="", mail="")
         try:
             vs = self._vs_crash_report()
             details = vs.from_html_vars("_report")
@@ -393,10 +393,10 @@ class PageCrash(ABCCrashReportPage):
 
         html.close_table()
 
-    def _format_traceback(self, tb):
+    def _format_traceback(self, tb: list[traceback.FrameSummary]) -> str:
         return "".join(traceback.format_list(tb))
 
-    def _show_crash_report_details(self, crash_info: CrashInfo, row):  # type: ignore[no-untyped-def]
+    def _show_crash_report_details(self, crash_info: CrashInfo, row: CrashReportRow) -> None:
         self._crash_type_renderer(crash_info["crash_type"]).show_details(crash_info, row)
 
     def _crash_type_renderer(self, crash_type):
@@ -418,7 +418,7 @@ class ABCReportRenderer(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def show_details(self, crash_info: CrashInfo, row):  # type: ignore[no-untyped-def]
+    def show_details(self, crash_info: CrashInfo, row: CrashReportRow) -> None:
         raise NotImplementedError()
 
 
@@ -442,7 +442,7 @@ class ReportRendererGeneric(ABCReportRenderer):
         # We don't want to produce anything here
         yield from ()
 
-    def show_details(self, crash_info: CrashInfo, row) -> None:  # type: ignore[no-untyped-def]
+    def show_details(self, crash_info: CrashInfo, row: CrashReportRow) -> None:
         if not crash_info["details"]:
             return
 
@@ -466,12 +466,12 @@ class ReportRendererSection(ABCReportRenderer):
         # We don't want to produce anything here
         yield from ()
 
-    def show_details(self, crash_info: CrashInfo, row) -> None:  # type: ignore[no-untyped-def]
+    def show_details(self, crash_info: CrashInfo, row: CrashReportRow) -> None:
         self._show_crashed_section_details(crash_info)
         _show_agent_output(row)
 
     def _show_crashed_section_details(self, info: CrashInfo) -> None:
-        def format_bool(val):
+        def format_bool(val: bool | None) -> str:
             return {
                 True: _("Yes"),
                 False: _("No"),
@@ -536,7 +536,7 @@ class ReportRendererCheck(ABCReportRenderer):
             item=make_simple_link(service_url),
         )
 
-    def show_details(self, crash_info: CrashInfo, row) -> None:  # type: ignore[no-untyped-def]
+    def show_details(self, crash_info: CrashInfo, row: CrashReportRow) -> None:
         self._show_crashed_check_details(crash_info)
         _show_agent_output(row)
 
@@ -579,11 +579,10 @@ class ReportRendererGUI(ABCReportRenderer):
     def page_menu_entries_related_monitoring(
         self, crash_info: CrashInfo, site_id: SiteId
     ) -> Iterator[PageMenuEntry]:
-        # We don't want to produce anything here
-        return
-        yield  # pylint: disable=unreachable
+        """Produces nothing"""
+        yield from ()
 
-    def show_details(self, crash_info: CrashInfo, row) -> None:  # type: ignore[no-untyped-def]
+    def show_details(self, crash_info: CrashInfo, row: CrashReportRow) -> None:
         details = crash_info["details"]
 
         html.h3(_("Details"), class_="table")
@@ -614,10 +613,7 @@ def _crash_row(
     tdclass = "left legend" if legend else "left"
     html.open_tr(class_=trclass)
     html.td(title, class_=tdclass)
-    if pre:
-        html.td(HTMLWriter.render_pre(infotext))
-    else:
-        html.td(infotext)
+    html.td(HTMLWriter.render_pre(infotext) if pre else infotext)
     html.close_tr()
 
 
@@ -644,7 +640,7 @@ def _show_output_box(title: str, content: bytes) -> None:
     html.close_div()
 
 
-def _show_agent_output(row):
+def _show_agent_output(row: CrashReportRow) -> None:
     agent_output = row.get("agent_output")
     if agent_output:
         assert isinstance(agent_output, bytes)

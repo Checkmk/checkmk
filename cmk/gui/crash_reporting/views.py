@@ -94,7 +94,7 @@ class CrashReportsRowTable(RowTable):
         return sorted(rows, key=lambda r: r["crash_time"])
 
     def get_crash_report_rows(
-        self, only_sites: list[SiteId] | None, filter_headers: str
+        self, only_sites: OnlySites, filter_headers: str
     ) -> list[dict[str, str]]:
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
@@ -138,7 +138,7 @@ class CrashReportsRowTable(RowTable):
         return rows
 
     def _get_crash_report_info(
-        self, only_sites: list[SiteId] | None, filter_headers: str | None = None
+        self, only_sites: OnlySites, filter_headers: str | None = None
     ) -> list[dict[str, str]]:
         try:
             sites.live().set_prepend_site(True)
@@ -178,7 +178,7 @@ class PainterCrashIdent(Painter):
             ],
             filename="crash.py",
         )
-        return (None, HTMLWriter.render_a(row["crash_id"], href=url))
+        return None, HTMLWriter.render_a(row["crash_id"], href=url)
 
 
 class PainterCrashType(Painter):
@@ -197,7 +197,7 @@ class PainterCrashType(Painter):
         return ["crash_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["crash_type"])
+        return None, row["crash_type"]
 
 
 class PainterCrashSource(Painter):
@@ -263,7 +263,7 @@ class PainterCrashVersion(Painter):
         return ["crash_version"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["crash_version"])
+        return None, row["crash_version"]
 
 
 class PainterCrashException(Painter):
@@ -282,7 +282,7 @@ class PainterCrashException(Painter):
         return ["crash_exc_type", "crash_exc_value"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, "{}: {}".format(row["crash_exc_type"], row["crash_exc_value"]))
+        return None, "{}: {}".format(row["crash_exc_type"], row["crash_exc_value"])
 
 
 class SorterCrashTime(Sorter):

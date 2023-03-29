@@ -39,52 +39,84 @@ rustup update 1.66.0
 cd
 cargo -V
 rustc -V
-
-:: On windows we want to kill exe before starting rebuild. 
-:: Use case CI starts testing, for some reasoms process hangs up longer as expected thus 
-:: rebuild/retest will be not possible: we get strange/inconsistent results.
-call scripts\kill_processes_in_targets.cmd %target%\release
+echo arg_build=%arg_build%
+echo arg_clippy=%arg_clippy%
+echo arg_test=%arg_test%
 
 :: Disable assert()s in C/C++ parts (e.g. wepoll-ffi), they map to _assert()/_wassert(),
 :: which is not provided by libucrt. The latter is needed for static linking.
 :: https://github.com/rust-lang/cc-rs#external-configuration-via-environment-variables
 set CFLAGS=-DNDEBUG
 
-del /Q %arte%\%exe_name% 2> nul
-
 :: 1. Clippy
-powershell Write-Host "Run Rust clippy" -Foreground White
-cargo clippy --release --target %target% 2>&1
-if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo clippy" -Foreground Red && exit /b 17
-powershell Write-Host "Checking Rust SUCCESS" -Foreground Green
+if "%arg_clippy%" == "1" (
+    powershell Write-Host "Run Rust clippy" -Foreground White
+    cargo clippy --release --target %target% 2>&1
+    if ERRORLEVEL 1 (
+        powershell Write-Host "Failed cargo clippy" -Foreground Red 
+        exit /b 17
+    )
+    powershell Write-Host "Checking Rust SUCCESS" -Foreground Green
+) else (
+    powershell Write-Host "Skip Rust clippy" -Foreground Yellow
+)
 
 :: 2. Build
-powershell Write-Host "Building Rust executables" -Foreground White
-cargo build --release --target %target% 2>&1
-if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 18
-powershell Write-Host "Building Rust SUCCESS" -Foreground Green
+if "%arg_build%" == "1" (
+    rem On windows we want to kill exe before starting rebuild. 
+    rem Use case CI starts testing, for some reasoms process hangs up longer as expected thus 
+    rem rebuild/retest will be not possible: we get strange/inconsistent results.
+    call scripts\kill_processes_in_targets.cmd %target%\release || echo: ok...
+    del /Q %arte%\%exe_name% 2> nul
+
+    powershell Write-Host "Building Rust executables" -Foreground White
+    cargo build --release --target %target% 2>&1
+    if ERRORLEVEL 1 (
+        powershell Write-Host "Failed cargo build" -Foreground Red 
+        exit /b 18
+    )
+    powershell Write-Host "Building Rust SUCCESS" -Foreground Green
+) else (
+    powershell Write-Host "Skip Rust build" -Foreground Yellow
+)
 
 :: 3. Test
 :: Validate elevation, because full testing is possible only in elevated mode!
-net session > nul 2>&1 
-IF NOT %ERRORLEVEL% EQU 0 (
-    echo You must be elevated. Exiting...
-    exit /B 21
+if "%arg_test%" == "1" (
+    net session > nul 2>&1 
+    IF ERRORLEVEL 1 (
+        echo You must be elevated. Exiting...
+        exit /B 21
+    )
+    powershell Write-Host "Testing Rust executables" -Foreground White
+    cargo test --release --target %target% -- --test-threads=4 2>&1
+    if ERRORLEVEL 1  (
+        powershell Write-Host "Failed cargo test" -Foreground Red 
+        exit /b 19
+    )
+    rem powershell Write-Host "Testing Rust SUCCESS" -Foreground Green
+) else (
+    powershell Write-Host "Skip Rust test" -Foreground Yellow
 )
-powershell Write-Host "Testing Rust executables" -Foreground White
-cargo test --release --target %target% -- --test-threads=4 2>&1
-if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 19
-powershell Write-Host "Testing Rust SUCCESS" -Foreground Green
+
 
 :: 4. [optional] Signing
-if not "%2" == "" (
-powershell Write-Host "Signing Rust executables" -Foreground White
-@call ..\wnx\sign_windows_exe c:\common\store\%1 %2 %exe%
-if not %errorlevel% == 0 powershell Write-Host "Failed signing %exe%" -Foreground Red && exit /b 20
+if not "%arg_sign%" == "" (
+    powershell Write-Host "Signing Rust executables" -Foreground White
+    @call ..\wnx\sign_windows_exe c:\common\store\%1 %arg_sign% %exe%
+    if ERRORLEVEL 1 ( 
+        powershell Write-Host "Failed signing %exe%" -Foreground Red 
+        exit /b 20
+    )
+) else (
+    powershell Write-Host "Skip Rust sign" -Foreground Yellow
 )
 
 :: 5. Storing artifacts
-powershell Write-Host "Uploading artifacts: [ %exe% ] ..." -Foreground White
-copy %exe% %arte%\%exe_name%
-powershell Write-Host "Done." -Foreground Green
-
+if "%arg_build%" == "1" (
+    powershell Write-Host "Uploading artifacts: [ %exe% ] ..." -Foreground White
+    copy %exe% %arte%\%exe_name%
+    powershell Write-Host "Done." -Foreground Green
+) else (
+    powershell Write-Host "Skip Rust upload" -Foreground Yellow
+)

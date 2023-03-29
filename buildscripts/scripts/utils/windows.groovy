@@ -43,7 +43,7 @@ def build(Map args) {
                  "cmk-agent-ctl.exe,check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"] :
             (args.TARGET == "cmk_agent_ctl_no_sign") ? [
                 "packages/cmk-agent-ctl",
-                "call cargo_build.cmd",
+                "call run.cmd --all",
                  ""] :
             (args.TARGET == "test_unit") ? [
                  "agents/wnx",

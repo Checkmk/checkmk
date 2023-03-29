@@ -11,7 +11,6 @@ __all__ = [
     "AgentTargetVersion",
     "CheckPluginNameStr",
     "ClusterMode",
-    "ConnectorObj",
     "Contact",
     "ContactgroupName",
     "ContactName",
@@ -23,10 +22,6 @@ __all__ = [
     "EventContext",
     "EventRule",
     "EVERYTHING",
-    "ExecutionStatus",
-    "ExecutionStatusAttributes",
-    "ExecutionStep",
-    "ExecutionStepAttributes",
     "ExitSpec",
     "ensure_mrpe_configs",
     "Gateways",
@@ -64,9 +59,7 @@ __all__ = [
     "NotifyRuleInfo",
     "ParametersTypeAlias",
     "ParsedSectionName",
-    "PhaseOneAttributes",
     "PhaseOneResult",
-    "PiggybackHostsConnectorAttributes",
     "PluginNotificationContext",
     "RuleSetName",
     "Seconds",
@@ -128,16 +121,7 @@ from ._misc import (  # TODO(ML): We should clean this up some day.
     TimeRange,
     Timestamp,
 )
-from .automations import (
-    ConnectorObj,
-    ExecutionStatus,
-    ExecutionStatusAttributes,
-    ExecutionStep,
-    ExecutionStepAttributes,
-    PhaseOneAttributes,
-    PhaseOneResult,
-    PiggybackHostsConnectorAttributes,
-)
+from .automations import PhaseOneResult
 from .core_config import HostsToUpdate
 from .host import HostAddress, HostAgentConnectionMode, HostgroupName, HostName, HostState
 from .ip_lookup import UpdateDNSCacheResult

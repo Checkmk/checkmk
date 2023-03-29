@@ -7,23 +7,16 @@ from collections.abc import Sequence
 from typing import Any, Literal, TypedDict
 
 __all__ = [
-    "PiggybackHostsConnectorAttributes",
-    "ExecutionStepAttributes",
-    "ExecutionStep",
-    "ExecutionStatusAttributes",
-    "ExecutionStatus",
-    "ConnectorObj",
-    "PhaseOneAttributes",
     "PhaseOneResult",
 ]
 
 
-class PiggybackHostsConnectorAttributes(TypedDict):
+class _PiggybackHostsConnectorAttributes(TypedDict):
     hosts: Sequence[str]
     tmpfs_initialization_time: int
 
 
-class ExecutionStepAttributes(TypedDict):
+class _ExecutionStepAttributes(TypedDict):
     _name: str
     _title: str
     _time_initialized: float
@@ -35,35 +28,35 @@ class ExecutionStepAttributes(TypedDict):
     message: str
 
 
-class ExecutionStep(TypedDict):
+class _ExecutionStep(TypedDict):
     class_name: Literal["ExecutionStep"]
-    attributes: ExecutionStepAttributes
+    attributes: _ExecutionStepAttributes
 
 
-class ExecutionStatusAttributes(TypedDict):
-    _steps: Sequence[ExecutionStep]
+class _ExecutionStatusAttributes(TypedDict):
+    _steps: Sequence[_ExecutionStep]
     _finished: bool
     _time_initialized: float
     _time_completed: float
 
 
-class ExecutionStatus(TypedDict):
+class _ExecutionStatus(TypedDict):
     class_name: Literal["ExecutionStatus"]
-    attributes: ExecutionStatusAttributes
+    attributes: _ExecutionStatusAttributes
 
 
-class ConnectorObj(TypedDict):
+class _ConnectorObj(TypedDict):
     # Literal["PiggybackHosts"]
     class_name: str  # TODO: replace str type with Literal
     # attributes of new connector objects should be listed here
-    attributes: PiggybackHostsConnectorAttributes | dict[str, Any]
+    attributes: _PiggybackHostsConnectorAttributes | dict[str, Any]
 
 
-class PhaseOneAttributes(TypedDict):
-    connector_object: ConnectorObj
-    status: ExecutionStatus
+class _PhaseOneAttributes(TypedDict):
+    connector_object: _ConnectorObj
+    status: _ExecutionStatus
 
 
 class PhaseOneResult(TypedDict, total=False):
     class_name: Literal["Phase1Result"]
-    attributes: PhaseOneAttributes
+    attributes: _PhaseOneAttributes

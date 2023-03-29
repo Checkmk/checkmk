@@ -29,7 +29,7 @@ struct RegisterExistingBody {
 }
 
 #[derive(Deserialize)]
-pub struct RegisterExisitingResponse {
+pub struct RegisterExistingResponse {
     pub root_cert: String,
     pub agent_cert: String,
     pub connection_mode: config::ConnectionMode,
@@ -102,7 +102,7 @@ pub trait Registration {
         uuid: &uuid::Uuid,
         csr: &str,
         host_name: &str,
-    ) -> AnyhowResult<RegisterExisitingResponse>;
+    ) -> AnyhowResult<RegisterExistingResponse>;
 
     fn register_new(
         &self,
@@ -246,7 +246,7 @@ impl Registration for Api {
         uuid: &uuid::Uuid,
         csr: &str,
         host_name: &str,
-    ) -> AnyhowResult<RegisterExisitingResponse> {
+    ) -> AnyhowResult<RegisterExistingResponse> {
         self.call_registration_init_endpoint(
             Self::endpoint_url(base_url, &["register_existing"])?,
             root_cert,
@@ -256,7 +256,7 @@ impl Registration for Api {
                 csr: csr.to_owned(),
                 host_name: String::from(host_name),
             },
-            |body| serde_json::from_str::<RegisterExisitingResponse>(body),
+            |body| serde_json::from_str::<RegisterExistingResponse>(body),
         )
     }
 

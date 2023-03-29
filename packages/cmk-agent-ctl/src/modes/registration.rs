@@ -134,8 +134,8 @@ struct RegistrationResult {
     connection_mode: config::ConnectionMode,
 }
 
-impl std::convert::From<agent_receiver_api::RegisterExisitingResponse> for RegistrationResult {
-    fn from(register_existing_response: agent_receiver_api::RegisterExisitingResponse) -> Self {
+impl std::convert::From<agent_receiver_api::RegisterExistingResponse> for RegistrationResult {
+    fn from(register_existing_response: agent_receiver_api::RegisterExistingResponse) -> Self {
         Self {
             root_cert: register_existing_response.root_cert,
             agent_cert: register_existing_response.agent_cert,
@@ -539,7 +539,7 @@ mod tests {
             _uuid: &uuid::Uuid,
             _csr: &str,
             host_name: &str,
-        ) -> AnyhowResult<agent_receiver_api::RegisterExisitingResponse> {
+        ) -> AnyhowResult<agent_receiver_api::RegisterExistingResponse> {
             assert!(matches!(
                 self.expected_registration_method.as_ref().unwrap(),
                 RegistrationMethod::Existing
@@ -547,7 +547,7 @@ mod tests {
             assert!(base_url == &expected_url());
             assert!(root_cert.is_some() == self.expect_root_cert);
             assert!(host_name == HOST_NAME);
-            Ok(agent_receiver_api::RegisterExisitingResponse {
+            Ok(agent_receiver_api::RegisterExistingResponse {
                 root_cert: String::from("root_cert"),
                 agent_cert: String::from("agent_cert"),
                 connection_mode: config::ConnectionMode::Pull,

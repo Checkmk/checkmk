@@ -1,0 +1,14 @@
+Title: aruba_aps and aruba_clients showing no performance data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679915723
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p35
+
+Check plugins aruba_aps and aruba_clients were not delivering data performance data.
+This has now been fixed by adding the `has_perfdata` argument in the check plugin registration.
+

@@ -83,7 +83,6 @@ def test_find_debug_code(changed_files: ChangedFiles, path: str) -> None:
             if os.path.relpath(file_path, cmk_path()) in exclude_files:
                 continue
 
-            LOGGER.info("Checking file %s", file_path)
             try:
                 with open(file_path) as file:
                     for nr, line in enumerate(file.readlines()):

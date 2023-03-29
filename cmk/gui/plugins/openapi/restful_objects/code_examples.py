@@ -11,7 +11,7 @@ be referenced in the result of _build_code_templates.
 import functools
 import json
 import re
-from typing import Any, NamedTuple
+from typing import Any, cast, NamedTuple, TypeAlias
 
 import black
 import jinja2
@@ -203,6 +203,7 @@ API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
 
+# Requires httpie version >= 3
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
@@ -223,9 +224,7 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
  {%- endfor %}
 {%- endif %}
 {%- if request_schema %}
- {%- for key, field in request_schema.declared_fields.items() %}
-    {{ key }}='{{ field | field_value }}' \\
- {%- endfor %}
+{{ request_schema | to_dict | httpie_request_body | indent(spaces=4) }}
 {%- endif %}
 {%- if endpoint.content_type == 'application/octet-stream' %}
     --download \\
@@ -421,6 +420,57 @@ def _transform_params(param_list):
     }
 
 
+JsonObject: TypeAlias = dict[
+    str, int | float | str | bool | dict[str, "JsonObject"] | list["JsonObject"]
+]
+
+
+def _httpie_request_body_lines(prefix: str, field: JsonObject, lines: list[str]) -> list[str]:
+    for key, example in field.items():
+        match example:
+            case bool():
+                lines.append(prefix + key + ":=" + str(example).lower())
+            case int() | float():
+                lines.append(prefix + key + ":=" + str(example))
+            case str():
+                lines.append(prefix + key + "=" + "'" + str(example) + "'")
+            case list():
+                lines.append(prefix + key + ":=" + "'" + json.dumps(example) + "'")
+            case dict():
+                nested = cast(dict, example)
+                _httpie_request_body_lines(
+                    f"{prefix}{key}", {f"[{key}]": val for key, val in nested.items()}, lines
+                )
+            case _:
+                raise ValueError(f"Value of unexpected type: {example} of type {type(example)}")
+    return lines
+
+
+def httpie_request_body(examples: JsonObject) -> str:
+    """
+
+    Args:
+        examples: a field to example dict, as created by `to_dict`
+
+    Returns:
+        a str that httpie can use as a request body specification
+
+
+    >>> httpie_request_body({"foo": "bar bar bar"})
+    "foo='bar bar bar'"
+    >>> httpie_request_body({"foo": 5})
+    'foo:=5'
+    >>> httpie_request_body({"foo": False})
+    'foo:=false'
+    >>> httpie_request_body({"foo": [1,2,3]})
+    "foo:='[1, 2, 3]'"
+    >>> httpie_request_body({"foo": {"bar": {"baz" : "buz"}}})
+    "foo[bar][baz]='buz'"
+    """
+
+    return "\\\n".join(_httpie_request_body_lines("", examples, []))
+
+
 def code_samples(  # type: ignore[no-untyped-def]
     endpoint,
     header_params,
@@ -583,6 +633,7 @@ def _jinja_environment() -> jinja2.Environment:
         to_json=json.dumps,
         to_python=format_nicely,
         repr=repr,
+        httpie_request_body=httpie_request_body,
     )
     # These objects will be available in the templates
     tmpl_env.globals.update(

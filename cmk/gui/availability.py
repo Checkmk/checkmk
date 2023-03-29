@@ -38,6 +38,7 @@ from cmk.gui.type_defs import (
     ViewProcessTracking,
     VisualContext,
 )
+from cmk.gui.utils import cmp_service_name_equiv
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors
@@ -54,7 +55,6 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.view_utils import CSSClass
-from cmk.gui.views.sorter import cmp_service_name_equiv
 
 from cmk.bi.data_fetcher import (
     BIHostSpec,

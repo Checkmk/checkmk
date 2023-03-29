@@ -24,7 +24,6 @@ from .helpers import (
     cmp_insensitive_string,
     cmp_ip_address,
     cmp_num_split,
-    cmp_service_name_equiv,
     cmp_simple_number,
     cmp_simple_string,
     cmp_string_list,
@@ -465,8 +464,8 @@ class SorterServicelevel(Sorter):
 
 
 def cmp_service_name(column, r1, r2):
-    return (cmp_service_name_equiv(r1[column]) > cmp_service_name_equiv(r2[column])) - (
-        cmp_service_name_equiv(r1[column]) < cmp_service_name_equiv(r2[column])
+    return (utils.cmp_service_name_equiv(r1[column]) > utils.cmp_service_name_equiv(r2[column])) - (
+        utils.cmp_service_name_equiv(r1[column]) < utils.cmp_service_name_equiv(r2[column])
     ) or cmp_num_split(column, r1, r2)
 
 

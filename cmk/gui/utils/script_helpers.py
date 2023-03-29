@@ -17,7 +17,7 @@ from flask import Flask
 from flask.ctx import RequestContext
 from werkzeug.test import create_environ
 
-from cmk.gui import http
+from cmk.gui.http import Response
 
 Environments = typing.Literal["production", "testing", "development"]
 
@@ -41,7 +41,7 @@ def request_context(app: Flask, environ: dict[str, Any] | None = None) -> Iterat
     with make_request_context(app, environ):
         app.preprocess_request()
         yield
-        app.process_response(http.Response())
+        app.process_response(Response())
 
 
 @contextmanager

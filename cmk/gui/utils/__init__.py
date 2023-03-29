@@ -91,3 +91,18 @@ def get_failed_plugins() -> Sequence[tuple[Path, str, str, BaseException]]:
 
 def remove_failed_plugin(entry: Path) -> None:
     _drop = _failed_plugins.pop(entry, None)
+
+
+# TODO: Find a better place without introducing any cycles.
+def cmp_service_name_equiv(r: str) -> int:
+    if r == "Check_MK":
+        return -6
+    if r == "Check_MK Agent":
+        return -5
+    if r == "Check_MK Discovery":
+        return -4
+    if r == "Check_MK inventory":
+        return -3  # FIXME: Remove old name one day
+    if r == "Check_MK HW/SW Inventory":
+        return -2
+    return 0

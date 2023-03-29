@@ -37,20 +37,6 @@ def cmp_string_list(column: ColumnName, r1: Row, r2: Row) -> int:
     return cmp_insensitive_string(v1, v2)
 
 
-def cmp_service_name_equiv(r: str) -> int:
-    if r == "Check_MK":
-        return -6
-    if r == "Check_MK Agent":
-        return -5
-    if r == "Check_MK Discovery":
-        return -4
-    if r == "Check_MK inventory":
-        return -3  # FIXME: Remove old name one day
-    if r == "Check_MK HW/SW Inventory":
-        return -2
-    return 0
-
-
 def cmp_custom_variable(r1: Row, r2: Row, key: str, cmp_func: SorterFunction) -> int:
     return (_get_custom_var(r1, key) > _get_custom_var(r2, key)) - (
         _get_custom_var(r1, key) < _get_custom_var(r2, key)

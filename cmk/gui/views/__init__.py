@@ -218,13 +218,14 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "cmp_custom_variable",
         "cmp_ip_address",
         "cmp_num_split",
-        "cmp_service_name_equiv",
         "cmp_simple_number",
         "cmp_simple_string",
         "cmp_string_list",
         "compare_ips",
     ):
         api_module.__dict__[name] = sorter.__dict__[name]
+
+    api_module.__dict__["cmp_service_name_equiv"] = utils.cmp_service_name_equiv
 
     for name in (
         "get_permitted_views",

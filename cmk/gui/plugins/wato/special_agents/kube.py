@@ -103,7 +103,7 @@ def _migrate_cce2cre(p: dict[str, object]) -> dict[str, object]:
 def _openshift() -> tuple[str, str, Dictionary]:
     return (
         "prometheus",
-        _("Use data from OpenShift"),
+        _("Use data from OpenShift (Cloud Edition)"),
         Dictionary(
             elements=[
                 (

@@ -13,7 +13,7 @@ checkname = "akcp_exp_humidity"
 info = [["Dual Humidity Port 1", "30", "7", "1"]]
 
 
-discovery = {"": [("Dual Humidity Port 1", "akcp_humidity_defaultlevels")]}
+discovery = {"": [("Dual Humidity Port 1", (30, 35, 60, 65))]}
 
 
 checks = {

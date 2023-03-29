@@ -18,7 +18,7 @@ info = [
 ]
 
 
-discovery = {"": [("p0", None), ("p1", None), ("p2", None), ("p3", None)]}
+discovery = {"": [("p0", {}), ("p1", {}), ("p2", {}), ("p3", {})]}
 
 
 checks = {

@@ -5,6 +5,8 @@
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
+f5_bigip_fans_default_levels = (2000, 500)
+
 checkname = "f5_bigip_fans"
 
 info = [
@@ -21,12 +23,12 @@ info = [
 
 discovery = {
     "": [
-        ("Chassis 1", "f5_bigip_fans_default_levels"),
-        ("Chassis 2", "f5_bigip_fans_default_levels"),
-        ("Chassis 3", "f5_bigip_fans_default_levels"),
-        ("Chassis 4", "f5_bigip_fans_default_levels"),
-        ("Chassis 5", "f5_bigip_fans_default_levels"),
-        ("Chassis 6", "f5_bigip_fans_default_levels"),
+        ("Chassis 1", f5_bigip_fans_default_levels),
+        ("Chassis 2", f5_bigip_fans_default_levels),
+        ("Chassis 3", f5_bigip_fans_default_levels),
+        ("Chassis 4", f5_bigip_fans_default_levels),
+        ("Chassis 5", f5_bigip_fans_default_levels),
+        ("Chassis 6", f5_bigip_fans_default_levels),
     ]
 }
 

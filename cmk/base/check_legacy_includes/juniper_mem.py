@@ -11,7 +11,7 @@ juniper_mem_default_levels = (80.0, 90.0)
 
 
 def inventory_juniper_mem_generic(info):
-    return [(None, "juniper_mem_default_levels")]
+    return [(None, juniper_mem_default_levels)]
 
 
 def check_juniper_mem_generic(_no_item, params, info):

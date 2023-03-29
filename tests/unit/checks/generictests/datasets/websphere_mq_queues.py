@@ -44,9 +44,9 @@ info = [
 
 discovery = {
     "": [
-        ("BRK.REPLY.CONVERTQ", "websphere_mq_queues_default_levels"),
-        ("DEAD.QUEUE.SECURITY", "websphere_mq_queues_default_levels"),
-        ("DEAD.QUEUE.SECURITY2", "websphere_mq_queues_default_levels"),
+        ("BRK.REPLY.CONVERTQ", {'message_count': (1000, 1200), 'message_count_perc': (80.0, 90.0)}),
+        ("DEAD.QUEUE.SECURITY", {'message_count': (1000, 1200), 'message_count_perc': (80.0, 90.0)}),
+        ("DEAD.QUEUE.SECURITY2", {'message_count': (1000, 1200), 'message_count_perc': (80.0, 90.0)}),
     ]
 }
 

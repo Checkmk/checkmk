@@ -17,9 +17,8 @@ def parse_liebert_bat_temp(info):
         return {}
 
 
-@discover(default_params="liebert_bat_temp_default")
-def discover_liebert_bat_temp(key, _value):
-    return key
+def discover_liebert_bat_temp(section):
+    yield from ((key, liebert_bat_temp_default) for key in section)
 
 
 @get_parsed_item_data

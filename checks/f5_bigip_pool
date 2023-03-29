@@ -48,7 +48,7 @@ def inventory_f5_bigip_pool(parsed):
     # inventorize all pools and their member count
     for item in parsed:
         if item != "":
-            yield item, "f5_bigip_pool_default_levels"
+            yield item, f5_bigip_pool_default_levels
 
 
 def f5_bigip_pool_get_down_members(down_info):

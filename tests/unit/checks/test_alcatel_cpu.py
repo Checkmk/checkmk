@@ -21,7 +21,7 @@ CHECK_NAME = "alcatel_cpu"
     [
         (
             [["doesnt matter", "doesent matter"], ["doesnt matter"]],
-            [(None, "alcatel_cpu_default_levels")],
+            [(None, (90.0, 95.0))],
         ),
     ],
 )

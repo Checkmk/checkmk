@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Submodule providing the `run` function of generictests package"""
-from ast import literal_eval
 from contextlib import contextmanager
 
 import freezegun
@@ -56,17 +55,14 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):
 def get_merged_parameters(check, provided_p):
     default_p = check.default_parameters()
 
-    if isinstance(provided_p, int):
+    if isinstance(provided_p, (int, tuple)):
         return provided_p
     if not provided_p:
         return default_p
-    if isinstance(provided_p, str):
-        if provided_p in check.context:
-            return check.context[provided_p]
 
-        evaluated_params = literal_eval(provided_p)
-        default_p.update(evaluated_params)
-        return default_p
+    # legacy, no longer supported
+    assert not isinstance(provided_p, str)
+
     if isinstance(provided_p, dict):
         default_p.update(provided_p)
         return default_p

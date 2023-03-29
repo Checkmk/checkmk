@@ -58,7 +58,7 @@ brocade_fan_default_levels = {"lower": (3000, 2800)}
 
 def inventory_brocade_fan(info):
     converted = brocade_sensor_convert(info, "FAN")
-    return [(x[0], "brocade_fan_default_levels") for x in converted]
+    return [(x[0], brocade_fan_default_levels) for x in converted]
 
 
 def check_brocade_fan(item, params, info):
@@ -112,7 +112,7 @@ factory_settings["brocade_temp_default_levels"] = {"levels": (55.0, 60.0)}
 
 def inventory_brocade_temp(info):
     converted = brocade_sensor_convert(info, "SLOT")
-    return [(x[0], "brocade_temp_default_levels") for x in converted]
+    return [(x[0], {}) for x in converted]
 
 
 def check_brocade_temp(item, params, info):

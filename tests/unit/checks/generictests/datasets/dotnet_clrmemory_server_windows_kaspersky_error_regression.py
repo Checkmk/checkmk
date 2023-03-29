@@ -5,6 +5,7 @@
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
+dotnet_clrmemory_defaultlevels = {"upper": (10.0, 15.0)}
 
 checkname = "dotnet_clrmemory"
 
@@ -256,7 +257,7 @@ info = [
     ],
 ]
 
-discovery = {"": [("_Global_", "dotnet_clrmemory_defaultlevels")]}
+discovery = {"": [("_Global_", dotnet_clrmemory_defaultlevels)]}
 
 checks = {
     "": [

@@ -32,7 +32,7 @@ def parse_tsm_scratch(info):
 
 
 def inventory_tsm_scratch(parsed):
-    return [(lib, "tsm_scratch_default_levels") for lib in parsed]
+    return [(lib, tsm_scratch_default_levels) for lib in parsed]
 
 
 def check_tsm_scratch(item, params, parsed):

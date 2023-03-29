@@ -37,13 +37,13 @@ mock_item_state = {
 
 discovery = {
     "": [
-        ("Job One", "veeam_tapejobs_default_levels"),
-        ("Job Two", "veeam_tapejobs_default_levels"),
-        ("Job Three", "veeam_tapejobs_default_levels"),
-        ("Job Four", "veeam_tapejobs_default_levels"),
-        ("Job Five (older)", "veeam_tapejobs_default_levels"),
-        ("Job Six", "veeam_tapejobs_default_levels"),
-        ("Job Seven (older)", "veeam_tapejobs_default_levels"),
+        ("Job One", (86400, 172800)),
+        ("Job Two", (86400, 172800)),
+        ("Job Three", (86400, 172800)),
+        ("Job Four", (86400, 172800)),
+        ("Job Five (older)", (86400, 172800)),
+        ("Job Six", (86400, 172800)),
+        ("Job Seven (older)", (86400, 172800)),
     ],
 }
 

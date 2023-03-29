@@ -11,7 +11,7 @@ stulz_humidity_default_levels = (35, 40, 60, 65)
 
 
 def inventory_stulz_humidity(info):
-    return [(x[0], "stulz_humidity_default_levels") for x in info]
+    return [(x[0], stulz_humidity_default_levels) for x in info]
 
 
 def check_stulz_humidity(item, params, info):

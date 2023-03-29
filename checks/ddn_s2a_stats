@@ -29,9 +29,9 @@ ddn_s2a_readhits_default_levels = (85.0, 70.0)
 
 def inventory_ddn_s2a_stats_readhits(parsed):
     if "All_ports_Read_Hits" in parsed:
-        yield "Total", "ddn_s2a_readhits_default_levels"
+        yield "Total", ddn_s2a_readhits_default_levels
     for nr, _ in enumerate(parsed.get("Read_Hits", [])):
-        yield "%d" % (nr + 1), "ddn_s2a_readhits_default_levels"
+        yield "%d" % (nr + 1), ddn_s2a_readhits_default_levels
 
 
 def check_ddn_s2a_stats_readhits(item, params, parsed):

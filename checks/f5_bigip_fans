@@ -53,7 +53,7 @@ def parse_f5_bigip_fans(info):
 
 def inventory_f5_bigip_fans(parsed):
     for item in parsed.keys():
-        yield item, "f5_bigip_fans_default_levels"
+        yield item, f5_bigip_fans_default_levels
 
 
 def check_f5_bigip_fans(item, params, parsed):

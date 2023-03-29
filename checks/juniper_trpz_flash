@@ -7,7 +7,7 @@ juniper_trpz_flash_default_levels = (90.0, 95.0)
 
 
 def inventory_juniper_trpz_flash(info):
-    return [(None, "juniper_trpz_flash_default_levels")]
+    return [(None, juniper_trpz_flash_default_levels)]
 
 
 def check_juniper_trpz_flash(_no_item, params, info):

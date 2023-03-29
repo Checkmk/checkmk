@@ -74,7 +74,7 @@ def parse_websphere_mq_queues(info):
 
 
 def inventory_websphere_mq_queues(parsed):
-    return [(queue_name, "websphere_mq_queues_default_levels") for queue_name in parsed]
+    return [(queue_name, websphere_mq_queues_default_levels) for queue_name in parsed]
 
 
 def check_websphere_mq_queues(item, params, parsed):

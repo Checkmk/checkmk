@@ -17,7 +17,7 @@ info = [
 
 discovery = {
     "": [
-        ("Battery", "liebert_bat_temp_default"),
+        ("Battery", (40, 50)),
     ],
 }
 

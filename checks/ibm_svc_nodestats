@@ -290,7 +290,7 @@ ibm_svc_cpu_default_levels = (90.0, 95.0)
 
 def inventory_ibm_svc_nodestats_cpu(info):
     return [
-        (node_name, "ibm_svc_cpu_default_levels")
+        (node_name, ibm_svc_cpu_default_levels)
         for node_name, data in parse_ibm_svc_nodestats(info).items()
         if "cpu_pc" in data
     ]

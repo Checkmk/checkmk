@@ -13,7 +13,7 @@ checkname = "juniper_trpz_flash"
 info = [["51439616", "62900224"]]
 
 
-discovery = {"": [(None, "juniper_trpz_flash_default_levels")]}
+discovery = {"": [(None, (90.0, 95.0))]}
 
 
 checks = {

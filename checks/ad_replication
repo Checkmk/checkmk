@@ -47,7 +47,7 @@ def inventory_ad_replication(info):
             source_dc = line[4]
         else:
             break  # unhandled data
-        entry = ("%s/%s" % (source_site, source_dc), "ad_replication_default_params")
+        entry = ("%s/%s" % (source_site, source_dc), ad_replication_default_params)
         if line[0] == "showrepl_INFO" and entry not in inv:
             inv.append(entry)
     return inv

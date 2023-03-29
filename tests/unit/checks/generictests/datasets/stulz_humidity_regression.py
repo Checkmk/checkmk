@@ -18,8 +18,8 @@ info = [
 
 discovery = {
     "": [
-        ("MICOS11Q", "stulz_humidity_default_levels"),
-        ("MICOS11Q", "stulz_humidity_default_levels"),
+        ("MICOS11Q", (35, 40, 60, 65)),
+        ("MICOS11Q", (35, 40, 60, 65)),
     ]
 }
 

@@ -16,7 +16,7 @@ citrix_sessions_default_levels = {
 
 
 def inventory_citrix_sessions(info):
-    return [(None, "citrix_sessions_default_levels")]
+    return [(None, citrix_sessions_default_levels)]
 
 
 def check_citrix_sessions(_no_item, params, info):

@@ -85,10 +85,10 @@ info = [
 
 discovery = {
     "": [
-        ("HAM/SADS003", "ad_replication_default_params"),
-        ("HAM/SADS008", "ad_replication_default_params"),
-        ("HAM/SADS015", "ad_replication_default_params"),
-        ("HAM/SADS055", "ad_replication_default_params"),
+        ("HAM/SADS003", (15, 20)),
+        ("HAM/SADS008", (15, 20)),
+        ("HAM/SADS015", (15, 20)),
+        ("HAM/SADS055", (15, 20)),
     ]
 }
 

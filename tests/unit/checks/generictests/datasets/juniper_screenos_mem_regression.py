@@ -13,7 +13,7 @@ checkname = "juniper_screenos_mem"
 info = [["157756272", "541531248"]]
 
 
-discovery = {"": [(None, "juniper_mem_default_levels")]}
+discovery = {"": [(None, (80.0, 90.0))]}
 
 
 checks = {

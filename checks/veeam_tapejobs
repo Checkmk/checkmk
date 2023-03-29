@@ -29,7 +29,7 @@ def parse_veeam_tapejobs(info):
 
 def inventory_veeam_tapejobs(parsed):
     for job in parsed:
-        yield job, "veeam_tapejobs_default_levels"
+        yield job, veeam_tapejobs_default_levels
 
 
 @get_parsed_item_data

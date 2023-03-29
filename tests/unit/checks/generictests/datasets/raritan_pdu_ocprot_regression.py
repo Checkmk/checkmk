@@ -5,6 +5,7 @@
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
+raritan_pdu_ocprot_current_default_levels = (14.0, 15.0)
 
 checkname = "raritan_pdu_ocprot"
 
@@ -28,12 +29,12 @@ info = [
 
 discovery = {
     "": [
-        ("C1", "raritan_pdu_ocprot_current_default_levels"),
-        ("C2", "raritan_pdu_ocprot_current_default_levels"),
-        ("C3", "raritan_pdu_ocprot_current_default_levels"),
-        ("C4", "raritan_pdu_ocprot_current_default_levels"),
-        ("C5", "raritan_pdu_ocprot_current_default_levels"),
-        ("C6", "raritan_pdu_ocprot_current_default_levels"),
+        ("C1", raritan_pdu_ocprot_current_default_levels),
+        ("C2", raritan_pdu_ocprot_current_default_levels),
+        ("C3", raritan_pdu_ocprot_current_default_levels),
+        ("C4", raritan_pdu_ocprot_current_default_levels),
+        ("C5", raritan_pdu_ocprot_current_default_levels),
+        ("C6", raritan_pdu_ocprot_current_default_levels),
     ]
 }
 

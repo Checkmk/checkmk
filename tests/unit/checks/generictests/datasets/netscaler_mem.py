@@ -10,7 +10,7 @@ checkname = "netscaler_mem"
 
 info = [["4.2", "23"]]
 
-discovery = {"": [(None, "netscaler_mem_default_levels")]}
+discovery = {"": [(None, (80.0, 90.0))]}
 
 checks = {
     "": [

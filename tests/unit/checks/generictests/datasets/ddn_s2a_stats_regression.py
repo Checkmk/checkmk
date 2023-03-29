@@ -23,15 +23,18 @@ info = [
 ]
 
 
+ddn_s2a_readhits_default_levels = (85.0, 70.0)
+
+
 discovery = {
     "": [("1", {}), ("2", {}), ("3", {}), ("4", {}), ("Total", {})],
     "io": [("1", {}), ("2", {}), ("3", {}), ("4", {}), ("Total", {})],
     "readhits": [
-        ("1", "ddn_s2a_readhits_default_levels"),
-        ("2", "ddn_s2a_readhits_default_levels"),
-        ("3", "ddn_s2a_readhits_default_levels"),
-        ("4", "ddn_s2a_readhits_default_levels"),
-        ("Total", "ddn_s2a_readhits_default_levels"),
+        ("1", ddn_s2a_readhits_default_levels),
+        ("2", ddn_s2a_readhits_default_levels),
+        ("3", ddn_s2a_readhits_default_levels),
+        ("4", ddn_s2a_readhits_default_levels),
+        ("Total", ddn_s2a_readhits_default_levels),
     ],
 }
 

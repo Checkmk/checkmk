@@ -50,6 +50,10 @@ def parse_raritan_pdu_ocprot(info):
     return parsed
 
 
+def discover_raritan_pdu_ocprot(section):
+    yield from ((item, raritan_pdu_ocprot_current_default_levels) for item in section)
+
+
 @get_parsed_item_data
 def check_raritan_pdu_ocprot(item, params, data):
     states = {
@@ -66,9 +70,7 @@ def check_raritan_pdu_ocprot(item, params, data):
 
 check_info["raritan_pdu_ocprot"] = {
     "parse_function": parse_raritan_pdu_ocprot,
-    "inventory_function": discover(
-        lambda key, value: True, default_params="raritan_pdu_ocprot_current_default_levels"
-    ),
+    "inventory_function": discover_raritan_pdu_ocprot,
     "check_function": check_raritan_pdu_ocprot,
     "service_description": "Overcurrent Protector %s",
     "group": "ocprot_current",

@@ -11,11 +11,11 @@ info = [["1", "30"], ["2", "32"], ["3", "36"], ["4", "41"], ["5", "41"]]
 
 discovery = {
     "": [
-        ("1", "f5_bigip_chassis_temp_default_params"),
-        ("2", "f5_bigip_chassis_temp_default_params"),
-        ("3", "f5_bigip_chassis_temp_default_params"),
-        ("4", "f5_bigip_chassis_temp_default_params"),
-        ("5", "f5_bigip_chassis_temp_default_params"),
+        ("1", (35, 40)),
+        ("2", (35, 40)),
+        ("3", (35, 40)),
+        ("4", (35, 40)),
+        ("5", (35, 40)),
     ]
 }
 

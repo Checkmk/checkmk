@@ -20,8 +20,8 @@ info = [
 
 discovery = {
     "": [
-        ("Any.Lib2", "tsm_scratch_default_levels"),
-        ("Baz123 / Any.Lib1", "tsm_scratch_default_levels"),
+        ("Any.Lib2", (5, 7)),
+        ("Baz123 / Any.Lib1", (5, 7)),
     ]
 }
 

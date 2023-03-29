@@ -9,6 +9,6 @@ checkname = "f5_bigip_cpu_temp"
 
 info = [["1", "40"]]
 
-discovery = {"": [("1", "f5_bigip_cpu_temp_default_params")]}
+discovery = {"": [("1", (60, 80))]}
 
 checks = {"": [("1", (60, 80), [(0, "40 °C", [("temp", 40, 60.0, 80.0, None, None)])])]}

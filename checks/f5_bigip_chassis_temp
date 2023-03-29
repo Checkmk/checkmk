@@ -16,7 +16,7 @@ f5_bigip_chassis_temp_default_params = (35, 40)
 
 def inventory_f5_bigip_chassis_temp(info):
     for line in info:
-        yield line[0], "f5_bigip_chassis_temp_default_params"
+        yield line[0], f5_bigip_chassis_temp_default_params
 
 
 def check_f5_bigip_chassis_temp(item, params, info):

@@ -106,7 +106,7 @@ def inventory_fc_port(info):
             continue
 
         item = fc_port_getitem(len(info), index, portname)
-        yield item, "fc_port_default_levels"
+        yield item, {}
 
 
 def check_fc_port(item, params, info):  # pylint: disable=too-many-branches

@@ -28,10 +28,10 @@ info = [
 
 discovery = {
     "": [
-        ("/Common/ad_hubservice-pool", "f5_bigip_pool_default_levels"),
-        ("/Common/ad_testch-pool", "f5_bigip_pool_default_levels"),
-        ("/Common/ldap_testch-pool", "f5_bigip_pool_default_levels"),
-        ("/Common/ldap_testhk-pool", "f5_bigip_pool_default_levels"),
+        ("/Common/ad_hubservice-pool", (2, 1)),
+        ("/Common/ad_testch-pool", (2, 1)),
+        ("/Common/ldap_testch-pool", (2, 1)),
+        ("/Common/ldap_testhk-pool", (2, 1)),
     ]
 }
 

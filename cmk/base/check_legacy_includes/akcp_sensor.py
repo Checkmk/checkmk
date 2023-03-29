@@ -62,7 +62,7 @@ akcp_humidity_defaultlevels = (30, 35, 60, 65)
 def inventory_akcp_humidity(info):
     for description, _percent, _status, online in info:
         if online == "1":
-            yield description, "akcp_humidity_defaultlevels"
+            yield description, akcp_humidity_defaultlevels
 
 
 def check_akcp_humidity(item, params, info):

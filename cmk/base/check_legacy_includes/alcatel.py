@@ -37,8 +37,8 @@ def alcatel_new_networking_products_scan_function(oid):
     )  # MIB object "alcatelENT1BaseMIB"
 
 
-def inventory_alcatel_cpu(info) -> DiscoveryResult:  # type: ignore[no-untyped-def]
-    return [(None, "alcatel_cpu_default_levels")]
+def inventory_alcatel_cpu(info):
+    yield None, alcatel_cpu_default_levels
 
 
 def check_alcatel_cpu(_no_item, params, info):

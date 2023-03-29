@@ -5029,15 +5029,15 @@ info = [
 
 discovery = {
     "": [
-        ("01", "fc_port_default_levels"),
-        ("02", "fc_port_default_levels"),
-        ("03", "fc_port_default_levels"),
-        ("04", "fc_port_default_levels"),
-        ("05", "fc_port_default_levels"),
-        ("06", "fc_port_default_levels"),
-        ("07", "fc_port_default_levels"),
-        ("17", "fc_port_default_levels"),
-        ("18", "fc_port_default_levels"),
+        ("01", {}),
+        ("02", {}),
+        ("03", {}),
+        ("04", {}),
+        ("05", {}),
+        ("06", {}),
+        ("07", {}),
+        ("17", {}),
+        ("18", {}),
     ],
 }
 

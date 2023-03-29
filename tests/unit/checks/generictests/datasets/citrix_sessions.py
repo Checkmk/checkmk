@@ -13,7 +13,12 @@ checkname = "citrix_sessions"
 info = [["sessions", "1"], ["active_sessions", "1"], ["inactive_sessions", "0"]]
 
 
-discovery = {"": [(None, "citrix_sessions_default_levels")]}
+discovery = {
+    "": [
+        (None, {"total": (60, 65), "active": (60, 65), "inactive": (10, 15), }),
+    ],
+}
+
 
 
 checks = {

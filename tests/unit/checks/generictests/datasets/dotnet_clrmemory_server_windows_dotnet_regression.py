@@ -921,7 +921,7 @@ info = [
     ],
 ]
 
-discovery = {"": [("_Global_", "dotnet_clrmemory_defaultlevels")]}
+discovery = {"": [("_Global_", {'upper': (10.0, 15.0)})]}
 
 checks = {
     "": [

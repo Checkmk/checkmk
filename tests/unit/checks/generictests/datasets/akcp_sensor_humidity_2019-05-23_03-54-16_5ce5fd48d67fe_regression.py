@@ -13,7 +13,7 @@ checkname = "akcp_sensor_humidity"
 info = [["Humidity1 Description", "", "7", "1"], ["Humidity2 Description", "", "0", "2"]]
 
 
-discovery = {"": [("Humidity1 Description", "akcp_humidity_defaultlevels")]}
+discovery = {"": [("Humidity1 Description", (30, 35, 60, 65))]}
 
 
 checks = {"": [("Humidity1 Description", (30, 35, 60, 65), [(2, "State: sensor error", [])])]}

@@ -13,7 +13,7 @@ checkname = "websphere_mq_queues"
 info = [["0", "ABC-123-DEF"], ["TEST-FOO", "RUNNING"]]
 
 
-discovery = {"": [("ABC-123-DEF", "websphere_mq_queues_default_levels")]}
+discovery = {"": [("ABC-123-DEF", {'message_count': (1000, 1200), 'message_count_perc': (80.0, 90.0)})]}
 
 
 checks = {

@@ -10,7 +10,7 @@ checkname = "fortigate_memory"
 
 info = [["42"]]
 
-discovery = {"": [(None, "fortigate_memory_default_levels")]}
+discovery = {"": [(None, (70, 80))]}
 
 checks = {
     "": [

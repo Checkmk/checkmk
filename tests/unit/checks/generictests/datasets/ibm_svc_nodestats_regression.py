@@ -5,6 +5,7 @@
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
+ibm_svc_cpu_default_levels = (90.0, 95.0)
 
 
 checkname = "ibm_svc_nodestats"
@@ -60,8 +61,8 @@ info = [
 discovery = {
     "cache": [("BLUBBSVC01", None)],
     "cpu_util": [
-        ("BLUBBSVC01", "ibm_svc_cpu_default_levels"),
-        ("BLUBBSVC02", "ibm_svc_cpu_default_levels"),
+        ("BLUBBSVC01", ibm_svc_cpu_default_levels),
+        ("BLUBBSVC02", ibm_svc_cpu_default_levels),
     ],
     "disk_latency": [
         ("Drives BLUBBSVC01", None),

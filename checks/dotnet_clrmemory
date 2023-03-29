@@ -23,7 +23,7 @@ def check_dotnet_clrmemory(item, params, parsed):
 check_info["dotnet_clrmemory"] = {
     "parse_function": parse_wmi_table,
     "inventory_function": lambda parsed: inventory_wmi_table_instances(
-        parsed, filt=wmi_filter_global_only, levels="dotnet_clrmemory_defaultlevels"
+        parsed, filt=wmi_filter_global_only, levels=dotnet_clrmemory_defaultlevels
     ),
     "check_function": check_dotnet_clrmemory,
     "service_description": "DotNet Memory Management %s",

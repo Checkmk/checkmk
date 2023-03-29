@@ -12,6 +12,7 @@ interface Dashlet {
     w: number;
     h: number;
 }
+
 /*
  * information about DashboardProperties type
  * we got the data from cmk/gui/dashboard.py
@@ -53,6 +54,7 @@ interface Thresholds {
     height: number;
     width: number;
 }
+
 var reload_on_resize = {};
 export var dashboard_properties = {} as DashboardPropertiesGlobal;
 
@@ -255,29 +257,35 @@ function align_to_grid(px) {
     );
 }
 
-function vec(x, y) {
-    this.x = x || 0;
-    this.y = y || 0;
-}
+class Vec {
+    x: number;
+    y: number;
 
-vec.prototype = {
-    divide: function (s) {
-        return new vec(~~(this.x / s), ~~(this.y / s));
-    },
-    add: function (v) {
-        return new vec(this.x + v.x, this.y + v.y);
-    },
-    make_absolute: function (size_v) {
-        return new vec(
+    constructor(x: number | null, y: number | null) {
+        this.x = x || 0;
+        this.y = y || 0;
+    }
+
+    divide(s: number) {
+        return new Vec(~~(this.x / s), ~~(this.y / s));
+    }
+
+    add(v: Vec) {
+        return new Vec(this.x + v.x, this.y + v.y);
+    }
+
+    make_absolute(size_v: Vec) {
+        return new Vec(
             this.x < 0 ? this.x + size_v.x + 1 : this.x - 1,
             this.y < 0 ? this.y + size_v.y + 1 : this.y - 1
         );
-    },
+    }
+
     // Compute the initial size of the dashlet. If dashboard_properties.MAX is used,
     // then the dashlet consumes all space in its growing direction,
     // regardless of any other dashlets.
-    initial_size: function (pos_v, grid_v) {
-        return new vec(
+    initial_size(pos_v: Vec, grid_v: Vec) {
+        return new Vec(
             this.x == dashboard_properties.MAX
                 ? grid_v.x - Math.abs(pos_v.x) + 1
                 : this.x == dashboard_properties.GROW
@@ -289,24 +297,26 @@ vec.prototype = {
                 ? dashboard_properties.dashlet_min_size[1]
                 : this.y
         );
-    },
+    }
+
     // return codes:
     //  0: absolute size, no growth
     //  1: grow direction right, down
     // -1: grow direction left, up
-    compute_grow_by: function (size_v) {
-        return new vec(
+    compute_grow_by(size_v: Vec) {
+        return new Vec(
             size_v.x != dashboard_properties.GROW ? 0 : this.x < 0 ? -1 : 1,
             size_v.y != dashboard_properties.GROW ? 0 : this.y < 0 ? -1 : 1
         );
-    },
-    toString: function () {
+    }
+
+    toString() {
         return this.x + "/" + this.y;
-    },
-};
+    }
+}
 
 function calculate_dashlets() {
-    var screen_size = new vec(g_dashboard_width, g_dashboard_height);
+    var screen_size = new Vec(g_dashboard_width, g_dashboard_height);
     var raster_size = screen_size.divide(dashboard_properties.grid_size);
     var used_matrix = {};
     var positions: number[][] = [];
@@ -319,13 +329,13 @@ function calculate_dashlets() {
         // Relative position is as noted in the declaration. 1,1 => top left origin,
         // -1,-1 => bottom right origin, 0 is not allowed here
         // starting from 1, negative means: from right/bottom
-        var rel_position = new vec(dashlet.x, dashlet.y);
+        var rel_position = new Vec(dashlet.x, dashlet.y);
 
         // Compute the absolute position, this time from 0 to raster_size-1
         var abs_position = rel_position.make_absolute(raster_size);
 
         // The size in raster-elements. A 0 for a dimension means growth. No negative values here.
-        var size = new vec(dashlet.w, dashlet.h);
+        var size = new Vec(dashlet.w, dashlet.h);
 
         // Compute the minimum used size for the dashlet. For growth-dimensions we start with 1
         var used_size = size.initial_size(rel_position, raster_size);
@@ -886,7 +896,7 @@ function calculate_relative_dashlet_coords(
         align_to_grid(dashlet_obj?.clientHeight) /
         dashboard_properties.grid_size;
 
-    var screen_size = new vec(g_dashboard_width, g_dashboard_height);
+    var screen_size = new Vec(g_dashboard_width, g_dashboard_height);
     var raster_size = screen_size.divide(dashboard_properties.grid_size);
 
     // Update fixed sizes in coord structure

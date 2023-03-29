@@ -669,13 +669,14 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring> &params) {
     auto proc_id = cma::tools::RunStdCommand(command_to_run, true);
     ModifyStdio(true);
 
+    XLOG::d("Start Agent Updater process '{}' \n",
+            wtools::ToUtf8(command_to_run));
     if (proc_id > 0) {
         XLOG::l.i("Agent Updater process [{}] started\n", proc_id);
         return 0;
     }
 
-    XLOG::l("Agent Updater process '{}' failed to start\n",
-            wtools::ToUtf8(command_to_run));
+    XLOG::l("Agent Updater process failed to start\n");
     return 1;
 }
 

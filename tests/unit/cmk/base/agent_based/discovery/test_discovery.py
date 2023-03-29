@@ -1539,6 +1539,7 @@ def test__discover_host_labels_and_services_on_realhost(
             host_name=scenario.hostname,
             discovered_host_labels=discover_host_labels(
                 scenario.hostname,
+                scenario.config_cache,
                 HostLabelPluginMapper(),
                 providers=scenario.providers,
                 on_error=OnError.RAISE,
@@ -1575,6 +1576,7 @@ def test__perform_host_label_discovery_on_realhost(
         host_name=scenario.hostname,
         discovered_host_labels=discover_host_labels(
             scenario.hostname,
+            scenario.config_cache,
             HostLabelPluginMapper(),
             providers=scenario.providers,
             on_error=OnError.RAISE,
@@ -1618,6 +1620,7 @@ def test__discover_services_on_cluster(
             scenario.parent,
             discovered_host_labels=discover_cluster_labels(
                 nodes,
+                scenario.config_cache,
                 HostLabelPluginMapper(),
                 providers=scenario.providers,
                 load_labels=discovery_test_case.load_labels,
@@ -1658,6 +1661,7 @@ def test__perform_host_label_discovery_on_cluster(
         scenario.parent,
         discovered_host_labels=discover_cluster_labels(
             nodes,
+            scenario.config_cache,
             HostLabelPluginMapper(),
             providers=scenario.providers,
             load_labels=discovery_test_case.load_labels,

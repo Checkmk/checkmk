@@ -292,7 +292,7 @@ def _discover_plugins_services(
     if not kwargs:
         return
 
-    disco_params = config.get_discovery_parameters(host_key.hostname, plugin)
+    disco_params = config.get_discovery_parameters(host_key.hostname, config_cache, plugin)
     if disco_params is not None:
         kwargs = {**kwargs, "params": disco_params}
 

@@ -15,6 +15,7 @@ from cmk.checkers import HostKey, PHostLabelDiscoveryPlugin, SourceType
 from cmk.checkers.sectionparser import Provider, ResolvedResult
 
 import cmk.base.config as config
+from cmk.base.config import ConfigCache
 
 from .utils import QualifiedDiscovery
 
@@ -29,6 +30,7 @@ __all__ = [
 
 def discover_cluster_labels(
     nodes: Sequence[HostName],
+    config_cache: ConfigCache,
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     *,
     providers: Mapping[HostKey, Provider],
@@ -41,7 +43,7 @@ def discover_cluster_labels(
         node_labels = QualifiedDiscovery[HostLabel](
             preexisting=do_load_labels(node) if load_labels else (),
             current=discover_host_labels(
-                node, host_label_plugins, providers=providers, on_error=on_error
+                node, config_cache, host_label_plugins, providers=providers, on_error=on_error
             ),
             key=lambda hl: hl.label,
         )
@@ -122,6 +124,7 @@ def do_save_labels(host_name: HostName, host_labels: QualifiedDiscovery[HostLabe
 
 def discover_host_labels(
     host_name: HostName,
+    config_cache: ConfigCache,
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     *,
     providers: Mapping[HostKey, Provider],
@@ -131,12 +134,14 @@ def discover_host_labels(
     labels_by_name = {
         **_discover_host_labels_for_source_type(
             host_label_plugins,
+            config_cache,
             host_key=HostKey(host_name, SourceType.HOST),
             providers=providers,
             on_error=on_error,
         ),
         **_discover_host_labels_for_source_type(
             host_label_plugins,
+            config_cache,
             host_key=HostKey(host_name, SourceType.MANAGEMENT),
             providers=providers,
             on_error=on_error,
@@ -168,6 +173,7 @@ def _all_parsing_results(
 
 def _discover_host_labels_for_source_type(
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
+    config_cache: ConfigCache,
     *,
     host_key: HostKey,
     providers: Mapping[HostKey, Provider],
@@ -187,6 +193,7 @@ def _discover_host_labels_for_source_type(
             host_label_plugin = host_label_plugins[section_name]
             host_label_params = config.get_host_label_parameters(
                 host_key.hostname,
+                config_cache,
                 host_label_plugin,
             )
             if host_label_params is not None:

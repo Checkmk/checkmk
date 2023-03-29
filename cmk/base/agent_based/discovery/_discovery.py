@@ -75,6 +75,7 @@ def execute_check_discovery(
         host_name,
         discovered_host_labels=discover_host_labels(
             host_name,
+            config_cache,
             host_label_plugins,
             providers=providers,
             on_error=OnError.RAISE,

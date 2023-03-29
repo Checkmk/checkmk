@@ -1967,8 +1967,9 @@ def _extract_check_plugins(
 
 
 def _get_plugin_parameters(
-    *,
     host_name: HostName,
+    config_cache: ConfigCache,
+    *,
     default_parameters: ParametersTypeAlias | None,
     ruleset_name: RuleSetName | None,
     ruleset_type: Literal["all", "merged"],
@@ -1982,7 +1983,6 @@ def _get_plugin_parameters(
         # Not very sensical for discovery functions, but not forbidden by the API either.
         return Parameters(default_parameters)
 
-    config_cache = get_config_cache()
     rules = rules_getter_function(ruleset_name)
 
     if ruleset_type == "all":
@@ -2004,10 +2004,12 @@ def _get_plugin_parameters(
 
 def get_discovery_parameters(
     host_name: HostName,
+    config_cache: ConfigCache,
     plugin: PDiscoveryPlugin,
 ) -> None | Parameters | list[Parameters]:
     return _get_plugin_parameters(
-        host_name=host_name,
+        host_name,
+        config_cache,
         default_parameters=plugin.discovery_default_parameters,
         ruleset_name=plugin.discovery_ruleset_name,
         ruleset_type=plugin.discovery_ruleset_type,
@@ -2017,10 +2019,12 @@ def get_discovery_parameters(
 
 def get_host_label_parameters(
     host_name: HostName,
+    config_cache: ConfigCache,
     host_label_plugin: PHostLabelDiscoveryPlugin,
 ) -> None | Parameters | list[Parameters]:
     return _get_plugin_parameters(
-        host_name=host_name,
+        host_name,
+        config_cache,
         default_parameters=host_label_plugin.host_label_default_parameters,
         ruleset_name=host_label_plugin.host_label_ruleset_name,
         ruleset_type=host_label_plugin.host_label_ruleset_type,

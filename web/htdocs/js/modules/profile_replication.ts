@@ -4,26 +4,45 @@
 
 import * as utils from "utils";
 import * as ajax from "ajax";
+import {CMKAjaxReponse} from "types";
+
+type ReplicationImage =
+    | "repl_success"
+    | "repl_failed"
+    | "repl_75"
+    | "repl_50"
+    | "repl_25"
+    | "repl_pending";
 
 let g_num_replsites = 0;
 let g_back_url = "";
-const profile_replication_progress = {};
+const profile_replication_progress: Record<string, number> = {};
 
-export function prepare(num, back_url) {
+export function prepare(num: number, back_url: string) {
     g_num_replsites = num;
     g_back_url = back_url;
 }
 
-export function start(siteid, est, progress_text) {
+export function start(siteid: string, est: number, progress_text: string) {
     ajax.call_ajax("wato_ajax_profile_repl.py", {
-        response_handler: function (handler_data, response_json) {
-            const response = JSON.parse(response_json);
+        response_handler: function (
+            handler_data: {site_id: string},
+            response_json: string
+        ) {
+            const response: CMKAjaxReponse<string> = JSON.parse(response_json);
+
             const success = response.result_code === 0;
             const msg = response.result;
 
             set_result(handler_data["site_id"], success, msg);
         },
-        error_handler: function (handler_data, status_code, error_msg) {
+        error_handler: function (
+            handler_data: {
+                site_id: string;
+            },
+            status_code: number,
+            error_msg: string
+        ) {
             set_result(
                 handler_data["site_id"],
                 false,
@@ -51,7 +70,7 @@ export function start(siteid, est, progress_text) {
     setTimeout(step, est / 20, siteid, est, progress_text);
 }
 
-function set_status(siteid, image, text) {
+function set_status(siteid: string, image: ReplicationImage, text: string) {
     const icon = document
         .getElementById("site-" + siteid)!
         .getElementsByClassName("repl_status")[0];
@@ -59,11 +78,11 @@ function set_status(siteid, image, text) {
     icon.className = "icon repl_status " + image;
 }
 
-export function step(siteid, est, progress_text) {
+export function step(siteid: string, est: number, progress_text: string) {
     if (profile_replication_progress[siteid] > 0) {
         profile_replication_progress[siteid]--;
         const perc = ((20.0 - profile_replication_progress[siteid]) * 100) / 20;
-        let img;
+        let img: ReplicationImage;
         if (perc >= 75) img = "repl_75";
         else if (perc >= 50) img = "repl_50";
         else if (perc >= 25) img = "repl_25";
@@ -73,7 +92,7 @@ export function step(siteid, est, progress_text) {
     }
 }
 
-function set_result(site_id, success, msg) {
+function set_result(site_id: string, success: boolean, msg: string) {
     profile_replication_progress[site_id] = 0;
 
     const icon_name = success ? "repl_success" : "repl_failed";

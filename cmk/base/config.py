@@ -92,7 +92,6 @@ from cmk.utils.type_defs import (
     HWSWInventoryParameters,
     IPMICredentials,
     Item,
-    RuleSetName,
     Seconds,
     SectionName,
     ServicegroupName,
@@ -121,14 +120,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers import (
-    AgentParser,
-    PCheckPlugin,
-    PDiscoveryPlugin,
-    PHostLabelDiscoveryPlugin,
-    PInventoryPlugin,
-    SourceType,
-)
+from cmk.checkers import AgentParser, PCheckPlugin, PDiscoveryPlugin, PInventoryPlugin, SourceType
 from cmk.checkers.check_table import (
     ConfiguredService,
     FilterMode,
@@ -149,7 +141,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_snmp_section_plugin_from_legacy,
 )
 from cmk.base.api.agent_based.register.utils_legacy import CheckInfoElement
-from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias, SNMPSectionPlugin
+from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
 
@@ -1964,72 +1956,6 @@ def _extract_check_plugins(
 #   +----------------------------------------------------------------------+
 #   | Misc check related helper functions                                  |
 #   '----------------------------------------------------------------------'
-
-
-def _get_plugin_parameters(
-    host_name: HostName,
-    config_cache: ConfigCache,
-    *,
-    default_parameters: ParametersTypeAlias | None,
-    ruleset_name: RuleSetName | None,
-    ruleset_type: Literal["all", "merged"],
-    rules_getter_function: Callable[[RuleSetName], Sequence[RuleSpec]],
-) -> None | Parameters | list[Parameters]:
-    if default_parameters is None:
-        # This means the function will not accept any params.
-        return None
-    if ruleset_name is None:
-        # This means we have default params, but no rule set.
-        # Not very sensical for discovery functions, but not forbidden by the API either.
-        return Parameters(default_parameters)
-
-    rules = rules_getter_function(ruleset_name)
-
-    if ruleset_type == "all":
-        host_rules = config_cache.host_extra_conf(host_name, rules)
-        host_rules.append(default_parameters)
-        return [Parameters(d) for d in host_rules]
-
-    if ruleset_type == "merged":
-        return Parameters(
-            {
-                **default_parameters,
-                **config_cache.host_extra_conf_merged(host_name, rules),
-            }
-        )
-
-    # validation should have prevented this
-    raise NotImplementedError(f"unknown discovery rule set type {ruleset_type!r}")
-
-
-def get_discovery_parameters(
-    host_name: HostName,
-    config_cache: ConfigCache,
-    plugin: PDiscoveryPlugin,
-) -> None | Parameters | list[Parameters]:
-    return _get_plugin_parameters(
-        host_name,
-        config_cache,
-        default_parameters=plugin.discovery_default_parameters,
-        ruleset_name=plugin.discovery_ruleset_name,
-        ruleset_type=plugin.discovery_ruleset_type,
-        rules_getter_function=agent_based_register.get_discovery_ruleset,
-    )
-
-
-def get_host_label_parameters(
-    host_name: HostName,
-    config_cache: ConfigCache,
-    host_label_plugin: PHostLabelDiscoveryPlugin,
-) -> None | Parameters | list[Parameters]:
-    return _get_plugin_parameters(
-        host_name,
-        config_cache,
-        default_parameters=host_label_plugin.host_label_default_parameters,
-        ruleset_name=host_label_plugin.host_label_ruleset_name,
-        ruleset_type=host_label_plugin.host_label_ruleset_type,
-        rules_getter_function=agent_based_register.get_host_label_ruleset,
-    )
 
 
 def compute_check_parameters(

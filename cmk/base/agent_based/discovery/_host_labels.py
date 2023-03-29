@@ -14,9 +14,9 @@ from cmk.utils.type_defs import HostName, SectionName
 from cmk.checkers import HostKey, PHostLabelDiscoveryPlugin, SourceType
 from cmk.checkers.sectionparser import Provider, ResolvedResult
 
-import cmk.base.config as config
 from cmk.base.config import ConfigCache
 
+from ._parameters import get_host_label_parameters
 from .utils import QualifiedDiscovery
 
 __all__ = [
@@ -191,7 +191,7 @@ def _discover_host_labels_for_source_type(
             kwargs = {"section": section_data}
 
             host_label_plugin = host_label_plugins[section_name]
-            host_label_params = config.get_host_label_parameters(
+            host_label_params = get_host_label_parameters(
                 host_key.hostname,
                 config_cache,
                 host_label_plugin,

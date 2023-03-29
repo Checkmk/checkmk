@@ -18,9 +18,9 @@ from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 from cmk.checkers.sectionparser import Provider
 from cmk.checkers.sectionparserutils import get_section_kwargs
 
-import cmk.base.config as config
 from cmk.base.config import ConfigCache
 
+from ._parameters import get_discovery_parameters
 from .utils import QualifiedDiscovery
 
 
@@ -292,7 +292,7 @@ def _discover_plugins_services(
     if not kwargs:
         return
 
-    disco_params = config.get_discovery_parameters(host_key.hostname, config_cache, plugin)
+    disco_params = get_discovery_parameters(host_key.hostname, config_cache, plugin)
     if disco_params is not None:
         kwargs = {**kwargs, "params": disco_params}
 

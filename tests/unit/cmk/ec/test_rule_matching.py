@@ -20,7 +20,7 @@ from cmk.ec.rule_matcher import (
 
 
 @pytest.mark.parametrize(
-    "message,result,match_message,cancel_message,match_groups,cancel_groups",
+    "message,result,match_message,cancel_message,match_result,cancel_groups",
     [
         # No pattern, match
         ("bla CRIT", MatchSuccess(cancelling=False, match_groups={}), "", None, (), None),
@@ -120,7 +120,7 @@ def test_match_message(
     result: MatchResult,
     match_message: str,
     cancel_message: str | None,
-    match_groups: TextMatchResult,
+    match_result: TextMatchResult,
     cancel_groups: bool | None,
 ) -> None:
     m = RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
@@ -133,14 +133,14 @@ def test_match_message(
 
     event: Event = {"text": message}
 
-    matched_groups: MatchGroups = {}
-    assert m.event_rule_matches_message(rule, event, matched_groups) == result
-    assert matched_groups["match_groups_message"] == match_groups
+    match_groups: MatchGroups = {}
+    assert m.event_rule_matches_message(rule, event, match_groups) == result
+    assert match_groups["match_groups_message"] == match_result
 
     if cancel_message is not None:
-        assert matched_groups["match_groups_message_ok"] == cancel_groups
+        assert match_groups["match_groups_message_ok"] == cancel_groups
     else:
-        assert "match_groups_message_ok" not in matched_groups
+        assert "match_groups_message_ok" not in match_groups
 
 
 @pytest.mark.parametrize(

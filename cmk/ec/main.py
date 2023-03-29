@@ -1513,7 +1513,7 @@ class EventServer(ECServerThread):
             return self._rule_matcher.event_rule_matches(rule, event)
 
     def rewrite_event(  # pylint: disable=too-many-branches
-        self, rule: Rule, event: Event, groups: MatchGroups, set_first: bool = True
+        self, rule: Rule, event: Event, match_groups: MatchGroups, set_first: bool = True
     ) -> None:
         """Rewrite texts and compute other fields in the event."""
         if rule["state"] == -1:
@@ -1544,18 +1544,20 @@ class EventServer(ECServerThread):
             event["first"] = event["time"]
         event["last"] = event["time"]
         if "set_comment" in rule:
-            event["comment"] = replace_groups(rule["set_comment"], event["text"], groups)
+            event["comment"] = replace_groups(rule["set_comment"], event["text"], match_groups)
         if "set_text" in rule:
-            event["text"] = replace_groups(rule["set_text"], event["text"], groups)
+            event["text"] = replace_groups(rule["set_text"], event["text"], match_groups)
         if "set_host" in rule:
             event["orig_host"] = event["host"]
-            event["host"] = replace_groups(rule["set_host"], event["host"], groups)
+            event["host"] = replace_groups(rule["set_host"], event["host"], match_groups)
         if "set_application" in rule:
             event["application"] = replace_groups(
-                rule["set_application"], event["application"], groups
+                rule["set_application"], event["application"], match_groups
             )
         if "set_contact" in rule and "contact" not in event:
-            event["contact"] = replace_groups(rule["set_contact"], event.get("contact", ""), groups)
+            event["contact"] = replace_groups(
+                rule["set_contact"], event.get("contact", ""), match_groups
+            )
 
     def do_translate_hostname(self, event: Event) -> None:
         try:

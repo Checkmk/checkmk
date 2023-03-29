@@ -287,8 +287,8 @@ def replace_groups(text: str, origtext: str, match_groups: MatchGroups) -> str:
     text = text.replace("\\0", origtext)
 
     # Generic replacement with \1, \2, ...
-    match_groups_message = match_groups.get("match_groups_message")
-    if isinstance(match_groups_message, tuple):
+    match_groups_message = match_groups.get("match_groups_message", False)
+    if match_groups_message is not False:
         for nr, g in enumerate(match_groups_message):
             text = text.replace(f"\\{nr + 1}", g)
 

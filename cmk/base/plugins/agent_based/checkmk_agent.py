@@ -82,6 +82,7 @@ def _check_cmk_agent_installation(
     yield from _check_python_plugins(
         agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
     )
+    yield from _check_encryption_panic(agent_info.get("encryptionpanic"))
 
 
 def _check_version(
@@ -173,6 +174,16 @@ def _check_python_plugins(
             state=State.WARN,
             summary=f"Failed to execute python plugins: {agent_failed_plugins}"
             + (f" ({agent_fail_reason})" if agent_fail_reason else ""),
+        )
+
+
+def _check_encryption_panic(
+    panic: Optional[str],
+) -> CheckResult:
+    if panic:
+        yield Result(
+            state=State.CRIT,
+            summary="Failed to apply symmetric encryption, aborting communication.",
         )
 
 

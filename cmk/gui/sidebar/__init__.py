@@ -598,12 +598,7 @@ def _render_header_icon() -> None:
     if theme.has_custom_logo("navbar_logo"):
         html.img(theme.detect_icon_path(icon_name="navbar_logo", prefix=""), class_="custom")
     else:
-        html.img(
-            theme.detect_icon_path(
-                icon_name="icon" + ("_min" if user.get_attribute("nav_hide_icons_title") else ""),
-                prefix="tribe29_",
-            )
-        )
+        html.icon("checkmk_logo" + ("_min" if user.get_attribute("nav_hide_icons_title") else ""))
 
 
 @cmk.gui.pages.register("side")

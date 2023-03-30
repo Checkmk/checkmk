@@ -39,7 +39,7 @@ def discovery(section: PodConditions) -> DiscoveryResult:
     yield Service()
 
 
-LOGICAL_ORDER = ["scheduled", "initialized", "containersready", "ready"]
+LOGICAL_ORDER = ["scheduled", "hasnetwork", "initialized", "containersready", "ready"]
 
 
 def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:
@@ -105,6 +105,7 @@ register.check_plugin(
     check_function=check,
     check_default_parameters={
         "scheduled": "no_levels",
+        "hasnetwork": "no_levels",
         "initialized": "no_levels",
         "containersready": "no_levels",
         "ready": "no_levels",

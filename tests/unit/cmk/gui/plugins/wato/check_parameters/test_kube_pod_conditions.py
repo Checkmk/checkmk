@@ -10,7 +10,7 @@ import pytest
 from cmk.gui.plugins.wato.check_parameters import kube_pod_conditions
 from cmk.gui.valuespec import Dictionary
 
-SECTION_ELEMENTS = "initialized", "scheduled", "containersready", "ready"
+SECTION_ELEMENTS = "initialized", "hasnetwork", "scheduled", "containersready", "ready"
 
 
 def test_parameter_valuespec_returns_a_dictionary() -> None:

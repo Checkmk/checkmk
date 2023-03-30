@@ -279,6 +279,7 @@ class PodConditions(Section):
     """section: kube_pod_conditions_v1"""
 
     initialized: PodCondition | None
+    hasnetwork: PodCondition | None = None
     scheduled: PodCondition
     containersready: PodCondition | None
     ready: PodCondition | None

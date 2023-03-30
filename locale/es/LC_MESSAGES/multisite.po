@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-07-11 17:06+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
+"PO-Revision-Date: 2023-03-30 06:00+0000\n"
+"Last-Translator: Christopher Gyllen <christopher.gyllen@gmail.com>\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/"
 "software/es/>\n"
 "Language: es\n"
@@ -84,6 +84,9 @@ msgid ""
 " <b>Note</b>: To restrict this rule to hosts created via <a href=\"%s\">auto-"
 "registration</a>, use the host label <tt>cmk/agent_auto_registered:yes</tt>."
 msgstr ""
+" <b>Nota</b>:  Para restringir esta regla a los hosts creados mediante <a "
+"href=\"%s\"> registro automático</a>, utilice la etiqueta de host <tt> cmk/"
+"agent_auto_registered:yes</tt>."
 
 msgid " Activate this option"
 msgstr " Activar esta opción"
@@ -155,7 +158,7 @@ msgstr " para el host %s"
 
 #, python-format
 msgid " for the following %d Event Console  %s"
-msgstr " del siguiente %d consola de eventos %s"
+msgstr " para el siguiente %d Evento de Consola %s"
 
 #, python-format
 msgid " in %d days"
@@ -341,7 +344,7 @@ msgstr "%d Cambio de estado caotico desde %s hasta %s (%s)"
 
 #, python-format
 msgid "%d check plugins using the deprecated API: %s"
-msgstr ""
+msgstr "%d verifique los complementos usando la API obsoleta: %s"
 
 #, python-format
 msgid "%d columns"
@@ -385,7 +388,7 @@ msgstr "%d se han ignorado los plugins de inventario HW/SW encontrados: %s"
 
 #, python-format
 msgid "%d incompatible Werks have been acknowledged."
-msgstr "Se han reconocido %d Werks incompatibles."
+msgstr "Se reconocieron %d trabajos incompatibles."
 
 #, python-format
 msgid "%d links"
@@ -413,7 +416,7 @@ msgstr ""
 
 #, python-format
 msgid "%d open incompatible werks"
-msgstr "%d abrir obras incompatibles"
+msgstr "%d trabajos incompatibles abiertos"
 
 #, python-format
 msgid "%d rows"
@@ -531,9 +534,9 @@ msgstr "%s para %d hosts iniciados (%s)..."
 msgid "%s for all hosts started..."
 msgstr "%s para todos los hosts iniciados..."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s instances"
-msgstr "Instancias de la BD"
+msgstr "%s Instancias de la BD"
 
 #, python-format
 msgid "%s is not a valid UNIX timestamp"
@@ -1307,16 +1310,16 @@ msgid "<b>disable notifications</b> for"
 msgstr "<b>deshabilitar notificaciones</b> para"
 
 msgid "<b>disable passive checks</b> for"
-msgstr "<b>desactivar las comprobaciones pasivas</b> para"
+msgstr "<b>deshabilitar comprobaciones pasivas</b> para"
 
 msgid "<b>enable active checks</b> for"
-msgstr "<b>habilitar las comprobaciones activas</b> para"
+msgstr "<b>habilitar comprobaciones activas</b> para"
 
 msgid "<b>enable notifications</b> for"
 msgstr "<b>habilitar notificaciones</b> para"
 
 msgid "<b>enable passive checks</b> for"
-msgstr "<b>habilitar las comprobaciones pasivas</b> para"
+msgstr "<b>habilitar comprobaciones pasivas</b> para"
 
 #, python-format
 msgid "<b>manually set check results to %s</b> for"
@@ -1928,6 +1931,10 @@ msgid ""
 "Deployment may present different conditions. You can set a time for how long "
 "a condition is allowed to be in a certain state before the check alerts."
 msgstr ""
+"Una implementación entra en varios estados durante su ciclo de vida. "
+"Dependiendo de esto un Despliegue puede presentar diferentes condiciones. "
+"Puede establecer un tiempo durante el cual se permite que una condición esté "
+"en un estado determinado antes de que se activen las alertas de verificación."
 
 msgid "A Multisite view"
 msgstr "Una vista multisitio"
@@ -1937,6 +1944,10 @@ msgid ""
 "or has not yet passed. You can set a time for how long a condition is "
 "allowed to be in a failed state before the check alerts."
 msgstr ""
+"El estado de un Pod depende de una serie de condiciones por las que el Pod "
+"ha pasado o aún no. Puede establecer un tiempo durante el cual se permite "
+"que una condición esté en un estado fallido antes de que se activen las "
+"alertas de verificación."
 
 msgid ""
 "A cache age limit on plugins and local checks. If set, the output of plugins "
@@ -2341,9 +2352,8 @@ msgstr "Certificados ACME"
 msgid "ACTIVE"
 msgstr "ACTIVO"
 
-#, fuzzy
 msgid "AD Connect Sync"
-msgstr "Conexiones DB"
+msgstr "Sincronizar la conexión AD"
 
 msgid "AES-128"
 msgstr "AES-128"
@@ -2427,9 +2437,8 @@ msgstr "Clave/token de la API"
 msgid "API server connection"
 msgstr "Conexión al servidor API"
 
-#, fuzzy
 msgid "APPEND"
-msgstr "PEND"
+msgstr "ADJUNTAR"
 
 msgid "APT Updates"
 msgstr "Actualizaciones de APT"
@@ -2481,9 +2490,8 @@ msgstr "Etiquetas AWS"
 msgid "AWS/CE Costs and Usage"
 msgstr "Costes y uso de AWS/CE"
 
-#, fuzzy
 msgid "AWS/CloudFront"
-msgstr "CloudFront"
+msgstr "AWS/CloudFront"
 
 msgid "AWS/CloudWatch Alarms Limits"
 msgstr "Límites de las alarmas de AWS/CloudWatch"
@@ -2509,9 +2517,8 @@ msgstr "Créditos de la CPU de AWS/EC2"
 msgid "AWS/EC2 Limits"
 msgstr "Límites AWS/EC2"
 
-#, fuzzy
 msgid "AWS/ECS Limits"
-msgstr "Límites de AWS/EBS"
+msgstr "Límites de AWS/ECS"
 
 msgid "AWS/ELB Backend Connection Errors"
 msgstr "Errores de conexión del backend de AWS/ELB"
@@ -2548,9 +2555,8 @@ msgstr "Límites de AWS/Glaciar"
 msgid "AWS/ElastiCache Connections"
 msgstr "Límites de AWS/Glaciar"
 
-#, fuzzy
 msgid "AWS/ElastiCache Limits"
-msgstr "Límites de AWS/Glaciar"
+msgstr "Límites de AWS/ElastiCache"
 
 #, fuzzy
 msgid "AWS/ElastiCache Memory"
@@ -2565,17 +2571,14 @@ msgstr "Objetos de AWS/Glacier Vault"
 msgid "AWS/Glacier Vaults"
 msgstr "Bóvedas AWS/Glaciar"
 
-#, fuzzy
 msgid "AWS/Lambda Concurrency"
-msgstr "Rendimiento"
+msgstr "Simultaneidad AWS/Lambda"
 
-#, fuzzy
 msgid "AWS/Lambda Memory"
-msgstr "Rendimiento"
+msgstr "AWS/Lambda Memoria"
 
-#, fuzzy
 msgid "AWS/Lambda Performance"
-msgstr "Rendimiento"
+msgstr "Rendimiento de AWS/Lambda"
 
 msgid "AWS/RDS CPU Credits"
 msgstr "Créditos de CPU de AWS/RDS"
@@ -2592,9 +2595,8 @@ msgstr "Límites de AWS/RDS"
 msgid "AWS/RDS Replica lag"
 msgstr "Retraso en la réplica de AWS/RDS"
 
-#, fuzzy
 msgid "AWS/Route53"
-msgstr "Ruta53"
+msgstr "AWS/Route53"
 
 msgid "AWS/S3 Bucket Objects"
 msgstr "Objetos de cubo de AWS/S3"
@@ -2618,9 +2620,8 @@ msgstr "Límites de AWS/S3"
 msgid "AWS/SNS"
 msgstr "Límites de AWS/S3"
 
-#, fuzzy
 msgid "AWS/SNS Limits"
-msgstr "Límites de AWS/S3"
+msgstr "AWS/SNS Limites"
 
 msgid "AWS/WAFV2 Limits"
 msgstr "Límites AWS/WAFV2"
@@ -2710,9 +2711,8 @@ msgstr "Niveles absolutos de espacio temporal libre"
 msgid "Absolute levels for input traffic"
 msgstr "Niveles absolutos de tráfico de entrada"
 
-#, fuzzy
 msgid "Absolute levels for logged-in users"
-msgstr "Niveles absolutos para %s utilizados"
+msgstr "Niveles absolutos para usuarios registrados"
 
 msgid "Absolute levels for memory reclaimed by GC"
 msgstr "Niveles absolutos de memoria recuperada por GC"
@@ -2757,19 +2757,17 @@ msgstr "Niveles absolutos de arrendamientos usados"
 msgid "Absolute value"
 msgstr "Valor absoluto"
 
-#, fuzzy
 msgid "Accept TLS encrypted connections only"
-msgstr "Conexiones aceptadas"
+msgstr "Aceptar solo conexiones encriptadas TLS"
 
 msgid "Accept all"
 msgstr "Aceptar todo"
 
 msgid "Accept all incoming data, including unencrypted"
-msgstr ""
+msgstr "Aceptar todos los datos entrantes, incluidos los no cifrados"
 
-#, fuzzy
 msgid "Accept all types of encryption"
-msgstr "Codificación del estado"
+msgstr "Aceptar todo tipo de encriptación"
 
 msgid "Accept any SSH Host Key"
 msgstr "Aceptar cualquier clave de host SSH"
@@ -3197,13 +3195,11 @@ msgstr "Conexiones activas"
 msgid "Active guest memory"
 msgstr "Memoria de invitados activa"
 
-#, fuzzy
 msgid "Active in time period"
-msgstr "Activo en el periodo de tiempo"
+msgstr "Activ@ en el período de tiempo"
 
-#, fuzzy
 msgid "Active jobs"
-msgstr "Anfitriones activos"
+msgstr "Trabajos activos"
 
 msgid "Active modems"
 msgstr "Módems activos"
@@ -28560,7 +28556,7 @@ msgid "License state"
 msgstr "Estado de la licencia"
 
 #, fuzzy
-msgid "License state \"Free\""
+msgid "License state: Free"
 msgstr "Estado de la licencia"
 
 msgid "License usage"
@@ -44059,6 +44055,10 @@ msgstr "Claves de firma para los agentes firmantes"
 
 msgid "Signature keys the agent will accept"
 msgstr "Claves de firma que el agente aceptará"
+
+#, fuzzy
+msgid "Signature verification failed"
+msgstr "Notificación al usuario"
 
 msgid ""
 "Signatures are required for cryptographically signing your agents. That "

@@ -28540,7 +28540,7 @@ msgid "License state"
 msgstr "Estado da licença"
 
 #, fuzzy
-msgid "License state \"Free\""
+msgid "License state: Free"
 msgstr "Estado da licença"
 
 msgid "License usage"
@@ -44085,6 +44085,10 @@ msgstr "Chaves de assinatura para agentes signatários"
 
 msgid "Signature keys the agent will accept"
 msgstr "Chaves de assinatura que o agente irá aceitar"
+
+#, fuzzy
+msgid "Signature verification failed"
+msgstr "Notificação do usuário"
 
 msgid ""
 "Signatures are required for cryptographically signing your agents. That "

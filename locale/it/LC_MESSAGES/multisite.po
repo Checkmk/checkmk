@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-07-11 17:00+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
+"PO-Revision-Date: 2023-03-30 06:00+0000\n"
+"Last-Translator: Gianluca Ulivi <gianlu9858@gmail.com>\n"
 "Language-Team: Italian <https://translate.checkmk.com/projects/checkmk/"
 "software/it/>\n"
 "Language: it\n"
@@ -5090,9 +5090,9 @@ msgstr ""
 "Aggiungi sempre questi gruppi come <b>contatti</b> a tutti i servizi <b>in "
 "tutte le sottocartelle di questa cartella</b>"
 
-#, fuzzy
 msgid "Always allow to use unencrypted (legacy) communication as fallback"
-msgstr "Crittografare la comunicazione"
+msgstr ""
+"Permetti sempre di usare la comunicazione non criptata (legacy) come scorta"
 
 msgid "Always assume host to be up"
 msgstr "Presumere sempre che l'host sia attivo"
@@ -28774,7 +28774,7 @@ msgid "License state"
 msgstr "Stato della licenza"
 
 #, fuzzy
-msgid "License state \"Free\""
+msgid "License state: Free"
 msgstr "Stato della licenza"
 
 msgid "License usage"
@@ -44415,6 +44415,10 @@ msgstr "Chiavi di firma per agenti di firma"
 
 msgid "Signature keys the agent will accept"
 msgstr "Chiavi di firma che l'agente accetterà"
+
+#, fuzzy
+msgid "Signature verification failed"
+msgstr "Notifica dell'utente"
 
 msgid ""
 "Signatures are required for cryptographically signing your agents. That "

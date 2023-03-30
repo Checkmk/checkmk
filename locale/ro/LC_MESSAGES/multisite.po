@@ -26920,7 +26920,7 @@ msgid "License state"
 msgstr "Stare adiministrativă"
 
 #, fuzzy
-msgid "License state \"Free\""
+msgid "License state: Free"
 msgstr "Stare adiministrativă"
 
 #, fuzzy
@@ -42470,6 +42470,10 @@ msgstr "Acces la Agenți"
 
 msgid "Signature keys the agent will accept"
 msgstr ""
+
+#, fuzzy
+msgid "Signature verification failed"
+msgstr "trimite notificare"
 
 msgid ""
 "Signatures are required for cryptographically signing your agents. That "

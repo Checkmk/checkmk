@@ -10,7 +10,6 @@ from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.licensing.registry import is_free, is_trial
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -352,7 +351,7 @@ class Rulespec(abc.ABC):
         plain_title = self._title() if self._title else self.valuespec.title()
         if self._is_deprecated:
             return "%s: %s" % (_("Deprecated"), plain_title)
-        if self._is_cloud_edition_only and (is_trial() or is_free()):
+        if self._is_cloud_edition_only:
             return f"{plain_title} (Cloud Edition)"
         return plain_title
 

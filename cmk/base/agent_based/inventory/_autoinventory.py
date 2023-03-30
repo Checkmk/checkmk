@@ -17,7 +17,7 @@ from cmk.checkers import (
     SummarizerFunction,
 )
 
-import cmk.base.config as config
+from cmk.base.config import ConfigCache
 
 from ._active import execute_active_check_inventory
 
@@ -25,7 +25,7 @@ __all__ = ["inventorize_marked_hosts"]
 
 
 def inventorize_marked_hosts(
-    config_cache: config.ConfigCache,
+    config_cache: ConfigCache,
     autoinventory_queue: AutoQueue,
     *,
     parser: ParserFunction,

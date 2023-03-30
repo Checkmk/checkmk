@@ -104,9 +104,6 @@ def del_auth_cookie() -> None:
 # - It calls connection.is_locked() but we don't
 
 
-# Ignored because mypy doesn't recognize AuthType as a type. It's a Literal[...]
-
-
 @page_registry.register_page("login")
 class LoginPage(Page):
     def __init__(self) -> None:

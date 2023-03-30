@@ -48,7 +48,7 @@ def check_auth() -> tuple[UserId, AuthType]:
         #       The most specific to succeed will be used in the end.
         (_check_auth_by_custom_http_header, "http_header"),
         (_check_auth_by_remote_user, "web_server"),
-        (_check_auth_by_basic_header, "web_server"),
+        (_check_auth_by_basic_header, "basic_auth"),
         (_check_auth_by_cookie, "cookie"),
         # After cookie, so users can experiment with differing users in the REST API, without
         # having to log out.

@@ -7,10 +7,11 @@ from . import livestatus
 from ._discovery import execute_check_discovery
 from .autodiscovery import automation_discovery, discover_marked_hosts, get_host_services
 from .commandline import commandline_discovery
-from .preview import get_check_preview, SourcesFailedError
+from .preview import CheckPreview, get_check_preview, SourcesFailedError
 from .utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = [
+    "CheckPreview",
     "DiscoveryMode",
     "QualifiedDiscovery",
     "automation_discovery",

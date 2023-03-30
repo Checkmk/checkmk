@@ -55,7 +55,6 @@ from cmk.automations.results import (
     ActiveCheckResult,
     AnalyseHostResult,
     AnalyseServiceResult,
-    CheckPreviewEntry,
     CreateDiagnosticsDumpResult,
     DeleteHostsKnownRemoteResult,
     DeleteHostsResult,
@@ -292,11 +291,11 @@ def _get_discovery_preview(
         log.setup_console_logging()
 
         try:
-            check_preview_table, host_label_result = _execute_discovery(
-                host_name, perform_scan, on_error
-            )
+            check_preview = _execute_discovery(host_name, perform_scan, on_error)
         except discovery.SourcesFailedError:
-            check_preview_table, host_label_result = [], discovery.QualifiedDiscovery.empty()
+            check_preview = discovery.CheckPreview(
+                table=[], labels=discovery.QualifiedDiscovery.empty()
+            )
 
         def make_discovered_host_labels(
             labels: Sequence[HostLabel],
@@ -307,20 +306,20 @@ def _get_discovery_preview(
         changed_labels = make_discovered_host_labels(
             [
                 l
-                for l in host_label_result.vanished
-                if l.name in make_discovered_host_labels(host_label_result.new)
+                for l in check_preview.labels.vanished
+                if l.name in make_discovered_host_labels(check_preview.labels.new)
             ]
         )
 
         return ServiceDiscoveryPreviewResult(
             output=buf.getvalue(),
-            check_table=check_preview_table,
-            host_labels=make_discovered_host_labels(host_label_result.present),
+            check_table=check_preview.table,
+            host_labels=make_discovered_host_labels(check_preview.labels.present),
             new_labels=make_discovered_host_labels(
-                [l for l in host_label_result.new if l.name not in changed_labels]
+                [l for l in check_preview.labels.new if l.name not in changed_labels]
             ),
             vanished_labels=make_discovered_host_labels(
-                [l for l in host_label_result.vanished if l.name not in changed_labels]
+                [l for l in check_preview.labels.vanished if l.name not in changed_labels]
             ),
             changed_labels=changed_labels,
         )
@@ -330,7 +329,7 @@ def _execute_discovery(
     host_name: HostName,
     perform_scan: bool,
     on_error: OnError,
-) -> tuple[Sequence[CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]]:
+) -> discovery.CheckPreview:
     file_cache_options = FileCacheOptions(
         use_outdated=not perform_scan, use_only_cache=not perform_scan
     )

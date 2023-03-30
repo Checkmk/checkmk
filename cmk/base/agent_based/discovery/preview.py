@@ -5,6 +5,7 @@
 
 import itertools
 from collections.abc import Callable, Container, Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any, Literal
 
 import cmk.utils.cleanup
@@ -57,6 +58,12 @@ class SourcesFailedError(RuntimeError):
     ...
 
 
+@dataclass(frozen=True)
+class CheckPreview:
+    table: Sequence[CheckPreviewEntry]
+    labels: QualifiedDiscovery[HostLabel]
+
+
 def get_check_preview(
     host_name: HostName,
     *,
@@ -71,7 +78,7 @@ def get_check_preview(
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     ignored_services: Container[ServiceName],
     on_error: OnError,
-) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
+) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
     ip_address = (
@@ -85,8 +92,8 @@ def get_check_preview(
     host_attrs = config_cache.get_host_attributes(host_name)
 
     fetched = fetcher(host_name, ip_address=ip_address)
-    host_sections = parser((f[0], f[1]) for f in fetched)
-    if failed_sources_results := list(failure_summarizer(host_sections)):
+    parsed = parser((f[0], f[1]) for f in fetched)
+    if failed_sources_results := list(failure_summarizer(parsed)):
         raise SourcesFailedError("\n".join(r.summary for r in failed_sources_results))
 
     host_sections_no_error = filter_out_errors(parser((f[0], f[1]) for f in fetched))
@@ -162,19 +169,22 @@ def get_check_preview(
             for _ruleset_name, service in config_cache.enforced_services_table(host_name).values()
         ]
 
-    return [
-        *passive_rows,
-        *_active_check_preview_rows(
-            host_name,
-            config_cache.alias(host_name),
-            config_cache.active_checks(host_name),
-            ignored_services,
-            host_attrs,
-        ),
-        *_custom_check_preview_rows(
-            host_name, config_cache.custom_checks(host_name), ignored_services
-        ),
-    ], host_labels
+    return CheckPreview(
+        table=[
+            *passive_rows,
+            *_active_check_preview_rows(
+                host_name,
+                config_cache.alias(host_name),
+                config_cache.active_checks(host_name),
+                ignored_services,
+                host_attrs,
+            ),
+            *_custom_check_preview_rows(
+                host_name, config_cache.custom_checks(host_name), ignored_services
+            ),
+        ],
+        labels=host_labels,
+    )
 
 
 def _check_preview_table_row(

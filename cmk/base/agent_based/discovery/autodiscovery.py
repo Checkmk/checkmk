@@ -6,7 +6,6 @@
 
 import time
 from collections.abc import Callable, Iterable, Mapping
-from pathlib import Path
 from typing import Literal, TypeVar, Union
 
 from typing_extensions import assert_never
@@ -16,7 +15,6 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
-from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.labels import HostLabel
 from cmk.utils.log import console
@@ -48,11 +46,9 @@ from cmk.checkers.sectionparser import (
     store_piggybacked_sections,
 )
 
-import cmk.base.config as config
 import cmk.base.core
 from cmk.base.agent_based.confcheckers import ConfiguredSummarizer
 from cmk.base.config import ConfigCache
-from cmk.base.core_config import MonitoringCore
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
@@ -343,7 +339,6 @@ def _make_diff(
 
 
 def discover_marked_hosts(
-    core: MonitoringCore,
     autodiscovery_queue: AutoQueue,
     *,
     config_cache: ConfigCache,
@@ -355,7 +350,7 @@ def discover_marked_hosts(
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     schedule_discovery_check: Callable[[HostName], object],
     on_error: OnError,
-) -> None:
+) -> bool:
     """Autodiscovery"""
     autodiscovery_queue.cleanup(
         valid_hosts=config_cache.all_configured_hosts(),
@@ -364,11 +359,10 @@ def discover_marked_hosts(
 
     if (oldest_queued := autodiscovery_queue.oldest()) is None:
         console.verbose("Autodiscovery: No hosts marked by discovery check\n")
-        return
+        return False
+
     console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:\n")
-
     process_hosts = EVERYTHING if (up_hosts := get_up_hosts()) is None else up_hosts
-
     activation_required = False
     rediscovery_reference_time = time.time()
 
@@ -399,34 +393,7 @@ def discover_marked_hosts(
                 on_error=on_error,
             )
 
-    if not activation_required:
-        return
-
-    console.verbose("\nRestarting monitoring core with updated configuration...\n")
-    with config.set_use_core_config(
-        autochecks_dir=Path(cmk.utils.paths.base_autochecks_dir),
-        discovered_host_labels_dir=cmk.utils.paths.base_discovered_host_labels_dir,
-    ):
-        try:
-            _config_cache.clear_all()
-            config_cache.initialize()
-
-            # reset these to their original value to create a correct config
-            if config.monitoring_core == "cmc":
-                cmk.base.core.do_reload(
-                    core,
-                    locking_mode=config.restart_locking,
-                    duplicates=config.duplicate_hosts(),
-                )
-            else:
-                cmk.base.core.do_restart(
-                    core,
-                    locking_mode=config.restart_locking,
-                    duplicates=config.duplicate_hosts(),
-                )
-        finally:
-            _config_cache.clear_all()
-            config_cache.initialize()
+    return activation_required
 
 
 def _discover_marked_host(

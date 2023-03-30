@@ -20,6 +20,7 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 from cmk.utils.auto_queue import AutoQueue
+from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
@@ -1522,8 +1523,7 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         # make sure we may use the file the active discovery check left behind:
         max_cachefile_age=config.max_cachefile_age(discovery=600),
     )
-    discovery.discover_marked_hosts(
-        create_core(config.monitoring_core),
+    activation_required = discovery.discover_marked_hosts(
         queue,
         config_cache=config_cache,
         parser=parser,
@@ -1535,6 +1535,35 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         schedule_discovery_check=schedule_discovery_check,
         on_error=OnError.IGNORE,
     )
+    if not activation_required:
+        return
+
+    console.verbose("\nRestarting monitoring core with updated configuration...\n")
+    core = create_core(config.monitoring_core)
+    with config.set_use_core_config(
+        autochecks_dir=Path(cmk.utils.paths.base_autochecks_dir),
+        discovered_host_labels_dir=cmk.utils.paths.base_discovered_host_labels_dir,
+    ):
+        try:
+            _config_cache.clear_all()
+            config_cache.initialize()
+
+            # reset these to their original value to create a correct config
+            if config.monitoring_core == "cmc":
+                cmk.base.core.do_reload(
+                    core,
+                    locking_mode=config.restart_locking,
+                    duplicates=config.duplicate_hosts(),
+                )
+            else:
+                cmk.base.core.do_restart(
+                    core,
+                    locking_mode=config.restart_locking,
+                    duplicates=config.duplicate_hosts(),
+                )
+        finally:
+            _config_cache.clear_all()
+            config_cache.initialize()
 
 
 modes.register(

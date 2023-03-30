@@ -1204,7 +1204,7 @@ def test_updater_merge_tables_outdated(
         (3, 3),
     ],
 )
-def test_check_inventory_tree(
+def test_inventorize_host(
     monkeypatch: pytest.MonkeyPatch,
     failed_state: int | None,
     expected: int,
@@ -1233,13 +1233,12 @@ def test_check_inventory_tree(
         keep_outdated=True,
         logger=logging.getLogger("tests"),
     )
-    check_result = _inventory.check_inventory_tree(
+    check_result = _inventory.inventorize_host(
         hostname,
-        config_cache=config_cache,
         fetcher=fetcher,
         parser=parser,
         summarizer=lambda *args, **kwargs: [],
-        inventory_parameters=config_cache.inventory_parameters,
+        inventory_parameters=lambda *args, **kw: {},
         section_plugins=SectionPluginMapper(),
         inventory_plugins={},
         run_plugin_names=EVERYTHING,
@@ -1254,20 +1253,15 @@ def test_check_inventory_tree(
     assert "Did not update the tree due to at least one error" in check_result.summary
 
 
-def test_check_inventory_tree_no_data_or_files(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_inventorize_host_with_no_data_nor_files() -> None:
     hostname = HostName("my-host")
-    config_cache = Scenario().apply(monkeypatch)
-
-    check_result = _inventory.check_inventory_tree(
+    check_result = _inventory.inventorize_host(
         hostname,
-        config_cache=config_cache,
         # no data!
         fetcher=lambda *args, **kwargs: [],
         parser=lambda *args, **kwargs: [],
         summarizer=lambda *args, **kwargs: [],
-        inventory_parameters=config_cache.inventory_parameters,
+        inventory_parameters=lambda *args, **kw: {},
         section_plugins={},
         inventory_plugins={},
         run_plugin_names=EVERYTHING,

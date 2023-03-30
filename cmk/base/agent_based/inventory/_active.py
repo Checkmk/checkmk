@@ -34,7 +34,7 @@ from cmk.checkers.checkresults import ActiveCheckResult
 
 from cmk.base.config import ConfigCache
 
-from ._inventory import check_inventory_tree
+from ._inventory import inventorize_cluster, inventorize_host
 
 __all__ = ["execute_active_check_inventory"]
 
@@ -58,20 +58,26 @@ def execute_active_check_inventory(
     )
     old_tree = tree_or_archive_store.load_previous(host_name=host_name)
 
-    result = check_inventory_tree(
-        host_name,
-        fetcher=fetcher,
-        parser=parser,
-        summarizer=summarizer,
-        config_cache=config_cache,
-        inventory_parameters=inventory_parameters,
-        section_plugins=section_plugins,
-        inventory_plugins=inventory_plugins,
-        run_plugin_names=EVERYTHING,
-        parameters=parameters,
-        raw_intervals_from_config=raw_intervals_from_config,
-        old_tree=old_tree,
-    )
+    if config_cache.is_cluster(host_name):
+        result = inventorize_cluster(
+            config_cache.nodes_of(host_name) or (),
+            parameters=parameters,
+            old_tree=old_tree,
+        )
+    else:
+        result = inventorize_host(
+            host_name,
+            fetcher=fetcher,
+            parser=parser,
+            summarizer=summarizer,
+            inventory_parameters=inventory_parameters,
+            section_plugins=section_plugins,
+            inventory_plugins=inventory_plugins,
+            run_plugin_names=EVERYTHING,
+            parameters=parameters,
+            raw_intervals_from_config=raw_intervals_from_config,
+            old_tree=old_tree,
+        )
 
     if result.no_data_or_files:
         AutoQueue(cmk.utils.paths.autoinventory_dir).add(host_name)

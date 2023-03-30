@@ -30,7 +30,7 @@ from cmk.checkers import (
 
 from cmk.base.config import ConfigCache
 
-from ._inventory import check_inventory_tree
+from ._inventory import inventorize_cluster, inventorize_host
 
 __all__ = ["commandline_inventory"]
 
@@ -90,20 +90,26 @@ def _commandline_inventory_on_host(
 
     old_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, host_name))
 
-    check_result = check_inventory_tree(
-        host_name,
-        config_cache=config_cache,
-        fetcher=fetcher,
-        parser=parser,
-        summarizer=summarizer,
-        inventory_parameters=inventory_parameters,
-        section_plugins=section_plugins,
-        inventory_plugins=inventory_plugins,
-        run_plugin_names=run_plugin_names,
-        parameters=parameters,
-        raw_intervals_from_config=raw_intervals_from_config,
-        old_tree=old_tree,
-    ).check_result
+    if config_cache.is_cluster(host_name):
+        check_result = inventorize_cluster(
+            config_cache.nodes_of(host_name) or (),
+            parameters=parameters,
+            old_tree=old_tree,
+        ).check_result
+    else:
+        check_result = inventorize_host(
+            host_name,
+            fetcher=fetcher,
+            parser=parser,
+            summarizer=summarizer,
+            inventory_parameters=inventory_parameters,
+            section_plugins=section_plugins,
+            inventory_plugins=inventory_plugins,
+            run_plugin_names=run_plugin_names,
+            parameters=parameters,
+            raw_intervals_from_config=raw_intervals_from_config,
+            old_tree=old_tree,
+        ).check_result
 
     if check_result.state:
         section.section_error(check_result.summary)

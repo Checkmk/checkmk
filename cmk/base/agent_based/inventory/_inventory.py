@@ -63,11 +63,10 @@ from cmk.checkers.sectionparser import (
 )
 from cmk.checkers.sectionparserutils import check_parsing_errors, get_cache_info, get_section_kwargs
 
-from cmk.base.config import ConfigCache
-
 __all__ = [
+    "inventorize_cluster",
+    "inventorize_host",
     "inventorize_status_data_of_real_host",
-    "check_inventory_tree",
 ]
 
 
@@ -80,10 +79,9 @@ class CheckInventoryTreeResult:
     update_result: UpdateResult
 
 
-def check_inventory_tree(
+def inventorize_host(
     host_name: HostName,
     *,
-    config_cache: ConfigCache,
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
@@ -95,23 +93,6 @@ def check_inventory_tree(
     raw_intervals_from_config: RawIntervalsFromConfig,
     old_tree: StructuredDataNode,
 ) -> CheckInventoryTreeResult:
-    if config_cache.is_cluster(host_name):
-        inventory_tree = _inventorize_cluster(nodes=config_cache.nodes_of(host_name) or [])
-        return CheckInventoryTreeResult(
-            processing_failed=False,
-            no_data_or_files=False,
-            check_result=ActiveCheckResult.from_subresults(
-                *_check_trees(
-                    parameters=parameters,
-                    inventory_tree=inventory_tree,
-                    status_data_tree=StructuredDataNode(),
-                    old_tree=old_tree,
-                ),
-            ),
-            inventory_tree=inventory_tree,
-            update_result=UpdateResult(),
-        )
-
     fetched = fetcher(host_name, ip_address=None)
     host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_no_error = filter_out_errors(host_sections)
@@ -184,7 +165,30 @@ def check_inventory_tree(
 #   '----------------------------------------------------------------------'
 
 
-def _inventorize_cluster(*, nodes: list[HostName]) -> StructuredDataNode:
+def inventorize_cluster(
+    nodes: Sequence[HostName],
+    *,
+    parameters: HWSWInventoryParameters,
+    old_tree: StructuredDataNode,
+) -> CheckInventoryTreeResult:
+    inventory_tree = _inventorize_cluster(nodes=nodes)
+    return CheckInventoryTreeResult(
+        processing_failed=False,
+        no_data_or_files=False,
+        check_result=ActiveCheckResult.from_subresults(
+            *_check_trees(
+                parameters=parameters,
+                inventory_tree=inventory_tree,
+                status_data_tree=StructuredDataNode(),
+                old_tree=old_tree,
+            ),
+        ),
+        inventory_tree=inventory_tree,
+        update_result=UpdateResult(),
+    )
+
+
+def _inventorize_cluster(*, nodes: Sequence[HostName]) -> StructuredDataNode:
     inventory_tree = StructuredDataNode()
 
     _add_cluster_property_to(inventory_tree=inventory_tree, is_cluster=True)

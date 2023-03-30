@@ -18,7 +18,7 @@ import pytest
 
 from tests.testlib import CMKWebSession
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name
+from tests.testlib.utils import current_base_branch_name, PExpectDialog, spawn_expect_process
 from tests.testlib.version import CMKVersion, version_gte
 
 from cmk.utils.version import Edition
@@ -101,6 +101,20 @@ def set_admin_password(site: Site, password: str = "cmk") -> int:
     return _run_as_site_user(site, cmd, input_value=password).returncode
 
 
+def verify_admin_password(site: Site) -> None:
+    """Verify that logging in to the site is possible and reset the admin password otherwise."""
+    web = CMKWebSession(site)
+    try:
+        web.login()
+    except AssertionError:
+        assert set_admin_password(site) == 0, "Could not set admin password!"
+        logger.warning(
+            "Had to reset the admin password after installing %s!", site.version.version_directory()
+        )
+        site.stop()
+        site.start()
+
+
 def get_omd_version(site: Site, full: bool = False) -> str:
     """Get the omd version for the given site."""
     cmd = ["/usr/bin/omd", "version", site.id]
@@ -151,41 +165,108 @@ def update_config(site: Site) -> int:
     return 2
 
 
-def _get_site(version: CMKVersion, update: bool) -> Site:
-    """Install or update the test site with the given version."""
-
+def _get_site(
+    version: CMKVersion, base_site: Optional[Site] = None, interactive: bool = True
+) -> Site:
+    """Install or update the test site with the given version.
+    An update installation is done automatically when an optional base_site is given.
+    By default, both installing and updating is done directly via spawn_expect_process()."""
+    update = base_site is not None and base_site.exists()
+    update_conflict_mode = "keepold"
     sf = SiteFactory(
         version=CMKVersion(version.version, version.edition, current_base_branch_name()),
         prefix="update_",
         update_from_git=False,
         install_test_python_modules=False,
         update=update,
-        update_conflict_mode="keepold",
+        update_conflict_mode=update_conflict_mode,
         enforce_english_gui=False,
     )
     site = sf.get_existing_site("central")
 
     logger.info("Site exists: %s", site.exists())
-    if site.exists():
-        if not update:
-            logger.info("Dropping existing site ...")
-            site.rm()
-        elif site.is_running():
-            logger.info("Stopping running site before update ...")
-            site.stop()
-            assert get_site_status(site) == "stopped"
-    if site.exists() == update:
-        logger.info("Updating existing site" if update else "Creating new site")
+    if site.exists() and not update:
+        logger.info("Dropping existing site ...")
+        site.rm()
+    elif site.is_running():
+        logger.info("Stopping running site before update ...")
+        site.stop()
+        assert get_site_status(site) == "stopped"
+    assert site.exists() == update, (
+        "Trying to update non-existing site!" if update else "Trying to install existing site!"
+    )
+    logger.info("Updating existing site" if update else "Creating new site")
+
+    if interactive:
+        # bypass SiteFactory for interactive installations
+        source_version = base_site.version.version_directory() if base_site else ""
+        target_version = version.version_directory()
+        logfile_path = f"/tmp/omd_{'update' if update else 'install'}_{site.id}.out"
+        # install the release
+        site.install_cmk()
+
+        # Run the CLI installer interactively and respond to expected dialogs.
+
+        if not os.getenv("CI", "").strip().lower() == "true":
+            print(
+                "\033[91m"
+                "#######################################################################\n"
+                "# This will trigger a SUDO prompt if run with a regular user account! #\n"
+                "# NOTE: Using interactive password authentication will NOT work here! #\n"
+                "#######################################################################"
+                "\033[0m"
+            )
+        spawn_expect_process(
+            [
+                "/usr/bin/sudo",
+                "/usr/bin/omd",
+                "-V",
+                target_version,
+                "update",
+                f"--conflict={update_conflict_mode}",
+                site.id,
+            ]
+            if update
+            else [
+                "/usr/bin/sudo",
+                "/usr/bin/omd",
+                "-V",
+                target_version,
+                "create",
+                "--admin-password",
+                site.admin_password,
+                "--apache-reload",
+                site.id,
+            ],
+            [
+                PExpectDialog(
+                    expect=(
+                        f"You are going to update the site {site.id} "
+                        f"from version {source_version} "
+                        f"to version {target_version}."
+                    ),
+                    send="u\r",
+                ),
+                PExpectDialog(expect="Wrong permission", send="d", count=0, optional=True),
+            ]
+            if update
+            else [],
+            logfile_path=logfile_path,
+        )
+        with open(logfile_path, "r") as logfile:
+            logger.debug("OMD automation logfile: %s", logfile.read())
+        # refresh the site object after creating the site
+        site = sf.get_existing_site("central")
+        # open the livestatus port
+        site.open_livestatus_tcp(encrypted=False)
+        # start the site after manually installing it
+        site.start()
+    else:
+        # use SiteFactory for non-interactive site creation/update
         site = sf.get_site("central")
 
-        web = CMKWebSession(site)
-        try:
-            web.login()
-        except AssertionError:
-            assert set_admin_password(site) == 0, "Could not set admin password!"
-            logger.warning("Had to reset the admin password after installing %s!", version.version)
-            site.stop()
-            site.start()
+    verify_admin_password(site)
+
     assert site.is_running(), "Site is not running!"
     logger.info("Test-site %s is up", site.id)
 
@@ -210,12 +291,12 @@ def get_site(request: pytest.FixtureRequest) -> Site:
     """Install the test site with the base version."""
     base_version = request.param
     logger.info("Setting up test-site ...")
-    return _get_site(base_version, update=False)
+    return _get_site(base_version, interactive=True)
 
 
-def update_site(target_version: CMKVersion) -> Site:
+def update_site(site: Site, target_version: CMKVersion, interactive: bool = True) -> Site:
     """Update the test site to the target version."""
-    return _get_site(target_version, update=True)
+    return _get_site(target_version, base_site=site, interactive=interactive)
 
 
 def _execute(command: Sequence[str]) -> subprocess.CompletedProcess:

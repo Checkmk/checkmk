@@ -11,12 +11,32 @@ import pwd
 import re
 import subprocess
 import sys
+import textwrap
 from collections.abc import Callable
 from pathlib import Path
+
+import pexpect  # type: ignore[import]
 
 from cmk.utils.version import Edition
 
 logger = logging.getLogger()
+
+
+class PExpectDialog:
+    """An expected dialog for spawn_expect_message.
+
+    Attributes:
+    expect    The expected dialog message.
+    send      The string/keys sent to the CLI.
+    count     The expected number of occurrences (default: 1).
+    optional  Specifies if the dialog message is optional.
+    """
+
+    def __init__(self, expect: str, send: str, count: int = 1, optional: bool = False) -> None:
+        self.expect = expect
+        self.send = send
+        self.count = count
+        self.optional = optional
 
 
 def repo_path() -> Path:
@@ -236,3 +256,75 @@ def branch_from_env(fallback: str | Callable[[], str] | None = None) -> str:
     if fallback:
         return fallback if isinstance(fallback, str) else fallback()
     raise RuntimeError("BRANCH environment variable, e.g. master, is missing")
+
+
+def spawn_expect_process(
+    args: list[str],
+    dialogs: list[PExpectDialog],
+    logfile_path: str = "/tmp/sep.out",
+    auto_wrap_length: int = 49,
+    break_long_words: bool = False,
+) -> int:
+    """Spawn an interactive CLI process via pexpect and process supplied expected dialogs
+    "dialogs" must be a list of objects with the following format:
+    {"expect": str, "send": str, "count": int, "optional": bool}
+
+    Return codes:
+    0: success
+    1: unexpected EOF
+    2: unexpected timeout
+    3: any other exception
+    """
+    logger.info("Executing: %s", subprocess.list2cmdline(args))
+    with open(logfile_path, "w") as logfile:
+        p = pexpect.spawn(" ".join(args), encoding="utf-8", logfile=logfile)
+        try:
+            for dialog in dialogs:
+                counter = 0
+                while True:
+                    counter += 1
+                    if auto_wrap_length > 0:
+                        dialog.expect = r".*".join(
+                            textwrap.wrap(
+                                dialog.expect,
+                                width=auto_wrap_length,
+                                break_long_words=break_long_words,
+                            )
+                        )
+                    logger.info("Expecting: '%s'", dialog.expect)
+                    rc = p.expect(
+                        [
+                            dialog.expect,  # rc=0
+                            pexpect.EOF,  # rc=1
+                            pexpect.TIMEOUT,  # rc=2
+                        ]
+                    )
+                    if rc == 0:
+                        # msg found; sending input
+                        logger.info(
+                            "%s; sending: %s",
+                            "Optional message found"
+                            if dialog.optional
+                            else "Required message found",
+                            repr(dialog.send),
+                        )
+                        p.send(dialog.send)
+                    elif dialog.optional:
+                        logger.info("Optional message not found; ignoring!")
+                        rc = 0
+                        break
+                    else:
+                        logger.warning("Required message not found; aborting!")
+                    if rc > 0 or counter >= dialog.count >= 1:
+                        # msg not found or reached max count
+                        break
+            if p.isalive():
+                rc = p.expect(pexpect.EOF)
+            else:
+                rc = p.status
+        except Exception as e:
+            logger.exception(e)
+            logger.debug(p)
+            rc = 3
+
+    return rc

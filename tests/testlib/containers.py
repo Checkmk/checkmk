@@ -122,6 +122,7 @@ def execute_tests_in_container(
             environment=_container_env(version),
             workdir="/git",
             stream=True,
+            tty=True,  # NOTE: Some tests require a tty (e.g. test-update)!
         )
 
         # Collect the test results located in /results of the container. The

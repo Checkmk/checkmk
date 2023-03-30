@@ -11,10 +11,11 @@ from .autodiscovery import (
     schedule_discovery_check,
 )
 from .commandline import commandline_discovery
-from .preview import get_check_preview, SourcesFailedError
+from .preview import CheckPreview, get_check_preview, SourcesFailedError
 from .utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = [
+    "CheckPreview",
     "DiscoveryMode",
     "QualifiedDiscovery",
     "automation_discovery",

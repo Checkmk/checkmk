@@ -54,7 +54,9 @@ class ActiveCheckResult:
     def as_text(self) -> str:
         return "\n".join(
             (
-                " | ".join((self.summary, " ".join(self.metrics))),
+                " | ".join((self.summary, " ".join(self.metrics)))
+                if self.metrics
+                else self.summary,
                 "".join(f"{line}\n" for line in self.details),
             )
         )

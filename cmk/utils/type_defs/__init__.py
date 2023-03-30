@@ -30,6 +30,7 @@ __all__ = [
     "ExecutionStep",
     "ExecutionStepAttributes",
     "ExitSpec",
+    "ensure_mrpe_configs",
     "Gateways",
     "HandlerName",
     "HandlerParameters",
@@ -50,6 +51,8 @@ __all__ = [
     "IPMICredentials",
     "Item",
     "LegacyCheckParameters",
+    "MrpeConfig",
+    "MrpeConfigDeprecated",
     "MetricName",
     "MetricTuple",
     "NotificationContext",
@@ -147,6 +150,7 @@ from .automations import (
 from .core_config import HostsToUpdate
 from .host import HostAddress, HostAgentConnectionMode, HostgroupName, HostName, HostState
 from .ip_lookup import UpdateDNSCacheResult
+from .mrpe_config import ensure_mrpe_configs, MrpeConfig, MrpeConfigDeprecated
 from .notify import (
     Contact,
     ContactName,

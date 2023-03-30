@@ -9,6 +9,7 @@ import os
 import tempfile
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, NamedTuple
 
@@ -24,12 +25,17 @@ from cmk.utils.type_defs import AgentRawData, HostName
 logger = logging.getLogger("cmk.base")
 
 
-class PiggybackFileInfo(NamedTuple):
+@dataclass(frozen=True)
+class PiggybackFileInfo:
     source_hostname: HostName
     file_path: Path
     successfully_processed: bool
     message: str
     status: int
+
+    def __post_init__(self) -> None:
+        if not self.message:
+            raise ValueError(self.message)
 
 
 class PiggybackRawDataInfo(NamedTuple):

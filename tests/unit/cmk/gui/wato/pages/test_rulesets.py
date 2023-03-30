@@ -3,13 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable
+from typing import Type
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
+from pytest_mock import MockerFixture
 
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
 from cmk.utils.tags import TagConfig, TaggroupID, TagID
+from cmk.utils.type_defs import HostOrServiceConditions
 
 from cmk.gui.utils.html import HTML
 from cmk.gui.wato.pages.rulesets import _get_groups, active_config, Rule, RuleConditionRenderer
@@ -82,20 +86,16 @@ def fixture_tag_config():
 
 
 @pytest.fixture(autouse=True)
-def patch_tag_config(  # type: ignore[no-untyped-def]
-    request_context,
-    monkeypatch: MonkeyPatch,
-    tag_config: TagConfig,
-) -> None:
-    monkeypatch.setattr(
-        active_config,
-        "tags",
-        tag_config,
-    )
+def patch_tag_config(
+    request_context: None, monkeypatch: MonkeyPatch, tag_config: TagConfig
+) -> Iterable[None]:
+    with monkeypatch.context() as m:
+        m.setattr(active_config, "tags", tag_config)
+        yield
 
 
 @pytest.fixture(name="folder_lookup")
-def fixture_folder_lookup(mocker):
+def fixture_folder_lookup(mocker: MockerFixture) -> None:
     folder_cache = {"cached_host": "cached_host_value"}
     mocker.patch.object(Folder, "get_folder_lookup_cache", return_value=folder_cache)
 
@@ -274,8 +274,9 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_render_host_condition_text(  # type: ignore[no-untyped-def]
-        self, folder_lookup, conditions, expected
+    @pytest.mark.usefixtures("folder_lookup")
+    def test_render_host_condition_text(
+        self, conditions: HostOrServiceConditions, expected: str
     ) -> None:
         assert RuleConditionRenderer()._render_host_condition_text(conditions) == HTML(expected)
 
@@ -299,8 +300,9 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_render_host_condition_text_raises(  # type: ignore[no-untyped-def]
-        self, folder_lookup, conditions, exception
+    @pytest.mark.usefixtures("folder_lookup")
+    def test_render_host_condition_text_raises(
+        self, conditions: HostOrServiceConditions, exception: Type[Exception]
     ) -> None:
         with pytest.raises(exception):
             assert RuleConditionRenderer()._render_host_condition_text(conditions)
@@ -412,8 +414,12 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_service_conditions(  # type: ignore[no-untyped-def]
-        self, item_type, item_name, conditions, expected
+    def test_service_conditions(
+        self,
+        item_type: str | None,
+        item_name: str | None,
+        conditions: HostOrServiceConditions | None,
+        expected: list[HTML],
     ) -> None:
         assert (
             list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))

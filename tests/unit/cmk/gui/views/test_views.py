@@ -6,7 +6,6 @@
 from typing import Any, Literal
 
 import pytest
-from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -1908,17 +1907,16 @@ def test_view_row_limit(view: View) -> None:
 @pytest.mark.usefixtures("request_context")
 def test_gui_view_row_limit(
     monkeypatch: pytest.MonkeyPatch,
-    mocker: MockerFixture,
     limit: Literal["soft", "hard", "none"] | None,
     permissions: dict[str, bool],
     result: int | None,
 ) -> None:
-    if limit is not None:
-        monkeypatch.setitem(request._vars, "limit", limit)
-
-    mocker.patch.object(active_config, "roles", {"nobody": {"permissions": permissions}})
-    mocker.patch.object(user, "role_ids", ["nobody"])
-    assert get_limit() == result
+    with monkeypatch.context() as m:
+        if limit is not None:
+            monkeypatch.setitem(request._vars, "limit", limit)
+        m.setattr(active_config, "roles", {"nobody": {"permissions": permissions}})
+        m.setattr(user, "role_ids", ["nobody"])
+        assert get_limit() == result
 
 
 def test_view_only_sites(view: View) -> None:

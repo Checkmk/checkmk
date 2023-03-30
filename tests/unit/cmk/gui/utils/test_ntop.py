@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
+
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.utils.version as cmk_version
 
@@ -18,12 +21,7 @@ from cmk.gui.utils.ntop import (
 
 @pytest.mark.usefixtures("load_config")
 def test_is_ntop_available() -> None:
-    available = is_ntop_available()
-
-    if cmk_version.is_raw_edition():
-        assert not available
-    if not cmk_version.is_raw_edition():
-        assert available
+    assert is_ntop_available() != cmk_version.is_raw_edition()
 
 
 @pytest.mark.usefixtures("load_config")
@@ -61,22 +59,19 @@ def test_is_ntop_available() -> None:
     ],
 )
 def test_is_ntop_configured_and_reason(
-    mocker,
-    ntop_connection,
-    custom_user,
-    answer,
-    reason,
-):
+    monkeypatch: MonkeyPatch,
+    ntop_connection: dict[str, Any],
+    custom_user: str,
+    answer: bool,
+    reason: str,
+) -> None:
     if cmk_version.is_raw_edition():
         assert not is_ntop_configured()
         assert get_ntop_misconfiguration_reason() == "ntopng integration is only available in CEE"
-    if not cmk_version.is_raw_edition():
-        mocker.patch.object(
-            active_config,
-            "ntop_connection",
-            ntop_connection,
-        )
-        if custom_user:
-            user._set_attribute("ntop_alias", custom_user)
-        assert is_ntop_configured() == answer
-        assert get_ntop_misconfiguration_reason() == reason
+    else:
+        with monkeypatch.context() as m:
+            m.setattr(active_config, "ntop_connection", ntop_connection)
+            if custom_user:
+                user._set_attribute("ntop_alias", custom_user)
+            assert is_ntop_configured() == answer
+            assert get_ntop_misconfiguration_reason() == reason

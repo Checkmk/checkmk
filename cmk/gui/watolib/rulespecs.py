@@ -10,6 +10,7 @@ from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.version import Edition, mark_edition_only
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -349,10 +350,12 @@ class Rulespec(abc.ABC):
     @property
     def title(self) -> str | None:
         plain_title = self._title() if self._title else self.valuespec.title()
+        if plain_title is None:
+            return None
         if self._is_deprecated:
             return "%s: %s" % (_("Deprecated"), plain_title)
         if self._is_cloud_edition_only:
-            return f"{plain_title} (Cloud Edition)"
+            return mark_edition_only(plain_title, Edition.CCE)
         return plain_title
 
     @property

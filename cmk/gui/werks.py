@@ -68,7 +68,9 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.open_div(id_="info_title")
         html.h1(_("Your monitoring machine"))
         html.a(
-            html.render_img(theme.url("images/tribe29.svg")), "https://tribe29.com", target="_blank"
+            html.render_img(theme.url("images/checkmk_logo.svg")),
+            "https://tribe29.com",
+            target="_blank",
         )
         html.close_div()
 

@@ -606,7 +606,7 @@ class LoginPage(Page):
         html.open_a(href="https://checkmk.com")
         html.img(
             src=theme.detect_icon_path(
-                icon_name="login_logo" if theme.has_custom_logo("login_logo") else "mk-logo",
+                icon_name="login_logo" if theme.has_custom_logo("login_logo") else "checkmk_logo",
                 prefix="",
             ),
             id_="logo",

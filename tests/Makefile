@@ -257,7 +257,7 @@ test-gui-e2e: prepare-playwright
 	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
 
 test-integration:
-	$(PIPENV) run scripts/run-integration-test.py $(realpath integration)
+	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration)
 
 test-composition:
 	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)

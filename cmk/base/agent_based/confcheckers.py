@@ -192,20 +192,11 @@ def summarize_host_sections(
         yield from (
             ActiveCheckResult(
                 s.state if override_non_ok_state is None else override_non_ok_state,
-                f"[{source.ident}] {s.summary}",
+                f"[{source.ident}] {s.summary}" if idx == 0 else s.summary,
                 s.details,
                 s.metrics,
             )
-            for s in subresults[:1]
-        )
-        yield from (
-            ActiveCheckResult(
-                s.state if override_non_ok_state is None else override_non_ok_state,
-                s.summary,
-                s.details,
-                s.metrics,
-            )
-            for s in subresults[1:]
+            for idx, s in enumerate(subresults)
         )
 
 

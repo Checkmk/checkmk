@@ -267,14 +267,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         )
 
         if not discovery_result.check_table_created and previous_discovery_result:
-            discovery_result = DiscoveryResult(
-                job_status=discovery_result.job_status,
-                check_table_created=previous_discovery_result.check_table_created,
-                check_table=previous_discovery_result.check_table,
-                host_labels=previous_discovery_result.host_labels,
-                new_labels=previous_discovery_result.new_labels,
-                vanished_labels=previous_discovery_result.vanished_labels,
-                changed_labels=previous_discovery_result.changed_labels,
+            discovery_result = previous_discovery_result._replace(
+                job_status=discovery_result.job_status
             )
 
         show_checkboxes = user.discovery_checkboxes

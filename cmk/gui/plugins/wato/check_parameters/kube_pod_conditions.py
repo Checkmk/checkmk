@@ -26,6 +26,10 @@ def _parameter_valuespec():
                 age_levels_dropdown(_("Time until alert, if PODSCHEDULED condition is false")),
             ),
             (
+                "hasnetwork",
+                age_levels_dropdown(_("Time until alert, if PODHASNETWORK condition is false")),
+            ),
+            (
                 "initialized",
                 age_levels_dropdown(_("Time until alert, if INITIALIZED condition is false")),
             ),

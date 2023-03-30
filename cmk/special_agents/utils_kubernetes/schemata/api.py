@@ -799,6 +799,7 @@ class ContainerStatus(BaseModel):
 
 class ConditionType(str, enum.Enum):
     # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions
+    PODHASNETWORK = "hasnetwork"
     PODSCHEDULED = "scheduled"
     CONTAINERSREADY = "containersready"
     INITIALIZED = "initialized"

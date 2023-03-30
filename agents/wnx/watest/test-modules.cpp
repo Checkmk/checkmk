@@ -195,7 +195,7 @@ TEST(ModulesTest, Loader) {
         EXPECT_EQ(m.name(), s.name);
         auto arr = cma::cfg::GetArray<std::string>(YAML::Load(s.exts));
         EXPECT_TRUE(Compare(m.exts(), arr));
-        EXPECT_EQ(m.exec(), wtools::ConvertToUTF16(s.exec));
+        EXPECT_EQ(m.exec(), wtools::ConvertToUtf16(s.exec));
         if (s.dir.size() <= 5)
             EXPECT_EQ(m.dir(), fmt::format(defaults::kModulesDir, m.name()));
         else

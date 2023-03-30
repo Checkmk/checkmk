@@ -31,9 +31,9 @@ public:
     Parser &operator=(Parser &&) = delete;
 
     void prepare();
-    bool readIni(const std::filesystem::path &Path, bool Local);
+    bool readIni(const std::filesystem::path &path, bool local);
 
-    void emitYaml(std::ostream &Out);
+    void emitYaml(std::ostream &out);
 
     YAML::Node emitYaml() noexcept;
 

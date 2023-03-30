@@ -21,7 +21,7 @@ Commander::Commander() : algorithm_(Algorithm::kDefault) {
 Commander::Commander(const std::string &key, Length length)
     : algorithm_(Algorithm::kDefault) {
     crypt_provider_ = obtainContext();
-    key_ = deriveOpenSSLKey(key, length, 1);
+    key_ = deriveOpenSslKey(key, length, 1);
 
     checkAndConfigure();
 }
@@ -248,15 +248,15 @@ std::tuple<HCRYPTHASH, size_t> GetHash(HCRYPTPROV crypt_provider) {
 }
 
 template <typename T>
-auto HashData(HCRYPTHASH Hash, const T &Value) {
-    return ::CryptHashData(Hash, reinterpret_cast<const BYTE *>(&Value[0]),
-                           static_cast<DWORD>(Value.size()), 0);
+auto HashData(HCRYPTHASH Hash, const T &value) {
+    return ::CryptHashData(Hash, reinterpret_cast<const BYTE *>(&value[0]),
+                           static_cast<DWORD>(value.size()), 0);
 }
 
 template <typename T>
-auto GetHashData(HCRYPTHASH Hash, T &Value) {
-    auto buffer_size = static_cast<DWORD>(Value.size());
-    return ::CryptGetHashParam(Hash, HP_HASHVAL, &Value[0], &buffer_size, 0);
+auto GetHashData(HCRYPTHASH hash, T &value) {
+    auto buffer_size = static_cast<DWORD>(value.size());
+    return ::CryptGetHashParam(hash, HP_HASHVAL, &value[0], &buffer_size, 0);
 }
 
 HCRYPTHASH DuplicateHash(HCRYPTHASH hash) {
@@ -307,10 +307,12 @@ bool HashBuffer(ByteVector &buffer, HCRYPTHASH base_hash, int iterations) {
 }  // namespace
 
 // Stupid function from the LWA
-HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
+HCRYPTKEY Commander::deriveOpenSslKey(const std::string &password,
                                       Length key_length, int iterations) const {
-    constexpr uint32_t kBlockALign = 8;
-    if (crypt_provider_ == 0) return 0;
+    constexpr uint32_t block_align = 8;
+    if (crypt_provider_ == 0) {
+        return 0;
+    }
 
     auto [base_hash, hash_size] = GetHash(crypt_provider_);
 
@@ -324,13 +326,13 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
     cma::ByteVector buffer;
     buffer.resize(hash_size);
 
-    HCRYPTKEY hkey = 0;
+    HCRYPTKEY h_key = 0;
     bool first_iteration = true;
     size_t key_offset = 0;
     size_t iv_offset = 0;
 
     const auto key_size = key_length == Length::kDefault
-                              ? keySize(ToDword(algorithm_)) / kBlockALign
+                              ? keySize(ToDword(algorithm_)) / block_align
                               : static_cast<size_t>(key_length);
 
     std::vector<BYTE> key(key_size);
@@ -377,13 +379,13 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
                 // apply key. we do this right away so that we can query the
                 // necessary
                 // size for the iv and don't need own logic to deduce it.
-                hkey = importKey(key.data(), static_cast<DWORD>(key.size()));
-                auto block_size = BlockSize(hkey);
+                h_key = importKey(key.data(), static_cast<DWORD>(key.size()));
+                auto block_size = BlockSize(h_key);
                 if (!block_size) {
-                    ::CryptDestroyKey(hkey);
+                    ::CryptDestroyKey(h_key);
                     return 0;
                 }
-                iv.resize(*block_size / kBlockALign);
+                iv.resize(*block_size / block_align);
             }
         }
 
@@ -396,13 +398,13 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
     }
 
     // apply iv
-    if (hkey != 0 && ::CryptSetKeyParam(hkey, KP_IV, iv.data(), 0) == FALSE) {
-        ::CryptDestroyKey(hkey);
+    if (h_key != 0 && ::CryptSetKeyParam(h_key, KP_IV, iv.data(), 0) == FALSE) {
+        ::CryptDestroyKey(h_key);
         XLOG::l("Failure applying key [{}]", GetLastError());
         return 0;
     }
 
-    return hkey;
+    return h_key;
 }
 
 void Commander::releaseKey() {
@@ -451,7 +453,7 @@ bool Commander::randomizeBuffer(void *buffer, size_t buffer_size) const {
 }
 
 std::unique_ptr<Commander> MakeCrypt() {
-    auto pass = cma::cfg::groups::global.getPasword();
+    auto pass = cma::cfg::groups::g_global.getPasword();
     if (!pass) {
         XLOG::t.t("Nothing.. ..");
         return {};

@@ -27,7 +27,7 @@ namespace vs = std::views;
 namespace cma::provider {
 
 bool PluginsProvider::isAllowedByCurrentConfig() const {
-    return cfg::groups::global.allowedSection(cfg_name_);
+    return cfg::groups::g_global.allowedSection(cfg_name_);
 }
 
 static bool IsPluginRequiredType(const PluginEntry &plugin,
@@ -91,7 +91,7 @@ void PluginsProvider::updateCommandLine() {
 }
 
 void PluginsProvider::UpdatePluginMapCmdLine(PluginMap &pm,
-                                             cma::srv::ServiceProcessor *sp) {
+                                             srv::ServiceProcessor *sp) {
     for (auto &[name, entry] : pm) {
         XLOG::t.i("checking entry");
         entry.setCmdLine(L""sv);
@@ -155,8 +155,8 @@ std::vector<std::string> PluginsProvider::gatherAllowedExtensions() const {
 
 void PluginsProvider::loadConfig() {
     auto folder_vector = exec_type_ == ExecType::local
-                             ? cfg::groups::localGroup.folders()
-                             : cfg::groups::plugins.folders();
+                             ? cfg::groups::g_local_group.folders()
+                             : cfg::groups::g_plugins.folders();
 
     PathVector pv;
     for (auto &folder : folder_vector) {

@@ -709,7 +709,7 @@ std::optional<std::wstring> Get() {
     }
     for (const auto &line : ReadFileAsTable(*api_log)) {
         if (line.starts_with(api_err::kFailMarker)) {
-            return wtools::ConvertToUTF16(line.c_str() +
+            return wtools::ConvertToUtf16(line.c_str() +
                                           api_err::kFailMarker.length());
         }
     }

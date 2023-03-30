@@ -42,7 +42,7 @@ TEST(WinPerf, ValidateFabricConfig) {
     auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
-    auto cmd_line = cfg::groups::winperf.buildCmdLine();
+    auto cmd_line = cfg::groups::g_winperf.buildCmdLine();
     auto cfg = cfg::GetLoadedConfig();
 
     auto winperf_node = cfg[groups::kWinPerf];
@@ -52,18 +52,18 @@ TEST(WinPerf, ValidateFabricConfig) {
     auto wp_group = cfg[groups::kWinPerf];
     auto cfg_timeout = wp_group[vars::kWinPerfTimeout].as<int>(1234567);
     ASSERT_NE(cfg_timeout, 1234567);
-    EXPECT_EQ(groups::winperf.timeout(), cfg_timeout);
+    EXPECT_EQ(groups::g_winperf.timeout(), cfg_timeout);
 
     EXPECT_TRUE(wp_group[vars::kWinPerfFork].as<bool>(false));
-    EXPECT_TRUE(groups::winperf.isFork());
+    EXPECT_TRUE(groups::g_winperf.isFork());
 
     EXPECT_FALSE(wp_group[vars::kWinPerfTrace].as<bool>(true));
-    EXPECT_FALSE(groups::winperf.isTrace());
+    EXPECT_FALSE(groups::g_winperf.isTrace());
 
     auto cfg_prefix =
         wp_group[vars::kWinPerfPrefixName].as<std::string>("1234567");
     ASSERT_EQ(cfg_prefix, vars::kWinPerfPrefixDefault);
-    EXPECT_EQ(groups::winperf.prefix(), cfg_prefix);
+    EXPECT_EQ(groups::g_winperf.prefix(), cfg_prefix);
 
     auto enabled = cfg::GetVal(groups::kWinPerf, vars::kEnabled, false);
     EXPECT_TRUE(enabled);
@@ -92,11 +92,11 @@ TEST(WinPerf, ValidateFabricConfig) {
 TEST(WinPerf, BuildCommandLine) {
     const auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadContent("global:\n  enabled: yes\n"));
-    auto cmd_line = cfg::groups::winperf.buildCmdLine();
+    auto cmd_line = cfg::groups::g_winperf.buildCmdLine();
     EXPECT_TRUE(cmd_line.empty()) << cmd_line;
 
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
-    cmd_line = cfg::groups::winperf.buildCmdLine();
+    cmd_line = cfg::groups::g_winperf.buildCmdLine();
     EXPECT_EQ(cmd_line, L"234:phydisk 510:if 238:processor")
         << "validate fabric yaml";
 }

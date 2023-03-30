@@ -54,7 +54,7 @@ bool CheckArgvForValue(int argc, const wchar_t *argv[], int pos,
                        std::string_view value) noexcept;
 }  // namespace tools
 using PathVector = std::vector<std::filesystem::path>;
-PathVector GatherAllFiles(const PathVector &Folders);
+PathVector GatherAllFiles(const PathVector &folders);
 // Scan one folder and add contents to the dirs and files
 void GatherMatchingFilesAndDirs(
     const std::filesystem::path &search_dir,    // c:\windows
@@ -153,7 +153,7 @@ public:
         }
         command_line += cmd_line;
 
-        exec_ = wtools::ConvertToUTF16(cmd_line);
+        exec_ = wtools::ConvertToUtf16(cmd_line);
 
         // send exec array entries to internal
         try {
@@ -375,7 +375,7 @@ bool HackDataWithCacheInfo(std::vector<char> &out,
                            const std::string &patch, HackDataMode mode);
 
 // cleans \r from string
-inline bool HackPluginDataRemoveCR(std::vector<char> &out,
+inline bool HackPluginDataRemoveCr(std::vector<char> &out,
                                    const std::vector<char> &original_data) {
     return HackDataWithCacheInfo(out, original_data, "", HackDataMode::header);
 }
@@ -407,7 +407,7 @@ public:
     // ASYNC:
     // if StartProcessNow then process will be started immediately
     // otherwise entry will be marked as required to start
-    std::vector<char> getResultsAsync(bool StartProcessNow);
+    std::vector<char> getResultsAsync(bool start_process_now);
 
     // AU:
     void restartIfRequired();
@@ -555,7 +555,7 @@ protected:
     }
 
     void joinAndReleaseMainThread() noexcept;
-    void threadCore(const std::wstring &Id);
+    void threadCore(const std::wstring &id);
     void registerProcess(uint32_t Id);
 
     // this is not normal situation

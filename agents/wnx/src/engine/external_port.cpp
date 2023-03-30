@@ -322,7 +322,7 @@ void ExternalPort::processSession(const ReplyFunc &reply,
 
     const bool local_connection =
         info.peer_ip == "127.0.0.1" || info.peer_ip == "::1";
-    if (cfg::groups::global.isIpAddressAllowed(info.peer_ip) ||
+    if (cfg::groups::g_global.isIpAddressAllowed(info.peer_ip) ||
         local_connection) {
         if (local_connection && AllowLocalConnection()) {
             session->read_ip();
@@ -496,7 +496,7 @@ void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
     XLOG::d.i(XLOG_FUNC + " started");
     // all threads must control exceptions
     try {
-        auto ipv6 = cfg::groups::global.ipv6();
+        auto ipv6 = cfg::groups::g_global.ipv6();
 
         // Asio IO server start
         XLOG::l.i("Starting IO ipv6:{}, used port:{}", ipv6, port);

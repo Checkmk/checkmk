@@ -212,11 +212,11 @@ std::string Device::generateData() const {
 
 // #TODO overcomplicated function, to be re-factored
 void Device::mainThread() noexcept {
-    std::unique_lock lk(lock_);
+    std::unique_lock lk_init(lock_);
     auto port = port_;
     auto ip_address = ""s;  // set to invalid value, prevents race
     auto passphrase = passphrase_;
-    lk.unlock();
+    lk_init.unlock();
 
     // on exit from thread we should drop/clear resources
     ON_OUT_OF_SCOPE({

@@ -47,8 +47,8 @@ void ApiLog(Args... args) {
 using ThreadProc = bool (*)(const Slot *slot, const void *data, int len,
                             void *context);
 
-constexpr int DEFAULT_THREAD_SLEEP = 20;
-constexpr std::string_view controller_slot_prefix{"WinAgentCtl"};
+constexpr int g_default_thread_sleep = 20;
+constexpr std::string_view g_controller_slot_prefix{"WinAgentCtl"};
 
 /// convert slot name into fully qualified global object
 std::string BuildCustomMailSlotName(std::string_view slot_name, uint32_t id,
@@ -65,12 +65,12 @@ public:
     enum class Mode { client, server };
 
     enum ErrCodes {
-        SUCCESS = 0,
-        FAILED_READ = -1,
-        TOO_SMALL = -2,
-        FAILED_INFO = -3,
-        FAILED_INIT = -4,
-        FAILED_CREATE = -5
+        success = 0,
+        failed_read = -1,
+        too_small = -2,
+        failed_info = -3,
+        failed_init = -4,
+        failed_create = -5
     };
 
     Slot(const Slot &) = delete;
@@ -133,7 +133,7 @@ private:
 
 /// returns controller slot_name
 inline std::string ControllerMailSlotName(uint32_t pid) noexcept {
-    return BuildCustomMailSlotName(controller_slot_prefix, pid, ".");
+    return BuildCustomMailSlotName(g_controller_slot_prefix, pid, ".");
 }
 
 }  // namespace cma::mailslot

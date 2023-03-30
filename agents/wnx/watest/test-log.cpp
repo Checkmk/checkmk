@@ -189,7 +189,7 @@ TEST(LogTest, All) {
     {
         auto &xlogd = XLOG::d;
 
-        auto debug_log_level = cma::cfg::groups::global.debugLogLevel();
+        auto debug_log_level = cma::cfg::groups::g_global.debugLogLevel();
         if (debug_log_level < 1)
             EXPECT_EQ(xlogd.logParam().directions_,
                       xlog::Directions::kDebuggerPrint);

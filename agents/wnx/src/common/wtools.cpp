@@ -1807,7 +1807,7 @@ HMODULE LoadWindowsLibrary(const std::wstring &dll_path) {
 std::vector<std::string> EnumerateAllRegistryKeys(const char *reg_path) {
     HKEY key = nullptr;
     auto r =
-        ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, ConvertToUTF16(reg_path).c_str(), 0,
+        ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, ConvertToUtf16(reg_path).c_str(), 0,
                         KEY_ENUMERATE_SUB_KEYS, &key);  // NOLINT
     if (r != ERROR_SUCCESS) {
         XLOG::l(" Cannot open registry key '{}' error [{}]", reg_path,

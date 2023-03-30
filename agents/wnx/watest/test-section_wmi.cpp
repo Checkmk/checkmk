@@ -101,7 +101,7 @@ TEST_F(WmiWrapperFixture, QueryTableTimeout) {
 
 TEST_F(WmiWrapperFixture, TablePostProcess) {
     auto [result, status] = wmi.queryTable(
-        {}, L"Win32_Process", L",", cma::cfg::groups::global.getWmiTimeout());
+        {}, L"Win32_Process", L",", cma::cfg::groups::g_global.getWmiTimeout());
     ASSERT_TRUE(!result.empty());
     EXPECT_EQ(status, WmiStatus::ok);
     EXPECT_TRUE(result.back() == L'\n');
@@ -151,7 +151,7 @@ TEST_F(WmiWrapperFixture, TablePostProcess) {
 
 TEST_F(WmiWrapperFixture, Table) {
     auto [result, status] = wmi.queryTable(
-        {}, L"Win32_Process", L",", cma::cfg::groups::global.getWmiTimeout());
+        {}, L"Win32_Process", L",", cma::cfg::groups::g_global.getWmiTimeout());
     ASSERT_TRUE(!result.empty());
     EXPECT_EQ(status, WmiStatus::ok);
     EXPECT_TRUE(result.back() == L'\n');

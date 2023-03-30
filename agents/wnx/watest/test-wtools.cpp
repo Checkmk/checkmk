@@ -294,10 +294,10 @@ TEST(Wtools, ConditionallyConvertLowLevel) {
 TEST(Wtools, ConditionallyConvert) {
     std::vector<uint8_t> a;
 
-    auto ret = ConditionallyConvertFromUTF16(a);
+    auto ret = ConditionallyConvertFromUtf16(a);
     EXPECT_TRUE(ret.empty());
     a.push_back('a');
-    ret = ConditionallyConvertFromUTF16(a);
+    ret = ConditionallyConvertFromUtf16(a);
     EXPECT_EQ(1, ret.size());
     EXPECT_EQ(1, strlen(ret.c_str()));
 }
@@ -305,14 +305,14 @@ TEST(Wtools, ConditionallyConvert) {
 TEST(Wtools, ConditionallyConvertBom) {
     std::vector<uint8_t> a;
 
-    auto ret = ConditionallyConvertFromUTF16(a);
+    auto ret = ConditionallyConvertFromUtf16(a);
     EXPECT_TRUE(ret.empty());
     a.push_back('\xFF');
-    ret = ConditionallyConvertFromUTF16(a);
+    ret = ConditionallyConvertFromUtf16(a);
     EXPECT_EQ(1, ret.size());
 
     a.push_back('\xFE');
-    ret = ConditionallyConvertFromUTF16(a);
+    ret = ConditionallyConvertFromUtf16(a);
     EXPECT_EQ(0, ret.size());
 
     constexpr auto text = L"abcde";
@@ -320,7 +320,7 @@ TEST(Wtools, ConditionallyConvertBom) {
     for (int i = 0; i < 10; ++i) {
         a.push_back(data[i]);
     }
-    ret = ConditionallyConvertFromUTF16(a);
+    ret = ConditionallyConvertFromUtf16(a);
     EXPECT_EQ(5, ret.size());
     EXPECT_EQ(5, strlen(ret.c_str()));
 }

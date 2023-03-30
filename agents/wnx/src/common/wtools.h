@@ -198,8 +198,8 @@ public:
 
     SimplePipe(const SimplePipe &) = delete;
     SimplePipe &operator=(const SimplePipe &) = delete;
-    SimplePipe(SimplePipe &&Rhs) = delete;
-    SimplePipe &operator=(SimplePipe &&Rhs) = delete;
+    SimplePipe(SimplePipe &&rhs) = delete;
+    SimplePipe &operator=(SimplePipe &&rhs) = delete;
 
     ~SimplePipe() { shutdown(); }
 
@@ -320,7 +320,7 @@ int FindProcess(std::wstring_view process_name) noexcept;
 constexpr bool kProcessTreeKillAllowed = false;
 
 // WIN32 described method of killing process tree
-void KillProcessTree(uint32_t ProcessId);
+void KillProcessTree(uint32_t process_id);
 
 class AppRunner {
 public:
@@ -585,17 +585,13 @@ inline std::string ToStr(const std::filesystem::path &src) noexcept {
 std::wstring ToCanonical(std::wstring_view raw_app_name);
 // standard Windows converter from Microsoft
 // WINDOWS ONLY
-inline std::wstring ConvertToUTF16(std::string_view src) noexcept {
+inline std::wstring ConvertToUtf16(std::string_view src) noexcept {
     const auto in_len = static_cast<int>(src.length());
     const auto *utf8_str = src.data();
     const auto out_len =
         MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, nullptr, 0);
     std::wstring wstr;
-    try {
-        wstr.resize(out_len);
-    } catch (const std::exception & /*e*/) {
-        return {};
-    }
+    wstr.resize(out_len);
 
     if (MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, wstr.data(),
                             out_len) == out_len) {
@@ -727,7 +723,7 @@ inline void AddSafetyEndingNull(std::string &data) {
 
 // generic to support uint8_t and int8_t and char and unsigned char
 template <typename T>
-std::string ConditionallyConvertFromUTF16(const std::vector<T> &original_data) {
+std::string ConditionallyConvertFromUtf16(const std::vector<T> &original_data) {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");
     if (original_data.empty()) {
         return {};
@@ -894,7 +890,7 @@ inline uint64_t WmiGetUint64(const VARIANT &var) noexcept {
 
 bool WmiObjectContains(IWbemClassObject *object, const std::wstring &name);
 
-std::wstring WmiGetWstring(const VARIANT &Var);
+std::wstring WmiGetWstring(const VARIANT &var);
 std::optional<std::wstring> WmiTryGetString(IWbemClassObject *object,
                                             const std::wstring &name);
 std::wstring WmiStringFromObject(IWbemClassObject *object,

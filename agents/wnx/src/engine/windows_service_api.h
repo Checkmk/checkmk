@@ -28,7 +28,7 @@ int TestIo();                           // on check -io
 int TestMt();                           // on check -mt
 int TestMainServiceSelf(int interval);  // on check self
 int TestLegacy();                       // on test
-int RestoreWATOConfig();                // on restore
+int RestoreWatoConfig();                // on restore
 int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
                  std::wstring_view name);  // on fw
 int ExecMainService(StdioLog stdio_log);   // on exec

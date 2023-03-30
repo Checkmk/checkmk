@@ -154,8 +154,8 @@ bool CoreCarrier::mailSlotSend(DataType data_type, const std::string &peer_name,
                                uint64_t answer_id, const void *data,
                                size_t length) const {
     mailslot::Slot postman(carrier_address_);
-    auto cdh = CarrierDataHeader::createPtr(peer_name.c_str(), answer_id,
-                                            data_type, data, length);
+    const auto cdh = CarrierDataHeader::createPtr(peer_name.c_str(), answer_id,
+                                                  data_type, data, length);
     if (!cdh) {
         XLOG::l("Cannot create data for peer {} length {}", peer_name, length);
         return false;
@@ -197,9 +197,10 @@ bool CoreCarrier::fileSlotSend(DataType data_type, const std::string &peer_name,
                 f.open(carrier_address_ + ".log", std::ios::app);
                 break;
             case DataType::kCommand:
-                if (auto rcp = commander::ObtainRunCommandProcessor();
+                if (const auto rcp = commander::ObtainRunCommandProcessor();
                     rcp != nullptr) {
-                    std::string cmd{static_cast<const char *>(data), length};
+                    const std::string cmd{static_cast<const char *>(data),
+                                          length};
                     rcp(peer_name, cmd);
                 }
                 break;
@@ -244,8 +245,8 @@ bool CoreCarrier::asioSlotSend(DataType /*data_type*/,
 void InformByMailSlot(std::string_view mail_slot, std::string_view cmd) {
     CoreCarrier cc;
 
-    auto internal_port = BuildPortName(std::string{kCarrierMailslotName},
-                                       std::string{mail_slot});
+    const auto internal_port = BuildPortName(std::string{kCarrierMailslotName},
+                                             std::string{mail_slot});
     cc.establishCommunication(internal_port);
     cc.sendCommand(commander::kMainPeer, cmd);
 

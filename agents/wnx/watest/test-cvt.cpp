@@ -196,7 +196,7 @@ TEST(CvtTest, LogWatchSection) {
 
     ASSERT_TRUE(logwatch[vars::kLogWatchEventLogFile].size() == 4);
     auto logfiles = logwatch[vars::kLogWatchEventLogFile];
-    constexpr cma::provider::RawLogWatchData base[4] = {
+    constexpr provider::RawLogWatchData base[4] = {
         {true, "application", EventLevels::kCrit,
          provider::LogWatchContext::with},
         {true, "system", EventLevels::kWarn, provider::LogWatchContext::hide},
@@ -206,7 +206,7 @@ TEST(CvtTest, LogWatchSection) {
     };
 
     for (int i = 0; i < 4; ++i) {
-        cma::provider::LogWatchEntry lwe;
+        provider::LogWatchEntry lwe;
         lwe.loadFromMapNode(logfiles[i]);
         EXPECT_EQ(lwe.name(), base[i].name_);
         EXPECT_EQ(lwe.level(), base[i].level_);

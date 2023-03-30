@@ -782,7 +782,7 @@ public:
     }
     auto exeWide() const {
         std::lock_guard lk(lock_);
-        return wtools::ConvertToUTF16(exe_name_);
+        return wtools::ConvertToUtf16(exe_name_);
     }
 
     auto prefix() const {
@@ -792,7 +792,7 @@ public:
 
     auto prefixWide() const {
         std::lock_guard lk(lock_);
-        return wtools::ConvertToUTF16(prefix_);
+        return wtools::ConvertToUtf16(prefix_);
     }
 
     auto counters() const {
@@ -1002,7 +1002,7 @@ public:
     }
     auto exeWide() const {
         std::lock_guard lk(lock_);
-        return wtools::ConvertToUTF16(exe_name_);
+        return wtools::ConvertToUtf16(exe_name_);
     }
 
     auto asyncStart() const {
@@ -1043,10 +1043,10 @@ void ProcessPluginEnvironment(
 void SetupRemoteHostEnvironment(const std::string &ip_address);
 
 namespace groups {
-extern Global global;
-extern WinPerf winperf;
-extern Plugins plugins;
-extern Plugins localGroup;
+extern Global g_global;
+extern WinPerf g_winperf;
+extern Plugins g_plugins;
+extern Plugins g_local_group;
 }  // namespace groups
 
 inline bool LogPluginOutput() noexcept { return false; }

@@ -122,7 +122,7 @@ public:
             [this, port_name](const std::string &command_line,
                               AnswerId answer) {
                 engine_.updateSectionStatus();  // actual data gathering is
-                                                // here for plugins and local
+                                                // here for g_plugins and local
 
                 engine_.registerCommandLine(command_line);
                 auto id = AnswerIdToNumber(answer);
@@ -211,10 +211,10 @@ public:
     }
 
     // boiler plate
-    ServiceProcessor(const ServiceProcessor &Rhs) = delete;
-    ServiceProcessor &operator=(ServiceProcessor &Rhs) = delete;
-    ServiceProcessor(const ServiceProcessor &&Rhs) = delete;
-    ServiceProcessor &operator=(ServiceProcessor &&Rhs) = delete;
+    ServiceProcessor(const ServiceProcessor &rhs) = delete;
+    ServiceProcessor &operator=(ServiceProcessor &rhs) = delete;
+    ServiceProcessor(const ServiceProcessor &&rhs) = delete;
+    ServiceProcessor &operator=(ServiceProcessor &&rhs) = delete;
 
     // Standard Windows API to Service
     void stopService(wtools::StopMode stop_mode) override;
@@ -594,7 +594,7 @@ private:
                     full_path,  // exe
                     log_file.empty() ? L"" : L"@" + log_file + L" ",
                     segment,                                        //
-                    wtools::ConvertToUTF16(sp->getInternalPort()),  //
+                    wtools::ConvertToUtf16(sp->getInternalPort()),  //
                     AnswerIdToNumber(answer),                       // answer id
                     tout, command);
                 XLOG::d.i("async RunStdCmd: {}", wtools::ToUtf8(cmd_line));

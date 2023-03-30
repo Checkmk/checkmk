@@ -492,7 +492,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
     }
 
     if (param == kRestoreParam) {
-        return srv::RestoreWATOConfig();
+        return srv::RestoreWatoConfig();
     }
 
     if (param == kExecParam || param == kAdhocParam) {
@@ -560,7 +560,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
     if (param == kUpgradeParam) {
         std::wstring second_param = argc > 2 ? argv[2] : L"";
         return srv::ExecUpgradeParam(
-            second_param == wtools::ConvertToUTF16(kUpgradeParamForce));
+            second_param == wtools::ConvertToUtf16(kUpgradeParamForce));
     }
     // #TODO make a function
     if (param == kCvtParam) {
@@ -572,7 +572,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
             auto pos = diag == srv::StdioLog::yes ? 3 : 2;
             if (argc <= pos) {
                 ServiceUsage(std::wstring(L"inifile is mandatory to call ") +
-                             wtools::ConvertToUTF16(kCvtParam) + L"\n");
+                             wtools::ConvertToUtf16(kCvtParam) + L"\n");
                 return 2;
             }
 
@@ -583,7 +583,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
         }
 
         ServiceUsage(std::wstring(L"Invalid count of parameters for ") +
-                     wtools::ConvertToUTF16(kCvtParam) + L"\n");
+                     wtools::ConvertToUtf16(kCvtParam) + L"\n");
         return 2;
     }
 
@@ -603,7 +603,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
         }
 
         ServiceUsage(std::wstring(L"Invalid parameter for ") +
-                     wtools::ConvertToUTF16(kFwParam) + L"\n");
+                     wtools::ConvertToUtf16(kFwParam) + L"\n");
         return 2;
     }
 
@@ -644,7 +644,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
     }
 
     auto text = std::wstring(L"Provided Parameter \"") +
-                wtools::ConvertToUTF16(param) + L"\" is not allowed\n";
+                wtools::ConvertToUtf16(param) + L"\" is not allowed\n";
 
     ServiceUsage(text);
     return 13;

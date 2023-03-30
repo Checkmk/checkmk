@@ -113,7 +113,7 @@ bool AreFilesSame(const fs::path &tgt, const fs::path &src) {
 bool CheckArgvForValue(int argc, const wchar_t *argv[], int pos,
                        std::string_view value) noexcept {
     return argv != nullptr && argc > pos && pos > 0 && argv[pos] != nullptr &&
-           std::wstring(argv[pos]) == wtools::ConvertToUTF16(value);
+           std::wstring(argv[pos]) == wtools::ConvertToUtf16(value);
 }
 
 }  // namespace tools
@@ -148,10 +148,10 @@ bool MatchPattern(const std::string &input, const fs::path &file_full_path) {
 }
 }  // namespace
 
-PathVector GatherAllFiles(const PathVector &Folders) {
+PathVector GatherAllFiles(const PathVector &folders) {
     PathVector paths;
 
-    for (const auto &dir : Folders) {
+    for (const auto &dir : folders) {
         std::error_code ec;
         if (!fs::exists(dir, ec)) {
             continue;
@@ -218,7 +218,7 @@ void FilterPathByExtension(PathVector &paths,
     std::erase_if(paths, [exts](const auto &path) {
         auto ext = RemoveDot(path.extension().wstring());
         return rs::none_of(exts, [&](const auto &e) {
-            return ext == wtools::ConvertToUTF16(e);
+            return ext == wtools::ConvertToUtf16(e);
         });
     });
 }
@@ -424,7 +424,7 @@ void RemoveDuplicatedEntriesByName(UnitMap &um, ExecType exec_type) {
 namespace {
 std::optional<std::wstring> GetTrustee(const cfg::Plugins::ExeUnit &unit) {
     if (!unit.group().empty()) {
-        return ObtainInternalUser(wtools::ConvertToUTF16(unit.group())).first;
+        return ObtainInternalUser(wtools::ConvertToUtf16(unit.group())).first;
     }
     if (unit.user().empty()) {
         return {};
@@ -674,7 +674,7 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring &id,
         minibox_.processResults([&](const std::wstring &cmd_line, uint32_t pid,
                                     uint32_t code,
                                     const std::vector<char> &datablock) {
-            auto data = wtools::ConditionallyConvertFromUTF16(datablock);
+            auto data = wtools::ConditionallyConvertFromUtf16(datablock);
             if (!data.empty() && data.back() == 0) {
                 data.pop_back();  // conditional convert adds 0
             }
@@ -987,10 +987,10 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
     return true;
 }
 
-void PluginEntry::threadCore(const std::wstring &Id) {
+void PluginEntry::threadCore(const std::wstring &id) {
     // pre entry
     // thread counters block
-    XLOG::d.i("Async Thread for {} is to be started", wtools::ToUtf8(Id));
+    XLOG::d.i("Async Thread for {} is to be started", wtools::ToUtf8(id));
     ++g_tread_count;
     ON_OUT_OF_SCOPE(--g_tread_count);
     std::unique_lock lk(lock_);
@@ -1007,28 +1007,28 @@ void PluginEntry::threadCore(const std::wstring &Id) {
     });
 
     // core
-    auto mode = GetStartMode(path());
+    const auto mode = GetStartMode(path());
 
-    auto exec = cmd_line_.empty() ? ConstructCommandToExec(path()) : cmd_line_;
+    const auto exec =
+        cmd_line_.empty() ? ConstructCommandToExec(path()) : cmd_line_;
     if (exec.empty()) {
         XLOG::l(
             "Failed to start minibox '{}', can't find executables for the '{}'",
-            wtools::ToUtf8(Id), path().u8string());
+            wtools::ToUtf8(id), path().u8string());
         return;
     }
 
     const auto is_detached = mode == TheMiniBox::StartMode::detached;
     while (true) {
-        auto started = minibox_.startEx(Id, exec, mode, iu_);
-        if (!started) {
-            XLOG::l("Failed to start minibox thread {}", wtools::ToUtf8(Id));
+        if (!minibox_.startEx(id, exec, mode, iu_)) {
+            XLOG::l("Failed to start minibox thread {}", wtools::ToUtf8(id));
             break;
         }
 
         registerProcess(minibox_.getProcessId());
         std::vector<char> accu;
 
-        auto success =
+        const auto success =
             is_detached
                 ? minibox_.waitForUpdater(std::chrono::seconds(timeout()))
                 : minibox_.waitForEnd(std::chrono::seconds(timeout()));
@@ -1037,7 +1037,7 @@ void PluginEntry::threadCore(const std::wstring &Id) {
             minibox_.processResults([&](const std::wstring &cmd_line,
                                         uint32_t pid, uint32_t code,
                                         const std::vector<char> &datablock) {
-                auto data = wtools::ConditionallyConvertFromUTF16(datablock);
+                auto data = wtools::ConditionallyConvertFromUtf16(datablock);
                 tools::AddVector(accu, data);
                 {
                     std::lock_guard l(data_lock_);
@@ -1078,7 +1078,7 @@ void PluginEntry::threadCore(const std::wstring &Id) {
 
 wtools::InternalUser PluginsExecutionUser2Iu(std::string_view user) {
     const auto table =
-        tools::SplitStringExact(wtools::ConvertToUTF16(user), L" ", 2);
+        tools::SplitStringExact(wtools::ConvertToUtf16(user), L" ", 2);
     if (table.empty()) {
         return {};
     }
@@ -1096,7 +1096,7 @@ void PluginEntry::fillInternalUser() {
 
     // group is coming first
     if (!group_.empty()) {
-        iu_ = ObtainInternalUser(wtools::ConvertToUTF16(group_));
+        iu_ = ObtainInternalUser(wtools::ConvertToUtf16(group_));
         XLOG::t("Entry '{}' uses user '{}' as group config", path(),
                 wtools::ToUtf8(iu_.first));
         return;
@@ -1413,18 +1413,18 @@ void RunDetachedPlugins(const PluginMap & /*plugins_map*/,
 
 // To get data from async plugins with cache_age=0
 void PickupAsync0data(int timeout, PluginMap &plugins, std::vector<char> &out,
-                      std::vector<std::pair<bool, std::string>> &async_0s) {
+                      std::vector<std::pair<bool, std::string>> &async_nul_s) {
     timeout = std::max(timeout, 10);
     if (timeout != 0) {
         XLOG::d.i(
             "Picking up [{}] async-0"
             "plugins with timeout [{}]",
-            async_0s.size(), timeout);
+            async_nul_s.size(), timeout);
     }
 
     size_t async_count = 0;
     for (int i = 0; i < timeout; i++) {
-        for (auto &[started, name] : async_0s) {
+        for (auto &[started, name] : async_nul_s) {
             if (started) {
                 continue;
             }
@@ -1436,7 +1436,7 @@ void PickupAsync0data(int timeout, PluginMap &plugins, std::vector<char> &out,
                 async_count++;
             }
         }
-        if (async_count >= async_0s.size()) {
+        if (async_count >= async_nul_s.size()) {
             break;
         }
         tools::sleep(1000);

@@ -148,17 +148,17 @@ std::vector<std::string> SplitStringCall(const SplitTest &t) {
 
 std::vector<std::wstring> SplitStringCallWide(const SplitTest &t) {
     return t.count.has_value()
-               ? SplitString(wtools::ConvertToUTF16(t.in),
-                             wtools::ConvertToUTF16(t.delim), *t.count)
-               : SplitString(wtools::ConvertToUTF16(t.in),
-                             wtools::ConvertToUTF16(t.delim));
+               ? SplitString(wtools::ConvertToUtf16(t.in),
+                             wtools::ConvertToUtf16(t.delim), *t.count)
+               : SplitString(wtools::ConvertToUtf16(t.in),
+                             wtools::ConvertToUtf16(t.delim));
 }
 
 std::vector<std::wstring> ToUtf16(const std::vector<std::string> &strings) {
     std::vector<std::wstring> wstrings;
     std::ranges::transform(
         strings, std::back_inserter(wstrings),
-        [](const auto &s) { return wtools::ConvertToUTF16(s); });
+        [](const auto &s) { return wtools::ConvertToUtf16(s); });
     return wstrings;
 }
 
@@ -193,8 +193,8 @@ TEST(CmaTools, RemoveQuotes) {
     };
     for (const auto &[value, expected] : tests) {
         EXPECT_EQ(RemoveQuotes(value), expected);
-        EXPECT_EQ(RemoveQuotes(wtools::ConvertToUTF16(value)),
-                  wtools::ConvertToUTF16(expected));
+        EXPECT_EQ(RemoveQuotes(wtools::ConvertToUtf16(value)),
+                  wtools::ConvertToUtf16(expected));
     }
 }
 

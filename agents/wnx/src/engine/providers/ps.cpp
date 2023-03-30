@@ -75,8 +75,8 @@ std::wstring GetProcessListFromWmi(std::wstring_view separator) {
 
     // status will be ignored, ps doesn't support correct error processing
     // like other wmi sections
-    auto [table, ignored] = wmi.queryTable({}, L"Win32_Process", separator,
-                                           cfg::groups::global.getWmiTimeout());
+    auto [table, ignored] = wmi.queryTable(
+        {}, L"Win32_Process", separator, cfg::groups::g_global.getWmiTimeout());
     return table;
 }
 
@@ -332,7 +332,7 @@ std::string ProducePsWmi(bool use_full_path) {
         IWbemClassObject *object{nullptr};
         auto status{wtools::WmiStatus::ok};
         std::tie(object, status) = wtools::WmiGetNextObject(
-            processes, cfg::groups::global.getWmiTimeout());
+            processes, cfg::groups::g_global.getWmiTimeout());
         if (object == nullptr) {
             break;
         }

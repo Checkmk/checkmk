@@ -22,8 +22,7 @@
 // asio will call this function instead of the WSASocketW
 // we will modify behavior of the socket
 SOCKET WSASocketW_Hook(int af, int type, int protocol,
-                       LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g,
-                       DWORD dwFlags);
+                       LPWSAPROTOCOL_INFOW protocol_info, GROUP g, DWORD flags);
 
 #define WSASocketW WSASocketW_Hook
 #include <asio.hpp>

@@ -98,7 +98,7 @@ std::unordered_map<std::string, std::string> GetComputerSystemInfo(
 
     auto [table, ignored] =
         wmi.queryTable({}, L"Win32_ComputerSystem", separator,
-                       cfg::groups::global.getWmiTimeout());
+                       cfg::groups::g_global.getWmiTimeout());
     auto rows = tools::SplitString(table, L"\n");
     if (rows.size() < 2) {
         return {};
@@ -115,7 +115,7 @@ std::unordered_map<std::string, std::string> GetComputerSystemInfo(
     }
     std::unordered_map<std::string, std::string> result;
     for (const auto &n : names) {
-        auto i = rs::find(all_names, wtools::ConvertToUTF16(n));
+        auto i = rs::find(all_names, wtools::ConvertToUtf16(n));
         if (i == all_names.end()) {
             XLOG::l.t("Not found {}", n);
             result[n] = "";
@@ -132,7 +132,7 @@ std::unordered_map<std::string, std::string> GetComputerSystemInfo(
 std::string PerfCpuLoad::makeBody() {
     static const std::vector<std::string> names{
         "Name", "NumberOfLogicalProcessors", "NumberOfProcessors"};
-    auto sep = wtools::ConvertToUTF16(fmt::format("{}", separator()));
+    auto sep = wtools::ConvertToUtf16(fmt::format("{}", separator()));
     auto values = GetComputerSystemInfo(names, sep);
     if (values.empty()) {
         values = computer_info_cache_;

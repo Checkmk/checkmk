@@ -437,7 +437,7 @@ std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name) {
     if (type == EvlType::classic && !IsEventLogInRegistry(name)) return {};
 
     auto log =
-        evl::OpenEvl(wtools::ConvertToUTF16(name), type == EvlType::vista);
+        evl::OpenEvl(wtools::ConvertToUtf16(name), type == EvlType::vista);
 
     if (log && log->isLogValid()) {
         return log->getLastRecordId();
@@ -493,7 +493,7 @@ std::optional<std::string> ReadDataFromLog(EvlType type, State &state,
         return {};
     }
 
-    auto log = evl::OpenEvl(wtools::ConvertToUTF16(state.name_),
+    auto log = evl::OpenEvl(wtools::ConvertToUtf16(state.name_),
                             type == EvlType::vista);
 
     if (!log || !log->isLogValid()) {

@@ -158,20 +158,20 @@ TEST(ServiceProcessorTest, StartStopExe) {
     auto tp = processor->openAnswer("127.0.0.1");
 
     // make command line
-    auto cmd_line = groups::winperf.buildCmdLine();
+    auto cmd_line = groups::g_winperf.buildCmdLine();
     ASSERT_TRUE(!cmd_line.empty());
-    auto count = groups::winperf.countersCount();
+    auto count = groups::g_winperf.countersCount();
     auto count_of_colon = rs::count(cmd_line, L':');
     auto count_of_spaces = rs::count(cmd_line, L' ');
     ASSERT_TRUE(count_of_colon == count);
     ASSERT_EQ(count_of_spaces, count - 1);
 
-    auto exe_name = groups::winperf.exe();
+    auto exe_name = groups::g_winperf.exe();
     ASSERT_TRUE(!exe_name.empty());
-    auto wide_exe_name = wtools::ConvertToUTF16(exe_name);
-    auto prefix = groups::winperf.prefix();
+    auto wide_exe_name = wtools::ConvertToUtf16(exe_name);
+    auto prefix = groups::g_winperf.prefix();
     ASSERT_TRUE(!prefix.empty());
-    auto wide_prefix = wtools::ConvertToUTF16(prefix);
+    auto wide_prefix = wtools::ConvertToUtf16(prefix);
 
     processor->kickExe(true, wide_exe_name, tp.value(), processor, wide_prefix,
                        10, cmd_line);

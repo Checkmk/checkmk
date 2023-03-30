@@ -84,7 +84,7 @@ private:
     [[nodiscard]] HCRYPTKEY generateKey(Length key_length) const;
     HCRYPTKEY importKey(const BYTE *key, DWORD key_size) const;
     // derive key and iv from the password in the same manner as openssl does
-    [[nodiscard]] HCRYPTKEY deriveOpenSSLKey(const std::string &password,
+    [[nodiscard]] HCRYPTKEY deriveOpenSslKey(const std::string &password,
                                              Length key_length,
                                              int iterations) const;
     void releaseKey();

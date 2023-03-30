@@ -183,12 +183,12 @@ public:
                          const std::wstring &port_name,  // standard format
                          const std::wstring &answer_id,  // identifies Answer
                          const void *data, size_t length) {
-        if (auto id = tools::ConvertToUint64(answer_id); id.has_value()) {
-            auto port = wtools::ToUtf8(port_name);
+        if (const auto id = tools::ConvertToUint64(answer_id); id.has_value()) {
+            const auto port = wtools::ToUtf8(port_name);
             CoreCarrier cc;
             cc.establishCommunication(port);
-            auto ret = cc.sendData(wtools::ToUtf8(peer_name), id.value(), data,
-                                   length);
+            const auto ret = cc.sendData(wtools::ToUtf8(peer_name), id.value(),
+                                         data, length);
             cc.shutdownCommunication();
             return ret;
         }

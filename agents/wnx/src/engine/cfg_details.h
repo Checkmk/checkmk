@@ -178,7 +178,7 @@ public:
 
             auto raw_data = tools::ReadFileInVector(path_.wstring());
             if (raw_data.has_value()) {
-                data_ = wtools::ConditionallyConvertFromUTF16(raw_data.value());
+                data_ = wtools::ConditionallyConvertFromUtf16(raw_data.value());
                 checkData();
             }
         }
@@ -425,7 +425,7 @@ public:
     bool loadDirect(const std::filesystem::path &file);
     bool loadDirect(std::string_view text);
 
-    static uint64_t uniqId() noexcept { return g_uniq_id; }
+    static uint64_t uniqId() noexcept { return uniq_id_; }
 
 private:
     void fillExePaths(const std::filesystem::path &root);
@@ -466,7 +466,7 @@ private:
     bool generated_ = false;
     bool ok_ = false;
 
-    static std::atomic<uint64_t> g_uniq_id;
+    static std::atomic<uint64_t> uniq_id_;
 
 #if defined(ENABLE_WHITE_BOX_TESTING)
     friend class CmaCfg;

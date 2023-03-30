@@ -325,7 +325,7 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     }
     const auto &[ret, status] =
         wrapper.queryTable(columns_table, wmi_object, separator,
-                           cfg::groups::global.getWmiTimeout());
+                           cfg::groups::g_global.getWmiTimeout());
 
     tl.writeLog(ret.size());
 
@@ -334,7 +334,7 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
 
 namespace {
 std::wstring CharToWideString(char ch) {
-    return wtools::ConvertToUTF16(std::string(1, ch));
+    return wtools::ConvertToUtf16(std::string(1, ch));
 }
 
 bool IsAllAbsent(const std::vector<std::wstring> &services) {
@@ -399,7 +399,7 @@ std::string WmiBase::getData() {
 bool WmiBase::isAllowedByCurrentConfig() const {
     const auto name = getUniqName();
 
-    if (!cfg::groups::global.allowedSection(name)) {
+    if (!cfg::groups::g_global.allowedSection(name)) {
         XLOG::t("'{}' is skipped by config", name);
         return false;
     }
@@ -413,7 +413,7 @@ bool WmiBase::isAllowedByCurrentConfig() const {
     // 2. with sub_section, check situation when parent
     // is allowed, but all sub  DISABLED DIRECTLY
     for (const auto &sub : sub_objects_) {
-        if (!cfg::groups::global.isSectionDisabled(sub.getUniqName())) {
+        if (!cfg::groups::g_global.isSectionDisabled(sub.getUniqName())) {
             return true;
         }
     }

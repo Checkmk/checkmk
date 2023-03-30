@@ -96,8 +96,8 @@ IEnumVARIANT *Policy::getEnum() const {
     ON_OUT_OF_SCOPE(enumerator->Release());
 
     IEnumVARIANT *variant = nullptr;
-    const auto hr =
-        enumerator->QueryInterface(__uuidof(IEnumVARIANT), (void **)&variant);
+    const auto hr = enumerator->QueryInterface(
+        __uuidof(IEnumVARIANT), reinterpret_cast<void **>(&variant));
 
     return SUCCEEDED(hr) ? variant : nullptr;
 }
@@ -411,7 +411,7 @@ INetFwPolicy2 *WFCOMInitialize() {
 
     auto hr = ::CoCreateInstance(__uuidof(NetFwPolicy2), nullptr,
                                  CLSCTX_INPROC_SERVER, __uuidof(INetFwPolicy2),
-                                 (void **)&net_fw_policy2);
+                                 reinterpret_cast<void **>(&net_fw_policy2));
 
     if (FAILED(hr)) {
         XLOG::l("CoCreateInstance for INetFwPolicy2 failed: [{:#X}]", hr);

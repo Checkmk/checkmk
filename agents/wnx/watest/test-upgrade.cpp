@@ -211,8 +211,8 @@ static auto CreateIniFile(const fs::path &lwa, const std::string &content,
 }
 
 static std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
-    fs::path temp_dir = cfg::GetTempDir();
-    auto normal_dir =
+    const fs::path temp_dir = cfg::GetTempDir();
+    const auto normal_dir =
         temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
     if (normal_dir) {
         std::error_code ec;
@@ -226,9 +226,9 @@ static std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
 }
 
 TEST(UpgradeTest, CheckProtocolUpdate) {
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    auto [old_location, new_location] = CreateInOut();
+    const auto dir_pair = tst::TempDirPair(test_info_->name());
+    const auto old_location = dir_pair.in();
+    const auto new_location = dir_pair.out();
     EXPECT_TRUE(
         UpdateProtocolFile(new_location.wstring(), old_location.wstring()));
     EXPECT_FALSE(
@@ -263,19 +263,13 @@ TEST(UpgradeTest, CheckProtocolUpdate) {
 }
 
 TEST(UpgradeTest, CreateProtocol) {
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    fs::path dir = cfg::GetTempDir();
-    auto x = CreateProtocolFile(dir, "  aaa: aaa");
-    ASSERT_TRUE(x);
+    const auto tmp = tst::TempFolder(test_info_->name());
+    ASSERT_TRUE(CreateProtocolFile(tmp.path(), "  aaa: aaa"));
 
-    auto protocol_file = ConstructProtocolFileName(dir);
-    auto f = tools::ReadFileInVector(protocol_file);
+    auto f = tools::ReadFileInVector(ConstructProtocolFileName(tmp.path()));
     ASSERT_TRUE(f.has_value());
-    auto file_content = f.value();
-    std::string str((const char *)file_content.data(), file_content.size());
-    auto table = tools::SplitString(str, "\n");
-    EXPECT_EQ(table.size(), 3);
+    const std::string str{f->begin(), f->end()};
+    EXPECT_EQ(tools::SplitString(str, "\n").size(), 3);
 }
 
 static std::string for_patch =
@@ -376,7 +370,7 @@ TEST(UpgradeTest, LoggingSupport) {
         EXPECT_TRUE(IsBakeryIni(ini));
         auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
         EXPECT_EQ(yaml_file.filename().wstring(),
-                  wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
+                  wtools::ConvertToUtf16(name) + files::kDefaultBakeryExt);
         auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_TRUE(yaml.IsMap());
         auto yml_global = yaml[groups::kGlobal];
@@ -688,7 +682,7 @@ TEST(UpgradeTest, LoadIni) {
         EXPECT_TRUE(IsBakeryIni(ini));
         auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
         EXPECT_EQ(yaml_file.filename().wstring(),
-                  wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
+                  wtools::ConvertToUtf16(name) + files::kDefaultBakeryExt);
         auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_TRUE(yaml.IsMap());
     }
@@ -700,7 +694,7 @@ TEST(UpgradeTest, LoadIni) {
         auto yaml_file = CreateUserYamlFromIni(ini, pd_dir, name);
         EXPECT_TRUE(IsBakeryIni(ini));
         EXPECT_EQ(yaml_file.filename().wstring(),
-                  wtools::ConvertToUTF16(name) + files::kDefaultUserExt);
+                  wtools::ConvertToUtf16(name) + files::kDefaultUserExt);
         auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_TRUE(yaml.IsMap());
     }
@@ -712,7 +706,7 @@ TEST(UpgradeTest, LoadIni) {
         EXPECT_FALSE(IsBakeryIni(ini));
         auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_EQ(yaml_file.filename().wstring(),
-                  wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
+                  wtools::ConvertToUtf16(name) + files::kDefaultBakeryExt);
         EXPECT_TRUE(yaml.IsMap());
     }
 
@@ -723,7 +717,7 @@ TEST(UpgradeTest, LoadIni) {
         EXPECT_FALSE(IsBakeryIni(ini));
         auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_EQ(yaml_file.filename().wstring(),
-                  wtools::ConvertToUTF16(name) + files::kDefaultUserExt);
+                  wtools::ConvertToUtf16(name) + files::kDefaultUserExt);
         EXPECT_TRUE(yaml.IsMap());
     }
 }

@@ -197,7 +197,7 @@ void ServiceProcessor::stopTestingMainThread() {
 
 namespace {
 std::string FindWinPerfExe() {
-    auto exe_name = cfg::groups::winperf.exe();
+    auto exe_name = cfg::groups::g_winperf.exe();
 
     if (tools::IsEqual(exe_name, "agent")) {
         XLOG::t.i("Looking for default agent");
@@ -229,7 +229,7 @@ std::string FindWinPerfExe() {
 }
 
 std::wstring GetWinPerfLogFile() {
-    return cfg::groups::winperf.isTrace()
+    return cfg::groups::g_winperf.isTrace()
                ? (fs::path{cfg::GetLogDir()} / "winperf.log").wstring()
                : L"";
 }
@@ -237,19 +237,17 @@ std::wstring GetWinPerfLogFile() {
 
 void ServiceProcessor::kickWinPerf(AnswerId answer_id,
                                    const std::string &ip_addr) {
-    using cfg::groups::winperf;
-
-    auto cmd_line = winperf.buildCmdLine();
+    auto cmd_line = cfg::groups::g_winperf.buildCmdLine();
     if (!ip_addr.empty()) {
         // we may need IP info and using for this pseudo-counter
-        cmd_line = L"ip:" + wtools::ConvertToUTF16(ip_addr) + L" " + cmd_line;
+        cmd_line = L"ip:" + wtools::ConvertToUtf16(ip_addr) + L" " + cmd_line;
     }
 
-    auto exe_name = wtools::ConvertToUTF16(FindWinPerfExe());
-    const auto timeout = winperf.timeout();
-    auto prefix = wtools::ConvertToUTF16(winperf.prefix());
+    auto exe_name = wtools::ConvertToUtf16(FindWinPerfExe());
+    const auto timeout = cfg::groups::g_winperf.timeout();
+    auto prefix = wtools::ConvertToUtf16(cfg::groups::g_winperf.prefix());
 
-    if (winperf.isFork() && !exe_name.empty()) {
+    if (cfg::groups::g_winperf.isFork() && !exe_name.empty()) {
         vf_.emplace_back(kickExe(true,                   // async ???
                                  exe_name,               // perf_counter.exe
                                  answer_id,              // answer id
@@ -266,7 +264,7 @@ void ServiceProcessor::kickWinPerf(AnswerId answer_id,
                 auto cs = tools::SplitString(cmd_line, L" ");
                 std::vector<std::wstring_view> counters{cs.begin(), cs.end()};
                 return provider::RunPerf(prefix,
-                                         wtools::ConvertToUTF16(internal_port_),
+                                         wtools::ConvertToUtf16(internal_port_),
                                          AnswerIdToWstring(answer_id), timeout,
                                          std::vector<std::wstring_view>{
                                              cs.begin(), cs.end()}) == 0;
@@ -285,21 +283,21 @@ void ServiceProcessor::informDevice(rt::Device &rt_device,
         return;
     }
 
-    if (!cfg::groups::global.realtimeEnabled()) {
+    if (!cfg::groups::g_global.realtimeEnabled()) {
         XLOG::t("Real time is disabled in config");
         return;
     }
 
-    auto sections = cfg::groups::global.realtimeSections();
+    auto sections = cfg::groups::g_global.realtimeSections();
     if (sections.empty()) {
         return;
     }
 
     auto s_view = tools::ToView(sections);
 
-    const auto rt_port = cfg::groups::global.realtimePort();
-    auto password = cfg::groups::global.realtimePassword();
-    const auto rt_timeout = cfg::groups::global.realtimeTimeout();
+    const auto rt_port = cfg::groups::g_global.realtimePort();
+    auto password = cfg::groups::g_global.realtimePassword();
+    const auto rt_timeout = cfg::groups::g_global.realtimeTimeout();
 
     rt_device.connectFrom(ip_addr, rt_port, s_view, password, rt_timeout);
 }
@@ -453,8 +451,9 @@ int ServiceProcessor::startProviders(AnswerId answer_id,
     // sections to be kicked out
     tryToKick(uptime_provider_, answer_id, ip_addr);
 
-    if (cfg::groups::winperf.enabledInConfig() &&
-        cfg::groups::global.allowedSection(cfg::vars::kWinPerfPrefixDefault)) {
+    if (cfg::groups::g_winperf.enabledInConfig() &&
+        cfg::groups::g_global.allowedSection(
+            cfg::vars::kWinPerfPrefixDefault)) {
         kickWinPerf(answer_id, ip_addr);
     }
 
@@ -562,8 +561,8 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
     std::optional<ControllerParam> &controller_param) {
     XLOG::l.i("main Wait Loop");
     // memorize vars to check for changes in loop below
-    const auto ipv6 = cfg::groups::global.ipv6();
-    const auto port = cfg::groups::global.port();
+    const auto ipv6 = cfg::groups::g_global.ipv6();
+    const auto port = cfg::groups::g_global.port();
     auto uniq_cfg_id = cfg::details::ConfigInfo::uniqId();
     if (GetModus() == Modus::service) {
         ProcessServiceConfiguration(kServiceName);
@@ -582,8 +581,8 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
         }
 
         // check for config update and inform external port
-        auto new_ipv6 = cfg::groups::global.ipv6();
-        auto new_port = cfg::groups::global.port();
+        auto new_ipv6 = cfg::groups::g_global.ipv6();
+        auto new_port = cfg::groups::g_global.port();
         if (new_ipv6 != ipv6 || new_port != port) {
             XLOG::l.i("Restarting server with new parameters [{}] ipv6:[{}]",
                       new_port, new_ipv6);

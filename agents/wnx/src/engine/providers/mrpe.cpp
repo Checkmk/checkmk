@@ -349,7 +349,7 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
     minibox.processResults([&result](const std::wstring &cmd_line, uint32_t pid,
                                      uint32_t error_code,
                                      const std::vector<char> &data_block) {
-        auto data = wtools::ConditionallyConvertFromUTF16(data_block);
+        auto data = wtools::ConditionallyConvertFromUtf16(data_block);
         tools::AllTrim(data);
 
         // mrpe output must be patched in a bit strange way

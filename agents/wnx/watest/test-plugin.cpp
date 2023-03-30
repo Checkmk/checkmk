@@ -597,7 +597,7 @@ TEST(PluginTest, FilesAndFoldersIntegration) {
     OnStartTest();
     {
         PathVector pv;
-        for (auto &folder : cfg::groups::plugins.folders()) {
+        for (auto &folder : cfg::groups::g_plugins.folders()) {
             pv.emplace_back(folder);
         }
         auto files = GatherAllFiles(pv);
@@ -606,8 +606,8 @@ TEST(PluginTest, FilesAndFoldersIntegration) {
             return;
         }
 
-        EXPECT_EQ(cfg::groups::localGroup.foldersCount(), 1);
-        EXPECT_EQ(cfg::groups::plugins.foldersCount(), 2);
+        EXPECT_EQ(cfg::groups::g_local_group.foldersCount(), 1);
+        EXPECT_EQ(cfg::groups::g_plugins.foldersCount(), 2);
         EXPECT_TRUE(files.size() > 20);
 
         auto execute =
@@ -633,9 +633,9 @@ TEST(PluginTest, FilesAndFoldersIntegration) {
     }
 
     {
-        EXPECT_EQ(cfg::groups::localGroup.foldersCount(), 1);
+        EXPECT_EQ(cfg::groups::g_local_group.foldersCount(), 1);
         PathVector pv;
-        for (auto &folder : cfg::groups::localGroup.folders()) {
+        for (auto &folder : cfg::groups::g_local_group.folders()) {
             pv.emplace_back(folder);
         }
         auto files = cma::GatherAllFiles(pv);
@@ -2030,7 +2030,7 @@ TEST(PluginTest, EmptyPlugins) {
         yaml[cfg::groups::kGlobal][cfg::vars::kSectionsEnabled] =
             YAML::Load("[plugins]");
 
-        cfg::groups::global.loadFromMainConfig();
+        cfg::groups::g_global.loadFromMainConfig();
         plugins.updateSectionStatus();
         auto result = plugins.generateContent("", true);
         ASSERT_TRUE(!result.empty());
@@ -2044,7 +2044,7 @@ TEST(PluginTest, EmptyPlugins) {
         yaml[cfg::groups::kGlobal][cfg::vars::kSectionsEnabled] =
             YAML::Load("[local]");
 
-        cfg::groups::global.loadFromMainConfig();
+        cfg::groups::g_global.loadFromMainConfig();
         plugins.updateSectionStatus();
         auto result = plugins.generateContent(section::kLocal, true);
         ASSERT_TRUE(result.empty());
@@ -2067,7 +2067,7 @@ TEST(PluginTest, EmptyPlugins) {
         yaml[cfg::groups::kGlobal][cfg::vars::kSectionsEnabled] =
             YAML::Load("[local]");
 
-        cfg::groups::global.loadFromMainConfig();
+        cfg::groups::g_global.loadFromMainConfig();
         plugins.updateSectionStatus();
         auto result = plugins.generateContent(section::kLocal, true);
         ASSERT_FALSE(result.empty());
@@ -2251,7 +2251,7 @@ TEST(CmaMain, MiniBoxStartMode) {
         mb.processResults([&](const std::wstring & /*cmd_line*/,
                               uint32_t /*pid*/, uint32_t /*code*/,
                               const std::vector<char> &data) {
-            const auto result = wtools::ConditionallyConvertFromUTF16(data);
+            const auto result = wtools::ConditionallyConvertFromUtf16(data);
 
             tools::AddVector(accu, result);
         });
@@ -2279,7 +2279,7 @@ MiniBoxResult ExecWithMiniBox(const fs::path &file,
         mb.processResults([&](const std::wstring & /*cmd_line*/,
                               uint32_t /*pid*/, uint32_t /*code*/,
                               const std::vector<char> &data) {
-            const auto output = wtools::ConditionallyConvertFromUTF16(data);
+            const auto output = wtools::ConditionallyConvertFromUtf16(data);
             tools::AddVector(result.accu, output);
         });
     }

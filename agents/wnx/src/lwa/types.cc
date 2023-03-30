@@ -144,7 +144,7 @@ winperf_counter from_string<winperf_counter>(const std::string &value) {
     if (non_digit == base_id.end()) return {std::stoi(base_id), name, base_id};
 
     auto x =
-        wtools::perf::FindPerfIndexInRegistry(wtools::ConvertToUTF16(base_id));
+        wtools::perf::FindPerfIndexInRegistry(wtools::ConvertToUtf16(base_id));
     if (x.has_value()) return {(int)x.value(), name, base_id};
 
     return {0, "", ""};

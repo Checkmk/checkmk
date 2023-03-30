@@ -112,7 +112,7 @@ TEST(EventLogTest, PrintEventLogIntegration) {
         ASSERT_TRUE(ptr != nullptr);
 
         std::string str;
-        auto last = PrintEventLog(
+        const auto last = PrintEventLog(
             *ptr, 0, cfg::EventLevels::kCrit, false, SkipDuplicatedRecords::no,
             [&str](const std::string &in) {
                 str += in;
@@ -122,12 +122,12 @@ TEST(EventLogTest, PrintEventLogIntegration) {
         EXPECT_TRUE(!str.empty());
         {
             std::string str;
-            auto last = PrintEventLog(*ptr, 0, cfg::EventLevels::kCrit, false,
-                                      SkipDuplicatedRecords::no,
-                                      [&str](const std::string &in) {
-                                          str += in;
-                                          return str.length() < 10'000;
-                                      });
+            const auto last = PrintEventLog(*ptr, 0, cfg::EventLevels::kCrit,
+                                            false, SkipDuplicatedRecords::no,
+                                            [&str](const std::string &in) {
+                                                str += in;
+                                                return str.length() < 10'000;
+                                            });
             EXPECT_TRUE(last > 0);
             EXPECT_TRUE(str.size() >= 100);
         }

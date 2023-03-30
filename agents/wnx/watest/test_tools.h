@@ -182,7 +182,7 @@ constexpr std::string_view cab_to_test = "uncab_test.cab";
 class TempFolder {
 public:
     explicit TempFolder(std::string_view folder_name)
-        : TempFolder(wtools::ConvertToUTF16(folder_name)) {}
+        : TempFolder(wtools::ConvertToUtf16(folder_name)) {}
     explicit TempFolder(std::wstring_view folder_name);
     TempFolder(const TempFolder &) = delete;
     TempFolder &operator=(const TempFolder &) = delete;

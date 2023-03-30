@@ -320,11 +320,9 @@ TEST(LogWatchEventTest, CheckFabricConfig) {
     // data to be tested against
     constexpr RawLogWatchData base[LogWatchSections_Test] = {
         //{false, "", cfg::EventLevels::kOff, false},
-        {true, "Parameters", cfg::EventLevels::kIgnore,
-         provider::LogWatchContext::hide},
-        {true, "State", cfg::EventLevels::kIgnore,
-         provider::LogWatchContext::hide},
-        {true, "*", cfg::EventLevels::kWarn, provider::LogWatchContext::hide},
+        {true, "Parameters", cfg::EventLevels::kIgnore, LogWatchContext::hide},
+        {true, "State", cfg::EventLevels::kIgnore, LogWatchContext::hide},
+        {true, "*", cfg::EventLevels::kWarn, LogWatchContext::hide},
     };
 
     int pos = 0;
@@ -365,13 +363,11 @@ TEST(LogWatchEventTest, CheckTestConfig) {
 
     // data to be tested against
     constexpr RawLogWatchData base[LogWatchSections_Test] = {
-        {true, "Application", cfg::EventLevels::kCrit,
-         provider::LogWatchContext::with},
-        {true, "System", cfg::EventLevels::kWarn,
-         provider::LogWatchContext::hide},
-        {true, "Demo", cfg::EventLevels::kAll, provider::LogWatchContext::hide},
-        {false, "", cfg::EventLevels::kOff, provider::LogWatchContext::hide},
-        {true, "*", cfg::EventLevels::kWarn, provider::LogWatchContext::with},
+        {true, "Application", cfg::EventLevels::kCrit, LogWatchContext::with},
+        {true, "System", cfg::EventLevels::kWarn, LogWatchContext::hide},
+        {true, "Demo", cfg::EventLevels::kAll, LogWatchContext::hide},
+        {false, "", cfg::EventLevels::kOff, LogWatchContext::hide},
+        {true, "*", cfg::EventLevels::kWarn, LogWatchContext::with},
     };
 
     int pos = 0;

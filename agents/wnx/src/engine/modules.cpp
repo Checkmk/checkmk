@@ -265,7 +265,7 @@ ModuleCommander::GetSystemExtensions() {
     try {
         name_ = node[vars::kModulesName].as<std::string>();
         exec_ =
-            wtools::ConvertToUTF16(node[vars::kModulesExec].as<std::string>());
+            wtools::ConvertToUtf16(node[vars::kModulesExec].as<std::string>());
         exts_ = GetArray<std::string>(node[vars::kModulesExts]);
 
         // dir is optional

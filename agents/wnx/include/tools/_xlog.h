@@ -149,8 +149,8 @@ namespace xlog {
     }
 
     template <typename T>
-    void internal_Print2Buffer(const wchar_t *prefix, T *buf, size_t len,
-                               const T *format_string, ...) noexcept {
+    void InternalPrint2Buffer(const wchar_t *prefix, T *buf, size_t len,
+                              const T *format_string, ...) noexcept {
         static_assert(sizeof(T) == 1 || sizeof(T) == 2);
 
         va_list args{nullptr};
@@ -188,8 +188,8 @@ namespace xlog {
     template <typename T, typename... Args>
     void SysLogEvent(const T *log_name, LogEvents event_level, DWORD code,
                      const T *event_text, Args &&...args) {
-        auto eventSource = ::RegisterEventSource(nullptr, log_name);
-        if (eventSource == nullptr) {
+        auto event_source = ::RegisterEventSource(nullptr, log_name);
+        if (event_source == nullptr) {
             return;
         }
 
@@ -210,23 +210,23 @@ namespace xlog {
                 break;
         }
         T buf[4096] = {0};
-        xlog::internal_Print2Buffer(nullptr, buf, 4096, event_text,
-                                    std::forward<Args>(args)...);
+        xlog::InternalPrint2Buffer(nullptr, buf, 4096, event_text,
+                                   std::forward<Args>(args)...);
 
         const T *strings[2] = {
             log_name,
             buf,
         };
-        ::ReportEvent(eventSource,  // Event log handle
-                      type,         // Event type
-                      0,            // Event category
-                      code,         // Event identifier
-                      nullptr,      // No security identifier
-                      2,            // Size of lpszStrings array
-                      0,            // No binary data
-                      strings,      // Array of strings
-                      nullptr);     // No binary data
-        ::DeregisterEventSource(eventSource);
+        ::ReportEvent(event_source,  // Event log handle
+                      type,          // Event type
+                      0,             // Event category
+                      code,          // Event identifier
+                      nullptr,       // No security identifier
+                      2,             // Size of lpszStrings array
+                      0,             // No binary data
+                      strings,       // Array of strings
+                      nullptr);      // No binary data
+        ::DeregisterEventSource(event_source);
     }
 
     template <typename T>
@@ -554,7 +554,7 @@ namespace xlog {
         const LogParam &log_param, const T *format_string, Args &&...args) {
         T buf[kInternalMaxOut] = {0};
 
-        internal_Print2Buffer(
+        InternalPrint2Buffer(
             log_param.flags_ & Flags::kNoPrefix ? nullptr
                                                 : log_param.prefix().c_str(),
             buf, kInternalMaxOut, format_string, std::forward<Args>(args)...);

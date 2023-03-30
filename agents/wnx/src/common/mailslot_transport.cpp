@@ -213,28 +213,28 @@ bool Slot::Post(const void *data, int len) {
 int Slot::Get(void *data, unsigned int max_len) {
     std::lock_guard lck(lock_);
     if (handle_ == nullptr || IsClient()) {
-        return ErrCodes::FAILED_INIT;
+        return ErrCodes::failed_init;
     }
     const auto msg_size = CheckMessageSize();
     if (!msg_size.has_value()) {
-        return ErrCodes::FAILED_INFO;
+        return ErrCodes::failed_info;
     }
     const auto message_size = *msg_size;
 
     if (message_size == MAILSLOT_NO_MESSAGE) {
-        return ErrCodes::SUCCESS;
+        return ErrCodes::success;
     }
     if (data == nullptr) {
         return static_cast<int>(message_size);
     }
     if (max_len < message_size) {
-        return ErrCodes::TOO_SMALL;
+        return ErrCodes::too_small;
     }
 
     OVERLAPPED ov = CreateOverlapped();
     if (ov.hEvent == nullptr) {
         ApiLog("Failed Create Event with error %d", ::GetLastError());
-        return ErrCodes::FAILED_CREATE;
+        return ErrCodes::failed_create;
     }
     ON_OUT_OF_SCOPE(::CloseHandle(ov.hEvent));
     if (DWORD message_read{0U};
@@ -244,7 +244,7 @@ int Slot::Get(void *data, unsigned int max_len) {
 
     ApiLog("Failed read mail slot with error %d", ::GetLastError());
 
-    return ErrCodes::FAILED_READ;
+    return ErrCodes::failed_read;
 }
 
 OVERLAPPED Slot::CreateOverlapped() noexcept {
@@ -288,8 +288,8 @@ void Slot::MailBoxThread(ThreadProc foo, int sleep_value, void *context) {
         }
 
         ::Sleep(sleep_value > 0 ? sleep_value
-                                : DEFAULT_THREAD_SLEEP);  // we need sleep to
-                                                          // prevent polling
+                                : g_default_thread_sleep);  // we need sleep to
+                                                            // prevent polling
     }
 }
 

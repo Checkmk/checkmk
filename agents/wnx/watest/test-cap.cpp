@@ -97,7 +97,7 @@ TEST_F(CapTestFixture, ReinstallWithSource) {
 TEST_F(CapTestFixture, InstallFileAsCopy) {
     // absent source
     tst::CreateTextFile(target(), "1");
-    EXPECT_TRUE(InstallFileAsCopy(wtools::ConvertToUTF16(name()),
+    EXPECT_TRUE(InstallFileAsCopy(wtools::ConvertToUtf16(name()),
                                   target_dir().wstring(),
                                   source_dir().wstring(),
                                   Mode::normal));  //
@@ -105,7 +105,7 @@ TEST_F(CapTestFixture, InstallFileAsCopy) {
 
     // target presented
     tst::CreateTextFile(source(), "2");
-    EXPECT_TRUE(InstallFileAsCopy(wtools::ConvertToUTF16(name()),
+    EXPECT_TRUE(InstallFileAsCopy(wtools::ConvertToUtf16(name()),
                                   target_dir().wstring(),
                                   source_dir().wstring(),
                                   Mode::normal));  //
@@ -196,11 +196,9 @@ TEST_F(CapTestYamlFixture, ReInstallAbsentEverything) {
 }
 
 TEST_F(CapTestYamlFixture, ReInstall) {
-    auto yml_base =
+    const auto yml_base =
         tst::MakePathToConfigTestFiles() / "check_mk.wato.install.yml";
-    ASSERT_TRUE(fs::exists(yml_base));
-
-    auto yml_bakery = GetBakeryFile();
+    const auto yml_bakery = GetBakeryFile();
 
     // target presented: everything is removed
     // fs::copy_file(yml_base, yml_source());
@@ -330,7 +328,7 @@ TEST(CapTest, GetProcessToKill) {
 TEST(CapTest, StoreFileAgressive) {
     ASSERT_TRUE(IsStoreFileAgressive()) << "should be set normally";
 
-    auto work = tst::MakeTempFolderInTempPath(wtools::ConvertToUTF16(
+    auto work = tst::MakeTempFolderInTempPath(wtools::ConvertToUtf16(
         ::testing::UnitTest::GetInstance()->current_test_info()->name()));
     fs::create_directories(work);
 

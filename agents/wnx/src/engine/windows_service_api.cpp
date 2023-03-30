@@ -73,7 +73,7 @@ int RemoveMainService() {
 }
 
 // #POC: to be deleted
-static bool execMsi() {
+static bool ExecMsi() {
     wchar_t *str = nullptr;
     if (SHGetKnownFolderPath(FOLDERID_System, KF_FLAG_DEFAULT, nullptr, &str) !=
         S_OK) {
@@ -114,8 +114,8 @@ static bool execMsi() {
 
 // #POC This is part of poc, testing command which finds an update file and
 // execute it
-static void CheckForCommand(std::string &Command) {
-    Command = "";
+static void CheckForCommand(std::string &command) {
+    command.clear();
     std::error_code ec;
     auto dir = fs::current_path(ec);
     std::cout << wtools::ToStr(dir) << ": tick\n";
@@ -161,9 +161,9 @@ static void CheckForCommand(std::string &Command) {
         buffer[length] = 0;
         command_file.close();
         if (::MoveFileA(command_file_name.c_str(), done_file_name.c_str())) {
-            Command = buffer;
-            xlog::l("To exec %s", Command.c_str());
-            execMsi();
+            command = buffer;
+            xlog::l("To exec %s", command.c_str());
+            ExecMsi();
             return;
         }
 
@@ -184,7 +184,7 @@ int TestMainServiceSelf(int interval) {
     }
     // not a best method to call thread, but this is only for VISUAL testing
     std::thread kick_and_print([&stop, interval] {
-        auto port = static_cast<uint16_t>(cfg::groups::global.port());
+        auto port = static_cast<uint16_t>(cfg::groups::g_global.port());
 
         using namespace asio;
 
@@ -201,8 +201,8 @@ int TestMainServiceSelf(int interval) {
         tools::sleep(1000);
 
         while (!stop) {
-            auto enc = cfg::groups::global.globalEncrypt();
-            auto password = enc ? cfg::groups::global.password() : "";
+            auto enc = cfg::groups::g_global.globalEncrypt();
+            auto password = enc ? cfg::groups::g_global.password() : "";
             socket.connect(endpoint, ec);
             if (ec) {
                 XLOG::l("Can't connect to {}:{}, waiting for 5 seconds",
@@ -338,7 +338,7 @@ int TestLegacy() {
     return 0;
 }
 
-int RestoreWATOConfig() {
+int RestoreWatoConfig() {
     try {
         XLOG::setup::ColoredOutputOnStdio(true);
         XLOG::setup::DuplicateOnStdio(true);

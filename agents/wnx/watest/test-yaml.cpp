@@ -856,7 +856,7 @@ TEST(AgentConfig, UTF16LE) {
     // #TODO make separate
     auto name_utf8 = GetVal(groups::kGlobal, vars::kName, std::string(""));
     EXPECT_TRUE(!name_utf8.empty());
-    auto name_utf16 = wtools::ConvertToUTF16(name_utf8);
+    auto name_utf16 = wtools::ConvertToUtf16(name_utf8);
     EXPECT_TRUE(!name_utf16.empty());
     auto utf8_from_utf16 = wtools::ToUtf8(name_utf16);
     EXPECT_TRUE(!utf8_from_utf16.empty());
@@ -958,14 +958,14 @@ TEST(AgentConfig, LoadingCheck) {
     EXPECT_TRUE(XLOG::l.isFileDbg());
     EXPECT_TRUE(XLOG::l.isWinDbg());
 
-    EXPECT_TRUE(!groups::global.enabledSections().empty());
-    EXPECT_TRUE(groups::global.disabledSections().empty());
+    EXPECT_TRUE(!groups::g_global.enabledSections().empty());
+    EXPECT_TRUE(groups::g_global.disabledSections().empty());
 
-    EXPECT_TRUE(groups::global.realtimePort() == cfg::kDefaultRealtimePort);
-    EXPECT_TRUE(groups::global.realtimeTimeout() ==
+    EXPECT_TRUE(groups::g_global.realtimePort() == cfg::kDefaultRealtimePort);
+    EXPECT_TRUE(groups::g_global.realtimeTimeout() ==
                 cfg::kDefaultRealtimeTimeout);
-    EXPECT_FALSE(groups::global.realtimeEncrypt());
-    EXPECT_FALSE(groups::global.realtimeEnabled());
+    EXPECT_FALSE(groups::g_global.realtimeEncrypt());
+    EXPECT_FALSE(groups::g_global.realtimeEnabled());
 }
 
 TEST(AgentConfig, FactoryConfigBase) {
@@ -1045,18 +1045,18 @@ TEST(AgentConfig, GlobalTest) {
     EXPECT_TRUE(
         tools::IsEqual(fname, wtools::ToStr(dir / cfg::kDefaultLogFileName)));
 
-    EXPECT_TRUE(groups::global.allowedSection("check_mk"));
-    EXPECT_TRUE(groups::global.allowedSection("winperf"));
-    EXPECT_TRUE(groups::global.allowedSection("uptime"));
-    EXPECT_TRUE(groups::global.allowedSection("systemtime"));
-    EXPECT_TRUE(groups::global.allowedSection("df"));
-    EXPECT_TRUE(groups::global.allowedSection("mem"));
-    EXPECT_TRUE(groups::global.allowedSection("services"));
+    EXPECT_TRUE(groups::g_global.allowedSection("check_mk"));
+    EXPECT_TRUE(groups::g_global.allowedSection("winperf"));
+    EXPECT_TRUE(groups::g_global.allowedSection("uptime"));
+    EXPECT_TRUE(groups::g_global.allowedSection("systemtime"));
+    EXPECT_TRUE(groups::g_global.allowedSection("df"));
+    EXPECT_TRUE(groups::g_global.allowedSection("mem"));
+    EXPECT_TRUE(groups::g_global.allowedSection("services"));
 
-    EXPECT_TRUE(!groups::global.isSectionDisabled("winperf_any"));
-    EXPECT_TRUE(!groups::global.allowedSection("_logfiles"));
+    EXPECT_TRUE(!groups::g_global.isSectionDisabled("winperf_any"));
+    EXPECT_TRUE(!groups::g_global.allowedSection("_logfiles"));
 
-    auto val = groups::global.getWmiTimeout();
+    auto val = groups::g_global.getWmiTimeout();
     EXPECT_TRUE(val >= 1 && val < 100);
 }
 

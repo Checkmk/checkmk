@@ -79,6 +79,20 @@ def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 
 
+def mark_edition_only(feature_to_mark: str, exclusive_to: Edition) -> str:
+    """
+    >>> mark_edition_only("Feature", Edition.CRE)
+    'Feature (Raw Edition)'
+    >>> mark_edition_only("Feature", Edition.CEE)
+    'Feature (Enterprise Edition)'
+    >>> mark_edition_only("Feature", Edition.CCE)
+    'Feature (Cloud Edition)'
+    >>> mark_edition_only("Feature", Edition.CME)
+    'Feature (Managed Services Edition)'
+    """
+    return f"{feature_to_mark} ({exclusive_to.title.removeprefix('Checkmk ')})"
+
+
 # Version string: <major>.<minor>.<sub><vtype><patch>-<year>.<month>.<day>
 #                 [------ base -------][-- build ---]-[------ date ------]
 # A version string may consist of the three parts "base", "build" and "date".

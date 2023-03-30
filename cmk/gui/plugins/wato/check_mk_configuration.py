@@ -2931,7 +2931,9 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
     def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=DropdownChoice(
-                title=_("Choose SNMP Backend (Enterprise Edition only)"),
+                title=cmk_version.mark_edition_only(
+                    _("Choose SNMP Backend"), cmk_version.Edition.CEE
+                ),
                 choices=[
                     (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
                     (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
@@ -2978,7 +2980,7 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
                 "Changes to this option will have no effect to the behaviour of "
                 "Checkmk"
             )
-            % _("Choose SNMP Backend (Enterprise Edition only)"),
+            % cmk_version.mark_edition_only(_("Choose SNMP Backend"), cmk_version.Edition.CEE),
         )
 
 
@@ -5207,7 +5209,9 @@ rulespec_registry.register(
         group=RulespecGroupAgentSNMP,
         help_func=_help_snmp_backend,
         name="snmp_backend_hosts",
-        title=lambda: _("Hosts using a specific SNMP Backend (Enterprise Edition only)"),
+        title=lambda: cmk_version.mark_edition_only(
+            _("Hosts using a specific SNMP Backend"), cmk_version.Edition.CEE
+        ),
     )
 )
 

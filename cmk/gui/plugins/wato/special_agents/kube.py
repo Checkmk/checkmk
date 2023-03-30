@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.version import is_cloud_edition
+from cmk.utils.version import Edition, is_cloud_edition, mark_edition_only
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
@@ -107,7 +107,7 @@ def _migrate_usage_endpoint(p: dict[str, object]) -> dict[str, object]:
 def _openshift() -> tuple[str, str, Dictionary]:
     return (
         "prometheus",
-        _("Use data from OpenShift (Cloud Edition)"),
+        mark_edition_only(_("Use data from OpenShift"), Edition.CCE),
         Dictionary(
             elements=[
                 (

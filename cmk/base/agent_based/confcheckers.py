@@ -191,7 +191,9 @@ def summarize_host_sections(
     if include_ok_results or any(s.state != 0 for s in subresults):
         yield from (
             ActiveCheckResult(
-                s.state if override_non_ok_state is None else override_non_ok_state,
+                s.state
+                if (s.state == 0 or override_non_ok_state is None)
+                else override_non_ok_state,
                 f"[{source.ident}] {s.summary}" if idx == 0 else s.summary,
                 s.details,
                 s.metrics,

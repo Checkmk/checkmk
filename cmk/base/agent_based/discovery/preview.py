@@ -29,7 +29,7 @@ from cmk.checkers import (
     SummarizerFunction,
 )
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
-from cmk.checkers.checkresults import ServiceCheckResult
+from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 
 import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
@@ -50,17 +50,14 @@ from ._host_labels import analyse_host_labels, discover_host_labels, do_load_lab
 from .autodiscovery import _Transition, get_host_services
 from .utils import QualifiedDiscovery
 
-__all__ = ["get_check_preview", "SourcesFailedError"]
-
-
-class SourcesFailedError(RuntimeError):
-    ...
+__all__ = ["CheckPreview", "get_check_preview"]
 
 
 @dataclass(frozen=True)
 class CheckPreview:
     table: Sequence[CheckPreviewEntry]
     labels: QualifiedDiscovery[HostLabel]
+    source_results: Mapping[str, ActiveCheckResult]
 
 
 def get_check_preview(
@@ -91,8 +88,6 @@ def get_check_preview(
 
     fetched = fetcher(host_name, ip_address=ip_address)
     parsed = parser((f[0], f[1]) for f in fetched)
-    if failed_sources_results := [r for r in summarizer(parsed) if r.state != 0]:
-        raise SourcesFailedError("\n".join(r.summary for r in failed_sources_results))
 
     host_sections_no_error = filter_out_errors(parser((f[0], f[1]) for f in fetched))
     store_piggybacked_sections(host_sections_no_error)
@@ -181,6 +176,9 @@ def get_check_preview(
             ),
         ],
         labels=host_labels,
+        source_results={
+            src.ident: result for (src, _sections), result in zip(parsed, summarizer(parsed))
+        },
     )
 
 

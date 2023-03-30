@@ -121,6 +121,7 @@ class TestTryDiscoveryResult:
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            source_results={"agent": (0, "Success")},
         )
         assert (
             ServiceDiscoveryPreviewResult.deserialize(

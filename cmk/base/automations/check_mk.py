@@ -288,12 +288,7 @@ def _get_discovery_preview(
     with redirect_stdout(buf), redirect_stderr(buf):
         log.setup_console_logging()
 
-        try:
-            check_preview = _execute_discovery(host_name, perform_scan, on_error)
-        except discovery.SourcesFailedError:
-            check_preview = discovery.CheckPreview(
-                table=[], labels=discovery.QualifiedDiscovery.empty()
-            )
+        check_preview = _execute_discovery(host_name, perform_scan, on_error)
 
         def make_discovered_host_labels(
             labels: Sequence[HostLabel],
@@ -320,6 +315,9 @@ def _get_discovery_preview(
                 [l for l in check_preview.labels.vanished if l.name not in changed_labels]
             ),
             changed_labels=changed_labels,
+            source_results={
+                k: (r.state, r.as_text()) for k, r in check_preview.source_results.items()
+            },
         )
 
 

@@ -489,6 +489,7 @@ class DiscoveryPageRenderer:
         with output_funnel.plugged():
             self._toggle_action_page_menu_entries(discovery_result)
             enable_page_menu_entry(html, "inline_help")
+            self.render_sources(discovery_result.sources)
             self._show_discovered_host_labels(discovery_result)
             self._show_discovery_details(discovery_result, api_request)
             return output_funnel.drain()
@@ -497,6 +498,19 @@ class DiscoveryPageRenderer:
         with output_funnel.plugged():
             self._show_fix_all(discovery_result)
             return output_funnel.drain()
+
+    def render_sources(self, sources: Mapping[str, tuple[int, str]]) -> None:
+        pass  # TODO
+        # overall_state = cmk.utils.check_utils.worst_service_state(*(s for s, _output in sources.values()))
+        # open div, ...
+        # for state, output in sources.values():
+        #     # Make sure to not show long output (but we don't expect any)
+        #    _source, summary = output.split("\n", 1)[0].split(" ", 1)
+        #    # TODO: something close to this:
+        #    html.write_html(
+        #    #    HTML(f"{cmk.utils.html.get_html_state_marker(state)} {format_plugin_output(summary)}<br>")
+        #    # )
+        # NOTE: Check this with a non-ok datasource. We might get a bit many state markers.
 
     def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> None:
         if not discovery_result.host_labels:
@@ -610,6 +624,12 @@ class DiscoveryPageRenderer:
             self._show_discovery_empty(discovery_result, api_request)
             return
 
+        if self._snmp_source_failed(discovery_result.sources) and self._is_first_attempt(
+            api_request
+        ):
+            html.show_message(_("No SNMP data available. Please trigger a rescan."))
+            return
+
         # We currently don't get correct information from cmk.base (the data sources). Better
         # don't display this until we have the information.
         # html.write_text("Using discovery information from %s" % cmk.utils.render.date_and_time(
@@ -668,26 +688,17 @@ class DiscoveryPageRenderer:
             )
             return
 
-        if self._is_first_attempt(api_request):
-            html.show_message(
-                _("Could not find any service for this host. You might need to trigger a rescan.")
-            )
-            return
-
-        html.show_message(
-            _(
-                "No services found. "
-                "If you expect this host to have (vanished) services, it probably means that one "
-                "of the confured data sources is not operating as expected. "
-                "Take a look at the <i>Check_MK</i> service to see what is wrong."
-            )
-        )
-
     def _is_active(self, discovery_result: DiscoveryResult) -> bool:
         return discovery_result.job_status["is_active"]
 
     def _is_first_attempt(self, api_request: dict) -> bool:
         return api_request["discovery_result"] is None
+
+    def _snmp_source_failed(self, sources: Mapping[str, tuple[int, str]]) -> bool:
+        try:
+            return sources["snmp"][0] != 0
+        except KeyError:
+            return False
 
     def _group_check_table_by_state(
         self, check_table: Iterable[CheckPreviewEntry]

@@ -94,14 +94,14 @@ def execute_tests_in_container(
             logger.info("|   Execute all integration tests")
             logger.info("| ")
             logger.info(
-                "| VERSION=git tests/scripts/run-integration-test.py "
+                "| VERSION=git pytest -T integration "
                 "tests/integration/livestatus/test_livestatus.py"
             )
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
             logger.info(
-                "| VERSION=git tests/scripts/run-integration-test.py "
+                "| VERSION=git pytest -T integration "
                 "tests/integration/livestatus/test_livestatus.py "
                 "-k test_service_custom_variables "
             )

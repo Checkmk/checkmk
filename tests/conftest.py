@@ -64,7 +64,7 @@ test_types = collections.OrderedDict(
         ("docker", ExecutionType.VirtualEnv),
         ("agent-integration", ExecutionType.VirtualEnv),
         ("agent-plugin-unit", ExecutionType.VirtualEnv),
-        ("integration", ExecutionType.Site),
+        ("integration", ExecutionType.VirtualEnv),
         ("gui_crawl", ExecutionType.VirtualEnv),
         ("gui_e2e", ExecutionType.VirtualEnv),
         ("packaging", ExecutionType.VirtualEnv),

@@ -847,3 +847,46 @@ def test_connect_error(mock_close: mock.Mock, mock_connect: mock.Mock) -> None:
 @mock.patch("cmk.special_agents.agent_smb_share.special_agent_main", return_value=0)
 def test_main(mock_agent: mock.Mock) -> None:
     assert main() == 0
+
+
+@pytest.mark.parametrize(
+    "file1,file2,expected_result",
+    [
+        pytest.param(
+            File(
+                "\\Share Folder 1\\smb_share.log",
+                SharedFile(0, 0, 0, 1111111, 100, 0, 16, "", "smb_share.log"),
+            ),
+            File(
+                "\\Share Folder 1\\smb_share.log",
+                SharedFile(0, 0, 0, 1111112, 101, 0, 16, "", "smb_share.log"),
+            ),
+            True,
+            id="files with the same path",
+        ),
+        pytest.param(
+            File(
+                "\\Share Folder 1\\smb_share.log",
+                SharedFile(0, 0, 0, 1111111, 100, 0, 16, "", "smb_share.log"),
+            ),
+            File(
+                "\\Share Folder 2\\smb_share.log",
+                SharedFile(0, 0, 0, 1111111, 100, 0, 16, "", "smb_share.log"),
+            ),
+            False,
+            id="files with different paths",
+        ),
+        pytest.param(
+            File(
+                "\\Share Folder 1\\smb_share.log",
+                SharedFile(0, 0, 0, 1111111, 100, 0, 16, "", "smb_share.log"),
+            ),
+            5,
+            False,
+            id="comparison with an object of a different type",
+        ),
+    ],
+)
+def test_file_comparison(file1: File, file2: File, expected_result: bool) -> None:
+    result = file1 == file2
+    assert result == expected_result

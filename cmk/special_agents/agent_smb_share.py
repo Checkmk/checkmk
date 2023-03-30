@@ -28,6 +28,15 @@ class File(NamedTuple):
     path: str
     file: SharedFile
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, File):
+            return NotImplemented
+
+        return self.path == other.path
+
+    def __hash__(self) -> int:
+        return hash(self.path)
+
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)

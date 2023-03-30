@@ -153,7 +153,7 @@ class ConfiguredSummarizer:
         self,
         host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
     ) -> Iterable[ActiveCheckResult]:
-        return itertools.chain.from_iterable(
+        yield from (
             summarize_host_sections(
                 host_sections,
                 source,
@@ -178,7 +178,7 @@ def summarize_host_sections(
     exit_spec: ExitSpec,
     time_settings: PiggybackTimeSettings,
     is_piggyback: bool,
-) -> Iterable[ActiveCheckResult]:
+) -> ActiveCheckResult:
     subresults = summarize(
         source.hostname,
         source.ipaddress,
@@ -188,18 +188,23 @@ def summarize_host_sections(
         is_piggyback=is_piggyback,
         fetcher_type=source.fetcher_type,
     )
-    if include_ok_results or any(s.state != 0 for s in subresults):
-        yield from (
-            ActiveCheckResult(
-                s.state
-                if (s.state == 0 or override_non_ok_state is None)
-                else override_non_ok_state,
-                f"[{source.ident}] {s.summary}" if idx == 0 else s.summary,
-                s.details,
-                s.metrics,
+    return (
+        ActiveCheckResult()
+        if not include_ok_results and all(s.state == 0 for s in subresults)
+        else ActiveCheckResult.from_subresults(
+            *(
+                ActiveCheckResult(
+                    s.state
+                    if (s.state == 0 or override_non_ok_state is None)
+                    else override_non_ok_state,
+                    f"[{source.ident}] {s.summary}" if idx == 0 else s.summary,
+                    s.details,
+                    s.metrics,
+                )
+                for idx, s in enumerate(subresults)
             )
-            for idx, s in enumerate(subresults)
         )
+    )
 
 
 class ConfiguredFetcher:

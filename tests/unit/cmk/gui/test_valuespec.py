@@ -130,17 +130,18 @@ def test_timerange_value_to_html_conversion(
     value: vs.CascadingDropdownChoiceValue,
     result_title: vs.ValueSpecText,
 ) -> None:
-    monkeypatch.setattr(
-        active_config,
-        "graph_timeranges",
-        [
-            {"title": "The last 4 fun hours", "duration": 4 * 60 * 60},
-            {"title": "The last 25 hard hours", "duration": 25 * 60 * 60},
-            {"title": "Since a sesquiweek", "duration": 3600 * 24 * 7 * 1.5},
-        ],
-    )
+    with monkeypatch.context() as m:
+        m.setattr(
+            active_config,
+            "graph_timeranges",
+            [
+                {"title": "The last 4 fun hours", "duration": 4 * 60 * 60},
+                {"title": "The last 25 hard hours", "duration": 25 * 60 * 60},
+                {"title": "Since a sesquiweek", "duration": 3600 * 24 * 7 * 1.5},
+            ],
+        )
 
-    assert vs.Timerange().value_to_html(value) == result_title
+        assert vs.Timerange().value_to_html(value) == result_title
 
 
 @pytest.mark.usefixtures("request_context")

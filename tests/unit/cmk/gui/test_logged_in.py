@@ -136,15 +136,16 @@ def test_unauthenticated_users(
 
 @pytest.mark.parametrize("user", [LoggedInNobody(), LoggedInSuperUser()])
 @pytest.mark.usefixtures("request_context")
-def test_unauthenticated_users_language(mocker: MockerFixture, user: LoggedInUser) -> None:
-    mocker.patch.object(active_config, "default_language", "esperanto")
-    assert user.language == "esperanto"
+def test_unauthenticated_users_language(monkeypatch: MonkeyPatch, user: LoggedInUser) -> None:
+    with monkeypatch.context() as m:
+        m.setattr(active_config, "default_language", "esperanto")
+        assert user.language == "esperanto"
 
-    user.language = "sindarin"
-    assert user.language == "sindarin"
+        user.language = "sindarin"
+        assert user.language == "sindarin"
 
-    user.reset_language()
-    assert user.language == "esperanto"
+        user.reset_language()
+        assert user.language == "esperanto"
 
 
 @pytest.mark.parametrize("user", [LoggedInNobody(), LoggedInSuperUser()])
@@ -181,35 +182,35 @@ def test_unauthenticated_users_authorized_login_sites(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_logged_in_nobody_permissions(mocker: MockerFixture) -> None:
+def test_logged_in_nobody_permissions(mocker: MockerFixture, monkeypatch: MonkeyPatch) -> None:
     user = LoggedInNobody()
-
-    mocker.patch.object(active_config, "roles", {})
     mocker.patch.object(permissions, "permission_registry")
+    with monkeypatch.context() as m:
+        m.setattr(active_config, "roles", {})
 
-    assert user.may("any_permission") is False
-    with pytest.raises(MKAuthException):
-        user.need_permission("any_permission")
+        assert user.may("any_permission") is False
+        with pytest.raises(MKAuthException):
+            user.need_permission("any_permission")
 
 
 @pytest.mark.usefixtures("request_context")
-def test_logged_in_super_user_permissions(mocker: MockerFixture) -> None:
+def test_logged_in_super_user_permissions(mocker: MockerFixture, monkeypatch: MonkeyPatch) -> None:
     user = LoggedInSuperUser()
-
-    mocker.patch.object(
-        active_config,
-        "roles",
-        {
-            "admin": {"permissions": {"eat_other_peoples_cake": True}},
-        },
-    )
     mocker.patch.object(permissions, "permission_registry")
+    with monkeypatch.context() as m:
+        m.setattr(
+            active_config,
+            "roles",
+            {
+                "admin": {"permissions": {"eat_other_peoples_cake": True}},
+            },
+        )
 
-    assert user.may("eat_other_peoples_cake") is True
-    assert user.may("drink_other_peoples_milk") is False
-    user.need_permission("eat_other_peoples_cake")
-    with pytest.raises(MKAuthException):
-        user.need_permission("drink_other_peoples_milk")
+        assert user.may("eat_other_peoples_cake") is True
+        assert user.may("drink_other_peoples_milk") is False
+        user.need_permission("eat_other_peoples_cake")
+        with pytest.raises(MKAuthException):
+            user.need_permission("drink_other_peoples_milk")
 
 
 MONITORING_USER_CACHED_PROFILE = {
@@ -315,38 +316,41 @@ def test_monitoring_user_read_broken_file(monitoring_user: LoggedInUser) -> None
     assert monitoring_user.load_file("asd", deflt="xyz") == "xyz"
 
 
-def test_monitoring_user_permissions(mocker: MockerFixture, monitoring_user: LoggedInUser) -> None:
-    mocker.patch.object(
-        active_config,
-        "roles",
-        {
-            # The admin permissions are needed, otherwise the teardown code would not run due to
-            # missing permissions.
-            "admin": {
-                "permissions": {
-                    "wato.users": True,
-                    "wato.edit": True,
+def test_monitoring_user_permissions(
+    mocker: MockerFixture, monkeypatch: MonkeyPatch, monitoring_user: LoggedInUser
+) -> None:
+    mocker.patch.object(permissions, "permission_registry")
+    with monkeypatch.context() as m:
+        m.setattr(
+            active_config,
+            "roles",
+            {
+                # The admin permissions are needed, otherwise the teardown code would not run due to
+                # missing permissions.
+                "admin": {
+                    "permissions": {
+                        "wato.users": True,
+                        "wato.edit": True,
+                    },
+                },
+                "user": {
+                    "permissions": {
+                        "action.star": False,
+                        "general.edit_views": True,
+                    }
                 },
             },
-            "user": {
-                "permissions": {
-                    "action.star": False,
-                    "general.edit_views": True,
-                }
-            },
-        },
-    )
-    mocker.patch.object(permissions, "permission_registry")
+        )
 
-    assert monitoring_user.may("action.star") is False
-    assert monitoring_user.may("general.edit_views") is True
-    assert monitoring_user.may("unknown_permission") is False
+        assert monitoring_user.may("action.star") is False
+        assert monitoring_user.may("general.edit_views") is True
+        assert monitoring_user.may("unknown_permission") is False
 
-    with pytest.raises(MKAuthException):
-        monitoring_user.need_permission("action.start")
-    monitoring_user.need_permission("general.edit_views")
-    with pytest.raises(MKAuthException):
-        monitoring_user.need_permission("unknown_permission")
+        with pytest.raises(MKAuthException):
+            monitoring_user.need_permission("action.start")
+        monitoring_user.need_permission("general.edit_views")
+        with pytest.raises(MKAuthException):
+            monitoring_user.need_permission("unknown_permission")
 
 
 @pytest.mark.usefixtures("monitoring_user")

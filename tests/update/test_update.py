@@ -92,7 +92,7 @@ def test_update(test_site: Site, tmp_path: Path) -> None:
         fallback_branch=current_base_branch_name(),
     )
 
-    target_site = update_site(target_version)
+    target_site = update_site(test_site, target_version, interactive=True)
 
     # TODO: check target installation (version check done in update_site function)
     # TODO: check config

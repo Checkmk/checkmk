@@ -87,30 +87,32 @@ def test_add_manual_link() -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(user, "language", lambda: "de")
-    assert compare_html(
-        html.render_help("[intro_welcome|Welcome]"),
-        HTML(
-            '<div style="display:none;" class="help"><div class="info_icon"><img '
-            'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
-            'class="help_text"><a href="https://docs.checkmk.com/master/de/intro_welcome.html" '
-            'target="_blank">Welcome</a></div></div>'
-        ),
-    )
+    with monkeypatch.context() as m:
+        m.setattr(user, "language", lambda: "de")
+        assert compare_html(
+            html.render_help("[intro_welcome|Welcome]"),
+            HTML(
+                '<div style="display:none;" class="help"><div class="info_icon"><img '
+                'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
+                'class="help_text"><a href="https://docs.checkmk.com/master/de/intro_welcome.html" '
+                'target="_blank">Welcome</a></div></div>'
+            ),
+        )
 
 
 @pytest.mark.usefixtures("request_context")
 def test_add_manual_link_anchor(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(user, "language", lambda: "de")
-    assert compare_html(
-        html.render_help("[graphing#rrds|RRDs]"),
-        HTML(
-            '<div style="display:none;" class="help"><div class="info_icon"><img '
-            'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
-            'class="help_text"><a href="https://docs.checkmk.com/master/de/graphing.html#rrds" '
-            'target="_blank">RRDs</a></div></div>'
-        ),
-    )
+    with monkeypatch.context() as m:
+        m.setattr(user, "language", lambda: "de")
+        assert compare_html(
+            html.render_help("[graphing#rrds|RRDs]"),
+            HTML(
+                '<div style="display:none;" class="help"><div class="info_icon"><img '
+                'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
+                'class="help_text"><a href="https://docs.checkmk.com/master/de/graphing.html#rrds" '
+                'target="_blank">RRDs</a></div></div>'
+            ),
+        )
 
 
 @pytest.mark.usefixtures("request_context")

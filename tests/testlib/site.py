@@ -411,7 +411,8 @@ class Site:
 
     def read_binary_file(self, rel_path: str) -> bytes:
         if self._is_running_as_site_user():
-            raise NotImplementedError()
+            with open(self.path(rel_path), "rb") as f:
+                return f.read()
 
         p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE, encoding=None)
         stdout = p.communicate()[0]

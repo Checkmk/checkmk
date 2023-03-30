@@ -2,7 +2,6 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import urllib.parse
 from collections.abc import MutableMapping
 from typing import Any, Literal
 
@@ -221,7 +220,7 @@ class MoveHost(BaseSchema):
     target_folder = gui_fields.FolderField(
         required=True,
         description="The path of the target folder where the host is supposed to be moved to.",
-        example=urllib.parse.quote_plus("/my/fine/folder"),
+        example="~my~fine~folder",
     )
 
 
@@ -567,7 +566,7 @@ class MoveFolder(BaseSchema):
     destination = gui_fields.FolderField(
         required=True,
         description="Where the folder has to be moved to.",
-        example=urllib.parse.quote_plus("/my/fine/folder"),
+        example="~my~fine/folder",
     )
 
 

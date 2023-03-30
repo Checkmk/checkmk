@@ -40,15 +40,12 @@ class TestAgentSummarizer:
 
 class TestPiggybackSummarizer:
     def test_summarize_missing_data_without_is_piggyback_option(self) -> None:
-        assert (
-            summarize_piggyback(
-                hostname="hostname",
-                ipaddress="1.2.3.4",
-                time_settings=[("", "", 0)],
-                is_piggyback=False,
-            )
-            == []
-        )
+        assert summarize_piggyback(
+            hostname="hostname",
+            ipaddress="1.2.3.4",
+            time_settings=[("", "", 0)],
+            is_piggyback=False,
+        ) == [ActiveCheckResult(0, "Success (but no data found)")]
 
     def test_summarize_missing_data_with_is_piggyback_option(self) -> None:
         assert summarize_piggyback(

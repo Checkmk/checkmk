@@ -12,7 +12,7 @@ import sys
 import time
 from collections.abc import Callable, Sequence
 from hashlib import sha256
-from typing import Any, assert_never, Literal, NamedTuple, TypedDict
+from typing import Any, assert_never, Literal, Mapping, NamedTuple, TypedDict
 
 from mypy_extensions import NamedArg
 
@@ -133,6 +133,7 @@ class DiscoveryResult(NamedTuple):
     new_labels: dict
     vanished_labels: dict
     changed_labels: dict
+    sources: Mapping[str, tuple[int, str]]
 
     def serialize(self) -> str:
         return repr(
@@ -144,6 +145,7 @@ class DiscoveryResult(NamedTuple):
                 self.new_labels,
                 self.vanished_labels,
                 self.changed_labels,
+                self.sources,
             )
         )
 
@@ -843,6 +845,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                 new_labels={},
                 vanished_labels={},
                 changed_labels={},
+                source_results={},
             ),
         )
 
@@ -913,6 +916,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             new_labels=result.new_labels,
             vanished_labels=result.vanished_labels,
             changed_labels=result.changed_labels,
+            sources=result.source_results,
         )
 
     @staticmethod

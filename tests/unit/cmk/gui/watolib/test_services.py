@@ -74,6 +74,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
     new_labels={},
     vanished_labels={},
     changed_labels={},
+    source_results={"agent": (0, "Success")},
 )
 
 
@@ -225,6 +226,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            source_results={"agent": (0, "Success")},
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -279,6 +281,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         },
         vanished_labels={},
         changed_labels={},
+        sources={"agent": (0, "Success")},
     )
 
     discovery_options = DiscoveryOptions(
@@ -406,6 +409,7 @@ def test_perform_discovery_single_update(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            source_results={"agent": (0, "Success")},
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -505,6 +509,7 @@ def test_perform_discovery_single_update(
         new_labels={},
         vanished_labels={},
         changed_labels={},
+        sources={"agent": (0, "Success")},
     )
 
     discovery_options = DiscoveryOptions(
@@ -598,6 +603,7 @@ def test_perform_discovery_action_update_services(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            source_results={"agent": (0, "Success")},
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -680,6 +686,7 @@ def test_perform_discovery_action_update_services(
         new_labels={},
         vanished_labels={},
         changed_labels={},
+        sources={"agent": (0, "Success")},
     )
 
     discovery_options = DiscoveryOptions(
@@ -745,6 +752,7 @@ def test_perform_discovery_action_update_host_labels(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            source_results={"agent": (0, "Success")},
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -776,6 +784,7 @@ def test_perform_discovery_action_update_host_labels(
         new_labels={},
         vanished_labels={"cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"}},
         changed_labels={},
+        sources={"agent": (0, "Success")},
     )
 
     discovery_options = DiscoveryOptions(

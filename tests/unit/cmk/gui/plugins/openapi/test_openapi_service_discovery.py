@@ -785,6 +785,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
     new_labels={},
     vanished_labels={},
     changed_labels={},
+    source_results={"agent": (0, "Success")},
 )
 
 

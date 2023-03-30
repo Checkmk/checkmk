@@ -17,3 +17,7 @@ def replace_state_markers(output: str) -> str:
         .replace("(?)", _UNKNOWN_MARKER)
         .replace("(.)", _OK_MARKER)
     )
+
+
+def get_html_state_marker(state: int) -> str:
+    return [_OK_MARKER, _WARN_MARKER, _CRIT_MARKER, _UNKNOWN_MARKER][state]

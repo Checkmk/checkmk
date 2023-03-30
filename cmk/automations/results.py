@@ -137,8 +137,11 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     new_labels: DiscoveredHostLabelsDict
     vanished_labels: DiscoveredHostLabelsDict
     changed_labels: DiscoveredHostLabelsDict
+    source_results: Mapping[str, tuple[int, str]]
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+        if for_cmk_version <= cmk_version.Version.from_str("2.2.0b2"):
+            return SerializedResult(repr(astuple(self)[:6]))
         return SerializedResult(repr(astuple(self)))
 
     @classmethod

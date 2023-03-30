@@ -15,6 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
 from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_agent_update,
     _check_cmk_agent_update,
+    _check_encryption_panic,
     _check_only_from,
     _check_python_plugins,
     _check_transport,
@@ -186,6 +187,19 @@ def test_check_faild_python_plugins() -> None:
             ),
         )
     ]
+
+
+def test_check_encryption_panic() -> None:
+    assert [*_check_encryption_panic("something")] == [
+        Result(
+            state=State.CRIT,
+            summary="Failed to apply symmetric encryption, aborting communication.",
+        )
+    ]
+
+
+def test_check_no_encryption_panic() -> None:
+    assert not [*_check_encryption_panic(None)]
 
 
 @pytest.mark.parametrize("fail_state", list(State))

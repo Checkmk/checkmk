@@ -308,9 +308,17 @@ if inpath timeout; then
     export -f waitmax
 fi
 
+encryption_panic() {
+    echo "<<<check_mk>>>"
+    echo "EncryptionPanic: true"
+    exit 1
+}
+
 set_up_encryption() {
     # shellcheck source=agents/cfg_examples/encryption.cfg
-    [ -f "${MK_CONFDIR}/encryption.cfg" ] && . "${MK_CONFDIR}/encryption.cfg"
+    [ -f "${MK_CONFDIR}/encryption.cfg" ] && {
+        . "${MK_CONFDIR}/encryption.cfg" || encryption_panic
+    }
     define_optionally_encrypt "${ENCRYPTED:-"no"}"
 }
 

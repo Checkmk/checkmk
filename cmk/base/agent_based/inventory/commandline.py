@@ -11,7 +11,7 @@ import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.log import section
-from cmk.utils.structured_data import load_tree
+from cmk.utils.structured_data import load_tree, RawIntervalsFromConfig
 from cmk.utils.type_defs import (
     EVERYTHING,
     HostName,
@@ -43,6 +43,7 @@ def commandline_inventory(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     parameters: HWSWInventoryParameters,
+    raw_intervals_from_config: RawIntervalsFromConfig,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
@@ -57,6 +58,7 @@ def commandline_inventory(
             summarizer=summarizer,
             inventory_parameters=config_cache.inventory_parameters,
             parameters=parameters,
+            raw_intervals_from_config=raw_intervals_from_config,
             section_plugins=section_plugins,
             inventory_plugins=inventory_plugins,
             run_plugin_names=run_plugin_names,
@@ -79,6 +81,7 @@ def _commandline_inventory_on_host(
     summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
     parameters: HWSWInventoryParameters,
+    raw_intervals_from_config: RawIntervalsFromConfig,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
@@ -98,6 +101,7 @@ def _commandline_inventory_on_host(
         inventory_plugins=inventory_plugins,
         run_plugin_names=run_plugin_names,
         parameters=parameters,
+        raw_intervals_from_config=raw_intervals_from_config,
         old_tree=old_tree,
     ).check_result
 

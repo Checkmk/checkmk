@@ -9,7 +9,12 @@ from typing import NamedTuple
 import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.log import console
-from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, UpdateResult
+from cmk.utils.structured_data import (
+    RawIntervalsFromConfig,
+    StructuredDataNode,
+    TreeOrArchiveStore,
+    UpdateResult,
+)
 from cmk.utils.type_defs import (
     EVERYTHING,
     HostName,
@@ -45,6 +50,7 @@ def execute_active_check_inventory(
     inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
     parameters: HWSWInventoryParameters,
+    raw_intervals_from_config: RawIntervalsFromConfig,
 ) -> ActiveCheckResult:
     tree_or_archive_store = TreeOrArchiveStore(
         cmk.utils.paths.inventory_output_dir,
@@ -63,6 +69,7 @@ def execute_active_check_inventory(
         inventory_plugins=inventory_plugins,
         run_plugin_names=EVERYTHING,
         parameters=parameters,
+        raw_intervals_from_config=raw_intervals_from_config,
         old_tree=old_tree,
     )
 

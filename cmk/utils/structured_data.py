@@ -86,7 +86,7 @@ class _RawIntervalFromConfig(_RawIntervalFromConfigMandatory, total=False):
     columns: Literal["all"] | tuple[str, list[str]]
 
 
-RawIntervalsFromConfig = list[_RawIntervalFromConfig]
+RawIntervalsFromConfig = Sequence[_RawIntervalFromConfig]
 
 
 class RetentionIntervals(NamedTuple):

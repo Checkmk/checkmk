@@ -92,6 +92,7 @@ def check_inventory_tree(
     inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
+    raw_intervals_from_config: RawIntervalsFromConfig,
     old_tree: StructuredDataNode,
 ) -> CheckInventoryTreeResult:
     if config_cache.is_cluster(host_name):
@@ -129,7 +130,7 @@ def check_inventory_tree(
                 run_plugin_names=run_plugin_names,
             )
         ),
-        raw_intervals_from_config=config_cache.inv_retention_intervals(host_name),
+        raw_intervals_from_config=raw_intervals_from_config,
         old_tree=old_tree,
     )
 

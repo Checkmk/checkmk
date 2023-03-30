@@ -2195,6 +2195,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
             parser=parser,
             summarizer=summarizer,
             parameters=parameters,
+            raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
             section_plugins=SectionPluginMapper(),
             inventory_plugins=InventoryPluginMapper(),
             run_plugin_names=run_plugin_names,
@@ -2293,6 +2294,7 @@ def mode_inventory_as_check(
             inventory_plugins=InventoryPluginMapper(),
             inventory_parameters=config_cache.inventory_parameters,
             parameters=parameters,
+            raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
         )
         state, text = check_result.state, check_result.as_text()
     if error_handler.result is not None:

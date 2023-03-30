@@ -59,4 +59,5 @@ def inventorize_marked_hosts(
                     inventory_plugins=inventory_plugins,
                     inventory_parameters=config_cache.inventory_parameters,
                     parameters=config_cache.hwsw_inventory_parameters(host_name),
+                    raw_intervals_from_config=config_cache.inv_retention_intervals(host_name),
                 )

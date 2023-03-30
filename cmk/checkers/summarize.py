@@ -5,9 +5,7 @@
 
 from __future__ import annotations
 
-import itertools
 from collections.abc import Sequence
-from typing import Final
 
 from cmk.utils.exceptions import (
     MKAgentError,
@@ -16,7 +14,7 @@ from cmk.utils.exceptions import (
     MKSNMPError,
     MKTimeout,
 )
-from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
+from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackTimeSettings
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, result
 
 from cmk.fetchers import FetcherType
@@ -92,20 +90,17 @@ def summarize_piggyback(
     # Tag: 'Always use and expect piggback data'
     is_piggyback: bool,
 ) -> Sequence[ActiveCheckResult]:
-    sources: Final[Sequence[PiggybackRawDataInfo]] = list(
-        itertools.chain.from_iterable(
-            # TODO(ml): The code uses `get_piggyback_raw_data()` instead of
-            # `HostSections.piggyback_raw_data` because this allows it to
-            # sneakily use cached data.  At minimum, we should group all cache
-            # handling performed after the parser.
-            get_piggyback_raw_data(origin, time_settings)
-            for origin in (hostname, ipaddress)
-        )
-    )
-    if not sources:
-        if is_piggyback:
-            return [ActiveCheckResult(1, "Missing data")]
-        return []
-    return [
-        ActiveCheckResult(src.info.status, src.info.message) for src in sources if src.info.message
-    ]
+    if sources := [
+        source
+        for origin in (hostname, ipaddress)
+        # TODO(ml): The code uses `get_piggyback_raw_data()` instead of
+        # `HostSections.piggyback_raw_data` because this allows it to
+        # sneakily use cached data.  At minimum, we should group all cache
+        # handling performed after the parser.
+        for source in get_piggyback_raw_data(origin, time_settings)
+    ]:
+        return [ActiveCheckResult(src.info.status, src.info.message) for src in sources]
+
+    if is_piggyback:
+        return [ActiveCheckResult(1, "Missing data")]
+    return [ActiveCheckResult(0, "Success (but no data found)")]

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_SCREENOS
 
 juniper_screenos_cpu_default_levels = {"util": (80.0, 90.0)}
 
@@ -42,7 +42,7 @@ def check_juniper_screenos_cpu(_no_item, params, info):
 
 
 check_info["juniper_screenos_cpu"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3224.1"),
+    "detect": DETECT_JUNIPER_SCREENOS,
     "check_function": check_juniper_screenos_cpu,
     "inventory_function": inventory_juniper_screenos_cpu,
     "group": "cpu_utilization",

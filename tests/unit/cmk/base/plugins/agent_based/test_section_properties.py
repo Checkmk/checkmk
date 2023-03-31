@@ -182,13 +182,6 @@ def test_detect_spec_dedup(
             "infoblox_temp",
         ),
         (
-            "juniper_screenos_cpu",
-            "juniper_screenos_fan",
-            "juniper_screenos_mem",
-            "juniper_screenos_temp",
-            "juniper_screenos_vpn",
-        ),
-        (
             "juniper_trpz_cpu_util",
             "juniper_trpz_flash",
             "juniper_trpz_info",

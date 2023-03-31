@@ -6,3 +6,5 @@
 from ..agent_based_api.v1 import startswith
 
 DETECT_JUNIPER = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2636.1.1.1")
+
+DETECT_JUNIPER_SCREENOS = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3224.1")

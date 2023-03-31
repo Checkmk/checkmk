@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 from tests.testlib import SpecialAgent
+
+from cmk.base.config import SpecialAgentInfoFunctionResult
 
 pytestmark = pytest.mark.checks
 
@@ -22,7 +26,9 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_fritzbox_argument_parsing(params, expected_args) -> None:  # type: ignore[no-untyped-def]
+def test_fritzbox_argument_parsing(
+    params: Mapping[str, object], expected_args: SpecialAgentInfoFunctionResult
+) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_fritzbox")
     arguments = agent.argument_func(params, "host", "address")

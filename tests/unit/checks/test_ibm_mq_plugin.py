@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 from tests.testlib import Check
@@ -91,7 +93,9 @@ runmqsc: Not executable
         ),
     ],
 )
-def test_check(params, parsed, expected) -> None:  # type: ignore[no-untyped-def]
+def test_check(
+    params: Mapping[str, object], parsed: Mapping[str, str], expected: list[tuple[int, str]]
+) -> None:
     check = Check(CHECK_NAME)
     actual = list(check.run_check(None, params, parsed))
     assert actual == expected

@@ -5,6 +5,8 @@
 
 # pylint: disable=protected-access
 
+from pytest import MonkeyPatch
+
 import cmk.utils.store as store
 from cmk.utils.type_defs import CheckPluginName, ServiceID
 
@@ -16,7 +18,7 @@ from cmk.base.api.agent_based.value_store._global_state import (
 _TEST_KEY = ("check", "item", "user-key")
 
 
-def test_load_host_value_store_loads_file(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_load_host_value_store_loads_file(monkeypatch: MonkeyPatch) -> None:
     service_id = ServiceID(CheckPluginName("test_service"), None)
 
     monkeypatch.setattr(

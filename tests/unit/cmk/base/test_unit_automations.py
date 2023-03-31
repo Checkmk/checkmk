@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pytest import MonkeyPatch
+
 from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
@@ -54,7 +56,7 @@ def test_registered_automations() -> None:
     )
 
 
-def test_analyse_host(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
     automation = automations.AutomationAnalyseHost()
 
     ts = Scenario()

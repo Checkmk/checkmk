@@ -5,11 +5,15 @@
 
 # pylint: disable=protected-access
 
+from collections.abc import Callable
 from typing import Any
 
 import pytest
 
+from tests.unit.conftest import FixRegister
+
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName
+from cmk.utils.type_defs.pluginname import InventoryPluginName
 
 import cmk.base.api.agent_based.register.check_plugins as check_plugins
 
@@ -62,13 +66,13 @@ def dummy_function_jj(section_jim, section_jill):  # pylint: disable=unused-argu
         ("", ValueError),
     ],
 )
-def test_invalid_service_name(string, exc_ty) -> None:  # type: ignore[no-untyped-def]
+def test_invalid_service_name(string: str, exc_ty: type["TypeError"] | type["ValueError"]) -> None:
     with pytest.raises(exc_ty):
         check_plugins._validate_service_name(CheckPluginName("test"), string)
 
 
 @pytest.mark.parametrize("string", ["whooop", "foo %s bar"])
-def test_valid_service_name(string) -> None:  # type: ignore[no-untyped-def]
+def test_valid_service_name(string: str) -> None:
     check_plugins._validate_service_name(CheckPluginName("test"), string)
 
 
@@ -79,7 +83,7 @@ def test_valid_service_name(string) -> None:  # type: ignore[no-untyped-def]
         ("Foo %s", True),
     ],
 )
-def test_requires_item(service_name, expected) -> None:  # type: ignore[no-untyped-def]
+def test_requires_item(service_name: str, expected: bool) -> None:
     assert check_plugins._requires_item(service_name) == expected
 
 
@@ -90,7 +94,7 @@ def test_requires_item(service_name, expected) -> None:  # type: ignore[no-untyp
         "mööp",
     ],
 )
-def test_create_sections_invalid(sections) -> None:  # type: ignore[no-untyped-def]
+def test_create_sections_invalid(sections: list[str] | None) -> None:
     with pytest.raises((TypeError, ValueError)):
         check_plugins.create_subscribed_sections(sections, None)  # type: ignore[arg-type]
 
@@ -106,7 +110,11 @@ def test_create_sections_invalid(sections) -> None:  # type: ignore[no-untyped-d
         ),
     ],
 )
-def test_create_sections(sections, plugin_name, expected) -> None:  # type: ignore[no-untyped-def]
+def test_create_sections(
+    sections: list[str] | None,
+    plugin_name: InventoryPluginName | CheckPluginName,
+    expected: list[ParsedSectionName],
+) -> None:
     assert check_plugins.create_subscribed_sections(sections, plugin_name) == expected
 
 
@@ -140,8 +148,12 @@ def test_create_sections(sections, plugin_name, expected) -> None:  # type: igno
         (dummy_function_jj, False, False, [CheckPluginName("jim"), CheckPluginName("jill")], None),
     ],
 )
-def test_validate_function_args(  # type: ignore[no-untyped-def]
-    function, has_item, has_params, sections, raises
+def test_validate_function_args(
+    function: Callable,
+    has_item: bool,
+    has_params: bool,
+    sections: list[ParsedSectionName],
+    raises: None | type["TypeError"],
 ) -> None:
     if raises is None:
         check_plugins.validate_function_arguments(
@@ -164,7 +176,7 @@ def test_validate_function_args(  # type: ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("key", list(MINIMAL_CREATION_KWARGS.keys()))
-def test_create_check_plugin_mandatory(key) -> None:  # type: ignore[no-untyped-def]
+def test_create_check_plugin_mandatory(key: str) -> None:
     kwargs = {k: v for k, v in MINIMAL_CREATION_KWARGS.items() if k != key}
     with pytest.raises(TypeError):
         _ = check_plugins.create_check_plugin(**kwargs)
@@ -203,6 +215,6 @@ def test_create_check_plugin() -> None:
     assert plugin.check_ruleset_name is None
 
 
-def test_module_attribute(fix_register) -> None:  # type: ignore[no-untyped-def]
+def test_module_attribute(fix_register: FixRegister) -> None:
     local_check = fix_register.check_plugins[CheckPluginName("local")]
     assert local_check.module == "local"

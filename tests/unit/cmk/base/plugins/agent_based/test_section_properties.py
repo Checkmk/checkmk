@@ -146,13 +146,6 @@ def test_detect_spec_dedup(
             "ups_modulys_outphase",
         ),
         ("vutlan_ems_humidity", "vutlan_ems_leakage", "vutlan_ems_smoke", "vutlan_ems_temp"),
-        (
-            "akcp_exp_drycontact",
-            "akcp_exp_humidity",
-            "akcp_exp_smoke",
-            "akcp_exp_temp",
-            "akcp_exp_water",
-        ),
         ("cisco_fan", "cisco_fru_powerusage", "cisco_mem_legacy", "cisco_power", "inv_cisco_vlans"),
         ("domino_info", "domino_mailqueues", "domino_tasks", "domino_transactions", "domino_users"),
         (

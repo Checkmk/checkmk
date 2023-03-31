@@ -3,19 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from cmk.base.check_api import all_of, exists, startswith
 from cmk.base.check_legacy_includes.akcp_sensor import check_akcp_humidity, inventory_akcp_humidity
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.akcp import DETECT_AKCP_EXP
 
 # Example for contents of info
 #           description         percent  status  online
 # ["Port 8 Feuchte USV Raum A",  "38",    "5",    "1"]
 
 check_info["akcp_exp_humidity"] = {
-    "detect": all_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1"), exists(".1.3.6.1.4.1.3854.2.*")
-    ),
+    "detect": DETECT_AKCP_EXP,
     "check_function": check_akcp_humidity,
     "inventory_function": inventory_akcp_humidity,
     "service_description": "Humidity %s",

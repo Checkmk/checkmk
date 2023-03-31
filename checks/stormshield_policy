@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.stormshield import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.stormshield import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.stormshield import DETECT_STORMSHIELD
 
 
 def inventory_stormshield_policy(info):
@@ -32,13 +34,7 @@ def check_stormshield_policy(item, params, info):
 
 
 check_info["stormshield_policy"] = {
-    "detect": all_of(
-        any_of(
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072"),
-            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11256.2.0"),
-        ),
-        exists(".1.3.6.1.4.1.11256.1.0.1.0"),
-    ),
+    "detect": DETECT_STORMSHIELD,
     "inventory_function": inventory_stormshield_policy,
     "check_function": check_stormshield_policy,
     "service_description": "Policy %s",

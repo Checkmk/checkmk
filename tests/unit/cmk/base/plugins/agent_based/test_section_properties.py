@@ -333,16 +333,6 @@ def test_detect_spec_dedup(
             "mcafee_emailgateway_smtp",
             "mcafee_emailgateway_spam_mcafee",
         ],
-        [
-            "stormshield_services",
-            "stormshield_cpu_temp",
-            "stormshield_disk",
-            "stormshield_info",
-            "stormshield_packets",
-            "stormshield_policy",
-            "stormshield_route",
-            "stormshield_updates",
-        ],
     ]
 
 

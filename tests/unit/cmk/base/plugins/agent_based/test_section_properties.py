@@ -148,13 +148,6 @@ def test_detect_spec_dedup(
         ("vutlan_ems_humidity", "vutlan_ems_leakage", "vutlan_ems_smoke", "vutlan_ems_temp"),
         ("cisco_fan", "cisco_fru_powerusage", "cisco_mem_legacy", "cisco_power", "inv_cisco_vlans"),
         ("domino_info", "domino_mailqueues", "domino_tasks", "domino_transactions", "domino_users"),
-        (
-            "huawei_osn_fan",
-            "huawei_osn_if",
-            "huawei_osn_laser",
-            "huawei_osn_power",
-            "huawei_osn_temp",
-        ),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

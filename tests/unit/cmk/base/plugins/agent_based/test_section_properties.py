@@ -107,7 +107,6 @@ def test_detect_spec_dedup(
         ("ups_cps_battery", "ups_cps_inphase", "ups_cps_outphase"),
         ("alcatel_cpu", "alcatel_fans", "alcatel_power", "alcatel_temp"),
         ("alcatel_cpu_aos7", "alcatel_fans_aos7", "alcatel_power_aos7", "alcatel_temp_aos7"),
-        ("blade_bx_blades", "blade_bx_powerfan", "blade_bx_powermod", "blade_bx_temp"),
         (
             "fjdarye_controller_modules_flash",
             "fjdarye_expanders",

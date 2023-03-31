@@ -166,46 +166,53 @@ def parse_arguments(argv=None):
 
 
 class FileStat:
-    """Wrapper arount os.stat
+    """Wrapper around os.stat
 
     Only call os.stat once.
     """
 
-    def __init__(self, path):
-        super().__init__()
-        LOGGER.debug("Creating FileStat(%r)", path)
-        self.path = ensure_text(path)
-        self.stat_status = "ok"
-        self.size = None
-        self.age = None
-        self._m_time = None
+    @classmethod
+    def from_path(cls, raw_path):
+        LOGGER.debug("Creating FileStat(%r)", raw_path)
+        path = ensure_text(raw_path)
+
+        LOGGER.debug("os.stat(%r)", path)
         # report on errors, regard failure as 'file'
-        self.isfile = True
-        self.isdir = False
-
-        LOGGER.debug("os.stat(%r)", self.path)
-        path = self.path.encode("utf8")
         try:
-            file_stat = os.stat(path)
+            file_stat = os.stat(path.encode("utf8"))
         except OSError as exc:
-            self.stat_status = "file vanished" if exc.errno == errno.ENOENT else str(exc)
-            return
+            stat_status = "file vanished" if exc.errno == errno.ENOENT else str(exc)
+            return cls(path, stat_status)
 
         try:
-            self.size = int(file_stat.st_size)
+            size = int(file_stat.st_size)
         except ValueError as exc:
-            self.stat_status = str(exc)
-            return
+            stat_status = str(exc)
+            return cls(path, stat_status)
 
         try:
-            self._m_time = int(file_stat.st_mtime)
-            self.age = int(time.time()) - self._m_time
+            m_time = int(file_stat.st_mtime)
+            age = int(time.time()) - m_time
         except ValueError as exc:
-            self.stat_status = str(exc)
-            return
+            stat_status = str(exc)
+            return cls(path, stat_status, size)
 
-        self.isfile = stat.S_ISREG(file_stat.st_mode)
-        self.isdir = stat.S_ISDIR(file_stat.st_mode)
+        isfile = stat.S_ISREG(file_stat.st_mode)
+        isdir = stat.S_ISDIR(file_stat.st_mode)
+
+        return cls(path, "ok", size, age, m_time, isfile, isdir)
+
+    def __init__(
+        self, path, stat_status, size=None, age=None, m_time=None, isfile=True, isdir=False
+    ):
+        super().__init__()
+        self.path = path
+        self.stat_status = stat_status
+        self.size = size
+        self.age = age
+        self._m_time = m_time
+        self.isfile = isfile
+        self.isdir = isdir
 
     def __repr__(self):
         # type: () -> str
@@ -245,7 +252,7 @@ class PatternIterator:
 
     def _iter_files(self, pattern):
         for item in glob.iglob(pattern):
-            filestat = FileStat(item)
+            filestat = FileStat.from_path(item)
             if filestat.isfile:
                 yield filestat
             elif filestat.isdir:

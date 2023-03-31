@@ -38,6 +38,8 @@ DETAIL = "wow detail many detailed"
 class PodConditionsFactory(ModelFactory):
     __model__ = PodConditions
 
+    disruptiontarget = None
+
 
 class PodConditionFactory(ModelFactory):
     __model__ = PodCondition
@@ -263,6 +265,7 @@ def test_check_all_results_with_summary_status_false():
     expected_summaries = [
         f"{k.upper()}: False ({REASON}: {DETAIL}) for 0 seconds"
         for k in kube_pod_conditions.LOGICAL_ORDER
+        if k != "disruptiontarget"
     ]
     assert list(r.summary for r in check_result if isinstance(r, Result)) == expected_summaries
 
@@ -354,7 +357,10 @@ def test_register_check_plugin_calls(check_plugin) -> None:  # type: ignore[no-u
 
 @pytest.mark.parametrize(
     "condition_status, expected_length",
-    [(True, 1), (False, len(kube_pod_conditions.LOGICAL_ORDER))],
+    [
+        (True, 1),
+        (False, 5),
+    ],
 )
 def test_check_yields_check_results(condition_status: bool, expected_length: int) -> None:
     section = PodConditionsFactory.build(
@@ -380,4 +386,27 @@ def test_check_all_results_with_summary_status_true():
     check_result = kube_pod_conditions._check(TIMESTAMP, {}, section)
     assert list(isinstance(r, Result) and r.summary for r in check_result) == [
         "Ready, all conditions passed"
+    ]
+
+
+def test_check_disruption_target_condition():
+    condition_status = True
+    section = PodConditionsFactory.build(
+        initialized=PodConditionFactory.build(status=condition_status),
+        hasnetwork=PodConditionFactory.build(status=condition_status),
+        scheduled=PodConditionFactory.build(status=condition_status),
+        containersready=PodConditionFactory.build(status=condition_status),
+        ready=PodConditionFactory.build(status=condition_status),
+        disruptiontarget=PodConditionFactory.build(
+            status=condition_status, reason="EvictionByEvictionAPI", detail="EvictionAPI: evicting"
+        ),
+    )
+    check_result = kube_pod_conditions._check(TIMESTAMP, {}, section)
+    assert list(r.summary for r in check_result if isinstance(r, Result)) == [
+        "SCHEDULED: True",
+        "HASNETWORK: True",
+        "INITIALIZED: True",
+        "CONTAINERSREADY: True",
+        "READY: True",
+        "DISRUPTIONTARGET: True (EvictionByEvictionAPI: EvictionAPI: evicting)",
     ]

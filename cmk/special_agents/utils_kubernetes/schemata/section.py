@@ -283,6 +283,7 @@ class PodConditions(Section):
     scheduled: PodCondition
     containersready: PodCondition | None
     ready: PodCondition | None
+    disruptiontarget: PodCondition | None
 
 
 class PodContainers(Section):

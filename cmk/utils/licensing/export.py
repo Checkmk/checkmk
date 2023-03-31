@@ -234,10 +234,18 @@ class LicenseUsageExtensions:
         return {"ntop": self.ntop}
 
     @classmethod
-    def parse(cls, raw_sample: object) -> LicenseUsageExtensions:
-        # Extensions are created after execute_activate_changes and may be missing when downloading
-        # or submitting license usage reports. This means that the extensions are not really
-        # dependent on the report version:
+    def parse(cls, raw_extensions: object) -> LicenseUsageExtensions:
+        """
+        >>> LicenseUsageExtensions.parse(LicenseUsageExtensions(ntop=True).for_report())
+        LicenseUsageExtensions(ntop=True)
+        """
+        if not isinstance(raw_extensions, dict):
+            raise TypeError()
+
+        return cls(ntop=raw_extensions.get("ntop", False))
+
+    @classmethod
+    def parse_from_sample(cls, raw_sample: object) -> LicenseUsageExtensions:
         # Old: {..., "extensions": {"ntop": True/False}, ...}
         # New: {..., "extension_ntop": True/False, ...}
         if not isinstance(raw_sample, dict):
@@ -366,7 +374,7 @@ class LicenseUsageSample:
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
             raise ValueError()
 
-        extensions = LicenseUsageExtensions.parse(raw_sample)
+        extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
             instance_id=instance_id,
             site_hash=site_hash,
@@ -404,7 +412,7 @@ class LicenseUsageSample:
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
             raise ValueError()
 
-        extensions = LicenseUsageExtensions.parse(raw_sample)
+        extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
             instance_id=instance_id,
             site_hash=site_hash,
@@ -445,7 +453,7 @@ class LicenseUsageSample:
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
             raise ValueError()
 
-        extensions = LicenseUsageExtensions.parse(raw_sample)
+        extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
             instance_id=instance_id,
             site_hash=site_hash,

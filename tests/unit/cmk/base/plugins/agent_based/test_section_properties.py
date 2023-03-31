@@ -252,14 +252,6 @@ def test_detect_spec_dedup(
             "kentix_motion",
             "kentix_temp",
         ],
-        [
-            "netextreme_cpu_util",
-            "netextreme_fan",
-            "netextreme_psu",
-            "netextreme_psu_in",
-            "netextreme_psu_out",
-            "netextreme_temp",
-        ],
         [  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

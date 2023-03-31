@@ -117,7 +117,6 @@ def test_detect_spec_dedup(
             "ups_modulys_inphase",
             "ups_modulys_outphase",
         ),
-        ("vutlan_ems_humidity", "vutlan_ems_leakage", "vutlan_ems_smoke", "vutlan_ems_temp"),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

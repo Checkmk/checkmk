@@ -10,8 +10,9 @@
 
 from typing import Mapping, NamedTuple
 
-from .agent_based_api.v1 import contains, OIDEnd, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import OIDEnd, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.vutlan import DETECT_VUTLAN_EMS
 
 
 class SmokeSensor(NamedTuple):
@@ -35,7 +36,7 @@ def parse_vutlan_ems_smoke(string_table: StringTable) -> SmokeSensorSection:
 register.snmp_section(
     name="vutlan_ems_smoke",
     parse_function=parse_vutlan_ems_smoke,
-    detect=contains(".1.3.6.1.2.1.1.1.0", "vutlan ems"),
+    detect=DETECT_VUTLAN_EMS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.39052.1.3.1",
         oids=[

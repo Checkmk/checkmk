@@ -195,13 +195,6 @@ def test_detect_spec_dedup(
             "juniper_trpz_mem",
             "juniper_trpz_power",
         ),
-        (
-            "mbg_lantime_ng_fan",
-            "mbg_lantime_ng_power",
-            "mbg_lantime_ng_refclock",
-            "mbg_lantime_ng_state",
-            "mbg_lantime_ng_temp",
-        ),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

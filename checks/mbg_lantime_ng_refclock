@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
 
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |
@@ -13,9 +15,6 @@
 #   |                  |___/                                               |
 #   +----------------------------------------------------------------------+
 
-
-from cmk.base.check_api import any_of, equals
-from cmk.base.config import check_info
 
 mbg_lantime_ng_refclock_types = {
     "0": "unknown",
@@ -336,10 +335,7 @@ def check_lantime_ng_refclock(item, _no_params, info):
 
 
 check_info["mbg_lantime_ng_refclock"] = {
-    "detect": any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.30"),
-    ),
+    "detect": DETECT_MBG_LANTIME_NG,
     "check_function": check_lantime_ng_refclock,
     "inventory_function": inventory_lantime_ng_refclock,
     "service_description": "LANTIME Refclock %s",

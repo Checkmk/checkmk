@@ -287,15 +287,6 @@ def test_detect_spec_dedup(
             "bvip_video_alerts",
         ],
         [
-            "cmctc_config",
-            "cmctc_lcp",
-            "cmctc_output",
-            "cmctc_ports",
-            "cmctc_psm_m",
-            "cmctc_state",
-            "cmctc",
-        ],
-        [
             "fortiauthenticator_auth_fail",
             "fortiauthenticator_system",
             "primekey",

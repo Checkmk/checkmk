@@ -26,6 +26,7 @@ from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.bakery import has_agent_bakery
 from cmk.gui.watolib.search import MatchItem
 
@@ -187,7 +188,7 @@ def test_write_and_read_host_attributes(
 
 
 @contextmanager
-def in_chdir(directory) -> Iterator[None]:  # type: ignore[no-untyped-def]
+def in_chdir(directory: str) -> Iterator[None]:
     cur = os.getcwd()
     os.chdir(directory)
     yield
@@ -417,14 +418,8 @@ def fixture_make_folder(mocker: MagicMock) -> Callable:
     Returns a function to create patched folders for tests. Note that the global setting
     "Hide folders without read permissions" will currently always be set during setup.
     """
-    mocker.patch.object(
-        hosts_and_folders.active_config,
-        "wato_hide_folders_without_read_permissions",
-        True,
-        create=True,
-    )
 
-    def prefixed_title(self_, current_depth: int, pretty) -> str:  # type: ignore[no-untyped-def]
+    def prefixed_title(self_: hosts_and_folders.CREFolder, current_depth: int, pretty: bool) -> str:
         return "_" * current_depth + self_.title()
 
     mocker.patch.object(hosts_and_folders.Folder, "_prefixed_title", prefixed_title)
@@ -444,7 +439,13 @@ def fixture_make_folder(mocker: MagicMock) -> Callable:
 
     mocker.patch.object(hosts_and_folders.Folder, "add_subfolders", add_subfolders, create=True)
 
-    def f(name, title, root_dir="/", parent_folder=None, may_see=True):
+    def f(
+        name: str,
+        title: str,
+        root_dir: str = "/",
+        parent_folder: hosts_and_folders.CREFolder | None = None,
+        may_see: bool = True,
+    ) -> hosts_and_folders.CREFolder:
         folder = hosts_and_folders.Folder(
             name, folder_path=None, parent_folder=parent_folder, title=title, root_dir=root_dir
         )
@@ -455,13 +456,13 @@ def fixture_make_folder(mocker: MagicMock) -> Callable:
     return f
 
 
-def only_root(folder):
+def only_root(folder: Callable) -> hosts_and_folders.CREFolder:
     root_folder = folder("", title="Main")
     root_folder._loaded_subfolders = {}
     return root_folder
 
 
-def three_levels(folder):
+def three_levels(folder: Callable) -> hosts_and_folders.CREFolder:
     return folder("", title="Main").add_subfolders(
         [
             folder("a", title="A").add_subfolders(
@@ -483,7 +484,7 @@ def three_levels(folder):
     )
 
 
-def three_levels_leaf_permissions(folder):
+def three_levels_leaf_permissions(folder: Callable) -> hosts_and_folders.CREFolder:
     return folder("", title="Main", may_see=False).add_subfolders(
         [
             folder("a", title="A", may_see=False).add_subfolders(
@@ -534,23 +535,31 @@ def three_levels_leaf_permissions(folder):
         ),
     ],
 )
-def test_recursive_subfolder_choices(  # type: ignore[no-untyped-def]
-    make_folder, actual_builder, expected
+def test_recursive_subfolder_choices(
+    monkeypatch: MonkeyPatch,
+    make_folder: Callable,
+    actual_builder: Callable[[Callable], hosts_and_folders.CREFolder],
+    expected: list[tuple[str, HTML]],
 ) -> None:
-    actual = actual_builder(make_folder)
-    assert actual.recursive_subfolder_choices() == expected
+    with monkeypatch.context() as m:
+        m.setattr(
+            hosts_and_folders.active_config, "wato_hide_folders_without_read_permissions", True
+        )
+        assert actual_builder(make_folder).recursive_subfolder_choices() == expected
 
 
-def test_recursive_subfolder_choices_function_calls(  # type: ignore[no-untyped-def]
-    mocker: MagicMock, make_folder
+def test_recursive_subfolder_choices_function_calls(
+    monkeypatch: MonkeyPatch, mocker: MagicMock, make_folder: Callable
 ) -> None:
     """Every folder should only be visited once"""
-    spy = mocker.spy(hosts_and_folders.Folder, "_walk_tree")
-
-    tree = three_levels_leaf_permissions(make_folder)
-    tree.recursive_subfolder_choices()
-
-    assert spy.call_count == 7
+    with monkeypatch.context() as m:
+        m.setattr(
+            hosts_and_folders.active_config, "wato_hide_folders_without_read_permissions", True
+        )
+        spy = mocker.spy(hosts_and_folders.Folder, "_walk_tree")
+        tree = three_levels_leaf_permissions(make_folder)
+        tree.recursive_subfolder_choices()
+        assert spy.call_count == 7
 
 
 def test_subfolder_creation() -> None:
@@ -595,8 +604,8 @@ class _TreeStructure:
     num_hosts: int = 0
 
 
-def make_monkeyfree_folder(  # type: ignore[no-untyped-def]
-    tree_structure, parent=None
+def make_monkeyfree_folder(
+    tree_structure: _TreeStructure, parent: hosts_and_folders.CREFolder | None = None
 ) -> hosts_and_folders.CREFolder:
     new_folder = hosts_and_folders.CREFolder(
         tree_structure.path,
@@ -618,15 +627,11 @@ def make_monkeyfree_folder(  # type: ignore[no-untyped-def]
     return new_folder
 
 
-def dump_wato_folder_structure(  # type: ignore[no-untyped-def]
-    wato_folder: hosts_and_folders.CREFolder,
-):
+def dump_wato_folder_structure(wato_folder: hosts_and_folders.CREFolder) -> None:
     # Debug function to have a look at the internal folder tree structure
     sys.stdout.write("\n")
 
-    def dump_structure(  # type: ignore[no-untyped-def]
-        wato_folder: hosts_and_folders.CREFolder, indent=0
-    ):
+    def dump_structure(wato_folder: hosts_and_folders.CREFolder, indent: int = 0) -> None:
         indent_space = " " * indent * 6
         sys.stdout.write(f"{indent_space + '->' + str(wato_folder):80} {wato_folder.path()}\n")
         sys.stdout.write(
@@ -758,8 +763,8 @@ def dump_wato_folder_structure(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_folder_permissions(  # type: ignore[no-untyped-def]
-    structure, testfolder_expected_groups
+def test_folder_permissions(
+    structure: _TreeStructure, testfolder_expected_groups: set[str]
 ) -> None:
     with disable_redis():
         wato_folder = make_monkeyfree_folder(structure)
@@ -773,8 +778,8 @@ def test_folder_permissions(  # type: ignore[no-untyped-def]
         assert permitted_groups_bulk["sub1/testfolder"].actual_groups == testfolder_expected_groups
 
 
-def _convert_folder_tree_to_all_folders(  # type: ignore[no-untyped-def]
-    root_folder,
+def _convert_folder_tree_to_all_folders(
+    root_folder: hosts_and_folders.CREFolder,
 ) -> dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.CREFolder]:
     all_folders = {}
 
@@ -796,7 +801,7 @@ class _UserTest:
 
 
 @contextmanager
-def hide_folders_without_permission(do_hide) -> Iterator[None]:  # type: ignore[no-untyped-def]
+def hide_folders_without_permission(do_hide: bool) -> Iterator[None]:
     old_value = active_config.wato_hide_folders_without_read_permissions
     try:
         active_config.wato_hide_folders_without_read_permissions = do_hide
@@ -805,7 +810,7 @@ def hide_folders_without_permission(do_hide) -> Iterator[None]:  # type: ignore[
         active_config.wato_hide_folders_without_read_permissions = old_value
 
 
-def _default_groups(configured_groups: list[ContactgroupName]):  # type: ignore[no-untyped-def]
+def _default_groups(configured_groups: list[ContactgroupName]) -> dict[str, Any]:
     return {
         "contactgroups": {
             "groups": configured_groups,
@@ -867,8 +872,8 @@ group_tree_test = (
     "structure, user_tests",
     [group_tree_test],
 )
-def test_num_hosts_normal_user(  # type: ignore[no-untyped-def]
-    structure, user_tests, monkeypatch
+def test_num_hosts_normal_user(
+    structure: _TreeStructure, user_tests: list[_UserTest], monkeypatch: MonkeyPatch
 ) -> None:
     with disable_redis():
         for user_test in user_tests:
@@ -886,15 +891,21 @@ def test_num_hosts_normal_user(  # type: ignore[no-untyped-def]
     "structure, user_tests",
     [group_tree_test],
 )
-def test_num_hosts_admin_user(  # type: ignore[no-untyped-def]
-    structure, user_tests, monkeypatch
+def test_num_hosts_admin_user(
+    structure: _TreeStructure, user_tests: list[_UserTest], monkeypatch: MonkeyPatch
 ) -> None:
     with disable_redis():
         for user_test in user_tests:
             _run_num_host_test(structure, user_test, 117, True, monkeypatch)
 
 
-def _run_num_host_test(structure, user_test, expected_host_count, is_admin, monkeypatch):
+def _run_num_host_test(
+    structure: _TreeStructure,
+    user_test: _UserTest,
+    expected_host_count: int,
+    is_admin: bool,
+    monkeypatch: MonkeyPatch,
+) -> None:
     wato_folder = make_monkeyfree_folder(structure)
     with hide_folders_without_permission(user_test.hide_folders_without_permission):
         # The algorithm implemented in CREFolder actually computes the num_hosts_recursively wrong.
@@ -926,19 +937,41 @@ def _run_num_host_test(structure, user_test, expected_host_count, is_admin, monk
             assert wato_folder.num_hosts_recursively() == expected_host_count
 
 
-def _fake_redis_num_hosts_answer(  # type: ignore[no-untyped-def]
-    wato_folder: hosts_and_folders.CREFolder,
-):
+def _fake_redis_num_hosts_answer(wato_folder: hosts_and_folders.CREFolder) -> list[list[str]]:
     redis_answer = []
     for folder in _convert_folder_tree_to_all_folders(wato_folder).values():
         redis_answer.extend([",".join(folder.groups()[0]), str(folder._num_hosts)])
     return [redis_answer]
 
 
+class MockRedisClient:
+    def __init__(self, answers: list[list[list[str]]]) -> None:
+        class FakePipeline:
+            def __init__(self, answers: list[list[list[str]]]) -> None:
+                self._answers = answers
+
+            def execute(self):
+                return self._answers.pop(0)
+
+            def __getattr__(self, name):
+                return lambda *args, **kwargs: None
+
+        self._fake_pipeline = FakePipeline(answers)
+        self._answers = answers
+
+    def __getattr__(self, name):
+        if name == "pipeline":
+            return lambda: self._fake_pipeline
+
+        return lambda *args, **kwargs: lambda *args, **kwargs: None
+
+
 @contextmanager
-def get_fake_setup_redis_client(  # type: ignore[no-untyped-def]
-    monkeypatch, all_folders, redis_answers: list
-):
+def get_fake_setup_redis_client(
+    monkeypatch: MonkeyPatch,
+    all_folders: dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.CREFolder],
+    redis_answers: list[list[list[str]]],
+) -> Iterator[MockRedisClient]:
     monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
     mock_redis_client = MockRedisClient(redis_answers)
     monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
@@ -959,30 +992,8 @@ def get_fake_setup_redis_client(  # type: ignore[no-untyped-def]
     monkeypatch.undo()
 
 
-class MockRedisClient:
-    def __init__(self, answers: list[list[str]]) -> None:
-        class FakePipeline:
-            def __init__(self, answers) -> None:  # type: ignore[no-untyped-def]
-                self._answers = answers
-
-            def execute(self):
-                return self._answers.pop(0)
-
-            def __getattr__(self, name):
-                return lambda *args, **kwargs: None
-
-        self._fake_pipeline = FakePipeline(answers)
-        self._answers = answers
-
-    def __getattr__(self, name):
-        if name == "pipeline":
-            return lambda: self._fake_pipeline
-
-        return lambda *args, **kwargs: lambda *args, **kwargs: None
-
-
 @pytest.mark.usefixtures("with_admin_login")
-def test_load_redis_folders_on_demand(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch) -> None:
     wato_folder = make_monkeyfree_folder(group_tree_structure)
     with get_fake_setup_redis_client(
         monkeypatch, _convert_folder_tree_to_all_folders(wato_folder), []

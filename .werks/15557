@@ -1,0 +1,17 @@
+Title: Resolve indexed IP for ICMP Echo Request
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680248748
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p35
+
+If you're using the active check <tt>check_icmp</tt> (ICMP Echo Requests) in combination
+with <tt>Ping IPv4/6 address identified by its index</tt>, the plugin crashed with:
+C+:
+(3, u'check_icmp: Failed to resolve $: Name or service not known')
+C-:
+
+This is fixed now.

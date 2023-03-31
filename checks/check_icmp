@@ -52,10 +52,10 @@ def check_icmp_arguments(params):
         args += ["-6", "$_HOSTADDRESSES_6$"]
 
     elif target[0] == "indexed_ipv4address":
-        args.append("$_HOSTADDRESS_4_%s$" % target[1])
+        args.append("$_HOSTADDRESSES_4_%s$" % target[1])
 
     elif target[0] == "indexed_ipv6address":
-        args.append("$_HOSTADDRESS_6_%s$" % target[1])
+        args.append("$_HOSTADDRESSES_6_%s$" % target[1])
 
     else:  # custom
         args.append(str(target[1]))

@@ -174,13 +174,6 @@ def test_detect_spec_dedup(
             "huawei_osn_power",
             "huawei_osn_temp",
         ),
-        (
-            "infoblox_dhcp_stats",
-            "infoblox_dns_stats",
-            "infoblox_grid_status",
-            "infoblox_replication_status",
-            "infoblox_temp",
-        ),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

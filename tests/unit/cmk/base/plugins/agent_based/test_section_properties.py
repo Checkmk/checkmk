@@ -132,12 +132,6 @@ def test_detect_spec_dedup(
         ("fortigate_ipsecvpn", "fortigate_memory_base", "fortigate_signatures", "fortigate_sslvpn"),
         ("ibm_imm_fan", "ibm_imm_health", "ibm_imm_temp", "ibm_imm_voltage"),
         (
-            "intel_true_scale_chassis_temp",
-            "intel_true_scale_fans",
-            "intel_true_scale_psus",
-            "intel_true_scale_sensors_temp",
-        ),
-        (
             "ups_modulys_alarms",
             "ups_modulys_battery",
             "ups_modulys_inphase",

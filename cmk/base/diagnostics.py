@@ -40,9 +40,11 @@ from cmk.utils.diagnostics import (
     DiagnosticsOptionalParameters,
     get_checkmk_config_files_map,
     get_checkmk_core_files_map,
+    get_checkmk_licensing_files_map,
     get_checkmk_log_files_map,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
+    OPT_CHECKMK_LICENSING_FILES,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
@@ -170,17 +172,25 @@ class DiagnosticsDump:
         if rel_checkmk_config_files:
             optional_elements.append(CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files))
 
-        rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
-        if not cmk_version.is_raw_edition() and rel_checkmk_core_files:
-            optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
-            optional_elements.append(CMCDumpDiagnosticsElement())
-
         rel_checkmk_log_files = parameters.get(OPT_CHECKMK_LOG_FILES)
         if rel_checkmk_log_files:
             optional_elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
 
-        if not cmk_version.is_raw_edition() and parameters.get(OPT_PERFORMANCE_GRAPHS):
-            optional_elements.append(PerformanceGraphsDiagnosticsElement())
+        # CEE options
+        if not cmk_version.is_raw_edition():
+            rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
+            if rel_checkmk_core_files:
+                optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
+                optional_elements.append(CMCDumpDiagnosticsElement())
+
+            if parameters.get(OPT_PERFORMANCE_GRAPHS):
+                optional_elements.append(PerformanceGraphsDiagnosticsElement())
+
+            rel_checkmk_licensing_files = parameters.get(OPT_CHECKMK_LICENSING_FILES)
+            if rel_checkmk_licensing_files:
+                optional_elements.append(
+                    CheckmkLicensingFilesDiagnosticsElement(rel_checkmk_licensing_files)
+                )
 
         return optional_elements
 
@@ -779,6 +789,27 @@ class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @property
     def _checkmk_files_map(self) -> CheckmkFilesMap:
         return get_checkmk_core_files_map()
+
+
+class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
+    @property
+    def ident(self) -> str:
+        # Unused because we directly pack the config, state and history file
+        return "checkmk_licensing_files"
+
+    @property
+    def title(self) -> str:
+        return _("Checkmk Licensing Files")
+
+    @property
+    def description(self) -> str:
+        return _(
+            "Licensing files (data and logs) from var/check_mk/licensing and var/log: %s"
+        ) % ", ".join(self.rel_checkmk_files)
+
+    @property
+    def _checkmk_files_map(self) -> CheckmkFilesMap:
+        return get_checkmk_licensing_files_map()
 
 
 class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):

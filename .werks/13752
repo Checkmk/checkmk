@@ -1,0 +1,14 @@
+Title: Support Diagnostics: Add option for licensing information
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1680270371
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b2
+
+The Support Diagnostics now contain, if selected, information about the licensing.
+This includes files from the directories ~/var/check_mk/licensing and ~/var/log.
+Having this information, the support team is able to reproduce licensing issues in your environment.
+

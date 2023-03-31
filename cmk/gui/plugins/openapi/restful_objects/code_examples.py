@@ -110,17 +110,24 @@ request = urllib.request.Request(
     {%- endif %}
 )
 response = urllib.request.urlopen(request)
-if response.status == 200:
-    pprint.pprint(json.loads(response.read()))
-elif response.status == 204:
-    {%- if downloadable %}
-    file_name = response.headers["content-disposition"].split("filename=")[1].strip("\"")
+{%- if downloadable %}
+if resp.status_code == 200:
+    file_name = resp.headers["content-disposition"].split("filename=")[1].strip('\"')
     with open(file_name, 'wb') as out_file:
         shutil.copyfileobj(response, out_file)
-    {%- endif %}
     print("Done")
+{%- else %}
+if resp.status_code == 200:
+    pprint.pprint(resp.json())
+elif resp.status_code == 204:
+    print("Done")
+{%- endif %}
+{%- if endpoint.does_redirects %}
+elif resp.status_code == 302:
+    print("Redirected to", resp.headers["location"])
+{%- endif %}
 else:
-    raise RuntimeError(response.read())
+    raise RuntimeError(pprint.pformat(resp.json()))
 """
 
 CODE_TEMPLATE_CURL = """
@@ -267,17 +274,23 @@ resp = session.{{ method }}(
     {%- if endpoint.does_redirects %}
     allow_redirects=True,
     {%- endif %}
-)
-if resp.status_code == 200:
-    pprint.pprint(resp.json())
-elif resp.status_code == 204:
     {%- if downloadable %}
-    file_name = resp.headers["content-disposition"].split("filename=")[1].strip("\"")
+    stream=True,
+    {%- endif %}
+)
+{%- if downloadable %}
+if resp.status_code == 200:
+    file_name = resp.headers["content-disposition"].split("filename=")[1].strip('\"')
     with open(file_name, 'wb') as out_file:
         resp.raw.decode_content = True
         shutil.copyfileobj(resp.raw, out_file)
-    {%- endif %}
     print("Done")
+{%- else %}
+if resp.status_code == 200:
+    pprint.pprint(resp.json())
+elif resp.status_code == 204:
+    print("Done")
+{%- endif %}
 {%- if endpoint.does_redirects %}
 elif resp.status_code == 302:
     print("Redirected to", resp.headers["location"])

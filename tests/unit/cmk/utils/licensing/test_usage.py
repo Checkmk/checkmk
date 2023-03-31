@@ -18,6 +18,7 @@ from cmk.utils.licensing.export import LicenseUsageExtensions, LicenseUsageSampl
 from cmk.utils.licensing.helper import init_logging
 from cmk.utils.licensing.usage import (
     _get_cloud_counter,
+    _load_extensions,
     _serialize_dump,
     CLOUD_SERVICE_PREFIXES,
     get_license_usage_report_filepath,
@@ -25,6 +26,7 @@ from cmk.utils.licensing.usage import (
     load_license_usage_history,
     LocalLicenseUsageHistory,
     RawLicenseUsageReport,
+    save_extensions,
     try_update_license_usage,
 )
 from cmk.utils.man_pages import load_man_page_catalog, ManPageCatalogPath
@@ -541,3 +543,16 @@ def test_history_try_add_sample_from_same_day() -> None:
     )
     assert len(history) == 1
     assert history.last == first_sample
+
+
+@pytest.mark.parametrize(
+    "expected_extensions",
+    [
+        pytest.param(LicenseUsageExtensions(ntop=True), id="ntop enabled"),
+        pytest.param(LicenseUsageExtensions(ntop=False), id="ntop disabled"),
+    ],
+)
+def test_save_load_extensions(expected_extensions: LicenseUsageExtensions) -> None:
+    save_extensions(expected_extensions)
+
+    assert _load_extensions() == expected_extensions

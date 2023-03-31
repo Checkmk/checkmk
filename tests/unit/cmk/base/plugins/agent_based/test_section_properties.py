@@ -153,13 +153,6 @@ def test_detect_spec_dedup(
             "akcp_exp_temp",
             "akcp_exp_water",
         ),
-        (
-            "avaya_88xx",
-            "avaya_88xx_cpu",
-            "avaya_chassis_card",
-            "avaya_chassis_ps",
-            "avaya_chassis_temp",
-        ),
         ("cisco_fan", "cisco_fru_powerusage", "cisco_mem_legacy", "cisco_power", "inv_cisco_vlans"),
         ("domino_info", "domino_mailqueues", "domino_tasks", "domino_transactions", "domino_users"),
         (

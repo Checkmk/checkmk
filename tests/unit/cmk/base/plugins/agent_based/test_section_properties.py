@@ -13,10 +13,15 @@ def test_detect_spec_dedup(
 ) -> None:
     """Test which snmp sections share a detect spec, but do not share the code for it
 
-    If this test turns red, you have either
-     a) deduplicated code (nice!)
-     b) accidently changed a detect specification where you should have changed all of them
-        -> please try a)!
+    This means that they currently are detecting the same devices, but they might get out
+    of sync.
+
+    If this test turns red, the set of plugins that share the same detection spec has changed.
+    This means that
+     a) You have deduplicated code, such that plugins now share the same (not only "equal"!)
+        detection spec. That is good, remove them from the list below!
+     b) You accidently changed a detect specification where you should have changed all of them,
+        or you can share a spec with another plugin. -> please turn this situation into a)!
     """
     plugins_by_detect_spec: dict[tuple[tuple[str, ...], ...], dict[int, list[str]]] = {}
     for snmp_section in fix_register.snmp_sections.values():

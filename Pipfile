@@ -93,6 +93,7 @@ types-typing-extensions = "*"  # used for type checking
 types-urllib3 = "*"  # used for type checking
 botocore-stubs = "==1.29.96"  # used for type checking, keep version in sync with botocore
 boto3-stubs = "==1.26.96"  # used for type checking, keep version in sync with boto3
+pexpect = "*" # used for update testing
 
 [packages]
 setuptools-scm = "==4.1.2"  # needed by various setup.py

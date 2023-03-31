@@ -343,16 +343,6 @@ def test_detect_spec_dedup(
             "stormshield_route",
             "stormshield_updates",
         ],
-        [
-            "acme_agent_sessions",
-            "acme_certificates",
-            "acme_fan",
-            "acme_powersupply",
-            "acme_realm",
-            "acme_sbc_snmp",
-            "acme_temp",
-            "acme_voltage",
-        ],
     ]
 
 

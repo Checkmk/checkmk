@@ -122,7 +122,6 @@ def test_detect_spec_dedup(
             "didactum_sensors_outlet",
         ),
         ("eltek_battery", "eltek_fans", "eltek_outdoor_temp", "eltek_systemstatus"),
-        ("enterasys_cpu_util", "enterasys_fans", "enterasys_powersupply", "enterasys_temp"),
         (
             "fjdarye_controller_modules_flash",
             "fjdarye_expanders",

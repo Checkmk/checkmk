@@ -75,20 +75,13 @@ def test_url_sorters_parse_encode(url: str, sorters: Sequence[SorterSpec]) -> No
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_replace_action_url_macros(
-    monkeypatch,
-    request_context,
-    url,
-    what,
-    row,
-    result,
-):
-    monkeypatch.setattr(
-        user,
-        "id",
-        UserId("user"),
-    )
-    assert replace_action_url_macros(url, what, row) == result
+    monkeypatch: pytest.MonkeyPatch, url: str, what: str, row: Row, result: str
+) -> None:
+    with monkeypatch.context() as m:
+        m.setattr(user, "id", UserId("user"))
+        assert replace_action_url_macros(url, what, row) == result
 
 
 def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> None:

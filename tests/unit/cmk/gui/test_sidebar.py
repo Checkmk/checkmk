@@ -2,7 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 
 import pytest
 from pytest_mock import MockerFixture
@@ -15,9 +15,11 @@ from cmk.gui.sidebar import UserSidebarSnapin
 
 
 @pytest.fixture(scope="function", autouse=True)
-def fixture_user(request_context, monkeypatch):
-    monkeypatch.setattr(user, "confdir", "")
-    monkeypatch.setattr(user, "may", lambda x: True)
+def fixture_user(request_context: None, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    with monkeypatch.context() as m:
+        m.setattr(user, "confdir", "")
+        m.setattr(user, "may", lambda x: True)
+        yield
 
 
 def test_user_config_fold_unfold() -> None:
@@ -179,13 +181,14 @@ def test_load_skip_not_permitted(monkeypatch: pytest.MonkeyPatch) -> None:
             "snapins": [("tactical_overview", "closed"), ("views", "closed")],
         },
     )
-    monkeypatch.setattr(user, "may", lambda x: x != "sidesnap.tactical_overview")
+    with monkeypatch.context() as m:
+        m.setattr(user, "may", lambda x: x != "sidesnap.tactical_overview")
 
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
-    assert user_config.folded is False
-    assert user_config.snapins == [
-        UserSidebarSnapin(sidebar.snapin_registry["views"], sidebar.SnapinVisibility.CLOSED),
-    ]
+        user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+        assert user_config.folded is False
+        assert user_config.snapins == [
+            UserSidebarSnapin(sidebar.snapin_registry["views"], sidebar.SnapinVisibility.CLOSED),
+        ]
 
 
 def test_load_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -210,20 +213,24 @@ def test_load_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_save_user_config_denied(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(user, "may", lambda x: x != "general.configure_sidebar")
-    save_user_file_mock = mocker.patch.object(user, "save_file")
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
-    user_config.save()
-    save_user_file_mock.assert_not_called()
+    with monkeypatch.context() as m:
+        m.setattr(user, "may", lambda x: x != "general.configure_sidebar")
+        save_user_file_mock = mocker.patch.object(user, "save_file")
+        user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+        user_config.save()
+        save_user_file_mock.assert_not_called()
+        mocker.stopall()
 
 
 def test_save_user_config_allowed(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(user, "may", lambda x: x == "general.configure_sidebar")
-    save_user_file_mock = mocker.patch.object(user, "save_file")
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
-    user_config._config = {"fold": True, "snapins": []}
-    user_config.save()
-    save_user_file_mock.assert_called_once_with("sidebar", {"fold": True, "snapins": []})
+    with monkeypatch.context() as m:
+        m.setattr(user, "may", lambda x: x == "general.configure_sidebar")
+        save_user_file_mock = mocker.patch.object(user, "save_file")
+        user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+        user_config._config = {"fold": True, "snapins": []}
+        user_config.save()
+        save_user_file_mock.assert_called_once_with("sidebar", {"fold": True, "snapins": []})
+        mocker.stopall()
 
 
 @pytest.mark.parametrize(
@@ -262,6 +269,7 @@ def test_ajax_fold(
             ],
         },
     )
+    mocker.stopall()
 
 
 @pytest.mark.parametrize(
@@ -313,13 +321,15 @@ def test_ajax_openclose_close(mocker: MockerFixture, origin_state: str, set_stat
             "snapins": [e.to_config() for e in snapins],
         },
     )
+    mocker.stopall()
 
 
 def test_move_snapin_not_permitted(monkeypatch: pytest.MonkeyPatch, mocker: MockerFixture) -> None:
-    monkeypatch.setattr(user, "may", lambda x: x != "general.configure_sidebar")
-    m_load = mocker.patch.object(sidebar.UserSidebarConfig, "_load")
-    sidebar.move_snapin()
-    m_load.assert_not_called()
+    with monkeypatch.context() as m:
+        m.setattr(user, "may", lambda x: x != "general.configure_sidebar")
+        m_load = mocker.patch.object(sidebar.UserSidebarConfig, "_load")
+        sidebar.move_snapin()
+        m_load.assert_not_called()
 
 
 @pytest.mark.parametrize(

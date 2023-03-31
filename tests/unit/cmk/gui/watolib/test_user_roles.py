@@ -6,10 +6,11 @@
 from collections.abc import Mapping
 from contextlib import contextmanager
 
-from pytest_mock import MockerFixture
+from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
 
+import cmk.gui.utils.transaction_manager
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import UserRole
 from cmk.gui.watolib import userroles
@@ -26,15 +27,17 @@ def should_raise_a_mkusererror():
         raise AssertionError("An MKUserError should have been raised and it wasn't!")
 
 
-def test_cant_delete_default_user_roles(mocker: MockerFixture) -> None:
+def test_cant_delete_default_user_roles(monkeypatch: MonkeyPatch) -> None:
     default_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
-    mocker.patch(
-        "cmk.gui.utils.transaction_manager.transactions.transaction_valid", return_value=True
-    )
-
-    for roleid in default_roles.keys():
-        with should_raise_a_mkusererror():
-            userroles.delete_role(roleid)
+    with monkeypatch.context() as m:
+        m.setattr(
+            cmk.gui.utils.transaction_manager.transactions,
+            "transaction_valid",
+            lambda: True,
+        )
+        for roleid in default_roles.keys():
+            with should_raise_a_mkusererror():
+                userroles.delete_role(roleid)
 
 
 def test_deleting_cloned_user_roles() -> None:

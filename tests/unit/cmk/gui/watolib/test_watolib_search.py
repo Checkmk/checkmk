@@ -327,16 +327,10 @@ def test_is_url_permitted_host_true(
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_is_url_permitted_host_false(
-    monkeypatch: MonkeyPatch,
-    created_host_url: str,
-) -> None:
-    monkeypatch.setattr(
-        user,
-        "may",
-        lambda pname: False,
-    )
-    assert not is_url_permitted(created_host_url)
+def test_is_url_permitted_host_false(monkeypatch: MonkeyPatch, created_host_url: str) -> None:
+    with monkeypatch.context() as m:
+        m.setattr(user, "may", lambda pname: False)
+        assert not is_url_permitted(created_host_url)
 
 
 class TestPermissionHandler:

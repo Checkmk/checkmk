@@ -19,9 +19,6 @@ from unittest.mock import MagicMock
 
 import pytest
 import webtest  # type: ignore[import]
-
-# TODO: Change to pytest.MonkeyPatch. It will be available in future pytest releases.
-from _pytest.monkeypatch import MonkeyPatch
 from flask import Flask
 from mypy_extensions import KwArg
 from pytest_mock import MockerFixture
@@ -114,25 +111,6 @@ def request_context(flask_app: Flask) -> Iterator[None]:
         flask_app.preprocess_request()
         yield
         flask_app.process_response(http.Response())
-
-
-@pytest.fixture()
-def monkeypatch(monkeypatch: MonkeyPatch, request_context: None) -> Iterator[MonkeyPatch]:
-    """Makes patch/undo of request globals possible
-
-    In the GUI we often use the monkeypatch for patching request globals (e.g.
-    cmk.gui.globals.config). To be able to undo all these patches, we need to be within the request
-    context while monkeypatch.undo is running. However, with the default "monkeypatch" fixture the
-    undo would be executed after leaving the application and request context.
-
-    What we do here is to override the default monkeypatch fixture of pytest for the GUI tests:
-    See also: https://github.com/pytest-dev/pytest/blob/main/src/_pytest/monkeypatch.py.
-
-    The drawback here may be that we create some unnecessary application / request context objects
-    for some tests. If you have an idea for a cleaner approach, let me know.
-    """
-    with monkeypatch.context() as m:
-        yield m
 
 
 @pytest.fixture(name="mock_livestatus")

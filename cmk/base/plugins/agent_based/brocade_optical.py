@@ -13,11 +13,11 @@ from .agent_based_api.v1 import (
     Result,
     Service,
     SNMPTree,
-    startswith,
     State,
     type_defs,
 )
 from .utils import interfaces, temperature
+from .utils.brocade import DETECT_MLX
 
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.1  41.4960 C: Normal
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.2  50.9531 C: Normal
@@ -261,7 +261,7 @@ register.snmp_section(
             ],
         ),
     ],
-    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1991.1."),
+    detect=DETECT_MLX,
 )
 
 

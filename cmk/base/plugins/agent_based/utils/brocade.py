@@ -12,6 +12,9 @@ DETECT = all_of(
     exists(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*"),
 )
 
+DETECT_MLX = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1991.1.")
+
+
 DISCOVERY_DEFAULT_PARAMETERS = {
     "admstates": [1, 3, 4],
     "phystates": [3, 4, 5, 6, 7, 8, 9, 10],

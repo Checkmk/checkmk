@@ -217,14 +217,6 @@ def test_detect_spec_dedup(
             "ups_socomec_out_voltage",
             "ups_socomec_outphase",
         ),
-        (
-            "brocade_mlx",
-            "brocade_mlx_fan",
-            "brocade_mlx_power",
-            "brocade_mlx_temp",
-            "brocade_optical",
-            "brocade_tm",
-        ),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

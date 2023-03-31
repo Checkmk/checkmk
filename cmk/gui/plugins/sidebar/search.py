@@ -1053,6 +1053,67 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
 match_plugin_registry.register(ServiceMatchPlugin())
 
 
+class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
+    def __init__(self) -> None:
+        super().__init__(["services"], "services", "st")
+
+    def _create_servicestate_filter_value(self, value: str) -> str:
+        _value = value.lower()
+        if _value in ("0", "o", "ok"):
+            return "0"
+        if _value in ("1", "w", "warn", "warning"):
+            return "1"
+        if _value in ("2", "c", "crit", "critical"):
+            return "2"
+        if _value in ("3", "u", "unkn", "unkown"):
+            return "3"
+        if _value in ("p", "pend", "pending"):
+            return "p"
+        raise MKGeneralException("Invalid service state: %s" % value)
+
+    def get_match_topic(self) -> str:
+        return _("Service states")
+
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
+        return ["state"]
+
+    def get_livestatus_filters(
+        self, livestatus_table: LivestatusTable, used_filters: UsedFilters
+    ) -> LivestatusFilterHeaders:
+        filter_lines = []
+        for entry in used_filters.get(self.name, []):
+            value = self._create_servicestate_filter_value(entry)
+            filter_lines.append("Filter: state = %s" % value)
+
+        if len(filter_lines) > 1:
+            filter_lines.append("Or: %d" % len(filter_lines))
+
+        return "\n".join(filter_lines)
+
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Row | None,
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        rows: Rows,
+    ) -> Matches:
+        supported_views = ["allservices", "searchsvc"]
+        if for_view not in supported_views:
+            return None
+
+        url_infos: list[tuple[str, int | str | None]] = []
+
+        for entry in used_filters.get(self.name, []):
+            value = self._create_servicestate_filter_value(entry)
+            url_infos.append(("st%s" % value, "on"))
+
+        return "", url_infos
+
+
+match_plugin_registry.register(ServiceStateMatchPlugin())
+
+
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self, livestatus_field, name) -> None:  # type: ignore[no-untyped-def]
         super().__init__(["hosts", "services"], "hosts", name)
@@ -1591,7 +1652,8 @@ class MonitoringSearch(ABCMegaMenuSearch):
             "al: Alias\n"
             "tg: Host tag\n"
             "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
-            "sl: Service label (e.g. sl: cmk/os_family:linux)\n\n"
+            "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+            "st: Service state (e.g. 0, 1, 2, ok, warn, crit)\n\n"
             "Note that for simplicity '*' will be substituted with '.*'."
         )
         html.input(

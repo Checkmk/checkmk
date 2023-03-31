@@ -278,15 +278,6 @@ def test_detect_spec_dedup(
             "fjdarye_system_capacitors",
         ],
         [
-            "bvip_fans",
-            "bvip_info",
-            "bvip_link",
-            "bvip_poe",
-            "bvip_temp",
-            "bvip_util",
-            "bvip_video_alerts",
-        ],
-        [
             "fortiauthenticator_auth_fail",
             "fortiauthenticator_system",
             "primekey",

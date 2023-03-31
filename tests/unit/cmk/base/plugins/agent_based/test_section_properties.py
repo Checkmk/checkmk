@@ -137,7 +137,6 @@ def test_detect_spec_dedup(
             "intel_true_scale_psus",
             "intel_true_scale_sensors_temp",
         ),
-        ("lgp_info", "lgp_pdu_aux", "lgp_pdu_info", "liebert_bat_temp"),
         (
             "ups_modulys_alarms",
             "ups_modulys_battery",

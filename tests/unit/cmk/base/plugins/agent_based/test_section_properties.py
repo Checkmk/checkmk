@@ -166,7 +166,6 @@ def test_detect_spec_dedup(
         ("decru_cpu", "decru_fans", "decru_perf", "decru_power", "decru_temps"),
         ("domino_info", "domino_mailqueues", "domino_tasks", "domino_transactions", "domino_users"),
         ("genua_carp", "genua_fan", "genua_pfstate", "genua_state_correlation", "genua_vpn"),
-        ("hp_blade", "hp_blade_blades", "hp_blade_fan", "hp_blade_manager", "hp_blade_psu"),
         (
             "huawei_osn_fan",
             "huawei_osn_if",

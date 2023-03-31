@@ -1195,8 +1195,8 @@ void ProcessPluginEnvironment(
             //
         }};
 
-    for (const auto &d : env_pairs) {
-        func(d.first, wtools::ToUtf8(d.second()));
+    for (const auto &[name, val] : env_pairs) {
+        func(name, wtools::ToUtf8(val()));
     }
 }
 

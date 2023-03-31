@@ -772,7 +772,8 @@ TEST(LogWatchEventTest, TestMakeBody) {
         auto st = states;
         auto logs_in = logs_in_registry;
         logs_in.emplace_back("Zcx");
-        auto processed = UpdateEventLogStates(st, logs_in, SendMode::normal);
+        uint32_t processed =
+            UpdateEventLogStates(st, logs_in, SendMode::normal);
         EXPECT_TRUE(processed == logs_in.size());
         int count = 0;
         for (auto &s : st) {

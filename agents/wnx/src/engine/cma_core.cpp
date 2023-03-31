@@ -344,7 +344,7 @@ void UpdatePluginMapWithUnitMap(PluginMap &out, UnitMap &um,
     }
 
     // reporting
-    for (const auto &[name, unit] : um) {
+    for (const auto &name : um | std::views::keys) {
         const auto *ptr = GetEntrySafe(out, name);
         if (ptr == nullptr) {
             continue;
@@ -1114,7 +1114,7 @@ void PluginEntry::fillInternalUser() {
 
 // if thread finished join old and start new thread again
 // if thread NOT finished quit
-void PluginEntry::restartAsyncThreadIfFinished(const std::wstring &Id) {
+void PluginEntry::restartAsyncThreadIfFinished(const std::wstring &id) {
     std::unique_lock lk(lock_);
     const auto start_thread = !thread_on_;
     thread_on_ = true;  // thread is always on
@@ -1134,14 +1134,14 @@ void PluginEntry::restartAsyncThreadIfFinished(const std::wstring &Id) {
     // thread was finished  join(we must)
     joinAndReleaseMainThread();
     // restart
-    auto t = std::make_unique<std::thread>(&PluginEntry::threadCore, this, Id);
+    auto t = std::make_unique<std::thread>(&PluginEntry::threadCore, this, id);
     lk.lock();
     main_thread_ = std::move(t);
     lk.unlock();
     XLOG::d.i("restarted thread for plugin '{}'", path());
 }
 
-std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
+std::vector<char> PluginEntry::getResultsAsync(bool start_process_now) {
     // check is valid parameters
     if (cacheAge() < cfg::kMinimumCacheAge && cacheAge() != 0) {
         XLOG::l("Plugin '{}' requested to be async, but has no valid cache age",
@@ -1177,7 +1177,7 @@ std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
 
     // execution phase
     if (going_to_be_old) {
-        if (StartProcessNow) {
+        if (start_process_now) {
             XLOG::d.i("restarting async plugin '{}'", path());
             restartAsyncThreadIfFinished(path().wstring());
         } else {
@@ -1310,7 +1310,7 @@ void FilterPluginMap(PluginMap &out_map, const PathVector &found_files) {
 
     // check every entry for presence in the found files vector
     // absent entries are in to_delete
-    for (const auto &[path, plugin] : out_map) {
+    for (const auto &path : out_map | std::views::keys) {
         bool exists = false;
         for (const auto &ff : found_files) {
             if (path == wtools::ToUtf8(ff.wstring())) {
@@ -1374,7 +1374,7 @@ using DataBlock = std::vector<char>;
 void StartSyncPlugins(PluginMap &plugins,
                       std::vector<std::future<DataBlock>> &results,
                       int timeout) {
-    for (auto &[path, plugin] : plugins) {
+    for (auto &plugin : plugins | std::views::values) {
         if (provider::config::IsRunAsync(plugin)) {
             continue;
         }
@@ -1450,7 +1450,7 @@ std::vector<char> RunAsyncPlugins(PluginMap &plugins, int &total,
     std::vector<char> out;
 
     int count = 0;
-    for (auto &[path, plugin] : plugins) {
+    for (auto &plugin : plugins | std::views::values) {
         if (!plugin.async() || !provider::config::IsRunAsync(plugin)) {
             continue;
         }
@@ -1468,10 +1468,10 @@ std::vector<char> RunAsyncPlugins(PluginMap &plugins, int &total,
 namespace cma {
 std::mutex g_users_lock;
 std::unordered_map<std::wstring, wtools::InternalUser> g_users;
-constexpr bool enable_ps1_proxy{true};
+constexpr bool g_enable_ps1_proxy{true};
 
 std::wstring LocatePs1Proxy() {
-    if constexpr (!enable_ps1_proxy) {
+    if constexpr (!g_enable_ps1_proxy) {
         return L"";
     }
 
@@ -1500,7 +1500,7 @@ std::wstring MakePowershellWrapper() noexcept {
 }
 
 wtools::InternalUser ObtainInternalUser(std::wstring_view group) {
-    std::wstring group_name(group);
+    const std::wstring group_name(group);
     std::lock_guard lk(g_users_lock);
 
     if (auto it = g_users.find(group_name); it != g_users.end()) {
@@ -1519,7 +1519,7 @@ wtools::InternalUser ObtainInternalUser(std::wstring_view group) {
 
 void KillAllInternalUsers() {
     std::lock_guard lk(g_users_lock);
-    for (const auto &[group_name, iu] : g_users) {
+    for (const auto &iu : g_users | std::views::values) {
         wtools::RemoveCmaUser(iu.first);
     }
     g_users.clear();

@@ -26,7 +26,7 @@ namespace fs = std::filesystem;
 namespace cma::provider {
 static const std::string section_name{section::kUseEmbeddedName};
 
-class Empty final: public Synchronous {
+class Empty final : public Synchronous {
 public:
     Empty() : Synchronous("empty") {}
     std::string makeBody() override { return "****"; }
@@ -146,7 +146,7 @@ public:
 
     std::filesystem::path createDataDir() {
         if (!temp_fs_) {
-            temp_fs_ = std::move(tst::TempCfgFs::Create());
+            temp_fs_ = tst::TempCfgFs::Create();
         }
         return temp_fs_->data();
     }

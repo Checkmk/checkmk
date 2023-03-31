@@ -543,7 +543,7 @@ public:
 protected:
     std::optional<std::string> startProcessName();
     void fillInternalUser();
-    void restartAsyncThreadIfFinished(const std::wstring &Id);
+    void restartAsyncThreadIfFinished(const std::wstring &id);
     void markAsForRestart() {
         XLOG::l.i("markAsForRestart {}", path());
         std::lock_guard lk(lock_);

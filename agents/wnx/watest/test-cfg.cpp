@@ -505,7 +505,7 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
     EXPECT_TRUE(fs::exists(pd / files::kUserYmlFile))
         << "this file must be left on disk";
 
-    int exists_count = 0;
+    uint32_t exists_count = 0;
     for (const auto &n : table) {
         if (fs::exists(pd / n / "1.tmp")) {
             ++exists_count;

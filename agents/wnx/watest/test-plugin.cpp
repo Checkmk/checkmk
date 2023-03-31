@@ -1169,14 +1169,16 @@ TEST(PluginTest, SyncStartSimulationFuture_Integration) {
     int requested_count = 0;
 
     // sync part
-    for (auto &[entry_name, entry] : pm) {
+    for (auto &entry : pm | std ::views::values) {
         // C++ async black magic
         results.emplace_back(std::async(
             std::launch::async,  // first param
 
-            [](PluginEntry *Entry) -> DataBlock {  // lambda
-                if (!Entry) return {};
-                return Entry->getResultsSync(Entry->path().wstring(), 5);
+            [](PluginEntry *e) -> DataBlock {  // lambda
+                if (!e) {
+                    return {};
+                }
+                return e->getResultsSync(e->path().wstring(), 5);
             },  // lambda end
 
             &entry  // lambda parameter
@@ -1215,7 +1217,7 @@ std::string GenerateCachedHeader(const std::string &usual_header,
     std::vector<char> out;
     std::vector<char> in{usual_header.begin(), usual_header.end()};
     if (HackDataWithCacheInfo(out, in, patch, HackDataMode::header)) {
-        return std::string(out.data(), out.size());
+        return {out.data(), out.size()};
     }
 
     return {};
@@ -1359,11 +1361,11 @@ TEST(PluginTest, AsyncStartSimulation_Integration) {
     UpdatePluginMap(pm, ExecType::plugin, files, exe_units_async_0, false);
 
     // async to sync part
-    for (auto &[entry_name, entry] : pm) {
+    for (auto &entry : pm | std ::views::values) {
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_FALSE(entry.isTooManyRetries());
 
-        auto accu = entry.getResultsSync(L"id", -1);
+        const auto accu = entry.getResultsSync(L"id", -1);
         EXPECT_FALSE(accu.empty());
         EXPECT_FALSE(entry.running());
         entry.breakAsync();

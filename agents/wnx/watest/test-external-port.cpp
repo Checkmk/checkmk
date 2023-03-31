@@ -337,8 +337,8 @@ TEST(ExternalPortTest, IsIpAllowedAsExceptionYes) {
     auto test_fs = tst::TempCfgFs::CreateNoIo();
     cfg::GetLoadedConfig()[cfg::groups::kSystem] =
         YAML::Load(fmt::format(fmt::runtime(base), "yes"));
-    for (const auto &t : ip_allowed) {
-        EXPECT_EQ(IsIpAllowedAsException(t.first), t.second);
+    for (const auto &[ip, allowed] : ip_allowed) {
+        EXPECT_EQ(IsIpAllowedAsException(ip), allowed);
     }
 }
 
@@ -346,8 +346,8 @@ TEST(ExternalPortTest, IsIpAllowedAsExceptionNo) {
     auto test_fs = tst::TempCfgFs::CreateNoIo();
     cfg::GetLoadedConfig()[cfg::groups::kSystem] =
         YAML::Load(fmt::format(fmt::runtime(base), "no"));
-    for (const auto &t : ip_allowed) {
-        EXPECT_FALSE(IsIpAllowedAsException(t.first));
+    for (const auto &ip : ip_allowed | std::views::keys) {
+        EXPECT_FALSE(IsIpAllowedAsException(ip));
     }
 }
 
@@ -379,8 +379,7 @@ public:
     std::vector<uint8_t> data_ = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     void wait_for_effect() {
         std::this_thread::sleep_for(100ms);  // wait for thread
-        tst::WaitForSuccessSilent(2000ms,
-                                  [this]() { return !result_.empty(); });
+        tst::WaitForSuccessSilent(2000ms, [this] { return !result_.empty(); });
     }
 
     std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> split_result()

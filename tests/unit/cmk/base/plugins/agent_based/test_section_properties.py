@@ -244,14 +244,6 @@ def test_detect_spec_dedup(
             "huawei_switch_stack",
             "huawei_switch_temp",
         ],
-        [
-            "kentix_amp_sensors",
-            "kentix_co",
-            "kentix_dewpoint",
-            "kentix_humidity",
-            "kentix_motion",
-            "kentix_temp",
-        ],
         [  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

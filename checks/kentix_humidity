@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
+
+
 def inventory_kentix_humidity(info):
     if info:
         return [(None, None)]
@@ -27,7 +30,7 @@ def check_kentix_humidity(_no_item, _no_params, info):
 
 
 check_info["kentix_humidity"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.332.11.6"),
+    "detect": DETECT_KENTIX,
     "check_function": check_kentix_humidity,
     "inventory_function": inventory_kentix_humidity,
     "service_description": "Humidity",

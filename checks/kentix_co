@@ -8,6 +8,8 @@
 
 # Default levels from http://www.detectcarbonmonoxide.com/co-health-risks/
 
+from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
+
 factory_settings["kentix_co"] = {
     "levels_ppm": (10, 25),
 }
@@ -33,7 +35,7 @@ def check_kentix_co(item, params, info):
 
 
 check_info["kentix_co"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.332.11.6"),
+    "detect": DETECT_KENTIX,
     "inventory_function": inventory_kentix_co,
     "check_function": check_kentix_co,
     "default_levels_variable": "kentix_co",

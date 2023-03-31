@@ -7,6 +7,9 @@
 # 2017 comNET GmbH, Bjoern Mueller
 
 
+from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
+
+
 def inventory_kentix_motion(info):
     if info:
         index = info[0][0].split(".", 3)[-1]
@@ -47,7 +50,7 @@ def check_kentix_motion(item, params, info):
 
 
 check_info["kentix_motion"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.332.11.6"),
+    "detect": DETECT_KENTIX,
     "inventory_function": inventory_kentix_motion,
     "check_function": check_kentix_motion,
     "service_description": "Motion Detector %s",

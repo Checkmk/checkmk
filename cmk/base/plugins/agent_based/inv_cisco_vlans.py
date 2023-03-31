@@ -33,8 +33,9 @@
 
 from typing import NamedTuple, Sequence
 
-from .agent_based_api.v1 import contains, OIDEnd, register, SNMPTree, TableRow
+from .agent_based_api.v1 import OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+from .utils.cisco import DETECT_CISCO
 
 
 class _IfInfo(NamedTuple):
@@ -140,7 +141,7 @@ register.snmp_section(
             "4",  # vmVlans
         ],
     ),
-    detect=contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+    detect=DETECT_CISCO,
 )
 
 

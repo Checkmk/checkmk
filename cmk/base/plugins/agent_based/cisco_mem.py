@@ -39,6 +39,7 @@ from .agent_based_api.v1 import (
     SNMPTree,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.cisco import DETECT_CISCO
 from .utils.cisco_mem import check_cisco_mem_sub
 
 Section = Dict[str, Sequence[str]]
@@ -84,7 +85,7 @@ def parse_cisco_mem(string_table: List[StringTable]) -> Optional[Section]:
 register.snmp_section(
     name="cisco_mem_legacy",
     parsed_section_name="cisco_mem",
-    detect=contains(OID_SysDesc, "cisco"),
+    detect=DETECT_CISCO,
     parse_function=parse_cisco_mem,
     fetch=[
         SNMPTree(

@@ -202,13 +202,6 @@ def test_detect_spec_dedup(
             "mbg_lantime_ng_state",
             "mbg_lantime_ng_temp",
         ),
-        (
-            "pandacom_10gm_temp",
-            "pandacom_fan",
-            "pandacom_fc_temp",
-            "pandacom_psu",
-            "pandacom_sys_temp",
-        ),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

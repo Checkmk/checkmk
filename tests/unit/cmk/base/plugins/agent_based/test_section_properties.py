@@ -209,7 +209,6 @@ def test_detect_spec_dedup(
             "pandacom_psu",
             "pandacom_sys_temp",
         ),
-        ("stulz_alerts", "stulz_humidity", "stulz_powerstate", "stulz_pump", "stulz_temp"),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

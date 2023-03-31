@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
+
 factory_settings["emc_datadomain_mtree_default_levels"] = {
     "deleted": 2,
     "read-only": 1,
@@ -44,7 +46,7 @@ def check_emc_datadomain_mtree(_item, params, mtree_data):
 
 
 check_info["emc_datadomain_mtree"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.1.0", "Data Domain OS"),
+    "detect": DETECT_DATADOMAIN,
     "parse_function": parse_emc_datadomain_mtree,
     "check_function": check_emc_datadomain_mtree,
     "inventory_function": discover(),

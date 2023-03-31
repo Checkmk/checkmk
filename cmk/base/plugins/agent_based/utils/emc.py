@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ..agent_based_api.v1 import all_of, contains, equals, exists
+from ..agent_based_api.v1 import all_of, contains, equals, exists, startswith
 
 DETECT_VPLEX = all_of(
     equals(".1.3.6.1.2.1.1.1.0", ""),
@@ -11,3 +11,5 @@ DETECT_VPLEX = all_of(
 )
 
 DETECT_ISILON = contains(".1.3.6.1.2.1.1.1.0", "isilon")
+
+DETECT_DATADOMAIN = startswith(".1.3.6.1.2.1.1.1.0", "Data Domain OS")

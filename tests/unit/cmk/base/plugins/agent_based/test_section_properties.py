@@ -296,15 +296,6 @@ def test_detect_spec_dedup(
             "cmctc",
         ],
         [
-            "emc_datadomain_disks",
-            "emc_datadomain_fans",
-            "emc_datadomain_fs",
-            "emc_datadomain_mtree",
-            "emc_datadomain_nvbat",
-            "emc_datadomain_power",
-            "emc_datadomain_temps",
-        ],
-        [
             "fortiauthenticator_auth_fail",
             "fortiauthenticator_system",
             "primekey",

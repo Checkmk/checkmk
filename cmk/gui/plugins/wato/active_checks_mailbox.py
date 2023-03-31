@@ -186,18 +186,45 @@ def apply_fetch(params, fetch_param, allowed_keys):
     }
 
 
-def update_auth(old_auth: tuple[str, tuple]) -> tuple[str, tuple[str, ...]]:
-    return old_auth if isinstance(old_auth[1][1], tuple) else ("basic", old_auth)
+def is_typed_auth(auth: tuple[str, tuple]) -> bool:
+    """New `auth` elements contain a type ('basic' or 'oauth2') as first element
+    and a 2/3 tuple as second element containing the actual auth data, e.g.
+    `(<type>:str, (<username>:str, (<pw-type>:str, <pw-or-id>:str)))`
+     while older variants only consisted of
+    a 2-tuple `(<username>:str, (<pw-type>:str, <pw-or-id>:str))`
+    So checking the type of the second elment of the second element to be a
+    tuple tells us if the given @auth is new.
+    """
+    return isinstance(auth[1][1], tuple)
+
+
+def update_auth(auth: tuple[str, tuple]) -> tuple[str, tuple[str, ...]]:
+    """Older `auth` element had been `basic` only, so we just have to wrap it
+    if it's not typed yet"""
+    return auth if is_typed_auth(auth) else ("basic", auth)
 
 
 def update_fetch(old_fetch):
-    """Create a new 'fetch' element out of an old one"""
+    """Create a new 'fetch' element out of an old one.
+    Older `fetch` structures might have contained an `ssl` element with a tuple
+    (use_ssl: optional[bool], tcp_port: optional[str]), which is being semantially
+    inverted and merged into the new `connection` elment:
+    "connection": {
+        "disable_tls": not <prior-value>  # only if prior-value was not None
+        "tcp_port": <prior-value>  # only if prior-value was not None
+    }
+    The `auth` element had been a tuple `(<username>, (<pw-type>, <pw-or-id>))`
+    and contains a type now, which is being inserted by `update_auth()`
+    """
     return {
         "server": old_fetch["server"],
         "connection": {
-            k: (not v) if isinstance(v, bool) else v
-            for k, v in zip(("disable_tls", "tcp_port"), old_fetch["ssl"])
-            if v is not None
+            **{
+                k: (not v) if isinstance(v, bool) else v
+                for k, v in zip(("disable_tls", "tcp_port"), old_fetch.get("ssl", (None, None)))
+                if v is not None
+            },
+            **old_fetch.get("connection", {}),
         },
         "auth": update_auth(old_fetch["auth"]),
     }
@@ -206,9 +233,40 @@ def update_fetch(old_fetch):
 def transform_check_mail_loop_params(params):
     """Transforms rule sets from 2.0 and below format to current (2.1 and up)
     >>> transformed = transform_check_mail_loop_params({  # v2.0.0 / IMAP
-    ...     'item': 'SD',
+    ...     'item': 'service_name',
     ...     'fetch': ('IMAP', {
-    ...       'server': 'srv',
+    ...       'server': 'imap.gmx.net',
+    ...       'connection': {'disable_tls': False},
+    ...       'auth': ('usr_imap', ('password', 'pw_imap')),
+    ...       }),
+    ...     'smtp_server': 'smtp.gmx.de',
+    ...     'smtp_tls': True,
+    ...     'mail_from': 'me_from@gmx.de',
+    ...     'mail_to': 'me_to@gmx.de',
+    ...     })
+    >>> assert transform_check_mail_loop_params(transformed) == transformed
+    >>> import yaml; print(yaml.dump(transformed).strip())
+    fetch: !!python/tuple
+    - IMAP
+    - auth: !!python/tuple
+      - basic
+      - !!python/tuple
+        - usr_imap
+        - !!python/tuple
+          - password
+          - pw_imap
+      connection:
+        disable_tls: false
+      server: imap.gmx.net
+    item: service_name
+    mail_from: me_from@gmx.de
+    mail_to: me_to@gmx.de
+    smtp_server: smtp.gmx.de
+    smtp_tls: true
+    >>> transformed = transform_check_mail_loop_params({  # v2.0.0 / IMAP
+    ...     'item': 'service_name',
+    ...     'fetch': ('IMAP', {
+    ...       'server': 'imap.gmx.net',
     ...       'ssl': (False, 143),
     ...       'auth': ('usr_imap', ('password', 'pw_imap')),
     ...     }),
@@ -241,8 +299,8 @@ def transform_check_mail_loop_params(params):
       connection:
         disable_tls: false
         tcp_port: 143
-      server: srv
-    item: SD
+      server: imap.gmx.net
+    item: service_name
     mail_from: me_from@gmx.de
     mail_to: me_to@gmx.de
     smtp_auth: !!python/tuple
@@ -276,10 +334,14 @@ def transform_check_mail_loop_params(params):
         raise ValueError(f"Cannot transform {params} - 'fetch' element is missing")
 
     fetch_protocol, fetch_params = params["fetch"]
-    if fetch_protocol in {"IMAP", "POP3"} and {"connection", "auth"} <= fetch_params.keys():
-        # newest schema (2.1 and up) - do nothing
+    if (
+        fetch_protocol in {"IMAP", "POP3"}
+        and {"connection", "auth"} <= fetch_params.keys()
+        and is_typed_auth(fetch_params["auth"])
+    ):
+        # newest schema (2.2 and up) - return the unmodified argument
         return params
-    if fetch_protocol in {"IMAP", "POP3"} and {"server", "ssl", "auth"} <= fetch_params.keys():
+    if fetch_protocol in {"IMAP", "POP3"} and {"server", "auth"} <= fetch_params.keys():
         # old format (2.0 and below)
         if params.get("imap_tls"):
             fetch_params["ssl"] = (True, fetch_params["ssl"][1])

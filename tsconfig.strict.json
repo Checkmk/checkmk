@@ -49,7 +49,7 @@
         "./web/htdocs/js/modules/host_diagnose.ts",
         "./web/htdocs/js/modules/reload_pause.ts",
         "./web/htdocs/js/modules/prediction.ts",
-        //"./web/htdocs/js/modules/bi.ts",
+        "./web/htdocs/js/modules/bi.ts",
         //"./web/htdocs/js/modules/figures/cmk_stats.ts",
         //"./web/htdocs/js/modules/figures/cmk_table.ts",
         //"./web/htdocs/js/modules/figures/cmk_figures.ts",

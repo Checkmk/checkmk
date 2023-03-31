@@ -39,6 +39,10 @@ from exchangelib import (  # type: ignore[import]
     DELEGATE,
     EWSDateTime,
     EWSTimeZone,
+    Identity,
+    IMPERSONATION,
+    OAUTH2,
+    OAuth2Credentials,
     protocol,
 )
 
@@ -62,10 +66,26 @@ class EWS:
         self._selected_folder = self._account.inbox
 
     def folders(self) -> Iterable[str]:
-        return list(map(lambda x: str(x.name), self._account.msg_folder_root.children))
+        logging.debug("Account::msg_folder_root.tree():\n%s", self._account.msg_folder_root.tree())
+        logging.debug(
+            "folder, [folder.children]:\n%s",
+            "\n".join(
+                f"{folder} {list(map(lambda x: str(x.name), folder.children))}"
+                for folder in self._account.msg_folder_root.children
+            ),
+        )
+
+        # Return a folders 'absolute' path as it's shown in the UI.
+        # Since `.absolute` returns a path with a useless and longish prefix
+        # this has to be removed.
+        root_folder = f"{self._account.msg_folder_root.absolute}/"
+        return [f.absolute[len(root_folder) :] for f in self._account.msg_folder_root.walk()]
 
     def select_folder(self, folder_name: str) -> int:
-        self._selected_folder = self._account.msg_folder_root / folder_name
+        selected_folder = self._account.msg_folder_root
+        for s in folder_name.split("/"):
+            selected_folder /= s
+        self._selected_folder = selected_folder
         return int(self._selected_folder.total_count)
 
     def mail_ids_by_date(
@@ -228,7 +248,7 @@ class Mailbox:
     """
 
     def __init__(self, args: Args) -> None:
-        self._connection = None
+        self._connection: Any = None  # TODO: Typing is quite broken below...
         self._args = args
 
     def __enter__(self) -> "Mailbox":
@@ -260,23 +280,50 @@ class Mailbox:
             if self._args.no_cert_check:
                 protocol.BaseProtocol.HTTP_ADAPTER_CLS = protocol.NoVerifyHTTPAdapter
 
-            connection = EWS(
-                Account(
-                    primary_smtp_address=self._args.fetch_email_address
-                    or self._args.fetch_username,
-                    autodiscover=False,
-                    access_type=DELEGATE,
-                    config=Configuration(
-                        server=self._args.fetch_server,
-                        credentials=Credentials(
-                            self._args.fetch_username,
-                            self._args.fetch_password,
-                        ),
-                    ),
-                    default_timezone=EWSTimeZone("Europe/Berlin"),
+            primary_smtp_address = self._args.fetch_email_address or self._args.fetch_username
+
+            # https://ecederstrand.github.io/exchangelib/#oauth-on-office-365
+
+            self._connection = (
+                (
+                    EWS(
+                        Account(
+                            primary_smtp_address=primary_smtp_address,
+                            autodiscover=False,
+                            access_type=IMPERSONATION,
+                            config=Configuration(
+                                server=self._args.fetch_server,
+                                credentials=OAuth2Credentials(
+                                    client_id=self._args.fetch_client_id,
+                                    client_secret=self._args.fetch_client_secret,
+                                    tenant_id=self._args.fetch_tenant_id,
+                                    identity=Identity(smtp_address=primary_smtp_address),
+                                ),
+                                auth_type=OAUTH2,
+                            ),
+                            default_timezone=EWSTimeZone("Europe/Berlin"),
+                        )
+                    )
+                )
+                if self._args.fetch_client_id
+                else (
+                    EWS(
+                        Account(
+                            primary_smtp_address=primary_smtp_address,
+                            autodiscover=False,
+                            access_type=DELEGATE,
+                            config=Configuration(
+                                server=self._args.fetch_server,
+                                credentials=Credentials(
+                                    self._args.fetch_username,
+                                    self._args.fetch_password,
+                                ),
+                            ),
+                            default_timezone=EWSTimeZone("Europe/Berlin"),
+                        )
+                    )
                 )
             )
-            self._connection = connection  # type: ignore[assignment]
 
         assert self._connection is None
         try:
@@ -513,31 +560,45 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
 
     parser.add_argument(
         "--fetch-server",
-        type=str,
         required=True,
         metavar="ADDRESS",
         help="Host address of the IMAP/POP3/EWS server hosting your mailbox",
     )
     parser.add_argument(
         "--fetch-username",
-        type=str,
-        required=True,
+        required=False,
         metavar="USER",
         help="Username to use for IMAP/POP3/EWS",
     )
     parser.add_argument(
         "--fetch-email-address",
-        type=str,
         required=False,
         metavar="EMAIL-ADDRESS",
         help="Email address (default: same as username, only effects EWS protocol)",
     )
     parser.add_argument(
         "--fetch-password",
-        type=str,
-        required=True,
+        required=False,
         metavar="PASSWORD",
         help="Password to use for IMAP/POP3/EWS",
+    )
+    parser.add_argument(
+        "--fetch-client-id",
+        required=False,
+        metavar="CLIENT_ID",
+        help="OAuth2 ClientID for EWS",
+    )
+    parser.add_argument(
+        "--fetch-client-secret",
+        required=False,
+        metavar="CLIENT_SECRET",
+        help="OAuth2 ClientSecret for EWS",
+    )
+    parser.add_argument(
+        "--fetch-tenant-id",
+        required=False,
+        metavar="TENANT_ID",
+        help="OAuth2 TenantID for EWS",
     )
     parser.add_argument(
         "--fetch-protocol",
@@ -573,6 +634,22 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         # we have no efficient way to control the output on stderr but at least we can return
         # UNKNOWN
         raise SystemExit(3)
+
+    if not tuple(
+        map(
+            bool,
+            (
+                args.fetch_username,
+                args.fetch_password,
+                args.fetch_client_id,
+                args.fetch_client_secret,
+                args.fetch_tenant_id,
+            ),
+        )
+    ) in {(True, True, False, False, False), (False, False, True, True, True)}:
+        raise RuntimeError(
+            "Either Username/Passwort or ClientID/ClientSecret/TenantID have to be set"
+        )
 
     args.fetch_port = args.fetch_port or (
         (995 if args.fetch_tls else 110)

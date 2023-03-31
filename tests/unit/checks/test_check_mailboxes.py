@@ -23,7 +23,7 @@ pytestmark = pytest.mark.checks
                             "disable_tls": True,
                             "tcp_port": 143,
                         },
-                        "auth": ("hans", "wurst"),
+                        "auth": ("basic", ("hans", "wurst")),
                     },
                 )
             },
@@ -42,7 +42,7 @@ pytestmark = pytest.mark.checks
                     {
                         "server": "foo",
                         "connection": {},
-                        "auth": ("hans", "wurst"),
+                        "auth": ("basic", ("hans", "wurst")),
                     },
                 )
             },
@@ -52,6 +52,26 @@ pytestmark = pytest.mark.checks
                 "--fetch-tls",
                 "--fetch-username=hans",
                 "--fetch-password=wurst",
+            ],
+        ),
+        (
+            {
+                "fetch": (
+                    "EWS",
+                    {
+                        "server": "foo",
+                        "connection": {},
+                        "auth": ("oauth2", ("client_id", "client_secret", "tenant_id")),
+                    },
+                )
+            },
+            [
+                "--fetch-protocol=EWS",
+                "--fetch-server=foo",
+                "--fetch-tls",
+                "--fetch-client-id=client_id",
+                "--fetch-client-secret=client_secret",
+                "--fetch-tenant-id=tenant_id",
             ],
         ),
     ],

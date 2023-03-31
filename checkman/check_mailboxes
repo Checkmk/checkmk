@@ -13,8 +13,9 @@ description:
  recently and most recently modified mails from the server and checks the age of those.
  Unless mails get moved between mailboxes, the least recenly modified mail should also
  be the oldest one and the most recently modified mail should be the newest.
- 
+
  As for EWS the mailbox to be contacted can be specified by an email address which in contrast to
- IMAP might be different from the credentials username (but doesn't have to be).
- For that case this email address (a.k.a. 'PrimarySmtpAddress') can be specified in the setup
+ IMAP might be different from the username provided with legacy OAuth credentials (but doesn't
+ have to be). For that case as well as for (non-legacy) OAuth2 credentials using ClientID and
+ TenantID this email address (a.k.a. 'PrimarySmtpAddress') can/must be specified in the setup
  for this check (available for EWS only).

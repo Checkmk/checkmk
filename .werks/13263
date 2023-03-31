@@ -1,0 +1,24 @@
+Title: Add (non-legacy) OAuth2 support (using TenantID, ClientID and ClientSecret) to check_mailboxes active check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1670919292
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p26
+
+Current check_mailboxes active check implementation used only legacy authentication
+for EWS mailboxes.
+
+This werk introduces client/tenant based authentication, while keeping legacy authentication
+still an option.
+
+Please note that previously, when using legacy authentication, you could use the login
+username as the email address for the mailbox you wanted to access. However, when using
+ClientID/TenantID, you now need to specify the email address separately.
+
+Please also note that this feature only applies to {{check_mailboxes}} for now.
+
+

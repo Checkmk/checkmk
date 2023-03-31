@@ -108,7 +108,6 @@ def test_detect_spec_dedup(
         ("alcatel_cpu", "alcatel_fans", "alcatel_power", "alcatel_temp"),
         ("alcatel_cpu_aos7", "alcatel_fans_aos7", "alcatel_power_aos7", "alcatel_temp_aos7"),
         ("blade_bx_blades", "blade_bx_powerfan", "blade_bx_powermod", "blade_bx_temp"),
-        ("cmciii_lcp_airin", "cmciii_lcp_airout", "cmciii_lcp_fans", "cmciii_lcp_water"),
         (
             "fjdarye_controller_modules_flash",
             "fjdarye_expanders",

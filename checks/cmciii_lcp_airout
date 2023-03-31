@@ -3,22 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-# Note: this check is obsolete, please use cmciii.temp_in_out instead
-
-
-from cmk.base.check_api import all_of, startswith
 from cmk.base.check_legacy_includes.cmciii import (
     check_cmciii_lcp_fanunit,
     inventory_cmciii_lcp_fanunit,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.cmciii import DETECT_CMCIII_LCP
+
+# Note: this check is obsolete, please use cmciii.temp_in_out instead
+
 
 check_info["cmciii_lcp_airout"] = {
-    "detect": all_of(
-        startswith(".1.3.6.1.2.1.1.1.0", "Rittal LCP"),
-        startswith(".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6", "Air.Temperature.DescName"),
-    ),
+    "detect": DETECT_CMCIII_LCP,
     "check_function": check_cmciii_lcp_fanunit,
     "inventory_function": lambda info: inventory_cmciii_lcp_fanunit("Air", "Out", info),
     "service_description": "Temperature %s",

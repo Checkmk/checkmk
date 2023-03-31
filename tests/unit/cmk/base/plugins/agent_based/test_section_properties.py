@@ -353,16 +353,6 @@ def test_detect_spec_dedup(
             "acme_temp",
             "acme_voltage",
         ],
-        [
-            "dell_chassis_fans",
-            "dell_chassis_io",
-            "dell_chassis_kvm",
-            "dell_chassis_power",
-            "dell_chassis_powersupplies",
-            "dell_chassis_slots",
-            "dell_chassis_status",
-            "dell_chassis_temp",
-        ],
     ]
 
 

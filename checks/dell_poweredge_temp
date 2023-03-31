@@ -10,7 +10,7 @@ from cmk.base.check_legacy_includes.dell_poweredge import *  # pylint: disable=w
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.dell_idrac import DETECT_IDRAC_POWEREDGE
+from cmk.base.plugins.agent_based.utils.dell import DETECT_IDRAC_POWEREDGE
 
 check_info["dell_poweredge_temp"] = {
     "detect": DETECT_IDRAC_POWEREDGE,

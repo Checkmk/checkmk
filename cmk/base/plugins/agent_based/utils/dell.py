@@ -6,3 +6,5 @@
 from ..agent_based_api.v1 import equals
 
 DETECT_IDRAC_POWEREDGE = equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10892.5")
+
+DETECT_CHASSIS = equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10892.2")

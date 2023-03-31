@@ -43,6 +43,7 @@ OPT_OMD_CONFIG = "omd-config"
 OPT_CHECKMK_OVERVIEW = "checkmk-overview"
 OPT_CHECKMK_CONFIG_FILES = "checkmk-config-files"
 OPT_CHECKMK_CORE_FILES = "checkmk-core-files"
+OPT_CHECKMK_LICENSING_FILES = "checkmk-licensing-files"
 OPT_CHECKMK_LOG_FILES = "checkmk-log-files"
 
 # CEE specific options
@@ -54,6 +55,7 @@ OPT_COMP_HOSTS_AND_FOLDERS = "hosts-and-folders"
 OPT_COMP_NOTIFICATIONS = "notifications"
 OPT_COMP_BUSINESS_INTELLIGENCE = "business-intelligence"
 OPT_COMP_CMC = "cmc"
+OPT_COMP_LICENSING = "licensing"
 
 _BOOLEAN_CONFIG_OPTS = [
     OPT_LOCAL_FILES,
@@ -65,6 +67,7 @@ _BOOLEAN_CONFIG_OPTS = [
 _FILES_OPTS = [
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
+    OPT_CHECKMK_LICENSING_FILES,
     OPT_CHECKMK_LOG_FILES,
 ]
 
@@ -107,9 +110,11 @@ _CSV_COLUMNS = [
 ]
 
 
-def serialize_wato_parameters(
+def serialize_wato_parameters(  # pylint: disable=too-many-branches
     wato_parameters: DiagnosticsParameters,
 ) -> list[DiagnosticsCLParameters]:
+    # TODO: reduce the number of branches and do the whole procedure in a more generic/elegant way
+
     parameters = {}
 
     opt_info_parameters = wato_parameters.get("opt_info")
@@ -126,6 +131,7 @@ def serialize_wato_parameters(
 
     config_files: set[str] = set()
     core_files: set[str] = set()
+    licensing_files: set[str] = set()
     log_files: set[str] = set()
 
     for key, value in sorted(parameters.items()):
@@ -134,6 +140,9 @@ def serialize_wato_parameters(
 
         elif key == OPT_CHECKMK_CORE_FILES:
             core_files |= _extract_list_of_files(value)
+
+        elif key == OPT_CHECKMK_LICENSING_FILES:
+            licensing_files |= _extract_list_of_files(value)
 
         elif key == OPT_CHECKMK_LOG_FILES:
             log_files |= _extract_list_of_files(value)
@@ -144,9 +153,11 @@ def serialize_wato_parameters(
             OPT_COMP_NOTIFICATIONS,
             OPT_COMP_BUSINESS_INTELLIGENCE,
             OPT_COMP_CMC,
+            OPT_COMP_LICENSING,
         ]:
             config_files |= _extract_list_of_files(value.get("config_files"))
             core_files |= _extract_list_of_files(value.get("core_files"))
+            licensing_files |= _extract_list_of_files(value.get("licensing_files"))
             log_files |= _extract_list_of_files(value.get("log_files"))
 
     chunks: list[list[str]] = []
@@ -164,6 +175,12 @@ def serialize_wato_parameters(
         sorted(core_files)[i : i + max_args] for i in range(0, len(sorted(core_files)), max_args)
     ]:
         chunks.append([OPT_CHECKMK_CORE_FILES, ",".join(core_args)])
+
+    for licensing_args in [
+        sorted(licensing_files)[i : i + max_args]
+        for i in range(0, len(sorted(licensing_files)), max_args)
+    ]:
+        chunks.append([OPT_CHECKMK_LICENSING_FILES, ",".join(licensing_args)])
 
     for log_args in [
         sorted(log_files)[i : i + max_args] for i in range(0, len(sorted(log_files)), max_args)
@@ -251,6 +268,16 @@ def get_checkmk_core_files_map() -> CheckmkFilesMap:
             if filepath.stem in ("state", "history", "config"):
                 rel_filepath = str(filepath.relative_to(cmk.utils.paths.var_dir))
                 files_map.setdefault(rel_filepath, filepath)
+    return files_map
+
+
+def get_checkmk_licensing_files_map() -> CheckmkFilesMap:
+    files_map: CheckmkFilesMap = {}
+    for root, _dirs, files in os.walk(cmk.utils.paths.var_dir + "/licensing"):
+        for file_name in files:
+            filepath = Path(root).joinpath(file_name)
+            rel_filepath = str(filepath.relative_to(cmk.utils.paths.var_dir))
+            files_map.setdefault(rel_filepath, filepath)
     return files_map
 
 
@@ -491,6 +518,28 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         sensitivity=CheckmkFileSensitivity(1),
         description="Contains the latest state history of all hosts and services.",
     ),
+    # Licensing files
+    "licensing/extensions.json": CheckmkFileInfo(
+        components=[
+            OPT_COMP_LICENSING,
+        ],
+        sensitivity=CheckmkFileSensitivity(0),
+        description="Extends the information in history.json.",
+    ),
+    "licensing/history.json": CheckmkFileInfo(
+        components=[
+            OPT_COMP_LICENSING,
+        ],
+        sensitivity=CheckmkFileSensitivity(0),
+        description="Contains information about the licensing samples.",
+    ),
+    "licensing/verification_result.json": CheckmkFileInfo(
+        components=[
+            OPT_COMP_LICENSING,
+        ],
+        sensitivity=CheckmkFileSensitivity(0),
+        description="Contains the last licensing verification result.",
+    ),
     # Log files
     "cmc.log": CheckmkFileInfo(
         components=[
@@ -599,6 +648,13 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
     ),
     "agent-registration.log": CheckmkFileInfo(
         components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="",
+    ),
+    "licensing.log": CheckmkFileInfo(
+        components=[
+            OPT_COMP_LICENSING,
+        ],
         sensitivity=CheckmkFileSensitivity(1),
         description="",
     ),

@@ -165,7 +165,6 @@ def test_detect_spec_dedup(
         ("cisco_fan", "cisco_fru_powerusage", "cisco_mem_legacy", "cisco_power", "inv_cisco_vlans"),
         ("decru_cpu", "decru_fans", "decru_perf", "decru_power", "decru_temps"),
         ("domino_info", "domino_mailqueues", "domino_tasks", "domino_transactions", "domino_users"),
-        ("genua_carp", "genua_fan", "genua_pfstate", "genua_state_correlation", "genua_vpn"),
         (
             "huawei_osn_fan",
             "huawei_osn_if",

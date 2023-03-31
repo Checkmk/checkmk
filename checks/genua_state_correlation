@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
 
 # Example Agent Output:
 # GENUA-MIB:
@@ -17,12 +19,6 @@
 # .1.3.6.1.4.1.3137.2.1.2.1.4.10 = INTEGER: 2
 # .1.3.6.1.4.1.3137.2.1.2.1.7.9 = INTEGER: 2
 # .1.3.6.1.4.1.3137.2.1.2.1.7.10 = INTEGER: 2
-
-
-# mypy: disable-error-code="assignment"
-
-from cmk.base.check_api import any_of, contains
-from cmk.base.config import check_info
 
 
 def inventory_genua_state(info):
@@ -63,7 +59,7 @@ def check_genua_state(item, _no_params, info):
 
     # critical if the carp interfaces dont have the same state
     carp_states = [0, 0, 0]
-    for i, elem in enumerate(carp_info):
+    for elem in carp_info:
         carp_states[int(elem[4])] += 1
         if carp_info[0][4] != elem[4]:
             state = 2
@@ -77,11 +73,7 @@ def check_genua_state(item, _no_params, info):
 
 
 check_info["genua_state_correlation"] = {
-    "detect": any_of(
-        contains(".1.3.6.1.2.1.1.1.0", "genuscreen"),
-        contains(".1.3.6.1.2.1.1.1.0", "genubox"),
-        contains(".1.3.6.1.2.1.1.1.0", "genucrypt"),
-    ),
+    "detect": DETECT_GENUA,
     "inventory_function": inventory_genua_state,
     "check_function": check_genua_state,
     "service_description": "Carp Correlation",

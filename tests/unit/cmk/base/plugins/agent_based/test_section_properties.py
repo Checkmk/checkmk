@@ -210,13 +210,6 @@ def test_detect_spec_dedup(
             "pandacom_sys_temp",
         ),
         ("stulz_alerts", "stulz_humidity", "stulz_powerstate", "stulz_pump", "stulz_temp"),
-        (
-            "ups_socomec_capacity",
-            "ups_socomec_in_voltage",
-            "ups_socomec_out_source",
-            "ups_socomec_out_voltage",
-            "ups_socomec_outphase",
-        ),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

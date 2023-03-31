@@ -8,7 +8,7 @@
 from collections.abc import Iterable, Sequence
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 

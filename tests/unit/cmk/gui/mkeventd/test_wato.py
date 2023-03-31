@@ -6,8 +6,8 @@
 from collections.abc import Iterable
 from datetime import datetime
 
-from _pytest.monkeypatch import MonkeyPatch
 from freezegun import freeze_time
+from pytest import MonkeyPatch
 
 from cmk.ec.export import ECRulePack, MkpRulePackProxy
 

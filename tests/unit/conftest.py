@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Generator
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from fakeredis import FakeRedis
+from pytest import MonkeyPatch
 
 from tests.testlib import is_cloud_repo, is_enterprise_repo, is_managed_repo
 

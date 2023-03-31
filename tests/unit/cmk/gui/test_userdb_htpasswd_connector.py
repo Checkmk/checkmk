@@ -6,7 +6,7 @@
 from pathlib import Path
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password

@@ -23,7 +23,7 @@ from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum
 @pytest.fixture(scope="module")
 def monkeymodule(request):
     # pylint: disable=import-outside-toplevel
-    from _pytest.monkeypatch import MonkeyPatch
+    from pytest import MonkeyPatch
 
     # pylint: enable=import-outside-toplevel
     mpatch = MonkeyPatch()

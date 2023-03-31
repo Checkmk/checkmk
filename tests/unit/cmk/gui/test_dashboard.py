@@ -6,7 +6,7 @@
 from typing import Literal
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId

@@ -12,7 +12,7 @@ from contextlib import closing
 from pathlib import Path
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import livestatus
 

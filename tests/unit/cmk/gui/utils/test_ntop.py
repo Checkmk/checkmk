@@ -6,7 +6,7 @@
 from typing import Any
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
 

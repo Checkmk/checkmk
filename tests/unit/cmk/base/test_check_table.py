@@ -7,7 +7,7 @@
 
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 # No stub file
 from tests.testlib.base import Scenario

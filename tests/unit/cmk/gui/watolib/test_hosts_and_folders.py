@@ -15,7 +15,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.redis import disable_redis

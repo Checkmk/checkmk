@@ -14,8 +14,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from flask import Flask
+from pytest import MonkeyPatch
 
 from tests.testlib import is_managed_repo
 

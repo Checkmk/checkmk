@@ -7,7 +7,7 @@
 
 from collections.abc import Callable, Iterable, Sequence
 
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 

@@ -9,7 +9,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.special_agents.agent_aws import (
     _create_lamdba_sections,

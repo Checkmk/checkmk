@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from typing import Type
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
 from cmk.utils.redis import disable_redis

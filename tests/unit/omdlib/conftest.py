@@ -6,7 +6,7 @@
 from pathlib import Path
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import omdlib
 from omdlib.contexts import SiteContext

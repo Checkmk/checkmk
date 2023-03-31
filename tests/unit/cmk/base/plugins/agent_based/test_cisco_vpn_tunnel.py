@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.base.plugins.agent_based import cisco_vpn_tunnel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (

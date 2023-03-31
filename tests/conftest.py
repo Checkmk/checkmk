@@ -13,7 +13,6 @@ import shutil
 from pathlib import Path
 
 import pytest
-from _pytest.doctest import DoctestItem
 
 if os.getenv("_PYTEST_RAISE", "0") != "0":
     # This allows exceptions to be handled by IDEs (rather than just printing the results)
@@ -116,7 +115,7 @@ def pytest_collection_modifyitems(items):
         repo_rel_path = file_path.relative_to(testlib.repo_path())
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
-            if not isinstance(item, DoctestItem):
+            if not isinstance(item, pytest.DoctestItem):
                 raise Exception(f"Test in {repo_rel_path} not TYPE marked: {item!r} ({ty!r})")
 
         item.add_marker(pytest.mark.type.with_args(ty))

@@ -7,7 +7,7 @@ import os
 from collections.abc import Mapping
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 

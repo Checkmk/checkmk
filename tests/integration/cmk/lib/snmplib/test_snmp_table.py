@@ -35,7 +35,7 @@ INFO_TREE = BackendSNMPTree(
 @pytest.fixture(scope="module")
 def monkeymodule(request):
     # pylint: disable=import-outside-toplevel
-    from _pytest.monkeypatch import MonkeyPatch
+    from pytest import MonkeyPatch
 
     # pylint: enable=import-outside-toplevel
     mpatch = MonkeyPatch()

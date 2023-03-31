@@ -79,9 +79,9 @@ def fake_version_and_paths() -> None:
     if is_running_as_site_user():
         return
 
-    import _pytest.monkeypatch  # pylint: disable=import-outside-toplevel
+    from pytest import MonkeyPatch  # pylint: disable=import-outside-toplevel
 
-    monkeypatch = _pytest.monkeypatch.MonkeyPatch()
+    monkeypatch = MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
     import cmk.utils.paths  # pylint: disable=import-outside-toplevel

@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.testlib import on_time
 

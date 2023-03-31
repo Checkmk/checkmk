@@ -17,8 +17,8 @@ from unittest import mock
 from zlib import compress
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
+from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
 from cmk.utils.encryption import TransportProtocol

@@ -9,7 +9,7 @@ from functools import partial
 from typing import Any
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 

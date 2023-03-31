@@ -7,7 +7,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.unit.cmk.gui.conftest import SetConfig
 

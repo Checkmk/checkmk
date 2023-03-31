@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.gui.plugins.metrics import graph_templates
 from cmk.gui.plugins.metrics.utils import GraphTemplate

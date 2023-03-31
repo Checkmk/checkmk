@@ -8,8 +8,8 @@ import time
 from collections.abc import Iterator
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from pydantic import BaseModel
+from pytest import MonkeyPatch
 from werkzeug.test import create_environ
 
 import cmk.gui.http as http

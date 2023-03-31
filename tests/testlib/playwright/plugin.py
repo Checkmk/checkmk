@@ -14,8 +14,8 @@ import os
 import typing as t
 import urllib
 
-import _pytest
 import pytest
+from _pytest.fixtures import SubRequest  # TODO: Do we really need an implementation detail?
 from playwright.sync_api import (
     Browser,
     BrowserContext,
@@ -159,7 +159,7 @@ def is_chromium(browser_name: str) -> bool:
 
 
 @pytest.fixture(name="browser_name", scope="session", params=_browser_engines)
-def _browser_name(request: _pytest.fixtures.SubRequest, pytestconfig: _pytest.config.Config) -> str:
+def _browser_name(request: SubRequest, pytestconfig: pytest.Config) -> str:
     """Returns the browser name(s).
 
     Fixture returning the parametrized browser name(s). A subset of the parametrized browser names

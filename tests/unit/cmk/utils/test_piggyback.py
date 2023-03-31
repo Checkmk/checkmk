@@ -9,8 +9,8 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from freezegun import freeze_time
+from pytest import MonkeyPatch
 
 import cmk.utils.log
 import cmk.utils.paths

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.domino import DETECT
 
 # Example SNMP walk:
 #
@@ -10,10 +12,6 @@
 # .1.3.6.1.4.1.334.72.1.1.4.8.0 MEDEMA
 # .1.3.6.1.4.1.334.72.1.1.6.2.1.0 CN=HH-BK4/OU=SRV/O=MEDEMA/C=DE
 # .1.3.6.1.4.1.334.72.1.1.6.2.4.0 Release 8.5.3FP5 HF89
-
-
-from cmk.base.check_api import any_of, startswith
-from cmk.base.config import check_info
 
 
 def inventory_domino_info(info):
@@ -41,11 +39,7 @@ def check_domino_info(_no_item, _no_params, info):
 
 
 check_info["domino_info"] = {
-    "detect": any_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.1.10"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
-    ),
+    "detect": DETECT,
     "check_function": check_domino_info,
     "inventory_function": inventory_domino_info,
     "service_description": "Domino Info",

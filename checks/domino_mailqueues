@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, check_levels, discover, get_parsed_item_data, startswith
+from cmk.base.check_api import check_levels, discover, get_parsed_item_data
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.utils.domino import DETECT
 
 factory_settings["domino_mailqueues_defaults"] = {"queue_length": (300, 350)}
 
@@ -40,11 +41,7 @@ def check_domino_mailqueues(_item, params, data):
 
 
 check_info["domino_mailqueues"] = {
-    "detect": any_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.1.10"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
-    ),
+    "detect": DETECT,
     "parse_function": parse_domino_mailqueues,
     "inventory_function": discover(),
     "check_function": check_domino_mailqueues,

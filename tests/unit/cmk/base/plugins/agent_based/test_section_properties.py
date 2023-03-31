@@ -105,8 +105,6 @@ def test_detect_spec_dedup(
         ("sophos_cpu", "sophos_disk", "sophos_memory"),
         ("steelhead_connections", "steelhead_peers", "steelhead_status"),
         ("ups_cps_battery", "ups_cps_inphase", "ups_cps_outphase"),
-        ("alcatel_cpu", "alcatel_fans", "alcatel_power", "alcatel_temp"),
-        ("alcatel_cpu_aos7", "alcatel_fans_aos7", "alcatel_power_aos7", "alcatel_temp_aos7"),
         (
             "fjdarye_controller_modules_flash",
             "fjdarye_expanders",

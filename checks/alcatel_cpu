@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
 from cmk.base.check_legacy_includes.alcatel import check_alcatel_cpu, inventory_alcatel_cpu
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL
 
 check_info["alcatel_cpu"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6486.800"),
+    "detect": DETECT_ALCATEL,
     "check_function": check_alcatel_cpu,
     "inventory_function": inventory_alcatel_cpu,
     "service_description": "CPU utilization",

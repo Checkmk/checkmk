@@ -110,12 +110,6 @@ def test_detect_spec_dedup(
         ("blade_bx_blades", "blade_bx_powerfan", "blade_bx_powermod", "blade_bx_temp"),
         ("cmciii_lcp_airin", "cmciii_lcp_airout", "cmciii_lcp_fans", "cmciii_lcp_water"),
         (
-            "dell_compellent_controller",
-            "dell_compellent_disks",
-            "dell_compellent_enclosure",
-            "dell_compellent_folder",
-        ),
-        (
             "fjdarye_controller_modules_flash",
             "fjdarye_expanders",
             "fjdarye_inlet_thermal_sensors",

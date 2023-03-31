@@ -20,7 +20,7 @@ else:
 
 @pytest.fixture(name="lazyfile")
 def fixture_lazyfile():
-    mylazyfile = mk_filestats.FileStat(__file__)
+    mylazyfile = mk_filestats.FileStat.from_path(__file__)
 
     # Overwrite the path to be reproducable...
     mylazyfile.path = "test_mk_filestats.py"
@@ -28,13 +28,13 @@ def fixture_lazyfile():
 
 
 def test_lazy_file() -> None:
-    lfile = mk_filestats.FileStat("/bla/no such file.txt")
+    lfile = mk_filestats.FileStat.from_path("/bla/no such file.txt")
     assert lfile.path == "/bla/no such file.txt"
     assert lfile.size is None
     assert lfile.age is None
     assert lfile.stat_status == "file vanished"
 
-    lfile = mk_filestats.FileStat(__file__)  # this should exist...
+    lfile = mk_filestats.FileStat.from_path(__file__)  # this should exist...
     assert lfile.path == __file__
     assert lfile.size == os.stat(__file__).st_size
     assert lfile.stat_status == "ok"
@@ -99,7 +99,7 @@ def test_numeric_filter_raises(invalid_arg) -> None:  # type: ignore[no-untyped-
 def test_path_filter(reg_pat, paths, results) -> None:  # type: ignore[no-untyped-def]
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):
-        lazy_file = mk_filestats.FileStat(path)
+        lazy_file = mk_filestats.FileStat.from_path(path)
         assert result == path_filter.matches(lazy_file)
 
 
@@ -231,14 +231,6 @@ class TestConfigParsing:
             assert config_dict["subgroups_delimiter"] == "@"
 
 
-class MockedFileStatFile:
-    def __init__(self, path) -> None:  # type: ignore[no-untyped-def]
-        self.path = path
-
-    def __eq__(self, other):
-        return self.path == other.path
-
-
 @pytest.mark.parametrize(
     "section_name, files_iter, grouping_conditions, expected_result",
     [
@@ -246,10 +238,10 @@ class MockedFileStatFile:
             "banana",
             iter(
                 [
-                    MockedFileStatFile("/var/log/syslog"),
-                    MockedFileStatFile("/var/log/syslog1"),
-                    MockedFileStatFile("/var/log/syslog2"),
-                    MockedFileStatFile("/var/log/apport"),
+                    mk_filestats.FileStat("/var/log/syslog", "ok"),
+                    mk_filestats.FileStat("/var/log/syslog1", "ok"),
+                    mk_filestats.FileStat("/var/log/syslog2", "ok"),
+                    mk_filestats.FileStat("/var/log/apport", "ok"),
                 ]
             ),
             [
@@ -271,18 +263,18 @@ class MockedFileStatFile:
             [
                 (
                     "banana raccoon",
-                    [MockedFileStatFile("/var/log/syslog1")],
+                    [mk_filestats.FileStat("/var/log/syslog1", "ok")],
                 ),
                 (
                     "banana colibri",
                     [
-                        MockedFileStatFile("/var/log/syslog"),
-                        MockedFileStatFile("/var/log/syslog2"),
+                        mk_filestats.FileStat("/var/log/syslog", "ok"),
+                        mk_filestats.FileStat("/var/log/syslog2", "ok"),
                     ],
                 ),
                 (
                     "banana",
-                    [MockedFileStatFile("/var/log/apport")],
+                    [mk_filestats.FileStat("/var/log/apport", "ok")],
                 ),
             ],
         ),
@@ -333,7 +325,7 @@ def test_grouping_multiple_groups(
     ) in enumerate(results_list):
         assert section_name_arg == expected_results_list[results_idx][0]
         for files_idx, single_file in enumerate(files):
-            assert single_file == expected_results_list[results_idx][1][files_idx]
+            assert single_file.path == expected_results_list[results_idx][1][files_idx].path
 
 
 @pytest.mark.parametrize("val", [None, "null"])

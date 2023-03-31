@@ -1153,39 +1153,30 @@ def IPNetwork(  # pylint: disable=redefined-builtin
 ) -> TextInput:
     """Same as IPv4Network, but allowing both IPv4 and IPv6"""
 
-    def _validate_value_for_one_class(value: str, varprefix: str) -> None:
-        assert ip_class is not None
+    def _try(
+        cls: type[ipaddress.IPv4Network] | type[ipaddress.IPv6Network], value: str
+    ) -> Exception | None:
         try:
-            ip_class(value)
+            cls(value)
+            return None
         except ValueError as exc:
-            ip_class_text = {
-                ipaddress.IPv4Network: "IPv4",
-                ipaddress.IPv6Network: "IPv6",
-            }[ip_class]
-
-            raise MKUserError(varprefix, _("Invalid %s address: %s") % (ip_class_text, exc))
-
-    def _validate_value_for_both_classes(value: str, varprefix: str):  # type: ignore[no-untyped-def]
-        errors = {}
-        for ipc in (ipaddress.IPv4Network, ipaddress.IPv6Network):
-            try:
-                ipc(value)
-                return
-            except ValueError as exc:
-                errors[ipc] = exc
-
-        raise MKUserError(
-            varprefix,
-            _("Invalid host or network address. IPv4: %s, IPv6: %s")
-            % (errors[ipaddress.IPv4Network], errors[ipaddress.IPv6Network]),
-        )
+            return exc
 
     def _validate_value(value: str, varprefix: str) -> None:
-        if ip_class is not None:
-            _validate_value_for_one_class(value, varprefix)
-            return
-
-        _validate_value_for_both_classes(value, varprefix)
+        if ip_class is None:
+            if (e4 := _try(ipaddress.IPv4Network, value)) is not None and (
+                e6 := _try(ipaddress.IPv6Network, value)
+            ) is not None:
+                raise MKUserError(
+                    varprefix,
+                    _("Invalid host or network address. IPv4: %s, IPv6: %s") % (e4, e6),
+                )
+        elif issubclass(ip_class, ipaddress.IPv4Network):
+            if (e4 := _try(ipaddress.IPv4Network, value)) is not None:
+                raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % e4)
+        else:
+            if (e6 := _try(ipaddress.IPv6Network, value)) is not None:
+                raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
 
     return TextInput(
         validate=_validate_value,

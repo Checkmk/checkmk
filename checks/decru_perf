@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.decru import DETECT_DECRU
 
 
 def inventory_decru_perf(info):
@@ -41,7 +41,7 @@ def check_decru_perf(item, _no_params, info):
 
 
 check_info["decru_perf"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "datafort"),
+    "detect": DETECT_DECRU,
     "check_function": check_decru_perf,
     "inventory_function": inventory_decru_perf,
     "service_description": "COUNTER %s",

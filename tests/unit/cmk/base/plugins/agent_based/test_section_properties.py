@@ -323,16 +323,6 @@ def test_detect_spec_dedup(
             "primekey_hsm_battery_voltage",
             "primekey_cpu_temperature",
         ],
-        [
-            "mcafee_emailgateway_cpuload",
-            "mcafee_emailgateway_agent",
-            "mcafee_emailgateway_av_authentium",
-            "mcafee_emailgateway_av_mcafee",
-            "mcafee_emailgateway_bridge",
-            "mcafee_emailgateway_entities",
-            "mcafee_emailgateway_smtp",
-            "mcafee_emailgateway_spam_mcafee",
-        ],
     ]
 
 

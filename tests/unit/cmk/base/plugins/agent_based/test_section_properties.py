@@ -116,12 +116,6 @@ def test_detect_spec_dedup(
             "dell_compellent_folder",
         ),
         (
-            "didactum_can_sensors_analog",
-            "didactum_sensors_analog",
-            "didactum_sensors_discrete",
-            "didactum_sensors_outlet",
-        ),
-        (
             "fjdarye_controller_modules_flash",
             "fjdarye_expanders",
             "fjdarye_inlet_thermal_sensors",

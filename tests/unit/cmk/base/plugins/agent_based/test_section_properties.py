@@ -130,7 +130,6 @@ def test_detect_spec_dedup(
             "fjdarye_thermal_sensors",
         ),
         ("fortigate_ipsecvpn", "fortigate_memory_base", "fortigate_signatures", "fortigate_sslvpn"),
-        ("ibm_imm_fan", "ibm_imm_health", "ibm_imm_temp", "ibm_imm_voltage"),
         (
             "ups_modulys_alarms",
             "ups_modulys_battery",

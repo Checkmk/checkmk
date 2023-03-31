@@ -116,12 +116,6 @@ def test_detect_spec_dedup(
             "fjdarye_inlet_thermal_sensors",
             "fjdarye_thermal_sensors",
         ),
-        (
-            "ups_modulys_alarms",
-            "ups_modulys_battery",
-            "ups_modulys_inphase",
-            "ups_modulys_outphase",
-        ),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

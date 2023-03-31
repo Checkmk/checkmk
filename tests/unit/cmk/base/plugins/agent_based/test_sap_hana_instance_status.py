@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.sap_hana_instance_status import InstanceProces
 @pytest.mark.parametrize(
     "info, expected_result",
     [
-        (
+        pytest.param(
             [
                 ["[[HXE 98]]"],
                 ["instanceStatus: 3"],
@@ -75,13 +75,62 @@ from cmk.base.plugins.agent_based.sap_hana_instance_status import InstanceProces
                     ],
                 )
             },
+            id="instance with processes",
         ),
-        (
+        pytest.param(
             [
                 ["[[HXE 98]]"],
                 ["instanceStatus: 4"],
             ],
             {"HXE 98": InstanceStatus(status="4")},
+            id="instance without processes",
+        ),
+        pytest.param(
+            [
+                ["[[HXE 98]]"],
+                ["instanceStatus: 3"],
+                ["OK"],
+                [
+                    "name",
+                    "description",
+                    "dispstatus",
+                    "textstatus",
+                    "starttime",
+                    "elapsedtime",
+                    "pid",
+                ],
+                [
+                    "hdbdaemon",
+                    "HDB Daemon",
+                    "GREEN",
+                    "Running",
+                    "2021 05 19 07:50:33",
+                ],
+                [
+                    "hdbcompileserver",
+                    "HDB Compileserver",
+                    "GREEN",
+                    "Running",
+                    "2021 05 19 07:50:44",
+                    "0:40:39",
+                    "3546",
+                ],
+            ],
+            {
+                "HXE 98": InstanceStatus(
+                    status="3",
+                    processes=[
+                        InstanceProcess(
+                            name="HDB Compileserver",
+                            state="GREEN",
+                            description="Running",
+                            elapsed_time=2439.0,
+                            pid="3546",
+                        ),
+                    ],
+                )
+            },
+            id="incomplete process data",
         ),
     ],
 )

@@ -53,10 +53,10 @@ export function initialize() {
         g_visibility_detection_enabled = false;
     }
 
-    function on_visibility_change(evt) {
+    function on_visibility_change(evt: {type: string}) {
         const v = "visible",
             h = "hidden",
-            evtMap = {
+            evtMap: Record<string, "visible" | "hidden"> = {
                 focus: v,
                 focusin: v,
                 pageshow: v,
@@ -70,7 +70,7 @@ export function initialize() {
         utils.remove_class(document.body, "visible");
         utils.remove_class(document.body, "hidden");
 
-        let new_class;
+        let new_class: "visible" | "hidden";
         if (evt.type in evtMap) {
             new_class = evtMap[evt.type];
         } else {
@@ -82,8 +82,10 @@ export function initialize() {
     }
 
     // set the initial state (but only if browser supports the Page Visibility API)
+    //@ts-ignore
     if (document[hidden_attr_name] !== undefined)
         on_visibility_change({
+            //@ts-ignore
             type: document[hidden_attr_name] ? "blur" : "focus",
         });
 }

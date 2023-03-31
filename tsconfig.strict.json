@@ -30,7 +30,7 @@
         "./web/htdocs/js/modules/sites.ts",
         "./web/htdocs/js/modules/foldable_container.ts",
         "./web/htdocs/js/modules/transfer.ts",
-        //"./web/htdocs/js/modules/visibility_detection.ts",
+        "./web/htdocs/js/modules/visibility_detection.ts",
         "./web/htdocs/js/modules/sidebar.ts",
         "./web/htdocs/js/modules/async_progress.ts",
         //"./web/htdocs/js/modules/page_menu.ts",

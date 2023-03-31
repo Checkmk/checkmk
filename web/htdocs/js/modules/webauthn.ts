@@ -77,15 +77,15 @@ export function register() {
         });
 }
 
-function show_info(text) {
+function show_info(text: string) {
     show_message(text, "success");
 }
 
-function show_error(text) {
+function show_error(text: string) {
     show_message(text, "error");
 }
 
-function show_message(text, cls) {
+function show_message(text: string, cls: string) {
     const msg = document.getElementById("webauthn_message")!;
     utils.remove_class(msg, "error");
     utils.remove_class(msg, "success");

@@ -296,15 +296,6 @@ def test_detect_spec_dedup(
             "cmctc",
         ],
         [
-            "dell_om_disks",
-            "dell_om_esmlog",
-            "dell_om_fans",
-            "dell_om_mem",
-            "dell_om_power",
-            "dell_om_processors",
-            "dell_om_sensors",
-        ],
-        [
             "emc_datadomain_disks",
             "emc_datadomain_fans",
             "emc_datadomain_fs",

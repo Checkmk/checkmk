@@ -193,14 +193,16 @@ modes.register_general_option(
 # .
 
 
-def _handle_fetcher_options(options: Mapping[str, object]) -> FileCacheOptions:
-    file_cache_options = FileCacheOptions()
+def _handle_fetcher_options(
+    options: Mapping[str, object], *, defaults: FileCacheOptions | None = None
+) -> FileCacheOptions:
+    file_cache_options = defaults or FileCacheOptions()
 
     if options.get("cache", False):
-        file_cache_options = file_cache_options._replace(use_outdated=True)
+        file_cache_options = file_cache_options._replace(disabled=False, use_outdated=True)
 
     if options.get("no-cache", False):
-        file_cache_options = file_cache_options._replace(disabled=True)
+        file_cache_options = file_cache_options._replace(disabled=True, use_outdated=False)
 
     if options.get("no-tcp", False):
         file_cache_options = file_cache_options._replace(tcp_use_only_cache=True)
@@ -1843,7 +1845,17 @@ _DiscoveryOptions = TypedDict(
 
 
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
-    file_cache_options = _handle_fetcher_options(options)
+    hostnames = modes.parse_hostname_list(args)
+    if hostnames:
+        # In case of discovery with host restriction, do not use the cache
+        # file by default as -I and -II are used for debugging.
+        file_cache_options = FileCacheOptions(disabled=True, use_outdated=False)
+    else:
+        # In case of discovery without host restriction, use the cache file
+        # by default. Otherwise Checkmk would have to connect to ALL hosts.
+        file_cache_options = FileCacheOptions(disabled=False, use_outdated=True)
+
+    file_cache_options = _handle_fetcher_options(options, defaults=file_cache_options)
     hostnames = modes.parse_hostname_list(args)
     if not hostnames:
         # In case of discovery without host restriction, use the cache file

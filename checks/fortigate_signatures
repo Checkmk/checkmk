@@ -8,11 +8,11 @@
 
 # signature ages (defaults are 1/2 days)
 
-
 import time
 
-from cmk.base.check_api import contains, get_age_human_readable, regex
+from cmk.base.check_api import get_age_human_readable, regex
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.utils.fortigate import DETECT_FORTIGATE
 
 factory_settings["fortigate_signature_default_levels"] = {
     "av_age": (86400, 172800),
@@ -75,7 +75,7 @@ def check_fortigate_signatures(_no_item, params, parsed):
 
 
 check_info["fortigate_signatures"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
+    "detect": DETECT_FORTIGATE,
     "parse_function": parse_fortigate_signatures,
     "inventory_function": inventory_fortigate_signatures,
     "check_function": check_fortigate_signatures,

@@ -60,7 +60,7 @@ def parse_sap_hana_instance_status(string_table: StringTable) -> Dict[str, Insta
                 elapsed_time=_parse_elapsed_time(line[5]),
                 pid=line[6],
             )
-            for line in lines[3:]
+            for line in lines[3:] if len(line) > 5
         ]
 
         section[sid_instance] = InstanceStatus(status=status, processes=processes)

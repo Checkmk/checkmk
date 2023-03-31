@@ -161,7 +161,6 @@ def test_detect_spec_dedup(
             "avaya_chassis_temp",
         ),
         ("blade_bays", "blade_blades", "blade_blowers", "blade_health", "blade_mediatray"),
-        ("casa_cpu_mem", "casa_cpu_temp", "casa_cpu_util", "casa_fan", "casa_power"),
         ("cisco_fan", "cisco_fru_powerusage", "cisco_mem_legacy", "cisco_power", "inv_cisco_vlans"),
         ("domino_info", "domino_mailqueues", "domino_tasks", "domino_transactions", "domino_users"),
         (

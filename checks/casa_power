@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.casa import DETECT_CASA
 
 
 def inventory_casa_power(info):
@@ -27,7 +27,7 @@ def check_casa_power(item, no_params, info):
 
 
 check_info["casa_power"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20858.2."),
+    "detect": DETECT_CASA,
     "check_function": check_casa_power,
     "inventory_function": inventory_casa_power,
     "service_description": "Power %s",

@@ -226,14 +226,6 @@ def test_detect_spec_dedup(
             "brocade_tm",
         ),
         (
-            "huawei_switch_cpu",
-            "huawei_switch_fan",
-            "huawei_switch_mem",
-            "huawei_switch_psu",
-            "huawei_switch_stack",
-            "huawei_switch_temp",
-        ),
-        (
             "juniper_alarm",
             "juniper_bgp_state",
             "juniper_cpu",

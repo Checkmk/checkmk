@@ -88,7 +88,6 @@ def test_detect_spec_dedup(
         ("aruba_aps", "aruba_clients", "aruba_cpu_util"),
         ("atto_fibrebridge_chassis", "atto_fibrebridge_fcport", "atto_fibrebridge_sas"),
         ("avaya_45xx_cpu", "avaya_45xx_fan", "avaya_45xx_temp"),
-        ("barracuda_mail_latency", "barracuda_mailqueues", "barracuda_system_cpu_util"),
         ("bdtms_tape_info", "bdtms_tape_module", "bdtms_tape_status"),
         ("cisco_srst_call_legs", "cisco_srst_phones", "cisco_srst_state"),
         ("climaveneta_alarm", "climaveneta_fan", "climaveneta_temp"),

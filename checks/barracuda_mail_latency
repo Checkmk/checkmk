@@ -8,8 +8,9 @@
 # Suggested by customer, in seconds
 
 
-from cmk.base.check_api import all_of, contains, get_age_human_readable, startswith
+from cmk.base.check_api import get_age_human_readable
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.barracuda import DETECT_BARRACUDA
 
 barracuda_mail_latency_default_levels = (40, 60)
 
@@ -38,10 +39,7 @@ def check_barracuda_mail_latency(_no_item, params, info):
 
 
 check_info["barracuda_mail_latency"] = {
-    "detect": all_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
-        contains(".1.3.6.1.2.1.1.1.0", "barracuda"),
-    ),
+    "detect": DETECT_BARRACUDA,
     "inventory_function": inventory_barracuda_mail_latency,
     "check_function": check_barracuda_mail_latency,
     "service_description": "Mail Latency",

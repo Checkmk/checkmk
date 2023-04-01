@@ -107,7 +107,6 @@ def test_detect_spec_dedup(
         ("raritan_pdu_inlet", "raritan_pdu_inlet_summary", "raritan_px2_sensors"),
         ("sentry_pdu", "sentry_pdu_outlets", "sentry_pdu_systempower"),
         ("sni_octopuse_cpu", "sni_octopuse_status", "sni_octopuse_trunks"),
-        ("sophos_cpu", "sophos_disk", "sophos_memory"),
         (
             "fjdarye_controller_modules_flash",
             "fjdarye_expanders",

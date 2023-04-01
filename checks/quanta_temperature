@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from cmk.base.check_api import all_of, discover, exists, get_parsed_item_data, startswith
+from cmk.base.check_api import discover, get_parsed_item_data
 from cmk.base.check_legacy_includes.quanta import parse_quanta
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.quanta import DETECT_QUANTA
 
 # .1.3.6.1.4.1.7244.1.2.1.3.4.1.1.1 1
 # .1.3.6.1.4.1.7244.1.2.1.3.4.1.1.2 2
@@ -51,10 +51,7 @@ def check_quanta_temperature(item, params, entry):
 
 
 check_info["quanta_temperature"] = {
-    "detect": all_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
-        exists(".1.3.6.1.4.1.7244.1.2.1.1.1.0"),
-    ),
+    "detect": DETECT_QUANTA,
     "inventory_function": discover(),
     "parse_function": parse_quanta,
     "check_function": check_quanta_temperature,

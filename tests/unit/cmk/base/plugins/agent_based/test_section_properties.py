@@ -102,7 +102,6 @@ def test_detect_spec_dedup(
         ("orion_backup", "orion_batterytest", "orion_system"),
         ("pfsense_counter", "pfsense_if", "pfsense_status"),
         ("qnap_disks", "qnap_fans", "qnap_hdd_temp"),
-        ("quanta_fan", "quanta_temperature", "quanta_voltage"),
         ("sentry_pdu", "sentry_pdu_outlets", "sentry_pdu_systempower"),
         (
             "fjdarye_controller_modules_flash",

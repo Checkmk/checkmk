@@ -3,18 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-# mypy: disable-error-code="var-annotated"
-
-from cmk.base.check_api import discover, equals, OID_END
+from cmk.base.check_api import discover, OID_END
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.raritan import raritan_map_state, raritan_map_type
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.raritan import DETECT_RARITAN
 
 
 def parse_raritan_pdu_inlet(info):
     precisions = {oid_end: int(decimals) for oid_end, decimals in info[0]}
-    parsed = {}
+    parsed: dict[str, dict[str, tuple[str, tuple | None]]] = {}
     for oid_end, availability, sensor_state, value in info[1]:
         if availability == "1":
             phase_id, sensor_type = oid_end.split(".")[2:4]
@@ -40,7 +38,7 @@ def check_raritan_pdu_inlet(item, params, info):
 
 
 check_info["raritan_pdu_inlet"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6"),
+    "detect": DETECT_RARITAN,
     "parse_function": parse_raritan_pdu_inlet,
     "inventory_function": discover(),
     "check_function": check_raritan_pdu_inlet,

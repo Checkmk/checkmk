@@ -104,7 +104,6 @@ def test_detect_spec_dedup(
         ("qnap_disks", "qnap_fans", "qnap_hdd_temp"),
         ("quanta_fan", "quanta_temperature", "quanta_voltage"),
         ("ra32e_power", "ra32e_sensors", "ra32e_switch"),
-        ("raritan_pdu_inlet", "raritan_pdu_inlet_summary", "raritan_px2_sensors"),
         ("sentry_pdu", "sentry_pdu_outlets", "sentry_pdu_systempower"),
         (
             "fjdarye_controller_modules_flash",

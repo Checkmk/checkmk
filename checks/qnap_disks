@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, startswith
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.qnap import DETECT_QNAP
 
 
 def inventory_qnap_disks(info):
@@ -35,9 +35,7 @@ def check_qnap_disks(item, _no_params, info):
 
 
 check_info["qnap_disks"] = {
-    "detect": any_of(
-        startswith(".1.3.6.1.2.1.1.1.0", "Linux TS-"), startswith(".1.3.6.1.2.1.1.1.0", "NAS Q")
-    ),
+    "detect": DETECT_QNAP,
     "check_function": check_qnap_disks,
     "inventory_function": inventory_qnap_disks,
     "service_description": "Disk %s",

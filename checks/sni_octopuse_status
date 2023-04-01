@@ -9,8 +9,8 @@
 # { normal(1), warning(2), minor(3), major(4), critical(5) }
 
 
-from cmk.base.check_api import contains
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.sni_octopuse import DETECT_SNI_OCTOPUSE
 
 
 def inventory_octopus_status(info):
@@ -39,7 +39,7 @@ def check_octopus_status(_no_item, _no_params_info, info):
 
 
 check_info["sni_octopuse_status"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "agent for hipath"),
+    "detect": DETECT_SNI_OCTOPUSE,
     "check_function": check_octopus_status,
     "inventory_function": inventory_octopus_status,
     "service_description": "Global status",

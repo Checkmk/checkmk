@@ -106,7 +106,6 @@ def test_detect_spec_dedup(
         ("ra32e_power", "ra32e_sensors", "ra32e_switch"),
         ("raritan_pdu_inlet", "raritan_pdu_inlet_summary", "raritan_px2_sensors"),
         ("sentry_pdu", "sentry_pdu_outlets", "sentry_pdu_systempower"),
-        ("sni_octopuse_cpu", "sni_octopuse_status", "sni_octopuse_trunks"),
         (
             "fjdarye_controller_modules_flash",
             "fjdarye_expanders",

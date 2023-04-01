@@ -37,6 +37,9 @@ DETECT_UPS_GENERIC = any_of(
 )
 
 
+DETECT_UPS_CPS = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3808.1.1.1")
+
+
 class UpsParameters(TypedDict, total=False):
     battime: Tuple[int, int]
     capacity: Tuple[int, int]

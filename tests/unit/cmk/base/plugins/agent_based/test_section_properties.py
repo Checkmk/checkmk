@@ -109,7 +109,6 @@ def test_detect_spec_dedup(
         ("sni_octopuse_cpu", "sni_octopuse_status", "sni_octopuse_trunks"),
         ("sophos_cpu", "sophos_disk", "sophos_memory"),
         ("steelhead_connections", "steelhead_peers", "steelhead_status"),
-        ("ups_cps_battery", "ups_cps_inphase", "ups_cps_outphase"),
         (
             "fjdarye_controller_modules_flash",
             "fjdarye_expanders",

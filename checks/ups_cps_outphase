@@ -4,33 +4,41 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated"
+from collections.abc import Iterable, Mapping
+from typing import Literal, TypedDict
 
-from cmk.base.check_api import startswith
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_CPS
 
 
-def parse_ups_cps_outphase(info):
-    parsed = {}
-    parsed["1"] = {}
-    parsed["1"] = {
-        "voltage": float(info[0][0]) / 10,
-        "frequency": float(info[0][1]) / 10,
-        "output_load": float(info[0][2]),
-        "current": float(info[0][3]) / 10,
+class Phase(TypedDict):
+    voltage: float
+    frequency: float
+    output_load: float
+    current: float
+
+
+Section = Mapping[Literal["1"], Phase]
+
+
+def parse_ups_cps_outphase(string_table: list[str]) -> Section:
+    return {
+        "1": Phase(
+            voltage=float(string_table[0][0]) / 10,
+            frequency=float(string_table[0][1]) / 10,
+            output_load=float(string_table[0][2]),
+            current=float(string_table[0][3]) / 10,
+        )
     }
-    return parsed
 
 
-def inventory_ups_cps_outphase(parsed):
-    if parsed:
-        return [("1", {})]
-    return []
+def inventory_ups_cps_outphase(section: Section) -> Iterable[tuple[str, dict]]:
+    yield "1", {}
 
 
 check_info["ups_cps_outphase"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3808.1.1.1"),
+    "detect": DETECT_UPS_CPS,
     "parse_function": parse_ups_cps_outphase,
     "inventory_function": inventory_ups_cps_outphase,
     "check_function": check_elphase,

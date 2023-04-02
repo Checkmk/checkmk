@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import equals
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.knuerr import DETECT_KNUERR
 
 
 def inventory_knuerr_sensors(info):
@@ -24,7 +24,7 @@ def check_knuerr_sensors(item, _no_params, info):
 
 
 check_info["knuerr_sensors"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3711.15.1"),
+    "detect": DETECT_KNUERR,
     "check_function": check_knuerr_sensors,
     "inventory_function": inventory_knuerr_sensors,
     "service_description": "Sensor %s",

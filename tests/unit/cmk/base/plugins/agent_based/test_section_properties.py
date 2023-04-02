@@ -95,7 +95,6 @@ def test_detect_spec_dedup(
         ("f5_bigip_cluster_status_v11_2", "f5_bigip_vcmpfailover", "f5_bigip_vcmpguests"),
         ("hp_procurve_cpu", "hp_procurve_mem", "hp_procurve_sensors"),
         ("ispro_sensors_digital", "ispro_sensors_humid", "ispro_sensors_temp"),
-        ("knuerr_rms_humidity", "knuerr_rms_temp", "knuerr_sensors"),
         ("mcafee_webgateway", "mcafee_webgateway_info", "mcafee_webgateway_misc"),
         ("orion_backup", "orion_batterytest", "orion_system"),
         ("pfsense_counter", "pfsense_if", "pfsense_status"),

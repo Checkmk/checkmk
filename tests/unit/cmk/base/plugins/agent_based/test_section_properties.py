@@ -97,7 +97,6 @@ def test_detect_spec_dedup(
         ("ispro_sensors_digital", "ispro_sensors_humid", "ispro_sensors_temp"),
         ("knuerr_rms_humidity", "knuerr_rms_temp", "knuerr_sensors"),
         ("mcafee_webgateway", "mcafee_webgateway_info", "mcafee_webgateway_misc"),
-        ("netgear_fans", "netgear_powersupplies", "netgear_temp"),
         ("orion_backup", "orion_batterytest", "orion_system"),
         ("pfsense_counter", "pfsense_if", "pfsense_status"),
         ("sentry_pdu", "sentry_pdu_outlets", "sentry_pdu_systempower"),

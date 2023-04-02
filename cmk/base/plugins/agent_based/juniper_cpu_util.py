@@ -9,7 +9,7 @@ from typing import Mapping, Tuple, TypedDict
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cpu_util import check_cpu_util
-from .utils.juniper import DETECT
+from .utils.juniper import DETECT_JUNIPER
 
 Section = Mapping[str, int]
 
@@ -32,7 +32,7 @@ register.snmp_section(
             "8",  # jnxOperatingCPU
         ],
     ),
-    detect=DETECT,
+    detect=DETECT_JUNIPER,
 )
 
 

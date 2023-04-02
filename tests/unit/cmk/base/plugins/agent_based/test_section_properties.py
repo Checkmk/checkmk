@@ -225,14 +225,6 @@ def test_detect_spec_dedup(
             "brocade_optical",
             "brocade_tm",
         ),
-        (
-            "juniper_alarm",
-            "juniper_bgp_state",
-            "juniper_cpu",
-            "juniper_cpu_util",
-            "juniper_fru",
-            "juniper_mem",
-        ),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

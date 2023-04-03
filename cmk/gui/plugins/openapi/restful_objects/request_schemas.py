@@ -474,6 +474,7 @@ class CreateFolder(BaseSchema):
         required=True,
         pattern=WATO_FOLDER_PATH_NAME_REGEX,
         example="production",
+        minLength=1,
     )
     title = fields.String(
         required=True,

@@ -845,3 +845,14 @@ def test_delete_root_folder(
     )
     assert resp.json["title"] == "Problem deleting folder."
     assert resp.json["detail"] == "Deleting the root folder is not permitted."
+
+
+def test_create_folder_with_name_as_empty_string(api_client: RestApiClient) -> None:
+    r = api_client.create_folder(
+        folder_name="",
+        title="some_foldeer_title",
+        parent="~",
+        expect_ok=False,
+    )
+    assert r.json["detail"] == "These fields have problems: name"
+    assert r.json["fields"]["name"][0] == "string '' is too short. The minimum length is 1."

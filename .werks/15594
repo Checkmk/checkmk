@@ -1,0 +1,15 @@
+Title: folder: create folder endpoint now requires a name with min length of 1
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1680506943
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue with the create folder endpoint.  Previously
+it was possible to create a folder with an empty string for the name
+field. This is no longer possible.  A min length of 1 character is now
+required.
+

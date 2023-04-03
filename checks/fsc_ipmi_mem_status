@@ -34,7 +34,7 @@ def inventory_fsc_ipmi_mem_status(info):
     # b) Don't have a status (line[2])
     # c) Don't have a module
     return [
-        (line[1], "", None) for line in info if line[0] != "E" and len(line) > 2 and line[2] != "00"
+        (line[1], None) for line in info if line[0] != "E" and len(line) > 2 and line[2] != "00"
     ]
 
 

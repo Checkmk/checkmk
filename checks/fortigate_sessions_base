@@ -11,7 +11,7 @@ fortigate_sessions_base_default_levels = (100000, 150000)
 
 
 def inventory_fortigate_sessions_base(info):
-    return [(None, "fortigate_sessions_base_default_levels")]
+    return [(None, fortigate_sessions_base_default_levels)]
 
 
 def check_fortigate_sessions_base(item, params, info):

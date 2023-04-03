@@ -136,7 +136,7 @@ fortigate_node_cpu_default_levels = (80.0, 90.0)
 
 def inventory_fortigate_node_cpu(parsed):
     for hostname in parsed["nodes"]:
-        yield hostname, "fortigate_node_cpu_default_levels"
+        yield hostname, fortigate_node_cpu_default_levels
 
 
 def check_fortigate_node_cpu(item, params, parsed):
@@ -166,7 +166,7 @@ fortigate_node_sessions_default_levels = (100000, 150000)
 
 def inventory_fortigate_node_ses(parsed):
     for hostname in parsed["nodes"]:
-        yield hostname, "fortigate_node_sessions_default_levels"
+        yield hostname, fortigate_node_sessions_default_levels
 
 
 def check_fortigate_node_ses(item, params, parsed):

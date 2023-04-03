@@ -27,6 +27,7 @@ from cmk.gui.plugins.openapi.endpoints.aux_tags.schemas import (
     AuxTagAttrsUpdate,
     AuxTagID,
     AuxTagIDShouldExist,
+    AuxTagIDShouldExistShouldBeCustom,
     AuxTagResponse,
     AuxTagResponseCollection,
 )
@@ -117,7 +118,7 @@ def create_aux_tag(params: Mapping[str, Any]) -> Response:
     "cmk/update",
     method="put",
     tag_group="Setup",
-    path_params=[AuxTagIDShouldExist],
+    path_params=[AuxTagIDShouldExistShouldBeCustom],
     request_schema=AuxTagAttrsUpdate,
     response_schema=AuxTagResponse,
     permissions_required=RW_PERMISSIONS,

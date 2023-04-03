@@ -18,7 +18,7 @@ def inventory_gude_humidity(info):
     for oid_index, reading_str in info:
         _oid, index = oid_index.split(".")
         if reading_str != "-9999":
-            yield "Sensor %s" % index, "gude_humidity_default_levels"
+            yield "Sensor %s" % index, gude_humidity_default_levels
 
 
 def check_gude_humidity(item, params, info):

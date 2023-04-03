@@ -165,13 +165,13 @@ def main() {
 
                         copyArtifacts(
                             projectName: win_project_name,
-                            selector: specific(get_valid_build_id(win_project_name, VERSION)),
+                            selector: specific(get_valid_build_id(win_project_name)),
                             target: "agents",
                             fingerprintArtifacts: true
                         )
                         copyArtifacts(
                             projectName: win_py_project_name,
-                            selector: specific(get_valid_build_id(win_py_project_name, VERSION)),
+                            selector: specific(get_valid_build_id(win_py_project_name)),
                             target: "agents",
                             fingerprintArtifacts: true
                         )
@@ -562,18 +562,43 @@ def test_package(package_path, name, workspace, source_dir, cmk_version) {
     }
 }
 
-def get_valid_build_id(jobName, version_string) {
+def get_valid_build_id(jobName) {
+    /// In order to avoid unnessessary builds for the given job, we check if we
+    /// can use the last completed build instead.
+    /// That's the case if the following requirements are met:
+    /// - there _is_ a last completed build 
+    /// - it's been successful
+    /// - it's from same day
+    /// - VERSION parameter matches with current build's
+    /// - and must be one of 'git' or 'daily'
+
+    def currentBuildVersion = params.VERSION;
     def lastBuild = Jenkins.instance.getItemByFullName(jobName).lastCompletedBuild;
-    if (version_string in ["daily", "git"] &&
-        lastBuild != null &&
-        lastBuild.result.toString().equals("SUCCESS")
-    ) {
-        return lastBuild.getId();
+    if (lastBuild) {
+        def currentBuildDay = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
+
+        def lastBuildParameters = (
+            lastBuild.getAllActions().find{ it instanceof ParametersAction }?.parameters.collectEntries { entry ->
+                [(entry.name) : entry.value]});
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(lastBuild.getTime());
+        def lastBuildDay = calendar.get(Calendar.DAY_OF_YEAR);    
+
+        if (currentBuildVersion in ["daily", "git"] &&
+            lastBuildParameters.VERSION == currentBuildVersion &&
+            lastBuildDay == currentBuildDay &&
+            lastBuild.result.toString().equals("SUCCESS")
+        ) {
+            return lastBuild.getId();
+        }
+        print("Some attributes of the last ${jobName} build force a rebuild.");
     }
+
     show_duration("Build ${jobName}") {
         return build(
             job: jobName,
-            parameters: [string(name: "VERSION", value: version_string)]
+            parameters: [string(name: "VERSION", value: currentBuildVersion)]
         ).getId();
     }
 }

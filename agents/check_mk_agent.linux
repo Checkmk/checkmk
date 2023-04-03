@@ -163,9 +163,17 @@ if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
     . "$MK_CONFDIR/exclude_sections.cfg"
 fi
 
+encryption_panic() {
+    echo "<<<check_mk>>>"
+    echo "EncryptionPanic: true"
+    exit 1
+}
+
 set_up_encryption() {
     # shellcheck source=/dev/null
-    [ -f "$MK_CONFDIR/encryption.cfg" ] && . "$MK_CONFDIR/encryption.cfg"
+    [ -f "${MK_CONFDIR}/encryption.cfg" ] && {
+        . "${MK_CONFDIR}/encryption.cfg" || encryption_panic
+    }
 
     if [ "$ENCRYPTED" == "yes" ]; then
         OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')

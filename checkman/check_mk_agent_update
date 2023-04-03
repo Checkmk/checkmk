@@ -7,3 +7,4 @@ description:
  This plugin makes sure that the Checkmk agent deploy mechanism (if used)
  is working properly. It checks the time of the last successful connect
  to the deployment server and if there are any error messages.
+ A failing agent encryption will also be reported by this plugin.

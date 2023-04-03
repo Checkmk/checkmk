@@ -61,11 +61,17 @@ def _get_error_deployment_globally_disabled_state(params, error_text):
 
 
 def inventory_cmk_agent_update(info):
-    if "AgentUpdate" in info:
+    if "AgentUpdate" in info or "EncryptionPanic" in info:
         return [(None, {})]
 
 
 def check_cmk_agent_update(_no_item, params, info):
+    if info.get("EncryptionPanic"):
+        # This does not belong to agent updates, but the "Check_MK Agent" service should report a
+        # failing symmetric encryption, as it's done from 2.1.0 on, so it has to be handled here.
+        yield 2, "Failed to apply symmetric encryption, aborting communication."
+        return
+
     if "AgentUpdate" not in info:
         return
 

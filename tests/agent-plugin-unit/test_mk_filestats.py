@@ -364,6 +364,25 @@ def test_explicit_null_in_filestat(val):
         pytest.param(
             [
                 mk_filestats.FileStat("/tmp/file1", "file_vanished"),
+                mk_filestats.FileStat("/tmp/file2", "ok", 512, 600),
+            ],
+            "[[[extremes_only MYGROUP]]]",
+            [
+                {
+                    "type": "file",
+                    "path": "/tmp/file2",
+                    "stat_status": "ok",
+                    "size": 512,
+                    "age": 600,
+                    "mtime": None,
+                },
+                {"type": "summary", "count": 2},
+            ],
+            id="file without metrics is the first one",
+        ),
+        pytest.param(
+            [
+                mk_filestats.FileStat("/tmp/file1", "file_vanished"),
             ],
             "[[[extremes_only MYGROUP]]]",
             [

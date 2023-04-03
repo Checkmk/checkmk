@@ -536,13 +536,16 @@ def output_aggregator_extremes_only(group_name, files_iter):
     min_age = max_age = min_size = max_size = files[0]
 
     for filestat in files[1:]:
-        if filestat.age is not None and filestat.age < min_age.age:
+        if filestat.age is None:
+            continue
+
+        if min_age.age is None or filestat.age < min_age.age:
             min_age = filestat
-        elif filestat.age is not None and filestat.age > max_age.age:
+        if max_age.age is None or filestat.age > max_age.age:
             max_age = filestat
-        if filestat.size is not None and filestat.size < min_size.size:
+        if min_size.size is None or filestat.size < min_size.size:
             min_size = filestat
-        elif filestat.size is not None and filestat.size > max_size.size:
+        if max_size.size is None or filestat.size > max_size.size:
             max_size = filestat
 
     for extreme_file in set((min_age, max_age, min_size, max_size)):

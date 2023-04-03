@@ -30,8 +30,10 @@ def cfg_setup_fixture(request: pytest.FixtureRequest, site: Site) -> Iterator[No
     # Enforce use of the pre-created RRD file from the git. The restart of the core
     # is needed to make it renew it's internal RRD file cache
     site.makedirs("var/check_mk/rrd/test-prediction")
-    with open(site.path("var/check_mk/rrd/test-prediction/CPU_load.rrd"), "wb") as f:
-        f.write((repo_path() / "tests/integration/cmk/base/test-files/CPU_load.rrd").read_bytes())
+    site.write_binary_file(
+        "var/check_mk/rrd/test-prediction/CPU_load.rrd",
+        (repo_path() / "tests/integration/cmk/base/test-files/CPU_load.rrd").read_bytes(),
+    )
 
     site.write_text_file(
         "var/check_mk/rrd/test-prediction/CPU_load.info",

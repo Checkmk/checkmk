@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
-import os
 import re
 import subprocess
 from collections.abc import Iterator
@@ -15,13 +14,12 @@ from tests.testlib.rest_api_client import RestApiClient
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
-import cmk.utils.paths
 from cmk.utils.type_defs import DiscoveryResult, HostName
 
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksTable
 
-from cmk.checkers.discovery import AutochecksStore
+from cmk.checkers.discovery._autochecks import _AutochecksSerializer
 
 
 @pytest.fixture(name="test_cfg", scope="module")
@@ -430,10 +428,10 @@ def test_automation_set_autochecks(site: Site) -> None:
             results.SetAutochecksResult,
         )
 
-        autochecks_file = f"{cmk.utils.paths.autochecks_dir}/{hostname}.mk"
-        assert os.path.exists(autochecks_file)
+        autochecks_file = f"var/check_mk/autochecks/{hostname}.mk"
+        assert site.file_exists(autochecks_file)
 
-        data = AutochecksStore(hostname).read()
+        data = _AutochecksSerializer().deserialize(site.read_file(autochecks_file).encode("utf-8"))
         services = [
             (
                 (str(s.check_plugin_name), s.item),

@@ -28,7 +28,7 @@ import shutil
 import subprocess
 import time
 import traceback
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
 from itertools import filterfalse
 from pathlib import Path
@@ -684,7 +684,7 @@ class ActivateChangesManager(ActivateChanges):
             The activation-id under which to track the progress of this particular run.
 
         """
-        _raise_for_license_block(self._changes)
+        _raise_for_license_block()
 
         self._activate_foreign = activate_foreign
 
@@ -2694,9 +2694,8 @@ def get_restapi_response_for_activation_id(
     )
 
 
-def _raise_for_license_block(changes: Sequence[tuple[str, Mapping[str, Any]]]) -> None:
+def _raise_for_license_block() -> None:
     if block_effect := get_licensing_user_effect(
-        changes=changes,
         licensing_settings_link=makeuri_contextless(
             _request, [("mode", "edit_licensing_settings")], filename="wato.py"
         ),
@@ -2732,7 +2731,7 @@ def activate_changes_start(
     changes = ActivateChanges()
     changes.load()
 
-    _raise_for_license_block(changes._changes)
+    _raise_for_license_block()
 
     if changes.has_foreign_changes():
         if not user.may("wato.activateforeign"):

@@ -187,7 +187,6 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 != LicenseUsageReportValidity.older_than_five_days
             )
             block_effect = get_licensing_user_effect(
-                changes=self._changes,
                 licensing_settings_link=makeuri_contextless(
                     request, [("mode", "edit_licensing_settings")], filename="wato.py"
                 ),
@@ -423,7 +422,6 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         warnings = []
 
         if block_effect := get_licensing_user_effect(
-            changes=self._changes,
             licensing_settings_link=makeuri_contextless(
                 request, [("mode", "edit_licensing_settings")], filename="wato.py"
             ),

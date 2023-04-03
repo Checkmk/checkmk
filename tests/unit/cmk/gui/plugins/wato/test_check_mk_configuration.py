@@ -20,7 +20,7 @@ def test_ui_theme_registration() -> None:
     assert valuespec.choices() == theme_choices()
 
 
-def test_ui_theme_default_value(request_context) -> None:  # type: ignore[no-untyped-def]
+def test_ui_theme_default_value() -> None:
     var = config_variable_registry["ui_theme"]()
 
     default_setting = var.domain()().default_globals()[var.ident()]

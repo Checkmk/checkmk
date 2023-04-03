@@ -13,19 +13,19 @@ from cmk.gui.plugins.wato.check_parameters.ps import (
 
 
 @pytest.mark.parametrize("pattern", ["(test)$", "foo\\b", "^bar", "\\bfoo\\b", "(a)\\b"])
-def test_validate_ps_allowed_regex(pattern) -> None:  # type: ignore[no-untyped-def]
+def test_validate_ps_allowed_regex(pattern: str) -> None:
     assert forbid_re_delimiters_inside_groups(pattern, "") is None
 
 
 @pytest.mark.parametrize("pattern", ["(test$)", "(foo\\b)", "(^bar)", "(\\bfoo\\b)"])
-def test_validate_ps_forbidden_regex(pattern) -> None:  # type: ignore[no-untyped-def]
+def test_validate_ps_forbidden_regex(pattern: str) -> None:
     with pytest.raises(MKUserError):
         forbid_re_delimiters_inside_groups(pattern, "")
 
 
 @pytest.mark.parametrize("description", ["%s%5"])
-def test_validate_process_discovery_descr_option(  # type: ignore[no-untyped-def]
-    description,
+def test_validate_process_discovery_descr_option(
+    description: str,
 ) -> None:
     with pytest.raises(MKUserError):
         validate_process_discovery_descr_option(description, "")

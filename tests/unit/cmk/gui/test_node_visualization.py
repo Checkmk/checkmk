@@ -16,11 +16,12 @@ somewhere expected :-)
 Also sometimes livestatus just tries again which can result in unexpected queries.
 Good luck!
 """
-
 import pytest
+from pytest_mock import MockerFixture
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs.user_id import UserId
 
 from cmk.gui.node_visualization import (
     _get_hostnames_for_query,
@@ -60,8 +61,8 @@ def rough_livestatus_mock(mock_livestatus: MockLiveStatusConnection) -> MockLive
     return live
 
 
-def test_ParentChildNetworkTopology_fetch_data_for_hosts(  # type: ignore[no-untyped-def]
-    rough_livestatus: MockLiveStatusConnection, with_admin_login
+def test_ParentChildNetworkTopology_fetch_data_for_hosts(
+    rough_livestatus: MockLiveStatusConnection, with_admin_login: UserId
 ) -> None:
     with rough_livestatus(expect_status_query=True):
         rough_livestatus.expect_query(
@@ -78,8 +79,8 @@ def test_ParentChildNetworkTopology_fetch_data_for_hosts(  # type: ignore[no-unt
     assert host_info[0]["name"] == "foo<(/"
 
 
-def test_ParentChildTopologyPage_get_hostnames_from_filters(  # type: ignore[no-untyped-def]
-    rough_livestatus: MockLiveStatusConnection, mocker
+def test_ParentChildTopologyPage_get_hostnames_from_filters(
+    rough_livestatus: MockLiveStatusConnection, mocker: MockerFixture
 ) -> None:
     class MockView:
         context = None

@@ -36,5 +36,7 @@ from cmk.gui.plugins.wato.check_parameters.mysql_db_size import _migrate
         ),
     ],
 )
-def test_migrate(entry, result) -> None:  # type: ignore[no-untyped-def]
+def test_migrate(
+    entry: dict[str, object] | tuple[float, float], result: dict[str, tuple[float, float]]
+) -> None:
     assert _migrate(entry) == result

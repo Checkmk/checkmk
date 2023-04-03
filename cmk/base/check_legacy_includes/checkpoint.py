@@ -4,13 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def scan_checkpoint(oid):
-    # we must keep this function with the current name, as long as
-    # not all checkpoint check plugins are migrated.
-    # see cmk.base.plugins.agent_based.utils.checkpoint.DETECT
-    raise NotImplementedError("already migrated")
-
-
 checkpoint_sensorstatus_to_nagios = {
     "0": (0, "sensor in range"),
     "1": (2, "sensor out of range"),

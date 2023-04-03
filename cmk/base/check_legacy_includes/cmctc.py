@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def cmctc_snmp_scan_function(oid):
-    return ".1.3.6.1.4.1.2606.4" in oid(".1.3.6.1.2.1.1.2.0")
-
-
 def cmctc_translate_status(status):
     return {4: 0, 7: 1, 8: 1, 9: 2}.get(status, 3)  # ok  # warning  # too low  # too high
 

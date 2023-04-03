@@ -18,7 +18,7 @@ def inventory_cpsecure_sessions(info):
     inventory = []
     for service, enabled, _sessions in info:
         if enabled == "1":
-            inventory.append((service, "cpsecure_sessions_default_levels"))
+            inventory.append((service, cpsecure_sessions_default_levels))
     return inventory
 
 

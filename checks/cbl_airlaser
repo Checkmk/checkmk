@@ -145,7 +145,7 @@ def inventory_cbl_airlaser(info):
     # start passing parameters, but since we might also need some for optics
     # this may change to using factory settings.
     # Or we just hardcode the margins we got from the vendor.
-    return [(None, "airlaser_default_levels")]
+    return [(None, airlaser_default_levels)]
 
 
 def check_cbl_airlaser_status(item, _no_params, info):

@@ -1,0 +1,14 @@
+Title: agent: download agent by host returns a 404 when agent it not available
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1680503543
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue on the download agent by host endpoint.
+Previously, if the agent wasn't available, a 500 internal server
+was being raised.  We now return a 404 not found response.
+

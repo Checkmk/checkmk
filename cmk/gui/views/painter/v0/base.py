@@ -409,6 +409,9 @@ class Cell:
             return None
         return self._painter_params if self._painter_params else vs_painter_params.default_value()
 
+    def has_painter_params(self) -> bool:
+        return self._painter_params not in (None, {})
+
     def title(self, use_short: bool = True) -> str:
         if self._custom_title:
             return self._custom_title

@@ -5,11 +5,9 @@
 
 import abc
 import datetime
-import fcntl
 import importlib.machinery
 import importlib.util
 import os
-import subprocess
 import sys
 import tempfile
 import time
@@ -17,7 +15,7 @@ from collections.abc import Callable, Collection, Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Final
+from typing import Any, Final, TextIO
 
 import freezegun
 import pytest
@@ -195,34 +193,24 @@ class WatchLog:
     def __init__(self, site: Site, default_timeout: int | None = None) -> None:
         self._site = site
         self._log_path = site.core_history_log()
+        self._log: TextIO | None = None
         self._default_timeout = default_timeout or site.core_history_log_timeout()
 
-        self._tail_process: subprocess.Popen[str] | None = None
-
-    def __enter__(self) -> "WatchLog":
+    def __enter__(self):
         if not self._site.file_exists(self._log_path):
             self._site.write_text_file(self._log_path, "")
 
-        self._tail_process = self._site.execute(
-            ["tail", "-f", self._log_path],
-            stdout=subprocess.PIPE,
-            bufsize=1,  # line buffered
-        )
-
-        # Make stdout non blocking. Otherwise the timeout handling
-        # in _check_for_line will not work
-        assert self._tail_process.stdout is not None
-        fd = self._tail_process.stdout.fileno()
-        fl = fcntl.fcntl(fd, fcntl.F_GETFL)
-        fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
-
+        _log = open(self._site.path(self._log_path))
+        _log.seek(0, 2)  # go to end of file
+        self._log = _log
         return self
 
     def __exit__(self, *exc_info):
-        if self._tail_process is not None:
-            self._tail_process.terminate()
-            self._tail_process.wait()
-            self._tail_process = None
+        try:
+            if self._log is not None:
+                self._log.close()
+        except AttributeError:
+            pass
 
     def check_logged(self, match_for: str, timeout: float | None = None) -> None:
         if timeout is None:
@@ -241,17 +229,15 @@ class WatchLog:
             )
 
     def _check_for_line(self, match_for: str, timeout: float) -> bool:
-        if self._tail_process is None:
+        if self._log is None:
             raise Exception("no log file")
         timeout_at = time.time() + timeout
         sys.stdout.write(
-            "Start checking for matching line %r at %d until %d\n"
-            % (match_for, time.time(), timeout_at)
+            "Start checking for matching line at %d until %d\n" % (time.time(), timeout_at)
         )
         while time.time() < timeout_at:
             # print("read till timeout %0.2f sec left" % (timeout_at - time.time()))
-            assert self._tail_process.stdout is not None
-            line = self._tail_process.stdout.readline()
+            line = self._log.readline()
             if line:
                 sys.stdout.write("PROCESS LINE: %r\n" % line)
             if match_for in line:
@@ -263,17 +249,6 @@ class WatchLog:
 
 
 def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname: str) -> None:
-    def get_data_source_cache_files(name: str) -> list[str]:
-        p = site.execute(
-            ["ls", f"tmp/check_mk/data_source_cache/*/{name}"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        output = p.communicate()[0].strip()
-        if not output:
-            return []
-        return output.split(" ")
-
     def finalizer() -> None:
         site.openapi.delete_host(hostname)
         site.activate_changes_and_wait_for_core_reload()
@@ -288,7 +263,10 @@ def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname:
             "var/check_mk/autochecks/%s.mk" % hostname,
             "tmp/check_mk/counters/%s" % hostname,
             "tmp/check_mk/cache/%s" % hostname,
-        ] + get_data_source_cache_files(hostname):
+        ] + [
+            str(p.relative_to(site.root))
+            for p in Path(site.root, "tmp/check_mk/data_source_cache/").glob(f"*/{hostname}")
+        ]:
             if site.file_exists(path):
                 site.delete_file(path)
 

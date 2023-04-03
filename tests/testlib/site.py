@@ -421,9 +421,10 @@ class Site:
     def read_file(self, rel_path: str) -> str:
         if not self._is_running_as_site_user():
             p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE)
-            if p.wait() != 0:
+            stdout = p.communicate()[0]
+            if p.returncode != 0:
                 raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
-            return p.stdout.read() if p.stdout is not None else ""
+            return stdout if stdout is not None else ""
         return open(self.path(rel_path)).read()
 
     def read_binary_file(self, rel_path: str) -> bytes:
@@ -527,6 +528,12 @@ class Site:
             return p.wait() == 0
 
         return os.path.exists(self.path(rel_path))
+
+    def is_file(self, rel_path: str) -> bool:
+        return self.execute(["test", "-f", self.path(rel_path)]).wait() == 0
+
+    def is_dir(self, rel_path: str) -> bool:
+        return self.execute(["test", "-d", self.path(rel_path)]).wait() == 0
 
     def file_mode(self, rel_path: str) -> int:
         return int(self.check_output(["stat", "-c", "%f", self.path(rel_path)]).rstrip(), base=16)

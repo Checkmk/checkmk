@@ -71,7 +71,7 @@ def vs_conditions() -> Transform:
     return Transform(
         valuespec=VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
         to_valuespec=lambda c: RuleConditions.from_config("", c),
-        from_valuespec=lambda c: c.to_config(UseHostFolder.HOST),
+        from_valuespec=lambda c: c.to_config(UseHostFolder.HOST_FOLDER_FOR_UI),
     )
 
 

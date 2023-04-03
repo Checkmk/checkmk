@@ -28,7 +28,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.hosts_and_folders import CREHost, Host
-from cmk.gui.watolib.rulesets import SingleRulesetRecursively
+from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
 
 
 def execute_host_removal_background_job() -> None:
@@ -149,7 +149,7 @@ def _hosts_to_be_removed_local() -> Iterator[HostName]:
 
 def _load_automatic_host_removal_ruleset() -> Sequence[RuleSpec]:
     return [
-        rule.to_config()
+        rule.to_config(use_host_folder=UseHostFolder.HOST_FOLDER_FOR_BASE)
         for _folder, _idx, rule in SingleRulesetRecursively.load_single_ruleset_recursively(
             "automatic_host_removal"
         )

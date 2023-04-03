@@ -32,11 +32,17 @@ metric_info["omd_rrd_size"] = {
     "unit": "bytes",
     "color": "21/a",
 }
+metric_info["omd_size"] = {
+    "title": _l("Total size of site"),
+    "unit": "bytes",
+    "color": "31/a",
+}
 
 graph_info["omd_fileusage"] = {
     "title": _l("OMD filesystem usage"),
     "metrics": [
         ("omd_log_size", "stack"),
         ("omd_rrd_size", "stack"),
+        ("omd_size", "line"),
     ],
 }

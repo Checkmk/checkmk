@@ -178,9 +178,8 @@ std::vector<Command> NagiosCore::commands() const {
     return commands;
 }
 
-std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
+std::vector<std::unique_ptr<const IComment>> NagiosCore::comments_unlocked(
     const IHost &hst) const {
-    // TODO(sp): Do we need a mutex here?
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
         if (co->_host == static_cast<const host *>(hst.handle()) &&
@@ -192,8 +191,13 @@ std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
 }
 
 std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
-    const IService &svc) const {
+    const IHost &hst) const {
     // TODO(sp): Do we need a mutex here?
+    return comments_unlocked(hst);
+}
+
+std::vector<std::unique_ptr<const IComment>> NagiosCore::comments_unlocked(
+    const IService &svc) const {
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
         if (co->_host == static_cast<const service *>(svc.handle())->host_ptr &&
@@ -202,6 +206,12 @@ std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
         }
     }
     return result;
+}
+
+std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
+    const IService &svc) const {
+    // TODO(sp): Do we need a mutex here?
+    return comments_unlocked(svc);
 }
 
 bool NagiosCore::all_of_comments(
@@ -213,9 +223,8 @@ bool NagiosCore::all_of_comments(
                        });
 }
 
-std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
+std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes_unlocked(
     const IHost &hst) const {
-    // TODO(sp): Do we need a mutex here?
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
         if (dt->_host == static_cast<const host *>(hst.handle()) &&
@@ -227,8 +236,13 @@ std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
 }
 
 std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
-    const IService &svc) const {
+    const IHost &hst) const {
     // TODO(sp): Do we need a mutex here?
+    return downtimes_unlocked(hst);
+}
+
+std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes_unlocked(
+    const IService &svc) const {
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
         if (dt->_host == static_cast<const service *>(svc.handle())->host_ptr &&
@@ -237,6 +251,12 @@ std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
         }
     }
     return result;
+}
+
+std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
+    const IService &svc) const {
+    // TODO(sp): Do we need a mutex here?
+    return downtimes_unlocked(svc);
 }
 
 bool NagiosCore::all_of_downtimes(

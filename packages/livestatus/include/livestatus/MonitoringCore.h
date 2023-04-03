@@ -74,14 +74,23 @@ public:
         const std::string &name) const = 0;
     [[nodiscard]] virtual std::vector<Command> commands() const = 0;
 
+    [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>>
+    comments_unlocked(const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>> comments(
         const IHost &) const = 0;
+    [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>>
+    comments_unlocked(const IService &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>> comments(
         const IService &) const = 0;
     bool virtual all_of_comments(
         const std::function<bool(const IComment &)> &pred) const = 0;
+
+    [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
+    downtimes_unlocked(const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
     downtimes(const IHost &) const = 0;
+    [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
+    downtimes_unlocked(const IService &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
     downtimes(const IService &) const = 0;
     bool virtual all_of_downtimes(

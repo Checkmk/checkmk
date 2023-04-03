@@ -121,11 +121,20 @@ class DummyMonitoringCore : public MonitoringCore {
     }
     [[nodiscard]] std::vector<Command> commands() const override { return {}; }
 
+    [[nodiscard]] std::vector<std::unique_ptr<const IComment>>
+    comments_unlocked(const IHost & /*host*/) const override {
+        return {};
+    }
+
     [[nodiscard]] std::vector<std::unique_ptr<const IComment>> comments(
         const IHost & /*host*/) const override {
         return {};
     }
 
+    [[nodiscard]] std::vector<std::unique_ptr<const IComment>>
+    comments_unlocked(const IService & /*service*/) const override {
+        return {};
+    }
     [[nodiscard]] std::vector<std::unique_ptr<const IComment>> comments(
         const IService & /*service*/) const override {
         return {};
@@ -136,8 +145,18 @@ class DummyMonitoringCore : public MonitoringCore {
         return true;
     }
 
+    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>>
+    downtimes_unlocked(const IHost & /*host*/) const override {
+        return {};
+    }
+
     [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IHost & /*host*/) const override {
+        return {};
+    }
+
+    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>>
+    downtimes_unlocked(const IService & /*service*/) const override {
         return {};
     }
 

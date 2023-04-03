@@ -126,7 +126,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         const auto &s = r.rawData<LogRow>()->svc;
         return s ? s->handle() : nullptr;
     }),
-                              false /* no hosts table */);
+                              TableServices::AddHosts::no);
     TableContacts::addColumns(this, "current_contact_", offsets.add([](Row r) {
         return r.rawData<LogRow>()->ctc.get();
     }));

@@ -90,7 +90,7 @@ static double staleness(const service &svc) {
 }
 
 TableServices::TableServices(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", ColumnOffsets{}, true);
+    addColumns(this, "", ColumnOffsets{}, AddHosts::yes);
 }
 
 std::string TableServices::name() const { return "services"; }
@@ -99,7 +99,8 @@ std::string TableServices::namePrefix() const { return "service_"; }
 
 // static
 void TableServices::addColumns(Table *table, const std::string &prefix,
-                               const ColumnOffsets &offsets, bool add_hosts) {
+                               const ColumnOffsets &offsets,
+                               AddHosts add_hosts) {
     auto *mc = table->core();
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
@@ -573,7 +574,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::full),
         get_comments));
 
-    if (add_hosts) {
+    if (add_hosts == AddHosts::yes) {
         TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
             return r.rawData<service>()->host_ptr;
         }));

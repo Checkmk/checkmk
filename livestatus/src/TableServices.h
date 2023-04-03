@@ -19,9 +19,10 @@ class User;
 
 class TableServices : public Table {
 public:
+    enum class AddHosts { no, yes };
     explicit TableServices(MonitoringCore *mc);
     static void addColumns(Table *table, const std::string &prefix,
-                           const ColumnOffsets &offsets, bool add_hosts);
+                           const ColumnOffsets &offsets, AddHosts add_hosts);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

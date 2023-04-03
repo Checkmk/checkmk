@@ -11,7 +11,7 @@ innovaphone_mem_default_levels = (60.0, 70.0)
 
 
 def inventory_innovaphone_mem(info):
-    return [(None, "innovaphone_mem_default_levels")]
+    return [(None, innovaphone_mem_default_levels)]
 
 
 def check_innovaphone_mem(_no_item, params, info):

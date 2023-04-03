@@ -10,7 +10,7 @@ ipr400_in_voltage_default_levels = (12, 11)  # 11.5-13.8V is the operational vol
 
 def inventory_ipr400_in_voltage(info):
     if len(info) > 0:
-        yield "1", "ipr400_in_voltage_default_levels"
+        yield "1", ipr400_in_voltage_default_levels
 
 
 def check_ipr400_in_voltage(item, params, info):

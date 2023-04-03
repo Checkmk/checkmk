@@ -17,7 +17,7 @@ def inventory_ifoperstatus(info):
         if hwtype in ifoperstatus_inventory_porttypes and (
             ifoperstatus_monitor_unused or operstatus == "1"
         ):
-            inventory.append((name, operstatus, repr(operstatus)))
+            inventory.append((name, operstatus))
     return inventory
 
 

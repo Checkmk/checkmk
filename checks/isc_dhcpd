@@ -70,7 +70,7 @@ def parse_isc_dhcpd(info):
 
 
 def inventory_isc_dhcpd(parsed):
-    return [(item, "isc_dhcpd_default_levels") for item in parsed["pools"]]
+    return [(item, isc_dhcpd_default_levels) for item in parsed["pools"]]
 
 
 def check_isc_dhcpd(item, params, parsed):

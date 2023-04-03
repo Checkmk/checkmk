@@ -8,7 +8,7 @@ innovaphone_licenses_default_levels = (90.0, 95.0)
 
 def inventory_innovaphone_licenses(info):
     if info:
-        return [(None, "innovaphone_licenses_default_levels")]
+        return [(None, innovaphone_licenses_default_levels)]
     return []
 
 

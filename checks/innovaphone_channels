@@ -12,7 +12,7 @@ innovaphone_channels_default_levels = (75.0, 80.0)
 
 def inventory_innovaphone_channels(info):
     return [
-        (x[0], "innovaphone_channels_default_levels") for x in info if x[1] == "Up" and x[2] == "Up"
+        (x[0], innovaphone_channels_default_levels) for x in info if x[1] == "Up" and x[2] == "Up"
     ]
 
 

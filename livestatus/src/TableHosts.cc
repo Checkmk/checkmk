@@ -499,6 +499,10 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             }
             return std::vector<std::string>(names.begin(), names.end());
         }));
+
+    auto get_downtimes = [mc](const host &hst) {
+        return mc->downtimes_unlocked(NebHost{hst});
+    };
     table->addColumn(
         std::make_unique<ListColumn<host, std::unique_ptr<const IDowntime>>>(
             prefix + "downtimes",
@@ -506,7 +510,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             offsets,
             std::make_unique<DowntimeRenderer>(
                 DowntimeRenderer::verbosity::none),
-            [mc](const host &hst) { return mc->downtimes(NebHost{hst}); }));
+            get_downtimes));
     table->addColumn(
         std::make_unique<ListColumn<host, std::unique_ptr<const IDowntime>>>(
             prefix + "downtimes_with_info",
@@ -514,33 +518,38 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             offsets,
             std::make_unique<DowntimeRenderer>(
                 DowntimeRenderer::verbosity::medium),
-            [mc](const host &hst) { return mc->downtimes(NebHost{hst}); }));
+            get_downtimes));
     table->addColumn(std::make_unique<
                      ListColumn<host, std::unique_ptr<const IDowntime>>>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
         offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
-        [mc](const host &hst) { return mc->downtimes(NebHost{hst}); }));
+        get_downtimes));
+
+    auto get_comments = [mc](const host &hst) {
+        return mc->comments_unlocked(NebHost{hst});
+    };
     table->addColumn(
         std::make_unique<ListColumn<host, std::unique_ptr<const IComment>>>(
             prefix + "comments", "A list of the ids of all comments", offsets,
             std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
-            [mc](const host &hst) { return mc->comments(NebHost{hst}); }));
+            get_comments));
     table->addColumn(
         std::make_unique<ListColumn<host, std::unique_ptr<const IComment>>>(
             prefix + "comments_with_info",
             "A list of all comments with id, author and comment", offsets,
             std::make_unique<CommentRenderer>(
                 CommentRenderer::verbosity::medium),
-            [mc](const host &hst) { return mc->comments(NebHost{hst}); }));
+            get_comments));
     table->addColumn(std::make_unique<
                      ListColumn<host, std::unique_ptr<const IComment>>>(
         prefix + "comments_with_extra_info",
         "A list of all comments with id, author, comment, entry type and entry time",
         offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::full),
-        [mc](const host &hst) { return mc->comments(NebHost{hst}); }));
+        get_comments));
+
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "custom_variable_names",
         "A list of the names of the custom variables", offsets,

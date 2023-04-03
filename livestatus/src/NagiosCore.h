@@ -97,15 +97,23 @@ public:
     Command find_command(const std::string &name) const override;
     std::vector<Command> commands() const override;
 
+    std::vector<std::unique_ptr<const IComment>> comments_unlocked(
+        const IHost &hst) const override;
     std::vector<std::unique_ptr<const IComment>> comments(
         const IHost &hst) const override;
+    std::vector<std::unique_ptr<const IComment>> comments_unlocked(
+        const IService &svc) const override;
     std::vector<std::unique_ptr<const IComment>> comments(
         const IService &svc) const override;
     bool all_of_comments(
         const std::function<bool(const IComment &)> &pred) const override;
 
+    std::vector<std::unique_ptr<const IDowntime>> downtimes_unlocked(
+        const IHost &hst) const override;
     std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IHost &hst) const override;
+    std::vector<std::unique_ptr<const IDowntime>> downtimes_unlocked(
+        const IService &svc) const override;
     std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IService &svc) const override;
     bool all_of_downtimes(

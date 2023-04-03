@@ -1,0 +1,13 @@
+Title: Customize view: Fixed invalid title for 'SLA - Service specific painter'
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1680508450
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The title of the service specific painter was displayed as <tt>The last 4 hours</tt>.
+

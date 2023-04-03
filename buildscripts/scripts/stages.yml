@@ -59,6 +59,18 @@ VARIABLES:
     - NAME: CHANGED_RUN_PRETTIER_SCRIPT
       SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-prettier' - || true"
 
+    - NAME: CHANGED_RUN_JS_LINT_SCRIPT
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/check-js-lint.sh' - || true"
+
+    - NAME: CHANGED_RUN_TYPESCRIPT_TYPES_SCRIPT
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/check-typescript-types.sh' - || true"
+
+    - NAME: CHANGED_TYPESCRIPT_CONFIG
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^tsconfig*.json' - || true"
+
+    - NAME: CHANGED_WEBPACK_CONFIG
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^webpack.config.js' - || true"
+
     - NAME: CHANGED_AGENT_PLUGINS
       SH: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true"
       REPLACE_NEWLINES: true
@@ -230,21 +242,21 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/js-prettier.txt"
 
     -  NAME: 'JS Build'
-       ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES
+       ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_WEBPACK_CONFIG,CHANGED_PACKAGE_JSON
        DIR: 'tests'
        COMMAND: 'make test-build-js &> ${RESULTS}/js-build.txt'
        TEXT_ON_SKIP: 'No relevant JS/TS files changed'
        RESULT_CHECK_FILE_PATTERN: "results/js-build.txt"
 
     -  NAME: 'JS Lint'
-       ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES
+       ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_JS_LINT_SCRIPT,CHANGED_PACKAGE_JSON
        DIR: 'tests'
        COMMAND: 'make test-lint-js-docker &> ${RESULTS}/js-lint.txt'
        TEXT_ON_SKIP: 'No relevant JS/TS files changed'
        RESULT_CHECK_FILE_PATTERN: "results/js-lint.txt"
 
     - NAME: 'TypeScript Type Checking'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_TYPESCRIPT_CONFIG,CHANGED_RUN_TYPESCRIPT_TYPES_SCRIPT,CHANGED_PACKAGE_JSON
       DIR: 'tests'
       COMMAND: 'make test-typescript-types-docker &> ${RESULTS}/js-types.txt'
       TEXT_ON_SKIP: 'No relevant JS/TS files changed'

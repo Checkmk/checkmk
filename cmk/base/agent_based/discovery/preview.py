@@ -70,7 +70,7 @@ def get_check_preview(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
-    failure_summarizer: SummarizerFunction,
+    summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     discovery_plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
@@ -93,7 +93,7 @@ def get_check_preview(
 
     fetched = fetcher(host_name, ip_address=ip_address)
     parsed = parser((f[0], f[1]) for f in fetched)
-    if failed_sources_results := list(failure_summarizer(parsed)):
+    if failed_sources_results := [r for r in summarizer(parsed) if r.state != 0]:
         raise SourcesFailedError("\n".join(r.summary for r in failed_sources_results))
 
     host_sections_no_error = filter_out_errors(parser((f[0], f[1]) for f in fetched))

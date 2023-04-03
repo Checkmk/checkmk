@@ -140,7 +140,7 @@ def inventorize_host(
                     processing_failed=processing_failed,
                     no_data_or_files=no_data_or_files,
                 ),
-                summarizer(host_sections),
+                (r for r in summarizer(host_sections) if r.state != 0),
                 check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
             )
         ),

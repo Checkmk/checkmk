@@ -207,10 +207,9 @@ class AutomationDiscovery(DiscoveryAutomation):
                 config_cache=config_cache,
                 parser=parser,
                 fetcher=fetcher,
-                failure_summarizer=ConfiguredSummarizer(
+                summarizer=ConfiguredSummarizer(
                     config_cache,
                     hostname,
-                    include_ok_results=False,
                     override_non_ok_state=None,
                 ),
                 section_plugins=SectionPluginMapper(),
@@ -356,10 +355,9 @@ def _execute_discovery(
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
-        failure_summarizer=ConfiguredSummarizer(
+        summarizer=ConfiguredSummarizer(
             config_cache,
             host_name,
-            include_ok_results=False,
             override_non_ok_state=None,
         ),
         section_plugins=SectionPluginMapper(),

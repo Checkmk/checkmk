@@ -116,7 +116,7 @@ def execute_check_discovery(
         *itertools.chain(
             services_result,
             [host_labels_result],
-            summarizer(host_sections),
+            (r for r in summarizer(host_sections) if r.state != 0),
             parsing_errors_results,
             [
                 _schedule_rediscovery(

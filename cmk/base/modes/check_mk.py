@@ -1624,7 +1624,6 @@ def mode_check_discovery(
     summarizer = ConfiguredSummarizer(
         config_cache,
         hostname,
-        include_ok_results=False,
         override_non_ok_state=None,
     )
     error_handler = CheckResultErrorHandler(
@@ -2023,7 +2022,6 @@ def mode_check(
     summarizer = ConfiguredSummarizer(
         config_cache,
         hostname,
-        include_ok_results=True,
         override_non_ok_state=None,
     )
     error_handler = CheckResultErrorHandler(
@@ -2196,7 +2194,6 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         summarizer = ConfiguredSummarizer(
             config_cache,
             hostname,
-            include_ok_results=False,
             override_non_ok_state=parameters.fail_status,
         )
 
@@ -2282,7 +2279,6 @@ def mode_inventory_as_check(
     summarizer = ConfiguredSummarizer(
         config_cache,
         hostname,
-        include_ok_results=False,
         override_non_ok_state=parameters.fail_status,
     )
     error_handler = CheckResultErrorHandler(
@@ -2425,7 +2421,6 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         return ConfiguredSummarizer(
             config_cache,
             host_name,
-            include_ok_results=False,
             override_non_ok_state=config_cache.hwsw_inventory_parameters(host_name).fail_status,
         )
 

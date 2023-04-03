@@ -5,7 +5,7 @@
 """Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia
 """
 
-__version__ = "2.2.0b2"
+__version__ = "2.2.0b3"
 
 USER_AGENT = "checkmk-special-jolokia-" + __version__
 

@@ -54,10 +54,10 @@ def test_discover_aruba_chassis_temp(
             "Chassis 0",
             [
                 Metric("temp", 22.0, levels=(50.0, 60.0)),
-                Result(state=State.OK, summary="Temperature: 22.0°C"),
+                Result(state=State.OK, summary="Temperature: 22.0 °C"),
                 Result(state=State.OK, notice="Configuration: show most critical state"),
-                Result(state=State.OK, summary="Min temperature: 22.0°C"),
-                Result(state=State.OK, summary="Max temperature: 26.0°C"),
+                Result(state=State.OK, summary="Min temperature: 22.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 26.0 °C"),
             ],
         ),
         (
@@ -65,10 +65,10 @@ def test_discover_aruba_chassis_temp(
             "Chassis 1",
             [
                 Metric("temp", 21.0, levels=(50.0, 60.0)),
-                Result(state=State.OK, summary="Temperature: 21.0°C"),
+                Result(state=State.OK, summary="Temperature: 21.0 °C"),
                 Result(state=State.OK, notice="Configuration: show most critical state"),
-                Result(state=State.OK, summary="Min temperature: 21.0°C"),
-                Result(state=State.OK, summary="Max temperature: 25.0°C"),
+                Result(state=State.OK, summary="Min temperature: 21.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 25.0 °C"),
             ],
         ),
         (
@@ -77,11 +77,11 @@ def test_discover_aruba_chassis_temp(
             [
                 Metric("temp", 56.0, levels=(55.0, 55.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 56.0°C (warn/crit at 55.0°C/55.0°C)"
+                    state=State.CRIT, summary="Temperature: 56.0 °C (warn/crit at 55.0 °C/55.0 °C)"
                 ),
                 Result(state=State.OK, notice="Configuration: show most critical state"),
-                Result(state=State.OK, summary="Min temperature: 30.0°C"),
-                Result(state=State.OK, summary="Max temperature: 70.0°C"),
+                Result(state=State.OK, summary="Min temperature: 30.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 70.0 °C"),
             ],
         ),
         (
@@ -90,11 +90,11 @@ def test_discover_aruba_chassis_temp(
             [
                 Metric("temp", 52.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.WARN, summary="Temperature: 52.0°C (warn/crit at 50.0°C/60.0°C)"
+                    state=State.WARN, summary="Temperature: 52.0 °C (warn/crit at 50.0 °C/60.0 °C)"
                 ),
                 Result(state=State.OK, notice="Configuration: show most critical state"),
-                Result(state=State.OK, summary="Min temperature: 25.0°C"),
-                Result(state=State.OK, summary="Max temperature: 60.0°C"),
+                Result(state=State.OK, summary="Min temperature: 25.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 60.0 °C"),
             ],
         ),
         (
@@ -103,11 +103,11 @@ def test_discover_aruba_chassis_temp(
             [
                 Metric("temp", 70.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 70.0°C (warn/crit at 50.0°C/60.0°C)"
+                    state=State.CRIT, summary="Temperature: 70.0 °C (warn/crit at 50.0 °C/60.0 °C)"
                 ),
                 Result(state=State.OK, notice="Configuration: show most critical state"),
-                Result(state=State.OK, summary="Min temperature: 40.0°C"),
-                Result(state=State.OK, summary="Max temperature: 83.0°C"),
+                Result(state=State.OK, summary="Min temperature: 40.0 °C"),
+                Result(state=State.OK, summary="Max temperature: 83.0 °C"),
             ],
         ),
     ],

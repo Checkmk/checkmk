@@ -203,7 +203,7 @@ def test_discover_bluecoat_sensors_temp() -> None:
             "System center",
             [
                 Metric("temp", 37.0),
-                Result(state=State.OK, summary="Temperature: 37.0°C"),
+                Result(state=State.OK, summary="Temperature: 37.0 °C"),
                 Result(state=State.OK, notice="State on device: OK"),
                 Result(
                     state=State.OK,
@@ -216,7 +216,7 @@ def test_discover_bluecoat_sensors_temp() -> None:
             "SSL card",
             [
                 Metric("temp", 26.0),
-                Result(state=State.OK, summary="Temperature: 26.0°C"),
+                Result(state=State.OK, summary="Temperature: 26.0 °C"),
                 Result(state=State.CRIT, summary="State on device: Not OK"),
                 Result(
                     state=State.OK,

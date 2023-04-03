@@ -30,8 +30,8 @@ checks = {
             [
                 (
                     1,
-                    "Temperature: 1°C (warn/crit at 40°C/50°C),"
-                    " Remote-Temperature: 40°C (warn/crit at 40°C/50°C)(!),"
+                    "Temperature: 1 °C (warn/crit at 40 °C/50 °C),"
+                    " Remote-Temperature: 40 °C (warn/crit at 40 °C/50 °C)(!),"
                     " Humidity: 3% (warn/crit at 65%/80%)",
                     [
                         ("temp", 1, 40, 50, None, None),

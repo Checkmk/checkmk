@@ -28,7 +28,7 @@ def test_check() -> None:
         )
     ) == [
         Metric("temp", 31.0, levels=(20.0, 50.0)),
-        Result(state=State.WARN, summary="Temperature: 31.0°C (warn/crit at 20.0°C/50.0°C)"),
+        Result(state=State.WARN, summary="Temperature: 31.0 °C (warn/crit at 20.0 °C/50.0 °C)"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",

@@ -102,7 +102,7 @@ def test_discover_enviromux_voltage(
             {"levels": (35.0, 45.0)},
             [
                 Metric("temp", 29.2, levels=(35.0, 45.0)),
-                Result(state=State.OK, summary="Temperature: 29.2°C"),
+                Result(state=State.OK, summary="Temperature: 29.2 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (used user levels)",
@@ -118,7 +118,7 @@ def test_discover_enviromux_voltage(
             [
                 Metric("temp", 40.2, levels=(35.0, 45.0)),
                 Result(
-                    state=State.WARN, summary="Temperature: 40.2°C (warn/crit at 35.0°C/45.0°C)"
+                    state=State.WARN, summary="Temperature: 40.2 °C (warn/crit at 35.0 °C/45.0 °C)"
                 ),
                 Result(
                     state=State.OK,
@@ -135,7 +135,7 @@ def test_discover_enviromux_voltage(
             [
                 Metric("temp", 46.2, levels=(35.0, 45.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 46.2°C (warn/crit at 35.0°C/45.0°C)"
+                    state=State.CRIT, summary="Temperature: 46.2 °C (warn/crit at 35.0 °C/45.0 °C)"
                 ),
                 Result(
                     state=State.OK,
@@ -152,7 +152,8 @@ def test_discover_enviromux_voltage(
             [
                 Metric("temp", 24.0),
                 Result(
-                    state=State.WARN, summary="Temperature: 24.0°C (warn/crit below 25.0°C/20.0°C)"
+                    state=State.WARN,
+                    summary="Temperature: 24.0 °C (warn/crit below 25.0 °C/20.0 °C)",
                 ),
                 Result(
                     state=State.OK,
@@ -169,7 +170,8 @@ def test_discover_enviromux_voltage(
             [
                 Metric("temp", 19.0),
                 Result(
-                    state=State.CRIT, summary="Temperature: 19.0°C (warn/crit below 25.0°C/20.0°C)"
+                    state=State.CRIT,
+                    summary="Temperature: 19.0 °C (warn/crit below 25.0 °C/20.0 °C)",
                 ),
                 Result(
                     state=State.OK,

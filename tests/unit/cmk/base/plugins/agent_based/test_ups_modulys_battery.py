@@ -246,7 +246,7 @@ def test_check_ups_modulys_battery_temp_ok_state() -> None:
         ),
     ) == [
         Metric("temp", 45.0, levels=(90.0, 95.0)),
-        Result(state=State.OK, summary="Temperature: 45.0°C"),
+        Result(state=State.OK, summary="Temperature: 45.0 °C"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
@@ -270,7 +270,7 @@ def test_check_ups_modulys_battery_temp_warn_state() -> None:
         ),
     ) == [
         Metric("temp", 92.0, levels=(90.0, 95.0)),
-        Result(state=State.WARN, summary="Temperature: 92.0°C (warn/crit at 90°C/95°C)"),
+        Result(state=State.WARN, summary="Temperature: 92.0 °C (warn/crit at 90 °C/95 °C)"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",
@@ -294,7 +294,7 @@ def test_check_ups_modulys_battery_temp_crit_state() -> None:
         ),
     ) == [
         Metric("temp", 96.0, levels=(90.0, 95.0)),
-        Result(state=State.CRIT, summary="Temperature: 96.0°C (warn/crit at 90°C/95°C)"),
+        Result(state=State.CRIT, summary="Temperature: 96.0 °C (warn/crit at 90 °C/95 °C)"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",

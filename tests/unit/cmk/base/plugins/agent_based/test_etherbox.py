@@ -166,7 +166,7 @@ def test_check_temp(check_temp: CheckFunction) -> None:
         )
     )
     assert set(results) == {
-        Result(state=State.OK, summary="[n] Temperature: 4.2°C"),
+        Result(state=State.OK, summary="[n] Temperature: 4.2 °C"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (no levels found)",

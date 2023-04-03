@@ -221,7 +221,7 @@ def test_check_temp(section_temp: ct.Section) -> None:
         )
     ) == [
         Metric("temp", 24.492, levels=(70.0, 75.0)),
-        Result(state=State.OK, summary="Temperature: 24.5°C"),
+        Result(state=State.OK, summary="Temperature: 24.5 °C"),
         Result(state=State.OK, notice="State on device: OK"),
         Result(
             state=State.OK,

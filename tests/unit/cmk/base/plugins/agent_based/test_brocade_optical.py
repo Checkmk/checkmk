@@ -121,7 +121,7 @@ def test_discover_brocade_optical(
                     summary="[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down",
                 ),
                 Metric("temp", 31.4882),
-                Result(state=State.OK, summary="Temperature: 31.5°C"),
+                Result(state=State.OK, summary="Temperature: 31.5 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -164,7 +164,7 @@ def test_discover_brocade_optical(
                 Metric("tx_light", -1.6045),
                 Result(state=State.OK, summary="RX Light -2.3 dBm (Normal)"),
                 Metric("rx_light", -2.2504),
-                Result(state=State.OK, notice="Temperature (Lane 1) Temperature: 31.5°C"),
+                Result(state=State.OK, notice="Temperature (Lane 1) Temperature: 31.5 °C"),
                 Metric("port_temp_1", 31.4531),
                 Result(state=State.OK, notice="TX Light (Lane 1) -1.6 dBm (Normal)"),
                 Metric("tx_light_1", -1.6045),
@@ -571,8 +571,8 @@ def test_check_brocade_optical(
                            details='[S/N AGA07AJ, P/N FTRX-3811-353-F1] Operational up'),
                     Metric('temp', 31.7695),
                     Result(state=State.OK,
-                           summary='Temperature: 31.8°C',
-                           details='Temperature: 31.8°C'),
+                           summary='Temperature: 31.8 °C',
+                           details='Temperature: 31.8 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -596,8 +596,8 @@ def test_check_brocade_optical(
                            details='[S/N AG800UB, P/N FTRX-3811-354-F1] Operational up'),
                     Metric('temp', 34.8203),
                     Result(state=State.OK,
-                           summary='Temperature: 34.8°C',
-                           details='Temperature: 34.8°C'),
+                           summary='Temperature: 34.8 °C',
+                           details='Temperature: 34.8 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -621,8 +621,8 @@ def test_check_brocade_optical(
                            details='[S/N PRG041, P/N FIM31060/210W55] Operational up'),
                     Metric('temp', 34.1445),
                     Result(state=State.OK,
-                           summary='Temperature: 34.1°C',
-                           details='Temperature: 34.1°C'),
+                           summary='Temperature: 34.1 °C',
+                           details='Temperature: 34.1 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -646,8 +646,8 @@ def test_check_brocade_optical(
                            details='[S/N SPG153, P/N FIM31060/210W56] Operational up'),
                     Metric('temp', 33.2734),
                     Result(state=State.OK,
-                           summary='Temperature: 33.3°C',
-                           details='Temperature: 33.3°C'),
+                           summary='Temperature: 33.3 °C',
+                           details='Temperature: 33.3 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -671,8 +671,8 @@ def test_check_brocade_optical(
                            details='[S/N PHG020, P/N FIM31060/210W50] Operational up'),
                     Metric('temp', 30.7734),
                     Result(state=State.OK,
-                           summary='Temperature: 30.8°C',
-                           details='Temperature: 30.8°C'),
+                           summary='Temperature: 30.8 °C',
+                           details='Temperature: 30.8 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -696,8 +696,8 @@ def test_check_brocade_optical(
                            details='[S/N PRG015, P/N FIM31060/210W51] Operational up'),
                     Metric('temp', 32.6914),
                     Result(state=State.OK,
-                           summary='Temperature: 32.7°C',
-                           details='Temperature: 32.7°C'),
+                           summary='Temperature: 32.7 °C',
+                           details='Temperature: 32.7 °C'),
                     Result(
                         state=State.OK,
                         notice=
@@ -721,8 +721,8 @@ def test_check_brocade_optical(
                            details='[S/N UL30HQ5, P/N XFP-DWLR08-52] Operational up'),
                     Metric('temp', 32.5),
                     Result(state=State.OK,
-                           summary='Temperature: 32.5°C',
-                           details='Temperature: 32.5°C'),
+                           summary='Temperature: 32.5 °C',
+                           details='Temperature: 32.5 °C'),
                     Result(
                         state=State.OK,
                         notice=

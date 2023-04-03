@@ -130,7 +130,7 @@ def inventory_brocade_mlx_module_mem(info):
         if v["state_readable"] not in ["Slot is empty", "Blocked for full height card"] and (
             descr.startswith("NI-MLX") or descr.startswith("BR-MLX")
         ):
-            inventory.append((k, "brocade_mlx_mem_default_levels"))
+            inventory.append((k, brocade_mlx_mem_default_levels))
     return inventory
 
 
@@ -193,7 +193,7 @@ def inventory_brocade_mlx_module_cpu(info):
             inventory.append(
                 (
                     brocade_mlx_combine_item(module_id, module_descr),
-                    "brocade_mlx_cpu_default_levels",
+                    brocade_mlx_cpu_default_levels,
                 )
             )
     return inventory

@@ -90,7 +90,7 @@ def inventory_bluenet_sensor_hum(info):
                 descr = "internal"
             else:
                 descr = "external %s" % sensor_id
-            yield descr, "bluenet_sensor_humidity_default_levels"
+            yield descr, bluenet_sensor_humidity_default_levels
 
 
 def check_bluenet_sensor_hum(item, params, info):

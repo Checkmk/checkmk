@@ -10,7 +10,7 @@ barracuda_mail_latency_default_levels = (40, 60)
 
 
 def inventory_barracuda_mail_latency(info):
-    return [(None, "barracuda_mail_latency_default_levels")]
+    return [(None, barracuda_mail_latency_default_levels)]
 
 
 def check_barracuda_mail_latency(_no_item, params, info):

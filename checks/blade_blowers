@@ -44,12 +44,10 @@ def number_of_blowers(info):
 
 
 def inventory_blade_blowers(info):
-    inventory = []
     n = number_of_blowers(info)
     for i in range(0, n):
         if info[i + n][0] != "0":  # skip unknown blowers
-            inventory.append(("%d/%d" % (i + 1, n), None, None))
-    return inventory
+            yield "%d/%d" % (i + 1, n), None
 
 
 def check_blade_blowers(item, _no_params, info):

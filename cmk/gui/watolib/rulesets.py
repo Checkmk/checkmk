@@ -11,7 +11,8 @@ import pprint
 import re
 from collections.abc import Callable, Container, Mapping
 from enum import auto, Enum
-from typing import Any, cast, Final, Iterable
+from pathlib import Path
+from typing import Any, assert_never, cast, Final, Iterable
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
@@ -108,7 +109,14 @@ class RuleOptions:
 class UseHostFolder(Enum):
     NONE = auto()
     MACRO = auto()
-    HOST = auto()
+    # cmk.gui uses folders like this:
+    # subfolder/subsubfolder/...
+    # cf. CREFolder.folder, CREFolder.folder_choices etc.
+    HOST_FOLDER_FOR_UI = auto()
+    # cmk.base sets folders this way when loading the configuration:
+    # /wato/subfolder/subsubfolder/...
+    # cf. FOLDER_PATH in cmk.base.config
+    HOST_FOLDER_FOR_BASE = auto()
 
 
 class RuleConditions:
@@ -179,8 +187,12 @@ class RuleConditions:
                 pass
             case UseHostFolder.MACRO:
                 cfg["host_folder"] = _FOLDER_PATH_MACRO
-            case UseHostFolder.HOST:
+            case UseHostFolder.HOST_FOLDER_FOR_UI:
                 cfg["host_folder"] = self.host_folder
+            case UseHostFolder.HOST_FOLDER_FOR_BASE:
+                cfg["host_folder"] = str(Path("/wato") / self.host_folder)
+            case _:
+                assert_never(use_host_folder)
 
         return cfg
 
@@ -1088,11 +1100,14 @@ class Rule:
 
         return make_diff_text(self.to_log(), other.to_log())
 
-    def to_config(self) -> RuleSpec:
+    def to_config(
+        self,
+        use_host_folder: UseHostFolder = UseHostFolder.MACRO,
+    ) -> RuleSpec:
         # Special case: The main folder must not have a host_folder condition, because
         # these rules should also affect non Setup hosts.
         return self._to_config(
-            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else UseHostFolder.MACRO
+            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else use_host_folder
         )
 
     def to_web_api(self) -> RuleSpec:

@@ -50,53 +50,57 @@ def register_sites_options() -> None:
     )
 
 
-register_cre_licensing_handler()
-visuals.register(cmk.gui.pages.page_registry)
-views.register(
-    permission_section_registry,
-    cmk.gui.pages.page_registry,
-    visual_type_registry,
-    register_post_config_load_hook,
-)
-dashboard.register(
-    permission_section_registry,
-    cmk.gui.pages.page_registry,
-    visual_type_registry,
-    dashlet_registry,
-)
-crash_reporting.register(
-    cmk.gui.pages.page_registry,
-    data_source_registry,
-    painter_registry,
-    sorter_registry,
-    command_registry,
-)
-mkeventd_registration.register(
-    permission_section_registry,
-    permission_registry,
-    data_source_registry,
-    painter_registry,
-    icon_and_action_registry,
-    config_domain_registry,
-    sample_config_generator_registry,
-    mode_registry,
-    main_module_registry,
-    config_variable_group_registry,
-    config_variable_registry,
-    rulespec_group_registry,
-    rulespec_registry,
-    autocompleter_registry,
-)
-mobile.register(layout_registry)
-wato.register(painter_registry, sorter_registry, icon_and_action_registry)
-bi_registration.register(
-    data_source_registry,
-    painter_registry,
-    painter_option_registry,
-    permission_section_registry,
-    permission_registry,
-    cmk.gui.pages.page_registry,
-)
-register_sites_options()
-register_row_post_processor(inventory_row_post_processor)
-register_row_post_processor(join_service_row_post_processor)
+def register() -> None:
+    register_cre_licensing_handler()
+    visuals.register(cmk.gui.pages.page_registry)
+    views.register(
+        permission_section_registry,
+        cmk.gui.pages.page_registry,
+        visual_type_registry,
+        register_post_config_load_hook,
+    )
+    dashboard.register(
+        permission_section_registry,
+        cmk.gui.pages.page_registry,
+        visual_type_registry,
+        dashlet_registry,
+    )
+    crash_reporting.register(
+        cmk.gui.pages.page_registry,
+        data_source_registry,
+        painter_registry,
+        sorter_registry,
+        command_registry,
+    )
+    mkeventd_registration.register(
+        permission_section_registry,
+        permission_registry,
+        data_source_registry,
+        painter_registry,
+        icon_and_action_registry,
+        config_domain_registry,
+        sample_config_generator_registry,
+        mode_registry,
+        main_module_registry,
+        config_variable_group_registry,
+        config_variable_registry,
+        rulespec_group_registry,
+        rulespec_registry,
+        autocompleter_registry,
+    )
+    mobile.register(layout_registry)
+    wato.register(painter_registry, sorter_registry, icon_and_action_registry)
+    bi_registration.register(
+        data_source_registry,
+        painter_registry,
+        painter_option_registry,
+        permission_section_registry,
+        permission_registry,
+        cmk.gui.pages.page_registry,
+    )
+    register_sites_options()
+    register_row_post_processor(inventory_row_post_processor)
+    register_row_post_processor(join_service_row_post_processor)
+
+
+register()

@@ -8,6 +8,8 @@
 from collections.abc import Sequence
 from functools import partial
 
+import cmk.utils.version as cmk_version
+
 import cmk.gui.pages
 import cmk.gui.plugins.metrics.graph_images as graph_images
 import cmk.gui.plugins.metrics.html_render as html_render
@@ -67,5 +69,12 @@ def register_painters() -> None:
     painter_registry.register(painters.PainterDowntimeRecurring)
 
 
-register_pages()
-register_painters()
+def register() -> None:
+    if not cmk_version.is_raw_edition():
+        return
+
+    register_pages()
+    register_painters()
+
+
+register()

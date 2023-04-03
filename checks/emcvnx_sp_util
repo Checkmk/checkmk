@@ -23,7 +23,7 @@ def parse_emcvnx_sp_util(info):
 
 def inventory_emcvnx_sp_util(parsed):
     if "idle" in parsed and "busy" in parsed:
-        return [(None, "emcvnx_sp_util_default_levels")]
+        return [(None, emcvnx_sp_util_default_levels)]
     return []
 
 

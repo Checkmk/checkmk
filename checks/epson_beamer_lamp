@@ -8,7 +8,7 @@ epson_beamer_lamp_default_levels = (1000 * 3600, 1500 * 3600)
 
 def inventory_epson_beamer_lamp(info):
     if info:
-        return [(None, "epson_beamer_lamp_default_levels")]
+        return [(None, epson_beamer_lamp_default_levels)]
     return []
 
 

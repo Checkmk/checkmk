@@ -14,7 +14,7 @@ factory_settings["enterasys_cpu_default_levels"] = {
 
 def inventory_enterasys_cpu_util(info):
     # [:-2] to remove the oid end
-    return [(x[0][:-2], "enterasys_cpu_default_levels") for x in info]
+    return [(x[0][:-2], {}) for x in info]
 
 
 def check_enterasys_cpu_util(item, params, info):

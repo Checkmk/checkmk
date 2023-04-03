@@ -4,7 +4,6 @@
 
 import * as ajax from "ajax";
 import * as utils from "utils";
-import * as page_menu from "page_menu";
 
 interface SelectionProperties {
     page_id: null | string;
@@ -250,7 +249,7 @@ function set_rowselection(
             action +
             "&rows=" +
             rows.join(","),
-        response_handler: function (_data, _response) {
+        response_handler: function (_data: unknown, _response: unknown) {
             post_selection_functions.forEach(f_spec =>
                 f_spec.function(...f_spec.arguments)
             );

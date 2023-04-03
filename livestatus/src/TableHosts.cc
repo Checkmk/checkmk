@@ -95,7 +95,8 @@ std::vector<::column::service_list::Entry> getServices(const host &hst,
 }  // namespace
 
 TableHosts::TableHosts(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", ColumnOffsets{});
+    addColumns(this, "", ColumnOffsets{}, LockComments::yes,
+               LockDowntimes::yes);
 }
 
 std::string TableHosts::name() const { return "hosts"; }
@@ -104,7 +105,9 @@ std::string TableHosts::namePrefix() const { return "host_"; }
 
 // static
 void TableHosts::addColumns(Table *table, const std::string &prefix,
-                            const ColumnOffsets &offsets) {
+                            const ColumnOffsets &offsets,
+                            LockComments lock_comments,
+                            LockDowntimes lock_downtimes) {
     auto *mc = table->core();
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "name", "Host name", offsets,
@@ -500,8 +503,10 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return std::vector<std::string>(names.begin(), names.end());
         }));
 
-    auto get_downtimes = [mc](const host &hst) {
-        return mc->downtimes_unlocked(NebHost{hst});
+    auto get_downtimes = [mc, lock_downtimes](const host &hst) {
+        return lock_downtimes == LockDowntimes::yes
+                   ? mc->downtimes(NebHost{hst})
+                   : mc->downtimes_unlocked(NebHost{hst});
     };
     table->addColumn(
         std::make_unique<ListColumn<host, std::unique_ptr<const IDowntime>>>(
@@ -527,8 +532,10 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
         get_downtimes));
 
-    auto get_comments = [mc](const host &hst) {
-        return mc->comments_unlocked(NebHost{hst});
+    auto get_comments = [mc, lock_comments](const host &hst) {
+        return lock_comments == LockComments::yes
+                   ? mc->comments(NebHost{hst})
+                   : mc->comments_unlocked(NebHost{hst});
     };
     table->addColumn(
         std::make_unique<ListColumn<host, std::unique_ptr<const IComment>>>(

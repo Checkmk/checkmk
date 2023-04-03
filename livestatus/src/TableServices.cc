@@ -45,6 +45,7 @@
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/Table.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 #include "nagios.h"
@@ -90,7 +91,8 @@ static double staleness(const service &svc) {
 }
 
 TableServices::TableServices(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", ColumnOffsets{}, AddHosts::yes);
+    addColumns(this, "", ColumnOffsets{}, AddHosts::yes, LockComments::yes,
+               LockDowntimes::yes);
 }
 
 std::string TableServices::name() const { return "services"; }
@@ -99,8 +101,9 @@ std::string TableServices::namePrefix() const { return "service_"; }
 
 // static
 void TableServices::addColumns(Table *table, const std::string &prefix,
-                               const ColumnOffsets &offsets,
-                               AddHosts add_hosts) {
+                               const ColumnOffsets &offsets, AddHosts add_hosts,
+                               LockComments lock_comments,
+                               LockDowntimes lock_downtimes) {
     auto *mc = table->core();
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
@@ -524,8 +527,10 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return std::vector<std::string>(names.begin(), names.end());
         }));
 
-    auto get_downtimes = [mc](const service &svc) {
-        return mc->downtimes_unlocked(NebService{svc});
+    auto get_downtimes = [mc, lock_downtimes](const service &svc) {
+        return lock_downtimes == LockDowntimes::yes
+                   ? mc->downtimes(NebService{svc})
+                   : mc->downtimes_unlocked(NebService{svc});
     };
     table->addColumn(
         std::make_unique<ListColumn<service, std::unique_ptr<const IDowntime>>>(
@@ -551,8 +556,10 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
         get_downtimes));
 
-    auto get_comments = [mc](const service &svc) {
-        return mc->comments_unlocked(NebService{svc});
+    auto get_comments = [mc, lock_comments](const service &svc) {
+        return lock_comments == LockComments::yes
+                   ? mc->comments(NebService{svc})
+                   : mc->comments_unlocked(NebService{svc});
     };
     table->addColumn(
         std::make_unique<ListColumn<service, std::unique_ptr<const IComment>>>(
@@ -577,7 +584,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     if (add_hosts == AddHosts::yes) {
         TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
             return r.rawData<service>()->host_ptr;
-        }));
+        }),
+                               LockComments::yes, LockDowntimes::yes);
     }
 
     table->addColumn(std::make_unique<ListColumn<service>>(

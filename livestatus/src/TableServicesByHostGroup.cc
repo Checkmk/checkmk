@@ -27,7 +27,8 @@ TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
     TableServices::addColumns(this, "", offsets.add([](Row r) {
         return r.rawData<ServiceAndGroup>()->svc.handle();
     }),
-                              TableServices::AddHosts::yes);
+                              TableServices::AddHosts::yes, LockComments::yes,
+                              LockDowntimes::yes);
     TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
         return r.rawData<ServiceAndGroup>()->group.handle();
     }));

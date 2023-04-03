@@ -151,43 +151,37 @@ class ConfiguredSummarizer:
         self,
         host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
     ) -> Iterable[ActiveCheckResult]:
-        return itertools.chain.from_iterable(
-            summarize_host_sections(
-                host_sections,
-                source,
-                include_ok_results=self.include_ok_results,
-                override_non_ok_state=self.override_non_ok_state,
-                exit_spec=self.config_cache.exit_code_spec(source.hostname, source.ident),
-                time_settings=self.config_cache.get_piggybacked_hosts_time_settings(
-                    piggybacked_hostname=source.hostname
-                ),
-                is_piggyback=self.config_cache.is_piggyback_host(self.host_name),
-            )
+        return [
+            ac_result
             for source, host_sections in host_sections
-        )
+            if (
+                ac_result := _summarize_host_sections(
+                    host_sections,
+                    source,
+                    override_non_ok_state=self.override_non_ok_state,
+                    exit_spec=self.config_cache.exit_code_spec(source.hostname, source.ident),
+                    time_settings=self.config_cache.get_piggybacked_hosts_time_settings(
+                        piggybacked_hostname=source.hostname
+                    ),
+                    is_piggyback=self.config_cache.is_piggyback_host(self.host_name),
+                )
+            ).state
+            != 0
+            or self.include_ok_results
+        ]
 
 
-def summarize_host_sections(
+def _summarize_host_sections(
     host_sections: result.Result[HostSections, Exception],
     source: SourceInfo,
     *,
-    include_ok_results: bool = False,
     override_non_ok_state: ServiceState | None = None,
     exit_spec: ExitSpec,
     time_settings: PiggybackTimeSettings,
     is_piggyback: bool,
-) -> Iterable[ActiveCheckResult]:
-    subresults = summarize(
-        source.hostname,
-        source.ipaddress,
-        host_sections,
-        exit_spec=exit_spec,
-        time_settings=time_settings,
-        is_piggyback=is_piggyback,
-        fetcher_type=source.fetcher_type,
-    )
-    if include_ok_results or any(s.state != 0 for s in subresults):
-        yield from (
+) -> ActiveCheckResult:
+    return ActiveCheckResult.from_subresults(
+        *(
             ActiveCheckResult(
                 s.state
                 if (s.state == 0 or override_non_ok_state is None)
@@ -196,8 +190,19 @@ def summarize_host_sections(
                 s.details,
                 s.metrics,
             )
-            for idx, s in enumerate(subresults)
+            for idx, s in enumerate(
+                summarize(
+                    source.hostname,
+                    source.ipaddress,
+                    host_sections,
+                    exit_spec=exit_spec,
+                    time_settings=time_settings,
+                    is_piggyback=is_piggyback,
+                    fetcher_type=source.fetcher_type,
+                )
+            )
         )
+    )
 
 
 class ConfiguredFetcher:

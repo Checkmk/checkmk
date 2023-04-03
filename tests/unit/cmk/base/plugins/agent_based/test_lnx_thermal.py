@@ -50,7 +50,7 @@ RESULT_CHECK = [
     [
         [
             Metric("temp", 57.0, levels=(127.0, 127.0)),
-            Result(state=State.OK, summary="Temperature: 57.0°C"),
+            Result(state=State.OK, summary="Temperature: 57.0 °C"),
             Result(
                 state=State.OK,
                 notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -58,7 +58,7 @@ RESULT_CHECK = [
         ],
         [
             Metric("temp", 65.0, levels=(95.5, 100.0)),
-            Result(state=State.OK, summary="Temperature: 65.0°C"),
+            Result(state=State.OK, summary="Temperature: 65.0 °C"),
             Result(
                 state=State.OK,
                 notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -66,7 +66,7 @@ RESULT_CHECK = [
         ],
         [
             Metric("temp", 46.0, levels=(115.0, 115.0)),
-            Result(state=State.OK, summary="Temperature: 46.0°C"),
+            Result(state=State.OK, summary="Temperature: 46.0 °C"),
             Result(
                 state=State.OK,
                 notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -74,7 +74,7 @@ RESULT_CHECK = [
         ],
         [
             Metric("temp", 44.0, levels=None),
-            Result(state=State.OK, summary="Temperature: 44.0°C"),
+            Result(state=State.OK, summary="Temperature: 44.0 °C"),
             Result(
                 state=State.OK,
                 notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -84,7 +84,7 @@ RESULT_CHECK = [
     [
         [
             Metric("temp", 25.0, levels=(107.0, 107.0)),
-            Result(state=State.OK, summary="Temperature: 25.0°C"),
+            Result(state=State.OK, summary="Temperature: 25.0 °C"),
             Result(
                 state=State.OK,
                 notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -92,7 +92,7 @@ RESULT_CHECK = [
         ],
         [
             Metric("temp", 45.0, levels=(115.0, 115.0)),
-            Result(state=State.OK, summary="Temperature: 45.0°C"),
+            Result(state=State.OK, summary="Temperature: 45.0 °C"),
             Result(
                 state=State.OK,
                 notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -100,7 +100,7 @@ RESULT_CHECK = [
         ],
         [
             Metric("temp", 20.0, levels=None),
-            Result(state=State.OK, summary="Temperature: 20.0°C"),
+            Result(state=State.OK, summary="Temperature: 20.0 °C"),
             Result(
                 state=State.OK,
                 notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -108,7 +108,7 @@ RESULT_CHECK = [
         ],
         [
             Metric("temp", 48.0, levels=None),
-            Result(state=State.OK, summary="Temperature: 48.0°C"),
+            Result(state=State.OK, summary="Temperature: 48.0 °C"),
             Result(
                 state=State.OK,
                 notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -116,7 +116,7 @@ RESULT_CHECK = [
         ],
         [
             Metric("temp", 61.0, levels=(99.0, 127.0)),
-            Result(state=State.OK, summary="Temperature: 61.0°C"),
+            Result(state=State.OK, summary="Temperature: 61.0 °C"),
             Result(
                 state=State.OK,
                 notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -124,7 +124,7 @@ RESULT_CHECK = [
         ],
         [
             Metric("temp", 61.0, levels=(99.0, 127.0)),
-            Result(state=State.OK, summary="Temperature: 61.0°C"),
+            Result(state=State.OK, summary="Temperature: 61.0 °C"),
             Result(
                 state=State.OK,
                 notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -240,7 +240,7 @@ def test_parse_and_discovery_function_2_no_item(line: list[str]) -> None:
             "Zone 0",
             [
                 Metric("temp", 27.8, levels=None),
-                Result(state=State.OK, summary="Temperature: 27.8\xb0C"),
+                Result(state=State.OK, summary="Temperature: 27.8 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -261,7 +261,7 @@ def test_parse_and_discovery_function_2_no_item(line: list[str]) -> None:
             "Zone 1",
             [
                 Metric("temp", 29.8, levels=(108.0, 105.0)),
-                Result(state=State.OK, summary="Temperature: 29.8\xb0C"),
+                Result(state=State.OK, summary="Temperature: 29.8 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (used device levels)",

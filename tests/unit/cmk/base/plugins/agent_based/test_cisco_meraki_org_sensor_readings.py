@@ -69,7 +69,7 @@ def test_discover_sensor_temperature(
             _STRING_TABLE,
             [
                 Metric("temp", 25.45),
-                Result(state=State.OK, summary="Temperature: 25.4°C"),
+                Result(state=State.OK, summary="Temperature: 25.4 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",

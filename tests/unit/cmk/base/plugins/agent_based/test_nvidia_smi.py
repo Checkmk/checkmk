@@ -304,7 +304,7 @@ def test_discover_nvidia_smi_temperature(
             SECTION,
             [
                 Metric("temp", 40.0),
-                Result(state=State.OK, summary="Temperature: 40.0°C"),
+                Result(state=State.OK, summary="Temperature: 40.0 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",

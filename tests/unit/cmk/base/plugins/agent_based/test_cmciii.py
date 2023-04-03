@@ -156,30 +156,30 @@ def _lcp_sensor():
             ["2.4", "Air.Device.Status", "7", "", "0", "OK", "4"],
             ["2.5", "Air.Device.Category", "14", "", "0", "2", "2"],
             ["2.6", "Air.Temperature.DescName", "1", "", "0", "Air-Temperatures", "0"],
-            ["2.7", "Air.Temperature.In-Top", "2", "°C", "-10", "19.8 °C", "198"],
-            ["2.8", "Air.Temperature.In-Mid", "2", "°C", "-10", "19.0 °C", "190"],
-            ["2.9", "Air.Temperature.In-Bot", "2", "°C", "-10", "18.2 °C", "182"],
-            ["2.10", "Air.Temperature.Out-Top", "2", "°C", "-10", "19.9 °C", "199"],
-            ["2.11", "Air.Temperature.Out-Mid", "2", "°C", "-10", "18.9 °C", "189"],
-            ["2.12", "Air.Temperature.Out-Bot", "2", "°C", "-10", "18.0 °C", "180"],
+            ["2.7", "Air.Temperature.In-Top", "2", " °C", "-10", "19.8  °C", "198"],
+            ["2.8", "Air.Temperature.In-Mid", "2", " °C", "-10", "19.0  °C", "190"],
+            ["2.9", "Air.Temperature.In-Bot", "2", " °C", "-10", "18.2  °C", "182"],
+            ["2.10", "Air.Temperature.Out-Top", "2", " °C", "-10", "19.9  °C", "199"],
+            ["2.11", "Air.Temperature.Out-Mid", "2", " °C", "-10", "18.9  °C", "189"],
+            ["2.12", "Air.Temperature.Out-Bot", "2", " °C", "-10", "18.0  °C", "180"],
             ["2.13", "Air.Temperature.Status", "7", "", "0", "OK", "4"],
             ["2.14", "Air.Temperature.Category", "14", "", "0", "2", "2"],
             ["2.15", "Air.Server-In.DescName", "1", "", "0", "Server-In", "0"],
-            ["2.16", "Air.Server-In.Setpoint", "17", "°C", "-10", "23.0 °C", "230"],
-            ["2.17", "Air.Server-In.Average", "2", "°C", "-10", "19.0 °C", "190"],
-            ["2.18", "Air.Server-In.SetPtHighAlarm", "3", "°C", "-10", "35.0 °C", "350"],
-            ["2.19", "Air.Server-In.SetPtHighWarning", "4", "°C", "-10", "30.0 °C", "300"],
-            ["2.20", "Air.Server-In.SetPtLowWarning", "9", "°C", "-10", "15.0 °C", "150"],
-            ["2.21", "Air.Server-In.SetPtLowAlarm", "5", "°C", "-10", "10.0 °C", "100"],
+            ["2.16", "Air.Server-In.Setpoint", "17", " °C", "-10", "23.0  °C", "230"],
+            ["2.17", "Air.Server-In.Average", "2", " °C", "-10", "19.0  °C", "190"],
+            ["2.18", "Air.Server-In.SetPtHighAlarm", "3", " °C", "-10", "35.0  °C", "350"],
+            ["2.19", "Air.Server-In.SetPtHighWarning", "4", " °C", "-10", "30.0  °C", "300"],
+            ["2.20", "Air.Server-In.SetPtLowWarning", "9", " °C", "-10", "15.0  °C", "150"],
+            ["2.21", "Air.Server-In.SetPtLowAlarm", "5", " °C", "-10", "10.0  °C", "100"],
             ["2.22", "Air.Server-In.Hysteresis", "6", "%", "1", "5 %", "5"],
             ["2.23", "Air.Server-In.Status", "7", "", "0", "OK", "4"],
             ["2.24", "Air.Server-In.Category", "14", "", "0", "2", "2"],
             ["2.25", "Air.Server-Out.DescName", "1", "", "0", "Server-Out", "0"],
-            ["2.26", "Air.Server-Out.Average", "2", "°C", "-10", "18.9 °C", "189"],
-            ["2.27", "Air.Server-Out.SetPtHighAlarm", "3", "°C", "-10", "35.0 °C", "350"],
-            ["2.28", "Air.Server-Out.SetPtHighWarning", "4", "°C", "-10", "30.0 °C", "300"],
-            ["2.29", "Air.Server-Out.SetPtLowWarning", "9", "°C", "-10", "15.0 °C", "150"],
-            ["2.30", "Air.Server-Out.SetPtLowAlarm", "5", "°C", "-10", "10.0 °C", "100"],
+            ["2.26", "Air.Server-Out.Average", "2", " °C", "-10", "18.9  °C", "189"],
+            ["2.27", "Air.Server-Out.SetPtHighAlarm", "3", " °C", "-10", "35.0  °C", "350"],
+            ["2.28", "Air.Server-Out.SetPtHighWarning", "4", " °C", "-10", "30.0  °C", "300"],
+            ["2.29", "Air.Server-Out.SetPtLowWarning", "9", " °C", "-10", "15.0  °C", "150"],
+            ["2.30", "Air.Server-Out.SetPtLowAlarm", "5", " °C", "-10", "10.0  °C", "100"],
             ["2.31", "Air.Server-Out.Hysteresis", "6", "%", "1", "5 %", "5"],
             ["2.32", "Air.Server-Out.Status", "7", "", "0", "OK", "4"],
             ["2.33", "Air.Server-Out.Category", "14", "", "0", "2", "2"],
@@ -237,7 +237,7 @@ def test_cmciii_lcp_discovery(plugin, expected) -> None:  # type:ignore[no-untyp
             "Air LCP In Bottom",
             [
                 Metric("temp", 18.2),
-                Result(state=State.OK, summary="Temperature: 18.2°C"),
+                Result(state=State.OK, summary="Temperature: 18.2 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -248,7 +248,7 @@ def test_cmciii_lcp_discovery(plugin, expected) -> None:  # type:ignore[no-untyp
             "Air LCP In Middle",
             [
                 Metric("temp", 19.0),
-                Result(state=State.OK, summary="Temperature: 19.0°C"),
+                Result(state=State.OK, summary="Temperature: 19.0 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -259,7 +259,7 @@ def test_cmciii_lcp_discovery(plugin, expected) -> None:  # type:ignore[no-untyp
             "Air LCP In Top",
             [
                 Metric("temp", 19.8),
-                Result(state=State.OK, summary="Temperature: 19.8°C"),
+                Result(state=State.OK, summary="Temperature: 19.8 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -1152,7 +1152,7 @@ def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
                     "Ambient CMC-PU",
                     [
                         Metric("temp", 30.5, levels=(40.0, 45.0)),
-                        Result(state=State.OK, summary="Temperature: 30.5°C"),
+                        Result(state=State.OK, summary="Temperature: 30.5 °C"),
                         Result(
                             state=State.OK,
                             notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -1163,7 +1163,7 @@ def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
                     "Ambient CMC-Temperatur",
                     [
                         Metric("temp", 27.0, levels=(35.0, 40.0)),
-                        Result(state=State.OK, summary="Temperature: 27.0°C"),
+                        Result(state=State.OK, summary="Temperature: 27.0 °C"),
                         Result(
                             state=State.OK,
                             notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -1174,7 +1174,7 @@ def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
                     "Dew Point CMC-Temperatur",
                     [
                         Metric("temp", -7.8),
-                        Result(state=State.OK, summary="Temperature: -7.8°C"),
+                        Result(state=State.OK, summary="Temperature: -7.8 °C"),
                         Result(
                             state=State.OK,
                             notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -1186,7 +1186,7 @@ def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
                     [
                         Result(state=State.OK, summary="[Sys Temp]"),
                         Metric("temp", 32.3, levels=(70.0, 80.0)),
-                        Result(state=State.OK, summary="Temperature: 32.3°C"),
+                        Result(state=State.OK, summary="Temperature: 32.3 °C"),
                         Result(
                             state=State.OK,
                             notice="Configuration: prefer user levels over device levels (used device levels)",

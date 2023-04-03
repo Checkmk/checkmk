@@ -101,7 +101,7 @@ def render_temp(n: float, output_unit: str, relative: bool = False, *, sign: boo
 
 
 def _render_temp_with_unit(temp: float, unit: str) -> str:
-    return render_temp(temp, unit) + temp_unitsym[unit]
+    return f"{render_temp(temp, unit)} {temp_unitsym[unit]}"
 
 
 temp_unitsym = {
@@ -213,6 +213,7 @@ def _check_trend(
             relative=True,
             sign=True,
         )
+        + " "
         + temp_unitsym[output_unit]
         + " per "
         + str(trend_range_min)

@@ -22,9 +22,9 @@ def check_ups_eaton_enviroment(item, params, info):
     state = 0
     messages = []
     perfdata = []
-    for sensor, sensor_name, unit in [
-        ("temp", "Temperature", "°C"),
-        ("remote_temp", "Remote-Temperature", "°C"),
+    for sensor, sensor_name, unit_symbol in [
+        ("temp", "Temperature", " °C"),
+        ("remote_temp", "Remote-Temperature", " °C"),
         ("humidity", "Humidity", "%"),
     ]:
 
@@ -33,11 +33,11 @@ def check_ups_eaton_enviroment(item, params, info):
         text = "%s: %d%s (warn/crit at %d%s/%d%s)" % (
             sensor_name,
             wert[i],
-            unit,
+            unit_symbol,
             warn,
-            unit,
+            unit_symbol,
             crit,
-            unit,
+            unit_symbol,
         )
 
         if wert[i] >= crit:

@@ -111,18 +111,18 @@ def check_aruba_chassis_temp(
 
     yield Result(
         state=State.OK,
-        summary=f"Min temperature: {render_temp(chassis.min_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}",
+        summary=f"Min temperature: {render_temp(chassis.min_temp, chassis.dev_unit)} {temp_unitsym[chassis.dev_unit]}",
     )
 
     yield Result(
         state=State.OK,
-        summary=f"Max temperature: {render_temp(chassis.max_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}",
+        summary=f"Max temperature: {render_temp(chassis.max_temp, chassis.dev_unit)} {temp_unitsym[chassis.dev_unit]}",
     )
 
     if chassis.avg_temp:
         yield Result(
             state=State.OK,
-            summary=f"Average temperature: {render_temp(chassis.avg_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}",
+            summary=f"Average temperature: {render_temp(chassis.avg_temp, chassis.dev_unit)} {temp_unitsym[chassis.dev_unit]}",
         )
 
 

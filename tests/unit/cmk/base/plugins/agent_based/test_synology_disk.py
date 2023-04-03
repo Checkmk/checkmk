@@ -134,7 +134,7 @@ def test_disk_health_status(fix_register: FixRegister, as_path: Callable[[str], 
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 3", {}, parsed)) == [
         Metric("temp", 26.0),
-        Result(state=State.OK, summary="Temperature: 26.0°C"),
+        Result(state=State.OK, summary="Temperature: 26.0 °C"),
         Result(state=State.OK, summary="Allocation status: OK"),
         Result(state=State.OK, summary="Model: HAT5300-8T"),
         Result(state=State.CRIT, summary="Health: Critical"),
@@ -148,7 +148,7 @@ def test_disk_health_status_missing(
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 1", {}, parsed)) == [
         Metric("temp", 27.0),
-        Result(state=State.OK, summary="Temperature: 27.0°C"),
+        Result(state=State.OK, summary="Temperature: 27.0 °C"),
         Result(state=State.OK, summary="Allocation status: OK"),
         Result(state=State.OK, summary="Model: HAT5300-8T"),
         Result(state=State.OK, summary="Health: Not provided (available with DSM 7.1 and above)"),
@@ -160,7 +160,7 @@ def test_hotspare(fix_register: FixRegister, as_path: Callable[[str], Path]) -> 
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 4", {}, parsed)) == [
         Metric("temp", 35.0),
-        Result(state=State.OK, summary="Temperature: 35.0°C"),
+        Result(state=State.OK, summary="Temperature: 35.0 °C"),
         Result(state=State.OK, summary="Allocation status: disk is hotspare"),
         Result(state=State.OK, summary="Model: WD40000000-6666666"),
         Result(state=State.OK, summary="Health: Not provided (available with DSM 7.1 and above)"),

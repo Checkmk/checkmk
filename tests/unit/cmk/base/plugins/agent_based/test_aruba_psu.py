@@ -99,7 +99,7 @@ def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
             "JL086A 1",
             [
                 Metric("temp", 24.0, levels=(50.0, 60.0)),
-                Result(state=State.OK, summary="Temperature: 24.0°C"),
+                Result(state=State.OK, summary="Temperature: 24.0 °C"),
                 Result(state=State.OK, notice="Configuration: only use user levels"),
             ],
         ),
@@ -108,7 +108,7 @@ def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
             "JL086A 2",
             [
                 Metric("temp", 27.0, levels=(50.0, 60.0)),
-                Result(state=State.OK, summary="Temperature: 27.0°C"),
+                Result(state=State.OK, summary="Temperature: 27.0 °C"),
                 Result(state=State.OK, notice="Configuration: only use user levels"),
             ],
         ),
@@ -118,7 +118,7 @@ def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
             [
                 Metric("temp", 51.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.WARN, summary="Temperature: 51.0°C (warn/crit at 50.0°C/60.0°C)"
+                    state=State.WARN, summary="Temperature: 51.0 °C (warn/crit at 50.0 °C/60.0 °C)"
                 ),
                 Result(state=State.OK, notice="Configuration: only use user levels"),
             ],
@@ -129,7 +129,7 @@ def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
             [
                 Metric("temp", 61.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 61.0°C (warn/crit at 50.0°C/60.0°C)"
+                    state=State.CRIT, summary="Temperature: 61.0 °C (warn/crit at 50.0 °C/60.0 °C)"
                 ),
                 Result(state=State.OK, notice="Configuration: only use user levels"),
             ],

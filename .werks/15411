@@ -1,0 +1,18 @@
+Title: Render temperature units consistently with space in service outputs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680535322
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b3
+
+Depending on the underlying check plugin, Checkmk rendered temperature units with or without a space
+in service outputs. As of this werk, Checkmk consistently renders temperatures with a space between
+the numerical value and the unit. Examples:
+
+LI: 12.0 °C instead of 12.0°C
+LI: 256.41 K instead of 256.41 K
+

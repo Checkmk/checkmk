@@ -178,7 +178,7 @@ def test_discover_entity_sensors_power_presence(  # type:ignore[no-untyped-def]
             },
             [
                 Metric("temp", 40.0),
-                Result(state=State.OK, summary="Temperature: 40.0°C"),
+                Result(state=State.OK, summary="Temperature: 40.0 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -201,7 +201,7 @@ def test_discover_entity_sensors_power_presence(  # type:ignore[no-untyped-def]
             },
             [
                 Metric("temp", 40.0),
-                Result(state=State.OK, summary="Temperature: 40.0°C"),
+                Result(state=State.OK, summary="Temperature: 40.0 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",

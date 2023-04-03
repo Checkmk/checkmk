@@ -17,7 +17,7 @@ factory_settings["apc_humidity_default_levels"] = {
 def inventory_apc_humidity(info):
     for line in info:
         if int(line[1]) >= 0:
-            yield line[0], "apc_humidity_default_levels"
+            yield line[0], {}
 
 
 def check_apc_humidity(item, params, info):

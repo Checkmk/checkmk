@@ -202,7 +202,7 @@ apc_netbotz_sensors_humidity_default_levels = (30, 35, 60, 65)
 
 def inventory_apc_netbotz_sensors_humidity(parsed):
     return [
-        (item, "apc_netbotz_sensors_humidity_default_levels") for item in parsed.get("humidity", [])
+        (item, apc_netbotz_sensors_humidity_default_levels) for item in parsed.get("humidity", [])
     ]
 
 

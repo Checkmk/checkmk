@@ -7,13 +7,7 @@ from cmk.base.plugins.agent_based.utils.apc import DETECT
 
 
 def inventory_apc_inputs(info):
-    if len(info) > 0:
-        inventory = []
-        for line in info:
-            if line[2] not in ["3", "4"]:
-                inventory.append((line[0], {"state": line[2]}))
-        return inventory
-    return []
+    yield from ((line[0], {"state": line[2]}) for line in info if line[2] not in ["3", "4"])
 
 
 def check_apc_inputs(item, params, info):

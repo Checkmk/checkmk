@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.arris_cmts import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 arris_cmts_cpu_default_levels = (90, 95)
 
@@ -15,11 +12,11 @@ def inventory_arris_cmts_cpu(info):
         # Sadly the cpu_id seams empty. Referring to
         # the MIB, its slot id
         if cpu_id:
-            yield cpu_id, "arris_cmts_cpu_default_levels"
+            yield cpu_id, arris_cmts_cpu_default_levels
         else:
             # Fallback to the oid end
             item = str(int(oid_id) - 1)
-            yield item, "arris_cmts_cpu_default_levels"
+            yield item, arris_cmts_cpu_default_levels
 
 
 def check_arris_cmts_cpu(item, params, info):

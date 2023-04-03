@@ -13,7 +13,7 @@ apc_inrow_airflow_default_levels = {
 
 def inventory_apc_inrow_airflow(info):
     if info:
-        return [(None, "apc_inrow_airflow_default_levels")]
+        return [(None, apc_inrow_airflow_default_levels)]
     return []
 
 

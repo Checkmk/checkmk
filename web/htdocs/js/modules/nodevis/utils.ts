@@ -327,7 +327,7 @@ export class LiveSearch {
         this._search_button.style("pointer-events", "all");
     }
 
-    _update_pending(eta): void {
+    _update_pending(_eta): void {
         // May show an indicator for an upcoming update
         return;
         //this._search_button.property(

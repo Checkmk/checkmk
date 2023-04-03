@@ -241,6 +241,7 @@ def _valuespec_special_agents_kube():
                             ("cronjobs_pods", _("Pods of CronJobs")),
                         ],
                         default_value=[
+                            "cronjobs",
                             "deployments",
                             "daemonsets",
                             "statefulsets",

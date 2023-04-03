@@ -72,7 +72,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
         const auto *svc = r.rawData<IComment>()->service();
         return svc == nullptr ? nullptr : svc->handle();
     }),
-                              false /* no hosts table */);
+                              TableServices::AddHosts::no);
 }
 
 std::string TableComments::name() const { return "comments"; }

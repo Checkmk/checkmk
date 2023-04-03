@@ -86,7 +86,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         const auto *svc = r.rawData<IDowntime>()->service();
         return svc == nullptr ? nullptr : svc->handle();
     }),
-                              false /* no hosts table */);
+                              TableServices::AddHosts::no);
 }
 
 std::string TableDowntimes::name() const { return "downtimes"; }

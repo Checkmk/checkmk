@@ -188,7 +188,7 @@ void TableStateHistory::addColumns(Table *table, const std::string &prefix,
             const auto &s = r.rawData<HostServiceState>()->_service;
             return s ? s->handle() : nullptr;
         }),
-        false /* no hosts table */);
+        TableServices::AddHosts::no);
 }
 
 std::string TableStateHistory::name() const { return "statehist"; }

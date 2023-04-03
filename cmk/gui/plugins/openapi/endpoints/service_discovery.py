@@ -384,7 +384,7 @@ class DiscoverServices(BaseSchema):
     tag_group="Setup",
     status_descriptions={
         302: "The service discovery background job has been initialized. Redirecting to the "
-        "'Show discovery service background job' endpoint.",
+        "'Wait for service discovery completion' endpoint.",
         409: "A service discovery background job is currently running",
     },
     additional_status_codes=[302, 409],
@@ -408,7 +408,7 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
     tag_group="Setup",
     status_descriptions={
         302: "The service discovery background job has been initialized. Redirecting to the "
-        "'Show discovery service background job' endpoint.",
+        "'Wait for service discovery completion' endpoint.",
         404: "Host could not be found",
         409: "A service discovery background job is currently running",
     },

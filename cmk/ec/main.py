@@ -102,7 +102,7 @@ class HasFileno(Protocol):
 FileDescr = int  # mypy calls this FileDescriptor, but this clashes with out definition
 FileDescriptorLike = FileDescr | HasFileno
 
-Response = Iterable[list[Any]] | dict[str, Any] | None
+Response = Iterable[list[object]] | dict[str, object] | None
 
 LimitKind = Literal["overall", "by_rule", "by_host"]
 
@@ -516,15 +516,15 @@ class EventServer(ECServerThread):
             ("status_event_limit_active_overall", False),
         ]
 
-    def get_status(self) -> list[list[Any]]:
-        row: list[Any] = []
+    def get_status(self) -> list[list[object]]:
+        row: list[object] = []
         row += self._add_general_status()
         row += self._perfcounters.get_status()
         row += self._add_replication_status()
         row += self._add_event_limit_status()
         return [row]
 
-    def _add_general_status(self) -> list[Any]:
+    def _add_general_status(self) -> list[object]:
         return [
             self._config["last_reload"],
             self._event_status.num_existing_events,
@@ -535,7 +535,7 @@ class EventServer(ECServerThread):
         parts = Path("/proc/self/stat").read_text().split()
         return int(parts[22])  # in Bytes
 
-    def _add_replication_status(self) -> list[Any]:
+    def _add_replication_status(self) -> list[object]:
         if is_replication_slave(self._config):
             return [
                 self._slave_status["mode"],
@@ -544,7 +544,7 @@ class EventServer(ECServerThread):
             ]
         return ["master", 0.0, False]
 
-    def _add_event_limit_status(self) -> list[Any]:
+    def _add_event_limit_status(self) -> list[object]:
         return [
             self._config["event_limit"]["by_host"]["limit"],
             self._config["event_limit"]["by_rule"]["limit"],
@@ -2039,7 +2039,7 @@ class StatusTable:
     columns: Columns = []
 
     @abc.abstractmethod
-    def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
         """
         Must return a enumerable type containing fully populated lists (rows) matching the
         columns of the table.
@@ -2054,7 +2054,7 @@ class StatusTable:
         self.column_types = {name: type(def_val) for name, def_val in self.columns}
         self.column_indices = {name: index for index, name in enumerate(self.column_names)}
 
-    def query(self, query: QueryGET) -> Iterable[list[Any]]:
+    def query(self, query: QueryGET) -> Iterable[list[object]]:
         requested_column_indexes = query.requested_column_indexes()
 
         # Output the column headers
@@ -2072,8 +2072,8 @@ class StatusTable:
                 num_rows += 1
 
     def _build_result_row(
-        self, row: list[Any], requested_column_indexes: list[int | None]
-    ) -> list[Any]:
+        self, row: list[object], requested_column_indexes: list[int | None]
+    ) -> list[object]:
         return [(None if index is None else row[index]) for index in requested_column_indexes]
 
 
@@ -2111,7 +2111,7 @@ class StatusTableEvents(StatusTable):
         super().__init__(logger)
         self._event_status = event_status
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
@@ -2148,7 +2148,7 @@ class StatusTableHistory(StatusTable):
         super().__init__(logger)
         self._history = history
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
         return self._history.get(query)
 
 
@@ -2163,7 +2163,7 @@ class StatusTableRules(StatusTable):
         super().__init__(logger)
         self._event_status = event_status
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
         return self._event_status.get_rule_stats()
 
 
@@ -2175,7 +2175,7 @@ class StatusTableStatus(StatusTable):
         super().__init__(logger)
         self._event_server = event_server
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
         return self._event_server.get_status()
 
 
@@ -2441,7 +2441,7 @@ class StatusServer(ECServerThread):
             raise NotImplementedError()
 
     def _answer_query_python(
-        self, client_socket: socket.socket, response: Iterable[list[Any]] | None
+        self, client_socket: socket.socket, response: Iterable[list[object]] | None
     ) -> None:
         client_socket.sendall((repr(response) + "\n").encode("utf-8"))
 
@@ -3020,7 +3020,7 @@ class EventStatus:
     def cancel_events(
         self,
         event_server: EventServer,
-        event_columns: Iterable[tuple[str, Any]],
+        event_columns: Iterable[tuple[str, object]],
         new_event: Event,
         match_groups: MatchGroups,
         rule: Rule,
@@ -3317,8 +3317,8 @@ def replication_allow_command(config: Config, command: str, slave_status: SlaveS
 
 def replication_send(
     config: Config, lock_configuration: ECLock, event_status: EventStatus, last_update: int
-) -> dict[str, Any]:
-    response: dict[str, Any] = {}
+) -> dict[str, object]:
+    response: dict[str, object] = {}
     with lock_configuration:
         response["status"] = event_status.pack_status()
         if last_update < config["last_reload"]:
@@ -3442,7 +3442,7 @@ def replication_update_state(
     event_status.unpack_status(new_state["status"])
 
 
-def save_master_config(settings: Settings, new_state: dict[str, Any]) -> None:
+def save_master_config(settings: Settings, new_state: dict[str, object]) -> None:
     path = settings.paths.master_config_file.value
     path_new = path.parent / (path.name + ".new")
     path_new.write_text(

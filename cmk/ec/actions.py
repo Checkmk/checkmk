@@ -8,7 +8,6 @@ import subprocess
 import time
 from collections.abc import Iterable
 from logging import Logger
-from typing import Any
 
 import cmk.utils.debug
 import cmk.utils.defines
@@ -42,7 +41,7 @@ def event_has_opened(
     config: Config,
     logger: Logger,
     host_config: HostConfig,
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     rule: Rule,
     event: Event,
 ) -> None:
@@ -78,7 +77,7 @@ def do_event_actions(
     config: Config,
     logger: Logger,
     host_config: HostConfig,
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     actions: Iterable[str],
     event: Event,
     is_cancelling: bool,
@@ -106,7 +105,7 @@ def do_event_action(
     settings: Settings,
     config: Config,
     logger: Logger,
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     action: Action,
     event: Event,
     user: str,
@@ -133,7 +132,7 @@ def _do_email_action(
     history: History,
     config: Config,
     logger: Logger,
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     action_config: EMailActionConfig,
     event: Event,
     user: str,
@@ -148,7 +147,7 @@ def _do_email_action(
 def _do_script_action(
     history: History,
     logger: Logger,
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     action_config: ScriptActionConfig,
     action_id: str,
     event: Event,
@@ -163,7 +162,7 @@ def _do_script_action(
     history.add(event, "SCRIPT", user, action_id)
 
 
-def _prepare_text(text: str, event_columns: Iterable[tuple[str, Any]], event: Event) -> str:
+def _prepare_text(text: str, event_columns: Iterable[tuple[str, object]], event: Event) -> str:
     return _escape_null_bytes(_substitute_event_tags(text, event_columns, event))
 
 
@@ -172,7 +171,7 @@ def _escape_null_bytes(s: str) -> str:
 
 
 def _substitute_event_tags(
-    text: str, event_columns: Iterable[tuple[str, Any]], event: Event
+    text: str, event_columns: Iterable[tuple[str, object]], event: Event
 ) -> str:
     for key, value in _get_event_tags(event_columns, event).items():
         text = text.replace(f"${key.upper()}$", value)
@@ -215,7 +214,7 @@ def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger
 
 
 def _execute_script(
-    event_columns: Iterable[tuple[str, Any]], body: str, event: Event, logger: Logger
+    event_columns: Iterable[tuple[str, object]], body: str, event: Event, logger: Logger
 ) -> None:
     script_env = os.environ.copy()
     for key, value in _get_event_tags(event_columns, event).items():
@@ -239,10 +238,10 @@ def _execute_script(
 
 
 def _get_event_tags(
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     event: Event,
 ) -> dict[str, str]:
-    substs: list[tuple[str, Any]] = [
+    substs: list[tuple[str, object]] = [
         (f"match_group_{nr + 1}", g) for nr, g in enumerate(event.get("match_groups", ()))
     ]
 

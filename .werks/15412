@@ -1,0 +1,12 @@
+Title: Graphs and perfometers: Render temperatures in Kelvin without degree symbol
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1680536541
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Temperatures in Kelvin are now rendered without the degree symbol in graphs and perfometers:
+"341.1 K" instead of "341.1 °K".

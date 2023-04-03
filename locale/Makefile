@@ -38,7 +38,7 @@ update-pot:
 	git pull --rebase
 	# back in CHECKMK_DIR
 	git pull --rebase
-	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 -o scanned.pot \
+	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 --keyword=_l -o scanned.pot \
 	../web/app/index.wsgi \
 	../livestatus/api/python/livestatus.py \
 		$$(find -L ../cmk -type f -name "*.py") 2>&1 | \

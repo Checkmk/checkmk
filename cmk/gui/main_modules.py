@@ -7,6 +7,7 @@ import importlib
 import sys
 import traceback
 from collections.abc import Iterator
+from contextlib import suppress
 from pathlib import Path
 from types import ModuleType
 
@@ -16,21 +17,19 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 
-# The following imports trigger loading of builtin main modules
-# isort: off
-import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
-
-if cmk_version.is_raw_edition():
+# The following imports trigger loading of builtin main modules.
+# Note: They are loaded once more in `_import_main_module_plugins()` and
+# possibly a third time over the plugin discovery mechanism.
+with suppress(ModuleNotFoundError):
+    import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
+with suppress(ModuleNotFoundError):
     import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import
-else:
+with suppress(ModuleNotFoundError):
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
-
-if cmk_version.is_managed_edition():
+with suppress(ModuleNotFoundError):
     import cmk.gui.cme.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
-
-if cmk_version.is_cloud_edition():
+with suppress(ModuleNotFoundError):
     import cmk.gui.cce.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
-# isort: on
 
 
 def _imports() -> Iterator[str]:

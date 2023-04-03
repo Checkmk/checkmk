@@ -253,3 +253,22 @@ def test_delete_tag_that_belongs_to_a_tag_group(
         resp.json["detail"]
         == 'You cannot delete this auxiliary tag. It is being used by the following tag groups: "tag_group_1, tag_group_2"'
     )
+
+
+def test_update_builtin_aux_tag(auxtag_client: AuxTagTestClient) -> None:
+    r = auxtag_client.edit(
+        aux_tag_id="ip-v4",
+        tag_data=auxtag_client.edit_model(
+            title="edited_title",
+            topic="edited_topic",
+            help="help",
+        ),
+        with_etag=False,
+        expect_ok=False,
+    )
+    r.assert_status_code(404)
+    assert r.json["title"] == "Not Found"
+    assert (
+        r.json["fields"]["aux_tag_id"][0]
+        == "The aux_tag 'ip-v4' should be an existing custom aux tag but it's not."
+    )

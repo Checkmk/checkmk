@@ -150,13 +150,12 @@ def test_check_metrics(fix_register: FixRegister, as_path: Callable[[str], Path]
 INVALID_WALK = """
 .1.3.6.1.4.1.1230.2.7.2.5.2.0
 .1.3.6.1.4.1.1230.2.7.2.5.3.0
-.1.3.6.1.4.1.1230.2.7.2.6.1.0 0
 """
 
 
 def test_check_invalid_values(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
     # Assemble
-    # This walk is made up, the final entry cannot be removed, because our fetcher will crash.
+    # This walk is made up.
     section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), as_path(INVALID_WALK))
 
     # Assume

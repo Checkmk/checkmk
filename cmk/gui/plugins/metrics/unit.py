@@ -203,10 +203,10 @@ unit_info["f"] = {
 }
 
 unit_info["k"] = {
-    "title": _("Degree Kelvin"),
-    "symbol": "°K",
-    "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v), "°K"),
-    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' °K'",
+    "title": _("Kelvin"),
+    "symbol": "K",
+    "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v), "K"),
+    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' K'",
 }
 
 unit_info["a"] = {

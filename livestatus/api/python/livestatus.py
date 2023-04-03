@@ -97,7 +97,7 @@ class SiteConfiguration(TypedDict, total=False):
     user_login: bool
     user_sync: Literal["all"] | tuple[Literal["list"], list[str]] | None
 
-    # Thanks to SingleSiteConnection we need str here. The convertion can
+    # Thanks to SingleSiteConnection we need str here. The conversion can
     # probably be moved into the SingleSiteConnection
     socket: str | UnixSocketInfo | NetworkSocketInfo | LocalSocketInfo
 
@@ -143,7 +143,7 @@ class LivestatusTestingError(RuntimeError):
 #   '----------------------------------------------------------------------'
 
 # TODO: This mechanism does not take different connection options into account
-# Keep a global array of persistant connections
+# Keep a global array of persistent connections
 persistent_connections: dict[str, socket.socket] = {}
 
 # Regular expression for removing Cache: headers if caching is not allowed

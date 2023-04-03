@@ -82,7 +82,7 @@ nagios_compat_schedule_new_event_t schedule_new_event(
 }
 int submit_external_command(char * /*unused*/, int * /*unused*/) { return 0; }
 int write_to_all_logs(char * /*unused*/, unsigned long /*unused*/) { return 0; }
-// inofficial exports ----------------------------------------------------------
+// unofficial exports ----------------------------------------------------------
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int check_external_commands;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)

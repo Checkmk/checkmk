@@ -81,7 +81,7 @@ void TableEventConsoleEvents::addColumns(Table *table) {
         "Whether or not the host- or rule groups have precedence", offsets));
     table->addColumn(ECRow::makeStringColumn(
         "event_core_host",
-        "The canoncial name of the host for this event as known in the monitoring",
+        "The canonical name of the host for this event as known in the monitoring",
         offsets));
     table->addColumn(ECRow::makeIntColumn(
         "event_host_in_downtime",
@@ -89,7 +89,7 @@ void TableEventConsoleEvents::addColumns(Table *table) {
         offsets));
     table->addColumn(
         ECRow::makeListColumn("event_match_groups_syslog_application",
-                              "The sylog application match groups", offsets));
+                              "The syslog application match groups", offsets));
 
     TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
         const auto *h = r.rawData<ECRow>()->host();

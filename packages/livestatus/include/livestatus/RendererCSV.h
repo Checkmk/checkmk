@@ -13,7 +13,7 @@
 #include "livestatus/Renderer.h"
 class Logger;
 
-// Note: The CSV format is a bit underspecified, but the most "authorative"
+// Note: The CSV format is a bit underspecified, but the most "authoritative"
 // reference seems to be https://tools.ietf.org/html/rfc4180.
 class RendererCSV : public Renderer {
 public:

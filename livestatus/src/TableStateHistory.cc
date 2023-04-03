@@ -297,7 +297,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     // Store hosts/services that we have filtered out here
     std::set<HostServiceKey> object_blacklist;
 
-    // Optimize time interval for the query. In log querys there should always
+    // Optimize time interval for the query. In log queries there should always
     // be a time range in form of one or two filter expressions over time. We
     // use that to limit the number of logfiles we need to scan and to find the
     // optimal entry point into the logfile
@@ -480,7 +480,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     state->_from = since;
 
                     // Get notification period of host/service
-                    // If this host/service is no longer availabe in nagios ->
+                    // If this host/service is no longer available in nagios ->
                     // set to ""
                     state->_notification_period =
                         state->_service

@@ -72,7 +72,7 @@ public:
     enum class Class {
         info = 0,             // all messages not in any other class
         alert = 1,            // alerts: the change service/host state
-        program = 2,          // important programm events (restart, ...)
+        program = 2,          // important program events (restart, ...)
         hs_notification = 3,  // host/service notifications
         passivecheck = 4,     // passive checks
         ext_command = 5,      // external commands

@@ -174,7 +174,7 @@ void TableLog::answerQuery(Query &query, const User &user) {
 // static
 LogFilter TableLog::constructFilter(Query &query,
                                     size_t max_lines_per_logfile) {
-    // Optimize time interval for the query. In log querys there should
+    // Optimize time interval for the query. In log queries there should
     // always be a time range in form of one or two filter expressions over
     // time. We use that to limit the number of logfiles we need to scan and
     // to find the optimal entry point into the logfile

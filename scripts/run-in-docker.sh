@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # The test image is selected automatically, but can still be set via
-# enviroment. e.g. for master:
+# environment. e.g. for master:
 # export IMAGE_ID="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
 
 set -e

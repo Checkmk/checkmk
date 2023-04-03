@@ -204,7 +204,7 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
 
     // Make RRDTool flush the rrdcached if necessary
 
-    // The cache deamon experiences long delays when queries extend over a
+    // The cache daemon experiences long delays when queries extend over a
     // large time range and the underlying RRA are in high resolution.
 
     // For performance reasons the xport tool will not connect to the daemon
@@ -265,7 +265,7 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
         }
     }
 
-    // Now do the actual export. The library function rrd_xport mimicks the
+    // Now do the actual export. The library function rrd_xport mimics the
     // command line API of rrd xport, but - fortunately - we get direct access
     // to a binary buffer with doubles. No parsing is required.
     int xxsize = 0;

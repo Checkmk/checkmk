@@ -98,7 +98,7 @@ public:
     // and a non-const part can probably fix that wart.
     //
     // A much bigger problem is that we can't make answerQuery() itself 'const',
-    // because its impementations in TableStateHistory and TableCachedStatehist
+    // because its implementations in TableStateHistory and TableCachedStatehist
     // are non-const. Tables are shared between threads and the locking in the
     // problematic answerQuery() implementations is a "bit" chaotic, so this can
     // be a real correctness problem! This has to be fixed...

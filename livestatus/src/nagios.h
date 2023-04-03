@@ -94,7 +94,7 @@ inline int nagios_compat_submit_external_command(const char *cmd) {
 #include "nagios/nebstructs.h"
 #include "nagios/objects.h"
 
-// a collection of the "inofficial Nagios 3 API" we are using
+// a collection of the "unofficial Nagios 3 API" we are using
 extern "C" {
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int accept_passive_host_checks;

@@ -65,7 +65,7 @@ public:
     // constructs its own instance.
     explicit LogCache(MonitoringCore *mc);
 
-    // Used for a confusing fragile protocol betwwen LogCache and Logfile to
+    // Used for a confusing fragile protocol between LogCache and Logfile to
     // keep the number of cached log entries under control. Used by
     // Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);

@@ -37,7 +37,7 @@ void TimeperiodsCache::logCurrentTimeperiods() {
 void TimeperiodsCache::update(std::chrono::system_clock::time_point now) {
     const std::lock_guard<std::mutex> lg(_mutex);
     // Update cache only once a minute. The timeperiod definitions have a
-    // 1-minute granularity, so a 1-second resultion is not needed.
+    // 1-minute granularity, so a 1-second resolution is not needed.
     if (now < _last_update + 1min) {
         return;
     }

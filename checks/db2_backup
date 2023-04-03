@@ -16,7 +16,7 @@ db2_backup_default_levels = (86400 * 14, 86400 * 28)
 
 def inventory_db2_backup(parsed):
     for instance in parsed[1]:
-        yield instance, "db2_backup_default_levels"
+        yield instance, db2_backup_default_levels
 
 
 def check_db2_backup(item, params, parsed):

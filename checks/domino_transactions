@@ -12,7 +12,7 @@ domino_transactions_default_levels = (30000, 35000)
 
 def inventory_domino_transactions(info):
     if info:
-        yield None, "domino_transactions_default_levels"
+        yield None, domino_transactions_default_levels
 
 
 def check_domino_transactions(_no_item, params, info):

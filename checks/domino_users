@@ -12,7 +12,7 @@ domino_users_default_levels = (1000, 1500)
 
 def inventory_domino_users(info):
     if info:
-        yield None, "domino_users_default_levels"
+        yield None, domino_users_default_levels
 
 
 def check_domino_users(_no_item, params, info):

@@ -5,7 +5,7 @@
 
 
 def inventory_decru_power(info):
-    return [(l[0], "", None) for l in info]
+    return [(l[0], None) for l in info]
 
 
 def check_decru_power(item, params, info):

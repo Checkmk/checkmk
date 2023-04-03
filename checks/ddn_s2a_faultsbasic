@@ -46,7 +46,7 @@ ddn_s2a_faultsbasic_disks_default_levels = (1, 2)
 
 def inventory_ddn_s2a_faultsbasic_disks(parsed):
     if "disk_failures_count" in parsed:
-        return [(None, "ddn_s2a_faultsbasic_disks_default_levels")]
+        return [(None, ddn_s2a_faultsbasic_disks_default_levels)]
     return []
 
 
@@ -169,7 +169,7 @@ ddn_s2a_faultsbasic_fans_default_levels = (1, 2)
 
 def inventory_ddn_s2a_faultsbasic_fans(parsed):
     if "avr_fan_ctrl_failures_count" in parsed:
-        return [(None, "ddn_s2a_faultsbasic_fans_default_levels")]
+        return [(None, ddn_s2a_faultsbasic_fans_default_levels)]
     return []
 
 

@@ -7,7 +7,7 @@ decru_fan_default_levels = (8000, 8400)
 
 
 def inventory_decru_fans(info):
-    return [(l[0], "decru_fan_default_levels") for l in info]
+    return [(l[0], decru_fan_default_levels) for l in info]
 
 
 def check_decru_fans(item, params, info):

@@ -183,15 +183,8 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     mocker.patch("cmk.gui.watolib.services.update_host_labels", return_value={})
     mock_discovery_preview = mocker.patch(
         "cmk.gui.watolib.services.discovery_preview",
-        return_value=DiscoveryResult(
-            job_status={
-                "state": "initialized",
-                "started": 1654006499.56774,
-                "pid": None,
-                "loginfo": {"JobProgressUpdate": [], "JobResult": [], "JobException": []},
-                "is_active": False,
-            },
-            check_table_created=1654006499,
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
             check_table=[
                 CheckPreviewEntry(
                     check_source="old",
@@ -335,27 +328,8 @@ def test_perform_discovery_single_update(
 ) -> None:
     mock_discovery_preview = mocker.patch(
         "cmk.gui.watolib.services.discovery_preview",
-        return_value=DiscoveryResult(
-            job_status={
-                "duration": 2.351154088973999,
-                "estimated_duration": 2.37550950050354,
-                "host_name": "TODAY",
-                "logfile_path": "~/var/log/web.log",
-                "pid": 1363226,
-                "ppid": 1363225,
-                "started": 1654173769.3507118,
-                "state": "finished",
-                "stoppable": True,
-                "title": "Refresh",
-                "user": "cmkadmin",
-                "loginfo": {
-                    "JobProgressUpdate": ["Starting job...", "Completed."],
-                    "JobResult": [],
-                    "JobException": [],
-                },
-                "is_active": False,
-            },
-            check_table_created=1654237829,
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
             check_table=[
                 CheckPreviewEntry(
                     check_source="old",
@@ -584,27 +558,8 @@ def test_perform_discovery_action_update_services(
 ) -> None:
     mock_discovery_preview = mocker.patch(
         "cmk.gui.watolib.services.discovery_preview",
-        return_value=DiscoveryResult(
-            job_status={
-                "duration": 2.351154088973999,
-                "estimated_duration": 2.37550950050354,
-                "host_name": "TODAY",
-                "logfile_path": "~/var/log/web.log",
-                "pid": 1363226,
-                "ppid": 1363225,
-                "started": 1654173769.3507118,
-                "state": "finished",
-                "stoppable": True,
-                "title": "Refresh",
-                "user": "cmkadmin",
-                "loginfo": {
-                    "JobProgressUpdate": ["Starting job...", "Completed."],
-                    "JobResult": [],
-                    "JobException": [],
-                },
-                "is_active": False,
-            },
-            check_table_created=1654237829,
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
             check_table=[
                 CheckPreviewEntry(
                     check_source="old",
@@ -781,27 +736,8 @@ def test_perform_discovery_action_update_host_labels(
     )
     mock_discovery_preview = mocker.patch(
         "cmk.gui.watolib.services.discovery_preview",
-        return_value=DiscoveryResult(
-            job_status={
-                "duration": 2.351154088973999,
-                "estimated_duration": 2.37550950050354,
-                "host_name": "heute",
-                "logfile_path": "~/var/log/web.log",
-                "pid": 1363226,
-                "ppid": 1363225,
-                "started": 1654173769.3507118,
-                "state": "finished",
-                "stoppable": True,
-                "title": "Refresh",
-                "user": "cmkadmin",
-                "loginfo": {
-                    "JobProgressUpdate": ["Starting job...", "Completed."],
-                    "JobResult": [],
-                    "JobException": [],
-                },
-                "is_active": False,
-            },
-            check_table_created=1654250056,
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
             check_table=[],
             host_labels={
                 "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},

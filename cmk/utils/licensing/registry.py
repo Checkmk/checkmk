@@ -11,7 +11,6 @@ from cmk.utils.licensing.handler import (
     LicenseStateError,
     LicensingHandler,
     NotificationHandler,
-    PendingChanges,
     RemainingTrialTime,
     UserEffect,
 )
@@ -78,10 +77,8 @@ def get_licensing_user_effect_core(num_services: int, num_hosts_shadow: int) -> 
     return _get_licensing_handler().effect_core(num_services, num_hosts_shadow)
 
 
-def get_licensing_user_effect(
-    changes: PendingChanges | None = None, licensing_settings_link: str | None = None
-) -> UserEffect:
-    return _get_licensing_handler().effect(changes if changes else [], licensing_settings_link)
+def get_licensing_user_effect(licensing_settings_link: str | None = None) -> UserEffect:
+    return _get_licensing_handler().effect(licensing_settings_link)
 
 
 def get_licensing_notification_handler() -> NotificationHandler:

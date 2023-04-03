@@ -139,12 +139,10 @@ class ConfiguredSummarizer:
         config_cache: ConfigCache,
         host_name: HostName,
         *,
-        include_ok_results: bool,
         override_non_ok_state: ServiceState | None = None,
     ) -> None:
         self.config_cache: Final = config_cache
         self.host_name: Final = host_name
-        self.include_ok_results: Final = include_ok_results
         self.override_non_ok_state: Final = override_non_ok_state
 
     def __call__(
@@ -152,22 +150,17 @@ class ConfiguredSummarizer:
         host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
     ) -> Iterable[ActiveCheckResult]:
         return [
-            ac_result
+            _summarize_host_sections(
+                host_sections,
+                source,
+                override_non_ok_state=self.override_non_ok_state,
+                exit_spec=self.config_cache.exit_code_spec(source.hostname, source.ident),
+                time_settings=self.config_cache.get_piggybacked_hosts_time_settings(
+                    piggybacked_hostname=source.hostname
+                ),
+                is_piggyback=self.config_cache.is_piggyback_host(self.host_name),
+            )
             for source, host_sections in host_sections
-            if (
-                ac_result := _summarize_host_sections(
-                    host_sections,
-                    source,
-                    override_non_ok_state=self.override_non_ok_state,
-                    exit_spec=self.config_cache.exit_code_spec(source.hostname, source.ident),
-                    time_settings=self.config_cache.get_piggybacked_hosts_time_settings(
-                        piggybacked_hostname=source.hostname
-                    ),
-                    is_piggyback=self.config_cache.is_piggyback_host(self.host_name),
-                )
-            ).state
-            != 0
-            or self.include_ok_results
         ]
 
 

@@ -108,7 +108,7 @@ def automation_discovery(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
-    failure_summarizer: SummarizerFunction,
+    summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
@@ -135,7 +135,7 @@ def automation_discovery(
 
         fetched = fetcher(host_name, ip_address=None)
         parsed = parser((f[0], f[1]) for f in fetched)
-        if failed_sources_results := list(failure_summarizer(parsed)):
+        if failed_sources_results := [r for r in summarizer(parsed) if r.state != 0]:
             return DiscoveryResult(error_text=", ".join(r.summary for r in failed_sources_results))
 
         host_sections = filter_out_errors(parsed)
@@ -403,10 +403,9 @@ def discover_marked_hosts(
                 config_cache=config_cache,
                 parser=parser,
                 fetcher=fetcher,
-                failure_summarizer=ConfiguredSummarizer(
+                summarizer=ConfiguredSummarizer(
                     config_cache,
                     host_name,
-                    include_ok_results=False,
                     override_non_ok_state=None,
                 ),
                 section_plugins=section_plugins,
@@ -455,7 +454,7 @@ def _discover_marked_host(
     config_cache: ConfigCache,
     fetcher: FetcherFunction,
     parser: ParserFunction,
-    failure_summarizer: SummarizerFunction,
+    summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
@@ -485,7 +484,7 @@ def _discover_marked_host(
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
-        failure_summarizer=failure_summarizer,
+        summarizer=summarizer,
         section_plugins=section_plugins,
         host_label_plugins=host_label_plugins,
         check_plugins=check_plugins,

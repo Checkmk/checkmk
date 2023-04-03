@@ -6,8 +6,6 @@
 # This file initializes the pytest environment
 # pylint: disable=redefined-outer-name,wrong-import-order
 
-import collections
-import enum
 import os
 import shutil
 from pathlib import Path
@@ -51,52 +49,38 @@ if not Path(testlib.utils.cmc_path()).exists():
 # the other type will be skipped.
 #
 
-
-class ExecutionType(enum.Enum):
-    Site = enum.auto()
-    VirtualEnv = enum.auto()
-
-
-test_types = collections.OrderedDict(
-    [
-        ("unit", ExecutionType.VirtualEnv),
-        ("pylint", ExecutionType.VirtualEnv),
-        ("docker", ExecutionType.VirtualEnv),
-        ("agent-integration", ExecutionType.VirtualEnv),
-        ("agent-plugin-unit", ExecutionType.VirtualEnv),
-        ("integration", ExecutionType.VirtualEnv),
-        ("gui_crawl", ExecutionType.VirtualEnv),
-        ("gui_e2e", ExecutionType.VirtualEnv),
-        ("packaging", ExecutionType.VirtualEnv),
-        ("composition", ExecutionType.VirtualEnv),
-        ("code_quality", ExecutionType.VirtualEnv),
-        ("update", ExecutionType.VirtualEnv),
-        ("openapi", ExecutionType.VirtualEnv),
-    ]
-)
+test_types = [
+    "unit",
+    "pylint",
+    "docker",
+    "agent-integration",
+    "agent-plugin-unit",
+    "integration",
+    "gui_crawl",
+    "gui_e2e",
+    "packaging",
+    "composition",
+    "code_quality",
+    "update",
+    "openapi",
+]
 
 
 def pytest_addoption(parser):
     """Register the -T option to pytest"""
-    options = [name for opt in parser._anonymous.options for name in opt.names()]
-    # conftest.py is symlinked from enterprise/tests/conftest.py which makes it being executed
-    # twice. Only register this option once.
-    if "-T" in options:
-        return
-
     parser.addoption(
         "-T",
         action="store",
         metavar="TYPE",
         default=None,
-        help="Run tests of the given TYPE. Available types are: %s" % ", ".join(test_types.keys()),
+        help="Run tests of the given TYPE. Available types are: %s" % ", ".join(test_types),
     )
 
 
 def pytest_configure(config):
     """Registers custom markers to pytest"""
     config.addinivalue_line(
-        "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types.keys())
+        "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types)
     )
     config.addinivalue_line(
         "markers",
@@ -131,9 +115,6 @@ def pytest_runtest_setup(item):
 def cleanup_cmk():
     yield
 
-    if testlib.is_running_as_site_user():
-        return
-
     import cmk.utils.paths
 
     if "pytest_cmk_" not in str(cmk.utils.paths.tmp_dir):
@@ -146,26 +127,9 @@ def cleanup_cmk():
 
 
 def pytest_cmdline_main(config):
-    """There are 2 environments for testing:
-
-    * A real Check_MK site environment (e.g. integration tests)
-    * Python virtual environment (e.g. for unit tests)
-
-    Depending on the selected "type" marker the environment is ensured
-    or switched here."""
     if not config.getoption("-T"):
         return  # missing option is handled later
-
-    context = test_types[config.getoption("-T")]
-    if context == ExecutionType.VirtualEnv:
-        verify_virtualenv()
-    elif context == ExecutionType.Site:
-        verify_site()
-
-
-def verify_site():
-    if not testlib.is_running_as_site_user():
-        raise RuntimeError("Please run tests as site user.")
+    verify_virtualenv()
 
 
 def verify_virtualenv():

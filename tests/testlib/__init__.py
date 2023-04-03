@@ -37,7 +37,6 @@ from tests.testlib.utils import (
     is_cloud_repo,
     is_enterprise_repo,
     is_managed_repo,
-    is_running_as_site_user,
     repo_path,
     site_id,
     virtualenv_path,
@@ -80,9 +79,6 @@ _UNPATCHED_PATHS: Final = {
 # defaults. In integration tests we want to use the exact version of the
 # site. For unit tests we assume we are in Enterprise Edition context.
 def fake_version_and_paths() -> None:
-    if is_running_as_site_user():
-        return
-
     from pytest import MonkeyPatch  # pylint: disable=import-outside-toplevel
 
     monkeypatch = MonkeyPatch()

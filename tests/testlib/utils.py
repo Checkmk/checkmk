@@ -8,7 +8,6 @@
 import dataclasses
 import logging
 import os
-import pwd
 import re
 import subprocess
 import sys
@@ -200,25 +199,12 @@ def site_id() -> str:
     return site_id
 
 
-def is_running_as_site_user() -> bool:
-    try:
-        return pwd.getpwuid(os.getuid()).pw_name == site_id()
-    except KeyError:
-        # Happens when no user with current UID exists (experienced in container with not existing
-        # "-u" run argument set)
-        return False
-
-
 def add_python_paths() -> None:
-    # make the repo directory available (cmk lib)
     sys.path.insert(0, cmk_path())
-
-    # if not running as site user, make the livestatus module available
-    if not is_running_as_site_user():
-        if is_enterprise_repo():
-            sys.path.insert(0, os.path.join(cmc_path()))
-        sys.path.insert(0, os.path.join(cmk_path(), "livestatus/api/python"))
-        sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
+    if is_enterprise_repo():
+        sys.path.insert(0, os.path.join(cmc_path()))
+    sys.path.insert(0, os.path.join(cmk_path(), "livestatus/api/python"))
+    sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
 
 
 def package_hash_path(version: str, edition: Edition) -> Path:

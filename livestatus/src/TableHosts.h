@@ -21,7 +21,9 @@ class TableHosts : public Table {
 public:
     explicit TableHosts(MonitoringCore *mc);
     static void addColumns(Table *table, const std::string &prefix,
-                           const ColumnOffsets &offsets);
+                           const ColumnOffsets &offsets,
+                           LockComments lock_comments,
+                           LockDowntimes lock_downtimes);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

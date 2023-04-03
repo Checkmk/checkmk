@@ -94,7 +94,8 @@ void TableEventConsoleEvents::addColumns(Table *table) {
     TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
         const auto *h = r.rawData<ECRow>()->host();
         return h == nullptr ? nullptr : h->handle();
-    }));
+    }),
+                           LockComments::yes, LockDowntimes::yes);
 }
 
 std::string TableEventConsoleEvents::name() const {

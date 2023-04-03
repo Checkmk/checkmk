@@ -121,12 +121,14 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     TableHosts::addColumns(this, "current_host_", offsets.add([](Row r) {
         const auto &h = r.rawData<LogRow>()->hst;
         return h ? h->handle() : nullptr;
-    }));
+    }),
+                           LockComments::yes, LockDowntimes::yes);
     TableServices::addColumns(this, "current_service_", offsets.add([](Row r) {
         const auto &s = r.rawData<LogRow>()->svc;
         return s ? s->handle() : nullptr;
     }),
-                              TableServices::AddHosts::no);
+                              TableServices::AddHosts::no, LockComments::yes,
+                              LockDowntimes::yes);
     TableContacts::addColumns(this, "current_contact_", offsets.add([](Row r) {
         return r.rawData<LogRow>()->ctc.get();
     }));

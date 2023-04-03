@@ -19,6 +19,9 @@ class MonitoringCore;
 class Query;
 class User;
 
+enum class LockComments { no, yes };
+enum class LockDowntimes { no, yes };
+
 /// A table-like view for some underlying data, exposed via LQL.
 ///
 /// table               | primary key

@@ -12,7 +12,7 @@ logins_default_levels = (20, 30)
 
 def inventory_logins(info):
     if info:
-        return [(None, "logins_default_levels")]
+        return [(None, logins_default_levels)]
     return []
 
 

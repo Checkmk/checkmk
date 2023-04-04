@@ -22,9 +22,5 @@ def parse_liebert_without_unit_wrapper(info, type_func=float):
     return parse_liebert_without_unit([info], type_func)
 
 
-def scan_liebert(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.476.1.42")
-
-
 def check_temp_unit(output):
     return temperature_to_celsius(float(output[0]), output[1])

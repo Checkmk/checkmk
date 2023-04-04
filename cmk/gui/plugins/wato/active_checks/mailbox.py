@@ -186,15 +186,6 @@ def _mail_receiving_params(supported_protocols: Iterable[str]) -> DictionaryEntr
     )
 
 
-def apply_fetch(params, fetch_param, allowed_keys):
-    """Create a new set of params by taking all allowed elements from old dataset
-    adding a new 'fetch' element"""
-    return {
-        **{k: v for k, v in params.items() if k in allowed_keys - {"fetch"}},
-        **{"fetch": fetch_param},
-    }
-
-
 def is_typed_auth(auth: tuple[str, tuple]) -> bool:
     """New `auth` elements contain a type ('basic' or 'oauth2') as first element
     and a 2/3 tuple as second element containing the actual auth data, e.g.
@@ -205,12 +196,6 @@ def is_typed_auth(auth: tuple[str, tuple]) -> bool:
     tuple tells us if the given @auth is new.
     """
     return isinstance(auth[1][1], tuple)
-
-
-def update_auth(auth: tuple[str, tuple]) -> tuple[str, tuple[str, ...]]:
-    """Older `auth` element had been `basic` only, so we just have to wrap it
-    if it's not typed yet"""
-    return auth if is_typed_auth(auth) else ("basic", auth)
 
 
 def update_fetch(old_fetch):
@@ -226,60 +211,26 @@ def update_fetch(old_fetch):
     and contains a type now, which is being inserted by `update_auth()`
     """
     return {
-        "server": old_fetch["server"],
-        "connection": {
-            **{
-                k: (not v) if isinstance(v, bool) else v
-                for k, v in zip(("disable_tls", "tcp_port"), old_fetch.get("ssl", (None, None)))
-                if v is not None
-            },
-            **old_fetch.get("connection", {}),
-        },
-        "auth": update_auth(old_fetch["auth"]),
+        **old_fetch,
+        "auth": auth if is_typed_auth(auth := old_fetch["auth"]) else ("basic", auth),
     }
 
 
 def migrate_check_mail_loop_params(params):
     """Migrates rule sets from 2.1 and below format to current (2.2 and up)"""
-    allowed_keys = {
-        "item",  # instead of "service_description"
-        "fetch",
-        "connect_timeout",
-        "subject",
-        "smtp_server",
-        "smtp_tls",
-        "smtp_port",
-        "smtp_auth",
-        "mail_from",
-        "mail_to",
-        "duration",
-        "delete_messages",
-    }
-    if not params.keys() <= allowed_keys | {"imap_tls"}:
-        raise ValueError(f"{params.keys() - allowed_keys}")
-
-    if "fetch" not in params:
-        raise ValueError(f"Cannot transform {params} - 'fetch' element is missing")
-
     fetch_protocol, fetch_params = params["fetch"]
-    if (
-        fetch_protocol in {"IMAP", "POP3"}
-        and {"connection", "auth"} <= fetch_params.keys()
-        and is_typed_auth(fetch_params["auth"])
-    ):
-        # newest schema (2.2 and up) - return the unmodified argument
-        return params
-    if fetch_protocol in {"IMAP", "POP3"} and {"server", "auth"} <= fetch_params.keys():
-        # old format (2.0 and below)
-        if params.get("imap_tls"):
-            fetch_params["ssl"] = (True, fetch_params["ssl"][1])
-        return apply_fetch(
-            params,
-            (fetch_protocol, update_fetch(fetch_params)),
-            allowed_keys,
-        )
 
-    raise ValueError(f"Cannot transform {params}")
+    # since v2.0.0 `fetch_protocol` is one of {"IMAP", "POP3"}
+    # - but cannot be "EWS" for check_mail_loop yet
+
+    if not is_typed_auth(fetch_params["auth"]):
+        # Up to 2.1.0p24 we only had the basic auth tuple
+        return {
+            **params,
+            "fetch": (fetch_protocol, update_fetch(fetch_params)),
+        }
+    # newest schema (2.1 and up) - return the unmodified argument
+    return params
 
 
 def _valuespec_active_checks_mail_loop() -> Migrate:
@@ -425,67 +376,7 @@ rulespec_registry.register(
 
 
 def migrate_check_mail_params(params):
-    """Transforms rule sets from 2.0 and below format to current (2.1 and up)
-    >>> transformed = migrate_check_mail_params({  # v2.0.0 / IMAP
-    ...     'service_description': 'SD',
-    ...     'fetch': ('IMAP', {
-    ...       'server': 'srv',
-    ...       'ssl': (False, 143),
-    ...       'auth': ('usr', ('password', 'pw')),
-    ...     }),
-    ...     'connect_timeout': 12,
-    ...     'forward': {'match_subject': 'test'},
-    ... })
-    >>> assert migrate_check_mail_params(transformed) == transformed
-    >>> import yaml; print(yaml.dump(transformed).strip())
-    connect_timeout: 12
-    fetch: !!python/tuple
-    - IMAP
-    - auth: !!python/tuple
-      - basic
-      - !!python/tuple
-        - usr
-        - !!python/tuple
-          - password
-          - pw
-      connection:
-        disable_tls: true
-        tcp_port: 143
-      server: srv
-    forward:
-      match_subject: test
-    service_description: SD
-    >>> transformed = migrate_check_mail_params({  # v2.0.0 / POP3
-    ...     'service_description': 'SD',
-    ...     'fetch': ('POP3', {
-    ...       'server': 'srv',
-    ...       'ssl': (False, 110),
-    ...       'auth': ('usr', ('password', 'pw')),
-    ...     }),
-    ...     'connect_timeout': 12,
-    ...     'forward': {'match_subject': 'test'},
-    ... })
-    >>> assert migrate_check_mail_params(transformed) == transformed
-    >>> import yaml; print(yaml.dump(transformed).strip())
-    connect_timeout: 12
-    fetch: !!python/tuple
-    - POP3
-    - auth: !!python/tuple
-      - basic
-      - !!python/tuple
-        - usr
-        - !!python/tuple
-          - password
-          - pw
-      connection:
-        disable_tls: true
-        tcp_port: 110
-      server: srv
-    forward:
-      match_subject: test
-    service_description: SD
-    """
-
+    """Transforms rule sets from 2.1 and format to current (2.2 and up)"""
     if not params.keys() <= {
         "service_description",
         "fetch",
@@ -494,23 +385,16 @@ def migrate_check_mail_params(params):
     }:
         raise ValueError(f"{params.keys()}")
 
-    if "fetch" in params:
-        fetch_protocol, fetch_params = params["fetch"]
-        if (
-            fetch_protocol in {"IMAP", "POP3", "EWS"}
-            and {"connection", "auth"} <= fetch_params.keys()
-        ):
-            # newest schema (2.1 and up) - do nothing
-            return params
-        if fetch_protocol in {"IMAP", "POP3"} and {"server", "ssl", "auth"} <= fetch_params.keys():
-            # old format (2.0 and below)
-            return apply_fetch(
-                params,
-                (fetch_protocol, update_fetch(fetch_params)),
-                {"service_description", "forward", "connect_timeout"},
-            )
+    fetch_protocol, fetch_params = params["fetch"]
 
-    raise ValueError(f"Cannot transform {params}")
+    if not is_typed_auth(fetch_params["auth"]):
+        # Up to 2.1.0p24 we only had the basic auth tuple
+        return {
+            **params,
+            "fetch": (fetch_protocol, update_fetch(fetch_params)),
+        }
+    # newest schema (2.1 and up) - do nothing
+    return params
 
 
 def _valuespec_active_checks_mail() -> Migrate:
@@ -740,146 +624,17 @@ rulespec_registry.register(
 )
 
 
-def migrate_check_mailbox_params(params):
-    """Transforms rule sets from 2.0 and below format to current (2.1 and up)
-    >>> transformed = migrate_check_mailbox_params({  # v2.0.0 / IMAP
-    ...     'service_description': 'SD',
-    ...     'imap_parameters': {
-    ...       'server': 'srv', 'ssl': (True, 7), 'auth': ('usr', ('password', 'pw'))},
-    ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
-    ...     'mailboxes': ['abc', 'def'],
-    ... })
-    >>> assert migrate_check_mailbox_params(transformed) == transformed
-    >>> import yaml; print(yaml.dump(transformed).strip())
-    age: !!python/tuple
-    - 1
-    - 2
-    age_newest: !!python/tuple
-    - 3
-    - 4
-    count: !!python/tuple
-    - 5
-    - 6
-    fetch: !!python/tuple
-    - IMAP
-    - auth: !!python/tuple
-      - basic
-      - !!python/tuple
-        - usr
-        - !!python/tuple
-          - password
-          - pw
-      connection:
-        disable_tls: false
-        tcp_port: 7
-      server: srv
-    mailboxes:
-    - abc
-    - def
-    service_description: SD
-    >>> transformed = migrate_check_mailbox_params({  # v2.1.0b / IMAP
-    ...     'service_description': 'SD',
-    ...     'fetch': ('IMAP', {
-    ...       'server': 'srv', 'ssl': (True, None), 'auth': ('usr', ('password', 'pw'))}),
-    ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
-    ...     'mailboxes': ['abc', 'def'],
-    ...     'connect_timeout': 12,
-    ... })
-    >>> assert migrate_check_mailbox_params(transformed) == transformed
-    >>> import yaml; print(yaml.dump(transformed).strip())
-    age: !!python/tuple
-    - 1
-    - 2
-    age_newest: !!python/tuple
-    - 3
-    - 4
-    connect_timeout: 12
-    count: !!python/tuple
-    - 5
-    - 6
-    fetch: !!python/tuple
-    - IMAP
-    - auth: !!python/tuple
-      - basic
-      - !!python/tuple
-        - usr
-        - !!python/tuple
-          - password
-          - pw
-      connection:
-        disable_tls: false
-      server: srv
-    mailboxes:
-    - abc
-    - def
-    service_description: SD
-    >>> transformed = migrate_check_mailbox_params({  # v2.1.0 / EWS
-    ...     'service_description': 'SD',
-    ...     'fetch': ('EWS', {
-    ...       'server': 'srv', 'connection': {},
-    ...       'auth': ('usr', ('password', 'pw')),
-    ...       'connection': {'disable_tls': False, 'disable_cert_validation': False, 'tcp_port': 123}}),
-    ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
-    ...     'mailboxes': ['abc', 'def'],
-    ... })
-    >>> assert migrate_check_mailbox_params(transformed) == transformed
-    >>> import yaml; print(yaml.dump(transformed).strip())
-    age: !!python/tuple
-    - 1
-    - 2
-    age_newest: !!python/tuple
-    - 3
-    - 4
-    count: !!python/tuple
-    - 5
-    - 6
-    fetch: !!python/tuple
-    - EWS
-    - auth: !!python/tuple
-      - basic
-      - !!python/tuple
-        - usr
-        - !!python/tuple
-          - password
-          - pw
-      connection:
-        disable_cert_validation: false
-        disable_tls: false
-        tcp_port: 123
-      server: srv
-    mailboxes:
-    - abc
-    - def
-    service_description: SD
-    """
-    allowed_keys = {
-        "service_description",
-        "age",
-        "age_newest",
-        "count",
-        "mailboxes",
-        "connect_timeout",
-    }
-    if not params.keys() <= allowed_keys | {"imap_parameters", "fetch"}:
-        raise ValueError(f"{params.keys()}")
-
-    if "fetch" in params:
-        fetch_protocol, fetch_params = params["fetch"]
-        if fetch_protocol in {"IMAP", "EWS"} and {"connection", "auth"} <= fetch_params.keys():
-            # newest schema (2.1 and up) - do nothing
-            fetch_params["auth"] = update_auth(fetch_params["auth"])
-            return params
-        if fetch_protocol in {"IMAP"} and {"server", "ssl", "auth"} <= fetch_params.keys():
-            # temporary 2.1.0b format - just update the connection element
-            return apply_fetch(params, ("IMAP", update_fetch(fetch_params)), allowed_keys)
-
-    if "imap_parameters" in params:
-        # v2.0.0 and below
-        fetch_params = params["imap_parameters"]
-        return apply_fetch(params, ("IMAP", update_fetch(fetch_params)), allowed_keys)
-
-    # no known format recognized
-    raise ValueError(f"Cannot migrate {params}")
+def migrate_check_mailboxes_params(params):
+    """Transforms rule sets from 2.0 and below format to current (2.1 and up)"""
+    fetch_protocol, fetch_params = params["fetch"]
+    if not is_typed_auth(fetch_params["auth"]):
+        # Up to 2.1.0p24 we only had the basic auth tuple
+        return {
+            **params,
+            "fetch": (fetch_protocol, update_fetch(fetch_params)),
+        }
+    # newest schema (2.1 and up) - do nothing
+    return params
 
 
 def _valuespec_active_checks_mailboxes() -> Migrate:
@@ -950,7 +705,7 @@ def _valuespec_active_checks_mailboxes() -> Migrate:
             ],
             required_keys=["service_description", "fetch"],
         ),
-        migrate=migrate_check_mailbox_params,
+        migrate=migrate_check_mailboxes_params,
     )
 
 

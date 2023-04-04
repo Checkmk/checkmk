@@ -241,7 +241,7 @@ def test_detect_spec_dedup(
             "juniper_fru",
             "juniper_mem",
         ),
-        (
+        (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",
             "fjdarye_controller_enclosures",
@@ -250,7 +250,7 @@ def test_detect_spec_dedup(
             "fjdarye_summary_status",
             "fjdarye_system_capacitors",
         ),
-        (
+        (  # these probably are the same due to rebranding? Only two different implementations.
             "fortiauthenticator_auth_fail",
             "fortiauthenticator_system",
             "primekey",

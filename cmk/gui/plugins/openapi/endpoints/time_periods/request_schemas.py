@@ -82,16 +82,16 @@ class TimePeriodAlias(fields.String):
 
         # Empty String because validation works for non-timeperiod alias & time period name is
         # verified separately
-        _new_entry, _ = is_alias_used("timeperiods", "", value)
+        _is_new_alias, _ = is_alias_used("timeperiods", "", value)
 
-        if self._presence == "should_exist" and _new_entry:
+        if self._presence == "should_exist" and _is_new_alias:
             raise self.make_error("should_exist", name=value)
 
-        if self._presence == "should_not_exist" and not _new_entry:
+        if self._presence == "should_not_exist" and not _is_new_alias:
             raise self.make_error("should_not_exist", name=value)
 
         if self._presence == "should_exist_and_should_not_be_builtin":
-            if _new_entry:
+            if _is_new_alias:
                 raise self.make_error("should_exist", name=value)
             if value == "Always":
                 raise self.make_error("should_not_be_builtin", name=value)
@@ -182,7 +182,7 @@ class CreateTimePeriod(BaseSchema):
 
 class UpdateTimePeriod(BaseSchema):
     alias = TimePeriodAlias(
-        example="alias",
+        example="new_alias",
         description="An alias for the time period",
         required=False,
         presence="should_not_exist",

@@ -1,0 +1,19 @@
+Title: Process discovery: Fix `Invalid check parameter: ...` in discovery page
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1680607156
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b3
+
+If <i>Display > Show check parameters</i> was activated, the discovery page showed
+
+C+:
+Invalid check parameter: Undefined key 'process' in the dictionary.
+C-:
+
+when discovering services which monitor processes.
+

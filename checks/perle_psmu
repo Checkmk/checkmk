@@ -12,10 +12,10 @@ from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard
 from cmk.base.check_legacy_includes.perle import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
-def inventory_perle_psmu(parsed, what_state, params=None):
+def inventory_perle_psmu(parsed, what_state):
     for unit, values in parsed.items():
         if values[what_state][1] != "not present":
-            yield unit, params
+            yield unit, {}
 
 
 def check_perle_psmu_powersupplies(item, params, parsed):
@@ -28,7 +28,7 @@ def check_perle_psmu_powersupplies(item, params, parsed):
 
 check_info["perle_psmu"] = {
     # section is already migrated!
-    "inventory_function": lambda info: inventory_perle_psmu(info, "psustate", {}),
+    "inventory_function": lambda info: inventory_perle_psmu(info, "psustate"),
     "check_function": check_perle_psmu_powersupplies,
     "service_description": "Power supply %s",
     "group": "el_inphase",
@@ -43,7 +43,7 @@ def check_perle_psmu_fans(item, _no_params, parsed):
 
 
 check_info["perle_psmu.fan"] = {
-    "inventory_function": lambda info: inventory_perle_psmu(info, "fanstate", {}),
+    "inventory_function": lambda info: inventory_perle_psmu(info, "fanstate"),
     "check_function": check_perle_psmu_fans,
     "service_description": "Fan %s",
 }

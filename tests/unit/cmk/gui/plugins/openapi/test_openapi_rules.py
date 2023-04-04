@@ -564,3 +564,8 @@ def test_openapi_deprecated_filter_regression(rule_client: RulesTestClient) -> N
 
     resp = rule_client.list_rulesets(deprecated=False)
     assert len(resp.json["value"]) == 0
+
+
+def test_openapi_ruleset_search_invalid_regex_regression(ruleset_client: RulesetTestClient) -> None:
+    """Searching for an invalid regex shouldn't crash"""
+    ruleset_client.get_all("?fulltext=%5C&used=false", expect_ok=False).assert_status_code(400)

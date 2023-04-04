@@ -37,6 +37,7 @@ import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui import hooks, utils
 from cmk.gui.config import active_config, register_post_config_load_hook
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
@@ -1424,7 +1425,11 @@ def _match_search_expression(search_options: SearchOptions, attr_name: str, sear
 
     if search_in and search_in.startswith("~"):
         return re.search(search_in.lstrip("~"), search_options[attr_name], re.I) is not None
-    return bool(search_in and re.search(search_options[attr_name], search_in, re.I) is not None)
+
+    try:
+        return bool(search_in and re.search(search_options[attr_name], search_in, re.I) is not None)
+    except re.error as e:
+        raise MKUserError("", e.msg) from e
 
 
 def _match_one_of_search_expression(

@@ -46,8 +46,8 @@ def _parameter_valuespec_temperature() -> Dictionary:
                 DropdownChoice(
                     title=_("Display values in "),
                     choices=[
-                        ("c", _("Celsius")),
-                        ("f", _("Fahrenheit")),
+                        ("c", _("Degree Celsius")),
+                        ("f", _("Degree Fahrenheit")),
                         ("k", _("Kelvin")),
                     ],
                 ),

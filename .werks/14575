@@ -41,3 +41,6 @@ monitoring is compatible to any Prometheus stack. For compatibility Checkmk requ
 set-up of Prometheus as in OpenShift. This includes scraping the same collectors, renaming metrics
 in the same manner, having the same recording rules and so forth. Thus, we highly recommend using
 the <tt>Checkmk collectors</tt> for any non-OpenShift Kubernetes environment.
+
+The Checkmk Openshift monitoring will display different metric values for some resources than reported
+on the Openshift dashboard.

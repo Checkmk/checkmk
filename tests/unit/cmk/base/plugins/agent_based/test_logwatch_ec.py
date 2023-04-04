@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.paths
+from cmk.utils.type_defs import HostName
 
 from cmk.base.plugins.agent_based import logwatch_ec
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -181,6 +182,8 @@ def test_check_logwatch_ec_common_single_node() -> None:
             },
             service_level=10,
             value_store={},
+            hostname=HostName("test-host"),
+            message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
         )
     ) == [
         Result(state=State.OK, summary="Forwarded 0 messages"),
@@ -198,6 +201,8 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
             },
             service_level=10,
             value_store={},
+            hostname=HostName("test-host"),
+            message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
         )
     )
 
@@ -213,6 +218,8 @@ def test_check_logwatch_ec_common_multiple_nodes() -> None:
             },
             service_level=10,
             value_store={},
+            hostname=HostName("test-host"),
+            message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
         )
     ) == [
         Result(state=State.OK, summary="Forwarded 0 messages"),
@@ -231,6 +238,8 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
             },
             service_level=10,
             value_store={},
+            hostname=HostName("test-host"),
+            message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
         )
     )
 
@@ -246,6 +255,8 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
             },
             service_level=10,
             value_store={},
+            hostname=HostName("test-host"),
+            message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
         )
     ) == [
         Result(state=State.OK, summary="Forwarded 0 messages"),
@@ -254,7 +265,6 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
 
 
 def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(logwatch_ec, "host_name", lambda: "test-host")
     monkeypatch.setattr(logwatch_ec, "_MAX_SPOOL_SIZE", 32)
     assert list(
         logwatch_ec.check_logwatch_ec_common(
@@ -268,6 +278,8 @@ def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None
             },
             service_level=10,
             value_store={},
+            hostname=HostName("test-host"),
+            message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
         )
     ) == [
         Result(state=State.OK, summary="Forwarded 3 messages from log1"),

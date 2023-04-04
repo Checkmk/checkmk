@@ -37,7 +37,7 @@ licensing_handler_registry = LicensingHandlerRegistry()
 
 
 def _get_licensing_handler() -> LicensingHandler:
-    return licensing_handler_registry[edition()]()
+    return licensing_handler_registry[edition()].make()
 
 
 def is_free() -> bool:

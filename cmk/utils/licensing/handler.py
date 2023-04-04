@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import abc
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -68,6 +70,11 @@ class RemainingTrialTime(NamedTuple):
 
 
 class LicensingHandler(abc.ABC):
+    @classmethod
+    @abc.abstractmethod
+    def make(cls) -> LicensingHandler:
+        raise NotImplementedError()
+
     @property
     @abc.abstractmethod
     def state(self) -> LicenseState:

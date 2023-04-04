@@ -60,8 +60,7 @@ def main(args: list[str]) -> int:
 def load_plugins() -> None:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions"),
-        load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions"),
-        load_plugins_with_exceptions("cmk.post_rename_site.cce.plugins.actions")
+        load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
         if not is_raw_edition()
         else [],
     ):

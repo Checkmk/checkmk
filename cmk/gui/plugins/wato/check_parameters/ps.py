@@ -586,7 +586,12 @@ def _item_spec_ps():
 def _parameter_valuespec_ps() -> Dictionary:
     return Dictionary(
         elements=process_level_elements(),
-        ignored_keys=["match_groups", "cgroup"],
+        ignored_keys=[
+            "process",
+            "match_groups",
+            "user",
+            "cgroup",
+        ],
         required_keys=["cpu_rescale_max"],
     )
 

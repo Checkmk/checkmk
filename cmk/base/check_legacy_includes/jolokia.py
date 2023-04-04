@@ -5,7 +5,7 @@
 
 import json
 from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
-from typing import Any
+from typing import Any, Callable
 
 #   .--Parse---------------------------------------------------------------.
 #   |                      ____                                            |
@@ -145,58 +145,43 @@ def jolokia_metrics_parse(info: Sequence[MutableSequence[str]]) -> Mapping[str, 
 #   '----------------------------------------------------------------------'
 
 
-def inventory_jolokia_metrics_apps(  # pylint: disable=too-many-branches
-    info: Any,
+_DefaultsType = tuple[int, int] | tuple[int, int, int, int] | None
+
+
+def get_inventory_jolokia_metrics_apps(  # pylint: disable=too-many-branches
     what: str,
-) -> Sequence[tuple[str, str | None]]:
-    inv = []
-    parsed = jolokia_metrics_parse(info)
+    *,
+    needed_keys: set[str],
+    default_params: _DefaultsType = None,
+) -> Callable[[list[list[str]]], Sequence[tuple[str, _DefaultsType]]]:
+    def inventory_function(info: list[list[str]]) -> Sequence[tuple[str, _DefaultsType]]:
+        inv = []
+        parsed = jolokia_metrics_parse(info)
 
-    if what == "app_sess":
-        levels: str | None = "jolokia_metrics_app_sess_default_levels"
-        needed_key = ["Sessions", "activeSessions"]
-    elif what == "bea_app_sess":
-        levels = "jolokia_metrics_app_sess_default_levels"
-        needed_key = ["OpenSessionsCurrentCount"]
-    elif what == "queue":
-        needed_key = ["QueueLength"]
-        levels = "jolokia_metrics_queue_default_levels"
-    # Only works on BEA
-    elif what == "bea_requests":
-        needed_key = ["CompletedRequestCount"]
-        levels = None
-    elif what == "requests":
-        needed_key = ["requestCount"]
-        levels = None
-    elif what == "threads":
-        needed_key = ["StandbyThreadCount"]
-        levels = None
-    else:
-        needed_key = ["Running", "stateName"]
-        levels = None
+        # this handles information from BEA, they stack one level
+        # higher than the rest.
+        if what == "bea_app_sess":
+            for inst, vals in parsed.items():
+                if vals is None:
+                    continue  # no data from agent
 
-    # this handles information from BEA, they stack one level
-    # higher than the rest.
-    if what == "bea_app_sess":
+                for app, appstate in vals.get("apps", {}).items():
+                    if "servlets" in appstate:
+                        for nk in needed_keys:
+                            for servlet in appstate["servlets"]:
+                                if nk in appstate["servlets"][servlet]:
+                                    inv.append((f"{inst} {app} {servlet}", default_params))
+                                    continue
+        # This does the same for tomcat
         for inst, vals in parsed.items():
             if vals is None:
                 continue  # no data from agent
 
             for app, appstate in vals.get("apps", {}).items():
-                if "servlets" in appstate:
-                    for nk in needed_key:
-                        for servlet in appstate["servlets"]:
-                            if nk in appstate["servlets"][servlet]:
-                                inv.append((f"{inst} {app} {servlet}", levels))
-                                continue
-    # This does the same for tomcat
-    for inst, vals in parsed.items():
-        if vals is None:
-            continue  # no data from agent
+                for nk in needed_keys:
+                    if nk in appstate:
+                        inv.append((f"{inst} {app}", default_params))
+                        continue
+        return inv
 
-        for app, appstate in vals.get("apps", {}).items():
-            for nk in needed_key:
-                if nk in appstate:
-                    inv.append((f"{inst} {app}", levels))
-                    continue
-    return inv
+    return inventory_function

@@ -186,7 +186,9 @@ def check_jolokia_metrics_app_state(item, _unused, info):
 check_info["jolokia_metrics.app_state"] = {
     "service_description": "JVM %s State",
     "check_function": check_jolokia_metrics_app_state,
-    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "app_state"),
+    "inventory_function": get_inventory_jolokia_metrics_apps(
+        "app_state", needed_keys={"Running", "stateName"}
+    ),
 }
 
 # .
@@ -294,14 +296,20 @@ def check_jolokia_metrics_bea_threads(item, _no_params, info):
 check_info["jolokia_metrics.app_sess"] = {
     "service_description": "JVM %s Sessions",
     "check_function": check_jolokia_metrics_app_sess,
-    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "app_sess"),
+    "inventory_function": get_inventory_jolokia_metrics_apps(
+        "app_sess",
+        needed_keys={"Sessions", "activeSessions"},
+        default_params=jolokia_metrics_app_sess_default_levels,
+    ),
     "group": "jvm_sessions",
 }
 
 check_info["jolokia_metrics.requests"] = {
     "service_description": "JVM %s Requests",
     "check_function": check_jolokia_metrics_bea_requests,
-    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "requests"),
+    "inventory_function": get_inventory_jolokia_metrics_apps(
+        "requests", needed_keys={"requestCount"}
+    ),
     "group": "jvm_requests",
 }
 
@@ -309,44 +317,49 @@ check_info["jolokia_metrics.requests"] = {
 check_info["jolokia_metrics.bea_queue"] = {
     "service_description": "JVM %s Queue",
     "check_function": check_jolokia_metrics_bea_queue,
-    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "queue"),
+    "inventory_function": get_inventory_jolokia_metrics_apps(
+        "queue", needed_keys={"QueueLength"}, default_params=jolokia_metrics_queue_default_levels
+    ),
     "group": "jvm_queue",
 }
 
 check_info["jolokia_metrics.bea_requests"] = {
     "service_description": "JVM %s Requests",
     "check_function": check_jolokia_metrics_bea_requests,
-    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "bea_requests"),
+    "inventory_function": get_inventory_jolokia_metrics_apps(
+        "bea_requests", needed_keys={"CompletedRequestCount"}
+    ),
     "group": "jvm_requests",
 }
 
 check_info["jolokia_metrics.bea_threads"] = {
     "service_description": "JVM %s Threads",
     "check_function": check_jolokia_metrics_bea_threads,
-    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "threads"),
+    "inventory_function": get_inventory_jolokia_metrics_apps(
+        "threads", needed_keys={"StandbyThreadCount"}
+    ),
     "group": "jvm_threads",
 }
 
 check_info["jolokia_metrics.bea_sess"] = {
     "service_description": "JVM %s Sessions",
     "check_function": check_jolokia_metrics_app_sess,
-    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "bea_app_sess"),
+    "inventory_function": get_inventory_jolokia_metrics_apps(
+        "bea_app_sess",
+        needed_keys={"OpenSessionsCurrentCount"},
+        default_params=jolokia_metrics_app_sess_default_levels,
+    ),
     "group": "jvm_sessions",
 }
 
-jolokia_metrics_cache_hits_default_levels = {}
 
-
-def inventory_jolokia_metrics_cache(key, metrics, info):
+def inventory_jolokia_metrics_cache(metrics, info):
     parsed = jolokia_metrics_parse(info)
     metrics_set = set(metrics)
     for inst, vals in [x for x in parsed.items() if x[1] is not None]:
         for cache, cache_vars in vals.get("CacheStatistics", {}).items():
             if metrics_set.intersection(cache_vars) == metrics_set:
-                if key is None:
-                    yield "%s %s" % (inst, cache), None
-                else:
-                    yield "%s %s" % (inst, cache), "jolokia_metrics_%s_default_levels" % key
+                yield "%s %s" % (inst, cache), {}
 
 
 def check_jolokia_metrics_cache(metrics, totals, item, params, info):
@@ -394,7 +407,7 @@ check_info["jolokia_metrics.cache_hits"] = {
         ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, params, parsed
     ),
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
-        "cache_hits", ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info
+        ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info
     ),
 }
 
@@ -408,7 +421,6 @@ check_info["jolokia_metrics.in_memory"] = {
         parsed,
     ),
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
-        "cache_hits",
         ["InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"],
         info,
     ),
@@ -424,7 +436,6 @@ check_info["jolokia_metrics.on_disk"] = {
         parsed,
     ),
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
-        "cache_hits",
         ["OnDiskHitPercentage", "DiskStoreObjectCount", "OnDiskHits", "OnDiskMisses"],
         info,
     ),
@@ -440,7 +451,6 @@ check_info["jolokia_metrics.off_heap"] = {
         parsed,
     ),
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
-        "cache_hits",
         ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"],
         info,
     ),
@@ -452,120 +462,6 @@ check_info["jolokia_metrics.writer"] = {
         ["WriterQueueLength", "WriterMaxQueueSize"], [], item, params, parsed
     ),
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
-        "cache_hits", ["WriterQueueLength", "WriterMaxQueueSize"], info
+        ["WriterQueueLength", "WriterMaxQueueSize"], info
     ),
-}
-
-# .
-#   .--Deprecated Checks----------------------------------------.
-#   |     ____                                _           _     |
-#   |    |  _ \  ___ _ __  _ __ ___  ___ __ _| |_ ___  __| |    |
-#   |    | | | |/ _ \ '_ \| '__/ _ \/ __/ _` | __/ _ \/ _` |    |
-#   |    | |_| |  __/ |_) | | |  __/ (_| (_| | ||  __/ (_| |    |
-#   |    |____/ \___| .__/|_|  \___|\___\__,_|\__\___|\__,_|    |
-#   |               |_|                                         |
-#   +-----------------------------------------------------------+
-#   | All subchecks below this point are depricated at least    |
-#   | since version 1.7                                         |
-#   |                                                           |
-#   | Since this file and the plugin have become an utter mess, |
-#   | we move the 'subchecks' (which are semantically in no way |
-#   | subchecks of 'metric') to their own plugins. This process |
-#   | has started with the jolokia_jvm_threading plugin in 1.6  |
-#   | and will hopefully be completed once checkmk 1.7 is       |
-#   | released.                                                 |
-#   '-----------------------------------------------------------+
-
-
-def inventory_jolokia_metrics_gc(info):
-    """DEPRECATED.
-
-    This service has been replaced by the
-    'jolokia_jvm_uptime' plugin in checkmk version 2.0.0
-    """
-    inv = []
-    parsed = jolokia_metrics_parse(info)
-    for inst, vals in parsed.items():
-        if vals is None:
-            continue  # no data from agent
-        for gc in vals.get("gc", {}):
-            inv.append(("%s GC %s" % (inst, gc), {}))
-    return inv
-
-
-def jolokia_metrics_gc(info, split_item):
-    inst, _typ, gc = split_item
-    parsed = jolokia_metrics_parse(info)
-    if parsed.get(inst, "") is None:
-        raise MKCounterWrapped("No information from Jolokia agent")
-
-    if not inst in parsed or not gc in parsed[inst].get("gc", {}):
-        return None
-    return parsed[inst]["gc"][gc]
-
-
-def _transform_invers(params):
-    """Even if this is deprecated, make sure it still works should the user update the rule"""
-    if params is None:
-        return {}
-    new_params = params.copy()
-    if "collection_time" in params:
-        perc = params["collection_time"]
-        new_params["CollectionTime"] = (perc[0] * 600.0, perc[1] * 600.0)
-    if "collection_count" in params:
-        per_sec = params["collection_count"]
-        new_params["CollectionCount"] = (per_sec[0] * 60.0, per_sec[1] * 60.0)
-    return new_params
-
-
-def check_jolokia_metrics_gc(item, params, info):
-    gc = jolokia_metrics_gc(info, item.split())
-    if gc is None:
-        return
-
-    params = _transform_invers(params)
-
-    crate = get_rate("jvm.gc.count.%s" % (item), time.time(), int(gc["CollectionCount"]))
-    crate = crate * 60.0
-
-    ctext = ""
-    status = 0
-    cwarn, ccrit = params.get("CollectionCount", (None, None))
-    if cwarn is not None and ccrit is not None:
-        if crate >= int(ccrit):
-            status = 2
-            ctext = " (Level %s) " % ccrit
-        elif crate >= int(cwarn):
-            status = 1
-            ctext = " (Level %s) " % cwarn
-
-    yield status, "%.2f GC Count/minute%s" % (crate, ctext), [
-        ("CollectionCount", crate, cwarn, ccrit)
-    ]
-
-    if "CollectionTime" in gc:
-        twarn, tcrit = params.get("CollectionTime", (None, None))
-        trate = get_rate("jvm.gc.time.%s" % (item), time.time(), int(gc["CollectionTime"]))
-        trate = trate * 60.0
-
-        ttext = ""
-        status = 0
-        if twarn is not None and tcrit is not None:
-            if trate >= int(tcrit):
-                status = 2
-                ttext = "(Level %s) " % tcrit
-            elif trate >= int(twarn):
-                status = 1
-                ttext = "(Level %s) " % twarn
-
-        yield status, "%.2f GC ms/minute%s" % (trate, ttext), [
-            ("CollectionTime", trate, twarn, tcrit)
-        ]
-
-
-check_info["jolokia_metrics.gc"] = {
-    "service_description": "JVM %s",
-    "check_function": check_jolokia_metrics_gc,
-    "inventory_function": inventory_jolokia_metrics_gc,
-    "group": "jvm_gc",
 }

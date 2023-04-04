@@ -99,16 +99,6 @@ check_metrics["check_mk-postfix_mailq"] = {
     "~mail_queue_.*_size": {"name": "mail_queue_active_size"},
     "~mail_queue_.*_length": {"name": "mail_queue_active_length"},
 }
-check_metrics["check_mk-jolokia_metrics_gc"] = {
-    "CollectionCount": {
-        "name": "jvm_garbage_collection_count",
-        "scale": 1 / 60.0,
-    },
-    "CollectionTime": {
-        "name": "jvm_garbage_collection_time",
-        "scale": 1 / 600.0,  # ms/min -> %
-    },
-}
 check_metrics["check_mk-rmon_stats"] = {
     "bcast": {"name": "broadcast_packets"},
     "mcast": {"name": "multicast_packets"},

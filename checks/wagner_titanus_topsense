@@ -81,10 +81,6 @@ wagner_titanus_topsense_info = [
 ]
 
 
-def wagner_titanus_topsense_scan(oid):
-    return oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.34187.21501", ".1.3.6.1.4.1.34187.74195"]
-
-
 def parse_wagner_titanus_topsens(info):
     # not much of a parse function. simply retrieves the info blocks that apply for the
     # respective topsens model and returns only those
@@ -334,8 +330,8 @@ wagner_titanus_topsense_airflow_deviation_default_values = (-20.0, -20.0, 20.0, 
 
 def inventory_wagner_titanus_topsense_airflow_deviation(info):
     return [
-        ("1", "wagner_titanus_topsense_airflow_deviation_default_values"),
-        ("2", "wagner_titanus_topsense_airflow_deviation_default_values"),
+        ("1", wagner_titanus_topsense_airflow_deviation_default_values),
+        ("2", wagner_titanus_topsense_airflow_deviation_default_values),
     ]
 
 

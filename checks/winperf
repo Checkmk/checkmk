@@ -63,7 +63,7 @@ def inventory_win_diskstat(info):
     for line in info:
         try:
             if line[0] == "2:16" or line[0] == "2:18":
-                return [(None, None, None)]
+                return [(None, None)]
         except Exception:
             pass
     return []

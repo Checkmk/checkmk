@@ -12,10 +12,6 @@ from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcar
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
-def detect_webtherm(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5040.1.2.")
-
-
 def parse_wut_webtherm(info):
     map_sensor_type = {
         "1": "temp",
@@ -144,7 +140,7 @@ wut_webtherm_humidity_defaultlevels = (35, 40, 60, 65)
 
 def inventory_wut_webtherm_humidity(parsed):
     return [
-        (sensor_id, "wut_webtherm_humidity_defaultlevels")
+        (sensor_id, wut_webtherm_humidity_defaultlevels)
         for sensor_id, values in parsed.items()
         if values["type"] == "humid"
     ]

@@ -113,7 +113,7 @@ def inventory_wmi_table_instances(  # type: ignore[no-untyped-def]
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, str | int], bool] | None = None,
-    levels=None,
+    levels: tuple | dict | None = None,  # important for now: not str!
 ):
     if required_tables is None:
         required_tables = tables
@@ -140,7 +140,7 @@ def inventory_wmi_table_total(  # type: ignore[no-untyped-def]
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, None], bool] | None = None,
-    levels=None,
+    levels: tuple | dict | None = None,  # important for now: not str!
 ):
     if required_tables is None:
         required_tables = tables

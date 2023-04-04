@@ -16,7 +16,7 @@ symantec_av_updates_default_levels = (259200, 345600)
 
 
 def inventory_symantec_av_updates(info):
-    return [(None, "symantec_av_updates_default_levels")]
+    return [(None, symantec_av_updates_default_levels)]
 
 
 def check_symantec_av_updates(_no_item, params, info):

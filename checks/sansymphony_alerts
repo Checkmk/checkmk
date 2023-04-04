@@ -7,7 +7,7 @@ sansymphony_alerts_default_values = (1, 2)
 
 
 def inventory_sansymphony_alerts(info):
-    return [(None, "sansymphony_alerts_default_values")]
+    return [(None, sansymphony_alerts_default_values)]
 
 
 def check_sansymphony_alerts(_no_item, params, info):

@@ -6,8 +6,6 @@
 # Author: Lars Michelsen <lm@mathias-kettner.de>, 2011-03-21
 
 strem1_temp_defaultlevels = (28, 32)
-strem1_humidity_defaultlevels = (None, None)
-strem1_wetness_defaultlevels = (None, None)
 
 
 def strem1_sensors_parse_info(info):
@@ -25,11 +23,9 @@ def strem1_sensors_parse_info(info):
 def inventory_strem1_sensors(info):
     inventory = []
     for index, typ, val, _intval in strem1_sensors_parse_info(info[1]):
-        lvls = "strem1_temp_defaultlevels"
-        if typ == "Humidity":
-            lvls = "strem1_humidity_defaultlevels"
-        elif typ == "Wetness":
-            lvls = "strem1_wetness_defaultlevels"
+        lvls: tuple[int, int] | tuple[None, None] = strem1_temp_defaultlevels
+        if typ in {"Humidity", "Wetness"}:
+            lvls = (None, None)
         if val != "-999.9":
             inventory.append((index, lvls))
     return inventory

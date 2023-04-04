@@ -42,7 +42,6 @@
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
-#include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
 #include "livestatus/LogwatchList.h"
 #include "livestatus/Metric.h"
@@ -58,9 +57,6 @@
 #include "pnp4nagios.h"
 
 using namespace std::string_literals;
-
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern TimeperiodsCache *g_timeperiods_cache;
 
 namespace {
 bool inCustomTimeperiod(const service *svc) {

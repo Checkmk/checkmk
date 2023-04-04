@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
+#include <iterator>
 #include <memory>
 #include <utility>
 
@@ -29,6 +30,7 @@
 #include "livestatus/Logger.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"
+#include "pnp4nagios.h"
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int g_num_hosts;
@@ -75,6 +77,13 @@ std::unique_ptr<const IHost> NagiosCore::find_host(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
     const auto *host = ::find_host(const_cast<char *>(name.c_str()));
     return host == nullptr ? nullptr : std::make_unique<NebHost>(*host);
+}
+
+std::unique_ptr<const IHostGroup> NagiosCore::find_hostgroup(
+    const std::string &name) const {
+    // Older Nagios headers are not const-correct... :-P
+    const auto *hg = ::find_hostgroup(const_cast<char *>(name.c_str()));
+    return hg == nullptr ? nullptr : std::make_unique<NebHostGroup>(*hg);
 }
 
 bool NagiosCore::all_of_hosts(
@@ -405,6 +414,24 @@ size_t NagiosCore::numQueuedAlerts() const { return 0; }
 
 size_t NagiosCore::numCachedLogMessages() {
     return _store.numCachedLogMessages();
+}
+
+bool NagiosCore::isPnpGraphPresent(const IHost &h) const {
+    return pnpgraph_present(paths()->rrd_multiple_directory(), h.name(),
+                            dummy_service_description()) != 0;
+}
+
+std::vector<std::string> NagiosCore::metrics(const IHost &h,
+                                             Logger *logger) const {
+    std::vector<std::string> metrics;
+    if (!h.name().empty()) {
+        auto names = scan_rrd(paths()->rrd_multiple_directory() / h.name(),
+                              dummy_service_description(), logger);
+        std::transform(std::begin(names), std::end(names),
+                       std::back_inserter(metrics),
+                       [](auto &&m) { return m.string(); });
+    }
+    return metrics;
 }
 
 namespace {

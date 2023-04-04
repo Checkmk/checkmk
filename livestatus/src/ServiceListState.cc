@@ -5,6 +5,7 @@
 
 #include "ServiceListState.h"
 
+#include "livestatus/LogEntry.h"
 #include "livestatus/User.h"
 
 #ifdef CMC

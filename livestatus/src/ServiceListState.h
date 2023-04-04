@@ -10,7 +10,7 @@
 
 #include <cstdint>
 
-#include "livestatus/LogEntry.h"
+#include "livestatus/Interface.h"
 class User;
 
 #ifdef CMC

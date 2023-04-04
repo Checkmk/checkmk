@@ -5,6 +5,7 @@
 
 #include "HostListState.h"
 
+#include "livestatus/Interface.h"
 #include "livestatus/User.h"
 
 #ifdef CMC

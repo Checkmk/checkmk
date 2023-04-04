@@ -69,6 +69,8 @@ public:
                NagiosAuthorization authorization, Encoding data_encoding);
 
     std::unique_ptr<const IHost> find_host(const std::string &name) override;
+    [[nodiscard]] std::unique_ptr<const IHostGroup> find_hostgroup(
+        const std::string &name) const override;
     std::unique_ptr<const IHost> getHostByDesignation(
         const std::string &designation) override;
     bool all_of_hosts(
@@ -187,6 +189,9 @@ public:
     size_t numQueuedNotifications() const override;
     size_t numQueuedAlerts() const override;
     size_t numCachedLogMessages() override;
+    [[nodiscard]] bool isPnpGraphPresent(const IHost &h) const override;
+    std::vector<std::string> metrics(const IHost &h,
+                                     Logger *logger) const override;
 
     MetricLocation metricLocation(const std::string &host_name,
                                   const std::string &service_description,

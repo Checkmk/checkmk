@@ -15,7 +15,7 @@
 #include "ServiceListState.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
-#include "livestatus/LogEntry.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Query.h"
 #include "livestatus/ServiceGroupMembersColumn.h"
 #include "livestatus/StringColumn.h"

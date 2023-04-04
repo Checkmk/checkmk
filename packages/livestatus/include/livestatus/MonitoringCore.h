@@ -43,6 +43,8 @@ public:
     virtual ~MonitoringCore() = default;
 
     virtual std::unique_ptr<const IHost> find_host(const std::string &name) = 0;
+    [[nodiscard]] virtual std::unique_ptr<const IHostGroup> find_hostgroup(
+        const std::string &name) const = 0;
     virtual std::unique_ptr<const IHost> getHostByDesignation(
         const std::string &designation) = 0;
     virtual bool all_of_hosts(
@@ -154,6 +156,8 @@ public:
 
     [[nodiscard]] virtual std::chrono::system_clock::time_point
     stateFileCreatedTime() const = 0;
+    [[nodiscard]] virtual std::vector<std::string> metrics(
+        const IHost &, Logger *logger) const = 0;
 
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;
@@ -169,6 +173,8 @@ public:
     [[nodiscard]] virtual size_t numQueuedAlerts() const = 0;
     // TODO(sp) This should really be const!
     [[nodiscard]] virtual size_t numCachedLogMessages() = 0;
+
+    [[nodiscard]] virtual bool isPnpGraphPresent(const IHost &) const = 0;
 
     [[nodiscard]] virtual MetricLocation metricLocation(
         const std::string &host_name, const std::string &service_description,

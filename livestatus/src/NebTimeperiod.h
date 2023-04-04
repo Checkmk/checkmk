@@ -10,9 +10,6 @@
 #include "livestatus/Interface.h"
 #include "nagios.h"
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern TimeperiodsCache *g_timeperiods_cache;
-
 class NebTimeperiod : public ITimeperiod {
 public:
     explicit NebTimeperiod(const ::timeperiod &timeperiod)

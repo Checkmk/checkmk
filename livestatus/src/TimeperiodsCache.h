@@ -35,4 +35,7 @@ private:
     void logTransition(char *name, int from, int to) const;
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+extern TimeperiodsCache *g_timeperiods_cache;
+
 #endif  // TimeperiodsCache_h

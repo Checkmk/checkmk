@@ -53,9 +53,6 @@
 
 using namespace std::string_literals;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern TimeperiodsCache *g_timeperiods_cache;
-
 // TODO(ml): Here we use `static` instead of an anonymous namespace because
 // of the `extern` declaration.  We should find something better.
 static double staleness(const service &svc) {

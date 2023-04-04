@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "CustomAttributeMap.h"
 #include "NagiosCore.h"
 #include "NebHost.h"
 #include "livestatus/Attributes.h"
@@ -49,6 +50,45 @@ public:
             .value_or("");
     }
 
+    [[nodiscard]] bool in_custom_time_period() const override {
+        const auto tp = servicePeriodName();
+        // empty assumes 24X7
+        return tp.empty() || g_timeperiods_cache->inTimeperiod(tp);
+    }
+
+    [[nodiscard]] std::string name() const override {
+        return service_.description;
+    }
+
+    [[nodiscard]] std::string description() const override {
+        return service_.description;
+    }
+    [[nodiscard]] std::string plugin_output() const override {
+        return service_.plugin_output == nullptr ? "" : service_.plugin_output;
+    }
+    [[nodiscard]] int32_t current_attempt() const override {
+        return service_.current_attempt;
+    }
+    [[nodiscard]] int32_t max_check_attempts() const override {
+        return service_.max_attempts;
+    }
+
+    [[nodiscard]] int32_t current_state() const override {
+        return service_.current_state;
+    }
+    [[nodiscard]] int32_t last_hard_state() const override {
+        return service_.last_hard_state;
+    }
+    [[nodiscard]] bool has_been_checked() const override {
+        return service_.has_been_checked != 0;
+    }
+    [[nodiscard]] bool problem_has_been_acknowledged() const override {
+        return service_.problem_has_been_acknowledged != 0;
+    }
+    [[nodiscard]] int32_t scheduled_downtime_depth() const override {
+        return service_.scheduled_downtime_depth;
+    }
+
     bool all_of_labels(
         const std::function<bool(const Attribute &)> &pred) const override {
         // TODO(sp) Avoid construction of temporary map
@@ -63,17 +103,5 @@ public:
 private:
     const ::service &service_;
 };
-
-// TODO(sp) Fix cruel workaround for circular header includes.
-inline bool NebHost::all_of_services(
-    std::function<bool(const IService &)> pred) const {
-    for (servicesmember *mem = host_.services; mem != nullptr;
-         mem = mem->next) {
-        if (!pred(NebService{*mem->service_ptr})) {
-            return false;
-        }
-    }
-    return true;
-}
 
 #endif  // NebService_h

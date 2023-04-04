@@ -70,6 +70,10 @@ class DummyMonitoringCore : public MonitoringCore {
         const std::string & /*name*/) override {
         return {};
     }
+    [[nodiscard]] std::unique_ptr<const IHostGroup> find_hostgroup(
+        const std::string & /* name */) const override {
+        return {};
+    }
     std::unique_ptr<const IHost> getHostByDesignation(
         const std::string & /*designation*/) override {
         return {};
@@ -259,6 +263,15 @@ class DummyMonitoringCore : public MonitoringCore {
 
     [[nodiscard]] std::chrono::system_clock::time_point stateFileCreatedTime()
         const override {
+        return {};
+    }
+
+    std::vector<std::string> metrics(const IHost & /* h */,
+                                     Logger * /*  l */) const override {
+        return {};
+    }
+
+    [[nodiscard]] bool isPnpGraphPresent(const IHost & /* h */) const override {
         return {};
     }
 

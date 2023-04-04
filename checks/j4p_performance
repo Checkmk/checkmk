@@ -62,9 +62,9 @@ def inventory_j4p_performance(info, what):
     parsed = j4p_performance_parse(info)
     levels = None
     if what == "mem":
-        levels = "j4p_performance_mem_default_levels"
+        levels = j4p_performance_mem_default_levels
     elif what == "threads":
-        levels = "j4p_performance_threads_default_levels"
+        levels = j4p_performance_threads_default_levels
     return [(k, levels) for k in parsed]
 
 
@@ -73,7 +73,7 @@ def inventory_j4p_performance_apps(info, what):
     parsed = j4p_performance_parse(info)
     levels = None
     if what == "app_sess":
-        levels = "j4p_performance_app_sess_default_levels"
+        levels = j4p_performance_app_sess_default_levels
     for inst, vals in parsed.items():
         for app in vals.get("apps", {}):
             inv.append(("%s %s" % (inst, app), levels))
@@ -85,7 +85,7 @@ def inventory_j4p_performance_serv(info, what):
     parsed = j4p_performance_parse(info)
     levels = None
     if what == "serv_req":
-        levels = "j4p_performance_serv_req_default_levels"
+        levels = j4p_performance_serv_req_default_levels
     for inst, vals in parsed.items():
         for app, val in vals.get("apps", {}).items():
             for serv in val.get("servlets", {}):

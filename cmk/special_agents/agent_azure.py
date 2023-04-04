@@ -13,6 +13,7 @@ import argparse
 import datetime
 import json
 import logging
+import re
 import string
 import sys
 from collections import defaultdict
@@ -478,17 +479,22 @@ class MgmtApiClient(BaseApiClient):
 
     @staticmethod
     def _get_available_metrics_from_exception(
-        desired_names: str, api_error: ApiError
+        desired_names: str, api_error: ApiError, resource_id: str
     ) -> str | None:
         error_message = api_error.args[0]
-        if not (
-            error_message.startswith("Failed to find metric configuration for provider")
-            and "Valid metrics: " in error_message
-        ):
+        match = re.match(
+            r"Failed to find metric configuration for provider.*Valid metrics: ([\w,]*)",
+            error_message,
+        )
+        if not match:
+            raise api_error
+
+        available_names = match.groups()[0]
+        retry_names = set(desired_names.split(",")) & set(available_names.split(","))
+        if not retry_names:
+            LOGGER.debug("None of the expected metrics are available for resource %s", resource_id)
             return None
 
-        available_names = error_message.split("Valid metrics: ")[1]
-        retry_names = set(desired_names.split(",")) & set(available_names.split(","))
         return ",".join(sorted(retry_names))
 
     @property
@@ -589,11 +595,13 @@ class MgmtApiClient(BaseApiClient):
         try:
             return self._get(url, key="value", params=params)
         except ApiError as exc:
-            retry_names = self._get_available_metrics_from_exception(params["metricnames"], exc)
+            retry_names = self._get_available_metrics_from_exception(
+                params["metricnames"], exc, resource_id
+            )
             if retry_names:
                 params["metricnames"] = retry_names
                 return self._get(url, key="value", params=params)
-            raise
+            return []
 
 
 # The following *Config objects provide a Configuration instance as described in

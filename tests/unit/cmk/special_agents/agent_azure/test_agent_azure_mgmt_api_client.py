@@ -7,6 +7,8 @@ import pytest
 
 from cmk.special_agents.agent_azure import ApiError, MgmtApiClient
 
+RESOURCE_ID = "/subscriptions/1234/resourceGroups/test/providers/Microsoft.Network/virtualNetworkGateways/vnet_gateway"
+
 
 @pytest.mark.parametrize(
     "desired_names,api_error,expected_result",
@@ -28,18 +30,12 @@ from cmk.special_agents.agent_azure import ApiError, MgmtApiClient
             id="only one valid",
         ),
         pytest.param(
-            "AverageBandwidth,P2SBandwidth",
+            "P2SBandwidth",
             ApiError(
-                "Failed to find metric configuration for provider: Microsoft.Network, resource Type: virtualNetworkGateways, metric: NonExistingMetric"
+                "Failed to find metric configuration for provider: Microsoft.Network, resource Type: virtualNetworkGateways, metric: NonExistingMetric, Valid metrics: AverageBandwidth"
             ),
             None,
-            id="no valid metrics",
-        ),
-        pytest.param(
-            "AverageBandwidth,P2SBandwidth",
-            ApiError("Unexpected ApiError"),
-            None,
-            id="unexpected error",
+            id="no metrics to retry",
         ),
     ],
 )
@@ -48,4 +44,33 @@ def test_get_available_metrics_from_exception(
 ) -> None:
     client = MgmtApiClient("1234")
 
-    assert client._get_available_metrics_from_exception(desired_names, api_error) == expected_result
+    result = client._get_available_metrics_from_exception(desired_names, api_error, RESOURCE_ID)
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "desired_names,api_error,expected_error",
+    [
+        pytest.param(
+            "AverageBandwidth,P2SBandwidth",
+            ApiError(
+                "Failed to find metric configuration for provider: Microsoft.Network, resource Type: virtualNetworkGateways, metric: NonExistingMetric"
+            ),
+            "Failed to find metric configuration for provider: Microsoft.Network, resource Type: virtualNetworkGateways, metric: NonExistingMetric",
+            id="no valid metrics",
+        ),
+        pytest.param(
+            "AverageBandwidth,P2SBandwidth",
+            ApiError("Unexpected ApiError"),
+            "Unexpected ApiError",
+            id="unexpected error",
+        ),
+    ],
+)
+def test_get_available_metrics_from_exception_error(
+    desired_names: str, api_error: ApiError, expected_error: str
+) -> None:
+    client = MgmtApiClient("1234")
+
+    with pytest.raises(ApiError, match=expected_error):
+        client._get_available_metrics_from_exception(desired_names, api_error, RESOURCE_ID)

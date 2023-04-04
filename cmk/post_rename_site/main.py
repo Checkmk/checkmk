@@ -5,7 +5,6 @@
 
 import argparse
 import logging
-from itertools import chain
 
 from livestatus import SiteId
 
@@ -14,7 +13,7 @@ import cmk.utils.log as log
 import cmk.utils.plugin_registry
 import cmk.utils.site
 from cmk.utils.log import VERBOSE
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
+from cmk.utils.plugin_loader import load_plugins_with_exceptions, PluginFailures
 from cmk.utils.version import is_raw_edition
 
 # This special script needs persistence and conversion code from different places of Checkmk. We may
@@ -58,15 +57,17 @@ def main(args: list[str]) -> int:
 
 
 def load_plugins() -> None:
-    for plugin, exc in chain(
-        load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions"),
-        load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
-        if not is_raw_edition()
-        else [],
-    ):
+    for plugin, exc in _load_plugins():
         logger.error("Error in action plugin %s: %s\n", plugin, exc)
         if cmk.utils.debug.enabled():
             raise exc
+
+
+def _load_plugins() -> PluginFailures:
+    yield from load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions")
+    if not is_raw_edition():
+        yield from load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
+        yield from load_plugins_with_exceptions("cmk.post_rename_site.cce.plugins.actions")
 
 
 def parse_arguments(args: list[str]) -> argparse.Namespace:

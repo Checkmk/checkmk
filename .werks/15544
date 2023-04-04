@@ -1,0 +1,13 @@
+Title: Webex notification template
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1680602091
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p27
+
+The Webex notification template used to use incorrect Markdown syntax
+therefore the links were not correctly displayed.
+

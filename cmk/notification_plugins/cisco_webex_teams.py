@@ -25,10 +25,12 @@ def cisco_webex_teams_msg(context: Dict) -> Dict:
     if context.get("WHAT", None) == "SERVICE":
         monitored_type = "Service"
         host_service_info = "Host: %s (IP: %s)  \nService: %s" % (
-            utils.format_link("<%s|%s>", utils.host_url_from_context(context), context["HOSTNAME"]),
+            utils.format_link(
+                "[%s](%s)", context["HOSTNAME"], utils.host_url_from_context(context)
+            ),
             context["HOSTADDRESS"],
             utils.format_link(
-                "<%s|%s>", utils.service_url_from_context(context), context["SERVICEDESC"]
+                "[%s](%s)", context["SERVICEDESC"], utils.service_url_from_context(context)
             ),
         )
         state = "State: %s" % context["SERVICESTATE"]
@@ -38,7 +40,9 @@ def cisco_webex_teams_msg(context: Dict) -> Dict:
     else:
         monitored_type = "Host"
         host_service_info = "Host: %s (IP: %s)" % (
-            utils.format_link("<%s|%s>", utils.host_url_from_context(context), context["HOSTNAME"]),
+            utils.format_link(
+                "[%s](%s)", context["HOSTNAME"], utils.host_url_from_context(context)
+            ),
             context["HOSTADDRESS"],
         )
         state = "State: %s" % context["HOSTSTATE"]

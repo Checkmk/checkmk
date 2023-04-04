@@ -1,0 +1,11 @@
+Title: KUBE: addition of support for Kubernetes cloud providers
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1680599947
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Kubernetes for AWS EKS, AKS and GKE are now officially supported.

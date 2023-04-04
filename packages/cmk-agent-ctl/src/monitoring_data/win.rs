@@ -174,7 +174,7 @@ pub fn collect(agent_channel: &AgentChannel) -> IoResult<Vec<u8>> {
 #[cfg(windows)]
 mod tests {
     use crate::mailslot_transport::SERVER_CREATION_TIMEOUT as MAILSLOT_SERVER_TIMEOUT;
-    use crate::monitoring_data::windows::make_yaml_command;
+    use crate::monitoring_data::win::make_yaml_command;
 
     use super::{async_collect, AgentChannel, ChannelType};
     use std::fmt;

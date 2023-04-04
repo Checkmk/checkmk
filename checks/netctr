@@ -50,7 +50,7 @@ def inventory_netctr_combined(info):
     if len(info) == 0:
         return []
     return [
-        (l[0], "", "netctr_default_params")
+        (l[0], netctr_default_params)
         for l in info[1:]
         if l[0] != "lo" and not l[0].startswith("sit")
     ]

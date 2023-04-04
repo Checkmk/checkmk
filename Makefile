@@ -114,6 +114,15 @@ check-version:
 	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
 	    false ; }
 
+check-setup:
+	echo "From here on we check the successful setup of some parts ..."
+	@if [[ ":$(PATH):" != *":$(HOME)/.local/bin:"* ]]; then \
+	  echo "Your PATH is missing '~/.local/bin' to work properly with pipenv."; \
+	  exit 1; \
+	else \
+		echo "Checks passed"; \
+	fi
+
 $(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
 
@@ -421,6 +430,7 @@ setup:
 	$(MAKE) -C web setup
 	$(MAKE) -C docker_image setup
 	$(MAKE) -C locale setup
+	$(MAKE) check-setup
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery | grep -v livestatus/src ) | sort -n

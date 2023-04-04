@@ -30,5 +30,8 @@ description:
 
  The check requires that the special agent kube is configured.
 
+ For the Checkmk Openshift monitoring, the reported metric values will differ from the values
+ reported on the Openshift dashboard as as the included values describe a different quantity.
+
 discovery:
  One service is created per Kubernetes object.

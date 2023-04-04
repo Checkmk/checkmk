@@ -68,10 +68,10 @@ def test_check_mbg_lantime_ng_refclock(
 @pytest.mark.parametrize(
     "info,expected",
     [
-        (meinberg_lantime_1, DiscoveryResult([("1", "mbg_lantime_refclock_default_levels")])),
+        (meinberg_lantime_1, DiscoveryResult([("1", (3, 3))])),
         (meinberg_lantime_2, DiscoveryResult([])),  # don't discover GPS clocks
-        (meinberg_lantime_5, DiscoveryResult([("1", "mbg_lantime_refclock_default_levels")])),
-        (meinberg_lantime_6, DiscoveryResult([("1", "mbg_lantime_refclock_default_levels")])),
+        (meinberg_lantime_5, DiscoveryResult([("1", (3, 3))])),
+        (meinberg_lantime_6, DiscoveryResult([("1", (3, 3))])),
     ],
 )
 def test_discovery_mbg_lantime_ng_refclock_gps(

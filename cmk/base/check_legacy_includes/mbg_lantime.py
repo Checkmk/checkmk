@@ -9,13 +9,6 @@ MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def snmp_scan_mbg_lantime_ng_hw(oid):
-    return (
-        oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3"
-        or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.30"
-    )
-
-
 def check_mbg_lantime_state_common(states, _no_item, params, info):
     ntp_state, stratum, refclock_name, refclock_offset = info[0]
     if not isinstance(params, dict):

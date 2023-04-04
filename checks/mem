@@ -386,7 +386,7 @@ def inventory_mem_vmalloc(section):
         # Do not checks this on 64 Bit systems. They have almost
         # infinitive vmalloc
         if section["VmallocTotal"] < 4 * 1024**2:
-            yield None, "mem_vmalloc_default_levels"
+            yield None, mem_vmalloc_default_levels
 
 
 def check_mem_vmalloc(_item, params, section):

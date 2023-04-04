@@ -233,7 +233,7 @@ def inventory_lantime_ng_refclock_gps(info):
         if clock_type is None:
             continue
         if clock_type.startswith("gps"):
-            yield (line[0], "mbg_lantime_refclock_default_levels")
+            yield (line[0], mbg_lantime_refclock_default_levels)
 
 
 def check_lantime_ng_refclock_gps(item, params, info):

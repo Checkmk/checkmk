@@ -1,0 +1,16 @@
+Title: Agent Bakery: Show full agent hash in GUI
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1680606795
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b3
+
+The agent hashes of baked agent packages, as shown in the available agents table in the agent bakery GUI, now are shown entirely, rather than abbreviated to 8 digits.
+
+While there is little benefit in abbreviating the hash, it turned out to be tedious to look up the full hash on the GUI.
+
+

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Iterable
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -11,9 +13,16 @@ from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
 
 ups_out_voltage_default_levels = (210, 180)  # warning / critical
 
+
+def discover_ups_out_voltage(info: list[list[str]]) -> Iterable[tuple[str, tuple[int, int]]]:
+    yield from (
+        (item, ups_out_voltage_default_levels) for item, value, *_rest in info if int(value) > 0
+    )
+
+
 check_info["ups_out_voltage"] = {
     "detect": DETECT_UPS_GENERIC,
-    "inventory_function": discover(lambda line: int(line[1]) > 0, "ups_out_voltage_default_levels"),
+    "inventory_function": discover_ups_out_voltage,
     "check_function": check_ups_out_voltage,
     "service_description": "OUT voltage phase %s",
     "group": "evolt",

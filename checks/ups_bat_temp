@@ -24,7 +24,7 @@ def inventory_ups_bat_temp(info):
     # 2nd condition is needed to catch some UPS devices which do not have
     # any temperature sensor but report a 0 as upsBatteryTemperature. Skip those lines
     if len(info) > 0 and saveint(info[0][1]) != 0:
-        return [(format_item_ups_bat_temp(line[0], True), "ups_bat_temp_default") for line in info]
+        return [(format_item_ups_bat_temp(line[0], True), {}) for line in info]
     return []
 
 

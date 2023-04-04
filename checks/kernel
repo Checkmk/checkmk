@@ -24,8 +24,6 @@ from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildc
 #   |  Check page faults, context switches and process creations           |
 #   '----------------------------------------------------------------------'
 
-kernel_default_levels = None
-
 kernel_counter_names = cmk.base.plugins.agent_based.kernel.KERNEL_COUNTER_NAMES
 
 kernel_metrics_names = {

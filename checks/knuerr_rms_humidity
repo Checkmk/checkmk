@@ -11,7 +11,7 @@ knuerr_rms_humidity_default_levels = (30, 40, 70, 75)
 
 
 def inventory_knuerr_rms_humidity(info):
-    return [(None, "knuerr_rms_humidity_default_levels")]
+    return [(None, knuerr_rms_humidity_default_levels)]
 
 
 def check_knuerr_rms_humidity(_no_item, params, info):

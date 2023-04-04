@@ -155,7 +155,7 @@ def check_kentix_amp_sensors_smoke(item, params, parsed):
 
 check_info["kentix_amp_sensors.smoke"] = {
     "inventory_function": lambda parsed: inventory_kentix_amp_sensors(
-        parsed, "kentix_amp_sensors_smoke_default_levels"
+        parsed, kentix_amp_sensors_smoke_default_levels
     ),
     "check_function": check_kentix_amp_sensors_smoke,
     "service_description": "Smoke Detector %s",

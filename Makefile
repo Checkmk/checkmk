@@ -384,6 +384,7 @@ setup:
 	    libpcap-dev \
 	    librrd-dev \
 	    libsasl2-dev \
+	    libsqlite3-dev \
 	    libtool-bin \
 	    libxml2-dev \
 	    libreadline-dev \

@@ -13,5 +13,5 @@ Depending on the underlying check plugin, Checkmk rendered temperature units wit
 in service outputs. As of this werk, Checkmk consistently renders temperatures with a space between
 the numerical value and the unit. Examples:
 
-LI: 12.0 °C instead of 12.0°C
-LI: 256.41 K instead of 256.41K
+LI: "12.0 °C" instead of "12.0°C"
+LI: "256.41 K" instead of "256.41K"

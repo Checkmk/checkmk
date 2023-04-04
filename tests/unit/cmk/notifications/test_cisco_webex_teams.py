@@ -30,8 +30,8 @@ from cmk.notification_plugins.cisco_webex_teams import _cisco_webex_teams_msg
             },
             {
                 "markdown": "#### Service PROBLEM notification"
-                "  \nHost: <http://localhost/testsite/view?key=val|site1> (IP: 127.0.0.1)"
-                "  \nService: <http://localhost/testsite/view?key=val2|first>"
+                "  \nHost: [site1](http://localhost/testsite/view?key=val) (IP: 127.0.0.1)"
+                "  \nService: [first](http://localhost/testsite/view?key=val2)"
                 "  \nState: CRITICAL"
                 "  \n#### Additional Info"
                 "  \nService Down"
@@ -56,7 +56,7 @@ from cmk.notification_plugins.cisco_webex_teams import _cisco_webex_teams_msg
             },
             {
                 "markdown": "#### Host PROBLEM notification"
-                "  \nHost: <https://localhost/testsite/view?key=val|site1> (IP: 127.0.0.1)"
+                "  \nHost: [site1](https://localhost/testsite/view?key=val) (IP: 127.0.0.1)"
                 "  \nState: DOWN  \n#### Additional Info"
                 "  \nManually set to Down by cmkadmin"
                 "  \nPlease take a look: @John"

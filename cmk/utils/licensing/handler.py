@@ -61,9 +61,6 @@ class NotificationHandler(abc.ABC):
         raise NotImplementedError()
 
 
-PendingChanges = Sequence[tuple]
-
-
 class RemainingTrialTime(NamedTuple):
     days: int
     perc: float

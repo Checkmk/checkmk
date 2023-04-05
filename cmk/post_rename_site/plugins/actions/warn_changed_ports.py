@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from logging import Logger
 from pathlib import Path
 
 from livestatus import SiteId
@@ -10,11 +11,10 @@ from livestatus import SiteId
 from cmk.utils.i18n import _
 from cmk.utils.log import console
 
-from cmk.post_rename_site.main import logger
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 
-def warn_about_network_ports(old_site_id: SiteId, new_site_id: SiteId) -> None:
+def warn_about_network_ports(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:
     if not Path("/omd/sites", old_site_id).exists():
         return  # Site was not copied
 

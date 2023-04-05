@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
+from logging import Logger
 
 from livestatus import SiteId
 
 from cmk.utils.plugin_registry import Registry
 
-RenameActionHandler = Callable[[SiteId, SiteId], None]
+from .logger import logger
+
+RenameActionHandler = Callable[[SiteId, SiteId, Logger], None]
 
 
 class RenameAction:
@@ -37,7 +40,7 @@ class RenameAction:
 
     def run(self, old_site_id: SiteId, new_site_id: SiteId) -> None:
         """Execute the rename operation"""
-        self._handler(old_site_id, new_site_id)
+        self._handler(old_site_id, new_site_id, logger)
 
 
 class RenameActionRegistry(Registry[RenameAction]):

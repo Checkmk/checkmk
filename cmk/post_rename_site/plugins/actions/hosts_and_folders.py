@@ -3,17 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from logging import Logger
+
 from livestatus import SiteId
 
 from cmk.utils.i18n import _
 
 from cmk.gui.watolib.hosts_and_folders import Folder
 
-from cmk.post_rename_site.main import logger
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 
-def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId) -> None:
+def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:
     """Update the Checkmk site attribute in folder and host config files
 
     - Explicitly configured `site` attributes are updated

@@ -88,8 +88,7 @@ def jolokia_metrics_serv(info, split_item):
 def inventory_jolokia_metrics_serv(info):
     inv = []
     parsed = jolokia_metrics_parse(info)
-    levels = None
-    levels = "jolokia_metrics_serv_req_default_levels"
+    levels = jolokia_metrics_serv_req_default_levels
     needed_key = "Requests"
     for inst, vals in parsed.items():
         if vals is None:

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -13,9 +14,12 @@ from cmk.utils.type_defs import HostName
 
 from cmk.base.plugins.agent_based import logwatch_ec
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.logwatch_section import parse_logwatch
 
-INFO1 = [
+from cmk.ec.export import SyslogMessage
+
+_STRING_TABLE_NO_MESSAGES = [
     ["[[[log1]]]"],
     ["[[[log2]]]"],
     ["[[[log3:missing]]]"],
@@ -24,11 +28,34 @@ INFO1 = [
     ["[[[log1:missing]]]"],
 ]
 
-INFO2 = [
+_STRING_TABLE_MESSAGES_LOG1 = [
+    ["[[[log1]]]"],
+    ["BATCH: 1680617834-122172169179246007103019047128114004006211120121"],
+    ["C ERROR: issue 1"],
+    ["C ERROR: issue 2"],
     ["[[[log2]]]"],
     ["[[[log3:missing]]]"],
     ["[[[log4:cannotopen]]]"],
     ["[[[log5]]]"],
+    ["[[[log1:missing]]]"],
+]
+
+_STRING_TABLE_MESSAGES_LOG1_2 = [
+    ["[[[log1]]]"],
+    ["BATCH: 1680617840-135239174175144102013221144181058125008119107236"],
+    ["C ERROR: issue 1"],
+    ["C ERROR: issue 2"],
+    ["C ERROR: issue 3"],
+]
+
+_STRING_TABLE_MESSAGES_LOG5 = [
+    ["[[[log2]]]"],
+    ["[[[log3:missing]]]"],
+    ["[[[log4:cannotopen]]]"],
+    ["[[[log5]]]"],
+    ["BATCH: 1680617711-122172169179246007103019047128114004006211120555"],
+    ["C ERROR: issue 1"],
+    ["C ERROR: issue 2"],
 ]
 
 
@@ -52,9 +79,9 @@ SECTION1 = logwatch_ec.logwatch.Section(
 @pytest.mark.parametrize(
     "info, fwd_rule, expected_result",
     [
-        (INFO1, [], []),
+        (_STRING_TABLE_NO_MESSAGES, [], []),
         (
-            INFO1,
+            _STRING_TABLE_NO_MESSAGES,
             [{"separate_checks": True}],
             [
                 Service(item="log1", parameters={"expected_logfiles": ["log1"]}),
@@ -62,9 +89,9 @@ SECTION1 = logwatch_ec.logwatch.Section(
                 Service(item="log5", parameters={"expected_logfiles": ["log5"]}),
             ],
         ),
-        (INFO1, [{"restrict_logfiles": [".*"]}], []),
+        (_STRING_TABLE_NO_MESSAGES, [{"restrict_logfiles": [".*"]}], []),
         (
-            INFO1,
+            _STRING_TABLE_NO_MESSAGES,
             [
                 {
                     "restrict_logfiles": [".*"],
@@ -78,7 +105,7 @@ SECTION1 = logwatch_ec.logwatch.Section(
             ],
         ),
         (
-            INFO1,
+            _STRING_TABLE_NO_MESSAGES,
             [
                 {
                     "restrict_logfiles": [".*"],
@@ -88,7 +115,7 @@ SECTION1 = logwatch_ec.logwatch.Section(
             [],
         ),
         (
-            INFO1,
+            _STRING_TABLE_NO_MESSAGES,
             [
                 {
                     "restrict_logfiles": [".*"],
@@ -97,7 +124,7 @@ SECTION1 = logwatch_ec.logwatch.Section(
             [],
         ),
         (
-            INFO1,
+            _STRING_TABLE_NO_MESSAGES,
             [
                 {
                     "restrict_logfiles": ["log1"],
@@ -135,17 +162,17 @@ def test_logwatch_ec_inventory_single(monkeypatch, info, fwd_rule, expected_resu
 @pytest.mark.parametrize(
     "info, fwd_rule, expected_result",
     [
-        (INFO1, [], []),
-        (INFO1, [{"separate_checks": True}], []),
+        (_STRING_TABLE_NO_MESSAGES, [], []),
+        (_STRING_TABLE_NO_MESSAGES, [{"separate_checks": True}], []),
         (
-            INFO1,
+            _STRING_TABLE_NO_MESSAGES,
             [{"separate_checks": False}],
             [
                 Service(parameters={"expected_logfiles": ["log1", "log2", "log5"]}),
             ],
         ),
         (
-            INFO1,
+            _STRING_TABLE_NO_MESSAGES,
             [{"restrict_logfiles": [".*[12]"], "separate_checks": False}],
             [
                 Service(parameters={"expected_logfiles": ["log1", "log2"]}),
@@ -161,18 +188,27 @@ def test_logwatch_ec_inventory_groups(monkeypatch, info, fwd_rule, expected_resu
     assert actual_result == expected_result
 
 
+class _FakeForwarder:
+    def __call__(
+        self,
+        method: object,
+        messages: Sequence[SyslogMessage],
+    ) -> logwatch_ec.LogwatchFordwardResult:
+        return logwatch_ec.LogwatchFordwardResult(num_forwarded=len(messages))
+
+
 def test_check_logwatch_ec_common_single_node() -> None:
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
             {},
             {
-                "node1": parse_logwatch(INFO1),
+                "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
             },
             service_level=10,
             value_store={},
             hostname=HostName("test-host"),
-            message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
+            message_forwarder=_FakeForwarder(),
         )
     ) == [
         Result(state=State.OK, summary="Forwarded 0 messages"),
@@ -186,34 +222,144 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
             "log1",
             {},
             {
-                "node1": parse_logwatch(INFO2),
+                "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
             service_level=10,
             value_store={},
             hostname=HostName("test-host"),
-            message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
+            message_forwarder=_FakeForwarder(),
         )
     )
 
 
-def test_check_logwatch_ec_common_multiple_nodes() -> None:
-    assert list(
-        logwatch_ec.check_logwatch_ec_common(
-            "log1",
-            {},
+@pytest.mark.parametrize(
+    ["cluster_section", "expected_result"],
+    [
+        pytest.param(
             {
-                "node1": parse_logwatch(INFO1),
-                "node2": parse_logwatch(INFO1),
+                "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
+                "node2": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
             },
-            service_level=10,
-            value_store={},
-            hostname=HostName("test-host"),
-            message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
+            [
+                Result(state=State.OK, summary="Forwarded 0 messages"),
+                Metric("messages", 0.0),
+            ],
+            id="no messages",
+        ),
+        pytest.param(
+            {
+                "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
+                "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
+            },
+            [
+                Result(state=State.OK, summary="Forwarded 2 messages from log1"),
+                Metric("messages", 2.0),
+            ],
+            id="messages on one node",
+        ),
+        pytest.param(
+            {
+                "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
+                "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1_2),
+            },
+            [
+                Result(state=State.OK, summary="Forwarded 5 messages from log1"),
+                Metric("messages", 5.0),
+            ],
+            id="messages on both nodes",
+        ),
+    ],
+)
+def test_check_logwatch_ec_common_multiple_nodes_grouped(
+    cluster_section: logwatch_ec.ClusterSection,
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(
+            logwatch_ec.check_logwatch_ec_common(
+                "log1",
+                {},
+                cluster_section,
+                service_level=10,
+                value_store={},
+                hostname=HostName("test-host"),
+                message_forwarder=_FakeForwarder(),
+            )
         )
-    ) == [
-        Result(state=State.OK, summary="Forwarded 0 messages"),
-        Metric("messages", 0.0),
-    ]
+        == expected_result
+    )
+
+
+@pytest.mark.parametrize(
+    ["cluster_section", "expected_result"],
+    [
+        pytest.param(
+            {
+                "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
+                "node2": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
+            },
+            [
+                Result(state=State.OK, summary="Forwarded 0 messages"),
+                Metric("messages", 0.0),
+            ],
+            id="no messages",
+        ),
+        pytest.param(
+            {
+                "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
+                "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
+            },
+            # CMK-12756: should be 2 messages
+            [
+                Result(state=State.OK, summary="Forwarded 4 messages from log1"),
+                Metric("messages", 4.0),
+            ],
+            id="messages on one node",
+        ),
+        pytest.param(
+            {
+                "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
+                "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1_2),
+            },
+            # CMK-12756: should be 5 messages
+            [
+                Result(state=State.OK, summary="Forwarded 10 messages from log1"),
+                Metric("messages", 10.0),
+            ],
+            id="messages on both nodes, same logfile",
+        ),
+        pytest.param(
+            {
+                "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
+                "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
+            },
+            # CMK-12756: should be 4 messages
+            [
+                Result(state=State.OK, summary="Forwarded 6 messages from log1, log5"),
+                Metric("messages", 6.0),
+            ],
+            id="messages on both nodes, different logfiles",
+        ),
+    ],
+)
+def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
+    cluster_section: logwatch_ec.ClusterSection,
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(
+            logwatch_ec.check_logwatch_ec_common(
+                None,
+                {},
+                cluster_section,
+                service_level=10,
+                value_store={},
+                hostname=HostName("test-host"),
+                message_forwarder=_FakeForwarder(),
+            )
+        )
+        == expected_result
+    )
 
 
 def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> None:
@@ -222,13 +368,13 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
             "log1",
             {},
             {
-                "node1": parse_logwatch(INFO2),
-                "node2": parse_logwatch(INFO2),
+                "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
+                "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
             service_level=10,
             value_store={},
             hostname=HostName("test-host"),
-            message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
+            message_forwarder=_FakeForwarder(),
         )
     )
 
@@ -239,17 +385,17 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
             "log1",
             {},
             {
-                "node1": parse_logwatch(INFO1),
-                "node2": parse_logwatch(INFO2),
+                "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
+                "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
             service_level=10,
             value_store={},
             hostname=HostName("test-host"),
-            message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
+            message_forwarder=_FakeForwarder(),
         )
     ) == [
-        Result(state=State.OK, summary="Forwarded 0 messages"),
-        Metric("messages", 0.0),
+        Result(state=State.OK, summary="Forwarded 2 messages from log1"),
+        Metric("messages", 2.0),
     ]
 
 

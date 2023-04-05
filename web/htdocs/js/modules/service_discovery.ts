@@ -50,6 +50,7 @@ interface AjaxServiceDiscovery {
     job_state: any;
     message: string | null;
     body: string;
+    datasources: string;
     fixall: string;
     page_menu: string;
     pending_changes_info: string | null;
@@ -206,6 +207,10 @@ function update(
     document
         .getElementById("general_display_options")!
         .replaceWith(menu_display);
+
+    // Update datasources
+    const ds_container = document.getElementById("datasources_container")!;
+    ds_container.innerHTML = response.datasources;
 
     // Update fix all button
     const fixall_container = document.getElementById("fixall_container")!;

@@ -29,6 +29,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
+    ProblemException,
     serialize_group,
     serialize_group_list,
     serve_group,
@@ -50,7 +51,9 @@ from cmk.gui.watolib.groups import (
     add_group,
     check_modify_group_permissions,
     edit_group,
+    GroupInUseException,
     load_contact_group_information,
+    UnknownGroupException,
 )
 
 PERMISSIONS = permissions.Perm("wato.users")
@@ -162,7 +165,21 @@ def delete(params):
     check_modify_group_permissions("contact")
     with endpoint.do_not_track_permissions(), SuperUserContext():
         # HACK: We need to supress this, due to lots of irrelevant dashboard permissions
-        watolib.delete_group(name, "contact")
+        try:
+            watolib.delete_group(name, "contact")
+        except GroupInUseException as exc:
+            raise ProblemException(
+                status=400,
+                title="Group in use problem",
+                detail=str(exc),
+            )
+        except UnknownGroupException as exc:
+            raise ProblemException(
+                status=404,
+                title="Unknown group problem",
+                detail=str(exc),
+            )
+
     return Response(status=204)
 
 
@@ -173,25 +190,32 @@ def delete(params):
     request_schema=request_schemas.BulkDeleteContactGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[404],
 )
 def bulk_delete(params):
     """Bulk delete contact groups"""
     user.need_permission("wato.edit")
     user.need_permission("wato.users")
     body = params["body"]
-    entries = body["entries"]
-    for group_name in entries:
-        _group = fetch_group(
-            group_name,
-            "contact",
-            status=400,
-            message=f"contact group {group_name} was not found",
-        )
     with endpoint.do_not_track_permissions(), SuperUserContext():
-        for group_name in entries:
+        for group_name in body["entries"]:
             # We need to supress this, because a lot of dashboard permissions are checked for
             # various reasons.
-            watolib.delete_group(group_name, "contact")
+            try:
+                watolib.delete_group(group_name, "contact")
+            except GroupInUseException as exc:
+                raise ProblemException(
+                    status=400,
+                    title="Group in use problem",
+                    detail=str(exc),
+                )
+            except UnknownGroupException as exc:
+                raise ProblemException(
+                    status=404,
+                    title="Unknown group problem",
+                    detail=str(exc),
+                )
+
     return Response(status=204)
 
 

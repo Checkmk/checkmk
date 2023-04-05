@@ -291,3 +291,44 @@ def test_openapi_group_values_are_links(group_type, wsgi_app, with_automation_us
 
 def _random_string(size):
     return "".join(random.choice(string.ascii_letters + string.digits) for _ in range(size))
+
+
+@managedtest
+@pytest.mark.parametrize("group_type", ["host", "contact", "service"])
+def test_delete_non_existing_group_types(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    group_type: str,
+    base: str,
+) -> None:
+    aut_user_auth_wsgi_app.delete(
+        base + f"/objects/{group_type}_group_config/I_dont_exist",
+        headers={"Accept": "application/json"},
+        status=404,
+        content_type="application/json",
+    )
+
+
+@managedtest
+@pytest.mark.parametrize("group_type", ["host", "contact", "service"])
+def test_bulk_delete_non_existing_group_types(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    group_type: str,
+    base: str,
+) -> None:
+    groups = [
+        {
+            "name": _random_string(10),
+            "alias": _random_string(10),
+            "customer": "provider",
+        }
+        for _ in range(2)
+    ]
+
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + f"/domain-types/{group_type}_group_config/actions/bulk-delete/invoke",
+        params=json.dumps({"entries": [group["name"] for group in groups]}),
+        headers={"Accept": "application/json"},
+        status=404,
+        content_type="application/json",
+    )

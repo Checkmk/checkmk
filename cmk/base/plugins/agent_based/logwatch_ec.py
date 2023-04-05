@@ -398,7 +398,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
 
     try:
         if forwarded_logfiles:
-            logfile_info = " from " + ",".join(forwarded_logfiles)
+            logfile_info = " from " + ", ".join(sorted(forwarded_logfiles))
         else:
             logfile_info = ""
 

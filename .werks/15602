@@ -1,0 +1,15 @@
+Title: mk-job: Cleanup after execution was interrupted
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680708709
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, if the wrapper program <tt>mk-job</tt> was interrupted by a reboot, the <tt>Job</tt>
+service would continue to show the job, which was started by <tt>mk-job</tt>. This job was shown to
+be running despite it being terminated by the reboot. This can be fixed by removing the
+corresponding file created by <tt>mk-job</tt>. With this werk, <tt>mk-job</tt> cleans up the file
+after being interrupted. Thus, these terminated jobs will no longer be shown as running.

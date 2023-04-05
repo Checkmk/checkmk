@@ -55,6 +55,7 @@ def main() {
 
     def run_integration_tests = !(edition in ["free"]);
     def run_image_tests = !(edition in ["free"]);
+    def run_update_tests = (edition in ["enterprise"]);
 
     print(
         """
@@ -65,6 +66,7 @@ def main() {
         |build_cloud_images:.... │${build_cloud_images}│
         |run_integration_tests:. │${run_integration_tests}│
         |run_image_tests:....... │${run_image_tests}│
+        |run_update_tests:...... │${run_update_tests}│
         |===================================================
         """.stripMargin());
 
@@ -113,6 +115,13 @@ def main() {
             condition: run_integration_tests,
             raiseOnError: false) {
         build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
+    }
+
+    success &= smart_stage(
+            name: "Update Test",
+            condition: run_update_tests,
+            raiseOnError: false) {
+        build(job: "${base_folder}/test-update", parameters: job_parameters);
     }
 
     currentBuild.result = success ? "SUCCESS" : "FAILURE";

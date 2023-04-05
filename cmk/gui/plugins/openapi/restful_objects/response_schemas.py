@@ -876,11 +876,6 @@ class PasswordExtension(BaseSchema):
         attribute="docu_url",
         description="The URL pointing to documentation or any other page.",
     )
-    password = fields.String(
-        required=True,
-        example="password",
-        description="The password string",
-    )
     owned_by = fields.String(
         example="admin",
         description="The owner of the password who is able to edit, delete and use existing passwords.",

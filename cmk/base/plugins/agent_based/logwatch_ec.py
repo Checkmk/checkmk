@@ -291,12 +291,14 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         used_logfiles = [item]
     else:
         # Filter logfiles if some should be excluded
-        used_logfiles = [
-            name
-            for node_data in parsed.values()
-            for name in node_data.logfiles
-            if logwatch.ec_forwarding_enabled(params, name)
-        ]
+        used_logfiles = sorted(
+            {
+                name
+                for node_data in parsed.values()
+                for name in node_data.logfiles
+                if logwatch.ec_forwarding_enabled(params, name)
+            }
+        )
 
     # Check if the number of expected files matches the actual one
     if params["monitor_logfilelist"]:

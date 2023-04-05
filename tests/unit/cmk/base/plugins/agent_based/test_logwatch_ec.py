@@ -322,10 +322,9 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
                 "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
             },
-            # CMK-12756: should be 2 messages
             [
-                Result(state=State.OK, summary="Forwarded 4 messages from log1"),
-                Metric("messages", 4.0),
+                Result(state=State.OK, summary="Forwarded 2 messages from log1"),
+                Metric("messages", 2.0),
             ],
             id="messages on one node",
         ),
@@ -334,10 +333,9 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1_2),
             },
-            # CMK-12756: should be 5 messages
             [
-                Result(state=State.OK, summary="Forwarded 10 messages from log1"),
-                Metric("messages", 10.0),
+                Result(state=State.OK, summary="Forwarded 5 messages from log1"),
+                Metric("messages", 5.0),
             ],
             id="messages on both nodes, same logfile",
         ),
@@ -346,10 +344,9 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            # CMK-12756: should be 4 messages
             [
-                Result(state=State.OK, summary="Forwarded 6 messages from log1, log5"),
-                Metric("messages", 6.0),
+                Result(state=State.OK, summary="Forwarded 4 messages from log1, log5"),
+                Metric("messages", 4.0),
             ],
             id="messages on both nodes, different logfiles",
         ),

@@ -1681,7 +1681,7 @@ def pod_lookup_from_api_pod(api_pod: api.Pod) -> PodLookupName:
 
 
 KubeNamespacedObj = TypeVar(
-    "KubeNamespacedObj", bound=DaemonSet | Deployment | StatefulSet | api.CronJob
+    "KubeNamespacedObj", bound=DaemonSet | Deployment | StatefulSet | api.CronJob | api.Pod
 )
 
 
@@ -1762,12 +1762,6 @@ def _names_of_running_pods(
     return list(map(pod_lookup_from_api_pod, running_pods))
 
 
-def pods_from_namespaces(
-    pods: Iterable[api.Pod], namespaces: set[api.NamespaceName]
-) -> Sequence[api.Pod]:
-    return [pod for pod in pods if pod.metadata.namespace in namespaces]
-
-
 def determine_pods_to_host(
     monitored_objects: Sequence[MonitoredObject],
     composed_entities: ComposedEntities,
@@ -1817,8 +1811,9 @@ def determine_pods_to_host(
     # on write_sections_based_on_performance_pods should be refactored to use the
     # other function similar to namespaces
     if MonitoredObject.pods in monitored_objects:
-        monitored_pods = pods_from_namespaces(
-            filter_pods_by_phase(api_pods, api.Phase.RUNNING), monitored_namespaces
+        monitored_pods = kube_objects_from_namespaces(
+            filter_pods_by_phase(api_pods, api.Phase.RUNNING),
+            monitored_namespaces,
         )
         if MonitoredObject.cronjobs_pods not in monitored_objects:
             cronjob_pod_uids = {uid for cronjob in api_cron_jobs for uid in cronjob.pod_uids}
@@ -2383,7 +2378,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         )
                     common.write_sections(statefulset_sections)
 
-            monitored_api_cron_job_pods = [
+            api_cron_job_pods = [
                 api_pod
                 for cron_job in api_data.cron_jobs
                 for api_pod in api_data.pods
@@ -2392,7 +2387,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             if MonitoredObject.cronjobs in arguments.monitored_objects:
                 write_cronjobs_api_sections(
                     kube_objects_from_namespaces(api_data.cron_jobs, monitored_namespace_names),
-                    monitored_api_cron_job_pods,
+                    api_cron_job_pods,
                     {job.uid: job for job in api_data.jobs},
                     host_settings=checkmk_host_settings,
                     piggyback_formatter=piggyback_formatter,
@@ -2400,16 +2395,20 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
 
             if MonitoredObject.pods in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")
-                unmonitored_pods = (
-                    {pod_lookup_from_api_pod(pod) for pod in monitored_api_cron_job_pods}
-                    if MonitoredObject.cronjobs_pods not in arguments.monitored_objects
-                    else {}
+                pods_in_relevant_namespaces = kube_objects_from_namespaces(
+                    api_data.pods, monitored_namespace_names
                 )
+                if MonitoredObject.cronjobs_pods in arguments.monitored_objects:
+                    monitored_pods = pods_in_relevant_namespaces
+                else:
+                    cronjob_pod_ids = {pod_lookup_from_api_pod(pod) for pod in api_cron_job_pods}
+                    monitored_pods = [
+                        pod
+                        for pod in pods_in_relevant_namespaces
+                        if pod_lookup_from_api_pod(pod) not in cronjob_pod_ids
+                    ]
 
-                for pod in api_data.pods:
-                    if pod_lookup_from_api_pod(pod) in unmonitored_pods:
-                        continue
-
+                for pod in monitored_pods:
                     pod_piggyback_name = piggyback_formatter(pod)
                     sections = create_pod_api_sections(pod, piggyback_name=pod_piggyback_name)
                     sections = chain(

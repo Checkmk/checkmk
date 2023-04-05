@@ -1,0 +1,11 @@
+Title: Special agent IPMI sensors: Fail with non-zero exit code
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680675894
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p35
+
+The special agent <i>IPMI sensors</i> always returned with a non-zero exit code, "successfully" reporting empty sections upon failure.

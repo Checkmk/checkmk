@@ -272,9 +272,7 @@ def _main(args: Args) -> None:
             errors.append(str(e))
 
     if errors:
-        sys.stderr.write("ERROR: '%s'.\n" % ", ".join(errors))
-        return
-    return
+        raise SystemExit(f"ERROR: {', '.join(errors)}")
 
 
 def main() -> None:

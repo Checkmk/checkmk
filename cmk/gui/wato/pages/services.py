@@ -13,8 +13,10 @@ from typing import Any, Literal, NamedTuple
 from livestatus import SiteId
 
 import cmk.utils.render
+from cmk.utils.check_utils import worst_service_state
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.html import get_html_state_marker
 from cmk.utils.site import omd_site
 
 from cmk.automations.results import CheckPreviewEntry
@@ -155,6 +157,7 @@ class ModeDiscovery(WatoMode):
         # button. The help texts on this page are only added dynamically via
         # AJAX.
         html.enable_help_toggle()
+        self._datasources_container()
         self._fix_all_container()
         self._async_progress_msg_container()
         self._service_container()
@@ -178,6 +181,10 @@ class ModeDiscovery(WatoMode):
 
     def _fix_all_container(self):
         html.open_div(id_="fixall_container")
+        html.close_div()
+
+    def _datasources_container(self):
+        html.open_div(id_="datasources_container")
         html.close_div()
 
 
@@ -289,6 +296,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             discovery_options,
         )
         page_code = renderer.render(discovery_result, api_request)
+        datasources_code = renderer.render_datasources(discovery_result.sources)
         fix_all_code = renderer.render_fix_all(discovery_result)
 
         # Clean the requested action after performing it
@@ -300,6 +308,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "job_state": discovery_result.job_status["state"],
             "message": self._get_status_message(discovery_result, performed_action),
             "body": page_code,
+            "datasources": datasources_code,
             "fixall": fix_all_code,
             "page_menu": self._get_page_menu(discovery_options, host),
             "pending_changes_info": ActivateChanges().get_pending_changes_info().message,
@@ -489,7 +498,6 @@ class DiscoveryPageRenderer:
         with output_funnel.plugged():
             self._toggle_action_page_menu_entries(discovery_result)
             enable_page_menu_entry(html, "inline_help")
-            self.render_sources(discovery_result.sources)
             self._show_discovered_host_labels(discovery_result)
             self._show_discovery_details(discovery_result, api_request)
             return output_funnel.drain()
@@ -499,18 +507,53 @@ class DiscoveryPageRenderer:
             self._show_fix_all(discovery_result)
             return output_funnel.drain()
 
-    def render_sources(self, sources: Mapping[str, tuple[int, str]]) -> None:
-        pass  # TODO
-        # overall_state = cmk.utils.check_utils.worst_service_state(*(s for s, _output in sources.values()))
-        # open div, ...
-        # for state, output in sources.values():
-        #     # Make sure to not show long output (but we don't expect any)
-        #    _source, summary = output.split("\n", 1)[0].split(" ", 1)
-        #    # TODO: something close to this:
-        #    html.write_html(
-        #    #    HTML(f"{cmk.utils.html.get_html_state_marker(state)} {format_plugin_output(summary)}<br>")
-        #    # )
-        # NOTE: Check this with a non-ok datasource. We might get a bit many state markers.
+    def render_datasources(self, sources: Mapping[str, tuple[int, str]]) -> str:
+        states: list[int] = [s for s, _output in sources.values()]
+        overall_state: int = worst_service_state(*states, default=0)
+
+        with output_funnel.plugged():
+            # Colored overall state field
+            html.open_div(class_="datasources_state state%s" % overall_state)
+            html.open_span()
+            match overall_state:
+                case 0:
+                    html.icon("check")
+                case 1:
+                    html.icon("host_svc_problems_dark")
+                case 2 | 3:
+                    html.icon("host_svc_problems")
+            html.close_span()
+            html.close_div()
+
+            # Output per data source
+            html.open_div(class_="datasources_output")
+            if overall_state == 0:
+                html.h2(_("All datasources are OK"))
+            else:
+                num_problem_states: int = len([s for s in states if s != 0])
+                html.h2(
+                    ungettext(
+                        "Problems with %d datasource detected",
+                        "Problems with %d datasources detected",
+                        num_problem_states,
+                    )
+                    % num_problem_states
+                )
+
+            html.open_table()
+            for state, output in sources.values():
+                html.open_tr()
+                html.open_td()
+                html.write_html(HTML(get_html_state_marker(state)))
+                html.close_td()
+                # Make sure not to show long output
+                html.td(format_plugin_output(output.split("\n", 1)[0].replace(" ", ": ", 1)))
+                html.close_tr()
+            html.close_table()
+
+            html.close_div()
+
+            return output_funnel.drain()
 
     def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> None:
         if not discovery_result.host_labels:

@@ -155,6 +155,10 @@ function update(handler_data, response) {
         .getElementById("general_display_options")!
         .replaceWith(menu_display);
 
+    // Update datasources
+    const ds_container = document.getElementById("datasources_container")!;
+    ds_container.innerHTML = response.datasources;
+
     // Update fix all button
     var fixall_container = document.getElementById("fixall_container")!;
     fixall_container.style.display = "block";

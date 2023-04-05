@@ -33,6 +33,10 @@ check_metrics["check_icmp"] = {
     "~.*rtmax": {"scale": m},
     "~.*rtmin": {"scale": m},
 }
+# May be provided by an check_ping check configured as mrpe
+check_metrics["check_ping"] = {
+    "~.*rta": {"scale": m},
+}
 check_metrics["check_tcp"] = {
     "time": {"name": "response_time"},
 }

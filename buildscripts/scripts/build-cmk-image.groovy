@@ -139,7 +139,7 @@ def main() {
 
                     conditional_stage("Push images", push_to_registry) {
                         sh("""buildscripts/scripts/build-cmk-container.sh \
-                            ${BRANCH} \
+                            ${branch_name} \
                             ${EDITION} \
                             ${cmk_version} \
                             ${source_dir} \

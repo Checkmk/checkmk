@@ -89,10 +89,12 @@ stamp-h1
 tags
 tests/web/data/*
 tests/var/*
+tests/results/*
 tests/.hypothesis/
 web/htdocs/js/*_min.js.map
 /results
 /buildscripts/infrastructure/build-nodes/scripts/defines.make
+/buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode

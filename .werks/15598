@@ -1,0 +1,15 @@
+Title: group_config: deleting a non-existing group no longer has a 400 response
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1680695328
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces a fix to the contact_group, host_group and service_group
+endpoints. Previously when deleting an object or bulk deleting a list of
+objects, the rest-api would respond with a 400 status code when the group
+didn't exist. We now respond with a 404 Not Found.
+

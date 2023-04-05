@@ -891,7 +891,19 @@ metric_info["ap_devices_percent_unhealthy"] = {
 metric_info["request_rate"] = {
     "title": _("Request rate"),
     "unit": "1/s",
+    "color": "35/a",
+}
+
+metric_info["server_conns"] = {
+    "title": _("Server connections"),
+    "unit": "count",
     "color": "34/a",
+}
+
+metric_info["client_conns"] = {
+    "title": _("Client connections"),
+    "unit": "count",
+    "color": "45/a",
 }
 
 metric_info["error_rate"] = {

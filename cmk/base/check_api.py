@@ -28,9 +28,12 @@ import re  # noqa: F401 # pylint: disable=unused-import
 import socket
 import time
 from collections.abc import Callable, Iterable
+from contextlib import suppress
 from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, Union
 
+import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
+import cmk.utils.paths as _paths
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
@@ -38,15 +41,19 @@ import cmk.utils.debug as _debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
-from cmk.utils.type_defs import HostName, MetricName, ServiceDetails, ServiceState, state_markers
+from cmk.utils.type_defs import HostName, MetricName
+from cmk.utils.type_defs import SectionName as _SectionName
+from cmk.utils.type_defs import ServiceDetails, ServiceState, state_markers
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 
+from cmk.checkers.plugin_contexts import check_type
 from cmk.checkers.plugin_contexts import (
     host_name as _internal_host_name,  # pylint: disable=unused-import
 )
 from cmk.checkers.plugin_contexts import service_description
 
+import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
@@ -465,6 +472,41 @@ def get_http_proxy(http_proxy: Tuple[str, str]) -> HTTPProxyConfig:
     Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
     return _config.get_http_proxy(http_proxy)
+
+
+def get_agent_data_time() -> Optional[float]:
+    """Use this function to get the age of the agent data cache file
+    of tcp or snmp hosts or None in case of piggyback data because
+    we do not exactly know the latest agent data. Maybe one time
+    we can handle this. For cluster hosts an exception is raised."""
+    return _agent_cache_file_age(_internal_host_name(), check_type())
+
+
+def _agent_cache_file_age(
+    hostname: HostName,
+    check_plugin_name: str,
+) -> Optional[float]:
+    config_cache = _config.get_config_cache()
+    if config_cache.is_cluster(hostname):
+        raise MKGeneralException("get_agent_data_time() not valid for cluster")
+
+    # NOTE: This is a workaround for the 'old' API and will not be correct
+    # for the new one. This is a check plugin name, and the property of being
+    # 'TCP' or 'SNMP' is a property of the section.
+    # This function is deprecated for new plugins.
+    # For old-style plugins, plugin and section name are same, so check the
+    # corresponding section:
+    section_name_str = _cmk_utils.check_utils.section_name_of(check_plugin_name)
+    section = _agent_based_register.get_section_plugin(_SectionName(section_name_str))
+    if hasattr(section, "trees"):
+        cachefile = "%s/%s.%s" % (_paths.tcp_cache_dir, hostname, section_name_str)
+    else:
+        cachefile = "%s/%s" % (_paths.tcp_cache_dir, hostname)
+
+    with suppress(FileNotFoundError):
+        return _cmk_utils.cachefile_age(cachefile)
+
+    return None
 
 
 def get_parsed_item_data(check_function: Callable) -> Callable:

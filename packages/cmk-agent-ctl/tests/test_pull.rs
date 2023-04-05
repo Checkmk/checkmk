@@ -14,6 +14,7 @@ use std::io::{Read, Result as IoResult, Write};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::path::Path;
 use std::str::FromStr;
+use std::sync::atomic;
 use tokio::process::{Child, Command};
 
 fn registry(
@@ -193,17 +194,17 @@ async fn delete_all_connections(test_path: &Path, enable_legacy_mode: bool) -> A
 
 async fn teardown(
     test_dir: tempfile::TempDir,
-    pull_procress_fixture: PullProcessFixture,
+    pull_process_fixture: PullProcessFixture,
     agent_stream_fixture: Option<AgentStreamFixture>,
 ) -> IoResult<()> {
-    pull_procress_fixture.teardown().await?;
+    pull_process_fixture.teardown().await?;
     if let Some(agent_stream_fixture) = agent_stream_fixture {
         agent_stream_fixture.teardown()
     }
     test_dir.close()
 }
 
-async fn _test_pull_tls_main(prefix: &str, socket_addr: SocketAddr) -> AnyhowResult<()> {
+async fn _test_pull_tls_main(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowResult<()> {
     #[cfg(windows)]
     if !is_elevated::is_elevated() {
         println!("Test is skipped, must be in elevated mode");
@@ -213,7 +214,7 @@ async fn _test_pull_tls_main(prefix: &str, socket_addr: SocketAddr) -> AnyhowRes
     let test_dir = common::setup_test_dir(prefix);
     let agent_stream_fixture = AgentStreamFixture::setup(test_dir.path());
     let trust_fixture = TrustFixture::setup(test_dir.path())?;
-    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &socket_addr.port())?;
+    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &port)?;
 
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
@@ -224,6 +225,8 @@ async fn _test_pull_tls_main(prefix: &str, socket_addr: SocketAddr) -> AnyhowRes
     let mut message_buf: Vec<u8> = vec![];
     let mut client_connection =
         tls_client_connection(trust_fixture.certs.clone(), &trust_fixture.uuid);
+
+    let socket_addr = SocketAddr::new(ip_addr, port);
     let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
     tcp_stream.read_exact(&mut id_buf)?;
     assert_eq!(&id_buf, b"16");
@@ -245,13 +248,28 @@ async fn _test_pull_tls_main(prefix: &str, socket_addr: SocketAddr) -> AnyhowRes
         .context("Teardown failed")
 }
 
+fn get_port() -> u16 {
+    port_base() + make_port_personal()
+}
+
+fn port_base() -> u16 {
+    9970
+}
+
+fn make_port_personal() -> u16 {
+    static UNIQUE_PORT_INDEX: atomic::AtomicU16 = atomic::AtomicU16::new(0);
+
+    UNIQUE_PORT_INDEX.fetch_add(1, atomic::Ordering::Relaxed)
+}
+
 // TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
 #[tokio::test(flavor = "multi_thread")]
 #[cfg_attr(target_os = "windows", ignore)]
 async fn test_pull_tls_main_ipv4() -> AnyhowResult<()> {
     _test_pull_tls_main(
         "test_pull_tls_main_ipv4",
-        SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9970),
+        IpAddr::V4(Ipv4Addr::LOCALHOST),
+        get_port(),
     )
     .await
 }
@@ -262,7 +280,8 @@ async fn test_pull_tls_main_ipv4() -> AnyhowResult<()> {
 async fn test_pull_tls_main_ipv6() -> AnyhowResult<()> {
     _test_pull_tls_main(
         "test_pull_tls_main_ipv6",
-        SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 9971),
+        IpAddr::V6(Ipv6Addr::LOCALHOST),
+        get_port(),
     )
     .await
 }

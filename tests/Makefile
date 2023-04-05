@@ -223,8 +223,14 @@ test-typescript-types:
 test-lint-js:
 	cd ..; scripts/check-js-lint.sh
 
+test-build-js:
+	npm -y ci && ENTERPRISE=yes MANAGED=no npm run build
+
 test-lint-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-lint-js
+
+test-build-js-docker:
+	../scripts/run-in-docker.sh make --quiet test-build-js
 
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js
@@ -256,15 +262,11 @@ test-composition:
 test-update:
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py)
 
-
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug):
 	$(PIPENV) run scripts/run-dockerized.py debug
-
-test-build-js:
-	npm ci && ENTERPRISE=yes MANAGED=no npm run build
 
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \

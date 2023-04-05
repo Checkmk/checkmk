@@ -140,7 +140,9 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
     # Delete group
     group = groups.pop(name)
     save_group_information(all_groups)
-    _add_group_change(group, "edit-%sgroups", _l("Deleted %s group %s") % (group_type, name))
+    _add_group_change(
+        group, "edit-%sgroups" % group_type, _l("Deleted %s group %s") % (group_type, name)
+    )
 
 
 # TODO: Consolidate all group change related functions in a class that can be overriden

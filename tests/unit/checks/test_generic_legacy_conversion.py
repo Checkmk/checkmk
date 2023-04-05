@@ -1129,7 +1129,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "netscaler_health.temp",
         "netscaler_health.psu",
         "netscaler_mem",
-        "netscaler_tcp_conns",
         "netstat",
         "nfsexports",
         "nginx_status",

@@ -516,7 +516,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "netscaler_health_info",
     "netscaler_health_temp_default_levels",
     "netscaler_mem_default_levels",
-    "netscaler_tcp_conns_default_levels",
     "nimble_latency_default_levels",
     "nodes_info",
     "nullmailer_mailq_default_levels",

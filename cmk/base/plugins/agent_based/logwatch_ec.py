@@ -237,14 +237,12 @@ def discover_logwatch_ec_common(
         yield Service(item=log, parameters=single_log_params.copy())
 
 
+@dataclass
 class LogwatchFordwardResult:
-    def __init__(  # type: ignore[no-untyped-def]
-        self, num_forwarded=0, num_spooled=0, num_dropped=0, exception=None
-    ) -> None:
-        self.num_forwarded = num_forwarded
-        self.num_spooled = num_spooled
-        self.num_dropped = num_dropped
-        self.exception = exception
+    num_forwarded: int = 0
+    num_spooled: int = 0
+    num_dropped: int = 0
+    exception: Exception | None = None
 
 
 class MessageForwaderProto(Protocol):
@@ -456,267 +454,258 @@ class MessageForwarder:
             method += str(cmk.utils.paths.omd_root / "var/mkeventd/spool")
 
         if isinstance(method, tuple):
-            return logwatch_forward_tcp(
+            return self._forward_tcp(
                 method,
                 messages,
-                logwatch_spool_path(self.hostname),
-                self.hostname,
             )
 
         if not method.startswith("spool:"):
-            return logwatch_forward_pipe(
+            return self._forward_pipe(
                 Path(method),
                 messages,
             )
 
-        return logwatch_forward_spool_directory(method, self.item, messages, self.hostname)
+        return self._forward_spool_directory(method, messages)
 
+    # write into local event pipe
+    # Important: When the event daemon is stopped, then the pipe
+    # is *not* existing! This prevents us from hanging in such
+    # situations. So we must make sure that we do not create a file
+    # instead of the pipe!
+    @staticmethod
+    def _forward_pipe(
+        path: Path,
+        events: Sequence[SyslogMessage],
+    ) -> LogwatchFordwardResult:
+        if not events:
+            return LogwatchFordwardResult()
+        SyslogForwarderUnixSocket(path=path).forward(events)
+        return LogwatchFordwardResult(num_forwarded=len(events))
 
-# write into local event pipe
-# Important: When the event daemon is stopped, then the pipe
-# is *not* existing! This prevents us from hanging in such
-# situations. So we must make sure that we do not create a file
-# instead of the pipe!
-def logwatch_forward_pipe(
-    path: Path,
-    events: Sequence[SyslogMessage],
-) -> LogwatchFordwardResult:
-    if not events:
-        return LogwatchFordwardResult()
-    SyslogForwarderUnixSocket(path=path).forward(events)
-    return LogwatchFordwardResult(num_forwarded=len(events))
+    # Spool the log messages to given spool directory.
+    # First write a file which is not read into ec, then
+    # perform the move to make the file visible for ec
+    def _forward_spool_directory(
+        self,
+        method: str,
+        syslog_messages: Sequence[SyslogMessage],
+    ) -> LogwatchFordwardResult:
+        if not syslog_messages:
+            return LogwatchFordwardResult()
 
+        split_files = self._split_file_messages(
+            (message + "\n" for message in map(repr, syslog_messages))
+        )
+        for file_index, file_content in enumerate(split_files):
+            spool_file = self._get_new_spool_file(method, file_index)
+            with spool_file.open("w") as f:
+                for message in file_content:
+                    f.write(message)
+            spool_file.rename(spool_file.parent / spool_file.name[1:])
 
-# Spool the log messages to given spool directory.
-# First write a file which is not read into ec, then
-# perform the move to make the file visible for ec
-def logwatch_forward_spool_directory(
-    method: str,
-    item: Optional[str],
-    syslog_messages: Sequence[SyslogMessage],
-    hostname: HostName,
-) -> LogwatchFordwardResult:
-    if not syslog_messages:
-        return LogwatchFordwardResult()
+        return LogwatchFordwardResult(num_forwarded=len(syslog_messages))
 
-    split_files = split_file_messages((message + "\n" for message in map(repr, syslog_messages)))
-    for file_index, file_content in enumerate(split_files):
-        spool_file = get_new_spool_file(method, item, file_index, hostname)
-        with spool_file.open("w") as f:
-            for message in file_content:
-                f.write(message)
-        spool_file.rename(spool_file.parent / spool_file.name[1:])
+    @staticmethod
+    def _split_file_messages(file_messages: Generator[str, None, None]) -> list[list[str]]:
+        result: list[list[str]] = [[]]
+        curr_file_index = 0
+        curr_character_count = 0
+        for file_message in file_messages:
+            if curr_character_count >= _MAX_SPOOL_SIZE:
+                result.append([])
+                curr_file_index += 1
+                curr_character_count = 0
+            result[curr_file_index].append(file_message)
+            curr_character_count += len(file_message)
 
-    return LogwatchFordwardResult(num_forwarded=len(syslog_messages))
+        return result
 
+    def _get_new_spool_file(
+        self,
+        method: str,
+        file_index: int,
+    ) -> Path:
+        spool_file = Path(
+            method[6:],
+            ".%s_%s%d_%d"
+            % (
+                self.hostname,
+                (self.item.replace("/", "\\") + "_") if self.item else "",
+                time.time(),
+                file_index,
+            ),
+        )
+        spool_file.parent.mkdir(parents=True, exist_ok=True)
+        return spool_file
 
-def split_file_messages(file_messages: Generator[str, None, None]) -> list[list[str]]:
-    result: list[list[str]] = [[]]
-    curr_file_index = 0
-    curr_character_count = 0
-    for file_message in file_messages:
-        if curr_character_count >= _MAX_SPOOL_SIZE:
-            result.append([])
-            curr_file_index += 1
-            curr_character_count = 0
-        result[curr_file_index].append(file_message)
-        curr_character_count += len(file_message)
+    def _forward_tcp(
+        self,
+        method: Tuple,
+        syslog_messages: Sequence[SyslogMessage],
+    ) -> LogwatchFordwardResult:
+        # Transform old format: (proto, address, port)
+        if not isinstance(method[1], dict):
+            method = (method[0], {"address": method[1], "port": method[2]})
 
-    return result
+        result = LogwatchFordwardResult()
 
+        message_chunks = []
 
-def get_new_spool_file(
-    method: str,
-    item: Optional[str],
-    file_index: int,
-    hostname: HostName,
-) -> Path:
-    spool_file = Path(
-        method[6:],
-        ".%s_%s%d_%d"
-        % (
-            hostname,
-            (item.replace("/", "\\") + "_") if item else "",
-            time.time(),
-            file_index,
-        ),
-    )
-    spool_file.parent.mkdir(parents=True, exist_ok=True)
-    return spool_file
+        if self._shall_spool_messages(method):
+            message_chunks += self._load_spooled_messages(method, result)
 
+        # Add chunk of new messages (when there are new ones)
+        if syslog_messages:
+            message_chunks.append((time.time(), 0, list(map(repr, syslog_messages))))
 
-def logwatch_forward_tcp(
-    method: Tuple,
-    syslog_messages: Sequence[SyslogMessage],
-    spool_path: Path,
-    hostname: HostName,
-) -> LogwatchFordwardResult:
-    # Transform old format: (proto, address, port)
-    if not isinstance(method[1], dict):
-        method = (method[0], {"address": method[1], "port": method[2]})
-
-    result = LogwatchFordwardResult()
-
-    message_chunks = []
-
-    if logwatch_shall_spool_messages(method):
-        message_chunks += logwatch_load_spooled_messages(method, result, spool_path, hostname)
-
-    # Add chunk of new messages (when there are new ones)
-    if syslog_messages:
-        message_chunks.append((time.time(), 0, list(map(repr, syslog_messages))))
-
-    if not message_chunks:
-        return result  # Nothing to process
-
-    try:
-        logwatch_forward_send_tcp(method, message_chunks, result)
-    except Exception as exc:
-        result.exception = exc
-
-    if logwatch_shall_spool_messages(method):
-        logwatch_spool_messages(message_chunks, result, spool_path)
-    else:
-        result.num_dropped = sum(len(c[2]) for c in message_chunks)
-
-    return result
-
-
-def logwatch_shall_spool_messages(method):
-    return (
-        isinstance(method, tuple)
-        and method[0] == "tcp"
-        and isinstance(method[1], dict)
-        and "spool" in method[1]
-    )
-
-
-def logwatch_forward_send_tcp(  # type: ignore[no-untyped-def]
-    method,
-    message_chunks: Iterable[Tuple[float, int, List[str]]],
-    result,
-):
-    protocol, method_params = method
-
-    if protocol == "udp":
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    elif protocol == "tcp":
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    else:
-        raise NotImplementedError()
-
-    sock.connect((method_params["address"], method_params["port"]))
-
-    try:
-        for _time_spooled, _num_spooled, message_chunk in message_chunks:
-            for message in message_chunk:
-                sock.sendall(message.encode("utf-8") + b"\n")
-                result.num_forwarded += 1
-    except Exception as exc:
-        result.exception = exc
-    finally:
-        sock.close()
-
-
-# a) Rewrite chunks that have been processed partially
-# b) Write files for new chunk
-def logwatch_spool_messages(  # type: ignore[no-untyped-def]
-    message_chunks: Iterable[Tuple[float, int, List[str]]],
-    result,
-    spool_path: Path,
-):
-    spool_path.mkdir(parents=True, exist_ok=True)
-
-    # Now write updated/new and delete emtpy spool files
-    for time_spooled, num_already_spooled, message_chunk in message_chunks:
-        spool_file_path = spool_path / ("spool.%0.2f" % time_spooled)
-
-        if not message_chunk:
-            # Cleanup empty spool files
-            spool_file_path.unlink(missing_ok=True)
-            continue
+        if not message_chunks:
+            return result  # Nothing to process
 
         try:
-            # Partially processed chunks or the new one
-            spool_file_path.write_text(repr(message_chunk))
-            result.num_spooled += len(message_chunk)
-        except Exception:
-            if cmk.utils.debug.enabled():
-                raise
+            self._forward_send_tcp(method, message_chunks, result)
+        except Exception as exc:
+            result.exception = exc
 
-            if num_already_spooled == 0:
-                result.num_dropped += len(message_chunk)
+        if self._shall_spool_messages(method):
+            self._spool_messages(message_chunks, result)
+        else:
+            result.num_dropped = sum(len(c[2]) for c in message_chunks)
 
+        return result
 
-def logwatch_load_spooled_messages(  # type: ignore[no-untyped-def]
-    method: Tuple,
-    result,
-    spool_path: Path,
-    hostname: HostName,
-) -> List[Tuple[float, int, List[str]]]:
-    spool_params = method[1]["spool"]
+    @staticmethod
+    def _shall_spool_messages(method: object) -> bool:
+        return (
+            isinstance(method, tuple)
+            and method[0] == "tcp"
+            and isinstance(method[1], dict)
+            and "spool" in method[1]
+        )
 
-    try:
-        spool_files = sorted(spool_path.iterdir())
-    except FileNotFoundError:
-        return []
+    @staticmethod
+    def _forward_send_tcp(
+        method: tuple,
+        message_chunks: Iterable[Tuple[float, int, List[str]]],
+        result: LogwatchFordwardResult,
+    ) -> None:
+        protocol, method_params = method
 
-    message_chunks = []
+        if protocol == "udp":
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        elif protocol == "tcp":
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            raise NotImplementedError()
 
-    total_size = 0
-    for path in spool_files:
-        # Delete unknown files
-        if not path.name.startswith("spool."):
-            path.unlink()
-            continue
-
-        time_spooled = float(path.name[6:])
-        file_size = path.stat().st_size
-        total_size += file_size
-
-        # Delete fully processed files
-        if file_size in [0, 2]:
-            path.unlink()
-            continue
-
-        # Delete too old files by age
-        if time_spooled < time.time() - spool_params["max_age"]:
-            logwatch_spool_drop_messages(path, result)
-            continue
-
-    # Delete by size till half of target size has been deleted (oldest spool files first)
-    if total_size > spool_params["max_size"]:
-        target_size = int(spool_params["max_size"] / 2.0)
-
-        for filename in spool_files:
-            path = logwatch_spool_path(hostname) / filename
-
-            total_size -= logwatch_spool_drop_messages(path, result)
-            if target_size >= total_size:
-                break  # cleaned up enough
-
-    # Now process the remaining files
-    for path in spool_files:
-        time_spooled = float(path.name[6:])
+        sock.connect((method_params["address"], method_params["port"]))
 
         try:
-            messages = ast.literal_eval(path.read_text())
+            for _time_spooled, _num_spooled, message_chunk in message_chunks:
+                for message in message_chunk:
+                    sock.sendall(message.encode("utf-8") + b"\n")
+                    result.num_forwarded += 1
+        except Exception as exc:
+            result.exception = exc
+        finally:
+            sock.close()
+
+    # a) Rewrite chunks that have been processed partially
+    # b) Write files for new chunk
+    def _spool_messages(
+        self,
+        message_chunks: Iterable[Tuple[float, int, List[str]]],
+        result: LogwatchFordwardResult,
+    ) -> None:
+        self._spool_path.mkdir(parents=True, exist_ok=True)
+
+        # Now write updated/new and delete emtpy spool files
+        for time_spooled, num_already_spooled, message_chunk in message_chunks:
+            spool_file_path = self._spool_path / ("spool.%0.2f" % time_spooled)
+
+            if not message_chunk:
+                # Cleanup empty spool files
+                spool_file_path.unlink(missing_ok=True)
+                continue
+
+            try:
+                # Partially processed chunks or the new one
+                spool_file_path.write_text(repr(message_chunk))
+                result.num_spooled += len(message_chunk)
+            except Exception:
+                if cmk.utils.debug.enabled():
+                    raise
+
+                if num_already_spooled == 0:
+                    result.num_dropped += len(message_chunk)
+
+    def _load_spooled_messages(
+        self,
+        method: Tuple,
+        result: LogwatchFordwardResult,
+    ) -> List[Tuple[float, int, List[str]]]:
+        spool_params = method[1]["spool"]
+
+        try:
+            spool_files = sorted(self._spool_path.iterdir())
         except FileNotFoundError:
-            continue
+            return []
 
-        message_chunks.append((time_spooled, len(messages), messages))
+        message_chunks = []
 
-    return message_chunks
+        total_size = 0
+        for path in spool_files:
+            # Delete unknown files
+            if not path.name.startswith("spool."):
+                path.unlink()
+                continue
 
+            time_spooled = float(path.name[6:])
+            file_size = path.stat().st_size
+            total_size += file_size
 
-def logwatch_spool_drop_messages(path: Path, result) -> int:  # type: ignore[no-untyped-def]
-    messages = ast.literal_eval(path.read_text())
-    result.num_dropped += len(messages)
+            # Delete fully processed files
+            if file_size in [0, 2]:
+                path.unlink()
+                continue
 
-    file_size = path.stat().st_size
-    path.unlink()
-    return file_size
+            # Delete too old files by age
+            if time_spooled < time.time() - spool_params["max_age"]:
+                self._spool_drop_messages(path, result)
+                continue
 
+        # Delete by size till half of target size has been deleted (oldest spool files first)
+        if total_size > spool_params["max_size"]:
+            target_size = int(spool_params["max_size"] / 2.0)
 
-def logwatch_spool_path(hostname: HostName) -> Path:
-    return Path(cmk.utils.paths.var_dir, "logwatch_spool", hostname)
+            for filename in spool_files:
+                path = self._spool_path / filename
+
+                total_size -= self._spool_drop_messages(path, result)
+                if target_size >= total_size:
+                    break  # cleaned up enough
+
+        # Now process the remaining files
+        for path in spool_files:
+            time_spooled = float(path.name[6:])
+
+            try:
+                messages = ast.literal_eval(path.read_text())
+            except FileNotFoundError:
+                continue
+
+            message_chunks.append((time_spooled, len(messages), messages))
+
+        return message_chunks
+
+    @staticmethod
+    def _spool_drop_messages(path: Path, result: LogwatchFordwardResult) -> int:
+        messages = ast.literal_eval(path.read_text())
+        result.num_dropped += len(messages)
+
+        file_size = path.stat().st_size
+        path.unlink()
+        return file_size
+
+    @property
+    def _spool_path(self) -> Path:
+        return Path(cmk.utils.paths.var_dir, "logwatch_spool", self.hostname)

@@ -87,6 +87,8 @@ def check_graylog_sources(item: str, params: Mapping[str, Any], section: SourceI
     yield from _handle_graylog_sources_messages(item_data, params)
 
 
+factory_settings["graylog_sources_default_levels"] = {}
+
 check_info["graylog_sources"] = {
     "parse_function": parse_graylog_sources,
     "check_function": check_graylog_sources,

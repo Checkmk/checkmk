@@ -381,6 +381,8 @@ def check_apc_symmetra_elphase(item, params, parsed):
     return check_elphase(item, params, parsed.get("elphase", {}))
 
 
+factory_settings["apc_symmetra_elphase_default_levels"] = {}
+
 check_info["apc_symmetra.elphase"] = {
     "inventory_function": inventory_apc_symmetra_elphase,
     "check_function": check_apc_symmetra_elphase,

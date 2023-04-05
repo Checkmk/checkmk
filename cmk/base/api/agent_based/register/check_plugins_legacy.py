@@ -28,32 +28,6 @@ from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias
 from .utils_legacy import CheckInfoElement
 
 
-def _get_default_parameters(
-    check_info_element: CheckInfoElement,
-    factory_settings: dict[str, dict[str, object]],
-    check_context: dict[str, object],
-) -> Optional[ParametersTypeAlias]:
-    """compute default parameters"""
-    params_variable_name = check_info_element.get("default_levels_variable")
-    if not params_variable_name:
-        return None
-
-    # factory_settings
-    fs_parameters = factory_settings.get(params_variable_name, {})
-
-    # global scope of check context
-    gs_parameters = check_context.get(params_variable_name)
-
-    return (
-        {
-            **fs_parameters,
-            **gs_parameters,
-        }
-        if isinstance(gs_parameters, dict)
-        else fs_parameters
-    )
-
-
 def _create_discovery_function(
     check_name: str,
     check_info_element: CheckInfoElement,
@@ -301,17 +275,12 @@ def _create_signature_check_function(
 def _create_wrapped_parameters(
     check_info_element: CheckInfoElement,
     factory_settings: Dict[str, Dict],
-    check_context: dict[str, object],
 ) -> ParametersTypeAlias:
     """compute default parameters and wrap them in a dictionary"""
-    default_parameters = _get_default_parameters(
-        check_info_element,
-        factory_settings,
-        check_context,
-    )
-    if default_parameters is None:
+    if (params_variable_name := check_info_element.get("default_levels_variable")) is None:
         return {}
 
+    default_parameters = factory_settings[params_variable_name]
     if isinstance(default_parameters, dict):
         return default_parameters
     return wrap_parameters(default_parameters)
@@ -341,7 +310,6 @@ def create_check_plugin_from_legacy(
     check_default_parameters = _create_wrapped_parameters(
         check_info_element,
         factory_settings,
-        check_context,
     )
 
     discovery_function = _create_discovery_function(

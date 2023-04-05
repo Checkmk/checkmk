@@ -231,7 +231,7 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
         "norris",
         check_info_element,
         {"norris_default_levels": {"levels": (23, 42)}},
-        {"norris_default_levels": {"levels_lower": (1, 2)}},
+        {},
     )
 
     assert plugin.name == CheckPluginName("norris")
@@ -243,51 +243,6 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
     assert plugin.check_function.__name__ == "check_migration_wrapper"
     assert plugin.check_default_parameters == {
         "levels": (23, 42),
-        "levels_lower": (1, 2),
     }
     assert plugin.check_ruleset_name == RuleSetName("norris_rule")
     assert plugin.cluster_check_function is None
-
-
-def test_get_default_params_clean_case() -> None:
-    # with params
-    assert check_plugins_legacy._get_default_parameters(
-        check_info_element={"default_levels_variable": "foo"},
-        factory_settings={"foo": {"levels": (23, 42)}},
-        check_context={},
-    ) == {"levels": (23, 42)}
-
-    # without params
-    assert (
-        check_plugins_legacy._get_default_parameters(
-            check_info_element={},
-            factory_settings={},
-            check_context={},
-        )
-        is None
-    )
-
-
-def test_get_default_params_with_user_update() -> None:
-    # with params
-    assert check_plugins_legacy._get_default_parameters(
-        check_info_element={"default_levels_variable": "foo"},
-        factory_settings={"foo": {"levels": (23, 42), "overwrite_this": None}},
-        check_context={"foo": {"overwrite_this": 3.14, "more": "is better!"}},
-    ) == {
-        "levels": (23, 42),
-        "overwrite_this": 3.14,
-        "more": "is better!",
-    }
-
-
-def test_get_default_params_ignore_user_defined_tuple() -> None:
-    # with params
-    assert (
-        check_plugins_legacy._get_default_parameters(
-            check_info_element={"default_levels_variable": "foo"},
-            factory_settings={},
-            check_context={"foo": (23, 42)},
-        )
-        == {}
-    )

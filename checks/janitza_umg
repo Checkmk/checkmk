@@ -101,6 +101,8 @@ def inventory_janitza_umg_inphase(parsed):
             yield item, {}
 
 
+factory_settings["janitza_umg_inphase_default_levels"] = {}
+
 check_info["janitza_umg"] = {
     "detect": any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.8.6"),
@@ -173,6 +175,9 @@ def check_janitza_umg_temp(item, params, parsed):
             float(parsed["Temperature"][idx]) / 10.0, params, "janitza_umg_%s" % item
         )
     return None
+
+
+factory_settings["janitza_umg_temp_default_levels"] = {}
 
 
 check_info["janitza_umg.temp"] = {

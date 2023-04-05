@@ -157,10 +157,10 @@ class ModeDiscovery(WatoMode):
         # button. The help texts on this page are only added dynamically via
         # AJAX.
         html.enable_help_toggle()
-        self._datasources_container()
-        self._fix_all_container()
+        self._container("datasources")
+        self._container("fixall")
         self._async_progress_msg_container()
-        self._service_container()
+        self._container("service", True)
         html.javascript(
             "cmk.service_discovery.start(%s, %s, %s)"
             % (
@@ -170,21 +170,13 @@ class ModeDiscovery(WatoMode):
             )
         )
 
+    def _container(self, name: str, hidden: bool = False) -> None:
+        html.open_div(id_=f"{name}_container", style=("display:none" if hidden else ""))
+        html.close_div()
+
     def _async_progress_msg_container(self):
         html.open_div(id_="async_progress_msg")
         html.show_message(_("Loading..."))
-        html.close_div()
-
-    def _service_container(self):
-        html.open_div(id_="service_container", style="display:none")
-        html.close_div()
-
-    def _fix_all_container(self):
-        html.open_div(id_="fixall_container")
-        html.close_div()
-
-    def _datasources_container(self):
-        html.open_div(id_="datasources_container")
         html.close_div()
 
 

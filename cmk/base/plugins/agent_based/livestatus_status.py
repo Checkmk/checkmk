@@ -7,10 +7,7 @@ from typing import Any, Dict, Mapping, MutableMapping, Optional
 
 from .agent_based_api.v1 import (
     check_levels,
-    get_rate,
     get_value_store,
-    GetRateError,
-    IgnoreResults,
     Metric,
     register,
     render,
@@ -148,31 +145,21 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
 
     yield Result(state=State.OK, summary="Livestatus version: %s" % status["livestatus_version"])
 
-    for key, title in [
-        ("host_checks", "Host checks"),
-        ("service_checks", "Service checks"),
-        ("forks", "Process creations"),
-        ("connections", "Livestatus connects"),
-        ("requests", "Livestatus requests"),
-        ("log_messages", "Log messages"),
+    for metric_name, key, title in [
+        ("host_checks", "host_checks_rate", "Host checks"),
+        ("service_checks", "service_checks_rate", "Service checks"),
+        ("forks", "forks_rate", "Process creations"),
+        ("connections", "connections_rate", "Livestatus connects"),
+        ("requests", "requests_rate", "Livestatus requests"),
+        ("log_messages", "log_messages_rate", "Log messages"),
     ]:
-        try:
-            value = get_rate(
-                value_store=value_store,
-                key=key,
-                time=this_time,
-                value=float(status[key]),
-            )
-        except GetRateError as error:
-            yield IgnoreResults(str(error))
-            continue
-
-        if key in ("host_checks", "service_checks"):
+        value = float(status[key])
+        if key in ("host_checks_rate", "service_checks_rate"):
             yield Result(state=State.OK, summary="%s: %.1f/s" % (title, value))
         else:
             yield Result(state=State.OK, notice="%s: %.1f/s" % (title, value))
 
-        yield Metric(name=key, value=value, boundaries=(0, None))
+        yield Metric(name=metric_name, value=value, boundaries=(0, None))
 
     if status["program_version"].startswith("Check_MK"):
         # We have a CMC here.

@@ -35,6 +35,9 @@ docker_tag() {
     if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
         log "Erstelle \"{$BRANCH}-latest\" tag..."
         docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+    else
+        log "Erstelle \"daily\" tag..."
+        docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-daily"
     fi
 
     if [ "$SET_LATEST_TAG" = "yes" ]; then
@@ -62,6 +65,8 @@ docker_push() {
 
     if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
         DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+    else
+        DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-daily"
     fi
 
     if [ "$SET_LATEST_TAG" = "yes" ]; then

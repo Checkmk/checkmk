@@ -163,7 +163,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.users")
     name = params["name"]
     check_modify_group_permissions("contact")
-    with disable_permission_tracking(), SuperUserContext():
+    with disable_permission_tracking():
         # HACK: We need to supress this, due to lots of irrelevant dashboard permissions
         delete_group(name, "contact")
     return Response(status=204)

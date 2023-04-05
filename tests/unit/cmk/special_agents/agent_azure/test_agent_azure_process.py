@@ -26,6 +26,7 @@ from cmk.special_agents.agent_azure import (
     Section,
     usage_details,
     write_group_info,
+    write_remaining_reads,
     write_section_ad,
 )
 
@@ -291,7 +292,6 @@ def test_get_vm_labels_section(
                         '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "BurningMan", "cmk/azure/vm": "instance"}\n'
                     ],
                 ),
-                (AzureSection, [""], ["remaining-reads|2.0\n"]),
                 (
                     AzureSection,
                     ["MyVM"],
@@ -342,7 +342,6 @@ def test_get_vm_labels_section(
                 services=["Microsoft.Compute/virtualMachines"],
             ),
             [
-                (AzureSection, [""], ["remaining-reads|2.0\n"]),
                 (
                     AzureSection,
                     ["BurningMan"],
@@ -804,3 +803,25 @@ def test_process_resource_health_request_error_debug(capsys: pytest.CaptureFixtu
 
     with pytest.raises(Exception, match="Request failed"):
         list(process_resource_health(mgmt_client, [], Args(debug=True)))
+
+
+@pytest.mark.parametrize(
+    "rate_limit,expected_output",
+    [
+        (
+            10000,
+            "<<<<>>>>\n<<<azure_agent_info:sep(124)>>>\nremaining-reads|10000\n<<<<>>>>\n",
+        ),
+        (
+            None,
+            "<<<<>>>>\n<<<azure_agent_info:sep(124)>>>\nremaining-reads|None\n<<<<>>>>\n",
+        ),
+    ],
+)
+def test_write_remaining_reads(
+    capsys: pytest.CaptureFixture[str], rate_limit: int | None, expected_output: str
+) -> None:
+    write_remaining_reads(rate_limit)
+
+    captured = capsys.readouterr()
+    assert captured.out == expected_output

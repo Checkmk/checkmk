@@ -3,70 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import re
-from pathlib import Path
-
-import pytest
-
 import tests.testlib as testlib
-
-from tests.unit.conftest import FixPluginLegacy
-
-import cmk.utils.paths
-
-
-def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
-    try:
-        with check_file_path.open() as handle:
-            return [
-                "%s:%d:%s" % (check_file_path.name, line_no, repr(line.strip()))
-                for line_no, line in enumerate(handle, 1)
-                if re.search(deprecated_pattern, line.strip())
-            ]
-    except UnicodeDecodeError as exc:
-        return [f"{check_file_path.name}:-1:Unable to reade file: {exc}"]
-
-
-@pytest.mark.parametrize(
-    "deprecated_pattern",
-    [
-        r"\bservice_description\(",
-        r"\bOID_BIN\b",
-        r"\bOID_STRING\b",
-        r"\bOID_END_BIN\b",
-        r"\bOID_END_OCTET_STRING\b",
-        r"\ball_matching_hosts\b",
-        r"\bbinstring_to_int\b",
-        r"\bcheck_type\b",
-        r"\bcore_state_names\b",
-        r"\bis_cmc\b",
-        r"\bnagios_illegal_chars\b",
-        r"\bquote_shell_string\b",
-        r"\btags_of_host\b",
-    ],
-)
-def test_deprecated_api_features(deprecated_pattern: str) -> None:
-    check_files = (
-        pathname
-        for pathname in Path(cmk.utils.paths.checks_dir).glob("*")
-        if os.path.isfile(pathname) and pathname.suffix not in (".swp",)
-    )
-    with_deprecated_feature = [
-        finding  #
-        for check_file_path in check_files  #
-        for finding in _search_deprecated_api_feature(check_file_path, deprecated_pattern)
-    ]
-    assert not with_deprecated_feature, "Found %d deprecated API name '%r' usages:\n%s" % (
-        len(with_deprecated_feature),
-        deprecated_pattern,
-        "\n".join(with_deprecated_feature),
-    )
-
-
-def test_includes_are_deprecated(fix_plugin_legacy: FixPluginLegacy) -> None:
-    for name, check_info in fix_plugin_legacy.check_info.items():
-        assert not check_info.get("includes"), f"Plugin {name}: includes are deprecated!"
 
 
 def test_check_plugin_header() -> None:

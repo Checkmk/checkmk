@@ -10,12 +10,91 @@
 # in order of frequency, decreasing (at time of writing):
 # mypy: disable-error-code="var-annotated,name-defined,arg-type,no-untyped-def,list-item,index,attr-defined,operator,assignment"
 
-from cmk.base.api.agent_based.register.utils_legacy import CheckInfoElement
-from cmk.base.check_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-check_info: dict[str, CheckInfoElement] = {}
-factory_settings: dict[str, dict | tuple] = {}
-active_check_info = {}
-special_agent_info = {}
+from cmk.base.check_api import (  # pylint: disable=unused-import
+    all_of,
+    Any,
+    any_of,
+    BINARY,
+    CACHED_OID,
+    Callable,
+    check_levels,
+    clear_item_state,
+    collections,
+    contains,
+    Crit,
+    Dict,
+    discover,
+    discover_single,
+    endswith,
+    enum,
+    equals,
+    exists,
+    functools,
+    get_age_human_readable,
+    get_average,
+    get_bytes_human_readable,
+    get_check_api_context,
+    get_filesize_human_readable,
+    get_http_proxy,
+    get_item_state,
+    get_nic_speed_human_readable,
+    get_number_with_precision,
+    get_parsed_item_data,
+    get_percent_human_readable,
+    get_rate,
+    get_relative_date_human_readable,
+    get_timestamp_human_readable,
+    host_name,
+    HostName,
+    HTTPProxyConfig,
+    is_ipv6_primary,
+    Iterable,
+    Levels,
+    List,
+    Literal,
+    Mapping,
+    matches,
+    MetricName,
+    MKCounterWrapped,
+    MKGeneralException,
+    not_contains,
+    not_equals,
+    not_exists,
+    not_matches,
+    OID_END,
+    Optional,
+    passwordstore_get_cmdline,
+    RAISE,
+    re,
+    regex,
+    savefloat,
+    saveint,
+    service_description,
+    ServiceCheckResult,
+    ServiceDetails,
+    ServiceState,
+    set_item_state,
+    SKIP,
+    socket,
+    startswith,
+    state_markers,
+    time,
+    Tuple,
+    Union,
+    validate_filter,
+    Warn,
+    ZERO,
+)
 
-# pylint: disable=ungrouped-imports,wrong-import-order
+# TODO: can we move these to check_api and make this actual code (of the checks/* files)?
+from cmk.base.config import (  # pylint: disable=unused-import
+    active_check_info,
+    check_info,
+    factory_settings,
+    special_agent_info,
+)
+
+# pylint: disable=ungrouped-imports,wrong-import-order,reimported,pointless-string-statement
+
+## %<

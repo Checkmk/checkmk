@@ -36,7 +36,7 @@ factory_settings["esx_vsphere_objects_default_levels"] = {
 def parse_esx_vsphere_objects(info):
     parsed = {}
     Obj = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
-        "EsxObj", ["name", "hostsystem", "state"]
+        "Obj", ["name", "hostsystem", "state"]
     )
     for line in info:
         if len(line) < 2:

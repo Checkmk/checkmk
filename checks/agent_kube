@@ -22,7 +22,7 @@ def _usage_endpoint(
 ) -> list[str]:
     args = [
         f"--{prefix}-endpoint",
-        params["endpoint"],
+        str(params["endpoint"]),
         "--usage-proxy",
         get_http_proxy(params.get("proxy", ("environment", "environment"))).serialize(),
     ]

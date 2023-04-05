@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable
-from typing import NotRequired, TypedDict
+from typing import Mapping, NotRequired, TypedDict
 
 from cmk.base.api.agent_based.checking_classes import Service
 
 from ..section_classes import SNMPDetectSpecification
 
-_DiscoveredParameters = dict | tuple | str | None
+_DiscoveredParameters = Mapping | tuple | str | None
 
 
 class CheckInfoElement(TypedDict):

@@ -32,7 +32,9 @@ def parse_win_license(info):
             expiration = " ".join(line).split(":")[1].strip()
             parsed["expiration"] = expiration
             time_left_re = regex(r"(\d+) minute")
-            time_left = int(time_left_re.search(expiration).group(1)) * 60
+            if (search := time_left_re.search(expiration)) is None:
+                raise ValueError(expiration)
+            time_left = int(search.group(1)) * 60
             parsed["expiration_time"] = time_left
     return parsed
 

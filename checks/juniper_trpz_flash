@@ -26,7 +26,7 @@ def check_juniper_trpz_flash(_no_item, params, info):
             return 1, message + levels, perf
     else:
         perf = [("used", used, warn, crit, 0, total)]
-        levels = "Levels Warn/Crit are (%.2f, %.2f)" % (
+        levels = "Levels Warn/Crit are (%s, %s)" % (
             get_bytes_human_readable(warn),
             get_bytes_human_readable(crit),
         )

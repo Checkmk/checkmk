@@ -7,7 +7,7 @@
 # 524288000 5669830
 
 SplunkLicenseUsage = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
-    "lcsusg", ["quota", "slaves_usage_bytes"]
+    "SplunkLicenseUsage", ["quota", "slaves_usage_bytes"]
 )
 
 

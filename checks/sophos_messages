@@ -18,6 +18,9 @@
 # TODO levels?
 
 
+import time
+
+
 def inventory_sophos_messages(info):
     return [(line[0].replace("InvalidRecipient", "Invalid Recipient"), None) for line in info]
 

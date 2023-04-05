@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
+from collections.abc import Iterable
+from typing import Dict, List, Tuple
 
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 

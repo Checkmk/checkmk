@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+
 veeam_tapejobs_default_levels = (1 * 3600 * 24, 2 * 3600 * 24)
 
 BACKUP_STATE = {"Success": 0, "Warning": 1, "Failed": 2}

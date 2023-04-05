@@ -8,6 +8,8 @@
 # Controller idle ticks: 1773844
 
 # suggested by customer
+import time
+
 emcvnx_sp_util_default_levels = (50.0, 60.0)
 
 

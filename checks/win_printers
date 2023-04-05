@@ -9,6 +9,8 @@
 # PrinterStockholm                      0                   3                   0
 # WH1_BC_O3_UPS                         0                   3                   0
 
+import collections
+
 factory_settings["win_printer_default_levels"] = {
     "warn_states": [8, 11],
     "crit_states": [9, 10],

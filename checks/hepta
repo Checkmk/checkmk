@@ -6,6 +6,9 @@
 # Device Manual: https://www.hopf.com/downloads/manuals/8030hepta-gps_v0400_en.pdf
 
 
+import time
+
+
 def get_time(timefromdevice):
     import struct
 

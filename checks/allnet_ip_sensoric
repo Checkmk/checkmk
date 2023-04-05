@@ -5,6 +5,7 @@
 
 import re
 from collections.abc import Mapping
+from typing import Mapping
 
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import

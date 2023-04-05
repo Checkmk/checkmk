@@ -51,6 +51,9 @@
 # OutputBuffer:             0 Bytes
 
 
+import time
+
+
 def parse_mknotifyd(info):  # pylint: disable=too-many-branches
     try:
         timestamp, data = int(info[0][0]), info[1:]

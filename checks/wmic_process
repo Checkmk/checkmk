@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import time
+
+
 def check_wmic_process(item, params, info):
     name, memwarn, memcrit, pagewarn, pagecrit, cpuwarn, cpucrit = params
     count, mem, page, userc, kernelc = 0, 0, 0, 0, 0

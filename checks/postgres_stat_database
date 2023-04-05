@@ -11,6 +11,9 @@
 # 16385 foobardb 7 43619118 262 3589 838098632 854602076 441785363 8298 602481 2806
 
 
+import time
+
+
 def parse_postgres_stat_database(info):
     if len(info) == 0:
         return {}

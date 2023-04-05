@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.1.  index for ifname

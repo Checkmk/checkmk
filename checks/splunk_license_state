@@ -10,6 +10,9 @@
 
 # expiration_time default is warn/crit 14d/7d
 
+import collections
+import time
+
 SplunkLicenseState = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "SplunkLicenseState",
     [

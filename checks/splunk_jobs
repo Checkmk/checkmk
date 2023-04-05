@@ -7,6 +7,8 @@
 # splunk-system-user, , 0.91, False, 61440, False
 # admin, search, 0.101, False, 69632, False
 
+import collections
+
 JobCount = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "JobCount", ["jobs", "failed", "zombies", "output"]
 )

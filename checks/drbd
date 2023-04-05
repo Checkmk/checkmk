@@ -121,7 +121,11 @@
 #   wo (write order). Currently used write ordering method: b (barrier), f (flush), d (drain) or n (none). Since 8.2.7.
 #   oos (out of sync). Amount of storage currently out of sync; in Kibibytes. Since 8.2.6.
 
+import re
+
 # Default thresholds for drbd checks
+import time
+
 drbd_net_default_levels = (None, None)
 drbd_disk_default_levels = (None, None)
 drbd_stats_default_levels = (None, None, None, None, None, None, None, None, None)

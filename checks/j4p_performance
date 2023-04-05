@@ -7,6 +7,8 @@
 # Please use jolokia_* instead
 
 # MB warn, crit
+import time
+
 j4p_performance_mem_default_levels = (1000, 2000)
 # Number of threads warn, crit
 j4p_performance_threads_default_levels = (80, 100)

@@ -5,6 +5,8 @@
 
 # example output
 
+import collections
+
 factory_settings["lvm_lvs_default_levels"] = {
     "levels_data": (80.0, 90.0),
     "levels_meta": (80.0, 90.0),

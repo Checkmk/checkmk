@@ -11,6 +11,9 @@
 # 127.0.0.1 80 Reading: 0 Writing: 1 Waiting: 0
 
 
+import time
+
+
 def parse_nginx_status(info):
     if len(info) % 4 != 0:
         # Every instance block consists of four lines

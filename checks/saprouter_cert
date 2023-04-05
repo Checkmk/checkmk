@@ -23,6 +23,8 @@
 # get_my_name: Couldn't open PSE "/usr/users/prdadm/saprouter/local.pse" (Decoding error)
 
 # Suggested by customer
+import time
+
 factory_settings["saprouter_cert_default_levels"] = {
     "validity_age": (86400 * 30, 86400 * 7),
 }

@@ -33,6 +33,8 @@
 # 0  DEAD.QUEUE.IGNORE  100000  CURDEPTH(0)LGETDATE()LGETTIME() 2016_04_08-15_31_43
 # 0  DEAD.QUEUE.SECURITY  100000  CURDEPTH(0)LGETDATE()LGETTIME() 2016_04_08-15_31_43
 
+import time
+
 websphere_mq_queues_default_levels = {
     "message_count": (1000, 1200),
     "message_count_perc": (80.0, 90.0),

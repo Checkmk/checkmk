@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import re
+
+
 def bintec_brrp_status_compose_item(brrp_id):
     return re.sub(r"\..*", "", brrp_id)
 

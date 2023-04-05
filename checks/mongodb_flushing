@@ -9,6 +9,9 @@
 # flushed 36479
 
 
+import time
+
+
 def inventory_mongodb_flushing(info):
     # This check has no default parameters
     # The average/last flush time highly depends on the size of the mongodb setup

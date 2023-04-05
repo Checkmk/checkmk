@@ -8,6 +8,9 @@
 # Hans|jk-8109|Error Count:0|Request Count:2
 
 
+import time
+
+
 def inventory_appdynamics_web_container(info):
     for line in info:
         yield " ".join(line[0:2]), {}

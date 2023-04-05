@@ -24,6 +24,8 @@
 # zam19-113565 Sebastian Hirschdobler 3561472 Fri Jul 31 12:58:01 2015
 
 # Default thresholds
+import time
+
 factory_settings["cups_queues_default_levels"] = {
     "job_count": (5, 10),  # warn/crit for queue entries
     "job_age": (360, 720),  # warn/crit for entry age in seconds

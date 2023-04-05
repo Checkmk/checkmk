@@ -32,6 +32,10 @@
 # bbbbbbbb, Central Syslog Sender, GRAY, Stopped, , , 9109548
 
 
+import re
+import time
+
+
 def parse_aix_sap_processlist(info):
     instance, description = None, None
     parsed = {}

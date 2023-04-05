@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import time
+
+
 def parse_safenet_ntls(info):
     return {
         "operation_status": info[0][0],

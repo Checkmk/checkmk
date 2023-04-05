@@ -18,6 +18,8 @@
 # virtualmachine  LinuxV
 # virtualmachine  OpenSUSE_I
 
+import collections
+
 vsphere_object_names = {
     "hostsystem": "HostSystem",
     "virtualmachine": "VM",

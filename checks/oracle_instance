@@ -15,6 +15,7 @@
 # ORA-28002: the password will expire within 1 days$
 
 import datetime
+import time
 
 from cmk.base.plugins.agent_based.oracle_instance import GeneralError, Instance, InvalidData
 

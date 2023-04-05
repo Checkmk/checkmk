@@ -12,6 +12,8 @@
 # node1 76123   123123
 # node2 7612311 123123
 
+import collections
+
 NetappApiTimeEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "NetappApiTimeEntry",
     [

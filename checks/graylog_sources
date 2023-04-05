@@ -6,7 +6,7 @@
 import json
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Mapping
 
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import

@@ -24,6 +24,8 @@
 # 0: alive_report (max age of hint file in seconds)
 # 1: warn fill level in percent
 # 2: crit fill level in percent
+import time
+
 sylo_default_levels = (70, 5, 25)
 
 

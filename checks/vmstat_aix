@@ -12,6 +12,8 @@
 #  2  1 669941 89605   0   0   0   3   12   0  12  531 240  0  0 99  0  0.02   0.5
 #  0  1    2    3      4   5   6   7   8    9  10   11  12 13 14 15 16   17     18
 
+import collections
+
 VMStatAIX = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "VMStatAIX", ["user", "system", "idle", "wait"]
 )

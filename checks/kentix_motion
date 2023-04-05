@@ -7,6 +7,8 @@
 # 2017 comNET GmbH, Bjoern Mueller
 
 
+import time
+
 from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
 
 

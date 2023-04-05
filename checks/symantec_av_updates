@@ -12,6 +12,8 @@
 # <<<symantec_av_updates>>>
 # 09/18/15 rev. 1
 
+import time
+
 symantec_av_updates_default_levels = (259200, 345600)
 
 

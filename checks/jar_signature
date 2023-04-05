@@ -23,6 +23,9 @@
 #                     This jar contains entries whose signer certificate has expired.
 
 
+import time
+
+
 def inventory_jar_signature(info):
     inventory = []
     for line in info:

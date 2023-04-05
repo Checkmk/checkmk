@@ -8,6 +8,9 @@
 # - use friendly output of values. Output
 #   "Ingress Dequeue Packets" instead of "brcdTMStatsIngressDequeuePkts"
 
+import re
+import time
+
 factory_settings["brocade_tm_default_levels"] = {
     "brcdTMStatsTotalIngressPktsCnt": (1000, 10000),
     "brcdTMStatsIngressEnqueuePkts": (1000, 10000),

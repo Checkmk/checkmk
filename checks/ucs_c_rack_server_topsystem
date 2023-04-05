@@ -9,6 +9,9 @@
 # topSystem<TAB>dn sys<TAB>address 192.168.1.1<TAB>currentTime Wed Feb  6 09:12:12 2019<TAB>mode stand-alone<TAB>name CIMC-istreamer2a-etn
 
 
+import time
+
+
 def parse_ucs_c_rack_server_topsystem(info):
     """
     Input: Single line info with a rack server topsystem information.

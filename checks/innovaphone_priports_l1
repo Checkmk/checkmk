@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import time
+
+
 def parse_innovaphone_priports_l1(info):
     parsed = {}
     for item, state_s, sigloss_s, slip_s in info:

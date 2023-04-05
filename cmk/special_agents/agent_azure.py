@@ -1282,10 +1282,10 @@ def process_resource(
         else None
     )
 
-    agent_info_section = AzureSection("agent_info")
-    agent_info_section.add(("remaining-reads", mgmt_client.ratelimit))
-    agent_info_section.add(err.dumpinfo() if err else None)
-    sections.append(agent_info_section)
+    if err:
+        agent_info_section = AzureSection("agent_info")
+        agent_info_section.add(err.dumpinfo())
+        sections.append(agent_info_section)
 
     section = AzureSection(resource.section, resource.piggytargets)
     section.add(resource.dumpinfo())
@@ -1325,6 +1325,12 @@ def write_group_info(
     # write empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
     AzureSection("agent_info", monitored_groups).write()
+
+
+def write_remaining_reads(rate_limit: int | None) -> None:
+    agent_info_section = AzureSection("agent_info")
+    agent_info_section.add(("remaining-reads", rate_limit))
+    agent_info_section.write()
 
 
 def write_exception_to_agent_info_section(exception, component):
@@ -1570,6 +1576,8 @@ def main_subscription(args, selector, subscription):
 
     for section in process_resource_health(mgmt_client, monitored_resources, args):
         section.write()
+
+    write_remaining_reads(mgmt_client.ratelimit)
 
 
 def main(argv=None):

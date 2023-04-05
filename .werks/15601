@@ -10,4 +10,4 @@ State: unknown
 Version: 2.2.0b3
 
 The Kubernetes special agent would show the piggyback data for Pods, which should have been excluded
-based on their namespace via the <tt>Kubernetes<\tt> rule.
+based on their namespace via the <tt>Kubernetes</tt> rule.

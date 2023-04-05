@@ -427,7 +427,16 @@ class AuthOptions(TypedDict, total=False):
 def _update_auth_options(
     internal_attrs: dict[str, int | str | bool], auth_options: AuthOptions, new_user: bool = False
 ) -> dict[str, int | str | bool]:
+    """Update the internal attributes with the authentication options (used for create and update)
+
+    Notes:
+        * the REST API currently only allows creating users with htpasswd connector (not LDAP
+        or SAML2)
+            * the connector must also be set even if there is no authentication specified
+    """
     if not auth_options:
+        if new_user:
+            internal_attrs["connector"] = userdb_utils.ConnectorType.HTPASSWD
         return internal_attrs
 
     if auth_options.get("auth_type") == "remove":
@@ -454,7 +463,7 @@ def _update_auth_options(
             if "password" in auth_options or "secret" in auth_options:
                 internal_attrs["serial"] = 1
 
-        internal_attrs["connector"] = "htpasswd"
+        internal_attrs["connector"] = userdb_utils.ConnectorType.HTPASSWD
     return internal_attrs
 
 

@@ -138,44 +138,44 @@ export function toggle_assumption(link, site, host, service) {
 }
 
 export function update_argument_hints() {
-    d3.selectAll<HTMLSelectElement, unknown>(
-        "select[onchange='cmk.bi.update_argument_hints();']"
-    ).each((d, idx, nodes) => {
-        const node = d3.select(nodes[idx]);
-        const rule_arguments =
-            window["bi_rule_argument_lookup"][node.property("value")];
-        const rule_body = node.select(function () {
-            // @ts-ignore
-            return this.closest("tbody");
-        });
-        const required_inputs = rule_arguments.length;
+    d3.selectAll("select[onchange='cmk.bi.update_argument_hints();']").each(
+        (d, idx, nodes) => {
+            const node = d3.select(nodes[idx]);
+            const rule_arguments =
+                window["bi_rule_argument_lookup"][node.property("value")];
+            const rule_body = node.select(function () {
+                // @ts-ignore
+                return this.closest("tbody");
+            });
+            const required_inputs = rule_arguments.length;
 
-        // Create nodes
-        let newNodes = rule_body
-            .selectAll<HTMLDivElement, unknown>("div.listofstrings")
-            .selectAll<HTMLInputElement, unknown>("input.text")
-            .nodes();
-        while (required_inputs >= newNodes.length) {
-            valuespecs.list_of_strings_add_new_field(
-                newNodes[newNodes.length - 1] as HTMLInputElement
-            );
-            newNodes = rule_body
-                .selectAll<HTMLDivElement, unknown>("div.listofstrings")
-                .selectAll<HTMLInputElement, unknown>("input.text")
+            // Create nodes
+            nodes = rule_body
+                .selectAll("div.listofstrings")
+                .selectAll("input.text")
                 .nodes();
-        }
+            while (required_inputs >= nodes.length) {
+                valuespecs.list_of_strings_add_new_field(
+                    nodes[nodes.length - 1]
+                );
+                nodes = rule_body
+                    .selectAll("div.listofstrings")
+                    .selectAll("input.text")
+                    .nodes();
+            }
 
-        // Update placeholder
-        const input_nodes = rule_body
-            .selectAll("div.listofstrings")
-            .selectAll("input.text");
-        input_nodes.attr("placeholder", "");
-        input_nodes.each((d, idx, nodes) => {
-            if (idx >= rule_arguments.length) return;
-            const argument_input = d3.select(nodes[idx]);
-            argument_input.attr("placeholder", rule_arguments[idx]);
-        });
-    });
+            // Update placeholder
+            const input_nodes = rule_body
+                .selectAll("div.listofstrings")
+                .selectAll("input.text");
+            input_nodes.attr("placeholder", "");
+            input_nodes.each((d, idx, nodes) => {
+                if (idx >= rule_arguments.length) return;
+                const argument_input = d3.select(nodes[idx]);
+                argument_input.attr("placeholder", rule_arguments[idx]);
+            });
+        }
+    );
 }
 
 export class BIPreview {

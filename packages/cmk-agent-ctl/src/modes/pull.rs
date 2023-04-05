@@ -222,26 +222,72 @@ async fn _pull(
     }
 }
 
-fn configure_socket(socket: Socket) -> AnyhowResult<Socket> {
+#[cfg(windows)]
+/// In windows REUSE is forbidden due to security reasons
+fn set_socket_for_exclusive_use(socket: &Socket, on: bool) -> std::io::Result<()> {
+    use std::os::windows::prelude::AsRawSocket;
+    use winapi::{ctypes, um::winsock2};
+    let on = u32::from(on);
+    let ret = unsafe {
+        let sock = socket.as_raw_socket() as winsock2::SOCKET;
+        let ptr = &on as *const ctypes::c_ulong as *const ctypes::c_void as *const ctypes::c_char;
+        winsock2::setsockopt(
+            sock,
+            winsock2::SOL_SOCKET,
+            winsock2::SO_EXCLUSIVEADDRUSE,
+            ptr,
+            4,
+        )
+    };
+    match ret {
+        0 => Ok(()),
+        code => Err(std::io::Error::from_raw_os_error(code)),
+    }
+}
+
+pub enum SocketMode {
+    Reuse,
+    Exclusive,
+}
+
+fn configure_socket(socket: Socket, mode: SocketMode) -> AnyhowResult<Socket> {
     socket.set_nonblocking(true)?;
     // https://stackoverflow.com/questions/3229860/what-is-the-meaning-of-so-reuseaddr-setsockopt-option-linux
     // Allow re-using the address, even if there are still connections. After sending the agent
     // data, we end up with a waiting connection which will be dropped at some point, but not
     // immediately (this is OK, standard TCP protocol). However, this will block the re-creation
     // of the socket if the agent controller is restarted (agent update or manual restart).
-    socket.set_reuse_address(true)?;
+    match mode {
+        #[cfg(windows)]
+        SocketMode::Exclusive => set_socket_for_exclusive_use(&socket, true)?,
+        #[cfg(unix)]
+        SocketMode::Exclusive => panic!("Not supported in Linux"),
+        SocketMode::Reuse => socket.set_reuse_address(true)?,
+    }
+
     Ok(socket)
 }
 
+#[cfg(windows)]
+const DEFAULT_SOCKET_MODE: SocketMode = SocketMode::Exclusive;
+#[cfg(unix)]
+const DEFAULT_SOCKET_MODE: SocketMode = SocketMode::Reuse;
+
 fn tcp_listener_v4(address: Ipv4Addr, port: u16) -> AnyhowResult<TcpListenerStd> {
-    let socket = configure_socket(Socket::new(Domain::IPV4, Type::STREAM, None)?)?;
+    let socket = configure_socket(
+        Socket::new(Domain::IPV4, Type::STREAM, None)?,
+        DEFAULT_SOCKET_MODE,
+    )?;
     socket.bind(&SockAddr::from(SocketAddr::new(IpAddr::V4(address), port)))?;
     socket.listen(4096)?;
     Ok(socket.into())
 }
 
 fn tcp_listener_v6(address: Ipv6Addr, port: u16) -> AnyhowResult<TcpListenerStd> {
-    let socket = configure_socket(Socket::new(Domain::IPV6, Type::STREAM, None)?)?;
+    let socket = configure_socket(
+        Socket::new(Domain::IPV6, Type::STREAM, None)?,
+        DEFAULT_SOCKET_MODE,
+    )?;
     socket.set_only_v6(false)?;
     socket.bind(&SockAddr::from(SocketAddr::new(IpAddr::V6(address), port)))?;
     socket.listen(4096)?;
@@ -471,6 +517,67 @@ mod tests {
     use super::*;
     use crate::types::AgentChannel;
 
+    #[cfg(windows)]
+    mod win {
+        use socket2::{Domain, SockAddr, Socket, Type};
+        use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+        use crate::modes::pull::{configure_socket, SocketMode};
+
+        fn make_socket_std() -> Socket {
+            let socket_a = Socket::new(Domain::IPV4, Type::STREAM, None).unwrap();
+            configure_socket(socket_a, SocketMode::Reuse).unwrap()
+        }
+
+        fn make_socket_exclusive() -> Socket {
+            let socket_exclusive = Socket::new(Domain::IPV4, Type::STREAM, None).unwrap();
+            let socket_exclusive =
+                configure_socket(socket_exclusive, SocketMode::Exclusive).unwrap();
+            socket_exclusive
+        }
+
+        #[test]
+        fn test_socket_reuse_exclusive() {
+            let socket_a = make_socket_std();
+            let socket_b = make_socket_std();
+            let socket_exclusive = make_socket_exclusive();
+            let addr = SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19900));
+            let a = socket_a.bind(&addr);
+            let b = socket_b.bind(&addr);
+            let exclusive = socket_exclusive.bind(&addr);
+
+            assert!(a.is_ok());
+            assert!(b.is_ok());
+            assert!(exclusive.is_err());
+        }
+        #[test]
+        fn test_socket_exclusive_reuse() {
+            let socket_std = make_socket_std();
+            let socket_exclusive = make_socket_exclusive();
+            let addr = SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19900));
+
+            let exclusive = socket_exclusive.bind(&addr);
+            let a = socket_std.bind(&addr);
+
+            assert!(a.is_err());
+            assert!(exclusive.is_ok());
+        }
+        #[test]
+        fn test_socket_exclusive_exclusive() {
+            {
+                let socket_exclusive = make_socket_exclusive();
+                let addr =
+                    SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19900));
+                let exclusive = socket_exclusive.bind(&addr);
+                assert!(exclusive.is_ok());
+            }
+            let socket_exclusive = make_socket_exclusive();
+            let addr = SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19900));
+            let exclusive = socket_exclusive.bind(&addr);
+            assert!(exclusive.is_ok());
+        }
+    }
+
     #[test]
     fn test_encode_data_for_transport() {
         let mut expected_result = b"\x00\x00\x01".to_vec();
@@ -478,7 +585,6 @@ mod tests {
         let agout = AgentOutputCollectorImpl::from(AgentChannel::from("dummy"));
         assert_eq!(agout.encode(b"abc").unwrap(), expected_result);
     }
-
     fn listening_config(port: u16) -> ListeningConfig {
         ListeningConfig {
             addr_v4: Ipv4Addr::UNSPECIFIED,

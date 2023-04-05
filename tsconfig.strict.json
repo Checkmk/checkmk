@@ -16,12 +16,12 @@
     },
     "files": [
         // add files here
-        //"./web/htdocs/js/modules/valuespecs.ts",
+        "./web/htdocs/js/modules/valuespecs.ts",
         //"./web/htdocs/js/modules/graphs.ts",
         "./web/htdocs/js/modules/wato.ts",
         "./web/htdocs/js/modules/element_dragging.ts",
         "./web/htdocs/js/modules/password_meter.ts",
-        //"./web/htdocs/js/modules/forms.ts",
+        "./web/htdocs/js/modules/forms.ts",
         "./web/htdocs/js/modules/service_discovery.ts",
         "./web/htdocs/js/modules/utils.ts",
         "./web/htdocs/js/modules/selection.ts",
@@ -34,7 +34,7 @@
         "./web/htdocs/js/modules/sidebar.ts",
         "./web/htdocs/js/modules/async_progress.ts",
         //"./web/htdocs/js/modules/page_menu.ts",
-        //"./web/htdocs/js/modules/popup_menu.ts",
+        "./web/htdocs/js/modules/popup_menu.ts",
         "./web/htdocs/js/modules/availability.ts",
         "./web/htdocs/js/modules/backup.ts",
         //"./web/htdocs/js/modules/activation.ts",

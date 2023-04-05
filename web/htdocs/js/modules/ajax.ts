@@ -40,6 +40,9 @@ export function call_ajax(url: string, optional_args?: any) {
         ...optional_args,
     };
 
+    // TODO: remove window.ActiveXObject("Microsoft.XMLHTTP") since we don't need it any move
+    //  according to: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
+    //  all browsers we support support new window.XMLHttpRequest()
     const AJAX = window.XMLHttpRequest
         ? new window.XMLHttpRequest()
         : new window.ActiveXObject("Microsoft.XMLHTTP");

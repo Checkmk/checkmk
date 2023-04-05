@@ -38,7 +38,7 @@ div.floatfilter {
     height: 17px;
     padding: 5px 8px;
     padding-left: 0;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
     color: $font-color;
     background-color: $floatfilter-bg-color;
 
@@ -844,7 +844,7 @@ table.data.availability {
   }
 
   tr.summary td {
-    font-weight: bold;
+    font-weight: $font-weight-bold;
   }
 
   tr.odd0 td.number.stats {

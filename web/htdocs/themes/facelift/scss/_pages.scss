@@ -27,7 +27,7 @@ h4 {
 
 h3:not(.table) {
   font-size: $font-size-large;
-  font-weight: normal;
+  font-weight: $font-weight-default;
 }
 
 @mixin table-header-mixin {
@@ -230,7 +230,7 @@ body {
 
 #reload_pause_counter {
   font-size: $font-size-large;
-  font-weight: bold;
+  font-weight: $font-weight-bold;
   color: $font-color-light-grey;
   text-align: center;
   text-decoration: none;
@@ -316,7 +316,7 @@ table.data {
 
     /* e.g. numeric columns on alert statistics views */
     &.count {
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       text-align: right;
       white-space: nowrap;
     }
@@ -397,7 +397,7 @@ table.data {
     padding: 4px;
     margin: 0;
     font-size: $font-size-small;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
     line-height: 5px;
     text-align: center;
     vertical-align: middle;
@@ -1104,7 +1104,7 @@ body.main .popup_menu {
   span {
     padding-left: 0;
     margin-top: 8px;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
   }
 
   li:first-child span {
@@ -1191,7 +1191,7 @@ body.main .popup_menu {
       width: 142px;
       margin: 0;
       overflow: hidden;
-      font-weight: normal;
+      font-weight: $font-weight-default;
       line-height: 19px;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -1289,7 +1289,7 @@ table.debug_vars {
 
   th,
   td.left {
-    font-weight: bold;
+    font-weight: $font-weight-bold;
   }
 
   td.right {

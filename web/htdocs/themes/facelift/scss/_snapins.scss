@@ -93,7 +93,7 @@ table.master_control {
       text-align: left;
 
       a {
-        font-weight: normal;
+        font-weight: $font-weight-default;
         text-align: left;
       }
     }
@@ -129,7 +129,7 @@ table.mkeventd_performance {
     &:nth-of-type(2) {
       padding: 0;
       padding-right: 1px;
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       text-align: right;
       white-space: nowrap;
     }
@@ -163,7 +163,7 @@ table.performance {
   padding: 4px 0 0;
   margin: 0 auto;
   font-size: 24px;
-  font-weight: bold;
+  font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
   color: $font-color;
   background-color: $server-time-div-bg-color;
@@ -186,7 +186,7 @@ table.sitestate {
       text-align: left;
 
       a {
-        font-weight: normal;
+        font-weight: $font-weight-default;
         text-align: left;
       }
     }
@@ -241,7 +241,7 @@ table.tacticaloverview {
 
   th {
     font-size: $font-size-small;
-    font-weight: normal;
+    font-weight: $font-weight-default;
     line-height: 1.6;
     letter-spacing: 0;
     color: $font-color-dimmed;
@@ -351,7 +351,7 @@ div.spacertop {
   }
 
   b {
-    font-weight: normal;
+    font-weight: $font-weight-default;
   }
 
   p {
@@ -456,11 +456,11 @@ div.spacertop {
  * Wiki snapin
  */
 #snapin_container_wiki div.content {
-  font-weight: bold;
+  font-weight: $font-weight-bold;
   color: $font-color;
 
   p {
-    font-weight: normal;
+    font-weight: $font-weight-default;
   }
 }
 

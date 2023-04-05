@@ -72,7 +72,7 @@
   }
 
   b {
-    font-weight: normal;
+    font-weight: $font-weight-default;
     color: $font-color;
   }
 }
@@ -441,7 +441,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
 .wato div.floatfolder div.title body.main .popup_menu span,
 body.main .popup_menu .wato div.floatfolder div.title span,
 .wato div.floatfolder.locked div.title {
-  font-weight: 500;
+  font-weight: $font-weight-default;
   color: $font-color;
 }
 
@@ -644,7 +644,7 @@ div.filter_buttons {
       top: 14px;
       left: 72px;
       padding: 0;
-      font-weight: bold;
+      font-weight: $font-weight-bold;
     }
 
     &.subtitle {
@@ -655,7 +655,7 @@ div.filter_buttons {
       padding: 16px 0 0;
       overflow: hidden;
       font-size: $font-size-small;
-      font-weight: 500;
+      font-weight: $font-weight-default;
       line-height: 1.5;
       letter-spacing: $letter-spacing-table;
       color: $font-color-dimmed;
@@ -914,7 +914,7 @@ table.logwatch span.match {
 /* BI Editor */
 table.data td.bi_rule_tree {
   b.treeangle {
-    font-weight: normal;
+    font-weight: $font-weight-default;
     color: $font-color-black;
   }
 

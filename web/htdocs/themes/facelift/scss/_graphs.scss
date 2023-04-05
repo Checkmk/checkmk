@@ -42,7 +42,7 @@ div.graph {
 
   div.title {
     margin-bottom: 1ex;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
     text-align: center;
   }
 
@@ -101,7 +101,7 @@ div.graph {
     th,
     th.scalar {
       padding-bottom: 3px;
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       text-align: right;
       background-color: transparent;
       border-style: none;
@@ -179,7 +179,7 @@ div.graph {
       z-index: 10;
       width: 100%;
       font-size: $font-size-large;
-      font-weight: normal;
+      font-weight: $font-weight-default;
     }
   }
 
@@ -189,7 +189,7 @@ div.graph {
     top: 10px;
     z-index: 10;
     margin: 0;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
     text-align: center;
   }
 

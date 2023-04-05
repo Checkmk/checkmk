@@ -25,7 +25,7 @@ div#top_heading {
     padding: 0;
     margin: 6px 0 0;
     font-size: $font-size-page-title;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
     color: $font-color;
     text-decoration: none;
     white-space: nowrap;
@@ -302,7 +302,7 @@ div#top_heading {
 
           div.topic_title {
             padding: $spacing 0 2px 12px;
-            font-weight: normal;
+            font-weight: $font-weight-default;
             color: $font-color-dimmed;
             cursor: default;
           }
@@ -584,7 +584,7 @@ div#page_menu_popups {
     border-radius: $border-radius-left;
     margin: 0;
     font-size: 7px;
-    font-weight: 800;
+    font-weight: $font-weight-bold;
     color: $font-color-light-bg;
 
     &.confirm_question {
@@ -609,7 +609,7 @@ div#page_menu_popups {
 
   .confirm_title {
     margin: 0 25px 0px;
-    font-weight: 800;
+    font-weight: $font-weight-bold;
   }
 
   .confirm_content {
@@ -878,7 +878,7 @@ div#page_menu_popups div.side_popup {
     a.filter_group_title {
       display: block;
       padding: 8px 10px;
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       color: $font-color;
       cursor: pointer;
     }

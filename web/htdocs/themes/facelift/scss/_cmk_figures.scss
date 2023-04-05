@@ -24,7 +24,7 @@ div.cmk_tab {
       position: relative;
       float: left;
       min-width: 10rem;
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       line-height: 2rem;
       text-align: center;
       cursor: pointer;

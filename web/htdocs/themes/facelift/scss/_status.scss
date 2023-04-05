@@ -450,12 +450,12 @@ table.data {
     white-space: nowrap;
 
     &.staletime {
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       color: $font-color-red;
     }
 
     &.recent {
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       color: $font-color;
     }
   }
@@ -467,7 +467,7 @@ table.data {
 }
 
 td.badflag span {
-  font-weight: bold;
+  font-weight: $font-weight-bold;
   background-color: $orange-2;
 }
 

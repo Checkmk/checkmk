@@ -352,7 +352,7 @@ div.snapin {
 
   /* Normal link in snapins */
   a {
-    font-weight: normal;
+    font-weight: $font-weight-default;
     color: $font-color;
     text-decoration: none;
 

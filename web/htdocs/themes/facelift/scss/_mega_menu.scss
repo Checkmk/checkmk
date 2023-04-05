@@ -276,7 +276,7 @@
             padding-bottom: 4px;
             margin: 0;
             font-size: $font-size-large;
-            font-weight: bold;
+            font-weight: $font-weight-bold;
             color: $font-color;
 
             span.emblem {
@@ -363,7 +363,7 @@
               margin-top: 2px;
 
               a {
-                font-weight: 700;
+                font-weight: $font-weight-bold;
               }
             }
           }

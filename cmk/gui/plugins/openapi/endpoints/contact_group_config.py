@@ -30,6 +30,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
+    ProblemException,
     serialize_group,
     serialize_group_list,
     serve_group,
@@ -53,7 +54,9 @@ from cmk.gui.watolib.groups import (
     check_modify_group_permissions,
     delete_group,
     edit_group,
+    GroupInUseException,
     load_contact_group_information,
+    UnknownGroupException,
 )
 
 PERMISSIONS = permissions.Perm("wato.users")
@@ -165,7 +168,21 @@ def delete(params: Mapping[str, Any]) -> Response:
     check_modify_group_permissions("contact")
     with disable_permission_tracking():
         # HACK: We need to supress this, due to lots of irrelevant dashboard permissions
-        delete_group(name, "contact")
+        try:
+            delete_group(name, "contact")
+        except GroupInUseException as exc:
+            raise ProblemException(
+                status=400,
+                title="Group in use problem",
+                detail=str(exc),
+            )
+        except UnknownGroupException as exc:
+            raise ProblemException(
+                status=404,
+                title="Unknown group problem",
+                detail=str(exc),
+            )
+
     return Response(status=204)
 
 
@@ -176,25 +193,32 @@ def delete(params: Mapping[str, Any]) -> Response:
     request_schema=request_schemas.BulkDeleteContactGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[404],
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete contact groups"""
     user.need_permission("wato.edit")
     user.need_permission("wato.users")
     body = params["body"]
-    entries = body["entries"]
-    for group_name in entries:
-        fetch_group(
-            group_name,
-            "contact",
-            status=400,
-            message=f"contact group {group_name} was not found",
-        )
     with disable_permission_tracking(), SuperUserContext():
-        for group_name in entries:
+        for group_name in body["entries"]:
             # We need to supress this, because a lot of dashboard permissions are checked for
             # various reasons.
-            delete_group(group_name, "contact")
+            try:
+                delete_group(group_name, "contact")
+            except GroupInUseException as exc:
+                raise ProblemException(
+                    status=400,
+                    title="Group in use problem",
+                    detail=str(exc),
+                )
+            except UnknownGroupException as exc:
+                raise ProblemException(
+                    status=404,
+                    title="Unknown group problem",
+                    detail=str(exc),
+                )
+
     return Response(status=204)
 
 

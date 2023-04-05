@@ -5,6 +5,8 @@
 
 from collections.abc import Iterable
 
+from pytest import MonkeyPatch
+
 from cmk.gui.plugins.watolib.utils import ConfigVariable, ConfigVariableGroup
 from cmk.gui.valuespec import TextInput, ValueSpec
 from cmk.gui.wato.pages.global_settings import (
@@ -15,8 +17,8 @@ from cmk.gui.wato.pages.global_settings import (
 from cmk.gui.watolib.search import MatchItem
 
 
-def test_match_item_generator_settings(  # type: ignore[no-untyped-def]
-    monkeypatch, request_context
+def test_match_item_generator_settings(
+    monkeypatch: MonkeyPatch,
 ) -> None:
     class SomeConfigVariable(ConfigVariable):
         def ident(self) -> str:

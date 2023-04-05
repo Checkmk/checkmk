@@ -172,8 +172,8 @@ class CMKWebSession:
             mime_type = self._get_mime_type(req)
             assert mime_type in allowed_mime_types
 
-    def _find_resource_urls(  # type: ignore[no-untyped-def]
-        self, tag: str, attribute, soup: BeautifulSoup, filters: Collection | None = None
+    def _find_resource_urls(
+        self, tag: str, attribute: str, soup: BeautifulSoup, filters: Collection | None = None
     ) -> list:
         urls = []
 

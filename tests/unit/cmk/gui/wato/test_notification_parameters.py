@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pytest import MonkeyPatch
+
 import cmk.gui.plugins.wato.utils as utils
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
@@ -35,8 +37,8 @@ def test_registered_notification_parameters() -> None:
     assert registered_plugins == sorted(expected_plugins)
 
 
-def test_register_legacy_notification_parameters(  # type: ignore[no-untyped-def]
-    monkeypatch,
+def test_register_legacy_notification_parameters(
+    monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         utils, "notification_parameter_registry", utils.NotificationParameterRegistry()

@@ -8,6 +8,7 @@ import pytest
 from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import result
+from cmk.utils.type_defs.host import HostName
 
 from cmk.fetchers import PiggybackFetcher
 
@@ -47,6 +48,8 @@ class TestModeDumpAgent:
 
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")
-    def test_success(self, hostname, raw_data, capsys) -> None:  # type: ignore[no-untyped-def]
+    def test_success(
+        self, hostname: HostName, raw_data: bytes, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         check_mk.mode_dump_agent({}, hostname)
         assert capsys.readouterr().out == raw_data.decode()

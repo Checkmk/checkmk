@@ -3,17 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 
 # pylint: disable=redefined-outer-name
 from dataclasses import dataclass
 
 import pytest
+from pytest import FixtureRequest
+
+from tests.unit.cmk.gui.conftest import SetConfig
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils import version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RulesetName, RuleSpec
+from cmk.utils.type_defs.user_id import UserId
 
 import cmk.gui.utils
 
@@ -24,10 +28,10 @@ import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
-from cmk.gui.watolib.rulesets import RuleOptions
+from cmk.gui.watolib.rulesets import RuleOptions, RuleValue
 
 
-def _ruleset(ruleset_name) -> rulesets.Ruleset:  # type: ignore[no-untyped-def]
+def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
     return rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(active_config.tags))
 
 
@@ -66,8 +70,8 @@ def fixture_gen_id(monkeypatch):
         ("clustered_services", True, True),
     ],
 )
-def test_rule_from_ruleset_defaults(  # type: ignore[no-untyped-def]
-    request_context, ruleset_name, default_value, is_binary
+def test_rule_from_ruleset_defaults(
+    request_context: None, ruleset_name: str, default_value: RuleValue, is_binary: bool
 ) -> None:
     ruleset = _ruleset(ruleset_name)
     rule = rulesets.Rule.from_ruleset_defaults(hosts_and_folders.Folder.root_folder(), ruleset)
@@ -382,13 +386,13 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec):
         ),
     ],
 )
-def test_rule_from_config_dict(  # type: ignore[no-untyped-def]
-    request_context,
-    ruleset_name,
+def test_rule_from_config_dict(
+    request_context: None,
+    ruleset_name: str,
     rule_spec: RuleSpec,
-    expected_attributes,
+    expected_attributes: Mapping[str, object],
     rule_options: RuleOptionsSpec,
-):
+) -> None:
     rule_spec = rule_spec.copy()
     if rule_options is not None:
         rule_spec["options"] = rule_options
@@ -456,12 +460,12 @@ checkgroup_parameters['local'] = [
         # """),
     ],
 )
-def test_ruleset_to_config(  # type: ignore[no-untyped-def]
-    request_context,
-    monkeypatch,
-    wato_use_git,
-    expected_result,
-    set_config,
+def test_ruleset_to_config(
+    request_context: None,
+    monkeypatch: pytest.MonkeyPatch,
+    wato_use_git: bool,
+    expected_result: str,
+    set_config: SetConfig,
 ) -> None:
     with set_config(wato_use_git=wato_use_git):
         ruleset = rulesets.Ruleset(
@@ -516,8 +520,12 @@ checkgroup_parameters['local'] = [
         ),
     ],
 )
-def test_ruleset_to_config_sub_folder(  # type: ignore[no-untyped-def]
-    with_admin_login, monkeypatch, wato_use_git, expected_result, set_config
+def test_ruleset_to_config_sub_folder(
+    with_admin_login: UserId,
+    monkeypatch: pytest.MonkeyPatch,
+    wato_use_git: bool,
+    expected_result: str,
+    set_config: SetConfig,
 ) -> None:
     with set_config(wato_use_git=wato_use_git):
         ruleset = rulesets.Ruleset(
@@ -551,7 +559,7 @@ def test_ruleset_to_config_sub_folder(  # type: ignore[no-untyped-def]
         assert ruleset.to_config(folder) == expected_result
 
 
-def test_rule_clone(request_context) -> None:  # type: ignore[no-untyped-def]
+def test_rule_clone(request_context: None) -> None:
     rule = rulesets.Rule.from_config(
         hosts_and_folders.Folder.root_folder(),
         _ruleset("clustered_services"),
@@ -633,13 +641,13 @@ def test_rule_clone(request_context) -> None:  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_matches_search_with_rules(  # type: ignore[no-untyped-def]
-    with_admin_login,
+def test_matches_search_with_rules(
+    with_admin_login: UserId,
     search_options: rulesets.SearchOptions,
     rule_config: RuleSpec,
     folder_name: str,
     expected_result: bool,
-):
+) -> None:
     hosts_and_folders.Folder.create_missing_folders(folder_name)
     folder = hosts_and_folders.Folder.folder(folder_name)
     ruleset = _ruleset("host_contactgroups")
@@ -697,39 +705,35 @@ class _RuleHelper:
         ),
     ]
 )
-def rule_helper(request) -> _RuleHelper:  # type: ignore[no-untyped-def]
+def rule_helper(request: FixtureRequest) -> _RuleHelper:
     return request.param
 
 
-def test_to_log_masks_secrets(request_context) -> None:  # type: ignore[no-untyped-def]
+def test_to_log_masks_secrets(request_context: None) -> None:
     log = str(_RuleHelper.gcp_rule().to_log())
     assert "'password'" in log, "password tuple is present"
     assert "hunter2" not in log, "password is masked"
 
 
-def test_diff_rules_new_rule(request_context, rule_helper) -> None:  # type: ignore[no-untyped-def]
+def test_diff_rules_new_rule(request_context: None, rule_helper: _RuleHelper) -> None:
     new = rule_helper.rule()
     diff = new.ruleset.diff_rules(None, new)
     assert rule_helper.secret_attr in diff, "Attribute is added in new rule"
     assert "******" in diff, "Attribute is masked"
 
 
-def test_diff_to_no_changes(request_context, rule_helper) -> None:  # type: ignore[no-untyped-def]
+def test_diff_to_no_changes(request_context: None, rule_helper: _RuleHelper) -> None:
     rule = rule_helper.rule()
     assert rule.diff_to(rule) == "Nothing was changed."
 
 
-def test_diff_to_secret_changed(  # type: ignore[no-untyped-def]
-    request_context, rule_helper
-) -> None:
+def test_diff_to_secret_changed(request_context: None, rule_helper: _RuleHelper) -> None:
     old, new = rule_helper.rule(), rule_helper.rule()
     new.value[rule_helper.secret_attr] = rule_helper.new_secret
     assert old.diff_to(new) == "Redacted secrets changed."
 
 
-def test_diff_to_secret_unchanged(  # type: ignore[no-untyped-def]
-    request_context, rule_helper
-) -> None:
+def test_diff_to_secret_unchanged(request_context: None, rule_helper: _RuleHelper) -> None:
     old, new = rule_helper.rule(), rule_helper.rule()
     new.value[rule_helper.other_attr] = "new_value"
     diff = old.diff_to(new)
@@ -737,8 +741,8 @@ def test_diff_to_secret_unchanged(  # type: ignore[no-untyped-def]
     assert 'changed from "old_value" to "new_value".' in diff
 
 
-def test_diff_to_secret_and_other_attribute_changed(  # type: ignore[no-untyped-def]
-    request_context, rule_helper
+def test_diff_to_secret_and_other_attribute_changed(
+    request_context: None, rule_helper: _RuleHelper
 ) -> None:
     old, new = rule_helper.rule(), rule_helper.rule()
     new.value[rule_helper.secret_attr] = rule_helper.new_secret

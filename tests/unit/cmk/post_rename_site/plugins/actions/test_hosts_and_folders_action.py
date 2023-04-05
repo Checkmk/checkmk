@@ -5,6 +5,8 @@
 
 from pathlib import Path
 
+from pytest import MonkeyPatch
+
 from livestatus import SiteId
 
 import cmk.utils.paths
@@ -91,7 +93,7 @@ host_attributes.update(
     assert hosts_config["host_tags"]["ag"]["site"] == "dingdong"
 
 
-def test_rewrite_tags_no_explicit_site_set(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_rewrite_tags_no_explicit_site_set(monkeypatch: MonkeyPatch) -> None:
     _write_folder_attributes(
         {
             "title": "Main",

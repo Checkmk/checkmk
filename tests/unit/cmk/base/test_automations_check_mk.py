@@ -55,7 +55,7 @@ class TestAutomationDiagHost:
 
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")
-    def test_execute(self, hostname, ipaddress, raw_data) -> None:  # type: ignore[no-untyped-def]
+    def test_execute(self, hostname: str, ipaddress: str, raw_data: str) -> None:
         args = [hostname, "agent", ipaddress, "", "6557", "10", "5", "5", ""]
         assert check_mk.AutomationDiagHost().execute(args) == DiagHostResult(
             0,
@@ -187,14 +187,14 @@ def mock_service_description(params: Mapping[str, str]) -> str:
         ),
     ],
 )
-def test_automation_active_check(  # type: ignore[no-untyped-def]
+def test_automation_active_check(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
     host_attrs: Mapping[str, str],
     active_check_args: list[str],
     expected_result: automation_results.ActiveCheckResult,
-    monkeypatch,
-):
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *_: host_attrs)
     monkeypatch.setattr(check_mk.AutomationActiveCheck, "_load_resource_file", lambda *_: None)
@@ -234,14 +234,14 @@ def test_automation_active_check(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_automation_active_check_invalid_args(  # type: ignore[no-untyped-def]
+def test_automation_active_check_invalid_args(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
     host_attrs: Mapping[str, str],
     active_check_args: list[str],
     error_message: str,
-    monkeypatch,
-):
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *_: host_attrs)
     monkeypatch.setattr(check_mk.AutomationActiveCheck, "_load_resource_file", lambda *_: None)

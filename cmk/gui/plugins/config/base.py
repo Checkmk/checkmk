@@ -12,6 +12,7 @@ from livestatus import SiteConfigurations
 from cmk.utils.tags import TagConfigSpec
 
 from cmk.gui.type_defs import GroupSpec, UserSpec
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
 
@@ -342,6 +343,9 @@ class CREConfig:
     agent_controller_certificates: dict[str, int] = field(
         default_factory=lambda: {"lifetime_in_months": 60}
     )
+
+    # Default temperature unit
+    default_temperature_unit: str = TemperatureUnit.CELSIUS.value
 
     #     _   _               ____  ____
     #    | | | |___  ___ _ __|  _ \| __ )

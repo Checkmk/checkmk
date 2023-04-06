@@ -32,6 +32,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.utils import param_description
 from cmk.gui.plugins.userdb.utils import user_attribute_registry
 from cmk.gui.userdb import load_users, register_custom_user_attributes
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.tags import tag_group_exists
@@ -1312,6 +1313,16 @@ class CreateUser(BaseSchema):
         example="en",
         enum=["de", "en", "ro"],
     )
+    temperature_unit = fields.String(
+        required=False,
+        description="Configure the temperature unit used for graphs and perfometers. Omitting this "
+        "field will configure the default temperature unit.",
+        example="celsius",
+        enum=[
+            "default",
+            *(unit.value for unit in TemperatureUnit),
+        ],
+    )
     interface_options = fields.Nested(
         UserInterfaceAttributes,
         required=False,
@@ -1438,6 +1449,15 @@ class UpdateUser(BaseSchema):
         "this will configure the default language",
         example="en",
         enum=["de", "en", "ro"],
+    )
+    temperature_unit = fields.String(
+        required=False,
+        description="Configure the temperature unit used for graphs and perfometers.",
+        example="celsius",
+        enum=[
+            "default",
+            *(unit.value for unit in TemperatureUnit),
+        ],
     )
     interface_options = fields.Nested(
         UserInterfaceUpdateAttributes,

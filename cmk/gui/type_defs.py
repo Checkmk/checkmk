@@ -186,6 +186,7 @@ class UserSpec(TypedDict, total=False):
     user_scheme_serial: int
     nav_hide_icons_title: Literal["hide"] | None
     icons_per_item: Literal["entry"] | None
+    temperature_unit: str | None
 
 
 class UserObjectValue(TypedDict, total=True):

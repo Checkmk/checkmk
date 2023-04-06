@@ -149,6 +149,7 @@ def test_default_config_from_plugins() -> None:
         "tags",
         "enable_login_via_get",
         "enable_community_translations",
+        "default_temperature_unit",
     ]
 
     # The below lines are confusing and incorrect. The reason we need them is

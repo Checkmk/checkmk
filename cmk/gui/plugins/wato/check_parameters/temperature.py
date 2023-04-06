@@ -44,7 +44,12 @@ def _parameter_valuespec_temperature() -> Dictionary:
             (
                 "output_unit",
                 DropdownChoice(
-                    title=_("Display values in "),
+                    title=_("Display values in (see also help text)"),
+                    help=_(
+                        "This setting affects service summaries and details only, which are user-"
+                        "independent. Changing the temperature unit for graphs and perfometers is "
+                        "possible via the user profile."
+                    ),
                     choices=[
                         ("c", _("Degree Celsius")),
                         ("f", _("Degree Fahrenheit")),

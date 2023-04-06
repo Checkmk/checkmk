@@ -36,36 +36,36 @@ class LicensingHandlerRegistry:
 licensing_handler_registry = LicensingHandlerRegistry()
 
 
-def _get_licensing_handler() -> LicensingHandler:
-    return licensing_handler_registry[edition()].make()
+def _get_licensing_handler() -> Type[LicensingHandler]:
+    return licensing_handler_registry[edition()]
+
+
+def _make_licensing_handler() -> LicensingHandler:
+    return _get_licensing_handler().make()
 
 
 def is_free() -> bool:
-    return _get_licensing_handler().state is LicenseState.FREE
+    return _make_licensing_handler().state is LicenseState.FREE
 
 
 def is_trial() -> bool:
-    return _get_licensing_handler().state is LicenseState.TRIAL
+    return _make_licensing_handler().state is LicenseState.TRIAL
 
 
 def is_licensed() -> bool:
-    return _get_licensing_handler().state is LicenseState.LICENSED
+    return _make_licensing_handler().state is LicenseState.LICENSED
 
 
 def is_unlicensed() -> bool:
-    return _get_licensing_handler().state is LicenseState.UNLICENSED
-
-
-def get_license_state() -> LicenseState:
-    return _get_licensing_handler().state
+    return _make_licensing_handler().state is LicenseState.UNLICENSED
 
 
 def get_license_message() -> str:
-    return _get_licensing_handler().message
+    return _make_licensing_handler().message
 
 
 def get_remaining_trial_time() -> RemainingTrialTime:
-    handler: LicensingHandler = _get_licensing_handler()
+    handler = _make_licensing_handler()
     if handler.state is LicenseState.TRIAL:
         return handler.remaining_trial_time
     raise LicenseStateError(
@@ -74,15 +74,15 @@ def get_remaining_trial_time() -> RemainingTrialTime:
 
 
 def get_licensing_user_effect_core(num_services: int, num_hosts_shadow: int) -> UserEffect:
-    return _get_licensing_handler().effect_core(num_services, num_hosts_shadow)
+    return _make_licensing_handler().effect_core(num_services, num_hosts_shadow)
 
 
 def get_licensing_user_effect(licensing_settings_link: str | None = None) -> UserEffect:
-    return _get_licensing_handler().effect(licensing_settings_link)
+    return _make_licensing_handler().effect(licensing_settings_link)
 
 
 def get_licensing_notification_handler() -> NotificationHandler:
-    return _get_licensing_handler().notification_handler
+    return _make_licensing_handler().notification_handler
 
 
 def register_cre_licensing_handler():

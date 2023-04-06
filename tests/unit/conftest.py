@@ -29,6 +29,7 @@ import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils import tty
+from cmk.utils.licensing.handler import LicensingHandler, NotificationHandler, UserEffect
 from cmk.utils.licensing.registry import LicenseState
 from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
@@ -373,12 +374,38 @@ def fixture_monkeypatch_module() -> Iterator[pytest.MonkeyPatch]:
         yield mp
 
 
-@pytest.fixture(name="is_in_trial_state", scope="module")
-def fixture_is_in_trial_state(monkeypatch_module: pytest.MonkeyPatch) -> None:
+@pytest.fixture(name="is_licensed", scope="module")
+def fixture_is_licensed(monkeypatch_module: pytest.MonkeyPatch) -> None:
+    class DummyNotificationHandler(NotificationHandler):
+        def manage_notification(self) -> None:
+            pass
+
+    class DummyLicensingHandler(LicensingHandler):
+        @classmethod
+        def make(cls) -> "DummyLicensingHandler":
+            return cls()
+
+        @property
+        def state(self) -> LicenseState:
+            return LicenseState.LICENSED
+
+        @property
+        def message(self) -> str:
+            return ""
+
+        def effect_core(self, num_services: int, num_hosts_shadow: int) -> UserEffect:
+            return UserEffect(header=None, email=None, block=None)
+
+        def effect(self, licensing_settings_link: str | None = None) -> UserEffect:
+            return UserEffect(header=None, email=None, block=None)
+
+        @property
+        def notification_handler(self) -> NotificationHandler:
+            return DummyNotificationHandler(email_notification=None)
+
     monkeypatch_module.setattr(
-        "cmk.utils.licensing.registry.get_license_state", lambda: LicenseState.TRIAL
+        "cmk.utils.licensing.registry._get_licensing_handler", DummyLicensingHandler
     )
-    monkeypatch_module.setattr("cmk.utils.licensing.registry.get_license_message", lambda: "")
 
 
 @pytest.fixture(name="suppress_license_expiry_header")

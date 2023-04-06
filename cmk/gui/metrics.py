@@ -70,7 +70,6 @@ def load_plugins() -> None:
     utils.load_web_plugins("metrics", globals())
 
     fixup_graph_info()
-    fixup_unit_info()
     fixup_perfometer_info()
 
 
@@ -139,13 +138,6 @@ def fixup_graph_info() -> None:
     # create back link from each graph to its id.
     for graph_id, graph in graph_info.items():
         graph["id"] = graph_id
-
-
-def fixup_unit_info() -> None:
-    # create back link from each unit to its id.
-    for unit_id, unit in unit_info.items():
-        unit["id"] = unit_id
-        unit.setdefault("description", unit["title"])
 
 
 def fixup_perfometer_info() -> None:

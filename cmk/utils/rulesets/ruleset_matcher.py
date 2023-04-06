@@ -6,7 +6,7 @@
 
 from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from re import Pattern
-from typing import Any, cast, Generic, NamedTuple, Required, TypedDict, TypeVar
+from typing import Any, cast, Generic, Literal, NamedTuple, Required, TypedDict, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, Labels
@@ -30,7 +30,8 @@ from cmk.utils.type_defs import (
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")
 
-LabelConditions = dict  # TODO: Optimize this
+# The value of `LabelConditions` may actually be something like TagCondition.
+LabelConditions = Mapping[str, str | Mapping[Literal["$ne"], str]]
 LabelSources = dict[str, str]
 
 # The Tag* types below are *not* used in `cmk.utils.tags`
@@ -84,12 +85,12 @@ class RuleOptionsSpec(TypedDict, total=False):
 
 # TODO: Improve this type
 class RuleConditionsSpec(TypedDict, total=False):
-    host_tags: Any
-    host_labels: Any
+    host_tags: Mapping[TaggroupID, TagCondition]
+    host_labels: Mapping[str, str | Mapping[Literal["$ne"], str]]
     host_name: HostOrServiceConditions | None
     service_description: HostOrServiceConditions | None
-    service_labels: Any
-    host_folder: Any
+    service_labels: Mapping[str, str | Mapping[Literal["$ne"], str]]
+    host_folder: str
 
 
 class RuleSpec(Generic[TRuleValue], TypedDict, total=False):
@@ -324,7 +325,7 @@ class RulesetMatcher:
     def _matches_service_conditions(
         self,
         service_description_condition: tuple[bool, Pattern[str]],
-        service_labels_condition: dict[str, str],
+        service_labels_condition: Mapping[str, object],
         match_object: RulesetMatchObject,
     ) -> bool:
         if not self._matches_service_description_condition(
@@ -710,9 +711,11 @@ class RulesetOptimizer:
         self,
         hostlist: HostOrServiceConditions | None,
         tag_conditions: Mapping[TaggroupID, TagCondition],
-        labels: Any,
-        rule_path: Any,
-    ) -> tuple[tuple[str, ...], tuple[tuple[str, Any], ...], tuple[tuple[Any, Any], ...], Any]:
+        labels: Mapping[str, str | Mapping[Literal["$ne"], str]],
+        rule_path: str,
+    ) -> tuple[
+        tuple[str, ...], tuple[tuple[TaggroupID, object], ...], tuple[tuple[str, object], ...], str
+    ]:
         host_parts: list[str] = []
 
         if hostlist is not None:
@@ -747,7 +750,9 @@ class RulesetOptimizer:
     def _match_hosts_by_tags(
         self,
         cache_id: tuple[
-            tuple[tuple[str, ...], tuple[tuple[str, Any], ...], tuple[tuple[Any, Any], ...], Any],
+            tuple[
+                tuple[str, ...], tuple[tuple[str, object], ...], tuple[tuple[str, object], ...], str
+            ],
             bool,
         ],
         valid_hosts: set[HostName],
@@ -927,7 +932,7 @@ class RulesetOptimizer:
         )
 
 
-def _tags_or_labels_cache_id(tag_or_label_spec):
+def _tags_or_labels_cache_id(tag_or_label_spec: object) -> object:
     if isinstance(tag_or_label_spec, dict):
         if "$ne" in tag_or_label_spec:
             return "!%s" % tag_or_label_spec["$ne"]
@@ -1002,12 +1007,16 @@ def matches_tag_condition(
     ) in hosttags
 
 
-# FIXME: The types passed to this are a total chaos!
-def matches_labels(object_labels: Any, required_labels: Any) -> bool:
+def matches_labels(
+    object_labels: Mapping[str, object] | None, required_labels: Mapping[str, object]
+) -> bool:
     for label_group_id, label_spec in required_labels.items():
         is_not = isinstance(label_spec, dict)
-        if is_not:
+        if isinstance(label_spec, dict):
             label_spec = label_spec["$ne"]
+
+        if object_labels is None:
+            return False
 
         if (object_labels.get(label_group_id) == label_spec) is is_not:
             return False

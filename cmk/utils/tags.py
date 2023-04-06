@@ -15,7 +15,6 @@ from cmk.utils.i18n import _
 
 TagID = str
 TaggroupID = str
-TaggroupIDToTagID = Mapping[TaggroupID, TagID]
 
 
 class GroupedTagSpec(TypedDict):
@@ -292,7 +291,7 @@ class TagGroup:
             choices.append((tag.id, tag.title))
         return choices
 
-    def get_tag_group_config(self, value: TagID | None) -> TaggroupIDToTagID:
+    def get_tag_group_config(self, value: TagID | None) -> Mapping[TaggroupID, TagID]:
         """Return the set of tag groups which should be set for a host based on the given value"""
         tag_groups = {}
 
@@ -785,7 +784,7 @@ class ComputedDataSources(NamedTuple):
         ]
 
 
-def compute_datasources(tag_groups: TaggroupIDToTagID) -> ComputedDataSources:
+def compute_datasources(tag_groups: Mapping[TaggroupID, TagID]) -> ComputedDataSources:
     return ComputedDataSources(
         is_tcp=tag_groups.get("tcp") == "tcp",
         is_snmp=tag_groups.get("snmp_ds") in ["snmp", "snmp-v1", "snmp-v2"],

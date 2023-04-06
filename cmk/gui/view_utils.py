@@ -11,7 +11,7 @@ from livestatus import SiteId
 
 from cmk.utils.html import replace_state_markers
 from cmk.utils.labels import Labels
-from cmk.utils.rulesets.ruleset_matcher import LabelSources, TaggroupIDToTagID
+from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.tags import TaggroupID, TagID
 
 import cmk.gui.utils.escaping as escaping
@@ -194,14 +194,16 @@ def render_labels(
     )
 
 
-def render_tag_groups(tag_groups: TaggroupIDToTagID, object_type: str, with_links: bool) -> HTML:
+def render_tag_groups(
+    tag_groups: Mapping[TaggroupID, TagID], object_type: str, with_links: bool
+) -> HTML:
     return _render_tag_groups_or_labels(
         tag_groups, object_type, with_links, label_type="tag_group", label_sources={}
     )
 
 
 def _render_tag_groups_or_labels(
-    entries: TaggroupIDToTagID | Labels,
+    entries: Mapping[TaggroupID, TagID] | Labels,
     object_type: str,
     with_links: bool,
     label_type: str,

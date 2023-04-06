@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, Set, TypeVar
@@ -33,7 +33,7 @@ ActionArguments = list[ActionArgument]
 
 from cmk.utils import plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
-from cmk.utils.rulesets.ruleset_matcher import TaggroupIDToTagCondition
+from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TaggroupID, TagID
 from cmk.utils.type_defs import HostName, HostState, ServiceDetails, ServiceName, ServiceState
 
@@ -404,7 +404,7 @@ class ABCBISearcher(ABC):
     def filter_host_tags(
         self,
         hosts: Iterable[BIHostData],
-        tag_conditions: TaggroupIDToTagCondition,
+        tag_conditions: Mapping[TaggroupID, TagCondition],
     ) -> Iterable[BIHostData]:
         ...
 

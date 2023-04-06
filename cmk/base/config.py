@@ -68,12 +68,11 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetMatchObject,
     RulesetName,
     RuleSpec,
-    TagIDToTaggroupID,
 )
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.structured_data import RawIntervalsFromConfig
-from cmk.utils.tags import ComputedDataSources, TaggroupIDToTagID, TagID
+from cmk.utils.tags import ComputedDataSources, TaggroupID, TagID
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
     AgentTargetVersion,
@@ -141,8 +140,6 @@ from cmk.base.api.agent_based.register.utils_legacy import CheckInfoElement
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
-
-TagIDs = set[TagID]
 
 # TODO: Prefix helper functions with "_".
 
@@ -2065,7 +2062,7 @@ class ConfigCache:
         self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
 
         # Host tags
-        self._hosttags: dict[HostName, TagIDs] = {}
+        self._hosttags: dict[HostName, set[TagID]] = {}
 
         # Autochecks cache
         self._autochecks_manager = AutochecksManager()
@@ -2173,7 +2170,7 @@ class ConfigCache:
         }
 
     @staticmethod
-    def get_tag_to_group_map() -> TagIDToTaggroupID:
+    def get_tag_to_group_map() -> Mapping[TagID, TaggroupID]:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return ruleset_matcher.get_tag_to_group_map(tags)
 
@@ -2856,7 +2853,7 @@ class ConfigCache:
             for name in (checking_sections | disabled_sections)
         }
 
-    def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:
+    def _collect_hosttags(self, tag_to_group_map: Mapping[TagID, TaggroupID]) -> None:
         """Calculate the effective tags for all configured hosts
 
         WATO ensures that all hosts configured with WATO have host_tags set, but there may also be hosts defined
@@ -2890,7 +2887,9 @@ class ConfigCache:
             )
 
     @staticmethod
-    def _tag_groups_to_tag_list(host_path: str, tag_groups: TaggroupIDToTagID) -> TagIDs:
+    def _tag_groups_to_tag_list(
+        host_path: str, tag_groups: Mapping[TaggroupID, TagID]
+    ) -> set[TagID]:
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
         # but there was a single tag group added with it's leading tag group id. This
         # was the internal "site" tag that is created by HostAttributeSite.
@@ -2901,8 +2900,8 @@ class ConfigCache:
 
     @staticmethod
     def _tag_list_to_tag_groups(
-        tag_to_group_map: TagIDToTaggroupID, tag_list: TagIDs
-    ) -> TaggroupIDToTagID:
+        tag_to_group_map: Mapping[TagID, TaggroupID], tag_list: Iterable[TagID]
+    ) -> Mapping[TaggroupID, TagID]:
         # This assumes all needed aux tags of grouped are already in the tag_list
 
         # Ensure the internal mandatory tag groups are set for all hosts
@@ -2921,7 +2920,7 @@ class ConfigCache:
             **{tag_to_group_map.get(tag_id, tag_id): tag_id for tag_id in tag_list},
         }
 
-    def tag_list(self, hostname: HostName) -> TagIDs:
+    def tag_list(self, hostname: HostName) -> set[TagID]:
         """Returns the list of all configured tags of a host. In case
         a host has no tags configured or is not known, it returns an
         empty list."""
@@ -2933,7 +2932,7 @@ class ConfigCache:
 
     # TODO: check all call sites and remove this or make it private?
     @staticmethod
-    def tags(hostname: HostName) -> TaggroupIDToTagID:
+    def tags(hostname: HostName) -> Mapping[TaggroupID, TagID]:
         """Returns the dict of all configured tag groups and values of a host."""
         if hostname in host_tags:
             return host_tags[hostname]
@@ -3293,7 +3292,9 @@ class ConfigCache:
 
         return flat_rule
 
-    def tags_of_service(self, hostname: HostName, svc_desc: ServiceName) -> TaggroupIDToTagID:
+    def tags_of_service(
+        self, hostname: HostName, svc_desc: ServiceName
+    ) -> Mapping[TaggroupID, TagID]:
         """Returns the dict of all configured tags of a service
         It takes all explicitly configured tag groups into account.
         """
@@ -3515,7 +3516,7 @@ class ConfigCache:
 
     @staticmethod
     def _get_tag_attributes(
-        collection: TaggroupIDToTagID | Labels | LabelSources,
+        collection: Mapping[TaggroupID, TagID] | Labels | LabelSources,
         prefix: str,
     ) -> ObjectAttributes:
         return {f"__{prefix}_{k}": str(v) for k, v in collection.items()}

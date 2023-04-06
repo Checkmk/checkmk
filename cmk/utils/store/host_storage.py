@@ -7,7 +7,7 @@ from __future__ import annotations
 import abc
 import enum
 import io
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -15,8 +15,8 @@ from typing import Any, Generic, TypedDict, TypeVar
 
 from cmk.utils import store
 from cmk.utils.labels import Labels
-from cmk.utils.rulesets.ruleset_matcher import TaggroupIDToTagID
 from cmk.utils.rulesets.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
+from cmk.utils.tags import TaggroupID, TagID
 from cmk.utils.type_defs import ContactgroupName, HostName
 
 HostAttributeMapping = tuple[
@@ -82,7 +82,7 @@ class HostsStorageData:
     clusters: dict[HostName, Any]
     attributes: dict[str, Any]
     custom_macros: dict[str, Any]
-    host_tags: dict[HostName, TaggroupIDToTagID]
+    host_tags: dict[HostName, Mapping[TaggroupID, TagID]]
     host_labels: dict[HostName, Labels]
     contact_groups: ContactGroupsField
     explicit_host_conf: dict[str, dict[HostName, Any]]

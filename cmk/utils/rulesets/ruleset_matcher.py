@@ -19,7 +19,7 @@ from cmk.utils.rulesets.tuple_rulesets import (
     NEGATE,
     PHYSICAL_HOSTS,
 )
-from cmk.utils.tags import TagConfig, TaggroupID, TaggroupIDToTagID, TagID
+from cmk.utils.tags import TagConfig, TaggroupID, TagID
 from cmk.utils.type_defs import (
     HostName,
     HostOrServiceConditions,
@@ -37,7 +37,6 @@ LabelSources = dict[str, str]
 # but they are used here.  Therefore, they do *not* belong
 # in `cmk.utils.tags`.  This is _not a bug_!
 
-TagIDToTaggroupID = Mapping[TagID, TaggroupID]
 TagConditionNE = TypedDict(
     "TagConditionNE",
     {
@@ -59,8 +58,7 @@ TagConditionNOR = TypedDict(
 TagCondition = TagID | None | TagConditionNE | TagConditionOR | TagConditionNOR
 # Here, we have data structures such as
 # {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
-TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
-TagsOfHosts = dict[HostName, TaggroupIDToTagID]
+TagsOfHosts = dict[HostName, Mapping[TaggroupID, TagID]]
 
 
 PreprocessedHostRuleset = dict[HostName, list[TRuleValue]]
@@ -165,7 +163,7 @@ class RulesetMatcher:
 
     def __init__(
         self,
-        tag_to_group_map: TagIDToTaggroupID,
+        tag_to_group_map: Mapping[TagID, TaggroupID],
         host_tags: TagsOfHosts,
         host_paths: dict[HostName, str],
         labels: LabelManager,
@@ -595,7 +593,7 @@ class RulesetOptimizer:
         """Returns a set containing the names of hosts that match the given
         tags and hostlist conditions."""
         hostlist = condition.get("host_name")
-        tag_conditions: TaggroupIDToTagCondition = condition.get("host_tags", {})
+        tag_conditions: Mapping[TaggroupID, TagCondition] = condition.get("host_tags", {})
         labels = condition.get("host_labels", {})
         rule_path = condition.get("host_folder", "/")
 
@@ -700,7 +698,7 @@ class RulesetOptimizer:
     def matches_host_tags(
         self,
         hosttags: set[tuple[TaggroupID, TagID]],
-        required_tags: TaggroupIDToTagCondition,
+        required_tags: Mapping[TaggroupID, TagCondition],
     ) -> bool:
         return all(
             matches_tag_condition(taggroup_id, tag_condition, hosttags)
@@ -711,7 +709,7 @@ class RulesetOptimizer:
     def _condition_cache_id(
         self,
         hostlist: HostOrServiceConditions | None,
-        tag_conditions: TaggroupIDToTagCondition,
+        tag_conditions: Mapping[TaggroupID, TagCondition],
         labels: Any,
         rule_path: Any,
     ) -> tuple[tuple[str, ...], tuple[tuple[str, Any], ...], tuple[tuple[Any, Any], ...], Any]:
@@ -753,7 +751,7 @@ class RulesetOptimizer:
             bool,
         ],
         valid_hosts: set[HostName],
-        tag_conditions: TaggroupIDToTagCondition,
+        tag_conditions: Mapping[TaggroupID, TagCondition],
     ) -> set | None:
         matching = set()
         negative_match_tags = set()
@@ -1033,7 +1031,7 @@ class RulesetToDictTransformer:
     This is done in place to keep the references to the ruleset working.
     """
 
-    def __init__(self, tag_to_group_map: TagIDToTaggroupID) -> None:
+    def __init__(self, tag_to_group_map: Mapping[TagID, TaggroupID]) -> None:
         super().__init__()
         self._tag_groups = tag_to_group_map
         self._transformed_ids: set[int] = set()
@@ -1215,7 +1213,7 @@ class RulesetToDictTransformer:
         return conditions
 
 
-def get_tag_to_group_map(tag_config: TagConfig) -> TagIDToTaggroupID:
+def get_tag_to_group_map(tag_config: TagConfig) -> Mapping[TagID, TaggroupID]:
     """The old rules only have a list of tags and don't know anything about the
     tag groups they are coming from. Create a map based on the current tag config
     """

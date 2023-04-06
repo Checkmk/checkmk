@@ -24,11 +24,10 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RuleOptionsSpec,
     RulesetName,
     RuleSpec,
+    TagCondition,
     TagConditionNE,
-    TaggroupIDToTagCondition,
-    TagIDToTaggroupID,
 )
-from cmk.utils.tags import TagID
+from cmk.utils.tags import TaggroupID, TagID
 from cmk.utils.type_defs import HostOrServiceConditionRegex, HostOrServiceConditions
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
@@ -115,14 +114,14 @@ class RuleConditions:
     def __init__(
         self,
         host_folder: str,
-        host_tags: TaggroupIDToTagCondition | None = None,
+        host_tags: Mapping[TaggroupID, TagCondition] | None = None,
         host_labels: Labels | None = None,
         host_name: HostOrServiceConditions | None = None,
         service_description: HostOrServiceConditions | None = None,
         service_labels: Labels | None = None,
     ) -> None:
         self.host_folder: Final = host_folder
-        self.host_tags: Final[TaggroupIDToTagCondition] = host_tags or {}
+        self.host_tags: Final[Mapping[TaggroupID, TagCondition]] = host_tags or {}
         self.host_labels: Final = host_labels or {}
         self.host_name: Final = host_name
         self.service_description: Final = service_description
@@ -550,7 +549,7 @@ class Ruleset:
     def __init__(
         self,
         name: RulesetName,
-        tag_to_group_map: TagIDToTaggroupID,
+        tag_to_group_map: Mapping[TagID, TaggroupID],
         rulespec: Rulespec | None = None,
     ) -> None:
         super().__init__()

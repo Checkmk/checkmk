@@ -3,15 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from cmk.utils.regex import regex
-from cmk.utils.rulesets.ruleset_matcher import (
-    matches_labels,
-    matches_tag_condition,
-    TaggroupIDToTagCondition,
-)
+from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_condition, TagCondition
+from cmk.utils.tags import TaggroupID
 from cmk.utils.type_defs import HostName
 
 from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
@@ -180,7 +177,7 @@ class BISearcher(ABCBISearcher):
     def filter_host_tags(
         self,
         hosts: Iterable[BIHostData],
-        tag_conditions: TaggroupIDToTagCondition,
+        tag_conditions: Mapping[TaggroupID, TagCondition],
     ) -> Iterable[BIHostData]:
         return (
             host

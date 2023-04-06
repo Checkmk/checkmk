@@ -47,7 +47,7 @@ from cmk.utils.store.host_storage import (
     StandardHostsStorage,
     StorageFormat,
 )
-from cmk.utils.tags import TaggroupID, TaggroupIDToTagID, TagID
+from cmk.utils.tags import TaggroupID, TagID
 from cmk.utils.type_defs import ContactgroupName, HostName
 
 from cmk.automations.results import ABCAutomationResult
@@ -3109,7 +3109,7 @@ class CREHost(WithPermissions, WithAttributes):
     def parents(self):
         return self.effective_attribute("parents", [])
 
-    def tag_groups(self) -> TaggroupIDToTagID:
+    def tag_groups(self) -> Mapping[TaggroupID, TagID]:
         """Compute tags from host attributes
         Each tag attribute may set multiple tags.  can set tags (e.g. the SiteAttribute)"""
 

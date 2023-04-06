@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Mapping
 
 from livestatus import SiteId
 
 import cmk.utils.render
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.rulesets.ruleset_matcher import LabelSources, TaggroupIDToTagID
+from cmk.utils.rulesets.ruleset_matcher import LabelSources
+from cmk.utils.tags import TaggroupID, TagID
 from cmk.utils.type_defs import HostName
 
 from cmk.gui.config import active_config
@@ -87,7 +89,7 @@ def format_plugin_output(output: str, row: Row) -> HTML:
     )
 
 
-def get_tag_groups(row: Row, what: str) -> TaggroupIDToTagID:
+def get_tag_groups(row: Row, what: str) -> Mapping[TaggroupID, TagID]:
     # Sites with old versions that don't have the tag groups column return
     # None for this field. Convert this to the default value
     groups = row.get("%s_tags" % what, {}) or {}

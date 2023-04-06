@@ -97,7 +97,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^livestatus/iwyu-mappings/' || true"
 
     - NAME: CHANGED_JS_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/js/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^web/htdocs/js/\\|\\.js$\\|\\.ts$' || true"
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_PACKAGE_JSON

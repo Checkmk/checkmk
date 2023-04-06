@@ -7,12 +7,9 @@ from cmk.utils.licensing.cre_handler import CRELicensingHandler
 from cmk.utils.licensing.registry import LicenseState, UserEffect
 
 
-def test_license_status() -> None:
-    handler = CRELicensingHandler()
-    assert handler.state is LicenseState.LICENSED
-    assert handler.message == ""
-
-
-def test_user_effect() -> None:
-    handler = CRELicensingHandler()
-    assert handler.effect() == UserEffect(header=None, email=None, block=None)
+def test_cre_licensing_handler() -> None:
+    cre_handler = CRELicensingHandler()
+    assert cre_handler.state is LicenseState.LICENSED
+    assert cre_handler.message == ""
+    assert cre_handler.effect_core(1, 2) == UserEffect(header=None, email=None, block=None)
+    assert cre_handler.effect() == UserEffect(header=None, email=None, block=None)

@@ -337,6 +337,15 @@ class RestApiClient:
             expect_ok=expect_ok,
         )
 
+    def show_host(
+        self, host_name: str, effective_attributes: bool = False, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/host_config/{host_name}",
+            query_params={"effective_attributes": "true" if effective_attributes else "false"},
+        )
+
     def create_host(
         self,
         host_name: str,

@@ -294,11 +294,16 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         # Clean the requested action after performing it
         performed_action = discovery_options.action
         discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
+        message = (
+            self._get_status_message(discovery_result, performed_action)
+            if discovery_result.sources
+            else None
+        )
 
         return {
             "is_finished": not has_active_job(discovery_result),
             "job_state": discovery_result.job_status["state"],
-            "message": self._get_status_message(discovery_result, performed_action),
+            "message": message,
             "body": page_code,
             "datasources": datasources_code,
             "fixall": fix_all_code,
@@ -500,25 +505,31 @@ class DiscoveryPageRenderer:
             return output_funnel.drain()
 
     def render_datasources(self, sources: Mapping[str, tuple[int, str]]) -> str:
-        states: list[int] = [s for s, _output in sources.values()]
-        overall_state: int = worst_service_state(*states, default=0)
+        states = [s for s, _output in sources.values()]
+        overall_state = worst_service_state(*states, default=0)
 
         with output_funnel.plugged():
-            # Colored overall state field
-            html.open_div(class_="datasources_state state%s" % overall_state)
-            html.open_span()
-            match overall_state:
-                case 0:
-                    html.icon("check")
-                case 1:
-                    html.icon("host_svc_problems_dark")
-                case 2 | 3:
-                    html.icon("host_svc_problems")
-            html.close_span()
-            html.close_div()
+            if sources:
+                # Colored overall state field
+                html.open_div(class_="datasources_state state%s" % overall_state)
+                html.open_span()
+                match overall_state:
+                    case 0:
+                        html.icon("check")
+                    case 1:
+                        html.icon("host_svc_problems_dark")
+                    case 2 | 3:
+                        html.icon("host_svc_problems")
+                html.close_span()
+                html.close_div()
 
             # Output per data source
             html.open_div(class_="datasources_output")
+            if not sources:
+                html.h2(_("There are no configured datasources"))
+                html.close_div()
+                return output_funnel.drain()
+
             if overall_state == 0:
                 html.h2(_("All datasources are OK"))
             else:

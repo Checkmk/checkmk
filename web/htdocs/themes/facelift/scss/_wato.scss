@@ -197,6 +197,10 @@ div#datasources_container {
       margin: 0 25px 0px;
     }
 
+    &:first-child h2 {
+      margin: 0;
+    }
+
     table {
       margin: 5px 25px 0px;
 

@@ -1,0 +1,15 @@
+Title: show host endpoint will now correctly display formatted dates under 'meta_data' in 'effective_attributes'
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1681212713
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The response of the show host endpoint will now return
+formatted and human readable dates and times.
+under the key 'meta_data' in 'effective_attributes'.
+Previously, these were Unix timestamps represented as numbers.
+

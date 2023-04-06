@@ -1325,3 +1325,16 @@ def test_openapi_host_config_attributes_as_string_crash_regression(
     assert resp.json["fields"]["attributes"] == [
         "Incompatible data type. Received a(n) 'str', but an associative value is required. Maybe you quoted a value that is meant to be an object?"
     ]
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_config_effective_attributes_schema_regression(
+    api_client: RestApiClient,
+) -> None:
+    resp = api_client.show_host("heute", effective_attributes=True)
+    assert isinstance(
+        resp.json["extensions"]["effective_attributes"]["meta_data"]["created_at"], str
+    )
+    assert isinstance(
+        resp.json["extensions"]["effective_attributes"]["meta_data"]["updated_at"], str
+    )

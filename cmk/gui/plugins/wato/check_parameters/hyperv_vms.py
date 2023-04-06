@@ -71,6 +71,7 @@ def _parameter_valuespec_hyperv_vms() -> Alternative:
                     )
                     for vm_state, default_value in VM_STATES_DEFVALS
                 ],
+                ignored_keys=["state"],
             ),
             FixedValue(
                 {"compare_discovery": True},

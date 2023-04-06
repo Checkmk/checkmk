@@ -6,6 +6,7 @@
 # NOTE: DO NOT EDIT! Automatically generated from @@ORIG-FILE@@
 
 # fmt: off
+# isort: off
 
 # in order of frequency, decreasing (at time of writing):
 # mypy: disable-error-code="var-annotated,name-defined,arg-type,no-untyped-def,list-item,index,attr-defined,operator,assignment"

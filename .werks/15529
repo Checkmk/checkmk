@@ -1,0 +1,18 @@
+Title: hyperv_vms: Transform failed during cmk-update-config
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680779384
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Discovered services of the plugin <tt>hyperv_vms</tt> would result in error messages during update.
+The displayed message was:
+
+<i>Transform failed: host='heute', plugin='hyperv_vms', ruleset='hyperv_vms', params={'state': ...}, error=MKUserError(None, 'Found no matching alternative.')</i>
+
+You can safely ignore this message.
+With this werk the message will no longer appear.
+

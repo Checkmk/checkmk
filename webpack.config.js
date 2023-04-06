@@ -7,6 +7,24 @@ const RemoveEmptyScriptsPlugin = require("webpack-remove-empty-scripts");
 const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
 
+class WarningsToErrors {
+    apply(compiler) {
+        compiler.hooks.shouldEmit.tap("WarningsToErrors", compilation => {
+            if (compilation.warnings.length > 0) {
+                compilation.errors = compilation.errors.concat(compilation.warnings);
+                compilation.warnings = [];
+            }
+
+            compilation.children.forEach(child => {
+                if (child.warnings.length > 0) {
+                    child.errors = child.errors.concat(child.warnings);
+                    child.warnings = [];
+                }
+            });
+        });
+    }
+}
+
 module.exports = {
     mode: "production",
     devtool: "source-map",
@@ -116,6 +134,7 @@ module.exports = {
     plugins: [
         new RemoveEmptyScriptsPlugin(),
         new webpack.EnvironmentPlugin(["ENTERPRISE", "MANAGED"]),
+        new WarningsToErrors(),
     ],
 };
 
@@ -161,4 +180,5 @@ if (process.env.WEBPACK_MODE === "quick") {
         },
     ]);
 }
+
 module.exports.module.rules.unshift(babel_loader);

@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 import cmk.utils.render
 
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import unit_info
+from cmk.gui.logged_in import user
+from cmk.gui.plugins.metrics.utils import unit_info, UnitInfo
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 # TODO Graphingsystem:
@@ -184,12 +187,30 @@ unit_info["bytes/d"] = {
     "stepping": "binary",  # for vertical graph labels
 }
 
-unit_info["c"] = {
-    "title": _("Degree Celsius"),
-    "symbol": "°C",
-    "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v), "°C"),
-    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' °C'",
+_TEMPERATURE_UNIT_SPECS: Mapping[TemperatureUnit, UnitInfo] = {
+    TemperatureUnit.CELSIUS: {
+        "title": _("Degree Celsius"),
+        "symbol": "°C",
+        "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v), "°C"),
+        "js_render": "v => cmk.number_format.drop_dotzero(v) + ' °C'",
+    },
+    TemperatureUnit.FAHRENHEIT: {
+        "title": _("Degree Fahrenheit"),
+        "symbol": "°F",
+        "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v * 1.8 + 32), "°F"),
+        "js_render": "v => cmk.number_format.drop_dotzero(v * 1.8 + 32) + ' °F'",
+    },
 }
+
+
+unit_info["c"] = lambda: _TEMPERATURE_UNIT_SPECS[
+    TemperatureUnit(
+        active_config.default_temperature_unit
+        if (user_setting := user.get_attribute("temperature_unit")) is None
+        else user_setting
+    )
+]
+
 
 unit_info["a"] = {
     "title": _("Electrical Current (Amperage)"),

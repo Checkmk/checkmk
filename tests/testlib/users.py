@@ -98,6 +98,7 @@ def create_and_destroy_user(
                     "roles": [role],
                     "start_url": None,
                     "ui_theme": "modern-dark",
+                    **(custom_attrs or {}),
                 }
             )
         )

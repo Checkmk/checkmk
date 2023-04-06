@@ -54,12 +54,7 @@ def default_config() -> ConfigFromWATO:
         "remote_status": None,
         "socket_queue_len": 10,
         "eventsocket_queue_len": 10,
-        "hostname_translation": TranslationOptions(
-            case=None,
-            drop_domain=False,
-            mapping=[],
-            regex=[],
-        ),
+        "hostname_translation": TranslationOptions(),
         "archive_orphans": False,
         "archive_mode": "file",
         "translate_snmptraps": False,

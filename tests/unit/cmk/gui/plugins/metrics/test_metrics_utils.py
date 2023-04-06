@@ -20,7 +20,6 @@ from cmk.gui.plugins.metrics.utils import (
     NormalizedPerfData,
     StackElement,
     TranslationInfo,
-    UnitConversionError,
 )
 from cmk.gui.type_defs import Perfdata
 
@@ -431,46 +430,6 @@ def test_horizontal_rules_from_thresholds(
         )
         == result
     )
-
-
-@pytest.mark.parametrize(
-    "source_value, source_unit, target_unit, expected_value",
-    [
-        (10, "c", "f", 50),
-        (10, "c", "k", 283.15),
-    ],
-)
-def test_unit_conversion_single(
-    source_value: float, source_unit: str, target_unit: str, expected_value: float
-) -> None:
-    converter = utils.UnitConverter(source_unit, target_unit)
-    assert converter.convert(source_value) == expected_value
-
-
-@pytest.mark.parametrize(
-    "source_values, source_unit, target_unit, expected_values",
-    [
-        ([10, 20], "c", "f", [50, 68]),
-        ([10, 20], "c", "k", [283.15, 293.15]),
-    ],
-)
-def test_unit_conversion_iterable(
-    source_values: list[float], source_unit: str, target_unit: str, expected_values: list[float]
-) -> None:
-    converter = utils.UnitConverter(source_unit, target_unit)
-    assert list(converter.convert_iterable(source_values)) == expected_values
-
-
-def test_unit_conversion_error() -> None:
-    converter = utils.UnitConverter("c", "not_existing_unit")
-    with pytest.raises(UnitConversionError):
-        converter.convert(10)
-
-
-def test_unit_conversion_target_units_exist() -> None:
-    # This test may be useful to avoid that modifications in the unit_info dict will result in an
-    # empty result or an error when calling `get_all_target_units`
-    assert utils.UnitConverter.get_all_target_units()
 
 
 @pytest.mark.parametrize(

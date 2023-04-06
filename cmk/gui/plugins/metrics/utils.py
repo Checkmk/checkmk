@@ -10,7 +10,6 @@ import re
 import shlex
 from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
-from functools import lru_cache
 from itertools import chain
 from typing import Any, overload, TypedDict, TypeVar, Union
 
@@ -124,7 +123,6 @@ class GraphTemplate(_GraphTemplateMandatory, total=False):
     consolidation_function: GraphConsoldiationFunction
     range: GraphRangeSpec
     omit_zero_metrics: bool
-    convert_unit_to: str
 
 
 GraphRecipe = dict[str, Any]
@@ -600,61 +598,6 @@ def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
     rrd_metrics = row[what + "_metrics"]
     check_command = row[what + "_check_command"]
     return available_metrics_translated(perf_data_string, rrd_metrics, check_command)
-
-
-class UnitConversionError(MKGeneralException):
-    pass
-
-
-class UnitConverter:
-    @staticmethod
-    @lru_cache
-    def get_all_target_units(from_unit: str | None = None) -> set[str]:
-        """
-        Return all units that are available as a target of a conversion
-
-        If `from_unit` is None, it returns all the possible targets for all source units.
-        If `from_unit` is a unit, it returns all possible targets for the specified source unit.
-        """
-        if from_unit is None:
-            return {
-                conversion
-                for unit_data in unit_info.values()
-                for conversion in unit_data.get("conversions", {})
-            }
-        return set(unit_info[from_unit].get("conversions", {}))
-
-    def __init__(self, from_unit: str, to_unit: str) -> None:
-        self.from_unit = from_unit
-        self.to_unit = to_unit
-
-    def is_conversion_available(self) -> bool:
-        if self.from_unit not in unit_info:
-            return False
-        return self.to_unit in UnitConverter.get_all_target_units(self.from_unit)
-
-    def convert_iterable(
-        self, values: Iterable[float | int | None]
-    ) -> Iterable[float | int | None]:
-        """
-        Convert all `values` from `self.from_unit` to `self.to_unit`.
-
-        All `None` values are kept as they are.
-        """
-        conversion_fn = self._get_conversion_fn()
-        return ((e if e is None else conversion_fn(e)) for e in values)
-
-    def convert(self, value: float | int) -> float | int:
-        """Convert a `value` from `self.from_unit` to `self.to_unit`."""
-        conversion_fn = self._get_conversion_fn()
-        return conversion_fn(value)
-
-    def _get_conversion_fn(self) -> Callable[[float | int], float | int]:
-        if not self.is_conversion_available():
-            raise UnitConversionError(
-                f"Cannot find conversion from unit '{self.from_unit}' to unit '{self.to_unit}'"
-            )
-        return unit_info[self.from_unit]["conversions"][self.to_unit]
 
 
 # .

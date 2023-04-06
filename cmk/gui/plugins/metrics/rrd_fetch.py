@@ -10,7 +10,7 @@ from collections.abc import Callable, Iterator, Sequence
 from typing import Any
 
 import livestatus
-from livestatus import LivestatusRow, SiteId
+from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
@@ -29,7 +29,6 @@ from cmk.gui.plugins.metrics.utils import (
     GraphRecipe,
     reverse_translate_metric_name,
     RRDData,
-    UnitConverter,
 )
 from cmk.gui.type_defs import ColumnName, CombinedGraphSpec
 
@@ -202,29 +201,7 @@ def fetch_rrd_data(
     query = livestatus_lql([host_name], lql_columns, service_description)
 
     with sites.only_sites(site):
-        query_results = sites.live().query_row(query)
-
-    converted_query_results = _convert_query_results(query_results, graph_recipe)
-    return list(zip(metrics, converted_query_results))
-
-
-def _convert_query_results(
-    query_results: LivestatusRow, graph_recipe: GraphRecipe
-) -> LivestatusRow:
-    source_unit = graph_recipe.get("source_unit")
-    target_unit = graph_recipe.get("unit")
-    if source_unit is None or target_unit is None or source_unit == target_unit:
-        return query_results
-    converter = UnitConverter(source_unit, target_unit)
-    if not converter.is_conversion_available():
-        return query_results
-
-    converted_results = LivestatusRow([])
-    for result in query_results:
-        start_time, end_time, step, *original_data = result
-        converted_data = converter.convert_iterable(original_data)
-        converted_results.append([start_time, end_time, step, *converted_data])
-    return converted_results
+        return list(zip(metrics, sites.live().query_row(query)))
 
 
 def rrd_columns(

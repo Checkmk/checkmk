@@ -17,7 +17,7 @@
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1",
     "//": "COMMENT: Process 'resolutions' key below",
-    "preinstall": "npx npm-force-resolutions"
+    "preinstall": "npx --no npm-force-resolutions"
   },
   "repository": {
     "type": "git",
@@ -56,6 +56,7 @@
     "file-loader": "^6.2.0",
     "merge": ">=2.1.1",
     "mini-css-extract-plugin": "^2.4.5",
+    "npm-force-resolutions": "^0.0.10",
     "pkg-dir": "^6.0.1",
     "postcss": "^8.2.4",
     "postcss-loader": "^6.2.1",

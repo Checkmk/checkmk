@@ -88,7 +88,6 @@ def test_rpn_stack(expression: MetricExpression, result: StackElement) -> None:
 
 
 def test_create_graph_recipe_from_template() -> None:
-    metrics.fixup_unit_info()
     graph_template = GraphTemplate(
         {
             "metrics": [
@@ -164,7 +163,6 @@ def test_create_graph_recipe_from_template() -> None:
 def test_metric_unit_color(
     expression: str, perf_string: str, check_command: str | None, result_color: str
 ) -> None:
-    metrics.fixup_unit_info()
     translated_metrics = metrics.translate_perf_data(perf_string, check_command)
     translated_metric = translated_metrics.get(expression)
     assert translated_metric is not None

@@ -9,9 +9,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from cmk.base.api.agent_based.type_defs import StringTable
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # <<<graylog_sources>>>

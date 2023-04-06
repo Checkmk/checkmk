@@ -5,8 +5,6 @@
 
 from typing import Iterable
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.ups_out_voltage import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC

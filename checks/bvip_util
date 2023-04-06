@@ -5,9 +5,6 @@
 
 from cmk.base.check_legacy_includes.bvip import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.plugins.agent_based.utils.bvip import DETECT_BVIP
 
 bvip_util_default_levels = (90, 95)

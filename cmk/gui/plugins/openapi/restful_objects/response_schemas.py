@@ -740,6 +740,10 @@ class BaseUserAttributes(BaseSchema):
         required=False,
         description="The language used by the user in the user interface",
     )
+    temperature_unit = fields.String(
+        required=False,
+        description="The temperature unit used for graphs and perfometers.",
+    )
     auth_option = fields.Nested(
         AuthOption,
         required=False,

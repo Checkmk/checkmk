@@ -201,6 +201,7 @@ def test_registered_configvars() -> None:
         "enable_login_via_get",
         "enable_community_translations",
         "default_language",
+        "default_temperature_unit",
     ]
 
     if not cmk_version.is_raw_edition():

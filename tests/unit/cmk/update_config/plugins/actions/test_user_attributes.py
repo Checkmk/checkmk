@@ -142,6 +142,7 @@ def fixture_plugin() -> UpdateUserAttributes:
                 "serial": 0,
                 "num_failed_logins": 0,
                 "last_pw_change": 1668511745,
+                "temperature_unit": "celsius",
             },
             {
                 "alias": "test3",
@@ -162,6 +163,7 @@ def fixture_plugin() -> UpdateUserAttributes:
                 "serial": 0,
                 "num_failed_logins": 0,
                 "last_pw_change": 1668511745,
+                "temperature_unit": "celsius",
             },
             id="User already updated",
         ),

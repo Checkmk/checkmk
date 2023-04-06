@@ -258,6 +258,13 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
         internal_attrs, api_configurations.get("disable_notifications")
     )
     internal_attrs = _update_idle_options(internal_attrs, api_configurations.get("idle_timeout"))
+
+    if temperature_unit := api_configurations.get("temperature_unit"):
+        internal_attrs = _api_temperature_format_to_internal_format(
+            internal_attrs,
+            temperature_unit,
+        )
+
     return internal_attrs
 
 
@@ -294,6 +301,11 @@ def _internal_to_api_format(  # pylint: disable=too-many-branches
 
     if "pager" in internal_attrs:
         api_attrs["pager_address"] = internal_attrs["pager"]
+
+    if "temperature_unit" in internal_attrs:
+        api_attrs["temperature_unit"] = _internal_temperature_format_to_api_format(
+            internal_attrs["temperature_unit"]
+        )
 
     api_attrs.update(
         {
@@ -709,3 +721,29 @@ def _time_stamp_range(datetime_range: TimeRange) -> TIMESTAMP_RANGE:
         return dt.datetime.timestamp(date_time.replace(tzinfo=dt.timezone.utc))
 
     return timestamp(datetime_range["start_time"]), timestamp(datetime_range["end_time"])
+
+
+def _api_temperature_format_to_internal_format(
+    internal_attrs: Mapping[str, object],
+    temperature_unit: str,
+) -> dict[str, object]:
+    """
+    >>> _api_temperature_format_to_internal_format({'a': 'b'}, 'default')
+    {'a': 'b', 'temperature_unit': None}
+    >>> _api_temperature_format_to_internal_format({'a': 'b'}, 'celsius')
+    {'a': 'b', 'temperature_unit': 'celsius'}
+    """
+    return {
+        **internal_attrs,
+        "temperature_unit": None if temperature_unit == "default" else temperature_unit,
+    }
+
+
+def _internal_temperature_format_to_api_format(internal_temperature: str | None) -> str:
+    """
+    >>> _internal_temperature_format_to_api_format('celsius')
+    'celsius'
+    >>> _internal_temperature_format_to_api_format(None)
+    'default'
+    """
+    return "default" if not internal_temperature else internal_temperature

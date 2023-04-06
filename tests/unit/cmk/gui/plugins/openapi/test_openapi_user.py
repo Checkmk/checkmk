@@ -818,6 +818,7 @@ def test_global_full_configuration(
         "roles": ["user"],
         "disable_notifications": {"disable": False},
         "language": "en",
+        "temperature_unit": "fahrenheit",
     }
 
     base = "/NO_SITE/check_mk/api/1.0"
@@ -857,6 +858,7 @@ def test_global_full_configuration(
             "show_mode": "default",
             "sidebar_position": "right",
         },
+        "temperature_unit": "fahrenheit",
     }
 
 

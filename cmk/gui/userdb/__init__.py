@@ -872,6 +872,7 @@ def cleanup_abandoned_profiles(logger: Logger, now: datetime, max_age: timedelta
 
 
 def _register_user_attributes() -> None:
+    user_attribute_registry.register(user_attributes.TemperatureUnitUserAttribute)
     user_attribute_registry.register(user_attributes.ForceAuthUserUserAttribute)
     user_attribute_registry.register(user_attributes.DisableNotificationsUserAttribute)
     user_attribute_registry.register(user_attributes.StartURLUserAttribute)

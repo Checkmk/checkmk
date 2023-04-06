@@ -59,6 +59,7 @@ from cmk.gui.plugins.watolib.utils import (
     ConfigVariable,
     ConfigVariableGroup,
 )
+from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -1786,6 +1787,28 @@ class ConfigVariableViewActionDefaults(ConfigVariable):
                 ),
             ],
             optional_keys=[],
+        )
+
+
+@config_variable_registry.register
+class ConfigVariableDefaultTemperatureUnit(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserInterface
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "default_temperature_unit"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Default temperature unit"),
+            help=_(
+                "Set the default temperature unit used for graphs and perfometers. The option can "
+                "be configured individually for each user in the user settings."
+            ),
+            choices=temperature_unit_choices(),
         )
 
 

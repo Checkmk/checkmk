@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 from collections.abc import Iterable, Iterator, Sequence
 
 from cmk.utils import pnp_cleanup
@@ -33,8 +32,6 @@ from cmk.gui.plugins.metrics.utils import (
     StackElement,
     translated_metrics_from_row,
     TranslatedMetrics,
-    unit_info,
-    UnitConverter,
 )
 from cmk.gui.type_defs import MetricDefinition, Row, TemplateGraphSpec
 from cmk.gui.views.painter_options import PainterOptions
@@ -137,23 +134,6 @@ class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec]):
 graph_identification_types.register(GraphIdentificationTemplate)
 
 
-def get_converted_metrics(
-    converter: UnitConverter, translated_metrics: TranslatedMetrics
-) -> TranslatedMetrics:
-    translated_metrics = copy.deepcopy(translated_metrics)
-    for _metric_name, metric_data in translated_metrics.items():
-        if "value" in metric_data:
-            metric_data["value"] = converter.convert(metric_data["value"])
-        if "scalar" in metric_data:
-            metric_data["scalar"] = {
-                k: converter.convert(v) for (k, v) in metric_data["scalar"].items()
-            }
-        if "unit" in metric_data:
-            metric_data["unit"] = copy.deepcopy(unit_info[converter.to_unit])
-
-    return translated_metrics
-
-
 def create_graph_recipe_from_template(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
 ) -> GraphRecipe:
@@ -182,23 +162,11 @@ def create_graph_recipe_from_template(
         return metric
 
     metrics = list(map(_metric, graph_template["metrics"]))
-    source_units = {m["unit"] for m in metrics}
-    if len(source_units) > 1:
+    units = {m["unit"] for m in metrics}
+    if len(units) > 1:
         raise MKGeneralException(
-            _("Cannot create graph with metrics of different units '%s'") % ", ".join(source_units)
+            _("Cannot create graph with metrics of different units '%s'") % ", ".join(units)
         )
-    source_unit = source_units.pop()
-    unit = source_unit
-
-    target_unit = graph_template.get("convert_unit_to")
-    if (
-        target_unit is not None
-        and (converter := UnitConverter(source_unit, target_unit)).is_conversion_available()
-    ):
-        unit = target_unit
-        translated_metrics = get_converted_metrics(converter, translated_metrics)
-        for metric in metrics:
-            metric["unit"] = target_unit
 
     title = replace_expressions(str(graph_template.get("title", "")), translated_metrics)
     if not title:
@@ -211,14 +179,13 @@ def create_graph_recipe_from_template(
     return {
         "title": title,
         "metrics": metrics,
-        "unit": unit,
+        "unit": units.pop(),
         "explicit_vertical_range": get_graph_range(graph_template, translated_metrics),
         "horizontal_rules": horizontal_rules_from_thresholds(
             graph_template.get("scalars", []), translated_metrics
         ),  # e.g. lines for WARN and CRIT
         "omit_zero_metrics": graph_template.get("omit_zero_metrics", False),
         "consolidation_function": graph_template.get("consolidation_function", "max"),
-        "source_unit": source_unit,
     }
 
 

@@ -189,24 +189,6 @@ unit_info["c"] = {
     "symbol": "°C",
     "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v), "°C"),
     "js_render": "v => cmk.number_format.drop_dotzero(v) + ' °C'",
-    "conversions": {
-        "f": lambda v: v * 1.8 + 32.0,
-        "k": lambda v: v + 273.15,
-    },
-}
-
-unit_info["f"] = {
-    "title": _("Degree Fahrenheit"),
-    "symbol": "°F",
-    "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v), "°F"),
-    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' °F'",
-}
-
-unit_info["k"] = {
-    "title": _("Kelvin"),
-    "symbol": "K",
-    "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v), "K"),
-    "js_render": "v => cmk.number_format.drop_dotzero(v) + ' K'",
 }
 
 unit_info["a"] = {

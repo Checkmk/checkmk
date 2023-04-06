@@ -65,3 +65,9 @@ stunnel(
     version_str="5.63",
     sha256="c74c4e15144a3ae34b8b890bb31c909207301490bd1e51bfaaa5ffeb0a994617",
 )
+
+load("//packages/freetds:freetds_http.bzl", "freetds")
+freetds(
+    version_str="0.95.95",
+    sha256="be7c90fc771f30411eff6ae3a0d2e55961f23a950a4d93c44d4c488006e64c70",
+)

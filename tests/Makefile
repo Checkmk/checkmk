@@ -233,6 +233,9 @@ test-build-js:
 test-lint-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-lint-js
 
+test-build-js-docker:
+	../scripts/run-in-docker.sh make --quiet test-build-js
+
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js
 

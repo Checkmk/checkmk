@@ -238,7 +238,7 @@ STAGES:
     -  NAME: 'JS Build'
        ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_JS_FILES
        DIR: 'tests'
-       COMMAND: 'make test-build-js &> ${RESULTS}/js-build.txt'
+       COMMAND: 'make test-build-js-docker &> ${RESULTS}/js-build.txt'
        TEXT_ON_SKIP: 'No relevant JS/TS files changed'
        RESULT_CHECK_FILE_PATTERN: "results/js-build.txt"
 

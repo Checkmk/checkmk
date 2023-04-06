@@ -99,13 +99,9 @@ def test_upload_signing_keys(
     logged_in_page: PPage,
     self_signed_cert: CertificateWithPrivateKey,
     upload_function: Callable[[PPage, str, str, str], None],
-    is_firefox: bool,
 ) -> None:
     """Send a few payloads to the `Signature keys for signing agents` page and check the
     responses."""
-
-    if is_firefox:
-        pytest.xfail(reason="Test flaky when running on the firefox engine.")  # TODO: investigate
 
     # pem is invalid
     upload_function(logged_in_page, "Some description", "password", "invalid")

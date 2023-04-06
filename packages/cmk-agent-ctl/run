@@ -163,7 +163,7 @@ main() {
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && cargo build --release --all-targets
     test ${RUN_BUILD_UNIT_TESTS} = yes && cargo test --release --all-targets --no-run
-    test ${RUN_UNIT_TESTS} = yes && cargo test --release --all-targets
+    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=1 cargo test --release --all-targets
     test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets -- --deny warnings
     test ${RUN_FORMAT} = yes && cargo fmt
     test ${RUN_DOCUMENTATION} = yes && cargo doc --release --lib --bin --examples

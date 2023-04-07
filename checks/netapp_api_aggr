@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 
 # <<<netapp_api_aggr:sep(9)>>>
 # aggregation aggr0_root_n1       size-available 940666880        size-total 1793064960

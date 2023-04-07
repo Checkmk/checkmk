@@ -6,7 +6,7 @@
 import time
 from calendar import timegm
 
-from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR, json
 
 
 def parse_azure_ad(info):

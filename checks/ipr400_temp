@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 factory_settings["ipr400_temp_default_levels"] = {
     "levels": (30.0, 40.0),  # reported temperature seems to be near room temperature usually

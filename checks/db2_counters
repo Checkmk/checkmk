@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 # <<<db2_counters>>>
 # TIMESTAMP 1426610723
 # db2taddm:CMDBS1 deadlocks 0

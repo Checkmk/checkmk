@@ -5,7 +5,7 @@
 
 import math
 
-from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.k8s import parse_k8s
 
 ###########################################################################
 # NOTE: This check (and associated special agent) is deprecated and will be

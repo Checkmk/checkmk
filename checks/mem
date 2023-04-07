@@ -6,7 +6,7 @@
 import time
 
 import cmk.base.plugins.agent_based.utils.memory as memory
-from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.mem import check_memory_dict, check_memory_element
 
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |

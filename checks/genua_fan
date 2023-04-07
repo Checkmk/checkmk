@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.genua import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.fan import check_fan
 
 factory_settings["genua_fan_default_levels"] = {
     "lower": (2000, 1000),

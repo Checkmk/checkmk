@@ -6,7 +6,7 @@
 import time
 
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 
 factory_settings["pulse_secure_cpu_util_def_levels"] = {"util": (80.0, 90.0)}
 

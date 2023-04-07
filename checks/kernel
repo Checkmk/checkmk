@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.base.plugins.agent_based.kernel
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 #   .--kernel--Counters----------------------------------------------------.
 #   |                ____                  _                               |

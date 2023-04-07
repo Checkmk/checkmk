@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.dhcp_pools import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.dhcp_pools import check_dhcp_pools_levels
 
 isc_dhcpd_default_levels = (15.0, 5.0)
 

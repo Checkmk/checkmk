@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
 

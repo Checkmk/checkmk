@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
+from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
 
 def parse_jolokia_jvm_runtime(info):

@@ -4,8 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.hp_msa import (
+    check_hp_msa_health,
+    inventory_hp_msa_health,
+    parse_hp_msa,
+)
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 # <<<hp_msa_psu>>>
 # power-supplies 1 durable-id psu_1.1

@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.mbg_lantime import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-
 def inventory_mbg_lantime_ng_power(info):
     for line in info:
         yield line[0], None

@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.cisco_srst import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-
 def inventory_cisco_srst_phones(info):
     return [(None, {})]
 

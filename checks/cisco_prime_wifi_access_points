@@ -10,7 +10,7 @@ see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
 """
 import collections
 
-from cmk.base.check_legacy_includes.cisco_prime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 
 factory_settings["cisco_prime_wifi_access_points"] = {
     "levels": (20, 40),

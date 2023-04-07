@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
+from cmk.base.check_legacy_includes.mem import check_memory_element, MEMORY_DEFAULT_LEVELS
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
 check_info["couchbase_nodes_stats"] = {

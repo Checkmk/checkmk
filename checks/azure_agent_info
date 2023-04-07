@@ -6,7 +6,7 @@
 import json
 import time
 
-from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
 
 factory_settings["azure_agent_info_levels"] = {
     "warning_levels": (1, 10),

@@ -5,8 +5,6 @@
 
 import time
 
-from cmk.base.check_legacy_includes.docsis import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 # Old comments:
 # Strange: Channel IDs seem to be not unique. But the second
 # usage has '0' in the docsIfUpChannelFrequency...

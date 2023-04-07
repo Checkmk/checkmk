@@ -5,8 +5,10 @@
 
 import time
 
-from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.jolokia import (
+    get_inventory_jolokia_metrics_apps,
+    jolokia_metrics_parse,
+)
 
 # Example output from agent:
 # <<<jolokia_metrics>>>

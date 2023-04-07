@@ -5,7 +5,10 @@
 
 import time
 
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.netapp_api import (
+    get_and_try_cast_to_int,
+    netapp_api_parse_lines,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.interfaces import (
     bandwidth_levels,

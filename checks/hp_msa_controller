@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
+from cmk.base.check_legacy_includes.hp_msa import parse_hp_msa
 
 # <<<hp_msa_controller>>>
 # controller-statistics 1 durable-id controller_A

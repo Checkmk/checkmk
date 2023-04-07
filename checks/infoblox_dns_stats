@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.infoblox import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.infoblox import (
+    check_infoblox_statistics,
+    inventory_infoblox_statistics,
+)
 
 
 def check_infoblox_dns_stats(_no_item, _no_params, info):

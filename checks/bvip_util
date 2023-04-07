@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.bvip import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.plugins.agent_based.utils.bvip import DETECT_BVIP
 
 bvip_util_default_levels = (90, 95)

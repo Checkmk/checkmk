@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 
 factory_settings["avaya_45xx_cpu_default_levels"] = {"levels": (90.0, 95.0)}
 

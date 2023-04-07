@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.huawei_switch import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.huawei_switch import (
+    huawei_entity_specific_snmp_info,
+    parse_huawei_physical_entity_values,
+)
 
 huawei_switch_hw_oper_state_map = {
     "1": "notSupported",

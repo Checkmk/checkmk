@@ -5,8 +5,8 @@
 
 import collections
 
-from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.fan import check_fan
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 # <<<openhardwaremonitor:sep(44)>>>
 # Index,Name,Parent,SensorType,Value

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.elphase import check_elphase
 
 # Knowledge from customer:
 # Devices with OID_END=38 are 12 port power switches with two powerbanks.

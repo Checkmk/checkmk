@@ -5,7 +5,7 @@
 
 from typing import Dict
 
-from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.aws import AWSRegions, parse_aws
 
 
 def check_aws_dynamodb_summary(item, params, parsed):

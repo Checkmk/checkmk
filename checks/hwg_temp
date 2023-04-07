@@ -4,8 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.hwg import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.hwg import (
+    check_hwg_temp,
+    HWG_TEMP_DEFAULTLEVELS,
+    inventory_hwg_temp,
+    parse_hwg,
+)
 
 factory_settings["hwg_temp_defaultlevels"] = HWG_TEMP_DEFAULTLEVELS
 

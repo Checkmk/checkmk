@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.didactum import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.didactum import (
+    inventory_didactum_sensors,
+    parse_didactum_sensors,
+)
 
 
 def inventory_didactum_sensors_outlet_relay(parsed):

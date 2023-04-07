@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.perle import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.perle import check_perle_cm_modules, inventory_perle_cm_modules
 from cmk.base.plugins.agent_based.utils.perle import DETECT_PERLE
 
 check_info["perle_modules_cm1000"] = {

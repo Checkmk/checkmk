@@ -10,7 +10,7 @@ see: https://d1nmyq4gcgsfi5.cloudfront.net/media/pi_3_3_devnet/api/v2/data/Clien
 """
 
 
-from cmk.base.check_legacy_includes.cisco_prime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 
 
 def check_cisco_prime_wifi_connections(item, params, parsed):

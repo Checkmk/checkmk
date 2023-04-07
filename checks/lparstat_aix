@@ -5,8 +5,8 @@
 
 from typing import Iterable
 
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.transforms import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
+from cmk.base.check_legacy_includes.transforms import transform_cpu_iowait
 from cmk.base.plugins.agent_based.lparstat_aix import Section
 
 # +------------------------------------------------------------------+

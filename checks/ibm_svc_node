@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 
 # Example output from agent:
 # Put here the example output from your TCP-Based agent. If the

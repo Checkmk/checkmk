@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 # EXAMPLE DATA FROM: WDC SSC-D0128SC-2100
 # <<<smart>>>

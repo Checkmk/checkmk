@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 # OIDs for name and type of the sensors (type 8 = temperature sensor)
 # SNMPv2-SMI::mib-2.47.1.1.1.1.2.21594 = STRING: "module-1 Crossbar(s5)"
 # SNMPv2-SMI::mib-2.47.1.1.1.1.2.21601 = STRING: "module-1 QEng1Sn1(s12)"

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
 
 factory_settings["aws_rds_limits_default_levels"] = {
     "db_instances": (None, 80.0, 90.0),

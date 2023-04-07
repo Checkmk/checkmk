@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.mem import check_memory_element, get_levels_mode_from_value
 
 fortigate_memory_base_default_levels = {
     "levels": (70.0, 80.0),

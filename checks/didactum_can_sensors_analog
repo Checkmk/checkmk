@@ -4,11 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.didactum import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 # .1.3.6.1.4.1.46501.6.2.1.5.201007 alpha-bravo_doppelboden_frischluft --> DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogName.201007
 # .1.3.6.1.4.1.46501.6.2.1.6.201007 normal --> DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogState.201007
 # .1.3.6.1.4.1.46501.6.2.1.7.201007 14.9 --> DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogValue.201007
@@ -23,6 +18,15 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 #   +----------------------------------------------------------------------+
 #   |                              main check                              |
 #   '----------------------------------------------------------------------'
+
+
+from cmk.base.check_legacy_includes.didactum import (
+    check_didactum_sensors_humidity,
+    check_didactum_sensors_temp,
+    check_didactum_sensors_voltage,
+    inventory_didactum_sensors,
+    parse_didactum_sensors,
+)
 
 
 def inventory_didactum_can_sensors_analog_temp(parsed):

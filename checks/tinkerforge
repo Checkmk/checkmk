@@ -5,8 +5,8 @@
 
 import time
 
-from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.humidity import check_humidity
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 # <<<tinkerforge:sep(44)>>>
 # temperature,6QHSgJ.a.tiq,2181

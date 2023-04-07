@@ -6,7 +6,6 @@
 import collections
 import time
 
-from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.11.5.1.5.0 456.180 --> FE-FIREEYE-MIB::feSecurityContentVersion.0

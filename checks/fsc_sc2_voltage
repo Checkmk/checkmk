@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.fsc import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.fsc_sc2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.elphase import check_elphase
+from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
+from cmk.base.check_legacy_includes.fsc_sc2 import parse_fsc_sc2_voltage
 
 check_info["fsc_sc2_voltage"] = {
     "detect": DETECT_FSC_SC2,

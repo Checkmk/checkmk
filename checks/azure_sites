@@ -4,7 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.azure import (
+    check_azure_metric,
+    get_data_or_go_stale,
+    iter_resource_attributes,
+    parse_resources,
+)
 
 factory_settings["levels_azure_sites"] = {
     # https://www.nngroup.com/articles/response-times-3-important-limits/

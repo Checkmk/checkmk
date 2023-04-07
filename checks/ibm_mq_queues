@@ -5,7 +5,7 @@
 
 import dateutil.parser
 
-from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ibm_mq import is_ibm_mq_service_vanished
 
 # <<<ibm_mq_queues:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)

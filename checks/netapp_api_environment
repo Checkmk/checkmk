@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.netapp_api import maybefloat, netapp_api_parse_lines
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 # <<<netapp_api_environment:sep(9)>>>
 # sensor-name PSU1 FAULT  sensor-type discrete    node-name BIN-CL1-N1    discrete-sensor-value OK    discrete-sensor-state normal    threshold-sensor-state normal

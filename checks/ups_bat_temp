@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
 
 factory_settings["ups_bat_temp_default"] = {

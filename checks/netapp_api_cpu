@@ -5,8 +5,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 
 # 7mode
 # <<<netapp_api_cpu:sep(9)>>>

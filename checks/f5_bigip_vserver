@@ -7,7 +7,7 @@ import collections
 import socket
 import time
 
-from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # Current server status

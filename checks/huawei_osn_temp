@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.huawei_osn import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 # The laser should not get hotter than 70°C
 factory_settings["huawei_osn_temp_default_levels"] = {

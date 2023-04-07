@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 
 #    UCD-SNMP-MIB::ssCpuRawUser.0 = Counter32: 219998591

@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.graylog import handle_iso_utc_to_localtimestamp, json
 
 # <<<graylog_sidecars>>>
 # {"sort": "node_name", "pagination": {"count": 1, "per_page": 50, "total": 1,

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.quanta import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.quanta import parse_quanta
 
 # .1.3.6.1.4.1.7244.1.2.1.3.5.1.1.14 14
 # .1.3.6.1.4.1.7244.1.2.1.3.5.1.1.15 15

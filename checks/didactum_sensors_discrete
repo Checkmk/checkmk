@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.didactum import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.didactum import (
+    inventory_didactum_sensors,
+    parse_didactum_sensors,
+)
 
 # .1.3.6.1.4.1.46501.5.1.1.4.101001 dry --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretType.101001
 # .1.3.6.1.4.1.46501.5.1.1.4.101002 dry --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretType.101002

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.poe import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.poe import check_poe_data, PoeStatus, PoeValues
 
 # Maps poe power status to faulty status detail string.
 # See tpPoePowerStatus in TPLINK-POWER-OVER-ETHERNET-MIB

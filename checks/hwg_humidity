@@ -4,8 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.hwg import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.hwg import (
+    check_hwg_humidity,
+    HWG_HUMIDITY_DEFAULTLEVELS,
+    inventory_hwg_humidity,
+    parse_hwg,
+)
 
 factory_settings["hwg_humidity_defaultlevels"] = HWG_HUMIDITY_DEFAULTLEVELS
 

@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.huawei_osn import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-
 def inventory_huawei_osn_fan(info):
     for line in info:
         yield (line[0], None)

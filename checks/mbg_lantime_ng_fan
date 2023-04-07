@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.mbg_lantime import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-
 def parse_mbg_lantime_ng_fan(info):
     parsed = {}
     fan_states = {

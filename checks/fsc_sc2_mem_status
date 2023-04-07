@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.fsc import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.fsc_sc2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
+from cmk.base.check_legacy_includes.fsc_sc2 import (
+    check_fsc_sc2_mem_status,
+    inventory_fsc_sc2_mem_status,
+)
 
 check_info["fsc_sc2_mem_status"] = {
     "detect": DETECT_FSC_SC2,

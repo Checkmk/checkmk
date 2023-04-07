@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.fsc import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-
 def inventory_fsc_subsystems(info):
     yield from (
         (line[0], line[1], (int(line[1]) * 0.9, int(line[1]) * 0.8))

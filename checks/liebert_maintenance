@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.liebert import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.liebert import parse_liebert_without_unit_wrapper
 from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
 
 # example output

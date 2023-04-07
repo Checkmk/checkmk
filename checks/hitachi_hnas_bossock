@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.hitachi_hnas import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
 
 hitachi_hnas_bossock_default_levels = (250, 350)

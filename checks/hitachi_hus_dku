@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.hitachi_hus import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.hitachi_hus import check_hitachi_hus, inventory_hitachi_hus
 
 check_info["hitachi_hus_dku"] = {
     "detect": any_of(

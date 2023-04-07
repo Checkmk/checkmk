@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.huawei_osn import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 # The dBm should not get too low. So we check only for lower levels
 factory_settings["huawei_osn_laser_default_levels"] = {
     "levels_low_in": (-160.0, -180.0),

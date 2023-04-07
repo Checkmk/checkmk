@@ -5,7 +5,10 @@
 
 import time
 
-from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.graylog import (
+    handle_iso_utc_to_localtimestamp,
+    parse_graylog_agent_data,
+)
 
 # <<<graylog_license>>>
 # {"status": [{"violated": true,"expired": false,"expiration_upcoming":

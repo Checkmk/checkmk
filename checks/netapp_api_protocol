@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 
 # <<<netapp_api_protocol:sep(9)>>>
 # protocol nfs nfsv3_write_ops 0   instance_name nfs   nfsv3_read_ops 0

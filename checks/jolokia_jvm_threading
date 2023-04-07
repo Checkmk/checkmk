@@ -5,7 +5,10 @@
 
 import time
 
-from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.jolokia import (
+    jolokia_mbean_attribute,
+    parse_jolokia_json_output,
+)
 
 factory_settings["jolokia_jvm_threading.pool"] = {
     "currentThreadsBusy": (80, 90),

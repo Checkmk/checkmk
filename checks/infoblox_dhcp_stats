@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.infoblox import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.infoblox import (
+    check_infoblox_statistics,
+    inventory_infoblox_statistics,
+)
 
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.1.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfDiscovers.0
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.2.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfRequests.0

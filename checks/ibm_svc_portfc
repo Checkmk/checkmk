@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 
 # Output may have 11 fields:
 # id:fc_io_port_id:port_id:type:port_speed:node_id:node_name:WWPN:nportid:status:attachment

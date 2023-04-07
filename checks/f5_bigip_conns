@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.f5_bigip import DETECT, get_conn_rate_params
 
 factory_settings["f5_bigip_conns_default_levels"] = {
     "conns": (25000, 30000),

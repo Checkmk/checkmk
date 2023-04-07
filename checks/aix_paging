@@ -5,7 +5,7 @@
 
 import collections
 
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 
 # example output
 # <<<aix_paging>>>

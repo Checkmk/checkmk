@@ -5,7 +5,7 @@
 
 import json
 
-from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.mem import check_memory_element
 
 
 def parse_cadvisor_memory(info):

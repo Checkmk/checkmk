@@ -5,7 +5,7 @@
 
 import re
 
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 
 #   .--Example output from agent-------------------------------------------.
 # <<<libelle_business_shadow:sep(58)>>>

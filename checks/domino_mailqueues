@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.domino import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 factory_settings["domino_mailqueues_defaults"] = {"queue_length": (300, 350)}
 
 MAILQUEUES_LABEL = (

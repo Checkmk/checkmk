@@ -4,8 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.azure import (
+    check_azure_metric,
+    discover_azure_by_metrics,
+    get_data_or_go_stale,
+    iter_resource_attributes,
+    parse_resources,
+)
+from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 
 # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
 factory_settings["azure_databases_default_levels"] = {

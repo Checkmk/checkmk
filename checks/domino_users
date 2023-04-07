@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.domino import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 domino_users_default_levels = (1000, 1500)
 
 

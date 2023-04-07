@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
 
 
 def parse_jolokia_jvm_garbagecollectors(info):

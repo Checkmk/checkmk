@@ -5,7 +5,7 @@
 
 import collections
 
-from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.azure import get_data_or_go_stale, parse_resources
 
 factory_settings["levels_azure_usagedetails"] = {}
 

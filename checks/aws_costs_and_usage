@@ -5,7 +5,7 @@
 
 import collections
 
-from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.aws import parse_aws
 
 AWSCostAndUageMetrics = [
     ("Unblended", "UnblendedCost", "unblended"),

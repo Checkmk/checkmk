@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.huawei_switch import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.huawei_switch import (
+    huawei_entity_specific_snmp_info,
+    parse_huawei_physical_entity_values,
+)
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 factory_settings["huawei_switch_temp_default_levels"] = {
     "levels": (80.0, 90.0),

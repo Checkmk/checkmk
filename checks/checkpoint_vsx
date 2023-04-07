@@ -5,7 +5,6 @@
 
 import time
 
-from cmk.base.check_legacy_includes.checkpoint import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
 

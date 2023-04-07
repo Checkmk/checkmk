@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.liebert import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.liebert import check_temp_unit, parse_liebert_wrapper
+from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
 
 # example output

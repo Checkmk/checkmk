@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.raritan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.raritan import raritan_map_state
 
 raritan_pdu_plugs_default = (
     '"on"'  # only to be downwards compatible and can be removed any decade now.

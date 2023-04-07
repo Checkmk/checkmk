@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.cmciii import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 # Note: this check is obsolete, please use cmciii.temp_in_out instead
+
+from cmk.base.check_legacy_includes.cmciii import (
+    check_cmciii_lcp_fanunit,
+    inventory_cmciii_lcp_fanunit,
+)
 
 check_info["cmciii_lcp_airout"] = {
     "detect": all_of(

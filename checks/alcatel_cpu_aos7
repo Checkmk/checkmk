@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.alcatel import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.alcatel import check_alcatel_cpu, inventory_alcatel_cpu
 
 check_info["alcatel_cpu_aos7"] = {
     "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6486.801"),

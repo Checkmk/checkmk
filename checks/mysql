@@ -5,8 +5,8 @@
 
 import time
 
-from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.mysql import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.diskstat import check_diskstat_line
+from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 
 # <<<mysql>>>
 # [[mysql]]

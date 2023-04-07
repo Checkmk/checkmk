@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Mapping
 
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.graylog import handle_graylog_messages
 
 # <<<graylog_sources>>>
 # {"sources": {"172.18.0.1": {"messages": 457, "has_since": false}}}

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 # Example output from agent:
 # <<<ibm_svc_enclosurestats:sep(58)>>>

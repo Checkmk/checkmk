@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.poe import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.poe import check_poe_data, PoeValues
 
 # We fetch the following columns from SNMP:
 # 2 pethMainPsePower (The nominal power of the PSE expressed in Watts)

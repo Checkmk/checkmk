@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 
 # Agent output:
 # <<<netapp_api_snapshots:sep(9)>>>

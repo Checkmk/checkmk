@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-
 def inventory_mcafee_webgateway_info(info):
     if info:
         return [(None, None)]

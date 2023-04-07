@@ -4,8 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.check_legacy_includes.scaleio import (
+    convert_scaleio_space,
+    get_scaleio_data,
+    parse_scaleio,
+)
 
 # <<<scaleio_pd>>>
 # PROTECTION_DOMAIN 91ebcf4500000000:

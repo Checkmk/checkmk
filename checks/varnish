@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
 
 # Special thanks to Rene Stolle (r.stolle@funkemedien.de)

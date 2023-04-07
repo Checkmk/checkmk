@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.akcp_sensor import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.akcp_sensor import (
+    check_akcp_sensor_relay,
+    inventory_akcp_sensor_no_params,
+)
 
 # Example for contents of info
 #           description              state   online

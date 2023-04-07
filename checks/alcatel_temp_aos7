@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.alcatel import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.alcatel import ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
+from cmk.base.check_legacy_includes.temperature import check_temperature
 
 factory_settings["alcatel_temp_aos7"] = ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 

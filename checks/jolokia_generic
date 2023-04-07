@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.jolokia import jolokia_basic_split
 
 
 def parse_jolokia_generic(info):

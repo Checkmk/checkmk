@@ -5,7 +5,7 @@
 
 from typing import Literal
 
-from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.check_legacy_includes.elphase import check_elphase
 
 
 def parse_ups_cps_inphase(info) -> dict[Literal["1"], dict[str, float]]:

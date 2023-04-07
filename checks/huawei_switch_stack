@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.huawei_switch import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 huawei_switch_stack_unknown_role = "unknown"
 
 

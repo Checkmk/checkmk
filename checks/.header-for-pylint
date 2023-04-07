@@ -3,81 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+#
 # NOTE: DO NOT EDIT! Automatically generated from @@ORIG-FILE@@
-
-# fmt: off
-# isort: off
-
-# in order of frequency, decreasing (at time of writing):
-# mypy: disable-error-code="var-annotated,name-defined,arg-type,no-untyped-def,list-item,index,attr-defined,operator,assignment"
-
-
-from cmk.base.check_api import (  # pylint: disable=unused-import
-    all_of,
-    any_of,
-    BINARY,
-    CACHED_OID,
-    check_levels,
-    clear_item_state,
-    contains,
-    Crit,
-    discover,
-    discover_single,
-    endswith,
-    equals,
-    exists,
-    get_age_human_readable,
-    get_average,
-    get_bytes_human_readable,
-    get_check_api_context,
-    get_filesize_human_readable,
-    get_http_proxy,
-    get_item_state,
-    get_nic_speed_human_readable,
-    get_number_with_precision,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    get_rate,
-    get_relative_date_human_readable,
-    get_timestamp_human_readable,
-    host_name,
-    HostName,
-    HTTPProxyConfig,
-    is_ipv6_primary,
-    Levels,
-    matches,
-    MetricName,
-    MKCounterWrapped,
-    MKGeneralException,
-    not_contains,
-    not_equals,
-    not_exists,
-    not_matches,
-    OID_END,
-    passwordstore_get_cmdline,
-    RAISE,
-    regex,
-    savefloat,
-    saveint,
-    ServiceCheckResult,
-    ServiceDetails,
-    ServiceState,
-    set_item_state,
-    SKIP,
-    startswith,
-    state_markers,
-    Warn,
-    ZERO,
-)
-
-# TODO: can we move these to check_api and make this actual code (of the checks/* files)?
-from cmk.base.config import (  # pylint: disable=unused-import
-    active_check_info,
-    check_info,
-    factory_settings,
-    special_agent_info,
-)
-
-# pylint: disable=ungrouped-imports,wrong-import-order,reimported,pointless-string-statement
-
-## %<
+#
+# This mechanism was originally used to add "magic" imports and
+# suppressions to make linters understand the checks/.
+#
+# Those imports have since been added to the checks/* files themselves.
+#
+# Without this hack, mypy currently complains about duplicate modules.
+#
+# NOTE:
+# Renaming checks/{check,agent}_* files is an incompatible API change.
+# We're planning a new 'proper' API one for those files anyway -
+# I'd like to postpone the renaming of these files until then.
+#

@@ -85,6 +85,7 @@ class AutochecksManager:
                     name: ServiceLabel(name, value)
                     for name, value in autocheck_entry.service_labels.items()
                 },
+                is_enforced=False,
             )
 
     def discovered_labels_of(

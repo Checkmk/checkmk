@@ -430,7 +430,6 @@ def get_aggregated_result(
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        table = config_cache.check_table(host_name, skip_autochecks=True)
         result = ServiceCheckResult(
             3,
             crash_reporting.create_check_crash_dump(
@@ -439,7 +438,7 @@ def get_aggregated_result(
                 plugin_name=service.check_plugin_name,
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
                 is_cluster=config_cache.is_cluster(host_name),
-                is_enforced=service.id() in table,
+                is_enforced=service.is_enforced,
                 snmp_backend=config_cache.get_snmp_backend(host_name),
                 rtc_package=rtc_package,
             ),

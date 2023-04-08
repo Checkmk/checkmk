@@ -246,6 +246,7 @@ def test_get_cmk_passive_service_attributes(
         parameters=TimespecificParameters(),
         discovered_parameters={},
         service_labels={},
+        is_enforced=False,
     )
     service_spec = core_config.get_cmk_passive_service_attributes(
         config_cache, hostname, service, check_mk_attrs

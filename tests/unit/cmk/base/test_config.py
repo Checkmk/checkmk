@@ -1246,6 +1246,7 @@ def test_host_config_custom_checks(
                         ),
                         discovered_parameters={},
                         service_labels={},
+                        is_enforced=True,
                     ),
                 ),
                 ServiceID(CheckPluginName("checktype2"), "item2"): (
@@ -1262,6 +1263,7 @@ def test_host_config_custom_checks(
                         ),
                         discovered_parameters={},
                         service_labels={},
+                        is_enforced=True,
                     ),
                 ),
             },
@@ -1573,6 +1575,7 @@ def _service_list() -> list[ConfiguredService]:
             parameters=TimespecificParameters(),
             discovered_parameters={},
             service_labels={},
+            is_enforced=False,
         )
         for d in "FDACEB"
     ]

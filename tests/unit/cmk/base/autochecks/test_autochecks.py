@@ -54,6 +54,7 @@ def test_config(monkeypatch: pytest.MonkeyPatch) -> ConfigCache:
                     parameters=_COMPUTED_PARAMETERS_SENTINEL,
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 ),
             ],
         ),

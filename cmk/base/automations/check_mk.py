@@ -925,10 +925,8 @@ class AutomationAnalyseServices(Automation):
     def _get_service_info_from_autochecks(
         config_cache: ConfigCache, host_name: HostName, servicedesc: str
     ) -> ServiceInfo | None:
-        # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
-        # whole function up.
         # NOTE: Iterating over the check table would make things easier. But we might end up with
-        # differen information. Also: check table forgets wether it's an *auto*check.
+        # different information.
         table = config_cache.check_table(host_name)
         services = (
             [

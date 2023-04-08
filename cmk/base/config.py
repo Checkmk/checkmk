@@ -176,7 +176,6 @@ def _aggregate_check_table_services(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    skip_autochecks: bool,
     skip_ignored: bool,
     filter_mode: FilterMode,
 ) -> Iterable[ConfiguredService]:
@@ -189,16 +188,12 @@ def _aggregate_check_table_services(
 
     # process all entries that are specific to the host
     # in search (single host) or that might match the host.
-    if not (skip_autochecks or config_cache.is_ping_host(host_name)):
+    if not config_cache.is_ping_host(host_name):
         yield from (s for s in config_cache.get_autochecks_of(host_name) if sfilter.keep(s))
 
     # Now add checks a cluster might receive from its nodes
     if config_cache.is_cluster(host_name):
-        yield from (
-            s
-            for s in _get_clustered_services(config_cache, host_name, skip_autochecks)
-            if sfilter.keep(s)
-        )
+        yield from (s for s in _get_clustered_services(config_cache, host_name) if sfilter.keep(s))
 
     yield from (s for s in _get_enforced_services(config_cache, host_name) if sfilter.keep(s))
 
@@ -293,17 +288,16 @@ def _get_services_from_cluster_nodes(
     config_cache: ConfigCache, node_name: HostName
 ) -> Iterable[ConfiguredService]:
     for cluster in config_cache.clusters_of(node_name):
-        yield from _get_clustered_services(config_cache, cluster, False)
+        yield from _get_clustered_services(config_cache, cluster)
 
 
 def _get_clustered_services(
     config_cache: ConfigCache,
     cluster_name: HostName,
-    skip_autochecks: bool,
 ) -> Iterable[ConfiguredService]:
     for node in config_cache.nodes_of(cluster_name) or []:
         node_checks: list[ConfiguredService] = []
-        if not (skip_autochecks or config_cache.is_ping_host(cluster_name)):
+        if not config_cache.is_ping_host(cluster_name):
             node_checks += config_cache.get_autochecks_of(node)
         node_checks.extend(_get_enforced_services(config_cache, node))
 
@@ -2288,11 +2282,10 @@ class ConfigCache:
         hostname: HostName,
         *,
         use_cache: bool = True,
-        skip_autochecks: bool = False,
         filter_mode: FilterMode = FilterMode.NONE,
         skip_ignored: bool = True,
     ) -> HostCheckTable:
-        cache_key = (hostname, filter_mode, skip_autochecks, skip_ignored) if use_cache else None
+        cache_key = (hostname, filter_mode, skip_ignored) if use_cache else None
         if cache_key:
             with contextlib.suppress(KeyError):
                 return self._check_table_cache[cache_key]
@@ -2301,7 +2294,6 @@ class ConfigCache:
             services=_aggregate_check_table_services(
                 hostname,
                 config_cache=self,
-                skip_autochecks=skip_autochecks,
                 skip_ignored=skip_ignored,
                 filter_mode=filter_mode,
             )
@@ -2378,6 +2370,7 @@ class ConfigCache:
                         ),
                         discovered_parameters={},
                         service_labels={},
+                        is_enforced=True,
                     ),
                 )
                 for checkgroup_name, ruleset in static_checks.items()

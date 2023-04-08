@@ -28,6 +28,7 @@ class ConfiguredService(NamedTuple):
     # Explicitly optional b/c enforced services don't have disocvered params.
     discovered_parameters: LegacyCheckParameters | None
     service_labels: Mapping[str, ServiceLabel]
+    is_enforced: bool
 
     def id(self) -> ServiceID:
         return ServiceID(self.check_plugin_name, self.item)

@@ -169,6 +169,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=True,
                 ),
             },
         ),
@@ -183,6 +184,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     parameters=TimespecificParameters(()),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 ),
                 (CheckPluginName("blub_bla"), "ITEM"): ConfiguredService(
                     check_plugin_name=CheckPluginName("blub_bla"),
@@ -191,6 +193,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     parameters=TimespecificParameters(),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=True,
                 ),
             },
         ),
@@ -210,6 +213,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=True,
                 ),
             },
         ),
@@ -226,6 +230,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 ),
                 (CheckPluginName("smart_temp"), "static-node1"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
@@ -239,6 +244,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=True,
                 ),
             },
         ),
@@ -258,6 +264,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=True,
                 ),
                 (CheckPluginName("smart_temp"), "auto-clustered"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
@@ -268,6 +275,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 ),
             },
         ),
@@ -284,6 +292,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 )
             },
         ),
@@ -300,6 +309,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 )
             },
         ),
@@ -316,6 +326,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 )
             },
         ),

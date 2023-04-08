@@ -142,6 +142,7 @@ def get_check_preview(
                     ),
                     discovered_parameters=entry.parameters,
                     service_labels={n: ServiceLabel(n, v) for n, v in entry.service_labels.items()},
+                    is_enforced=True,
                 ),
                 check_source=check_source,
                 providers=providers,

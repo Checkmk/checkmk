@@ -18,6 +18,7 @@ def _service(plugin: str, item: str | None) -> ConfiguredService:
         parameters=TimespecificParameters(),
         discovered_parameters={},
         service_labels={},
+        is_enforced=False,
     )
 
 

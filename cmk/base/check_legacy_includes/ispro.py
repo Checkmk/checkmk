@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def ispro_scan_function(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.19011.1.3.2")
-
-
 def ispro_sensors_alarm_states(status):
     return {
         "1": (3, "unknown"),

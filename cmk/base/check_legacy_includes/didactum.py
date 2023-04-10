@@ -8,10 +8,6 @@ from .humidity import check_humidity
 from .temperature import check_temperature
 
 
-def scan_didactum(oid):
-    return "didactum" in oid(".1.3.6.1.2.1.1.1.0").lower()
-
-
 # elements (not excatly sensors!) can be:
 # temperature, analog voltage, usb-cam, reader, GSM modem, magnet,
 # smoke, unknown, induct relay, pushbutton, timer

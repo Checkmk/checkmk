@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def perle_scan_function(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1966.20")
-
-
 def perle_check_alarms(alarms_str):
     state = 0
     alarminfo = ""

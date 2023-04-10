@@ -5,10 +5,6 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains
 
-F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS = {
-    "type": "active_standby",
-}
-
 DETECT = all_of(
     contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375.2"),
     contains(".1.3.6.1.4.1.3375.2.1.4.1.0", "big-ip"),
@@ -31,11 +27,4 @@ def get_conn_rate_params(params):
         "connections per second is setup in predictive levels. Please use the given "
         "lower bound specified in the maximum connections, or set maximum "
         "connections to use fixed levels."
-    )
-
-
-def scan_f5_bigip(oid):
-    return (
-        ".1.3.6.1.4.1.3375.2" in oid(".1.3.6.1.2.1.1.2.0")
-        and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0", "").lower()
     )

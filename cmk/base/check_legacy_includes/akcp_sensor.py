@@ -27,18 +27,6 @@ akcp_sensor_level_states = {
 }
 
 
-def snmp_scan_akcp_sensor(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3854.1") and not oid(
-        ".1.3.6.1.4.1.3854.2.*"
-    )
-
-
-def snmp_scan_akcp_exp(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3854.1") and oid(
-        ".1.3.6.1.4.1.3854.2.*"
-    )
-
-
 def inventory_akcp_sensor_no_params(info):
     for line in info:
         # "1" means online, "2" offline

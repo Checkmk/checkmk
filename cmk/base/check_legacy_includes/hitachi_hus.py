@@ -25,14 +25,6 @@
 # .1.3.6.1.4.1.116.5.11.4.1.1.7.1.5 1
 
 
-def scan_hitachi_hus(oid):
-    return (
-        "hm700" in oid(".1.3.6.1.2.1.1.1.0").lower()
-        or "hm800" in oid(".1.3.6.1.2.1.1.1.0").lower()
-        or "hm850" in oid(".1.3.6.1.2.1.1.1.0").lower()
-    )
-
-
 def inventory_hitachi_hus(info):
     for line in info:
         # set dkuRaidListIndexSerialNumber as item

@@ -23,10 +23,6 @@ from .size_trend import size_trend
 
 # Common include file for all filesystem checks (df, df_netapp, hr_fs, ...)
 
-# Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
-filesystem_levels: list[Any] = []  # obsolete. Just here to check config and warn if changed
-filesystem_default_levels: dict[str, Any] = {}  # can also be dropped some day in future
-
 
 # ==================================================================================================
 # THIS FUNCTION DEFINED HERE IS IN THE PROCESS OF OR HAS ALREADY BEEN MIGRATED TO

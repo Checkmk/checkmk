@@ -14,7 +14,3 @@ acme_environment_states = {
     "8": (2, "not functioning"),
     "9": (2, "unknown"),
 }
-
-
-def scan_acme(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9148")

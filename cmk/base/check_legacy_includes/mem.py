@@ -4,12 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
-import time
-from numbers import Integral
-from typing import Any, NamedTuple
 
-from cmk.base.check_api import get_average, get_bytes_human_readable, get_percent_human_readable
-from cmk.base.plugins.agent_based.utils.memory import compute_state, get_levels_mode_from_value
+from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
+from cmk.base.plugins.agent_based.utils.memory import compute_state
 from cmk.base.plugins.agent_based.utils.memory import normalize_levels as normalize_mem_levels
 
 memused_default_levels = (150.0, 200.0)
@@ -17,20 +14,6 @@ memused_default_levels = (150.0, 200.0)
 MEMORY_DEFAULT_LEVELS = {
     "levels": memused_default_levels,
 }
-
-
-class _MemBytesTuple(NamedTuple):
-    bytes: int
-    kb: float
-    mb: float
-
-
-class MemBytes(_MemBytesTuple):
-    def __new__(cls, value):
-        return super().__new__(cls, int(value * 1024), float(value), value / 1024.0)
-
-    def render(self) -> str:
-        return get_bytes_human_readable(self.bytes, base=1024)
 
 
 def _compute_state(value, warn, crit):
@@ -222,150 +205,3 @@ def check_memory_dict(meminfo, params):
         )
 
     return results
-
-
-def _get_total_usage(ramused, swapused, pagetables):
-    """get total usage and a description how it was computed"""
-    totalused_kb = ramused.kb
-    details = ["RAM"]
-
-    if swapused:
-        totalused_kb += swapused.kb
-        details.append("Swap")
-
-    if pagetables:
-        totalused_kb += pagetables.kb
-        details.append("Pagetables")
-
-    totalused = MemBytes(totalused_kb)
-    if len(details) == 1:
-        return totalused, details[0]
-    return totalused, "Total (%s)" % " + ".join(details)
-
-
-def check_memory(params, meminfo):  # pylint: disable=too-many-branches
-    if isinstance(params, tuple):
-        params = {"levels": params}
-
-    memtotal = MemBytes(meminfo["MemTotal"])
-    memused = MemBytes(memtotal.kb - meminfo["MemFree"])
-
-    swaptotal: MemBytes | None
-    swapused: MemBytes | None
-    perfdata: list[Any]
-    if "SwapFree" in meminfo:
-        swaptotal = MemBytes(meminfo["SwapTotal"])
-        swapused = MemBytes(swaptotal.kb - meminfo["SwapFree"])
-        perfdata = [("swap_used", swapused.bytes, None, None, 0, swaptotal.bytes)]
-    else:
-        swaptotal = None
-        swapused = None
-        perfdata = []
-
-    # Size of Pagetable on Linux can be relevant e.g. on ORACLE
-    # servers with much memory, that do not use HugeTables. We account
-    # that for used
-    pagetables: MemBytes | None
-    if "PageTables" in meminfo:
-        pagetables = MemBytes(meminfo["PageTables"])
-        perfdata.append(("mem_lnx_page_tables", pagetables.bytes))
-    else:
-        pagetables = None
-
-    # Buffers and Cached are optional. On Linux both mean basically the same.
-    caches = MemBytes(meminfo.get("Buffers", 0) + meminfo.get("Cached", 0))
-
-    ramused = MemBytes(memused.kb - caches.kb)
-    perfdata.append(("mem_used", ramused.bytes, None, None, 0, memtotal.bytes))
-    perfdata.append(
-        ("mem_used_percent", 100.0 * ramused.bytes / memtotal.bytes, None, None, 0, 100.0)
-    )
-
-    totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)
-
-    infotext = check_memory_element(
-        totalused_descr,
-        totalused.bytes,
-        memtotal.bytes,
-        None,
-        label_total="RAM" if totalused_descr != "RAM" else "",
-    )[1]
-
-    # Take into account averaging
-    average_min = params.get("average")
-    if average_min:
-        totalused_mb_avg = get_average(
-            "mem.used.total", time.time(), totalused.mb, average_min, initialize_zero=False
-        )
-        totalused_perc_avg = totalused_mb_avg / memtotal.mb * 100
-        infotext += ", %d min average %.1f%%" % (average_min, totalused_perc_avg)
-        perfdata.append(("memusedavg", totalused_mb_avg))
-        comp_mb = totalused_mb_avg
-    else:
-        comp_mb = totalused.mb
-
-    # Normalize levels and check them
-    totalvirt = MemBytes((swaptotal.kb if swaptotal is not None else 0) + memtotal.kb)
-    warn, crit = params.get("levels", (None, None))
-    mode = get_levels_mode_from_value(warn)
-    warn_mb, crit_mb, levels_text = normalize_mem_levels(
-        mode,
-        abs(warn),
-        abs(crit),
-        totalvirt.mb,
-        _perc_total=memtotal.mb,
-        render_unit=1024**2,
-    )
-    assert isinstance(totalused, MemBytes)
-    assert isinstance(warn_mb, Integral)
-    assert isinstance(crit_mb, Integral)
-    perfdata.append(
-        (
-            "mem_lnx_total_used",
-            totalused.bytes,
-            warn_mb * 1024**2,
-            crit_mb * 1024**2,
-            0,
-            totalvirt.bytes,
-        )
-    )
-
-    # Check levels
-    state = _compute_state(comp_mb, warn_mb, crit_mb)
-    if state and levels_text:
-        infotext = f"{infotext} ({levels_text})"
-
-    yield state, infotext, perfdata
-
-    # Not sure why the next two lines are necessary: memtotal and ramused
-    # are not optional.
-    assert isinstance(ramused, MemBytes)
-    assert isinstance(memtotal, MemBytes)
-    if totalused_descr != "RAM":
-        yield check_memory_element(
-            "RAM",
-            ramused.bytes,  # <- caches subtracted
-            memtotal.bytes,
-            None,
-        )
-        assert isinstance(swapused, MemBytes)
-        assert isinstance(swaptotal, MemBytes)
-        if swaptotal and swaptotal.bytes:
-            yield check_memory_element(
-                "Swap",
-                swapused.bytes,
-                swaptotal.bytes,
-                None,
-            )
-        if pagetables:
-            yield 0, "Pagetables: %s" % pagetables.render(), []
-
-    # Add additional metrics, provided by Linux.
-    if meminfo.get("Mapped"):
-        for key, label, metric in (
-            ("Mapped", "Mapped", "mem_lnx_mapped"),
-            ("Committed_AS", "Committed", "mem_lnx_committed_as"),
-            ("Shmem", "Shared", "mem_lnx_shmem"),
-        ):
-            value = MemBytes(meminfo.get(key, 0))
-            yield 0, f"{label}: {value.render()}", [(metric, value.bytes)]

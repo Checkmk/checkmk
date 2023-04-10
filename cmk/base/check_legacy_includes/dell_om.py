@@ -10,14 +10,6 @@
 # devices and similar stuff
 
 
-def scan_dell_om(oid):
-    return (
-        "Open Manage" in oid(".1.3.6.1.2.1.1.1.0")
-        or "Linux" in oid(".1.3.6.1.2.1.1.1.0")
-        or "Software: Windows" in oid(".1.3.6.1.2.1.1.1.0")
-    )
-
-
 def parse_omreport(info):
     result = {}
     current_obj: dict = {}

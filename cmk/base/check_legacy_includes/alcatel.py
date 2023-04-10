@@ -18,25 +18,6 @@ DiscoveryResult = (
 )
 
 
-def alcatel_networking_products_scan_function(oid):
-    """
-    Devices running until AOS6 (including).
-    """
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(  # MIB object "sysObjectID"
-        ".1.3.6.1.4.1.6486.800"
-    )  # MIB object "alcatelIND1BaseMIB"
-
-
-def alcatel_new_networking_products_scan_function(oid):
-    """
-    Devices running at least AOS7 (including).
-    Refer to alcatelENT1BaseMIB for more information.
-    """
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(  # MIB object "sysObjectID"
-        ".1.3.6.1.4.1.6486.801"
-    )  # MIB object "alcatelENT1BaseMIB"
-
-
 def inventory_alcatel_cpu(info):
     yield None, alcatel_cpu_default_levels
 

@@ -8,10 +8,6 @@ from typing import NamedTuple
 from cmk.base.check_api import OID_END
 
 
-def huawei_switch_scan_function(oid):
-    return ".1.3.6.1.4.1.2011.2.23" in oid(".1.3.6.1.2.1.1.2.0")
-
-
 def huawei_entity_specific_snmp_info(snmp_info):
     """
     Used for the 'snmp_info' of a check to retrieve values that are indexed by a

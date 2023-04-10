@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-def scan_ibm_tape_library(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.32925.1")
-
-
 def ibm_tape_library_parse_device_name(name):
     # strange name format:IBM     ULT3580-TD6     00078B5F0F
     return " ".join([part for part in name.split() if part])

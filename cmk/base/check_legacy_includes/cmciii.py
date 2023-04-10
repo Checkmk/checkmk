@@ -65,9 +65,3 @@ def check_cmciii_lcp_fanunit(item, params, info):
     )
 
     return status, message, perfdata
-
-
-def snmp_scan_cmciii_lcp_fanunit(oid):
-    return oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal LCP") and oid(
-        ".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6"
-    ).startswith("Air.Temperature.DescName")

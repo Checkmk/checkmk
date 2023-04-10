@@ -37,10 +37,6 @@ def brocade_mlx_get_state(state):
     return brocade_mlx_states.get(state, (3, "Unhandled state - %d" % state))
 
 
-def brocade_mlx_scan(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1.")
-
-
 def brocade_mlx_combine_item(id_, descr):
     if descr == "":
         return id_

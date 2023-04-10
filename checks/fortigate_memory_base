@@ -5,8 +5,9 @@
 
 
 from cmk.base.check_api import contains
-from cmk.base.check_legacy_includes.mem import check_memory_element, get_levels_mode_from_value
+from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.utils.memory import get_levels_mode_from_value
 
 fortigate_memory_base_default_levels = {
     "levels": (70.0, 80.0),

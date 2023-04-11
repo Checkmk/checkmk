@@ -96,13 +96,13 @@ def _cleanup_old_packages() -> None:
 
 
 def resolve_image_alias(alias: str) -> str:
-    """Resolves given "Docker image alias" using the common `resolve.sh` and returns an image
+    """Resolves given "Docker image alias" using the common `resolve.py` and returns an image
     name which can be used with `docker run`
     >>> image = resolve_image_alias("IMAGE_CMK_BASE")
     >>> assert image and isinstance(image, str)
     """
     return subprocess.check_output(
-        [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.sh"), alias],
+        [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.py"), alias],
         text=True,
     ).split("\n", maxsplit=1)[0]
 

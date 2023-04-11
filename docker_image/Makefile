@@ -9,7 +9,7 @@ include ../defines.make
 CREDENTIALS_FILE         := $$HOME/.cmk-credentials
 DOCKER_REPO_NAME         := checkmk
 SHELL                    := /bin/bash -e -o pipefail
-RESOLVE_CMD              := ../buildscripts/docker_image_aliases/resolve.sh
+RESOLVE_CMD              := ../buildscripts/docker_image_aliases/resolve.py
 SECRET_CONTAINER_ID_CMD  := docker run -d --rm \
     --volume $(CREDENTIALS_FILE):/files/secret \
     $$($(RESOLVE_CMD) IMAGE_BUSYBOX_LATEST) timeout 180 httpd -f -p 8000 -h /files

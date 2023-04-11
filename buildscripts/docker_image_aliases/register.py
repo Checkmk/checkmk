@@ -15,7 +15,7 @@ to create an (internally used) Dockerfile inside `IMAGE_DEBIAN_DEFAULT/`:
 
 which can be used like this (Dockerfile example):
 
-  docker build --build-arg "IMAGE_DEBIAN_DEFAULT=$(./resolve.sh IMAGE_DEBIAN_DEFAULT)" -t debian_example example
+  docker build --build-arg "IMAGE_DEBIAN_DEFAULT=$(./resolve.py IMAGE_DEBIAN_DEFAULT)" -t debian_example example
 """
 
 import json

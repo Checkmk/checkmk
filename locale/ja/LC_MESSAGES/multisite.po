@@ -43795,7 +43795,7 @@ msgstr "SAML"
 msgid "SAML 2.0"
 msgstr "SAML 2.0"
 
-msgid "SAML Authentication"
+msgid "SAML authentication"
 msgstr "SAML認証"
 
 msgid "SAML connections"

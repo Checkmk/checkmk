@@ -204,7 +204,7 @@ class ModeUsers(WatoMode):
 
         if not cmk_version.is_raw_edition():
             yield PageMenuEntry(
-                title=_("SAML Authentication"),
+                title=_("SAML authentication"),
                 icon_name="saml",
                 item=make_simple_link(folder_preserving_link([("mode", "saml_config")])),
             )

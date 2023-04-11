@@ -37,14 +37,9 @@ def register() -> None:
     perfometers["check_mk-systemtime"] = lambda r, c, p: perfometer_check_mk_ntp(r, c, p, "s")
     perfometers["check_mk-ipmi_sensors"] = perfometer_ipmi_sensors
     perfometers["check_mk-nvidia.temp"] = perfometer_temperature
-    perfometers["check_mk-cisco_temp_sensor"] = perfometer_temperature
-    perfometers["check_mk-cisco_temp_perf"] = perfometer_temperature
     perfometers["check_mk-cmctc_lcp.temp"] = perfometer_temperature
     perfometers["check_mk-cmctc.temp"] = perfometer_temperature
     perfometers["check_mk-smart.temp"] = perfometer_temperature
-    perfometers["check_mk-f5_bigip_chassis_temp"] = perfometer_temperature
-    perfometers["check_mk-f5_bigip_cpu_temp"] = perfometer_temperature
-    perfometers["check_mk-hp_proliant_temp"] = perfometer_temperature
     perfometers["check_mk-akcp_sensor_temp"] = perfometer_temperature
     perfometers["check_mk-akcp_daisy_temp"] = perfometer_temperature
     perfometers["check_mk-fsc_temp"] = perfometer_temperature
@@ -53,14 +48,9 @@ def register() -> None:
     perfometers["check_mk-sensatronics_temp"] = perfometer_temperature
     perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
     perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
-    perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
-    perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
-    perfometers["check_mk-dell_om_sensors"] = perfometer_temperature
     perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
-    perfometers["check_mk-cmciii.temp"] = perfometer_temperature
     perfometers["check_mk-ibm_svc_enclosurestats.temp"] = perfometer_temperature
     perfometers["check_mk-wagner_titanus_topsense.temp"] = perfometer_temperature
-    perfometers["check_mk-enterasys_temp"] = perfometer_temperature
     perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
     perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
     perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
@@ -70,15 +60,9 @@ def register() -> None:
     perfometers["check_mk-casa_cpu_temp"] = perfometer_temperature
     perfometers["check_mk-rms200_temp"] = perfometer_temperature
     perfometers["check_mk-juniper_screenos_temp"] = perfometer_temperature
-    perfometers["check_mk-lnx_thermal"] = perfometer_temperature
     perfometers["check_mk-climaveneta_temp"] = perfometer_temperature
     perfometers["check_mk-carel_sensors"] = perfometer_temperature
-    perfometers["check_mk-netscaler_health.temp"] = perfometer_temperature
     perfometers["check_mk-kentix_temp"] = perfometer_temperature
-    perfometers["check_mk-ucs_bladecenter_fans.temp"] = perfometer_temperature
-    perfometers["check_mk-ucs_bladecenter_psu.chassis_temp"] = perfometer_temperature
-    perfometers["check_mk-cisco_temperature"] = perfometer_temperature
-    perfometers["check_mk-brocade_mlx_temp"] = perfometer_temperature_multi
     perfometers["check_mk-dell_poweredge_amperage.power"] = perfometer_power
     perfometers["check_mk-dell_chassis_power"] = perfometer_power
     perfometers["check_mk-dell_chassis_powersupplies"] = perfometer_power
@@ -371,26 +355,6 @@ def perfometer_temperature(
     color = "#39f"
     value = float(perf_data[0][1])
     return "%d °C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
-
-
-def perfometer_temperature_multi(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    display_value = -1
-    display_color = "#60f020"
-
-    for _sensor, value, _uom, warn, crit, _min, _max in perf_data:
-        value = int(value)
-        if value > display_value:
-            display_value = value
-
-            if warn is not None and display_value > int(warn):
-                display_color = "#FFC840"
-            if crit is not None and display_value > int(crit):
-                display_color = "#FF0000"
-
-    display_string = "%s °C" % display_value
-    return display_string, perfometer_linear(display_value, display_color)
 
 
 def perfometer_power(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:

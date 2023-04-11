@@ -232,9 +232,9 @@ def _get_labels_from_livestatus(
         sites.live().set_auth_domain("read")
 
     if label_type == LabelType.ALL:
-        return set((str(label[0]), str(label[1])) for label in label_rows)
+        return {(str(label[0]), str(label[1])) for label in label_rows}
 
-    return set((k, v) for row in label_rows for labels in row for k, v in labels.items())
+    return {(k, v) for row in label_rows for labels in row for k, v in labels.items()}
 
 
 def _parse_label_groups_to_http_vars(

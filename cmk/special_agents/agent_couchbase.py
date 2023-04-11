@@ -7,8 +7,8 @@ Special agent for monitoring Couchbase servers with Checkmk
 """
 
 import logging
-from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, Iterator, TypeVar
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from typing import Any, TypeVar
 
 import requests
 

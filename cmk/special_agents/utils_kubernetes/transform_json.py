@@ -13,9 +13,7 @@ API data, see CMK-10826.
 """
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import cast, Literal, TypedDict
-
-from typing_extensions import NotRequired
+from typing import cast, Literal, NotRequired, TypedDict
 
 from .schemata import api
 from .transform_any import parse_match_labels

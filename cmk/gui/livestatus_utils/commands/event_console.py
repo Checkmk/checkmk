@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from time import time
-from typing import get_args, Iterator, Literal, Mapping
+from typing import get_args, Literal
 
 from livestatus import MultiSiteConnection, SiteId
 

@@ -95,9 +95,7 @@ def disable_incomp_mkp(
             _CALLBACKS,
             package_id,
         )
-        sys.stdout.write(
-            "Disabled extension package: %s %s\n" % (package_id.name, package_id.version)
-        )
+        sys.stdout.write(f"Disabled extension package: {package_id.name} {package_id.version}\n")
         return True
     return False
 

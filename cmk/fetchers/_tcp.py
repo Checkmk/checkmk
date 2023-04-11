@@ -9,10 +9,8 @@ import logging
 import socket
 import ssl
 from collections.abc import Mapping
-from typing import Any, Final
+from typing import Any, assert_never, Final
 from uuid import UUID
-
-from typing_extensions import assert_never
 
 import cmk.utils.debug
 from cmk.utils import paths

@@ -10,7 +10,7 @@ import pprint
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, overload, Union
+from typing import Any, overload
 
 from flask import current_app, session
 
@@ -232,7 +232,7 @@ class HTMLGenerator(HTMLWriter):
         self.set_js_csrf_token()
 
         if self.browser_reload != 0.0:
-            self.javascript("cmk.utils.set_reload(%s)" % (self.browser_reload,))
+            self.javascript(f"cmk.utils.set_reload({self.browser_reload})")
 
         self.close_head()
 
@@ -1368,7 +1368,7 @@ def _path(path_or_str: str) -> Path:
     ...
 
 
-def _path(path_or_str: Union[Path, str]) -> Path:
+def _path(path_or_str: Path | str) -> Path:
     if isinstance(path_or_str, str):  # pylint: disable=no-else-return
         return Path(path_or_str)
     else:

@@ -9,9 +9,9 @@ import dataclasses
 import os
 import pprint
 import re
-from collections.abc import Callable, Container, Mapping
+from collections.abc import Callable, Container, Iterable, Mapping
 from enum import auto, Enum
-from typing import Any, cast, Final, Iterable
+from typing import Any, cast, Final
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store

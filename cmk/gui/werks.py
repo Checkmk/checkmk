@@ -10,9 +10,9 @@ import itertools
 import os
 import re
 import time
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from functools import cache
-from typing import Any, Callable, cast, Literal, NamedTuple, TypedDict
+from typing import Any, cast, Literal, NamedTuple, TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store

@@ -22,7 +22,7 @@ def make_yaml_config():
 
 @pytest.fixture(name="write_config")
 def write_config_engine(testconfig):
-    with open(user_yaml_config, "wt") as yaml_file:
+    with open(user_yaml_config, "w") as yaml_file:
         ret = yaml.dump(testconfig)
         yaml_file.write(ret)
     yield

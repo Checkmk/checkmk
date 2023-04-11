@@ -42,10 +42,10 @@ import sys
 import tarfile
 import time
 import traceback
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from enum import auto, Enum
 from pathlib import Path
-from typing import BinaryIO, cast, Final, IO, Literal, Mapping, NamedTuple, NoReturn
+from typing import BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn
 
 import psutil
 
@@ -1522,7 +1522,7 @@ def config_show(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -
 
 
 def config_configure(
-    site: SiteContext, global_opts: "GlobalOptions", config_hooks: ConfigHooks
+    site: SiteContext, global_opts: GlobalOptions, config_hooks: ConfigHooks
 ) -> Iterator[str]:
     hook_names = sorted(config_hooks.keys())
     current_hook_name: str | None = ""
@@ -1579,7 +1579,7 @@ def config_configure(
 
 
 def config_configure_hook(
-    site: SiteContext, global_opts: "GlobalOptions", config_hooks: ConfigHooks, hook_name: str
+    site: SiteContext, global_opts: GlobalOptions, config_hooks: ConfigHooks, hook_name: str
 ) -> Iterator[str]:
     if not site.is_stopped():
         if not dialog_yesno(
@@ -1618,7 +1618,7 @@ def config_configure_hook(
 def init_action(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     command: str,
     args: Arguments,
     options: CommandOptions,
@@ -1913,7 +1913,7 @@ def main_help(
 def main_setversion(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -1961,7 +1961,7 @@ def use_update_alternatives() -> bool:
 def main_version(
     version_info: VersionInfo,
     site: AbstractSiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -1985,7 +1985,7 @@ def main_version(
 def main_versions(
     version_info: VersionInfo,
     site: AbstractSiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -2022,7 +2022,7 @@ def version_exists(v: str) -> bool:
 def main_sites(
     version_info: VersionInfo,
     site: AbstractSiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -2068,7 +2068,7 @@ def sitename_must_be_valid(site, reuse=False):
 def main_create(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -2141,7 +2141,7 @@ def welcome_message(site: SiteContext, admin_password: Password) -> None:
 def main_init(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -2185,7 +2185,7 @@ def main_init(
 def init_site(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     config_settings: Config,
     options: CommandOptions,
 ) -> Password:
@@ -2292,7 +2292,7 @@ def finalize_site_as_user(
 def main_rm(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -2352,7 +2352,7 @@ def create_site_dir(site: SiteContext) -> None:
 def main_disable(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -2369,7 +2369,7 @@ def main_disable(
 def main_enable(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -2383,7 +2383,7 @@ def main_enable(
 def main_update_apache_config(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -2410,7 +2410,7 @@ def _get_conflict_mode(options: CommandOptions) -> str:
 def main_mv_or_cp(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     old_site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     command_type: CommandType,
     args: Arguments,
     options: CommandOptions,
@@ -2519,7 +2519,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
 def main_diff(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -2548,7 +2548,7 @@ def main_diff(
 
 
 def diff_list(
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     options: CommandOptions,
     site: SiteContext,
     from_skelroot: str,
@@ -2616,7 +2616,7 @@ def diff_list(
 
 def print_diff(
     rel_path: str,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     options: CommandOptions,
     site: SiteContext,
     source_path: str,
@@ -2687,7 +2687,7 @@ def print_diff(
 def main_update(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -3010,7 +3010,7 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
 def main_umount(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -3049,7 +3049,7 @@ def main_umount(
 def main_init_action(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     command: str,
     args: Arguments,
     options: CommandOptions,
@@ -3211,7 +3211,7 @@ def _update_license_usage(site: SiteContext) -> None:
 def main_config(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -3250,7 +3250,7 @@ def main_config(  # pylint: disable=too-many-branches
 def main_su(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -3265,7 +3265,7 @@ def _try_backup_site_to_tarfile(
     tar_mode: str,
     options: CommandOptions,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
 ) -> None:
     if "no-compression" not in options:
         tar_mode += "gz"
@@ -3279,7 +3279,7 @@ def _try_backup_site_to_tarfile(
 def main_backup(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -3305,7 +3305,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     tar: tarfile.TarFile,
     site: SiteContext,
     options: CommandOptions,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     version_info: VersionInfo,
     source_descr: str,
     new_site_name: str | None,
@@ -3400,7 +3400,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
 def main_restore(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -3476,7 +3476,7 @@ def prepare_restore_as_root(
 
 
 def prepare_restore_as_site_user(
-    site: SiteContext, global_opts: "GlobalOptions", options: CommandOptions
+    site: SiteContext, global_opts: GlobalOptions, options: CommandOptions
 ) -> None:
     if not site.is_stopped() and "kill" not in options:
         bail_out("Cannot restore site while it is running.")
@@ -3522,7 +3522,7 @@ def verify_directory_write_access(site: SiteContext) -> None:
         )
 
 
-def terminate_site_user_processes(site: SiteContext, global_opts: "GlobalOptions") -> None:
+def terminate_site_user_processes(site: SiteContext, global_opts: GlobalOptions) -> None:
     """Sends a SIGTERM to all running site processes and waits up to 5 seconds for termination
 
     In case one or more processes are still running after the timeout, the method will make
@@ -3562,7 +3562,7 @@ def terminate_site_user_processes(site: SiteContext, global_opts: "GlobalOptions
 
 
 def kill_site_user_processes(
-    site: SiteContext, global_opts: "GlobalOptions", exclude_current_and_parents: bool = False
+    site: SiteContext, global_opts: GlobalOptions, exclude_current_and_parents: bool = False
 ) -> None:
     pids = site_user_processes(site, exclude_current_and_parents)
     tries = 5
@@ -3653,7 +3653,7 @@ def postprocess_restore_as_site_user(
 def main_cleanup(
     version_info: VersionInfo,
     site: SiteContext,
-    global_opts: "GlobalOptions",
+    global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,
 ) -> None:

@@ -465,7 +465,7 @@ def _get_needed_regular_columns(
     return list(columns)
 
 
-def save_state_for_playing_alarm_sounds(row: "Row") -> None:
+def save_state_for_playing_alarm_sounds(row: Row) -> None:
     if not active_config.enable_sounds or not active_config.sounds:
         return
 
@@ -575,7 +575,7 @@ def _link_to_folder_by_path(path: str) -> str:
     )
 
 
-def _sort_data(data: "Rows", sorters: list[SorterEntry]) -> None:
+def _sort_data(data: Rows, sorters: list[SorterEntry]) -> None:
     """Sort data according to list of sorters."""
     if not sorters:
         return

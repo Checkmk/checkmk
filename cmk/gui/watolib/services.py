@@ -10,9 +10,9 @@ import json
 import os
 import sys
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from hashlib import sha256
-from typing import Any, assert_never, Literal, Mapping, NamedTuple, TypedDict
+from typing import Any, assert_never, Literal, NamedTuple, TypedDict
 
 from mypy_extensions import NamedArg
 

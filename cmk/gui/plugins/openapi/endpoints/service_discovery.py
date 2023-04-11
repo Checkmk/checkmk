@@ -12,9 +12,7 @@ You can find an introduction to services including service discovery in the
 """
 import enum
 from collections.abc import Mapping, Sequence
-from typing import Any
-
-from typing_extensions import assert_never
+from typing import Any, assert_never
 
 from cmk.automations.results import CheckPreviewEntry
 

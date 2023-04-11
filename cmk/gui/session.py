@@ -6,8 +6,9 @@
 from __future__ import annotations
 
 import contextlib
+from collections.abc import Container, Iterator
 from datetime import datetime
-from typing import cast, Container, ContextManager, Iterator
+from typing import cast, ContextManager
 
 import flask
 from flask import Flask
@@ -183,13 +184,13 @@ class FileBasedSession(SessionInterface):
 
     session_class = CheckmkFileBasedSession
 
-    def get_cookie_name(self, app: "Flask") -> str:
+    def get_cookie_name(self, app: Flask) -> str:
         # NOTE: get_cookie_name and get_cookie_path are implemented at runtime (not with
         # app.settings[...]) to allow the Flask-App to be reused for different sites in
         # the tests.
         return f"auth_{omd_site()}"
 
-    def get_cookie_path(self, app: "Flask") -> str:
+    def get_cookie_path(self, app: Flask) -> str:
         # NOTE: get_cookie_name and get_cookie_path are implemented at runtime (not with
         # app.settings[...]) to allow the Flask-App to be reused for different sites in
         # the tests.

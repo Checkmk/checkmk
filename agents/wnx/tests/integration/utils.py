@@ -111,7 +111,7 @@ def check_os() -> None:
 def _write_config(work_config: YamlDict, data_dir: Path) -> Iterator[None]:
     yaml_file = data_dir / USER_YAML_CONFIG
     try:
-        with open(yaml_file, "wt") as f:
+        with open(yaml_file, "w") as f:
             ret = yaml.dump(work_config)
             f.write(ret)
         yield

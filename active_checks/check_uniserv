@@ -61,7 +61,7 @@ def check_job(job, s, sid, street, street_nr, city, regex):
             return 3, "Unknown zip or city"
 
         state = 0
-        infotext = "Address: %s %s" % (city_zip, city_name)
+        infotext = f"Address: {city_zip} {city_name}"
         if not re.match(regex, data["out_city"]):
             infotext += " but expects %s" % regex
             state = 2

@@ -12,9 +12,7 @@ import time
 from collections.abc import Callable, Iterable, Sequence
 from logging import Logger
 from pathlib import Path
-from typing import Any, Literal
-
-from typing_extensions import assert_never
+from typing import Any, assert_never, Literal
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.render import date_and_time

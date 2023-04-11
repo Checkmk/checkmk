@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, Set, TypeVar
+from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, TypeVar
 
 from marshmallow import Schema as marshmallow_Schema
 
@@ -462,7 +462,7 @@ class ABCBICompiledNode(ABC):
         """Sets branch comparison result info"""
         self._frozen_marker = frozen_marker
 
-    def get_identifiers(self, parent_id: tuple, used_ids: Set[tuple]) -> list[NodeIdentifierInfo]:
+    def get_identifiers(self, parent_id: tuple, used_ids: set[tuple]) -> list[NodeIdentifierInfo]:
         return []
 
     @classmethod

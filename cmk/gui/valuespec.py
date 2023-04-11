@@ -2064,7 +2064,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             raise NotImplementedError()
 
     def _list_buttons(self, varprefix: str) -> None:
-        onclick: str = "cmk.valuespecs.listof_add(%s, %s, %s)" % (
+        onclick: str = "cmk.valuespecs.listof_add({}, {}, {})".format(
             json.dumps(varprefix),
             json.dumps(self._magic),
             json.dumps(self._style.value),

@@ -5,9 +5,9 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Iterator
 from functools import cached_property
-from typing import Callable, Iterator, Literal, Union
+from typing import Literal, Union
 
 from pydantic import BaseModel, validator
 from semver import VersionInfo
@@ -38,11 +38,11 @@ class PackageVersion(str):
         return super().__new__(cls, value)
 
     @classmethod
-    def validate(cls, value: str | PackageVersion) -> "PackageVersion":
+    def validate(cls, value: str | PackageVersion) -> PackageVersion:
         return cls(value)
 
     @classmethod
-    def __get_validators__(cls) -> Iterator[Callable[[str | "PackageVersion"], "PackageVersion"]]:
+    def __get_validators__(cls) -> Iterator[Callable[[str | PackageVersion], PackageVersion]]:
         yield cls.validate
 
     @staticmethod
@@ -85,11 +85,11 @@ class PackageName(str):
     )
 
     @classmethod
-    def validate(cls, value: str | PackageName) -> "PackageName":
+    def validate(cls, value: str | PackageName) -> PackageName:
         return cls(value)
 
     @classmethod
-    def __get_validators__(cls) -> Iterator[Callable[[str | "PackageName"], "PackageName"]]:
+    def __get_validators__(cls) -> Iterator[Callable[[str | PackageName], PackageName]]:
         yield cls.validate
 
     def __new__(cls, value: str) -> PackageName:

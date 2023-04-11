@@ -5,7 +5,7 @@
 
 """Pages to create either linked_view or view dashlets"""
 
-from typing import Callable
+from collections.abc import Callable
 
 import cmk.gui.visuals as visuals
 from cmk.gui import forms

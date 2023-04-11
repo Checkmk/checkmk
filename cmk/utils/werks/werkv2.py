@@ -47,7 +47,7 @@ class RawWerkV2(BaseModel, RawWerk):
 
     @validator("component")
     def parse_component(cls, v: str) -> str:  # pylint: disable=no-self-argument
-        components = set(k for k, _ in WerkTranslator().components())
+        components = {k for k, _ in WerkTranslator().components()}
         if v not in components:
             raise TypeError(f"Component {v} not know. Choose from: {components}")
         return v

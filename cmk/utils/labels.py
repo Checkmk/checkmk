@@ -66,7 +66,7 @@ class HostLabel(_Label):
     __slots__ = ("plugin_name",)
 
     @classmethod
-    def from_dict(cls, name: str, dict_label: HostLabelValueDict) -> "HostLabel":
+    def from_dict(cls, name: str, dict_label: HostLabelValueDict) -> HostLabel:
         value = dict_label["value"]
         assert isinstance(value, str)
 

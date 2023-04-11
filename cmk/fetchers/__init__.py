@@ -10,9 +10,7 @@ See Also:
 """
 
 from collections.abc import Mapping
-from typing import Any
-
-from typing_extensions import assert_never
+from typing import Any, assert_never
 
 from ._abstract import Fetcher, Mode
 from ._api import get_raw_data

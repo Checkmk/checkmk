@@ -8,7 +8,7 @@ from collections.abc import Container, Mapping, Sequence
 from datetime import time as dt_time
 from itertools import chain
 from logging import Logger
-from typing import Pattern
+from re import Pattern
 
 from cmk.utils import debug
 from cmk.utils.log import VERBOSE

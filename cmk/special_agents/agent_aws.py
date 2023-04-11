@@ -23,13 +23,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 from time import sleep
-from typing import Any, assert_never, Literal, NamedTuple, Type, TypedDict, TypeVar
+from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TypedDict, TypeVar
 
 import boto3
 import botocore
 from botocore.client import BaseClient
 from pydantic import BaseModel, Field
-from typing_extensions import NotRequired
 
 import cmk.utils.password_store
 import cmk.utils.store as store
@@ -5322,7 +5321,7 @@ class SNSTopic:
     topic_name: str
 
     @classmethod
-    def from_arn(cls: Type["SNSTopic"], arn_str: str) -> "SNSTopic":
+    def from_arn(cls: type["SNSTopic"], arn_str: str) -> "SNSTopic":
         """Example topic ARN: 'arn:aws:sns:eu-central-1:710145618630:TestTopicGiordano'"""
         splitted_arn = arn_str.split(":")
         return cls(region=splitted_arn[3], account_id=splitted_arn[4], topic_name=splitted_arn[5])

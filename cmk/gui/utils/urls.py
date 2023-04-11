@@ -8,9 +8,7 @@ import urllib.parse
 from collections.abc import Mapping, Sequence
 from enum import Enum
 from functools import lru_cache
-from typing import Literal
-
-from typing_extensions import assert_never
+from typing import assert_never, Literal
 
 from cmk.gui.exceptions import MKNotFound
 from cmk.gui.http import Request

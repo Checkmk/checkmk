@@ -5,8 +5,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Iterator, NamedTuple
+from collections.abc import Iterator, Sequence
+from typing import NamedTuple
 
 from cmk.utils.structured_data import SDPath, SDRow, StructuredDataNode
 

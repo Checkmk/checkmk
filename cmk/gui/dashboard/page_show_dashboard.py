@@ -9,10 +9,10 @@ of the dashboard to render is given in the HTML variable 'name'.
 
 import copy
 import json
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Literal, Mapping
+from typing import Literal
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException

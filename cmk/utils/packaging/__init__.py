@@ -451,11 +451,11 @@ def _validate_package_files(manifest: Manifest, installer: Installer) -> None:
 
 def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
     """Packaged files must not already belong to another package"""
-    if collisions := set(
+    if collisions := {
         (part, fn)
         for part in PackagePart
         for fn in (set(manifest.files.get(part, ())) & set(other_manifest.files.get(part, ())))
-    ):
+    }:
         raise PackageError(
             "Files already belong to %s %s: %s"
             % (

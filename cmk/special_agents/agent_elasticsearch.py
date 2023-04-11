@@ -130,9 +130,7 @@ def handle_nodes(response: Mapping[str, object]) -> None:
                     node_response.name, node_response.process.max_file_descriptors
                 )
             )
-            writer.append(
-                "{} cpu_percent {}".format(node_response.name, node_response.process.cpu.percent)
-            )
+            writer.append(f"{node_response.name} cpu_percent {node_response.process.cpu.percent}")
             writer.append(
                 "{} cpu_total_in_millis {}".format(
                     node_response.name, node_response.process.cpu.total_in_millis

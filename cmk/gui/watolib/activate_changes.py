@@ -28,11 +28,11 @@ import shutil
 import subprocess
 import time
 import traceback
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import asdict, dataclass
 from itertools import filterfalse
 from pathlib import Path
-from typing import Any, Iterator, NamedTuple, Sequence
+from typing import Any, NamedTuple
 
 import psutil
 from setproctitle import setthreadtitle

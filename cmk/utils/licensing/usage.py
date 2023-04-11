@@ -345,7 +345,7 @@ class LocalLicenseUsageHistory:
         )
 
     def add_sample(self, sample: LicenseUsageSample) -> None:
-        if sample.sample_time in set(s.sample_time for s in self._samples):
+        if sample.sample_time in {s.sample_time for s in self._samples}:
             return
         self._samples.appendleft(sample)
 

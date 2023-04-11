@@ -26,7 +26,7 @@ def main():
         sys.stdout.write("UNKNOWN - %s\n" % exc)
         return 3
 
-    sys.stdout.write("%s | %s\n" % (msg, perfdata))
+    sys.stdout.write(f"{msg} | {perfdata}\n")
     sys.exit(state)
 
 

@@ -5,8 +5,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Callable, Final, Generic, NamedTuple
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Any, Final, Generic, NamedTuple
 
 import cmk.utils.piggyback
 from cmk.utils.log import console

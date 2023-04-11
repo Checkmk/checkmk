@@ -37,7 +37,7 @@ DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 
 
 class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
-    def plugin_name(self, instance: type["ABCAutomationResult"]) -> str:
+    def plugin_name(self, instance: type[ABCAutomationResult]) -> str:
         return instance.automation_call()
 
 

@@ -10,8 +10,7 @@ function is required to handle data from the client or from JSON.
 """
 import json
 import re
-from collections.abc import Mapping
-from typing import Iterator
+from collections.abc import Iterator, Mapping
 
 from .schemata import api
 

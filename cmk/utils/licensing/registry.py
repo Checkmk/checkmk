@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Type
-
 from cmk.utils.licensing.cre_handler import CRELicensingHandler
 from cmk.utils.licensing.handler import (
     LicenseState,
@@ -19,24 +17,24 @@ from cmk.utils.version import Edition, edition
 
 class LicensingHandlerRegistry:
     def __init__(self) -> None:
-        self._entries: dict[Edition, Type[LicensingHandler]] = {}
+        self._entries: dict[Edition, type[LicensingHandler]] = {}
 
     def register(
         self,
         *,
         cmk_edition: Edition,
-        licensing_handler: Type[LicensingHandler],
+        licensing_handler: type[LicensingHandler],
     ) -> None:
         self._entries[cmk_edition] = licensing_handler
 
-    def __getitem__(self, key: Edition) -> Type[LicensingHandler]:
+    def __getitem__(self, key: Edition) -> type[LicensingHandler]:
         return self._entries.__getitem__(key)
 
 
 licensing_handler_registry = LicensingHandlerRegistry()
 
 
-def _get_licensing_handler() -> Type[LicensingHandler]:
+def _get_licensing_handler() -> type[LicensingHandler]:
     return licensing_handler_registry[edition()]
 
 

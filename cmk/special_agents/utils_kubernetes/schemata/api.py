@@ -213,7 +213,7 @@ def _parse_quantity(value: str) -> float:
 def convert_to_timestamp(kube_date_time: str | datetime.datetime) -> Timestamp:
     if isinstance(kube_date_time, str):
         date_time = datetime.datetime.strptime(kube_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
-            tzinfo=datetime.timezone.utc
+            tzinfo=datetime.UTC
         )
     elif isinstance(kube_date_time, datetime.datetime):
         date_time = kube_date_time

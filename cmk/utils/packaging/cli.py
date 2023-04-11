@@ -7,9 +7,8 @@ import argparse
 import json
 import logging
 import sys
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
-from typing import Callable, Mapping
 
 from cmk.utils import version as cmk_version
 
@@ -64,7 +63,7 @@ def _render_table(headers: list[str], rows: Iterable[list[str]]) -> str:
 def _to_text(manifest: Manifest) -> str:
     valid_until_text = manifest.version_usable_until or "No version limitation"
     files = "".join(
-        "\n  %s%s" % (ui_title(part), "".join(f"\n    {f}" for f in fs))
+        "\n  {}{}".format(ui_title(part), "".join(f"\n    {f}" for f in fs))
         for part, fs in manifest.files.items()
     )
     return (

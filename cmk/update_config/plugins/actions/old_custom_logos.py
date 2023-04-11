@@ -5,7 +5,6 @@
 
 from logging import Logger
 from pathlib import Path
-from typing import Dict
 
 import cmk.utils.paths
 from cmk.utils import version
@@ -37,9 +36,9 @@ class RemoveOldCustomLogos(UpdateAction):
                 logo_path.unlink()
 
         try:
-            customers: Dict[CustomerId, Customer] = load_customers()
+            customers: dict[CustomerId, Customer] = load_customers()
             for config in customers.values():
-                globals_config: Dict[str, Dict] = config.get("globals", {})
+                globals_config: dict[str, dict] = config.get("globals", {})
                 if "logo" in globals_config:
                     del globals_config["logo"]
             save_customers(customers)

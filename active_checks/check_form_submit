@@ -148,7 +148,7 @@ def get_base_url(
     else:
         portspec = ":%d" % port
 
-    return "%s://%s%s" % (proto, host, portspec)
+    return f"{proto}://{host}{portspec}"
 
 
 # TODO: Refactor to requests
@@ -197,10 +197,10 @@ def open_url(  # type: ignore[no-untyped-def]
         new_state(2, "Unable to open %s : [%d] %s" % (url, e.code, e))
 
     except urllib.error.URLError as e:
-        new_state(2, "Unable to open %s : %s" % (url, e.reason))
+        new_state(2, f"Unable to open {url} : {e.reason}")
 
     except socket.timeout as e:
-        new_state(2, "Unable to open %s : %s" % (url, e))
+        new_state(2, f"Unable to open {url} : {e}")
 
     real_url = fd.geturl()
     code = fd.getcode()
@@ -333,7 +333,7 @@ def raise_host_state(
         target = base_url + target
     elif target[0] != "":
         # relative URL
-        target = "%s/%s" % ("/".join(real_url.rstrip("/").split("/")[:-1]), target)
+        target = "{}/{}".format("/".join(real_url.rstrip("/").split("/")[:-1]), target)
 
     real_url, content = open_url(
         client=client,
@@ -387,7 +387,7 @@ def check_host_states(  # type: ignore[no-untyped-def]
 
     txt = "%d succeeded, %d failed" % (num_success, num_failed)
     if failed:
-        txt += " (%s)" % ", ".join(["%s: %s" % (n, msg[1]) for n, msg in failed])
+        txt += " (%s)" % ", ".join([f"{n}: {msg[1]}" for n, msg in failed])
     return sum_state, txt
 
 

@@ -74,7 +74,9 @@ def parse_exception(exc):
 
 def output_check_result(s, perfdata):
     if perfdata:
-        perfdata_output_entries = ["%s=%s" % (p[0], ";".join(map(str, p[1:]))) for p in perfdata]
+        perfdata_output_entries = [
+            "{}={}".format(p[0], ";".join(map(str, p[1:]))) for p in perfdata
+        ]
         s += " | %s" % " ".join(perfdata_output_entries)
     sys.stdout.write("%s\n" % s)
 
@@ -94,8 +96,7 @@ def _execute_traceroute(target, nodns, method, address_family):
     cmd.append(target)
     completed_process = subprocess.run(
         cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         encoding="utf8",
         check=False,
     )
@@ -106,7 +107,7 @@ def _execute_traceroute(target, nodns, method, address_family):
 
 def check_traceroute(lines, routes):
     # find all visited routers
-    routers = set([])
+    routers = set()
     hops = len(lines[1:])
     for line in lines[1:]:
         parts = line.strip().split()
@@ -125,10 +126,10 @@ def check_traceroute(lines, routes):
         s = option_to_state(option)
         if option.islower() and route in routers:
             state = max(state, s)
-            bad_routers.append("%s(%s)" % (route, "!" * s))
+            bad_routers.append("{}({})".format(route, "!" * s))
         elif option.isupper() and route not in routers:
             state = max(state, s)
-            missing_routers.append("%s(%s)" % (route, "!" * s))
+            missing_routers.append("{}({})".format(route, "!" * s))
 
     info_text = "%d hops, missing routers: %s, bad routers: %s" % (
         hops,

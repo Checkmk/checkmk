@@ -73,4 +73,4 @@ for name, state in c.query("GET hosts\nColumns: name state\n"):
     print("%-15s: %d" % (name, state))
 print("Dead sites:")
 for sitename, info in c.dead_sites().items():
-    print("%s: %s" % (sitename, info["exception"]))
+    print("{}: {}".format(sitename, info["exception"]))

@@ -1120,7 +1120,7 @@ class ParentChildNetworkTopology(Topology):
                 "has_been_checked",
             ]
             query_result = sites.live().query(
-                "GET hosts\nColumns: %s\n%s" % (" ".join(columns), "\n".join(hostname_filters))
+                "GET hosts\nColumns: {}\n{}".format(" ".join(columns), "\n".join(hostname_filters))
             )
         finally:
             sites.live().set_prepend_site(False)
@@ -1170,7 +1170,7 @@ class ParentChildNetworkTopology(Topology):
         self._known_nodes[str(central_node["name"])] = central_node
 
         # The combinator mesh fuses all independent meshes at their site node
-        combinator_mesh = set([str(central_node["name"])])
+        combinator_mesh = {str(central_node["name"])}
         for node_name, settings in site_nodes.items():
             self._known_nodes[node_name] = settings
             combinator_mesh.add(node_name)

@@ -9,9 +9,10 @@ The intended use is for scripts such as cmk-update-config or init-redis.
 
 import typing
 import warnings
+from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
-from typing import Any, Iterator
+from typing import Any
 
 from flask import Flask
 from flask.ctx import RequestContext

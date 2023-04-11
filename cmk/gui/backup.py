@@ -21,9 +21,7 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from io import TextIOWrapper
 from pathlib import Path
-from typing import cast, Final, Generic, TypeVar
-
-from typing_extensions import assert_never
+from typing import assert_never, cast, Final, Generic, TypeVar
 
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
@@ -188,7 +186,7 @@ class Config:
         del self._config.site.targets[target_id]
         self._config.save()
 
-    def add_job(self, job: "Job") -> None:
+    def add_job(self, job: Job) -> None:
         self._config.site.jobs[job.ident] = job.config
         self._config.save()
         self._save_cronjobs()
@@ -395,7 +393,7 @@ class Job(MKBackupJob):
             dayspec = "%d * *" % period[1]
 
         else:
-            assert_never()
+            assert_never(period)
 
         # times: list of two element tuples (hours, minutes)
         timespecs = []

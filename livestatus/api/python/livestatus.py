@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import lru_cache
 from io import BytesIO
-from typing import Any, Literal, NamedTuple, NewType, Type, TypedDict
+from typing import Any, Literal, NamedTuple, NewType, TypedDict
 
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)
@@ -236,7 +236,7 @@ def create_client_socket(
     try:
         context.load_verify_locations(ca_file_path)
     except Exception as e:
-        raise MKLivestatusConfigError("Failed to load CA file '%s': %s" % (ca_file_path, e))
+        raise MKLivestatusConfigError(f"Failed to load CA file '{ca_file_path}': {e}")
 
     return context.wrap_socket(sock, do_handshake_on_connect=do_handshake_on_connect)
 
@@ -411,12 +411,12 @@ class Query:
     query. The object can be used to hand over the handling code some flags, for
     example to influence the error handling during query processing."""
 
-    default_suppressed_exceptions: tuple[Type[Exception], ...] = (MKLivestatusTableNotFoundError,)
+    default_suppressed_exceptions: tuple[type[Exception], ...] = (MKLivestatusTableNotFoundError,)
 
     def __init__(
         self,
         query: str | QuerySpecification,
-        suppress_exceptions: tuple[Type[Exception], ...] | None = None,
+        suppress_exceptions: tuple[type[Exception], ...] | None = None,
     ) -> None:
         self._query = query
         if suppress_exceptions is None:
@@ -605,7 +605,7 @@ class SingleSiteConnection(Helpers):
                     site_socket.close()
                 except OSError:
                     pass
-                raise MKLivestatusSocketError("Cannot connect to '%s': %s" % (self.socketurl, e))
+                raise MKLivestatusSocketError(f"Cannot connect to '{self.socketurl}': {e}")
 
         return site_socket
 
@@ -714,7 +714,7 @@ class SingleSiteConnection(Helpers):
             self.socket.sendall(query.encode("utf-8") + b"\n\n")
             if getattr(self.collect_queries, "active", False):
                 self.collect_queries.queries.append(query)
-        except IOError as e:
+        except OSError as e:
             self._close_socket()
 
             if do_reconnect:
@@ -731,7 +731,7 @@ class SingleSiteConnection(Helpers):
     def receive_raw_response(
         self,
         query: str,
-        suppress_exceptions: tuple[Type[Exception], ...],
+        suppress_exceptions: tuple[type[Exception], ...],
         timeout_at: float | None = None,
     ) -> bytes:
         try:
@@ -758,14 +758,14 @@ class SingleSiteConnection(Helpers):
 
             error_info = data.decode("utf-8")
             if code == "404":
-                raise MKLivestatusTableNotFoundError("Not Found (%s): %r" % (code, error_info))
+                raise MKLivestatusTableNotFoundError(f"Not Found ({code}): {error_info!r}")
 
             if code == "502":
                 raise MKLivestatusBadGatewayError(error_info)
 
-            raise MKLivestatusQueryError("%s: %s" % (code, error_info))
+            raise MKLivestatusQueryError(f"{code}: {error_info}")
 
-        except (MKLivestatusSocketClosed, IOError) as e:
+        except (MKLivestatusSocketClosed, OSError) as e:
             # In case of an IO error or the other side having
             # closed the socket do a reconnect and try again
             self.disconnect()
@@ -859,7 +859,7 @@ class SingleSiteConnection(Helpers):
 
         try:
             self.socket.sendall(command.encode("utf-8") + b"\n\n")
-        except IOError as e:
+        except OSError as e:
             self._close_socket()
             raise MKLivestatusSocketError(str(e))
 
@@ -1037,7 +1037,7 @@ class MultiSiteConnection(Helpers):
                     elif shs == 3:
                         ex = "The remote monitoring host's state it not yet determined"
                     elif shs == 4:
-                        ex = "Invalid status host: site %s has no host %r" % (
+                        ex = "Invalid status host: site {} has no host {!r}".format(
                             status_host[0],
                             status_host[1],
                         )

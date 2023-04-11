@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Final, Sequence
-
-from typing_extensions import assert_never
+from typing import assert_never, Final
 
 from cmk.utils.i18n import _
 

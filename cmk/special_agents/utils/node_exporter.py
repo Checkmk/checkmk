@@ -6,9 +6,9 @@ import enum
 import time
 import typing
 from collections.abc import Mapping
+from typing import NotRequired
 
 import pydantic
-from typing_extensions import NotRequired
 
 SectionStr = typing.NewType("SectionStr", str)
 

@@ -8,9 +8,9 @@ the utils_kubernetes/performance
 """
 import itertools
 import logging
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Callable, Generic, Iterable, Iterator, NewType, TypeVar
+from typing import Generic, NewType, TypeVar
 
 from pydantic import BaseModel
 

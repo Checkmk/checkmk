@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
-from typing import Sequence
+from collections.abc import Sequence
 
 import cmk.utils.regex
 

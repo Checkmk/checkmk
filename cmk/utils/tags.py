@@ -7,8 +7,8 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping, Sequence
-from typing import Iterator, NamedTuple, TypedDict
+from collections.abc import Iterator, Mapping, Sequence
+from typing import NamedTuple, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
@@ -129,8 +129,7 @@ class AuxTagList:
         return self
 
     def __iter__(self) -> Iterator:
-        for tag in self._tags:
-            yield tag
+        yield from self._tags
 
     def get_tags(self) -> Sequence[AuxTag]:
         return self._tags

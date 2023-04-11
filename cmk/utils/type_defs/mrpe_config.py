@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
-from typing import Sequence, TypedDict
+from collections.abc import Iterable, Sequence
+from typing import NotRequired, TypedDict
 from urllib.parse import unquote
-
-from typing_extensions import NotRequired
 
 __all__ = [
     "ensure_mrpe_configs",

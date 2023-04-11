@@ -13,11 +13,10 @@ except the python standard library or pydantic.
 import enum
 import json
 from collections.abc import Mapping, Sequence
-from typing import Literal, NewType
+from typing import assert_never, Literal, NewType
 
 import requests
 from pydantic import BaseModel, Field, ValidationError
-from typing_extensions import assert_never
 
 from cmk.special_agents.utils_kubernetes import prometheus_api, query
 from cmk.special_agents.utils_kubernetes.schemata import api

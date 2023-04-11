@@ -10,7 +10,7 @@ import os
 import pickle
 import time
 from pathlib import Path
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 from redis import Redis
 
@@ -62,7 +62,7 @@ class BICompiler:
 
     def get_aggregation_by_name(
         self, aggr_name: str
-    ) -> Optional[tuple[BICompiledAggregation, BICompiledRule]]:
+    ) -> tuple[BICompiledAggregation, BICompiledRule] | None:
         for _name, compiled_aggregation in self._compiled_aggregations.items():
             for branch in compiled_aggregation.branches:
                 if branch.properties.title == aggr_name:

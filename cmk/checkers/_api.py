@@ -121,7 +121,7 @@ class PluginSuppliedLabel(
             raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
 
     def __repr__(self) -> str:
-        return "%s(%r, %r)" % (self.__class__.__name__, self.name, self.value)
+        return f"{self.__class__.__name__}({self.name!r}, {self.value!r})"
 
 
 class HostLabel(PluginSuppliedLabel):

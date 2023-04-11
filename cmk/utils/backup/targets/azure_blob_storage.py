@@ -5,11 +5,10 @@
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Final, Literal, TypedDict
+from typing import assert_never, Final, Literal, TypedDict
 
 from azure.identity import ClientSecretCredential
 from azure.storage.blob import ContainerClient, LinearRetry
-from typing_extensions import assert_never
 
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.utils.exceptions import MKGeneralException
@@ -106,7 +105,7 @@ class BlobStorage:
                 client_id=ad_credentials["client_id"],
                 client_secret=client_secret,
             )
-        return assert_never()
+        return assert_never(configured_credentials)
 
 
 class BlobStorageTarget(RemoteTarget[BlobStorageParams, BlobStorage]):

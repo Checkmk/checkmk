@@ -5,10 +5,9 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Literal, TypeVar
+from typing import Any, assert_never, Literal, TypeVar
 
 from flask import g, request, session  # pylint: disable=unused-import  # noqa: F401
-from typing_extensions import assert_never
 from werkzeug.local import LocalProxy
 
 T = TypeVar("T")

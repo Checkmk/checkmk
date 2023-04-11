@@ -14,9 +14,7 @@ import traceback
 from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, IO, Literal, TypeVar
-
-from typing_extensions import NotRequired, TypedDict
+from typing import Any, IO, Literal, NotRequired, TypedDict, TypeVar
 
 import cmk.utils
 import cmk.utils.paths

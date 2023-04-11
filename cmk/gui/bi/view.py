@@ -2,9 +2,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any, Literal, Set
+from typing import Any, Literal
 
 from livestatus import OnlySites, SiteId
 
@@ -919,7 +920,7 @@ def combine_branches(reference_branch: BICompiledRule, other_branch: BICompiledR
         ref_ids[missing_id].set_frozen_marker(FrozenMarker("missing"))
 
     def common_prefix(
-        check_tuple: tuple[int | str, ...], other_tuples: Set[tuple[int | str, ...]]
+        check_tuple: tuple[int | str, ...], other_tuples: set[tuple[int | str, ...]]
     ) -> tuple[int | str, ...] | None:
         while len(check_tuple) > 0:
             if check_tuple in other_tuples:

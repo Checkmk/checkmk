@@ -19,7 +19,7 @@ def print_levels(level, exp):
         scale = felt_size / hgb_size  # fixed: true-division
         new_level = 1 - ((1 - level) * scale)
         freegb = size * (1.0 - new_level)
-        sys.stdout.write("{:4.0f}GB:{:4.0f}%({:3.0f}G) ".format(size, new_level * 100, freegb))
+        sys.stdout.write(f"{size:4.0f}GB:{new_level * 100:4.0f}%({freegb:3.0f}G) ")
     sys.stdout.write("\n")
 
 

@@ -14,7 +14,6 @@ import errno
 import getopt
 import logging
 import os
-import socket
 import sys
 
 # Needs to be placed before cmk modules, because they are not available
@@ -136,7 +135,7 @@ except (MKGeneralException, MKBailOut) as e:
         raise
     sys.exit(3)
 
-except socket.error as e:
+except OSError as e:
     if e.errno == errno.EPIPE:
         # this is not an error, caller closes socket(s) and will kill cmk too
         sys.exit(4)

@@ -16,9 +16,9 @@ Once a user logs out or the "last activity" is older than the configured session
 session is invalidated. The user can then login again from the same client or another one.
 """
 
+from collections.abc import Mapping
 from dataclasses import asdict
 from datetime import datetime
-from typing import Mapping
 
 from cmk.utils.crypto.secrets import AuthenticationSecret
 from cmk.utils.site import omd_site

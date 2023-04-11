@@ -353,7 +353,7 @@ class Rulespec(abc.ABC):
         if plain_title is None:
             return None
         if self._is_deprecated:
-            return "%s: %s" % (_("Deprecated"), plain_title)
+            return "{}: {}".format(_("Deprecated"), plain_title)
         if self._is_cloud_edition_only:
             return mark_edition_only(plain_title, Edition.CCE)
         return plain_title

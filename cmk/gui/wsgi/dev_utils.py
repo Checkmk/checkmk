@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import contextlib
 import os
-from typing import Generator
+from collections.abc import Generator
 from unittest import mock
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection

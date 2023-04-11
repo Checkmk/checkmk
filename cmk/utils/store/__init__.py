@@ -9,9 +9,10 @@ import logging
 import pickle
 import pprint
 import shutil
+from collections.abc import Mapping
 from contextlib import nullcontext
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout

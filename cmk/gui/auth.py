@@ -9,8 +9,9 @@ import base64
 import hmac
 import traceback
 import uuid
+from collections.abc import Callable
 from datetime import datetime
-from typing import Callable, Literal
+from typing import Literal
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.secrets import AutomationUserSecret

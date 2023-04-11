@@ -9,8 +9,9 @@ Please try to find a better place for the things you want to put here."""
 
 import marshal
 import uuid
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import cmk.utils.paths
 

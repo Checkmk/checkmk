@@ -9,8 +9,8 @@ from __future__ import annotations
 import logging
 import os
 import time
-from collections.abc import Container
-from typing import Any, Final, Sequence
+from collections.abc import Container, Sequence
+from typing import Any, Final
 
 from livestatus import SiteConfigurations, SiteId
 

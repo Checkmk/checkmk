@@ -6,10 +6,9 @@
 
 import argparse
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from getpass import getpass
 from pathlib import Path
-from typing import Callable
 
 import cmk.utils.crypto.password_hashing as password_hashing
 import cmk.utils.version as cmk_version

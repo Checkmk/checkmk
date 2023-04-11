@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from __future__ import annotations
 
-from typing import Any, NamedTuple, Set
+from typing import Any, NamedTuple
 
 from marshmallow import fields, pre_dump
 from marshmallow_oneofschema import OneOfSchema
@@ -79,7 +78,7 @@ class BICompiledLeaf(ABCBICompiledNode):
     def _get_comparable_name(self) -> str:
         return ":".join([self.site_id or "", self.host_name, self.service_description or ""])
 
-    def get_identifiers(self, parent_id: tuple, used_ids: Set[tuple]) -> list[NodeIdentifierInfo]:
+    def get_identifiers(self, parent_id: tuple, used_ids: set[tuple]) -> list[NodeIdentifierInfo]:
         own_id = (1, self.host_name, self.service_description)
         while (*parent_id, own_id) in used_ids:
             own_id = (own_id[0] + 1, self.host_name, self.service_description)
@@ -308,7 +307,7 @@ class BICompiledRule(ABCBICompiledNode):
     def _get_comparable_name(self) -> str:
         return self.properties.title
 
-    def get_identifiers(self, parent_id: tuple, used_ids: Set[tuple]) -> list[NodeIdentifierInfo]:
+    def get_identifiers(self, parent_id: tuple, used_ids: set[tuple]) -> list[NodeIdentifierInfo]:
         idents = []
         own_id = (1, self.properties.title)
         while (*parent_id, own_id) in used_ids:

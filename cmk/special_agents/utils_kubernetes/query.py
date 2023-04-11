@@ -15,7 +15,7 @@ import enum
 import json
 import logging
 from collections.abc import Iterable, Iterator, Mapping
-from typing import final, NewType, Tuple, Union
+from typing import final, NewType, Union
 
 import requests
 import urllib3
@@ -64,7 +64,7 @@ class Query(enum.StrEnum):
     )
 
 
-HTTPResponse = Tuple[Query, HTTPResult]
+HTTPResponse = tuple[Query, HTTPResult]
 
 
 @final

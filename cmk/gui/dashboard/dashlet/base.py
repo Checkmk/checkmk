@@ -6,8 +6,8 @@
 import abc
 import json
 import urllib.parse
-from collections.abc import Iterable
-from typing import Any, Callable, Generic, Literal, TypeVar
+from collections.abc import Callable, Iterable
+from typing import Any, Generic, Literal, TypeVar
 
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 

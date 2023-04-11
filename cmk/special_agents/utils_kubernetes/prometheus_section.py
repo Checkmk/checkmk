@@ -2,7 +2,9 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Iterable, Sequence, Type, TypeVar
+
+from collections.abc import Iterable, Sequence
+from typing import TypeVar
 
 from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric, SectionStr
 from cmk.special_agents.utils_kubernetes import common, prometheus_api, query
@@ -15,7 +17,7 @@ class Measurement(common.IdentifiableSample):
     value: float
 
     @classmethod
-    def from_sample(cls: Type[Self], sample: prometheus_api.Sample) -> Self:
+    def from_sample(cls: type[Self], sample: prometheus_api.Sample) -> Self:
         return cls(
             pod_name=sample.metric["pod"],
             namespace=sample.metric["namespace"],

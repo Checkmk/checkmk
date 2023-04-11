@@ -835,7 +835,7 @@ class InputRuleObject(base.BaseSchema):
             "the 'export for API' menu item in the Rule Editor of the GUI. The value is expected "
             "to be a valid Python type."
         ),
-        example="\"{'cmk/os_family': 'linux'}\"",
+        example="{'cmk/os_family': 'linux'}",
     )
     conditions = fields.Nested(
         RuleConditions,

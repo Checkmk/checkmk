@@ -18,25 +18,10 @@ import yaml
 def image_id(alias_name):
     """Basically returns the generated image id reported by `docker build` on a given
     image alias folder. Matches against output with or without Docker build kit"""
-    docker_build_result = run(
-        ["docker", "build", str(Path(__file__).parent / alias_name)],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if docker_build_result.returncode == 0:
-        for built_image_id in (
-            match.groups()[0]
-            for output in (docker_build_result.stderr, docker_build_result.stdout)
-            for line in output.split("\n")[-10:]
-            for pattern in (
-                ".*Successfully built ([0-9a-f]+).*",
-                ".*writing image (sha256:[0-9a-f]+) done.*",
-            )
-            for match in (re.match(pattern, line),)
-            if match
-        ):
-            return built_image_id
+    with open(Path(__file__).parent / alias_name / "Dockerfile") as dockerfile:
+        for line in dockerfile:
+            if "FROM" in line:
+                return line.strip().split()[-1]
 
     print(
         f"Docker image alias '{alias_name}' could not be resolved. `docker build` returned:",

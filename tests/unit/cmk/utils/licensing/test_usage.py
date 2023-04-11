@@ -180,8 +180,11 @@ def test_serialize_license_usage_report() -> None:
             },
         ],
     }
-    history = LocalLicenseUsageHistory.parse(raw_report, "site-hash")
-
+    history = LocalLicenseUsageHistory.parse(
+        raw_report,
+        None,
+        "site-hash",
+    )
     assert (
         _serialize_dump(
             RawLicenseUsageReport(
@@ -393,18 +396,14 @@ def test_serialize_license_usage_report() -> None:
     ],
 )
 def test_license_usage_report(
-    monkeypatch: pytest.MonkeyPatch,
     raw_report: Mapping[str, Any],
     expected_history: LocalLicenseUsageHistory,
 ) -> None:
-    monkeypatch.setattr(
-        licensing_usage,
-        "load_instance_id",
-        lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+    history = LocalLicenseUsageHistory.parse(
+        raw_report,
+        UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+        "site-hash",
     )
-
-    history = LocalLicenseUsageHistory.parse(raw_report, "site-hash")
-
     for sample, expected_sample in zip(history, expected_history):
         assert sample.instance_id == expected_sample.instance_id
         assert sample.site_hash == expected_sample.site_hash

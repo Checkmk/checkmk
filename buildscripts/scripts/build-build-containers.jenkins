@@ -47,7 +47,7 @@ timeout(time: 12, unit: 'HOURS') {
                                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                                     def DOCKERFILE = "$DISTRO/Dockerfile";
                                     def IMAGE_ALIAS_NAME = sh(script: "grep 'ARG IMAGE_' ${DOCKERFILE} | awk '{print \$2}'", returnStdout: true).replaceAll("[\r\n]+", "");
-                                    def RESOLVED_IMAGE_ID = sh(script: "../../docker_image_aliases/resolve.sh ${IMAGE_ALIAS_NAME}", returnStdout: true).replaceAll("[\r\n]+", "");
+                                    def RESOLVED_IMAGE_ID = sh(script: "../../docker_image_aliases/resolve.py ${IMAGE_ALIAS_NAME}", returnStdout: true).replaceAll("[\r\n]+", "");
                                     println("Using IMAGE_ALIAS_NAME: ${IMAGE_ALIAS_NAME}=${RESOLVED_IMAGE_ID}");
                                     def DOCKER_ARGS = (
                                         " --build-arg $IMAGE_ALIAS_NAME=$RESOLVED_IMAGE_ID" +

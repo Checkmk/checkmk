@@ -57,7 +57,7 @@ else
 fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
-: "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.sh "${IMAGE_ALIAS}")"}"
+: "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
 
 echo "Running in Docker container from image ${IMAGE_ID} (cmd=$*) (workdir=${PWD})"
 

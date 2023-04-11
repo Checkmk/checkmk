@@ -31,12 +31,12 @@ def image_id(alias_name):
             for line in output.split("\n")[-10:]
             for pattern in (
                 ".*Successfully built ([0-9a-f]+).*",
-                ".*writing image sha256:([0-9a-f]+) done.*",
+                ".*writing image (sha256:[0-9a-f]+) done.*",
             )
             for match in (re.match(pattern, line),)
             if match
         ):
-            return built_image_id[:12]
+            return built_image_id
 
     print(
         f"Docker image alias '{alias_name}' could not be resolved. `docker build` returned:",

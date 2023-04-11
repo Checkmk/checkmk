@@ -57,7 +57,7 @@ else
 fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
-: "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.sh "${IMAGE_ALIAS}")"}"
+: "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 
 if [ -t 0 ]; then
@@ -91,7 +91,6 @@ docker run -a stdout -a stderr \
     -e BAZEL_CACHE_USER \
     -e BAZEL_CACHE_PASSWORD \
     -e CI \
-    -e DOCKER_BUILDKIT \
     ${DOCKER_RUN_ADDOPTS} \
     "${IMAGE_ID}" \
     sh -c "${CMD}"

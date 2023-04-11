@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from enum import auto, Enum
 from pathlib import Path
 from typing import Any, NamedTuple, TypedDict
+from uuid import UUID
 
 import livestatus
 
@@ -299,7 +300,10 @@ def load_license_usage_history(report_filepath: Path) -> LocalLicenseUsageHistor
     if not raw_report.get("history"):
         return LocalLicenseUsageHistory([])
 
-    return LocalLicenseUsageHistory.parse(raw_report, hash_site_id(omd_site()))
+    if (instance_id := load_instance_id()) is None:
+        raise TypeError()
+
+    return LocalLicenseUsageHistory.parse(raw_report, instance_id, hash_site_id(omd_site()))
 
 
 # .
@@ -331,7 +335,9 @@ class LocalLicenseUsageHistory:
         return [sample.for_report() for sample in self._samples]
 
     @classmethod
-    def parse(cls, raw_report: object, site_hash: str) -> LocalLicenseUsageHistory:
+    def parse(
+        cls, raw_report: object, instance_id: UUID | None, site_hash: str
+    ) -> LocalLicenseUsageHistory:
         if not isinstance(raw_report, dict):
             raise TypeError()
 
@@ -342,7 +348,6 @@ class LocalLicenseUsageHistory:
             raise TypeError()
 
         parser = LicenseUsageSample.get_parser(version)
-        instance_id = load_instance_id()
         return cls(
             parser(raw_sample, instance_id=instance_id, site_hash=site_hash)
             for raw_sample in raw_report.get("history", [])

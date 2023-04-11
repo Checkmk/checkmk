@@ -6,7 +6,7 @@
 
 from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from re import Pattern
-from typing import Any, cast, Generic, Literal, NamedTuple, Required, TypedDict, TypeVar
+from typing import cast, Generic, Literal, NamedTuple, Required, TypedDict, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, Labels
@@ -1062,12 +1062,14 @@ class RulesetToDictTransformer:
                     ),
                 )
 
-    def _transform_rule(self, tuple_rule, is_service, is_binary):
-        rule: dict[str, Any] = {
-            "condition": {},
-        }
-
-        tuple_rule = list(tuple_rule)
+    def _transform_rule(
+        self,
+        rule_spec: RuleSpec[object],
+        is_service: bool,
+        is_binary: bool,
+    ) -> Mapping[str, object]:
+        rule: dict[str, object] = {}
+        tuple_rule = list(rule_spec)
 
         # Extract optional rule_options from the end of the tuple
         if isinstance(tuple_rule[-1], dict):
@@ -1075,13 +1077,13 @@ class RulesetToDictTransformer:
 
         # Extract value from front, if rule has a value
         if not is_binary:
-            value = tuple_rule.pop(0)
+            rule["value"] = tuple_rule.pop(0)
         else:
             value = True
             if tuple_rule[0] == NEGATE:
                 value = False
                 tuple_rule = tuple_rule[1:]
-        rule["value"] = value
+            rule["value"] = value
 
         # Extract list of items from back, if rule has items
         service_condition = {}
@@ -1091,8 +1093,10 @@ class RulesetToDictTransformer:
         # Rest is host list or tag list + host list
         host_condition = self._transform_host_conditions(tuple_rule)
 
-        rule["condition"].update(service_condition)
-        rule["condition"].update(host_condition)
+        condition = {}
+        condition.update(service_condition)
+        condition.update(host_condition)
+        rule["condition"] = condition
 
         return rule
 
@@ -1132,7 +1136,8 @@ class RulesetToDictTransformer:
             return {"service_description": {"$nor": sub_conditions}}
         return {"service_description": sub_conditions}
 
-    def _transform_host_conditions(self, tuple_rule):
+    def _transform_host_conditions(self, tuple_rule: Sequence[str]) -> Mapping[str, object]:
+        host_tags: Sequence[str]
         if len(tuple_rule) == 1:
             host_tags = []
             host_list = tuple_rule[0]
@@ -1140,19 +1145,19 @@ class RulesetToDictTransformer:
             host_tags = tuple_rule[0]
             host_list = tuple_rule[1]
 
-        condition: dict[str, str] = {}
+        condition: dict[str, object] = {}
         condition.update(self.transform_host_tags(host_tags))
         condition.update(self._transform_host_list(host_list))
         return condition
 
-    def _transform_host_list(self, host_list):
+    def _transform_host_list(self, host_list: Sequence[str]) -> Mapping[str, object]:
         if host_list == ALL_HOSTS:
             return {}
 
         if not host_list:
             return {"host_name": []}
 
-        sub_conditions = []
+        sub_conditions: list[object] = []
 
         # Assume WATO conforming rule where either *all* or *none* of the
         # host expressions are negated.
@@ -1193,11 +1198,11 @@ class RulesetToDictTransformer:
             return {"host_name": {"$nor": sub_conditions}}
         return {"host_name": sub_conditions}
 
-    def transform_host_tags(self, host_tags):
+    def transform_host_tags(self, host_tags: Sequence[TagID]) -> Mapping[str, object]:
         if not host_tags:
             return {}
 
-        conditions = {}
+        conditions: dict[str, object] = {}
         tag_conditions = {}
         for tag_id in host_tags:
             # Folder is either not present (main folder) or in this format

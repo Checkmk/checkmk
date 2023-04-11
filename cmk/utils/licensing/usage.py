@@ -160,6 +160,15 @@ class HostsOrServicesCounter(NamedTuple):
     num_excluded: int
 
 
+def _get_from_livestatus(query: str) -> Sequence[Sequence[Any]]:
+    return livestatus.LocalConnection().query(query)
+
+
+def _get_stats_from_livestatus(query: str) -> tuple[int, int, int]:
+    stats = _get_from_livestatus(query)[0]
+    return int(stats[0]), int(stats[1]), int(stats[2])
+
+
 def _get_hosts_counter() -> HostsOrServicesCounter:
     num_hosts, num_hosts_shadow, num_hosts_excluded = _get_stats_from_livestatus(
         (
@@ -210,15 +219,6 @@ def _get_services_counter() -> HostsOrServicesCounter:
     )
 
 
-def _get_from_livestatus(query: str) -> Sequence[Sequence[Any]]:
-    return livestatus.LocalConnection().query(query)
-
-
-def _get_stats_from_livestatus(query: str) -> tuple[int, int, int]:
-    stats = _get_from_livestatus(query)[0]
-    return int(stats[0]), int(stats[1]), int(stats[2])
-
-
 def _get_services_from_livestatus() -> Sequence[Sequence[Any]]:
     return _get_from_livestatus(
         "GET services"
@@ -231,12 +231,14 @@ def _get_services_from_livestatus() -> Sequence[Sequence[Any]]:
 
 
 @dataclass
-class CCECounter:
+class HostsOrServicesCloudCounter:
     hosts: int
     services: int
 
 
-def _parse_services_livestatus_response(response: Sequence[Sequence[Any]]) -> CCECounter:
+def _parse_cloud_hosts_or_services(
+    response: Sequence[Sequence[Any]],
+) -> HostsOrServicesCloudCounter:
     def contains_cloud_service(services: Sequence[str]) -> bool:
         return any(service.startswith(tuple(CLOUD_SERVICE_PREFIXES)) for service in services)
 
@@ -249,12 +251,14 @@ def _parse_services_livestatus_response(response: Sequence[Sequence[Any]]) -> CC
         for host, services in services_per_host.items()
         if contains_cloud_service(services)
     }
-    return CCECounter(hosts=len(cloud_services), services=sum(cloud_services.values()))
+    return HostsOrServicesCloudCounter(
+        hosts=len(cloud_services), services=sum(cloud_services.values())
+    )
 
 
-def _get_cloud_counter() -> CCECounter:
+def _get_cloud_counter() -> HostsOrServicesCloudCounter:
     response = _get_services_from_livestatus()
-    return _parse_services_livestatus_response(response)
+    return _parse_cloud_hosts_or_services(response)
 
 
 def _get_next_run_ts(next_run_filepath: Path) -> int:

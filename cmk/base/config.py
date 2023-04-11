@@ -72,7 +72,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.structured_data import RawIntervalsFromConfig
-from cmk.utils.tags import ComputedDataSources, TaggroupID, TagID
+from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
     AgentTargetVersion,
@@ -2170,7 +2170,7 @@ class ConfigCache:
         }
 
     @staticmethod
-    def get_tag_to_group_map() -> Mapping[TagID, TaggroupID]:
+    def get_tag_to_group_map() -> Mapping[TagID, TagGroupID]:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return ruleset_matcher.get_tag_to_group_map(tags)
 
@@ -2853,7 +2853,7 @@ class ConfigCache:
             for name in (checking_sections | disabled_sections)
         }
 
-    def _collect_hosttags(self, tag_to_group_map: Mapping[TagID, TaggroupID]) -> None:
+    def _collect_hosttags(self, tag_to_group_map: Mapping[TagID, TagGroupID]) -> None:
         """Calculate the effective tags for all configured hosts
 
         WATO ensures that all hosts configured with WATO have host_tags set, but there may also be hosts defined
@@ -2888,7 +2888,7 @@ class ConfigCache:
 
     @staticmethod
     def _tag_groups_to_tag_list(
-        host_path: str, tag_groups: Mapping[TaggroupID, TagID]
+        host_path: str, tag_groups: Mapping[TagGroupID, TagID]
     ) -> set[TagID]:
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
         # but there was a single tag group added with it's leading tag group id. This
@@ -2900,8 +2900,8 @@ class ConfigCache:
 
     @staticmethod
     def _tag_list_to_tag_groups(
-        tag_to_group_map: Mapping[TagID, TaggroupID], tag_list: Iterable[TagID]
-    ) -> Mapping[TaggroupID, TagID]:
+        tag_to_group_map: Mapping[TagID, TagGroupID], tag_list: Iterable[TagID]
+    ) -> Mapping[TagGroupID, TagID]:
         # This assumes all needed aux tags of grouped are already in the tag_list
 
         # Ensure the internal mandatory tag groups are set for all hosts
@@ -2932,7 +2932,7 @@ class ConfigCache:
 
     # TODO: check all call sites and remove this or make it private?
     @staticmethod
-    def tags(hostname: HostName) -> Mapping[TaggroupID, TagID]:
+    def tags(hostname: HostName) -> Mapping[TagGroupID, TagID]:
         """Returns the dict of all configured tag groups and values of a host."""
         if hostname in host_tags:
             return host_tags[hostname]
@@ -3294,7 +3294,7 @@ class ConfigCache:
 
     def tags_of_service(
         self, hostname: HostName, svc_desc: ServiceName
-    ) -> Mapping[TaggroupID, TagID]:
+    ) -> Mapping[TagGroupID, TagID]:
         """Returns the dict of all configured tags of a service
         It takes all explicitly configured tag groups into account.
         """
@@ -3516,7 +3516,7 @@ class ConfigCache:
 
     @staticmethod
     def _get_tag_attributes(
-        collection: Mapping[TaggroupID, TagID] | Labels | LabelSources,
+        collection: Mapping[TagGroupID, TagID] | Labels | LabelSources,
         prefix: str,
     ) -> ObjectAttributes:
         return {f"__{prefix}_{k}": str(v) for k, v in collection.items()}

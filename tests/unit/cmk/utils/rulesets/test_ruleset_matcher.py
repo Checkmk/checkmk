@@ -20,7 +20,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RuleSpec,
     TagCondition,
 )
-from cmk.utils.tags import TagConfig, TaggroupID
+from cmk.utils.tags import TagConfig, TagGroupID
 from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName
 
 from cmk.checkers.discovery import AutocheckEntry
@@ -906,7 +906,7 @@ def test_ruleset_optimizer_clear_ruleset_caches(monkeypatch: MonkeyPatch) -> Non
     ],
 )
 def test_matches_tag_condition(
-    taggroud_id: TaggroupID,
+    taggroud_id: TagGroupID,
     tag_condition: TagCondition,
     expected_result: bool,
 ) -> None:

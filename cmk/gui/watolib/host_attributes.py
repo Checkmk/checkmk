@@ -17,7 +17,7 @@ from marshmallow import fields
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.tags import TagGroup, TaggroupID, TagID
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from cmk.utils.type_defs import HostName
 
 from cmk.gui.config import active_config
@@ -372,7 +372,7 @@ class ABCHostAttribute(abc.ABC):
         that are represented by the current HTML variables."""
         return crit == value
 
-    def get_tag_groups(self, value: Any) -> Mapping[TaggroupID, TagID]:
+    def get_tag_groups(self, value: Any) -> Mapping[TagGroupID, TagID]:
         """Each attribute may set multiple tag groups for a host
         This is used for calculating the effective host tags when writing the hosts{.mk|.cfg}"""
         return {}
@@ -909,7 +909,7 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, abc.ABC):
     def is_tag_attribute(self) -> bool:
         return True
 
-    def get_tag_groups(self, value: TagID | None) -> Mapping[TaggroupID, TagID]:
+    def get_tag_groups(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         """Return set of tag groups to set (handles secondary tags)"""
         return self._tag_group.get_tag_group_config(value)
 
@@ -976,7 +976,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
     def _tag_value(self) -> TagID | None:
         return self._tag_group.get_tag_choices()[0][0]
 
-    def get_tag_groups(self, value: TagID | None) -> Mapping[TaggroupID, TagID]:
+    def get_tag_groups(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         if not value:
             return {}
         return super().get_tag_groups(self._tag_value())

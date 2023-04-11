@@ -17,7 +17,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.utils.regex import REGEX_ID
-from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
+from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagGroupSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -172,7 +172,7 @@ def update_host_tag_group(params: Mapping[str, Any]) -> Response:
     updated_details = {x: body[x] for x in body if x != "repair"}
     tag_group = _retrieve_group(ident)
     group_details = tag_group.get_dict_format()
-    # This is an incremental update of the TaggroupSpec
+    # This is an incremental update of the TagGroupSpec
     group_details.update(updated_details)  # type: ignore[typeddict-item]
     try:
         edit_tag_group(ident, TagGroup.from_config(group_details), allow_repair=body["repair"])
@@ -256,13 +256,13 @@ def _retrieve_group(ident: str) -> TagGroup:
     return tag_group
 
 
-def _serve_host_tag_group(tag_details: TaggroupSpec) -> Response:
+def _serve_host_tag_group(tag_details: TagGroupSpec) -> Response:
     response = serve_json(serialize_host_tag_group(tag_details))
     response.headers.add("ETag", constructors.etag_of_dict(dict(tag_details)).to_header())
     return response
 
 
-def serialize_host_tag_group(details: TaggroupSpec) -> dict[str, Any]:
+def serialize_host_tag_group(details: TagGroupSpec) -> dict[str, Any]:
     return constructors.domain_object(
         domain_type="host_tag_group",
         identifier=details["id"],

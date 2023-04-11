@@ -34,7 +34,7 @@ ActionArguments = list[ActionArgument]
 from cmk.utils import plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
-from cmk.utils.tags import TaggroupID, TagID
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import HostName, HostState, ServiceDetails, ServiceName, ServiceState
 
 from cmk.bi.type_defs import ActionConfig, ComputationConfigDict, GroupConfigDict, SearchConfig
@@ -95,7 +95,7 @@ class BIServiceData(NamedTuple):
 
 class BIHostData(NamedTuple):
     site_id: str
-    tags: set[tuple[TaggroupID, TagID]]
+    tags: set[tuple[TagGroupID, TagID]]
     labels: MapGroup2Value
     folder: str
     services: dict[str, BIServiceData]
@@ -404,7 +404,7 @@ class ABCBISearcher(ABC):
     def filter_host_tags(
         self,
         hosts: Iterable[BIHostData],
-        tag_conditions: Mapping[TaggroupID, TagCondition],
+        tag_conditions: Mapping[TagGroupID, TagCondition],
     ) -> Iterable[BIHostData]:
         ...
 

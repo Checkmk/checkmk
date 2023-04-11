@@ -14,7 +14,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
 TagID = str
-TaggroupID = str
+TagGroupID = str
 
 
 class GroupedTagSpec(TypedDict):
@@ -33,19 +33,19 @@ class AuxTagSpec(_AuxTagSpecOpt):
     title: str
 
 
-class _TaggroupSpecOpt(TypedDict, total=False):
+class _TagGroupSpecOpt(TypedDict, total=False):
     topic: str
     help: str
 
 
-class TaggroupSpec(_TaggroupSpecOpt):
-    id: TaggroupID
+class TagGroupSpec(_TagGroupSpecOpt):
+    id: TagGroupID
     title: str
     tags: list[GroupedTagSpec]
 
 
 class TagConfigSpec(TypedDict):
-    tag_groups: list[TaggroupSpec]
+    tag_groups: list[TagGroupSpec]
     aux_tags: list[AuxTagSpec]
 
 
@@ -228,7 +228,7 @@ class GroupedTag:
 
 class TagGroup:
     @classmethod
-    def from_config(cls, group_info: TaggroupSpec) -> TagGroup:
+    def from_config(cls, group_info: TagGroupSpec) -> TagGroup:
         group = TagGroup(
             group_id=group_info["id"],
             title=group_info["title"],
@@ -241,7 +241,7 @@ class TagGroup:
 
     def __init__(
         self,
-        group_id: TaggroupID,
+        group_id: TagGroupID,
         title: str,
         topic: str | None,
         help: str | None,  # pylint: disable=redefined-builtin
@@ -272,8 +272,8 @@ class TagGroup:
             return {None, self.tags[0].id}
         return {tag.id for tag in self.tags}
 
-    def get_dict_format(self) -> TaggroupSpec:
-        response: TaggroupSpec = {"id": self.id, "title": self.title, "tags": []}
+    def get_dict_format(self) -> TagGroupSpec:
+        response: TagGroupSpec = {"id": self.id, "title": self.title, "tags": []}
         if self.topic:
             response["topic"] = self.topic
 
@@ -291,7 +291,7 @@ class TagGroup:
             choices.append((tag.id, tag.title))
         return choices
 
-    def get_tag_group_config(self, value: TagID | None) -> Mapping[TaggroupID, TagID]:
+    def get_tag_group_config(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         """Return the set of tag groups which should be set for a host based on the given value"""
         tag_groups = {}
 
@@ -358,22 +358,22 @@ class TagConfig:
             by_topic.setdefault(topic, []).append(tag_group)
         return sorted(by_topic.items(), key=lambda x: x[0])
 
-    def tag_group_exists(self, tag_group_id: TaggroupID) -> bool:
+    def tag_group_exists(self, tag_group_id: TagGroupID) -> bool:
         return self.get_tag_group(tag_group_id) is not None
 
-    def get_tag_group(self, tag_group_id: TaggroupID) -> TagGroup | None:
+    def get_tag_group(self, tag_group_id: TagGroupID) -> TagGroup | None:
         for group in self.tag_groups:
             if group.id == tag_group_id:
                 return group
         return None
 
-    def remove_tag_group(self, tag_group_id: TaggroupID) -> None:
+    def remove_tag_group(self, tag_group_id: TagGroupID) -> None:
         group = self.get_tag_group(tag_group_id)
         if group is None:
             return
         self.tag_groups.remove(group)
 
-    def get_tag_group_choices(self) -> Sequence[tuple[TaggroupID, str]]:
+    def get_tag_group_choices(self) -> Sequence[tuple[TagGroupID, str]]:
         return [(tg.id, tg.choice_title) for tg in self.tag_groups]
 
     # TODO: Clean this up and make call sites directly call the wrapped function
@@ -429,7 +429,7 @@ class TagConfig:
 
     def get_tag_or_aux_tag(
         self,
-        taggroupd_id: TaggroupID,
+        taggroupd_id: TagGroupID,
         tag_id: TagID | None,
     ) -> GroupedTag | AuxTag | None:
         for tag_group in (t_grp for t_grp in self.tag_groups if t_grp.id == taggroupd_id):
@@ -469,7 +469,7 @@ class TagConfig:
 
     def _validate_ids(self) -> None:
         """Make sure that no tag key is used twice as aux_tag ID or tag group id"""
-        seen_ids: set[TaggroupID] = set()
+        seen_ids: set[TagGroupID] = set()
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
                 raise MKGeneralException(_('The tag group ID "%s" is used twice.') % tag_group.id)
@@ -562,7 +562,7 @@ class BuiltinTagConfig(TagConfig):
             ),
         )
 
-    def _builtin_tag_groups(self) -> list[TaggroupSpec]:
+    def _builtin_tag_groups(self) -> list[TagGroupSpec]:
         return [
             {
                 "id": "agent",
@@ -784,7 +784,7 @@ class ComputedDataSources(NamedTuple):
         ]
 
 
-def compute_datasources(tag_groups: Mapping[TaggroupID, TagID]) -> ComputedDataSources:
+def compute_datasources(tag_groups: Mapping[TagGroupID, TagID]) -> ComputedDataSources:
     return ComputedDataSources(
         is_tcp=tag_groups.get("tcp") == "tcp",
         is_snmp=tag_groups.get("snmp_ds") in ["snmp", "snmp-v1", "snmp-v2"],

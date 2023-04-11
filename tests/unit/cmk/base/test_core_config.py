@@ -22,7 +22,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import Labels
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.rulesets.ruleset_matcher import LabelSources
-from cmk.utils.tags import TaggroupID, TagID
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 from cmk.checkers.check_table import ConfiguredService
@@ -281,7 +281,7 @@ def test_get_cmk_passive_service_attributes(
     ],
 )
 def test_get_tag_attributes(
-    tag_groups: Mapping[TaggroupID, TagID] | Labels | LabelSources, result: ObjectAttributes
+    tag_groups: Mapping[TagGroupID, TagID] | Labels | LabelSources, result: ObjectAttributes
 ) -> None:
     attributes = ConfigCache._get_tag_attributes(tag_groups, "TAG")
     assert attributes == result

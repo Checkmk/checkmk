@@ -9,7 +9,7 @@ import pytest
 
 import cmk.utils.tags as tags
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.tags import AuxTag, GroupedTag, TagConfig, TagGroup, TaggroupID, TagID
+from cmk.utils.tags import AuxTag, GroupedTag, TagConfig, TagGroup, TagGroupID, TagID
 
 
 @pytest.fixture(name="test_cfg")
@@ -517,7 +517,7 @@ def test_aux_tag_list_remove(test_cfg: TagConfig) -> None:
     ],
 )
 def test_compute_datasources(
-    tag_groups: Mapping[TaggroupID, TagID], expected_computed_datasources: tags.ComputedDataSources
+    tag_groups: Mapping[TagGroupID, TagID], expected_computed_datasources: tags.ComputedDataSources
 ) -> None:
     assert tags.compute_datasources(tag_groups) == expected_computed_datasources
 

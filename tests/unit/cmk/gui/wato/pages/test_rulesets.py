@@ -12,7 +12,7 @@ from pytest_mock import MockerFixture
 
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
-from cmk.utils.tags import TagConfig, TaggroupID, TagID
+from cmk.utils.tags import TagConfig, TagGroupID, TagID
 from cmk.utils.type_defs import HostOrServiceConditions
 
 from cmk.gui.utils.html import HTML
@@ -150,7 +150,7 @@ class TestRuleConditionRenderer:
     )
     def test_single_tag_condition(
         self,
-        taggroup_id: TaggroupID,
+        taggroup_id: TagGroupID,
         tag_spec: TagID | None | TagConditionNE,
         rendered_condition: HTML,
     ) -> None:

@@ -210,7 +210,7 @@ class BIStructureFetcher:
     def add_site_data(self, site_id: SiteId, hosts: Mapping[HostName, tuple]) -> None:
         # BIHostData
         # ("site_id", str),
-        # ("tags", set[tuple[TaggroupID, TagID]]),
+        # ("tags", set[tuple[TagGroupID, TagID]]),
         # ("labels", set),
         # ("folder", str),
         # ("services", dict[str, BIServiceData]),

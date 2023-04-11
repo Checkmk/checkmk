@@ -25,7 +25,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionNOR,
     TagConditionOR,
 )
-from cmk.utils.tags import GroupedTag, TaggroupID, TagID
+from cmk.utils.tags import GroupedTag, TagGroupID, TagID
 from cmk.utils.type_defs import (
     HostName,
     HostOrServiceConditions,
@@ -2439,7 +2439,7 @@ class RuleConditionRenderer:
         yield from self._service_label_conditions(conditions)
 
     def _tag_conditions(
-        self, host_tag_conditions: Mapping[TaggroupID, TagCondition]
+        self, host_tag_conditions: Mapping[TagGroupID, TagCondition]
     ) -> Iterable[HTML]:
         for taggroup_id, tag_spec in host_tag_conditions.items():
             if isinstance(tag_spec, dict) and "$or" in tag_spec:
@@ -2479,7 +2479,7 @@ class RuleConditionRenderer:
 
     def _single_tag_condition(
         self,
-        taggroup_id: TaggroupID,
+        taggroup_id: TagGroupID,
         tag_spec: TagID | None | TagConditionNE,
     ) -> HTML:
         negate = False

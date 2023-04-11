@@ -1,0 +1,13 @@
+Title: Use system mod_auth_mellon under RHEL 9
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1683721085
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+If you're using SAML authentication with mod_auth_mellon under RHEL9, you might be affected by this werk.
+We're now not shipping mod_auth_mellon/lasso anymore with checkmk but require this during the installation of the checkmk package.
+

@@ -21,9 +21,12 @@
 
 class NebService : public IService {
 public:
-    explicit NebService(const ::service &svc) : service_{svc} {}
+    explicit NebService(const ::service &svc)
+        : service_{svc}, host_{NebHost{*svc.host_ptr}} {}
 
     [[nodiscard]] const void *handle() const override { return &service_; }
+
+    [[nodiscard]] const IHost &host() const override { return host_; }
 
     // Older Nagios headers are not const-correct... :-P
     [[nodiscard]] bool hasContact(const IContact &contact) const override {
@@ -32,10 +35,6 @@ public:
             static_cast<const ::contact *>(contact.handle()));
         return is_contact_for_service(s, c) != 0 ||
                is_escalated_contact_for_service(s, c) != 0;
-    }
-
-    [[nodiscard]] bool hasHostContact(const IContact &contact) const override {
-        return NebHost{*service_.host_ptr}.hasContact(contact);
     }
 
     [[nodiscard]] std::string notificationPeriodName() const override {
@@ -102,6 +101,7 @@ public:
 
 private:
     const ::service &service_;
+    const NebHost host_;
 };
 
 #endif  // NebService_h

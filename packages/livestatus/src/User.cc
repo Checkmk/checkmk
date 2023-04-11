@@ -35,7 +35,7 @@ bool AuthUser::is_authorized_for_host(const IHost &hst) const {
 bool AuthUser::is_authorized_for_service(const IService &svc) const {
     return svc.hasContact(*auth_user_) ||
            (service_auth_ == ServiceAuthorization::loose &&
-            svc.hasHostContact(*auth_user_));
+            svc.host().hasContact(*auth_user_));
 }
 
 bool AuthUser::is_authorized_for_host_group(const IHostGroup &hg) const {

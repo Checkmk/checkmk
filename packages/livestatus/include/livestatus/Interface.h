@@ -204,8 +204,8 @@ public:
 class IService {
 public:
     virtual ~IService() = default;
+    [[nodiscard]] virtual const IHost &host() const = 0;
     [[nodiscard]] virtual bool hasContact(const IContact &) const = 0;
-    [[nodiscard]] virtual bool hasHostContact(const IContact &) const = 0;
     [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string notificationPeriodName() const = 0;
     [[nodiscard]] virtual std::string servicePeriodName() const = 0;

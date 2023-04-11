@@ -782,5 +782,5 @@ void TableServices::answerQuery(Query &query, const User &user) {
 Row TableServices::get(const std::string &primary_key) const {
     // "host_name;description" is the primary key
     const auto &[host_name, description] = mk::splitCompositeKey2(primary_key);
-    return Row(core()->find_service(host_name, description)->handle());
+    return Row{core()->find_service(host_name, description)->handle()};
 }

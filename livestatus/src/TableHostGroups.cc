@@ -184,5 +184,5 @@ void TableHostGroups::answerQuery(Query &query, const User &user) {
 
 Row TableHostGroups::get(const std::string &primary_key) const {
     // "name" is the primary key
-    return Row(find_hostgroup(const_cast<char *>(primary_key.c_str())));
+    return Row{find_hostgroup(const_cast<char *>(primary_key.c_str()))};
 }

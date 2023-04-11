@@ -169,5 +169,5 @@ void TableServiceGroups::answerQuery(Query &query, const User &user) {
 
 Row TableServiceGroups::get(const std::string &primary_key) const {
     // "name" is the primary key
-    return Row(find_servicegroup(const_cast<char *>(primary_key.c_str())));
+    return Row{find_servicegroup(const_cast<char *>(primary_key.c_str()))};
 }

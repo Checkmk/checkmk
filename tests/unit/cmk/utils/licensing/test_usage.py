@@ -17,8 +17,8 @@ from cmk.utils.licensing import usage as licensing_usage
 from cmk.utils.licensing.export import LicenseUsageExtensions, LicenseUsageSample
 from cmk.utils.licensing.helper import init_logging
 from cmk.utils.licensing.usage import (
-    _get_cloud_counter,
     _load_extensions,
+    _parse_cloud_hosts_or_services,
     _serialize_dump,
     CLOUD_SERVICE_PREFIXES,
     get_license_usage_report_filepath,
@@ -148,20 +148,14 @@ def test_try_update_license_usage_next_run_ts_not_reached(
         pytest.param([["host", "gcp_run_cpu"], ["host", "not_cloud_check"]], 1, 2, id="mixed"),
     ],
 )
-def test_get_cloud_counter(
-    monkeypatch: MonkeyPatch,
+def test__parse_cloud_hosts_or_services(
     livestatus_response: Sequence[Sequence[Any]],
     expected_hosts: int,
     excepted_services: int,
 ) -> None:
-    def _mock_service_livestatus() -> Sequence[Sequence[Any]]:
-        return livestatus_response
-
-    monkeypatch.setattr(licensing_usage, "_get_services_from_livestatus", _mock_service_livestatus)
-
-    counter = _get_cloud_counter()
-    assert counter.hosts == expected_hosts
-    assert counter.services == excepted_services
+    hosts_or_services_cloud_counter = _parse_cloud_hosts_or_services(livestatus_response)
+    assert hosts_or_services_cloud_counter.hosts == expected_hosts
+    assert hosts_or_services_cloud_counter.services == excepted_services
 
 
 def test_serialize_license_usage_report() -> None:

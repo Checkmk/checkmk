@@ -7,7 +7,6 @@
 image ID, defined in correspondingly named folders containing Dockerfiles.
 So the mapping is SCM tracked and thus branch specific and reproducible."""
 
-import re
 import sys
 from pathlib import Path
 from subprocess import run
@@ -18,19 +17,18 @@ import yaml
 def image_id(alias_name):
     """Basically returns the generated image id reported by `docker build` on a given
     image alias folder. Matches against output with or without Docker build kit"""
-    with open(Path(__file__).parent / alias_name / "Dockerfile") as dockerfile:
-        for line in dockerfile:
-            if "FROM" in line:
-                return line.strip().split()[-1]
+    try:
+        with open(Path(__file__).parent / alias_name / "Dockerfile") as dockerfile:
+            for line in dockerfile:
+                if "FROM" in line:
+                    return line.strip().split()[-1]
+    except FileNotFoundError:
+        pass
 
     print(
-        f"Docker image alias '{alias_name}' could not be resolved. `docker build` returned:",
+        f"Docker image alias '{alias_name}' could not be resolved:",
         file=sys.stderr,
     )
-    print(f"  command: `{' '.join(docker_build_result.args)}`", file=sys.stderr)
-    print(f"  returned: {docker_build_result.returncode}", file=sys.stderr)
-    print(f"  stderr: {docker_build_result.stderr}", file=sys.stderr)
-    print(f"  stdout: {docker_build_result.stdout}", file=sys.stderr)
     print(
         "Make sure the image alias exists, you're correctly logged into the registry"
         " and the image exists on the registry.",

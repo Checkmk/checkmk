@@ -140,8 +140,8 @@ MONITORING_PLUGINS = (
     ),
     MonitoringPlugin(
         "check_traceroute",
-        cmd_line_option="",
-        expected="UNKNOWN - : Name or service not known",
+        cmd_line_option="-h",
+        expected="check_traceroute",
     ),
     MonitoringPlugin(
         "check_uniserv",

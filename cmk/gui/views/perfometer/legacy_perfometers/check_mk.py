@@ -88,23 +88,6 @@ def register() -> None:
     perfometers["check_mk-hitachi_hnas_cifs"] = perfometer_users
     perfometers["check_mk-cmctc_lcp.blower"] = perfometer_blower
     perfometers["check_mk-cmctc_lcp.regulator"] = perfometer_lcp_regulator
-    perfometers["check_mk-if"] = perfometer_check_mk_if
-    perfometers["check_mk-if64"] = perfometer_check_mk_if
-    perfometers["check_mk-if64_tplink"] = perfometer_check_mk_if
-    perfometers["check_mk-winperf_if"] = perfometer_check_mk_if
-    perfometers["check_mk-vms_if"] = perfometer_check_mk_if
-    perfometers["check_mk-if_lancom"] = perfometer_check_mk_if
-    perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
-    perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
-    perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
-    perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
-    perfometers["check_mk-hitachi_hnas_fc_if"] = perfometer_check_mk_if
-    perfometers["check_mk-statgrab_net"] = perfometer_check_mk_if
-    perfometers["check_mk-netapp_api_if"] = perfometer_check_mk_if
-    perfometers["check_mk-if_brocade"] = perfometer_check_mk_if
-    perfometers["check_mk-ucs_bladecenter_if"] = perfometer_check_mk_if
-    perfometers["check_mk-aix_if"] = perfometer_check_mk_if
-    perfometers["check_mk-if_fortigate"] = perfometer_check_mk_if
     perfometers["check_mk-fc_port"] = perfometer_check_mk_fc_port
     perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
     perfometers["check_mk-qlogic_fcport"] = perfometer_check_mk_brocade_fcport
@@ -484,19 +467,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_check_mk_if(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    unit = "Bit" if "Bit/s" in row["service_plugin_output"] else "B"
-    return perfometer_bandwidth(
-        in_traffic=utils.savefloat(perf_data[0][1]),
-        out_traffic=utils.savefloat(perf_data[5][1]),
-        in_bw=utils.savefloat(perf_data[0][6]),
-        out_bw=utils.savefloat(perf_data[5][6]),
-        unit=unit,
-    )
 
 
 def perfometer_check_mk_fc_port(

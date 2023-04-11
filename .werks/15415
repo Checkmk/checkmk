@@ -1,0 +1,25 @@
+Title: Interface checks: Fix errors in perfometer rendering
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681199832
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This issue only affected network interface services. After discovering new services or after an
+update, the user interface initially displayed `Exception: list index out of range` in the place
+where the perfometer is supposed to be displayed. The log file <i>var/log/web.log</i> also recorded
+these errors:
+
+C+:
+2023-04-11 10:00:28,884 [40] [cmk.web 78582] error rendering performeter
+Traceback (most recent call last):
+  ...
+IndexError: list index out of range
+C-:
+
+These errors quickly disappeared after a couple of check cycles. As of this werk, these error
+messages are not displayed anymore. Instead, the perfometer is rendered as soon as all necessary
+metrics are found.

@@ -1195,25 +1195,58 @@ def IPv4Network(  # pylint: disable=redefined-builtin
     return IPNetwork(ip_class=ipaddress.IPv4Network, size=18, title=title, help=help)
 
 
+def IPAddress(  # pylint: disable=redefined-builtin
+    ip_class: type[ipaddress.IPv4Address] | type[ipaddress.IPv6Address] | None = None,
+    size: int | Literal["max"] = 34,
+    title: str | None = None,
+    help: ValueSpecHelp | None = None,
+    default_value: ValueSpecDefault[str] = DEF_VALUE,
+    allow_empty: bool = True,
+) -> TextInput:
+    """The IP address allowing for both IPv4 and IPv6."""
+
+    def _try(
+        cls: type[ipaddress.IPv4Address] | type[ipaddress.IPv6Address], value: str
+    ) -> Exception | None:
+        try:
+            cls(value)
+            return None
+        except ValueError as exc:
+            return exc
+
+    def _validate_value(value: str, varprefix: str) -> None:
+        if ip_class is None:
+            if (e4 := _try(ipaddress.IPv4Address, value)) is not None and (
+                e6 := _try(ipaddress.IPv6Address, value)
+            ) is not None:
+                raise MKUserError(
+                    varprefix,
+                    _("Invalid host or IP address. IPv4: %s, IPv6: %s") % (e4, e6),
+                )
+        elif issubclass(ip_class, ipaddress.IPv4Address):
+            if (e4 := _try(ipaddress.IPv4Address, value)) is not None:
+                raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % e4)
+        else:
+            if (e6 := _try(ipaddress.IPv6Address, value)) is not None:
+                raise MKUserError(varprefix, _("Invalid IPv6 address: %s") % e6)
+
+    return TextInput(
+        validate=_validate_value,
+        size=size,
+        title=title,
+        help=help,
+        default_value=default_value,
+        allow_empty=allow_empty,
+    )
+
+
 def IPv4Address(  # pylint: disable=redefined-builtin
-    # From ValueSpec
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
 ) -> TextInput:
-    def _validate_value(value: str, varprefix: str):  # type: ignore[no-untyped-def]
-        try:
-            ipaddress.IPv4Address(value)
-        except ValueError as exc:
-            raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % exc)
-
-    return TextInput(
-        validate=_validate_value,
-        size=16,
-        title=title,
-        help=help,
-        default_value=default_value,
-        allow_empty=False,
+    return IPAddress(
+        ip_class=ipaddress.IPv4Address, size=16, title=title, help=help, default_value=default_value
     )
 
 

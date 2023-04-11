@@ -137,8 +137,8 @@ from cmk.gui.valuespec import (
     Foldable,
     ID,
     Integer,
-    IPv4Address,
-    IPv4Network,
+    IPAddress,
+    IPNetwork,
     ListChoice,
     ListOf,
     ListOfStrings,
@@ -1086,12 +1086,13 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
         ),
         (
             "match_ipaddress",
-            IPv4Network(
-                title=_("Match original source IP address"),
+            IPNetwork(
+                ip_class=None,
+                title=_("Match original source IP address or network"),
                 help=_(
                     "The rules does only apply when the event is being received from a "
                     "certain IP address. You can specify either a single IP address "
-                    "or an IPv4 network in the notation X.X.X.X/Bits."
+                    "or an IPv4/IPv6 network in the notation X.X.X.X/Bits or X:X:.../Bits for IPv6"
                 ),
             ),
         ),
@@ -1582,8 +1583,9 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
                 ),
                 (
                     "ipaddress",
-                    IPv4Address(
-                        title=_("Event source IP address"),
+                    IPAddress(
+                        ip_class=None,
+                        title=_("Event source IPv4/IPv6 address"),
                         help=_("Original IP address the event was received from"),
                         default_value="1.2.3.4",
                     ),
@@ -3690,13 +3692,16 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
                         valuespec=ListOfStrings(
                             help=_(
                                 "The access to the event status via TCP will only be allowed from "
-                                "this source IP addresses"
+                                "this source IP addresses or an IPv4/IPv6 network "
+                                "in the notation X.X.X.X/Bits or X:X:.../Bits for IPv6"
                             ),
-                            valuespec=IPv4Address(),
+                            valuespec=IPNetwork(ip_class=None, size="max"),
                             orientation="horizontal",
                             allow_empty=False,
                         ),
-                        label=_("Restrict access to the following source IP addresses"),
+                        label=_(
+                            "Restrict access to the following source IPv4/IPv6 addresses/networks"
+                        ),
                         none_label=_("access unrestricted"),
                     ),
                 ],

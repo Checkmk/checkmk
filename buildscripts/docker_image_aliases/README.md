@@ -32,9 +32,9 @@ A directory named after the image alias containing a `Dockerfile` and `meta.yml`
 `git add` and `commit` them in order to make your image alias official.
 
 You can now output the unique ID of a locally stored image by running 
-`buildscripts/docker_image_aliases/resolve.sh` providing the alias name:
+`buildscripts/docker_image_aliases/resolve.py` providing the alias name:
 
-        $ buildscripts/docker_image_aliases/resolve.sh IMAGE_CMK_BASE
+        $ buildscripts/docker_image_aliases/resolve.py IMAGE_CMK_BASE
         df0140a4030c
 
 ### Update aliases

@@ -16,7 +16,7 @@ REPO_DIR="$(git rev-parse --show-toplevel)"
 GIT_COMMON_DIR="$(realpath $(git rev-parse --git-common-dir))"
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
-: "${IMAGE_ID:="$(${REPO_DIR}/buildscripts/docker_image_aliases/resolve.sh ${IMAGE_ALIAS})"}"
+: "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
 
 echo "Running in Docker container from image ${IMAGE_ID} (workdir=${PWD})"
 

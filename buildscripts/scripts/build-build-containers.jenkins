@@ -53,51 +53,48 @@ timeout(time: 12, unit: 'HOURS') {
             sh('apt-get update')
             sh('DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce')
 
-            // TODO: the legacy buildkit will be removed in a future docker relase, migrate asap: CMK-12276
-            withEnv(["DOCKER_BUILDKIT=0"]) {
-                try {
-                    DISTRO_LIST.each { DISTRO ->
-                        DOCKER_BUILDS[DISTRO] = {
-                            def IMAGE
-                            stage('build ' + DISTRO) {
-                                dir('buildscripts/infrastructure/build-nodes') {
-                                    def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
-                                    withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                                        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                                            def DOCKERFILE = "$DISTRO/Dockerfile";
-                                            def IMAGE_ALIAS_NAME = sh(script: "grep 'ARG IMAGE_' ${DOCKERFILE} | awk '{print \$2}'", returnStdout: true).replaceAll("[\r\n]+", "");
-                                            def RESOLVED_IMAGE_ID = sh(script: "../../docker_image_aliases/resolve.sh ${IMAGE_ALIAS_NAME}", returnStdout: true).replaceAll("[\r\n]+", "");
-                                            println("Using IMAGE_ALIAS_NAME: ${IMAGE_ALIAS_NAME}=${RESOLVED_IMAGE_ID}");
-                                            def DOCKER_ARGS = (
-                                                " --build-arg $IMAGE_ALIAS_NAME=$RESOLVED_IMAGE_ID" +
-                                                    " --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP'" +
-                                                    " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +
-                                                    " --build-arg DISTRO='$DISTRO'" +
-                                                    " --build-arg NEXUS_USERNAME='$USERNAME'" +
-                                                    " --build-arg NEXUS_PASSWORD='$PASSWORD'" +
-                                                    " --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE'" +
-                                                    " --build-arg VERS_TAG='$VERS_TAG'" +
-                                                    " --build-arg BRANCH_VERSION='$BRANCH_VERSION'" +
-                                                    " -f $DOCKERFILE .");
-                                            println("Using DOCKER_ARGS: ${DOCKER_ARGS}");
-                                            IMAGE = docker.build(DISTRO + ':' + VERS_TAG, DOCKER_ARGS);
-                                        }
+            try {
+                DISTRO_LIST.each { DISTRO ->
+                    DOCKER_BUILDS[DISTRO] = {
+                        def IMAGE
+                        stage('build ' + DISTRO) {
+                            dir('buildscripts/infrastructure/build-nodes') {
+                                def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
+                                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                                    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                                        def DOCKERFILE = "$DISTRO/Dockerfile";
+                                        def IMAGE_ALIAS_NAME = sh(script: "grep 'ARG IMAGE_' ${DOCKERFILE} | awk '{print \$2}'", returnStdout: true).replaceAll("[\r\n]+", "");
+                                        def RESOLVED_IMAGE_ID = sh(script: "../../docker_image_aliases/resolve.py ${IMAGE_ALIAS_NAME}", returnStdout: true).replaceAll("[\r\n]+", "");
+                                        println("Using IMAGE_ALIAS_NAME: ${IMAGE_ALIAS_NAME}=${RESOLVED_IMAGE_ID}");
+                                        def DOCKER_ARGS = (
+                                            " --build-arg $IMAGE_ALIAS_NAME=$RESOLVED_IMAGE_ID" +
+                                                " --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP'" +
+                                                " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +
+                                                " --build-arg DISTRO='$DISTRO'" +
+                                                " --build-arg NEXUS_USERNAME='$USERNAME'" +
+                                                " --build-arg NEXUS_PASSWORD='$PASSWORD'" +
+                                                " --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE'" +
+                                                " --build-arg VERS_TAG='$VERS_TAG'" +
+                                                " --build-arg BRANCH_VERSION='$BRANCH_VERSION'" +
+                                                " -f $DOCKERFILE .");
+                                        println("Using DOCKER_ARGS: ${DOCKER_ARGS}");
+                                        IMAGE = docker.build(DISTRO + ':' + VERS_TAG, DOCKER_ARGS);
                                     }
                                 }
                             }
+                        }
 
-                            stage('upload ' + DISTRO) {
-                                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                                    IMAGE.push()
-                                    IMAGE.push(BRANCH + '-latest')
-                                }
+                        stage('upload ' + DISTRO) {
+                            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                                IMAGE.push()
+                                IMAGE.push(BRANCH + '-latest')
                             }
                         }
                     }
-                    parallel DOCKER_BUILDS
-                } catch(Exception e) {
-                    notify.notify_error(e)
                 }
+                parallel DOCKER_BUILDS
+            } catch(Exception e) {
+                notify.notify_error(e)
             }
         }
     }

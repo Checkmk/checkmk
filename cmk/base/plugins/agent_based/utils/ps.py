@@ -7,6 +7,7 @@ import contextlib
 import re
 import time
 from dataclasses import dataclass
+from html import escape
 from typing import (
     Any,
     Dict,
@@ -236,14 +237,17 @@ def process_matches(command_line: Sequence[str], process_pattern, match_groups=N
 # value is again a 2-field tuple, first is the value, second is the unit.
 # This function is actually fairly generic so it could be used for other
 # data structured the same way
-def format_process_list(processes: "ProcessAggregator", html_output):
+def format_process_list(processes: Iterable[_Process], html_output: bool) -> str:
     def format_value(pvalue: _ProcessValue) -> str:
         value, unit = pvalue
         if unit == "kB":
             return render.bytes(float(value) * 1024)
         if isinstance(value, float):
             return "%.1f%s" % (value, unit)
-        return "%s%s" % (value, unit)
+        unescaped = "%s%s" % (value, unit)
+        # Handling of backslash-n vs newline is fundamentally broken when talking to the core.
+        # If we're creating HTML anyway, we can circumnavigate that...
+        return escape(unescaped).replace("\\", "&bsol;") if html_output else unescaped
 
     # keys to output and default values:
     headers: Mapping[str, _ProcessValue] = {

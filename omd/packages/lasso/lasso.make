@@ -2,7 +2,7 @@ LASSO := lasso
 LASSO_VERS := 2.7.0
 LASSO_DIR := $(LASSO)-$(LASSO_VERS)
 # Increase this to enforce a recreation of the build cache
-LASSO_BUILD_ID := 1
+LASSO_BUILD_ID := 2
 
 LASSO_BUILD := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-build
 LASSO_UNPACK := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-unpack
@@ -19,7 +19,7 @@ $(LASSO): $(LASSO_BUILD) $(LASSO_INTERMEDIATE_INSTALL)
 $(LASSO)-unpack: $(LASSO_UNPACK)
 $(LASSO)-int: $(LASSO_INTERMEDIATE_INSTALL)
 
-ifeq ($(filter sles%,$(DISTRO_CODE)),)
+ifeq ($(filter sles% el9,$(DISTRO_CODE)),)
 $(LASSO_BUILD): $(LASSO_UNPACK) $(PYTHON_CACHE_PKG_PROCESS) $(PYTHON3_MODULES_CACHE_PKG_PROCESS)
 	cd $(LASSO_BUILD_DIR) \
 	&& export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) \
@@ -47,7 +47,7 @@ LASSO_CACHE_PKG_PATH := $(call cache_pkg_path,$(LASSO_DIR),$(LASSO_BUILD_ID))
 $(LASSO_CACHE_PKG_PATH):
 	$(call pack_pkg_archive,$@,$(LASSO_DIR),$(LASSO_BUILD_ID),$(LASSO_INTERMEDIATE_INSTALL))
 
-ifeq ($(filter sles%,$(DISTRO_CODE)),)
+ifeq ($(filter sles% el9,$(DISTRO_CODE)),)
 $(LASSO_CACHE_PKG_PROCESS): $(LASSO_CACHE_PKG_PATH)
 	$(call unpack_pkg_archive,$(LASSO_CACHE_PKG_PATH),$(LASSO_DIR))
 	$(call upload_pkg_archive,$(LASSO_CACHE_PKG_PATH),$(LASSO_DIR),$(LASSO_BUILD_ID))
@@ -59,7 +59,7 @@ $(LASSO_CACHE_PKG_PROCESS):
 endif
 
 $(LASSO_INTERMEDIATE_INSTALL): $(LASSO_BUILD)
-ifeq ($(filter sles%,$(DISTRO_CODE)),)
+ifeq ($(filter sles% el9,$(DISTRO_CODE)),)
 	$(MKDIR) $(LASSO_INSTALL_DIR)
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) \
 	&& export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) \
@@ -69,7 +69,7 @@ endif
 	$(TOUCH) $@
 
 $(LASSO_INSTALL): $(LASSO_CACHE_PKG_PROCESS)
-ifeq ($(filter sles%,$(DISTRO_CODE)),)
+ifeq ($(filter sles% el9,$(DISTRO_CODE)),)
 	$(RSYNC) $(LASSO_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@
 endif

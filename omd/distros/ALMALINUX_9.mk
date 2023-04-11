@@ -39,6 +39,7 @@ OS_PACKAGES      += rpm-build # Needed by Checkmk Agent Bakery
 #OS_PACKAGES      += pyOpenSSL # needed for Agent Bakery (deployment)
 OS_PACKAGES       += libffi # needed for pyOpenSSL and dependant
 OS_PACKAGES      += libpq
+OS_PACKAGES      += mod_auth_mellon # for this distro, we're not shipping it and using the system packages
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = yum -y makecache ; yum -y install

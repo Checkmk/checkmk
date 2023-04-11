@@ -27,7 +27,7 @@ def test_convert_to_timestamp_raises_error(kube_date_time: str) -> None:
     "kube_date_time",
     [
         "1970-01-01T00:00:00Z",
-        datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
+        datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=datetime.UTC),
     ],
 )
 def test_convert_to_timestamp_correct_conversion(

@@ -2,7 +2,8 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, MutableMapping
+from collections.abc import MutableMapping
+from typing import Any
 
 import pytest
 from pydantic_factories import ModelFactory

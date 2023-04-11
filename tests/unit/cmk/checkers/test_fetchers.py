@@ -814,7 +814,7 @@ class _MockSock:
         self._used += len(use)
         return use
 
-    def __enter__(self, *_args) -> "_MockSock":  # type: ignore[no-untyped-def]
+    def __enter__(self, *_args) -> _MockSock:  # type: ignore[no-untyped-def]
         return self
 
     def __exit__(self, *_args) -> None:  # type: ignore[no-untyped-def]

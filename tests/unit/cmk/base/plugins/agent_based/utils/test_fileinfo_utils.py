@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Type
+from typing import Any
 
 import pytest
 from freezegun import freeze_time
@@ -39,7 +39,7 @@ pytestmark = pytest.mark.checks
         ("some string", int),
     ],
 )
-def test__cast_value(value: str | None, cast_type: Type[float] | Type[int]) -> None:
+def test__cast_value(value: str | None, cast_type: type[float] | type[int]) -> None:
     cast_value = _cast_value(value, cast_type)
     assert cast_value is None
 

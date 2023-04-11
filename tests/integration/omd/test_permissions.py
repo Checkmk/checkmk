@@ -96,11 +96,11 @@ def test_version_file_permissions(site: Site) -> None:
     if site.update_from_git:
         pytest.skip("The f12ed files do not have the proper permissions")
 
-    assert not set(
+    assert not {
         p
         for p in iter_dir(Path(site.version.version_path()))
         if has_permission(p, Mode.WORLD_WRITEABLE ^ Mode.GROUP_WRITEABLE)
-    )
+    }
 
 
 def test_version_file_ownership(site: Site) -> None:

@@ -7,7 +7,7 @@ import csv
 import json
 import shutil
 from pathlib import Path, PurePath
-from typing import NamedTuple, Type
+from typing import NamedTuple
 
 import pytest
 import requests
@@ -523,7 +523,7 @@ def test_diagnostics_element_checkmk_overview_content(
     ],
 )
 def test_diagnostics_element_checkmk_files(
-    diag_elem: Type[diagnostics.CheckmkConfigFilesDiagnosticsElement],
+    diag_elem: type[diagnostics.CheckmkConfigFilesDiagnosticsElement],
     ident: str,
     title: str,
     description: str,
@@ -544,8 +544,8 @@ def test_diagnostics_element_checkmk_files(
 )
 def test_diagnostics_element_checkmk_files_error(
     tmp_path: PurePath,
-    diag_elem: Type[diagnostics.CheckmkConfigFilesDiagnosticsElement]
-    | Type[diagnostics.CheckmkLogFilesDiagnosticsElement],
+    diag_elem: type[diagnostics.CheckmkConfigFilesDiagnosticsElement]
+    | type[diagnostics.CheckmkLogFilesDiagnosticsElement],
 ) -> None:
     short_test_conf_filepath = "/no/such/file"
     diagnostics_element = diag_elem([short_test_conf_filepath])

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import threading
+from collections.abc import Iterator
 from multiprocessing.pool import ThreadPool
-from typing import Iterator
 
 import flask
 import pytest

@@ -5,8 +5,8 @@
 from __future__ import annotations
 
 from base64 import b64encode
+from collections.abc import Generator, Iterator
 from http.cookies import SimpleCookie
-from typing import Generator, Iterator
 
 import flask
 import pytest
@@ -185,9 +185,7 @@ def test_authenticate_fails(flask_app: flask.Flask, with_user: UserId) -> None:
 def fixture_pre_16_cookie() -> Iterator[str]:
     environ = dict(
         create_environ(),
-        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
-            "utf-8"
-        ),
+        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(),
     )
 
     with application_and_request_context(environ):
@@ -198,9 +196,7 @@ def fixture_pre_16_cookie() -> Iterator[str]:
 def fixture_pre_20_cookie() -> Iterator[str]:
     environ = dict(
         create_environ(),
-        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
-            "utf-8"
-        ),
+        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(),
     )
 
     with application_and_request_context(environ):

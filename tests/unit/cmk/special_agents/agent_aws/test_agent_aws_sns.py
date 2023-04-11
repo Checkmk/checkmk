@@ -5,8 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Iterable, Mapping, Sequence
-from typing import Callable
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from unittest.mock import MagicMock
 
 import pytest

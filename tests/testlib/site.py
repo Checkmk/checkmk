@@ -16,10 +16,10 @@ import subprocess
 import sys
 import time
 import urllib.parse
-from collections.abc import Callable, Mapping, MutableMapping
+from collections.abc import Callable, Iterator, Mapping, MutableMapping
 from contextlib import contextmanager, suppress
 from pathlib import Path
-from typing import Final, Iterator, Literal
+from typing import Final, Literal
 
 import pytest
 

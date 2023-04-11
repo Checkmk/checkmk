@@ -2,8 +2,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Iterator, Optional
+from typing import Any
 
 import pytest
 from flask import Flask
@@ -19,14 +20,14 @@ def application_context(app: Flask) -> Iterator[None]:
         yield
 
 
-def make_request_context(app: Flask, environ: Optional[dict[str, Any]] = None) -> RequestContext:
+def make_request_context(app: Flask, environ: dict[str, Any] | None = None) -> RequestContext:
     if environ is None:
         environ = create_environ()
     return app.request_context(environ)
 
 
 @contextmanager
-def request_context(app: Flask, environ: Optional[dict[str, Any]] = None) -> Iterator[None]:
+def request_context(app: Flask, environ: dict[str, Any] | None = None) -> Iterator[None]:
     with make_request_context(app, environ):
         from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
@@ -35,14 +36,14 @@ def request_context(app: Flask, environ: Optional[dict[str, Any]] = None) -> Ite
 
 
 @contextmanager
-def application_and_request_context(environ: Optional[dict[str, Any]] = None) -> Iterator[None]:
+def application_and_request_context(environ: dict[str, Any] | None = None) -> Iterator[None]:
     app = session_wsgi_app(testing=True)
     with application_context(app), request_context(app, environ):
         yield
 
 
 @contextmanager
-def gui_context(environ: Optional[dict[str, Any]] = None) -> Iterator[None]:
+def gui_context(environ: dict[str, Any] | None = None) -> Iterator[None]:
     app = session_wsgi_app(testing=True)
     with application_context(app), request_context(app, environ):
         yield

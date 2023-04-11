@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
-from typing import Type
 
 import pytest
 from pytest import MonkeyPatch
@@ -302,7 +301,7 @@ class TestRuleConditionRenderer:
     )
     @pytest.mark.usefixtures("folder_lookup")
     def test_render_host_condition_text_raises(
-        self, conditions: HostOrServiceConditions, exception: Type[Exception]
+        self, conditions: HostOrServiceConditions, exception: type[Exception]
     ) -> None:
         with pytest.raises(exception):
             assert RuleConditionRenderer()._render_host_condition_text(conditions)

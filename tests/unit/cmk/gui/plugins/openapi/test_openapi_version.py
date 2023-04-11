@@ -14,16 +14,14 @@ def test_version(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
         status=200,
     )
 
-    assert set(resp.json_body.keys()) == set(
-        [
-            "demo",
-            "edition",
-            "group",
-            "rest_api",
-            "site",
-            "versions",
-        ]
-    )
+    assert set(resp.json_body.keys()) == {
+        "demo",
+        "edition",
+        "group",
+        "rest_api",
+        "site",
+        "versions",
+    }
 
 
 def test_version_404(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:

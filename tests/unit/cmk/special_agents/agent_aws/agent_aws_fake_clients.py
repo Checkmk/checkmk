@@ -29,7 +29,7 @@ class Entity(abc.ABC):
         self.key = key
 
     @abc.abstractmethod
-    def create(self, idx, amount: int) -> "Entity":  # type: ignore[no-untyped-def]
+    def create(self, idx, amount: int) -> Entity:  # type: ignore[no-untyped-def]
         ...
 
 
@@ -208,7 +208,7 @@ class DictInstanceBuilder(abc.ABC):
 
     @classmethod
     def create_instances(
-        cls: Callable[[int, int], "DictInstanceBuilder"], amount: int
+        cls: Callable[[int, int], DictInstanceBuilder], amount: int
     ) -> Mapping[Entity, Entity]:
         return {
             # static analysis does not recognize that None can not happen because of if clause -> disable warning

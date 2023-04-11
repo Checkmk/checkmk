@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import MutableMapping
+from collections.abc import MutableMapping
 
 import pytest
 

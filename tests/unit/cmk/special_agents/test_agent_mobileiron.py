@@ -5,7 +5,6 @@
 import argparse
 import json
 from pathlib import Path
-from typing import Type
 
 import pytest
 import requests
@@ -134,7 +133,7 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
 )
 @responses.activate
 def test_agent_handles_exceptions(
-    exception: Type[requests.exceptions.HTTPError] | Type[requests.exceptions.SSLError],
+    exception: type[requests.exceptions.HTTPError] | type[requests.exceptions.SSLError],
     capsys: pytest.CaptureFixture,
 ) -> None:
     args = argparse.Namespace(

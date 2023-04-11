@@ -246,7 +246,7 @@ class TestPodStartUp(TestCase):
         """
         api_pod_status = api.PodStatus(
             start_time=convert_to_timestamp(
-                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc)
+                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.UTC)
             ),
             conditions=[
                 api.PodCondition(
@@ -305,7 +305,7 @@ class TestPodStartUp(TestCase):
         """
         api_pod_status = api.PodStatus(
             start_time=convert_to_timestamp(
-                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc)
+                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.UTC)
             ),
             conditions=[
                 api.PodCondition(

@@ -142,7 +142,7 @@ def test_serialize_rsa_key(tmp_path: Path) -> None:
     assert loaded_enc._key.private_numbers() == key._key.private_numbers()  # type: ignore[attr-defined]
 
 
-@pytest.mark.parametrize("data", [b"", b"test", b"\0\0\0", "sign here: 📝".encode("utf-8")])
+@pytest.mark.parametrize("data", [b"", b"test", b"\0\0\0", "sign here: 📝".encode()])
 def test_verify_rsa_key(data: bytes) -> None:
     private_key = RsaPrivateKey.generate(1024)
     signed = private_key.sign_data(data)

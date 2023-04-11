@@ -6,7 +6,7 @@ import json
 import logging
 from json.decoder import JSONDecodeError
 from re import DOTALL, match
-from typing import Any, Optional
+from typing import Any
 
 import schemathesis
 
@@ -18,21 +18,21 @@ logger = logging.getLogger(__name__)
 def fix_response(  # pylint: disable=too-many-branches
     case: schemathesis.Case,
     response: schemathesis.GenericResponse,
-    method: Optional[str] = None,
-    path: Optional[str] = None,
-    body: Optional[dict[str, Any]] = None,
-    status_code: Optional[int] = None,
-    object_type: Optional[str] = None,
-    stack_trace: Optional[str] = None,
-    valid_body: Optional[bool] = None,
-    empty_content_type: Optional[bool] = None,
-    valid_content_type: Optional[bool] = None,
-    set_status_code: Optional[int] = None,
-    update_headers: Optional[dict[str, Any]] = None,
-    set_body: Optional[dict[str, Any]] = None,
-    update_body: Optional[dict[str, Any]] = None,
-    update_items: Optional[dict[str, Any]] = None,
-    ticket_id: Optional[str] = None,
+    method: str | None = None,
+    path: str | None = None,
+    body: dict[str, Any] | None = None,
+    status_code: int | None = None,
+    object_type: str | None = None,
+    stack_trace: str | None = None,
+    valid_body: bool | None = None,
+    empty_content_type: bool | None = None,
+    valid_content_type: bool | None = None,
+    set_status_code: int | None = None,
+    update_headers: dict[str, Any] | None = None,
+    set_body: dict[str, Any] | None = None,
+    update_body: dict[str, Any] | None = None,
+    update_items: dict[str, Any] | None = None,
+    ticket_id: str | None = None,
 ) -> None:
     """Fix a broken response to suppress a known issue."""
     schema = case.operation.schema

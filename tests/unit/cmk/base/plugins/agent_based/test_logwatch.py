@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pathlib
-from typing import Set
 
 import pytest
 from pytest_mock import MockerFixture
@@ -56,7 +55,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
 def test_logwatch_groups_of_logfile(
     group_patterns: list[tuple[str, logwatch.GroupingPattern]],
     filename: str,
-    expected: dict[str, Set[logwatch.GroupingPattern]],
+    expected: dict[str, set[logwatch.GroupingPattern]],
 ) -> None:
     actual = logwatch._groups_of_logfile(group_patterns, filename)
     assert actual == expected

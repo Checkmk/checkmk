@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Type
 
 import pytest
 from pytest_mock import MockerFixture
@@ -27,10 +26,10 @@ def test_update_global_config_transform_values(
     )
 
     class ConfigVariableKey(ConfigVariable):
-        def group(self) -> Type[ConfigVariableGroupUserInterface]:
+        def group(self) -> type[ConfigVariableGroupUserInterface]:
             return ConfigVariableGroupUserInterface
 
-        def domain(self) -> Type[ConfigDomainGUI]:
+        def domain(self) -> type[ConfigDomainGUI]:
             return ConfigDomainGUI
 
         def ident(self) -> str:

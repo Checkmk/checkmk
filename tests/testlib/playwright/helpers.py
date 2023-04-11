@@ -8,7 +8,8 @@
 import re
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Literal, Optional, Pattern
+from re import Pattern
+from typing import Literal
 from urllib.parse import urljoin, urlsplit
 
 from playwright._impl import _api_types
@@ -338,7 +339,7 @@ class PPage(LocatorHelper):
         self,
         locator: Locator,
         navigate: bool = False,
-        expected_locator: Optional[Locator] = None,
+        expected_locator: Locator | None = None,
         reload_on_error: bool = False,
         max_tries: int = 10,
     ) -> None:

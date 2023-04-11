@@ -7,9 +7,8 @@ import copy
 import logging
 import os
 import shutil
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterable, Iterator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 from fakeredis import FakeRedis

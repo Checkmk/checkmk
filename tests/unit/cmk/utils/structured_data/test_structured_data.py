@@ -439,9 +439,9 @@ def test_table_compare_with(
     [
         ({}, {}, set()),
         ({"id": "id", "val": "val"}, {"id": "id", "val": "val"}, set()),
-        ({"id": "id", "val": "val"}, {"id": "id"}, set(["id", "val"])),
-        ({"id": "id"}, {"id": "id", "val": "val"}, set(["id", "val"])),
-        ({"id": "id1", "val": "val"}, {"id": "id2", "val": "val"}, set(["id", "val"])),
+        ({"id": "id", "val": "val"}, {"id": "id"}, {"id", "val"}),
+        ({"id": "id"}, {"id": "id", "val": "val"}, {"id", "val"}),
+        ({"id": "id1", "val": "val"}, {"id": "id2", "val": "val"}, {"id", "val"}),
     ],
 )
 def test_table_row_keys_compare_with(
@@ -455,7 +455,7 @@ def test_table_row_keys_compare_with(
     new_table.add_rows([new_row])
 
     delta_table = new_table.compare_with(old_table)
-    assert set(k for r in delta_table.rows for k in r) == expected_keys
+    assert {k for r in delta_table.rows for k in r} == expected_keys
 
 
 def test_filtering_node_no_paths() -> None:

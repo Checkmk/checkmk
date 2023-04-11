@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
 import json
-from typing import Tuple
 
 import pytest
 
@@ -1025,7 +1024,7 @@ def test_openapi_downtime_invalid_single(
 @pytest.mark.usefixtures("with_host")
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_user_in_service_but_not_in_host_contact_group_regression(
-    api_client: RestApiClient, mock_livestatus: MockLiveStatusConnection, with_user: Tuple[str, str]
+    api_client: RestApiClient, mock_livestatus: MockLiveStatusConnection, with_user: tuple[str, str]
 ) -> None:
     """Tests whether a user can put a service into downtime, even if she has no access to the host
     the service is run on.
@@ -1106,11 +1105,11 @@ def test_user_in_service_but_not_in_host_contact_group_regression(
 
 def test_with_defaulted_timezone() -> None:
     def _get_local_timezone():
-        return datetime.timezone.utc
+        return datetime.UTC
 
     assert _with_defaulted_timezone(
         datetime.datetime(year=1666, month=9, day=2), _get_local_timezone
-    ) == datetime.datetime(1666, 9, 2, 0, 0, tzinfo=datetime.timezone.utc)
+    ) == datetime.datetime(1666, 9, 2, 0, 0, tzinfo=datetime.UTC)
     assert _with_defaulted_timezone(
         datetime.datetime(year=1, month=1, day=1, tzinfo=datetime.timezone.min), _get_local_timezone
     ) == datetime.datetime(1, 1, 1, 0, 0, tzinfo=datetime.timezone.min)

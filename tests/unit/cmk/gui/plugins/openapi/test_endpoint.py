@@ -9,8 +9,8 @@ smth (needed for endpoint registration in test_openapi_endpoint_decorator_resets
 import json
 from collections.abc import Mapping
 from typing import Any
+from unittest import mock
 
-import mock
 import pytest
 
 from tests.testlib.rest_api_client import AuxTagTestClient

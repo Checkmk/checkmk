@@ -62,7 +62,7 @@ class TestAPINode:
         assert metadata.annotations == {}
 
     def test_parse_metadata_datetime(self) -> None:
-        now = datetime.datetime(2021, 10, 11, 13, 53, 10, tzinfo=datetime.timezone.utc)
+        now = datetime.datetime(2021, 10, 11, 13, 53, 10, tzinfo=datetime.UTC)
         node_raw_metadata = {
             "name": "unittest",
             "creationTimestamp": now,

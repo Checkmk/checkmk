@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Tuple
+from collections.abc import Mapping
 
 import pytest
 
@@ -72,6 +72,6 @@ def test_discover() -> None:
     ],
 )
 def test_check(
-    input_item: str, input_params: Mapping[str, Tuple[float, float]], expected_results: CheckResult
+    input_item: str, input_params: Mapping[str, tuple[float, float]], expected_results: CheckResult
 ) -> None:
     assert list(check(item=input_item, params=input_params, section=_Section)) == expected_results

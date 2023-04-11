@@ -12,7 +12,6 @@ import subprocess
 from collections.abc import Iterator, Sequence
 from multiprocessing import Process
 from pathlib import Path
-from typing import Optional
 
 import pytest
 
@@ -79,7 +78,7 @@ def get_services_with_status(
 
 
 def _run_as_site_user(
-    site: Site, cmd: list[str], input_value: Optional[str] = None
+    site: Site, cmd: list[str], input_value: str | None = None
 ) -> subprocess.CompletedProcess:
     """Run a command as the site user and return the completed_process."""
     cmd = ["/usr/bin/sudo", "-i", "-u", site.id] + cmd
@@ -119,12 +118,12 @@ def get_omd_status(site: Site) -> dict[str, str]:
     cmd = ["/usr/bin/omd", "status", "--bare"]
     status = {}
     for line in [_ for _ in _run_as_site_user(site, cmd).stdout.splitlines() if " " in _]:
-        key, val = [_.strip() for _ in line.split(" ", 1)]
+        key, val = (_.strip() for _ in line.split(" ", 1))
         status[key] = {"0": "running", "1": "stopped", "2": "partially running"}.get(val, val)
     return status
 
 
-def get_site_status(site: Site) -> Optional[str]:
+def get_site_status(site: Site) -> str | None:
     """Get the overall status of the given site."""
     service_status = get_omd_status(site)
     logger.debug("Status codes: %s", service_status)

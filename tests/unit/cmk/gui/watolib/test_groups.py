@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Callable, ContextManager
+from collections.abc import Callable
+from typing import ContextManager
 
 import pytest
 

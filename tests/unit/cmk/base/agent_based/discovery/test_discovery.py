@@ -6,8 +6,8 @@
 # pylint: disable=redefined-outer-name
 
 import logging
-from collections.abc import Mapping, Sequence
-from typing import Any, Iterable, NamedTuple
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any, NamedTuple
 
 import pytest
 from pytest import MonkeyPatch

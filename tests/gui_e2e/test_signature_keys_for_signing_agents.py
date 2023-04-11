@@ -6,8 +6,7 @@
 import logging
 import re
 import time
-from collections.abc import Iterator
-from typing import Callable, Optional
+from collections.abc import Callable, Iterator
 
 import pytest
 from playwright._impl import _api_types
@@ -37,7 +36,7 @@ def go_to_signature_page(page: PPage) -> None:
     page.main_area.check_page_title("Signature keys for signing agents")
 
 
-def delete_key(page: PPage, identifier: Optional[str] = None) -> None:
+def delete_key(page: PPage, identifier: str | None = None) -> None:
     """Delete a key based on some text, e.g. alias or hash.
 
     Note: you already have to be on the `Signature keys for signing agents` site.

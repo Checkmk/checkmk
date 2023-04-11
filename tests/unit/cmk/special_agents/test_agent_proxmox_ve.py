@@ -7,7 +7,6 @@ import os
 from collections.abc import Mapping
 from contextlib import ExitStack
 from pathlib import Path
-from typing import Type
 
 import pytest
 
@@ -439,7 +438,7 @@ from cmk.special_agents.agent_proxmox_ve import BackupInfo, BackupTask, collect_
 def test_parse_backup_logs(
     logfile: str,
     expected_results: Mapping[str, BackupInfo],
-    expected_exception: None | Type[BackupTask.LogParseWarning],
+    expected_exception: None | type[BackupTask.LogParseWarning],
 ) -> None:
     file_path = Path(os.path.dirname(__file__)) / "proxmox_ve-files" / logfile
     log = ({"n": i, "t": line} for i, line in enumerate(file_path.open().readlines()))

@@ -11,8 +11,8 @@ import multiprocessing
 import pprint
 import queue
 import urllib.parse
-from collections.abc import Mapping
-from typing import Any, cast, Literal, NoReturn, Sequence, Type, TypedDict
+from collections.abc import Mapping, Sequence
+from typing import Any, cast, Literal, NoReturn, TypedDict
 
 from pydantic import BaseModel, StrictStr
 
@@ -108,7 +108,7 @@ def get_link(resp: dict, rel: str) -> Mapping:
             for link in member["links"]:
                 if link["rel"].startswith(rel):
                     return link
-    raise KeyError("{!r} not found".format(rel))
+    raise KeyError(f"{rel!r} not found")
 
 
 def expand_rel(rel: str) -> str:
@@ -678,11 +678,11 @@ class AuxTagTestClient(RestApiClient):
     domain: Literal["aux_tag"] = "aux_tag"
 
     @property
-    def create_model(self) -> Type[AuxTagCreateRequest]:
+    def create_model(self) -> type[AuxTagCreateRequest]:
         return AuxTagCreateRequest
 
     @property
-    def edit_model(self) -> Type[AuxTagEditRequest]:
+    def edit_model(self) -> type[AuxTagEditRequest]:
         return AuxTagEditRequest
 
     def get(self, aux_tag_id: str, expect_ok: bool = True) -> Response:

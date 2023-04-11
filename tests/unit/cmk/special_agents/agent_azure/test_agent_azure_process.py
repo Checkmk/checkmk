@@ -5,10 +5,9 @@
 
 from collections.abc import Mapping, Sequence
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
-from mock import patch
 
 from cmk.special_agents.agent_azure import (
     ApiError,

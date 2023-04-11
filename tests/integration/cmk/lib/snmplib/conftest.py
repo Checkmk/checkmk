@@ -10,7 +10,7 @@ import os
 import subprocess
 from collections.abc import Iterator
 from pathlib import Path
-from typing import NamedTuple
+from typing import assert_never, NamedTuple
 
 import pytest
 from pysnmp.hlapi import (  # type: ignore[import]
@@ -22,7 +22,6 @@ from pysnmp.hlapi import (  # type: ignore[import]
     SnmpEngine,
     UdpTransportTarget,
 )
-from typing_extensions import assert_never
 
 from tests.testlib import wait_until
 from tests.testlib.site import Site

@@ -40,8 +40,7 @@ def test_write_daemon_sets_api_sections_registers_sections_to_be_written(
         "daemonset",
     )
     agent_kube.common.write_sections(sections)
-    assert (
-        set(section.section_name for section in list(write_writeable_sections_mock.call_args[0][0]))
-        == daemon_sets_api_sections()
-    )
+    assert {
+        section.section_name for section in list(write_writeable_sections_mock.call_args[0][0])
+    } == daemon_sets_api_sections()
     assert write_writeable_sections_mock.call_count == 1

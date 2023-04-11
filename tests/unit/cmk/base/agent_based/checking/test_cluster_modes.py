@@ -6,8 +6,8 @@
 # pylint: disable=protected-access
 
 import re
-from collections.abc import Iterable, Mapping
-from typing import Any, Callable, Literal
+from collections.abc import Callable, Iterable, Mapping
+from typing import Any, Literal
 
 import pytest
 

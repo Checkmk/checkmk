@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import json
-from collections.abc import Sequence
-from typing import Iterator
+from collections.abc import Iterator, Sequence
 from unittest.mock import MagicMock
 
 import pytest

@@ -5,7 +5,7 @@
 import json
 import logging
 from json.decoder import JSONDecodeError
-from typing import Any, Optional
+from typing import Any
 
 import hypothesis
 import schemathesis
@@ -22,11 +22,11 @@ def run_crud_test(  # pylint: disable=too-many-branches
     data: Any,
     object_endpoint: str,
     post_endpoint: str,
-    post_body: Optional[dict[str, Any]] = None,
-    put_body: Optional[dict[str, Any]] = None,
-    variables: Optional[dict[str, Any]] = None,
-    object_parameter_name: Optional[str] = None,
-    post_object_id_key: Optional[str] = None,
+    post_body: dict[str, Any] | None = None,
+    put_body: dict[str, Any] | None = None,
+    variables: dict[str, Any] | None = None,
+    object_parameter_name: str | None = None,
+    post_object_id_key: str | None = None,
     post_response_id_key: str = "id",
 ) -> None:
     """Execute API CRUD testing."""
@@ -38,10 +38,10 @@ def run_crud_test(  # pylint: disable=too-many-branches
     def init_case(
         endpoint: str,
         method: str,
-        body: Optional[dict[str, Any]] = None,
-        variables: Optional[dict[str, Any]] = None,
-        parameters: Optional[dict[str, Any]] = None,
-        draw: Optional[bool] = True,
+        body: dict[str, Any] | None = None,
+        variables: dict[str, Any] | None = None,
+        parameters: dict[str, Any] | None = None,
+        draw: bool | None = True,
     ) -> schemathesis.models.Case:
         """Draw a test data strategy and return a callable Case object."""
         method = method.lower()
@@ -79,7 +79,7 @@ def run_crud_test(  # pylint: disable=too-many-branches
         except (AttributeError, ValueError, JSONDecodeError):
             return {"error": f"INVALID JSON RESPONSE: {response.content!r}"}
 
-    def response_reason(response: Response, value: Optional[str] = "detail") -> str:
+    def response_reason(response: Response, value: str | None = "detail") -> str:
         try:
             if value:
                 return response.reason + f" ({response.json().get(value, 'N/A')})"
@@ -225,9 +225,9 @@ def run_crud_test(  # pylint: disable=too-many-branches
 
 def run_state_machine_test(
     schema: schemathesis.schemas.BaseSchema,
-    endpoint: Optional[str] = None,
-    method: Optional[Any] = None,
-    checks: Optional[Any] = None,
+    endpoint: str | None = None,
+    method: Any | None = None,
+    checks: Any | None = None,
 ) -> None:
     """Get a state machine for stateful testing."""
     if endpoint or checks or method:

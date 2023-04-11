@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Type
+from typing import Any
 
 import pytest
 
@@ -277,7 +277,7 @@ MEMINFO_PAGE_MAPPED = {
     ],
 )
 def test_check_memory_fails(
-    params: Mapping, meminfo: memory.SectionMemUsed, fail_with_exception: Type[KeyError]
+    params: Mapping, meminfo: memory.SectionMemUsed, fail_with_exception: type[KeyError]
 ) -> None:
     with pytest.raises(fail_with_exception):
         list(check_mem_used(params, meminfo))

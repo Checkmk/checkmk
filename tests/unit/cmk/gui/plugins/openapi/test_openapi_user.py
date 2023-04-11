@@ -9,10 +9,10 @@ import string
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from typing import Any, ContextManager
+from unittest.mock import MagicMock
 
 import pytest
 from freezegun import freeze_time
-from mock import MagicMock
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 

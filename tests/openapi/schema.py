@@ -5,7 +5,7 @@
 import logging
 import os
 from re import match
-from typing import Any, Optional
+from typing import Any
 
 import schemathesis
 from schemathesis import auth as schemathesis_auth
@@ -152,8 +152,8 @@ def add_links(
 
 def get_crud_endpoints(
     schema: schemathesis.specs.openapi.schemas.BaseOpenAPISchema,
-    accept: Optional[str] = None,
-    ignore: Optional[str] = None,
+    accept: str | None = None,
+    ignore: str | None = None,
     methods: tuple[str, ...] = ("get", "put", "patch", "delete"),
 ) -> list[dict[str, Any]]:
     """Auto-detect relations between POST and GET/PUT/PATCH/DELETE requests."""
@@ -257,8 +257,8 @@ def get_site() -> Site:
 
 def parametrize_crud_endpoints(
     schema: schemathesis.specs.openapi.schemas.BaseOpenAPISchema,
-    accept: Optional[str] = None,
-    ignore: Optional[str] = None,
+    accept: str | None = None,
+    ignore: str | None = None,
 ) -> dict[str, Any]:
     """Parametrization helper to generate individual CRUD tests named after the object type."""
     endpoints = get_crud_endpoints(schema, accept, ignore)
@@ -270,7 +270,7 @@ def update_property(
     schema_name: str,
     property_name: str,
     property_data: dict[str, Any],
-    ticket_id: Optional[str] = None,
+    ticket_id: str | None = None,
     merge: bool = True,
 ) -> None:
     if ticket_id and ticket_id not in settings.suppressed_issues:
@@ -309,7 +309,7 @@ def require_properties(
     raw_schema: dict[str, Any],
     schema_name: str,
     properties: list[str],
-    ticket_id: Optional[str] = None,
+    ticket_id: str | None = None,
     merge: bool = True,
 ) -> None:
     if ticket_id and ticket_id not in settings.suppressed_issues:
@@ -334,7 +334,7 @@ def update_schema(
     raw_schema: dict[str, Any],
     key_name: str,
     patch: dict[str, Any],
-    expected: Optional[dict[str, Any]] = None,
+    expected: dict[str, Any] | None = None,
     update_children: bool = True,
     delete_nulls: bool = True,
     path: str = "",
@@ -344,7 +344,7 @@ def update_schema(
     Can be used for generic patching of matching schema objects.
     """
 
-    def matching_dict(raw_schema: dict[str, Any], expected: Optional[dict[str, Any]]) -> bool:
+    def matching_dict(raw_schema: dict[str, Any], expected: dict[str, Any] | None) -> bool:
         """Return True if all expected values are found in the object."""
         return expected is None or all(
             raw_schema.get(attribute) == expected[attribute] for attribute in expected

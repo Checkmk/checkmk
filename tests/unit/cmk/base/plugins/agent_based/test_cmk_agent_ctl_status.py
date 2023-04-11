@@ -39,9 +39,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
                         coordinates="localhost:8001/heute",
                         local=LocalConnectionStatus(
                             cert_info=CertInfoController(
-                                to=datetime.datetime(
-                                    2028, 1, 24, 15, 20, 54, tzinfo=datetime.timezone.utc
-                                ),
+                                to=datetime.datetime(2028, 1, 24, 15, 20, 54, tzinfo=datetime.UTC),
                                 issuer="Site 'heute' local CA",
                             )
                         ),
@@ -51,9 +49,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
                         coordinates="localhost:8000/stable",
                         local=LocalConnectionStatus(
                             cert_info=CertInfoController(
-                                to=datetime.datetime(
-                                    3021, 5, 27, 15, 20, 40, tzinfo=datetime.timezone.utc
-                                ),
+                                to=datetime.datetime(3021, 5, 27, 15, 20, 40, tzinfo=datetime.UTC),
                                 issuer="Site 'stable' local CA",
                             )
                         ),
@@ -78,9 +74,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
                         coordinates=None,
                         local=LocalConnectionStatus(
                             cert_info=CertInfoController(
-                                to=datetime.datetime(
-                                    2028, 1, 24, 15, 20, 54, tzinfo=datetime.timezone.utc
-                                ),
+                                to=datetime.datetime(2028, 1, 24, 15, 20, 54, tzinfo=datetime.UTC),
                                 issuer="Site 'heute' local CA",
                             )
                         ),
@@ -90,9 +84,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
                         coordinates=None,
                         local=LocalConnectionStatus(
                             cert_info=CertInfoController(
-                                to=datetime.datetime(
-                                    3021, 5, 27, 15, 20, 40, tzinfo=datetime.timezone.utc
-                                ),
+                                to=datetime.datetime(3021, 5, 27, 15, 20, 40, tzinfo=datetime.UTC),
                                 issuer="Site 'stable' local CA",
                             )
                         ),
@@ -117,9 +109,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
                         coordinates=None,
                         local=LocalConnectionStatus(
                             cert_info=CertInfoController(
-                                to=datetime.datetime(
-                                    2028, 1, 24, 16, 55, 14, tzinfo=datetime.timezone.utc
-                                ),
+                                to=datetime.datetime(2028, 1, 24, 16, 55, 14, tzinfo=datetime.UTC),
                                 issuer="Site 'heute' local CA",
                             )
                         ),

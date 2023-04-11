@@ -5,9 +5,10 @@
 
 
 import json
+from collections.abc import Callable
 from functools import partial
 from time import time
-from typing import Any, Callable
+from typing import Any
 
 import pytest
 

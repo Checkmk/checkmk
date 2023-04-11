@@ -205,6 +205,11 @@ def main(args=None):  # pylint: disable=too-many-branches
     try:
         opts, args = getopt.getopt(args, short_options, long_options)
 
+        for o, a in opts:
+            if o in ["-h", "--help"]:
+                usage()
+                sys.exit(0)
+
         if len(args) < 1:
             raise MissingValueError("Please specify the target destination.")
 
@@ -227,12 +232,6 @@ def main(args=None):  # pylint: disable=too-many-branches
                     raise ProtocolVersionError("Cannot use both IPv4 and IPv6")
                 validate_ip_version(target_address, int(o.lstrip("-")))
                 opt_address_family = o
-
-        # now handle action options
-        for o, a in opts:
-            if o in ["-h", "--help"]:
-                usage()
-                sys.exit(0)
 
         sto = _execute_traceroute(target_address, opt_nodns, opt_method, opt_address_family)
         status, output, perfdata = check_traceroute(sto.split("\n"), route_params)

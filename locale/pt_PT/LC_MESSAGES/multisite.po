@@ -4618,6 +4618,10 @@ msgid "Agent controller auto-registration"
 msgstr "Versão agente"
 
 #, fuzzy
+msgid "Agent controller connections"
+msgstr "Versão agente"
+
+#, fuzzy
 msgid "Agent controller deployment"
 msgstr "autenticação do Windows"
 
@@ -5097,6 +5101,10 @@ msgstr "Todos os clientes"
 
 msgid "All customers with host and service statistics"
 msgstr "Todos os clientes com estatísticas de alojamento e serviços"
+
+#, fuzzy
+msgid "All datasources are OK"
+msgstr "Todos os pais estão em baixo"
 
 msgid "All directions"
 msgstr "Todas as direcções"
@@ -42151,6 +42159,12 @@ msgstr "Problemas no total"
 
 msgid "Problems of host"
 msgstr "Problemas do hospedeiro"
+
+#, python-format
+msgid "Problems with %d datasource detected"
+msgid_plural "Problems with %d datasources detected"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Proceed"
 msgstr "Proceder"

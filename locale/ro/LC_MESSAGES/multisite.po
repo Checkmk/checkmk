@@ -4369,6 +4369,10 @@ msgid "Agent controller auto-registration"
 msgstr "Numele Elementului"
 
 #, fuzzy
+msgid "Agent controller connections"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Agent controller deployment"
 msgstr "trimite notificare"
 
@@ -4866,6 +4870,9 @@ msgstr ""
 #, fuzzy
 msgid "All customers with host and service statistics"
 msgstr "Atribute personalizate"
+
+msgid "All datasources are OK"
+msgstr ""
 
 #, fuzzy
 msgid "All directions"
@@ -40750,6 +40757,13 @@ msgstr "Probleme"
 #, fuzzy
 msgid "Problems of host"
 msgstr "Probleme"
+
+#, python-format
+msgid "Problems with %d datasource detected"
+msgid_plural "Problems with %d datasources detected"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 msgid "Proceed"
 msgstr ""

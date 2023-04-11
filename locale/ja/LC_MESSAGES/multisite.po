@@ -4487,6 +4487,10 @@ msgstr "エージェントコントローラー"
 msgid "Agent controller auto-registration"
 msgstr "エージェントコントローラー自動登録"
 
+#, fuzzy
+msgid "Agent controller connections"
+msgstr "エージェントコントローラー自動登録"
+
 msgid "Agent controller deployment"
 msgstr "エージェントコントローラーデプロイ"
 
@@ -4941,6 +4945,10 @@ msgstr "すべてのお客様"
 
 msgid "All customers with host and service statistics"
 msgstr "ホストとサービスの統計を持つすべての顧客"
+
+#, fuzzy
+msgid "All datasources are OK"
+msgstr "すべての親がダウンしています"
 
 msgid "All directions"
 msgstr "全方向"
@@ -40630,6 +40638,11 @@ msgstr "全体の問題"
 
 msgid "Problems of host"
 msgstr "ホストの問題"
+
+#, python-format
+msgid "Problems with %d datasource detected"
+msgid_plural "Problems with %d datasources detected"
+msgstr[0] ""
 
 msgid "Proceed"
 msgstr "続行します"

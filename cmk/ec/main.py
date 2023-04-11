@@ -29,7 +29,7 @@ import sys
 import threading
 import time
 import traceback
-from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from functools import partial
 from logging import getLogger, Logger
 from pathlib import Path
@@ -231,23 +231,25 @@ class ECServerThread(threading.Thread):
         self._terminate_event.set()
 
 
-def allowed_ip(ip: str, access_list: Container[str]) -> bool:
+def allowed_ip(
+    ip: ipaddress.IPv6Address | ipaddress.IPv4Address,
+    access_list: Sequence[ipaddress.IPv6Network | ipaddress.IPv4Network],
+) -> bool:
     """
     Checks if ip is in the access_list.
     Takes care of mapped ipv6->ipv4 and ipv4->mapped_ipv6.
     This is needed because the access_list could contain ipv4/ipv6/ipv6mapped.
     """
-    ipaddress_object = ipaddress.ip_address(ip)
 
-    if str(ipaddress_object) in access_list:
+    if any(ip in entry for entry in access_list):
         return True
 
-    if f"::ffff:{str(ipaddress_object)}" in access_list:
-        return True
+    if not str(ip).startswith("::ffff:"):
+        if any(ipaddress.ip_address(f"::ffff:{str(ip)}") in entry for entry in access_list):
+            return True
 
-    if (
-        isinstance(ipaddress_object, ipaddress.IPv6Address)
-        and str(ipaddress_object.ipv4_mapped) in access_list
+    if isinstance(ip, ipaddress.IPv6Address) and any(
+        ip.ipv4_mapped in entry for entry in access_list
     ):
         return True
 
@@ -2242,9 +2244,15 @@ class StatusServer(ECServerThread):
             try:
                 self._tcp_port, self._tcp_allow_commands = self._config["remote_status"][:2]
                 try:
-                    self._tcp_access_list = self._config["remote_status"][2]
+                    ip_strings = self._config["remote_status"][2]
+                    if ip_strings is not None:
+                        self._tcp_access_list = [ipaddress.ip_network(x) for x in ip_strings]
+                    else:
+                        self._logger.info("No tcp access list in config. Using an empty list")
+                        self._tcp_access_list = []
                 except Exception:
-                    self._tcp_access_list = None
+                    self._logger.info("No tcp access list in config. Using an empty list")
+                    self._tcp_access_list = []
                 try:
                     self._logger.info("Trying to use ipv6 for TCP socket port")
                     self._tcp_socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
@@ -2276,7 +2284,7 @@ class StatusServer(ECServerThread):
             self._tcp_socket = None
             self._tcp_port = 0
             self._tcp_allow_commands = False
-            self._tcp_access_list = None
+            self._tcp_access_list = []
 
     def close_unix_socket(self) -> None:
         if self._socket:
@@ -2328,15 +2336,13 @@ class StatusServer(ECServerThread):
                         allow_commands = self._tcp_allow_commands
                         if self.settings.options.debug:
                             self._logger.info("Handle status connection from %s:%d", addr_info)
-                        if self._tcp_access_list is not None and allowed_ip(
-                            addr_info[0], self._tcp_access_list
-                        ):
+                        if allowed_ip(ipaddress.ip_address(addr_info[0]), self._tcp_access_list):
                             client_socket.close()
                             client_socket = None
                             self._logger.info(
                                 "Denying access to status socket from %s (allowed is only %s)",
                                 addr_info[0],
-                                ", ".join(self._tcp_access_list),
+                                ", ".join(str(x) for x in self._tcp_access_list),
                             )
                             continue
                     else:

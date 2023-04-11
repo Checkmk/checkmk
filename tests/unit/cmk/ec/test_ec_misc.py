@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Test different EC standalone helper functions"""
 
+import ipaddress
+
 import pytest
 from hypothesis import given, settings
 from hypothesis.strategies import ip_addresses
@@ -12,36 +14,36 @@ from cmk.ec.export import match_ip_network
 from cmk.ec.main import allowed_ip, unmap_ipv4_address
 
 ACCESS_LIST = [
-    "::ffff:8.8.4.4",
-    "1.1.1.1",
+    ipaddress.ip_network("::ffff:8.8.4.4"),
+    ipaddress.ip_network("1.1.1.1"),
+    ipaddress.ip_network("2002:db00::/24"),
+    ipaddress.ip_network("100.100.0.0/24"),
 ]
 
 
 @pytest.mark.parametrize(
-    "ip, access_list,  expected",
+    "ip,  expected",
     (
         pytest.param(
-            "8.8.4.4",
-            ACCESS_LIST,
+            ipaddress.ip_address("8.8.4.4"),
             True,
             id="IPv4 should be found even if mapped in the list",
         ),
         pytest.param(
-            "::ffff:1.1.1.1",
-            ACCESS_LIST,
+            ipaddress.ip_address("::ffff:1.1.1.1"),
             True,
             id="IPv6 mapped should be found even if stored as IPv4 in the list",
         ),
         pytest.param(
-            "::ffff:1.1.1.2",
-            ACCESS_LIST,
+            ipaddress.ip_address("::ffff:1.1.1.2"),
             False,
             id="Not found",
         ),
     ),
 )
-def test_allowed_ip(ip: str, access_list: list[str], expected: bool) -> None:
-    assert allowed_ip(ip, access_list) == expected
+def test_allowed_ip(ip: ipaddress.IPv6Address | ipaddress.IPv4Address, expected: bool) -> None:
+    assert allowed_ip(ip, ACCESS_LIST) == expected
+    assert allowed_ip(ip, []) is False
 
 
 @pytest.mark.parametrize(

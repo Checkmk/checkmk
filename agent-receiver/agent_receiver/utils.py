@@ -6,7 +6,6 @@
 import os
 from contextlib import suppress
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Final, Self
 
 from agent_receiver.models import ConnectionMode, RegistrationStatusEnum, RequestForRegistration
@@ -28,17 +27,10 @@ class RegisteredHost:
         self.source_path: Final = agent_output_dir() / str(uuid)
         if not self.source_path.is_symlink():
             raise NotRegisteredException("Source path is not a symlink")
-        try:
-            target_path = Path(os.readlink(self.source_path))
-        except (FileNotFoundError, OSError) as excpt:
-            raise NotRegisteredException("Failed to follow source path symlink") from excpt
 
+        target_path = self.source_path.resolve(strict=False)
         self.name: Final = target_path.name
-        self.connection_mode: Final = self._connection_mode(target_path)
-
-    @staticmethod
-    def _connection_mode(target_path: Path) -> ConnectionMode:
-        return (
+        self.connection_mode: Final = (
             ConnectionMode.PUSH if target_path.parent.name == "push-agent" else ConnectionMode.PULL
         )
 

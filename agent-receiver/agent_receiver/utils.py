@@ -8,7 +8,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Final, Self
 
-from agent_receiver.models import ConnectionMode, RegistrationStatusEnum, RequestForRegistration
+from agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
 from agent_receiver.site_context import agent_output_dir, r4r_dir, users_dir
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
@@ -37,12 +37,12 @@ class RegisteredHost:
 
 @dataclass(frozen=True)
 class R4R:
-    status: RegistrationStatusEnum
+    status: R4RStatus
     request: RequestForRegistration
 
     @classmethod
     def read(cls, uuid: UUID4) -> Self:
-        for status in RegistrationStatusEnum:
+        for status in R4RStatus:
             if (path := r4r_dir() / status.name / f"{uuid}.json").exists():
                 request = RequestForRegistration.parse_file(path)
                 # access time is used to determine when to remove registration request file

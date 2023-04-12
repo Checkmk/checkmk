@@ -69,7 +69,7 @@ pub enum RegisterNewOngoingResponse {
 }
 
 #[derive(StringEnum)]
-pub enum HostStatus {
+pub enum R4RStatus {
     /// `new`
     New,
     /// `pending`
@@ -81,9 +81,9 @@ pub enum HostStatus {
 }
 
 #[derive(Deserialize)]
-pub struct StatusResponse {
+pub struct RegistrationStatusResponse {
     pub hostname: Option<String>,
-    pub status: Option<HostStatus>,
+    pub status: Option<R4RStatus>,
     pub connection_mode: Option<config::ConnectionMode>,
     pub message: Option<String>,
 }
@@ -133,12 +133,12 @@ pub trait AgentData {
     ) -> AnyhowResult<()>;
 }
 
-pub trait Status {
-    fn status(
+pub trait RegistrationStatus {
+    fn registration_status(
         &self,
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
-    ) -> AnyhowResult<StatusResponse>;
+    ) -> AnyhowResult<RegistrationStatusResponse>;
 }
 
 pub trait RenewCertificate {
@@ -371,12 +371,12 @@ impl AgentData for Api {
     }
 }
 
-impl Status for Api {
-    fn status(
+impl RegistrationStatus for Api {
+    fn registration_status(
         &self,
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
-    ) -> AnyhowResult<StatusResponse> {
+    ) -> AnyhowResult<RegistrationStatusResponse> {
         Self::deserialize_json_response(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
@@ -387,7 +387,7 @@ impl Status for Api {
                 &["registration_status", &connection.uuid.to_string()],
             )?)
             .send()?,
-            |body| serde_json::from_str::<StatusResponse>(body),
+            |body| serde_json::from_str::<RegistrationStatusResponse>(body),
         )
     }
 }

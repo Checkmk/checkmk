@@ -163,7 +163,7 @@ class RequestForRegistration(BaseModel, frozen=True):
         return (self.state or {}).get("readable")
 
 
-class RegistrationStatusEnum(Enum):
+class R4RStatus(Enum):
     NEW = "new"
     PENDING = "pending"
     DECLINED = "declined"
@@ -172,7 +172,7 @@ class RegistrationStatusEnum(Enum):
 
 class RegistrationStatus(BaseModel, frozen=True):
     hostname: str | None = None
-    status: RegistrationStatusEnum | None = None
+    status: R4RStatus | None = None
     connection_mode: ConnectionMode | None = None
     message: str | None = None
     # Kept for backwards compatibility

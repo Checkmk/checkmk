@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 from agent_receiver import site_context
-from agent_receiver.models import ConnectionMode, RegistrationStatusEnum, RequestForRegistration
+from agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
 from agent_receiver.utils import NotRegisteredException, R4R, RegisteredHost
 from pydantic import UUID4
 
@@ -44,7 +44,7 @@ def test_push_host_registered(tmp_path: Path, uuid: UUID4) -> None:
 
 def test_r4r(uuid: UUID4) -> None:
     r4r = R4R(
-        status=RegistrationStatusEnum.NEW,
+        status=R4RStatus.NEW,
         request=RequestForRegistration(
             uuid=uuid,
             username="harry",

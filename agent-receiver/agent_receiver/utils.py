@@ -18,26 +18,17 @@ from cryptography.x509.oid import NameOID
 
 class Host:
     def __init__(self, uuid: UUID):
+        self._hostname = None
+        self._host_type = None
         self._source_path = agent_output_dir() / str(uuid)
-
         self._registered = self.source_path.is_symlink()
-        target_path = self._get_target_path() if self.registered else None
 
-        self._hostname = target_path.name if target_path else None
-        self._host_type = self._get_host_type(target_path)
+        if not self.registered:
+            return
 
-    def _get_target_path(self) -> Optional[Path]:
-        try:
-            return Path(os.readlink(self.source_path))
-        except (FileNotFoundError, OSError):
-            return None
-
-    @staticmethod
-    def _get_host_type(target_path: Optional[Path]) -> Optional[HostTypeEnum]:
-        if not target_path:
-            return None
-
-        return HostTypeEnum.PUSH if target_path.exists() else HostTypeEnum.PULL
+        target_path = self.source_path.resolve(strict=False)
+        self._hostname = target_path.name
+        self._host_type = HostTypeEnum.PUSH if target_path.exists() else HostTypeEnum.PULL
 
     @property
     def source_path(self) -> Path:

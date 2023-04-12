@@ -1,0 +1,27 @@
+Title: Agent TLS registration: Fix `500 Internal Server Error` during register and status
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1681286342
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p26
+
+When registering new agents (<tt>cmk-agent-ctl register</tt>) or querying the status of registered
+agents (<tt>cmk-agent-ctl status</tt>), users might have encountered the error
+
+C+:
+Error: Request failed with code 500 Internal Server Error: Internal Server Error (!!)
+C-:
+
+This happened if the path <tt>/opt/tmp</tt> existed on the monitoring server and the corresponding
+site user did <i>not</i> have read permissions for this path. If this happened, the log file
+<tt>var/log/agent-receiver/error.log</tt> contained errors such as
+
+C+:
+[ERROR] Exception in ASGI application
+Traceback (most recent call last):
+  ...
+PermissionError: [Errno 13] Permission denied: '../../../tmp/check_mk/data_source_cache/push-agent/my-host'
+C-:

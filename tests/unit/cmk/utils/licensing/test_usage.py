@@ -49,15 +49,21 @@ def test_try_update_license_usage(monkeypatch: MonkeyPatch) -> None:
         lambda: LicenseUsageExtensions(ntop=False),
     )
     monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
-    monkeypatch.setattr(
-        licensing_usage,
-        "load_instance_id",
-        lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-    )
-    monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
 
-    try_update_license_usage(init_logging())
-    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 1
+    instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
+    site_hash = "site-hash"
+
+    try_update_license_usage(init_logging(), instance_id, site_hash)
+    assert (
+        len(
+            load_license_usage_history(
+                get_license_usage_report_filepath(),
+                instance_id,
+                site_hash,
+            )
+        )
+        == 1
+    )
 
 
 def test_try_update_license_usage_livestatus_socket_error(
@@ -73,16 +79,22 @@ def test_try_update_license_usage_livestatus_socket_error(
         lambda: LicenseUsageExtensions(ntop=False),
     )
     monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
-    monkeypatch.setattr(
-        licensing_usage,
-        "load_instance_id",
-        lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-    )
-    monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
+
+    instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
+    site_hash = "site-hash"
 
     with pytest.raises(livestatus.MKLivestatusSocketError):
-        try_update_license_usage(init_logging())
-    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
+        try_update_license_usage(init_logging(), instance_id, site_hash)
+    assert (
+        len(
+            load_license_usage_history(
+                get_license_usage_report_filepath(),
+                instance_id,
+                site_hash,
+            )
+        )
+        == 0
+    )
 
 
 def test_try_update_license_usage_livestatus_not_found_error(
@@ -98,16 +110,22 @@ def test_try_update_license_usage_livestatus_not_found_error(
         lambda: LicenseUsageExtensions(ntop=False),
     )
     monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
-    monkeypatch.setattr(
-        licensing_usage,
-        "load_instance_id",
-        lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-    )
-    monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
+
+    instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
+    site_hash = "site-hash"
 
     with pytest.raises(livestatus.MKLivestatusNotFoundError):
-        try_update_license_usage(init_logging())
-    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
+        try_update_license_usage(init_logging(), instance_id, site_hash)
+    assert (
+        len(
+            load_license_usage_history(
+                get_license_usage_report_filepath(),
+                instance_id,
+                site_hash,
+            )
+        )
+        == 0
+    )
 
 
 def test_try_update_license_usage_next_run_ts_not_reached(
@@ -129,15 +147,21 @@ def test_try_update_license_usage_next_run_ts_not_reached(
         lambda: LicenseUsageExtensions(ntop=False),
     )
     monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 2 * time.time())
-    monkeypatch.setattr(
-        licensing_usage,
-        "load_instance_id",
-        lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-    )
-    monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
 
-    try_update_license_usage(init_logging())
-    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
+    instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
+    site_hash = "site-hash"
+
+    try_update_license_usage(init_logging(), instance_id, site_hash)
+    assert (
+        len(
+            load_license_usage_history(
+                get_license_usage_report_filepath(),
+                instance_id,
+                site_hash,
+            )
+        )
+        == 0
+    )
 
 
 @pytest.mark.parametrize(

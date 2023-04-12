@@ -20,6 +20,7 @@ use tokio::process::{Child, Command};
 const PULL_BASE_PORT: u16 = 9970;
 const PULL_TLS_CHECK_PORT: u16 = 9980;
 const PULL_LEGACY_PORT: u16 = 9990;
+const PULL_NO_CONNECTION_PORT: u16 = 10000;
 const PULL_RELOAD_PORT: u16 = 10010;
 
 const FREE_RANGE_PORT_START: u16 = 12400;
@@ -111,25 +112,20 @@ struct PullProcessFixture {
 }
 
 impl PullProcessFixture {
-    #[cfg(unix)]
-    fn setup(test_path: &Path, port: &u16, _agent_channel: Option<&str>) -> IoResult<Self> {
-        Command::new(assert_cmd::cargo::cargo_bin("cmk-agent-ctl"))
-            .env("DEBUG_HOME_DIR", test_path)
-            .env("DEBUG_CONNECTION_TIMEOUT", "1")
-            .args(["pull", "--port", &port.to_string()])
-            .spawn()
-            .map(|process| Self { process })
-    }
-
-    #[cfg(windows)]
     fn setup(test_path: &Path, port: &u16, agent_channel: Option<&str>) -> IoResult<Self> {
         let port_string = port.to_string();
         let mut commands = vec!["pull", "--port", &port_string];
-        if agent_channel.is_some() {
-            commands.extend_from_slice(&["--agent-channel", agent_channel.unwrap()]);
+        if let Some(value) = agent_channel {
+            commands.extend_from_slice(&["--agent-channel", value]);
+            #[cfg(unix)]
+            panic!(
+                "agent channel is not supported for Linux, path {:?}",
+                test_path
+            );
         }
         Command::new(assert_cmd::cargo::cargo_bin("cmk-agent-ctl"))
             .env("DEBUG_HOME_DIR", test_path)
+            .env("DEBUG_CONNECTION_TIMEOUT", "1")
             .args(commands)
             .spawn()
             .map(|process| Self { process })
@@ -268,7 +264,7 @@ async fn _test_pull_tls_main(prefix: &str, ip_addr: IpAddr, port: u16) -> Anyhow
     let test_dir = common::setup_test_dir(prefix);
     let agent_stream_fixture = AgentStreamFixture::setup(test_dir.path());
     let trust_fixture = TrustFixture::setup(test_dir.path())?;
-    let p = find_port_available(port);
+    let p = find_available_port_if_busy(port);
     let pull_proc_fixture = PullProcessFixture::setup(
         test_dir.path(),
         &p,
@@ -307,7 +303,7 @@ async fn _test_pull_tls_main(prefix: &str, ip_addr: IpAddr, port: u16) -> Anyhow
         .context("Teardown failed")
 }
 
-fn find_port_available(proposed_port: u16) -> u16 {
+fn find_available_port_if_busy(proposed_port: u16) -> u16 {
     let mut port = proposed_port;
     while !agent::is_port_available(port) {
         port = FREE_RANGE_PORT_START + make_port_personal();
@@ -447,7 +443,8 @@ async fn _test_pull_legacy(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowRe
 async fn test_pull_no_connections_ipv4() -> AnyhowResult<()> {
     _test_pull_no_connections(
         "test_pull_no_connections_ipv4",
-        SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 10000),
+        IpAddr::V4(Ipv4Addr::LOCALHOST),
+        PULL_NO_CONNECTION_PORT,
     )
     .await
 }
@@ -456,23 +453,25 @@ async fn test_pull_no_connections_ipv4() -> AnyhowResult<()> {
 async fn test_pull_no_connections_ipv6() -> AnyhowResult<()> {
     _test_pull_no_connections(
         "test_pull_no_connections_ipv6",
-        SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 10001),
+        IpAddr::V6(Ipv6Addr::LOCALHOST),
+        PULL_NO_CONNECTION_PORT + 1,
     )
     .await
 }
 
-async fn _test_pull_no_connections(prefix: &str, socket_addr: SocketAddr) -> AnyhowResult<()> {
+async fn _test_pull_no_connections(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowResult<()> {
     if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
         return Ok(());
     }
 
     let test_dir = common::setup_test_dir(prefix);
-    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &socket_addr.port(), None)?;
+    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &port, None)?;
 
     // Give it some time to provide the TCP socket (it shouldn't)
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
 
+    let socket_addr = SocketAddr::new(ip_addr, port);
     assert!(std::net::TcpStream::connect(socket_addr).is_err());
 
     teardown(test_dir, pull_proc_fixture, None)
@@ -480,9 +479,7 @@ async fn _test_pull_no_connections(prefix: &str, socket_addr: SocketAddr) -> Any
         .context("Teardown failed")
 }
 
-// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
 #[tokio::test(flavor = "multi_thread")]
-#[cfg_attr(target_os = "windows", ignore)]
 async fn test_pull_reload_ipv4() -> AnyhowResult<()> {
     _test_pull_reload(
         "test_pull_reload_ipv4",
@@ -492,9 +489,7 @@ async fn test_pull_reload_ipv4() -> AnyhowResult<()> {
     .await
 }
 
-// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
 #[tokio::test(flavor = "multi_thread")]
-#[cfg_attr(target_os = "windows", ignore)]
 async fn test_pull_reload_ipv6() -> AnyhowResult<()> {
     _test_pull_reload(
         "test_pull_reload_ipv6",
@@ -508,15 +503,15 @@ async fn _test_pull_reload(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowRe
         println!("Test is skipped, must be in elevated mode");
         return Ok(());
     }
-
     let test_dir = common::setup_test_dir(prefix);
     TrustFixture::setup(test_dir.path())?;
-    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &port, None)?;
+    let p = find_available_port_if_busy(port);
+    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &p, None)?;
 
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
 
-    let socket_addr = SocketAddr::new(ip_addr, port);
+    let socket_addr = SocketAddr::new(ip_addr, p);
     // Make sure we currently can connect
     let mut message_buf: Vec<u8> = vec![];
     let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;

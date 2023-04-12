@@ -7,6 +7,138 @@ import * as ajax from "ajax";
 import * as hover from "hover";
 import * as reload_pause from "reload_pause";
 
+//types from cmk/utils/type_defs/_misc.py:81
+type Timestamp = number;
+type Seconds = number;
+type Label = [number, string | null, number];
+type TimeRange = [number, number];
+type TimeSeriesValue = number | null;
+type LazyString = string; // not sure how teal with this for the moment
+type HorizontalRule = [number, string, string, string | LazyString];
+type SizePT = number;
+
+interface DefaultGraphRenderOptions {
+    font_size: number;
+    resizable: boolean;
+    show_controls: boolean;
+    show_pin: boolean;
+    show_legend: boolean;
+    show_graph_time: boolean;
+    show_vertical_axis: boolean;
+    vertical_axis_width: "fixed" | ["explicit", SizePT];
+    show_time_axis: boolean;
+    show_title: boolean;
+    title_format: boolean;
+    show_margin: boolean;
+    preview: boolean;
+    interaction: boolean;
+    editing: boolean;
+    fixed_timerange: boolean;
+    show_time_range_previews: boolean;
+    background_color: string;
+    foreground_color: string;
+    canvas_color: string;
+    onclick?: string;
+    show_timeranges?: any;
+}
+
+type GraphRenderOptions = DefaultGraphRenderOptions;
+interface _GraphDataRangeMandatory {
+    time_range: TimeRange;
+    step: Seconds | string;
+}
+
+interface GraphDataRange extends _GraphDataRangeMandatory {
+    vertical_range: [number, number];
+}
+
+interface AjaxContext {
+    graph_id: string;
+    definition: GraphRecipe;
+    data_range: GraphDataRange;
+    render_options: GraphRenderOptions;
+}
+
+interface AjaxGraph {
+    html: string;
+    graph: GraphArtwork;
+    context: AjaxContext;
+}
+
+interface LayoutedCurveArea {
+    type: "area";
+    points: [TimeSeriesValue, TimeSeriesValue][];
+    //dynamic
+    dont_paint: [number, number];
+    color: string;
+}
+
+interface LayoutedCurveLine {
+    type: "line";
+    points: TimeSeriesValue[];
+    //dynamic
+    dont_paint: [number, number];
+    color: string;
+}
+
+type LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea;
+
+interface TimeAxis {
+    labels: Label[];
+    range: TimeRange;
+    title: string;
+    //dynamic
+    pixels_per_second: number;
+}
+
+type GraphRecipe = Record<string, any>;
+
+interface VerticalAxis {
+    range: [number, number];
+    real_range: [number, number];
+    label_distance: number;
+    sub_distance: number;
+    axis_label: string | null;
+    labels: Label[];
+    max_label_length: null;
+    //dynamic
+    pixels_per_unit: number;
+    pixels_per_second: number;
+}
+
+//this type is from cmk/gui/plugins/metrics/artwork.py:82
+interface GraphArtwork {
+    //optional properties assigned dynamically in javascript
+    id: string;
+    canvas_obj: HTMLCanvasElement;
+    ajax_context?: AjaxContext;
+    render_options: GraphRenderOptions;
+    time_origin?: number;
+    vertical_origin?: number;
+    // Labelling, size, layout
+    title: string | null;
+    width: number;
+    height: number;
+    mirrored: boolean;
+    // Actual data and axes
+    curves: LayoutedCurve[];
+    horizontal_rules: HorizontalRule[];
+    vertical_axis: VerticalAxis;
+    time_axis: TimeAxis;
+    //Displayed range
+    start_time: Timestamp;
+    end_time: Timestamp;
+    step: Seconds;
+    explicit_vertical_range: [number | null, number | null];
+    requested_vrange: [number, number] | null;
+    requested_start_time: Timestamp;
+    requested_end_time: Timestamp;
+    requested_step: string | Seconds;
+    pin_time: Timestamp | null;
+    // Definition itself, for reproducing the graph
+    definition: GraphRecipe;
+}
+
 // Styling. Please note that for each visible pixel our canvas
 // has two pixels. This improves the resolution when zooming
 // in with your browser.
@@ -19,15 +151,15 @@ const g_page_update_delay = 60; // prevent page update for X seconds
 const g_delayed_graphs: DelayedGraph[] = [];
 
 // Global graph constructs to store the graphs etc.
-const g_graphs = {};
+const g_graphs: Record<string, GraphArtwork> = {};
 let g_current_graph_id = 0;
 
 interface DelayedGraph {
     graph_load_container: HTMLElement | Node | null;
-    graph_recipe;
-    graph_data_range;
-    graph_render_options;
-    script_object: HTMLElement | SVGElement;
+    graph_recipe: GraphRecipe;
+    graph_data_range: GraphDataRange;
+    graph_render_options: GraphRenderOptions;
+    script_object: HTMLScriptElement;
 }
 
 //#   .-Creation-----------------------------------------------------------.
@@ -43,17 +175,17 @@ interface DelayedGraph {
 //#   | called by web/plugins/graphs.py:render_graphs_htmls()              |
 //#   '--------------------------------------------------------------------'
 
-function get_id_of_graph(ajax_context) {
+function get_id_of_graph(ajax_context: AjaxContext) {
     // Return the graph_id for and eventual existing graph
     for (const graph_id in g_graphs) {
         // JSON.stringify seems to be the easiest way to compare the both dicts
         if (
             JSON.stringify(ajax_context.definition.specification) ==
                 JSON.stringify(
-                    g_graphs[graph_id].ajax_context.definition.specification
+                    g_graphs[graph_id].ajax_context!.definition.specification
                 ) &&
             JSON.stringify(ajax_context.render_options) ==
-                JSON.stringify(g_graphs[graph_id].ajax_context.render_options)
+                JSON.stringify(g_graphs[graph_id].ajax_context!.render_options)
         ) {
             return graph_id;
         }
@@ -64,10 +196,10 @@ function get_id_of_graph(ajax_context) {
 }
 
 export function create_graph(
-    html_code,
-    graph_artwork,
-    graph_render_options,
-    ajax_context
+    html_code: string,
+    graph_artwork: GraphArtwork,
+    graph_render_options: GraphRenderOptions,
+    ajax_context: AjaxContext
 ) {
     // Detect whether or not a new graph_id has to be calculated. During the view
     // data reload create_graph() is called again for all already existing graphs.
@@ -94,6 +226,8 @@ export function create_graph(
 
     // Now register and paint the graph
     ajax_context["graph_id"] = graph_id;
+    //TODO: perhaps reformat this so we have two GraphArtwork interfaces
+    // before and after these assignments
     g_graphs[graph_id] = graph_artwork;
     g_graphs[graph_id]["ajax_context"] = ajax_context;
     g_graphs[graph_id]["render_options"] = graph_render_options;
@@ -103,11 +237,13 @@ export function create_graph(
 
 // determine DOM node of the <javascript> that called us. It's
 // parent will get the graph node attached.
-function get_current_script() {
+function get_current_script(): HTMLScriptElement {
     const embedded_script = utils.current_script;
     if (embedded_script) return embedded_script;
 
+    //TODO: delete following statement since we don't support IE anymore
     // The function fixes IE compatibility issues
+    //@ts-ignore
     return (
         document.currentScript ||
         (function () {
@@ -128,9 +264,9 @@ function get_current_script() {
 // b) Process the rendering asynchronous via javascript to make the page loading
 //    faster by parallelizing the graph loading processes.
 export function load_graph_content(
-    graph_recipe,
-    graph_data_range,
-    graph_render_options
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions
 ) {
     const script_object = get_current_script();
 
@@ -174,12 +310,12 @@ export function register_delayed_graph_listener() {
 }
 
 function do_load_graph_content(
-    graph_recipe,
-    graph_data_range,
-    graph_render_options,
-    script_object
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    graph_render_options: GraphRenderOptions,
+    script_object: HTMLScriptElement
 ) {
-    const graph_load_container = script_object.previousSibling;
+    const graph_load_container = script_object.previousSibling as HTMLElement;
     update_graph_load_container(
         graph_load_container,
         "Loading graph...",
@@ -205,7 +341,10 @@ function do_load_graph_content(
     });
 }
 
-function handle_load_graph_content(script_object, ajax_response) {
+function handle_load_graph_content(
+    script_object: HTMLOrSVGScriptElement,
+    ajax_response: string
+) {
     const response = JSON.parse(ajax_response);
 
     if (response.result_code != 0) {
@@ -223,18 +362,18 @@ function handle_load_graph_content(script_object, ajax_response) {
     const tmp_div = document.createElement("div");
     tmp_div.innerHTML = response.result;
 
-    script_object.parentNode.replaceChild(
+    script_object.parentNode!.replaceChild(
         tmp_div,
-        script_object.previousSibling
+        script_object.previousSibling!
     );
-    script_object.parentNode.removeChild(script_object);
+    script_object.parentNode!.removeChild(script_object);
     utils.execute_javascript_by_object(tmp_div);
 }
 
 function handle_load_graph_content_error(
-    script_object,
-    status_code,
-    error_msg
+    script_object: HTMLOrSVGScriptElement,
+    status_code: number,
+    error_msg: string
 ) {
     const msg =
         "Loading graph failed: (Status: " +
@@ -242,7 +381,7 @@ function handle_load_graph_content_error(
         ")<br><br>" +
         error_msg;
 
-    const graph_load_container = script_object.previousSibling;
+    const graph_load_container = script_object.previousSibling as HTMLElement;
     update_graph_load_container(
         graph_load_container,
         "ERROR",
@@ -250,8 +389,13 @@ function handle_load_graph_content_error(
     );
 }
 
-function update_graph_load_container(container, title, content_html) {
-    container.getElementsByClassName("title")[0].innerText = title;
+function update_graph_load_container(
+    container: HTMLElement,
+    title: string,
+    content_html: string
+) {
+    (<HTMLElement>container.getElementsByClassName("title")[0]).innerText =
+        title;
     container.getElementsByClassName("content")[0].innerHTML = content_html;
 }
 
@@ -277,7 +421,7 @@ function delayed_graph_renderer() {
     return true;
 }
 
-function update_delayed_graphs_timerange(start_time, end_time) {
+function update_delayed_graphs_timerange(start_time: number, end_time: number) {
     for (let i = 0, len = g_delayed_graphs.length; i < len; i++) {
         const entry = g_delayed_graphs[i];
         entry.graph_data_range.time_range = [start_time, end_time];
@@ -305,11 +449,11 @@ let ctx: null | CanvasRenderingContext2D = null;
 //   added via CSS
 // NOTE: If you change something here, then please check if you also need to
 // adapt the Python code that creates that graph_artwork
-function render_graph(graph) {
+function render_graph(graph: GraphArtwork) {
     // First find the canvas object and add a reference to the graph dict
     // If the initial rendering failed then any later update does not
     // make any sense.
-    const container = document.getElementById(graph["id"]);
+    const container = document.getElementById(graph["id"]!);
     if (!container) return;
 
     const canvas = (
@@ -369,13 +513,13 @@ function render_graph(graph) {
     // Now transform the whole coordinate system to our real t and v coords
     // so if we paint something at (0, 0) it will correctly represent a
     // value of 0 and a time point of time_start.
-    const trans_t = function (t) {
+    const trans_t = function (t: number) {
         return (t - t_range_from) * t_pixels_per_second + t_orig;
     };
-    const trans_v = function (v) {
+    const trans_v = function (v: number) {
         return v_orig - (v - v_axis_orig) * v_pixels_per_unit;
     };
-    const trans = function (t, v) {
+    const trans = function (t: number, v: number): [number, number] {
         return [trans_t(t), trans_v(v)];
     };
 
@@ -451,14 +595,14 @@ function render_graph(graph) {
         }
 
         if (curve["type"] == "area") {
-            let prev_lower = null;
-            let prev_upper = null;
+            let prev_lower: TimeSeriesValue = null;
+            let prev_upper: TimeSeriesValue = null;
             ctx.save();
             ctx.fillStyle = hex_to_rgba(color + opacity);
             ctx.imageSmoothingEnabled = true; // seems no difference on FF
 
             for (j = 0; j < points.length; j++) {
-                const point = points[j];
+                const point = points[j] as [TimeSeriesValue, TimeSeriesValue];
                 const lower = point[0];
                 const upper = point[1];
                 if (
@@ -497,9 +641,9 @@ function render_graph(graph) {
             ctx.beginPath();
             ctx.strokeStyle = color;
             ctx.lineWidth = curve_line_width;
-            let last_value = null;
+            let last_value: TimeSeriesValue = null;
             for (j = 0; j < points.length; j++) {
-                const value = points[j];
+                const value = points[j] as TimeSeriesValue;
                 if (value != null) {
                     const p = trans(t, value);
                     if (last_value != null) ctx.lineTo(p[0], p[1]);
@@ -580,14 +724,14 @@ function render_graph(graph) {
     graph_activate_mouse_control(graph);
 }
 
-function hex_to_rgba(color) {
+function hex_to_rgba(color: string) {
     // convert '#00112233' to 'rgba(0, 17, 34, 0.2)'
     // NOTE: When we drop IE11 support we don't need this conversion anymore.
-    const parse = x => parseInt(color.substr(x, 2), 16);
+    const parse = (x: number) => parseInt(color.substr(x, 2), 16);
     return `rgba(${parse(1)}, ${parse(3)}, ${parse(5)}, ${parse(7) / 255})`;
 }
 
-function graph_vertical_axis_width(graph) {
+function graph_vertical_axis_width(graph: GraphArtwork) {
     if (graph.render_options.preview) return 0;
 
     if (
@@ -608,8 +752,10 @@ function graph_vertical_axis_width(graph) {
     return 6 * from_display_coord(pt_to_px(graph.render_options.font_size));
 }
 
-function update_graph_styling(graph, container) {
-    const graph_div = container.getElementsByClassName("graph")[0];
+function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
+    const graph_div = container.getElementsByClassName(
+        "graph"
+    )[0] as HTMLElement;
     if (!graph_div) return;
     graph_div.style.color = graph.render_options.foreground_color;
 
@@ -710,6 +856,7 @@ function update_graph_styling(graph, container) {
         const spec = rules[i];
         css_text += spec["selector"] + " {\n";
         for (const attr_name in spec["attrs"]) {
+            //@ts-ignore
             css_text += attr_name + ": " + spec["attrs"][attr_name] + ";\n";
         }
         css_text += "}\n";
@@ -719,19 +866,19 @@ function update_graph_styling(graph, container) {
     graph_div.appendChild(style);
 }
 
-function pt_to_px(size) {
+function pt_to_px(size: number) {
     return (size / 72.0) * 96;
 }
 
-function to_display_coord(canvas_coord) {
+function to_display_coord(canvas_coord: number) {
     return canvas_coord / 2;
 }
 
-function from_display_coord(display_coord) {
+function from_display_coord(display_coord: number) {
     return display_coord * 2;
 }
 
-function graph_bottom_border(graph) {
+function graph_bottom_border(graph: GraphArtwork) {
     if (graph.render_options.preview) return 0;
 
     if (graph.render_options.show_time_axis)
@@ -742,7 +889,7 @@ function graph_bottom_border(graph) {
     else return 0;
 }
 
-function paint_line(p0, p1, color) {
+function paint_line(p0: [number, number], p1: [number, number], color: string) {
     if (!ctx) throw new Error("ctx shouldn't be null!");
     ctx.save();
     ctx.strokeStyle = color;
@@ -755,7 +902,12 @@ function paint_line(p0, p1, color) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function paint_rect(p, width, height, color) {
+function paint_rect(
+    p: [number, number],
+    width: number,
+    height: number,
+    color: string
+) {
     if (!ctx) throw new Error("ctx shouldn't be null!");
     ctx.save();
     ctx.fillStyle = color;
@@ -763,7 +915,7 @@ function paint_rect(p, width, height, color) {
     ctx.restore();
 }
 
-function paint_dot(p, color) {
+function paint_dot(p: [number, number], color: string) {
     if (!ctx) throw new Error("ctx shouldn't be null!");
     ctx.save();
     ctx.beginPath();
@@ -774,7 +926,7 @@ function paint_dot(p, color) {
     ctx.restore();
 }
 
-function parse_color(hexcolor) {
+function parse_color(hexcolor: string): [number, number, number] {
     const bits = parseInt(hexcolor.substr(1), 16);
     const r = ((bits >> 16) & 255) / 255.0;
     const g = ((bits >> 8) & 255) / 255.0;
@@ -792,7 +944,7 @@ function render_color(rgb: [number, number, number]) {
     return "#" + hex;
 }
 
-function render_color_rgba(rgb, a) {
+function render_color_rgba(rgb: [number, number, number], a: number) {
     const r = rgb[0] * 255;
     const g = rgb[1] * 255;
     const b = rgb[2] * 255;
@@ -800,23 +952,23 @@ function render_color_rgba(rgb, a) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function lighten_color(rgb, v) {
-    const lighten = function (x, v) {
+function lighten_color(rgb: [number, number, number], v: number) {
+    const lighten = function (x: number, v: number) {
         return x + (1.0 - x) * v;
     };
     return [lighten(rgb[0], v), lighten(rgb[1], v), lighten(rgb[2], v)];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function darken_color(rgb, v) {
-    const darken = function (x, v) {
+function darken_color(rgb: [number, number, number], v: number) {
+    const darken = function (x: number, v: number) {
         return x * (1.0 - v);
     };
     return [darken(rgb[0], v), darken(rgb[1], v), darken(rgb[2], v)];
 }
 
-function invert_color(rgb): [number, number, number] {
-    const invert = function (x) {
+function invert_color(rgb: [number, number, number]): [number, number, number] {
+    const invert = function (x: number) {
         return 1.0 - x;
     };
     return [invert(rgb[0]), invert(rgb[1]), invert(rgb[2])];
@@ -836,11 +988,11 @@ function invert_color(rgb): [number, number, number] {
 
 let g_dragging_graph: null | {
     pos: [number, number];
-    graph: any;
+    graph: GraphArtwork;
 } = null;
 let g_resizing_graph: null | {
     pos: [number, number];
-    graph: any;
+    graph: GraphArtwork;
 } = null;
 // Is set to True when one graph is started being updated via AJAX.
 // It is set to False when the update has finished.
@@ -856,27 +1008,33 @@ let g_graph_wheel_timeout: null | number = null;
 
 // Returns the graph container node. Can be called with any DOM node as
 // parameter which is part of a graph
-function get_graph_container(obj) {
-    while (obj && !utils.has_class(obj, "graph_container"))
-        obj = obj.parentNode;
-    return obj;
+//TODO the three functions below behave similarly but have only different css_class
+// so we only need one and the rest should be deleted
+function get_graph_container(obj: HTMLElement) {
+    let newObj: null | HTMLElement = obj;
+    while (newObj && !utils.has_class(newObj, "graph_container"))
+        newObj = newObj.parentNode as HTMLElement | null;
+    return newObj;
 }
 
-function get_main_graph_container(obj) {
-    while (obj && !utils.has_class(obj, "graph_with_timeranges"))
-        obj = obj.parentNode;
-    return obj.childNodes[1];
+function get_main_graph_container(obj: HTMLElement) {
+    let res: HTMLElement | null = obj;
+    while (res && !utils.has_class(res, "graph_with_timeranges"))
+        res = res.parentNode as HTMLElement | null;
+    return obj.childNodes[1] as HTMLElement;
 }
 
-function get_graph_graph_node(obj) {
-    while (obj && !utils.has_class(obj, "graph")) obj = obj.parentNode;
-    return obj;
+function get_graph_graph_node(obj: HTMLElement) {
+    let res: HTMLElement | null = obj;
+    while (res && !utils.has_class(res, "graph"))
+        res = res.parentNode as HTMLElement | null;
+    return res;
 }
 
 // Walk up DOM parents to find the graph container, then walk down to
 // find the canvas element which has the graph_id in it's id attribute.
 // Strip off the graph_id and return it.
-function get_graph_id_of_dom_node(target) {
+function get_graph_id_of_dom_node(target: HTMLElement) {
     const graph_container = get_graph_container(target);
     if (!graph_container) return null;
 
@@ -895,12 +1053,12 @@ function graph_global_mouse_wheel(event: Event) {
         return utils.prevent_default_events(event!);
 }
 
-function graph_activate_mouse_control(graph) {
+function graph_activate_mouse_control(graph: GraphArtwork) {
     const canvas = graph["canvas_obj"];
     utils.add_event_handler(
         "mousemove",
         function (event) {
-            return graph_mouse_move(event, graph);
+            return graph_mouse_move(event as MouseEvent, graph);
         },
         canvas
     );
@@ -913,7 +1071,7 @@ function graph_activate_mouse_control(graph) {
         canvas
     );
 
-    const on_wheel = function (event) {
+    const on_wheel = function (event: Event) {
         return graph_mouse_wheel(event, graph);
     };
 
@@ -923,16 +1081,16 @@ function graph_activate_mouse_control(graph) {
     utils.add_event_handler("mouseup", global_graph_mouse_up);
 
     if (
-        graph.ajax_context.render_options.show_controls &&
-        graph.ajax_context.render_options.resizable
+        graph.ajax_context!.render_options.show_controls &&
+        graph.ajax_context!.render_options.resizable
     ) {
         // Find resize img element
         const container = get_graph_container(canvas);
-        const resize_img = container.getElementsByClassName("resize")[0];
+        const resize_img = container!.getElementsByClassName("resize")[0];
         utils.add_event_handler(
             "mousedown",
             function (event) {
-                return graph_start_resize(event, graph);
+                return graph_start_resize(event as MouseEvent, graph);
             },
             resize_img
         );
@@ -940,12 +1098,12 @@ function graph_activate_mouse_control(graph) {
         utils.add_event_handler("mousemove", graph_mouse_resize);
     }
 
-    if (graph.ajax_context.render_options.interaction) {
+    if (graph.ajax_context!.render_options.interaction) {
         utils.add_event_handler("mousemove", update_mouse_hovering);
     }
 }
 
-function graph_start_resize(event, graph) {
+function graph_start_resize(event: MouseEvent, graph: GraphArtwork) {
     g_resizing_graph = {
         pos: [event.clientX, event.clientY],
         graph: graph,
@@ -953,14 +1111,15 @@ function graph_start_resize(event, graph) {
     return utils.prevent_default_events(event);
 }
 
-function graph_mouse_resize(event) {
+function graph_mouse_resize(event: Event) {
     if (!g_resizing_graph) return true;
 
     if (g_graph_update_in_process || g_graph_in_cooldown_period)
         return utils.prevent_default_events(event);
 
-    const new_x = event.clientX;
-    const new_y = event.clientY;
+    const mouseEvent = event as MouseEvent;
+    const new_x = mouseEvent.clientX;
+    const new_y = mouseEvent.clientY;
     const delta_x = new_x - g_resizing_graph.pos[0];
     const delta_y = new_y - g_resizing_graph.pos[1];
     g_resizing_graph.pos = [new_x, new_y];
@@ -981,7 +1140,10 @@ function graph_mouse_resize(event) {
 // Get the mouse position of an event in coords of the
 // shown time/value system. Return null if the coords
 // lie outside.
-function graph_get_mouse_position(event, graph): null | [number, number] {
+function graph_get_mouse_position(
+    event: MouseEvent,
+    graph: GraphArtwork
+): null | [number, number] {
     const time = graph_get_click_time(event, graph);
     if (
         time < graph["time_axis"]["range"][0] ||
@@ -999,8 +1161,8 @@ function graph_get_mouse_position(event, graph): null | [number, number] {
     return [time, value];
 }
 
-function graph_mouse_down(event, graph) {
-    const pos = graph_get_mouse_position(event, graph);
+function graph_mouse_down(event: Event, graph: GraphArtwork) {
+    const pos = graph_get_mouse_position(event as MouseEvent, graph);
     if (!pos) return;
 
     // Store information needed for update globally
@@ -1013,16 +1175,21 @@ function graph_mouse_down(event, graph) {
     return utils.prevent_default_events(event);
 }
 
-function has_mouse_moved(pos1, pos2) {
-    if (Math.abs(pos1[0] - pos2[0]) < 1) return false;
-    else return true;
+function has_mouse_moved(
+    pos1: [number, number],
+    pos2: [number, number] | null
+) {
+    if (pos2 === null) {
+        return true; // assume mouse was moved when pos2 is outside of graph
+    }
+    return Math.abs(pos1[0] - pos2[0]) !== 0;
 }
 
 function global_graph_mouse_up(event: Event) {
     let graph_id, graph;
     if (g_dragging_graph) {
         graph = g_dragging_graph.graph;
-        const pos = graph_get_mouse_position(event, graph);
+        const pos = graph_get_mouse_position(event as MouseEvent, graph);
         if (pos) {
             graph_id = graph["id"];
 
@@ -1080,13 +1247,17 @@ function global_graph_mouse_up(event: Event) {
     return true;
 }
 
-function handle_graph_clicked(graph) {
+function handle_graph_clicked(graph: GraphArtwork) {
     if (graph.render_options.onclick) {
         eval(graph.render_options.onclick);
     }
 }
 
-function set_consolidation_function(event, graph, consolidation_function) {
+function set_consolidation_function(
+    event: Event,
+    graph: GraphArtwork,
+    consolidation_function: string
+) {
     if (graph.render_options.interaction) {
         update_graph(
             event,
@@ -1098,11 +1269,11 @@ function set_consolidation_function(event, graph, consolidation_function) {
             null,
             consolidation_function
         );
-        sync_all_graph_timeranges(graph.id);
+        sync_all_graph_timeranges(graph.id!);
     }
 }
 
-function remove_pin(event, graph) {
+function remove_pin(event: Event, graph: GraphArtwork) {
     // Only try to remove the pin when there is currently one
     if (
         graph.render_options.interaction &&
@@ -1110,11 +1281,15 @@ function remove_pin(event, graph) {
         graph.pin_time !== null
     ) {
         set_pin_position(event, graph, -1);
-        sync_all_graph_timeranges(graph.id);
+        sync_all_graph_timeranges(graph.id!);
     }
 }
 
-function set_pin_position(event, graph, timestamp) {
+function set_pin_position(
+    event: Event,
+    graph: GraphArtwork,
+    timestamp: number
+) {
     if (graph.render_options.interaction && graph.render_options.show_pin)
         return update_graph(
             event,
@@ -1123,13 +1298,13 @@ function set_pin_position(event, graph, timestamp) {
             null,
             null,
             null,
-            parseInt(timestamp),
+            Math.trunc(timestamp),
             null
         );
 }
 
 // move is used for dragging and also for resizing
-function graph_mouse_move(event, graph) {
+function graph_mouse_move(event: MouseEvent, graph: GraphArtwork) {
     if (!graph.render_options.interaction) return; // don't do anything when this graph is not allowed to set the pin
 
     if (g_graph_update_in_process || g_graph_in_cooldown_period) return false;
@@ -1160,16 +1335,16 @@ function graph_mouse_move(event, graph) {
     return utils.prevent_default_events(event);
 }
 
-function update_mouse_hovering(event) {
-    const canvas = mouse_hovering_canvas_graph_area(event);
+function update_mouse_hovering(event: Event) {
+    const canvas = mouse_hovering_canvas_graph_area(event as MouseEvent);
     remove_all_mouse_indicators();
     if (!canvas) {
         remove_all_graph_hover_popups();
         return;
     }
 
-    const graph_node = get_graph_graph_node(canvas);
-    const graph_id = get_graph_id_of_dom_node(graph_node);
+    const graph_node = get_graph_graph_node(canvas)!;
+    const graph_id = get_graph_id_of_dom_node(graph_node)!;
     const graph = g_graphs[graph_id];
 
     hover.add();
@@ -1181,21 +1356,21 @@ function update_mouse_hovering(event) {
         canvas,
         graph,
         graph_node,
-        event.clientX - canvas_rect.left
+        (event as MouseEvent).clientX - canvas_rect.left
     );
     update_graph_hover_popup(event, graph);
 }
 
 function mouse_hovering_canvas_graph_area(event: MouseEvent | undefined) {
     if (!event) throw new Error(`Expected event, got ${event} instead`);
-    const obj = event.target;
+    const obj = event.target as HTMLElement;
     if (!obj) return null;
 
     const graph_id = get_graph_id_of_dom_node(obj);
     if (!graph_id) return null;
 
     const graph = g_graphs[graph_id];
-    const canvas = graph["canvas_obj"];
+    const canvas = graph["canvas_obj"]!;
     const canvas_rect = canvas.getBoundingClientRect();
 
     if (
@@ -1219,7 +1394,12 @@ function mouse_hovering_canvas_graph_area(event: MouseEvent | undefined) {
     return canvas;
 }
 
-function update_mouse_indicator(canvas, graph, graph_node, x) {
+function update_mouse_indicator(
+    canvas: HTMLCanvasElement,
+    graph: GraphArtwork,
+    graph_node: HTMLElement,
+    x: number
+) {
     const indicator = document.createElement("div");
     utils.add_class(indicator, "indicator");
     graph_node.appendChild(indicator);
@@ -1240,12 +1420,12 @@ function remove_all_mouse_indicators() {
     }
 }
 
-function graph_mouse_wheel(event, graph) {
+function graph_mouse_wheel(event: Event, graph: GraphArtwork) {
     if (!graph.render_options.interaction) return; // don't do anything when this graph is not allowed to set the pin
 
     if (g_graph_update_in_process) return utils.prevent_default_events(event);
 
-    const time_zoom_center = graph_get_click_time(event, graph);
+    const time_zoom_center = graph_get_click_time(event as MouseEvent, graph);
     const delta = utils.wheel_event_delta(event);
 
     let zoom: null | number = null;
@@ -1277,7 +1457,7 @@ function graph_mouse_wheel(event, graph) {
         return false;
 
     /* Also zoom all other graphs on the page */
-    const graph_id = graph.id;
+    const graph_id = graph.id!;
     if (g_graph_wheel_timeout) clearTimeout(g_graph_wheel_timeout);
     g_graph_wheel_timeout = window.setTimeout(function () {
         sync_all_graph_timeranges(graph_id);
@@ -1286,7 +1466,7 @@ function graph_mouse_wheel(event, graph) {
     return utils.prevent_default_events(event);
 }
 
-function graph_get_click_time(event, graph) {
+function graph_get_click_time(event: MouseEvent, graph: GraphArtwork) {
     const canvas = event.target as HTMLCanvasElement;
 
     // Get X position of mouse click, converted to canvas pixels
@@ -1294,28 +1474,31 @@ function graph_get_click_time(event, graph) {
 
     // Convert this to a time value and check if its within the visible range
     const t_offset =
-        (x - graph["time_origin"]) / graph["time_axis"]["pixels_per_second"];
+        (x - graph["time_origin"]!) / graph["time_axis"]["pixels_per_second"];
     return graph["time_axis"]["range"][0] + t_offset;
 }
 
-function graph_get_click_value(event, graph) {
-    const canvas = event.target;
+function graph_get_click_value(event: MouseEvent, graph: GraphArtwork) {
+    const canvas = event.target as HTMLCanvasElement;
 
     // Get Y position of mouse click, converted to canvas pixels
     const y = (get_event_offset_y(event) * canvas.height) / canvas.clientHeight;
 
     // Convert this to a vertical value and check if its within the visible range
     const v_offset =
-        -(y - graph["vertical_origin"]) /
+        -(y - graph["vertical_origin"]!) /
         graph["vertical_axis"]["pixels_per_unit"];
     return graph["vertical_axis"]["range"][0] + v_offset;
 }
 
-function get_event_offset_x(event) {
+function get_event_offset_x(event: MouseEvent) {
+    //@ts-ignore
     return event.offsetX == undefined ? event.layerX : event.offsetX;
 }
 
-function get_event_offset_y(event) {
+function get_event_offset_y(event: MouseEvent) {
+    //https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/layerY
+    //@ts-ignore
     return event.offsetY == undefined ? event.layerY : event.offsetY;
 }
 
@@ -1329,11 +1512,16 @@ function get_event_offset_y(event) {
 //#   |                      |_|                                           |
 //#   '--------------------------------------------------------------------'
 
-function update_graph_hover_popup(event, graph) {
+interface GraphHover {
+    rendered_hover_time: string;
+    curve_values: CurveValues[];
+}
+
+function update_graph_hover_popup(event: Event, graph: GraphArtwork) {
     if (g_graph_update_in_process || g_graph_in_cooldown_period)
         return utils.prevent_default_events(event);
 
-    const hover_timestamp = graph_get_click_time(event, graph);
+    const hover_timestamp = graph_get_click_time(event as MouseEvent, graph);
 
     if (!hover_timestamp) return utils.prevent_default_events(event);
 
@@ -1347,7 +1535,7 @@ function update_graph_hover_popup(event, graph) {
         "context=" +
         encodeURIComponent(JSON.stringify(graph.ajax_context)) +
         "&hover_time=" +
-        encodeURIComponent(parseInt(hover_timestamp));
+        encodeURIComponent(Math.trunc(hover_timestamp));
 
     g_graph_update_in_process = true;
     set_graph_update_cooldown();
@@ -1365,16 +1553,19 @@ function update_graph_hover_popup(event, graph) {
 }
 
 function handle_graph_hover_popup_update(
-    handler_data,
-    ajax_response,
-    http_code
+    handler_data: {
+        graph: GraphArtwork;
+        event: Event;
+    },
+    ajax_response: string,
+    http_code: unknown
 ) {
     if (http_code !== undefined) {
         //console.log("Error calling AJAX web service for graph hover update: " + ajax_response);
         g_graph_update_in_process = false;
         return;
     }
-    let popup_data;
+    let popup_data: GraphHover;
     try {
         popup_data = JSON.parse(ajax_response);
     } catch (e) {
@@ -1394,6 +1585,17 @@ function handle_graph_hover_popup_update(
     g_graph_update_in_process = false;
 }
 
+interface CurveValues {
+    color: string;
+    rendered_value: [number, string];
+    title: string;
+}
+
+interface PopupData {
+    curve_values: CurveValues[];
+    rendered_hover_time: string;
+}
+
 // Structure of popup_data:
 // {
 //    "curve_values": [
@@ -1410,7 +1612,11 @@ function handle_graph_hover_popup_update(
 //     ],
 //     "rendered_hover_time": "2018-09-26 16:34:54"
 // }
-function render_graph_hover_popup(graph, event, popup_data) {
+function render_graph_hover_popup(
+    _graph: GraphArtwork,
+    event: Event,
+    popup_data: PopupData
+) {
     const wrapper = document.createElement("div");
 
     const popup_container = document.createElement("div");
@@ -1441,7 +1647,7 @@ function render_graph_hover_popup(graph, event, popup_data) {
         value.innerText = curve.rendered_value[1];
     });
 
-    hover.update_content(wrapper.innerHTML, event);
+    hover.update_content(wrapper.innerHTML, event as MouseEvent);
 }
 
 // Hide the tooltips that show the metric values at the position of the pointer
@@ -1469,22 +1675,25 @@ function remove_all_graph_hover_popups() {
 
 // TODO: Refactor the arguments to use something like ajax.call_ajax(). Makes things much clearer.
 function update_graph(
-    event,
-    graph,
-    time_shift,
-    time_zoom,
-    time_zoom_center,
-    vertical_zoom,
-    pin_timestamp,
-    consolidation_function
+    event: Event,
+    graph: GraphArtwork,
+    time_shift: number,
+    time_zoom: number | null,
+    time_zoom_center: number | null,
+    vertical_zoom: number | null,
+    pin_timestamp: number | null,
+    consolidation_function: null | string
 ) {
     const canvas = graph["canvas_obj"];
 
-    let start_time;
-    let end_time;
+    let start_time: number;
+    let end_time: number;
 
     // Time zoom
     if (time_zoom != null) {
+        if (time_zoom_center === null) {
+            throw new Error("time_zoom_center shouldn't be null!");
+        }
         // The requested start/end time can differ from the real because
         // RRDTool align the times as it needs. The graph always is align
         // to the RRDTool data, but the zooming into small time intervals
@@ -1542,7 +1751,7 @@ function update_graph(
     }
 
     // Recompute step
-    const step = (end_time - start_time) / canvas.width / 2;
+    const step = (end_time - start_time) / canvas!.width / 2;
 
     // wenn er einmal grob wurde, nie wieder fein wird, auch wenn man in
     // einen Bereich draggt, der wieder fein vorhanden wäre? Evtl. müssen
@@ -1579,11 +1788,11 @@ function update_graph(
 
     if (g_graph_update_in_process) return utils.prevent_default_events(event);
 
-    start_graph_update(canvas, post_data);
+    start_graph_update(canvas!, post_data);
     return true;
 }
 
-function start_graph_update(canvas, post_data) {
+function start_graph_update(canvas: HTMLCanvasElement, post_data: string) {
     g_graph_update_in_process = true;
 
     set_graph_update_cooldown();
@@ -1605,13 +1814,17 @@ function set_graph_update_cooldown() {
     }, 100);
 }
 
-function handle_graph_update(graph_container, ajax_response, http_code) {
+function handle_graph_update(
+    graph_container: HTMLElement,
+    ajax_response: string,
+    http_code: unknown
+) {
     if (http_code !== undefined) {
         //console.log("Error calling AJAX web service for graph update: " + ajax_response);
         g_graph_update_in_process = false;
         return;
     }
-    let response;
+    let response: AjaxGraph;
     try {
         response = JSON.parse(ajax_response);
     } catch (e) {
@@ -1630,7 +1843,7 @@ function handle_graph_update(graph_container, ajax_response, http_code) {
     //         "render_options" : graph_render_options,
     // }
     const graph_id = response.context.graph_id;
-    const graph = response.graph;
+    const graph: GraphArtwork = response.graph;
     graph["id"] = graph_id;
     graph["ajax_context"] = response.context;
     graph["render_options"] = graph["ajax_context"]["render_options"];
@@ -1650,13 +1863,13 @@ function handle_graph_update(graph_container, ajax_response, http_code) {
 
 // re-render the given graph and check whether or not there are subgraphs
 // which need to be re-rendered too.
-function render_graph_and_subgraphs(graph) {
+function render_graph_and_subgraphs(graph: GraphArtwork) {
     render_graph(graph);
 
     for (const graph_id in g_graphs) {
         if (
             graph_id != graph.id &&
-            graph_id.substr(0, graph.id.length) == graph.id
+            graph_id.substr(0, graph.id!.length) == graph.id
         ) {
             render_graph(g_graphs[graph_id]);
         }
@@ -1665,7 +1878,7 @@ function render_graph_and_subgraphs(graph) {
 
 // Is called on the graph overview page when clicking on a timerange
 // graph to change the timerange of the main graphs.
-export function change_graph_timerange(graph, duration) {
+export function change_graph_timerange(graph: GraphArtwork, duration: number) {
     // Find the main graph by DOM tree:
     // <div class=graph_with_timeranges><div container of maingraph></td><table><tr><td>...myself
     const maingraph_container = get_main_graph_container(graph["canvas_obj"]);
@@ -1682,7 +1895,10 @@ export function change_graph_timerange(graph, duration) {
     sync_all_graph_timeranges(main_graph_id, false);
 }
 
-function update_pdf_export_link_timerange(start_time, end_time) {
+function update_pdf_export_link_timerange(
+    start_time: number,
+    end_time: number
+) {
     const context_buttons =
         document.getElementsByClassName("context_pdf_export");
     for (let i = 0; i < context_buttons.length; i++) {
@@ -1703,7 +1919,7 @@ let g_timerange_update_queue: [string, number, number][] = [];
 // Be aware: set_graph_timerange triggers an AJAX request. Most browsers have
 // a limit on the concurrent AJAX requests, so we need to slice the requests.
 function sync_all_graph_timeranges(
-    graph_id,
+    graph_id: string,
     skip_origin: boolean | undefined = undefined
 ) {
     if (skip_origin === undefined) skip_origin = true;
@@ -1739,7 +1955,11 @@ function update_next_graph_timerange() {
     if (job) set_graph_timerange(job[0], job[1], job[2]);
 }
 
-function set_graph_timerange(graph_id, start_time, end_time) {
+function set_graph_timerange(
+    graph_id: string,
+    start_time: number,
+    end_time: number
+) {
     const graph = g_graphs[graph_id];
     const canvas = graph["canvas_obj"];
     if (canvas) {
@@ -1773,9 +1993,11 @@ function set_graph_timerange(graph_id, start_time, end_time) {
 
 // First updates the current graph and then continues with the next graph
 function handle_graph_timerange_update(
-    graph_container,
-    ajax_response,
-    http_code
+    graph_container: HTMLElement,
+    ajax_response: string,
+    //DO we need http_code since AJAX always calls a function with the first two
+    //so the third is always undefined?
+    http_code: unknown
 ) {
     handle_graph_update(graph_container, ajax_response, http_code);
     update_next_graph_timerange();

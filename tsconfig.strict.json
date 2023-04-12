@@ -18,7 +18,7 @@
         // add files here
         "./web/htdocs/js/modules/dashboard.ts",
         "./web/htdocs/js/modules/valuespecs.ts",
-        //"./web/htdocs/js/modules/graphs.ts",
+        "./web/htdocs/js/modules/graphs.ts",
         "./web/htdocs/js/modules/wato.ts",
         "./web/htdocs/js/modules/element_dragging.ts",
         "./web/htdocs/js/modules/password_meter.ts",

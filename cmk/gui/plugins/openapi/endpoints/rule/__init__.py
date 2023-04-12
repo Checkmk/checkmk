@@ -24,7 +24,12 @@ from cmk.gui.plugins.openapi.endpoints.rule.fields import (
 )
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.plugins.openapi.utils import (
+    problem,
+    ProblemException,
+    RestAPIRequestDataValidationException,
+    serve_json,
+)
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.changes import add_change
@@ -64,6 +69,17 @@ class RuleEntry:
     folder: CREFolder
 
 
+def _validate_rule_move(lhs: RuleEntry, rhs: RuleEntry) -> None:
+    if lhs.ruleset.name != rhs.ruleset.name:
+        raise RestAPIRequestDataValidationException(
+            title="Invalid rule move.", detail="The two rules are not in the same ruleset."
+        )
+    if lhs.rule.id == rhs.rule.id:
+        raise RestAPIRequestDataValidationException(
+            title="Invalid rule move", detail="You cannot move a rule before/after itself."
+        )
+
+
 @Endpoint(
     constructors.object_action_href("rule", "{rule_id}", "move"),
     "cmk/move",
@@ -98,10 +114,12 @@ def move_rule_to(param: typing.Mapping[str, typing.Any]) -> http.Response:
             index = Ruleset.BOTTOM
         case "before_specific_rule":
             dest_entry = _get_rule_by_id(body["rule_id"], all_rulesets=all_rulesets)
+            _validate_rule_move(source_entry, dest_entry)
             index = dest_entry.index_nr
             dest_folder = dest_entry.folder
         case "after_specific_rule":
             dest_entry = _get_rule_by_id(body["rule_id"], all_rulesets=all_rulesets)
+            _validate_rule_move(source_entry, dest_entry)
             dest_folder = dest_entry.folder
             index = dest_entry.index_nr + 1
         case _:

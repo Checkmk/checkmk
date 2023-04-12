@@ -54,14 +54,19 @@ _LICENSE_LABEL_NAME = "cmk/licensing"
 _LICENSE_LABEL_EXCLUDE = "excluded"
 
 
-def try_update_license_usage(logger: logging.Logger) -> None:
+def try_update_license_usage(
+    logger: logging.Logger, instance_id: UUID | None, site_hash: str
+) -> None:
     """Update the license usage history
 
     If a sample could not be created (due to livestatus errors) then the update process will be
     skipped. This is important for checking the mtime of the history file during activate changes.
 
     The history has a max. length of 400 (days)."""
-    sample = _create_sample()
+    if instance_id is None:
+        raise ValueError()
+
+    sample = _create_sample(instance_id, site_hash)
 
     report_filepath = get_license_usage_report_filepath()
     licensing_dir.mkdir(parents=True, exist_ok=True)
@@ -73,7 +78,7 @@ def try_update_license_usage(logger: logging.Logger) -> None:
         if now.timestamp() < _get_next_run_ts(next_run_filepath):
             return
 
-        history = load_license_usage_history(report_filepath)
+        history = load_license_usage_history(report_filepath, instance_id, site_hash)
         history.add_sample(sample)
         _save_license_usage_report(
             report_filepath,
@@ -86,7 +91,7 @@ def try_update_license_usage(logger: logging.Logger) -> None:
         store.save_text_to_file(next_run_filepath, rot47(str(_create_next_run_ts(now))))
 
 
-def _create_sample() -> LicenseUsageSample:
+def _create_sample(instance_id: UUID, site_hash: str) -> LicenseUsageSample:
     """Calculation of hosts and services:
     num_hosts: Hosts
         - that are not shadow hosts
@@ -113,9 +118,6 @@ def _create_sample() -> LicenseUsageSample:
 
     Shadow objects: 0: active, 1: passive, 2: shadow
     """
-    if not (instance_id := load_instance_id()):
-        raise ValueError()
-
     sample_time = int(
         datetime.utcnow()
         .replace(
@@ -136,7 +138,7 @@ def _create_sample() -> LicenseUsageSample:
 
     return LicenseUsageSample(
         instance_id=instance_id,
-        site_hash=hash_site_id(omd_site()),
+        site_hash=site_hash,
         version=cmk_version.omd_version(),
         edition=general_infos["edition"],
         platform=general_infos["os"],
@@ -285,7 +287,9 @@ def _save_license_usage_report(report_filepath: Path, raw_report: RawLicenseUsag
     )
 
 
-def load_license_usage_history(report_filepath: Path) -> LocalLicenseUsageHistory:
+def load_license_usage_history(
+    report_filepath: Path, instance_id: UUID, site_hash: str
+) -> LocalLicenseUsageHistory:
     if not isinstance(
         raw_report := deserialize_dump(
             store.load_bytes_from_file(
@@ -300,13 +304,10 @@ def load_license_usage_history(report_filepath: Path) -> LocalLicenseUsageHistor
     if not raw_report.get("history"):
         return LocalLicenseUsageHistory([])
 
-    if (instance_id := load_instance_id()) is None:
-        raise TypeError()
-
     return LocalLicenseUsageHistory.parse(
         raw_report,
         instance_id=instance_id,
-        site_hash=hash_site_id(omd_site()),
+        site_hash=site_hash,
     )
 
 
@@ -460,7 +461,7 @@ def get_license_usage_report_validity() -> LicenseUsageReportValidity:
 
     with store.locked(report_filepath):
         if report_filepath.stat().st_size == 0:
-            try_update_license_usage(init_logging())
+            try_update_license_usage(init_logging(), load_instance_id(), hash_site_id(omd_site()))
             return LicenseUsageReportValidity.recent_enough
 
         age = time.time() - report_filepath.stat().st_mtime

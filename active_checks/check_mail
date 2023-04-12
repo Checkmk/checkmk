@@ -263,4 +263,4 @@ def check_mail(args: Args) -> CheckResult:
 
 if __name__ == "__main__":
     logging.getLogger().name = "check_mail"
-    active_check_main(create_argument_parser(), check_mail)
+    active_check_main(create_argument_parser(), check_mail, allow_ews=False)

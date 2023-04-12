@@ -783,13 +783,13 @@ class RulesTestClient(RestApiClient):
         conditions: RuleConditions,
         folder: str = "~",
         properties: RuleProperties | None = None,
-        expect_ok: bool = False,
+        expect_ok: bool = True,
     ) -> Response:
         body = _only_set_keys(
             {
                 "ruleset": ruleset,
                 "folder": folder,
-                "properties": properties,
+                "properties": properties if properties is not None else {},
                 "value_raw": value_raw,
                 "conditions": conditions,
             }

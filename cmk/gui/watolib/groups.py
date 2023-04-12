@@ -119,29 +119,18 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
         )
 
 
-class UnknownGroupException(Exception):
-    ...
-
-
-class GroupInUseException(Exception):
-    ...
-
-
 def delete_group(name: GroupName, group_type: GroupType) -> None:
     check_modify_group_permissions(group_type)
     # Check if group exists
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
     if name not in groups:
-        raise UnknownGroupException(
-            None,
-            _("Unknown %s group: %s") % (group_type, name),
-        )
+        raise MKUserError(None, _("Unknown %s group: %s") % (group_type, name))
 
     # Check if still used
     usages = find_usages_of_group(name, group_type)
     if usages:
-        raise GroupInUseException(
+        raise MKUserError(
             None,
             _("Unable to delete group. It is still in use by: %s")
             % ", ".join([e[0] for e in usages]),

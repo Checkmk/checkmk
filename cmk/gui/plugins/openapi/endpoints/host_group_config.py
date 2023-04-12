@@ -28,7 +28,6 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
-    ProblemException,
     serialize_group,
     serialize_group_list,
     serve_group,
@@ -45,7 +44,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.plugins.openapi.utils import serve_json
-from cmk.gui.watolib.groups import add_group, edit_group, GroupInUseException, UnknownGroupException
+from cmk.gui.watolib.groups import add_group, edit_group
 
 PERMISSIONS = permissions.Perm("wato.groups")
 
@@ -132,21 +131,7 @@ def delete(params):
     user.need_permission("wato.edit")
     user.need_permission("wato.groups")
     name = params["name"]
-    try:
-        watolib.delete_group(name, "host")
-    except GroupInUseException as exc:
-        raise ProblemException(
-            status=400,
-            title="Group in use problem",
-            detail=str(exc),
-        )
-    except UnknownGroupException as exc:
-        raise ProblemException(
-            status=404,
-            title="Unknown group problem",
-            detail=str(exc),
-        )
-
+    watolib.delete_group(name, "host")
     return Response(status=204)
 
 
@@ -157,28 +142,24 @@ def delete(params):
     request_schema=request_schemas.BulkDeleteHostGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[404],
 )
 def bulk_delete(params):
     """Bulk delete host groups"""
     user.need_permission("wato.edit")
     user.need_permission("wato.groups")
     body = params["body"]
-    for group_name in body["entries"]:
-        try:
-            watolib.delete_group(group_name, "host")
-        except GroupInUseException as exc:
-            raise ProblemException(
-                status=400,
-                title="Group in use problem",
-                detail=str(exc),
-            )
-        except UnknownGroupException as exc:
-            raise ProblemException(
-                status=404,
-                title="Unknown group problem",
-                detail=str(exc),
-            )
+    entries = body["entries"]
+    for group_name in entries:
+        message = "host group %s was not found" % group_name
+        _group = fetch_group(
+            group_name,
+            "host",
+            status=400,
+            message=message,
+        )
+
+    for group_name in entries:
+        watolib.delete_group(group_name, "host")
     return Response(status=204)
 
 

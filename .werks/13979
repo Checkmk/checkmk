@@ -1,0 +1,12 @@
+Title: REST API documentation no longer shows unused Status livestatus table documentation
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1681304889
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The REST API documentation listed the 'status' livestatus table, even though there is no endpoint to query that data.
+This table is no longer shown.

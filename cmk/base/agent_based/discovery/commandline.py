@@ -6,7 +6,7 @@
 
 import itertools
 from collections import Counter
-from collections.abc import Container, Mapping
+from collections.abc import Container, Iterable, Mapping
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -114,26 +114,28 @@ def _preprocess_hostnames(
         )
         return set(config_cache.all_active_realhosts())
 
+    # For clusters add their nodes to the list.
+    # Clusters themselves cannot be discovered.
+    # The user is allowed to specify them and we do discovery on the nodes instead.
+    def _resolve_nodes(cluster_name: HostName) -> Iterable[HostName]:
+        if (nodes := config_cache.nodes_of(cluster_name)) is None:
+            raise MKGeneralException(f"Invalid cluster configuration: {cluster_name}")
+        return nodes
+
+    node_names = {
+        node_name
+        for host_name in arg_host_names
+        for node_name in (
+            _resolve_nodes(host_name) if config_cache.is_cluster(host_name) else (host_name,)
+        )
+    }
+
     console.verbose(
         "Discovering %shost labels on: %s\n"
-        % ("services and " if not only_host_labels else "", ", ".join(sorted(arg_host_names)))
+        % ("services and " if not only_host_labels else "", ", ".join(sorted(node_names)))
     )
 
-    host_names: set[HostName] = set()
-    # For clusters add their nodes to the list. Clusters itself
-    # cannot be discovered but the user is allowed to specify
-    # them and we do discovery on the nodes instead.
-    for host_name in arg_host_names:
-        if not config_cache.is_cluster(host_name):
-            host_names.add(host_name)
-            continue
-
-        nodes = config_cache.nodes_of(host_name)
-        if nodes is None:
-            raise MKGeneralException("Invalid cluster configuration")
-        host_names.update(nodes)
-
-    return host_names
+    return node_names
 
 
 def _analyse_node_labels(

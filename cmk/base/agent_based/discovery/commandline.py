@@ -112,12 +112,12 @@ def _preprocess_hostnames(
             "Discovering %shost labels on all hosts\n"
             % ("services and " if not only_host_labels else "")
         )
-        arg_host_names = config_cache.all_active_realhosts()
-    else:
-        console.verbose(
-            "Discovering %shost labels on: %s\n"
-            % ("services and " if not only_host_labels else "", ", ".join(sorted(arg_host_names)))
-        )
+        return set(config_cache.all_active_realhosts())
+
+    console.verbose(
+        "Discovering %shost labels on: %s\n"
+        % ("services and " if not only_host_labels else "", ", ".join(sorted(arg_host_names)))
+    )
 
     host_names: set[HostName] = set()
     # For clusters add their nodes to the list. Clusters itself

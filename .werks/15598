@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0b3
+Version: 2.2.0b4
 
 This werk introduces a fix to the contact_group, host_group and service_group
 endpoints. Previously when deleting an object or bulk deleting a list of

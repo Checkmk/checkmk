@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0b3
+Version: 2.2.0b4
 
 This werk introduces a fix to the dcd endpoints.  Previously,
 the default max_redirects of 30 was being used and was often

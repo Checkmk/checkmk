@@ -99,7 +99,7 @@ def try_update_license_usage(
 
         history = load_license_usage_history(report_filepath, instance_id, site_hash)
         history.add_sample(sample)
-        _save_license_usage_report(
+        save_license_usage_report(
             report_filepath,
             RawLicenseUsageReport(
                 VERSION=LicenseUsageReportVersion,
@@ -282,7 +282,7 @@ def get_license_usage_report_filepath() -> Path:
     return licensing_dir / "history.json"
 
 
-def _save_license_usage_report(report_filepath: Path, raw_report: RawLicenseUsageReport) -> None:
+def save_license_usage_report(report_filepath: Path, raw_report: RawLicenseUsageReport) -> None:
     store.save_bytes_to_file(
         report_filepath,
         _serialize_dump(raw_report),

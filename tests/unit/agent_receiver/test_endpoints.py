@@ -803,6 +803,78 @@ def test_registration_status_pull_host(
     }
 
 
+def test_registration_status_v2_uuid_mismtach(
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: Mapping[str, str],
+) -> None:
+    response = client.get(
+        "/registration_status_v2/123",
+        headers=typeshed_issue_7724(registration_status_headers),
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": f"Verified client UUID ({uuid}) does not match UUID in URL (123)"
+    }
+
+
+def test_registration_status_v2_host_not_registered(
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: Mapping[str, str],
+) -> None:
+    response = client.get(
+        f"/registration_status_v2/{uuid}",
+        headers=typeshed_issue_7724(registration_status_headers),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "NotRegistered"}
+
+
+@pytest.mark.usefixtures("symlink_push_host")
+def test_registration_status_v2_push_host(
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: Mapping[str, str],
+) -> None:
+    response = client.get(
+        f"/registration_status_v2/{uuid}",
+        headers=typeshed_issue_7724(registration_status_headers),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "Registered",
+        "hostname": "hostname",
+        "connection_mode": ConnectionMode.PUSH.value,
+    }
+
+
+def test_registration_status_v2_pull_host(
+    tmp_path: Path,
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: Mapping[str, str],
+) -> None:
+    source = site_context.agent_output_dir() / str(uuid)
+    target_dir = tmp_path / "hostname"
+    source.symlink_to(target_dir)
+
+    response = client.get(
+        f"/registration_status_v2/{uuid}",
+        headers=typeshed_issue_7724(registration_status_headers),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "Registered",
+        "hostname": "hostname",
+        "connection_mode": ConnectionMode.PULL.value,
+    }
+
+
 def test_renew_certificate_uuid_csr_mismatch(
     client: TestClient,
     uuid: UUID4,

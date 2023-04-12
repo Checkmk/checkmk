@@ -580,3 +580,41 @@ def test_openapi_deprecated_filter_regression(rule_client: RulesTestClient) -> N
 
     resp = rule_client.list_rulesets(deprecated=False)
     assert len(resp.json["value"]) == 0
+
+
+def test_openapi_cannot_move_rules_from_different_rulesets_regression(
+    rule_client: RulesTestClient,
+) -> None:
+    resp = rule_client.create(
+        "custom_checks",
+        value_raw=repr(
+            {
+                "service_description": "Test-Service",
+                "command_line": 'echo "123"',
+            }
+        ),
+        conditions={},
+    )
+    lhs_rule_id = resp.json["id"]
+
+    resp = rule_client.create("active_checks:tcp", value_raw=repr((1, {})), conditions={})
+    rhs_rule_id = resp.json["id"]
+
+    rule_client.move(
+        lhs_rule_id, {"after_specific_rule": rhs_rule_id}, expect_ok=False
+    ).assert_status_code(400)
+    rule_client.move(
+        lhs_rule_id, {"before_specific_rule": rhs_rule_id}, expect_ok=False
+    ).assert_status_code(400)
+
+
+def test_openapi_cannot_move_rule_before_or_after_itself(rule_client: RulesTestClient) -> None:
+    resp = rule_client.create("active_checks:tcp", value_raw=repr((1, {})), conditions={})
+    rule_id = resp.json["id"]
+
+    rule_client.move(rule_id, {"after_specific_rule": rule_id}, expect_ok=False).assert_status_code(
+        400
+    )
+    rule_client.move(
+        rule_id, {"before_specific_rule": rule_id}, expect_ok=False
+    ).assert_status_code(400)

@@ -53,7 +53,7 @@ from cmk.gui.wsgi.wrappers import ParameterDict
 
 if TYPE_CHECKING:
     # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
-    from _typeshed.wsgi import StartResponse, WSGIEnvironment
+    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
 
     from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
     from cmk.gui.wsgi.type_defs import WSGIResponse
@@ -74,9 +74,7 @@ def _get_header_name(header: Mapping[str, ma_fields.String]) -> str:
     return next(iter(header))
 
 
-def crash_report_response(
-    environ: WSGIEnvironment, start_response: StartResponse, exc: Exception
-) -> WSGIResponse:
+def crash_report_response(exc: Exception) -> WSGIApplication:
     site = config.omd_site()
     details: dict[str, Any] = {}
 
@@ -140,7 +138,7 @@ def crash_report_response(
         title="Internal Server Error",
         detail=f"{crash.crash_info['exc_type']}: {crash_msg}. Crash report generated. Please submit.",
         ext=EXT(crash.crash_info),
-    )(environ, start_response)
+    )
 
 
 class EndpointAdapter(AbstractWSGIApp):
@@ -449,10 +447,10 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             return exc(environ, start_response)
 
         except RestAPIPermissionException as exc:
-            return crash_report_response(environ, start_response, exc)
+            return crash_report_response(exc)(environ, start_response)
 
         except RestAPIResponseGeneralException as exc:
-            return crash_report_response(environ, start_response, exc)
+            return crash_report_response(exc)(environ, start_response)
 
         except HTTPException as exc:
             assert isinstance(exc.code, int)
@@ -474,7 +472,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         except Exception as exc:
             if self.debug:
                 raise
-            return crash_report_response(environ, start_response, exc)
+            return crash_report_response(exc)(environ, start_response)
 
 
 class APICrashReport(crash_reporting.ABCCrashReport):

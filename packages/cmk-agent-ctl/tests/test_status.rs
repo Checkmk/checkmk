@@ -7,16 +7,17 @@
 #![allow(dead_code)]
 mod common;
 
+use common::agent;
+
 use assert_cmd::prelude::OutputAssertExt;
 use predicates::prelude::*;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_status_ok() {
-    #[cfg(windows)]
-    if !is_elevated::is_elevated() {
+    if agent::is_elevation_required() {
         // SK: There is no better method to avoid annoying failures if your
-        // IDE is not elevated. Do not worry, that you may occasionally do not
-        // test something - the testing script will require elevation in any case.
+        // IDE/shell is not elevated. The testing script in CI  will require
+        // elevation in any case.
         println!("Test is skipped, must be in elevated mode");
         return;
     }
@@ -24,8 +25,8 @@ async fn test_status_ok() {
 
     #[cfg(unix)]
     {
-        tokio::spawn(common::agent::agent_response_loop(
-            common::setup_agent_socket_path(test_dir.path()),
+        tokio::spawn(agent::linux::agent_response_loop(
+            agent::linux::setup_agent_socket_path(test_dir.path()),
             String::from("some-agent-output"),
         ));
     }

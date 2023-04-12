@@ -9,6 +9,9 @@ mod common;
 
 #[cfg(unix)]
 use anyhow::Result as AnyhowResult;
+
+use common::agent;
+
 use assert_cmd::prelude::OutputAssertExt;
 use cmk_agent_ctl::configuration::config;
 #[cfg(unix)]
@@ -71,9 +74,9 @@ async fn test_dump() -> AnyhowResult<()> {
     let test_dir = common::setup_test_dir("cmk_agent_ctl_test_dump-");
 
     let test_agent_output = "some test agent output";
-    let agent_socket_address = common::setup_agent_socket_path(test_dir.path());
+    let agent_socket_address = agent::linux::setup_agent_socket_path(test_dir.path());
     let expected_remote_address = Some("\n");
-    let agent_stream_thread = tokio::spawn(common::agent::one_time_agent_response(
+    let agent_stream_thread = tokio::spawn(agent::linux::one_time_agent_response(
         agent_socket_address,
         test_agent_output,
         expected_remote_address,
@@ -210,7 +213,7 @@ fn build_status_command_with_log(
 #[cfg(windows)]
 #[test]
 fn test_log_to_file() {
-    if !is_elevated::is_elevated() {
+    if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
         return;
     }

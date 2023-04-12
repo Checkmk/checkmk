@@ -1,20 +1,11 @@
-// Copyright (C) 2018 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-#[cfg(windows)]
-use anyhow::Error as AnyhowError;
 use anyhow::Result as AnyhowResult;
-#[cfg(unix)]
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufStream};
-#[cfg(windows)]
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-#[cfg(windows)]
-use tokio::net::{TcpListener, TcpStream};
-#[cfg(unix)]
 use tokio::net::{UnixListener, UnixStream};
 
-#[cfg(unix)]
 pub async fn one_time_agent_response(
     socket_address: String,
     output: &str,
@@ -26,17 +17,13 @@ pub async fn one_time_agent_response(
 }
 
 pub async fn agent_response_loop(socket_address: String, output: String) -> AnyhowResult<()> {
-    #[cfg(unix)]
     let socket = UnixListener::bind(socket_address).unwrap();
-    #[cfg(windows)]
-    let socket = TcpListener::bind(socket_address).await?;
     loop {
         let (stream, _) = socket.accept().await?;
         tokio::spawn(agent_response(stream, output.clone(), None));
     }
 }
 
-#[cfg(unix)]
 pub async fn agent_response(
     stream: UnixStream,
     output: String,
@@ -55,32 +42,15 @@ pub async fn agent_response(
     Ok(())
 }
 
-#[cfg(windows)]
-pub async fn agent_response(
-    mut stream: TcpStream,
-    output: String,
-    expected_input: Option<&str>,
-) -> AnyhowResult<()> {
-    let (mut reader, mut writer) = stream.split();
-    let mut buf = vec![];
-    tokio::time::timeout(tokio::time::Duration::from_secs(1), async {
-        loop {
-            reader.read_buf(&mut buf).await?;
-            tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
-            if !buf.is_empty() {
-                return Ok::<(), AnyhowError>(());
-            }
-        }
-    })
-    .await
-    .unwrap_or(Ok(()))?;
+pub fn setup_agent_socket_path(home_dir: &std::path::Path) -> String {
+    std::fs::create_dir(home_dir.join("run")).unwrap();
+    home_dir
+        .join("run/check-mk-agent.socket")
+        .to_str()
+        .unwrap()
+        .to_string()
+}
 
-    if let Some(input) = expected_input {
-        assert_eq!(String::from_utf8(buf)?, input);
-    }
-
-    writer.write_all(output.as_bytes()).await?;
-    writer.flush().await?;
-    let _ = writer.shutdown().await; // ignore error: not our problem
-    Ok(())
+pub fn is_elevation_required() -> bool {
+    false
 }

@@ -6,10 +6,10 @@
 // may be some unused functions in the common module
 #![allow(dead_code)]
 mod common;
-use self::certs::X509Certs;
 use anyhow::{bail, Context, Result as AnyhowResult};
 use cmk_agent_ctl::{certs as lib_certs, configuration::config, site_spec};
-use common::certs;
+use common::agent;
+use common::certs::{self, X509Certs};
 use std::io::{Read, Result as IoResult, Write};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::path::Path;
@@ -41,8 +41,7 @@ fn registry(
 
 #[test]
 fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
-    #[cfg(windows)]
-    if !is_elevated::is_elevated() {
+    if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
         return Ok(());
     }
@@ -51,8 +50,7 @@ fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
     let test_path = test_dir.path();
 
     let controller_uuid = uuid::Uuid::new_v4();
-    let x509_certs =
-        common::certs::X509Certs::new("Test CA", "Test receiver", "some certainly wrong uuid");
+    let x509_certs = X509Certs::new("Test CA", "Test receiver", "some certainly wrong uuid");
     let registry = registry(
         &test_path.join("registered_connections.json"),
         &x509_certs,
@@ -105,11 +103,26 @@ struct PullProcessFixture {
 }
 
 impl PullProcessFixture {
-    fn setup(test_path: &Path, port: &u16) -> IoResult<Self> {
+    #[cfg(unix)]
+    fn setup(test_path: &Path, port: &u16, _agent_channel: Option<&str>) -> IoResult<Self> {
         Command::new(assert_cmd::cargo::cargo_bin("cmk-agent-ctl"))
             .env("DEBUG_HOME_DIR", test_path)
             .env("DEBUG_CONNECTION_TIMEOUT", "1")
             .args(["pull", "--port", &port.to_string()])
+            .spawn()
+            .map(|process| Self { process })
+    }
+
+    #[cfg(windows)]
+    fn setup(test_path: &Path, port: &u16, agent_channel: Option<&str>) -> IoResult<Self> {
+        let port_string = port.to_string();
+        let mut commands = vec!["pull", "--port", &port_string];
+        if agent_channel.is_some() {
+            commands.extend_from_slice(&["--agent-channel", agent_channel.unwrap()]);
+        }
+        Command::new(assert_cmd::cargo::cargo_bin("cmk-agent-ctl"))
+            .env("DEBUG_HOME_DIR", test_path)
+            .args(commands)
             .spawn()
             .map(|process| Self { process })
     }
@@ -121,22 +134,24 @@ impl PullProcessFixture {
 
 struct AgentStreamFixture {
     thread: tokio::task::JoinHandle<std::result::Result<(), anyhow::Error>>,
+    agent_channel: Option<String>,
 }
 
 impl AgentStreamFixture {
     #[cfg(unix)]
     fn setup(test_path: &Path) -> Self {
         Self {
-            thread: tokio::spawn(common::agent::agent_response_loop(
-                common::setup_agent_socket_path(test_path),
+            thread: tokio::spawn(agent::linux::agent_response_loop(
+                agent::linux::setup_agent_socket_path(test_path),
                 Self::test_agent_output(),
             )),
+            agent_channel: None,
         }
     }
 
     #[cfg(windows)]
     fn setup(_test_path: &Path) -> Self {
-        panic!("AgentStreamFixture::setup currently not implemented under Windows")
+        panic!("not implemented");
     }
 
     fn compressed_agent_output(&self) -> AnyhowResult<Vec<u8>> {
@@ -155,11 +170,15 @@ impl AgentStreamFixture {
     fn test_agent_output() -> String {
         String::from("some test agent output")
     }
+
+    fn get_agent_channel(&self) -> Option<&str> {
+        self.agent_channel.as_deref()
+    }
 }
 
 struct TrustFixture {
     uuid: String,
-    certs: common::certs::X509Certs,
+    certs: X509Certs,
 }
 
 impl TrustFixture {
@@ -205,8 +224,7 @@ async fn teardown(
 }
 
 async fn _test_pull_tls_main(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowResult<()> {
-    #[cfg(windows)]
-    if !is_elevated::is_elevated() {
+    if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
         return Ok(());
     }
@@ -214,7 +232,11 @@ async fn _test_pull_tls_main(prefix: &str, ip_addr: IpAddr, port: u16) -> Anyhow
     let test_dir = common::setup_test_dir(prefix);
     let agent_stream_fixture = AgentStreamFixture::setup(test_dir.path());
     let trust_fixture = TrustFixture::setup(test_dir.path())?;
-    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &port)?;
+    let pull_proc_fixture = PullProcessFixture::setup(
+        test_dir.path(),
+        &port,
+        agent_stream_fixture.get_agent_channel(),
+    )?;
 
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
@@ -287,15 +309,14 @@ async fn test_pull_tls_main_ipv6() -> AnyhowResult<()> {
 }
 
 async fn _test_pull_tls_check_guards(prefix: &str, socket_addr: SocketAddr) -> AnyhowResult<()> {
-    #[cfg(windows)]
-    if !is_elevated::is_elevated() {
+    if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
         return Ok(());
     }
 
     let test_dir = common::setup_test_dir(prefix);
     TrustFixture::setup(test_dir.path())?;
-    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &socket_addr.port())?;
+    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &socket_addr.port(), None)?;
 
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
@@ -338,8 +359,7 @@ async fn test_pull_tls_check_guards_ipv6() -> AnyhowResult<()> {
 }
 
 async fn _test_pull_legacy(prefix: &str, socket_addr: SocketAddr) -> AnyhowResult<()> {
-    #[cfg(windows)]
-    if !is_elevated::is_elevated() {
+    if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
         return Ok(());
     }
@@ -350,7 +370,11 @@ async fn _test_pull_legacy(prefix: &str, socket_addr: SocketAddr) -> AnyhowResul
     // marker; this shouldn't happen in reality, but who knows ...
     std::fs::write(test_dir.path().join("allow-legacy-pull"), "")?;
     let agent_stream_fixture = AgentStreamFixture::setup(test_dir.path());
-    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &socket_addr.port())?;
+    let pull_proc_fixture = PullProcessFixture::setup(
+        test_dir.path(),
+        &socket_addr.port(),
+        agent_stream_fixture.get_agent_channel(),
+    )?;
 
     // Give it some time to provide the TCP socket.
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
@@ -399,14 +423,13 @@ async fn test_pull_legacy_ipv6() -> AnyhowResult<()> {
 }
 
 async fn _test_pull_no_connections(prefix: &str, socket_addr: SocketAddr) -> AnyhowResult<()> {
-    #[cfg(windows)]
-    if !is_elevated::is_elevated() {
+    if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
         return Ok(());
     }
 
     let test_dir = common::setup_test_dir(prefix);
-    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &socket_addr.port())?;
+    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &socket_addr.port(), None)?;
 
     // Give it some time to provide the TCP socket (it shouldn't)
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
@@ -437,15 +460,14 @@ async fn test_pull_no_connections_ipv6() -> AnyhowResult<()> {
 }
 
 async fn _test_pull_reload(prefix: &str, socket_addr: SocketAddr) -> AnyhowResult<()> {
-    #[cfg(windows)]
-    if !is_elevated::is_elevated() {
+    if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
         return Ok(());
     }
 
     let test_dir = common::setup_test_dir(prefix);
     TrustFixture::setup(test_dir.path())?;
-    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &socket_addr.port())?;
+    let pull_proc_fixture = PullProcessFixture::setup(test_dir.path(), &socket_addr.port(), None)?;
 
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;

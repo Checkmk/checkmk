@@ -1053,3 +1053,21 @@ class PasswordTestClient(RestApiClient):
             body=body,
             expect_ok=expect_ok,
         )
+
+
+class AgentTestClient(RestApiClient):
+    domain: Literal["agent"] = "agent"
+
+    def bake(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/agent/actions/bake/invoke",
+            expect_ok=expect_ok,
+        )
+
+    def bake_status(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url="/domain-types/agent/actions/baking_status/invoke",
+            expect_ok=expect_ok,
+        )

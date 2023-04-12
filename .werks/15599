@@ -1,0 +1,16 @@
+Title: agent: second bake request now returns a 409 conflict
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1681276624
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces a fix to the bake all agents endpoint.
+Previously, the endpoint would return a 500 internal server
+error. We now return a 409 Conflict, with an appropriate
+error message to indicate that the process is already
+running. Client side scripts should be adjusted accordingly.
+

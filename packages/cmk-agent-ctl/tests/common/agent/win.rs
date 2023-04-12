@@ -5,6 +5,7 @@
 use anyhow::Error as AnyhowError;
 use anyhow::Result as AnyhowResult;
 use cmk_agent_ctl::mailslot_transport::MailSlotBackend;
+use mail_slot::{MailslotClient, MailslotName};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
@@ -17,10 +18,39 @@ pub async fn make_agent_response_peer() -> AnyhowResult<MailSlotBackend> {
 
 /// awaits on mailslot connection from controller
 pub async fn run_agent_response_loop(
-    mut _backend: MailSlotBackend,
-    _output: String,
+    mut backend: MailSlotBackend,
+    output: String,
 ) -> AnyhowResult<()> {
+    loop {
+        let value: Vec<u8> =
+            tokio::time::timeout(std::time::Duration::from_secs(180), backend.tx.recv())
+                .await
+                .unwrap_or_else(|_| {
+                    Some(vec![]) // we return empty string on timeout
+                })
+                .unwrap_or_default();
+        let command = String::from_utf8_lossy(&value);
+        if command.is_empty() {
+            break;
+        }
+        let name = MailslotName::local(&extract_mailslot_name_from_yaml_text(&command));
+        let result = MailslotClient::new(&name);
+        let mut client = result.expect(&format!(
+            "Name of the slot {}\\{} is probably incorrect",
+            name.domain, name.path
+        ));
+        if let Err(_) = client.send_message(output.as_bytes()) {
+            break;
+        }
+    }
+
     Ok(())
+}
+
+/// simplest possible extraction of the channel, we don't care about yaml
+fn extract_mailslot_name_from_yaml_text(command: &str) -> String {
+    let words: Vec<&str> = command.split(" ").into_iter().collect();
+    words[4].trim().to_owned()
 }
 
 pub async fn agent_response(

@@ -151,7 +151,15 @@ impl AgentStreamFixture {
 
     #[cfg(windows)]
     fn setup(_test_path: &Path) -> Self {
-        panic!("not implemented");
+        let backend = async_std::task::block_on(agent::win::make_agent_response_peer()).unwrap();
+        let agent_channel = Some("ms/".to_string() + &backend.used_name());
+        Self {
+            thread: tokio::spawn(agent::win::run_agent_response_loop(
+                backend,
+                Self::test_agent_output(),
+            )),
+            agent_channel,
+        }
     }
 
     fn compressed_agent_output(&self) -> AnyhowResult<Vec<u8>> {
@@ -223,6 +231,26 @@ async fn teardown(
     test_dir.close()
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pull_tls_main_ipv4() -> AnyhowResult<()> {
+    _test_pull_tls_main(
+        "test_pull_tls_main_ipv4",
+        IpAddr::V4(Ipv4Addr::LOCALHOST),
+        get_port(),
+    )
+    .await
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pull_tls_main_ipv6() -> AnyhowResult<()> {
+    _test_pull_tls_main(
+        "test_pull_tls_main_ipv6",
+        IpAddr::V6(Ipv6Addr::LOCALHOST),
+        get_port(),
+    )
+    .await
+}
+
 async fn _test_pull_tls_main(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowResult<()> {
     if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
@@ -282,30 +310,6 @@ fn make_port_personal() -> u16 {
     static UNIQUE_PORT_INDEX: atomic::AtomicU16 = atomic::AtomicU16::new(0);
 
     UNIQUE_PORT_INDEX.fetch_add(1, atomic::Ordering::Relaxed)
-}
-
-// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
-#[tokio::test(flavor = "multi_thread")]
-#[cfg_attr(target_os = "windows", ignore)]
-async fn test_pull_tls_main_ipv4() -> AnyhowResult<()> {
-    _test_pull_tls_main(
-        "test_pull_tls_main_ipv4",
-        IpAddr::V4(Ipv4Addr::LOCALHOST),
-        get_port(),
-    )
-    .await
-}
-
-// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
-#[tokio::test(flavor = "multi_thread")]
-#[cfg_attr(target_os = "windows", ignore)]
-async fn test_pull_tls_main_ipv6() -> AnyhowResult<()> {
-    _test_pull_tls_main(
-        "test_pull_tls_main_ipv6",
-        IpAddr::V6(Ipv6Addr::LOCALHOST),
-        get_port(),
-    )
-    .await
 }
 
 async fn _test_pull_tls_check_guards(prefix: &str, socket_addr: SocketAddr) -> AnyhowResult<()> {

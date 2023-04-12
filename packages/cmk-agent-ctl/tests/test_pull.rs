@@ -373,7 +373,6 @@ async fn _test_pull_tls_check_guards(prefix: &str, ip_addr: IpAddr, port: u16) -
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[cfg_attr(target_os = "windows", ignore)]
 async fn test_pull_legacy_ipv4() -> AnyhowResult<()> {
     _test_pull_legacy(
         "test_pull_legacy_ipv4",
@@ -384,7 +383,6 @@ async fn test_pull_legacy_ipv4() -> AnyhowResult<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[cfg_attr(target_os = "windows", ignore)]
 async fn test_pull_legacy_ipv6() -> AnyhowResult<()> {
     _test_pull_legacy(
         "test_pull_legacy_ipv6",

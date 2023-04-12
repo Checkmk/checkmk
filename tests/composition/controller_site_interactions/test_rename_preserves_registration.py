@@ -67,7 +67,7 @@ def _test_rename_preserves_registration(
 
     controller_status = controller_status_json(agent_ctl)
     try:
-        assert HostName(controller_status["connections"][0]["remote"]["host_name"]) == new_hostname
+        assert HostName(controller_status["connections"][0]["remote"]["hostname"]) == new_hostname
     except Exception as e:
         raise Exception(
             f"Checking if controller sees renaming failed. Status output:\n{controller_status}"

@@ -7,7 +7,6 @@ use anyhow::{bail, Context, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_with::DisplayFromStr;
-use string_enum::StringEnum;
 
 #[derive(Serialize)]
 struct RenewCertificateBody {
@@ -68,24 +67,17 @@ pub enum RegisterNewOngoingResponse {
     Success(RegisterNewOngoingResponseSuccess),
 }
 
-#[derive(StringEnum)]
-pub enum R4RStatus {
-    /// `new`
-    New,
-    /// `pending`
-    Pending,
-    /// `declined`
-    Declined,
-    /// `discoverable`
-    Discoverable,
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "status")]
+pub enum RegistrationStatusV2Response {
+    NotRegistered,
+    Registered(RegistrationStatusV2ResponseRegistered),
 }
 
-#[derive(Deserialize)]
-pub struct RegistrationStatusResponse {
-    pub hostname: Option<String>,
-    pub status: Option<R4RStatus>,
-    pub connection_mode: Option<config::ConnectionMode>,
-    pub message: Option<String>,
+#[derive(Serialize, Deserialize)]
+pub struct RegistrationStatusV2ResponseRegistered {
+    pub hostname: String,
+    pub connection_mode: config::ConnectionMode,
 }
 
 #[derive(Deserialize)]
@@ -133,12 +125,12 @@ pub trait AgentData {
     ) -> AnyhowResult<()>;
 }
 
-pub trait RegistrationStatus {
-    fn registration_status(
+pub trait RegistrationStatusV2 {
+    fn registration_status_v2(
         &self,
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
-    ) -> AnyhowResult<RegistrationStatusResponse>;
+    ) -> AnyhowResult<RegistrationStatusV2Response>;
 }
 
 pub trait RenewCertificate {
@@ -371,12 +363,12 @@ impl AgentData for Api {
     }
 }
 
-impl RegistrationStatus for Api {
-    fn registration_status(
+impl RegistrationStatusV2 for Api {
+    fn registration_status_v2(
         &self,
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
-    ) -> AnyhowResult<RegistrationStatusResponse> {
+    ) -> AnyhowResult<RegistrationStatusV2Response> {
         Self::deserialize_json_response(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
@@ -384,10 +376,10 @@ impl RegistrationStatus for Api {
             )?
             .get(Self::endpoint_url(
                 base_url,
-                &["registration_status", &connection.uuid.to_string()],
+                &["registration_status_v2", &connection.uuid.to_string()],
             )?)
             .send()?,
-            |body| serde_json::from_str::<RegistrationStatusResponse>(body),
+            |body| serde_json::from_str::<RegistrationStatusV2Response>(body),
         )
     }
 }

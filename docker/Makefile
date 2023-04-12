@@ -47,7 +47,7 @@ check-mk-$(EDITION)-docker-$(VERSION).demo.tar.gz: image-demo
 
 image: needed-packages
 	SECRET_CONTAINER_ID=$$($(SECRET_CONTAINER_ID_CMD)) ; \
-	docker build \
+	DOCKER_BUILDKIT=0 docker build \
 	    --network=container:$$SECRET_CONTAINER_ID \
 	    --build-arg CMK_VERSION="$(VERSION)" \
 	    --build-arg CMK_EDITION="$(EDITION)" \
@@ -77,7 +77,7 @@ image-daily: needed-packages
 	fi ; \
 	VERSION="$${VERSION:-$$(date +%F)}" ; \
 	VERSION="$${BRANCH_PREFIX}$${VERSION//-/.}" ; \
-	docker build \
+	DOCKER_BUILDKIT=0 docker build \
 	    --network=container:$$SECRET_CONTAINER_ID \
 	    --build-arg CMK_VERSION="$${VERSION}" \
 	    --build-arg CMK_EDITION=$(EDITION) \

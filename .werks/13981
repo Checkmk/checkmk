@@ -1,0 +1,25 @@
+Title: Permission checks in REST-API service downtimes
+Class: security
+Compatible: compat
+Component: rest-api
+Date: 1681377150
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this Werk it was possible for users to schedule downtimes for services of any host via the REST API, even if they didn't have the permissions to do so.
+
+The REST API will now correctly check the users permissions when putting a service into downtime.
+That not only includes the permission "wato.downtimes" but also access to the effected host and service.
+
+<b>Affected Versions</b>:
+LI: 2.2.0 (beta)
+LI: 2.1.0
+
+<b>Vulnerability Management</b>:
+We have rated the issue with a CVSS Score of 4.3 (Medium) with the following CVSS vector:
+<tt>CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N</tt>.
+and assigned CVE <tt>CVE-2023-2020</tt>.
+
+

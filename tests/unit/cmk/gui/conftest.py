@@ -29,6 +29,7 @@ from tests.testlib.rest_api_client import (
     AgentTestClient,
     AuxTagTestClient,
     ContactGroupTestClient,
+    DowntimeTestClient,
     expand_rel,
     get_link,
     HostTagGroupTestClient,
@@ -584,3 +585,8 @@ def password_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> Pass
 @pytest.fixture()
 def agent_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> AgentTestClient:
     return AgentTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture()
+def downtime_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> DowntimeTestClient:
+    return DowntimeTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)

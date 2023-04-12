@@ -6,7 +6,7 @@
 import datetime as dt
 from typing import Literal
 
-from livestatus import SiteId
+from livestatus import MultiSiteConnection, SiteId
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
@@ -16,6 +16,7 @@ from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.livestatus_helpers.tables.services import Services
 from cmk.utils.type_defs import UserId
 
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 from cmk.gui.livestatus_utils.commands.utils import to_timestamp
@@ -663,6 +664,30 @@ def schedule_host_downtime(  # type: ignore[no-untyped-def]
             )
 
 
+def assert_object_is_visible_to_user(
+    live: MultiSiteConnection, host: str, service: str | None, user: UserId
+) -> None:
+    if service is None:
+        query = Query.from_string(
+            "\n".join(
+                [
+                    "GET hosts",
+                    "Columns: host_name",
+                    f"Filter: host_name = {host}",
+                    f"AuthUser: {user}",
+                ]
+            )
+        )
+        fail_msg = f"Host {host}"
+    else:
+        query = Query.from_string(
+            f"GET services\nColumns: service_description\nFilter: service_description = {service}\nFilter: host_name = {host}\nAuthUser: {user}"
+        )
+        fail_msg = f"Service '{service}' of {host}"
+    if not len(query.fetch_values(live)) != 0:
+        raise MKAuthException(f"Cannot find the requested resource: {fail_msg}")
+
+
 def _schedule_downtime(  # type: ignore[no-untyped-def]
     sites,
     command: LivestatusCommand,
@@ -685,6 +710,8 @@ def _schedule_downtime(  # type: ignore[no-untyped-def]
     """
     # TODO: provide reference documents for recurring magic numbers
     _user.need_permission("action.downtimes")
+    if _user.id is not None:
+        assert_object_is_visible_to_user(sites, host_or_group, service_description, _user.id)
 
     recur_mode = _recur_mode(recur, duration)
 

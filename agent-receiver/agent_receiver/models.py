@@ -177,3 +177,13 @@ class RegistrationStatus(BaseModel, frozen=True):
     message: str | None = None
     # Kept for backwards compatibility
     type: ConnectionMode | None = None
+
+
+class RegistrationStatusV2ResponseNotRegistered(BaseModel, frozen=True):
+    status: Literal["NotRegistered"] = "NotRegistered"
+
+
+class RegistrationStatusV2ResponseRegistered(BaseModel, frozen=True):
+    status: Literal["Registered"] = "Registered"
+    hostname: str
+    connection_mode: ConnectionMode

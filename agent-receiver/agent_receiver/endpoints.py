@@ -37,6 +37,8 @@ from agent_receiver.models import (
     RegisterNewOngoingResponseSuccess,
     RegisterNewResponse,
     RegistrationStatus,
+    RegistrationStatusV2ResponseNotRegistered,
+    RegistrationStatusV2ResponseRegistered,
     RegistrationWithHNBody,
     RenewCertResponse,
     RequestForRegistration,
@@ -448,6 +450,24 @@ async def registration_status(
         connection_mode=host.connection_mode,
         message="Host registered",
         type=host.connection_mode,
+    )
+
+
+@UUID_VALIDATION_ROUTER.get(
+    "/registration_status_v2/{uuid}",
+    response_model=RegistrationStatusV2ResponseNotRegistered
+    | RegistrationStatusV2ResponseRegistered,
+)
+async def registration_status_v2(
+    uuid: UUID4,
+) -> RegistrationStatusV2ResponseNotRegistered | RegistrationStatusV2ResponseRegistered:
+    try:
+        host = RegisteredHost(uuid)
+    except NotRegisteredException:
+        return RegistrationStatusV2ResponseNotRegistered()
+    return RegistrationStatusV2ResponseRegistered(
+        hostname=host.name,
+        connection_mode=host.connection_mode,
     )
 
 

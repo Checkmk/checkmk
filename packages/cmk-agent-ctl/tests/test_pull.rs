@@ -312,6 +312,24 @@ fn make_port_personal() -> u16 {
     UNIQUE_PORT_INDEX.fetch_add(1, atomic::Ordering::Relaxed)
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pull_tls_check_guards_ipv4() -> AnyhowResult<()> {
+    _test_pull_tls_check_guards(
+        "test_pull_tls_check_guards_ipv4",
+        SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9980),
+    )
+    .await
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pull_tls_check_guards_ipv6() -> AnyhowResult<()> {
+    _test_pull_tls_check_guards(
+        "test_pull_tls_check_guards_ipv6",
+        SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 9981),
+    )
+    .await
+}
+
 async fn _test_pull_tls_check_guards(prefix: &str, socket_addr: SocketAddr) -> AnyhowResult<()> {
     if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
@@ -345,19 +363,21 @@ async fn _test_pull_tls_check_guards(prefix: &str, socket_addr: SocketAddr) -> A
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_pull_tls_check_guards_ipv4() -> AnyhowResult<()> {
-    _test_pull_tls_check_guards(
-        "test_pull_tls_check_guards_ipv4",
-        SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9980),
+#[cfg_attr(target_os = "windows", ignore)]
+async fn test_pull_legacy_ipv4() -> AnyhowResult<()> {
+    _test_pull_legacy(
+        "test_pull_legacy_ipv4",
+        SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9990),
     )
     .await
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_pull_tls_check_guards_ipv6() -> AnyhowResult<()> {
-    _test_pull_tls_check_guards(
-        "test_pull_tls_check_guards_ipv6",
-        SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 9981),
+#[cfg_attr(target_os = "windows", ignore)]
+async fn test_pull_legacy_ipv6() -> AnyhowResult<()> {
+    _test_pull_legacy(
+        "test_pull_legacy_ipv6",
+        SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 9991),
     )
     .await
 }
@@ -407,21 +427,19 @@ async fn _test_pull_legacy(prefix: &str, socket_addr: SocketAddr) -> AnyhowResul
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[cfg_attr(target_os = "windows", ignore)]
-async fn test_pull_legacy_ipv4() -> AnyhowResult<()> {
-    _test_pull_legacy(
-        "test_pull_legacy_ipv4",
-        SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 9990),
+async fn test_pull_no_connections_ipv4() -> AnyhowResult<()> {
+    _test_pull_no_connections(
+        "test_pull_no_connections_ipv4",
+        SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 10000),
     )
     .await
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[cfg_attr(target_os = "windows", ignore)]
-async fn test_pull_legacy_ipv6() -> AnyhowResult<()> {
-    _test_pull_legacy(
-        "test_pull_legacy_ipv6",
-        SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 9991),
+async fn test_pull_no_connections_ipv6() -> AnyhowResult<()> {
+    _test_pull_no_connections(
+        "test_pull_no_connections_ipv6",
+        SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 10001),
     )
     .await
 }
@@ -445,24 +463,27 @@ async fn _test_pull_no_connections(prefix: &str, socket_addr: SocketAddr) -> Any
         .context("Teardown failed")
 }
 
+// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
 #[tokio::test(flavor = "multi_thread")]
-async fn test_pull_no_connections_ipv4() -> AnyhowResult<()> {
-    _test_pull_no_connections(
-        "test_pull_no_connections_ipv4",
-        SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 10000),
+#[cfg_attr(target_os = "windows", ignore)]
+async fn test_pull_reload_ipv4() -> AnyhowResult<()> {
+    _test_pull_reload(
+        "test_pull_reload_ipv4",
+        SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 10010),
     )
     .await
 }
 
+// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
 #[tokio::test(flavor = "multi_thread")]
-async fn test_pull_no_connections_ipv6() -> AnyhowResult<()> {
-    _test_pull_no_connections(
-        "test_pull_no_connections_ipv6",
-        SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 10001),
+#[cfg_attr(target_os = "windows", ignore)]
+async fn test_pull_reload_ipv6() -> AnyhowResult<()> {
+    _test_pull_reload(
+        "test_pull_reload_ipv6",
+        SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 10011),
     )
     .await
 }
-
 async fn _test_pull_reload(prefix: &str, socket_addr: SocketAddr) -> AnyhowResult<()> {
     if agent::is_elevation_required() {
         println!("Test is skipped, must be in elevated mode");
@@ -494,26 +515,4 @@ async fn _test_pull_reload(prefix: &str, socket_addr: SocketAddr) -> AnyhowResul
     teardown(test_dir, pull_proc_fixture, None)
         .await
         .context("Teardown failed")
-}
-
-// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
-#[tokio::test(flavor = "multi_thread")]
-#[cfg_attr(target_os = "windows", ignore)]
-async fn test_pull_reload_ipv4() -> AnyhowResult<()> {
-    _test_pull_reload(
-        "test_pull_reload_ipv4",
-        SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 10010),
-    )
-    .await
-}
-
-// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
-#[tokio::test(flavor = "multi_thread")]
-#[cfg_attr(target_os = "windows", ignore)]
-async fn test_pull_reload_ipv6() -> AnyhowResult<()> {
-    _test_pull_reload(
-        "test_pull_reload_ipv6",
-        SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 10011),
-    )
-    .await
 }

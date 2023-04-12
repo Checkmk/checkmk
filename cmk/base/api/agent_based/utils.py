@@ -352,10 +352,10 @@ def check_levels(
         """
         if levels_upper and levels_lower:
             metric_levels = (
-				levels_lower
-	            if value <= levels_lower[0] +(levels_upper[0]-levels_lower[0])/2
+                levels_lower
+                if value <= levels_lower[0] +(levels_upper[0]-levels_lower[0])/2
                 else levels_upper
-			)
+            )
         else:
             metric_levels = levels_upper if levels_upper else levels_lower
 
@@ -440,20 +440,20 @@ def check_levels_predictive(
         info_text = "%s%s" % (render_func(value), predictive_levels_msg)
 
     yield Result(state=value_state, summary=info_text + levels_text)
-	"""
-	If both lower and upper levels are present, check which levels
-	have been exceeded and show these in the summary text.
-	Otherwise, select the available levels, or None if neither is known.
-	"""
-	if levels_upper and levels_lower:
-		metric_levels = (
-			levels_lower
-			if value <= levels_lower[0] +(levels_upper[0]-levels_lower[0])/2
-			else levels_upper
-		)
-	else:
-		metric_levels = levels_upper if levels_upper else levels_lower
-	yield Metric(metric_name, value, levels=metric_levels, boundaries=boundaries)
+    """
+    If both lower and upper levels are present, check which levels
+    have been exceeded and show these in the summary text.
+    Otherwise, select the available levels, or None if neither is known.
+    """
+    if levels_upper and levels_lower:
+        metric_levels = (
+            levels_lower
+            if value <= levels_lower[0] +(levels_upper[0]-levels_lower[0])/2
+            else levels_upper
+        )
+    else:
+        metric_levels = levels_upper if levels_upper else levels_lower
+    yield Metric(metric_name, value, levels=metric_levels, boundaries=boundaries)
     if ref_value:
         yield Metric("predict_%s" % metric_name, ref_value)
 

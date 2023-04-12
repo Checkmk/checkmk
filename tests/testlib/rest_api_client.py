@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import abc
 import dataclasses
+import datetime
 import json
 import multiprocessing
 import pprint
@@ -511,11 +512,32 @@ class RestApiClient:
         return result
 
     # TODO: add optional parameters
-    def create_user(self, username: str, fullname: str, expect_ok: bool = True) -> Response:
-        body = {
+    def create_user(
+        self,
+        username: str,
+        fullname: str,
+        authorized_sites: Sequence[str] | None = None,
+        contactgroups: Sequence[str] | None = None,
+        auth_option: dict[str, str] | None = None,
+        roles: list[str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
             "username": username,
             "fullname": fullname,
         }
+
+        if authorized_sites is not None:
+            body["authorized_sites"] = authorized_sites
+
+        if contactgroups is not None:
+            body["contactgroups"] = contactgroups
+
+        if auth_option is not None:
+            body["auth_option"] = auth_option
+
+        if roles is not None:
+            body["roles"] = roles
 
         if version.is_managed_edition():
             body["customer"] = "provider"
@@ -899,3 +921,55 @@ class ContactGroupTestClient(RestApiClient):
         )
 
     # TODO: Add other contact group endpoints
+
+
+class DowntimeTestClient(RestApiClient):
+    domain: Literal["downtime"] = "downtime"
+
+    def create_for_host(
+        self,
+        start_time: datetime.datetime,
+        end_time: datetime.datetime,
+        recur: str,
+        duration: int,
+        comment: str,
+        host_name: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        body = {
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat(),
+            "recur": recur,
+            "duration": duration,
+            "comment": comment,
+            "host_name": host_name,
+            "downtime_type": "host",
+        }
+        return self.request(
+            "post", url="/domain-types/downtime/collections/host", body=body, expect_ok=expect_ok
+        )
+
+    def create_for_services(
+        self,
+        start_time: datetime.datetime,
+        end_time: datetime.datetime,
+        recur: str,
+        duration: int,
+        comment: str,
+        host_name: str,
+        service_descriptions: list[str],
+        expect_ok: bool = True,
+    ) -> Response:
+        body = {
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat(),
+            "recur": recur,
+            "duration": duration,
+            "comment": comment,
+            "host_name": host_name,
+            "service_descriptions": service_descriptions,
+            "downtime_type": "service",
+        }
+        return self.request(
+            "post", url="/domain-types/downtime/collections/service", body=body, expect_ok=expect_ok
+        )

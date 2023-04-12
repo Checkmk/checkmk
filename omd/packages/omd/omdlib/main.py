@@ -31,6 +31,7 @@ import fcntl
 import io
 import logging
 import os
+import pty
 import pwd
 import random
 import re
@@ -1805,26 +1806,35 @@ def call_scripts(site: SiteContext, phase: str, add_env: Mapping[str, str] | Non
         if file.name[0] == ".":
             continue
         sys.stdout.write(f'Executing {phase} script "{file.name}"...')
+        fd_parent, fd_child = pty.openpty()
+
+        parent = os.fdopen(fd_parent, buffering=1)
         with subprocess.Popen(  # nosec
             str(file),  # path-like args is not allowed when shell is true
             shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stdout=fd_child,
+            stderr=fd_child,
             encoding="utf-8",
             env=env,
         ) as proc:
-
-            if proc.stdout is None:
-                raise Exception("stdout needs to be set")
-
+            os.close(fd_child)
             wrote_output = False
-            for line in proc.stdout:
-                if not wrote_output:
-                    sys.stdout.write("\n")
-                    wrote_output = True
+            try:
+                while True:
+                    line = parent.readline()
+                    if not line:
+                        break
+                    if not wrote_output:
+                        sys.stdout.write("\n")
+                        wrote_output = True
 
-                sys.stdout.write(f"-| {line}")
-                sys.stdout.flush()
+                    sys.stdout.write(f"-| {line}")
+                    sys.stdout.flush()
+            except IOError:
+                pass
+            finally:
+                if not pty:
+                    parent.close()
 
         if not proc.returncode:
             sys.stdout.write(tty.ok + "\n")

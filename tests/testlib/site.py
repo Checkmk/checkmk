@@ -487,7 +487,7 @@ class Site:
     def current_version_directory(self) -> str:
         return os.path.split(os.readlink("/omd/sites/%s/version" % self.id))[-1]
 
-    def create(self) -> None:
+    def install_cmk(self) -> None:
         if not self.version.is_installed():
             logger.info("Install Checkmk version %s", self.version.version)
             completed_process = subprocess.run(
@@ -504,6 +504,9 @@ class Site:
                     f"Version {self.version.version} could not be installed! "
                     'Use "tests/scripts/install-cmk.py" or install it manually.'
                 )
+
+    def create(self) -> None:
+        self.install_cmk()
 
         if not (self.reuse or self.update) and self.exists():
             raise Exception("The site %s already exists." % self.id)

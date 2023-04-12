@@ -181,13 +181,6 @@ def test_detect_spec_dedup(
             "infoblox_replication_status",
             "infoblox_temp",
         ),
-        (
-            "juniper_trpz_cpu_util",
-            "juniper_trpz_flash",
-            "juniper_trpz_info",
-            "juniper_trpz_mem",
-            "juniper_trpz_power",
-        ),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

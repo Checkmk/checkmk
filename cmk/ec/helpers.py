@@ -9,8 +9,6 @@ from logging import Logger
 from types import TracebackType
 from typing import Literal
 
-FileDescr = int  # mypy calls this FileDescriptor, but this clashes with our definition
-
 
 class ECLock:
     def __init__(self, logger: Logger) -> None:

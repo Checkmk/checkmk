@@ -34,7 +34,7 @@ from functools import partial
 from logging import getLogger, Logger
 from pathlib import Path
 from types import FrameType
-from typing import Any, Literal, Protocol, TypedDict
+from typing import Any, Literal, TypedDict
 
 from setproctitle import setthreadtitle
 
@@ -93,14 +93,7 @@ class SlaveStatus(TypedDict):
     success: bool
 
 
-# Python and mypy have FD stuff internally, but they don't export it. :-/
-class HasFileno(Protocol):
-    def fileno(self) -> int:
-        ...
-
-
-FileDescr = int  # mypy calls this FileDescriptor, but this clashes with out definition
-FileDescriptorLike = FileDescr | HasFileno
+FileDescr = int  # mypy calls this FileDescriptor, but this clashes with our definition
 
 Response = Iterable[list[object]] | dict[str, object] | None
 
@@ -312,17 +305,15 @@ def process_exists(pid: int) -> bool:
 def drain_pipe(pipe: FileDescr) -> None:
     while True:
         try:
-            readable = select.select([pipe], [], [], 0.1)[0]
+            readable: list[FileDescr] = select.select([pipe], [], [], 0.1)[0]
         except OSError as e:
             if e.args[0] != errno.EINTR:
                 raise
             continue
 
-        data = None
         if pipe in readable:
             try:
-                data = os.read(pipe, 4096)
-                if not data:  # EOF
+                if not os.read(pipe, 4096):  # EOF
                     break
             except Exception:
                 break  # Error while reading
@@ -714,29 +705,16 @@ class EventServer(ECServerThread):
     def serve(self) -> None:  # pylint: disable=too-many-branches
         pipe_fragment = b""
         pipe = self.open_pipe()
-        listen_list: list[FileDescriptorLike] = [pipe]
-
-        # Wait for incoming syslog packets via UDP
-        if self._syslog_udp is not None:
-            listen_list.append(self._syslog_udp)
-
-        # Wait for new connections for events via TCP socket
-        if self._syslog_tcp is not None:
-            listen_list.append(self._syslog_tcp)
-
-        # Wait for new connections for events via unix socket
-        if self._eventsocket:
-            listen_list.append(self._eventsocket)
-
-        # Wait for incoming SNMP traps
-        if self._snmptrap is not None:
-            listen_list.append(self._snmptrap)
-
+        listen_list = [
+            f
+            for f in (pipe, self._syslog_udp, self._syslog_tcp, self._eventsocket, self._snmptrap)
+            if f is not None
+        ]
         client_sockets: dict[FileDescr, tuple[socket.socket, tuple[str, int] | None, bytes]] = {}
         select_timeout = 1
         while not self._terminate_event.is_set():
             try:
-                readable = select.select(
+                readable: list[FileDescr | socket.socket] = select.select(
                     listen_list + list(client_sockets.keys()), [], [], select_timeout
                 )[0]
             except OSError as e:
@@ -2333,12 +2311,9 @@ class StatusServer(ECServerThread):
                     self.reopen_sockets()
                     self._reopen_sockets = False
 
-                listen_list = [self._socket]
-                if self._tcp_socket:
-                    listen_list.append(self._tcp_socket)
-
+                listen_list = [s for s in (self._socket, self._tcp_socket) if s is not None]
                 try:
-                    readable = select.select(listen_list, [], [], 0.2)[0]
+                    readable: list[socket.socket] = select.select(listen_list, [], [], 0.2)[0]
                 except OSError as e:
                     if e.args[0] != errno.EINTR:
                         raise

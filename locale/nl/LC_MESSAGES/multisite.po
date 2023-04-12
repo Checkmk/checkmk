@@ -45038,7 +45038,7 @@ msgstr ""
 
 #, fuzzy
 msgid "SAML authentication"
-msgstr "SMTP-verificatie"
+msgstr "SAML-verificatie"
 
 #, fuzzy
 msgid "SAML connections"

@@ -743,7 +743,7 @@ class SingleSiteConnection(Helpers):
             except Exception:
                 self.disconnect()
                 raise MKLivestatusSocketError(
-                    "Malformed output. Livestatus TCP socket might be unreachable or wrong"
+                    "Malformed output. Livestatus TCP socket might be unreachable or wrong "
                     "encryption settings are used."
                 )
 

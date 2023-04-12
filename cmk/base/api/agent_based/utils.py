@@ -355,7 +355,7 @@ def check_levels(
         if levels_upper and levels_lower:
             metric_levels = (
                 levels_lower
-                if value <= levels_lower[0] +(levels_upper[0]-levels_lower[0])/2
+                if value <= levels_lower[0] + (levels_upper[0] - levels_lower[0]) / 2
                 else levels_upper
             )
         else:
@@ -452,7 +452,7 @@ def check_levels_predictive(
     if levels_upper and levels_lower:
         metric_levels = (
             levels_lower
-            if value <= levels_lower[0] +(levels_upper[0]-levels_lower[0])/2
+            if value <= levels_lower[0] + (levels_upper[0] - levels_lower[0]) / 2
             else levels_upper
         )
     else:

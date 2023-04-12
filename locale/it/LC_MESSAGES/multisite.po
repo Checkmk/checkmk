@@ -45760,8 +45760,8 @@ msgid "SAML 2.0"
 msgstr ""
 
 #, fuzzy
-msgid "SAML authentication"
-msgstr "Autenticazione SAML"
+msgid "SAML Authentication"
+msgstr "Autenticazione SMTP"
 
 #, fuzzy
 msgid "SAML connections"

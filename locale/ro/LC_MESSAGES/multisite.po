@@ -44086,7 +44086,7 @@ msgid "SAML 2.0"
 msgstr ""
 
 #, fuzzy
-msgid "SAML authentication"
+msgid "SAML Authentication"
 msgstr "trimite notificare"
 
 #, fuzzy

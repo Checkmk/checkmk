@@ -373,7 +373,7 @@ fn _register_pre_configured(
     pre_configured_connections: &config::PreConfiguredConnections,
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
-    registration_with_labels: &impl RegistrationNew,
+    registration_new: &impl RegistrationNew,
 ) -> AnyhowResult<()> {
     for (site_id, pre_configured_connection) in pre_configured_connections.connections.iter() {
         if let Err(error) = process_pre_configured_connection(
@@ -382,7 +382,7 @@ fn _register_pre_configured(
             &pre_configured_connections.agent_labels,
             client_config,
             registry,
-            registration_with_labels,
+            registration_new,
         ) {
             error!(
                 "Error while processing connection {}: {}",
@@ -435,7 +435,7 @@ fn process_pre_configured_connection(
     agent_labels: &types::AgentLabels,
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
-    registration_with_labels: &impl RegistrationNew,
+    registration_new: &impl RegistrationNew,
 ) -> AnyhowResult<()> {
     let receiver_port = match pre_configured.port {
         Some(receiver_port) => receiver_port,
@@ -464,7 +464,7 @@ fn process_pre_configured_connection(
         agent_labels.clone(),
     )?;
 
-    registration_with_labels.register(&registration_config, registry)?;
+    registration_new.register(&registration_config, registry)?;
     info!("Registered new connection {}", site_id);
 
     Ok(())

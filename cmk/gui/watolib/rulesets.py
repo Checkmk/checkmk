@@ -208,7 +208,7 @@ class RuleConditions:
             else:
                 tag_id = cast(TagID | None, tag_spec)
 
-            tag_list.append(("!%s" % tag_id) if is_not else tag_id)
+            tag_list.append(TagID("!%s" % tag_id) if is_not else tag_id)
         return tag_list
 
     # Compatibility code for pre 1.6 Setup code

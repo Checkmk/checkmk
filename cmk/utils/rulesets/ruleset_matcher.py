@@ -1137,12 +1137,12 @@ class RulesetToDictTransformer:
         return {"service_description": sub_conditions}
 
     def _transform_host_conditions(self, tuple_rule: Sequence[str]) -> Mapping[str, object]:
-        host_tags: Sequence[str]
+        host_tags: Sequence[TagID]
         if len(tuple_rule) == 1:
             host_tags = []
             host_list = tuple_rule[0]
         else:
-            host_tags = tuple_rule[0]
+            host_tags = [TagID(tuple_rule[0])]
             host_list = tuple_rule[1]
 
         condition: dict[str, object] = {}
@@ -1213,8 +1213,7 @@ class RulesetToDictTransformer:
 
             negate = False
             if tag_id[0] == "!":
-                tag_id = tag_id[1:]
-                negate = True
+                negate, tag_id = True, TagID(tag_id[1:])
 
             # Assume it's an aux tag in case there is a tag configured without known group
             tag_group_id = self._tag_groups.get(tag_id, tag_id)
@@ -1231,10 +1230,10 @@ def get_tag_to_group_map(tag_config: TagConfig) -> Mapping[TagID, TagGroupID]:
     """The old rules only have a list of tags and don't know anything about the
     tag groups they are coming from. Create a map based on the current tag config
     """
-    tag_id_to_tag_group_id_map = {}
+    tag_id_to_tag_group_id_map: dict[TagID, TagGroupID] = {}
 
     for aux_tag in tag_config.aux_tag_list.get_tags():
-        tag_id_to_tag_group_id_map[aux_tag.id] = aux_tag.id
+        tag_id_to_tag_group_id_map[aux_tag.id] = TagGroupID(aux_tag.id)
 
     for tag_group in tag_config.tag_groups:
         for grouped_tag in tag_group.tags:

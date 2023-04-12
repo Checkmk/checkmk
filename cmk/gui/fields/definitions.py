@@ -27,6 +27,7 @@ from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExp
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
+from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.gui import sites
 from cmk.gui.exceptions import MKUserError
@@ -860,12 +861,12 @@ class TagGroupAttributes(ValueTypedDictSchema):
         )
     )
 
-    def _validate_tag_group(self, name: str) -> set[str | None]:
+    def _validate_tag_group(self, name: str) -> set[TagID | None]:
         if not name.startswith("tag_"):
             raise ValidationError({name: "Tag group name must start with 'tag_'"})
 
         try:
-            tag_group = load_tag_group(name[4:])
+            tag_group = load_tag_group(TagGroupID(name[4:]))
         except MKUserError as exc:
             raise ValidationError({name: str(exc)}) from exc
 

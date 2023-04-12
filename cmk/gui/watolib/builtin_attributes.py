@@ -7,6 +7,7 @@ from collections.abc import Callable, Sequence
 from typing import Any, Literal
 
 import cmk.utils.tags
+from cmk.utils.tags import TagGroupID
 from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.hooks as hooks
@@ -451,7 +452,7 @@ hooks.register_builtin("validate-host", validate_host_parents)
 def _get_criticality_choices():
     """Returns the current configuration of the tag_group criticality"""
     tags = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_reading())
-    criticality_group = tags.get_tag_group("criticality")
+    criticality_group = tags.get_tag_group(TagGroupID("criticality"))
     if not criticality_group:
         return []
 

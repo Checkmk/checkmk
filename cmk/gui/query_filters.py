@@ -13,6 +13,8 @@ from typing import Literal
 
 import livestatus
 
+from cmk.utils.tags import TagGroupID
+
 import cmk.gui.inventory as inventory
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
@@ -781,7 +783,7 @@ class TagsQuery(ABCTagsQuery):
             num += 1
 
             op = value.get(prefix + "_op")
-            tag_group = active_config.tags.get_tag_group(value.get(prefix + "_grp", ""))
+            tag_group = active_config.tags.get_tag_group(TagGroupID(value.get(prefix + "_grp", "")))
 
             if tag_group and op:
                 tag = value.get(prefix + "_val", "")

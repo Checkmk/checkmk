@@ -3056,7 +3056,7 @@ class CREHost(WithPermissions, WithAttributes):
         self._name = host_name
         self._attributes = attributes
         self._cluster_nodes = cluster_nodes
-        self._cached_host_tags: None | dict[str, str] = None
+        self._cached_host_tags: None | dict[TagGroupID, TagID] = None
 
     def __repr__(self) -> str:
         return "Host(%r)" % (self._name)
@@ -3128,11 +3128,11 @@ class CREHost(WithPermissions, WithAttributes):
         # information, we need to add this decision here.
         # Skip this in case no-ip is configured: A ping check is useless in this case
         if (
-            tag_groups["snmp_ds"] == "no-snmp"
-            and tag_groups["agent"] == "no-agent"
-            and tag_groups["address_family"] != "no-ip"
+            tag_groups[TagGroupID("snmp_ds")] == TagID("no-snmp")
+            and tag_groups[TagGroupID("agent")] == TagID("no-agent")
+            and tag_groups[TagGroupID("address_family")] != TagID("no-ip")
         ):
-            tag_groups["ping"] = "ping"
+            tag_groups[TagGroupID("ping")] = TagID("ping")
 
         # The following code is needed to migrate host/rule matching from <1.5
         # to 1.5 when a user did not modify the "agent type" tag group.  (See
@@ -3141,34 +3141,34 @@ class CREHost(WithPermissions, WithAttributes):
 
         # Be compatible to: Agent type -> SNMP v2 or v3
         if (
-            tag_groups["agent"] == "no-agent"
-            and tag_groups["snmp_ds"] == "snmp-v2"
-            and "snmp-only" in aux_tag_ids
+            tag_groups[TagGroupID("agent")] == TagID("no-agent")
+            and tag_groups[TagGroupID("snmp_ds")] == TagID("snmp-v2")
+            and TagID("snmp-only") in aux_tag_ids
         ):
-            tag_groups["snmp-only"] = "snmp-only"
+            tag_groups[TagGroupID("snmp-only")] = TagID("snmp-only")
 
         # Be compatible to: Agent type -> Dual: SNMP + TCP
         if (
-            tag_groups["agent"] == "cmk-agent"
-            and tag_groups["snmp_ds"] == "snmp-v2"
-            and "snmp-tcp" in aux_tag_ids
+            tag_groups[TagGroupID("agent")] == TagID("cmk-agent")
+            and tag_groups[TagGroupID("snmp_ds")] == TagID("snmp-v2")
+            and TagID("snmp-tcp") in aux_tag_ids
         ):
-            tag_groups["snmp-tcp"] = "snmp-tcp"
+            tag_groups[TagGroupID("snmp-tcp")] = TagID("snmp-tcp")
 
         self._cached_host_tags = tag_groups
         return tag_groups
 
     # TODO: Can we remove this?
-    def tags(self):
+    def tags(self) -> set[TagID]:
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
         # but there was a single tag group added with it's leading tag group id. This
         # was the internal "site" tag that is created by HostAttributeSite.
-        tags = {v for k, v in self.tag_groups().items() if k != "site"}
-        tags.add("site:%s" % self.tag_groups()["site"])
+        tags = {v for k, v in self.tag_groups().items() if k != TagGroupID("site")}
+        tags.add(TagID("site:%s" % self.tag_groups()[TagGroupID("site")]))
         return tags
 
     def is_ping_host(self) -> bool:
-        return self.tag_groups().get("ping") == "ping"
+        return self.tag_groups().get(TagGroupID("ping")) == TagID("ping")
 
     def tag(self, taggroup_name):
         effective = self.effective_attributes()

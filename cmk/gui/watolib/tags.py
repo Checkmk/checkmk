@@ -14,7 +14,7 @@ import cmk.utils.store as store
 import cmk.utils.tags
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup
+from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID
 
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
@@ -97,7 +97,7 @@ def update_tag_config(tag_config: TagConfig):  # type: ignore[no-untyped-def]
     _update_tag_dependencies()
 
 
-def load_tag_group(ident: str) -> TagGroup | None:
+def load_tag_group(ident: TagGroupID) -> TagGroup | None:
     """Load a tag group
 
     Args:
@@ -124,7 +124,7 @@ def save_tag_group(tag_group: TagGroup):  # type: ignore[no-untyped-def]
     update_tag_config(tag_config)
 
 
-def is_builtin(ident: str) -> bool:
+def is_builtin(ident: TagGroupID) -> bool:
     """Verify if a tag group is a built-in"""
     if user:
         user.need_permission("wato.hosttags")
@@ -132,7 +132,7 @@ def is_builtin(ident: str) -> bool:
     return tag_config.tag_group_exists(ident)
 
 
-def tag_group_exists(ident: str, builtin_included=False) -> bool:  # type: ignore[no-untyped-def]
+def tag_group_exists(ident: TagGroupID, builtin_included=False) -> bool:  # type: ignore[no-untyped-def]
     """Verify if a tag group exists"""
     tag_config = load_tag_config()
     if builtin_included:
@@ -150,9 +150,7 @@ class RepairError(MKGeneralException):
     pass
 
 
-def edit_tag_group(  # type: ignore[no-untyped-def]
-    ident: str, edited_group: TagGroup, allow_repair=False
-):
+def edit_tag_group(ident: TagGroupID, edited_group: TagGroup, allow_repair: bool = False) -> None:
     """Update attributes of a tag group & update the relevant positions which used the relevant tag group
 
     Args:

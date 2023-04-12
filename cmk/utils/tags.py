@@ -60,7 +60,7 @@ def get_effective_tag_config(tag_config: TagConfigSpec) -> TagConfig:
     return tags
 
 
-def _validate_tag_id(tag_id: TagID) -> None:
+def _validate_tag_id(tag_id: TagID | TagGroupID) -> None:
     if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
         raise MKGeneralException(
             _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed.")
@@ -292,7 +292,7 @@ class TagGroup:
 
     def get_tag_group_config(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         """Return the set of tag groups which should be set for a host based on the given value"""
-        tag_groups = {}
+        tag_groups: dict[TagGroupID, TagID] = {}
 
         if value is not None:
             tag_groups[self.id] = value
@@ -300,7 +300,8 @@ class TagGroup:
         # add optional aux tags
         for grouped_tag in self.tags:
             if grouped_tag.id == value:
-                tag_groups.update({t: t for t in grouped_tag.aux_tag_ids})
+                # We need to convert here.  Typing smell?
+                tag_groups.update({TagGroupID(t): t for t in grouped_tag.aux_tag_ids})
 
         return tag_groups
 
@@ -468,7 +469,8 @@ class TagConfig:
 
     def _validate_ids(self) -> None:
         """Make sure that no tag key is used twice as aux_tag ID or tag group id"""
-        seen_ids: set[TagGroupID] = set()
+        # `TagID | TagGroupID` type smell.
+        seen_ids: set[TagID | TagGroupID] = set()
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
                 raise MKGeneralException(_('The tag group ID "%s" is used twice.') % tag_group.id)
@@ -479,12 +481,13 @@ class TagConfig:
                 raise MKGeneralException(_('The tag ID "%s" is used twice.') % aux_tag.id)
             seen_ids.add(aux_tag.id)
 
-    def valid_id(self, tag_aux_id: TagID) -> bool:
+    def valid_id(self, tag_aux_id: TagID | TagGroupID) -> bool:
         """Verify if the proposed id is not already in use"""
-        if tag_aux_id in [tag_group.id for tag_group in self.tag_groups]:
+        # Back to str, the code is untyped.
+        if str(tag_aux_id) in [str(tag_group.id) for tag_group in self.tag_groups]:
             return False
 
-        if tag_aux_id in [aux_tag.id for aux_tag in self.aux_tag_list.get_tags()]:
+        if str(tag_aux_id) in [str(aux_tag.id) for aux_tag in self.aux_tag_list.get_tags()]:
             return False
 
         return True
@@ -564,34 +567,34 @@ class BuiltinTagConfig(TagConfig):
     def _builtin_tag_groups(self) -> list[TagGroupSpec]:
         return [
             {
-                "id": "agent",
+                "id": TagGroupID("agent"),
                 "title": _("Checkmk agent / API integrations"),
                 "topic": _("Monitoring agents"),
                 "tags": [
                     {
-                        "id": "cmk-agent",
+                        "id": TagID("cmk-agent"),
                         "title": _("API integrations if configured, else Checkmk agent"),
-                        "aux_tags": ["tcp", "checkmk-agent"],
+                        "aux_tags": [TagID("tcp"), TagID("checkmk-agent")],
                     },
                     {
-                        "id": "all-agents",
+                        "id": TagID("all-agents"),
                         "title": _("Configured API integrations and Checkmk agent"),
-                        "aux_tags": ["tcp", "checkmk-agent"],
+                        "aux_tags": [TagID("tcp"), TagID("checkmk-agent")],
                     },
                     {
-                        "id": "special-agents",
+                        "id": TagID("special-agents"),
                         "title": _("Configured API integrations, no Checkmk agent"),
-                        "aux_tags": ["tcp"],
+                        "aux_tags": [TagID("tcp")],
                     },
                     {
-                        "id": "no-agent",
+                        "id": TagID("no-agent"),
                         "title": _("No API integrations, no Checkmk agent"),
                         "aux_tags": [],
                     },
                 ],
             },
             {
-                "id": "piggyback",
+                "id": TagGroupID("piggyback"),
                 "title": _("Piggyback"),
                 "topic": _("Monitoring agents"),
                 "help": _(
@@ -610,41 +613,41 @@ class BuiltinTagConfig(TagConfig):
                 ),
                 "tags": [
                     {
-                        "id": "auto-piggyback",
+                        "id": TagID("auto-piggyback"),
                         "title": _("Use piggyback data from other hosts if present"),
                         "aux_tags": [],
                     },
                     {
-                        "id": "piggyback",
+                        "id": TagID("piggyback"),
                         "title": _("Always use and expect piggyback data"),
                         "aux_tags": [],
                     },
                     {
-                        "id": "no-piggyback",
+                        "id": TagID("no-piggyback"),
                         "title": _("Never use piggyback data"),
                         "aux_tags": [],
                     },
                 ],
             },
             {
-                "id": "snmp_ds",
+                "id": TagGroupID("snmp_ds"),
                 "title": _("SNMP"),
                 "topic": _("Monitoring agents"),
                 "tags": [
                     {
-                        "id": "no-snmp",
+                        "id": TagID("no-snmp"),
                         "title": _("No SNMP"),
                         "aux_tags": [],
                     },
                     {
-                        "id": "snmp-v2",
+                        "id": TagID("snmp-v2"),
                         "title": _("SNMP v2 or v3"),
-                        "aux_tags": ["snmp"],
+                        "aux_tags": [TagID("snmp")],
                     },
                     {
-                        "id": "snmp-v1",
+                        "id": TagID("snmp-v1"),
                         "title": _("SNMP v1"),
-                        "aux_tags": ["snmp"],
+                        "aux_tags": [TagID("snmp")],
                     },
                 ],
             },
@@ -652,27 +655,27 @@ class BuiltinTagConfig(TagConfig):
                 # Shouldn't be used *directly* anywhere.  Always prefer
                 # `ConfigCache.address_family(HostName) -> AddressFamily`
                 # because it is typed.
-                "id": "address_family",
+                "id": TagGroupID("address_family"),
                 "title": _("IP address family"),
                 "topic": "Address",
                 "tags": [
                     {
-                        "id": "ip-v4-only",
+                        "id": TagID("ip-v4-only"),
                         "title": _("IPv4 only"),
-                        "aux_tags": ["ip-v4"],
+                        "aux_tags": [TagID("ip-v4")],
                     },
                     {
-                        "id": "ip-v6-only",
+                        "id": TagID("ip-v6-only"),
                         "title": _("IPv6 only"),
-                        "aux_tags": ["ip-v6"],
+                        "aux_tags": [TagID("ip-v6")],
                     },
                     {
-                        "id": "ip-v4v6",
+                        "id": TagID("ip-v4v6"),
                         "title": _("IPv4/IPv6 dual-stack"),
-                        "aux_tags": ["ip-v4", "ip-v6"],
+                        "aux_tags": [TagID("ip-v4"), TagID("ip-v6")],
                     },
                     {
-                        "id": "no-ip",
+                        "id": TagID("no-ip"),
                         "title": _("No IP"),
                         "aux_tags": [],
                     },
@@ -683,32 +686,32 @@ class BuiltinTagConfig(TagConfig):
     def _builtin_aux_tags(self) -> list[AuxTagSpec]:
         return [
             {
-                "id": "ip-v4",
+                "id": TagID("ip-v4"),
                 "topic": _("Address"),
                 "title": _("IPv4"),
             },
             {
-                "id": "ip-v6",
+                "id": TagID("ip-v6"),
                 "topic": _("Address"),
                 "title": _("IPv6"),
             },
             {
-                "id": "snmp",
+                "id": TagID("snmp"),
                 "topic": _("Monitoring agents"),
                 "title": _("Monitor via SNMP"),
             },
             {
-                "id": "tcp",
+                "id": TagID("tcp"),
                 "topic": _("Monitoring agents"),
                 "title": _("Monitor via Checkmk Agent or special agent"),
             },
             {
-                "id": "checkmk-agent",
+                "id": TagID("checkmk-agent"),
                 "topic": _("Monitoring agents"),
                 "title": _("Monitor via Checkmk Agent"),
             },
             {
-                "id": "ping",
+                "id": TagID("ping"),
                 "topic": _("Monitoring agents"),
                 "title": _("Only ping this device"),
             },
@@ -729,21 +732,25 @@ def sample_tag_config() -> TagConfigSpec:
         "aux_tags": [],
         "tag_groups": [
             {
-                "id": "criticality",
+                "id": TagGroupID("criticality"),
                 "tags": [
-                    {"aux_tags": [], "id": "prod", "title": "Productive system"},
-                    {"aux_tags": [], "id": "critical", "title": "Business critical"},
-                    {"aux_tags": [], "id": "test", "title": "Test system"},
-                    {"aux_tags": [], "id": "offline", "title": "Do not monitor this host"},
+                    {"aux_tags": [], "id": TagID("prod"), "title": "Productive system"},
+                    {"aux_tags": [], "id": TagID("critical"), "title": "Business critical"},
+                    {"aux_tags": [], "id": TagID("test"), "title": "Test system"},
+                    {"aux_tags": [], "id": TagID("offline"), "title": "Do not monitor this host"},
                 ],
                 "title": "Criticality",
             },
             {
-                "id": "networking",
+                "id": TagGroupID("networking"),
                 "tags": [
-                    {"aux_tags": [], "id": "lan", "title": "Local network (low latency)"},
-                    {"aux_tags": [], "id": "wan", "title": "WAN (high latency)"},
-                    {"aux_tags": [], "id": "dmz", "title": "DMZ (low latency, secure access)"},
+                    {"aux_tags": [], "id": TagID("lan"), "title": "Local network (low latency)"},
+                    {"aux_tags": [], "id": TagID("wan"), "title": "WAN (high latency)"},
+                    {
+                        "aux_tags": [],
+                        "id": TagID("dmz"),
+                        "title": "DMZ (low latency, secure access)",
+                    },
                 ],
                 "title": "Networking Segment",
             },
@@ -785,8 +792,11 @@ class ComputedDataSources(NamedTuple):
 
 def compute_datasources(tag_groups: Mapping[TagGroupID, TagID]) -> ComputedDataSources:
     return ComputedDataSources(
-        is_tcp=tag_groups.get("tcp") == "tcp",
-        is_snmp=tag_groups.get("snmp_ds") in ["snmp", "snmp-v1", "snmp-v2"],
-        is_all_agents_host=tag_groups.get("agent") == "all-agents",
-        is_all_special_agents_host=tag_groups.get("agent") == "special-agents",
+        is_tcp=tag_groups.get(TagGroupID("tcp")) == TagID("tcp"),
+        is_snmp=(
+            tag_groups.get(TagGroupID("snmp_ds"))
+            in [TagID("snmp"), TagID("snmp-v1"), TagID("snmp-v2")]
+        ),
+        is_all_agents_host=tag_groups.get(TagGroupID("agent")) == TagID("all-agents"),
+        is_all_special_agents_host=tag_groups.get(TagGroupID("agent")) == TagID("special-agents"),
     )

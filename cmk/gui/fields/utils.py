@@ -25,7 +25,7 @@ from cmk.utils.livestatus_helpers.expressions import (
     UnaryExpression,
 )
 from cmk.utils.livestatus_helpers.types import Table
-from cmk.utils.tags import BuiltinTagConfig, TagGroup
+from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagID
 
 from cmk.gui import site_config
 from cmk.gui.fields.base import BaseSchema
@@ -44,7 +44,7 @@ class Attr(NamedTuple):
     mandatory: bool
     section: str
     description: str
-    enum: list[str | None] | None = None
+    enum: list[TagID | None] | None = None
     field: fields.Field | None = None
     allow_none: bool = False
 

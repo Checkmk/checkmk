@@ -952,7 +952,10 @@ def _filter_active_hosts(
 
 def _host_is_member_of_site(hostname: HostName, site: str) -> bool:
     # hosts without a site: tag belong to all sites
-    return ConfigCache.tags(hostname).get("site", distributed_wato_site) == distributed_wato_site
+    return (
+        ConfigCache.tags(hostname).get(TagGroupID("site"), distributed_wato_site)
+        == distributed_wato_site
+    )
 
 
 def duplicate_hosts() -> Sequence[HostName]:
@@ -2564,9 +2567,9 @@ class ConfigCache:
     def is_piggyback_host(self, host_name: HostName) -> bool:
         def get_is_piggyback_host() -> bool:
             tag_groups: Final = ConfigCache.tags(host_name)
-            if tag_groups["piggyback"] == "piggyback":
+            if tag_groups[TagGroupID("piggyback")] == TagID("piggyback"):
                 return True
-            if tag_groups["piggyback"] == "no-piggyback":
+            if tag_groups[TagGroupID("piggyback")] == TagID("no-piggyback"):
                 return False
             # Legacy automatic detection
             return self._has_piggyback_data(host_name)
@@ -2886,9 +2889,9 @@ class ConfigCache:
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
         # but there was a single tag group added with it's leading tag group id. This
         # was the internal "site" tag that is created by HostAttributeSite.
-        tags = {v for k, v in tag_groups.items() if k != "site"}
-        tags.add(host_path)
-        tags.add("site:%s" % tag_groups["site"])
+        tags = {v for k, v in tag_groups.items() if k != TagGroupID("site")}
+        tags.add(TagID(host_path))
+        tags.add(TagID("site:%s" % tag_groups[TagGroupID("site")]))
         return tags
 
     @staticmethod
@@ -2902,15 +2905,15 @@ class ConfigCache:
         # is currently responsible for calculating the host tags of a host.
         # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
         return {
-            "piggyback": "auto-piggyback",
-            "networking": "lan",
-            "agent": "cmk-agent",
-            "criticality": "prod",
-            "snmp_ds": "no-snmp",
-            "site": omd_site(),
-            "address_family": "ip-v4-only",
+            TagGroupID("piggyback"): TagID("auto-piggyback"),
+            TagGroupID("networking"): TagID("lan"),
+            TagGroupID("agent"): TagID("cmk-agent"),
+            TagGroupID("criticality"): TagID("prod"),
+            TagGroupID("snmp_ds"): TagID("no-snmp"),
+            TagGroupID("site"): TagID(omd_site()),
+            TagGroupID("address_family"): TagID("ip-v4-only"),
             # Assume it's an aux tag in case there is a tag configured without known group
-            **{tag_to_group_map.get(tag_id, tag_id): tag_id for tag_id in tag_list},
+            **{tag_to_group_map.get(tag_id, TagGroupID(tag_id)): tag_id for tag_id in tag_list},
         }
 
     def tag_list(self, hostname: HostName) -> set[TagID]:
@@ -2935,13 +2938,13 @@ class ConfigCache:
         # is currently responsible for calculating the host tags of a host.
         # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
         return {
-            "piggyback": "auto-piggyback",
-            "networking": "lan",
-            "agent": "cmk-agent",
-            "criticality": "prod",
-            "snmp_ds": "no-snmp",
-            "site": omd_site(),
-            "address_family": "ip-v4-only",
+            TagGroupID("piggyback"): TagID("auto-piggyback"),
+            TagGroupID("networking"): TagID("lan"),
+            TagGroupID("agent"): TagID("cmk-agent"),
+            TagGroupID("criticality"): TagID("prod"),
+            TagGroupID("snmp_ds"): TagID("no-snmp"),
+            TagGroupID("site"): TagID(omd_site()),
+            TagGroupID("address_family"): TagID("ip-v4-only"),
         }
 
     def checkmk_check_parameters(self, host_name: HostName) -> CheckmkCheckParameters:
@@ -3181,18 +3184,28 @@ class ConfigCache:
     def address_family(host_name: HostName) -> AddressFamily:
         # TODO(ml): [IPv6] clarify tag_groups vs tag_groups["address_family"]
         tag_groups = ConfigCache.tags(host_name)
-        if "no-ip" in tag_groups or "no-ip" == tag_groups["address_family"]:
+        if (
+            TagGroupID("no-ip") in tag_groups
+            or TagID("no-ip") == tag_groups[TagGroupID("address_family")]
+        ):
             return AddressFamily.NO_IP
-        if "ip-v4v6" in tag_groups or "ip-v4v6" == tag_groups["address_family"]:
-            return AddressFamily.DUAL_STACK
-        if ("ip-v6" in tag_groups or "ip-v6" == tag_groups["address_family"]) and (
-            "ip-v4" in tag_groups or "ip-v4" == tag_groups["address_family"]
+        if (
+            TagGroupID("ip-v4v6") in tag_groups
+            or TagID("ip-v4v6") == tag_groups[TagGroupID("address_family")]
         ):
             return AddressFamily.DUAL_STACK
         if (
-            "ip-v6" in tag_groups
-            or "ip-v6-only" in tag_groups
-            or tag_groups["address_family"] in {"ip-v6", "ip-v6-only"}
+            TagGroupID("ip-v6") in tag_groups
+            or TagID("ip-v6") == tag_groups[TagGroupID("address_family")]
+        ) and (
+            TagGroupID("ip-v4") in tag_groups
+            or TagID("ip-v4") == tag_groups[TagGroupID("address_family")]
+        ):
+            return AddressFamily.DUAL_STACK
+        if (
+            TagGroupID("ip-v6") in tag_groups
+            or TagGroupID("ip-v6-only") in tag_groups
+            or tag_groups[TagGroupID("address_family")] in {TagID("ip-v6"), TagID("ip-v6-only")}
         ):
             return AddressFamily.IPv6
         return AddressFamily.IPv4
@@ -3677,12 +3690,12 @@ class ConfigCache:
         nodes: Iterable[HostName],
     ) -> None:
         cluster_tg = self.tags(host_name)
-        cluster_agent_ds = cluster_tg.get("agent")
-        cluster_snmp_ds = cluster_tg.get("snmp_ds")
+        cluster_agent_ds = cluster_tg.get(TagGroupID("agent"))
+        cluster_snmp_ds = cluster_tg.get(TagGroupID("snmp_ds"))
         for nodename in nodes:
             node_tg = self.tags(nodename)
-            node_agent_ds = node_tg.get("agent")
-            node_snmp_ds = node_tg.get("snmp_ds")
+            node_agent_ds = node_tg.get(TagGroupID("agent"))
+            node_snmp_ds = node_tg.get(TagGroupID("snmp_ds"))
             warn_text = "Cluster '%s' has different datasources as its node" % host_name
             if node_agent_ds != cluster_agent_ds:
                 config_warnings.warn(

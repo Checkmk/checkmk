@@ -18,6 +18,7 @@ from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.gui.forms as forms
@@ -2028,6 +2029,13 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
 
     def _get_tag_conditions(self, varprefix: str) -> Sequence[str]:
         """Retrieve current tag condition settings from HTML variables"""
+
+        def gettagvalue(tgid: TagGroupID) -> TagID | None:
+            v = request.var(varprefix + "tagvalue_" + tgid)
+            if v is None:
+                return None
+            return TagID(v)
+
         if varprefix:
             varprefix += "_"
 
@@ -2037,7 +2045,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
             if tag_group.is_checkbox_tag_group:
                 tagvalue = tag_group.default_value
             else:
-                tagvalue = request.var(varprefix + "tagvalue_" + tag_group.id)
+                tagvalue = gettagvalue(tag_group.id)
 
             # Not all tags are submitted, see cmk.gui.forms.remove_unused_vars.
             # So simply skip None values.
@@ -2048,7 +2056,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
             if mode == "is":
                 tag_list.append(tagvalue)
             elif mode == "isnot":
-                tag_list.append("!" + tagvalue)
+                tag_list.append(TagID("!" + tagvalue))
 
         # Auxiliary tags
         for aux_tag in active_config.tags.aux_tag_list.get_tags():
@@ -2056,7 +2064,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
             if mode == "is":
                 tag_list.append(aux_tag.id)
             elif mode == "isnot":
-                tag_list.append("!" + aux_tag.id)
+                tag_list.append(TagID("!" + aux_tag.id))
 
         return tag_list
 

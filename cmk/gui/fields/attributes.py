@@ -10,6 +10,8 @@ from marshmallow import ValidationError
 from marshmallow.decorators import post_load, pre_dump, validates_schema
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk.utils.tags import TagGroupID
+
 from cmk.gui import userdb
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.fields.definitions import GroupField, Timestamp
@@ -529,7 +531,7 @@ class NetworkScan(BaseSchema):
 
     @validates_schema
     def validate_tag_criticality(self, data: dict[str, typing.Any], **kwargs: typing.Any) -> None:
-        tag_criticality = load_tag_group("criticality")
+        tag_criticality = load_tag_group(TagGroupID("criticality"))
         if tag_criticality is None:
             if "tag_criticality" in data:
                 raise ValidationError(

@@ -26,54 +26,54 @@ def fixture_tag_config():
         {
             "aux_tags": [
                 {
-                    "id": "aux_tag_1",
+                    "id": TagID("aux_tag_1"),
                     "topic": "Auxiliary tags",
                     "title": "Auxiliary tag 1",
                 }
             ],
             "tag_groups": [
                 {
-                    "id": "tag_grp_1",
+                    "id": TagGroupID("tag_grp_1"),
                     "topic": "Topic 1",
                     "title": "Tag group 1",
                     "tags": [
                         {
                             "aux_tags": [],
-                            "id": "grp_1_tg_1",
+                            "id": TagID("grp_1_tg_1"),
                             "title": "Tag 1.1",
                         },
                         {
                             "aux_tags": [],
-                            "id": "grp_1_tg_2",
+                            "id": TagID("grp_1_tg_2"),
                             "title": "Tag 1.2",
                         },
                     ],
                 },
                 {
-                    "id": "tag_grp_2",
+                    "id": TagGroupID("tag_grp_2"),
                     "topic": "Topic 2",
                     "title": "Tag group 2",
                     "tags": [
                         {
                             "aux_tags": [],
-                            "id": "grp_2_tg_1",
+                            "id": TagID("grp_2_tg_1"),
                             "title": "Tag 2.1",
                         },
                         {
                             "aux_tags": [],
-                            "id": "grp_2_tg_2",
+                            "id": TagID("grp_2_tg_2"),
                             "title": "Tag 2.2",
                         },
                     ],
                 },
                 {
-                    "id": "tag_grp_3",
+                    "id": TagGroupID("tag_grp_3"),
                     "topic": "Topic 3",
                     "title": "Tag group 3",
                     "tags": [
                         {
                             "aux_tags": [],
-                            "id": "grp_3_tg_1",
+                            "id": TagID("grp_3_tg_1"),
                             "title": "Tag 3.1",
                         },
                     ],
@@ -165,20 +165,20 @@ class TestRuleConditionRenderer:
         assert list(
             RuleConditionRenderer()._tag_conditions(
                 {
-                    "tag_grp_1": {
+                    TagGroupID("tag_grp_1"): {
                         "$or": [
-                            "grp_1_tg_1",
-                            "grp_1_tg_2",
+                            TagID("grp_1_tg_1"),
+                            TagID("grp_1_tg_2"),
                         ]
                     },
-                    "tag_grp_2": {
+                    TagGroupID("tag_grp_2"): {
                         "$nor": [
-                            "grp_2_tg_1",
-                            "grp_2_tg_2",
+                            TagID("grp_2_tg_1"),
+                            TagID("grp_2_tg_2"),
                         ]
                     },
-                    "tag_grp_3": "grp_3_tg_1",
-                    "aux_tag_1": {"$ne": "aux_tag_1"},
+                    TagGroupID("tag_grp_3"): TagID("grp_3_tg_1"),
+                    TagGroupID("aux_tag_1"): {"$ne": TagID("aux_tag_1")},
                 }
             )
         ) == [
@@ -448,7 +448,7 @@ def test_get_groups() -> None:
     ]
 
     root: CREFolder = Folder.root_folder()
-    ruleset: Ruleset = Ruleset("only_hosts", {"TAG1": "TG1"})
+    ruleset: Ruleset = Ruleset("only_hosts", {TagID("TAG1"): TagGroupID("TG1")})
     rules: list[tuple[CREFolder, int, Rule]] = [
         (root, 0, Rule.from_ruleset_defaults(root, ruleset))
     ]

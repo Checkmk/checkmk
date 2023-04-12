@@ -10,6 +10,7 @@ from collections.abc import Collection
 
 import cmk.utils.tags
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -193,9 +194,9 @@ class ModeTags(ABCTagMode):
         return redirect(mode_url("tags"))
 
     def _delete_tag_group(self) -> ActionResult:
-        del_id = request.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[
-            1
-        ]
+        del_id = TagGroupID(
+            request.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
+        )
 
         if not request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
             del_id
@@ -220,9 +221,7 @@ class ModeTags(ABCTagMode):
                 flash(message)
         return redirect(mode_url("tags"))
 
-    def _is_cleaning_up_user_tag_group_to_builtin(  # type: ignore[no-untyped-def]
-        self, del_id
-    ) -> bool:
+    def _is_cleaning_up_user_tag_group_to_builtin(self, del_id: TagGroupID) -> bool:
         """The "Agent type" tag group was user defined in previous versions
 
         Have a look at cmk/gui/watolib/tags.py (_migrate_old_sample_config_tag_groups)
@@ -235,11 +234,11 @@ class ModeTags(ABCTagMode):
         if del_id != "agent":
             return False
 
-        builtin_tg = self._builtin_config.get_tag_group("agent")
+        builtin_tg = self._builtin_config.get_tag_group(TagGroupID("agent"))
         if builtin_tg is None:
             return False
 
-        user_tg = self._tag_config.get_tag_group("agent")
+        user_tg = self._tag_config.get_tag_group(TagGroupID("agent"))
         if user_tg is None:
             return False
 
@@ -248,9 +247,9 @@ class ModeTags(ABCTagMode):
         return builtin_tg.get_tag_ids() == user_tg.get_tag_ids()
 
     def _delete_aux_tag(self) -> ActionResult:
-        del_id = request.get_item_input(
-            "_del_aux", dict(self._tag_config.aux_tag_list.get_choices())
-        )[1]
+        del_id = TagID(
+            request.get_item_input("_del_aux", dict(self._tag_config.aux_tag_list.get_choices()))[1]
+        )
 
         # Make sure that this aux tag is not begin used by any tag group
         for group in self._tag_config.tag_groups:
@@ -655,7 +654,7 @@ class ModeEditAuxtag(ABCEditTagMode):
         super().__init__()
 
         if self._new:
-            self._aux_tag = cmk.utils.tags.AuxTag(tag_id="", title="", topic=None, help=None)
+            self._aux_tag = cmk.utils.tags.AuxTag(tag_id=TagID(""), title="", topic=None, help=None)
         else:
             self._aux_tag = self._tag_config.aux_tag_list.get_aux_tag(self._id)
 
@@ -738,14 +737,18 @@ class ModeEditTagGroup(ABCEditTagMode):
 
         tg = self._tag_config.get_tag_group(self._id)
         self._untainted_tag_group = (
-            cmk.utils.tags.TagGroup(group_id="", title="", topic=None, help=None, tags=[])
+            cmk.utils.tags.TagGroup(
+                group_id=TagGroupID(""), title="", topic=None, help=None, tags=[]
+            )
             if tg is None
             else tg
         )
 
         tg = self._tag_config.get_tag_group(self._id)
         self._tag_group = (
-            cmk.utils.tags.TagGroup(group_id="", title="", topic=None, help=None, tags=[])
+            cmk.utils.tags.TagGroup(
+                group_id=TagGroupID(""), title="", topic=None, help=None, tags=[]
+            )
             if tg is None
             else tg
         )

@@ -8,6 +8,7 @@ from pathlib import Path
 from livestatus import SiteId
 
 import cmk.utils.paths
+from cmk.utils.tags import TagGroupID
 
 import cmk.gui.watolib.hosts_and_folders
 from cmk.gui.watolib.builtin_attributes import HostAttributeSite
@@ -142,7 +143,7 @@ host_attributes.update(
     assert Folder.root_folder().attribute("site") is None
     assert Folder.root_folder().load_host("ag").attribute("site") is None
     assert Folder.root_folder().load_host("ag").site_id() == "dingdong"
-    assert Folder.root_folder().load_host("ag").tag_groups()["site"] == "dingdong"
+    assert Folder.root_folder().load_host("ag").tag_groups()[TagGroupID("site")] == "dingdong"
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
     hosts_config = Folder.root_folder()._load_hosts_file()

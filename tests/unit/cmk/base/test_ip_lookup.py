@@ -12,6 +12,7 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
@@ -376,9 +377,9 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     )
 
     ts = Scenario()
-    ts.add_host(HostName("blub"), tags={"criticality": "offline"})
+    ts.add_host(HostName("blub"), tags={TagGroupID("criticality"): TagID("offline")})
     ts.add_host(HostName("bla"))
-    ts.add_host(HostName("dual"), tags={"address_family": "ip-v4v6"})
+    ts.add_host(HostName("dual"), tags={TagGroupID("address_family"): TagID("ip-v4v6")})
     ts.apply(monkeypatch)
 
     config_cache = config.get_config_cache()
@@ -422,21 +423,21 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
         (
             "localhost",
             {
-                "address_family": "ip-v4-only",
+                TagGroupID("address_family"): TagID("ip-v4-only"),
             },
             "127.0.0.1",
         ),
         (
             "127.0.0.1",
             {
-                "address_family": "ip-v4-only",
+                TagGroupID("address_family"): TagID("ip-v4-only"),
             },
             "127.0.0.1",
         ),
     ],
 )
 def test_lookup_mgmt_board_ip_address_ipv4_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result_address: str
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result_address: str
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -458,7 +459,7 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
-    ts.add_host(hostname, tags={"address_family": "ip-v6-only"})
+    ts.add_host(hostname, tags={TagGroupID("address_family"): TagID("ip-v6-only")})
     config_cache = ts.apply(monkeypatch)
     monkeypatch.setattr(
         socket,
@@ -488,7 +489,7 @@ def test_lookup_mgmt_board_ip_address_dual_host(
     ts.add_host(
         hostname,
         tags={
-            "address_family": "ip-v4v6",
+            TagGroupID("address_family"): TagID("ip-v4v6"),
         },
     )
 
@@ -502,26 +503,26 @@ def test_lookup_mgmt_board_ip_address_dual_host(
         ({}, socket.AF_INET),
         (
             {
-                "address_family": "ip-v4-only",
+                TagGroupID("address_family"): TagID("ip-v4-only"),
             },
             socket.AF_INET,
         ),
         (
             {
-                "address_family": "ip-v6-only",
+                TagGroupID("address_family"): TagID("ip-v6-only"),
             },
             socket.AF_INET6,
         ),
         (
             {
-                "address_family": "ip-v4v6",
+                TagGroupID("address_family"): TagID("ip-v4v6"),
             },
             socket.AF_INET,
         ),
     ],
 )
 def test_lookup_mgmt_board_ip_address_unresolveable(
-    monkeypatch: MonkeyPatch, tags: dict[str, str], family: socket.AddressFamily
+    monkeypatch: MonkeyPatch, tags: dict[TagGroupID, TagID], family: socket.AddressFamily
 ) -> None:
     hostname = HostName("unresolveable-hostname")
     ts = Scenario()

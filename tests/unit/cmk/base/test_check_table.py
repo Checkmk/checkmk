@@ -13,6 +13,7 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import (
     CheckPluginName,
     HostName,
@@ -346,8 +347,8 @@ def test_check_table(
     hostname = HostName(hostname_str)
 
     ts = Scenario()
-    ts.add_host(hostname, tags={"criticality": "test"})
-    ts.add_host("ping-host", tags={"agent": "no-agent"})
+    ts.add_host(hostname, tags={TagGroupID("criticality"): TagID("test")})
+    ts.add_host("ping-host", tags={TagGroupID("agent"): TagID("no-agent")})
     ts.add_host("node1")
     ts.add_cluster("cluster1", nodes=["node1"])
     ts.add_host("node2")
@@ -463,25 +464,25 @@ def test_check_table_of_mgmt_boards(
     ts.add_host(
         "mgmt-board-ipmi",
         tags={
-            "piggyback": "auto-piggyback",
-            "networking": "lan",
-            "address_family": "no-ip",
-            "criticality": "prod",
-            "snmp_ds": "no-snmp",
-            "site": "heute",
-            "agent": "no-agent",
+            TagGroupID("piggyback"): TagID("auto-piggyback"),
+            TagGroupID("networking"): TagID("lan"),
+            TagGroupID("address_family"): TagID("no-ip"),
+            TagGroupID("criticality"): TagID("prod"),
+            TagGroupID("snmp_ds"): TagID("no-snmp"),
+            TagGroupID("site"): TagID("heute"),
+            TagGroupID("agent"): TagID("no-agent"),
         },
     )
     ts.add_host(
         "ipmi-host",
         tags={
-            "piggyback": "auto-piggyback",
-            "networking": "lan",
-            "agent": "cmk-agent",
-            "criticality": "prod",
-            "snmp_ds": "no-snmp",
-            "site": "heute",
-            "address_family": "ip-v4-only",
+            TagGroupID("piggyback"): TagID("auto-piggyback"),
+            TagGroupID("networking"): TagID("lan"),
+            TagGroupID("agent"): TagID("cmk-agent"),
+            TagGroupID("criticality"): TagID("prod"),
+            TagGroupID("snmp_ds"): TagID("no-snmp"),
+            TagGroupID("site"): TagID("heute"),
+            TagGroupID("address_family"): TagID("ip-v4-only"),
         },
     )
     ts.set_option("management_protocol", {"mgmt-board-ipmi": "ipmi"})

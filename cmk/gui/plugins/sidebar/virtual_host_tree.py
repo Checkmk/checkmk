@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from contextlib import nullcontext
 from typing import Any, ContextManager
 
@@ -209,8 +210,10 @@ class VirtualHostTree(SidebarSnapin):
 
         return makeuri_contextless(request, urlvars, "view.py")
 
-    def _get_tag_url_vars(self, tree_spec, node_values):
-        urlvars = []
+    def _get_tag_url_vars(  # type: ignore[no-untyped-def]
+        self, tree_spec, node_values
+    ) -> Sequence[tuple[str, str]]:
+        urlvars: list[tuple[str, str]] = []
 
         tag_tree_spec = [
             l for l in tree_spec if not l.startswith("foldertree:") and not l.startswith("folder:")
@@ -228,7 +231,7 @@ class VirtualHostTree(SidebarSnapin):
                         if grouped_tag.id == tag:
                             urlvars.append(("host_tag_%d_grp" % nr, tag_group.id))
                             urlvars.append(("host_tag_%d_op" % nr, "is"))
-                            urlvars.append(("host_tag_%d_val" % nr, grouped_tag.id))
+                            urlvars.append(("host_tag_%d_val" % nr, str(grouped_tag.id)))
                             break
 
             else:

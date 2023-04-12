@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Sequence
 from re import Pattern
 
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
+from cmk.utils.tags import TagID
 
 # Conveniance macros for legacy tuple based host and service rules
 PHYSICAL_HOSTS = ["@physical"]  # all hosts but not clusters
@@ -95,7 +97,7 @@ def in_extraconf_hostlist(hostlist, hostname):  # pylint: disable=too-many-branc
     return False
 
 
-def hosttags_match_taglist(hosttags, required_tags):
+def hosttags_match_taglist(hosttags: Sequence[TagID], required_tags: Iterable[TagID]) -> bool:
     """Check if a host fulfills the requirements of a tag list.
 
     The host must have all tags in the list, except
@@ -104,7 +106,7 @@ def hosttags_match_taglist(hosttags, required_tags):
     for tag in required_tags:
         negate, tag = _parse_negated(tag)
         if tag and tag[-1] == "+":
-            tag = tag[:-1]
+            tag = TagID(tag[:-1])
             matches = False
             for t in hosttags:
                 if t.startswith(tag):

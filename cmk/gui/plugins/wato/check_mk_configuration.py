@@ -10,7 +10,7 @@ from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.tags import TagGroup, TagID
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from cmk.utils.version import is_cloud_edition, is_raw_edition
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
@@ -922,7 +922,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         # 2. All *topics* that:
         #  - consist only of checkbox tags
         #  - contain at least two entries
-        choices = []
+        choices: list[tuple[TagGroupID, str]] = []
         by_topic: dict[str, list[TagGroup]] = {}
         for tag_group in active_config.tags.tag_groups:
             choices.append((tag_group.id, tag_group.title))
@@ -937,7 +937,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
                 if len(tag_groups) > 1:
                     choices.append(
                         (
-                            "topic:" + topic,
+                            TagGroupID("topic:" + topic),
                             _("Topic") + ": " + topic,
                         )
                     )

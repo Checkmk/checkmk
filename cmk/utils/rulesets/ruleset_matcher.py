@@ -1137,12 +1137,13 @@ class RulesetToDictTransformer:
         return {"service_description": sub_conditions}
 
     def _transform_host_conditions(self, tuple_rule: Sequence[str]) -> Mapping[str, object]:
-        host_tags: Sequence[TagID]
+        host_tags: Sequence[str]
+        host_list: Sequence[str]
         if len(tuple_rule) == 1:
             host_tags = []
             host_list = tuple_rule[0]
         else:
-            host_tags = [TagID(tuple_rule[0])]
+            host_tags = tuple_rule[0]
             host_list = tuple_rule[1]
 
         condition: dict[str, object] = {}
@@ -1198,12 +1199,12 @@ class RulesetToDictTransformer:
             return {"host_name": {"$nor": sub_conditions}}
         return {"host_name": sub_conditions}
 
-    def transform_host_tags(self, host_tags: Sequence[TagID]) -> Mapping[str, object]:
+    def transform_host_tags(self, host_tags: Sequence[str]) -> Mapping[str, object]:
         if not host_tags:
             return {}
 
         conditions: dict[str, object] = {}
-        tag_conditions = {}
+        tag_conditions: dict[TagGroupID, TagCondition] = {}
         for tag_id in host_tags:
             # Folder is either not present (main folder) or in this format
             # "/abc/+" which matches on folder "abc" and all subfolders.
@@ -1216,7 +1217,8 @@ class RulesetToDictTransformer:
                 negate, tag_id = True, TagID(tag_id[1:])
 
             # Assume it's an aux tag in case there is a tag configured without known group
-            tag_group_id = self._tag_groups.get(tag_id, tag_id)
+            tag_id = TagID(tag_id)
+            tag_group_id = self._tag_groups.get(tag_id, TagGroupID(tag_id))
 
             tag_conditions[tag_group_id] = {"$ne": tag_id} if negate else tag_id
 

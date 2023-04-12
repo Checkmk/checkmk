@@ -16,6 +16,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionNOR,
     TagConditionOR,
 )
+from cmk.utils.tags import TagID
 from cmk.utils.type_defs import (
     HostOrServiceConditions,
     HostOrServiceConditionsNegated,
@@ -254,6 +255,7 @@ class TagConditionSchemaBase(base.BaseSchema):
         many=False,
         **kwargs,
     ):
+        value: TagCondition | str
         if self.operator_type == "collection":
             value = _collection_value(data["value"], data["operator"])
         elif self.operator_type == "scalar":
@@ -845,7 +847,7 @@ class InputRuleObject(base.BaseSchema):
 
 
 def _unpack_value(
-    v: TagCondition | HostOrServiceConditionsNegated,
+    v: str | TagCondition | HostOrServiceConditionsNegated,
 ) -> ApiExpressionValue | None:
     """Unpacks the value from a condition value
 
@@ -923,7 +925,7 @@ def _scalar_value(
     if operator == "is":  # pylint: disable=no-else-return
         return value
     elif operator == "is_not":
-        return {"$ne": value}
+        return {"$ne": TagID(value)}
     else:
         raise ValidationError(f"Unsupported scalar operator: {operator} {value!r}")
 
@@ -959,9 +961,9 @@ def _collection_value(
         raise ValidationError(f"Unsupported data type: {value!r}")
 
     if operator == "one_of":  # pylint: disable=no-else-return
-        return {"$or": value}
+        return {"$or": [TagID(v) for v in value]}
     elif operator == "none_of":
-        return {"$nor": value}
+        return {"$nor": [TagID(v) for v in value]}
     else:
         raise ValidationError(f"Unsupported list operator: {operator} {value!r}")
 

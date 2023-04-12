@@ -142,7 +142,7 @@ def test_commandline_arguments_list_with_invalid_type() -> None:
 
 def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
-    ts.add_host("test-host", tags={"agent": "no-agent"})
+    ts.add_host("test-host", tags={TagGroupID("agent"): TagID("no-agent")})
     ts.set_option(
         "host_labels",
         {

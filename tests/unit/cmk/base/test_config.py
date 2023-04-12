@@ -23,6 +23,7 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import CheckPluginName, HostName, RuleSetName, SectionName, ServiceID
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
@@ -58,7 +59,7 @@ def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
-    ts.add_host(HostName("blub"), tags={"criticality": "offline"})
+    ts.add_host(HostName("blub"), tags={TagGroupID("criticality"): TagID("offline")})
     ts.add_host(HostName("bla"))
     ts.apply(monkeypatch)
     assert config.all_offline_hosts() == set()
@@ -69,11 +70,17 @@ def test_all_offline_hosts_with_wato_default_config(monkeypatch: MonkeyPatch) ->
     ts.set_ruleset(
         "only_hosts",
         [
-            {"condition": {"host_tags": {"criticality": {"$ne": "offline"}}}, "value": True},
+            {
+                "condition": {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("offline")}}},
+                "value": True,
+            },
         ],
     )
-    ts.add_host(HostName("blub1"), tags={"criticality": "offline"})
-    ts.add_host(HostName("blub2"), tags={"criticality": "offline", "site": "site2"})
+    ts.add_host(HostName("blub1"), tags={TagGroupID("criticality"): TagID("offline")})
+    ts.add_host(
+        HostName("blub2"),
+        tags={TagGroupID("criticality"): TagID("offline"), TagGroupID("site"): TagID("site2")},
+    )
     ts.add_host(HostName("bla"))
     ts.apply(monkeypatch)
     assert config.all_offline_hosts() == {"blub1"}
@@ -84,22 +91,31 @@ def test_all_configured_offline_hosts(monkeypatch: MonkeyPatch) -> None:
     ts.set_ruleset(
         "only_hosts",
         [
-            {"condition": {"host_tags": {"criticality": {"$ne": "offline"}}}, "value": True},
+            {
+                "condition": {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("offline")}}},
+                "value": True,
+            },
         ],
     )
-    ts.add_host(HostName("blub1"), tags={"criticality": "offline", "site": "site1"})
-    ts.add_host(HostName("blub2"), tags={"criticality": "offline", "site": "site2"})
+    ts.add_host(
+        HostName("blub1"),
+        tags={TagGroupID("criticality"): TagID("offline"), TagGroupID("site"): TagID("site1")},
+    )
+    ts.add_host(
+        HostName("blub2"),
+        tags={TagGroupID("criticality"): TagID("offline"), TagGroupID("site"): TagID("site2")},
+    )
     ts.apply(monkeypatch)
     assert config.all_offline_hosts() == {"blub1"}
 
 
 def test_all_configured_hosts(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario(site_id="site1")
-    ts.add_host(HostName("real1"), tags={"site": "site1"})
-    ts.add_host(HostName("real2"), tags={"site": "site2"})
+    ts.add_host(HostName("real1"), tags={TagGroupID("site"): TagID("site1")})
+    ts.add_host(HostName("real2"), tags={TagGroupID("site"): TagID("site2")})
     ts.add_host(HostName("real3"))
-    ts.add_cluster(HostName("cluster1"), tags={"site": "site1"}, nodes=["node1"])
-    ts.add_cluster(HostName("cluster2"), tags={"site": "site2"}, nodes=["node2"])
+    ts.add_cluster(HostName("cluster1"), tags={TagGroupID("site"): TagID("site1")}, nodes=["node1"])
+    ts.add_cluster(HostName("cluster2"), tags={TagGroupID("site"): TagID("site2")}, nodes=["node2"])
     ts.add_cluster(HostName("cluster3"), nodes=["node3"])
 
     config_cache = ts.apply(monkeypatch)
@@ -116,11 +132,11 @@ def test_all_configured_hosts(monkeypatch: MonkeyPatch) -> None:
 
 def test_all_active_hosts(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario(site_id="site1")
-    ts.add_host(HostName("real1"), tags={"site": "site1"})
-    ts.add_host(HostName("real2"), tags={"site": "site2"})
+    ts.add_host(HostName("real1"), tags={TagGroupID("site"): TagID("site1")})
+    ts.add_host(HostName("real2"), tags={TagGroupID("site"): TagID("site2")})
     ts.add_host(HostName("real3"))
-    ts.add_cluster(HostName("cluster1"), tags={"site": "site1"}, nodes=["node1"])
-    ts.add_cluster(HostName("cluster2"), tags={"site": "site2"}, nodes=["node2"])
+    ts.add_cluster(HostName("cluster1"), tags={TagGroupID("site"): TagID("site1")}, nodes=["node1"])
+    ts.add_cluster(HostName("cluster2"), tags={TagGroupID("site"): TagID("site2")}, nodes=["node2"])
     ts.add_cluster(HostName("cluster3"), nodes=["node3"])
 
     config_cache = ts.apply(monkeypatch)
@@ -142,7 +158,7 @@ def test_config_cache_tag_to_group_map(monkeypatch: MonkeyPatch) -> None:
                     "id": "dingeling",
                     "title": "Dung",
                     "tags": [
-                        {"aux_tags": [], "id": "dong", "title": "ABC"},
+                        {"aux_tags": [], "id": TagID("dong"), "title": "ABC"},
                     ],
                 }
             ],
@@ -150,27 +166,27 @@ def test_config_cache_tag_to_group_map(monkeypatch: MonkeyPatch) -> None:
     )
     ts.apply(monkeypatch)
     assert ConfigCache.get_tag_to_group_map() == {
-        "all-agents": "agent",
-        "auto-piggyback": "piggyback",
-        "cmk-agent": "agent",
-        "checkmk-agent": "checkmk-agent",
-        "dong": "dingeling",
-        "ip-v4": "ip-v4",
-        "ip-v4-only": "address_family",
-        "ip-v4v6": "address_family",
-        "ip-v6": "ip-v6",
-        "ip-v6-only": "address_family",
-        "no-agent": "agent",
-        "no-ip": "address_family",
-        "no-piggyback": "piggyback",
-        "no-snmp": "snmp_ds",
-        "piggyback": "piggyback",
-        "ping": "ping",
-        "snmp": "snmp",
-        "snmp-v1": "snmp_ds",
-        "snmp-v2": "snmp_ds",
-        "special-agents": "agent",
-        "tcp": "tcp",
+        TagID("all-agents"): TagGroupID("agent"),
+        TagID("auto-piggyback"): TagGroupID("piggyback"),
+        TagID("cmk-agent"): TagGroupID("agent"),
+        TagID("checkmk-agent"): TagGroupID("checkmk-agent"),
+        TagID("dong"): TagGroupID("dingeling"),
+        TagID("ip-v4"): TagGroupID("ip-v4"),
+        TagID("ip-v4-only"): TagGroupID("address_family"),
+        TagID("ip-v4v6"): TagGroupID("address_family"),
+        TagID("ip-v6"): TagGroupID("ip-v6"),
+        TagID("ip-v6-only"): TagGroupID("address_family"),
+        TagID("no-agent"): TagGroupID("agent"),
+        TagID("no-ip"): TagGroupID("address_family"),
+        TagID("no-piggyback"): TagGroupID("piggyback"),
+        TagID("no-snmp"): TagGroupID("snmp_ds"),
+        TagID("piggyback"): TagGroupID("piggyback"),
+        TagID("ping"): TagGroupID("ping"),
+        TagID("snmp"): TagGroupID("snmp"),
+        TagID("snmp-v1"): TagGroupID("snmp_ds"),
+        TagID("snmp-v2"): TagGroupID("snmp_ds"),
+        TagID("special-agents"): TagGroupID("agent"),
+        TagID("tcp"): TagGroupID("tcp"),
     }
 
 
@@ -212,14 +228,14 @@ def test_host_folder_matching(
     "hostname_str,tags,result",
     [
         ("testhost", {}, True),
-        ("testhost", {"address_family": "ip-v4-only"}, True),
-        ("testhost", {"address_family": "ip-v4v6"}, True),
-        ("testhost", {"address_family": "ip-v6-only"}, False),
-        ("testhost", {"address_family": "no-ip"}, False),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v4-only")}, True),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v4v6")}, True),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v6-only")}, False),
+        ("testhost", {TagGroupID("address_family"): TagID("no-ip")}, False),
     ],
 )
 def test_is_ipv4_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -232,14 +248,14 @@ def test_is_ipv4_host(
     "hostname_str,tags,result",
     [
         ("testhost", {}, False),
-        ("testhost", {"address_family": "ip-v4-only"}, False),
-        ("testhost", {"address_family": "ip-v4v6"}, True),
-        ("testhost", {"address_family": "ip-v6-only"}, True),
-        ("testhost", {"address_family": "no-ip"}, False),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v4-only")}, False),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v4v6")}, True),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v6-only")}, True),
+        ("testhost", {TagGroupID("address_family"): TagID("no-ip")}, False),
     ],
 )
 def test_is_ipv6_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -252,14 +268,14 @@ def test_is_ipv6_host(
     "hostname_str,tags,result",
     [
         ("testhost", {}, False),
-        ("testhost", {"address_family": "ip-v4-only"}, False),
-        ("testhost", {"address_family": "ip-v4v6"}, True),
-        ("testhost", {"address_family": "ip-v6-only"}, False),
-        ("testhost", {"address_family": "no-ip"}, False),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v4-only")}, False),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v4v6")}, True),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v6-only")}, False),
+        ("testhost", {TagGroupID("address_family"): TagID("no-ip")}, False),
     ],
 )
 def test_is_ipv4v6_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -275,8 +291,8 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.add_host("localhost")
     ts.add_host("undiscoverable")
-    ts.add_host("no_ip", {"address_family": "no-ip"})
-    ts.add_host("dual_stack", {"address_family": "ip-v4v6"})
+    ts.add_host("no_ip", {TagGroupID("address_family"): TagID("no-ip")})
+    ts.add_host("dual_stack", {TagGroupID("address_family"): TagID("ip-v4v6")})
     ts.add_cluster("cluster")
     config_cache = ts.apply(monkeypatch)
     monkeypatch.setattr(
@@ -322,12 +338,12 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
 @pytest.mark.parametrize(
     "hostname_str,tags,result",
     [
-        ("testhost", {"piggyback": "piggyback"}, True),
-        ("testhost", {"piggyback": "no-piggyback"}, False),
+        ("testhost", {TagGroupID("piggyback"): TagID("piggyback")}, True),
+        ("testhost", {TagGroupID("piggyback"): TagID("no-piggyback")}, False),
     ],
 )
 def test_is_piggyback_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -346,11 +362,15 @@ def test_is_piggyback_host(
     "hostname_str,tags",
     [
         ("testhost", {}),
-        ("testhost", {"piggyback": "auto-piggyback"}),
+        ("testhost", {TagGroupID("piggyback"): TagID("auto-piggyback")}),
     ],
 )
 def test_is_piggyback_host_auto(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], with_data: bool, result: bool
+    monkeypatch: MonkeyPatch,
+    hostname_str: str,
+    tags: dict[TagGroupID, TagID],
+    with_data: bool,
+    result: bool,
 ) -> None:
     hostname = HostName(hostname_str)
     monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda hostname, cache_age: with_data)
@@ -363,14 +383,14 @@ def test_is_piggyback_host_auto(
     "hostname_str,tags,result",
     [
         ("testhost", {}, False),
-        ("testhost", {"address_family": "ip-v4-only"}, False),
-        ("testhost", {"address_family": "ip-v4v6"}, False),
-        ("testhost", {"address_family": "ip-v6-only"}, False),
-        ("testhost", {"address_family": "no-ip"}, True),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v4-only")}, False),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v4v6")}, False),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v6-only")}, False),
+        ("testhost", {TagGroupID("address_family"): TagID("no-ip")}, True),
     ],
 )
 def test_is_no_ip_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -385,35 +405,39 @@ def test_is_no_ip_host(
         ("testhost", {}, False, []),
         (
             "testhost",
-            {"address_family": "ip-v4-only"},
+            {TagGroupID("address_family"): TagID("ip-v4-only")},
             False,
             [{"condition": {}, "value": "ipv6"}],
         ),
-        ("testhost", {"address_family": "ip-v4v6"}, False, []),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v4v6")}, False, []),
         (
             "testhost",
-            {"address_family": "ip-v4v6"},
+            {TagGroupID("address_family"): TagID("ip-v4v6")},
             True,
             [{"condition": {}, "value": "ipv6"}],
         ),
-        ("testhost", {"address_family": "ip-v6-only"}, True, []),
+        ("testhost", {TagGroupID("address_family"): TagID("ip-v6-only")}, True, []),
         (
             "testhost",
-            {"address_family": "ip-v6-only"},
+            {TagGroupID("address_family"): TagID("ip-v6-only")},
             True,
             [{"condition": {}, "value": "ipv4"}],
         ),
         (
             "testhost",
-            {"address_family": "ip-v6-only"},
+            {TagGroupID("address_family"): TagID("ip-v6-only")},
             True,
             [{"condition": {}, "value": "ipv6"}],
         ),
-        ("testhost", {"address_family": "no-ip"}, False, []),
+        ("testhost", {TagGroupID("address_family"): TagID("no-ip")}, False, []),
     ],
 )
 def test_is_ipv6_primary_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool, ruleset: list
+    monkeypatch: MonkeyPatch,
+    hostname_str: str,
+    tags: dict[TagGroupID, TagID],
+    result: bool,
+    ruleset: list,
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -539,7 +563,7 @@ def test_host_config_additional_ipaddresses(
     ],
 )
 def test_is_tcp_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -551,20 +575,32 @@ def test_is_tcp_host(
     "hostname_str,tags,result",
     [
         ("testhost", {}, False),
-        ("testhost", {"agent": "cmk-agent"}, False),
-        ("testhost", {"agent": "cmk-agent", "snmp_ds": "snmp-v1"}, False),
-        ("testhost", {"snmp_ds": "snmp-v1"}, False),
+        ("testhost", {TagGroupID("agent"): TagID("cmk-agent")}, False),
         (
             "testhost",
-            {"agent": "no-agent", "snmp_ds": "no-snmp", "piggyback": "no-piggyback"},
+            {TagGroupID("agent"): TagID("cmk-agent"), TagGroupID("snmp_ds"): TagID("snmp-v1")},
+            False,
+        ),
+        ("testhost", {TagGroupID("snmp_ds"): TagID("snmp-v1")}, False),
+        (
+            "testhost",
+            {
+                TagGroupID("agent"): TagID("no-agent"),
+                TagGroupID("snmp_ds"): TagID("no-snmp"),
+                TagGroupID("piggyback"): TagID("no-piggyback"),
+            },
             True,
         ),
-        ("testhost", {"agent": "no-agent", "snmp_ds": "no-snmp"}, True),
-        ("testhost", {"agent": "no-agent"}, True),
+        (
+            "testhost",
+            {TagGroupID("agent"): TagID("no-agent"), TagGroupID("snmp_ds"): TagID("no-snmp")},
+            True,
+        ),
+        ("testhost", {TagGroupID("agent"): TagID("no-agent")}, True),
     ],
 )
 def test_is_ping_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -576,14 +612,26 @@ def test_is_ping_host(
     "hostname_str,tags,result",
     [
         ("testhost", {}, False),
-        ("testhost", {"agent": "cmk-agent"}, False),
-        ("testhost", {"agent": "cmk-agent", "snmp_ds": "snmp-v1"}, True),
-        ("testhost", {"agent": "cmk-agent", "snmp_ds": "snmp-v2"}, True),
-        ("testhost", {"agent": "cmk-agent", "snmp_ds": "no-snmp"}, False),
+        ("testhost", {TagGroupID("agent"): TagID("cmk-agent")}, False),
+        (
+            "testhost",
+            {TagGroupID("agent"): TagID("cmk-agent"), TagGroupID("snmp_ds"): TagID("snmp-v1")},
+            True,
+        ),
+        (
+            "testhost",
+            {TagGroupID("agent"): TagID("cmk-agent"), TagGroupID("snmp_ds"): TagID("snmp-v2")},
+            True,
+        ),
+        (
+            "testhost",
+            {TagGroupID("agent"): TagID("cmk-agent"), TagGroupID("snmp_ds"): TagID("no-snmp")},
+            False,
+        ),
     ],
 )
 def test_is_snmp_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -621,14 +669,26 @@ def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
     "hostname_str,tags,result",
     [
         ("testhost", {}, False),
-        ("testhost", {"agent": "cmk-agent"}, False),
-        ("testhost", {"agent": "no-agent", "snmp_ds": "snmp-v1"}, False),
-        ("testhost", {"agent": "no-agent", "snmp_ds": "no-snmp"}, False),
-        ("testhost", {"agent": "cmk-agent", "snmp_ds": "snmp-v1"}, True),
+        ("testhost", {TagGroupID("agent"): TagID("cmk-agent")}, False),
+        (
+            "testhost",
+            {TagGroupID("agent"): TagID("no-agent"), TagGroupID("snmp_ds"): TagID("snmp-v1")},
+            False,
+        ),
+        (
+            "testhost",
+            {TagGroupID("agent"): TagID("no-agent"), TagGroupID("snmp_ds"): TagID("no-snmp")},
+            False,
+        ),
+        (
+            "testhost",
+            {TagGroupID("agent"): TagID("cmk-agent"), TagGroupID("snmp_ds"): TagID("snmp-v1")},
+            True,
+        ),
     ],
 )
 def test_is_dual_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -640,14 +700,14 @@ def test_is_dual_host(
     "hostname_str,tags,result",
     [
         ("testhost", {}, False),
-        ("testhost", {"agent": "all-agents"}, True),
-        ("testhost", {"agent": "special-agents"}, False),
-        ("testhost", {"agent": "no-agent"}, False),
-        ("testhost", {"agent": "cmk-agent"}, False),
+        ("testhost", {TagGroupID("agent"): TagID("all-agents")}, True),
+        ("testhost", {TagGroupID("agent"): TagID("special-agents")}, False),
+        ("testhost", {TagGroupID("agent"): TagID("no-agent")}, False),
+        ("testhost", {TagGroupID("agent"): TagID("cmk-agent")}, False),
     ],
 )
 def test_is_all_agents_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -659,14 +719,14 @@ def test_is_all_agents_host(
     "hostname_str,tags,result",
     [
         ("testhost", {}, False),
-        ("testhost", {"agent": "all-agents"}, False),
-        ("testhost", {"agent": "special-agents"}, True),
-        ("testhost", {"agent": "no-agent"}, False),
-        ("testhost", {"agent": "cmk-agent"}, False),
+        ("testhost", {TagGroupID("agent"): TagID("all-agents")}, False),
+        ("testhost", {TagGroupID("agent"): TagID("special-agents")}, True),
+        ("testhost", {TagGroupID("agent"): TagID("no-agent")}, False),
+        ("testhost", {TagGroupID("agent"): TagID("cmk-agent")}, False),
     ],
 )
 def test_is_all_special_agents_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1706,38 +1766,36 @@ def test_config_cache_tag_list_of_host(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
-    ts.add_host(test_host, tags={"agent": "no-agent"})
+    ts.add_host(test_host, tags={TagGroupID("agent"): TagID("no-agent")})
     ts.add_host(xyz_host)
 
     config_cache = ts.apply(monkeypatch)
-    print(config_cache._hosttags[test_host])
-    print(config_cache._hosttags[xyz_host])
-    assert config_cache.tag_list(xyz_host) == {
-        "/wato/",
-        "lan",
-        "ip-v4",
-        "checkmk-agent",
-        "cmk-agent",
-        "no-snmp",
-        "tcp",
-        "auto-piggyback",
-        "ip-v4-only",
-        "site:unit",
-        "prod",
+    assert set(config_cache.tag_list(xyz_host)) == {
+        TagID("/wato/"),
+        TagID("lan"),
+        TagID("ip-v4"),
+        TagID("checkmk-agent"),
+        TagID("cmk-agent"),
+        TagID("no-snmp"),
+        TagID("tcp"),
+        TagID("auto-piggyback"),
+        TagID("ip-v4-only"),
+        TagID("site:unit"),
+        TagID("prod"),
     }
 
 
 def test_config_cache_tag_list_of_host_not_existing(monkeypatch: MonkeyPatch) -> None:
     config_cache = Scenario().apply(monkeypatch)
-    assert config_cache.tag_list(HostName("not-existing")) == {
-        "/",
-        "lan",
-        "cmk-agent",
-        "no-snmp",
-        "auto-piggyback",
-        "ip-v4-only",
-        "site:NO_SITE",
-        "prod",
+    assert set(config_cache.tag_list(HostName("not-existing"))) == {
+        TagID("/"),
+        TagID("lan"),
+        TagID("cmk-agent"),
+        TagID("no-snmp"),
+        TagID("auto-piggyback"),
+        TagID("ip-v4-only"),
+        TagID("site:NO_SITE"),
+        TagID("prod"),
     }
 
 
@@ -1749,7 +1807,7 @@ def test_host_tags_of_host(monkeypatch: MonkeyPatch) -> None:
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
     ts = Scenario()
-    ts.add_host(test_host, tags={"agent": "no-agent"})
+    ts.add_host(test_host, tags={TagGroupID("agent"): TagID("no-agent")})
     ts.add_host(xyz_host)
 
     config_cache = ts.apply(monkeypatch)
@@ -1786,7 +1844,7 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
     xyz_host = HostName("xyz")
 
     ts = Scenario()
-    ts.add_host(test_host, tags={"agent": "no-agent"})
+    ts.add_host(test_host, tags={TagGroupID("agent"): TagID("no-agent")})
     ts.add_host(xyz_host)
     ts.set_ruleset(
         "service_tag_rules",
@@ -1843,17 +1901,19 @@ def test_labels(monkeypatch: MonkeyPatch) -> None:
         "host_label_rules",
         [
             {
-                "condition": {"host_tags": {"agent": "no-agent"}},
+                "condition": {"host_tags": {TagGroupID("agent"): TagID("no-agent")}},
                 "value": {"from-rule": "rule1"},
             },
             {
-                "condition": {"host_tags": {"agent": "no-agent"}},
+                "condition": {"host_tags": {TagGroupID("agent"): TagID("no-agent")}},
                 "value": {"from-rule2": "rule2"},
             },
         ],
     )
 
-    ts.add_host(test_host, tags={"agent": "no-agent"}, labels={"explicit": "ding"})
+    ts.add_host(
+        test_host, tags={TagGroupID("agent"): TagID("no-agent")}, labels={"explicit": "ding"}
+    )
     ts.add_host(xyz_host)
 
     config_cache = ts.apply(monkeypatch)
@@ -2318,7 +2378,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
 
     ts = Scenario()
     ts.add_host(xyz_host)
-    ts.add_host(test_host, tags={"agent": "no-agent"})
+    ts.add_host(test_host, tags={TagGroupID("agent"): TagID("no-agent")})
     ts.set_autochecks(
         test_host,
         [
@@ -2432,9 +2492,9 @@ def test_host_config_add_discovery_check(
     xyz_host = HostName("xyz")
     if ping:
         tags = {
-            "agent": "no-agent",
-            "snmp_ds": "no-snmp",
-            "piggyback": "no-piggyback",
+            TagGroupID("agent"): TagID("no-agent"),
+            TagGroupID("snmp_ds"): TagID("no-snmp"),
+            TagGroupID("piggyback"): TagID("no-piggyback"),
         }
     else:
         tags = {}

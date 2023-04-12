@@ -1266,7 +1266,7 @@ def service_depends_on(hostname: HostName, servicedesc: ServiceName) -> list[Ser
 
         if len(entry) == 3:
             depname, hostlist, patternlist = entry
-            tags: list[str] = []
+            tags: list[TagID] = []
         elif len(entry) == 4:
             depname, tags, hostlist, patternlist = entry
         else:
@@ -2059,7 +2059,7 @@ class ConfigCache:
         self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
 
         # Host tags
-        self._hosttags: dict[HostName, set[TagID]] = {}
+        self._hosttags: dict[HostName, Sequence[TagID]] = {}
 
         # Autochecks cache
         self._autochecks_manager = AutochecksManager()
@@ -2869,14 +2869,14 @@ class ConfigCache:
                 )
             else:
                 # Only tag list available. Use it and compute the tag groups.
-                self._hosttags[hostname] = set(parts[1:])
+                self._hosttags[hostname] = tuple(parts[1:])
                 host_tags[hostname] = ConfigCache._tag_list_to_tag_groups(
                     tag_to_group_map, self._hosttags[hostname]
                 )
 
         for shadow_host_name, shadow_host_spec in list(get_shadow_hosts().items()):
-            self._hosttags[shadow_host_name] = set(
-                shadow_host_spec.get("custom_variables", {}).get("TAGS", "").split()
+            self._hosttags[shadow_host_name] = tuple(
+                set(shadow_host_spec.get("custom_variables", {}).get("TAGS", TagID("")).split())
             )
             host_tags[shadow_host_name] = ConfigCache._tag_list_to_tag_groups(
                 tag_to_group_map, self._hosttags[shadow_host_name]
@@ -2885,14 +2885,14 @@ class ConfigCache:
     @staticmethod
     def _tag_groups_to_tag_list(
         host_path: str, tag_groups: Mapping[TagGroupID, TagID]
-    ) -> set[TagID]:
+    ) -> Sequence[TagID]:
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
         # but there was a single tag group added with it's leading tag group id. This
         # was the internal "site" tag that is created by HostAttributeSite.
         tags = {v for k, v in tag_groups.items() if k != TagGroupID("site")}
         tags.add(TagID(host_path))
         tags.add(TagID("site:%s" % tag_groups[TagGroupID("site")]))
-        return tags
+        return tuple(tags)
 
     @staticmethod
     def _tag_list_to_tag_groups(
@@ -2916,7 +2916,7 @@ class ConfigCache:
             **{tag_to_group_map.get(tag_id, TagGroupID(tag_id)): tag_id for tag_id in tag_list},
         }
 
-    def tag_list(self, hostname: HostName) -> set[TagID]:
+    def tag_list(self, hostname: HostName) -> Sequence[TagID]:
         """Returns the list of all configured tags of a host. In case
         a host has no tags configured or is not known, it returns an
         empty list."""

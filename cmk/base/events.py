@@ -22,6 +22,7 @@ import cmk.utils.daemon
 import cmk.utils.debug
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
+from cmk.utils.tags import TagID
 from cmk.utils.type_defs import EventContext, EventRule, HostName, ServiceName
 
 import cmk.base.config as config
@@ -540,8 +541,8 @@ def event_match_folder(rule: EventRule, context: EventContext) -> str | None:
 def event_match_hosttags(rule: EventRule, context: EventContext) -> str | None:
     required = rule.get("match_hosttags")
     if required:
-        tags = context.get("HOSTTAGS", "").split()
-        if not config.hosttags_match_taglist(tags, required):
+        tags = [TagID(ident) for ident in context.get("HOSTTAGS", "").split()]
+        if not config.hosttags_match_taglist(tags, (TagID(_) for _ in required)):
             return "The host's tags {} do not match the required tags {}".format(
                 "|".join(tags),
                 "|".join(required),

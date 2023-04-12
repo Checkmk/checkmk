@@ -11,6 +11,7 @@ from collections.abc import Callable
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins
+from cmk.utils.tags import TagID
 from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
@@ -150,7 +151,9 @@ class Modes:
 
                 num_found = 0
                 for hostname in valid_hosts:
-                    if config.hosttags_match_taglist(config_cache.tag_list(hostname), tagspec):
+                    if config.hosttags_match_taglist(
+                        config_cache.tag_list(hostname), (TagID(_) for _ in tagspec)
+                    ):
                         hostlist.append(hostname)
                         num_found += 1
                 if num_found == 0:

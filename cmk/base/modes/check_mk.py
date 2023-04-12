@@ -320,13 +320,13 @@ modes.register(
 
 
 def mode_list_tag(args: list[str]) -> None:
-    hosts = _list_all_hosts_with_tags(args)
+    hosts = _list_all_hosts_with_tags(tuple(TagID(_) for _ in args))
     out.output("\n".join(sorted(hosts)))
     if hosts:
         out.output("\n")
 
 
-def _list_all_hosts_with_tags(tags: list[TagID]) -> list[HostName]:
+def _list_all_hosts_with_tags(tags: Sequence[TagID]) -> Sequence[HostName]:
     config_cache = config.get_config_cache()
     hosts = []
 

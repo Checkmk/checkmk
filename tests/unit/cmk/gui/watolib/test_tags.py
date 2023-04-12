@@ -12,6 +12,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import cmk.utils.tags as tags
+from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.watolib.tags
 import cmk.gui.watolib.utils
@@ -100,10 +101,10 @@ def test_tag_config_save(mocker: MockerFixture) -> None:
     cfg.insert_tag_group(
         tags.TagGroup.from_config(
             {
-                "id": "tgid2",
+                "id": TagGroupID("tgid2"),
                 "topic": "Topics",
                 "title": "titlor",
-                "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+                "tags": [{"id": TagID("tgid2"), "title": "tagid2", "aux_tags": []}],
             }
         )
     )

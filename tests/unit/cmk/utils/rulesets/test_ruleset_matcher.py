@@ -20,7 +20,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RuleSpec,
     TagCondition,
 )
-from cmk.utils.tags import TagConfig, TagGroupID
+from cmk.utils.tags import TagConfig, TagGroupID, TagID
 from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName
 
 from cmk.checkers.discovery import AutocheckEntry
@@ -185,21 +185,21 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
             {
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
-                    "host_tags": {"agent": "no-agent"},
+                    "host_tags": {TagGroupID("agent"): TagID("no-agent")},
                 },
                 "value": {"label1": "val1"},
             },
             {
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
-                    "host_tags": {"agent": "no-agent"},
+                    "host_tags": {TagGroupID("agent"): TagID("no-agent")},
                 },
                 "value": {"label2": "val2"},
             },
         ],
     )
 
-    ts.add_host(test_host, tags={"agent": "no-agent"})
+    ts.add_host(test_host, tags={TagGroupID("agent"): TagID("no-agent")})
     ruleset_matcher = ts.apply(monkeypatch).ruleset_matcher
 
     assert ruleset_matcher.labels_of_service(xyz_host, "CPU load") == {}
@@ -503,7 +503,7 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
         "value": "crit_prod",
         "condition": {
             "host_tags": {
-                "criticality": "prod",
+                TagGroupID("criticality"): TagID("prod"),
             },
         },
         "options": {},
@@ -514,8 +514,8 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
         "value": "prod_cmk-agent",
         "condition": {
             "host_tags": {
-                "criticality": "prod",
-                "agent": "cmk-agent",
+                TagGroupID("criticality"): TagID("prod"),
+                TagGroupID("agent"): TagID("cmk-agent"),
             },
         },
         "options": {},
@@ -524,7 +524,7 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
     {
         "id": "id2",
         "value": "not_lan",
-        "condition": {"host_tags": {"networking": {"$ne": "lan"}}},
+        "condition": {"host_tags": {TagGroupID("networking"): {"$ne": TagID("lan")}}},
         "options": {},
     },
     # test $or
@@ -533,10 +533,10 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
         "value": "wan_or_lan",
         "condition": {
             "host_tags": {
-                "networking": {
+                TagGroupID("networking"): {
                     "$or": [
-                        "lan",
-                        "wan",
+                        TagID("lan"),
+                        TagID("wan"),
                     ],
                 }
             }
@@ -549,10 +549,10 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
         "value": "not_wan_and_not_lan",
         "condition": {
             "host_tags": {
-                "networking": {
+                TagGroupID("networking"): {
                     "$nor": [
-                        "lan",
-                        "wan",
+                        TagID("lan"),
+                        TagID("wan"),
                     ],
                 }
             }
@@ -586,23 +586,23 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(
     ts.add_host(
         HostName("host1"),
         tags={
-            "criticality": "prod",
-            "agent": "cmk-agent",
-            "networking": "lan",
+            TagGroupID("criticality"): TagID("prod"),
+            TagGroupID("agent"): TagID("cmk-agent"),
+            TagGroupID("networking"): TagID("lan"),
         },
     )
     ts.add_host(
         HostName("host2"),
         tags={
-            "criticality": "test",
-            "networking": "wan",
+            TagGroupID("criticality"): TagID("test"),
+            TagGroupID("networking"): TagID("wan"),
         },
     )
     ts.add_host(
         HostName("host3"),
         tags={
-            "criticality": "test",
-            "networking": "dmz",
+            TagGroupID("criticality"): TagID("test"),
+            TagGroupID("networking"): TagID("dmz"),
         },
     )
     config_cache = ts.apply(monkeypatch)
@@ -628,7 +628,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(
                 "value": "value",
                 "condition": {
                     "host_tags": {
-                        "grp1": "v1",
+                        TagGroupID("grp1"): TagID("v1"),
                     },
                 },
                 "options": {},
@@ -641,7 +641,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(
                 "value": "value",
                 "condition": {
                     "host_tags": {
-                        "grp2": "v1",
+                        TagGroupID("grp2"): TagID("v1"),
                     },
                 },
                 "options": {},
@@ -662,22 +662,22 @@ def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
             "aux_tags": [],
             "tag_groups": [
                 {
-                    "id": "grp1",
+                    "id": TagGroupID("grp1"),
                     "tags": [
                         {
                             "aux_tags": [],
-                            "id": "v1",
+                            "id": TagID("v1"),
                             "title": "Value1",
                         },
                     ],
                     "title": "Group 1",
                 },
                 {
-                    "id": "grp2",
+                    "id": TagGroupID("grp2"),
                     "tags": [
                         {
                             "aux_tags": [],
-                            "id": "v1",
+                            "id": TagID("v1"),
                             "title": "Value1",
                         },
                     ],
@@ -690,7 +690,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
     ts.add_host(
         "host",
         tags={
-            "grp1": "v1",
+            TagGroupID("grp1"): TagID("v1"),
         },
     )
     config_cache = ts.apply(monkeypatch)
@@ -915,10 +915,10 @@ def test_matches_tag_condition(
             taggroud_id,
             tag_condition,
             {
-                ("t1", "abc"),
-                ("t2", "xyz"),
-                ("t3", "123"),
-                ("t4", "456"),
+                (TagGroupID("t1"), TagID("abc")),
+                (TagGroupID("t2"), TagID("xyz")),
+                (TagGroupID("t3"), TagID("123")),
+                (TagGroupID("t4"), TagID("456")),
             },
         )
         is expected_result

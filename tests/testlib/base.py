@@ -12,6 +12,7 @@ from pytest import MonkeyPatch
 from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.tags
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.checkers.discovery import AutocheckEntry
@@ -60,7 +61,7 @@ class Scenario:
     def add_host(
         self,
         hostname: HostName,
-        tags: dict[str, str] | None = None,
+        tags: dict[TagGroupID, TagID] | None = None,
         host_path: str = "/wato/hosts.mk",
         labels: dict[str, str] | None = None,
         ipaddress: HostAddress | None = None,
@@ -102,7 +103,7 @@ class Scenario:
     def add_cluster(
         self,
         hostname: HostName,
-        tags: dict[str, str] | None = None,
+        tags: dict[TagGroupID, TagID] | None = None,
         host_path: str = "/wato/hosts.mk",
         nodes: Sequence[HostName] | None = None,
     ) -> None:
@@ -120,7 +121,9 @@ class Scenario:
     # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
     # is currently responsible for calulcating the host tags of a host.
     # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
-    def _get_effective_tag_config(self, tags: Mapping[str, str]) -> Mapping[str, str]:
+    def _get_effective_tag_config(
+        self, tags: Mapping[TagGroupID, TagID]
+    ) -> Mapping[TagGroupID, TagID]:
         """Returns a full set of tag groups
 
         It contains the merged default tag groups and their default values
@@ -131,19 +134,19 @@ class Scenario:
 
         # TODO: Compute this dynamically with self.tags
         tag_config = {
-            "piggyback": "auto-piggyback",
-            "networking": "lan",
-            "agent": "cmk-agent",
-            "criticality": "prod",
-            "snmp_ds": "no-snmp",
-            "site": self.site_id,
-            "address_family": "ip-v4-only",
+            TagGroupID("piggyback"): TagID("auto-piggyback"),
+            TagGroupID("networking"): TagID("lan"),
+            TagGroupID("agent"): TagID("cmk-agent"),
+            TagGroupID("criticality"): TagID("prod"),
+            TagGroupID("snmp_ds"): TagID("no-snmp"),
+            TagGroupID("site"): TagID(self.site_id),
+            TagGroupID("address_family"): TagID("ip-v4-only"),
         }
         tag_config.update(tags)
 
         # NOTE: tag_config is modified within loop!
         for tg_id, tag_id in list(tag_config.items()):
-            if tg_id == "site":
+            if tg_id == TagGroupID("site"):
                 continue
 
             tag_group = self.tags.get_tag_group(tg_id)

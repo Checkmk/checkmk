@@ -17,7 +17,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.utils.regex import REGEX_ID
-from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagGroupSpec
+from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagGroupID, TagGroupSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -246,7 +246,7 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
     return Response(status=204)
 
 
-def _retrieve_group(ident: str) -> TagGroup:
+def _retrieve_group(ident: TagGroupID) -> TagGroup:
     tag_group = load_tag_group(ident)
     if tag_group is None:
         raise ProblemException(

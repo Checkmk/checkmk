@@ -51,18 +51,30 @@ def create_stage(Map args, issues, time_stage_started) {
 
                 println("Check results: ${args.RESULT_CHECK_TYPE}");
                 if (args.RESULT_CHECK_TYPE) {
-                    if (args.RESULT_CHECK_TYPE == "MYPY") {
-                        issues.add(scanForIssues(
-                            tool: myPy(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
-                    } else if (args.RESULT_CHECK_TYPE == "PYLINT") {
-                        issues.add(scanForIssues(
-                            tool: pyLint(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
-                    } else if (args.RESULT_CHECK_TYPE == "GCC") {
-                        issues.add(scanForIssues(
-                            tool: gcc(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
-                    } else if (args.RESULT_CHECK_TYPE == "CLANG") {
-                        issues.add(scanForIssues(
-                            tool: clang(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                    switch (args.RESULT_CHECK_TYPE) {
+                        case "MYPY":
+                            issues.add(scanForIssues(
+                                tool: myPy(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                        case "PYLINT":
+                            issues.add(scanForIssues(
+                                tool: pyLint(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                        case "GCC":
+                            issues.add(scanForIssues(
+                                tool: gcc(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                        case "CLANG":
+                            issues.add(scanForIssues(
+                                tool: clang(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                        case "JUNIT":
+                            issues.add(scanForIssues(
+                                tool: junitParser(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                        case "TSLINT":
+                            issues.add(scanForIssues(
+                                tool: tsLint(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                        case "ESLINT":
+                            issues.add(scanForIssues(
+                                tool: esLint(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                        default:
+                            println("No tool defined for RESULT_CHECK_TYPE: ${args.RESULT_CHECK_TYPE}");
                     }
                 }
                 /// make the stage fail if the command returned nonzero

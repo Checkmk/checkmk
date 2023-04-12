@@ -78,7 +78,7 @@ def notify_error(error) {
 
             /// fallback - for investigation
             notify_emails = notify_emails ?: [
-                "timotheus.bachinger@tribe29.com", "frans.fuerst@tribe29.com"];
+               "timotheus.bachinger@tribe29.com", "frans.fuerst@tribe29.com"];
 
             print("|| error-reporting: notify_emails ${notify_emails}");
 

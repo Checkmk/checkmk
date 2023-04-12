@@ -343,4 +343,4 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
 
 if __name__ == "__main__":
     logging.getLogger().name = "check_mail_loop"
-    active_check_main(create_argument_parser(), check_mail_roundtrip)
+    active_check_main(create_argument_parser(), check_mail_roundtrip, allow_ews=False)

@@ -368,9 +368,6 @@ class LicenseUsageSample:
         if not isinstance(raw_sample, dict):
             raise TypeError()
 
-        if raw_instance_id := raw_sample.get("instance_id"):
-            instance_id = UUID(raw_instance_id)
-
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
             raise ValueError()
 
@@ -405,9 +402,6 @@ class LicenseUsageSample:
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
             raise TypeError()
-
-        if raw_instance_id := raw_sample.get("instance_id"):
-            instance_id = UUID(raw_instance_id)
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
             raise ValueError()
@@ -444,10 +438,7 @@ class LicenseUsageSample:
         if not isinstance(raw_sample, dict):
             raise TypeError()
 
-        if raw_instance_id := raw_sample.get("instance_id"):
-            instance_id = UUID(raw_instance_id)
-
-        if instance_id is None:
+        if not (raw_instance_id := raw_sample.get("instance_id")):
             raise ValueError()
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
@@ -455,7 +446,7 @@ class LicenseUsageSample:
 
         extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
-            instance_id=instance_id,
+            instance_id=UUID(raw_instance_id),
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],

@@ -303,7 +303,11 @@ def load_license_usage_history(report_filepath: Path) -> LocalLicenseUsageHistor
     if (instance_id := load_instance_id()) is None:
         raise TypeError()
 
-    return LocalLicenseUsageHistory.parse(raw_report, instance_id, hash_site_id(omd_site()))
+    return LocalLicenseUsageHistory.parse(
+        raw_report,
+        instance_id=instance_id,
+        site_hash=hash_site_id(omd_site()),
+    )
 
 
 # .
@@ -336,7 +340,7 @@ class LocalLicenseUsageHistory:
 
     @classmethod
     def parse(
-        cls, raw_report: object, instance_id: UUID | None, site_hash: str
+        cls, raw_report: object, *, instance_id: UUID, site_hash: str
     ) -> LocalLicenseUsageHistory:
         if not isinstance(raw_report, dict):
             raise TypeError()
@@ -350,6 +354,25 @@ class LocalLicenseUsageHistory:
         parser = LicenseUsageSample.get_parser(version)
         return cls(
             parser(raw_sample, instance_id=instance_id, site_hash=site_hash)
+            for raw_sample in raw_report.get("history", [])
+        )
+
+    @classmethod
+    def parse_from_remote(cls, raw_report: object, *, site_hash: str) -> LocalLicenseUsageHistory:
+        # The report version from a remote site may not be known on the central site. Thus we always
+        # use the latest report verion of the central site.
+        # Example:
+        # - central: Checkmk 2.1 (report version 1.1)
+        # - remote: Checkmk 2.2 (report version 2.0)
+        if not isinstance(raw_report, dict):
+            raise TypeError()
+
+        if not raw_report:
+            return cls([])
+
+        parser = LicenseUsageSample.get_parser(LicenseUsageReportVersion)
+        return cls(
+            parser(raw_sample, instance_id=None, site_hash=site_hash)
             for raw_sample in raw_report.get("history", [])
         )
 

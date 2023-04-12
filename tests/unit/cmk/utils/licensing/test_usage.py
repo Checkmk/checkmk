@@ -182,8 +182,8 @@ def test_serialize_license_usage_report() -> None:
     }
     history = LocalLicenseUsageHistory.parse(
         raw_report,
-        None,
-        "site-hash",
+        instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+        site_hash="site-hash",
     )
     assert (
         _serialize_dump(
@@ -192,7 +192,7 @@ def test_serialize_license_usage_report() -> None:
                 history=history.for_report(),
             )
         )
-        == b"LQ't#$x~}Qi Qa]_Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi ?F==[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED0D925@HQi _[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D0D925@HQi _[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
+        == b"LQ't#$x~}Qi Qa]_Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi Qhbfchd43\\fg7f\\c_5c\\h3d7\\7a4d2g`6ee3gQ[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED0D925@HQi _[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D0D925@HQi _[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
     )
 
 
@@ -348,6 +348,7 @@ def test_serialize_license_usage_report() -> None:
                 "history": [
                     {
                         "instance_id": "4b66f726-c4fc-454b-80a6-4917d1b386ce",
+                        "site_hash": "the-site-hash",
                         "version": "",
                         "edition": "",
                         "platform": (
@@ -373,7 +374,7 @@ def test_serialize_license_usage_report() -> None:
                 [
                     LicenseUsageSample(
                         instance_id=UUID("4b66f726-c4fc-454b-80a6-4917d1b386ce"),
-                        site_hash="site-hash",
+                        site_hash="the-site-hash",
                         version="",
                         edition="",
                         platform="A very long string with len>50 describing the plat",
@@ -401,8 +402,8 @@ def test_license_usage_report(
 ) -> None:
     history = LocalLicenseUsageHistory.parse(
         raw_report,
-        UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-        "site-hash",
+        instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+        site_hash="site-hash",
     )
     for sample, expected_sample in zip(history, expected_history):
         assert sample.instance_id == expected_sample.instance_id
@@ -422,6 +423,58 @@ def test_license_usage_report(
         assert sample.num_services_shadow == expected_sample.num_services_shadow
         assert sample.num_services_excluded == expected_sample.num_services_excluded
         assert sample.extension_ntop == expected_sample.extension_ntop
+
+
+def test_license_usage_report_from_remote() -> None:
+    history = LocalLicenseUsageHistory.parse_from_remote(
+        {
+            "VERSION": "1000000.0",
+            "history": [
+                {
+                    "instance_id": "4b66f726-c4fc-454b-80a6-4917d1b386ce",
+                    "site_hash": "remote-site-hash",
+                    "version": "",
+                    "edition": "",
+                    "platform": (
+                        "A very long string with len>50 describing the platform"
+                        " a Checkmk server is operating on."
+                    ),
+                    "is_cma": False,
+                    "sample_time": 1,
+                    "timezone": "",
+                    "num_hosts": 2,
+                    "num_hosts_cloud": 1,
+                    "num_hosts_shadow": 6,
+                    "num_hosts_excluded": 3,
+                    "num_services": 4,
+                    "num_services_cloud": 2,
+                    "num_services_shadow": 7,
+                    "num_services_excluded": 5,
+                    "extension_ntop": True,
+                    "VERY_NEW_FIELD": "VERY NEW VALUE",
+                }
+            ],
+        },
+        site_hash="remote-site-hash-2",
+    )
+    assert (sample := history.last) is not None
+    assert sample.instance_id == UUID("4b66f726-c4fc-454b-80a6-4917d1b386ce")
+    assert sample.site_hash == "remote-site-hash"
+    assert sample.version == ""
+    assert sample.edition == ""
+    assert sample.platform == "A very long string with len>50 describing the plat"
+    assert sample.is_cma is False
+    assert sample.sample_time == 1
+    assert sample.timezone == ""
+    assert sample.num_hosts == 2
+    assert sample.num_hosts_cloud == 1
+    assert sample.num_hosts_shadow == 6
+    assert sample.num_hosts_excluded == 3
+    assert sample.num_services == 4
+    assert sample.num_services_cloud == 2
+    assert sample.num_services_shadow == 7
+    assert sample.num_services_excluded == 5
+    assert sample.extension_ntop is True
 
 
 def test_history_add_sample() -> None:

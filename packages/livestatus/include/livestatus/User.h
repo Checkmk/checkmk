@@ -45,8 +45,8 @@ public:
 
 class AuthUser : public User {
 public:
-    AuthUser(std::unique_ptr<IContact> auth_user,
-             ServiceAuthorization service_auth, GroupAuthorization group_auth,
+    AuthUser(const IContact &auth_user, ServiceAuthorization service_auth,
+             GroupAuthorization group_auth,
              std::function<std::unique_ptr<IContactGroup>(const std::string &)>
                  make_contact_group);
 
@@ -65,7 +65,7 @@ public:
         const IHost *hst) const override;
 
 private:
-    std::unique_ptr<IContact> auth_user_;
+    const IContact &auth_user_;
     ServiceAuthorization service_auth_;
     GroupAuthorization group_auth_;
     std::function<std::unique_ptr<IContactGroup>(const std::string &)>

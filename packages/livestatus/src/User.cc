@@ -12,11 +12,11 @@
 #include "livestatus/StringUtils.h"
 
 AuthUser::AuthUser(
-    std::unique_ptr<IContact> auth_user, ServiceAuthorization service_auth,
+    const IContact &auth_user, ServiceAuthorization service_auth,
     GroupAuthorization group_auth,
     std::function<std::unique_ptr<IContactGroup>(const std::string &)>
         make_contact_group)
-    : auth_user_{std::move(auth_user)}
+    : auth_user_{auth_user}
     , service_auth_{service_auth}
     , group_auth_{group_auth}
     , make_contact_group_{std::move(make_contact_group)} {}
@@ -29,13 +29,13 @@ bool AuthUser::is_authorized_for_object(const IHost *hst, const IService *svc,
 }
 
 bool AuthUser::is_authorized_for_host(const IHost &hst) const {
-    return hst.hasContact(*auth_user_);
+    return hst.hasContact(auth_user_);
 }
 
 bool AuthUser::is_authorized_for_service(const IService &svc) const {
-    return svc.hasContact(*auth_user_) ||
+    return svc.hasContact(auth_user_) ||
            (service_auth_ == ServiceAuthorization::loose &&
-            svc.host().hasContact(*auth_user_));
+            svc.host().hasContact(auth_user_));
 }
 
 bool AuthUser::is_authorized_for_host_group(const IHostGroup &hg) const {
@@ -65,7 +65,7 @@ bool AuthUser::is_authorized_for_event(const std::string &precedence,
         auto groups{mk::ec::split_list(contact_groups)};
         return std::any_of(
             groups.begin(), groups.end(), [this](const auto &group) {
-                return make_contact_group_(group)->isMember(*auth_user_);
+                return make_contact_group_(group)->isMember(auth_user_);
             });
     };
     if (precedence == "rule") {

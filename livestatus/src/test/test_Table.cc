@@ -97,7 +97,7 @@ class DummyMonitoringCore : public MonitoringCore {
         return {};
     }
 
-    [[nodiscard]] std::unique_ptr<const IContact> find_contact(
+    [[nodiscard]] const IContact *find_contact(
         const std::string & /*name*/) const override {
         return {};
     }

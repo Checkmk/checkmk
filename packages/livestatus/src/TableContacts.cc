@@ -155,6 +155,5 @@ void TableContacts::answerQuery(Query &query, const User & /*user*/) {
 
 Row TableContacts::get(const std::string &primary_key) const {
     // "name" is the primary key
-    auto contact = core()->find_contact(primary_key);
-    return Row{contact ? contact->handle() : nullptr};
+    return Row{core()->find_contact(primary_key)};
 }

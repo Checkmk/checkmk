@@ -71,6 +71,10 @@ NagiosCore::NagiosCore(
         }
         _hosts_by_designation[mk::unsafe_tolower(hst->name)] = hst;
     }
+
+    for (const ::contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
+        icontacts_[ctc] = std::make_unique<NebContact>(*ctc);
+    }
 }
 
 std::unique_ptr<const IHost> NagiosCore::find_host(const std::string &name) {
@@ -125,29 +129,24 @@ std::unique_ptr<const IServiceGroup> NagiosCore::find_servicegroup(
                             : std::make_unique<NebServiceGroup>(*group);
 }
 
-std::unique_ptr<const IContact> NagiosCore::find_contact(
-    const std::string &name) const {
+const IContact *NagiosCore::find_contact(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
-    const auto *c = ::find_contact(const_cast<char *>(name.c_str()));
-    return c == nullptr ? nullptr : std::make_unique<NebContact>(*c);
+    auto it = icontacts_.find(::find_contact(const_cast<char *>(name.c_str())));
+    return it == icontacts_.end() ? nullptr : it->second.get();
 }
 
 bool NagiosCore::all_of_contacts(
     const std::function<bool(const IContact &)> &pred) const {
-    for (const ::contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
-        if (!pred(NebContact{*ctc})) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(
+        icontacts_.cbegin(), icontacts_.cend(),
+        [&pred](const auto &entry) { return pred(*entry.second); });
 }
 
 std::unique_ptr<User> NagiosCore::find_user(const std::string &name) {
-    // Older Nagios headers are not const-correct... :-P
-    if (const auto *ctc = ::find_contact(const_cast<char *>(name.c_str()))) {
+    if (const auto *ctc = find_contact(name)) {
         return std::make_unique<AuthUser>(
-            std::make_unique<NebContact>(*ctc), _authorization._service,
-            _authorization._group, [](const std::string &name) {
+            *ctc, _authorization._service, _authorization._group,
+            [](const std::string &name) {
                 return std::make_unique<NebContactGroup>(name);
             });
     }

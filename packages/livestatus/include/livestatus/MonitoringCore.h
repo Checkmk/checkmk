@@ -59,7 +59,7 @@ public:
     virtual std::unique_ptr<const IServiceGroup> find_servicegroup(
         const std::string &name) = 0;
 
-    [[nodiscard]] virtual std::unique_ptr<const IContact> find_contact(
+    [[nodiscard]] virtual const IContact *find_contact(
         const std::string &name) const = 0;
     virtual bool all_of_contacts(
         const std::function<bool(const IContact &)> &pred) const = 0;

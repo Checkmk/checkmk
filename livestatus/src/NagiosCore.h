@@ -84,8 +84,7 @@ public:
     std::unique_ptr<const IServiceGroup> find_servicegroup(
         const std::string &name) override;
 
-    std::unique_ptr<const IContact> find_contact(
-        const std::string &name) const override;
+    const IContact *find_contact(const std::string &name) const override;
     bool all_of_contacts(
         const std::function<bool(const IContact &)> &pred) const override;
 
@@ -212,6 +211,7 @@ private:
     Store _store;
     // host is never nullptr
     std::unordered_map<std::string, host *> _hosts_by_designation;
+    std::unordered_map<const ::contact *, std::unique_ptr<IContact>> icontacts_;
     Triggers _triggers;
 
     void *implInternal() const override {

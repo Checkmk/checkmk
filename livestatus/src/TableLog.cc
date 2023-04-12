@@ -31,7 +31,6 @@ namespace {
 
 class LogRow {
 public:
-    // TODO(sp): Remove ugly casts.
     LogRow(const LogEntry &entry_, MonitoringCore *mc)
         : entry{&entry_}
         , hst{mc->find_host(entry_.host_name())}
@@ -43,7 +42,7 @@ public:
     const LogEntry *entry;
     std::unique_ptr<const IHost> hst;
     std::unique_ptr<const IService> svc;
-    std::unique_ptr<const IContact> ctc;
+    const IContact *ctc;
     Command command;
 };
 
@@ -130,7 +129,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
                               TableServices::AddHosts::no, LockComments::yes,
                               LockDowntimes::yes);
     TableContacts::addColumns(this, "current_contact_", offsets.add([](Row r) {
-        return r.rawData<LogRow>()->ctc.get();
+        return r.rawData<LogRow>()->ctc;
     }));
     TableCommands::addColumns(this, "current_command_", offsets.add([](Row r) {
         return &r.rawData<LogRow>()->command;

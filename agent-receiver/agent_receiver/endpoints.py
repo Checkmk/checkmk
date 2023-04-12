@@ -28,6 +28,7 @@ from agent_receiver.models import (
     CsrField,
     PairingBody,
     PairingResponse,
+    R4RStatus,
     RegisterExistingBody,
     RegisterExistingResponse,
     RegisterNewBody,
@@ -36,7 +37,6 @@ from agent_receiver.models import (
     RegisterNewOngoingResponseSuccess,
     RegisterNewResponse,
     RegistrationStatus,
-    RegistrationStatusEnum,
     RegistrationWithHNBody,
     RenewCertResponse,
     RequestForRegistration,
@@ -215,7 +215,7 @@ async def register_new(
     root_cert = _pem_serizialized_site_root_cert()
 
     R4R(
-        status=RegistrationStatusEnum.NEW,
+        status=R4RStatus.NEW,
         request=RequestForRegistration(
             uuid=registration_body.uuid,
             username=credentials.username,
@@ -272,13 +272,13 @@ async def register_new_ongoing(
         )
 
     match r4r.status:
-        case RegistrationStatusEnum.NEW | RegistrationStatusEnum.PENDING:
+        case R4RStatus.NEW | R4RStatus.PENDING:
             logger.info(
                 "uuid=%s Registration in progress",
                 uuid,
             )
             return RegisterNewOngoingResponseInProgress()
-        case RegistrationStatusEnum.DECLINED:
+        case R4RStatus.DECLINED:
             logger.info(
                 "uuid=%s Registration declined",
                 uuid,
@@ -286,7 +286,7 @@ async def register_new_ongoing(
             return RegisterNewOngoingResponseDeclined(
                 reason=r4r.request.rejection_notice() or "Reason unknown"
             )
-        case RegistrationStatusEnum.DISCOVERABLE:
+        case R4RStatus.DISCOVERABLE:
             try:
                 host = RegisteredHost(uuid)
             except NotRegisteredException:

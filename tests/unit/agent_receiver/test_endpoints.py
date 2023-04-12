@@ -15,7 +15,7 @@ import requests
 from agent_receiver import site_context
 from agent_receiver.certs import serialize_to_pem
 from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration, RegisterResponse
-from agent_receiver.models import ConnectionMode, RegistrationStatusEnum, RequestForRegistration
+from agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
 from agent_receiver.utils import R4R
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
@@ -366,7 +366,7 @@ def _test_register_new(
 
     triggered_r4r = R4R.read(uuid)
     assert triggered_r4r
-    assert triggered_r4r.status is RegistrationStatusEnum.NEW
+    assert triggered_r4r.status is R4RStatus.NEW
     assert triggered_r4r.request.uuid == uuid
     assert triggered_r4r.request.username == "monitoring"
     assert triggered_r4r.request.agent_labels == {
@@ -447,7 +447,7 @@ def test_register_new_ongoing_not_found(
     uuid: UUID4,
 ) -> None:
     R4R(
-        status=RegistrationStatusEnum.DECLINED,
+        status=R4RStatus.DECLINED,
         request=RequestForRegistration(
             uuid=uuid4(),
             username="user",
@@ -466,7 +466,7 @@ def test_register_new_ongoing_username_mismatch(
     uuid: UUID4,
 ) -> None:
     R4R(
-        status=RegistrationStatusEnum.DECLINED,
+        status=R4RStatus.DECLINED,
         request=RequestForRegistration(
             uuid=uuid,
             username="user2",
@@ -483,13 +483,13 @@ def test_register_new_ongoing_username_mismatch(
 
 @pytest.mark.parametrize(
     "status",
-    (RegistrationStatusEnum.NEW, RegistrationStatusEnum.PENDING),
+    (R4RStatus.NEW, R4RStatus.PENDING),
 )
 def test_register_new_ongoing_in_progress(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID4,
-    status: RegistrationStatusEnum,
+    status: R4RStatus,
 ) -> None:
     R4R(
         status=status,
@@ -511,7 +511,7 @@ def test_register_new_ongoing_in_declined(
     uuid: UUID4,
 ) -> None:
     R4R(
-        status=RegistrationStatusEnum.DECLINED,
+        status=R4RStatus.DECLINED,
         request=RequestForRegistration(
             uuid=uuid,
             username="user",
@@ -536,7 +536,7 @@ def test_register_new_ongoing_success(
     uuid: UUID4,
 ) -> None:
     R4R(
-        status=RegistrationStatusEnum.DISCOVERABLE,
+        status=R4RStatus.DISCOVERABLE,
         request=RequestForRegistration(
             uuid=uuid,
             username="user",
@@ -704,7 +704,7 @@ def test_registration_status_declined(
     registration_status_headers: Mapping[str, str],
 ) -> None:
     R4R(
-        status=RegistrationStatusEnum.DECLINED,
+        status=R4RStatus.DECLINED,
         request=RequestForRegistration(
             uuid=uuid,
             username="harry",
@@ -754,7 +754,7 @@ def test_registration_status_push_host(
     registration_status_headers: Mapping[str, str],
 ) -> None:
     R4R(
-        status=RegistrationStatusEnum.DISCOVERABLE,
+        status=R4RStatus.DISCOVERABLE,
         request=RequestForRegistration(
             uuid=uuid,
             username="harry",

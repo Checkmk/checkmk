@@ -31,7 +31,7 @@ struct LocalConnectionStatus {
 #[derive(serde::Serialize)]
 struct RemoteConnectionStatus {
     connection_mode: Option<config::ConnectionMode>,
-    registration_state: Option<agent_receiver_api::HostStatus>,
+    registration_state: Option<agent_receiver_api::R4RStatus>,
     host_name: Option<String>,
 }
 
@@ -112,9 +112,9 @@ impl ConnectionStatus {
     fn query_remote(
         site_id: &site_spec::SiteID,
         conn: &config::TrustedConnectionWithRemote,
-        agent_rec_api: &impl agent_receiver_api::Status,
+        agent_rec_api: &impl agent_receiver_api::RegistrationStatus,
     ) -> AnyhowResult<RemoteConnectionStatus> {
-        let status_response = agent_rec_api.status(
+        let status_response = agent_rec_api.registration_status(
             &site_spec::make_site_url(site_id, &conn.receiver_port)?,
             &conn.trust,
         )?;
@@ -129,7 +129,7 @@ impl ConnectionStatus {
         site_id: &site_spec::SiteID,
         conn: &config::TrustedConnectionWithRemote,
         conn_mode: config::ConnectionMode,
-        agent_rec_api: &Option<impl agent_receiver_api::Status>,
+        agent_rec_api: &Option<impl agent_receiver_api::RegistrationStatus>,
     ) -> ConnectionStatus {
         ConnectionStatus {
             site_data: Some(SiteData {
@@ -284,7 +284,7 @@ impl Status {
     fn from(
         registry: &config::Registry,
         pull_config: &config::PullConfig,
-        agent_rec_api: &Option<impl agent_receiver_api::Status>,
+        agent_rec_api: &Option<impl agent_receiver_api::RegistrationStatus>,
     ) -> Status {
         let mut conn_stats = Vec::new();
 
@@ -372,7 +372,7 @@ fn _status(
     registry: &config::Registry,
     pull_config: &config::PullConfig,
     json: bool,
-    agent_rec_api: &Option<impl agent_receiver_api::Status>,
+    agent_rec_api: &Option<impl agent_receiver_api::RegistrationStatus>,
 ) -> AnyhowResult<String> {
     Status::from(registry, pull_config, agent_rec_api).to_string(json)
 }
@@ -509,7 +509,7 @@ mod test_status {
                     remote: Remote::StatusResponse(Ok(
                         RemoteConnectionStatus {
                             connection_mode: Some(config::ConnectionMode::Pull),
-                            registration_state: Some(agent_receiver_api::HostStatus::Discoverable),
+                            registration_state: Some(agent_receiver_api::R4RStatus::Discoverable),
                             host_name: Some(String::from("my-host")),
                         }
                     ))
@@ -766,13 +766,13 @@ mod test_status {
 
     struct MockApi {}
 
-    impl agent_receiver_api::Status for MockApi {
-        fn status(
+    impl agent_receiver_api::RegistrationStatus for MockApi {
+        fn registration_status(
             &self,
             _base_url: &reqwest::Url,
             _connection: &config::TrustedConnection,
-        ) -> AnyhowResult<agent_receiver_api::StatusResponse> {
-            Ok(agent_receiver_api::StatusResponse {
+        ) -> AnyhowResult<agent_receiver_api::RegistrationStatusResponse> {
+            Ok(agent_receiver_api::RegistrationStatusResponse {
                 hostname: Some(String::from("host")),
                 status: None,
                 connection_mode: Some(config::ConnectionMode::Pull),

@@ -52,8 +52,8 @@ interface Thresholds {
     width: number;
 }
 
-var reload_on_resize: Record<number, any> = {};
-export var dashboard_properties = {} as DashboardPropertiesGlobal;
+const reload_on_resize: Record<number, any> = {};
+export let dashboard_properties = {} as DashboardPropertiesGlobal;
 
 // Set the dashboard as a start URL for the user
 export function set_start_url(dashboard_name: string) {
@@ -100,11 +100,11 @@ export function set_dashboard_properties(properties: DashboardPropertiesAPI) {
         [number, number, string | (() => void)]
     >(elem => [elem[0], elem[1], eval(elem[2])]);
 
-    var tmp_on_resize_dashlets: Record<
+    const tmp_on_resize_dashlets: Record<
         number,
         string | undefined | (() => void)
     > = {};
-    for (var key in Object.keys(on_resize_dashlets)) {
+    for (const key in Object.keys(on_resize_dashlets)) {
         tmp_on_resize_dashlets[key] = eval(on_resize_dashlets[key]!);
     }
 
@@ -116,24 +116,24 @@ export function set_dashboard_properties(properties: DashboardPropertiesAPI) {
 }
 
 function size_dashlets() {
-    var size_info = calculate_dashlets();
-    var oDash: HTMLElement | null = null;
-    var oDashTitle: HTMLElement | null = null;
-    var oDashInner: HTMLElement | null = null;
-    var oDashControls: HTMLElement | null = null;
+    const size_info = calculate_dashlets();
+    let oDash: HTMLElement | null = null;
+    let oDashTitle: HTMLElement | null = null;
+    let oDashInner: HTMLElement | null = null;
+    let oDashControls: HTMLElement | null = null;
 
-    for (var d_number = 0; d_number < size_info.length; d_number++) {
-        var dashlet: number[] = size_info[d_number];
-        var d_left = dashlet[0];
-        var d_top = dashlet[1];
-        var d_width = dashlet[2];
-        var d_height = dashlet[3];
-        var disstyle = "block";
+    for (let d_number = 0; d_number < size_info.length; d_number++) {
+        const dashlet: number[] = size_info[d_number];
+        const d_left = dashlet[0];
+        const d_top = dashlet[1];
+        let d_width = dashlet[2];
+        const d_height = dashlet[3];
+        const disstyle = "block";
 
         // check if dashlet has title and resize its width
         oDashTitle = document.getElementById("dashlet_title_" + d_number);
 
-        let has_title = Boolean(oDashTitle);
+        const has_title = Boolean(oDashTitle);
         if (has_title) {
             oDashTitle = oDashTitle!;
             //if browser window to small prevent js error
@@ -158,12 +158,12 @@ function size_dashlets() {
             oDash.style.height = d_height + "px";
         }
 
-        var top_padding = dashboard_properties.dashlet_padding[0];
+        let top_padding = dashboard_properties.dashlet_padding[0];
         if (!has_title) top_padding = dashboard_properties.dashlet_padding[4];
 
-        var netto_height =
+        const netto_height =
             d_height - top_padding - dashboard_properties.dashlet_padding[2];
-        var netto_width =
+        const netto_width =
             d_width -
             dashboard_properties.dashlet_padding[1] -
             dashboard_properties.dashlet_padding[3];
@@ -173,8 +173,8 @@ function size_dashlets() {
         if (oDashInner) {
             oDashInner.style.display = disstyle;
 
-            var old_width = oDashInner.clientWidth;
-            var old_height = oDashInner.clientHeight;
+            const old_width = oDashInner.clientWidth;
+            const old_height = oDashInner.clientHeight;
 
             oDashInner.style.left =
                 dashboard_properties.dashlet_padding[3] + "px";
@@ -219,8 +219,8 @@ function size_dashlets() {
 export function adjust_single_metric_font_size(
     oTdMetricValue: HTMLTableCellElement
 ) {
-    var originalFontSize = parseFloat(oTdMetricValue.style.fontSize);
-    var oAMetricValue = oTdMetricValue.childNodes[0] as HTMLAnchorElement;
+    const originalFontSize = parseFloat(oTdMetricValue.style.fontSize);
+    const oAMetricValue = oTdMetricValue.childNodes[0] as HTMLAnchorElement;
     if (oAMetricValue.scrollWidth > (oTdMetricValue.clientWidth * 9) / 10)
         oTdMetricValue.style.fontSize = (originalFontSize * 9) / 10 + "px";
     else
@@ -319,10 +319,10 @@ class Vec {
 }
 
 function calculate_dashlets() {
-    var screen_size = new Vec(g_dashboard_width, g_dashboard_height);
-    var raster_size = screen_size.divide(dashboard_properties.grid_size);
-    var used_matrix: Record<string, boolean> = {};
-    var positions: [number, number, number, number, Vec][] = [];
+    const screen_size = new Vec(g_dashboard_width, g_dashboard_height);
+    const raster_size = screen_size.divide(dashboard_properties.grid_size);
+    const used_matrix: Record<string, boolean> = {};
+    let positions: [number, number, number, number, Vec][] = [];
 
     // first place all dashlets at their absolute positions
     let nr: number,
@@ -332,21 +332,21 @@ function calculate_dashlets() {
         bottom: number,
         grow_by: Vec;
     for (nr = 0; nr < dashboard_properties.dashlets.length; nr++) {
-        var dashlet = dashboard_properties.dashlets[nr];
+        const dashlet = dashboard_properties.dashlets[nr];
 
         // Relative position is as noted in the declaration. 1,1 => top left origin,
         // -1,-1 => bottom right origin, 0 is not allowed here
         // starting from 1, negative means: from right/bottom
-        var rel_position = new Vec(dashlet.x, dashlet.y);
+        const rel_position = new Vec(dashlet.x, dashlet.y);
 
         // Compute the absolute position, this time from 0 to raster_size-1
-        var abs_position = rel_position.make_absolute(raster_size);
+        const abs_position = rel_position.make_absolute(raster_size);
 
         // The size in raster-elements. A 0 for a dimension means growth. No negative values here.
-        var size = new Vec(dashlet.w, dashlet.h);
+        const size = new Vec(dashlet.w, dashlet.h);
 
         // Compute the minimum used size for the dashlet. For growth-dimensions we start with 1
-        var used_size = size.initial_size(rel_position, raster_size);
+        const used_size = size.initial_size(rel_position, raster_size);
 
         // Now compute the rectangle that is currently occupied. The coords
         // of bottomright are *not* included.
@@ -368,8 +368,8 @@ function calculate_dashlets() {
 
         // Allocate used squares in matrix. If not all squares we need are free,
         // then the dashboard is too small for all dashlets (as it seems).
-        for (var x = left; x < right; x++) {
-            for (var y = top; y < bottom; y++) {
+        for (let x = left; x < right; x++) {
+            for (let y = top; y < bottom; y++) {
                 used_matrix[x + " " + y] = true;
             }
         }
@@ -379,13 +379,13 @@ function calculate_dashlets() {
         positions.push([left, top, right, bottom, grow_by]);
     }
 
-    var try_allocate = function (
+    const try_allocate = function (
         left: number,
         top: number,
         right: number,
         bottom: number
     ) {
-        var x, y;
+        let x, y;
         // Try if all needed squares are free
         for (x = left; x < right; x++)
             for (y = top; y < bottom; y++)
@@ -400,10 +400,10 @@ function calculate_dashlets() {
 
     // Now try to expand all elastic rectangles as far as possible
     // FIXME: Das hier muesste man optimieren
-    var at_least_one_expanded = true;
+    let at_least_one_expanded = true;
     while (at_least_one_expanded) {
         at_least_one_expanded = false;
-        var new_positions: [number, number, number, number, Vec][] = [];
+        const new_positions: [number, number, number, number, Vec][] = [];
         for (nr = 0; nr < positions.length; nr++) {
             left = positions[nr][0];
             top = positions[nr][1];
@@ -449,7 +449,7 @@ function calculate_dashlets() {
         positions = new_positions;
     }
 
-    var size_info: number[][] = [];
+    const size_info: number[][] = [];
     for (nr = 0; nr < positions.length; nr++) {
         left = positions[nr][0];
         top = positions[nr][1];
@@ -465,19 +465,19 @@ function calculate_dashlets() {
     return size_info;
 }
 
-var g_dashboard_resizer: null | boolean = null;
-var g_dashboard_top: number | null = null;
-var g_dashboard_left: number | null = null;
-var g_dashboard_width: number | null = null;
-var g_dashboard_height: number | null = null;
+let g_dashboard_resizer: null | boolean = null;
+let g_dashboard_top: number | null = null;
+let g_dashboard_left: number | null = null;
+let g_dashboard_width: number | null = null;
+let g_dashboard_height: number | null = null;
 
 export function calculate_dashboard() {
     if (g_dashboard_resizer !== null) return; // another resize is processed
     g_dashboard_resizer = true;
 
-    var oDash = document.getElementById("dashboard");
+    const oDash = document.getElementById("dashboard");
     if (!oDash) throw new Error("oDash shouldn't be null!");
-    let dashboard_rect = oDash.getBoundingClientRect();
+    const dashboard_rect = oDash.getBoundingClientRect();
 
     g_dashboard_top = dashboard_rect.top;
     g_dashboard_left = dashboard_rect.left;
@@ -500,11 +500,11 @@ export function execute_dashboard_scheduler(initial: number) {
         return;
     }
 
-    var timestamp = Math.trunc(new Date().getTime() / 1000);
-    for (var i = 0; i < dashboard_properties.refresh_dashlets.length; i++) {
-        var nr = dashboard_properties.refresh_dashlets[i][0];
-        var refresh = dashboard_properties.refresh_dashlets[i][1];
-        var url = dashboard_properties.refresh_dashlets[i][2];
+    const timestamp = Math.trunc(new Date().getTime() / 1000);
+    for (let i = 0; i < dashboard_properties.refresh_dashlets.length; i++) {
+        const nr = dashboard_properties.refresh_dashlets[i][0];
+        const refresh = dashboard_properties.refresh_dashlets[i][1];
+        let url = dashboard_properties.refresh_dashlets[i][2];
 
         if (
             (initial &&
@@ -546,7 +546,7 @@ function dashboard_update_contents(id: string, response_text: string) {
 // DASHBOARD EDITING
 //
 
-var g_editing = false;
+let g_editing = false;
 
 export function toggle_dashboard_edit(
     edit_text?: string,
@@ -555,11 +555,13 @@ export function toggle_dashboard_edit(
     g_editing = !g_editing;
 
     // Toggle the page menu elements
-    let toggle_suggestion = document.getElementById(
+    const toggle_suggestion = document.getElementById(
         "menu_suggestion_toggle_edit"
     );
-    let toggle_shortcut = document.getElementById("menu_shortcut_toggle_edit");
-    let toggle_entry = document.getElementById("menu_entry_toggle_edit");
+    const toggle_shortcut = document.getElementById(
+        "menu_shortcut_toggle_edit"
+    );
+    const toggle_entry = document.getElementById("menu_entry_toggle_edit");
 
     if (edit_text && display_text) {
         const title = g_editing ? edit_text : display_text;
@@ -595,10 +597,10 @@ export function toggle_dashboard_edit(
             icon_trans;
     }
 
-    var dashlet_divs = document.getElementsByClassName(
+    const dashlet_divs = document.getElementsByClassName(
         "dashlet"
     ) as HTMLCollectionOf<HTMLElement>;
-    for (var i = 0; i < dashlet_divs.length; i++)
+    for (let i = 0; i < dashlet_divs.length; i++)
         dashlet_toggle_edit(dashlet_divs[i]);
 
     // Remove/Add edit=1 parameter from URL to make page reload handling correct
@@ -643,8 +645,8 @@ function render_sizer(
     size: number
 ) {
     // 0 ~ X, 1 ~ Y
-    let orientation = i ? "height" : "width";
-    var sizer = document.createElement("div");
+    const orientation = i ? "height" : "width";
+    const sizer = document.createElement("div");
     sizer.className = "sizer sizer" + i + " anchor" + anchor_id;
 
     if (size == dashboard_properties.MAX) {
@@ -668,20 +670,20 @@ function render_sizer(
 }
 
 function render_corner_resizers(controls: HTMLElement) {
-    for (var corner_id = 0; corner_id < 4; corner_id++) {
-        var resize = document.createElement("div");
+    for (let corner_id = 0; corner_id < 4; corner_id++) {
+        const resize = document.createElement("div");
         resize.className = "resize resize_corner resize_corner" + corner_id;
         controls.appendChild(resize);
     }
 }
 
 function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
-    var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
-    var dashlet = dashboard_properties.dashlets[nr];
+    const nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
+    const dashlet = dashboard_properties.dashlets[nr];
 
     edit = edit === undefined ? g_editing : edit;
 
-    var controls: HTMLElement;
+    let controls: HTMLElement;
     if (edit) {
         // gray out the inner parts of the dashlet
         utils.add_class(dashlet_obj, "edit");
@@ -711,7 +713,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
         }
 
         // Which is the anchor corner?
-        var anchor_id = get_anchor_id(dashlet);
+        const anchor_id = get_anchor_id(dashlet);
 
         // Create the size / grow indicators and resizer control elements
         if (utils.has_class(dashlet_obj, "resizable")) {
@@ -722,12 +724,12 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
                 render_corner_resizers(controls);
         }
 
-        let create_a_button = function (
+        const create_a_button = function (
             className: string,
             title: string,
             onclick: () => void
         ) {
-            let element = document.createElement("a");
+            const element = document.createElement("a");
             element.className = className;
             element.title = title;
             element.onclick = onclick;
@@ -754,9 +756,9 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
             }
             controls.appendChild(anchor);
         }
-        var click_actions = function (target: string) {
+        const click_actions = function (target: string) {
             return function () {
-                var back_url = utils.makeuri(
+                const back_url = utils.makeuri(
                     {},
                     window.location.href,
                     "dashboard.py"
@@ -772,7 +774,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
             };
         };
 
-        let edits = document.createElement("div");
+        const edits = document.createElement("div");
         edits.className = "editor";
         // Add edit dashlet button
         edits.appendChild(
@@ -819,12 +821,12 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
 }
 
 // In case of cycling from ABS to again ABS, restore the previous ABS coords
-var g_last_absolute_widths: Record<number, number> = {};
-var g_last_absolute_heights: Record<number, number> = {};
+const g_last_absolute_widths: Record<number, number> = {};
+const g_last_absolute_heights: Record<number, number> = {};
 
 function toggle_sizer(nr: number, sizer_id: number) {
-    var dashlet = dashboard_properties.dashlets[nr];
-    var dashlet_obj = document.getElementById("dashlet_" + nr)!;
+    const dashlet = dashboard_properties.dashlets[nr];
+    const dashlet_obj = document.getElementById("dashlet_" + nr)!;
 
     if (sizer_id == 0) {
         if (dashlet.w > 0) {
@@ -866,15 +868,15 @@ function toggle_sizer(nr: number, sizer_id: number) {
     persist_dashlet_pos(nr);
 }
 
-var A_TOP_LEFT = 0;
-var A_TOP_RIGHT = 1;
-var A_BOTTOM_RIGHT = 2;
-var A_BOTTOM_LEFT = 3;
+const A_TOP_LEFT = 0;
+const A_TOP_RIGHT = 1;
+const A_BOTTOM_RIGHT = 2;
+const A_BOTTOM_LEFT = 3;
 
 // Calculates the ID of the current dashlet anchor depending
 // on the current coordinates
 function get_anchor_id(dashlet: Dashlet): number {
-    var anchor_id: number;
+    let anchor_id: number;
     if (dashlet.x > 0 && dashlet.y > 0) anchor_id = A_TOP_LEFT;
     else if (dashlet.x <= 0 && dashlet.y > 0) anchor_id = A_TOP_RIGHT;
     else if (dashlet.x <= 0 && dashlet.y <= 0) anchor_id = A_BOTTOM_RIGHT;
@@ -902,7 +904,7 @@ function calculate_relative_dashlet_coords(
     nr: number,
     anchor_id: number | string | undefined = undefined
 ) {
-    var dashlet = dashboard_properties.dashlets[nr];
+    const dashlet = dashboard_properties.dashlets[nr];
 
     // When the anchor id is not set explicit here autodetect the anchor
     // id which is currently used by the dashlet. Otherwise this function
@@ -911,21 +913,21 @@ function calculate_relative_dashlet_coords(
         anchor_id = get_anchor_id(dashlet);
     }
 
-    var dashlet_obj = document.getElementById("dashlet_" + nr)!;
+    const dashlet_obj = document.getElementById("dashlet_" + nr)!;
 
-    var x =
+    const x =
         align_to_grid(dashlet_obj!.offsetLeft) / dashboard_properties.grid_size;
-    var y =
+    const y =
         align_to_grid(dashlet_obj!.offsetTop) / dashboard_properties.grid_size;
-    var w =
+    const w =
         align_to_grid(dashlet_obj!.clientWidth) /
         dashboard_properties.grid_size;
-    var h =
+    const h =
         align_to_grid(dashlet_obj!.clientHeight) /
         dashboard_properties.grid_size;
 
-    var screen_size = new Vec(g_dashboard_width, g_dashboard_height);
-    var raster_size = screen_size.divide(dashboard_properties.grid_size);
+    const screen_size = new Vec(g_dashboard_width, g_dashboard_height);
+    const raster_size = screen_size.divide(dashboard_properties.grid_size);
 
     // Update fixed sizes in coord structure
     if (!is_dynamic(dashlet.w)) dashlet.w = w;
@@ -957,16 +959,16 @@ function rerender_dashlet_controls(dashlet_obj: HTMLElement) {
  * Dragging of dashlets
  */
 
-var g_dragging: HTMLElement | false = false;
-var g_drag_start: GDrag | null = null;
+let g_dragging: HTMLElement | false = false;
+let g_drag_start: GDrag | null = null;
 
 function drag_dashlet_start(event: MouseEvent) {
     if (!event) event = window.event as MouseEvent;
 
     if (!g_editing) return true;
 
-    var target = event.target as HTMLElement;
-    var button = utils.get_button(event);
+    const target = event.target as HTMLElement;
+    const button = utils.get_button(event);
 
     if (
         g_dragging === false &&
@@ -974,24 +976,24 @@ function drag_dashlet_start(event: MouseEvent) {
         utils.has_class(target, "controls")
     ) {
         g_dragging = target.parentNode as HTMLElement;
-        var nr = parseInt(g_dragging.id.replace("dashlet_", ""));
-        var dashlet = dashboard_properties.dashlets[nr];
+        const nr = parseInt(g_dragging.id.replace("dashlet_", ""));
+        const dashlet = dashboard_properties.dashlets[nr];
 
         // minimal dashlet sizes in pixels
-        var min_w =
+        const min_w =
             dashboard_properties.dashlet_min_size[0] *
             dashboard_properties.grid_size;
-        var min_h =
+        const min_h =
             dashboard_properties.dashlet_min_size[1] *
             dashboard_properties.grid_size;
 
         // reduce the dashlet to the minimum dashlet size for movement bound checks
-        var x = g_dragging.offsetLeft;
-        var y = g_dragging.offsetTop;
-        var w = g_dragging.clientWidth;
-        var h = g_dragging.clientHeight;
+        let x = g_dragging.offsetLeft;
+        let y = g_dragging.offsetTop;
+        let w = g_dragging.clientWidth;
+        let h = g_dragging.clientHeight;
 
-        var anchor_id = get_anchor_id(dashlet);
+        const anchor_id = get_anchor_id(dashlet);
         if (anchor_id == A_TOP_LEFT) {
             if (is_dynamic(dashlet.w)) w = min_w;
             if (is_dynamic(dashlet.h)) h = min_h;
@@ -1042,25 +1044,25 @@ function drag_dashlet(event: MouseEvent) {
     if (!event) event = window.event as MouseEvent;
 
     // mosue coords in px relative to dashboard
-    var mouse_x = event.clientX - g_dashboard_left!;
-    var mouse_y = event.clientY - g_dashboard_top!;
+    const mouse_x = event.clientX - g_dashboard_left!;
+    const mouse_y = event.clientY - g_dashboard_top!;
 
     if (!g_dragging) return true;
     const g_drag_start_const: GDrag = g_drag_start!;
 
-    var nr = parseInt(g_dragging.id.replace("dashlet_", ""));
-    var dashlet_obj = g_dragging;
+    const nr = parseInt(g_dragging.id.replace("dashlet_", ""));
+    let dashlet_obj = g_dragging;
     // get the relative mouse position offset to the dragging beginning
-    var diff_x = align_to_grid(g_drag_start_const.m_x - mouse_x);
-    var diff_y = align_to_grid(g_drag_start_const.m_y - mouse_y);
+    const diff_x = align_to_grid(g_drag_start_const.m_x - mouse_x);
+    const diff_y = align_to_grid(g_drag_start_const.m_y - mouse_y);
 
-    var x = g_drag_start_const.x - diff_x;
-    var y = g_drag_start_const.y - diff_y;
-    var w = g_drag_start_const.w;
-    var h = g_drag_start_const.h;
+    const x = g_drag_start_const.x - diff_x;
+    const y = g_drag_start_const.y - diff_y;
+    const w = g_drag_start_const.w;
+    const h = g_drag_start_const.h;
 
-    var board_w = align_to_grid(g_dashboard_width!);
-    var board_h = align_to_grid(g_dashboard_height!);
+    const board_w = align_to_grid(g_dashboard_width!);
+    const board_h = align_to_grid(g_dashboard_height!);
     dashlet_obj = dashlet_obj as HTMLElement;
     if (x < 0) {
         // reached left limit: left screen border
@@ -1099,7 +1101,7 @@ function drag_dashlet_stop(event: Event) {
 
     if (!g_dragging) return true;
 
-    var nr = parseInt(g_dragging.id.replace("dashlet_", ""));
+    const nr = parseInt(g_dragging.id.replace("dashlet_", ""));
     g_dragging = false;
     g_drag_start = null;
 
@@ -1108,7 +1110,7 @@ function drag_dashlet_stop(event: Event) {
 }
 
 function persist_dashlet_pos(nr: number) {
-    var dashlet = dashboard_properties.dashlets[nr];
+    const dashlet = dashboard_properties.dashlets[nr];
 
     if (
         !Number.isInteger(dashlet.x) ||
@@ -1148,7 +1150,7 @@ function persist_dashlet_pos(nr: number) {
 }
 
 function handle_dashlet_post_response(_unused: any, response_text: string) {
-    var parts = response_text.split(" ");
+    const parts = response_text.split(" ");
     if (parts[0] != "OK") {
         alert("Error: " + response_text);
     } else {
@@ -1168,23 +1170,23 @@ function bring_dashlet_to_front(obj: HTMLElement) {
  */
 
 // false or the resizer dom object currently being worked with
-var g_resizing: false | HTMLElement = false;
-var g_resize_start: GDrag | null = null;
+let g_resizing: false | HTMLElement = false;
+let g_resize_start: GDrag | null = null;
 
 function resize_dashlet_start(event: MouseEvent) {
     if (!event) event = window.event as MouseEvent;
 
     if (!g_editing) return true;
 
-    var target = event.target as HTMLElement;
-    var button = utils.get_button(event);
+    const target = event.target as HTMLElement;
+    const button = utils.get_button(event);
 
     if (
         g_resizing === false &&
         button == "LEFT" &&
         utils.has_class(target, "resize")
     ) {
-        var dashlet_obj = target.parentNode!.parentNode as HTMLElement;
+        const dashlet_obj = target.parentNode!.parentNode as HTMLElement;
 
         g_resizing = target;
         g_resize_start = {
@@ -1242,29 +1244,29 @@ function resize_dashlet(event: MouseEvent) {
 
     if (!g_resizing) return true;
 
-    var dashlet_obj = (g_resizing as HTMLElement).parentNode!
+    const dashlet_obj = (g_resizing as HTMLElement).parentNode!
         .parentNode as HTMLElement;
-    var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
+    const nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
     if (!g_resize_start) throw new Error("g_resize_start is not defined!");
-    var diff_x = align_to_grid(Math.abs(g_resize_start.m_x - event.clientX));
-    var diff_y = align_to_grid(Math.abs(g_resize_start.m_y - event.clientY));
+    let diff_x = align_to_grid(Math.abs(g_resize_start.m_x - event.clientX));
+    let diff_y = align_to_grid(Math.abs(g_resize_start.m_y - event.clientY));
 
     if (event.clientX > g_resize_start.m_x) diff_x *= -1;
     if (event.clientY > g_resize_start.m_y) diff_y *= -1;
 
-    var board_w = align_to_grid(g_dashboard_width!);
-    var board_h = align_to_grid(g_dashboard_height!);
+    const board_w = align_to_grid(g_dashboard_width!);
+    const board_h = align_to_grid(g_dashboard_height!);
 
-    var min_w =
+    const min_w =
         dashboard_properties.dashlet_min_size[0] *
         dashboard_properties.grid_size;
-    var min_h =
+    const min_h =
         dashboard_properties.dashlet_min_size[1] *
         dashboard_properties.grid_size;
 
     if (get_horizontal_direction(g_resizing) == "left") {
         // resizing with left border
-        var new_x = g_resize_start.x - diff_x;
+        const new_x = g_resize_start.x - diff_x;
         if (new_x < 0) {
             // reached left limit: left screen border
             dashlet_obj.style.left = "0px";
@@ -1294,7 +1296,7 @@ function resize_dashlet(event: MouseEvent) {
 
     if (get_vertical_direction(g_resizing) == "top") {
         // resizing with top border
-        var new_y = g_resize_start.y - diff_y;
+        const new_y = g_resize_start.y - diff_y;
         if (new_y < 0) {
             // reached top limit: top screen border
             dashlet_obj.style.top = "0px";
@@ -1341,9 +1343,9 @@ function resize_dashlet_stop(_event: Event) {
 
     if (!g_resizing) return true;
 
-    var dashlet_obj = (g_resizing as HTMLElement).parentNode
+    const dashlet_obj = (g_resizing as HTMLElement).parentNode
         ?.parentNode as HTMLElement;
-    var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
+    const nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
     g_resizing = false;
 
     dashlet_resized(nr, dashlet_obj);
@@ -1353,8 +1355,8 @@ function resize_dashlet_stop(_event: Event) {
 
 function dashlet_resized(nr: number, dashlet_obj: HTMLElement) {
     if (typeof reload_on_resize[nr] != "undefined") {
-        var base_url = reload_on_resize[nr];
-        var iframe = document.getElementById(
+        const base_url = reload_on_resize[nr];
+        const iframe = document.getElementById(
             "dashlet_iframe_" + nr
         ) as HTMLFrameElement;
         iframe.src =
@@ -1364,7 +1366,7 @@ function dashlet_resized(nr: number, dashlet_obj: HTMLElement) {
             "&height=" +
             dashlet_obj.clientHeight;
     }
-    let on_resize: undefined | (() => void) | string =
+    const on_resize: undefined | (() => void) | string =
         dashboard_properties.on_resize_dashlets[nr];
 
     if (typeof on_resize !== "undefined" && typeof on_resize !== "string") {
@@ -1418,13 +1420,13 @@ export function chart_pie(
     right_side: boolean,
     pie_diameter: number
 ) {
-    var context = (
+    let context = (
         document.getElementById(pie_id + "_stats") as HTMLCanvasElement
     ).getContext("2d");
     if (!context) return;
-    var pie_x = pie_diameter / 2;
-    var pie_y = pie_diameter / 2;
-    var pie_d = pie_diameter;
+    const pie_x = pie_diameter / 2;
+    const pie_y = pie_diameter / 2;
+    const pie_d = pie_diameter;
     context.fillStyle = color;
     context.save();
     context.translate(pie_x, pie_y);
@@ -1459,7 +1461,7 @@ function toggle_slim_controls(
     width: number,
     height: number
 ) {
-    let thresholds = {} as Thresholds;
+    const thresholds = {} as Thresholds;
     for (const key in dashboard_properties.slim_editor_thresholds) {
         //@ts-ignore
         thresholds[key] =

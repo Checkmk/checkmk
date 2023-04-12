@@ -40905,7 +40905,7 @@ msgstr ""
 
 #, fuzzy
 msgid "SAML authentication"
-msgstr "Autenticação SMTP"
+msgstr "Autenticação SAML"
 
 #, fuzzy
 msgid "SAML connections"

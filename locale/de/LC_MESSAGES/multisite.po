@@ -40627,7 +40627,7 @@ msgstr ""
 
 #, fuzzy
 msgid "SAML authentication"
-msgstr "SMTP-Authentifizierung"
+msgstr "SAML-Authentifizierung"
 
 #, fuzzy
 msgid "SAML connections"

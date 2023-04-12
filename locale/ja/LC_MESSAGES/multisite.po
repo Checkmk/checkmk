@@ -39013,7 +39013,7 @@ msgstr ""
 
 #, fuzzy
 msgid "SAML authentication"
-msgstr "SMTP認証"
+msgstr "SAML認証"
 
 #, fuzzy
 msgid "SAML connections"

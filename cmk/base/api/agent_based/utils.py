@@ -350,6 +350,8 @@ def check_levels(
         have been exceeded and show these in the summary text.
         Otherwise, select the available levels, or None if neither is given.
         """
+        metric_levels: Optional[Tuple[float, float]]
+
         if levels_upper and levels_lower:
             metric_levels = (
                 levels_lower
@@ -445,6 +447,8 @@ def check_levels_predictive(
     have been exceeded and show these in the summary text.
     Otherwise, select the available levels, or None if neither is known.
     """
+    metric_levels: Optional[Tuple[float, float]]
+
     if levels_upper and levels_lower:
         metric_levels = (
             levels_lower
@@ -453,6 +457,7 @@ def check_levels_predictive(
         )
     else:
         metric_levels = levels_upper if levels_upper else levels_lower
+
     yield Metric(metric_name, value, levels=metric_levels, boundaries=boundaries)
     if ref_value:
         yield Metric("predict_%s" % metric_name, ref_value)

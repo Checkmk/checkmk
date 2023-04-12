@@ -415,6 +415,8 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         return self._endpoints[endpoint_ident], path_args
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
+        response: WSGIApplication
+
         try:
             wsgi_endpoint, path_args = self._lookup_destination(environ)
 
@@ -430,10 +432,10 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # don't want to have cookies sent to the HTTP client whenever one is logged in using
             # the header methods.
             with ensure_authenticated(persist=False):
-                response = wsgi_endpoint(environ, start_response)
+                return wsgi_endpoint(environ, start_response)
 
         except ProblemException as exc:
-            response = exc(environ, start_response)
+            response = exc.to_problem()
 
         except MKHTTPException as exc:
             assert isinstance(exc.status, int)
@@ -441,16 +443,16 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 status=exc.status,
                 title=http.client.responses[exc.status],
                 detail=str(exc),
-            )(environ, start_response)
+            )
 
         except RestAPIRequestGeneralException as exc:
-            response = exc(environ, start_response)
+            response = exc.to_problem()
 
         except RestAPIPermissionException as exc:
-            response = crash_report_response(exc)(environ, start_response)
+            response = crash_report_response(exc)
 
         except RestAPIResponseGeneralException as exc:
-            response = crash_report_response(exc)(environ, start_response)
+            response = crash_report_response(exc)
 
         except HTTPException as exc:
             assert isinstance(exc.code, int)
@@ -458,7 +460,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 status=exc.code,
                 title=http.client.responses[exc.code],
                 detail=str(exc),
-            )(environ, start_response)
+            )
 
         except MKException as exc:
             if self.debug:
@@ -467,14 +469,14 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 status=EXCEPTION_STATUS.get(type(exc), 500),
                 title="An exception occurred.",
                 detail=str(exc),
-            )(environ, start_response)
+            )
 
         except Exception as exc:
             if self.debug:
                 raise
-            response = crash_report_response(exc)(environ, start_response)
+            response = crash_report_response(exc)
 
-        return response
+        return response(environ, start_response)
 
 
 class APICrashReport(crash_reporting.ABCCrashReport):

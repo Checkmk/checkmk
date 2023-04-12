@@ -9,7 +9,9 @@ from datetime import datetime
 from freezegun import freeze_time
 from pytest import MonkeyPatch
 
-from cmk.ec.export import ECRulePack, MkpRulePackProxy
+from livestatus import SiteId
+
+from cmk.ec.export import ECRulePack, Event, MkpRulePackProxy
 
 from cmk.gui.mkeventd import wato as mkeventd_wato
 from cmk.gui.watolib.search import MatchItem
@@ -75,16 +77,16 @@ def test_send_event(monkeypatch: MonkeyPatch) -> None:
     )
     assert (
         mkeventd_wato.send_event(
-            {
-                "facility": 17,
-                "priority": 1,
-                "sl": 20,
-                "host": "horst",
-                "ipaddress": "127.0.0.1",
-                "application": "Barz App",
-                "text": "I am a unit test",
-                "site": "heute",
-            }
+            Event(
+                facility=17,
+                priority=1,
+                sl=20,
+                host="horst",
+                ipaddress="127.0.0.1",
+                application="Barz App",
+                text="I am a unit test",
+                site=SiteId("heute"),
+            )
         )
         == '<137>1 2021-06-02T12:47:01+00:00 horst - - - [Checkmk@18662 ipaddress="127.0.0.1" sl="20" application="Barz App"] I am a unit test'
     )

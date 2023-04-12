@@ -1483,6 +1483,13 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
                 return nr, entry
         raise MKUserError(None, _("The requested rule pack does not exist."))
 
+    def _event_from_html_vars(self, varprefix: str) -> ec.Event:
+        vs = self._vs_mkeventd_event()
+        value = vs.from_html_vars(varprefix)
+        vs.validate_value(value, varprefix)
+        # cast needed because ValueSpecs don't obey "Parse, don't validate!"
+        return cast(ec.Event, value)
+
     def _show_event_simulator(self) -> ec.Event | None:
         event = user.load_file("simulated_event", {})
         html.begin_form("simulator")
@@ -1494,19 +1501,17 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         html.end_form()
         html.br()
 
-        if request.var("_simulate") or request.var("_generate"):
-            # TODO: remove cast improve type by explicit type conversion to Event
-            return cast(ec.Event, self._vs_mkeventd_event().from_html_vars("event"))
-        return None
+        return (
+            self._event_from_html_vars("event")
+            if request.var("_simulate") or request.var("_generate")
+            else None
+        )
 
     def _event_simulation_action(self) -> bool:
         if not request.var("_simulate") and not request.var("_generate"):
             return False
 
-        # Validation of input for rule simulation (no further action here)
-        vs = self._vs_mkeventd_event()
-        event = vs.from_html_vars("event")
-        vs.validate_value(event, "event")
+        event = self._event_from_html_vars("event")
         user.save_file("simulated_event", event)
 
         if request.var("_simulate"):
@@ -5191,8 +5196,7 @@ def daemon_running() -> bool:
     return _socket_path().exists()
 
 
-# TODO: Shouldn't the parameter be an ec.Event? But that has no "site" attribute?!
-def send_event(event: dict[str, Any]) -> str:
+def send_event(event: ec.Event) -> str:
     syslog_message_str = repr(
         ec.SyslogMessage(
             facility=event["facility"],

@@ -28,15 +28,8 @@ struct LocalConnectionStatus {
     cert_info: CertParsingResult,
 }
 
-#[derive(serde::Serialize)]
-struct RemoteConnectionStatus {
-    connection_mode: Option<config::ConnectionMode>,
-    registration_state: Option<agent_receiver_api::R4RStatus>,
-    host_name: Option<String>,
-}
-
 enum Remote {
-    StatusResponse(AnyhowResult<RemoteConnectionStatus>),
+    StatusResponse(AnyhowResult<agent_receiver_api::RegistrationStatusV2Response>),
     Imported,
     QueryDisabled,
 }
@@ -112,24 +105,19 @@ impl ConnectionStatus {
     fn query_remote(
         site_id: &site_spec::SiteID,
         conn: &config::TrustedConnectionWithRemote,
-        agent_rec_api: &impl agent_receiver_api::RegistrationStatus,
-    ) -> AnyhowResult<RemoteConnectionStatus> {
-        let status_response = agent_rec_api.registration_status(
+        agent_rec_api: &impl agent_receiver_api::RegistrationStatusV2,
+    ) -> AnyhowResult<agent_receiver_api::RegistrationStatusV2Response> {
+        agent_rec_api.registration_status_v2(
             &site_spec::make_site_url(site_id, &conn.receiver_port)?,
             &conn.trust,
-        )?;
-        Ok(RemoteConnectionStatus {
-            connection_mode: status_response.connection_mode,
-            registration_state: status_response.status,
-            host_name: status_response.hostname,
-        })
+        )
     }
 
     fn from_standard_conn(
         site_id: &site_spec::SiteID,
         conn: &config::TrustedConnectionWithRemote,
         conn_mode: config::ConnectionMode,
-        agent_rec_api: &Option<impl agent_receiver_api::RegistrationStatus>,
+        agent_rec_api: &Option<impl agent_receiver_api::RegistrationStatusV2>,
     ) -> ConnectionStatus {
         ConnectionStatus {
             site_data: Some(SiteData {
@@ -188,75 +176,56 @@ impl ConnectionStatus {
         lines
     }
 
-    fn remote_conn_mode_str(
-        local_conn_mode: &config::ConnectionMode,
-        remote_conn_mode: &Option<config::ConnectionMode>,
-    ) -> String {
-        match remote_conn_mode {
-            Some(ct) => {
-                if ct == local_conn_mode {
-                    format!("{ct}")
-                } else {
-                    mark_problematic(&format!("{ct}"))
+    fn remote_lines_readable(&self) -> Vec<String> {
+        match &self.remote {
+            Remote::StatusResponse(registration_status_v2_response) => {
+                match &registration_status_v2_response {
+                    Ok(registration_status_v2_response) => Self::remote_lines_success_readable(
+                        registration_status_v2_response,
+                        &self.local.connection_mode,
+                    ),
+                    Err(err) => {
+                        vec![mark_problematic(&format!("Error: {err}"))]
+                    }
                 }
             }
-            None => mark_problematic("unknown"),
-        }
-    }
-
-    fn registration_state_str(remote_conn_stat: &RemoteConnectionStatus) -> String {
-        match &remote_conn_stat.registration_state {
-            Some(st) => format!("{st}"),
-            None => {
-                if remote_conn_stat.connection_mode.is_some() & remote_conn_stat.host_name.is_some()
-                {
-                    String::from("operational")
-                } else {
-                    mark_problematic("unknown")
-                }
-            }
+            Remote::Imported => vec![String::from("No remote address (imported connection)")],
+            Remote::QueryDisabled => vec![String::from("Remote query disabled")],
         }
     }
 
     fn remote_lines_success_readable(
-        remote_conn_stat: &RemoteConnectionStatus,
+        registration_status_v2_response: &agent_receiver_api::RegistrationStatusV2Response,
         local_conn_mode: &config::ConnectionMode,
     ) -> Vec<String> {
-        vec![
-            format!(
-                "Connection mode: {}",
-                ConnectionStatus::remote_conn_mode_str(
-                    local_conn_mode,
-                    &remote_conn_stat.connection_mode
-                ),
-            ),
-            format!(
-                "Registration state: {}",
-                ConnectionStatus::registration_state_str(remote_conn_stat),
-            ),
-            format!(
-                "Host name: {}",
-                match &remote_conn_stat.host_name {
-                    Some(hn) => hn,
-                    None => "unknown",
-                }
-            ),
-        ]
-    }
-
-    fn remote_lines_readable(&self) -> Vec<String> {
-        match &self.remote {
-            Remote::StatusResponse(remote_conn_stat) => match &remote_conn_stat {
-                Ok(remote_conn_stat) => Self::remote_lines_success_readable(
-                    remote_conn_stat,
-                    &self.local.connection_mode,
-                ),
-                Err(err) => {
-                    vec![mark_problematic(&format!("Error: {err}"))]
-                }
-            },
-            Remote::Imported => vec![String::from("No remote address (imported connection)")],
-            Remote::QueryDisabled => vec![String::from("Remote query disabled")],
+        match registration_status_v2_response {
+            agent_receiver_api::RegistrationStatusV2Response::NotRegistered => {
+                vec![mark_problematic("Not registered")]
+            }
+            agent_receiver_api::RegistrationStatusV2Response::Registered(
+                registration_status_v2_response_registered,
+            ) => {
+                vec![
+                    format!(
+                        "Connection mode: {}",
+                        if &registration_status_v2_response_registered.connection_mode
+                            == local_conn_mode
+                        {
+                            registration_status_v2_response_registered
+                                .connection_mode
+                                .to_string()
+                        } else {
+                            mark_problematic(
+                                &registration_status_v2_response_registered.connection_mode,
+                            )
+                        },
+                    ),
+                    format!(
+                        "Hostname: {}",
+                        registration_status_v2_response_registered.hostname
+                    ),
+                ]
+            }
         }
     }
 
@@ -284,7 +253,7 @@ impl Status {
     fn from(
         registry: &config::Registry,
         pull_config: &config::PullConfig,
-        agent_rec_api: &Option<impl agent_receiver_api::RegistrationStatus>,
+        agent_rec_api: &Option<impl agent_receiver_api::RegistrationStatusV2>,
     ) -> Status {
         let mut conn_stats = Vec::new();
 
@@ -364,7 +333,7 @@ impl std::fmt::Display for Status {
     }
 }
 
-fn mark_problematic(to_mark: &str) -> String {
+fn mark_problematic(to_mark: &(impl std::fmt::Display + ?Sized)) -> String {
     format!("{to_mark} (!!)")
 }
 
@@ -372,7 +341,7 @@ fn _status(
     registry: &config::Registry,
     pull_config: &config::PullConfig,
     json: bool,
-    agent_rec_api: &Option<impl agent_receiver_api::RegistrationStatus>,
+    agent_rec_api: &Option<impl agent_receiver_api::RegistrationStatusV2>,
 ) -> AnyhowResult<String> {
     Status::from(registry, pull_config, agent_rec_api).to_string(json)
 }
@@ -470,11 +439,12 @@ mod test_status {
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
-                        RemoteConnectionStatus {
-                            connection_mode: Some(config::ConnectionMode::Pull),
-                            registration_state: None,
-                            host_name: Some(String::from("my-host")),
-                        }
+                        agent_receiver_api::RegistrationStatusV2Response::Registered(
+                            agent_receiver_api::RegistrationStatusV2ResponseRegistered {
+                            connection_mode: config::ConnectionMode::Pull,
+                            hostname: String::from("my-host"),
+                            }
+                        )
                     ))
                 }
             ),
@@ -488,45 +458,7 @@ mod test_status {
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
                  \t\tConnection mode: pull-agent\n\
-                 \t\tRegistration state: operational\n\
-                 \t\tHost name: my-host"
-            )
-        );
-    }
-
-    #[test]
-    fn test_connection_status_fmt_discoverable() {
-        assert_eq!(
-            format!(
-                "{}",
-                ConnectionStatus {
-                    site_data: Some(SiteData {
-                        site_id: site_spec::SiteID::from_str("localhost/site").unwrap(),
-                        receiver_port: 8000,
-                    }),
-                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
-                    local: local_connection_status(),
-                    remote: Remote::StatusResponse(Ok(
-                        RemoteConnectionStatus {
-                            connection_mode: Some(config::ConnectionMode::Pull),
-                            registration_state: Some(agent_receiver_api::R4RStatus::Discoverable),
-                            host_name: Some(String::from("my-host")),
-                        }
-                    ))
-                }
-            ),
-            String::from(
-                "Connection: localhost/site\n\
-                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
-                 \tLocal:\n\
-                 \t\tConnection mode: pull-agent\n\
-                 \t\tConnecting to receiver port: 8000\n\
-                 \t\tCertificate issuer: Site 'site' local CA\n\
-                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 \tRemote:\n\
-                 \t\tConnection mode: pull-agent\n\
-                 \t\tRegistration state: discoverable\n\
-                 \t\tHost name: my-host"
+                 \t\tHostname: my-host"
             )
         );
     }
@@ -599,11 +531,12 @@ mod test_status {
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
-                        RemoteConnectionStatus {
-                            connection_mode: Some(config::ConnectionMode::Push),
-                            registration_state: None,
-                            host_name: Some(String::from("my-host")),
-                        }
+                        agent_receiver_api::RegistrationStatusV2Response::Registered(
+                            agent_receiver_api::RegistrationStatusV2ResponseRegistered {
+                                connection_mode: config::ConnectionMode::Push,
+                                hostname: String::from("my-host"),
+                            }
+                        )
                     ))
                 }
             ),
@@ -617,14 +550,13 @@ mod test_status {
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
                  \t\tConnection mode: push-agent (!!)\n\
-                 \t\tRegistration state: operational\n\
-                 \t\tHost name: my-host"
+                 \t\tHostname: my-host"
             )
         );
     }
 
     #[test]
-    fn test_connection_status_fmt_unkn_reg_state() {
+    fn test_connection_status_fmt_not_registered() {
         assert_eq!(
             format!(
                 "{}",
@@ -636,11 +568,7 @@ mod test_status {
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
-                        RemoteConnectionStatus {
-                            connection_mode: Some(config::ConnectionMode::Pull),
-                            registration_state: None,
-                            host_name: None,
-                        }
+                        agent_receiver_api::RegistrationStatusV2Response::NotRegistered
                     ))
                 }
             ),
@@ -653,9 +581,7 @@ mod test_status {
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
-                 \t\tConnection mode: pull-agent\n\
-                 \t\tRegistration state: unknown (!!)\n\
-                 \t\tHost name: unknown"
+                 \t\tNot registered (!!)"
             )
         );
     }
@@ -674,11 +600,14 @@ mod test_status {
                     }),
                     uuid: uuid::Uuid::from_str("50611369-7a42-4c0b-927e-9a14330401fe").unwrap(),
                     local: local_connection_status(),
-                    remote: Remote::StatusResponse(Ok(RemoteConnectionStatus {
-                        connection_mode: Some(config::ConnectionMode::Pull),
-                        registration_state: None,
-                        host_name: Some(String::from("my-host")),
-                    })),
+                    remote: Remote::StatusResponse(Ok(
+                        agent_receiver_api::RegistrationStatusV2Response::Registered(
+                            agent_receiver_api::RegistrationStatusV2ResponseRegistered {
+                                connection_mode: config::ConnectionMode::Pull,
+                                hostname: String::from("my-host"),
+                            },
+                        ),
+                    )),
                 },
                 ConnectionStatus {
                     site_data: Some(SiteData {
@@ -694,11 +623,14 @@ mod test_status {
                             to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
                         }),
                     },
-                    remote: Remote::StatusResponse(Ok(RemoteConnectionStatus {
-                        connection_mode: Some(config::ConnectionMode::Push),
-                        registration_state: None,
-                        host_name: Some(String::from("my-host2")),
-                    })),
+                    remote: Remote::StatusResponse(Ok(
+                        agent_receiver_api::RegistrationStatusV2Response::Registered(
+                            agent_receiver_api::RegistrationStatusV2ResponseRegistered {
+                                connection_mode: config::ConnectionMode::Push,
+                                hostname: String::from("my-host2"),
+                            },
+                        ),
+                    )),
                 },
             ],
         }
@@ -720,8 +652,7 @@ mod test_status {
              \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
              \tRemote:\n\
              \t\tConnection mode: pull-agent\n\
-             \t\tRegistration state: operational\n\
-             \t\tHost name: my-host\n\n\n\
+             \t\tHostname: my-host\n\n\n\
              Connection: somewhere/site2\n\
              \tUUID: 3c87778b-8bb8-434d-bcc6-6d05f2668c80\n\
              \tLocal:\n\
@@ -731,8 +662,7 @@ mod test_status {
              \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
              \tRemote:\n\
              \t\tConnection mode: push-agent\n\
-             \t\tRegistration state: operational\n\
-             \t\tHost name: my-host2"
+             \t\tHostname: my-host2"
         );
     }
 
@@ -766,18 +696,20 @@ mod test_status {
 
     struct MockApi {}
 
-    impl agent_receiver_api::RegistrationStatus for MockApi {
-        fn registration_status(
+    impl agent_receiver_api::RegistrationStatusV2 for MockApi {
+        fn registration_status_v2(
             &self,
             _base_url: &reqwest::Url,
             _connection: &config::TrustedConnection,
-        ) -> AnyhowResult<agent_receiver_api::RegistrationStatusResponse> {
-            Ok(agent_receiver_api::RegistrationStatusResponse {
-                hostname: Some(String::from("host")),
-                status: None,
-                connection_mode: Some(config::ConnectionMode::Pull),
-                message: None,
-            })
+        ) -> AnyhowResult<agent_receiver_api::RegistrationStatusV2Response> {
+            Ok(
+                agent_receiver_api::RegistrationStatusV2Response::Registered(
+                    agent_receiver_api::RegistrationStatusV2ResponseRegistered {
+                        hostname: String::from("host"),
+                        connection_mode: config::ConnectionMode::Pull,
+                    },
+                ),
+            )
         }
     }
 
@@ -820,8 +752,7 @@ mod test_status {
                  \t\tCertificate parsing failed (!!)\n\
                  \tRemote:\n\
                  \t\tConnection mode: pull-agent (!!)\n\
-                 \t\tRegistration state: operational\n\
-                 \t\tHost name: host",
+                 \t\tHostname: host",
                 constants::VERSION,
                 if cfg!(unix) {
                     "inoperational (!!)"

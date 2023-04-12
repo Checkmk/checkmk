@@ -41,7 +41,7 @@ def test_status_pull(
         hostname=HostName("pull-host"),
         host_attributes={},
     )["connections"][0]["remote"]
-    assert remote_status["host_name"] == "pull-host"
+    assert remote_status["hostname"] == "pull-host"
     assert HostAgentConnectionMode(remote_status["connection_mode"]) is HostAgentConnectionMode.PULL
 
 
@@ -56,5 +56,5 @@ def test_status_push(
         hostname=HostName("push-host"),
         host_attributes={"cmk_agent_connection": HostAgentConnectionMode.PUSH.value},
     )["connections"][0]["remote"]
-    assert remote_status["host_name"] == "push-host"
+    assert remote_status["hostname"] == "push-host"
     assert HostAgentConnectionMode(remote_status["connection_mode"]) is HostAgentConnectionMode.PUSH

@@ -11,8 +11,6 @@ import sys
 from pathlib import Path
 from subprocess import run
 
-import yaml
-
 
 def image_id(alias_name):
     """Basically returns the generated image id reported by `docker build` on a given
@@ -53,7 +51,8 @@ def main():
     # Get the nexus repo tag via the meta.yml file. You're asking why not via docker image inspect?
     # It seems that we don't always get the nexus repo tag via the field "RepoTags", so we go this way...
     with open(Path(__file__).parent / alias_name / "meta.yml") as meta_file:
-        repo_tag = yaml.load(meta_file, Loader=yaml.BaseLoader).get("tag")
+        tag_lines = [line for line in meta_file.readlines() if "tag:" in line]
+        repo_tag = tag_lines and tag_lines[0].split()[1]
         if repo_tag:
             # We need to pull also the tag, otherwise Nexus may delete those images
             run(["docker", "pull", repo_tag], capture_output=True, check=False)

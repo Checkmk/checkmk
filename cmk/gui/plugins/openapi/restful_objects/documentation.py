@@ -82,7 +82,7 @@ def is_adjacent_column(column) -> bool:  # type:ignore[no-untyped-def]
 def table_definitions() -> list[str]:
     result = []
     table_tmpl = _jinja_env().get_template("table")
-    for table_name in tables.__all__:
+    for table_name in tables.REST_API_DOC_TABLES:
         table = getattr(tables, table_name)
         columns = []
         adjacent_columns = []

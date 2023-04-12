@@ -12,6 +12,16 @@ from cmk.utils.livestatus_helpers.tables.servicegroups import Servicegroups
 from cmk.utils.livestatus_helpers.tables.services import Services
 from cmk.utils.livestatus_helpers.tables.status import Status
 
+REST_API_DOC_TABLES = [
+    "Downtimes",
+    "Hostgroups",
+    "Hosts",
+    "Servicegroups",
+    "Services",
+    "Comments",
+    "Eventconsoleevents",
+]
+
 __all__ = [
     "Downtimes",
     "Hostgroups",
@@ -21,4 +31,5 @@ __all__ = [
     "Status",
     "Comments",
     "Eventconsoleevents",
+    "REST_API_DOC_TABLES",
 ]

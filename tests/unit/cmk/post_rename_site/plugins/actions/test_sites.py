@@ -18,6 +18,7 @@ from livestatus import (
 
 from cmk.gui.watolib.sites import SiteManagementFactory
 
+from cmk.post_rename_site.logger import logger
 from cmk.post_rename_site.plugins.actions.sites import update_site_config
 
 
@@ -58,7 +59,7 @@ def test_update_basic_site_config(site_config_file: Path) -> None:
         ),
     )
 
-    update_site_config(SiteId("heute"), SiteId("haha"))
+    update_site_config(SiteId("heute"), SiteId("haha"), logger)
 
     site_mgmt = SiteManagementFactory().factory()
     all_sites = site_mgmt.load_sites()
@@ -122,7 +123,7 @@ def test_update_remote_site_status_host_config(site_config_file: Path) -> None:
         ),
     )
 
-    update_site_config(SiteId("stable"), SiteId("dingdong"))
+    update_site_config(SiteId("stable"), SiteId("dingdong"), logger)
 
     site_mgmt = SiteManagementFactory().factory()
     all_sites = site_mgmt.load_sites()

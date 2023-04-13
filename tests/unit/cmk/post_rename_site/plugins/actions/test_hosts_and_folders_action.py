@@ -14,6 +14,7 @@ import cmk.gui.watolib.hosts_and_folders
 from cmk.gui.watolib.builtin_attributes import HostAttributeSite
 from cmk.gui.watolib.hosts_and_folders import Folder
 
+from cmk.post_rename_site.logger import logger
 from cmk.post_rename_site.plugins.actions.hosts_and_folders import update_hosts_and_folders
 
 
@@ -56,7 +57,7 @@ def test_rewrite_folder_explicit_site() -> None:
     folder.load_instance()
     assert folder.attribute("site") == "stable"
 
-    update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"))
+    update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"), logger)
     assert folder.attribute("site") == "dingdong"
 
 
@@ -81,7 +82,7 @@ host_attributes.update(
     )
 
     assert Folder.root_folder().load_host("ag").attribute("site") == "stable"
-    update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"))
+    update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"), logger)
     assert Folder.root_folder().load_host("ag").attribute("site") == "dingdong"
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
@@ -136,7 +137,7 @@ host_attributes.update(
     monkeypatch.setattr(cmk.gui.watolib.hosts_and_folders, "omd_site", lambda: "dingdong")
     monkeypatch.setattr(HostAttributeSite, "default_value", lambda self: "dingdong")
 
-    update_hosts_and_folders(SiteId("NO_SITE"), SiteId("dingdong"))
+    update_hosts_and_folders(SiteId("NO_SITE"), SiteId("dingdong"), logger)
 
     Folder.invalidate_caches()
 

@@ -4,12 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
-import logging
 
 from livestatus import SiteId
 
 import cmk.utils.debug
-import cmk.utils.log as log
 import cmk.utils.plugin_registry
 import cmk.utils.site
 from cmk.utils.log import VERBOSE
@@ -23,14 +21,13 @@ from cmk.gui import main_modules
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 
+from .logger import logger, setup_logging
 from .registry import rename_action_registry
-
-logger = logging.getLogger("cmk.post_rename_site")
 
 
 def main(args: list[str]) -> int:
     arguments = parse_arguments(args)
-    setup_logging(arguments)
+    setup_logging(verbose=arguments.verbose)
 
     if arguments.debug:
         cmk.utils.debug.enable()
@@ -94,25 +91,6 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
     )
 
     return p.parse_args(args)
-
-
-def setup_logging(arguments: argparse.Namespace) -> None:
-    level = log.verbosity_to_log_level(arguments.verbose)
-
-    log.setup_console_logging()
-    log.logger.setLevel(level)
-
-    logger.setLevel(level)
-    logger.debug("parsed arguments: %s", arguments)
-
-    # TODO: Fix this cruel hack caused by our funny mix of GUI + console
-    # stuff. Currently, we just move the console handler to the top, so
-    # both worlds are happy. We really, really need to split business logic
-    # from presentation code... :-/
-    if log.logger.handlers:
-        console_handler = log.logger.handlers[0]
-        del log.logger.handlers[:]
-        logging.getLogger().addHandler(console_handler)
 
 
 def run(arguments: argparse.Namespace, old_site_id: SiteId, new_site_id: SiteId) -> bool:

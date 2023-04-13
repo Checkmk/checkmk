@@ -207,7 +207,7 @@ metric_info["kube_misscheduled_replicas"] = {
 
 
 metric_info["kube_cron_job_status_job_duration"] = {
-    "title": _("Duration"),
+    "title": _("Total duration"),
     "unit": "s",
     "color": "41/a",
 }

@@ -24,7 +24,6 @@ class TestValueSpecPassword:
         assert vs.Password().value_to_html("elon") == "******"
         assert vs.Password().value_to_html(None) == "none"
 
-    @pytest.mark.usefixtures("fixture_auth_secret")
     def test_from_html_vars(self) -> None:
         with request_var(p="smth"):
             assert vs.Password(encrypt_value=False).from_html_vars("p") == "smth"
@@ -33,7 +32,6 @@ class TestValueSpecPassword:
             assert vs.Password().from_html_vars("p") == "smth"
 
 
-@pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_initial_pw(request_context) -> None:  # type: ignore[no-untyped-def]
     request.set_var("pw_orig", "")
     request.set_var("pw", "abc")
@@ -44,7 +42,6 @@ def test_password_from_html_vars_initial_pw(request_context) -> None:  # type: i
 @pytest.mark.skipif(
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
-@pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_unchanged_pw(  # type: ignore[no-untyped-def]
     request_context,
 ) -> None:
@@ -57,7 +54,6 @@ def test_password_from_html_vars_unchanged_pw(  # type: ignore[no-untyped-def]
 @pytest.mark.skipif(
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
-@pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_change_pw(request_context) -> None:  # type: ignore[no-untyped-def]
     request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
     request.set_var("pw", "xyz")

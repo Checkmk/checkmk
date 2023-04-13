@@ -413,11 +413,3 @@ def fixture_suppress_license_expiry_header(monkeypatch_module: pytest.MonkeyPatc
     monkeypatch_module.setattr(
         "cmk.gui.htmllib.top_heading._may_show_license_expiry", lambda x: None
     )
-
-
-@pytest.fixture()
-def fixture_auth_secret():
-    """Place the secret "auth-secret" at the path for auth.secret"""
-    secret_path = cmk.utils.paths.auth_secret_file
-    secret_path.parent.mkdir(parents=True, exist_ok=True)
-    secret_path.write_bytes(b"auth-secret")

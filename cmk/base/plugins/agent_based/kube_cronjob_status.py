@@ -26,6 +26,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.utils.kube import (
     ConditionStatus,
+    ContainerStateType,
     CronJobLatestJob,
     CronJobStatus,
     get_age_levels_for,
@@ -128,11 +129,36 @@ def _check_cron_job_status(
             value=current_time - latest_job.status.start_time,
         )
 
+    if job_status is JobStatusType.RUNNING and job_pod is not None:
+        if (pod_running_start_time := _pod_running_start_time(job_pod)) is not None:
+            yield Metric(
+                name="kube_cron_job_status_execution_duration",
+                value=current_time - pod_running_start_time,
+            )
+
     if status.last_duration:
         yield Metric(name="kube_cron_job_status_last_duration", value=status.last_duration)
 
     if status.active_jobs_count is not None:
         yield Metric(name="kube_cron_job_status_active", value=status.active_jobs_count)
+
+
+def _pod_running_start_time(pod: JobPod) -> int | None:
+    """Determine the run start time of the pod
+
+    Assumptions made:
+        * we consider it to be running if all containers of the pod are running (this should be
+        reflected in the pod phase)
+        * the pod run start time is the start time of the last container to start running
+    """
+    latest_start_container_time = 0
+    for container_status in pod.containers.values():
+        if container_status.state.type is not ContainerStateType.running:
+            return None
+        latest_start_container_time = max(
+            latest_start_container_time, container_status.state.start_time
+        )
+    return latest_start_container_time
 
 
 def _determine_job_status(

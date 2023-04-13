@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pathlib
+from collections.abc import Iterable
 
 import pytest
 from pytest_mock import MockerFixture
@@ -107,33 +108,59 @@ def test_discovery_single(monkeypatch: pytest.MonkeyPatch) -> None:
         Service(item="empty.log"),
         Service(item="my_other_log"),
         Service(item="mylog"),
+        Service(item="unreadablelog"),
     ]
 
     assert not list(logwatch.discover_logwatch_groups([], SECTION1))
 
 
-def test_check_single(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    "log_name, expected_result",
+    [
+        pytest.param(
+            "empty.log",
+            [
+                Result(
+                    state=State.OK,
+                    summary="No error messages",
+                ),
+            ],
+        ),
+        pytest.param(
+            "my_other_log",
+            [
+                Result(
+                    state=State.WARN,
+                    summary='1 WARN messages (Last worst: "watch your step!")',
+                ),
+            ],
+        ),
+        pytest.param(
+            "mylog",
+            [
+                Result(
+                    state=State.CRIT,
+                    summary='1 CRIT messages (Last worst: "whoha! Someone mooped!")',
+                ),
+            ],
+        ),
+        pytest.param(
+            "unreadablelog",
+            [
+                Result(state=State.CRIT, summary="Could not read log file 'unreadablelog'"),
+                Result(state=State.OK, summary="No error messages"),
+            ],
+        ),
+    ],
+)
+def test_check_single(
+    monkeypatch: pytest.MonkeyPatch, log_name: str, expected_result: Iterable[Result]
+) -> None:
     monkeypatch.setattr(logwatch, "get_value_store", lambda: {})
     monkeypatch.setattr(logwatch, "_compile_params", lambda _item: [])
     monkeypatch.setattr(logwatch, "host_name", lambda: "test-host")
-    assert list(logwatch.check_logwatch_node("empty.log", SECTION1)) == [
-        Result(
-            state=State.OK,
-            summary="No error messages",
-        ),
-    ]
-    assert list(logwatch.check_logwatch_node("my_other_log", SECTION1)) == [
-        Result(
-            state=State.WARN,
-            summary='1 WARN messages (Last worst: "watch your step!")',
-        ),
-    ]
-    assert list(logwatch.check_logwatch_node("mylog", SECTION1)) == [
-        Result(
-            state=State.CRIT,
-            summary='1 CRIT messages (Last worst: "whoha! Someone mooped!")',
-        ),
-    ]
+
+    assert list(logwatch.check_logwatch_node(log_name, SECTION1)) == expected_result
 
 
 SECTION2 = logwatch.logwatch.Section(
@@ -174,6 +201,7 @@ def test_logwatch_discover_single_restrict(monkeypatch: pytest.MonkeyPatch) -> N
         key=lambda s: s.item or "",
     ) == [
         Service(item="log1"),
+        Service(item="log4"),
         Service(item="log5"),
     ]
 

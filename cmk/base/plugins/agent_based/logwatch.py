@@ -145,6 +145,9 @@ def check_logwatch(
     section: ClusterSection,
 ) -> CheckResult:
     yield from logwatch.check_errors(section)
+    yield from logwatch.check_unreadable_files(
+        logwatch.get_unreadable_logfiles(item, section), State.CRIT
+    )
 
     value_store = get_value_store()
 

@@ -550,6 +550,7 @@ def test_grouped_rulespecs():
             "clustered_services_mapping",
             "extra_host_conf:service_period",
             "extra_service_conf:service_period",
+            "cmc_graphite_host_metrics",
             "cmc_graphite_service_metrics",
             "cmc_service_rrd_config",
             "cmc_host_rrd_config",

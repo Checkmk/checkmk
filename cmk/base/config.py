@@ -4227,25 +4227,30 @@ class CEEConfigCache(ConfigCache):
             deflt=cmc_check_timeout,  # type: ignore[name-defined] # pylint: disable=undefined-variable
         )
 
-    def graphite_metrics_of_service(
+    def graphite_metrics_of(
         self,
         hostname: HostName,
         description: Optional[ServiceName],
         *,
-        default: Sequence[str],
+        default: List[str],
     ) -> Sequence[str]:
         if description is None:
-            return default
+            return next(
+                iter(
+                    self.host_extra_conf(
+                        hostname,
+                        cmc_graphite_host_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+                    )
+                ),
+                default,
+            )
 
-        value = self.get_service_ruleset_value(
+        return self.get_service_ruleset_value(
             hostname,
             description,
             cmc_graphite_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-            deflt=None,
+            deflt=default,
         )
-        if value is None:
-            return default
-        return value
 
     def influxdb_metrics_of_service(
         self,

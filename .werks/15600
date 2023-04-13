@@ -1,0 +1,18 @@
+Title: group_config: return the correct collection response for host/service/contact_group endpoints
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1681317871
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b4
+
+This werk introduces a fix to collection responses for host, service
+and contact group_config endpoints.
+
+For bulk-create and bulk-update calls, the link object in the
+responses did not align with the expected schema. Now we return
+the expected schema.
+

@@ -318,9 +318,8 @@ def test_openapi_group_values_are_links(
     )
     assert response.status_code == 200
 
-    json_data = response.json
-    assert len(json_data["value"]) == 1
-    assert json_data["value"][0]["domainType"] == "link"
+    assert len(response.json["value"]) == 1
+    assert response.json["value"][0]["links"][0]["domainType"] == "link"
 
 
 def _random_string(size):
@@ -366,3 +365,79 @@ def test_bulk_delete_non_existing_group_types(
         status=404,
         content_type="application/json",
     )
+
+
+@managedtest
+@pytest.mark.parametrize("group_type", ["host", "service", "contact"])
+def test_openapi_bulk_group_schema(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    group_type: str,
+    base: str,
+) -> None:
+    groups = [
+        {"name": _random_string(10), "alias": _random_string(10), "customer": "provider"}
+        for _i in range(2)
+    ]
+
+    # ------------------- bulk create -------------------
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + f"/domain-types/{group_type}_group_config/actions/bulk-create/invoke",
+        params=json.dumps({"entries": groups}),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+    assert set(resp.json["value"][0]) == {
+        "links",
+        "domainType",
+        "id",
+        "title",
+        "members",
+        "extensions",
+    }
+    assert resp.json["value"][0]["domainType"] == f"{group_type}_group_config"
+
+    # ------------------- get collection -------------------
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + f"/domain-types/{group_type}_group_config/collections/all",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+    assert set(resp.json["value"][0]) == {
+        "links",
+        "domainType",
+        "id",
+        "title",
+        "members",
+        "extensions",
+    }
+    assert resp.json["value"][0]["domainType"] == f"{group_type}_group_config"
+
+    # ------------------- bulk update -------------------
+    updated_groups = [
+        {
+            "name": group["name"],
+            "attributes": {"alias": group["alias"], "customer": "global"},
+        }
+        for group in groups
+    ]
+    resp = aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + f"/domain-types/{group_type}_group_config/actions/bulk-update/invoke",
+        params=json.dumps({"entries": updated_groups}),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    assert set(resp.json["value"][0]) == {
+        "links",
+        "domainType",
+        "id",
+        "title",
+        "members",
+        "extensions",
+    }
+    assert resp.json["value"][0]["domainType"] == f"{group_type}_group_config"

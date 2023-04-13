@@ -58,7 +58,7 @@ def serialize_group_list(
     return constructors.collection_object(
         domain_type=domain_type,
         value=[
-            constructors.collection_item(
+            constructors.domain_object(
                 domain_type=domain_type,
                 title=group["alias"],
                 identifier=group["id"],

@@ -7,7 +7,7 @@ import copy
 import dataclasses
 import logging
 import time
-from collections.abc import Collection, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Final
 
@@ -251,7 +251,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             walk_cache.clear()
             walk_cache_msg = "SNMP walk cache cleared"
 
-        fetched_data: MutableMapping[SectionName, Sequence[SNMPRawDataSection]] = {}
+        fetched_data: dict[SectionName, Sequence[SNMPRawDataSection]] = {}
         for section_name in self._sort_section_names(section_names):
             try:
                 _from, until, _section = persisted_sections[section_name]
@@ -278,7 +278,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
     def _sort_section_names(
         cls,
         section_names: Iterable[SectionName],
-    ) -> Iterable[SectionName]:
+    ) -> Sequence[SectionName]:
         # In former Checkmk versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.
         # In Checkmk 1.5 the order was random and

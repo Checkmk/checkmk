@@ -7,12 +7,13 @@ from __future__ import annotations
 
 import abc
 import string
-from typing import Final, NamedTuple
+from collections.abc import Container
+from typing import Final, NamedTuple, Self
 
 from ._misc import Item
 
 __all__ = [
-    "PluginName",
+    "ValidatedString",
     "ParsedSectionName",
     "SectionName",
     "RuleSetName",
@@ -22,48 +23,45 @@ __all__ = [
 ]
 
 
-class PluginName(abc.ABC):
-    """Common class for all names.
+class ValidatedString(abc.ABC):
+    """Base class for validated strings.
 
     A plugin name must be a non-empty string consisting only of letters A-z, digits
     and the underscore.
     """
 
-    VALID_CHARACTERS = string.ascii_letters + "_" + string.digits
+    VALID_CHARACTERS: Final = string.ascii_letters + "_" + string.digits
 
     @classmethod
     @abc.abstractmethod
-    def _legacy_naming_exceptions(cls) -> set[str]:
-        """we allow to maintain a list of exceptions"""
-        raise NotImplementedError()
+    def exceptions(cls) -> Container[str]:
+        """List of exceptions to validation.  Empty by default."""
+        return frozenset()
 
     @classmethod
-    def _validate_args(cls, plugin_name: str) -> str:
-        if plugin_name in cls._legacy_naming_exceptions():
-            return plugin_name
+    def _validate_args(cls, /, __str: str) -> str:
+        if __str in cls.exceptions():
+            return __str
 
-        if not isinstance(plugin_name, str):
+        if not isinstance(__str, str):
             raise TypeError(f"{cls.__name__} must initialized from str")
-        if not plugin_name:
+        if not __str:
             raise ValueError(f"{cls.__name__} initializer must not be empty")
 
-        if any(c not in cls.VALID_CHARACTERS for c in plugin_name):
-            invalid = "".join(c for c in plugin_name if c not in cls.VALID_CHARACTERS)
-            raise ValueError(
-                f"Invalid characters in {plugin_name!r} for {cls.__name__}: {invalid!r}"
-            )
+        if invalid := "".join(c for c in __str if c not in cls.VALID_CHARACTERS):
+            raise ValueError(f"Invalid characters in {__str!r} for {cls.__name__}: {invalid!r}")
 
-        return plugin_name
+        return __str
 
     def __getnewargs__(self) -> tuple[str]:
         return (str(self),)
 
-    def __new__(cls, plugin_name: str) -> PluginName:
-        cls._validate_args(plugin_name)
+    def __new__(cls, /, __str: str) -> Self:
+        cls._validate_args(__str)
         return super().__new__(cls)
 
-    def __init__(self, plugin_name: str) -> None:
-        self._value: Final = plugin_name
+    def __init__(self, /, __str: str) -> None:
+        self._value: Final = __str
         self._hash: Final = hash(type(self).__name__ + self._value)
 
     def __repr__(self) -> str:
@@ -77,66 +75,68 @@ class PluginName(abc.ABC):
             raise TypeError(f"cannot compare {self!r} and {other!r}")
         return self._value == other._value
 
-    def __lt__(self, other: PluginName) -> bool:
+    def __lt__(self, other: ValidatedString) -> bool:
         if not isinstance(other, self.__class__):
             return NotImplemented
         return self._value < other._value
 
-    def __le__(self, other: PluginName) -> bool:
+    def __le__(self, other: ValidatedString) -> bool:
         return self < other or self == other
 
-    def __gt__(self, other: PluginName) -> bool:
+    def __gt__(self, other: ValidatedString) -> bool:
         return not self <= other
 
-    def __ge__(self, other: PluginName) -> bool:
+    def __ge__(self, other: ValidatedString) -> bool:
         return not self < other
 
     def __hash__(self) -> int:
         return self._hash
 
 
-class ParsedSectionName(PluginName):
+class ParsedSectionName(ValidatedString):
     @classmethod
-    def _legacy_naming_exceptions(cls) -> set[str]:
-        return set()
+    def exceptions(cls) -> Container[str]:
+        return super().exceptions()
 
 
-class SectionName(PluginName):
+class SectionName(ValidatedString):
     @classmethod
-    def _legacy_naming_exceptions(cls) -> set[str]:
-        return set()
+    def exceptions(cls) -> Container[str]:
+        return super().exceptions()
 
 
-class RuleSetName(PluginName):
+class RuleSetName(ValidatedString):
     @classmethod
-    def _legacy_naming_exceptions(cls) -> set[str]:
+    def exceptions(cls) -> Container[str]:
         """
         allow these names
 
         Unfortunately, we have some WATO rules that contain dots or dashes.
         In order not to break things, we allow those
         """
-        return {
-            "drbd.net",
-            "drbd.disk",
-            "drbd.stats",
-            "fileinfo-groups",
-            "hpux_snmp_cs.cpu",
-            "j4p_performance.mem",
-            "j4p_performance.threads",
-            "j4p_performance.uptime",
-            "j4p_performance.app_state",
-            "j4p_performance.app_sess",
-            "j4p_performance.serv_req",
-        }
+        return frozenset(
+            (
+                "drbd.net",
+                "drbd.disk",
+                "drbd.stats",
+                "fileinfo-groups",
+                "hpux_snmp_cs.cpu",
+                "j4p_performance.mem",
+                "j4p_performance.threads",
+                "j4p_performance.uptime",
+                "j4p_performance.app_state",
+                "j4p_performance.app_sess",
+                "j4p_performance.serv_req",
+            )
+        )
 
 
-class CheckPluginName(PluginName):
-    MANAGEMENT_PREFIX = "mgmt_"
+class CheckPluginName(ValidatedString):
+    MANAGEMENT_PREFIX: Final = "mgmt_"
 
     @classmethod
-    def _legacy_naming_exceptions(cls) -> set[str]:
-        return set()
+    def exceptions(cls) -> Container[str]:
+        return super().exceptions()
 
     def is_management_name(self) -> bool:
         return self._value.startswith(self.MANAGEMENT_PREFIX)
@@ -152,10 +152,10 @@ class CheckPluginName(PluginName):
         return self
 
 
-class InventoryPluginName(PluginName):
+class InventoryPluginName(ValidatedString):
     @classmethod
-    def _legacy_naming_exceptions(cls) -> set[str]:
-        return set()
+    def exceptions(cls) -> Container[str]:
+        return super().exceptions()
 
 
 class ServiceID(NamedTuple):

@@ -5,7 +5,7 @@
 """Checkmk wide type definitions"""
 
 __all__ = [
-    "PluginName",
+    "ValidatedString",
     "ActiveCheckPluginName",
     "AgentRawData",
     "AgentTargetVersion",
@@ -178,10 +178,10 @@ from .pluginname import (
     CheckPluginName,
     InventoryPluginName,
     ParsedSectionName,
-    PluginName,
     RuleSetName,
     SectionName,
     ServiceID,
+    ValidatedString,
 )
 from .protocol import Deserializer, Serializer
 from .user_id import UserId

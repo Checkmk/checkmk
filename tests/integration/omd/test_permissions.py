@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import logging
 import stat
 from collections.abc import Iterator
@@ -49,28 +50,32 @@ def iter_dir(path: Path) -> Iterator[Path]:
             yield from iter_dir(sub_path)
 
 
+def get_site_file_permission(site: Site) -> list[tuple[int, str]]:
+    return ast.literal_eval(
+        site.python_helper("helper_get_site_file_permissions.py").check_output()
+    )
+
+
 @pytest.mark.parametrize(
     "mode,known_files_set",
     ((Mode.WORLD_WRITEABLE, KNOWN_WORLD_WRITABLE_FILES),),
 )
 def test_site_file_permissions(site: Site, mode: Mode, known_files_set: set[str]) -> None:
-    def rel_path(p: Path) -> str:
-        return str(p.relative_to(site.root))
-
-    offenders: set[Path] = set()
-    for p in iter_dir(Path(site.root)):
-        if not has_permission(p, mode):
-            continue
-        if rel_path(p) in known_files_set:
+    offenders: set[str] = set()
+    for file_mode, rel_path in get_site_file_permission(site):
+        if not bool(file_mode & mode):
             continue
 
         # As long as we .f12 into the site under test during the post-merge jobs,
         # we need to ignore the files here. They are patched into the site by
         # tests.testlib.Site._install_test_python_modules.
-        if rel_path(p).startswith("local/lib/python3"):
+        if rel_path.startswith("local/lib/python3"):
             continue
 
-        offenders.add(p)
+        if rel_path in known_files_set:
+            continue
+
+        offenders.add(rel_path)
 
     assert not offenders
 

@@ -213,6 +213,13 @@ metric_info["kube_cron_job_status_job_duration"] = {
 }
 
 
+metric_info["kube_cron_job_status_execution_duration"] = {
+    "title": _("Execution time"),
+    "unit": "s",
+    "color": "41/a",
+}
+
+
 metric_info["kube_cron_job_status_last_duration"] = {
     "title": _("Last completed duration"),
     "unit": "s",

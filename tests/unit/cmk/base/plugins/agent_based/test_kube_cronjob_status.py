@@ -21,6 +21,18 @@ class JobPodFactory(ModelFactory):
     __model__ = kube.JobPod
 
 
+class ContainerStatusFactory(ModelFactory):
+    __model__ = kube.ContainerStatus
+
+
+class ContainerWaitingStateFactory(ModelFactory):
+    __model__ = kube.ContainerWaitingState
+
+
+class ContainerRunningStateFactory(ModelFactory):
+    __model__ = kube.ContainerRunningState
+
+
 class JobConditionFactory(ModelFactory):
     __model__ = kube.JobCondition
 
@@ -94,7 +106,16 @@ def test_cron_job_status_with_running_job_and_previously_completed_job() -> None
             conditions=[],
             start_time=1,
         ),
-        pods=[JobPodFactory.build(lifecycle=kube.PodLifeCycle(phase=kube.Phase.RUNNING))],
+        pods=[
+            JobPodFactory.build(
+                lifecycle=kube.PodLifeCycle(phase=kube.Phase.RUNNING),
+                containers={
+                    "running": ContainerStatusFactory.build(
+                        ready=True, state=ContainerRunningStateFactory.build()
+                    )
+                },
+            )
+        ],
     )
     cron_job_status = CronJobStatusFactory.build(
         active_jobs_count=1,
@@ -114,6 +135,7 @@ def test_cron_job_status_with_running_job_and_previously_completed_job() -> None
     assert {r.name for r in check_result if isinstance(r, Metric)} == {
         "kube_cron_job_status_job_duration",
         "kube_cron_job_status_last_duration",
+        "kube_cron_job_status_execution_duration",
         "kube_cron_job_status_active",
         "kube_cron_job_status_since_completion",
         "kube_cron_job_status_since_schedule",

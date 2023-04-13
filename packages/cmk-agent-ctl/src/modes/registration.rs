@@ -2,7 +2,10 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::{agent_receiver_api, certs, config, constants, misc, site_spec, types};
+use crate::{
+    agent_receiver_api::{self, RegistrationStatusV2},
+    certs, config, constants, misc, site_spec, types,
+};
 use anyhow::{bail, Context, Result as AnyhowResult};
 use log::{error, info};
 
@@ -365,7 +368,7 @@ pub fn register_pre_configured(
         pre_configured_connections,
         client_config,
         registry,
-        &RegistrationNewImpl {},
+        &RegistrationPreConfiguredImpl {},
     )
 }
 
@@ -373,7 +376,7 @@ fn _register_pre_configured(
     pre_configured_connections: &config::PreConfiguredConnections,
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
-    registration_new: &impl RegistrationNew,
+    registration_pre_configured: &impl RegistrationPreConfigured,
 ) -> AnyhowResult<()> {
     for (site_id, pre_configured_connection) in pre_configured_connections.connections.iter() {
         if let Err(error) = process_pre_configured_connection(
@@ -382,7 +385,7 @@ fn _register_pre_configured(
             &pre_configured_connections.agent_labels,
             client_config,
             registry,
-            registration_new,
+            registration_pre_configured,
         ) {
             error!(
                 "Error while processing connection {}: {}",
@@ -409,23 +412,45 @@ fn _register_pre_configured(
         .context("Failed to save registered connections")
 }
 
-trait RegistrationNew {
+trait RegistrationPreConfigured {
     fn register(
         &self,
         config: &config::RegisterNewConfig,
         registry: &mut config::Registry,
     ) -> AnyhowResult<()>;
+
+    fn registration_status_v2(
+        &self,
+        site_id: &site_spec::SiteID,
+        connection: &config::TrustedConnectionWithRemote,
+        client_config: &config::ClientConfig,
+    ) -> AnyhowResult<agent_receiver_api::RegistrationStatusV2Response>;
 }
 
-struct RegistrationNewImpl;
+struct RegistrationPreConfiguredImpl;
 
-impl RegistrationNew for RegistrationNewImpl {
+impl RegistrationPreConfigured for RegistrationPreConfiguredImpl {
     fn register(
         &self,
         config: &config::RegisterNewConfig,
         registry: &mut config::Registry,
     ) -> AnyhowResult<()> {
         register_new(config, registry)
+    }
+
+    fn registration_status_v2(
+        &self,
+        site_id: &site_spec::SiteID,
+        connection: &config::TrustedConnectionWithRemote,
+        client_config: &config::ClientConfig,
+    ) -> AnyhowResult<agent_receiver_api::RegistrationStatusV2Response> {
+        agent_receiver_api::Api {
+            use_proxy: client_config.use_proxy,
+        }
+        .registration_status_v2(
+            &site_spec::make_site_url(site_id, &connection.receiver_port)?,
+            &connection.trust,
+        )
     }
 }
 
@@ -435,7 +460,7 @@ fn process_pre_configured_connection(
     agent_labels: &types::AgentLabels,
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
-    registration_new: &impl RegistrationNew,
+    registration_pre_configured: &impl RegistrationPreConfigured,
 ) -> AnyhowResult<()> {
     let receiver_port = match pre_configured.port {
         Some(receiver_port) => receiver_port,
@@ -448,7 +473,16 @@ fn process_pre_configured_connection(
             "Updated agent receiver port for existing connection {}",
             site_id
         );
-        return Ok(());
+        if matches!(
+            registration_pre_configured.registration_status_v2(
+                site_id,
+                registered_connection,
+                client_config
+            )?,
+            agent_receiver_api::RegistrationStatusV2Response::Registered(..)
+        ) {
+            return Ok(());
+        }
     }
 
     let registration_config = config::RegisterNewConfig::new(
@@ -464,7 +498,7 @@ fn process_pre_configured_connection(
         agent_labels.clone(),
     )?;
 
-    registration_new.register(&registration_config, registry)?;
+    registration_pre_configured.register(&registration_config, registry)?;
     info!("Registered new connection {}", site_id);
 
     Ok(())
@@ -864,9 +898,11 @@ mod tests {
             }
         }
 
-        struct MockRegistrationWithAgentLabelsImpl;
+        struct MockRegistrationPreConfiguredImpl {
+            is_registered_at_remote: bool,
+        }
 
-        impl RegistrationNew for MockRegistrationWithAgentLabelsImpl {
+        impl RegistrationPreConfigured for MockRegistrationPreConfiguredImpl {
             fn register(
                 &self,
                 config: &config::RegisterNewConfig,
@@ -897,6 +933,24 @@ mod tests {
                     },
                 );
                 Ok(())
+            }
+
+            fn registration_status_v2(
+                &self,
+                _site_id: &site_spec::SiteID,
+                _connection: &config::TrustedConnectionWithRemote,
+                _client_config: &config::ClientConfig,
+            ) -> AnyhowResult<agent_receiver_api::RegistrationStatusV2Response> {
+                Ok(if self.is_registered_at_remote {
+                    agent_receiver_api::RegistrationStatusV2Response::Registered(
+                        agent_receiver_api::RegistrationStatusV2ResponseRegistered {
+                            hostname: String::from("my-host"),
+                            connection_mode: config::ConnectionMode::Pull,
+                        },
+                    )
+                } else {
+                    agent_receiver_api::RegistrationStatusV2Response::NotRegistered
+                })
             }
         }
 
@@ -980,7 +1034,9 @@ mod tests {
                     validate_api_cert: false,
                 },
                 &mut registry,
-                &MockRegistrationWithAgentLabelsImpl {},
+                &MockRegistrationPreConfiguredImpl {
+                    is_registered_at_remote: true
+                },
             )
             .is_ok());
             test_registry_after_registration(true, &mut registry)
@@ -996,7 +1052,9 @@ mod tests {
                     validate_api_cert: false,
                 },
                 &mut registry,
-                &MockRegistrationWithAgentLabelsImpl {},
+                &MockRegistrationPreConfiguredImpl {
+                    is_registered_at_remote: true
+                },
             )
             .is_ok());
             test_registry_after_registration(false, &mut registry)
@@ -1036,7 +1094,9 @@ mod tests {
                     validate_api_cert: false,
                 },
                 &mut registry,
-                &MockRegistrationWithAgentLabelsImpl {},
+                &MockRegistrationPreConfiguredImpl {
+                    is_registered_at_remote: true
+                },
             )
             .is_ok());
 
@@ -1051,6 +1111,40 @@ mod tests {
                     .receiver_port,
                 1001
             );
+        }
+
+        #[test]
+        fn test_registered_locally_but_not_at_remote() -> AnyhowResult<()> {
+            let (_reg_dir, mut registry) = registry();
+            let registry_before_registration = registry.clone();
+            let pre_configured_connections = pre_configured_connections(true);
+            assert!(_register_pre_configured(
+                &pre_configured_connections,
+                &config::ClientConfig {
+                    use_proxy: false,
+                    validate_api_cert: false,
+                },
+                &mut registry,
+                &MockRegistrationPreConfiguredImpl {
+                    is_registered_at_remote: false
+                },
+            )
+            .is_ok());
+
+            // for any connection which was already present before registering the pre-configured
+            // connections, we expect the uuid to change, because the remote says that we are not
+            // registered --> re-registration
+            for site_id in pre_configured_connections.connections.keys() {
+                if let Some(connection_before_registration) =
+                    registry_before_registration.get(site_id)
+                {
+                    assert_ne!(
+                        connection_before_registration.trust.uuid,
+                        registry.get(site_id).unwrap().trust.uuid
+                    );
+                }
+            }
+            Ok(())
         }
     }
 }

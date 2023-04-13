@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, NamedTuple, TypedDict
+from typing import Any, NamedTuple, Protocol, TypedDict
 from uuid import UUID
 
 import livestatus
@@ -53,6 +53,11 @@ _LICENSE_LABEL_NAME = "cmk/licensing"
 _LICENSE_LABEL_EXCLUDE = "excluded"
 
 
+class DoCreateSample(Protocol):
+    def __call__(self, now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSample:
+        ...
+
+
 @dataclass(frozen=True)
 class Now:
     dt: datetime
@@ -67,7 +72,11 @@ class Now:
         )
 
 
-def try_update_license_usage(instance_id: UUID | None, site_hash: str) -> None:
+def try_update_license_usage(
+    instance_id: UUID | None,
+    site_hash: str,
+    do_create_sample: DoCreateSample,
+) -> None:
     """Update the license usage history
 
     If a sample could not be created (due to livestatus errors) then the update process will be
@@ -78,7 +87,7 @@ def try_update_license_usage(instance_id: UUID | None, site_hash: str) -> None:
         raise ValueError()
 
     now = Now.make()
-    sample = _create_sample(now, instance_id, site_hash)
+    sample = do_create_sample(now, instance_id, site_hash)
 
     report_filepath = get_license_usage_report_filepath()
     licensing_dir.mkdir(parents=True, exist_ok=True)
@@ -101,7 +110,7 @@ def try_update_license_usage(instance_id: UUID | None, site_hash: str) -> None:
         store.save_text_to_file(next_run_filepath, rot47(str(_create_next_run_ts(now))))
 
 
-def _create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSample:
+def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSample:
     """Calculation of hosts and services:
     num_hosts: Hosts
         - that are not shadow hosts
@@ -454,7 +463,7 @@ def get_license_usage_report_validity() -> LicenseUsageReportValidity:
 
     with store.locked(report_filepath):
         if report_filepath.stat().st_size == 0:
-            try_update_license_usage(load_instance_id(), hash_site_id(omd_site()))
+            try_update_license_usage(load_instance_id(), hash_site_id(omd_site()), create_sample)
             return LicenseUsageReportValidity.recent_enough
 
         age = time.time() - report_filepath.stat().st_mtime

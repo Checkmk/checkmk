@@ -800,11 +800,7 @@ export function duallist_switch(
     // create an order of his choice. This is being used if DualListChoice
     // has the option custom_order = True
     if (!keeporder) {
-        const collator = new Intl.Collator(undefined, {
-            numeric: true,
-            sensitivity: "base",
-        });
-        sort_select(other_field, collator.compare);
+        sort_select(other_field);
     }
 
     // Update internal helper field which contains a list of all selected keys
@@ -817,11 +813,8 @@ export function duallist_switch(
     helper.value = texts.join("|");
 }
 
-function sort_select(
-    select: HTMLSelectElement,
-    cmp_func: (x: string, y: string) => number
-) {
-    const choices: [string, string, boolean][] = [];
+function sort_select(select: HTMLSelectElement) {
+    let choices: [string, string, boolean][] = [];
     let i;
     for (i = 0; i < select.options.length; i++) {
         choices[i] = [
@@ -830,11 +823,17 @@ function sort_select(
             select.options[i].disabled,
         ];
     }
-    //TODO: the function does it work correctly but it actually expects tw array of three elements not two strings,
-    // so typescript throws an error here: the functionality should be inlined and replaced in an extra commit -- see:
-    // https://stackoverflow.com/a/46256174 & https://review.lan.tribe29.com/c/check_mk/+/51083
-    // @ts-ignore
-    choices.sort(cmp_func);
+
+    const collator = new Intl.Collator(undefined, {
+        numeric: true,
+        sensitivity: "base",
+    });
+    choices = choices.sort(
+        (a, b) =>
+            collator.compare(a[0], b[0]) ||
+            collator.compare(String(a[1]), String(b[1])) ||
+            collator.compare(String(a[2]), String(b[2]))
+    );
     while (select.options.length > 0) {
         // @ts-ignore
         select.options[0] = null;

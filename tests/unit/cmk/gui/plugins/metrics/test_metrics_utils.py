@@ -323,6 +323,16 @@ def test_evaluate() -> None:
 def test_evaluate_cpu_utilization(
     perf_data: str, expression: str, check_command: str, expected_result: float
 ) -> None:
+    """Clamping to upper value.
+
+    Technically, the percent values for CPU Utilization should always be between 0 and 100. In
+    practice, these values can be above 100. This was observed for docker (SUP-13161). In this
+    case, it is sensible to extend the graph. This behaviour would be a sensible default, but
+    currently using our `stack_resolver` is the only.
+
+    This test provides a sanity check that the stack_resolver clamps the values in the way it
+    should.
+    """
     # Assemble
     assert utils.metric_info, "Global variable is empty/has not been initialized."
     assert utils.graph_info, "Global variable is empty/has not been initialized."

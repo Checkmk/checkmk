@@ -46,8 +46,13 @@ _BROCADE_FCPORT_PHYSTATES = {
     9: "lock ref",
     10: "validating",
     11: "invalid module",
-    12: "no sig det",
-    13: "unknown",
+    12: "remote fault",
+    13: "local fault",
+    14: "no sig det",
+    15: "hard fault",
+    16: "unsupported module",
+    17: "module fault",
+    255: "unknown",
 }
 
 # Taken from swFCPortOpStatus

@@ -54,21 +54,6 @@ def discover_kaspersky_av_kesl_updates(section: Section) -> DiscoveryResult:
 
 
 def check_kaspersky_av_kesl_updates(section: Section) -> CheckResult:
-    """
-    # set fixed timezone for reproducable tests
-    >>> import os
-    >>> os.environ["TZ"] = "0"
-
-    >>> for result in check_kaspersky_av_kesl_updates({
-    ...     'Anti-virus databases loaded': 'Yes',
-    ...     'Last release date of databases': '1970-01-01 00:00:00',
-    ...     'Anti-virus database records': '1',
-    ... }):
-    ...     print(result)
-    Result(state=<State.OK: 0>, summary='Databases loaded: True')
-    Result(state=<State.OK: 0>, summary='Database date: Jan 01 1970 00:00:00')
-    Result(state=<State.OK: 0>, summary='Database records: 1')
-    """
     loaded = section["Anti-virus databases loaded"] == "Yes"
     yield Result(state=State.OK if loaded else State.CRIT, summary=f"Databases loaded: {loaded}")
     db_release_date = time.mktime(

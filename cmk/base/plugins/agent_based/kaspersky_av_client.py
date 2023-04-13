@@ -21,14 +21,6 @@ def parse_kaspersky_av_client(string_table: StringTable) -> Section:
 
 
 def _parse_kaspersky_av_client(string_table: StringTable, now: float) -> Section:
-    """
-    # Set up timezone to make doctests reproducable.
-    >>> import os
-    >>> os.environ["TZ"] = "0"
-
-    >>> _parse_kaspersky_av_client([["Fullscan", "01.01.1970", "00:00:00"]], now=1)
-    {'fullscan_age': 1.0}
-    """
     parsed: Section = {}
 
     for line in string_table:

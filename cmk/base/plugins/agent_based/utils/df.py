@@ -61,6 +61,9 @@ FILESYSTEM_DEFAULT_LEVELS = {
 }
 
 
+DfSection = Tuple[BlocksSubsection, InodesSubsection]
+
+
 def savefloat(raw: Any) -> float:
     try:
         return float(raw)

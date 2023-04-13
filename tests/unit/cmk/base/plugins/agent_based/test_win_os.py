@@ -5,25 +5,28 @@
 
 import pytest
 
+from tests.testlib import set_timezone
+
 from cmk.base.plugins.agent_based import win_os
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 
 
 @pytest.fixture(name="section", scope="module")
 def _get_section() -> win_os.Section:
-    return win_os.parse_win_os(
-        [
+    with set_timezone("UTC"):
+        return win_os.parse_win_os(
             [
-                "ZMUCVCS05",
-                "Microsoft Windows Server 2008 R2 Standard",
-                "6.1.7601",
-                "64-bit",
-                "1",
-                "0",
-                "20120531230239.000000+120",
+                [
+                    "ZMUCVCS05",
+                    "Microsoft Windows Server 2008 R2 Standard",
+                    "6.1.7601",
+                    "64-bit",
+                    "1",
+                    "0",
+                    "20120531230239.000000+120",
+                ]
             ]
-        ]
-    )
+        )
 
 
 def test_inventory_win_os(section: win_os.Section) -> None:

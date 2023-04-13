@@ -24,8 +24,8 @@ info = [
 @pytest.mark.parametrize(
     "check,lines,expected_result",
     [
-        ("jolokia_generic", info, [("PingFederate-CUK-CDI TotalRequests", {})]),
-        ("jolokia_generic.rate", info, [("PingFederate-CUK-CDI MaxRequestTime", {})]),
+        ("jolokia_generic", info, [("PingFederate-CUK-CDI MBean TotalRequests", {})]),
+        ("jolokia_generic.rate", info, [("PingFederate-CUK-CDI MBean MaxRequestTime", {})]),
     ],
 )
 def test_jolokia_generic_discovery(

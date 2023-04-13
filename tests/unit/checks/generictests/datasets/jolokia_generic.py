@@ -31,41 +31,41 @@ info = [
 
 discovery = {
     "": [
-        ("Instance1 Mitglieder_Anzahl", {}),
-        ("Instance2 Mitglieder Anzahl", {}),
-        ("JIRA,com.atlassian.jira:type=web.requests,invocation.count jira.value", {}),
+        ("Instance1 MBean Mitglieder_Anzahl", {}),
+        ("Instance2 MBean Mitglieder Anzahl", {}),
+        ("JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.value", {}),
     ],
-    "rate": [("Instance2 Beitritte", {})],
-    "string": [("Instance2 Current Motto", {})],
+    "rate": [("Instance2 MBean Beitritte", {})],
+    "string": [("Instance2 MBean Current Motto", {})],
 }
 
 checks = {
     "": [
         (
-            "Instance1 Mitglieder_Anzahl",
+            "Instance1 MBean Mitglieder_Anzahl",
             {},
             [(0, "-23.00", [("generic_number", -23.0, None, None, None, None)])],
         ),
         (
-            "Instance2 Mitglieder Anzahl",
+            "Instance2 MBean Mitglieder Anzahl",
             {},
             [(0, "-23.00", [("generic_number", -23.0, None, None, None, None)])],
         ),
-        ("JIRA,com.atlassian.jira:type=web.requests,invocation.count jira.name", {}, []),
+        ("JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.name", {}, []),
         (
-            "JIRA,com.atlassian.jira:type=web.requests,invocation.count jira.value",
+            "JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.value",
             {},
             [(0, "2624460.00", [("generic_number", 2624460.0, None, None, None, None)])],
         ),
     ],
     "rate": [
         (
-            "Instance2 Beitritte",
+            "Instance2 MBean Beitritte",
             {},
             [(0, "0.33", [("generic_rate", 0.328125, None, None, None, None)])],
         )
     ],
-    "string": [("Instance2 Current Motto", {}, [(0, "Never gonna give you up", [])])],
+    "string": [("Instance2 MBean Current Motto", {}, [(0, "Never gonna give you up", [])])],
 }
 
 

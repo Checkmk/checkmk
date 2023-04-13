@@ -22,7 +22,7 @@ def parse_jolokia_generic(info):
                 value = float(value)
         except ValueError:
             continue
-        item = "%s %s" % (instance, mbean)
+        item = "%s MBean %s" % (instance, mbean)
         parsed[item] = {"value": value, "type": type_}
 
     return parsed

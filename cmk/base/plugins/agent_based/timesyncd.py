@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Optional, Sequence, Tuple, TypedDict
+from typing import Any, Iterable, Mapping, NotRequired, Optional, Sequence, Tuple, TypedDict
 
 import pytz
 from dateutil import parser as date_parser
-from typing_extensions import NotRequired
 
 from .agent_based_api.v1 import (
     check_levels,

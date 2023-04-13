@@ -133,7 +133,6 @@ package-definitions:
   starlette: [starlette]
   stdlib2: [ConfigParser, cStringIO, urllib2]  # Python 2 packages/modules not in Python 3
   tinkerforge: [tinkerforge]
-  typing-extensions: [typing_extensions]
   urllib3: [urllib3]
   uvicorn: [uvicorn]
   vcrpy: [vcr]
@@ -267,7 +266,6 @@ allowed-package-relationships:
     python-dateutil,
     requests,
     six,
-    typing-extensions,
     checkmk-cmk,
     checkmk-cmk-ec-export,
     checkmk-cmk-utils,
@@ -286,7 +284,6 @@ allowed-package-relationships:
     pysnmp,
     python-dateutil,
     setproctitle,
-    typing-extensions,
     checkmk-cmk-utils,
     checkmk-livestatus
   ]
@@ -328,7 +325,6 @@ allowed-package-relationships:
     requests,
     setproctitle,
     six,
-    typing-extensions,
     urllib3,
     Werkzeug,
     checkmk-cmk,  # TODO: For cmk.automations and cmk.snmplib. New packages?
@@ -356,7 +352,6 @@ allowed-package-relationships:
     pyyaml,
     redis,
     six,
-    typing-extensions,
     urllib3,
     checkmk-cmk-ec-export,  # TODO: cmk.utils.packaging causes this cycle!
     checkmk-livestatus
@@ -387,7 +382,6 @@ allowed-package-relationships:
     rrdtool,
     setproctitle,
     six,
-    typing-extensions,
     urllib3,
     Werkzeug,
     checkmk-cmk,
@@ -483,7 +477,6 @@ allowed-package-relationships:
     requests,
     requests_oauthlib,
     tinkerforge,
-    typing-extensions,
     urllib3,
     vcrpy,
     checkmk-agents-plugins,  # HACK needed because of sys.path fiddling for mk_jolokia

@@ -19,11 +19,9 @@ from collections.abc import (
 )
 from dataclasses import asdict, dataclass, fields, replace
 from functools import partial
-from typing import Any, Literal
+from typing import Any, assert_never, Literal
 from typing import Mapping as TypingMapping
 from typing import TypedDict, TypeVar
-
-from typing_extensions import assert_never
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -699,7 +697,7 @@ def _scaled_bandwidth_thresholds(
             return scale(thresholds, 1 / unit)
         case "perc":
             return scale(thresholds, speed / 100) if speed else None
-    assert_never()
+    assert_never(thresholds_type)
 
 
 def _finalize_bandwidth_levels(

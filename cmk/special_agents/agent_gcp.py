@@ -11,9 +11,8 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
 from types import TracebackType
-from typing import Any, Protocol
+from typing import Any, assert_never, Protocol
 
-import typing_extensions
 from google.api_core.exceptions import PermissionDenied, Unauthenticated
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation as gAggregation
@@ -376,7 +375,7 @@ def gcp_serializer(sections: Iterable[Section]) -> None:
         elif isinstance(section, HostLabelSection):
             _label_serializer(section)
         else:
-            typing_extensions.assert_never(section)
+            assert_never(section)
 
 
 ###########

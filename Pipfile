@@ -54,7 +54,7 @@ pipfile = "*" # for generating import names during int tests
 networkx = "*" # needed for py-import-cycles
 py-import-cycles = "*"  # used in tests/Makefile
 telnetlib3 = "*"  # used by Windows Agent tests
-schemathesis = "*"  # used for openapi tests
+schemathesis = "<3.18"  # used for openapi tests
 httpx = "*"  # used by agent receiver tests
 ruff = "*"
 types-beautifulsoup4 = "*"  # used for type checking
@@ -89,7 +89,6 @@ types-s3transfer = "*"  # used for type checking
 types-setuptools = "*"  # used for type checking
 types-simplejson = "*"  # used for type checking
 types-six = "*"  # used for type checking
-types-typing-extensions = "*"  # used for type checking
 types-urllib3 = "*"  # used for type checking
 botocore-stubs = "==1.29.105"  # used for type checking, keep version in sync with botocore
 boto3-stubs = "==1.26.105"  # used for type checking, keep version in sync with boto3
@@ -175,7 +174,6 @@ marshmallow = "==3.19.0"  # direct dependency
 marshmallow-oneofschema = "==3.0.1"  # direct dependency
 mypy-extensions = "==1.0.0" # direct dependency, NOTE: This should really be unpinned, because it must work with the unpinned mypy version! Otherwise e.g. the mypy LSP integration can break silently etc. But we have a silly test enforcing the pinning here... :-P * * *
 apispec-oneofschema = "==3.0.0"  # direct dependency
-typing-extensions = "==4.5.0"   # required by pydantic
 pydantic = "==1.10.7"
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
 python-active-directory = "==2.0.1"

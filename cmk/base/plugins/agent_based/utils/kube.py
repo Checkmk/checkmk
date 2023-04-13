@@ -6,6 +6,7 @@
 import enum
 import time
 from typing import (
+    assert_never,
     Callable,
     Literal,
     Mapping,
@@ -19,7 +20,6 @@ from typing import (
 )
 
 from pydantic import BaseModel, Field
-from typing_extensions import assert_never
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (

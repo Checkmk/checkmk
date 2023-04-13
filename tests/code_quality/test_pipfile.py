@@ -23,7 +23,7 @@ from tests.testlib.utils import is_enterprise_repo
 
 IGNORED_LIBS = {"cmk", "livestatus", "mk_jolokia", "cmc_proto"}  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
-IGNORED_LIBS |= {"__future__", "typing_extensions"}  # other builtin stuff
+IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 BUILD_DIRS = {repo_path() / "agent-receiver/build"}
 
@@ -277,7 +277,6 @@ CEE_UNUSED_PACKAGES = [
     "setuptools-scm",
     "snmpsim",
     "tenacity",
-    "typing-extensions",
     "websocket-client",
     "wrapt",
     "yarl",

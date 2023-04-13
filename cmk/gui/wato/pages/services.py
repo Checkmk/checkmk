@@ -17,6 +17,7 @@ from cmk.utils.check_utils import worst_service_state
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.html import get_html_state_marker
+from cmk.utils.labels import HostLabelValueDict
 from cmk.utils.site import omd_site
 
 from cmk.automations.results import CheckPreviewEntry
@@ -585,8 +586,8 @@ class DiscoveryPageRenderer:
         table,
         discovery_result: DiscoveryResult,
     ) -> None:
-        active_host_labels: dict[str, dict[str, str]] = {}
-        changed_host_labels: dict[str, dict[str, str]] = {}
+        active_host_labels: dict[str, HostLabelValueDict] = {}
+        changed_host_labels: dict[str, HostLabelValueDict] = {}
 
         for label_id, label in discovery_result.host_labels.items():
             # For visualization of the changed host labels the old value and the new value

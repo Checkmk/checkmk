@@ -557,13 +557,13 @@ section_df() {
         excludefs="${excludefs} -x zfs"
     fi
 
-    echo '<<<df>>>'
+    echo '<<<df_v2>>>'
     # We really *need* word splitting below!
     # shellcheck disable=SC2086
     df -PTlk ${excludefs} | sed 1d
 
     # df inodes information
-    echo '<<<df>>>'
+    echo '<<<df_v2>>>'
     echo '[df_inodes_start]'
     # We really *need* word splitting below!
     # shellcheck disable=SC2086
@@ -572,7 +572,7 @@ section_df() {
 
     if inpath lsblk; then
         echo "[df_lsblk_start]"
-        lsblk --list --json --paths --output NAME,UUID
+        lsblk --list --paths --output NAME,UUID
         echo "[df_lsblk_end]"
     fi
 }

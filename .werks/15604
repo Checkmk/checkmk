@@ -1,0 +1,11 @@
+Title: check_mk_agent.linux: Extend support to old lsblk versions
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1681377171
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0b4
+

@@ -365,6 +365,6 @@ class HostLabelValueDict(TypedDict):
     plugin_name: Optional[str]
 
 
-DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
+DiscoveredHostLabelsDict = Mapping[str, HostLabelValueDict]
 
 HTTPMethod = Literal["get", "put", "post", "delete"]

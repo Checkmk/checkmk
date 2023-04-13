@@ -25,6 +25,7 @@ from typing import (
 import cmk.utils.render
 from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.defines import short_service_state_name
+from cmk.utils.labels import HostLabelValueDict
 from cmk.utils.python_printer import PythonPrinter
 from cmk.utils.site import omd_site
 
@@ -554,8 +555,8 @@ class DiscoveryPageRenderer:
         table,
         discovery_result: DiscoveryResult,
     ) -> None:
-        active_host_labels: Dict[str, Dict[str, str]] = {}
-        changed_host_labels: Dict[str, Dict[str, str]] = {}
+        active_host_labels: Dict[str, HostLabelValueDict] = {}
+        changed_host_labels: Dict[str, HostLabelValueDict] = {}
 
         for label_id, label in discovery_result.host_labels.items():
             # For visualization of the changed host labels the old value and the new value

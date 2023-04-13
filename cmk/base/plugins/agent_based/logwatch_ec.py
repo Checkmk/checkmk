@@ -48,15 +48,21 @@ from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
     host_name,
     service_extra_conf,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_value_store,
+    Metric,
+    register,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.utils import logwatch
 
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogForwarderUnixSocket,
     SyslogMessage,
 )
-
-from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import logwatch
 
 ClusterSection = Dict[Optional[str], logwatch.Section]
 _MAX_SPOOL_SIZE = 1024**2
@@ -65,6 +71,7 @@ CHECK_DEFAULT_PARAMETERS = {
     "facility": 17,  # default to "local1"
     "method": "",  # local site
     "monitor_logfilelist": False,
+    "monitor_logfile_access_state": 2,
 }
 
 
@@ -233,7 +240,13 @@ def discover_logwatch_ec_common(
         return
 
     single_log_params = {}
-    for key in ["method", "facility", "monitor_logfilelist", "logwatch_reclassify"]:
+    for key in [
+        "method",
+        "facility",
+        "monitor_logfilelist",
+        "monitor_logfile_access_state",
+        "logwatch_reclassify",
+    ]:
         if key in merged_rules:
             single_log_params[key] = merged_rules[key]
     for log in forwarded_logs:
@@ -293,6 +306,12 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         ) or not logwatch.ec_forwarding_enabled(params, item):
             return
         used_logfiles = [item]
+
+        yield from logwatch.check_unreadable_files(
+            logwatch.get_unreadable_logfiles(item, parsed),
+            State(params["monitor_logfile_access_state"]),
+        )
+
     else:
         # Filter logfiles if some should be excluded
         used_logfiles = sorted(
@@ -303,6 +322,12 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
                 if logwatch.ec_forwarding_enabled(params, name)
             }
         )
+
+        for logfile in used_logfiles:
+            yield from logwatch.check_unreadable_files(
+                logwatch.get_unreadable_logfiles(logfile, parsed),
+                State(params["monitor_logfile_access_state"]),
+            )
 
     # Check if the number of expected files matches the actual one
     if params["monitor_logfilelist"]:

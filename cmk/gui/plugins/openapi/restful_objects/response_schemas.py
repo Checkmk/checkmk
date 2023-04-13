@@ -517,14 +517,6 @@ class DomainObjectCollection(Linkable):
     extensions = fields.Dict(description="Additional attributes alongside the collection.")
 
 
-class LinkedValueDomainObjectCollection(DomainObject):
-    value: fields.Field = fields.Nested(
-        LinkSchema,
-        description="The collection itself, as links. Each entry in here is part of the collection.",
-        many=True,
-    )
-
-
 class HostConfigCollection(DomainObjectCollection):
     domainType = fields.Constant(
         "host_config",
@@ -1084,4 +1076,58 @@ class AgentCollection(DomainObjectCollection):
     value = fields.List(
         fields.Nested(AgentObject),
         description="A list of agent objects.",
+    )
+
+
+class ContactGroupObject(DomainObject):
+    domainType = fields.Constant(
+        "contact_group_config",
+        description="The domain type of the object.",
+    )
+
+
+class ContactGroupCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "contact_group_config",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(ContactGroupObject),
+        description="A list of contact group objects.",
+    )
+
+
+class HostGroupObject(DomainObject):
+    domainType = fields.Constant(
+        "host_group_config",
+        description="The domain type of the object.",
+    )
+
+
+class HostGroupCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "host_group_config",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(HostGroupObject),
+        description="A list of host group objects.",
+    )
+
+
+class ServiceGroupObject(DomainObject):
+    domainType = fields.Constant(
+        "service_group_config",
+        description="The domain type of the object.",
+    )
+
+
+class ServiceGroupCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "service_group_config",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(ServiceGroupObject),
+        description="A list of service group objects.",
     )

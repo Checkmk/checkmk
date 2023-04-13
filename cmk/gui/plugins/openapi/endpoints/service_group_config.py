@@ -87,7 +87,7 @@ def create(params: Mapping[str, Any]) -> Response:
     "cmk/bulk_create",
     method="post",
     request_schema=request_schemas.BulkInputServiceGroup,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.ServiceGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_create(params: Mapping[str, Any]) -> Response:
@@ -111,7 +111,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("service_group_config"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.LinkedValueDomainObjectCollection,
+    response_schema=response_schemas.ServiceGroupCollection,
     permissions_required=PERMISSIONS,
 )
 def list_groups(params: Mapping[str, Any]) -> Response:
@@ -231,7 +231,7 @@ def update(params: Mapping[str, Any]) -> Response:
     "cmk/bulk_update",
     method="put",
     request_schema=request_schemas.BulkUpdateServiceGroup,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.ServiceGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_update(params: Mapping[str, Any]) -> Response:

@@ -18,8 +18,9 @@ from typing import Any, assert_never, Literal, NamedTuple, TypedDict, TypeVar
 from mypy_extensions import Arg, NamedArg
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.labels import HostLabelValueDict
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.type_defs import HostOrServiceConditions, Item
+from cmk.utils.type_defs import HostName, HostOrServiceConditions, Item
 
 from cmk.automations.results import (
     CheckPreviewEntry,
@@ -131,10 +132,10 @@ class DiscoveryResult(NamedTuple):
     job_status: dict
     check_table_created: int
     check_table: Sequence[CheckPreviewEntry]
-    host_labels: dict
-    new_labels: dict
-    vanished_labels: dict
-    changed_labels: dict
+    host_labels: Mapping[str, HostLabelValueDict]
+    new_labels: Mapping[str, HostLabelValueDict]
+    vanished_labels: Mapping[str, HostLabelValueDict]
+    changed_labels: Mapping[str, HostLabelValueDict]
     sources: Mapping[str, tuple[int, str]]
 
     def serialize(self) -> str:
@@ -512,7 +513,7 @@ def perform_fix_all(
     """
     Handle fix all ('Accept All' on UI) discovery action
     """
-    _perform_update_host_labels(host, discovery_result.host_labels)
+    _perform_update_host_labels({host.name(): discovery_result.host_labels})
     Discovery(
         host,
         discovery_options,
@@ -534,7 +535,7 @@ def perform_host_label_discovery(
     host: CREHost,
 ) -> DiscoveryResult:
     """Handle update host labels discovery action"""
-    _perform_update_host_labels(host, discovery_result.host_labels)
+    _perform_update_host_labels({host.name(): discovery_result.host_labels})
     discovery_result = get_check_table(
         StartDiscoveryRequest(host, host.folder(), discovery_options)
     )
@@ -639,22 +640,28 @@ def initial_discovery_result(
     )
 
 
-def _perform_update_host_labels(host, host_labels):
-    message = _("Updated discovered host labels of '%s' with %d labels") % (
-        host.name(),
-        len(host_labels),
-    )
-    _changes.add_service_change(
-        "update-host-labels",
-        message,
-        host.object_ref(),
-        host.site_id(),
-    )
-    update_host_labels(
-        host.site_id(),
-        host.name(),
-        host_labels,
-    )
+def _perform_update_host_labels(
+    labels_by_nodes: Mapping[HostName, Mapping[str, HostLabelValueDict]]
+) -> None:
+    for host_name, host_labels in labels_by_nodes.items():
+        if (host := CREHost.host(host_name)) is None:
+            raise ValueError(f"no such host: {host_name!r}")
+
+        message = _("Updated discovered host labels of '%s' with %d labels") % (
+            host_name,
+            len(host_labels),
+        )
+        _changes.add_service_change(
+            "update-host-labels",
+            message,
+            host.object_ref(),
+            host.site_id(),
+        )
+        update_host_labels(
+            host.site_id(),
+            host.name(),
+            host_labels,
+        )
 
 
 def _apply_state_change(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches

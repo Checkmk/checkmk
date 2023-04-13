@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable
-from typing import Mapping, NotRequired, TypedDict
+from collections.abc import Callable, Iterable, Mapping
+from typing import NotRequired, TypedDict
 
 from cmk.base.api.agent_based.checking_classes import Service
 

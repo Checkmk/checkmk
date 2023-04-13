@@ -8,7 +8,7 @@ These are meant to be exposed in the API
 """
 import math
 import time
-from typing import Iterable, Optional, Tuple
+from collections.abc import Iterable
 
 _DATE_FORMAT = "%b %d %Y"
 
@@ -35,7 +35,7 @@ _SIZE_PREFIXES_IEC = _SIZE_PREFIXES_SI[:]
 _SIZE_PREFIXES_IEC[1] = "K"
 
 
-def date(epoch: Optional[float]) -> str:
+def date(epoch: float | None) -> str:
     """Render seconds since epoch as date
 
     Example:
@@ -51,7 +51,7 @@ def date(epoch: Optional[float]) -> str:
     return time.strftime(_DATE_FORMAT, time.localtime(float(epoch)))
 
 
-def datetime(epoch: Optional[float]) -> str:
+def datetime(epoch: float | None) -> str:
     """Render seconds since epoch as date and time
 
     Example:
@@ -80,7 +80,7 @@ def _gen_timespan_chunks(seconds: float, nchunks: int) -> Iterable[str]:
     for unit, scale in _TIME_UNITS[start : start + nchunks]:
         last_chunk = unit.endswith("seconds")
         value = (round if last_chunk else int)(seconds / scale)  # type: ignore[operator]
-        yield "%.0f %s" % (value, unit if value != 1 else unit[:-1])
+        yield f"{value:.0f} {unit if value != 1 else unit[:-1]}"
         if last_chunk:
             break
         seconds %= scale
@@ -124,7 +124,7 @@ def _digits_left(value: float) -> int:
         return 1
 
 
-def _auto_scale(value: float, use_si_units: bool, add_bytes_prefix: bool = True) -> Tuple[str, str]:
+def _auto_scale(value: float, use_si_units: bool, add_bytes_prefix: bool = True) -> tuple[str, str]:
     if use_si_units:
         base = 1000
         size_prefixes = _SIZE_PREFIXES_SI
@@ -164,7 +164,7 @@ def disksize(bytes_: float) -> str:
       '1.02 kB'
     """
     value_str, unit = _auto_scale(float(bytes_), use_si_units=True)
-    return "%s %s" % (value_str if unit != "B" else value_str.split(".")[0], unit)
+    return "{} {}".format(value_str if unit != "B" else value_str.split(".")[0], unit)
 
 
 def bytes(bytes_: float) -> str:  # pylint: disable=redefined-builtin
@@ -175,7 +175,7 @@ def bytes(bytes_: float) -> str:  # pylint: disable=redefined-builtin
       '1.00 MiB'
     """
     value_str, unit = _auto_scale(float(bytes_), use_si_units=False)
-    return "%s %s" % (value_str if unit != "B" else value_str.split(".")[0], unit)
+    return "{} {}".format(value_str if unit != "B" else value_str.split(".")[0], unit)
 
 
 def filesize(bytes_: float) -> str:
@@ -208,7 +208,7 @@ def nicspeed(octets_per_sec: float) -> str:
     value_str, unit = _auto_scale(float(octets_per_sec) * 8, use_si_units=True)
     if "." in value_str:
         value_str = value_str.rstrip("0").rstrip(".")
-    return "%s %sit/s" % (value_str, unit)
+    return f"{value_str} {unit}it/s"
 
 
 def iobandwidth(bytes_: float) -> str:

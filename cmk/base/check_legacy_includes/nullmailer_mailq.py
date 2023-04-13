@@ -27,7 +27,7 @@ def parse_nullmailer_mailq(info):
     return [Queue(size=int(line[0]), length=int(line[1]), name=name(line)) for line in info]
 
 
-def check_single_queue(queue: Queue, levels_length: typing.Tuple[int, int]) -> Iterable[tuple]:
+def check_single_queue(queue: Queue, levels_length: tuple[int, int]) -> Iterable[tuple]:
     make_metric = queue.name == "deferred"
 
     yield check_levels(

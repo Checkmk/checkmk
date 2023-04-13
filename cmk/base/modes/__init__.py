@@ -33,7 +33,7 @@ class Modes:
         self._modes: list[Mode] = []
         self._general_options: list[Option] = []
 
-    def register(self, mode: "Mode") -> None:
+    def register(self, mode: Mode) -> None:
         self._modes.append(mode)
 
         self._mode_map[mode.long_option] = mode
@@ -68,7 +68,7 @@ class Modes:
 
         return handler(*handler_args)
 
-    def _get(self, opt: str) -> "Mode":
+    def _get(self, opt: str) -> Mode:
         opt_name = self._strip_dashes(opt)
         return self._mode_map[opt_name]
 
@@ -79,7 +79,7 @@ class Modes:
             return opt[1:]
         raise NotImplementedError()
 
-    def get(self, name: OptionName) -> "Mode":
+    def get(self, name: OptionName) -> Mode:
         return self._mode_map[name]
 
     def short_getopt_specs(self) -> str:
@@ -166,7 +166,7 @@ class Modes:
     # GENERAL OPTIONS
     #
 
-    def register_general_option(self, option: "Option") -> None:
+    def register_general_option(self, option: Option) -> None:
         self._general_options.append(option)
 
     def process_general_options(self, all_opts: Options) -> None:

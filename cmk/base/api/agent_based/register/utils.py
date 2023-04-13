@@ -6,19 +6,8 @@ import enum
 import inspect
 import pathlib
 import sys
-from typing import (
-    Callable,
-    Dict,
-    Final,
-    get_args,
-    List,
-    Literal,
-    Mapping,
-    NoReturn,
-    Optional,
-    Sequence,
-    Union,
-)
+from collections.abc import Callable, Mapping, Sequence
+from typing import Final, get_args, Literal, NoReturn
 
 from cmk.utils.paths import agent_based_plugins_dir
 from cmk.utils.type_defs import CheckPluginName, InventoryPluginName, ParsedSectionName, RuleSetName
@@ -57,13 +46,13 @@ def get_validated_plugin_module_name() -> str:
 
 
 def create_subscribed_sections(
-    sections: Optional[List[str]],
-    plugin_name: Union[InventoryPluginName, CheckPluginName],
-) -> List[ParsedSectionName]:
+    sections: list[str] | None,
+    plugin_name: InventoryPluginName | CheckPluginName,
+) -> list[ParsedSectionName]:
     if sections is None:
         return [ParsedSectionName(str(plugin_name))]
     if not isinstance(sections, list):
-        raise TypeError("'sections' must be a list of str, got %r" % (sections,))
+        raise TypeError(f"'sections' must be a list of str, got {sections!r}")
     if not sections:
         raise ValueError("'sections' must not be empty")
     return [ParsedSectionName(n) for n in sections]
@@ -74,8 +63,8 @@ def validate_function_arguments(
     type_label: TypeLabel,
     function: Callable,
     has_item: bool,
-    default_params: Optional[ParametersTypeAlias],
-    sections: List[ParsedSectionName],
+    default_params: ParametersTypeAlias | None,
+    sections: list[ParsedSectionName],
 ) -> None:
     """Validate the functions signature and type"""
     if not inspect.isgeneratorfunction(function):
@@ -197,18 +186,16 @@ def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
 
 def validate_default_parameters(
     params_type: Literal["check", "discovery", "host_label", "inventory"],
-    ruleset_name: Optional[str],
-    default_parameters: Optional[ParametersTypeAlias],
+    ruleset_name: str | None,
+    default_parameters: ParametersTypeAlias | None,
 ) -> None:
     if default_parameters is None:
         if ruleset_name is None:
             return
-        raise TypeError(
-            "missing default %s parameters for ruleset %s" % (params_type, ruleset_name)
-        )
+        raise TypeError(f"missing default {params_type} parameters for ruleset {ruleset_name}")
 
     if not isinstance(default_parameters, dict):
-        raise TypeError("default %s parameters must be dict" % (params_type,))
+        raise TypeError(f"default {params_type} parameters must be dict")
 
     if ruleset_name is None and params_type != "check":
         raise TypeError("missing ruleset name for default %s parameters" % (params_type))
@@ -216,7 +203,7 @@ def validate_default_parameters(
 
 def validate_check_ruleset_item_consistency(
     check_plugin: CheckPlugin,
-    check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]],
+    check_plugins_by_ruleset_name: dict[RuleSetName | None, list[CheckPlugin]],
 ) -> None:
     """Validate check plugins sharing a check_ruleset_name have either all or none an item.
 

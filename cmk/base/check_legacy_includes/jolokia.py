@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
-from typing import Any, Callable
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, MutableSequence, Sequence
+from typing import Any
 
 #   .--Parse---------------------------------------------------------------.
 #   |                      ____                                            |

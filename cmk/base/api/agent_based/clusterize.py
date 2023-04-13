@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from cmk.utils.type_defs import state_markers
 
@@ -67,10 +67,10 @@ def make_node_notice_results(
 
     def _nodify(text: str, state: State) -> str:
         """Prepend node name and, if state is forced to OK, append state marker"""
-        node_text = "\n".join("[%s]: %s" % (node_name, line) for line in text.split("\n"))
+        node_text = "\n".join(f"[{node_name}]: {line}" for line in text.split("\n"))
         if not force_ok:
             return node_text
-        return "%s%s" % (node_text.rstrip(), state_markers[int(state)])
+        return f"{node_text.rstrip()}{state_markers[int(state)]}"
 
     for result in results:
         yield Result(

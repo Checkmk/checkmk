@@ -31,9 +31,18 @@ from collections.abc import (
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
-from typing import Any, AnyStr, Final, Literal, NamedTuple, overload, Protocol, TypedDict, Union
-
-from typing_extensions import assert_never
+from typing import (
+    Any,
+    AnyStr,
+    assert_never,
+    Final,
+    Literal,
+    NamedTuple,
+    overload,
+    Protocol,
+    TypedDict,
+    Union,
+)
 
 import cmk.utils
 import cmk.utils.check_utils

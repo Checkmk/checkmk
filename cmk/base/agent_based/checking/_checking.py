@@ -6,9 +6,9 @@
 
 import itertools
 from collections import defaultdict
-from collections.abc import Container, Iterable, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
-from typing import Callable, DefaultDict, NamedTuple
+from typing import DefaultDict, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths

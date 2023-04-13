@@ -6,15 +6,16 @@
 This module keeps the global state of the ValueStore.
 """
 
+from collections.abc import Generator, MutableMapping
 from contextlib import contextmanager
-from typing import Any, Generator, MutableMapping, Optional
+from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
 from ._utils import ValueStoreManager
 
-_active_host_value_store: Optional[ValueStoreManager] = None
+_active_host_value_store: ValueStoreManager | None = None
 
 
 # Caveat: this function (and its docstring) is part of the public Check API.

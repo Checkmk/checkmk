@@ -5,7 +5,8 @@
 """Classes used by the API for check plugins
 """
 import enum
-from typing import Callable, Iterable, List, NamedTuple, Optional, overload, Sequence, Tuple, Union
+from collections.abc import Callable, Iterable, Sequence
+from typing import NamedTuple, Optional, overload, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.check_utils import unwrap_parameters
@@ -23,7 +24,7 @@ from cmk.checkers.discovery import AutocheckEntry
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, RuleSetTypeName
 
 # we may have 0/None for min/max for instance.
-_OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
+_OptionalPair = Optional[tuple[Optional[float], Optional[float]]]
 
 
 class ServiceLabel(PluginSuppliedLabel):
@@ -66,9 +67,9 @@ class Service(
     def __new__(
         cls,
         *,
-        item: Optional[str] = None,
-        parameters: Optional[ParametersTypeAlias] = None,
-        labels: Optional[Sequence[ServiceLabel]] = None,
+        item: str | None = None,
+        parameters: ParametersTypeAlias | None = None,
+        labels: Sequence[ServiceLabel] | None = None,
     ) -> "Service":
         return super().__new__(
             cls,
@@ -78,28 +79,28 @@ class Service(
         )
 
     @staticmethod
-    def _parse_item(item: Optional[str]) -> Optional[str]:
+    def _parse_item(item: str | None) -> str | None:
         if item is None:
             return None
         if item and isinstance(item, str):
             return item
-        raise TypeError("'item' must be a non empty string or ommited entirely, got %r" % (item,))
+        raise TypeError(f"'item' must be a non empty string or ommited entirely, got {item!r}")
 
     @staticmethod
-    def _parse_parameters(parameters: Optional[ParametersTypeAlias]) -> ParametersTypeAlias:
+    def _parse_parameters(parameters: ParametersTypeAlias | None) -> ParametersTypeAlias:
         if parameters is None:
             return {}
         if isinstance(parameters, dict) and all(isinstance(k, str) for k in parameters):
             return parameters
-        raise TypeError("'parameters' must be dict or None, got %r" % (parameters,))
+        raise TypeError(f"'parameters' must be dict or None, got {parameters!r}")
 
     @staticmethod
-    def _parse_labels(labels: Optional[Sequence[ServiceLabel]]) -> Sequence[ServiceLabel]:
+    def _parse_labels(labels: Sequence[ServiceLabel] | None) -> Sequence[ServiceLabel]:
         if not labels:
             return []
         if isinstance(labels, list) and all(isinstance(l, ServiceLabel) for l in labels):
             return labels
-        raise TypeError("'labels' must be list of ServiceLabels or None, got %r" % (labels,))
+        raise TypeError(f"'labels' must be list of ServiceLabels or None, got {labels!r}")
 
     def __repr__(self) -> str:
         args = ", ".join(
@@ -203,8 +204,8 @@ class Metric(
         [
             ("name", str),
             ("value", EvalableFloat),
-            ("levels", Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
-            ("boundaries", Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
+            ("levels", tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
+            ("boundaries", tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
         ],
     )
 ):
@@ -236,7 +237,7 @@ class Metric(
         cls._validate_name(name)
 
         if not isinstance(value, (int, float)):
-            raise TypeError("value for metric must be float or int, got %r" % (value,))
+            raise TypeError(f"value for metric must be float or int, got {value!r}")
 
         return super().__new__(
             cls,
@@ -258,7 +259,7 @@ class Metric(
             raise TypeError("invalid character(s) in metric name: %r" % offenders)
 
     @staticmethod
-    def _sanitize_single_value(field: str, value: Optional[float]) -> Optional[EvalableFloat]:
+    def _sanitize_single_value(field: str, value: float | None) -> EvalableFloat | None:
         if value is None:
             return None
         if isinstance(value, (int, float)):
@@ -270,7 +271,7 @@ class Metric(
         cls,
         field: str,
         values: _OptionalPair,
-    ) -> Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]:
+    ) -> tuple[EvalableFloat | None, EvalableFloat | None]:
         if values is None:
             return None, None
 
@@ -283,11 +284,9 @@ class Metric(
         )
 
     def __repr__(self) -> str:
-        levels = "" if self.levels == (None, None) else ", levels=%r" % (self.levels,)
-        boundaries = (
-            "" if self.boundaries == (None, None) else ", boundaries=%r" % (self.boundaries,)
-        )
-        return "%s(%r, %r%s%s)" % (
+        levels = "" if self.levels == (None, None) else f", levels={self.levels!r}"
+        boundaries = "" if self.boundaries == (None, None) else f", boundaries={self.boundaries!r}"
+        return "{}({!r}, {!r}{}{})".format(
             self.__class__.__name__,
             self.name,
             self.value,
@@ -356,7 +355,7 @@ class Result(ResultTuple):
         *,
         state: State,
         summary: str,
-        details: Optional[str] = None,
+        details: str | None = None,
     ) -> "Result":
         pass
 
@@ -366,7 +365,7 @@ class Result(ResultTuple):
         *,
         state: State,
         notice: str,
-        details: Optional[str] = None,
+        details: str | None = None,
     ) -> "Result":
         pass
 
@@ -395,10 +394,10 @@ class Result(ResultTuple):
 def _create_result_fields(
     *,
     state: State,
-    summary: Optional[str] = None,
-    notice: Optional[str] = None,
-    details: Optional[str] = None,
-) -> Tuple[State, str, str]:
+    summary: str | None = None,
+    notice: str | None = None,
+    details: str | None = None,
+) -> tuple[State, str, str]:
     if not isinstance(state, State):
         raise TypeError(f"'state' must be a checkmk State constant, got {state}")
 
@@ -469,7 +468,7 @@ class IgnoreResults:
         self._value = value
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (self.__class__.__name__, self._value)
+        return f"{self.__class__.__name__}({self._value!r})"
 
     def __str__(self) -> str:
         return self._value if isinstance(self._value, str) else repr(self._value)
@@ -515,14 +514,14 @@ def consume_check_results(
 
 class CheckPlugin(NamedTuple):
     name: CheckPluginName
-    sections: List[ParsedSectionName]
+    sections: list[ParsedSectionName]
     service_name: str
     discovery_function: DiscoveryFunction
-    discovery_default_parameters: Optional[ParametersTypeAlias]
-    discovery_ruleset_name: Optional[RuleSetName]
+    discovery_default_parameters: ParametersTypeAlias | None
+    discovery_ruleset_name: RuleSetName | None
     discovery_ruleset_type: RuleSetTypeName
     check_function: CheckFunction
-    check_default_parameters: Optional[ParametersTypeAlias]
-    check_ruleset_name: Optional[RuleSetName]
-    cluster_check_function: Optional[CheckFunction]
-    module: Optional[str]  # not available for auto migrated plugins.
+    check_default_parameters: ParametersTypeAlias | None
+    check_ruleset_name: RuleSetName | None
+    cluster_check_function: CheckFunction | None
+    module: str | None  # not available for auto migrated plugins.

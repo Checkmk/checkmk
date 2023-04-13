@@ -8,8 +8,9 @@ import copy
 import functools
 import itertools
 from collections import defaultdict
+from collections.abc import Callable, Generator, Iterable
 from contextlib import suppress
-from typing import Any, Callable, Dict, Generator, Iterable, List, Optional, Tuple, Union
+from typing import Any
 
 from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_parameters
 
@@ -121,7 +122,7 @@ def _create_check_function(name: str, check_info_element: CheckInfoElement) -> C
     """Create an API compliant check function"""
     service_descr = check_info_element["service_description"]
     if not isinstance(service_descr, str):
-        raise ValueError("[%s]: invalid service description: %r" % (name, service_descr))
+        raise ValueError(f"[{name}]: invalid service description: {service_descr!r}")
 
     # 1) ensure we have the correct signature
     requires_item = "%s" in service_descr
@@ -134,7 +135,7 @@ def _create_check_function(name: str, check_info_element: CheckInfoElement) -> C
     @functools.wraps(sig_function)
     def check_result_generator(*args, **kwargs) -> CheckResult:  # type: ignore[no-untyped-def]
         assert not args, "pass arguments as keywords to check function"
-        assert "params" in kwargs, "'params' is missing in kwargs: %r" % (kwargs,)
+        assert "params" in kwargs, f"'params' is missing in kwargs: {kwargs!r}"
         parameters = kwargs["params"]
         if isinstance(parameters, Parameters):
             # In the new API check_functions will be passed an immutable mapping
@@ -209,7 +210,7 @@ def _create_new_results_with_details(
         yield from _create_new_metric(metrics)
 
 
-def _get_float(raw_value: Any) -> Optional[float]:
+def _get_float(raw_value: Any) -> float | None:
     """Try to convert to float
 
     >>> _get_float("12.3s")
@@ -232,14 +233,14 @@ def _get_float(raw_value: Any) -> Optional[float]:
 def _create_new_result(
     legacy_state: int,
     legacy_text: str,
-    legacy_metrics: Union[Tuple, List] = (),
+    legacy_metrics: tuple | list = (),
 ) -> CheckResult:
     if legacy_state or legacy_text:  # skip "Null"-Result
         yield Result(state=State(legacy_state), summary=legacy_text.strip())
     yield from _create_new_metric(legacy_metrics)
 
 
-def _create_new_metric(legacy_metrics: Union[tuple, list] = ()) -> Generator[Metric, None, None]:
+def _create_new_metric(legacy_metrics: tuple | list = ()) -> Generator[Metric, None, None]:
     for metric in legacy_metrics:
         if len(metric) < 2:
             continue
@@ -274,7 +275,7 @@ def _create_signature_check_function(
 
 def _create_wrapped_parameters(
     check_info_element: CheckInfoElement,
-    factory_settings: Dict[str, Dict],
+    factory_settings: dict[str, dict],
 ) -> ParametersTypeAlias:
     """compute default parameters and wrap them in a dictionary"""
     if (params_variable_name := check_info_element.get("default_levels_variable")) is None:

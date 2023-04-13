@@ -16,10 +16,10 @@ from __future__ import annotations
 import contextlib
 import itertools
 import time
-from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Literal
 
 import cmk.utils.debug
 import cmk.utils.paths

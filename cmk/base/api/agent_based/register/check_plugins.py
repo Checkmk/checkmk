@@ -5,7 +5,8 @@
 """Background tools required to register a check plugin
 """
 import functools
-from typing import Any, Callable, Generator, List, Optional
+from collections.abc import Callable, Generator
+from typing import Any
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
@@ -33,7 +34,7 @@ MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
 def _validate_service_name(plugin_name: CheckPluginName, service_name: str) -> None:
     if not isinstance(service_name, str):
-        raise TypeError("service_name must be str, got %r" % (service_name,))
+        raise TypeError(f"service_name must be str, got {service_name!r}")
     if not service_name:
         raise ValueError("service_name must not be empty")
     if service_name.count(ITEM_VARIABLE) not in (0, 1):
@@ -101,17 +102,17 @@ def _filter_check(
 def _validate_kwargs(
     *,
     plugin_name: CheckPluginName,
-    subscribed_sections: List[ParsedSectionName],
+    subscribed_sections: list[ParsedSectionName],
     service_name: str,
     requires_item: bool,
     discovery_function: Callable,
-    discovery_default_parameters: Optional[ParametersTypeAlias],
-    discovery_ruleset_name: Optional[str],
+    discovery_default_parameters: ParametersTypeAlias | None,
+    discovery_ruleset_name: str | None,
     discovery_ruleset_type: RuleSetType,
     check_function: Callable,
-    check_default_parameters: Optional[ParametersTypeAlias],
-    check_ruleset_name: Optional[str],
-    cluster_check_function: Optional[Callable],
+    check_default_parameters: ParametersTypeAlias | None,
+    check_ruleset_name: str | None,
+    cluster_check_function: Callable | None,
 ) -> None:
     _validate_service_name(plugin_name, service_name)
 
@@ -158,17 +159,17 @@ def _validate_kwargs(
 def create_check_plugin(
     *,
     name: str,
-    sections: Optional[List[str]] = None,
+    sections: list[str] | None = None,
     service_name: str,
     discovery_function: Callable,
-    discovery_default_parameters: Optional[ParametersTypeAlias] = None,
-    discovery_ruleset_name: Optional[str] = None,
+    discovery_default_parameters: ParametersTypeAlias | None = None,
+    discovery_ruleset_name: str | None = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: Callable,
-    check_default_parameters: Optional[ParametersTypeAlias] = None,
-    check_ruleset_name: Optional[str] = None,
-    cluster_check_function: Optional[Callable] = None,
-    module: Optional[str] = None,
+    check_default_parameters: ParametersTypeAlias | None = None,
+    check_ruleset_name: str | None = None,
+    cluster_check_function: Callable | None = None,
+    module: str | None = None,
     validate_item: bool = True,
     validate_kwargs: bool = True,
 ) -> CheckPlugin:
@@ -228,7 +229,7 @@ def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
     return CheckPlugin(
         original_plugin.name.create_management_name(),
         original_plugin.sections,
-        "%s%s" % (MANAGEMENT_DESCR_PREFIX, original_plugin.service_name),
+        f"{MANAGEMENT_DESCR_PREFIX}{original_plugin.service_name}",
         original_plugin.discovery_function,
         original_plugin.discovery_default_parameters,
         original_plugin.discovery_ruleset_name,

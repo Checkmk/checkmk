@@ -38,7 +38,7 @@ def compress_history_file(  # pylint: disable=too-many-branches
     known_services: dict[str, set[str | None]] = {}
     machine_state = "START"
 
-    with open(output_path, "wt") as output:
+    with open(output_path, "w") as output:
         with open(input_path) as opened_file:
             for line in opened_file:
                 skip_this_line = False

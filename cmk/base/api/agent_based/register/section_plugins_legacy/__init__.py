@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-style section based on config.check_info
 """
-from typing import Any, Callable, List, Optional, Tuple
+from collections.abc import Callable
+from typing import Any, List, Optional, Tuple
 
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
@@ -21,7 +22,7 @@ from cmk.base.api.agent_based.type_defs import (
 
 from ..utils_legacy import CheckInfoElement
 
-LayoutRecoverSuboids = List[Tuple[str]]
+LayoutRecoverSuboids = list[tuple[str]]
 
 
 def get_section_name(check_plugin_name: str) -> str:
@@ -29,7 +30,7 @@ def get_section_name(check_plugin_name: str) -> str:
 
 
 def _create_agent_parse_function(
-    original_parse_function: Optional[Callable],
+    original_parse_function: Callable | None,
 ) -> AgentParseFunction:
     """Wrap parse function to comply to signature requirement"""
 
@@ -45,7 +46,7 @@ def _create_agent_parse_function(
     return parse_function
 
 
-def _create_layout_recover_function(suboids_list: List[Optional[LayoutRecoverSuboids]]) -> Callable:
+def _create_layout_recover_function(suboids_list: list[LayoutRecoverSuboids | None]) -> Callable:
     """Get a function that recovers the legacy data layout
 
     By adding the created elements to one long list,
@@ -64,14 +65,14 @@ def _create_layout_recover_function(suboids_list: List[Optional[LayoutRecoverSub
             else:
                 new_table = []
                 for suboid, subtable in zip(suboids, string_table[begin:end]):
-                    new_table += [["%s.%s" % (suboid, row[0])] + row[1:] for row in subtable]
+                    new_table += [[f"{suboid}.{row[0]}"] + row[1:] for row in subtable]
             reformatted.append(new_table)
         return reformatted
 
     return layout_recover_function
 
 
-def _extract_conmmon_part(oids: list) -> Tuple[str, list]:
+def _extract_conmmon_part(oids: list) -> tuple[str, list]:
     common = ""
 
     def _get_head(oids):
@@ -88,7 +89,7 @@ def _extract_conmmon_part(oids: list) -> Tuple[str, list]:
         "." in str(o) and str(o).split(".", 1)[0] == head for o in oids if not isinstance(o, int)
     ):
         oids = [o if isinstance(o, int) else type(o)(str(o).split(".", 1)[1]) for o in oids]
-        common = "%s.%s" % (common, head)
+        common = f"{common}.{head}"
         head = _get_head(oids)
 
     return common.strip("."), oids
@@ -96,7 +97,7 @@ def _extract_conmmon_part(oids: list) -> Tuple[str, list]:
 
 def _create_snmp_trees_from_tuple(
     snmp_info_element: tuple,
-) -> Tuple[List[SNMPTree], Optional[LayoutRecoverSuboids]]:
+) -> tuple[list[SNMPTree], LayoutRecoverSuboids | None]:
     """Create a SNMPTrees from (part of) a legacy definition
 
     Legacy definition *elements* can be 2-tuple or 3-tuple.
@@ -112,7 +113,7 @@ def _create_snmp_trees_from_tuple(
     # "Triple"-case: recursively return a list
     if len(snmp_info_element) == 3:
         tmp_base, suboids, oids = snmp_info_element
-        base_list = [("%s.%s" % (tmp_base, str(i).strip("."))) for i in suboids]
+        base_list = [("{}.{}".format(tmp_base, str(i).strip("."))) for i in suboids]
         return (
             sum((_create_snmp_trees_from_tuple((base, oids))[0] for base in base_list), []),
             suboids,
@@ -123,18 +124,16 @@ def _create_snmp_trees_from_tuple(
 
     if "" in oids:  # this fixes 19 cases
         base, tail = str(base).rsplit(".", 1)
-        oids = [
-            o if isinstance(o, int) else type(o)(("%s.%s" % (tail, o)).strip(".")) for o in oids
-        ]
+        oids = [o if isinstance(o, int) else type(o)((f"{tail}.{o}").strip(".")) for o in oids]
     else:  # this fixes 21 cases
         common, oids = _extract_conmmon_part(oids)
         if common:
-            base = "%s.%s" % (base, common)
+            base = f"{base}.{common}"
 
     return [SNMPTree(base=base, oids=oids)], None
 
 
-def _create_snmp_trees(snmp_info: Any) -> Tuple[List[SNMPTree], Callable]:
+def _create_snmp_trees(snmp_info: Any) -> tuple[list[SNMPTree], Callable]:
     """Create SNMPTrees from legacy definition
 
     Legacy definitions can be 2-tuple, 3-tuple, or a list
@@ -153,7 +152,7 @@ def _create_snmp_trees(snmp_info: Any) -> Tuple[List[SNMPTree], Callable]:
     assert isinstance(snmp_info, list)
 
     trees_and_suboids = [_create_snmp_trees_from_tuple(element) for element in snmp_info]
-    trees: List[SNMPTree] = sum((tree for tree, _suboids in trees_and_suboids), [])
+    trees: list[SNMPTree] = sum((tree for tree, _suboids in trees_and_suboids), [])
     suboids_list = [suboids for _tree, suboids in trees_and_suboids]
 
     layout_recover_function = _create_layout_recover_function(suboids_list)
@@ -162,7 +161,7 @@ def _create_snmp_trees(snmp_info: Any) -> Tuple[List[SNMPTree], Callable]:
 
 
 def _create_snmp_parse_function(
-    original_parse_function: Optional[Callable],
+    original_parse_function: Callable | None,
     recover_layout_function: Callable,
     handle_empty_info: bool,
 ) -> SNMPParseFunction:

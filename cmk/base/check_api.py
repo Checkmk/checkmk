@@ -27,9 +27,9 @@ import functools
 import re  # noqa: F401 # pylint: disable=unused-import
 import socket
 import time
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import suppress
-from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, Union
+from typing import Any, Literal, Union
 
 import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
@@ -81,9 +81,9 @@ from cmk.base.api.agent_based.utils import (  # noqa: F401 # pylint: disable=unu
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]
 _Bound = Union[None, int, float]
-Levels = Tuple  # Has length 2 or 4
+Levels = tuple  # Has length 2 or 4
 
-_MetricTuple = Tuple[
+_MetricTuple = tuple[
     MetricName,
     float,
     Warn,
@@ -92,7 +92,7 @@ _MetricTuple = Tuple[
     _Bound,
 ]
 
-ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[_MetricTuple]]
+ServiceCheckResult = tuple[ServiceState, ServiceDetails, list[_MetricTuple]]
 
 
 def host_name() -> str:
@@ -277,8 +277,8 @@ def _normalize_levels(levels: Levels) -> Levels:
 
 
 def _do_check_levels(
-    value: Union[int, float], levels: Levels, human_readable_func: Callable, unit_info: str
-) -> Tuple[ServiceState, ServiceDetails]:
+    value: int | float, levels: Levels, human_readable_func: Callable, unit_info: str
+) -> tuple[ServiceState, ServiceDetails]:
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
@@ -297,19 +297,19 @@ def _do_check_levels(
 def _levelsinfo_ty(
     ty: str, warn: Warn, crit: Crit, human_readable_func: Callable, unit_info: str
 ) -> str:
-    warn_str = "never" if warn is None else "%s%s" % (human_readable_func(warn), unit_info)
-    crit_str = "never" if crit is None else "%s%s" % (human_readable_func(crit), unit_info)
-    return " (warn/crit %s %s/%s)" % (ty, warn_str, crit_str)
+    warn_str = "never" if warn is None else f"{human_readable_func(warn)}{unit_info}"
+    crit_str = "never" if crit is None else f"{human_readable_func(crit)}{unit_info}"
+    return f" (warn/crit {ty} {warn_str}/{crit_str})"
 
 
 def _build_perfdata(
-    dsname: Union[None, MetricName],
-    value: Union[int, float],
+    dsname: None | MetricName,
+    value: int | float,
     scale_value: Callable,
     levels: Levels,
-    boundaries: Optional[Tuple],
-    ref_value: Union[None, int, float] = None,
-) -> List:
+    boundaries: tuple | None,
+    ref_value: None | int | float = None,
+) -> list:
     if not dsname:
         return []
 
@@ -323,16 +323,16 @@ def _build_perfdata(
 
 
 def check_levels(  # pylint: disable=too-many-branches
-    value: Union[int, float],
-    dsname: Union[None, MetricName],
+    value: int | float,
+    dsname: None | MetricName,
     params: Any,
     unit: str = "",
-    factor: Union[int, float] = 1.0,
-    scale: Union[int, float] = 1.0,
+    factor: int | float = 1.0,
+    scale: int | float = 1.0,
     statemarkers: bool = False,
-    human_readable_func: Optional[Callable] = None,
-    infoname: Optional[str] = None,
-    boundaries: Optional[Tuple] = None,
+    human_readable_func: Callable | None = None,
+    infoname: str | None = None,
+    boundaries: tuple | None = None,
 ) -> ServiceCheckResult:
     """Generic function for checking a value against levels
 
@@ -391,14 +391,14 @@ def check_levels(  # pylint: disable=too-many-branches
     if human_readable_func is None:
         human_readable_func = default_human_readable_func
 
-    def scale_value(v: Union[None, int, float]) -> Union[None, int, float]:
+    def scale_value(v: None | int | float) -> None | int | float:
         if v is None:
             return None
         return v * factor * scale
 
-    infotext = "%s%s" % (human_readable_func(value), unit_info)
+    infotext = f"{human_readable_func(value)}{unit_info}"
     if infoname:
-        infotext = "%s: %s" % (infoname, infotext)
+        infotext = f"{infoname}: {infotext}"
 
     # {}, (), None, (None, None), (None, None, None, None) -> do not check any levels
     if not params or set(params) <= {None}:
@@ -454,7 +454,7 @@ def check_levels(  # pylint: disable=too-many-branches
     return state, infotext, perfdata
 
 
-def passwordstore_get_cmdline(fmt: str, pw: Union[Tuple, str]) -> Union[str, Tuple[str, str, str]]:
+def passwordstore_get_cmdline(fmt: str, pw: tuple | str) -> str | tuple[str, str, str]:
     """Use this to prepare a command line argument for using a password from the
     Check_MK password store or an explicitly configured password."""
     if not isinstance(pw, tuple):
@@ -466,7 +466,7 @@ def passwordstore_get_cmdline(fmt: str, pw: Union[Tuple, str]) -> Union[str, Tup
     return ("store", pw[1], fmt)
 
 
-def get_http_proxy(http_proxy: Tuple[str, str]) -> HTTPProxyConfig:
+def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
     """Returns a proxy config object to be used for HTTP requests
 
     Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
@@ -474,7 +474,7 @@ def get_http_proxy(http_proxy: Tuple[str, str]) -> HTTPProxyConfig:
     return _config.get_http_proxy(http_proxy)
 
 
-def get_agent_data_time() -> Optional[float]:
+def get_agent_data_time() -> float | None:
     """Use this function to get the age of the agent data cache file
     of tcp or snmp hosts or None in case of piggyback data because
     we do not exactly know the latest agent data. Maybe one time
@@ -485,7 +485,7 @@ def get_agent_data_time() -> Optional[float]:
 def _agent_cache_file_age(
     hostname: HostName,
     check_plugin_name: str,
-) -> Optional[float]:
+) -> float | None:
     config_cache = _config.get_config_cache()
     if config_cache.is_cluster(hostname):
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
@@ -499,9 +499,9 @@ def _agent_cache_file_age(
     section_name_str = _cmk_utils.check_utils.section_name_of(check_plugin_name)
     section = _agent_based_register.get_section_plugin(_SectionName(section_name_str))
     if hasattr(section, "trees"):
-        cachefile = "%s/%s.%s" % (_paths.tcp_cache_dir, hostname, section_name_str)
+        cachefile = f"{_paths.tcp_cache_dir}/{hostname}.{section_name_str}"
     else:
-        cachefile = "%s/%s" % (_paths.tcp_cache_dir, hostname)
+        cachefile = f"{_paths.tcp_cache_dir}/{hostname}"
 
     with suppress(FileNotFoundError):
         return _cmk_utils.cachefile_age(cachefile)
@@ -565,12 +565,12 @@ def validate_filter(filter_function: Any) -> Callable:
     if filter_function is None:
         return lambda *entry: entry[0]
     raise ValueError(
-        "Filtering function is not a callable, a {} has been given.".format(type(filter_function))
+        f"Filtering function is not a callable, a {type(filter_function)} has been given."
     )
 
 
 def discover(
-    selector: Optional[Callable] = None, default_params: Union[None, Dict[Any, Any], str] = None
+    selector: Callable | None = None, default_params: None | dict[Any, Any] | str = None
 ) -> Callable:
     """Helper function to assist with service discoveries
 
@@ -634,8 +634,8 @@ def discover(
     def _discovery(filter_function: Callable) -> Callable:
         @functools.wraps(filter_function)
         def discoverer(
-            parsed: Union[Dict[Any, Any], List[Any], Tuple]
-        ) -> Iterable[Tuple[str, Union[Dict[Any, Any], str]]]:
+            parsed: dict[Any, Any] | list[Any] | tuple
+        ) -> Iterable[tuple[str, dict[Any, Any] | str]]:
             params = default_params if isinstance(default_params, (str, dict)) else {}
             if isinstance(parsed, dict):
                 filterer = validate_filter(filter_function)

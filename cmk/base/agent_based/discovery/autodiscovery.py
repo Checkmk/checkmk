@@ -6,9 +6,7 @@
 
 import time
 from collections.abc import Callable, Iterable, Mapping
-from typing import Literal, TypeVar, Union
-
-from typing_extensions import assert_never
+from typing import assert_never, Literal, TypeVar, Union
 
 import cmk.utils.cleanup
 import cmk.utils.debug

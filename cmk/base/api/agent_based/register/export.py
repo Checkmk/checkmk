@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from typing import Callable, List, Optional, overload, Union
+from collections.abc import Callable
+from typing import overload
 
 from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
@@ -46,13 +47,13 @@ __all__ = [
 def agent_section(
     *,
     name: str,
-    parse_function: Optional[AgentParseFunction] = None,
-    parsed_section_name: Optional[str] = None,
-    host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
-    host_label_ruleset_name: Optional[str] = None,
+    parse_function: AgentParseFunction | None = None,
+    parsed_section_name: str | None = None,
+    host_label_function: HostLabelFunction | None = None,
+    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: Optional[List[str]] = None,
+    supersedes: list[str] | None = None,
 ) -> None:
     """Register an agent section to checkmk
 
@@ -122,13 +123,13 @@ def snmp_section(
     name: str,
     detect: SNMPDetectSpecification,
     fetch: SNMPTree,
-    parse_function: Optional[SimpleSNMPParseFunction] = None,
-    parsed_section_name: Optional[str] = None,
-    host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
-    host_label_ruleset_name: Optional[str] = None,
+    parse_function: SimpleSNMPParseFunction | None = None,
+    parsed_section_name: str | None = None,
+    host_label_function: HostLabelFunction | None = None,
+    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: Optional[List[str]] = None,
+    supersedes: list[str] | None = None,
 ) -> None:
     pass
 
@@ -138,14 +139,14 @@ def snmp_section(
     *,
     name: str,
     detect: SNMPDetectSpecification,
-    fetch: List[SNMPTree],
-    parse_function: Optional[SNMPParseFunction] = None,
-    parsed_section_name: Optional[str] = None,
-    host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
-    host_label_ruleset_name: Optional[str] = None,
+    fetch: list[SNMPTree],
+    parse_function: SNMPParseFunction | None = None,
+    parsed_section_name: str | None = None,
+    host_label_function: HostLabelFunction | None = None,
+    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: Optional[List[str]] = None,
+    supersedes: list[str] | None = None,
 ) -> None:
     pass
 
@@ -154,14 +155,14 @@ def snmp_section(
     *,
     name: str,
     detect: SNMPDetectSpecification,
-    fetch: Union[SNMPTree, List[SNMPTree]],
-    parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
-    parsed_section_name: Optional[str] = None,
-    host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
-    host_label_ruleset_name: Optional[str] = None,
+    fetch: SNMPTree | list[SNMPTree],
+    parse_function: SimpleSNMPParseFunction | SNMPParseFunction | None = None,
+    parsed_section_name: str | None = None,
+    host_label_function: HostLabelFunction | None = None,
+    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: Optional[List[str]] = None,
+    supersedes: list[str] | None = None,
 ) -> None:
     """Register an snmp section to checkmk
 
@@ -243,16 +244,16 @@ def snmp_section(
 def check_plugin(
     *,
     name: str,
-    sections: Optional[List[str]] = None,
+    sections: list[str] | None = None,
     service_name: str,
     discovery_function: DiscoveryFunction,
-    discovery_default_parameters: Optional[ParametersTypeAlias] = None,
-    discovery_ruleset_name: Optional[str] = None,
+    discovery_default_parameters: ParametersTypeAlias | None = None,
+    discovery_ruleset_name: str | None = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: CheckFunction,
-    check_default_parameters: Optional[ParametersTypeAlias] = None,
-    check_ruleset_name: Optional[str] = None,
-    cluster_check_function: Optional[Callable] = None,
+    check_default_parameters: ParametersTypeAlias | None = None,
+    check_ruleset_name: str | None = None,
+    cluster_check_function: Callable | None = None,
 ) -> None:
     """Register a check plugin to checkmk.
 
@@ -333,10 +334,10 @@ def check_plugin(
 def inventory_plugin(
     *,
     name: str,
-    sections: Optional[List[str]] = None,
+    sections: list[str] | None = None,
     inventory_function: InventoryFunction,
-    inventory_default_parameters: Optional[ParametersTypeAlias] = None,
-    inventory_ruleset_name: Optional[str] = None,
+    inventory_default_parameters: ParametersTypeAlias | None = None,
+    inventory_ruleset_name: str | None = None,
 ) -> None:
     """Register an inventory plugin to checkmk.
 

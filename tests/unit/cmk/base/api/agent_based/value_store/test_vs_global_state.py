@@ -8,7 +8,9 @@
 from pytest import MonkeyPatch
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import CheckPluginName, ServiceID
+from cmk.utils.type_defs import CheckPluginName
+
+from cmk.checkers.check_table import ServiceID
 
 from cmk.base.api.agent_based.value_store._global_state import (
     get_value_store,

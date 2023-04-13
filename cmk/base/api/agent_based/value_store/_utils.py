@@ -22,7 +22,9 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import logger
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceID
+from cmk.utils.type_defs import CheckPluginName, HostName, Item
+
+from cmk.checkers.check_table import ServiceID
 
 _PluginName = str
 _UserKey = str

@@ -8,9 +8,7 @@ from __future__ import annotations
 import abc
 import string
 from collections.abc import Container
-from typing import Final, NamedTuple, Self
-
-from ._misc import Item
+from typing import Final, Self
 
 __all__ = [
     "ValidatedString",
@@ -19,7 +17,6 @@ __all__ = [
     "RuleSetName",
     "CheckPluginName",
     "InventoryPluginName",
-    "ServiceID",
 ]
 
 
@@ -156,8 +153,3 @@ class InventoryPluginName(ValidatedString):
     @classmethod
     def exceptions(cls) -> Container[str]:
         return super().exceptions()
-
-
-class ServiceID(NamedTuple):
-    name: CheckPluginName
-    item: Item

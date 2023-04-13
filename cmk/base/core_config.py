@@ -32,11 +32,10 @@ from cmk.utils.type_defs import (
     HostName,
     HostsToUpdate,
     Item,
-    ServiceID,
     ServiceName,
 )
 
-from cmk.checkers.check_table import ConfiguredService
+from cmk.checkers.check_table import ConfiguredService, ServiceID
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

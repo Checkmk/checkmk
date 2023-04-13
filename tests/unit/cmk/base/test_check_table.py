@@ -14,15 +14,9 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostName,
-    LegacyCheckParameters,
-    RuleSetName,
-    ServiceID,
-)
+from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters, RuleSetName
 
-from cmk.checkers.check_table import ConfiguredService, FilterMode, HostCheckTable
+from cmk.checkers.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
 from cmk.checkers.discovery import AutocheckEntry
 
 import cmk.base.api.agent_based.register as agent_based_register

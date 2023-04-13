@@ -12,9 +12,9 @@ from typing import Any, NamedTuple
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store import ObjectStore
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceID
+from cmk.utils.type_defs import CheckPluginName, HostName, Item
 
-from cmk.checkers.check_table import LegacyCheckParameters
+from cmk.checkers.check_table import LegacyCheckParameters, ServiceID
 
 __all__ = ["AutocheckServiceWithNodes", "AutocheckEntry", "AutochecksStore"]
 

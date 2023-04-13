@@ -10,7 +10,12 @@ from typing import NamedTuple
 
 from cmk.utils.labels import ServiceLabel
 from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters, ServiceID, ServiceName
+from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters, ServiceName
+
+
+class ServiceID(NamedTuple):
+    name: CheckPluginName
+    item: Item
 
 
 class FilterMode(enum.Enum):

@@ -24,7 +24,6 @@ from cmk.utils.type_defs import (
     HostName,
     RuleSetName,
     SectionName,
-    ServiceID,
 )
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
@@ -33,6 +32,7 @@ from cmk.fetchers import Mode
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers import HostKey, SourceType
+from cmk.checkers.check_table import ServiceID
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
 from cmk.checkers.host_sections import HostSections

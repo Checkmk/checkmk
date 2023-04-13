@@ -24,14 +24,14 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import CheckPluginName, HostName, RuleSetName, SectionName, ServiceID
+from cmk.utils.type_defs import CheckPluginName, HostName, RuleSetName, SectionName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
 from cmk.checkers import PInventoryResult
-from cmk.checkers.check_table import ConfiguredService
+from cmk.checkers.check_table import ConfiguredService, ServiceID
 from cmk.checkers.discovery import AutocheckEntry
 
 import cmk.base.api.agent_based.register as agent_based_register

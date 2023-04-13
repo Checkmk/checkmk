@@ -81,17 +81,35 @@ def _is_default_allowed_import(
     return _is_allowed_import(imported) or _in_component(imported, component)
 
 
+def _allow_default_plus_checkers(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    """`cmk.checkers` is the generic (library) part to the check engine."""
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported, Component("cmk.checkers")),
+        )
+    )
+
+
 def _allow_default_plus_fetchers_and_snmplib(
     *,
     imported: ModuleName,
     component: Component,
 ) -> bool:
     """
-    Allow import of `cmk.fetchers`, `cmk.checkers` and `cmk.snmplib`.
+    Allow import of `cmk.checkers`, `cmk.fetchers` and `cmk.snmplib`.
 
-    The layering is such that `fetchers` and `snmplib` is between
-    `utils` and `base` so that importing `fetchers` in `utils` is
-    wrong but anywhere else is OK.
+    `cmk.fetchers` are concrete fetchers implementations to the check engine.
+    The module shouldn't be required in too many places, always prefer the
+    more abstract `cmk.checkers` or refactor the code so that `cmk.checkers` can
+    be used instead.
+
+    `cmk.snmplib` is part of the SNMP fetcher backend.  The same restrictions apply.
+
     """
     return any(
         (
@@ -133,9 +151,9 @@ def _allow_default_plus_fetchers_checkers_snmplib_and_bakery(
     """
     Allow import of `cmk.checkers`, `cmk.snmplib` and `cmk.cee.bakery`.
 
-    The layering is such that `fetchers`, `snmplib` and `bakery` is between
-    `utils` and `base` so that importing `fetchers` in `utils` is
-    wrong but anywhere else is OK.
+    Warning:
+        Refactor to depend on `cmk.checkers` only.
+
     """
     return any(
         (
@@ -237,7 +255,7 @@ _COMPONENTS = (
     # Namespaces below cmk.base.api.agent_based are not really components,
     # but they (almost) adhere to the same import restrictions,
     # and we want to encourage that
-    (Component("cmk.base.api.agent_based.value_store"), _is_default_allowed_import),
+    (Component("cmk.base.api.agent_based.value_store"), _allow_default_plus_checkers),
     (Component("cmk.base.api.agent_based"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.base.plugins.agent_based.agent_based_api"), _is_allowed_for_agent_based_api),
     (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),

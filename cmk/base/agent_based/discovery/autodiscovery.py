@@ -23,7 +23,6 @@ from cmk.utils.type_defs import (
     HostName,
     Item,
     SectionName,
-    ServiceID,
     ServiceName,
 )
 
@@ -36,6 +35,7 @@ from cmk.checkers import (
     PSectionPlugin,
     SummarizerFunction,
 )
+from cmk.checkers.check_table import ServiceID
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.checkers.sectionparser import (
     filter_out_errors,

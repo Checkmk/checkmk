@@ -100,7 +100,6 @@ from cmk.utils.type_defs import (
     Seconds,
     SectionName,
     ServicegroupName,
-    ServiceID,
     ServiceName,
     TimeperiodName,
 )
@@ -131,6 +130,7 @@ from cmk.checkers.check_table import (
     FilterMode,
     HostCheckTable,
     LegacyCheckParameters,
+    ServiceID,
 )
 from cmk.checkers.discovery import AutocheckServiceWithNodes
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection

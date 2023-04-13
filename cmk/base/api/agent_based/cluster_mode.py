@@ -9,9 +9,10 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
 from typing import Any, Final, NamedTuple, Protocol
 
-from cmk.utils.type_defs import ClusterMode, ServiceID, state_markers
+from cmk.utils.type_defs import ClusterMode, state_markers
 
 from cmk.checkers import PCheckPlugin
+from cmk.checkers.check_table import ServiceID
 
 from cmk.base.api.agent_based.checking_classes import (
     CheckResult,

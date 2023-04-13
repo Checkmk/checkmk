@@ -79,7 +79,6 @@ __all__ = [
     "ServiceAdditionalDetails",
     "ServiceDetails",
     "ServicegroupName",
-    "ServiceID",
     "ServiceName",
     "ServiceState",
     "SNMPDetectBaseType",
@@ -180,7 +179,6 @@ from .pluginname import (
     ParsedSectionName,
     RuleSetName,
     SectionName,
-    ServiceID,
     ValidatedString,
 )
 from .protocol import Deserializer, Serializer

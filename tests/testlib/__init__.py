@@ -407,26 +407,23 @@ class SpecialAgent:
         self.argument_func = config.special_agent_info[self.name[len("agent_") :]]
 
 
-@contextmanager
-def set_timezone(timezone: str) -> Iterator[None]:
-    if "TZ" not in os.environ:
-        tz_set = False
-        old_tz = ""
-    else:
-        tz_set = True
-        old_tz = os.environ["TZ"]
-
-    os.environ["TZ"] = timezone
-    time.tzset()
-
-    yield
-
-    if not tz_set:
+def _set_tz(timezone: str | None) -> str | None:
+    old_tz = os.environ.get("TZ")
+    if timezone is None:
         del os.environ["TZ"]
     else:
-        os.environ["TZ"] = old_tz
-
+        os.environ["TZ"] = timezone
     time.tzset()
+    return old_tz
+
+
+@contextmanager
+def set_timezone(timezone: str) -> Iterator[None]:
+    old_tz = _set_tz(timezone)
+    try:
+        yield
+    finally:
+        _set_tz(old_tz)
 
 
 @contextmanager

@@ -32,15 +32,15 @@ from cmk.utils.man_pages import load_man_page_catalog, ManPageCatalogPath
 
 
 def test_try_update_license_usage(monkeypatch: MonkeyPatch) -> None:
-    def _mock_livestatus(query: str) -> tuple[int, int, int]:
+    def _mock_livestatus(query: str) -> Sequence[Sequence[Any]]:
         if "GET hosts" in query:
-            return 10, 5, 1
-        return 100, 10, 2
+            return [["10", "5", "1"]]
+        return [["100", "10", "2"]]
 
     def _mock_service_livestatus() -> list[list[str]]:
         return [["host", "services"]]
 
-    monkeypatch.setattr(licensing_usage, "_get_stats_from_livestatus", _mock_livestatus)
+    monkeypatch.setattr(licensing_usage, "_get_from_livestatus", _mock_livestatus)
     monkeypatch.setattr(licensing_usage, "_get_services_from_livestatus", _mock_service_livestatus)
     monkeypatch.setattr(
         licensing_usage,
@@ -71,7 +71,7 @@ def test_try_update_license_usage_livestatus_socket_error(
     def _mock_livestatus(query: str) -> tuple[int, int]:
         raise livestatus.MKLivestatusSocketError()
 
-    monkeypatch.setattr(licensing_usage, "_get_stats_from_livestatus", _mock_livestatus)
+    monkeypatch.setattr(licensing_usage, "_get_from_livestatus", _mock_livestatus)
     monkeypatch.setattr(
         licensing_usage,
         "_load_extensions",
@@ -102,7 +102,7 @@ def test_try_update_license_usage_livestatus_not_found_error(
     def _mock_livestatus(query: str) -> tuple[int, int]:
         raise livestatus.MKLivestatusNotFoundError()
 
-    monkeypatch.setattr(licensing_usage, "_get_stats_from_livestatus", _mock_livestatus)
+    monkeypatch.setattr(licensing_usage, "_get_from_livestatus", _mock_livestatus)
     monkeypatch.setattr(
         licensing_usage,
         "_load_extensions",
@@ -130,15 +130,15 @@ def test_try_update_license_usage_livestatus_not_found_error(
 def test_try_update_license_usage_next_run_ts_not_reached(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    def _mock_livestatus(query: str) -> tuple[int, int, int]:
+    def _mock_livestatus(query: str) -> Sequence[Sequence[Any]]:
         if "GET hosts" in query:
-            return 10, 5, 1
-        return 100, 10, 2
+            return [["10", "5", "1"]]
+        return [["100", "10", "2"]]
 
     def _mock_service_livestatus() -> list[list[str]]:
         return [["host", "services"]]
 
-    monkeypatch.setattr(licensing_usage, "_get_stats_from_livestatus", _mock_livestatus)
+    monkeypatch.setattr(licensing_usage, "_get_from_livestatus", _mock_livestatus)
     monkeypatch.setattr(licensing_usage, "_get_services_from_livestatus", _mock_service_livestatus)
     monkeypatch.setattr(
         licensing_usage,

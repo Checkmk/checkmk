@@ -154,68 +154,60 @@ def _create_sample(instance_id: UUID, site_hash: str) -> LicenseUsageSample:
     )
 
 
+def _get_from_livestatus(query: str) -> Sequence[Sequence[Any]]:
+    return livestatus.LocalConnection().query(query)
+
+
 class HostsOrServicesCounter(NamedTuple):
     num: int
     num_shadow: int
     num_excluded: int
 
-
-def _get_from_livestatus(query: str) -> Sequence[Sequence[Any]]:
-    return livestatus.LocalConnection().query(query)
-
-
-def _get_stats_from_livestatus(query: str) -> tuple[int, int, int]:
-    stats = _get_from_livestatus(query)[0]
-    return int(stats[0]), int(stats[1]), int(stats[2])
+    @classmethod
+    def make(cls, livestatus_response: Sequence[Sequence[Any]]) -> HostsOrServicesCounter:
+        stats = livestatus_response[0]
+        return cls(num=int(stats[0]), num_shadow=int(stats[1]), num_excluded=int(stats[2]))
 
 
 def _get_hosts_counter() -> HostsOrServicesCounter:
-    num_hosts, num_hosts_shadow, num_hosts_excluded = _get_stats_from_livestatus(
-        (
-            "GET hosts\n"
-            "Stats: host_check_type != 2\n"
-            "Stats: host_labels != '{label_name}' '{label_value}'\n"
-            "StatsAnd: 2\n"
-            "Stats: check_type = 2\n"
-            "Stats: host_labels = '{label_name}' '{label_value}'\n"
-        ).format(
-            label_name=_LICENSE_LABEL_NAME,
-            label_value=_LICENSE_LABEL_EXCLUDE,
+    return HostsOrServicesCounter.make(
+        _get_from_livestatus(
+            (
+                "GET hosts\n"
+                "Stats: host_check_type != 2\n"
+                "Stats: host_labels != '{label_name}' '{label_value}'\n"
+                "StatsAnd: 2\n"
+                "Stats: check_type = 2\n"
+                "Stats: host_labels = '{label_name}' '{label_value}'\n"
+            ).format(
+                label_name=_LICENSE_LABEL_NAME,
+                label_value=_LICENSE_LABEL_EXCLUDE,
+            )
         )
-    )
-
-    return HostsOrServicesCounter(
-        num=num_hosts,
-        num_shadow=num_hosts_shadow,
-        num_excluded=num_hosts_excluded,
     )
 
 
 def _get_services_counter() -> HostsOrServicesCounter:
-    num_services, num_services_shadow, num_services_excluded = _get_stats_from_livestatus(
-        (
-            "GET services\n"
-            "Stats: host_check_type != 2\n"
-            "Stats: check_type != 2\n"
-            "Stats: host_labels != '{label_name}' '{label_value}'\n"
-            "Stats: service_labels != '{label_name}' '{label_value}'\n"
-            "StatsAnd: 4\n"
-            "Stats: host_check_type = 2\n"
-            "Stats: check_type = 2\n"
-            "StatsAnd: 2\n"
-            "Stats: host_labels = '{label_name}' '{label_value}'\n"
-            "Stats: service_labels = '{label_name}' '{label_value}'\n"
-            "StatsOr: 2\n"
-        ).format(
-            label_name=_LICENSE_LABEL_NAME,
-            label_value=_LICENSE_LABEL_EXCLUDE,
+    return HostsOrServicesCounter.make(
+        _get_from_livestatus(
+            (
+                "GET services\n"
+                "Stats: host_check_type != 2\n"
+                "Stats: check_type != 2\n"
+                "Stats: host_labels != '{label_name}' '{label_value}'\n"
+                "Stats: service_labels != '{label_name}' '{label_value}'\n"
+                "StatsAnd: 4\n"
+                "Stats: host_check_type = 2\n"
+                "Stats: check_type = 2\n"
+                "StatsAnd: 2\n"
+                "Stats: host_labels = '{label_name}' '{label_value}'\n"
+                "Stats: service_labels = '{label_name}' '{label_value}'\n"
+                "StatsOr: 2\n"
+            ).format(
+                label_name=_LICENSE_LABEL_NAME,
+                label_value=_LICENSE_LABEL_EXCLUDE,
+            )
         )
-    )
-
-    return HostsOrServicesCounter(
-        num=num_services,
-        num_shadow=num_services_shadow,
-        num_excluded=num_services_excluded,
     )
 
 

@@ -53,6 +53,20 @@ _LICENSE_LABEL_NAME = "cmk/licensing"
 _LICENSE_LABEL_EXCLUDE = "excluded"
 
 
+@dataclass(frozen=True)
+class Now:
+    dt: datetime
+    tz: str
+
+    @classmethod
+    def make(cls) -> Now:
+        time_struct = time.localtime()
+        return cls(
+            dt=datetime.fromtimestamp(time.mktime(time_struct)),
+            tz=time_struct.tm_zone,
+        )
+
+
 def try_update_license_usage(instance_id: UUID | None, site_hash: str) -> None:
     """Update the license usage history
 
@@ -63,16 +77,15 @@ def try_update_license_usage(instance_id: UUID | None, site_hash: str) -> None:
     if instance_id is None:
         raise ValueError()
 
-    sample = _create_sample(instance_id, site_hash)
+    now = Now.make()
+    sample = _create_sample(now, instance_id, site_hash)
 
     report_filepath = get_license_usage_report_filepath()
     licensing_dir.mkdir(parents=True, exist_ok=True)
     next_run_filepath = licensing_dir / "next_run"
 
     with store.locked(next_run_filepath), store.locked(report_filepath):
-        now = datetime.now()
-
-        if now.timestamp() < _get_next_run_ts(next_run_filepath):
+        if now.dt.timestamp() < _get_next_run_ts(next_run_filepath):
             return
 
         history = load_license_usage_history(report_filepath, instance_id, site_hash)
@@ -88,7 +101,7 @@ def try_update_license_usage(instance_id: UUID | None, site_hash: str) -> None:
         store.save_text_to_file(next_run_filepath, rot47(str(_create_next_run_ts(now))))
 
 
-def _create_sample(instance_id: UUID, site_hash: str) -> LicenseUsageSample:
+def _create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSample:
     """Calculation of hosts and services:
     num_hosts: Hosts
         - that are not shadow hosts
@@ -116,14 +129,12 @@ def _create_sample(instance_id: UUID, site_hash: str) -> LicenseUsageSample:
     Shadow objects: 0: active, 1: passive, 2: shadow
     """
     sample_time = int(
-        datetime.utcnow()
-        .replace(
+        now.dt.replace(
             hour=0,
             minute=0,
             second=0,
             microsecond=0,
-        )
-        .timestamp()
+        ).timestamp()
     )
 
     hosts_counter = _get_hosts_counter()
@@ -149,7 +160,7 @@ def _create_sample(instance_id: UUID, site_hash: str) -> LicenseUsageSample:
         num_services_shadow=services_counter.num_shadow,
         num_services_excluded=services_counter.num_excluded,
         sample_time=sample_time,
-        timezone=time.localtime().tm_zone,
+        timezone=now.tz,
         extension_ntop=extensions.ntop,
     )
 
@@ -250,9 +261,9 @@ def _get_next_run_ts(next_run_filepath: Path) -> int:
     return int(rot47(store.load_text_from_file(next_run_filepath, default="_")))
 
 
-def _create_next_run_ts(now: datetime) -> int:
+def _create_next_run_ts(now: Now) -> int:
     """The next run time is randomly set to the next day between 8 am and 4 pm."""
-    eight_am_tdy = datetime(now.year, now.month, now.day, 8, 0, 0)
+    eight_am_tdy = datetime(now.dt.year, now.dt.month, now.dt.day, 8, 0, 0)
     start = eight_am_tdy + timedelta(days=1)
     end = start + timedelta(hours=8)
     return random.randrange(int(start.timestamp()), int(end.timestamp()), 600)

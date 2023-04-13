@@ -124,7 +124,7 @@ def _reboot_levels() -> Alternative:
         ),
     ]
     return Alternative(
-        title="Levels for time until forced reboot due to pending important updates",
+        title=_("Levels for time until forced reboot due to pending important updates"),
         elements=elements,
         match=match_levels_alternative,
         default_value=(604800, 172800),
@@ -141,13 +141,13 @@ def _parameter_valuespec_windows_updates() -> ValueSpec:
                 (
                     "levels_important",
                     _IntegerLevels(
-                        title="Levels for pending important updates", default_value=(1, 1)
+                        title=_("Levels for pending important updates"), default_value=(1, 1)
                     ),
                 ),
                 (
                     "levels_optional",
                     _IntegerLevels(
-                        title="Levels for pending optional updates", default_value=(1, 99)
+                        title=_("Levels for pending optional updates"), default_value=(1, 99)
                     ),
                 ),
                 (

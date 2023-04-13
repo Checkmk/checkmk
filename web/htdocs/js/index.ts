@@ -48,63 +48,35 @@ import * as password_meter from "password_meter";
 import * as cmk_figures from "cmk_figures";
 import "cmk_figures_plugins";
 
-try {
-    require("cmk_figures_plugins_cee");
-} catch (e) {
-    // eslint-disable-next-line no-empty
-}
-
 import * as graphs from "graphs";
 
 import * as nodevis from "./modules/nodevis/main";
 
 // Optional import is currently not possible using the ES6 imports
 let graphs_cee;
-try {
-    graphs_cee = require("graphs_cee");
-} catch (e) {
-    graphs_cee = null;
-}
-
 let ntop_host_details;
-try {
-    ntop_host_details = require("ntop_host_details");
-} catch (e) {
-    ntop_host_details = null;
-}
-
 let ntop_alerts;
-try {
-    ntop_alerts = require("ntop_alerts");
-} catch (e) {
-    ntop_alerts = null;
-}
-
 let ntop_flows;
-try {
-    ntop_flows = require("ntop_flows");
-} catch (e) {
-    ntop_flows = null;
-}
-
 let ntop_top_talkers;
-try {
-    ntop_top_talkers = require("ntop_top_talkers");
-} catch (e) {
-    ntop_top_talkers = null;
-}
-
 let ntop_utils;
-try {
-    ntop_utils = require("ntop_utils");
-} catch (e) {
-    ntop_utils = null;
-}
-
 let license_usage_timeseries_graph;
-try {
+
+if (process.env.ENTERPRISE !== "no") {
+    require("cmk_figures_plugins_cee");
+    graphs_cee = require("graphs_cee");
+    ntop_host_details = require("ntop_host_details");
+    ntop_alerts = require("ntop_alerts");
+    ntop_flows = require("ntop_flows");
+    ntop_top_talkers = require("ntop_top_talkers");
+    ntop_utils = require("ntop_utils");
     license_usage_timeseries_graph = require("license_usage_timeseries_graph");
-} catch (e) {
+} else {
+    graphs_cee = null;
+    ntop_host_details = null;
+    ntop_alerts = null;
+    ntop_flows = null;
+    ntop_top_talkers = null;
+    ntop_utils = null;
     license_usage_timeseries_graph = null;
 }
 

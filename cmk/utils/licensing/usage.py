@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import random
 import time
 from collections import defaultdict, deque
@@ -29,7 +28,7 @@ from cmk.utils.licensing.export import (
     RawLicenseUsageExtensions,
     RawLicenseUsageSample,
 )
-from cmk.utils.licensing.helper import hash_site_id, init_logging, load_instance_id, rot47
+from cmk.utils.licensing.helper import hash_site_id, load_instance_id, rot47
 from cmk.utils.paths import licensing_dir
 from cmk.utils.site import omd_site
 
@@ -54,9 +53,7 @@ _LICENSE_LABEL_NAME = "cmk/licensing"
 _LICENSE_LABEL_EXCLUDE = "excluded"
 
 
-def try_update_license_usage(
-    logger: logging.Logger, instance_id: UUID | None, site_hash: str
-) -> None:
+def try_update_license_usage(instance_id: UUID | None, site_hash: str) -> None:
     """Update the license usage history
 
     If a sample could not be created (due to livestatus errors) then the update process will be
@@ -461,7 +458,7 @@ def get_license_usage_report_validity() -> LicenseUsageReportValidity:
 
     with store.locked(report_filepath):
         if report_filepath.stat().st_size == 0:
-            try_update_license_usage(init_logging(), load_instance_id(), hash_site_id(omd_site()))
+            try_update_license_usage(load_instance_id(), hash_site_id(omd_site()))
             return LicenseUsageReportValidity.recent_enough
 
         age = time.time() - report_filepath.stat().st_mtime

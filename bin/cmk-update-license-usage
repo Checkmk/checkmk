@@ -13,7 +13,7 @@ from cmk.utils.site import omd_site
 def main() -> int:
     logger = init_logging()
     try:
-        try_update_license_usage(logger, load_instance_id(), hash_site_id(omd_site()))
+        try_update_license_usage(load_instance_id(), hash_site_id(omd_site()))
         return 0
     except Exception as e:
         logger.error("Error during license usage history update: %s", e)

@@ -15,7 +15,6 @@ import livestatus
 
 from cmk.utils.licensing import usage as licensing_usage
 from cmk.utils.licensing.export import LicenseUsageExtensions, LicenseUsageSample
-from cmk.utils.licensing.helper import init_logging
 from cmk.utils.licensing.usage import (
     _load_extensions,
     _parse_cloud_hosts_or_services,
@@ -53,7 +52,7 @@ def test_try_update_license_usage(monkeypatch: MonkeyPatch) -> None:
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
-    try_update_license_usage(init_logging(), instance_id, site_hash)
+    try_update_license_usage(instance_id, site_hash)
     assert (
         len(
             load_license_usage_history(
@@ -84,7 +83,7 @@ def test_try_update_license_usage_livestatus_socket_error(
     site_hash = "site-hash"
 
     with pytest.raises(livestatus.MKLivestatusSocketError):
-        try_update_license_usage(init_logging(), instance_id, site_hash)
+        try_update_license_usage(instance_id, site_hash)
     assert (
         len(
             load_license_usage_history(
@@ -115,7 +114,7 @@ def test_try_update_license_usage_livestatus_not_found_error(
     site_hash = "site-hash"
 
     with pytest.raises(livestatus.MKLivestatusNotFoundError):
-        try_update_license_usage(init_logging(), instance_id, site_hash)
+        try_update_license_usage(instance_id, site_hash)
     assert (
         len(
             load_license_usage_history(
@@ -151,7 +150,7 @@ def test_try_update_license_usage_next_run_ts_not_reached(
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
-    try_update_license_usage(init_logging(), instance_id, site_hash)
+    try_update_license_usage(instance_id, site_hash)
     assert (
         len(
             load_license_usage_history(

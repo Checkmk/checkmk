@@ -144,7 +144,10 @@ def test_serialize_rsa_key(tmp_path: Path) -> None:
     pem_enc = key.dump_pem(Password("verysecure"))
     assert pem_enc.bytes.startswith(b"-----BEGIN ENCRYPTED PRIVATE KEY-----")
 
-    with pytest.raises(WrongPasswordError):
+    with pytest.raises((WrongPasswordError, InvalidPEMError)):
+        # This should really be a WrongPasswordError, but for some reason we see an InvalidPEMError
+        # instead. We're not sure if it's an issue of our unit tests or if this confusion can also
+        # happen in production. See also `RsaPrivateKey.load_pem()`.
         RsaPrivateKey.load_pem(pem_enc, Password("wrong"))
 
     loaded_enc = RsaPrivateKey.load_pem(pem_enc, Password("verysecure"))

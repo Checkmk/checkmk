@@ -583,10 +583,20 @@ class RsaPrivateKey:
         Decode a PKCS8 PEM encoded RSA private key.
 
         `password` can be given if the key is encrypted.
+
+        Raises:
+            InvalidPEMError: if the PEM cannot be decoded.
+            WrongPasswordError: if an encrypted PEM cannot be decrypted with the given password.
+                NOTE: it seems we cannot rely on this error being raised. In the unit tests we
+                sometimes saw an InvalidPEMError instead. Expect to see that as well.
+            TypeError: when trying to load an EncryptedPrivateKeyPEM but no password is given.
+                This would be caught by mypy though.
+
         >>> RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(""))
         Traceback (most recent call last):
             ...
         cmk.utils.crypto.certificate.InvalidPEMError
+
         >>> pem = EncryptedPrivateKeyPEM(
         ...     "\\n".join([
         ...         "-----BEGIN ENCRYPTED PRIVATE KEY-----",
@@ -609,8 +619,10 @@ class RsaPrivateKey:
         ...         "-----END ENCRYPTED PRIVATE KEY-----"
         ...     ])
         ... )
+
         >>> RsaPrivateKey.load_pem(pem, Password("foo"))
         <cmk.utils.crypto.certificate.RsaPrivateKey object at 0x...>
+
         >>> RsaPrivateKey.load_pem(pem, Password("not foo"))
         Traceback (most recent call last):
             ...

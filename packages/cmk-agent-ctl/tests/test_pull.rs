@@ -404,16 +404,17 @@ async fn _test_pull_legacy(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowRe
     // marker; this shouldn't happen in reality, but who knows ...
     std::fs::write(test_dir.path().join("allow-legacy-pull"), "")?;
     let agent_stream_fixture = AgentStreamFixture::setup(test_dir.path());
+    let p = find_available_port_if_busy(port);
     let pull_proc_fixture = PullProcessFixture::setup(
         test_dir.path(),
-        &port,
+        &p,
         agent_stream_fixture.get_agent_channel(),
     )?;
 
     // Give it some time to provide the TCP socket.
     tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
 
-    let socket_addr = SocketAddr::new(ip_addr, port);
+    let socket_addr = SocketAddr::new(ip_addr, p);
     // Make sure the legacy mode is currently *not* active
     let mut message_buf: Vec<u8> = vec![];
     let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;

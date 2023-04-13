@@ -236,6 +236,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         section_names |= self._detect(
             select_from=self._get_detected_sections(mode) - section_names, backend=self._backend
         )
+        if mode is Mode.DISCOVERY and not section_names:
+            # Nothing to discover? That can't be right.
+            raise MKFetcherError("Got no data")
 
         walk_cache = snmp_table.WalkCache(self._backend.hostname)
         if mode is Mode.CHECKING:

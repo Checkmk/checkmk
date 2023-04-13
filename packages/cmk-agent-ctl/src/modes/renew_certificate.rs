@@ -44,7 +44,7 @@ fn find_site_for_ident<'reg>(
     let site_id = site_id_from_ident(registry, ident)?;
     Ok((
         registry
-            .get_mutable(&site_id)
+            .get_connection_as_mut(&site_id)
             .ok_or_else(|| anyhow!("Couldn't find connection with site ID {}", site_id))?,
         site_id,
     ))
@@ -104,7 +104,7 @@ fn renew_all_certificates(
         // if the registry is empty, we mustn't save, otherwise we might remove the legacy pull marker
         return Ok(());
     }
-    for (site_id, connection) in registry.standard_connections_mut() {
+    for (site_id, connection) in registry.get_standard_connections_as_mut() {
         conditionally_renew_connection_cert(site_id, connection, renew_certificate_api)?;
     }
     registry.save()?;
@@ -233,9 +233,15 @@ mod test_renew_certificate {
         fn new() -> Self {
             let test_registry = TestRegistry::new().fill_registry();
             let reg = &test_registry.registry;
-            let push_uuid = reg.push_connections().next().unwrap().1.trust.uuid;
-            let pull_uuid = reg.standard_pull_connections().next().unwrap().1.trust.uuid;
-            let imported_uuid = reg.imported_pull_connections().next().unwrap().uuid;
+            let push_uuid = reg.get_push_connections().next().unwrap().1.trust.uuid;
+            let pull_uuid = reg
+                .get_standard_pull_connections()
+                .next()
+                .unwrap()
+                .1
+                .trust
+                .uuid;
+            let imported_uuid = reg.get_imported_pull_connections().next().unwrap().uuid;
             Self {
                 test_registry,
                 push_uuid,
@@ -252,7 +258,7 @@ mod test_renew_certificate {
         _renew_certificate(&mut registry, &r.push_uuid.to_string(), &TestApi {}).unwrap();
         assert!(
             registry
-                .push_connections()
+                .get_push_connections()
                 .next()
                 .unwrap()
                 .1
@@ -269,7 +275,7 @@ mod test_renew_certificate {
         _renew_certificate(&mut registry, "server/pull-site", &TestApi {}).unwrap();
         assert!(
             registry
-                .standard_pull_connections()
+                .get_standard_pull_connections()
                 .next()
                 .unwrap()
                 .1
@@ -375,7 +381,7 @@ mod test_renew_certificate {
         let conn = get_connection(&registry, "server/pull-site_2");
         assert!(conn.certificate == a.cert_ok);
 
-        let conn = &registry.imported_pull_connections().next().unwrap();
+        let conn = &registry.get_imported_pull_connections().next().unwrap();
         assert!(conn.certificate == a.cert_too_short);
         Ok(())
     }
@@ -386,7 +392,7 @@ mod test_renew_certificate {
         let mut reg = r.registry;
         reg.activate_legacy_pull()?;
         renew_all_certificates(&mut reg, &TestApi {})?;
-        assert!(reg.legacy_pull_active());
+        assert!(reg.is_legacy_pull_active());
         Ok(())
     }
 }

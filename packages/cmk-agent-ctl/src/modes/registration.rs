@@ -399,7 +399,7 @@ fn _register_pre_configured(
         delete_vanished_connections(
             registry,
             registry
-                .registered_site_ids()
+                .get_registered_site_ids()
                 .filter(|site_id| !pre_configured_connections.connections.contains_key(site_id))
                 .cloned()
                 .collect::<Vec<site_spec::SiteID>>()
@@ -467,7 +467,7 @@ fn process_pre_configured_connection(
         None => site_spec::discover_receiver_port(site_id, client_config)?,
     };
 
-    if let Some(registered_connection) = registry.get_mutable(site_id) {
+    if let Some(registered_connection) = registry.get_connection_as_mut(site_id) {
         registered_connection.receiver_port = receiver_port;
         info!(
             "Updated agent receiver port for existing connection {}",
@@ -985,16 +985,16 @@ mod tests {
             }
             test_registered_standard_connections(
                 expected_pull_site_ids.into_iter(),
-                registry.standard_pull_connections(),
+                registry.get_standard_pull_connections(),
             );
             test_registered_standard_connections(
                 expected_push_site_ids.into_iter(),
-                registry.push_connections(),
+                registry.get_push_connections(),
             );
 
             assert_eq!(
                 registry
-                    .get_mutable(
+                    .get_connection_as_mut(
                         &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap()
                     )
                     .unwrap()
@@ -1003,7 +1003,7 @@ mod tests {
             );
             assert_eq!(
                 registry
-                    .get_mutable(
+                    .get_connection_as_mut(
                         &site_spec::SiteID::from_str("server/pre-baked-push-site").unwrap()
                     )
                     .unwrap()
@@ -1012,7 +1012,7 @@ mod tests {
             );
 
             assert_eq!(
-                registry.imported_pull_connections().count(),
+                registry.get_imported_pull_connections().count(),
                 match keep_existing_connections {
                     true => 1,
                     false => 0,
@@ -1100,7 +1100,7 @@ mod tests {
             let mut registry = config::Registry::from_file(registry.path()).unwrap();
             assert_eq!(
                 registry
-                    .get_mutable(
+                    .get_connection_as_mut(
                         &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap()
                     )
                     .unwrap()

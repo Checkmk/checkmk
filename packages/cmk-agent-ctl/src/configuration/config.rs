@@ -247,15 +247,15 @@ impl PullConfig {
     }
 
     pub fn allow_legacy_pull(&self) -> bool {
-        self.registry.legacy_pull_active()
+        self.registry.is_legacy_pull_active()
     }
 
-    pub fn connections(&self) -> impl Iterator<Item = &TrustedConnection> {
-        self.registry.pull_connections()
+    pub fn get_pull_connections(&self) -> impl Iterator<Item = &TrustedConnection> {
+        self.registry.get_pull_connections()
     }
 
     pub fn has_connections(&self) -> bool {
-        !self.registry.pull_is_empty()
+        !self.registry.is_pull_empty()
     }
 }
 
@@ -278,7 +278,7 @@ impl Registry {
             connections: RegisteredConnections::default(),
             path: PathBuf::from(path.as_ref()),
             last_reload: None,
-            legacy_pull_marker: LegacyPullMarker::new(Self::path_legacy_pull_marker(path)?),
+            legacy_pull_marker: LegacyPullMarker::new(Self::make_path_legacy_pull_marker(path)?),
         })
     }
 
@@ -287,7 +287,7 @@ impl Registry {
             connections: RegisteredConnections::load_missing_safe(path.as_ref())?,
             path: PathBuf::from(path.as_ref()),
             last_reload: mtime(path.as_ref())?,
-            legacy_pull_marker: LegacyPullMarker::new(Self::path_legacy_pull_marker(path)?),
+            legacy_pull_marker: LegacyPullMarker::new(Self::make_path_legacy_pull_marker(path)?),
         })
     }
 
@@ -325,7 +325,7 @@ impl Registry {
     }
 
     pub fn save(&self) -> io::Result<()> {
-        let tmp_path = self.tmp_path_for_save();
+        let tmp_path = self.make_tmp_path_for_save();
         fs::write(&tmp_path, serde_json::to_string_pretty(&self.connections)?)?;
         fs::rename(&tmp_path, &self.path)?;
         #[cfg(unix)]
@@ -333,37 +333,37 @@ impl Registry {
         self.legacy_pull_marker.remove()
     }
 
-    pub fn pull_standard_is_empty(&self) -> bool {
+    pub fn is_standard_pull_empty(&self) -> bool {
         self.connections.pull.is_empty()
     }
 
-    pub fn pull_imported_is_empty(&self) -> bool {
+    pub fn is_imported_pull_empty(&self) -> bool {
         self.connections.pull_imported.is_empty()
     }
 
-    pub fn pull_is_empty(&self) -> bool {
-        self.pull_standard_is_empty() & self.pull_imported_is_empty()
+    pub fn is_pull_empty(&self) -> bool {
+        self.is_standard_pull_empty() & self.is_imported_pull_empty()
     }
 
-    pub fn push_is_empty(&self) -> bool {
+    pub fn is_push_empty(&self) -> bool {
         self.connections.push.is_empty()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.push_is_empty() & self.pull_is_empty()
+        self.is_push_empty() & self.is_pull_empty()
     }
 
-    pub fn standard_pull_connections(
+    pub fn get_standard_pull_connections(
         &self,
     ) -> impl Iterator<Item = (&site_spec::SiteID, &TrustedConnectionWithRemote)> {
         self.connections.pull.iter()
     }
 
-    pub fn imported_pull_connections(&self) -> impl Iterator<Item = &TrustedConnection> {
+    pub fn get_imported_pull_connections(&self) -> impl Iterator<Item = &TrustedConnection> {
         self.connections.pull_imported.iter()
     }
 
-    pub fn pull_connections(&self) -> impl Iterator<Item = &TrustedConnection> {
+    pub fn get_pull_connections(&self) -> impl Iterator<Item = &TrustedConnection> {
         self.connections
             .pull
             .values()
@@ -371,13 +371,13 @@ impl Registry {
             .chain(self.connections.pull_imported.iter())
     }
 
-    pub fn push_connections(
+    pub fn get_push_connections(
         &self,
     ) -> impl Iterator<Item = (&site_spec::SiteID, &TrustedConnectionWithRemote)> {
         self.connections.push.iter()
     }
 
-    pub fn standard_connections_mut(
+    pub fn get_standard_connections_as_mut(
         &mut self,
     ) -> impl Iterator<Item = (&site_spec::SiteID, &mut TrustedConnectionWithRemote)> {
         self.connections
@@ -386,14 +386,14 @@ impl Registry {
             .chain(self.connections.pull.iter_mut())
     }
 
-    pub fn registered_site_ids(&self) -> impl Iterator<Item = &site_spec::SiteID> {
+    pub fn get_registered_site_ids(&self) -> impl Iterator<Item = &site_spec::SiteID> {
         self.connections
             .pull
             .keys()
             .chain(self.connections.push.keys())
     }
 
-    pub fn get_mutable(
+    pub fn get_connection_as_mut(
         &mut self,
         site_id: &site_spec::SiteID,
     ) -> Option<&mut TrustedConnectionWithRemote> {
@@ -451,7 +451,7 @@ impl Registry {
         self.connections.pull_imported.clear();
     }
 
-    pub fn legacy_pull_active(&self) -> bool {
+    pub fn is_legacy_pull_active(&self) -> bool {
         self.is_empty() && self.legacy_pull_marker.exists()
     }
 
@@ -469,8 +469,8 @@ impl Registry {
         uuid: &uuid::Uuid,
     ) -> Option<site_spec::SiteID> {
         for (site_id, connection) in self
-            .push_connections()
-            .chain(self.standard_pull_connections())
+            .get_push_connections()
+            .chain(self.get_standard_pull_connections())
         {
             if &connection.trust.uuid == uuid {
                 return Some(site_id.clone());
@@ -479,7 +479,7 @@ impl Registry {
         None
     }
 
-    fn tmp_path_for_save(&self) -> PathBuf {
+    fn make_tmp_path_for_save(&self) -> PathBuf {
         let mut tmp_path = PathBuf::from(&self.path);
         let mut ext = tmp_path
             .extension()
@@ -490,7 +490,7 @@ impl Registry {
         tmp_path
     }
 
-    fn path_legacy_pull_marker(registry_path: impl AsRef<Path>) -> AnyhowResult<PathBuf> {
+    fn make_path_legacy_pull_marker(registry_path: impl AsRef<Path>) -> AnyhowResult<PathBuf> {
         Ok(registry_path
             .as_ref()
             .parent()
@@ -997,7 +997,7 @@ mod test_registry {
 
         reg.save().unwrap();
         assert!(reg.path.exists());
-        assert!(!reg.tmp_path_for_save().exists());
+        assert!(!reg.make_tmp_path_for_save().exists());
         #[cfg(unix)]
         assert_eq!(
             fs::metadata(&reg.path).unwrap().permissions().mode(),
@@ -1034,7 +1034,7 @@ mod test_registry {
     #[test]
     fn test_new() {
         let reg = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
-        assert!(reg.pull_is_empty() && reg.push_is_empty());
+        assert!(reg.is_pull_empty() && reg.is_push_empty());
         assert!(reg.last_reload.is_none());
     }
 
@@ -1111,9 +1111,15 @@ mod test_registry {
     fn test_retrieve_standard_connection_by_uuid() {
         let test_registry = TestRegistry::new().fill_registry();
         let reg = test_registry.registry;
-        let uuid_push = reg.push_connections().next().unwrap().1.trust.uuid;
-        let uuid_pull = reg.standard_pull_connections().next().unwrap().1.trust.uuid;
-        let uuid_imported = reg.imported_pull_connections().next().unwrap().uuid;
+        let uuid_push = reg.get_push_connections().next().unwrap().1.trust.uuid;
+        let uuid_pull = reg
+            .get_standard_pull_connections()
+            .next()
+            .unwrap()
+            .1
+            .trust
+            .uuid;
+        let uuid_imported = reg.get_imported_pull_connections().next().unwrap().uuid;
 
         assert!(
             reg.retrieve_standard_connection_by_uuid(&uuid_push)
@@ -1148,7 +1154,7 @@ mod test_registry {
     fn test_pull_connections() {
         let test_registry = TestRegistry::new().fill_registry();
         let reg = test_registry.registry;
-        let pull_conns: Vec<&TrustedConnection> = reg.pull_connections().collect();
+        let pull_conns: Vec<&TrustedConnection> = reg.get_pull_connections().collect();
         assert!(pull_conns.len() == 2);
         assert!(
             pull_conns[0]
@@ -1166,8 +1172,10 @@ mod test_registry {
     fn test_registered_site_ids() {
         let test_registry = TestRegistry::new().fill_registry();
         let reg = test_registry.registry;
-        let mut reg_site_ids: Vec<String> =
-            reg.registered_site_ids().map(|s| s.to_string()).collect();
+        let mut reg_site_ids: Vec<String> = reg
+            .get_registered_site_ids()
+            .map(|s| s.to_string())
+            .collect();
         reg_site_ids.sort_unstable();
         assert_eq!(reg_site_ids, vec!["server/pull-site", "server/push-site"]);
     }
@@ -1176,20 +1184,25 @@ mod test_registry {
     fn test_get_mutable() {
         let test_registry = TestRegistry::new().fill_registry();
         let mut reg = test_registry.registry;
-        let pull_conn = reg.standard_pull_connections().next().unwrap().1.clone();
-        let push_conn = reg.push_connections().next().unwrap().1.clone();
+        let pull_conn = reg
+            .get_standard_pull_connections()
+            .next()
+            .unwrap()
+            .1
+            .clone();
+        let push_conn = reg.get_push_connections().next().unwrap().1.clone();
         assert_eq!(
-            reg.get_mutable(&site_spec::SiteID::from_str("server/pull-site").unwrap())
+            reg.get_connection_as_mut(&site_spec::SiteID::from_str("server/pull-site").unwrap())
                 .unwrap(),
             &pull_conn
         );
         assert_eq!(
-            reg.get_mutable(&site_spec::SiteID::from_str("server/push-site").unwrap())
+            reg.get_connection_as_mut(&site_spec::SiteID::from_str("server/push-site").unwrap())
                 .unwrap(),
             &push_conn
         );
         assert!(reg
-            .get_mutable(&site_spec::SiteID::from_str("a/b").unwrap())
+            .get_connection_as_mut(&site_spec::SiteID::from_str("a/b").unwrap())
             .is_none());
     }
 
@@ -1280,7 +1293,7 @@ mod test_registry {
         let test_registry = TestRegistry::new().fill_registry();
         let mut reg = test_registry.registry;
         reg.clear_imported();
-        assert!(reg.pull_imported_is_empty());
+        assert!(reg.is_imported_pull_empty());
         assert!(!reg.is_empty());
     }
 
@@ -1288,15 +1301,15 @@ mod test_registry {
     fn test_legacy_pull_marker_handling() {
         let test_registry = TestRegistry::new();
         let mut registry = test_registry.registry;
-        assert!(!registry.legacy_pull_active());
+        assert!(!registry.is_legacy_pull_active());
         assert!(registry.activate_legacy_pull().is_ok());
-        assert!(registry.legacy_pull_active());
+        assert!(registry.is_legacy_pull_active());
         registry.register_connection(
             &ConnectionMode::Push,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
             trusted_connection_with_remote(),
         );
-        assert!(!registry.legacy_pull_active());
+        assert!(!registry.is_legacy_pull_active());
         assert!(registry.activate_legacy_pull().is_err());
         registry.save().unwrap();
         assert!(!registry.legacy_pull_marker.exists());
@@ -1305,10 +1318,10 @@ mod test_registry {
     #[test]
     fn test_tmp_path_for_save() {
         let reg = Registry::new(PathBuf::from("/a/b/c.json")).unwrap();
-        assert_ne!(reg.path(), reg.tmp_path_for_save());
-        assert_eq!(reg.path().parent(), reg.tmp_path_for_save().parent());
+        assert_ne!(reg.path(), reg.make_tmp_path_for_save());
+        assert_eq!(reg.path().parent(), reg.make_tmp_path_for_save().parent());
         assert!(reg
-            .tmp_path_for_save()
+            .make_tmp_path_for_save()
             .file_name()
             .unwrap()
             .to_str()

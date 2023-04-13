@@ -91,7 +91,7 @@ mod tests {
         let mut r = registry();
         assert!(!r.registry.path().exists());
         assert!(delete(&mut r.registry, UUID_PULL).is_ok());
-        assert!(r.registry.pull_standard_is_empty());
+        assert!(r.registry.is_standard_pull_empty());
         assert!(r.registry.path().exists());
     }
 
@@ -100,7 +100,7 @@ mod tests {
         let mut r = registry();
         assert!(!r.registry.path().exists());
         assert!(delete(&mut r.registry, UUID_PUSH).is_ok());
-        assert!(r.registry.push_is_empty());
+        assert!(r.registry.is_push_empty());
         assert!(r.registry.path().exists());
     }
 
@@ -131,7 +131,7 @@ mod tests {
         assert!(!r.registry.path().exists());
         assert!(delete_all(&mut r.registry, false).is_ok());
         assert!(r.registry.path().exists());
-        assert!(!r.registry.legacy_pull_active());
+        assert!(!r.registry.is_legacy_pull_active());
     }
 
     #[test]
@@ -140,6 +140,6 @@ mod tests {
         assert!(!r.registry.path().exists());
         assert!(delete_all(&mut r.registry, true).is_ok());
         assert!(r.registry.path().exists());
-        assert!(r.registry.legacy_pull_active());
+        assert!(r.registry.is_legacy_pull_active());
     }
 }

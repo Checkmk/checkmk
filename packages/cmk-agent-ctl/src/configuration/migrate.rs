@@ -244,11 +244,12 @@ mod test {
         assert!(migrate_registered_connections(&tmp_path).is_ok());
         let migrated_registry = config::Registry::from_file(&tmp_path).unwrap();
 
-        assert_eq!(migrated_registry.push_connections().count(), 1);
-        assert_eq!(migrated_registry.standard_pull_connections().count(), 1);
-        assert_eq!(migrated_registry.imported_pull_connections().count(), 1);
+        assert_eq!(migrated_registry.get_push_connections().count(), 1);
+        assert_eq!(migrated_registry.get_standard_pull_connections().count(), 1);
+        assert_eq!(migrated_registry.get_imported_pull_connections().count(), 1);
 
-        let (site_id_push, connection_push) = migrated_registry.push_connections().next().unwrap();
+        let (site_id_push, connection_push) =
+            migrated_registry.get_push_connections().next().unwrap();
         assert_eq!(site_id_push.to_string(), "server/push-site");
         assert_eq!(
             connection_push.trust.uuid.to_string(),
@@ -269,7 +270,7 @@ mod test {
         assert_eq!(connection_push.receiver_port, 8000);
 
         let (site_id_pull, connection_pull) = migrated_registry
-            .standard_pull_connections()
+            .get_standard_pull_connections()
             .next()
             .unwrap();
         assert_eq!(site_id_pull.to_string(), "server/pull-site");
@@ -292,7 +293,7 @@ mod test {
         assert_eq!(connection_pull.receiver_port, 8000);
 
         let connection_imported = migrated_registry
-            .imported_pull_connections()
+            .get_imported_pull_connections()
             .next()
             .unwrap();
         assert_eq!(

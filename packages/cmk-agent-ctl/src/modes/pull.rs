@@ -51,7 +51,7 @@ impl std::convert::TryFrom<config::PullConfig> for PullStateImpl {
     fn try_from(config: config::PullConfig) -> AnyhowResult<Self> {
         Ok(Self {
             allow_legacy_pull: config.allow_legacy_pull(),
-            tls_acceptor: tls_server::tls_acceptor(config.connections())
+            tls_acceptor: tls_server::tls_acceptor(config.get_pull_connections())
                 .context("Could not initialize TLS.")?,
             config,
         })
@@ -61,7 +61,7 @@ impl std::convert::TryFrom<config::PullConfig> for PullStateImpl {
 impl PullState for PullStateImpl {
     fn refresh(&mut self) -> AnyhowResult<()> {
         if self.config.refresh()? {
-            self.tls_acceptor = tls_server::tls_acceptor(self.config.connections())
+            self.tls_acceptor = tls_server::tls_acceptor(self.config.get_pull_connections())
                 .context("Could not initialize TLS.")?;
         };
         self.allow_legacy_pull = self.config.allow_legacy_pull();

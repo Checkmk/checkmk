@@ -257,7 +257,7 @@ impl Status {
     ) -> Status {
         let mut conn_stats = Vec::new();
 
-        for (site_id, push_conn) in registry.push_connections() {
+        for (site_id, push_conn) in registry.get_push_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
                 site_id,
                 push_conn,
@@ -265,7 +265,7 @@ impl Status {
                 agent_rec_api,
             ));
         }
-        for (site_id, pull_conn) in registry.standard_pull_connections() {
+        for (site_id, pull_conn) in registry.get_standard_pull_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
                 site_id,
                 pull_conn,
@@ -273,7 +273,7 @@ impl Status {
                 agent_rec_api,
             ));
         }
-        for imp_pull_conn in registry.imported_pull_connections() {
+        for imp_pull_conn in registry.get_imported_pull_connections() {
             conn_stats.push(ConnectionStatus::from_imported_conn(imp_pull_conn));
         }
 

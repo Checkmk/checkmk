@@ -8,7 +8,7 @@ from re import match
 from typing import Any
 
 import schemathesis
-from schemathesis import auth as schemathesis_auth
+from schemathesis import auths as schemathesis_auth
 
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.utils import current_base_branch_name

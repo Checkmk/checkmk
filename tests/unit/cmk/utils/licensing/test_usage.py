@@ -32,26 +32,34 @@ from cmk.utils.man_pages import load_man_page_catalog, ManPageCatalogPath
 
 
 def test_try_update_license_usage(monkeypatch: MonkeyPatch) -> None:
-    def _mock_livestatus(query: str) -> Sequence[Sequence[Any]]:
-        if "GET hosts" in query:
-            return [["10", "5", "1"]]
-        if "Columns: host_name service_check_command" in query:
-            # cloud
-            return [["host", "services"]]
-        return [["100", "10", "2"]]
-
-    monkeypatch.setattr(licensing_usage, "_get_from_livestatus", _mock_livestatus)
-    monkeypatch.setattr(
-        licensing_usage,
-        "_load_extensions",
-        lambda: LicenseUsageExtensions(ntop=False),
-    )
     monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
 
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
-    try_update_license_usage(instance_id, site_hash)
+    try_update_license_usage(
+        instance_id,
+        site_hash,
+        lambda *args, **kwargs: LicenseUsageSample(
+            instance_id=instance_id,
+            site_hash=site_hash,
+            version="",
+            edition="",
+            platform="A very long string with len>50 describing the plat",
+            is_cma=False,
+            sample_time=1,
+            timezone="",
+            num_hosts=2,
+            num_hosts_cloud=1,
+            num_hosts_shadow=6,
+            num_hosts_excluded=3,
+            num_services=4,
+            num_services_cloud=2,
+            num_services_shadow=7,
+            num_services_excluded=5,
+            extension_ntop=True,
+        ),
+    )
     assert (
         len(
             load_license_usage_history(
@@ -67,22 +75,20 @@ def test_try_update_license_usage(monkeypatch: MonkeyPatch) -> None:
 def test_try_update_license_usage_livestatus_socket_error(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    def _mock_livestatus(query: str) -> tuple[int, int]:
+    def _mock_livestatus() -> LicenseUsageSample:
         raise livestatus.MKLivestatusSocketError()
 
-    monkeypatch.setattr(licensing_usage, "_get_from_livestatus", _mock_livestatus)
-    monkeypatch.setattr(
-        licensing_usage,
-        "_load_extensions",
-        lambda: LicenseUsageExtensions(ntop=False),
-    )
     monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
 
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
     with pytest.raises(livestatus.MKLivestatusSocketError):
-        try_update_license_usage(instance_id, site_hash)
+        try_update_license_usage(
+            instance_id,
+            site_hash,
+            lambda *args, **kwargs: _mock_livestatus(),
+        )
     assert (
         len(
             load_license_usage_history(
@@ -98,22 +104,20 @@ def test_try_update_license_usage_livestatus_socket_error(
 def test_try_update_license_usage_livestatus_not_found_error(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    def _mock_livestatus(query: str) -> tuple[int, int]:
+    def _mock_livestatus() -> LicenseUsageSample:
         raise livestatus.MKLivestatusNotFoundError()
 
-    monkeypatch.setattr(licensing_usage, "_get_from_livestatus", _mock_livestatus)
-    monkeypatch.setattr(
-        licensing_usage,
-        "_load_extensions",
-        lambda: LicenseUsageExtensions(ntop=False),
-    )
     monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
 
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
     with pytest.raises(livestatus.MKLivestatusNotFoundError):
-        try_update_license_usage(instance_id, site_hash)
+        try_update_license_usage(
+            instance_id,
+            site_hash,
+            lambda *args, **kwargs: _mock_livestatus(),
+        )
     assert (
         len(
             load_license_usage_history(
@@ -129,26 +133,34 @@ def test_try_update_license_usage_livestatus_not_found_error(
 def test_try_update_license_usage_next_run_ts_not_reached(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    def _mock_livestatus(query: str) -> Sequence[Sequence[Any]]:
-        if "GET hosts" in query:
-            return [["10", "5", "1"]]
-        if "Columns: host_name service_check_command" in query:
-            # cloud
-            return [["host", "services"]]
-        return [["100", "10", "2"]]
-
-    monkeypatch.setattr(licensing_usage, "_get_from_livestatus", _mock_livestatus)
-    monkeypatch.setattr(
-        licensing_usage,
-        "_load_extensions",
-        lambda: LicenseUsageExtensions(ntop=False),
-    )
     monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 2 * time.time())
 
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
-    try_update_license_usage(instance_id, site_hash)
+    try_update_license_usage(
+        instance_id,
+        site_hash,
+        lambda *args, **kwargs: LicenseUsageSample(
+            instance_id=instance_id,
+            site_hash=site_hash,
+            version="",
+            edition="",
+            platform="A very long string with len>50 describing the plat",
+            is_cma=False,
+            sample_time=1,
+            timezone="",
+            num_hosts=2,
+            num_hosts_cloud=1,
+            num_hosts_shadow=6,
+            num_hosts_excluded=3,
+            num_services=4,
+            num_services_cloud=2,
+            num_services_shadow=7,
+            num_services_excluded=5,
+            extension_ntop=True,
+        ),
+    )
     assert (
         len(
             load_license_usage_history(

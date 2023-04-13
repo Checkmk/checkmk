@@ -17,10 +17,10 @@ from cmk.utils.licensing import usage as licensing_usage
 from cmk.utils.licensing.export import LicenseUsageExtensions, LicenseUsageSample
 from cmk.utils.licensing.usage import (
     _load_extensions,
-    _parse_cloud_hosts_or_services,
     _serialize_dump,
     CLOUD_SERVICE_PREFIXES,
     get_license_usage_report_filepath,
+    HostsOrServicesCloudCounter,
     LicenseUsageReportVersion,
     load_license_usage_history,
     LocalLicenseUsageHistory,
@@ -35,13 +35,12 @@ def test_try_update_license_usage(monkeypatch: MonkeyPatch) -> None:
     def _mock_livestatus(query: str) -> Sequence[Sequence[Any]]:
         if "GET hosts" in query:
             return [["10", "5", "1"]]
+        if "Columns: host_name service_check_command" in query:
+            # cloud
+            return [["host", "services"]]
         return [["100", "10", "2"]]
 
-    def _mock_service_livestatus() -> list[list[str]]:
-        return [["host", "services"]]
-
     monkeypatch.setattr(licensing_usage, "_get_from_livestatus", _mock_livestatus)
-    monkeypatch.setattr(licensing_usage, "_get_services_from_livestatus", _mock_service_livestatus)
     monkeypatch.setattr(
         licensing_usage,
         "_load_extensions",
@@ -133,13 +132,12 @@ def test_try_update_license_usage_next_run_ts_not_reached(
     def _mock_livestatus(query: str) -> Sequence[Sequence[Any]]:
         if "GET hosts" in query:
             return [["10", "5", "1"]]
+        if "Columns: host_name service_check_command" in query:
+            # cloud
+            return [["host", "services"]]
         return [["100", "10", "2"]]
 
-    def _mock_service_livestatus() -> list[list[str]]:
-        return [["host", "services"]]
-
     monkeypatch.setattr(licensing_usage, "_get_from_livestatus", _mock_livestatus)
-    monkeypatch.setattr(licensing_usage, "_get_services_from_livestatus", _mock_service_livestatus)
     monkeypatch.setattr(
         licensing_usage,
         "_load_extensions",
@@ -176,7 +174,7 @@ def test__parse_cloud_hosts_or_services(
     expected_hosts: int,
     excepted_services: int,
 ) -> None:
-    hosts_or_services_cloud_counter = _parse_cloud_hosts_or_services(livestatus_response)
+    hosts_or_services_cloud_counter = HostsOrServicesCloudCounter.make(livestatus_response)
     assert hosts_or_services_cloud_counter.hosts == expected_hosts
     assert hosts_or_services_cloud_counter.services == excepted_services
 

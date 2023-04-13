@@ -211,46 +211,39 @@ def _get_services_counter() -> HostsOrServicesCounter:
     )
 
 
-def _get_services_from_livestatus() -> Sequence[Sequence[Any]]:
-    return _get_from_livestatus(
-        "GET services"
-        "\nColumns: host_name service_check_command"
-        "\nFilter: host_check_type != 2"
-        "\nFilter: check_type != 2"
-        f"\nFilter: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
-        f"\nFilter: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
-    )
-
-
 @dataclass
 class HostsOrServicesCloudCounter:
     hosts: int
     services: int
 
+    @classmethod
+    def make(cls, livestatus_response: Sequence[Sequence[Any]]) -> HostsOrServicesCloudCounter:
+        def _contains_cloud_service(services: Sequence[str]) -> bool:
+            return any(service.startswith(tuple(CLOUD_SERVICE_PREFIXES)) for service in services)
 
-def _parse_cloud_hosts_or_services(
-    response: Sequence[Sequence[Any]],
-) -> HostsOrServicesCloudCounter:
-    def contains_cloud_service(services: Sequence[str]) -> bool:
-        return any(service.startswith(tuple(CLOUD_SERVICE_PREFIXES)) for service in services)
+        services_per_host = defaultdict(list)
+        for result in livestatus_response:
+            services_per_host[result[0]].append(result[1].removeprefix("check_mk-"))
 
-    services_per_host = defaultdict(list)
-    for result in response:
-        services_per_host[result[0]].append(result[1].removeprefix("check_mk-"))
-
-    cloud_services = {
-        host: len(services)
-        for host, services in services_per_host.items()
-        if contains_cloud_service(services)
-    }
-    return HostsOrServicesCloudCounter(
-        hosts=len(cloud_services), services=sum(cloud_services.values())
-    )
+        cloud_services = {
+            host: len(services)
+            for host, services in services_per_host.items()
+            if _contains_cloud_service(services)
+        }
+        return cls(hosts=len(cloud_services), services=sum(cloud_services.values()))
 
 
 def _get_cloud_counter() -> HostsOrServicesCloudCounter:
-    response = _get_services_from_livestatus()
-    return _parse_cloud_hosts_or_services(response)
+    return HostsOrServicesCloudCounter.make(
+        _get_from_livestatus(
+            "GET services"
+            "\nColumns: host_name service_check_command"
+            "\nFilter: host_check_type != 2"
+            "\nFilter: check_type != 2"
+            f"\nFilter: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+            f"\nFilter: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+        )
+    )
 
 
 def _get_next_run_ts(next_run_filepath: Path) -> int:

@@ -349,7 +349,7 @@ class LicenseUsageSample:
         if version == "1.0":
             return cls._parse_sample_v1_0
 
-        if version in ["1.1"]:
+        if version == "1.1":
             return cls._parse_sample_v1_1
 
         if version == "2.0":

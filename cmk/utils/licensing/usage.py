@@ -73,6 +73,7 @@ class Now:
 
 
 def try_update_license_usage(
+    now: Now,
     instance_id: UUID | None,
     site_hash: str,
     do_create_sample: DoCreateSample,
@@ -86,7 +87,6 @@ def try_update_license_usage(
     if instance_id is None:
         raise ValueError()
 
-    now = Now.make()
     sample = do_create_sample(now, instance_id, site_hash)
 
     report_filepath = get_license_usage_report_filepath()
@@ -463,7 +463,12 @@ def get_license_usage_report_validity() -> LicenseUsageReportValidity:
 
     with store.locked(report_filepath):
         if report_filepath.stat().st_size == 0:
-            try_update_license_usage(load_instance_id(), hash_site_id(omd_site()), create_sample)
+            try_update_license_usage(
+                Now.make(),
+                load_instance_id(),
+                hash_site_id(omd_site()),
+                create_sample,
+            )
             return LicenseUsageReportValidity.recent_enough
 
         age = time.time() - report_filepath.stat().st_mtime

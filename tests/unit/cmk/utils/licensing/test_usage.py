@@ -5,15 +5,14 @@
 
 import time
 from collections.abc import Mapping, Sequence
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
 import pytest
-from pytest import MonkeyPatch
 
 import livestatus
 
-from cmk.utils.licensing import usage as licensing_usage
 from cmk.utils.licensing.export import LicenseUsageExtensions, LicenseUsageSample
 from cmk.utils.licensing.usage import (
     _load_extensions,
@@ -24,6 +23,7 @@ from cmk.utils.licensing.usage import (
     LicenseUsageReportVersion,
     load_license_usage_history,
     LocalLicenseUsageHistory,
+    Now,
     RawLicenseUsageReport,
     save_extensions,
     try_update_license_usage,
@@ -31,13 +31,12 @@ from cmk.utils.licensing.usage import (
 from cmk.utils.man_pages import load_man_page_catalog, ManPageCatalogPath
 
 
-def test_try_update_license_usage(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
-
+def test_try_update_license_usage() -> None:
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
     try_update_license_usage(
+        Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(time.time() * 2))), tz=""),
         instance_id,
         site_hash,
         lambda *args, **kwargs: LicenseUsageSample(
@@ -72,19 +71,17 @@ def test_try_update_license_usage(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-def test_try_update_license_usage_livestatus_socket_error(
-    monkeypatch: MonkeyPatch,
-) -> None:
+def test_try_update_license_usage_livestatus_socket_error() -> None:
     def _mock_livestatus() -> LicenseUsageSample:
         raise livestatus.MKLivestatusSocketError()
-
-    monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
 
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
     with pytest.raises(livestatus.MKLivestatusSocketError):
         try_update_license_usage(
+            # 'now' does not matter here due to a livestatus error
+            Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(0))), tz=""),
             instance_id,
             site_hash,
             lambda *args, **kwargs: _mock_livestatus(),
@@ -101,19 +98,17 @@ def test_try_update_license_usage_livestatus_socket_error(
     )
 
 
-def test_try_update_license_usage_livestatus_not_found_error(
-    monkeypatch: MonkeyPatch,
-) -> None:
+def test_try_update_license_usage_livestatus_not_found_error() -> None:
     def _mock_livestatus() -> LicenseUsageSample:
         raise livestatus.MKLivestatusNotFoundError()
-
-    monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
 
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
     with pytest.raises(livestatus.MKLivestatusNotFoundError):
         try_update_license_usage(
+            # 'now' does not matter here due to a livestatus error
+            Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(0))), tz=""),
             instance_id,
             site_hash,
             lambda *args, **kwargs: _mock_livestatus(),
@@ -130,15 +125,12 @@ def test_try_update_license_usage_livestatus_not_found_error(
     )
 
 
-def test_try_update_license_usage_next_run_ts_not_reached(
-    monkeypatch: MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 2 * time.time())
-
+def test_try_update_license_usage_next_run_ts_not_reached() -> None:
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
     try_update_license_usage(
+        Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(-1))), tz=""),
         instance_id,
         site_hash,
         lambda *args, **kwargs: LicenseUsageSample(

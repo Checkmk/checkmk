@@ -1,6 +1,6 @@
 Title: Fix Email HTML Injection
 Class: security
-Compatible: compat
+Compatible: incompat
 Component: notifications
 Date: 1678264782
 Edition: cre
@@ -26,3 +26,10 @@ We calculated a CVSS3.1 score of 4.1 (Medium) CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C
 <b>Changes</b>:
 With this Werk the <i>Insert HTML section between body and table</i> will be sanitized in the usual manner.
 So certain formatting tags like <tt>h1</tt>, <tt>b</tt>, etc. are still possible to use.
+
+To be precise:
+
+<tt>h1</tt>, <tt>h2</tt>, <tt>b</tt>, <tt>tt</tt>, <tt>i</tt>, <tt>u</tt>, <tt>br</tt>, <tt>nobr</tt>, <tt>pre</tt>, <tt>sup</tt>, <tt>p</tt>, <tt>li</tt>, <tt>ul</tt>, <tt>ol</tt> without any additional attributes are allowed.
+
+Links (<tt>a</tt>) are also allowed with the attributes <tt>href</tt> and <tt>target</tt>.
+The <tt>href</tt> needs to be either relative or when absolute must use one of the following URL schemas: <tt>http</tt>, <tt>https</tt>, <tt>mailto</tt>.

@@ -108,3 +108,36 @@ def test_escape_text_with_links(inp: str, out: Optional[str]) -> None:
         assert escaping.escape_permissive(inp, escape_links=False) == inp
     else:
         assert escaping.escape_permissive(inp, escape_links=False) == out
+
+
+@pytest.mark.parametrize(
+    "tagname", ("h1", "h2", "b", "tt", "i", "u", "br", "nobr", "pre", "sup", "p", "li", "ul", "ol"))
+def test_permissive_tags(tagname: str) -> None:
+    """test for which tags are 'allowed' aka unescaped after escaping"""
+
+    opening = f"<{tagname}>"
+    assert escaping.escape_permissive(opening) == opening
+
+    closing = f"</{tagname}>"
+    assert escaping.escape_permissive(closing) == closing
+
+    assert escaping.escape_permissive(opening + "foo" + closing) == opening + "foo" + closing
+
+
+def test_a_unescaping() -> None:
+    test_str = "<a>foo</a>"
+    assert escaping.escape_permissive("<a>foo</a>", escape_links=False) == "&lt;a&gt;foo</a>"
+
+    test_str = '<a href="bar">foo</a>'
+    assert escaping.escape_permissive(test_str, escape_links=False) == test_str
+
+    assert (escaping.escape_permissive('<a href="bar" target="">foo</a>',
+                                       escape_links=False) == '<a href="bar">foo</a>')
+
+    # I guess this should be considered a bug
+    assert (escaping.escape_permissive(
+        '<a href="bar" style="">foo</a>',
+        escape_links=False) == '<a href="bar&quot; style=&quot;">foo</a>')
+    assert (escaping.escape_permissive(
+        '<a style=""href="bar">foo</a>',
+        escape_links=False) == "&lt;a style=&quot;&quot;href=&quot;bar&quot;&gt;foo</a>")

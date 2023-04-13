@@ -6,14 +6,19 @@
 import sys
 
 from cmk.utils.licensing.helper import hash_site_id, init_logging, load_instance_id
-from cmk.utils.licensing.usage import create_sample, try_update_license_usage
+from cmk.utils.licensing.usage import create_sample, Now, try_update_license_usage
 from cmk.utils.site import omd_site
 
 
 def main() -> int:
     logger = init_logging()
     try:
-        try_update_license_usage(load_instance_id(), hash_site_id(omd_site()), create_sample)
+        try_update_license_usage(
+            Now.make(),
+            load_instance_id(),
+            hash_site_id(omd_site()),
+            create_sample,
+        )
         return 0
     except Exception as e:
         logger.error("Error during license usage history update: %s", e)

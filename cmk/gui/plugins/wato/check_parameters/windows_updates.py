@@ -21,20 +21,20 @@ def _parameter_valuespec_windows_updates() -> Dictionary:
             (
                 "levels_important",
                 SimpleLevels(
-                    Integer, title="Levels for pending important updates", default_value=(1, 1)
+                    Integer, title=_("Levels for pending important updates"), default_value=(1, 1)
                 ),
             ),
             (
                 "levels_optional",
                 SimpleLevels(
-                    Integer, title="Levels for pending optional updates", default_value=(1, 99)
+                    Integer, title=_("Levels for pending optional updates"), default_value=(1, 99)
                 ),
             ),
             (
                 "levels_lower_forced_reboot",
                 SimpleLevels(
                     Age,
-                    title="Levels for time until forced reboot due to pending important updates",
+                    title=_("Levels for time until forced reboot due to pending important updates"),
                     default_value=(604800, 172800),
                 ),
             ),

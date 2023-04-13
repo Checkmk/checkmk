@@ -34,8 +34,8 @@ from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
     host_extra_conf,
     host_name,
 )
-
-from ..agent_based_api.v1 import regex, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import regex, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 
 class ItemData(TypedDict):
@@ -73,13 +73,14 @@ def get_ec_rule_params() -> list:
 
 
 def discoverable_items(*sections: Section) -> List[str]:
-    """only consider files which are 'ok' on at least one node"""
+    """only consider files which are 'ok' on at least one node or 'cannotopen' to notify about
+    unreadable files"""
     return sorted(
         {
             item
             for node_data in sections
             for item, item_data in node_data.logfiles.items()
-            if item_data["attr"] == "ok"
+            if item_data["attr"] == "ok" or item_data["attr"] == "cannotopen"
         }
     )
 
@@ -113,7 +114,6 @@ def reclassify(
     text: str,
     old_level: str,
 ) -> str:
-
     # Reclassify state if a given regex pattern matches
     # A match overrules the previous state->state reclassification
     for level, pattern, _ in patterns.get("reclassify_patterns", []):
@@ -154,3 +154,46 @@ def check_errors(cluster_section: Mapping[Optional[str], Section]) -> Iterable[R
                 state=State.UNKNOWN,
                 summary=error_msg if node is None else "[%s] %s" % (node, error_msg),
             )
+
+
+def get_unreadable_logfiles(
+    logfile: str, section: Mapping[Optional[str], Section]
+) -> Sequence[tuple[str, Optional[str]]]:
+    """
+    >>> section = Section(errors=[], logfiles={"log1": ItemData(attr="cannotopen", lines={})})
+    >>> list(get_unreadable_logfiles("log1", {"node":section }))
+    [('log1', 'node')]
+    >>> section = Section(errors=[], logfiles={"log1": ItemData(attr="cannotopen", lines={})})
+    >>> list(get_unreadable_logfiles("log1", {None:section }))
+    [('log1', None)]
+    >>> list(get_unreadable_logfiles("log1", {"node": Section(errors=[], logfiles={})}))
+    []
+    """
+    unreadable_logfiles = [
+        (logfile, node)
+        for node, node_data in section.items()
+        if (logfile_data := node_data.logfiles.get(logfile))
+        and logfile_data["attr"] == "cannotopen"
+    ]
+    return unreadable_logfiles
+
+
+def check_unreadable_files(
+    unreadable_logfiles: Sequence[tuple[str, Optional[str]]], monitoring_state: State
+) -> CheckResult:
+    """
+    >>> list(check_unreadable_files([("log1", "node")], State.WARN))
+    [Result(state=<State.WARN: 1>, summary="[node] Could not read log file 'log1'")]
+    >>> list(check_unreadable_files([("log1", "node")], State.CRIT))
+    [Result(state=<State.CRIT: 2>, summary="[node] Could not read log file 'log1'")]
+    >>> list(check_unreadable_files([("log1", None)], State.CRIT))
+    [Result(state=<State.CRIT: 2>, summary="Could not read log file 'log1'")]
+    >>> list(check_unreadable_files([], State.CRIT))
+    []
+    """
+    for logfile, node in unreadable_logfiles:
+        error_msg = f"Could not read log file '{logfile}'"
+        yield Result(
+            state=monitoring_state,
+            summary=error_msg if node is None else f"[{node}] {error_msg}",
+        )

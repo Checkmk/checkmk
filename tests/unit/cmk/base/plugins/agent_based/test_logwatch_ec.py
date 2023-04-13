@@ -6,6 +6,7 @@
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any, Mapping, Optional
 
 import pytest
 
@@ -86,6 +87,7 @@ SECTION1 = logwatch_ec.logwatch.Section(
             [
                 Service(item="log1", parameters={"expected_logfiles": ["log1"]}),
                 Service(item="log2", parameters={"expected_logfiles": ["log2"]}),
+                Service(item="log4", parameters={"expected_logfiles": ["log4"]}),
                 Service(item="log5", parameters={"expected_logfiles": ["log5"]}),
             ],
         ),
@@ -101,6 +103,7 @@ SECTION1 = logwatch_ec.logwatch.Section(
             [
                 Service(item="log1", parameters={"expected_logfiles": ["log1"]}),
                 Service(item="log2", parameters={"expected_logfiles": ["log2"]}),
+                Service(item="log4", parameters={"expected_logfiles": ["log4"]}),
                 Service(item="log5", parameters={"expected_logfiles": ["log5"]}),
             ],
         ),
@@ -132,6 +135,7 @@ SECTION1 = logwatch_ec.logwatch.Section(
                     "method": "pass me on!",
                     "facility": "pass me on!",
                     "monitor_logfilelist": "pass me on!",
+                    "monitor_logfile_access_state": "pass me on!",
                     "logwatch_reclassify": "pass me on!",
                     "some_other_key": "I should be discarded!",
                 }
@@ -144,6 +148,7 @@ SECTION1 = logwatch_ec.logwatch.Section(
                         "method": "pass me on!",
                         "facility": "pass me on!",
                         "monitor_logfilelist": "pass me on!",
+                        "monitor_logfile_access_state": "pass me on!",
                         "logwatch_reclassify": "pass me on!",
                     },
                 ),
@@ -168,7 +173,7 @@ def test_logwatch_ec_inventory_single(monkeypatch, info, fwd_rule, expected_resu
             _STRING_TABLE_NO_MESSAGES,
             [{"separate_checks": False}],
             [
-                Service(parameters={"expected_logfiles": ["log1", "log2", "log5"]}),
+                Service(parameters={"expected_logfiles": ["log1", "log2", "log4", "log5"]}),
             ],
         ),
         (
@@ -197,23 +202,56 @@ class _FakeForwarder:
         return logwatch_ec.LogwatchFordwardResult(num_forwarded=len(messages))
 
 
-def test_check_logwatch_ec_common_single_node() -> None:
-    assert list(
-        logwatch_ec.check_logwatch_ec_common(
+@pytest.mark.parametrize(
+    "item, params, parsed, expected_result",
+    [
+        (
             "log1",
             logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            {"node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES)},
+            [
+                Result(state=State.OK, summary="Forwarded 0 messages"),
+                Metric("messages", 0.0),
+            ],
+        ),
+        (
+            "log4",
             {
-                "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
+                "facility": 17,  # default to "local1"
+                "method": "",  # local site
+                "monitor_logfilelist": False,
+                "monitor_logfile_access_state": 2,
+                "expected_logfiles": ["log4"],
             },
-            service_level=10,
-            value_store={},
-            hostname=HostName("test-host"),
-            message_forwarder=_FakeForwarder(),
+            {"node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES)},
+            [
+                Result(state=State.CRIT, summary="[node1] Could not read log file 'log4'"),
+                Result(state=State.OK, summary="Forwarded 0 messages"),
+                Metric("messages", 0.0),
+            ],
+        ),
+    ],
+)
+def test_check_logwatch_ec_common_single_node(
+    item: Optional[str],
+    params: Mapping[str, Any],
+    parsed: logwatch_ec.ClusterSection,
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(
+            logwatch_ec.check_logwatch_ec_common(
+                item,
+                params,
+                parsed,
+                service_level=10,
+                value_store={},
+                hostname=HostName("test-host"),
+                message_forwarder=_FakeForwarder(),
+            )
         )
-    ) == [
-        Result(state=State.OK, summary="Forwarded 0 messages"),
-        Metric("messages", 0.0),
-    ]
+        == expected_result
+    )
 
 
 def test_check_logwatch_ec_common_single_node_item_missing() -> None:
@@ -291,25 +329,31 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
 
 
 @pytest.mark.parametrize(
-    ["cluster_section", "expected_result"],
+    ["params", "cluster_section", "expected_result"],
     [
         pytest.param(
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
                 "node2": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
             },
             [
+                Result(state=State.CRIT, summary="[node1] Could not read log file 'log4'"),
+                Result(state=State.CRIT, summary="[node2] Could not read log file 'log4'"),
                 Result(state=State.OK, summary="Forwarded 0 messages"),
                 Metric("messages", 0.0),
             ],
             id="no messages",
         ),
         pytest.param(
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
             },
             [
+                Result(state=State.CRIT, summary="[node1] Could not read log file 'log4'"),
+                Result(state=State.CRIT, summary="[node2] Could not read log file 'log4'"),
                 Result(state=State.OK, summary="Forwarded 2 messages from log1"),
                 Metric("messages", 2.0),
             ],
@@ -317,21 +361,46 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
         ),
         pytest.param(
             {
+                "facility": 17,  # default to "local1"
+                "method": "",  # local site
+                "monitor_logfilelist": False,
+                "monitor_logfile_access_state": 2,
+                "expected_logfiles": ["log4"],
+            },
+            {
+                "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
+                "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
+            },
+            [
+                Result(state=State.CRIT, summary="[node1] Could not read log file 'log4'"),
+                Result(state=State.CRIT, summary="[node2] Could not read log file 'log4'"),
+                Result(state=State.OK, summary="Forwarded 2 messages from log1"),
+                Metric("messages", 2.0),
+            ],
+            id="no access to logfile on both nodes",
+        ),
+        pytest.param(
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1_2),
             },
             [
+                Result(state=State.CRIT, summary="[node1] Could not read log file 'log4'"),
                 Result(state=State.OK, summary="Forwarded 5 messages from log1"),
                 Metric("messages", 5.0),
             ],
             id="messages on both nodes, same logfile",
         ),
         pytest.param(
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
             [
+                Result(state=State.CRIT, summary="[node1] Could not read log file 'log4'"),
+                Result(state=State.CRIT, summary="[node2] Could not read log file 'log4'"),
                 Result(state=State.OK, summary="Forwarded 4 messages from log1, log5"),
                 Metric("messages", 4.0),
             ],
@@ -340,6 +409,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
     ],
 )
 def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
+    params: Mapping[str, Any],
     cluster_section: logwatch_ec.ClusterSection,
     expected_result: CheckResult,
 ) -> None:
@@ -347,7 +417,7 @@ def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
         list(
             logwatch_ec.check_logwatch_ec_common(
                 None,
-                logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+                params,
                 cluster_section,
                 service_level=10,
                 value_store={},

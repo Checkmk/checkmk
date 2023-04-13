@@ -24,6 +24,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     ListOf,
     ListOfStrings,
+    MonitoringState,
     NetworkPort,
     RegExp,
     TextInput,
@@ -473,6 +474,17 @@ def _parameter_valuespec_logwatch_ec():
                         ),
                     ),
                     (
+                        "monitor_logfile_access_state",
+                        MonitoringState(
+                            title=_("State if a logfile cannot be read"),
+                            default_value=2,
+                            help=_(
+                                "Choose the Checkmk state in case any of the forwarded logfiles "
+                                "cannot be read"
+                            ),
+                        ),
+                    ),
+                    (
                         "separate_checks",
                         Checkbox(
                             title=_("Create a separate check for each logfile"),
@@ -492,6 +504,7 @@ def _parameter_valuespec_logwatch_ec():
                     "facility",
                     "restrict_logfiles",
                     "monitor_logfilelist",
+                    "monitor_logfile_access_state",
                     "expected_logfiles",
                     "logwatch_reclassify",
                     "separate_checks",

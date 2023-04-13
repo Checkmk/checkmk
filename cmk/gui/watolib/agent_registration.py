@@ -13,8 +13,8 @@ import cmk.utils.regex
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.type_defs import HostName
 
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import request
+from cmk.gui.log import logger
 from cmk.gui.sites import get_site_config, site_is_local
 from cmk.gui.watolib import automation_command_registry, AutomationCommand, do_remote_automation
 
@@ -41,21 +41,24 @@ class AutomationRemoveTLSRegistration(AutomationCommand):
         return "remove-tls-registration"
 
     def get_request(self) -> Sequence[HostName]:
-        raw_host_names = json.loads(request.get_ascii_input_mandatory("host_names", "[]"))
-        return [
-            HostName(raw_host_name)
-            for raw_host_name in raw_host_names
-            if self._validate_host_name(raw_host_name)
-        ]
-
-    @staticmethod
-    def _validate_host_name(raw_host_name: str) -> None:
-        if cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME).match(str(raw_host_name)):
-            return
-        raise MKGeneralException("Invalid host name %s" % raw_host_name)
+        return json.loads(request.get_ascii_input_mandatory("host_names", "[]"))
 
     def execute(self, api_request: Sequence[HostName]) -> None:
-        _remove_tls_registration(api_request)
+        logger.warning(
+            "remove-tls-registration called with the following invalid hostnames: %s",
+            ", ".join(
+                hostname for hostname in api_request if not self._is_hostname_valid(hostname)
+            ),
+        )
+        _remove_tls_registration(
+            [hostname for hostname in api_request if self._is_hostname_valid(hostname)]
+        )
+
+    @staticmethod
+    def _is_hostname_valid(raw_host_name: str) -> bool:
+        return bool(
+            cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME).match(str(raw_host_name))
+        )
 
 
 def _remove_tls_registration(host_names: Sequence[HostName]) -> None:

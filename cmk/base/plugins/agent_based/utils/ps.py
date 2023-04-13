@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from html import escape
 from typing import (
     Any,
     Dict,
@@ -199,7 +200,10 @@ def format_process_list(processes, html_output):
         value, unit = value
         if isinstance(value, float):
             return "%.1f%s" % (value, unit)
-        return "%s%s" % (value, unit)
+        unescaped = "%s%s" % (value, unit)
+        # Handling of backslash-n vs newline is fundamentally broken when talking to the core.
+        # If we're creating HTML anyway, we can circumnavigate that...
+        return escape(unescaped).replace("\\", "&bsol;") if html_output else unescaped
 
     if html_output:
         table_bracket = "<table>%s</table>"

@@ -198,7 +198,19 @@ def test_format_process_list(processes, formatted_list, html_flag):
     assert ps.format_process_list(processes, html_flag) == formatted_list
 
 
-def test_unused_value_remover():
+def test_format_process_list_html_backslash_replacement() -> None:
+    assert ps.format_process_list(
+        [[
+            ("name", ("D:\\nginx", "")),
+            ("user", ("tim & struppi", "")),
+            ("arguments", ("", "")),
+        ]],
+        True,
+    ) == ("<table><tr><th>name</th><th>user</th><th>arguments</th></tr>"
+          "<tr><td>D:&bsol;nginx</td><td>tim &amp; struppi</td><td></td></tr></table>")
+
+
+def test_unused_value_remover() -> None:
 
     value_store_test = {
         "test": {

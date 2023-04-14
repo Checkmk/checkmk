@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 export MK_VARDIR=/var/lib/check_mk_agent
+TMPDIR=${TMPDIR:-/tmp}
 
 help() {
     echo "Usage: mk-job IDENT PROGRAM [ARGS...]"
@@ -22,23 +23,25 @@ if [ $# -lt 2 ]; then
 fi
 
 MYSELF=$(id -nu)
-OUTPUT_PATH=$MK_VARDIR/job/$MYSELF
-IDENT=$1
-RUNNING_FILE="$OUTPUT_PATH/$IDENT.$$running"
+OUTPUT_PATH="${MK_VARDIR}/job/${MYSELF}"
+IDENT="${1}"
+TMP_FILE="${TMPDIR}/${IDENT}.$$"
+RUNNING_FILE="${OUTPUT_PATH}/${IDENT}.$$running"
+COMPLETED_FILE="${OUTPUT_PATH}/${IDENT}"
 
 shift
 
-if [ ! -d "$OUTPUT_PATH" ]; then
-    if [ "$MYSELF" = root ]; then
-        mkdir -p "$OUTPUT_PATH"
+if [ ! -d "${OUTPUT_PATH}" ]; then
+    if [ "${MYSELF}" = root ]; then
+        mkdir -p "${OUTPUT_PATH}"
     else
-        echo "ERROR: Missing output directory $OUTPUT_PATH for non-root user '$MYSELF'." >&2
+        echo "ERROR: Missing output directory ${OUTPUT_PATH} for non-root user '${MYSELF}'." >&2
         exit 1
     fi
 fi
 
-if ! type "$1" >/dev/null 2>&1; then
-    echo -e "ERROR: Cannot run $1. Command not found.\n" >&2
+if ! type "${1}" >/dev/null 2>&1; then
+    echo -e "ERROR: Cannot run ${1}. Command not found.\n" >&2
     help >&2
     exit 1
 fi
@@ -47,18 +50,20 @@ cleanup() {
     rm "${RUNNING_FILE}" 2>/dev/null
 }
 
-date +"start_time %s" >"$RUNNING_FILE" 2>/dev/null
+date +"start_time %s" >"${TMP_FILE}" 2>/dev/null
+cp "${TMP_FILE}" "${RUNNING_FILE}" 2>/dev/null
 
-if [ ! -w "$RUNNING_FILE" ]; then
+if [ ! -w "${RUNNING_FILE}" ]; then
     # Looks like we are lacking the permissions to create this file..
     # In this scenario no mk-job status file is created. We simply execute the command
+    rm "${TMP_FILE}" 2>/dev/null
     exec "$@"
 fi
 
 trap "cleanup" 0
 
-/usr/bin/time -o "$RUNNING_FILE" --append \
+/usr/bin/time -o "${TMP_FILE}" --append \
     -f "exit_code %x\nreal_time %E\nuser_time %U\nsystem_time %S\nreads %I\nwrites %O\nmax_res_kbytes %M\navg_mem_kbytes %K\ninvol_context_switches %c\nvol_context_switches %w" "$@"
 RC=$?
-mv "$RUNNING_FILE" "$OUTPUT_PATH/$IDENT"
+mv "${TMP_FILE}" "${COMPLETED_FILE}"
 exit $RC

@@ -14,8 +14,6 @@ import urllib.parse
 from collections.abc import Mapping, Sequence
 from typing import Any, cast, Literal, NoReturn, TypedDict
 
-from pydantic import BaseModel, StrictStr
-
 from cmk.utils import version
 from cmk.utils.type_defs import HTTPMethod
 
@@ -25,24 +23,6 @@ JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"
 
 def _only_set_keys(body: dict[str, Any | None]) -> dict[str, Any]:
     return {k: v for k, v in body.items() if v is not None}
-
-
-class Link(BaseModel):
-    domainType: Literal["link"]
-    rel: StrictStr
-    href: StrictStr
-    method: Literal["GET", "PUT", "DELETE"]
-    type: Literal["application/json"]
-
-
-class ObjectResponse(BaseModel):
-    links: list[Link]
-    members: dict
-
-
-class CollectionResponse(BaseModel):
-    links: list[Link]
-    extensions: dict
 
 
 @dataclasses.dataclass(frozen=True)
@@ -219,7 +199,6 @@ class RestApiClient:
         method: HTTPMethod,
         url: str,
         body: JSON | None = None,
-        pydantic_basemodel_body: BaseModel | None = None,
         query_params: Mapping[str, str] | None = None,
         headers: Mapping[str, str] | None = None,
         expect_ok: bool = True,
@@ -238,13 +217,10 @@ class RestApiClient:
         if not url_is_complete:
             url = self._url_prefix + url
 
-        if pydantic_basemodel_body is not None:
-            request_body = pydantic_basemodel_body.json()
+        if body is not None:
+            request_body = json.dumps(body)
         else:
-            if body is not None:
-                request_body = json.dumps(body)
-            else:
-                request_body = ""
+            request_body = ""
 
         resp = self.request_handler.request(
             method=method,

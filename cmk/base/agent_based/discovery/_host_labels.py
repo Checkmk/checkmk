@@ -11,7 +11,7 @@ This module exposes three functions:
  * analyse_host_labels (dispatching to one of the above based on host_config.is_cluster)
 
 """
-from typing import Dict, Mapping, Sequence
+from typing import Dict, Iterable, Mapping, Sequence
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
@@ -124,15 +124,7 @@ def analyse_cluster_labels(
         )
 
         # keep the latest for every label.name
-        nodes_host_labels.update(
-            {
-                # TODO (mo): According to unit tests, this is what was done prior to refactoring.
-                # I'm not sure this is desired. If it is, it should be explained.
-                # Whenever we do not load the host labels, vanished will be empty.
-                **{l.name: l for l in node_result.vanished},
-                **{l.name: l for l in node_result.present},
-            }
-        )
+        nodes_host_labels.update({l.name: l for l in _iter_kept_labels(node_result)})
 
     return _analyse_host_labels(
         host_name=host_config.hostname,
@@ -160,12 +152,7 @@ def _analyse_host_labels(
 
     if save_labels:
         DiscoveredHostLabelsStore(host_name).save(
-            {
-                # TODO (mo): I'm not sure this is desired. If it is, it should be explained.
-                # Whenever we do not load the host labels, vanished will be empty.
-                **{l.name: l.to_dict() for l in host_labels.vanished},
-                **{l.name: l.to_dict() for l in host_labels.present},
-            }
+            {l.name: l.to_dict() for l in _iter_kept_labels(host_labels)}
         )
 
     if host_labels.new:
@@ -197,6 +184,15 @@ def _analyse_host_labels(
 def _load_existing_host_labels(host_name: HostName) -> Sequence[HostLabel]:
     raw_label_dict = DiscoveredHostLabelsStore(host_name).load()
     return [HostLabel.from_dict(name, value) for name, value in raw_label_dict.items()]
+
+
+def _iter_kept_labels(host_labels: QualifiedDiscovery[HostLabel]) -> Iterable[HostLabel]:
+    # TODO (mo): Clean this up, the logic is all backwards:
+    # It seems we always keep the vanished ones here.
+    # However: If we do not load the existing ones, no labels will be classified as 'vanished',
+    # and the ones that *are* in fact vanished are dropped silently.
+    yield from host_labels.vanished
+    yield from host_labels.present
 
 
 def _discover_host_labels(

@@ -76,7 +76,7 @@ def analyse_host_labels(
     if save_labels:
         do_save_labels(host_name, host_labels)
 
-    if host_labels.new:
+    if host_labels.new:  # what about vanished or changed?
         # Some check plugins like 'df' may discover services based on host labels.
         # A rule may look like:
         # [{
@@ -97,6 +97,9 @@ def analyse_host_labels(
         # based on these new host labels but we only got the cached result.
         # If we found new host labels, we have to evaluate these rules again in order
         # to find new services, eg. in 'inventory_df'. Thus we have to clear these caches.
+        #
+        # NOTE: This will not work for the discovery preview, as the host labels are not
+        # written to disk.
         ruleset_matcher.clear_caches()
 
     return host_labels

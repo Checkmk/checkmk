@@ -715,17 +715,15 @@ mod test_status {
 
     #[test]
     fn test_status_end_to_end() {
-        let reg_dir = config::test_helpers::TestRegistryDir::new();
-        let mut registry = reg_dir.registry();
-        registry.register_connection(
+        let r = config::test_helpers::TestRegistry::new().add_connection(
             &config::ConnectionMode::Push,
-            &site_spec::SiteID::from_str("server/push-site").unwrap(),
-            config::TrustedConnectionWithRemote::from("99f56bbc-5965-4b34-bc70-1959ad1d32d6"),
+            "server/push-site",
+            "99f56bbc-5965-4b34-bc70-1959ad1d32d6",
         );
 
         assert_eq!(
             _status(
-                &registry,
+                &r.registry,
                 &config::PullConfig::new(
                     config::RuntimeConfig::default(),
                     cli::PullOpts {
@@ -733,7 +731,7 @@ mod test_status {
                         #[cfg(windows)]
                         agent_channel: None,
                     },
-                    registry.clone()
+                    r.registry.clone()
                 )
                 .unwrap(),
                 false,

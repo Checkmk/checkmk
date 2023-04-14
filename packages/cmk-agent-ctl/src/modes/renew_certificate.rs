@@ -143,7 +143,7 @@ fn conditionally_renew_connection_cert(
 mod test_renew_certificate {
 
     use crate::config::Registry;
-    use crate::configuration::config::test_helpers::TestRegistryDir;
+    use crate::configuration::config::test_helpers::{TestRegistry, TestRegistryDir};
     use crate::modes::renew_certificate::*;
     use openssl;
     use openssl::asn1::Asn1Time;
@@ -223,8 +223,7 @@ mod test_renew_certificate {
     }
 
     struct RegistryFixture {
-        registry: Registry,
-        _reg_dir: TestRegistryDir,
+        test_registry: TestRegistry,
         push_uuid: uuid::Uuid,
         pull_uuid: uuid::Uuid,
         imported_uuid: uuid::Uuid,
@@ -232,14 +231,13 @@ mod test_renew_certificate {
 
     impl RegistryFixture {
         fn new() -> Self {
-            let reg_dir = TestRegistryDir::new();
-            let reg = reg_dir.prefilled_registry();
+            let test_registry = TestRegistry::new().fill_registry();
+            let reg = &test_registry.registry;
             let push_uuid = reg.push_connections().next().unwrap().1.trust.uuid;
             let pull_uuid = reg.standard_pull_connections().next().unwrap().1.trust.uuid;
             let imported_uuid = reg.imported_pull_connections().next().unwrap().uuid;
             Self {
-                registry: reg,
-                _reg_dir: reg_dir,
+                test_registry,
                 push_uuid,
                 pull_uuid,
                 imported_uuid,
@@ -249,10 +247,11 @@ mod test_renew_certificate {
 
     #[test]
     fn test_renew_certificate_push() {
-        let mut r = RegistryFixture::new();
-        _renew_certificate(&mut r.registry, &r.push_uuid.to_string(), &TestApi {}).unwrap();
+        let r = RegistryFixture::new();
+        let mut registry = r.test_registry.registry;
+        _renew_certificate(&mut registry, &r.push_uuid.to_string(), &TestApi {}).unwrap();
         assert!(
-            r.registry
+            registry
                 .push_connections()
                 .next()
                 .unwrap()
@@ -265,10 +264,11 @@ mod test_renew_certificate {
 
     #[test]
     fn test_renew_certificate_pull() {
-        let mut r = RegistryFixture::new();
-        _renew_certificate(&mut r.registry, "server/pull-site", &TestApi {}).unwrap();
+        let r = RegistryFixture::new();
+        let mut registry = r.test_registry.registry;
+        _renew_certificate(&mut registry, "server/pull-site", &TestApi {}).unwrap();
         assert!(
-            r.registry
+            registry
                 .standard_pull_connections()
                 .next()
                 .unwrap()
@@ -281,13 +281,14 @@ mod test_renew_certificate {
 
     #[test]
     fn test_renew_certificate_errors() {
-        let mut r = RegistryFixture::new();
+        let r = RegistryFixture::new();
+        let mut registry = r.test_registry.registry;
         let test_api = TestApi {};
         assert!(
-            _renew_certificate(&mut r.registry, &r.imported_uuid.to_string(), &test_api).is_err()
+            _renew_certificate(&mut registry, &r.imported_uuid.to_string(), &test_api).is_err()
         );
-        assert!(_renew_certificate(&mut r.registry, "not_a_uuid", &test_api).is_err());
-        assert!(_renew_certificate(&mut r.registry, "unknown/site_id", &test_api).is_err());
+        assert!(_renew_certificate(&mut registry, "not_a_uuid", &test_api).is_err());
+        assert!(_renew_certificate(&mut registry, "unknown/site_id", &test_api).is_err());
     }
 
     fn new_trusted_connection_with_remote(cert: String) -> config::TrustedConnectionWithRemote {
@@ -307,43 +308,41 @@ mod test_renew_certificate {
     }
 
     struct AllFixture {
-        registry: Registry,
-        _reg_dir: TestRegistryDir,
+        test_registry: TestRegistry,
         cert_too_short: String,
         cert_ok: String,
     }
 
     impl AllFixture {
         fn new() -> Self {
-            let reg_dir = TestRegistryDir::new();
-            let mut registry = reg_dir.registry();
             let cert_too_short = mk_ca_cert(10).unwrap();
             let cert_too_long = mk_ca_cert(365 * 600).unwrap();
             let cert_ok = mk_ca_cert(100).unwrap();
-            registry.register_connection(
-                &config::ConnectionMode::Push,
-                &site_spec::SiteID::from_str("server/push-site_1").unwrap(),
-                new_trusted_connection_with_remote(cert_too_short.clone()),
-            );
-            registry.register_connection(
-                &config::ConnectionMode::Push,
-                &site_spec::SiteID::from_str("server/push-site_2").unwrap(),
-                new_trusted_connection_with_remote(cert_too_long.clone()),
-            );
-            registry.register_connection(
-                &config::ConnectionMode::Pull,
-                &site_spec::SiteID::from_str("server/pull-site_1").unwrap(),
-                new_trusted_connection_with_remote(cert_too_long),
-            );
-            registry.register_connection(
-                &config::ConnectionMode::Pull,
-                &site_spec::SiteID::from_str("server/pull-site_2").unwrap(),
-                new_trusted_connection_with_remote(cert_ok.clone()),
-            );
-            registry.register_imported_connection(new_trusted_connection(cert_too_short.clone()));
+
+            let test_registry = TestRegistry::new()
+                .add_connection(
+                    &config::ConnectionMode::Push,
+                    "server/push-site_1",
+                    new_trusted_connection_with_remote(cert_too_short.clone()),
+                )
+                .add_connection(
+                    &config::ConnectionMode::Push,
+                    "server/push-site_2",
+                    new_trusted_connection_with_remote(cert_too_long.clone()),
+                )
+                .add_connection(
+                    &config::ConnectionMode::Pull,
+                    "server/pull-site_1",
+                    new_trusted_connection_with_remote(cert_too_long),
+                )
+                .add_connection(
+                    &config::ConnectionMode::Pull,
+                    "server/pull-site_2",
+                    new_trusted_connection_with_remote(cert_ok.clone()),
+                )
+                .add_imported_connection(new_trusted_connection(cert_too_short.clone()));
             Self {
-                registry,
-                _reg_dir: reg_dir,
+                test_registry,
                 cert_too_short,
                 cert_ok,
             }
@@ -360,22 +359,23 @@ mod test_renew_certificate {
 
     #[test]
     fn test_renew_all_certificates() -> AnyhowResult<()> {
-        let mut a = AllFixture::new();
-        renew_all_certificates(&mut a.registry, &TestApi {})?;
+        let a = AllFixture::new();
+        let mut registry = a.test_registry.registry;
+        renew_all_certificates(&mut registry, &TestApi {})?;
 
-        let conn = get_connection(&a.registry, "server/push-site_1");
+        let conn = get_connection(&registry, "server/push-site_1");
         assert!(conn.certificate == format!("new_cert_for_{}", conn.uuid));
 
-        let conn = get_connection(&a.registry, "server/push-site_2");
+        let conn = get_connection(&registry, "server/push-site_2");
         assert!(conn.certificate == format!("new_cert_for_{}", conn.uuid));
 
-        let conn = get_connection(&a.registry, "server/pull-site_1");
+        let conn = get_connection(&registry, "server/pull-site_1");
         assert!(conn.certificate == format!("new_cert_for_{}", conn.uuid));
 
-        let conn = get_connection(&a.registry, "server/pull-site_2");
+        let conn = get_connection(&registry, "server/pull-site_2");
         assert!(conn.certificate == a.cert_ok);
 
-        let conn = &a.registry.imported_pull_connections().next().unwrap();
+        let conn = &registry.imported_pull_connections().next().unwrap();
         assert!(conn.certificate == a.cert_too_short);
         Ok(())
     }
@@ -383,7 +383,7 @@ mod test_renew_certificate {
     #[test]
     fn test_renew_all_certificates_legacy_pull_mode() -> AnyhowResult<()> {
         let reg_dir = TestRegistryDir::new();
-        let mut reg = reg_dir.registry();
+        let mut reg = reg_dir.create_registry();
         reg.activate_legacy_pull()?;
         renew_all_certificates(&mut reg, &TestApi {})?;
         assert!(reg.legacy_pull_active());

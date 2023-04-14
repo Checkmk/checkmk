@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn test_import() {
         let reg_dir = config::test_helpers::TestRegistryDir::new();
-        let mut reg = reg_dir.registry();
+        let mut reg = reg_dir.create_registry();
         assert!(reg.is_empty());
         assert!(!reg.path().exists());
         assert!(_import(&mut reg, &MockImportDataProvider {}).is_ok());

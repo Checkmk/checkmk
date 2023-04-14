@@ -54,7 +54,7 @@ mod tests {
 
     fn registry() -> (TestRegistryDir, config::Registry) {
         let registry_dir = TestRegistryDir::new();
-        let mut registry = registry_dir.registry();
+        let mut registry = registry_dir.create_registry();
         registry.register_connection(
             &config::ConnectionMode::Push,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),

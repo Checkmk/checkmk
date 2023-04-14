@@ -534,7 +534,7 @@ pub fn proxy_register(config: &config::RegisterExistingConfig) -> AnyhowResult<(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use config::test_helpers::TestRegistryDir;
+    use config::test_helpers::{TestRegistry, TestRegistryDir};
     use std::str::FromStr;
 
     const SERVER: &str = "server";
@@ -737,7 +737,7 @@ mod tests {
         #[test]
         fn test_existing() {
             let reg_dir = TestRegistryDir::new();
-            let mut registry = reg_dir.registry();
+            let mut registry = reg_dir.create_registry();
             assert!(!registry.path().exists());
             assert!(direct_registration(
                 &registration_connection_config(None, None, false),
@@ -762,7 +762,7 @@ mod tests {
         #[test]
         fn test_new() {
             let reg_dir = TestRegistryDir::new();
-            let mut registry = reg_dir.registry();
+            let mut registry = reg_dir.create_registry();
             assert!(!registry.path().exists());
             assert!(direct_registration(
                 &registration_connection_config(
@@ -811,33 +811,29 @@ mod tests {
     mod test_register_pre_configured {
         use super::*;
 
-        fn registry() -> (TestRegistryDir, config::Registry) {
-            let reg_dir = TestRegistryDir::new();
-            let mut registry = reg_dir.registry();
-            registry.register_connection(
-                &config::ConnectionMode::Pull,
-                &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
-                config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
-            );
-            registry.register_connection(
-                &config::ConnectionMode::Pull,
-                &site_spec::SiteID::from_str("server/other-pull-site").unwrap(),
-                config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
-            );
-            registry.register_connection(
-                &config::ConnectionMode::Push,
-                &site_spec::SiteID::from_str("server/pre-baked-push-site").unwrap(),
-                config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
-            );
-            registry.register_connection(
-                &config::ConnectionMode::Push,
-                &site_spec::SiteID::from_str("server/other-push-site").unwrap(),
-                config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
-            );
-            registry.register_imported_connection(config::TrustedConnection::from(
-                uuid::Uuid::new_v4(),
-            ));
-            (reg_dir, registry)
+        fn registry() -> TestRegistry {
+            TestRegistry::new()
+                .add_connection(
+                    &config::ConnectionMode::Pull,
+                    "server/pre-baked-pull-site",
+                    uuid::Uuid::new_v4(),
+                )
+                .add_connection(
+                    &config::ConnectionMode::Pull,
+                    "server/other-pull-site",
+                    uuid::Uuid::new_v4(),
+                )
+                .add_connection(
+                    &config::ConnectionMode::Push,
+                    "server/pre-baked-push-site",
+                    uuid::Uuid::new_v4(),
+                )
+                .add_connection(
+                    &config::ConnectionMode::Push,
+                    "server/other-push-site",
+                    uuid::Uuid::new_v4(),
+                )
+                .add_imported_connection(uuid::Uuid::new_v4())
         }
 
         fn pre_configured_connections(
@@ -1026,44 +1022,44 @@ mod tests {
 
         #[test]
         fn test_keep_existing_connections() {
-            let (_reg_dir, mut registry) = registry();
+            let mut r = registry();
             assert!(_register_pre_configured(
                 &pre_configured_connections(true),
                 &config::ClientConfig {
                     use_proxy: false,
                     validate_api_cert: false,
                 },
-                &mut registry,
+                &mut r.registry,
                 &MockRegistrationPreConfiguredImpl {
                     is_registered_at_remote: true
                 },
             )
             .is_ok());
-            test_registry_after_registration(true, &mut registry)
+            test_registry_after_registration(true, &mut r.registry)
         }
 
         #[test]
         fn test_remove_vanished_connections() {
-            let (_reg_dir, mut registry) = registry();
+            let mut r = registry();
             assert!(_register_pre_configured(
                 &pre_configured_connections(false),
                 &config::ClientConfig {
                     use_proxy: false,
                     validate_api_cert: false,
                 },
-                &mut registry,
+                &mut r.registry,
                 &MockRegistrationPreConfiguredImpl {
                     is_registered_at_remote: true
                 },
             )
             .is_ok());
-            test_registry_after_registration(false, &mut registry)
+            test_registry_after_registration(false, &mut r.registry)
         }
 
         #[test]
         fn test_port_update_only() {
             let reg_dir = TestRegistryDir::new();
-            let mut registry = reg_dir.registry();
+            let mut registry = reg_dir.create_registry();
             registry.register_connection(
                 &config::ConnectionMode::Pull,
                 &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
@@ -1115,8 +1111,8 @@ mod tests {
 
         #[test]
         fn test_registered_locally_but_not_at_remote() -> AnyhowResult<()> {
-            let (_reg_dir, mut registry) = registry();
-            let registry_before_registration = registry.clone();
+            let mut r = registry();
+            let registry_before_registration = r.registry.clone();
             let pre_configured_connections = pre_configured_connections(true);
             assert!(_register_pre_configured(
                 &pre_configured_connections,
@@ -1124,7 +1120,7 @@ mod tests {
                     use_proxy: false,
                     validate_api_cert: false,
                 },
-                &mut registry,
+                &mut r.registry,
                 &MockRegistrationPreConfiguredImpl {
                     is_registered_at_remote: false
                 },
@@ -1140,7 +1136,7 @@ mod tests {
                 {
                     assert_ne!(
                         connection_before_registration.trust.uuid,
-                        registry.get(site_id).unwrap().trust.uuid
+                        r.registry.get(site_id).unwrap().trust.uuid
                     );
                 }
             }

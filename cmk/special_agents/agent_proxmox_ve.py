@@ -659,20 +659,11 @@ class ProxmoxVeSession:
         ) -> None:
             super().__init__()
             ticket_url = base_url + "api2/json/access/ticket"
-            try:
-                response = (
-                    requests.post(
-                        url=ticket_url, verify=verify_ssl, data=credentials, timeout=timeout
-                    )
-                    .json()
-                    .get("data")
-                )
-            except requests.exceptions.ConnectTimeout:
-                raise CannotRecover(
-                    f"Timeout after {timeout}s when trying to connect to {base_url}"
-                )
-            except requests.exceptions.ConnectionError as exc:
-                raise CannotRecover(f"Could not connect to {base_url} ({exc})") from exc
+            response = (
+                requests.post(url=ticket_url, verify=verify_ssl, data=credentials, timeout=timeout)
+                .json()
+                .get("data")
+            )
 
             if response is None:
                 raise CannotRecover(
@@ -742,16 +733,20 @@ class ProxmoxVeSession:
 
     def get_api_element(self, path: str) -> Any:
         """do an API GET request"""
-        response = self.get_raw("api2/json/" + path)
-        if response.status_code != requests.codes.ok:
-            return []
         try:
+            response = self.get_raw("api2/json/" + path)
+            if response.status_code != requests.codes.ok:
+                return []
             response_json = response.json()
+            if "errors" in response_json:
+                raise CannotRecover(
+                    "Could not fetch {!r} ({!r})".format(path, response_json["errors"])
+                )
+            return response_json.get("data")
+        except requests.exceptions.ReadTimeout:
+            raise CannotRecover(f"Read timeout after {self._timeout}s when trying to GET {path}")
         except JSONDecodeError as e:
             raise CannotRecover("Couldn't parse API element %r" % path) from e
-        if "errors" in response_json:
-            raise CannotRecover("Could not fetch {!r} ({!r})".format(path, response_json["errors"]))
-        return response_json.get("data")
 
 
 class ProxmoxVeAPI:
@@ -768,10 +763,10 @@ class ProxmoxVeAPI:
                 timeout=timeout,
                 verify_ssl=verify_ssl,
             )
-        except requests.exceptions.ConnectTimeout as exc:
-            # In order to make the exception traceback more readable truncate it to
-            # this function - fallback to full stack on Python2
-            raise exc.with_traceback(None) if hasattr(exc, "with_traceback") else exc
+        except requests.exceptions.ConnectTimeout:
+            raise CannotRecover(f"Timeout after {timeout}s when trying to connect to {host}:{port}")
+        except requests.exceptions.ConnectionError as exc:
+            raise CannotRecover(f"Could not connect to {host}:{port} ({exc})") from exc
 
     def __enter__(self) -> Any:
         self._session.__enter__()

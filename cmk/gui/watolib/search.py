@@ -630,7 +630,7 @@ def _launch_requests_processing_background() -> None:
         job.start(_process_update_requests_background)
 
 
-register_builtin("request-end", _launch_requests_processing_background)
+register_builtin("request-start", _launch_requests_processing_background)
 
 
 def _updates_requested() -> bool:

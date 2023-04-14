@@ -3,29 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from logging import getLogger
 
-from cmk.gui import main_modules  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.watolib.search import (  # pylint: disable=cmk-module-layer-violation
-    build_index_background,
-)
+from cmk.utils.setup_search_index import request_index_rebuild
 
 
 def main():
     logger = getLogger("init-redis")
     try:
-        main_modules.load_plugins()
-        with gui_context():
-            # the redis unix socket might not yet be open when the background process is launched, therefore, we allow
-            # for several attempts (sleep up to 6 * 5s = 30s at most)
-            build_index_background(
-                n_attempts_redis_connection=6,
-                wait_between_attempts=5,
-            )
+        request_index_rebuild()
     except Exception as excpt:
-        logger.error("ERROR: Failed to launch building of search index")
+        logger.error("ERROR: Failed to request building of Setup search index")
         logger.error(excpt)
 
 

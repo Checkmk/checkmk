@@ -11,7 +11,6 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from itertools import chain
-from time import sleep
 from typing import Final
 
 import redis
@@ -353,7 +352,7 @@ class IndexSearcher:
         self, query: SearchQuery
     ) -> dict[str, list[_SearchResultWithPermissionsCheck]]:
         if not IndexBuilder.index_is_built(self._redis_client):
-            build_index_background()
+            self._launch_index_building_in_background_job()
             raise IndexNotFoundException
 
         query_preprocessed = f"*{query.lower().replace(' ', '*')}*"
@@ -381,6 +380,14 @@ class IndexSearcher:
             ]
             for topic in chain(results_localization_independent, results_localization_dependent)
         }
+
+    @staticmethod
+    def _launch_index_building_in_background_job() -> None:
+        build_job = SearchIndexBackgroundJob()
+        with suppress(BackgroundJobAlreadyRunning):
+            build_job.start(
+                lambda job_interface: _index_building_in_background_job(job_interface=job_interface)
+            )
 
     def _search_redis_categories(
         self,
@@ -500,73 +507,10 @@ class _SearchResultWithPermissionsCheck:
     permissions_check: Callable[[str], bool]
 
 
-def _verify_redis_is_reachable(
-    *,
-    job_interface: BackgroundProcessInterface,
-    n_attempts_max: int = 1,
-    wait_between_attempts: int = 5,
-) -> None:
-    n_attempts = 0
-    job_interface.send_progress_update(_("Checking if Redis is reachable"))
-
-    while n_attempts < n_attempts_max:
-        n_attempts += 1
-
-        if redis_server_reachable():
-            job_interface.send_progress_update(_("Redis is reachable"))
-            return
-
-        job_interface.send_progress_update(
-            _("Connection attempt %d / %d to Redis failed")
-            % (
-                n_attempts,
-                n_attempts_max,
-            )
-        )
-
-        if n_attempts == n_attempts_max:
-            break
-
-        sleep(wait_between_attempts)
-
-    job_interface.send_result_message(
-        _("Maximum number of allowed connection attempts reached, terminating")
-    )
-    raise redis.ConnectionError("Failed to connect to local Redis server")
-
-
-def _actual_index_building_in_background_job(job_interface: BackgroundProcessInterface) -> None:
+def _index_building_in_background_job(job_interface: BackgroundProcessInterface) -> None:
     job_interface.send_progress_update(_("Building of search index started"))
     IndexBuilder(match_item_generator_registry).build_full_index()
     job_interface.send_result_message(_("Search index successfully built"))
-
-
-def _build_index_background(
-    job_interface: BackgroundProcessInterface,
-    n_attempts_redis_connection: int = 1,
-    wait_between_attempts: int = 5,
-) -> None:
-    _verify_redis_is_reachable(
-        job_interface=job_interface,
-        n_attempts_max=n_attempts_redis_connection,
-        wait_between_attempts=wait_between_attempts,
-    )
-    _actual_index_building_in_background_job(job_interface)
-
-
-def build_index_background(
-    n_attempts_redis_connection: int = 1,
-    wait_between_attempts: int = 5,
-) -> None:
-    build_job = SearchIndexBackgroundJob()
-    with suppress(BackgroundJobAlreadyRunning):
-        build_job.start(
-            lambda job_interface: _build_index_background(
-                job_interface=job_interface,
-                n_attempts_redis_connection=n_attempts_redis_connection,
-                wait_between_attempts=wait_between_attempts,
-            )
-        )
 
 
 def _launch_requests_processing_background() -> None:
@@ -581,7 +525,9 @@ register_builtin("request-start", _launch_requests_processing_background)
 
 
 def _process_update_requests_background(job_interface: BackgroundProcessInterface) -> None:
-    _verify_redis_is_reachable(job_interface=job_interface)
+    if not redis_server_reachable():
+        job_interface.send_progress_update(_("Redis is not reachable, terminating"))
+        return
 
     while updates_requested():
         _process_update_requests(
@@ -594,12 +540,12 @@ def _process_update_requests(
     requests: UpdateRequests, job_interface: BackgroundProcessInterface
 ) -> None:
     if requests["rebuild"]:
-        _actual_index_building_in_background_job(job_interface)
+        _index_building_in_background_job(job_interface)
         return
 
     if not IndexBuilder.index_is_built():
         job_interface.send_progress_update(_("Search index not found, re-building from scratch"))
-        _actual_index_building_in_background_job(job_interface)
+        _index_building_in_background_job(job_interface)
         return
 
     job_interface.send_progress_update(_("Updating of search index started"))

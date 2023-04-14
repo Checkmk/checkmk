@@ -44,15 +44,15 @@ class AutomationRemoveTLSRegistration(AutomationCommand):
         return json.loads(request.get_ascii_input_mandatory("host_names", "[]"))
 
     def execute(self, api_request: Sequence[HostName]) -> None:
-        logger.warning(
-            "remove-tls-registration called with the following invalid hostnames: %s",
-            ", ".join(
-                hostname for hostname in api_request if not self._is_hostname_valid(hostname)
-            ),
-        )
-        _remove_tls_registration(
-            [hostname for hostname in api_request if self._is_hostname_valid(hostname)]
-        )
+        valid_hosts = [hostname for hostname in api_request if self._is_hostname_valid(hostname)]
+        if len(valid_hosts) < len(api_request):
+            logger.warning(
+                "remove-tls-registration called with the following invalid hostnames: %s",
+                ", ".join(
+                    hostname for hostname in api_request if not self._is_hostname_valid(hostname)
+                ),
+            )
+        _remove_tls_registration(valid_hosts)
 
     @staticmethod
     def _is_hostname_valid(raw_host_name: str) -> bool:

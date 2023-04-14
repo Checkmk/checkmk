@@ -159,6 +159,7 @@ def show(params: Mapping[str, Any]) -> Response:
     path_params=[GROUP_NAME_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[409],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a contact group"""
@@ -172,7 +173,7 @@ def delete(params: Mapping[str, Any]) -> Response:
             delete_group(name, "contact")
         except GroupInUseException as exc:
             raise ProblemException(
-                status=400,
+                status=409,
                 title="Group in use problem",
                 detail=str(exc),
             )
@@ -193,7 +194,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     request_schema=request_schemas.BulkDeleteContactGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[404],
+    additional_status_codes=[404, 409],
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete contact groups"""
@@ -208,7 +209,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
                 delete_group(group_name, "contact")
             except GroupInUseException as exc:
                 raise ProblemException(
-                    status=400,
+                    status=409,
                     title="Group in use problem",
                     detail=str(exc),
                 )

@@ -128,6 +128,7 @@ def list_groups(params: Mapping[str, Any]) -> Response:
     path_params=[GROUP_NAME_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[409],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a host group"""
@@ -138,7 +139,7 @@ def delete(params: Mapping[str, Any]) -> Response:
         groups.delete_group(name, "host")
     except GroupInUseException as exc:
         raise ProblemException(
-            status=400,
+            status=409,
             title="Group in use problem",
             detail=str(exc),
         )
@@ -159,7 +160,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     request_schema=request_schemas.BulkDeleteHostGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[404],
+    additional_status_codes=[404, 409],
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete host groups"""
@@ -171,7 +172,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
             groups.delete_group(group_name, "host")
         except GroupInUseException as exc:
             raise ProblemException(
-                status=400,
+                status=409,
                 title="Group in use problem",
                 detail=str(exc),
             )

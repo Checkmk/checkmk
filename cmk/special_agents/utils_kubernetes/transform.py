@@ -159,6 +159,7 @@ def pod_conditions(
         "Initialized": api.ConditionType.INITIALIZED,
         "ContainersReady": api.ConditionType.CONTAINERSREADY,
         "Ready": api.ConditionType.READY,
+        "DisruptionTarget": api.ConditionType.DISRUPTIONTARGET,
     }
     result = []
     for condition in conditions:

@@ -45,6 +45,7 @@ LOGICAL_ORDER = [
     "initialized",
     "containersready",
     "ready",
+    "disruptiontarget",
 ]
 
 
@@ -58,11 +59,16 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
     `LOGICAL_ORDER`.  The last two conditions, `containersready` and `ready`,
     can be in a failed state simultaneously.  When a condition is missing (i.e.
     is `None`), it means that the previous condition is in a failed state."""
+
     condition_list: list[tuple[str, PodCondition | None]] = [
         (name, getattr(section, name)) for name in LOGICAL_ORDER
     ]
 
-    if all(cond and cond.status for _, cond in section):
+    # DisruptionTarget is a special case, and the user should be able to see the condition details
+    # when this condition appears.
+    if section.disruptiontarget is None and all(
+        cond and cond.status for name, cond in section if name != "disruptiontarget"
+    ):
         yield Result(
             state=State.OK,
             summary="Ready, all conditions passed",
@@ -75,8 +81,18 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
             ),
         )
         return
+
     for name, cond in condition_list:
         if cond is not None:
+            if name == "disruptiontarget":
+                yield Result(
+                    state=State.OK,
+                    summary=condition_detailed_description(
+                        name, cond.status, cond.reason, cond.detail
+                    ),
+                )
+                continue
+
             # keep the last-seen one
             time_diff = now - cond.last_transition_time  # type: ignore  # SUP-12170
             if cond.status:
@@ -86,6 +102,8 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
             summary_prefix = condition_detailed_description(
                 name, cond.status, cond.reason, cond.detail
             )
+        elif name == "disruptiontarget":
+            continue
         else:
             summary_prefix = condition_short_description(name, False)
         for result in check_levels(

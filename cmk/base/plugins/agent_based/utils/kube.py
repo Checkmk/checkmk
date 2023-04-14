@@ -609,6 +609,7 @@ class PodConditions(Section):
     scheduled: PodCondition
     containersready: Optional[PodCondition]
     ready: Optional[PodCondition]
+    disruptiontarget: PodCondition | None = None
 
 
 @enum.unique

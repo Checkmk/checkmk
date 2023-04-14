@@ -798,15 +798,30 @@ class ContainerStatus(BaseModel):
 
 
 class ConditionType(str, enum.Enum):
+    """
+    DISRUPTIONTARGET
+        * condition is only present if the pod is actually disrupted by one of listed
+        events (in most cases not):
+        https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-conditions
+        * simply terminating the pod will not produce this condition
+    """
+
     # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions
     PODHASNETWORK = "hasnetwork"
     PODSCHEDULED = "scheduled"
     CONTAINERSREADY = "containersready"
     INITIALIZED = "initialized"
     READY = "ready"
+    DISRUPTIONTARGET = "disruptiontarget"
 
 
 class PodCondition(BaseModel):
+    """
+    status:
+        * when True, reason & detail will be normally None
+        * for condition DisruptionTarget will include a reason & detail strings also for True
+    """
+
     status: bool
     type: ConditionType | None
     custom_type: str | None

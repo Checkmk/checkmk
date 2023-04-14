@@ -157,7 +157,7 @@ export function update_argument_hints() {
             .nodes();
         while (required_inputs >= newNodes.length) {
             valuespecs.list_of_strings_extend(
-                nodes[nodes.length - 1],
+                newNodes[newNodes.length - 1],
                 false,
                 ""
             );

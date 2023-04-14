@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from livestatus import SiteId
 
 import cmk.utils
+from cmk.utils.setup_search_index import request_index_update
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.utils
@@ -21,7 +22,6 @@ from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_domain_registr
 from cmk.gui.site_config import site_is_local
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import escaping
-from cmk.gui.watolib import search
 from cmk.gui.watolib.audit_log import log_audit, LogMessage
 from cmk.gui.watolib.objref import ObjectRef
 from cmk.gui.watolib.site_changes import SiteChanges
@@ -52,7 +52,7 @@ def add_change(
     )
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
-    search.request_index_update(action_name)
+    request_index_update(action_name)
 
     ActivateChangesWriter().add_change(
         action_name,

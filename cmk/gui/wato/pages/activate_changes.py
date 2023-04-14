@@ -20,6 +20,7 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.render as render
 from cmk.utils.licensing.registry import get_licensing_user_effect
 from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
+from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.version import is_cloud_edition
 
 import cmk.gui.forms as forms
@@ -62,7 +63,6 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-from cmk.gui.watolib.search import request_index_rebuild
 
 
 @mode_registry.register

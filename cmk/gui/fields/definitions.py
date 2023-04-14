@@ -571,15 +571,19 @@ class HostField(base.String):
 
         # Regex gets checked through the `pattern` of the String instance
 
+        host = Host.host(value)
+
         if self._should_exist is not None:
-            host = Host.host(value)
-            if self._should_exist and not host:
+            if self._should_exist and host is None:
                 raise self.make_error("should_exist", host_name=value)
 
-            if not self._should_exist and host:
+            if not self._should_exist and host is not None:
                 raise self.make_error("should_not_exist", host_name=value)
 
-        if self._should_be_cluster is not None and (host := Host.host(value)) is not None:
+        if self._should_be_cluster is not None:
+            if host is None:
+                raise self.make_error("should_exist", host_name=value)
+
             if self._should_be_cluster and not host.is_cluster():
                 raise self.make_error("should_be_cluster", host_name=value)
 
@@ -587,6 +591,9 @@ class HostField(base.String):
                 raise self.make_error("should_not_be_cluster", host_name=value)
 
         if self._should_be_monitored is not None:
+            if host is None:
+                raise self.make_error("should_exist", host_name=value)
+
             monitored = host_is_monitored(value)
             if self._should_be_monitored and not monitored:
                 raise self.make_error("should_be_monitored", host_name=value)

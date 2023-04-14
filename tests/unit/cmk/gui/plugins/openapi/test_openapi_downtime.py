@@ -127,6 +127,7 @@ def test_openapi_schedule_host_downtime(
         )
 
 
+@pytest.mark.usefixtures("with_host")
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_schedule_host_downtime_for_host_without_config(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
@@ -136,23 +137,23 @@ def test_openapi_schedule_host_downtime_for_host_without_config(
 
     base = "/NO_SITE/check_mk/api/1.0"
 
-    monitored_only_host = "this-host-only.exists-in.livestatus"
+    host_name = "example.com"
 
     live.add_table(
         "hosts",
         [
             {
-                "name": monitored_only_host,
+                "name": host_name,
             },
         ],
     )
 
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % monitored_only_host)
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % monitored_only_host)
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % monitored_only_host)
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % host_name)
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % host_name)
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % host_name)
     live.expect_query(
         "COMMAND [...] SCHEDULE_HOST_DOWNTIME;%s;1577836800;1577923200;1;0;0;test123-...;Downtime for ..."
-        % monitored_only_host,
+        % host_name,
         match_type="ellipsis",
     )
     with live:
@@ -162,7 +163,7 @@ def test_openapi_schedule_host_downtime_for_host_without_config(
             params=json.dumps(
                 {
                     "downtime_type": "host",
-                    "host_name": monitored_only_host,
+                    "host_name": host_name,
                     "start_time": "2020-01-01T00:00:00Z",
                     "end_time": "2020-01-02T00:00:00Z",
                 }
@@ -914,28 +915,24 @@ def test_openapi_delete_downtime_with_params_but_missing_downtime(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_downtime_non_existing_instance(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
-    live: MockLiveStatusConnection = mock_livestatus
-
-    live.expect_query(["GET hosts", "Columns: name", "Filter: name = non-existant"])
-
-    with live:
-        aut_user_auth_wsgi_app.post(
-            base + "/domain-types/downtime/collections/host",
-            content_type="application/json",
-            params=json.dumps(
-                {
-                    "downtime_type": "host",
-                    "host_name": "non-existant",
-                    "start_time": "2020-01-01T00:00:00Z",
-                    "end_time": "2020-01-02T00:00:00Z",
-                }
-            ),
-            headers={"Accept": "application/json"},
-            status=400,
-        )
+    resp = aut_user_auth_wsgi_app.post(
+        base + "/domain-types/downtime/collections/host",
+        content_type="application/json",
+        params=json.dumps(
+            {
+                "downtime_type": "host",
+                "host_name": "non-existant",
+                "start_time": "2020-01-01T00:00:00Z",
+                "end_time": "2020-01-02T00:00:00Z",
+            }
+        ),
+        headers={"Accept": "application/json"},
+        status=400,
+    )
+    assert resp.json["fields"]["host_name"] == ["Host not found: 'non-existant'"]
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

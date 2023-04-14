@@ -15,13 +15,7 @@ from cmk.utils.structured_data import (
     TreeOrArchiveStore,
     UpdateResult,
 )
-from cmk.utils.type_defs import (
-    EVERYTHING,
-    HostName,
-    HWSWInventoryParameters,
-    InventoryPluginName,
-    SectionName,
-)
+from cmk.utils.type_defs import EVERYTHING, HostName, HWSWInventoryParameters, SectionName
 
 from cmk.checkers import (
     FetcherFunction,
@@ -31,6 +25,7 @@ from cmk.checkers import (
     SummarizerFunction,
 )
 from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers.inventory import InventoryPluginName
 
 from cmk.base.config import ConfigCache
 

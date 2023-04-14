@@ -27,6 +27,7 @@ See Also:
 
 """
 
+from . import inventory
 from ._api import (
     FetcherFunction,
     HostLabel,
@@ -54,6 +55,7 @@ __all__ = [
     "FetcherFunction",
     "HostKey",
     "HostLabel",
+    "inventory",
     "parse_raw_data",
     "Parser",
     "ParserFunction",

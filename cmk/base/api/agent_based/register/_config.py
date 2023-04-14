@@ -7,13 +7,9 @@ from collections import defaultdict
 from collections.abc import Iterable, Sequence
 
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    InventoryPluginName,
-    ParsedSectionName,
-    RuleSetName,
-    SectionName,
-)
+from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName, SectionName
+
+from cmk.checkers.inventory import InventoryPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin

@@ -13,7 +13,8 @@ import pytest
 from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName
-from cmk.utils.type_defs.pluginname import InventoryPluginName
+
+from cmk.checkers.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register.check_plugins as check_plugins
 

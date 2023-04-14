@@ -46,7 +46,6 @@ __all__ = [
     "HTTPMethod",
     "HWSWInventoryParameters",
     "InfluxDBConnectionSpec",
-    "InventoryPluginName",
     "IPMICredentials",
     "Item",
     "LegacyCheckParameters",
@@ -175,7 +174,6 @@ from .notify import (
 from .parent_scan import Gateways
 from .pluginname import (
     CheckPluginName,
-    InventoryPluginName,
     ParsedSectionName,
     RuleSetName,
     SectionName,

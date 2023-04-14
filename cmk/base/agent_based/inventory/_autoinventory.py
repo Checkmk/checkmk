@@ -7,7 +7,7 @@ from collections.abc import Callable, Mapping
 
 from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.utils.log import console
-from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, SectionName
+from cmk.utils.type_defs import EVERYTHING, HostName, SectionName
 
 from cmk.checkers import (
     FetcherFunction,
@@ -16,6 +16,7 @@ from cmk.checkers import (
     PSectionPlugin,
     SummarizerFunction,
 )
+from cmk.checkers.inventory import InventoryPluginName
 
 from cmk.base.config import ConfigCache
 

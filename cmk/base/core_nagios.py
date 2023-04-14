@@ -34,7 +34,6 @@ from cmk.utils.type_defs import (
     HostgroupName,
     HostName,
     HostsToUpdate,
-    InventoryPluginName,
     ServicegroupName,
     ServiceName,
     TimeperiodName,
@@ -42,6 +41,7 @@ from cmk.utils.type_defs import (
 
 from cmk.checkers import plugin_contexts
 from cmk.checkers.check_table import FilterMode
+from cmk.checkers.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

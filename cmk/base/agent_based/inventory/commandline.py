@@ -11,13 +11,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.log import section
 from cmk.utils.structured_data import load_tree, RawIntervalsFromConfig
-from cmk.utils.type_defs import (
-    EVERYTHING,
-    HostName,
-    HWSWInventoryParameters,
-    InventoryPluginName,
-    SectionName,
-)
+from cmk.utils.type_defs import EVERYTHING, HostName, HWSWInventoryParameters, SectionName
 
 from cmk.checkers import (
     FetcherFunction,
@@ -26,6 +20,7 @@ from cmk.checkers import (
     PSectionPlugin,
     SummarizerFunction,
 )
+from cmk.checkers.inventory import InventoryPluginName
 
 from cmk.base.config import ConfigCache
 

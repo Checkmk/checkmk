@@ -34,13 +34,7 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     UpdateResult,
 )
-from cmk.utils.type_defs import (
-    HostName,
-    HWSWInventoryParameters,
-    InventoryPluginName,
-    ParsedSectionName,
-    SectionName,
-)
+from cmk.utils.type_defs import HostName, HWSWInventoryParameters, ParsedSectionName, SectionName
 
 from cmk.checkers import (
     FetcherFunction,
@@ -54,6 +48,7 @@ from cmk.checkers import (
 )
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
+from cmk.checkers.inventory import InventoryPluginName
 from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,

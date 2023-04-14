@@ -23,7 +23,6 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
     HostName,
-    InventoryPluginName,
     result,
     SectionName,
     ServiceState,
@@ -46,6 +45,7 @@ from cmk.checkers import (
 )
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
+from cmk.checkers.inventory import InventoryPluginName
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 

@@ -7,7 +7,9 @@
 
 import pytest
 
-from cmk.utils.type_defs import InventoryPluginName, ParsedSectionName
+from cmk.utils.type_defs import ParsedSectionName
+
+from cmk.checkers.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register.inventory_plugins as inventory_plugins
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin

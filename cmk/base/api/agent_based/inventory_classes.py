@@ -9,7 +9,9 @@ from collections.abc import Callable, Iterable, Mapping
 from typing import get_args, NamedTuple, NoReturn, Union
 
 from cmk.utils.structured_data import StructuredDataNode
-from cmk.utils.type_defs import InventoryPluginName, ParsedSectionName, RuleSetName
+from cmk.utils.type_defs import ParsedSectionName, RuleSetName
+
+from cmk.checkers.inventory import InventoryPluginName
 
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 

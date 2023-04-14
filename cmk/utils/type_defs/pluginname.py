@@ -16,7 +16,6 @@ __all__ = [
     "SectionName",
     "RuleSetName",
     "CheckPluginName",
-    "InventoryPluginName",
 ]
 
 
@@ -147,9 +146,3 @@ class CheckPluginName(ValidatedString):
         if self.is_management_name():
             return CheckPluginName(self._value[len(self.MANAGEMENT_PREFIX) :])
         return self
-
-
-class InventoryPluginName(ValidatedString):
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        return super().exceptions()

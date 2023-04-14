@@ -309,17 +309,6 @@ class LoginPage(Page):
 
         html.write_html(HTML(" - ").join(footer))
 
-        if cmk_version.is_raw_edition():
-            html.br()
-            html.br()
-            html.write_text(
-                _(
-                    'You can use, modify and distribute Checkmk under the terms of the <a href="%s" target="_blank">'
-                    "GNU GPL Version 2</a>."
-                )
-                % "https://checkmk.com/gpl.html"
-            )
-
         html.close_div()
 
         html.set_focus("_username")

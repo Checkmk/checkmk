@@ -40,6 +40,6 @@ rulespec_registry.register(
         check_group_name="systemtime",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_systemtime,
-        title=lambda: _("Windows system time offset"),
+        title=lambda: _("System time offset"),
     )
 )

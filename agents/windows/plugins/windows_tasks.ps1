@@ -26,7 +26,7 @@ $tasks = $d | ConvertFrom-Csv
 
 if ($lang -eq 1031){
 	foreach ($task in $tasks){
-		if (($task.HostName -match "^$($Env:Computername)$") -and ($task.AufgabenName -notlike '\Microsoft*') -and ($task.AufgabenName -notlike '*zachteHRM*')){
+		if (($task.HostName -match "^$($Env:Computername)$") -and ($task.AufgabenName -notlike '\Microsoft\*')){
 			Write-Host "TaskName `t: "$task.AufgabenName
 			Write-Host "Last Run Time `t: "$task.'Letzte Laufzeit'
 			Write-Host "Next Run Time `t: "$task.'Nächste Laufzeit'
@@ -40,5 +40,5 @@ if ($lang -eq 1031){
 		}
 	}
 } elseif ($lang -eq 1033 -or $lang -eq 2057){
-	$tasks | ? {$_.HostName -match "^$($Env:Computername)$" -and $_.TaskName -notlike '\Microsoft*' -and $_.TaskName -notlike '*zachteHRM*'} | fl taskname,"last run time","next run time","last result","scheduled task state" | out-string -width 4096
+	$tasks | ? {$_.HostName -match "^$($Env:Computername)$" -and $_.TaskName -notlike '\Microsoft\*'} | fl taskname,"last run time","next run time","last result","scheduled task state" | out-string -width 4096
 }

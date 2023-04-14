@@ -67,7 +67,9 @@ class PasswordStoreSecret(_LocalSecret):
     the secrets created now.
     """
 
-    path = paths.password_store_secret_file
+    @property
+    def path(self) -> Path:
+        return paths.password_store_secret_file
 
 
 class EncrypterSecret(_LocalSecret):
@@ -89,7 +91,9 @@ class AutomationUserSecret:
     password like other user passwords and storing it in the password store if necessary.
     """
 
-    def __init__(self, user_id: UserId, profile_dir: Path = paths.profile_dir) -> None:
+    def __init__(self, user_id: UserId, profile_dir: Path | None = None) -> None:
+        if profile_dir is None:
+            profile_dir = paths.profile_dir
         self.path = profile_dir / user_id / "automation.secret"
 
     def read(self) -> str:

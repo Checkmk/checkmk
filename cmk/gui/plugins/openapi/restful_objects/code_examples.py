@@ -174,6 +174,7 @@ out=$(
     --data '{{ request_schema |
             to_dict |
             to_json(indent=2, sort_keys=True) |
+            _escape_single_quotes |
             indent(skip_lines=1, spaces=8) }}' \\
 {%- endif %}
     "$API_URL{{ request_endpoint | fill_out_parameters }}")
@@ -634,12 +635,17 @@ def _jinja_environment() -> jinja2.Environment:
         to_python=format_nicely,
         repr=repr,
         httpie_request_body=httpie_request_body,
+        _escape_single_quotes=_escape_single_quotes,
     )
     # These objects will be available in the templates
     tmpl_env.globals.update(
         spec=SPEC,
     )
     return tmpl_env
+
+
+def _escape_single_quotes(text: str) -> str:
+    return text.replace("'", "'\\''")
 
 
 def to_param_dict(params: list[OpenAPIParameter]) -> dict[str, OpenAPIParameter]:

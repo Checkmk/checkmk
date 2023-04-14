@@ -11,7 +11,9 @@ import pytest
 
 from tests.testlib.snmp import get_parsed_snmp_section, snmp_is_detected
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkers.checking import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import StringTable

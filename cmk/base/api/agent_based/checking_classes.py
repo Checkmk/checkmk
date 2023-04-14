@@ -10,15 +10,10 @@ from typing import NamedTuple, Optional, overload, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.check_utils import unwrap_parameters
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    EvalableFloat,
-    MetricTuple,
-    ParsedSectionName,
-    RuleSetName,
-)
+from cmk.utils.type_defs import EvalableFloat, MetricTuple, ParsedSectionName, RuleSetName
 
 from cmk.checkers import PluginSuppliedLabel
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckEntry
 
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, RuleSetTypeName

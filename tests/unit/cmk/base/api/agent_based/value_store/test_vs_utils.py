@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 
 from cmk.utils import store
-from cmk.utils.type_defs import CheckPluginName
 
 from cmk.checkers.check_table import ServiceID
+from cmk.checkers.checking import CheckPluginName
 
 from cmk.base.api.agent_based.value_store._utils import (
     _DiskSyncedMapping,

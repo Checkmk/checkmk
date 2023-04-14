@@ -11,7 +11,9 @@ from the configuration.
 
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, HostName, Item, ServiceName
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
+
+from cmk.checkers.checking import CheckPluginName
 
 import cmk.base.config as config
 

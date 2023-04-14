@@ -7,7 +7,7 @@
 
 from pytest import MonkeyPatch
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.checkers.checking import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.checking_classes import CheckPlugin

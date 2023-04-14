@@ -11,8 +11,9 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
-from cmk.utils.type_defs import CheckPluginName
 from cmk.utils.version import is_raw_edition
+
+from cmk.checkers.checking import CheckPluginName
 
 import cmk.gui.watolib.timeperiods as timeperiods
 from cmk.gui.valuespec import Dictionary, Float, Migrate

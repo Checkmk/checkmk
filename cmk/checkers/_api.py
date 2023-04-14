@@ -12,7 +12,6 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.structured_data import StructuredDataNode
 from cmk.utils.type_defs import (
     AgentRawData,
-    CheckPluginName,
     HostAddress,
     HostName,
     ParametersTypeAlias,
@@ -29,6 +28,7 @@ from cmk.fetchers.filecache import FileCache, FileCacheOptions
 
 from ._parser import Parser
 from ._typedefs import SourceInfo
+from .checking import CheckPluginName
 from .checkresults import ActiveCheckResult
 from .discovery import AutocheckEntry
 from .host_sections import HostSections

@@ -9,7 +9,6 @@ __all__ = [
     "ActiveCheckPluginName",
     "AgentRawData",
     "AgentTargetVersion",
-    "CheckPluginName",
     "CheckPluginNameStr",
     "ClusterMode",
     "ConnectorObj",
@@ -172,12 +171,6 @@ from .notify import (
     UUIDs,
 )
 from .parent_scan import Gateways
-from .pluginname import (
-    CheckPluginName,
-    ParsedSectionName,
-    RuleSetName,
-    SectionName,
-    ValidatedString,
-)
+from .pluginname import ParsedSectionName, RuleSetName, SectionName, ValidatedString
 from .protocol import Deserializer, Serializer
 from .user_id import UserId

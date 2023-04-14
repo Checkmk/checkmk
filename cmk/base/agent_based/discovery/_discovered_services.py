@@ -11,10 +11,11 @@ import cmk.utils.misc
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console, section
-from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName
+from cmk.utils.type_defs import HostName, ParsedSectionName
 
 from cmk.checkers import HostKey, PDiscoveryPlugin, plugin_contexts, SourceType
 from cmk.checkers.check_table import ServiceID
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 from cmk.checkers.sectionparser import Provider
 from cmk.checkers.sectionparserutils import get_section_kwargs

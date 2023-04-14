@@ -16,7 +16,7 @@ from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.labels import HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
-from cmk.utils.type_defs import CheckPluginName, HostName, SectionName
+from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.checkers import (
     FetcherFunction,
@@ -26,6 +26,7 @@ from cmk.checkers import (
     PHostLabelDiscoveryPlugin,
     PSectionPlugin,
 )
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutochecksStore
 from cmk.checkers.sectionparser import (
     filter_out_errors,

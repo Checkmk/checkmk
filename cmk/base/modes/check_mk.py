@@ -35,7 +35,6 @@ from cmk.utils.exceptions import MKBailOut, MKGeneralException, OnError
 from cmk.utils.log import console
 from cmk.utils.tags import TagID
 from cmk.utils.type_defs import (
-    CheckPluginName,
     EVERYTHING,
     HostAddress,
     HostgroupName,
@@ -53,6 +52,7 @@ from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers import parse_raw_data, SourceType
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.error_handling import CheckResultErrorHandler
 from cmk.checkers.inventory import InventoryPluginName
 from cmk.checkers.submitters import get_submitter, Submitter

@@ -19,7 +19,8 @@ from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import CheckPluginName
+
+from cmk.checkers.checking import CheckPluginName
 
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks

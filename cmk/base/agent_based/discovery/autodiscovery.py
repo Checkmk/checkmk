@@ -17,7 +17,6 @@ from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.labels import HostLabel
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
-    CheckPluginName,
     DiscoveryResult,
     EVERYTHING,
     HostName,
@@ -36,6 +35,7 @@ from cmk.checkers import (
     SummarizerFunction,
 )
 from cmk.checkers.check_table import ServiceID
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.checkers.sectionparser import (
     filter_out_errors,

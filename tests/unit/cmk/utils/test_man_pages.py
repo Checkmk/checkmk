@@ -13,7 +13,8 @@ from tests.testlib.utils import cce_path, cmk_path
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 import cmk.utils.man_pages as man_pages
-from cmk.utils.type_defs import CheckPluginName
+
+from cmk.checkers.checking import CheckPluginName
 
 ManPages = Mapping[str, man_pages.ManPage | None]
 

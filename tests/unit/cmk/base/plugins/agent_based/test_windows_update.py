@@ -10,7 +10,7 @@ from pytest_mock.plugin import MockerFixture
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.checkers.checking import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckFunction
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State

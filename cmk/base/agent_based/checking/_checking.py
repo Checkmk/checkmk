@@ -21,7 +21,6 @@ from cmk.utils.regex import regex
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.type_defs import (
     AgentRawData,
-    CheckPluginName,
     EVERYTHING,
     ExitSpec,
     HostName,
@@ -52,6 +51,7 @@ from cmk.checkers import (
     SummarizerFunction,
 )
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.inventory import InventoryPluginName
 from cmk.checkers.sectionparser import (

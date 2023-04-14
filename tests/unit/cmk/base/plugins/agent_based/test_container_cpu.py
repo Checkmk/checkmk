@@ -7,7 +7,9 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkers.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import GetRateError, Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable

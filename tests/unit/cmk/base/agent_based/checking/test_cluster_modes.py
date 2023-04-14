@@ -11,9 +11,8 @@ from typing import Any, Literal
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
-
 from cmk.checkers.check_table import ServiceID
+from cmk.checkers.checking import CheckPluginName
 
 from cmk.base.api.agent_based import cluster_mode
 from cmk.base.api.agent_based.checking_classes import (

@@ -19,7 +19,6 @@ from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.type_defs import (
     AgentRawData,
-    CheckPluginName,
     ExitSpec,
     HostAddress,
     HostName,
@@ -43,6 +42,7 @@ from cmk.checkers import (
     Source,
     SourceInfo,
 )
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.inventory import InventoryPluginName

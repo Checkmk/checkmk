@@ -47,7 +47,7 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
-from cmk.utils.type_defs import AgentRawData, CheckPluginName, CheckPluginNameStr
+from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.utils.type_defs import HostAddress, HostName, ServiceDetails, ServiceState
 
@@ -91,6 +91,7 @@ from cmk.fetchers.filecache import FileCacheOptions
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
 from cmk.checkers import parse_raw_data, plugin_contexts, SourceType
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION

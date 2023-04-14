@@ -10,8 +10,9 @@ from pathlib import Path
 from cmk.utils import debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import autochecks_dir
-from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
+from cmk.utils.type_defs import HostName, LegacyCheckParameters
 
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 
 from cmk.base.api.agent_based import register

@@ -45,7 +45,9 @@ from tests.testlib.utils import (
 from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.web_session import APIError, CMKWebSession
 
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import HostName
+
+from cmk.checkers.checking import CheckPluginName
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

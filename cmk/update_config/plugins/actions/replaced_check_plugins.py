@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.checkers.checking import CheckPluginName
 
 REPLACED_CHECK_PLUGINS = {
     CheckPluginName("aix_diskiod"): CheckPluginName("diskstat_io"),

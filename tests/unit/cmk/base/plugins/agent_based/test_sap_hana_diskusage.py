@@ -11,7 +11,9 @@ from freezegun import freeze_time
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkers.checking import CheckPluginName
 
 import cmk.base.plugins.agent_based.sap_hana_diskusage as sap_hana_diskusage
 from cmk.base.api.agent_based.type_defs import StringTable

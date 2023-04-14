@@ -11,15 +11,7 @@ import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import HostLabel
-from cmk.utils.type_defs import (
-    AgentRawData,
-    CheckPluginName,
-    HostName,
-    Item,
-    result,
-    SectionName,
-    ServiceName,
-)
+from cmk.utils.type_defs import AgentRawData, HostName, Item, result, SectionName, ServiceName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -31,6 +23,7 @@ from cmk.checkers import (
     SourceInfo,
     SummarizerFunction,
 )
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.sectionparser import filter_out_errors, make_providers, store_piggybacked_sections
 from cmk.checkers.sectionparserutils import check_parsing_errors

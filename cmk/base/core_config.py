@@ -26,16 +26,10 @@ from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.store import load_object_from_file, lock_checkmk_configuration, save_object_to_file
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostAddress,
-    HostName,
-    HostsToUpdate,
-    Item,
-    ServiceName,
-)
+from cmk.utils.type_defs import HostAddress, HostName, HostsToUpdate, Item, ServiceName
 
 from cmk.checkers.check_table import ConfiguredService, ServiceID
+from cmk.checkers.checking import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

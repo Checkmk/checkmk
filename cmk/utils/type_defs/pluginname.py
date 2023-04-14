@@ -10,13 +10,7 @@ import string
 from collections.abc import Container
 from typing import Final, Self
 
-__all__ = [
-    "ValidatedString",
-    "ParsedSectionName",
-    "SectionName",
-    "RuleSetName",
-    "CheckPluginName",
-]
+__all__ = ["ValidatedString", "ParsedSectionName", "SectionName", "RuleSetName"]
 
 
 class ValidatedString(abc.ABC):
@@ -125,24 +119,3 @@ class RuleSetName(ValidatedString):
                 "j4p_performance.serv_req",
             )
         )
-
-
-class CheckPluginName(ValidatedString):
-    MANAGEMENT_PREFIX: Final = "mgmt_"
-
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        return super().exceptions()
-
-    def is_management_name(self) -> bool:
-        return self._value.startswith(self.MANAGEMENT_PREFIX)
-
-    def create_management_name(self) -> CheckPluginName:
-        if self.is_management_name():
-            return self
-        return CheckPluginName(f"{self.MANAGEMENT_PREFIX}{self._value}")
-
-    def create_basic_name(self) -> CheckPluginName:
-        if self.is_management_name():
-            return CheckPluginName(self._value[len(self.MANAGEMENT_PREFIX) :])
-        return self

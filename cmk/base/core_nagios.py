@@ -27,7 +27,6 @@ from cmk.utils.labels import Labels
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
-    CheckPluginName,
     CheckPluginNameStr,
     ContactgroupName,
     HostAddress,
@@ -41,6 +40,7 @@ from cmk.utils.type_defs import (
 
 from cmk.checkers import plugin_contexts
 from cmk.checkers.check_table import FilterMode
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register

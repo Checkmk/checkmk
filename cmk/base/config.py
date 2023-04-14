@@ -85,7 +85,6 @@ from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
     AgentTargetVersion,
-    CheckPluginName,
     CheckPluginNameStr,
     ClusterMode,
     ContactgroupName,
@@ -132,6 +131,7 @@ from cmk.checkers.check_table import (
     LegacyCheckParameters,
     ServiceID,
 )
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckServiceWithNodes
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 

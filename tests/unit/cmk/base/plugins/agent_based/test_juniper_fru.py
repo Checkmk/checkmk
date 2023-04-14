@@ -10,7 +10,9 @@ from tests.testlib.snmp import get_parsed_snmp_section, snmp_is_detected
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkers.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 

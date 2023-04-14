@@ -7,7 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkers.checking import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.plugins.agent_based.cmciii as cmciii

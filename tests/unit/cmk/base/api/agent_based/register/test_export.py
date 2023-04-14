@@ -9,8 +9,9 @@ from unittest.mock import patch
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.utils.type_defs import CheckPluginName, ParametersTypeAlias, RuleSetName, SectionName
+from cmk.utils.type_defs import ParametersTypeAlias, RuleSetName, SectionName
 
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.inventory import InventoryPluginName
 
 from cmk.base.api.agent_based.checking_classes import DiscoveryResult

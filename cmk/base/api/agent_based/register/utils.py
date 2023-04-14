@@ -10,9 +10,10 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn
 
 from cmk.utils.paths import agent_based_plugins_dir
-from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
+from cmk.utils.type_defs import ParsedSectionName, RuleSetName
 from cmk.utils.version import Edition
 
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.inventory import InventoryPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin

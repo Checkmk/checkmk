@@ -7,9 +7,8 @@
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.type_defs import CheckPluginName
-
 from cmk.checkers import plugin_contexts
+from cmk.checkers.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based import diskstat
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (

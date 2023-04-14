@@ -17,14 +17,7 @@ from tests.testlib.base import Scenario
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    DiscoveryResult,
-    EVERYTHING,
-    HostName,
-    RuleSetName,
-    SectionName,
-)
+from cmk.utils.type_defs import DiscoveryResult, EVERYTHING, HostName, RuleSetName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
@@ -33,6 +26,7 @@ from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers import HostKey, SourceType
 from cmk.checkers.check_table import ServiceID
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
 from cmk.checkers.host_sections import HostSections

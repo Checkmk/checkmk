@@ -23,9 +23,10 @@ from cmk.utils.labels import Labels
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import HostName
 
 from cmk.checkers.check_table import ConfiguredService
+from cmk.checkers.checking import CheckPluginName
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config

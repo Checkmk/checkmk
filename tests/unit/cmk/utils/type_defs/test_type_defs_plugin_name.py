@@ -8,7 +8,9 @@ import pickle
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkers.checking import CheckPluginName
 
 
 @pytest.mark.parametrize(

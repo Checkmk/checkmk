@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkers.checking import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
 from cmk.base.api.agent_based.type_defs import SNMPParseFunction

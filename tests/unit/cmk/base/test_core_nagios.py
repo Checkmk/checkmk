@@ -22,7 +22,9 @@ from tests.testlib.base import Scenario
 import cmk.utils.exceptions as exceptions
 import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import HostName
+
+from cmk.checkers.checking import CheckPluginName
 
 import cmk.base.config as config
 import cmk.base.core_nagios as core_nagios

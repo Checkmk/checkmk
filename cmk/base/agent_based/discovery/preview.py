@@ -16,7 +16,7 @@ from cmk.utils.labels import HostLabel, ServiceLabel
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName, ServiceName
+from cmk.utils.type_defs import HostName, Item, SectionName, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 
@@ -31,6 +31,7 @@ from cmk.checkers import (
     SummarizerFunction,
 )
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
+from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.sectionparser import (
     filter_out_errors,

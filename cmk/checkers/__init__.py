@@ -27,7 +27,7 @@ See Also:
 
 """
 
-from . import inventory
+from . import checking, inventory
 from ._api import (
     FetcherFunction,
     HostLabel,
@@ -52,6 +52,7 @@ from .summarize import summarize
 
 __all__ = [
     "AgentParser",
+    "checking",
     "FetcherFunction",
     "HostKey",
     "HostLabel",

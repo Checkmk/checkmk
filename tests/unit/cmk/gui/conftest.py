@@ -92,7 +92,7 @@ HTTPMethod = Literal[
 @pytest.fixture(autouse=True)
 def deactivate_search_index_building_at_requenst_end(mocker: MockerFixture) -> None:
     mocker.patch(
-        "cmk.gui.watolib.search._updates_requested",
+        "cmk.gui.watolib.search.updates_requested",
         return_value=False,
     )
 

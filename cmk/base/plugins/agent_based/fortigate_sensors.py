@@ -6,8 +6,6 @@
 from typing import NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    any_of,
-    equals,
     register,
     Result,
     Service,
@@ -19,6 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
+from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
 
 
 class FortigateSensors(NamedTuple):
@@ -63,12 +62,7 @@ def check_fortigate_sensors(section: FortigateSensors) -> CheckResult:
 
 register.snmp_section(
     name="fortigate_sensors",
-    detect=any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.1000"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.5004"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.5006"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.10004"),
-    ),
+    detect=DETECT_FORTIGATE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.4.3.2.1",
         oids=[

@@ -73,7 +73,7 @@ def analyse_node_labels(
     Some plugins discover services based on host labels, so the ruleset
     optimizer caches have to be cleared if new host labels are found.
     """
-    return _analyse_host_labels(
+    host_labels = _analyse_host_labels(
         host_name=host_key.hostname,
         discovered_host_labels=_discover_host_labels(
             host_key=host_key,
@@ -84,6 +84,11 @@ def analyse_node_labels(
         existing_host_labels=_load_existing_host_labels(host_key.hostname) if load_labels else (),
         save_labels=save_labels,
     )
+    if save_labels:
+        present_labels_dict = {l.name: l.to_dict() for l in _iter_kept_labels(host_labels)}
+        DiscoveredHostLabelsStore(host_key.hostname).save(present_labels_dict)
+
+    return host_labels
 
 
 def analyse_cluster_labels(
@@ -149,11 +154,6 @@ def _analyse_host_labels(
         current=discovered_host_labels,
         key=lambda hl: hl.label,
     )
-
-    if save_labels:
-        DiscoveredHostLabelsStore(host_name).save(
-            {l.name: l.to_dict() for l in _iter_kept_labels(host_labels)}
-        )
 
     if host_labels.new:
         # Some check plugins like 'df' may discover services based on host labels.

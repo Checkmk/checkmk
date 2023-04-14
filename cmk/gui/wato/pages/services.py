@@ -158,7 +158,7 @@ class ModeDiscovery(WatoMode):
         # AJAX.
         html.enable_help_toggle()
         self._container("datasources")
-        self._container("fixall")
+        self._container("fixall", True)
         self._async_progress_msg_container()
         self._container("service", True)
         html.javascript(

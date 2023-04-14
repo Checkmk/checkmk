@@ -260,14 +260,6 @@ div#fixall_container {
   }
 }
 
-div#async_progress_msg {
-  margin: $spacing 0;
-
-  div.success {
-    margin: 0;
-  }
-}
-
 table.data tr.data > td.bulkactions {
   background: transparent;
   border: none;

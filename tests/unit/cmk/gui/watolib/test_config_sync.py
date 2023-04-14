@@ -73,12 +73,6 @@ def fixture_disable_cmk_update_config(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
-def fixture_disable_build_setup_search_index_background(monkeypatch):
-    # init-redis is not availabe...
-    monkeypatch.setattr(cmk.utils.packaging, "_build_setup_search_index_background", lambda: None)
-
-
 def _create_sync_snapshot(
     activation_manager: activate_changes.ActivateChangesManager,
     snapshot_data_collector_class: str,

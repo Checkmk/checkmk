@@ -29,6 +29,7 @@ from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     uninstall_packaged_rule_packs,
 )
 
+from ..setup_search_index import request_index_rebuild
 from ._installed import Installer
 from ._mkp import (  # noqa: F401
     create_mkp,
@@ -719,43 +720,16 @@ def disable_outdated(installer: Installer, path_config: PathConfig) -> None:
 
 
 def _execute_post_package_change_actions(package: Manifest | None) -> None:
-    _build_setup_search_index_background()
-
     if package is None or _package_contains_gui_files(package):
         _invalidate_visuals_cache()
         _reload_apache()
+    request_index_rebuild()
 
 
 def _invalidate_visuals_cache():
     """Invalidate visuals cache to use the current data"""
     for file in cmk.utils.paths.visuals_cache_dir.glob("last*"):
         file.unlink(missing_ok=True)
-
-
-def _build_setup_search_index_background() -> None:
-    # Only trigger an index update if redis is running.
-    #
-    # This is mainly important in the context of 01_mkp-disable-outdated: Without the check if redis
-    # is up, `mkp update-active` would attempt to trigger an update of the search index in a
-    # background job. This involves deserializing a status file which was written during the
-    # previous execution. In 2.2, the format of this file changed, which makes the deserialization
-    # fail (CMK-12128). We have an update action which takes care of this, however,
-    # cmk-update-config is called after mkp-disable-outdated, which is too late.
-    #
-    # Note that calling init-redis when redis is not running does not cause an error on the command
-    # line. However, the background job would fail, which is shown in the background jobs page.
-    if not subprocess.run(
-        [
-            cmk.utils.paths.omd_root / "etc/init.d/redis",
-            "status",
-        ],
-        check=False,
-        capture_output=True,
-    ).returncode:
-        subprocess.run(
-            ["init-redis"],
-            check=False,
-        )
 
 
 def _package_contains_gui_files(package: Manifest) -> bool:

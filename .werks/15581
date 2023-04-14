@@ -1,0 +1,13 @@
+Title: Added support for monitoring NTI Enviromux Micro-T devices
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1681462541
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Added support for monitoring the Humidity and Temperature of external and internal sensors of NTI Enviromux Micro-T devices.
+In addition, in the HW/SW Inventory information about the unit name, device model, serial number and firmware version can be found.
+

@@ -263,14 +263,15 @@ def test_non_supported_accept_header(base: str, aut_user_auth_wsgi_app: WebTestA
 
 # ========= WATO disabled Validation =========
 def test_wato_disabled_exception(auxtag_client: AuxTagTestClient, set_config: SetConfig) -> None:
+    test_data: dict[str, Any] = {
+        "aux_tag_id": "aux_tag_id_1",
+        "title": "aux_tag_1",
+        "topic": "topic_1",
+        "help": "HELP",
+    }
     with set_config(wato_enabled=False):
         resp = auxtag_client.create(
-            tag_data=auxtag_client.create_model(
-                aux_tag_id="aux_tag_id_1",
-                title="aux_tag_1",
-                topic="topic_1",
-                help="help",
-            ),
+            tag_data=test_data,
             expect_ok=False,
         )
     resp.assert_status_code(403)
@@ -316,13 +317,14 @@ def test_crash_report_with_post(
         "cmk.gui.plugins.openapi.endpoints.aux_tags.load_tag_config",
         raise_an_exception,
     )
+    test_data: dict[str, Any] = {
+        "aux_tag_id": "aux_tag_id_1",
+        "title": "aux_tag_1",
+        "topic": "topic_1",
+        "help": "HELP",
+    }
     resp = auxtag_client.create(
-        tag_data=auxtag_client.create_model(
-            aux_tag_id="aux_tag_id_1",
-            title="aux_tag_1",
-            topic="topic_1",
-            help="help",
-        ),
+        tag_data=test_data,
         expect_ok=False,
     )
     resp.assert_status_code(500)

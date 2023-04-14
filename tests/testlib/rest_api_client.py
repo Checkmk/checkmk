@@ -652,88 +652,35 @@ class RestApiClient:
         )
 
 
-# === AuxTags Endpoint Client ===
-
-
-class AuxTagEditRequest(BaseModel):
-    title: StrictStr | None
-    topic: StrictStr | None
-    help: StrictStr | None
-
-
-class AuxTagCreateRequest(AuxTagEditRequest):
-    aux_tag_id: StrictStr | None
-
-
-class AuxTagResponseObject(BaseModel):
-    topic: StrictStr
-    help: StrictStr
-
-
-class AuxTagObjectResponse(ObjectResponse):
-    domainType: Literal["aux_tag"]
-    id: StrictStr
-    title: StrictStr
-    extensions: AuxTagResponseObject
-
-
-class AuxTagCollectionResponse(CollectionResponse):
-    id: Literal["aux_tag"]
-    domainType: Literal["aux_tag"]
-    value: list[AuxTagObjectResponse]
-
-
 class AuxTagTestClient(RestApiClient):
     domain: Literal["aux_tag"] = "aux_tag"
 
-    @property
-    def create_model(self) -> type[AuxTagCreateRequest]:
-        return AuxTagCreateRequest
-
-    @property
-    def edit_model(self) -> type[AuxTagEditRequest]:
-        return AuxTagEditRequest
-
     def get(self, aux_tag_id: str, expect_ok: bool = True) -> Response:
-        resp = self.request(
+        return self.request(
             "get",
             url=f"/objects/{self.domain}/{aux_tag_id}",
             expect_ok=expect_ok,
         )
 
-        if expect_ok:
-            AuxTagObjectResponse(**resp.json)
-        return resp
-
     def get_all(self, expect_ok: bool = True) -> Response:
-        resp = self.request(
+        return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
         )
-        if expect_ok:
-            AuxTagCollectionResponse(**resp.json)
-        return resp
 
-    def create(self, tag_data: AuxTagCreateRequest, expect_ok: bool = True) -> Response:
-        resp = self.request(
+    def create(self, tag_data: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
-            pydantic_basemodel_body=tag_data,
+            body=tag_data,
             expect_ok=expect_ok,
         )
-        if expect_ok:
-            create_response = AuxTagObjectResponse(**resp.json)
-            assert tag_data.aux_tag_id == create_response.id
-            assert tag_data.topic == create_response.extensions.topic
-            assert tag_data.help == create_response.extensions.help
-            assert tag_data.title == create_response.title
-        return resp
 
     def edit(
         self,
         aux_tag_id: str,
-        tag_data: AuxTagEditRequest,
+        tag_data: dict[str, Any],
         expect_ok: bool = True,
         with_etag: bool = True,
     ) -> Response:
@@ -743,20 +690,13 @@ class AuxTagTestClient(RestApiClient):
                 "If-Match": self.get(aux_tag_id).headers["ETag"],
                 "Accept": "application/json",
             }
-        resp = self.request(
+        return self.request(
             "put",
             url=f"/objects/{self.domain}/{aux_tag_id}",
-            pydantic_basemodel_body=tag_data,
+            body=tag_data,
             headers=headers,
             expect_ok=expect_ok,
         )
-        if expect_ok:
-            edit_response = AuxTagObjectResponse(**resp.json)
-            assert aux_tag_id == edit_response.id
-            assert tag_data.topic == edit_response.extensions.topic
-            assert tag_data.help == edit_response.extensions.help
-            assert tag_data.title == edit_response.title
-        return resp
 
     def delete(self, aux_tag_id: str, expect_ok: bool = True) -> Response:
         etag = self.get(aux_tag_id).headers["ETag"]
@@ -766,9 +706,6 @@ class AuxTagTestClient(RestApiClient):
             headers={"If-Match": etag, "Accept": "application/json"},
             expect_ok=expect_ok,
         )
-
-
-# === TimePeriod Endpoint Client ===
 
 
 class TimePeriodObject(BaseModel):

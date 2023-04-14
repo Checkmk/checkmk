@@ -36,6 +36,9 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 GCC_TOOLCHAIN := /opt/gcc-$(shell make --no-print-directory --file=../defines.make print-GCC_VERSION)
 AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
 
+# A random time zone between UTC-11...UTC+14. Note the recursively expanded
+# variable assignment to get a new time zone on every access.
+RANDOM_TZ = $(shell printf "UTC%+d\n" $$(( $$RANDOM / 1261 - 11 )) )
 
 SYSTEM_TESTS := \
     test-integration \
@@ -339,7 +342,7 @@ test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles
 
 test-unit: prepare-protobuf-files sync-legacy-checks
-	$(PYTEST) \
+	TZ=$(RANDOM_TZ) $(PYTEST) \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
 		$(PYTEST_UNIT_TEST_OPTS)
 
@@ -347,7 +350,7 @@ test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
 test-unit-slow: prepare-protobuf-files sync-legacy-checks
-	$(PYTEST) \
+	TZ=$(RANDOM_TZ) $(PYTEST) \
 		$(PYTEST_OPTS_UNIT_SLOW_ONLY) \
 		$(PYTEST_UNIT_TEST_OPTS)
 
@@ -355,7 +358,7 @@ test-unit-slow-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit-slow
 
 test-unit-resilience: prepare-protobuf-files sync-legacy-checks
-	$(PYTEST) \
+	TZ=$(RANDOM_TZ) $(PYTEST) \
 		--count=2 \
 		--random-order-bucket=global \
 	        -m "not non_resilient" \
@@ -369,7 +372,7 @@ test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
 
 test-unit-coverage-html: prepare-protobuf-files sync-legacy-checks
-	$(PYTEST) \
+	TZ=$(RANDOM_TZ) $(PYTEST) \
 		--cov=cmk \
 		--cov-report=html \
 		--cov-config=.coveragerc_unit \

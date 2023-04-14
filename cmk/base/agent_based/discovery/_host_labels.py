@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Discovery of HostLabels."""
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
@@ -49,15 +49,7 @@ def discover_cluster_labels(
             do_save_labels(node, node_labels)
 
         # keep the latest for every label.name
-        nodes_host_labels.update(
-            {
-                # TODO (mo): According to unit tests, this is what was done prior to refactoring.
-                # I'm not sure this is desired. If it is, it should be explained.
-                # Whenever we do not load the host labels, vanished will be empty.
-                **{l.name: l for l in node_labels.vanished},
-                **{l.name: l for l in node_labels.present},
-            }
-        )
+        nodes_host_labels.update({l.name: l for l in _iter_kept_labels(node_labels)})
     return list(nodes_host_labels.values())
 
 
@@ -112,13 +104,17 @@ def do_load_labels(host_name: HostName) -> Sequence[HostLabel]:
 
 def do_save_labels(host_name: HostName, host_labels: QualifiedDiscovery[HostLabel]) -> None:
     DiscoveredHostLabelsStore(host_name).save(
-        {
-            # TODO (mo): I'm not sure this is desired. If it is, it should be explained.
-            # Whenever we do not load the host labels, vanished will be empty.
-            **{l.name: l.to_dict() for l in host_labels.vanished},
-            **{l.name: l.to_dict() for l in host_labels.present},
-        }
+        {l.name: l.to_dict() for l in _iter_kept_labels(host_labels)}
     )
+
+
+def _iter_kept_labels(host_labels: QualifiedDiscovery[HostLabel]) -> Iterable[HostLabel]:
+    # TODO (mo): Clean this up, the logic is all backwards:
+    # It seems we always keep the vanished ones here.
+    # However: If we do not load the existing ones, no labels will be classified as 'vanished',
+    # and the ones that *are* in fact vanished are dropped silently.
+    yield from host_labels.vanished
+    yield from host_labels.present
 
 
 def discover_host_labels(

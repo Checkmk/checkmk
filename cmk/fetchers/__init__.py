@@ -14,7 +14,7 @@ from typing import Any, assert_never
 
 from ._abstract import Fetcher, Mode
 from ._api import get_raw_data
-from ._ipmi import IPMIFetcher
+from ._ipmi import IPMICredentials, IPMIFetcher
 from ._nofetcher import NoFetcher, NoFetcherError
 from ._piggyback import PiggybackFetcher
 from ._program import ProgramFetcher
@@ -28,6 +28,7 @@ __all__ = [
     "FetcherFactory",
     "FetcherType",
     "get_raw_data",
+    "IPMICredentials",
     "IPMIFetcher",
     "Mode",
     "NoFetcher",

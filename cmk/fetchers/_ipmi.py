@@ -8,7 +8,7 @@ from __future__ import annotations
 import copy
 import logging
 from collections.abc import Mapping
-from typing import Any, Final, TYPE_CHECKING
+from typing import Any, Final, TYPE_CHECKING, TypedDict
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -26,7 +26,12 @@ from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from cmk.fetchers import Fetcher, Mode
 
-__all__ = ["IPMIFetcher"]
+__all__ = ["IPMICredentials", "IPMIFetcher"]
+
+
+class IPMICredentials(TypedDict, total=False):
+    username: str
+    password: str
 
 
 class IPMIFetcher(Fetcher[AgentRawData]):

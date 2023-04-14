@@ -46,7 +46,6 @@ __all__ = [
     "state_markers",
     "ExitSpec",
     "InfluxDBConnectionSpec",
-    "IPMICredentials",
     "HTTPMethod",
 ]
 
@@ -208,10 +207,5 @@ class ExitSpec(TypedDict, total=False):
 
 
 InfluxDBConnectionSpec = dict[str, Any]
-
-# TODO(ml): IPMICredentials belongs with IPMIFetcher but
-#           we need to fix the layering problem with the
-#           global config before this is safe.
-IPMICredentials = Mapping[str, str]
 
 HTTPMethod = Literal["get", "put", "post", "delete"]

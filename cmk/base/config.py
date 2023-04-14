@@ -94,7 +94,6 @@ from cmk.utils.type_defs import (
     HostgroupName,
     HostName,
     HWSWInventoryParameters,
-    IPMICredentials,
     Item,
     Seconds,
     SectionName,
@@ -112,6 +111,7 @@ from cmk.snmplib.type_defs import (  # these are required in the modules' namesp
 
 from cmk.fetchers import (
     FetcherType,
+    IPMICredentials,
     IPMIFetcher,
     PiggybackFetcher,
     SNMPFetcher,

@@ -26,6 +26,8 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPCredentials
 
+from cmk.fetchers import IPMICredentials
+
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
 # variables are preset in checks/* as well.
@@ -112,7 +114,7 @@ management_protocol: dict[HostName, Literal["snmp", "ipmi"]] = {}
 # Mapping from hostname to SNMP credentials
 management_snmp_credentials: dict[HostName, SNMPCredentials] = {}
 # Mapping from hostname to IPMI credentials
-management_ipmi_credentials: dict[HostName, dict[str, str]] = {}
+management_ipmi_credentials: dict[HostName, IPMICredentials] = {}
 # Ruleset to specify whether or not to use bulkwalk
 management_bulkwalk_hosts: list[RuleSpec[object]] = []
 

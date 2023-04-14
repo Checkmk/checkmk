@@ -22,7 +22,7 @@ if [ $# -lt 2 ]; then
     exit 1
 fi
 
-MYSELF=$(id | awk -F')' '{print $1}' | awk -F'(' '{print $2}')
+MYSELF=$(whoami)
 OUTPUT_PATH="${MK_VARDIR}/job/${MYSELF}"
 IDENT="${1}"
 TMP_FILE="${TMPDIR}/${IDENT}.$$"
@@ -63,14 +63,14 @@ fi
 
 trap "cleanup" 0
 
-program_with_args="$* 2>/dev/null 1>&2"
-info=$({
-    /usr/bin/time -p sh -c "${program_with_args}" 2>&1
-    echo $?
-} | sed -e 's/,/\./g' | tr '\n' ' ')
-RC=$(echo "$info" | awk '{print $7}')
-
-(echo "$info" | awk '{print "exit_code "$7"\nreal_time "$2"\nuser_time "$4"\nsystem_time "$6""}') >>"${TMP_FILE}"
+# Note that Solaris has a variant of this command, for "complex commands"
+# (whatever that means):
+#    /usr/bin/time -p sh -c "much_command --such_complex --wow"
+# See https://docs.oracle.com/cd/E19253-01/816-5165/6mbb0m9to/index.html
+# But I'm not sure if this is really needed. Let's find out.
+/usr/bin/time -p "$@" 2>>"${TMP_FILE}" # the -p option writes to stderr, strangely...
+RC=$?
+echo "exit_code ${RC}" >>"${TMP_FILE}"
 
 mv "${TMP_FILE}" "${COMPLETED_FILE}"
-exit "${RC}"
+exit $RC

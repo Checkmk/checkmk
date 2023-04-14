@@ -11646,10 +11646,10 @@ msgid "Critical if at"
 msgstr "Kritisch ab"
 
 msgid "Critical if at least this number of important updates are pending"
-msgstr "Kritisch wenn mindestens soviele wichtige Updates ausstehen"
+msgstr "Kritisch, wenn mindestens soviele wichtige Updates ausstehen"
 
 msgid "Critical if at least this number of optional updates are pending"
-msgstr "Kritisch wenn mindestens soviele optionale Updates ausstehen"
+msgstr "Kritisch, wenn mindestens soviele optionale Updates ausstehen"
 
 msgid "Critical if below"
 msgstr "Kritisch wenn unter"
@@ -57049,10 +57049,10 @@ msgid "Warning if at"
 msgstr "Warnung ab"
 
 msgid "Warning if at least this number of important updates are pending"
-msgstr "Warnung, wenn mindestens soviele wichtige Updates anstehen"
+msgstr "Warnung, wenn mindestens soviele wichtige Updates ausstehen"
 
 msgid "Warning if at least this number of optional updates are pending"
-msgstr "Warnung, wenn mindestens soviele optionale Updates anstehen"
+msgstr "Warnung, wenn mindestens soviele optionale Updates ausstehen"
 
 msgid "Warning if below"
 msgstr "Warnung wenn unter"

@@ -583,25 +583,24 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_
         metavar="PASSWORD",
         help="Password to use for {'/'.join(protocols)}",
     )
-    if allow_ews:
-        parser.add_argument(
-            "--fetch-client-id",
-            required=False,
-            metavar="CLIENT_ID",
-            help="OAuth2 ClientID for EWS",
-        )
-        parser.add_argument(
-            "--fetch-client-secret",
-            required=False,
-            metavar="CLIENT_SECRET",
-            help="OAuth2 ClientSecret for EWS",
-        )
-        parser.add_argument(
-            "--fetch-tenant-id",
-            required=False,
-            metavar="TENANT_ID",
-            help="OAuth2 TenantID for EWS",
-        )
+    parser.add_argument(
+        "--fetch-client-id",
+        required=False,
+        metavar="CLIENT_ID",
+        help="OAuth2 ClientID for EWS" if allow_ews else "Ignored, only for compatibility",
+    )
+    parser.add_argument(
+        "--fetch-client-secret",
+        required=False,
+        metavar="CLIENT_SECRET",
+        help="OAuth2 ClientSecret for EWS" if allow_ews else "Ignored, only for compatibility",
+    )
+    parser.add_argument(
+        "--fetch-tenant-id",
+        required=False,
+        metavar="TENANT_ID",
+        help="OAuth2 TenantID for EWS" if allow_ews else "Ignored, only for compatibility",
+    )
     parser.add_argument(
         "--fetch-protocol",
         type=str.upper,

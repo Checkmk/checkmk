@@ -73,8 +73,8 @@ class ActivateChangesWriter:
     @classmethod
     @contextmanager
     def disable(cls) -> Iterator[None]:
+        cls._enabled = False
         try:
-            cls._enabled = False
             yield
         finally:
             cls._enabled = True

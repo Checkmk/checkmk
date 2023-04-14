@@ -310,8 +310,8 @@ def _UserContext(user_obj: LoggedInUser) -> Iterator[None]:
 
     After the user has been authenticated, initialize the global user object."""
     old_user: LoggedInUser = session.user
+    session.user = user_obj
     try:
-        session.user = user_obj
         yield
     finally:
         session.user = old_user

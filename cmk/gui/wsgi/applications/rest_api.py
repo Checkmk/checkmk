@@ -4,19 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import contextlib
 import functools
 import http.client
 import json
 import logging
 import mimetypes
 import traceback
-import typing
 import urllib.parse
 from collections.abc import Callable, Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import Any, Sequence, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml
 from flask import g, send_from_directory
@@ -310,8 +308,7 @@ class ServeSwaggerUI(AbstractWSGIApp):
         )
 
 
-@contextlib.contextmanager
-def ensure_authenticated(persist: bool = True) -> typing.Iterator[None]:
+def ensure_authenticated(persist: bool = True) -> None:
     session.session.persist_session = persist
     if session.session.user is None or isinstance(session.session.user, LoggedInNobody):
         # As a user we want the most specific error messages. Due to the errors being
@@ -320,7 +317,6 @@ def ensure_authenticated(persist: bool = True) -> typing.Iterator[None]:
         if session.session.exc:
             raise session.session.exc
         raise MKAuthException("You need to be logged in to access this resource.")
-    yield
 
 
 class CheckmkRESTAPI(AbstractWSGIApp):
@@ -382,7 +378,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         path_entries: list[str],
         endpoint: AbstractWSGIApp,
         key: str,
-        methods: typing.Sequence[HTTPMethod] | None = None,
+        methods: Sequence[HTTPMethod] | None = None,
     ) -> None:
         if methods is None:
             methods = ["get"]
@@ -431,8 +427,8 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # credentials, but accessing the REST API will never touch the session store. We also
             # don't want to have cookies sent to the HTTP client whenever one is logged in using
             # the header methods.
-            with ensure_authenticated(persist=False):
-                return wsgi_endpoint(environ, start_response)
+            ensure_authenticated(persist=False)
+            return wsgi_endpoint(environ, start_response)
 
         except ProblemException as exc:
             response = exc.to_problem()

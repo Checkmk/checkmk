@@ -1422,8 +1422,10 @@ def _validate_remote_target(
 @contextlib.contextmanager
 def _write_access_test_file(path: Path) -> Iterator[Path]:
     test_file_path = path / (f"write_test_{int(time.time())}")
-    yield test_file_path
-    test_file_path.unlink(missing_ok=True)
+    try:
+        yield test_file_path
+    finally:
+        test_file_path.unlink(missing_ok=True)
 
 
 # .

@@ -37,12 +37,12 @@ def _save_user_visuals(
     all_visuals: dict[tuple[UserId, str], visuals.T],
 ) -> Iterator[set[UserId]]:
     modified_user_instances: set[UserId] = set()
-
-    yield modified_user_instances
-
-    # Now persist all modified instances
-    for user_id in modified_user_instances:
-        visuals.save(visual_type, all_visuals, user_id)
+    try:
+        yield modified_user_instances
+    finally:
+        # Now persist all modified instances
+        for user_id in modified_user_instances:
+            visuals.save(visual_type, all_visuals, user_id)
 
 
 def _set_packaged_key(all_visuals: dict[tuple[UserId, str], visuals.T]) -> None:

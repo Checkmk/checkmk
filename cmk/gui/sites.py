@@ -412,8 +412,8 @@ def only_sites(sites: None | list[SiteId] | SiteId) -> Iterator[None]:
 @contextmanager
 def output_format(use_format: LivestatusOutputFormat) -> Iterator[None]:
     previous_format = live().get_output_format()
+    live().set_output_format(use_format)
     try:
-        live().set_output_format(use_format)
         yield
     finally:
         live().set_output_format(previous_format)
@@ -430,11 +430,8 @@ def prepend_site() -> Iterator[None]:
 
 @contextmanager
 def set_limit(limit: int | None) -> Iterator[None]:
-    if limit is not None:
-        live().set_limit(limit + 1)  # + 1: We need to know, if limit is exceeded
-    else:
-        live().set_limit(None)
-
+    # + 1: We need to know, if limit is exceeded
+    live().set_limit(limit if limit is None else limit + 1)
     try:
         yield
     finally:

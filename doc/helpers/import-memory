@@ -472,7 +472,10 @@ def basedir():
     root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
     # So cmk will actually be found...
     sys.path.insert(0, root.decode("utf-8").strip())
-    yield
+    try:
+        yield
+    finally:
+        sys.path.pop(0)
 
 
 def _spawn(*args):

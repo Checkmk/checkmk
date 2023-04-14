@@ -89,11 +89,11 @@ def foldable_container(
     html.open_ul(
         id_=container_id, class_=["treeangle", "open" if isopen else "closed"], style=indent_style
     )
-
-    yield isopen
-
-    html.close_ul()
-    html.close_div()
+    try:
+        yield isopen
+    finally:
+        html.close_ul()
+        html.close_div()
 
 
 def foldable_container_onclick(

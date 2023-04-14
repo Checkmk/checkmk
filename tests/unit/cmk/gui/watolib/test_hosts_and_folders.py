@@ -191,8 +191,10 @@ def test_write_and_read_host_attributes(
 def in_chdir(directory: str) -> Iterator[None]:
     cur = os.getcwd()
     os.chdir(directory)
-    yield
-    os.chdir(cur)
+    try:
+        yield
+    finally:
+        os.chdir(cur)
 
 
 def test_create_nested_folders(request_context: None) -> None:
@@ -986,10 +988,12 @@ def get_fake_setup_redis_client(
             for x in all_folders.keys()
         },
     )
-    yield mock_redis_client
-    monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: False)
-    # I have no idea if this is actually working..
-    monkeypatch.undo()
+    try:
+        yield mock_redis_client
+    finally:
+        monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: False)
+        # I have no idea if this is actually working..
+        monkeypatch.undo()
 
 
 @pytest.mark.usefixtures("with_admin_login")

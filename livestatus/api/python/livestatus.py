@@ -263,6 +263,7 @@ def intercept_queries() -> Iterator[list[str]]:
         yield SingleSiteConnection.collect_queries.queries
     finally:
         SingleSiteConnection.collect_queries.active = False
+        SingleSiteConnection.collect_queries.queries = []
 
 
 class Helpers:
@@ -1296,9 +1297,9 @@ def _livestatus_output_format_switcher(
     query: Query, connection: MultiSiteConnection | SingleSiteConnection
 ) -> Iterator[None]:
     previous_format = connection.get_output_format()
+    if query.supports_json_format():
+        connection.set_output_format(LivestatusOutputFormat.JSON)
     try:
-        if query.supports_json_format():
-            connection.set_output_format(LivestatusOutputFormat.JSON)
         yield
     finally:
         connection.set_output_format(previous_format)

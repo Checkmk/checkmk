@@ -198,8 +198,10 @@ def unpack_modules(root_dir: Path, *, module_dir: Path) -> int:
 def _change_dir(to_dir: Path) -> Iterator[None]:
     p = os.getcwd()
     os.chdir(to_dir)
-    yield
-    os.chdir(p)
+    try:
+        yield
+    finally:
+        os.chdir(p)
 
 
 def postinstall_module(module_dir: Path) -> int:

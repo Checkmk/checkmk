@@ -293,10 +293,10 @@ class FileSubmitter(Submitter):
                 continue  # try again
             except Exception as e:
                 raise MKGeneralException(f"Cannot create check result file in {base_dir}: {e!r}")
-
-            yield checkresult_file_fd
-
-            os.close(checkresult_file_fd)
+            try:
+                yield checkresult_file_fd
+            finally:
+                os.close(checkresult_file_fd)
             with open(filepath + ".ok", "w"):
                 pass
 

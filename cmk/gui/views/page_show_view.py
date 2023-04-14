@@ -173,12 +173,13 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
             all_active_filters,
             only_count=False,
         )
+        intercepted_queries = queries
 
     if html.output_format != "html":
         _export_view(view_renderer.view, rows)
         return
 
-    _add_rest_api_menu_entries(view_renderer, queries)
+    _add_rest_api_menu_entries(view_renderer, intercepted_queries)
     _show_view(view_renderer, unfiltered_amount_of_rows, rows)
 
 

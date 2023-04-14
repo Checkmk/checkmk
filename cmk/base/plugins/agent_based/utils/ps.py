@@ -565,10 +565,10 @@ def unused_value_remover(
     """
     values = value_store.setdefault(key, {})
     old_values = values.copy()
-
-    yield values
-
-    value_store[key] = {k: v for k, v in values.items() if v != old_values.get(k)}
+    try:
+        yield values
+    finally:
+        value_store[key] = {k: v for k, v in values.items() if v != old_values.get(k)}
 
 
 def check_ps_common(

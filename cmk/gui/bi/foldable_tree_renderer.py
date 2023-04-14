@@ -362,27 +362,27 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
         if icon_name and icon_title:
             html.icon(icon_name, title=icon_title, class_=["icon", "bi"])
+        try:
+            yield
+        finally:
+            if mousecode:
+                if str(effective_state["state"]) in tree[2].get("state_messages", {}):
+                    html.b(HTML("&diams;"), class_="bullet")
+                    html.write_text(tree[2]["state_messages"][str(effective_state["state"])])
 
-        yield
+                html.close_span()
 
-        if mousecode:
-            if str(effective_state["state"]) in tree[2].get("state_messages", {}):
-                html.b(HTML("&diams;"), class_="bullet")
-                html.write_text(tree[2]["state_messages"][str(effective_state["state"])])
+            output: HTML = cmk.gui.view_utils.format_plugin_output(
+                effective_state["output"], shall_escape=active_config.escape_plugin_output
+            )
 
-            html.close_span()
+            if output:
+                output = HTMLWriter.render_b(HTML("&diams;"), class_="bullet") + output
+            else:
+                output = HTML()
 
-        output: HTML = cmk.gui.view_utils.format_plugin_output(
-            effective_state["output"], shall_escape=active_config.escape_plugin_output
-        )
-
-        if output:
-            output = HTMLWriter.render_b(HTML("&diams;"), class_="bullet") + output
-        else:
-            output = HTML()
-
-        css_classes = ["content", "output"]
-        html.span(output, class_=css_classes)
+            css_classes = ["content", "output"]
+            html.span(output, class_=css_classes)
 
 
 class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):

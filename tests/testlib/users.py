@@ -103,10 +103,11 @@ def create_and_destroy_user(
         )
     )
 
-    yield user_id, password
+    try:
+        yield user_id, password
+    finally:
+        with SuperUserContext():
+            delete_users([user_id])
 
-    with SuperUserContext():
-        delete_users([user_id])
-
-    # User directories are not deleted by WATO by default. Clean it up here!
-    shutil.rmtree(str(profile_path))
+            # User directories are not deleted by WATO by default. Clean it up here!
+            shutil.rmtree(str(profile_path))

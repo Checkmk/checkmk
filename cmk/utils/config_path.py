@@ -95,6 +95,7 @@ class VersionedConfigPath(ConfigPath, Iterator):
         yield
         # TODO(ml) We should probably remove the files that were created
         #          previously and not update `serial.mk` on error.
+        # TODO: Should this be in a "finally" or not? Unclear...
         self._link_latest()
 
     def _cleanup(self) -> None:

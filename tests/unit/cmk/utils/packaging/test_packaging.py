@@ -89,7 +89,7 @@ def clean_dirs() -> Iterable[None]:
 
 
 @pytest.fixture(name="mkp_bytes")
-def fixture_mkp_bytes(build_setup_search_index: Mock, installer: packaging.Installer) -> bytes:
+def fixture_mkp_bytes(installer: packaging.Installer) -> bytes:
     # Create package information
     _create_simple_test_package(installer, packaging.PackageName("aaa"))
     manifest = _read_manifest(installer, packaging.PackageName("aaa"))
@@ -99,19 +99,9 @@ def fixture_mkp_bytes(build_setup_search_index: Mock, installer: packaging.Insta
 
     # Remove files from local hierarchy
     packaging.uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
-    build_setup_search_index.assert_called_once()
-    build_setup_search_index.reset_mock()
     assert installer.is_installed(packaging.PackageName("aaa")) is False
 
     return mkp
-
-
-@pytest.fixture(name="build_setup_search_index")
-def fixture_build_setup_search_index_background(mocker: MockerFixture) -> Mock:
-    return mocker.patch(
-        "cmk.utils.packaging._build_setup_search_index_background",
-        side_effect=lambda: None,
-    )
 
 
 @pytest.fixture(name="reload_apache")
@@ -229,7 +219,6 @@ def test_edit_rename_conflict(installer: packaging.Installer) -> None:
 
 def test_install(
     mkp_bytes: bytes,
-    build_setup_search_index: Mock,
     installer: packaging.Installer,
 ) -> None:
     packaging._install(
@@ -241,8 +230,6 @@ def test_install(
         allow_outdated=False,
         post_package_change_actions=True,
     )
-    build_setup_search_index.assert_called_once()
-
     assert installer.is_installed(packaging.PackageName("aaa")) is True
     manifest = _read_manifest(installer, packaging.PackageName("aaa"))
     assert manifest.version == "1.0.0"
@@ -286,10 +273,9 @@ def test_write_file(installer: packaging.Installer) -> None:
     assert info2["name"] == "aaa"
 
 
-def test_uninstall(build_setup_search_index: Mock, installer: packaging.Installer) -> None:
+def test_uninstall(installer: packaging.Installer) -> None:
     manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
     packaging.uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
-    build_setup_search_index.assert_called_once()
     assert not installer.is_installed(packaging.PackageName("aaa"))
 
 
@@ -371,17 +357,16 @@ def test_get_stored_manifests(
     )
 
 
-def test_reload_gui_without_gui_files(reload_apache: Mock, build_setup_search_index: Mock) -> None:
+def test_reload_gui_without_gui_files(reload_apache: Mock) -> None:
     package = packaging.manifest_template(
         packaging.PackageName("ding"),
         version_packaged=cmk_version.__version__,
     )
     packaging._execute_post_package_change_actions(package)
-    build_setup_search_index.assert_called_once()
     reload_apache.assert_not_called()
 
 
-def test_reload_gui_with_gui_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
+def test_reload_gui_with_gui_part(reload_apache: Mock) -> None:
     package = packaging.manifest_template(
         name=packaging.PackageName("ding"),
         version_packaged=cmk_version.__version__,
@@ -389,11 +374,10 @@ def test_reload_gui_with_gui_part(reload_apache: Mock, build_setup_search_index:
     )
 
     packaging._execute_post_package_change_actions(package)
-    build_setup_search_index.assert_called_once()
     reload_apache.assert_called_once()
 
 
-def test_reload_gui_with_web_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
+def test_reload_gui_with_web_part(reload_apache: Mock) -> None:
     package = packaging.manifest_template(
         name=packaging.PackageName("ding"),
         version_packaged=cmk_version.__version__,
@@ -401,7 +385,6 @@ def test_reload_gui_with_web_part(reload_apache: Mock, build_setup_search_index:
     )
 
     packaging._execute_post_package_change_actions(package)
-    build_setup_search_index.assert_called_once()
     reload_apache.assert_called_once()
 
 

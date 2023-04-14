@@ -58,6 +58,7 @@ if [ ! -w "${RUNNING_FILE}" ]; then
     # In this scenario no mk-job status file is created. We simply execute the command
     rm "${TMP_FILE}" 2>/dev/null
     exec "$@"
+    exit $?
 fi
 
 trap "cleanup" 0

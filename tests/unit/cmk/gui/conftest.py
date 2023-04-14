@@ -468,7 +468,7 @@ def run_as_user() -> Callable[[UserId], ContextManager[None]]:
 
     @contextmanager
     def _run_as_user(user_id: UserId) -> Iterator[None]:
-        cmk.gui.config.load_config()
+        config_module.load_config()
         with UserContext(user_id):
             yield None
 
@@ -491,7 +491,7 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
     @contextmanager
     def _run_as_superuser() -> Iterator[None]:
-        cmk.gui.config.load_config()
+        config_module.load_config()
         with SuperUserContext():
             yield None
 

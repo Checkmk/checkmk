@@ -1,0 +1,16 @@
+Title: AttributeError: 'Namespace' object has no attribute 'fetch_client_id' in check_mail and check_mail_loop
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681482903
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Trying to hide EWS related command line arguments from check_mail and check_mail_loop active checks
+(which don't support EWS yet) led to exceptions being raised due to invalid access to now
+non-existing arguments.
+This change makes those arguments visible again with a hint about EWS not being available.
+

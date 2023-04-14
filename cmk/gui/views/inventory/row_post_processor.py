@@ -33,7 +33,12 @@ def inventory_row_post_processor(
     # inventory, then we load it and attach it as column "host_inventory"
     if _is_inventory_data_needed(view, all_active_filters):
         _add_inventory_data(rows)
-        _join_inventory_rows(view, rows)
+        _join_inventory_rows(
+            view_macros=_get_view_macros(view.spec),
+            view_join_cells=view.join_cells,
+            view_datasource_ident=view.datasource.ident,
+            rows=rows,
+        )
 
 
 def _is_inventory_data_needed(view: View, all_active_filters: Sequence[Filter]) -> bool:
@@ -95,14 +100,20 @@ def _add_inventory_data(rows: Rows) -> None:
                 )
 
 
-def _join_inventory_rows(view: View, rows: Rows) -> None:
-    if (view_macros := _get_view_macros(view.spec)) is None:
+def _join_inventory_rows(
+    *,
+    view_macros: list[tuple[str, str]] | None,
+    view_join_cells: Sequence[JoinCell],
+    view_datasource_ident: str,
+    rows: Rows,
+) -> None:
+    if not view_macros:
         return
 
     # First we extract the table rows for all known join inv painters.
     # With this the extraction of the relevant nodes (and their table rows)
     # is done once per path.
-    if not (table_rows_by_master_key := _extract_table_rows(view.join_cells, rows)):
+    if not (table_rows_by_master_key := _extract_table_rows(view_join_cells, rows)):
         return
 
     # Then we evaluate these rows and try to find matching row entries.
@@ -110,7 +121,7 @@ def _join_inventory_rows(view: View, rows: Rows) -> None:
         row_values_by_macro = {
             macro: row_value
             for column_name, macro in view_macros
-            if (row_value := row.get(f"{view.datasource.ident}_{column_name}")) is not None
+            if (row_value := row.get(f"{view_datasource_ident}_{column_name}")) is not None
         }
 
         if join_inv_row := {
@@ -122,7 +133,7 @@ def _join_inventory_rows(view: View, rows: Rows) -> None:
 
 
 def _extract_table_rows(
-    join_cells: list[JoinCell], rows: Rows
+    join_cells: Sequence[JoinCell], rows: Rows
 ) -> dict[_MasterKey, list[_FoundTableRow]]:
     painter_macros_by_path_and_ident: dict[tuple[SDPath, str], list[tuple[str, str]]] = {}
     for join_cell in join_cells:

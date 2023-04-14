@@ -22,7 +22,7 @@ import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
-from cmk.gui.type_defs import ColumnSpec, PainterParameters, UserId
+from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.view import View
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
@@ -43,6 +43,7 @@ from cmk.gui.views.inventory import (
     TableViewSpec,
 )
 from cmk.gui.views.inventory.row_post_processor import _join_inventory_rows
+from cmk.gui.views.painter.v0.base import JoinCell
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
 
@@ -795,6 +796,10 @@ def test_registered_sorter_cmp() -> None:
 
 
 def test_row_post_processor() -> None:
+    class _FakeJoinCell(JoinCell):
+        def painter_parameters(self) -> PainterParameters | None:
+            return self._painter_params
+
     rows = [
         {
             "site": "mysite",
@@ -827,7 +832,7 @@ def test_row_post_processor() -> None:
                                             },
                                         ],
                                     },
-                                }
+                                },
                             },
                             "Table": {},
                         },
@@ -841,73 +846,55 @@ def test_row_post_processor() -> None:
     expected_len = len(rows)
 
     _join_inventory_rows(
-        View(
-            "invorainstance",
-            {
-                "datasource": "invorainstance",
-                "group_painters": [],
-                "painters": [
-                    # Match
-                    ColumnSpec(
-                        name="invoradataguardstats_db_unique",
-                        parameters=PainterParameters(
-                            path_to_table=("path-to", "ora-dataguard-stats"),
-                            column_to_display="db_unique",
-                            columns_to_match=[("sid", "$SID$")],
-                        ),
-                        join_value="invoradataguardstats_db_unique",
-                        _column_type="join_inv_column",
+        view_macros=[
+            ("sid", "$SID$"),
+        ],
+        view_join_cells=[
+            # Match
+            _FakeJoinCell(
+                ColumnSpec(
+                    name="invoradataguardstats_db_unique",
+                    parameters=PainterParameters(
+                        path_to_table=("path-to", "ora-dataguard-stats"),
+                        column_to_display="db_unique",
+                        columns_to_match=[("sid", "$SID$")],
                     ),
-                    # Unknown macro
-                    ColumnSpec(
-                        name="invoradataguardstats_role",
-                        parameters=PainterParameters(
-                            path_to_table=("path-to", "ora-dataguard-stats"),
-                            column_to_display="role",
-                            columns_to_match=[("sid", "$BAR$")],
-                        ),
-                        join_value="invoradataguardstats_role",
-                        _column_type="join_inv_column",
+                    join_value="invoradataguardstats_db_unique",
+                    _column_type="join_inv_column",
+                ),
+                "",
+            ),
+            # Unknown macro
+            _FakeJoinCell(
+                ColumnSpec(
+                    name="invoradataguardstats_role",
+                    parameters=PainterParameters(
+                        path_to_table=("path-to", "ora-dataguard-stats"),
+                        column_to_display="role",
+                        columns_to_match=[("sid", "$BAR$")],
                     ),
-                    # Unknown node
-                    ColumnSpec(
-                        name="invunknown_column_name",
-                        parameters=PainterParameters(
-                            path_to_table=("path-to", "somewhere-else"),
-                            column_to_display="column_name",
-                            columns_to_match=[("sid", "$SID$")],
-                        ),
-                        join_value="invunknown_column_name",
-                        _column_type="join_inv_column",
+                    join_value="invoradataguardstats_role",
+                    _column_type="join_inv_column",
+                ),
+                "",
+            ),
+            # Unknown node
+            _FakeJoinCell(
+                ColumnSpec(
+                    name="invunknown_column_name",
+                    parameters=PainterParameters(
+                        path_to_table=("path-to", "somewhere-else"),
+                        column_to_display="column_name",
+                        columns_to_match=[("sid", "$SID$")],
                     ),
-                ],
-                "inventory_join_macros": {"macros": [("sid", "$SID$")]},
-                # These fields do not matter here
-                "layout": "layout",
-                "browser_reload": 0,
-                "num_columns": 0,
-                "column_headers": "off",
-                "sorters": [],
-                "link_from": {},
-                "owner": UserId("its-me"),
-                "name": "name",
-                "context": {},
-                "single_infos": [],
-                "add_context_to_title": False,
-                "title": "title",
-                "description": "description",
-                "topic": "topic",
-                "sort_index": 0,
-                "is_show_more": False,
-                "icon": None,
-                "hidden": False,
-                "hidebutton": False,
-                "public": False,
-                "packaged": False,
-            },
-            {},
-        ),
-        rows,
+                    join_value="invunknown_column_name",
+                    _column_type="join_inv_column",
+                ),
+                "",
+            ),
+        ],
+        view_datasource_ident="invorainstance",
+        rows=rows,
     )
 
     assert len(rows) == expected_len
@@ -946,7 +933,7 @@ def test_row_post_processor() -> None:
                                                 },
                                             ],
                                         },
-                                    }
+                                    },
                                 },
                                 "Table": {},
                             },
@@ -955,7 +942,7 @@ def test_row_post_processor() -> None:
                     }
                 ),
                 "JOIN": {
-                    "invoradataguardstats_db_unique": {"invoradataguardstats_db_unique": "name1"}
+                    "invoradataguardstats_db_unique": {"invoradataguardstats_db_unique": "name1"},
                 },
             },
         ],

@@ -3,13 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from collections.abc import Iterable
 from typing import NamedTuple
 
-from cmk.base.check_api import any_of, equals
-from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    any_of,
+    equals,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
 
 class FortigateSensors(NamedTuple):
@@ -34,41 +43,47 @@ def parse_fortigate_sensors(string_table: StringTable) -> FortigateSensors:
     )
 
 
-def discover_fortigate_sensors(section: FortigateSensors) -> Iterable[tuple[None, dict]]:
+def discover_fortigate_sensors(section: FortigateSensors) -> DiscoveryResult:
     if section.total >= 1:
-        yield None, {}
+        yield Service()
 
 
-def check_fortigate_sensors(section: FortigateSensors) -> Iterable[tuple[int, str]]:
+def check_fortigate_sensors(section: FortigateSensors) -> CheckResult:
     if section.total == 0:
-        yield 2, "No sensors found"
+        yield Result(state=State.CRIT, summary="No sensors found")
         return
 
-    yield 0, f"{section.total} sensors"
-    yield 0, f"{section.ok} OK"
-    yield 0, f"{section.critical} with alarm"
+    yield Result(state=State.OK, summary=f"{section.total} sensors")
+    yield Result(state=State.OK, summary=f"{section.ok} OK")
+    yield Result(state=State.OK, summary=f"{section.critical} with alarm")
 
     for sensor in section.critical_sensors:
-        yield 2, f"{sensor}"
+        yield Result(state=State.CRIT, summary=f"{sensor}")
 
 
-check_info["fortigate_sensors"] = {
-    "detect": any_of(
+register.snmp_section(
+    name="fortigate_sensors",
+    detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.1000"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.5004"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.5006"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.10004"),
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.12356.101.4.3.2.1",
-        [
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.12356.101.4.3.2.1",
+        oids=[
             "2",  # FORTINET-FORTIGATE-MIB::fgHwSensorEntName
             "3",  # FORTINET-FORTIGATE-MIB::fgHwSensorEntValue
             "4",  # FORTINET-FORTIGATE-MIB::fgHwSensorEntAlarmStatus
         ],
     ),
-    "parse_function": parse_fortigate_sensors,
-    "inventory_function": discover_fortigate_sensors,
-    "check_function": check_fortigate_sensors,
-    "service_description": "Sensor Summary",
-}
+    parse_function=parse_fortigate_sensors,
+)
+
+
+register.check_plugin(
+    name="fortigate_sensors",
+    service_name="Sensor Summary",
+    discovery_function=discover_fortigate_sensors,
+    check_function=check_fortigate_sensors,
+)

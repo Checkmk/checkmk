@@ -124,12 +124,16 @@ def _join_inventory_rows(
             if (row_value := row.get(f"{view_datasource_ident}_{column_name}")) is not None
         }
 
-        if join_inv_row := {
-            found_table_row.ident: {found_table_row.ident: found_table_row.column_value}
-            for found_table_row in table_rows_by_master_key[_MasterKey.make(row)]
-            if found_table_row.matches(row_values_by_macro)
-        }:
-            row.setdefault("JOIN", {}).update(join_inv_row)
+        found_values_by_ident: dict[str, list[str | int | float]] = {}
+        for found_table_row in table_rows_by_master_key[_MasterKey.make(row)]:
+            if found_table_row.matches(row_values_by_macro):
+                found_values_by_ident.setdefault(found_table_row.ident, []).append(
+                    found_table_row.column_value
+                )
+
+        for ident, values in found_values_by_ident.items():
+            if len(values) == 1:
+                row.setdefault("JOIN", {}).update({ident: {ident: values[0]}})
 
 
 def _extract_table_rows(
@@ -180,7 +184,7 @@ class _FoundTableRow(NamedTuple):
     macros: dict[str, str | int | float]
 
     def matches(self, row_values_by_macro: dict[str, str | int | float]) -> bool:
-        return all(
+        return any(
             self.macros.get(macro) == row_value for macro, row_value in row_values_by_macro.items()
         )
 

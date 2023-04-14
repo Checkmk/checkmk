@@ -79,8 +79,8 @@ mod tests {
 
     #[test]
     fn test_import() {
-        let reg_dir = config::test_helpers::TestRegistryDir::new();
-        let mut reg = reg_dir.create_registry();
+        let r = config::test_helpers::TestRegistry::new();
+        let mut reg = r.registry;
         assert!(reg.is_empty());
         assert!(!reg.path().exists());
         assert!(_import(&mut reg, &MockImportDataProvider {}).is_ok());

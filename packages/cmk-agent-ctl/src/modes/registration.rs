@@ -534,7 +534,7 @@ pub fn proxy_register(config: &config::RegisterExistingConfig) -> AnyhowResult<(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use config::test_helpers::{TestRegistry, TestRegistryDir};
+    use config::test_helpers::TestRegistry;
     use std::str::FromStr;
 
     const SERVER: &str = "server";
@@ -736,8 +736,8 @@ mod tests {
 
         #[test]
         fn test_existing() {
-            let reg_dir = TestRegistryDir::new();
-            let mut registry = reg_dir.create_registry();
+            let r = TestRegistry::new();
+            let mut registry = r.registry;
             assert!(!registry.path().exists());
             assert!(direct_registration(
                 &registration_connection_config(None, None, false),
@@ -761,8 +761,8 @@ mod tests {
 
         #[test]
         fn test_new() {
-            let reg_dir = TestRegistryDir::new();
-            let mut registry = reg_dir.create_registry();
+            let r = TestRegistry::new();
+            let mut registry = r.registry;
             assert!(!registry.path().exists());
             assert!(direct_registration(
                 &registration_connection_config(
@@ -1058,8 +1058,8 @@ mod tests {
 
         #[test]
         fn test_port_update_only() {
-            let reg_dir = TestRegistryDir::new();
-            let mut registry = reg_dir.create_registry();
+            let r = TestRegistry::new();
+            let mut registry = r.registry;
             registry.register_connection(
                 &config::ConnectionMode::Pull,
                 &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),

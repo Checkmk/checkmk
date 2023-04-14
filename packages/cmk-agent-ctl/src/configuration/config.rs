@@ -634,7 +634,7 @@ pub mod test_helpers {
     use std::convert::From;
     use std::str::FromStr;
 
-    pub struct TestRegistryDir {
+    struct TestRegistryDir {
         // Wrapping this TempDir in an Option allows us to call close() on it in drop().
         pub dir: Option<tempfile::TempDir>,
     }

@@ -143,7 +143,7 @@ fn conditionally_renew_connection_cert(
 mod test_renew_certificate {
 
     use crate::config::Registry;
-    use crate::configuration::config::test_helpers::{TestRegistry, TestRegistryDir};
+    use crate::configuration::config::test_helpers::TestRegistry;
     use crate::modes::renew_certificate::*;
     use openssl;
     use openssl::asn1::Asn1Time;
@@ -382,8 +382,8 @@ mod test_renew_certificate {
 
     #[test]
     fn test_renew_all_certificates_legacy_pull_mode() -> AnyhowResult<()> {
-        let reg_dir = TestRegistryDir::new();
-        let mut reg = reg_dir.create_registry();
+        let r = TestRegistry::new();
+        let mut reg = r.registry;
         reg.activate_legacy_pull()?;
         renew_all_certificates(&mut reg, &TestApi {})?;
         assert!(reg.legacy_pull_active());

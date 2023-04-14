@@ -246,7 +246,7 @@ def _commandline_discovery_on_host(
 
     section.section_step("Analyse discovered host labels")
 
-    host_labels = analyse_node_labels(
+    host_labels, _labels_by_node = analyse_node_labels(
         host_key=host_key,
         host_key_mgmt=host_key_mgmt,
         parsed_sections_broker=parsed_sections_broker,
@@ -340,7 +340,7 @@ def automation_discovery(
         )
 
         if mode is not DiscoveryMode.REMOVE:
-            host_labels = analyse_host_labels(
+            host_labels, _labels_by_host = analyse_host_labels(
                 host_config=host_config,
                 parsed_sections_broker=parsed_sections_broker,
                 load_labels=True,
@@ -568,7 +568,7 @@ def active_check_discovery(
         on_scan_error=OnError.RAISE,
     )
 
-    host_labels = analyse_host_labels(
+    host_labels, _labels_by_node = analyse_host_labels(
         host_config=host_config,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=True,
@@ -1244,7 +1244,7 @@ def get_check_preview(
     ):
         raise SourcesFailedError("\n".join(r.summary for r in failed_sources_results))
 
-    host_labels = analyse_host_labels(
+    host_labels, _labels_by_host = analyse_host_labels(
         host_config=host_config,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=True,

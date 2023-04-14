@@ -20,7 +20,7 @@ from cmk.utils.type_defs import HostKey, HostName
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-from cmk.base.discovered_labels import HostLabel
+from cmk.base.discovered_labels import HostLabel, HostLabelValueDict
 
 from .utils import QualifiedDiscovery
 
@@ -32,7 +32,7 @@ def analyse_host_labels(
     save_labels: bool,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
-) -> QualifiedDiscovery[HostLabel]:
+) -> tuple[QualifiedDiscovery[HostLabel], Mapping[HostName, Mapping[str, HostLabelValueDict]]]:
     return (
         analyse_cluster_labels(
             host_config=host_config,
@@ -60,7 +60,7 @@ def analyse_node_labels(
     load_labels: bool,
     save_labels: bool,
     on_error: OnError,
-) -> QualifiedDiscovery[HostLabel]:
+) -> tuple[QualifiedDiscovery[HostLabel], Mapping[HostName, Mapping[str, HostLabelValueDict]]]:
     """Discovers and processes host labels per real host or node
 
     Side effects:
@@ -84,11 +84,13 @@ def analyse_node_labels(
         existing_host_labels=_load_existing_host_labels(host_key.hostname) if load_labels else (),
         save_labels=save_labels,
     )
+
+    present_labels_dict = {l.name: l.to_dict() for l in _iter_kept_labels(host_labels)}
+
     if save_labels:
-        present_labels_dict = {l.name: l.to_dict() for l in _iter_kept_labels(host_labels)}
         DiscoveredHostLabelsStore(host_key.hostname).save(present_labels_dict)
 
-    return host_labels
+    return host_labels, {host_key.hostname: present_labels_dict}
 
 
 def analyse_cluster_labels(
@@ -97,7 +99,7 @@ def analyse_cluster_labels(
     parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
     on_error: OnError,
-) -> QualifiedDiscovery[HostLabel]:
+) -> tuple[QualifiedDiscovery[HostLabel], Mapping[HostName, Mapping[str, HostLabelValueDict]]]:
     """Discovers and processes host labels per cluster host
 
     Side effects:
@@ -111,15 +113,16 @@ def analyse_cluster_labels(
     optimizer caches have to be cleared if new host labels are found.
     """
     if not host_config.nodes:
-        return QualifiedDiscovery.empty()
+        return QualifiedDiscovery.empty(), {}
 
+    labels_by_host: Dict[HostName, Mapping[str, HostLabelValueDict]] = {}
     nodes_host_labels: Dict[str, HostLabel] = {}
     config_cache = config.get_config_cache()
 
     for node in host_config.nodes:
         node_config = config_cache.get_host_config(node)
 
-        node_result = analyse_node_labels(
+        node_result, labels_by_node = analyse_node_labels(
             host_key=node_config.host_key,
             host_key_mgmt=node_config.host_key_mgmt,
             parsed_sections_broker=parsed_sections_broker,
@@ -131,7 +134,9 @@ def analyse_cluster_labels(
         # keep the latest for every label.name
         nodes_host_labels.update({l.name: l for l in _iter_kept_labels(node_result)})
 
-    return _analyse_host_labels(
+        labels_by_host.update(labels_by_node)
+
+    cluster_result = _analyse_host_labels(
         host_name=host_config.hostname,
         discovered_host_labels=list(nodes_host_labels.values()),
         existing_host_labels=_load_existing_host_labels(host_config.hostname)
@@ -139,6 +144,10 @@ def analyse_cluster_labels(
         else (),
         save_labels=False,
     )
+    return cluster_result, {
+        **labels_by_host,
+        host_config.hostname: {l.name: l.to_dict() for l in _iter_kept_labels(cluster_result)},
+    }
 
 
 def _analyse_host_labels(

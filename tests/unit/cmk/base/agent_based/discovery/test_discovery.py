@@ -1491,7 +1491,7 @@ def test__perform_host_label_discovery_on_realhost(
 ) -> None:
     scenario = realhost_scenario
 
-    host_label_result = discovery.analyse_node_labels(
+    host_label_result, _labels_by_node = discovery.analyse_node_labels(
         host_key=scenario.host_key,
         host_key_mgmt=scenario.host_key_mgmt,
         parsed_sections_broker=scenario.parsed_sections_broker,
@@ -1551,7 +1551,7 @@ def test__perform_host_label_discovery_on_cluster(
 
     scenario = cluster_scenario
 
-    host_label_result = discovery._host_labels.analyse_cluster_labels(
+    host_label_result, _labels_by_host = discovery._host_labels.analyse_cluster_labels(
         host_config=scenario.host_config,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,

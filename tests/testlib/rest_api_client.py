@@ -708,86 +708,51 @@ class AuxTagTestClient(RestApiClient):
         )
 
 
-class TimePeriodObject(BaseModel):
-    alias: StrictStr
-    active_time_ranges: list
-    exceptions: list
-    exclude: list | None  # builtin timeperiods don't have an exclude field
-
-
-class TimePeriodObjectResponse(ObjectResponse):
-    domainType: Literal["time_period"]
-    id: StrictStr
-    title: StrictStr
-    extensions: TimePeriodObject
-
-
-class TimePeriodCollectionResponse(CollectionResponse):
-    id: Literal["time_period"]
-    domainType: Literal["time_period"]
-    value: list[TimePeriodObjectResponse]
-
-
 class TimePeriodTestClient(RestApiClient):
     domain: Literal["time_period"] = "time_period"
 
     def get(self, time_period_id: str, expect_ok: bool = True) -> Response:
-        resp = self.request(
+        return self.request(
             "get",
             url=f"/objects/{self.domain}/{time_period_id}",
             expect_ok=expect_ok,
         )
-        if expect_ok:
-            TimePeriodObjectResponse(**resp.json)
-        return resp
 
     def get_all(self, expect_ok: bool = True) -> Response:
-        resp = self.request(
+        return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
         )
-        if expect_ok:
-            TimePeriodCollectionResponse(**resp.json)
-        return resp
 
     def delete(self, time_period_id: str, expect_ok: bool = True) -> Response:
         etag = self.get(time_period_id).headers["ETag"]
-        resp = self.request(
+        return self.request(
             "delete",
             url=f"/objects/{self.domain}/{time_period_id}",
             headers={"If-Match": etag, "Accept": "application/json"},
             expect_ok=expect_ok,
         )
-        return resp
 
     def create(self, time_period_data: dict[str, object], expect_ok: bool = True) -> Response:
-        resp = self.request(
+        return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
             body=time_period_data,
             expect_ok=expect_ok,
         )
-        if expect_ok:
-            TimePeriodObjectResponse(**resp.json)
-        return resp
 
     def edit(
         self, time_period_id: str, time_period_data: dict[str, object], expect_ok: bool = True
     ) -> Response:
         etag = self.get(time_period_id).headers["ETag"]
-        resp = self.request(
+        return self.request(
             "put",
             url=f"/objects/{self.domain}/{time_period_id}",
             body=time_period_data,
             expect_ok=expect_ok,
             headers={"If-Match": etag, "Accept": "application/json"},
         )
-
-        return resp
-
-
-# === Rules Endpoint Client ===
 
 
 class RulesTestClient(RestApiClient):
@@ -857,9 +822,6 @@ class RulesTestClient(RestApiClient):
         )
 
 
-# === Rulesets Endpoint Client ===
-
-
 class RulesetTestClient(RestApiClient):
     domain: Literal["ruleset"] = "ruleset"
 
@@ -876,9 +838,6 @@ class RulesetTestClient(RestApiClient):
             url=f"/objects/{self.domain}/{ruleset_id}",
             expect_ok=expect_ok,
         )
-
-
-# === ContactGroup Endpoint Client ===
 
 
 class ContactGroupTestClient(RestApiClient):

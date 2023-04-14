@@ -786,6 +786,9 @@ mock_discovery_result = TryDiscoveryResult(
     new_labels={},
     vanished_labels={},
     changed_labels={},
+    host_labels_by_host={
+        "heute": {"cmk/check_mk_server": {"plugin_name": "labels", "value": "yes"}}
+    },
 )
 
 

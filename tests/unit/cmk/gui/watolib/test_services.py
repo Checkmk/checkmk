@@ -69,6 +69,9 @@ MOCK_DISCOVERY_RESULT = TryDiscoveryResult(
     new_labels={},
     vanished_labels={},
     changed_labels={},
+    host_labels_by_host={
+        "heute": {"cmk/check_mk_server": {"plugin_name": "labels", "value": "yes"}}
+    },
 )
 
 
@@ -177,6 +180,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     mock_set_autochecks: MagicMock,
 ) -> None:
     mocker.patch("cmk.gui.watolib.services.update_host_labels", return_value={})
+    mocker.patch("cmk.gui.watolib.hosts_and_folders.CREHost.host", return_value=sample_host)
     mock_try_discovery = mocker.patch(
         "cmk.gui.watolib.services.try_discovery",
         return_value=DiscoveryResult(
@@ -228,6 +232,12 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            host_labels_by_host={
+                sample_host_name: {
+                    "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
+                    "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
+                }
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -282,6 +292,12 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         },
         vanished_labels={},
         changed_labels={},
+        host_labels_by_host={
+            sample_host_name: {
+                "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
+                "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
+            }
+        },
     )
 
     discovery_options = DiscoveryOptions(
@@ -404,6 +420,12 @@ def test_perform_discovery_single_update(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            host_labels_by_host={
+                "TODAY": {
+                    "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
+                    "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
+                }
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -479,6 +501,12 @@ def test_perform_discovery_single_update(
         new_labels={},
         vanished_labels={},
         changed_labels={},
+        host_labels_by_host={
+            "TODAY": {
+                "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
+                "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
+            }
+        },
     )
 
     discovery_options = DiscoveryOptions(
@@ -590,6 +618,12 @@ def test_perform_discovery_action_update_services(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            host_labels_by_host={
+                "TODAY": {
+                    "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
+                    "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
+                }
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -673,6 +707,12 @@ def test_perform_discovery_action_update_services(
         new_labels={},
         vanished_labels={},
         changed_labels={},
+        host_labels_by_host={
+            "TODAY": {
+                "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
+                "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
+            }
+        },
     )
 
     discovery_options = DiscoveryOptions(
@@ -756,6 +796,11 @@ def test_perform_discovery_action_update_host_labels(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            host_labels_by_host={
+                sample_host_name: {
+                    "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
+                }
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -788,6 +833,12 @@ def test_perform_discovery_action_update_host_labels(
         new_labels={},
         vanished_labels={"cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"}},
         changed_labels={},
+        host_labels_by_host={
+            "heute": {
+                "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
+                "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
+            }
+        },
     )
 
     discovery_options = DiscoveryOptions(

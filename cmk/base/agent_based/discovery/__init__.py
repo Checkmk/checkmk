@@ -34,6 +34,7 @@ import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
+from cmk.utils.labels import HostLabelValueDict
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
@@ -1216,7 +1217,11 @@ def get_check_preview(
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
     use_cached_snmp_data: bool,
     on_error: OnError,
-) -> Tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
+) -> Tuple[
+    Sequence[CheckPreviewEntry],
+    QualifiedDiscovery[HostLabel],
+    Mapping[str, Mapping[str, HostLabelValueDict]],
+]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
     config_cache = config.get_config_cache()
@@ -1244,7 +1249,7 @@ def get_check_preview(
     ):
         raise SourcesFailedError("\n".join(r.summary for r in failed_sources_results))
 
-    host_labels, _labels_by_host = analyse_host_labels(
+    host_labels, labels_by_host = analyse_host_labels(
         host_config=host_config,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=True,
@@ -1301,11 +1306,15 @@ def get_check_preview(
             for service in _manual_services(host_config).values()
         ]
 
-    return [
-        *passive_rows,
-        *_active_check_preview_rows(host_config, host_attrs),
-        *_custom_check_preview_rows(host_config),
-    ], host_labels
+    return (
+        [
+            *passive_rows,
+            *_active_check_preview_rows(host_config, host_attrs),
+            *_custom_check_preview_rows(host_config),
+        ],
+        host_labels,
+        labels_by_host,
+    )
 
 
 def _check_preview_table_row(

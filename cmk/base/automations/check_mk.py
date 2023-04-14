@@ -26,7 +26,7 @@ import cmk.utils.password_store
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, OnError
-from cmk.utils.labels import DiscoveredHostLabelsStore
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabelValueDict
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import (
@@ -187,7 +187,9 @@ class AutomationTryDiscovery(Automation):
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
-            check_preview_table, host_label_result = self._execute_discovery(args)
+            check_preview_table, host_label_result, host_labels_by_host = self._execute_discovery(
+                args
+            )
 
             def make_discovered_host_labels(
                 labels: Sequence[HostLabel],
@@ -216,12 +218,15 @@ class AutomationTryDiscovery(Automation):
                     [l for l in host_label_result.vanished if l.name not in changed_labels]
                 ),
                 changed_labels=changed_labels,
+                host_labels_by_host=host_labels_by_host,
             )
 
     def _execute_discovery(
         self, args: List[str]
     ) -> Tuple[
-        Sequence[automation_results.CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]
+        Sequence[automation_results.CheckPreviewEntry],
+        discovery.QualifiedDiscovery[HostLabel],
+        Mapping[str, Mapping[str, HostLabelValueDict]],
     ]:
 
         use_cached_snmp_data = False
@@ -253,7 +258,7 @@ class AutomationTryDiscovery(Automation):
                     on_error=on_error,
                 )
             except discovery.SourcesFailedError:
-                return [], discovery.QualifiedDiscovery.empty()
+                return [], discovery.QualifiedDiscovery.empty(), {}
 
 
 @contextmanager

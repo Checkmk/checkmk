@@ -106,8 +106,8 @@ class TestTryDiscoveryResult:
             output="output",
             check_table=[
                 CheckPreviewEntry(
-                    check_source="check_source",
-                    check_plugin_name="check_plugin_name",
+                    check_source="my_check_source",
+                    check_plugin_name="my_check_plugin_name",
                     ruleset_name=None,
                     item=None,
                     discovered_parameters=None,
@@ -124,5 +124,6 @@ class TestTryDiscoveryResult:
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            host_labels_by_host={},
         )
         assert TryDiscoveryResult.deserialize(result.serialize(_THIS_VERSION)) == result

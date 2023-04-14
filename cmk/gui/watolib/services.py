@@ -133,6 +133,7 @@ class DiscoveryResult(NamedTuple):
     new_labels: Mapping[str, HostLabelValueDict]
     vanished_labels: Mapping[str, HostLabelValueDict]
     changed_labels: Mapping[str, HostLabelValueDict]
+    host_labels_by_host: Mapping[HostName, Mapping[str, HostLabelValueDict]]
 
     def serialize(self) -> str:
         return repr(
@@ -144,6 +145,7 @@ class DiscoveryResult(NamedTuple):
                 self.new_labels,
                 self.vanished_labels,
                 self.changed_labels,
+                self.host_labels_by_host,
             )
         )
 
@@ -491,7 +493,7 @@ def perform_fix_all(
     """
     Handle fix all ('Accept All' on UI) discovery action
     """
-    _perform_update_host_labels({host.name(): discovery_result.host_labels})
+    _perform_update_host_labels(discovery_result.host_labels_by_host)
     Discovery(
         host,
         discovery_options,
@@ -513,7 +515,7 @@ def perform_host_label_discovery(
     host: CREHost,
 ) -> DiscoveryResult:
     """Handle update host labels discovery action"""
-    _perform_update_host_labels({host.name(): discovery_result.host_labels})
+    _perform_update_host_labels(discovery_result.host_labels_by_host)
     discovery_result = get_check_table(
         StartDiscoveryRequest(host, host.folder(), discovery_options)
     )
@@ -843,6 +845,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             host_name=host_name,
             estimated_duration=last_job_status.get("duration"),
         )
+        self._host_name = host_name
         self._pre_try_discovery = (
             0,
             TryDiscoveryResult(
@@ -852,6 +855,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
                 new_labels={},
                 vanished_labels={},
                 changed_labels={},
+                host_labels_by_host={},
             ),
         )
 
@@ -931,6 +935,10 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             new_labels=result.new_labels,
             vanished_labels=result.vanished_labels,
             changed_labels=result.changed_labels,
+            # versions before this commit did not send the host labels per node.
+            # For a real host (not a cluster) the fallback is the same, but for a cluster we only get the
+            # merged labels of the cluster, not for the individual nodes. See Werk #15530
+            host_labels_by_host=result.host_labels_by_host or {self._host_name: result.host_labels},
         )
 
     @staticmethod

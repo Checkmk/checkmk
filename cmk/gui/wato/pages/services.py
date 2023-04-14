@@ -300,6 +300,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 new_labels=previous_discovery_result.new_labels,
                 vanished_labels=previous_discovery_result.vanished_labels,
                 changed_labels=previous_discovery_result.changed_labels,
+                host_labels_by_host=previous_discovery_result.host_labels_by_host,
             )
 
         show_checkboxes = user.discovery_checkboxes

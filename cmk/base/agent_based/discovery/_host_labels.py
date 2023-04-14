@@ -38,7 +38,6 @@ def analyse_host_labels(
             host_config=host_config,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
-            save_labels=save_labels,
             on_error=on_error,
         )
         if host_config.is_cluster
@@ -92,7 +91,6 @@ def analyse_cluster_labels(
     host_config: config.HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
-    save_labels: bool,
     on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
     """Discovers and processes host labels per cluster host
@@ -121,7 +119,7 @@ def analyse_cluster_labels(
             host_key_mgmt=node_config.host_key_mgmt,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
-            save_labels=save_labels,
+            save_labels=False,
             on_error=on_error,
         )
 
@@ -142,7 +140,7 @@ def analyse_cluster_labels(
         existing_host_labels=_load_existing_host_labels(host_config.hostname)
         if load_labels
         else (),
-        save_labels=save_labels,
+        save_labels=False,
     )
 
 

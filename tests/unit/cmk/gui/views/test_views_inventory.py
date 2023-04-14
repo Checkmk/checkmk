@@ -805,6 +805,8 @@ def test_row_post_processor() -> None:
             "site": "mysite",
             "host_name": "my-host-name1",
             "invorainstance_sid": "sid1",
+            "invorainstance_version": "version1",
+            "invorainstance_bar": "bar",
             "host_inventory": StructuredDataNode.deserialize(
                 {
                     "Attributes": {},
@@ -833,6 +835,40 @@ def test_row_post_processor() -> None:
                                         ],
                                     },
                                 },
+                                "ora-versions": {
+                                    "Attributes": {},
+                                    "Nodes": {},
+                                    "Table": {
+                                        "KeyColumns": ["version"],
+                                        "Rows": [
+                                            {
+                                                "version": "version1",
+                                                "edition": "edition1",
+                                            },
+                                            {
+                                                "version": "version2",
+                                                "edition": "edition2",
+                                            },
+                                        ],
+                                    },
+                                },
+                                "ora-foobar": {
+                                    "Attributes": {},
+                                    "Nodes": {},
+                                    "Table": {
+                                        "KeyColumns": ["foo"],
+                                        "Rows": [
+                                            {
+                                                "foo": "foo1",
+                                                "bar": "bar",
+                                            },
+                                            {
+                                                "foo": "foo2",
+                                                "bar": "bar",
+                                            },
+                                        ],
+                                    },
+                                },
                             },
                             "Table": {},
                         },
@@ -848,9 +884,11 @@ def test_row_post_processor() -> None:
     _join_inventory_rows(
         view_macros=[
             ("sid", "$SID$"),
+            ("version", "$VERSION$"),
+            ("bar", "$BAR$"),
         ],
         view_join_cells=[
-            # Match
+            # Matches 'sid'
             _FakeJoinCell(
                 ColumnSpec(
                     name="invoradataguardstats_db_unique",
@@ -864,6 +902,34 @@ def test_row_post_processor() -> None:
                 ),
                 "",
             ),
+            # Match 'version'
+            _FakeJoinCell(
+                ColumnSpec(
+                    name="invoraversions_edition",
+                    parameters=PainterParameters(
+                        path_to_table=("path-to", "ora-versions"),
+                        column_to_display="edition",
+                        columns_to_match=[("version", "$VERSION$")],
+                    ),
+                    join_value="invoraversions_edition",
+                    _column_type="join_inv_column",
+                ),
+                "",
+            ),
+            # Match 'bar', not unique
+            _FakeJoinCell(
+                ColumnSpec(
+                    name="invorafoobar_foo",
+                    parameters=PainterParameters(
+                        path_to_table=("path-to", "ora-foobar"),
+                        column_to_display="foo",
+                        columns_to_match=[("bar", "$BAR$")],
+                    ),
+                    join_value="invorafoobar_foo",
+                    _column_type="join_inv_column",
+                ),
+                "",
+            ),
             # Unknown macro
             _FakeJoinCell(
                 ColumnSpec(
@@ -871,7 +937,7 @@ def test_row_post_processor() -> None:
                     parameters=PainterParameters(
                         path_to_table=("path-to", "ora-dataguard-stats"),
                         column_to_display="role",
-                        columns_to_match=[("sid", "$BAR$")],
+                        columns_to_match=[("sid", "$BAZ$")],
                     ),
                     join_value="invoradataguardstats_role",
                     _column_type="join_inv_column",
@@ -906,6 +972,8 @@ def test_row_post_processor() -> None:
                 "site": "mysite",
                 "host_name": "my-host-name1",
                 "invorainstance_sid": "sid1",
+                "invorainstance_version": "version1",
+                "invorainstance_bar": "bar",
                 "host_inventory": StructuredDataNode.deserialize(
                     {
                         "Attributes": {},
@@ -934,6 +1002,40 @@ def test_row_post_processor() -> None:
                                             ],
                                         },
                                     },
+                                    "ora-versions": {
+                                        "Attributes": {},
+                                        "Nodes": {},
+                                        "Table": {
+                                            "KeyColumns": ["version"],
+                                            "Rows": [
+                                                {
+                                                    "version": "version1",
+                                                    "edition": "edition1",
+                                                },
+                                                {
+                                                    "version": "version2",
+                                                    "edition": "edition2",
+                                                },
+                                            ],
+                                        },
+                                    },
+                                    "ora-foobar": {
+                                        "Attributes": {},
+                                        "Nodes": {},
+                                        "Table": {
+                                            "KeyColumns": ["foo"],
+                                            "Rows": [
+                                                {
+                                                    "foo": "foo1",
+                                                    "bar": "bar",
+                                                },
+                                                {
+                                                    "foo": "foo2",
+                                                    "bar": "bar",
+                                                },
+                                            ],
+                                        },
+                                    },
                                 },
                                 "Table": {},
                             },
@@ -943,6 +1045,7 @@ def test_row_post_processor() -> None:
                 ),
                 "JOIN": {
                     "invoradataguardstats_db_unique": {"invoradataguardstats_db_unique": "name1"},
+                    "invoraversions_edition": {"invoraversions_edition": "edition1"},
                 },
             },
         ],
@@ -952,6 +1055,7 @@ def test_row_post_processor() -> None:
         assert row["site"] == expected_row["site"]
         assert row["host_name"] == expected_row["host_name"]
         assert row["invorainstance_sid"] == expected_row["invorainstance_sid"]
+        assert row["invorainstance_version"] == expected_row["invorainstance_version"]
         assert row["JOIN"] == expected_row["JOIN"]
 
         tree = row["host_inventory"]

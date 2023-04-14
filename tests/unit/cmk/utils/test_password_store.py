@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -21,17 +20,14 @@ PW_STORE_KEY = "from_store"
 
 
 @pytest.fixture(name="fixed_secret")
-def fixture_fixed_secret(tmp_path: Path) -> Iterator[None]:
+def fixture_fixed_secret(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Write a fixed value to a tmp file and use that file for the password store secret
 
     we need the old value since other tests rely on the general path mocking"""
-    old_path = PasswordStoreSecret.path
     secret = b"password-secret"
     secret_path = tmp_path / "password_store_fixed.secret"
     secret_path.write_bytes(secret)
-    PasswordStoreSecret.path = secret_path
-    yield
-    PasswordStoreSecret.path = old_path
+    monkeypatch.setattr(PasswordStoreSecret, "path", secret_path)
 
 
 def test_save() -> None:

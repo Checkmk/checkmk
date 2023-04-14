@@ -1,0 +1,16 @@
+Title: Windows tasks plugin ignores only tasks from the Microsoft folder
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681472315
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+As a result of the change, the user will see some important,
+critical tasks, such as "Windows Edge update" task. 
+
+Otherwise, the behavior of the plugin is the same: tasks
+related to internal processing of Microsoft applications will
+be ignored.

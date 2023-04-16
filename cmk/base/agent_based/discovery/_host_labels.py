@@ -11,7 +11,7 @@ This module exposes three functions:
  * analyse_host_labels (dispatching to one of the above based on host_config.is_cluster)
 
 """
-from typing import Dict, Iterable, Mapping, Sequence
+from typing import Dict, Iterable, Mapping, Sequence, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
@@ -116,7 +116,7 @@ def analyse_cluster_labels(
         return QualifiedDiscovery.empty(), {}
 
     labels_by_host: Dict[HostName, Mapping[str, HostLabelValueDict]] = {}
-    nodes_host_labels: Dict[str, HostLabel] = {}
+    discovered_by_node: list[Mapping[str, HostLabel]] = []
     config_cache = config.get_config_cache()
 
     for node in host_config.nodes:
@@ -130,15 +130,13 @@ def analyse_cluster_labels(
             save_labels=False,
             on_error=on_error,
         )
-
-        # keep the latest for every label.name
-        nodes_host_labels.update({l.name: l for l in _iter_kept_labels(node_result)})
+        discovered_by_node.append({l.name: l for l in _iter_kept_labels(node_result)})
 
         labels_by_host.update(labels_by_node)
 
     cluster_result = _analyse_host_labels(
         host_name=host_config.hostname,
-        discovered_host_labels=list(nodes_host_labels.values()),
+        discovered_host_labels=list(_merge_cluster_labels(discovered_by_node).values()),
         existing_host_labels=_load_existing_host_labels(host_config.hostname)
         if load_labels
         else (),
@@ -148,6 +146,16 @@ def analyse_cluster_labels(
         **labels_by_host,
         host_config.hostname: {l.name: l.to_dict() for l in _iter_kept_labels(cluster_result)},
     }
+
+
+_TLabel = TypeVar("_TLabel")
+
+
+def _merge_cluster_labels(
+    all_node_labels: Sequence[Mapping[str, _TLabel]]
+) -> Mapping[str, _TLabel]:
+    """A cluster has all its nodes labels. Last node wins."""
+    return {name: label for node_labels in all_node_labels for name, label in node_labels.items()}
 
 
 def _analyse_host_labels(

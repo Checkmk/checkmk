@@ -15,8 +15,8 @@ from cmk.utils.type_defs import EVERYTHING, HostName, SectionName
 
 from cmk.checkers import (
     FetcherFunction,
+    InventoryPlugin,
     ParserFunction,
-    PInventoryPlugin,
     PSectionPlugin,
     SummarizerFunction,
 )
@@ -39,7 +39,7 @@ def commandline_inventory(
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: RawIntervalsFromConfig,
     section_plugins: Mapping[SectionName, PSectionPlugin],
-    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
 ) -> None:
     section.section_begin(hostname)
@@ -73,11 +73,11 @@ def _commandline_inventory_on_host(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: RawIntervalsFromConfig,
     section_plugins: Mapping[SectionName, PSectionPlugin],
-    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> None:
     section.section_step("Inventorizing")

@@ -36,9 +36,9 @@ from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 from cmk.checkers import (
     DiscoveryPlugin,
     HostLabelDiscoveryPlugin,
+    InventoryPlugin,
     parse_raw_data,
     PCheckPlugin,
-    PInventoryPlugin,
     PSectionPlugin,
     Source,
     SourceInfo,
@@ -364,10 +364,15 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
         return len(_api.registered_check_plugins)
 
 
-class InventoryPluginMapper(Mapping[InventoryPluginName, PInventoryPlugin]):
+class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):
     # See comment to SectionPluginMapper.
-    def __getitem__(self, __key: InventoryPluginName) -> PInventoryPlugin:
-        return _api.registered_inventory_plugins[__key]
+    def __getitem__(self, __key: InventoryPluginName) -> InventoryPlugin:
+        plugin = _api.registered_inventory_plugins[__key]
+        return InventoryPlugin(
+            sections=plugin.sections,
+            function=plugin.inventory_function,
+            ruleset_name=plugin.inventory_ruleset_name,
+        )
 
     def __iter__(self) -> Iterator[InventoryPluginName]:
         return iter(_api.registered_inventory_plugins)

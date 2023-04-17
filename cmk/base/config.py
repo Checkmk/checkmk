@@ -127,9 +127,9 @@ from cmk.fetchers.filecache import MaxAge
 from cmk.checkers import (
     AgentParser,
     DiscoveryPlugin,
+    InventoryPlugin,
     Parameters,
     PCheckPlugin,
-    PInventoryPlugin,
     SourceType,
 )
 from cmk.checkers.check_table import (
@@ -2702,14 +2702,14 @@ class ConfigCache:
         )
 
     def inventory_parameters(
-        self, host_name: HostName, plugin: PInventoryPlugin
+        self, host_name: HostName, plugin: InventoryPlugin
     ) -> dict[str, object]:
-        if plugin.inventory_ruleset_name is None:
+        if plugin.ruleset_name is None:
             raise ValueError(plugin)
 
         default: Sequence[RuleSpec[object]] = []
         return self.host_extra_conf_merged(
-            host_name, inv_parameters.get(str(plugin.inventory_ruleset_name), default)
+            host_name, inv_parameters.get(str(plugin.ruleset_name), default)
         )
 
     def custom_checks(self, host_name: HostName) -> list[dict]:

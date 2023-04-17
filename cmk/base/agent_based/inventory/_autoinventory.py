@@ -11,8 +11,8 @@ from cmk.utils.type_defs import EVERYTHING, HostName, SectionName
 
 from cmk.checkers import (
     FetcherFunction,
+    InventoryPlugin,
     ParserFunction,
-    PInventoryPlugin,
     PSectionPlugin,
     SummarizerFunction,
 )
@@ -33,7 +33,7 @@ def inventorize_marked_hosts(
     fetcher: FetcherFunction,
     summarizer: Callable[[HostName], SummarizerFunction],
     section_plugins: Mapping[SectionName, PSectionPlugin],
-    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
 ) -> None:
     autoinventory_queue.cleanup(
         valid_hosts=config_cache.all_configured_hosts(),

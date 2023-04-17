@@ -40,10 +40,10 @@ from cmk.fetchers import FetcherType
 from cmk.checkers import (
     crash_reporting,
     HostKey,
+    InventoryPlugin,
     Parameters,
     ParserFunction,
     PCheckPlugin,
-    PInventoryPlugin,
     plugin_contexts,
     PSectionPlugin,
     SourceInfo,
@@ -98,7 +98,7 @@ def execute_checkmk_checks(
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     check_plugins: Mapping[CheckPluginName, PCheckPlugin],
-    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
     submitter: Submitter,
@@ -153,8 +153,8 @@ def execute_checkmk_checks(
 def _do_inventory_actions_during_checking_for(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
-    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     params: HWSWInventoryParameters,
     providers: Mapping[HostKey, Provider],
 ) -> None:

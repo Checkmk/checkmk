@@ -19,8 +19,8 @@ from cmk.utils.type_defs import EVERYTHING, HostName, SectionName
 
 from cmk.checkers import (
     FetcherFunction,
+    InventoryPlugin,
     ParserFunction,
-    PInventoryPlugin,
     PSectionPlugin,
     SummarizerFunction,
 )
@@ -42,8 +42,8 @@ def execute_active_check_inventory(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
-    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
-    inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: RawIntervalsFromConfig,
 ) -> ActiveCheckResult:

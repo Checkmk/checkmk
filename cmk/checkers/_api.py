@@ -44,7 +44,7 @@ __all__ = [
     "PCheckPlugin",
     "DiscoveryPlugin",
     "HostLabelDiscoveryPlugin",
-    "PInventoryPlugin",
+    "InventoryPlugin",
     "PInventoryResult",
     "PluginSuppliedLabel",
     "PSectionPlugin",
@@ -208,20 +208,11 @@ class PInventoryResult(Protocol):
         ...
 
 
-class PInventoryPlugin(Protocol):
-    @property
-    def sections(self) -> Sequence[ParsedSectionName]:
-        ...
-
-    @property
-    def inventory_function(self) -> Callable[..., Iterable[PInventoryResult]]:
-        ...
-
-    @property
-    def inventory_ruleset_name(self) -> RuleSetName | None:
-        # Only used with the config.  Should we try to get rid
-        # of this attribute?
-        ...
+@dataclass(frozen=True)
+class InventoryPlugin:
+    sections: Sequence[ParsedSectionName]
+    function: Callable[..., Iterable[PInventoryResult]]
+    ruleset_name: RuleSetName | None
 
 
 class PSectionPlugin(Protocol):

@@ -6,8 +6,7 @@
 import re
 import shutil
 import socket
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Final, Literal
 
@@ -30,7 +29,7 @@ from cmk.snmplib.type_defs import SNMPBackendEnum
 
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
-from cmk.checkers import PInventoryResult
+from cmk.checkers import InventoryPlugin
 from cmk.checkers.check_table import ConfiguredService, ServiceID
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckEntry
@@ -41,13 +40,6 @@ from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ip_address_of
 from cmk.base.ip_lookup import AddressFamily
-
-
-@dataclass(frozen=True)
-class TestInventoryPlugin:
-    sections: Sequence[ParsedSectionName]
-    inventory_function: Callable[..., Iterable[PInventoryResult]]
-    inventory_ruleset_name: RuleSetName | None
 
 
 def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -1093,10 +1085,8 @@ def test_host_config_inventory_parameters(
             ],
         },
     )
-    plugin = TestInventoryPlugin(
-        sections=[],
-        inventory_function=lambda *_args: (),
-        inventory_ruleset_name=RuleSetName("if"),
+    plugin = InventoryPlugin(
+        sections=(), function=lambda *args, **kw: (), ruleset_name=RuleSetName("if")
     )
     assert ts.apply(monkeypatch).inventory_parameters(hostname, plugin) == result
 

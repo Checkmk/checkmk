@@ -39,8 +39,8 @@ from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 from cmk.checkers import (
     FetcherFunction,
     HostKey,
+    InventoryPlugin,
     ParserFunction,
-    PInventoryPlugin,
     PInventoryResult,
     PSectionPlugin,
     SourceType,
@@ -80,9 +80,9 @@ def inventorize_host(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
     section_plugins: Mapping[SectionName, PSectionPlugin],
-    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: RawIntervalsFromConfig,
@@ -269,9 +269,9 @@ def _inventorize_real_host(
 def inventorize_status_data_of_real_host(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
     providers: Mapping[HostKey, Provider],
-    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> StructuredDataNode:
     return _create_trees_from_inventory_plugin_items(
@@ -311,9 +311,9 @@ class ItemsOfInventoryPlugin:
 def _collect_inventory_plugin_items(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
     providers: Mapping[HostKey, Provider],
-    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> Iterator[ItemsOfInventoryPlugin]:
     section.section_step("Executing inventory plugins")
@@ -348,7 +348,7 @@ def _collect_inventory_plugin_items(
                         item,
                         class_mutex.setdefault(tuple(item.path), item.__class__.__name__),
                     )
-                    for item in inventory_plugin.inventory_function(**kwargs)
+                    for item in inventory_plugin.function(**kwargs)
                 ]
             except Exception as exception:
                 # TODO(ml): What is the `if cmk.utils.debug.enabled()` actually good for?

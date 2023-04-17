@@ -36,7 +36,7 @@ from cmk.checkers.discovery import AutocheckEntry
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.checking_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ip_address_of
 from cmk.base.ip_lookup import AddressFamily
@@ -1326,22 +1326,23 @@ def test_host_config_static_checks(
     hostname_str: str,
     result: Mapping[ServiceID, tuple[str, ConfiguredService]],
 ) -> None:
-    class MockPlugin:
-        def __init__(self, name: CheckPluginName) -> None:
-            self.name = name
-            self.service_name = "Test fake %s / %%s" % name
-            self.check_default_parameters: dict = {}
-            self.sections = ()
-            self.discovery_default_parameters = None
-            self.discovery_function = lambda *args, **kw: object
-            self.discovery_ruleset_name = None
-            self.discovery_ruleset_type = "all"
+    def make_plugin(name: CheckPluginName) -> CheckPluginAPI:
+        return CheckPluginAPI(
+            name=name,
+            sections=[],
+            service_name="Test fake %s / %%s" % name,
+            discovery_function=lambda *args, **kw: (),
+            discovery_default_parameters=None,
+            discovery_ruleset_name=None,
+            discovery_ruleset_type="all",
+            check_function=lambda *args, **kw: (),
+            check_default_parameters=None,
+            check_ruleset_name=None,
+            cluster_check_function=None,
+            module=None,
+        )
 
-    monkeypatch.setattr(
-        config.agent_based_register,
-        "get_check_plugin",
-        MockPlugin,
-    )
+    monkeypatch.setattr(config.agent_based_register, "get_check_plugin", make_plugin)
 
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -2809,19 +2810,19 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
             "service_description": "blah",
         },
     }
-    registered_plugin = CheckPlugin(
-        CheckPluginName("duplicate_plugin"),
-        [],
-        "Duplicate Plugin",
-        lambda: [],
-        None,
-        None,
-        "merged",
-        lambda: [],
-        None,
-        None,
-        None,
-        None,
+    registered_plugin = CheckPluginAPI(
+        name=CheckPluginName("duplicate_plugin"),
+        sections=[],
+        service_name="Duplicate Plugin",
+        discovery_function=lambda: [],
+        discovery_default_parameters=None,
+        discovery_ruleset_name=None,
+        discovery_ruleset_type="merged",
+        check_function=lambda: [],
+        cluster_check_function=None,
+        check_default_parameters=None,
+        check_ruleset_name=None,
+        module=None,
     )
 
     monkeypatch.setattr(

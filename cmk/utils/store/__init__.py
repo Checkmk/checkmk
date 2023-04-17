@@ -245,7 +245,10 @@ def save_bytes_to_file(path: Path | str, content: bytes) -> None:
         ObjectStore(Path(path), serializer=BytesSerializer()).write_obj(content)
 
 
-_pickled_files_base_dir = cmk.utils.paths.tmp_dir / "pickled_files_cache"
+def _pickled_files_base_dir() -> Path:
+    return cmk.utils.paths.tmp_dir / "pickled_files_cache"
+
+
 _pickle_serializer = PickleSerializer[Any]()
 
 
@@ -276,7 +279,7 @@ def try_load_file_from_pickle_cache(path: Path, *, default: Any, lock: bool = Fa
         # No idea why someone is trying to load something outside of the sites home directory
         return load_object_from_file(path, default=default, lock=lock)
 
-    pickle_path = _pickled_files_base_dir / relative_path.parent / (relative_path.name + ".pkl")
+    pickle_path = _pickled_files_base_dir() / relative_path.parent / (relative_path.name + ".pkl")
     try:
         if pickle_path.stat().st_mtime > path.stat().st_mtime:
             # Use pickled version since this file is newer and therefore valid
@@ -302,4 +305,4 @@ def try_load_file_from_pickle_cache(path: Path, *, default: Any, lock: bool = Fa
 
 def clear_pickled_object_files() -> None:
     """Remove all cached pickle files"""
-    shutil.rmtree(_pickled_files_base_dir, ignore_errors=True)
+    shutil.rmtree(_pickled_files_base_dir(), ignore_errors=True)

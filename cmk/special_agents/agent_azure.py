@@ -1333,6 +1333,13 @@ def write_remaining_reads(rate_limit: int | None) -> None:
     agent_info_section.write()
 
 
+def write_to_agent_info_section(message: str, component: str, status: int) -> None:
+    value = json.dumps((status, f"{component}: {message}"))
+    section = AzureSection("agent_info")
+    section.add(("agent-bailout", value))
+    section.write()
+
+
 def write_exception_to_agent_info_section(exception, component):
     # those exceptions are quite noisy. try to make them more concise:
     msg = str(exception).split("Trace ID", 1)[0]
@@ -1341,10 +1348,7 @@ def write_exception_to_agent_info_section(exception, component):
     if "does not have authorization to perform action" in msg:
         msg += "HINT: Make sure you have a proper role asigned to your client!"
 
-    value = json.dumps((2, f"{component}: {msg}"))
-    section = AzureSection("agent_info")
-    section.add(("agent-bailout", value))
-    section.write()
+    write_to_agent_info_section(msg, component, 2)
 
 
 def get_mapper(debug, sequential, timeout):
@@ -1447,9 +1451,6 @@ def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[object]:
             raise NoConsumptionAPIError
         raise
 
-    if not usage_data:
-        raise ApiErrorMissingData("Azure API did not return any usage details")
-
     LOGGER.debug("yesterdays usage details: %d", len(usage_data))
 
     for usage in usage_data:
@@ -1481,6 +1482,12 @@ def usage_details(mgmt_client: MgmtApiClient, monitored_groups: list[str], args:
 
     try:
         usage_section = get_usage_data(mgmt_client, args)
+        if not usage_section:
+            write_to_agent_info_section(
+                "Azure API did not return any usage details", "Usage client", 0
+            )
+            return
+
         write_usage_section(usage_section, monitored_groups)
 
     except NoConsumptionAPIError:
@@ -1491,7 +1498,7 @@ def usage_details(mgmt_client: MgmtApiClient, monitored_groups: list[str], args:
         if args.debug:
             raise
         LOGGER.warning("%s", exc)
-        write_exception_to_agent_info_section(exc, "get_usage_data")
+        write_exception_to_agent_info_section(exc, "Usage client")
         write_usage_section([], monitored_groups)
 
 

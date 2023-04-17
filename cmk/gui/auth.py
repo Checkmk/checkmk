@@ -38,12 +38,11 @@ def _check_auth() -> tuple[UserId, AuthType]:
     # NOTE: To push this list into the global namespace, the ordering of the methods need to
     #       be taken into account.
     auth_methods: list[tuple[AuthFunction, AuthType]] = [
+        # Automation authentication via _username and _secret overrules everything else.
+        (check_auth_by_cookie, "cookie"),
         (check_auth_by_custom_http_header, "http_header"),
         (check_auth_by_remote_user, "web_server"),
         (check_auth_by_basic_header, "web_server"),
-        (check_auth_by_cookie, "cookie"),
-        # After cookie, so users can experiment with differing users in the REST API, without
-        # having to log out.
         (check_auth_by_bearer_header, "bearer"),
         # Automation authentication via _username and _secret overrules everything else.
         (check_auth_by_automation_credentials_in_request_values, "automation"),

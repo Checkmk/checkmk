@@ -17,11 +17,10 @@ import cmk.base.api.agent_based.render as render
         (0, "Jan 01 1970"),
         (1587908220, "Apr 26 2020"),
         (1587908220.0, "Apr 26 2020"),
-        ("1587908220", "Apr 26 2020"),
     ],
 )
-def test_date(epoch: str | float | None, output: str) -> None:
-    assert output == render.date(epoch=epoch)  # type: ignore[arg-type]
+def test_date(epoch: float | None, output: str) -> None:
+    assert output == render.date(epoch=epoch)
 
 
 @pytest.mark.parametrize(
@@ -30,12 +29,11 @@ def test_date(epoch: str | float | None, output: str) -> None:
         (0, "Jan 01 1970 00:00:00"),
         (1587908220, "Apr 26 2020 13:37:00"),
         (1587908220.0, "Apr 26 2020 13:37:00"),
-        ("1587908220", "Apr 26 2020 13:37:00"),
     ],
 )
-def test_datetime(monkeypatch: MonkeyPatch, epoch: str | float | None, output: str) -> None:
+def test_datetime(monkeypatch: MonkeyPatch, epoch: float | None, output: str) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
-    assert output == render.datetime(epoch=epoch)  # type: ignore[arg-type]
+    assert output == render.datetime(epoch=epoch)
 
 
 @pytest.mark.parametrize(

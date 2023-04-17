@@ -536,7 +536,7 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             ApiError("unknown offer"),
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
-            'agent-bailout|[2, "get_usage_data: unknown offer"]\n'
+            'agent-bailout|[2, "Usage client: unknown offer"]\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
@@ -553,7 +553,7 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             Exception(),
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
-            'agent-bailout|[2, "get_usage_data: "]\n'
+            'agent-bailout|[2, "Usage client: "]\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
@@ -570,14 +570,7 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             None,
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
-            'agent-bailout|[2, "get_usage_data: Azure API did not return any usage details"]\n'
-            "<<<<>>>>\n"
-            "<<<<test1>>>>\n"
-            "<<<azure_usagedetails:sep(124)>>>\n"
-            "<<<<test2>>>>\n"
-            "<<<azure_usagedetails:sep(124)>>>\n"
-            "<<<<>>>>\n"
-            "<<<azure_usagedetails:sep(124)>>>\n"
+            'agent-bailout|[0, "Usage client: Azure API did not return any usage details"]\n'
             "<<<<>>>>\n",
             id="empty usage data",
         ),

@@ -233,7 +233,7 @@ class ECServerThread(threading.Thread):
 
 def allowed_ip(
     ip: ipaddress.IPv6Address | ipaddress.IPv4Address,
-    access_list: Sequence[ipaddress.IPv6Network | ipaddress.IPv4Network],
+    access_list: Iterable[ipaddress.IPv6Network | ipaddress.IPv4Network],
 ) -> bool:
     """
     Checks if ip is in the access_list.

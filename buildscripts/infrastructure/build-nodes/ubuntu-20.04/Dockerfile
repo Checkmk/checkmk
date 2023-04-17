@@ -49,6 +49,7 @@ RUN apt-get update \
     gettext \
     git-buildpackage \
     gtk-doc-tools \
+    golang-go \
     iputils-ping \
     joe \
     libcurl4-openssl-dev \
@@ -160,6 +161,7 @@ RUN /opt/install-cmk-dependencies.sh
 RUN /opt/install-patchelf.sh
 RUN /opt/install-packer.sh
 RUN /opt/install-aws-cli.sh
+RUN /opt/install-buildifier.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

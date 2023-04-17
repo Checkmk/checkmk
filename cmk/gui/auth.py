@@ -47,12 +47,10 @@ def check_auth() -> tuple[UserId, AuthType]:
     auth_methods: list[tuple[AuthFunction, AuthType]] = [
         # NOTE: This list is sorted from the more general to the most specific auth methods.
         #       The most specific to succeed will be used in the end.
+        (_check_auth_by_cookie, "cookie"),
         (_check_auth_by_custom_http_header, "http_header"),
         (_check_auth_by_remote_user, "web_server"),
         (_check_auth_by_basic_header, "basic_auth"),
-        (_check_auth_by_cookie, "cookie"),
-        # After cookie, so users can experiment with differing users in the REST API, without
-        # having to log out.
         (_check_auth_by_bearer_header, "bearer"),
         # Automation authentication via _username and _secret overrules everything else.
         (_check_auth_by_automation_credentials_in_request_values, "automation"),

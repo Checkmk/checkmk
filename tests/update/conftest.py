@@ -183,7 +183,6 @@ def _get_site(
         version=CMKVersion(version.version, version.edition, current_base_branch_name()),
         prefix="update_",
         update_from_git=False,
-        install_test_python_modules=False,
         update=update,
         update_conflict_mode=update_conflict_mode,
         enforce_english_gui=False,

@@ -216,7 +216,7 @@ metric_info["kube_cron_job_status_job_duration"] = {
 metric_info["kube_cron_job_status_execution_duration"] = {
     "title": _("Execution time"),
     "unit": "s",
-    "color": "41/a",
+    "color": "21/a",
 }
 
 
@@ -368,5 +368,14 @@ graph_info["kube_replica_update_state"] = {
     "metrics": [
         ("kube_desired_replicas", "line"),
         ("kube_updated_replicas", "area"),
+    ],
+}
+
+
+graph_info["kube_cronjob_status"] = {
+    "title": _("Duration"),
+    "metrics": [
+        ("kube_cron_job_status_job_duration", "area"),
+        ("kube_cron_job_status_execution_duration", "area"),
     ],
 }

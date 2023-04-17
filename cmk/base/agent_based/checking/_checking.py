@@ -40,6 +40,7 @@ from cmk.fetchers import FetcherType
 from cmk.checkers import (
     crash_reporting,
     HostKey,
+    Parameters,
     ParserFunction,
     PCheckPlugin,
     PInventoryPlugin,
@@ -75,7 +76,6 @@ from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
 from cmk.base.api.agent_based.checking_classes import State
-from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.config import ConfigCache
 
 __all__ = ["execute_checkmk_checks", "check_host_services"]

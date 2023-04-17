@@ -5,8 +5,9 @@
 
 import pytest
 
+from cmk.checkers import Parameters
+
 from cmk.base.api.agent_based.checking_classes import Metric, Result, State
-from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 from cmk.base.plugins.agent_based.domino_tasks import check_domino_tasks
 from cmk.base.plugins.agent_based.utils import ps

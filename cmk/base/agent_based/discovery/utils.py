@@ -12,7 +12,9 @@ from typing import Final, Generic, Literal, TypeVar
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.type_defs import HostName, RuleSetName
 
-from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias
+from cmk.checkers import Parameters
+
+from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 from cmk.base.config import ConfigCache
 
 

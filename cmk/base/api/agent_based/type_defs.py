@@ -7,8 +7,7 @@
 Some of these are exposed in the API, some are not.
 """
 
-import pprint
-from collections.abc import Callable, Generator, Iterator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from typing import Any, List, Literal, NamedTuple, Union
 
 from cmk.utils.type_defs import (
@@ -20,26 +19,6 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.checkers import HostLabel
-
-
-class Parameters(ParametersTypeAlias):
-    """Parameter objects are used to pass parameters to plugin functions"""
-
-    def __init__(self, data: ParametersTypeAlias) -> None:
-        self._data = dict(data)
-
-    def __getitem__(self, key: str) -> Any:
-        return self._data[key]
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(self._data)
-
-    def __repr__(self) -> str:
-        # use pformat to be testable.
-        return f"{self.__class__.__name__}({pprint.pformat(self._data)})"
 
 
 class OIDSpecTuple(NamedTuple):

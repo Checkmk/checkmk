@@ -10,8 +10,9 @@ import pytest
 
 from tests.testlib import set_timezone
 
+from cmk.checkers import Parameters
+
 import cmk.base.plugins.agent_based.livestatus_status as livestatus_status
-from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 

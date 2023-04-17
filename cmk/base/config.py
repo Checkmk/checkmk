@@ -122,7 +122,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers import AgentParser, PCheckPlugin, PDiscoveryPlugin, PInventoryPlugin, SourceType
+from cmk.checkers import AgentParser, DiscoveryPlugin, PCheckPlugin, PInventoryPlugin, SourceType
 from cmk.checkers.check_table import (
     ConfiguredService,
     FilterMode,
@@ -1156,11 +1156,20 @@ def service_description(
     check_plugin_name: CheckPluginName,
     item: Item,
 ) -> ServiceName:
-    plugin = agent_based_register.get_check_plugin(check_plugin_name)
-    if plugin is None:
+    check_plugin = agent_based_register.get_check_plugin(check_plugin_name)
+    if check_plugin is None:
         if item:
             return f"Unimplemented check {check_plugin_name} / {item}"
         return "Unimplemented check %s" % check_plugin_name
+
+    plugin = DiscoveryPlugin(
+        sections=check_plugin.sections,
+        service_name=check_plugin.service_name,
+        default_parameters=check_plugin.discovery_default_parameters,
+        function=check_plugin.discovery_function,
+        ruleset_name=check_plugin.discovery_ruleset_name,
+        ruleset_type=check_plugin.discovery_ruleset_type,
+    )
 
     return get_final_service_description(
         hostname,
@@ -1171,7 +1180,7 @@ def service_description(
 
 
 def _get_service_description_template_and_item(
-    plugin_name: CheckPluginName, plugin: PDiscoveryPlugin, item: Item
+    plugin_name: CheckPluginName, plugin: DiscoveryPlugin, item: Item
 ) -> tuple[ServiceName, Item]:
     plugin_name_str = str(plugin_name)
 

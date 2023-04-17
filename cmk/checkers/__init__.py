@@ -29,13 +29,13 @@ See Also:
 
 from . import checking, inventory
 from ._api import (
+    DiscoveryPlugin,
     FetcherFunction,
     HostLabel,
     HostLabelDiscoveryPlugin,
     parse_raw_data,
     ParserFunction,
     PCheckPlugin,
-    PDiscoveryPlugin,
     PInventoryPlugin,
     PInventoryResult,
     PluginSuppliedLabel,
@@ -61,7 +61,7 @@ __all__ = [
     "Parser",
     "ParserFunction",
     "PCheckPlugin",
-    "PDiscoveryPlugin",
+    "DiscoveryPlugin",
     "HostLabelDiscoveryPlugin",
     "PiggybackMarker",
     "PInventoryPlugin",

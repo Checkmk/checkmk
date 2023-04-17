@@ -40,7 +40,7 @@ __all__ = [
     "parse_raw_data",
     "ParserFunction",
     "PCheckPlugin",
-    "PDiscoveryPlugin",
+    "DiscoveryPlugin",
     "HostLabelDiscoveryPlugin",
     "PInventoryPlugin",
     "PInventoryResult",
@@ -163,32 +163,17 @@ class PCheckPlugin(Protocol):
         ...
 
 
-class PDiscoveryPlugin(Protocol):
-    @property
-    def sections(self) -> Sequence[ParsedSectionName]:
-        ...
-
-    @property
-    def service_name(self) -> str:
-        # There is a single caller for this attribute.  Is it *really* needed?
-        # Does it *really* belong to the check plugin?  This doesn't feel right.
-        ...
-
-    @property
-    def discovery_default_parameters(self) -> ParametersTypeAlias | None:
-        ...
-
-    @property
-    def discovery_function(self) -> Callable[..., Iterable[PService]]:
-        ...
-
-    @property
-    def discovery_ruleset_name(self) -> RuleSetName | None:
-        ...
-
-    @property
-    def discovery_ruleset_type(self) -> Literal["merged", "all"]:
-        ...
+@dataclass(frozen=True)
+class DiscoveryPlugin:
+    sections: Sequence[ParsedSectionName]
+    # There is a single user of the `service_name` attribute.  Is it
+    # *really* needed?  Does it *really* belong to the check plugin?
+    # This doesn't feel right.
+    service_name: str
+    default_parameters: ParametersTypeAlias | None
+    function: Callable[..., Iterable[PService]]
+    ruleset_name: RuleSetName | None
+    ruleset_type: Literal["merged", "all"]
 
 
 class PInventoryResult(Protocol):

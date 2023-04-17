@@ -19,11 +19,11 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.checkers import (
+    DiscoveryPlugin,
     FetcherFunction,
     HostKey,
     HostLabelDiscoveryPlugin,
     ParserFunction,
-    PDiscoveryPlugin,
     PSectionPlugin,
 )
 from cmk.checkers.checking import CheckPluginName
@@ -59,7 +59,7 @@ def commandline_discovery(
     config_cache: ConfigCache,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
-    plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
     only_host_labels: bool = False,
@@ -182,7 +182,7 @@ def _commandline_discovery_on_host(
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
-    plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
     only_new: bool,
     load_labels: bool,

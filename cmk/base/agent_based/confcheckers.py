@@ -33,10 +33,10 @@ from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
 from cmk.checkers import (
+    DiscoveryPlugin,
     HostLabelDiscoveryPlugin,
     parse_raw_data,
     PCheckPlugin,
-    PDiscoveryPlugin,
     PInventoryPlugin,
     PSectionPlugin,
     Source,
@@ -319,15 +319,22 @@ class CheckPluginMapper(Mapping[CheckPluginName, PCheckPlugin]):
         return len(_api.registered_check_plugins)
 
 
-class DiscoveryPluginMapper(Mapping[CheckPluginName, PDiscoveryPlugin]):
+class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
     # See comment to SectionPluginMapper.
-    def __getitem__(self, __key: CheckPluginName) -> PDiscoveryPlugin:
+    def __getitem__(self, __key: CheckPluginName) -> DiscoveryPlugin:
         # `get_check_plugin()` is not an error.  Both check plugins and
         # discovery are declared together in the check API.
-        value = _api.get_check_plugin(__key)
-        if value is None:
+        plugin = _api.get_check_plugin(__key)
+        if plugin is None:
             raise KeyError(__key)
-        return value
+        return DiscoveryPlugin(
+            sections=plugin.sections,
+            service_name=plugin.service_name,
+            default_parameters=plugin.discovery_default_parameters,
+            function=plugin.discovery_function,
+            ruleset_name=plugin.discovery_ruleset_name,
+            ruleset_type=plugin.discovery_ruleset_type,
+        )
 
     def __iter__(self) -> Iterator[CheckPluginName]:
         return iter(_api.registered_check_plugins)

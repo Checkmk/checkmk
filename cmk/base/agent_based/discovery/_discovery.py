@@ -16,9 +16,9 @@ from cmk.utils.type_defs import AgentRawData, HostName, Item, result, SectionNam
 from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.checkers import (
+    DiscoveryPlugin,
     HostLabelDiscoveryPlugin,
     ParserFunction,
-    PDiscoveryPlugin,
     PSectionPlugin,
     SourceInfo,
     SummarizerFunction,
@@ -47,7 +47,7 @@ def execute_check_discovery(
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
-    plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:

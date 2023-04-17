@@ -1341,6 +1341,11 @@ def test_host_config_static_checks(
             self.name = name
             self.service_name = "Test fake %s / %%s" % name
             self.check_default_parameters: dict = {}
+            self.sections = ()
+            self.discovery_default_parameters = None
+            self.discovery_function = lambda *args, **kw: object
+            self.discovery_ruleset_name = None
+            self.discovery_ruleset_type = "all"
 
     monkeypatch.setattr(
         config.agent_based_register,

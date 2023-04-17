@@ -13,7 +13,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console, section
 from cmk.utils.type_defs import HostName, ParsedSectionName
 
-from cmk.checkers import HostKey, PDiscoveryPlugin, plugin_contexts, SourceType
+from cmk.checkers import DiscoveryPlugin, HostKey, plugin_contexts, SourceType
 from cmk.checkers.check_table import ServiceID
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
@@ -31,7 +31,7 @@ def analyse_discovered_services(
     host_name: HostName,
     *,
     providers: Mapping[HostKey, Provider],
-    plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
     keep_vanished: bool,
@@ -123,7 +123,7 @@ def _discover_services(
     *,
     providers: Mapping[HostKey, Provider],
     run_plugin_names: Container[CheckPluginName],
-    plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
 ) -> list[AutocheckEntry]:
     # find out which plugins we need to discover
@@ -266,7 +266,7 @@ def _discover_plugins_services(
     config_cache: ConfigCache,
     *,
     check_plugin_name: CheckPluginName,
-    plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     host_key: HostKey,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
@@ -297,9 +297,9 @@ def _discover_plugins_services(
     disco_params = get_plugin_parameters(
         host_key.hostname,
         config_cache,
-        default_parameters=plugin.discovery_default_parameters,
-        ruleset_name=plugin.discovery_ruleset_name,
-        ruleset_type=plugin.discovery_ruleset_type,
+        default_parameters=plugin.default_parameters,
+        ruleset_name=plugin.ruleset_name,
+        ruleset_type=plugin.ruleset_type,
         rules_getter_function=agent_based_register.get_discovery_ruleset,
     )
     if disco_params is not None:
@@ -307,8 +307,7 @@ def _discover_plugins_services(
 
     try:
         yield from (
-            service.as_autocheck_entry(check_plugin_name)
-            for service in plugin.discovery_function(**kwargs)
+            service.as_autocheck_entry(check_plugin_name) for service in plugin.function(**kwargs)
         )
     except Exception as e:
         if on_error is OnError.RAISE:

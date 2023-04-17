@@ -21,12 +21,12 @@ from cmk.utils.type_defs import HostName, Item, SectionName, ServiceName
 from cmk.automations.results import CheckPreviewEntry
 
 from cmk.checkers import (
+    DiscoveryPlugin,
     FetcherFunction,
     HostKey,
     HostLabelDiscoveryPlugin,
     ParserFunction,
     PCheckPlugin,
-    PDiscoveryPlugin,
     PSectionPlugin,
     SummarizerFunction,
 )
@@ -71,7 +71,7 @@ def get_check_preview(
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
-    discovery_plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
+    discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     ignored_services: Container[ServiceName],

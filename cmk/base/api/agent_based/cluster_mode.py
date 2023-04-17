@@ -11,7 +11,7 @@ from typing import Any, Final, NamedTuple, Protocol
 
 from cmk.utils.type_defs import ClusterMode, state_markers
 
-from cmk.checkers import PCheckPlugin
+from cmk.checkers import CheckPlugin
 from cmk.checkers.check_table import ServiceID
 
 from cmk.base.api.agent_based.checking_classes import (
@@ -53,11 +53,11 @@ def get_cluster_check_function(
     clusterization_parameters: Mapping[str, Any],
     *,
     service_id: ServiceID,
-    plugin: PCheckPlugin,
+    plugin: CheckPlugin,
     value_store_manager: ValueStoreManager,
 ) -> Callable[..., Iterable[object]]:
     if mode == "native":
-        return plugin.cluster_check_function or _unfit_for_clustering
+        return plugin.cluster_function or _unfit_for_clustering
 
     executor = NodeCheckExecutor(
         service_id=service_id,
@@ -69,7 +69,7 @@ def get_cluster_check_function(
             _cluster_check,
             clusterization_parameters=clusterization_parameters,
             executor=executor,
-            check_function=plugin.check_function,
+            check_function=plugin.function,
             label="active",
             selector=State.worst,
             levels_additional_nodes_count=(1, _INF),
@@ -81,7 +81,7 @@ def get_cluster_check_function(
             _cluster_check,
             clusterization_parameters=clusterization_parameters,
             executor=executor,
-            check_function=plugin.check_function,
+            check_function=plugin.function,
             label="worst",
             selector=State.worst,
             levels_additional_nodes_count=(_INF, _INF),
@@ -93,7 +93,7 @@ def get_cluster_check_function(
             _cluster_check,
             clusterization_parameters=clusterization_parameters,
             executor=executor,
-            check_function=plugin.check_function,
+            check_function=plugin.function,
             label="best",
             selector=State.best,
             levels_additional_nodes_count=(_INF, _INF),

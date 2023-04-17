@@ -126,10 +126,10 @@ from cmk.fetchers.filecache import MaxAge
 
 from cmk.checkers import (
     AgentParser,
+    CheckPlugin,
     DiscoveryPlugin,
     InventoryPlugin,
     Parameters,
-    PCheckPlugin,
     SourceType,
 )
 from cmk.checkers.check_table import (
@@ -1822,15 +1822,22 @@ def compute_check_parameters(
     """Compute parameters for a check honoring factory settings,
     default settings of user in main.mk, check_parameters[] and
     the values code in autochecks (given as parameter params)"""
-    plugin = agent_based_register.get_check_plugin(plugin_name)
-    if plugin is None:  # handle vanished check plugin
+    check_plugin = agent_based_register.get_check_plugin(plugin_name)
+    if check_plugin is None:  # handle vanished check plugin
         return TimespecificParameters()
 
+    plugin = CheckPlugin(
+        sections=check_plugin.sections,
+        function=check_plugin.check_function,
+        cluster_function=check_plugin.cluster_check_function,
+        default_parameters=check_plugin.check_default_parameters,
+        ruleset_name=check_plugin.check_ruleset_name,
+    )
     if configured_parameters is None:
         configured_parameters = _get_configured_parameters(host, plugin_name, plugin, item)
 
     return _update_with_configured_check_parameters(
-        _update_with_default_check_parameters(plugin.check_default_parameters, params),
+        _update_with_default_check_parameters(plugin.default_parameters, params),
         configured_parameters,
     )
 
@@ -1881,7 +1888,7 @@ def _update_with_configured_check_parameters(
 def _get_configured_parameters(
     host: HostName,
     plugin_name: CheckPluginName,
-    plugin: PCheckPlugin,
+    plugin: CheckPlugin,
     item: Item,
 ) -> TimespecificParameters:
     config_cache = get_config_cache()
@@ -1893,7 +1900,7 @@ def _get_configured_parameters(
         for p in config_cache.service_extra_conf(host, descr, check_parameters)
     ]
 
-    if plugin.check_ruleset_name is None:
+    if plugin.ruleset_name is None:
         return TimespecificParameters(extra)
 
     return TimespecificParameters(
@@ -1901,11 +1908,7 @@ def _get_configured_parameters(
             # parameters configured via checkgroup_parameters
             TimespecificParameterSet.from_parameters(p)
             for p in _get_checkgroup_parameters(
-                config_cache,
-                host,
-                str(plugin.check_ruleset_name),
-                item,
-                descr,
+                config_cache, host, str(plugin.ruleset_name), item, descr
             )
         ]
         + extra

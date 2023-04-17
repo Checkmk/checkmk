@@ -38,12 +38,12 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.fetchers import FetcherType
 
 from cmk.checkers import (
+    CheckPlugin,
     crash_reporting,
     HostKey,
     InventoryPlugin,
     Parameters,
     ParserFunction,
-    PCheckPlugin,
     plugin_contexts,
     SectionPlugin,
     SourceInfo,
@@ -97,7 +97,7 @@ def execute_checkmk_checks(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
-    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
@@ -271,7 +271,7 @@ def check_host_services(
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     services: Sequence[ConfiguredService],
-    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
     rtc_package: AgentRawData | None,
@@ -362,7 +362,7 @@ def get_aggregated_result(
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     service: ConfiguredService,
-    plugin: PCheckPlugin,
+    plugin: CheckPlugin,
     *,
     rtc_package: AgentRawData | None,
     value_store_manager: value_store.ValueStoreManager,
@@ -379,7 +379,7 @@ def get_aggregated_result(
             value_store_manager=value_store_manager,
         )
         if config_cache.is_cluster(host_name)
-        else plugin.check_function
+        else plugin.function
     )
 
     section_kws, error_result = _get_monitoring_data_kwargs(
@@ -397,7 +397,7 @@ def get_aggregated_result(
     item_kw = {} if service.item is None else {"item": service.item}
     params_kw = (
         {}
-        if plugin.check_default_parameters is None
+        if plugin.default_parameters is None
         else {"params": _final_read_only_check_parameters(service.parameters)}
     )
 

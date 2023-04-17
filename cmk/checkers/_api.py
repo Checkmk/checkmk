@@ -41,7 +41,7 @@ __all__ = [
     "Parameters",
     "parse_raw_data",
     "ParserFunction",
-    "PCheckPlugin",
+    "CheckPlugin",
     "DiscoveryPlugin",
     "HostLabelDiscoveryPlugin",
     "InventoryPlugin",
@@ -163,26 +163,13 @@ class PService(Protocol):
         ...
 
 
-class PCheckPlugin(Protocol):
-    @property
-    def sections(self) -> Sequence[ParsedSectionName]:
-        ...
-
-    @property
-    def check_default_parameters(self) -> Mapping[str, object] | None:
-        ...
-
-    @property
-    def check_function(self) -> Callable[..., Iterable[object]]:
-        ...
-
-    @property
-    def cluster_check_function(self) -> Callable[..., Iterable[object]] | None:
-        ...
-
-    @property
-    def check_ruleset_name(self) -> RuleSetName | None:
-        ...
+@dataclass(frozen=True)
+class CheckPlugin:
+    sections: Sequence[ParsedSectionName]
+    function: Callable[..., Iterable[object]]
+    cluster_function: Callable[..., Iterable[object]] | None
+    default_parameters: Mapping[str, object] | None
+    ruleset_name: RuleSetName | None
 
 
 @dataclass(frozen=True)

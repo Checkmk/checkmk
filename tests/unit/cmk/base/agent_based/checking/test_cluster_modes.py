@@ -11,13 +11,13 @@ from typing import Any, Literal
 
 import pytest
 
+from cmk.checkers import CheckPlugin
 from cmk.checkers.check_table import ServiceID
 from cmk.checkers.checking import CheckPluginName
 
 from cmk.base.api.agent_based import cluster_mode
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
-    CheckPlugin,
     CheckResult,
     IgnoreResults,
     IgnoreResultsError,
@@ -38,23 +38,11 @@ def _vsm():
 
 def _get_test_check_plugin(**kwargs) -> CheckPlugin:  # type: ignore[no-untyped-def]
     return CheckPlugin(
-        **{  # type: ignore[arg-type]
-            **{
-                "name": None,
-                "sections": None,
-                "service_name": None,
-                "discovery_function": None,
-                "discovery_default_parameters": None,
-                "discovery_ruleset_name": None,
-                "discovery_ruleset_type": None,
-                "check_function": None,
-                "check_default_parameters": None,
-                "check_ruleset_name": None,
-                "cluster_check_function": None,
-                "module": None,
-            },
-            **kwargs,
-        }
+        sections=kwargs.get("sections", ()),
+        function=kwargs.get("check_function", lambda *args, **kw: object),
+        cluster_function=kwargs.get("cluster_check_function", lambda *args, **kw: object),
+        default_parameters=kwargs.get("check_default_parameters"),
+        ruleset_name=kwargs.get("check_ruleset_name"),
     )
 
 

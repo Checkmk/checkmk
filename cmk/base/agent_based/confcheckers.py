@@ -34,11 +34,11 @@ from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
 from cmk.checkers import (
+    CheckPlugin,
     DiscoveryPlugin,
     HostLabelDiscoveryPlugin,
     InventoryPlugin,
     parse_raw_data,
-    PCheckPlugin,
     SectionPlugin,
     Source,
     SourceInfo,
@@ -320,13 +320,20 @@ class HostLabelPluginMapper(Mapping[SectionName, HostLabelDiscoveryPlugin]):
         )
 
 
-class CheckPluginMapper(Mapping[CheckPluginName, PCheckPlugin]):
+class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
     # See comment to SectionPluginMapper.
-    def __getitem__(self, __key: CheckPluginName) -> PCheckPlugin:
-        value = _api.get_check_plugin(__key)
-        if value is None:
+    def __getitem__(self, __key: CheckPluginName) -> CheckPlugin:
+        plugin = _api.get_check_plugin(__key)
+        if plugin is None:
             raise KeyError(__key)
-        return value
+
+        return CheckPlugin(
+            sections=plugin.sections,
+            function=plugin.check_function,
+            cluster_function=plugin.cluster_check_function,
+            default_parameters=plugin.check_default_parameters,
+            ruleset_name=plugin.check_ruleset_name,
+        )
 
     def __iter__(self) -> Iterator[CheckPluginName]:
         return iter(_api.registered_check_plugins)

@@ -21,12 +21,12 @@ from cmk.utils.type_defs import HostName, Item, SectionName, ServiceName
 from cmk.automations.results import CheckPreviewEntry
 
 from cmk.checkers import (
+    CheckPlugin,
     DiscoveryPlugin,
     FetcherFunction,
     HostKey,
     HostLabelDiscoveryPlugin,
     ParserFunction,
-    PCheckPlugin,
     SectionPlugin,
     SummarizerFunction,
 )
@@ -72,7 +72,7 @@ def get_check_preview(
     section_plugins: Mapping[SectionName, SectionPlugin],
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
-    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     ignored_services: Container[ServiceName],
     on_error: OnError,
@@ -191,7 +191,7 @@ def _check_preview_table_row(
     *,
     config_cache: ConfigCache,
     service: ConfiguredService,
-    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     check_source: _Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
     found_on_nodes: Sequence[HostName],
@@ -199,9 +199,7 @@ def _check_preview_table_row(
 ) -> CheckPreviewEntry:
     check_plugin = check_plugins.get(service.check_plugin_name)
     ruleset_name = (
-        str(check_plugin.check_ruleset_name)
-        if check_plugin and check_plugin.check_ruleset_name
-        else None
+        str(check_plugin.ruleset_name) if check_plugin and check_plugin.ruleset_name else None
     )
 
     result = (

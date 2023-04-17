@@ -221,6 +221,7 @@ def test__restrict_to_region() -> None:
     assert us_east_entries == entries[:1]
 
 
+@pytest.mark.skip("this tests depends on the local time zone")
 def test__sort_newest_entry_first() -> None:
     times = [1.0, 3.0, 2.0]
     entries = [EntryFactory.build(published_parsed=time.localtime(t)) for t in times]

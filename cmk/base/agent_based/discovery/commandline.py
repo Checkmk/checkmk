@@ -156,7 +156,6 @@ def _analyse_node_labels(
 
         discovered_host_labels = discover_cluster_labels(
             nodes,
-            config_cache,
             host_label_plugins,
             providers=providers,
             load_labels=load_labels,
@@ -165,7 +164,7 @@ def _analyse_node_labels(
         )
     else:
         discovered_host_labels = discover_host_labels(
-            host_name, config_cache, host_label_plugins, providers=providers, on_error=on_error
+            host_name, host_label_plugins, providers=providers, on_error=on_error
         )
     return analyse_host_labels(
         host_name,

@@ -20,10 +20,9 @@ from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 from cmk.checkers.sectionparser import Provider
 from cmk.checkers.sectionparserutils import get_section_kwargs
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.config import ConfigCache
 
-from .utils import get_plugin_parameters, QualifiedDiscovery
+from .utils import QualifiedDiscovery
 
 
 def analyse_discovered_services(
@@ -294,14 +293,7 @@ def _discover_plugins_services(
     if not kwargs:
         return
 
-    disco_params = get_plugin_parameters(
-        host_key.hostname,
-        config_cache,
-        default_parameters=plugin.default_parameters,
-        ruleset_name=plugin.ruleset_name,
-        ruleset_type=plugin.ruleset_type,
-        rules_getter_function=agent_based_register.get_discovery_ruleset,
-    )
+    disco_params = plugin.parameters(host_key.hostname)
     if disco_params is not None:
         kwargs = {**kwargs, "params": disco_params}
 

@@ -698,11 +698,12 @@ def test__check_service_table(
 
 
 @pytest.mark.usefixtures("fix_register")
-def test__find_candidates() -> None:
+def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
     # This test doesn't test much:
     #  1. It concentrates on implementation details and private functions.
     #  2. Because it tests private functions, it also copy-pastes a lot of
     #     production code!
+    config_cache = Scenario().apply(monkeypatch)
     providers = {
         # we just care about the keys here, content set to arbitrary values that can be parsed.
         # section names are chosen arbitrarily.
@@ -800,7 +801,11 @@ def test__find_candidates() -> None:
     }
 
     assert discovery._discovered_services._find_candidates(
-        providers, [(name, p.sections) for name, p in DiscoveryPluginMapper().items()]
+        providers,
+        [
+            (name, p.sections)
+            for name, p in DiscoveryPluginMapper(config_cache=config_cache).items()
+        ],
     ) == {
         CheckPluginName("docker_container_status_uptime"),
         CheckPluginName("kernel"),
@@ -916,8 +921,8 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(),
-        host_label_plugins=HostLabelPluginMapper(),
-        plugins=DiscoveryPluginMapper(),
+        host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
+        plugins=DiscoveryPluginMapper(config_cache=config_cache),
         run_plugin_names=EVERYTHING,
         arg_only_new=False,
         on_error=OnError.RAISE,
@@ -1533,8 +1538,7 @@ def test__discover_host_labels_and_services_on_realhost(
             host_name=scenario.hostname,
             discovered_host_labels=discover_host_labels(
                 scenario.hostname,
-                scenario.config_cache,
-                HostLabelPluginMapper(),
+                HostLabelPluginMapper(config_cache=scenario.config_cache),
                 providers=scenario.providers,
                 on_error=OnError.RAISE,
             ),
@@ -1549,7 +1553,7 @@ def test__discover_host_labels_and_services_on_realhost(
         scenario.config_cache,
         scenario.hostname,
         providers=scenario.providers,
-        plugins=DiscoveryPluginMapper(),
+        plugins=DiscoveryPluginMapper(config_cache=scenario.config_cache),
         on_error=OnError.RAISE,
         run_plugin_names=EVERYTHING,
     )
@@ -1570,8 +1574,7 @@ def test__perform_host_label_discovery_on_realhost(
         host_name=scenario.hostname,
         discovered_host_labels=discover_host_labels(
             scenario.hostname,
-            scenario.config_cache,
-            HostLabelPluginMapper(),
+            HostLabelPluginMapper(config_cache=scenario.config_cache),
             providers=scenario.providers,
             on_error=OnError.RAISE,
         ),
@@ -1614,8 +1617,7 @@ def test__discover_services_on_cluster(
             scenario.parent,
             discovered_host_labels=discover_cluster_labels(
                 nodes,
-                scenario.config_cache,
-                HostLabelPluginMapper(),
+                HostLabelPluginMapper(config_cache=scenario.config_cache),
                 providers=scenario.providers,
                 load_labels=discovery_test_case.load_labels,
                 save_labels=discovery_test_case.save_labels,
@@ -1632,7 +1634,7 @@ def test__discover_services_on_cluster(
         scenario.parent,
         config_cache=scenario.config_cache,
         providers=scenario.providers,
-        plugins=DiscoveryPluginMapper(),
+        plugins=DiscoveryPluginMapper(config_cache=scenario.config_cache),
         get_service_description=config.service_description,
         on_error=OnError.RAISE,
     )
@@ -1655,8 +1657,7 @@ def test__perform_host_label_discovery_on_cluster(
         scenario.parent,
         discovered_host_labels=discover_cluster_labels(
             nodes,
-            scenario.config_cache,
-            HostLabelPluginMapper(),
+            HostLabelPluginMapper(config_cache=scenario.config_cache),
             providers=scenario.providers,
             load_labels=discovery_test_case.load_labels,
             save_labels=discovery_test_case.save_labels,

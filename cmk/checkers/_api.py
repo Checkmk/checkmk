@@ -8,7 +8,7 @@ import pprint
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence, Set
 from dataclasses import dataclass
 from functools import partial
-from typing import Generic, Literal, NamedTuple, Protocol
+from typing import Generic, NamedTuple, Protocol
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.structured_data import StructuredDataNode
@@ -192,10 +192,8 @@ class DiscoveryPlugin:
     # *really* needed?  Does it *really* belong to the check plugin?
     # This doesn't feel right.
     service_name: str
-    default_parameters: ParametersTypeAlias | None
     function: Callable[..., Iterable[PService]]
-    ruleset_name: RuleSetName | None
-    ruleset_type: Literal["merged", "all"]
+    parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]
 
 
 class PInventoryResult(Protocol):
@@ -245,9 +243,7 @@ class PSectionPlugin(Protocol):
 @dataclass(frozen=True)
 class HostLabelDiscoveryPlugin:
     function: Callable[..., Iterator[HostLabel]]
-    default_parameters: ParametersTypeAlias | None
-    ruleset_name: RuleSetName | None
-    ruleset_type: Literal["merged", "all"]
+    parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]
 
 
 def parse_raw_data(

@@ -10,6 +10,7 @@ from __future__ import annotations
 import itertools
 import logging
 from collections.abc import Iterable, Iterator, Mapping, Sequence
+from functools import partial
 from typing import Final
 
 import cmk.utils.tty as tty
@@ -49,6 +50,7 @@ from cmk.checkers.inventory import InventoryPluginName
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
 from cmk.base.config import ConfigCache
@@ -284,13 +286,22 @@ class SectionPluginMapper(Mapping[SectionName, PSectionPlugin]):
 
 
 class HostLabelPluginMapper(Mapping[SectionName, HostLabelDiscoveryPlugin]):
+    def __init__(self, *, config_cache: ConfigCache) -> None:
+        super().__init__()
+        self.config_cache: Final = config_cache
+
     def __getitem__(self, __key: SectionName) -> HostLabelDiscoveryPlugin:
         plugin = _api.get_section_plugin(__key)
         return HostLabelDiscoveryPlugin(
             function=plugin.host_label_function,
-            default_parameters=plugin.host_label_default_parameters,
-            ruleset_name=plugin.host_label_ruleset_name,
-            ruleset_type=plugin.host_label_ruleset_type,
+            parameters=partial(
+                config.get_plugin_parameters,
+                config_cache=self.config_cache,
+                default_parameters=plugin.host_label_default_parameters,
+                ruleset_name=plugin.host_label_ruleset_name,
+                ruleset_type=plugin.host_label_ruleset_type,
+                rules_getter_function=agent_based_register.get_host_label_ruleset,
+            ),
         )
 
     def __iter__(self) -> Iterator[SectionName]:
@@ -321,19 +332,29 @@ class CheckPluginMapper(Mapping[CheckPluginName, PCheckPlugin]):
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
     # See comment to SectionPluginMapper.
+    def __init__(self, *, config_cache: ConfigCache) -> None:
+        super().__init__()
+        self.config_cache: Final = config_cache
+
     def __getitem__(self, __key: CheckPluginName) -> DiscoveryPlugin:
         # `get_check_plugin()` is not an error.  Both check plugins and
         # discovery are declared together in the check API.
         plugin = _api.get_check_plugin(__key)
         if plugin is None:
             raise KeyError(__key)
+
         return DiscoveryPlugin(
             sections=plugin.sections,
             service_name=plugin.service_name,
-            default_parameters=plugin.discovery_default_parameters,
             function=plugin.discovery_function,
-            ruleset_name=plugin.discovery_ruleset_name,
-            ruleset_type=plugin.discovery_ruleset_type,
+            parameters=partial(
+                config.get_plugin_parameters,
+                config_cache=self.config_cache,
+                default_parameters=plugin.discovery_default_parameters,
+                ruleset_name=plugin.discovery_ruleset_name,
+                ruleset_type=plugin.discovery_ruleset_type,
+                rules_getter_function=agent_based_register.get_discovery_ruleset,
+            ),
         )
 
     def __iter__(self) -> Iterator[CheckPluginName]:

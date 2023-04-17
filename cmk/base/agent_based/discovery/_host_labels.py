@@ -14,10 +14,7 @@ from cmk.utils.type_defs import HostName, SectionName
 from cmk.checkers import HostKey, HostLabelDiscoveryPlugin, SourceType
 from cmk.checkers.sectionparser import Provider, ResolvedResult
 
-import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.config import ConfigCache
-
-from .utils import get_plugin_parameters, QualifiedDiscovery
+from .utils import QualifiedDiscovery
 
 __all__ = [
     "analyse_host_labels",
@@ -30,7 +27,6 @@ __all__ = [
 
 def discover_cluster_labels(
     nodes: Sequence[HostName],
-    config_cache: ConfigCache,
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     *,
     providers: Mapping[HostKey, Provider],
@@ -43,7 +39,7 @@ def discover_cluster_labels(
         node_labels = QualifiedDiscovery[HostLabel](
             preexisting=do_load_labels(node) if load_labels else (),
             current=discover_host_labels(
-                node, config_cache, host_label_plugins, providers=providers, on_error=on_error
+                node, host_label_plugins, providers=providers, on_error=on_error
             ),
             key=lambda hl: hl.label,
         )
@@ -124,7 +120,6 @@ def do_save_labels(host_name: HostName, host_labels: QualifiedDiscovery[HostLabe
 
 def discover_host_labels(
     host_name: HostName,
-    config_cache: ConfigCache,
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     *,
     providers: Mapping[HostKey, Provider],
@@ -134,14 +129,12 @@ def discover_host_labels(
     labels_by_name = {
         **_discover_host_labels_for_source_type(
             host_label_plugins,
-            config_cache,
             host_key=HostKey(host_name, SourceType.HOST),
             providers=providers,
             on_error=on_error,
         ),
         **_discover_host_labels_for_source_type(
             host_label_plugins,
-            config_cache,
             host_key=HostKey(host_name, SourceType.MANAGEMENT),
             providers=providers,
             on_error=on_error,
@@ -173,7 +166,6 @@ def _all_parsing_results(
 
 def _discover_host_labels_for_source_type(
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
-    config_cache: ConfigCache,
     *,
     host_key: HostKey,
     providers: Mapping[HostKey, Provider],
@@ -191,14 +183,7 @@ def _discover_host_labels_for_source_type(
             kwargs = {"section": section_data}
 
             host_label_plugin = host_label_plugins[section_name]
-            host_label_params = get_plugin_parameters(
-                host_key.hostname,
-                config_cache,
-                default_parameters=host_label_plugin.default_parameters,
-                ruleset_name=host_label_plugin.ruleset_name,
-                ruleset_type=host_label_plugin.ruleset_type,
-                rules_getter_function=agent_based_register.get_host_label_ruleset,
-            )
+            host_label_params = host_label_plugin.parameters(host_key.hostname)
             if host_label_params is not None:
                 kwargs["params"] = host_label_params
 

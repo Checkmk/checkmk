@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import functools
 import ipaddress
 import itertools
 import logging
@@ -94,6 +95,7 @@ from cmk.utils.type_defs import (
     HostgroupName,
     HostName,
     Item,
+    RuleSetName,
     Seconds,
     SectionName,
     ServicegroupName,
@@ -122,7 +124,14 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers import AgentParser, DiscoveryPlugin, PCheckPlugin, PInventoryPlugin, SourceType
+from cmk.checkers import (
+    AgentParser,
+    DiscoveryPlugin,
+    Parameters,
+    PCheckPlugin,
+    PInventoryPlugin,
+    SourceType,
+)
 from cmk.checkers.check_table import (
     ConfiguredService,
     FilterMode,
@@ -1151,11 +1160,48 @@ _old_service_descriptions: Mapping[str, Callable[[Item], tuple[ServiceName, Item
 }
 
 
+def get_plugin_parameters(
+    host_name: HostName,
+    *,
+    config_cache: ConfigCache,
+    default_parameters: ParametersTypeAlias | None,
+    ruleset_name: RuleSetName | None,
+    ruleset_type: Literal["all", "merged"],
+    rules_getter_function: Callable[[RuleSetName], Sequence[RuleSpec]],
+) -> None | Parameters | list[Parameters]:
+    if default_parameters is None:
+        # This means the function will not accept any params.
+        return None
+    if ruleset_name is None:
+        # This means we have default params, but no rule set.
+        # Not very sensical for discovery functions, but not forbidden by the API either.
+        return Parameters(default_parameters)
+
+    rules = rules_getter_function(ruleset_name)
+
+    if ruleset_type == "all":
+        host_rules = config_cache.host_extra_conf(host_name, rules)
+        host_rules.append(default_parameters)
+        return [Parameters(d) for d in host_rules]
+
+    if ruleset_type == "merged":
+        return Parameters(
+            {
+                **default_parameters,
+                **config_cache.host_extra_conf_merged(host_name, rules),
+            }
+        )
+
+    # validation should have prevented this
+    raise NotImplementedError(f"unknown discovery rule set type {ruleset_type!r}")
+
+
 def service_description(
     hostname: HostName,
     check_plugin_name: CheckPluginName,
     item: Item,
 ) -> ServiceName:
+    config_cache = get_config_cache()
     check_plugin = agent_based_register.get_check_plugin(check_plugin_name)
     if check_plugin is None:
         if item:
@@ -1165,10 +1211,15 @@ def service_description(
     plugin = DiscoveryPlugin(
         sections=check_plugin.sections,
         service_name=check_plugin.service_name,
-        default_parameters=check_plugin.discovery_default_parameters,
         function=check_plugin.discovery_function,
-        ruleset_name=check_plugin.discovery_ruleset_name,
-        ruleset_type=check_plugin.discovery_ruleset_type,
+        parameters=functools.partial(
+            get_plugin_parameters,
+            config_cache=config_cache,
+            default_parameters=check_plugin.discovery_default_parameters,
+            ruleset_name=check_plugin.discovery_ruleset_name,
+            ruleset_type=check_plugin.discovery_ruleset_type,
+            rules_getter_function=agent_based_register.get_host_label_ruleset,
+        ),
     )
 
     return get_final_service_description(
@@ -2180,7 +2231,7 @@ class ConfigCache:
             for label in self._autochecks_manager.discovered_labels_of(
                 hostname,
                 service_desc,
-                service_description,  # this is the global function!
+                functools.partial(service_description),
             ).values()
         }
 
@@ -3057,7 +3108,7 @@ class ConfigCache:
                     hostname,
                     new_services,
                     self.effective_host,
-                    service_description,  # top level function!
+                    functools.partial(service_description),
                 )
         else:
             autochecks.set_autochecks_of_real_hosts(hostname, new_services)
@@ -3071,7 +3122,10 @@ class ConfigCache:
         nodes = self.nodes_of(hostname) or [hostname]
         return sum(
             autochecks.remove_autochecks_of_host(
-                node, hostname, self.effective_host, service_description
+                node,
+                hostname,
+                self.effective_host,
+                functools.partial(service_description),
             )
             for node in nodes
         )
@@ -3526,7 +3580,7 @@ class ConfigCache:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
             compute_check_parameters,
-            service_description,  # this is the global function!
+            functools.partial(service_description),
             self.effective_host,
         )
 

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p26
+Version: 2.1.0p27
 
 This fixes some display glitches for a very specific setup:
 Users can configure the plugin "<i>State and Count of Processes</i>" to produce an HTML table in the service details, and additionally configure Checkmk to <i>not</i> escape it (such that it will actually be rendered as a table).

@@ -134,6 +134,11 @@ class Painter(abc.ABC):
         Falls back to the full title if no short title is given"""
         return self.title(cell)
 
+    def tooltip_title(self, cell: Cell) -> str:
+        """Used as string for the painter title in table header tooltips
+        Falls back to the full title if no tooltip title is given"""
+        return self.title(cell)
+
     def export_title(self, cell: Cell) -> str:
         """Used for exporting views in JSON/CSV/python format"""
         return self.ident
@@ -272,6 +277,7 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
             "ident": property(lambda s: s._ident),
             "title": lambda s, cell: s._spec["title"],
             "short_title": lambda s, cell: s._spec.get("short", s.title),
+            "tooltip_title": lambda s, cell: s._spec.get("tooltip_title", s.title),
             "columns": property(lambda s: s._spec["columns"]),
             "render": lambda self, row, cell: paint_function(row),
             "export_for_python": (
@@ -421,6 +427,13 @@ class Cell:
             return self._get_short_title(painter)
         return self._get_long_title(painter)
 
+    def tooltip_title(self) -> str:
+        if self._custom_title:
+            return self._custom_title
+
+        painter = self.painter()
+        return painter.tooltip_title(self)
+
     def _get_short_title(self, painter: Painter) -> str:
         return painter.short_title(self)
 
@@ -464,7 +477,7 @@ class Cell:
 
             classes += ["sort"]
             onclick = "location.href='%s'" % makeuri(request, addvars=params, remove_prefix="sort")
-            title = _("Sort by %s") % self.title()
+            title = _("Sort by %s") % self.tooltip_title()
         classes += self.painter().title_classes()
 
         html.open_th(class_=classes, onclick=onclick, title=title)

@@ -24,7 +24,6 @@ from cmk.utils.type_defs import (
     EVERYTHING,
     ExitSpec,
     HostName,
-    HWSWInventoryParameters,
     MetricTuple,
     ParsedSectionName,
     SectionName,
@@ -53,7 +52,7 @@ from cmk.checkers import (
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
-from cmk.checkers.inventory import InventoryPluginName
+from cmk.checkers.inventory import HWSWInventoryParameters, InventoryPluginName
 from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,

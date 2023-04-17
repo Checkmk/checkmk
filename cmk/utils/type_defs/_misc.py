@@ -36,7 +36,6 @@ __all__ = [
     "LegacyCheckParameters",
     "ParametersTypeAlias",
     "DiscoveryResult",
-    "HWSWInventoryParameters",
     "SNMPDetectBaseType",
     "TimeperiodSpec",
     "TimeperiodSpecs",
@@ -104,6 +103,8 @@ ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompa
 
 @dataclass
 class DiscoveryResult:
+    # TODO(ml): Move to `autodiscovery` when the dependency to
+    #           `cmk.base.config` has been inverted.
     self_new: int = 0
     self_removed: int = 0
     self_kept: int = 0
@@ -122,31 +123,6 @@ class DiscoveryResult:
 
     # An optional text to describe the services changed by the operation
     diff_text: str | None = None
-
-
-@dataclass(frozen=True)
-class HWSWInventoryParameters:
-    # TODO(ml): Move to inventory when the dependency to
-    #           `cmk.base.config` has been inverted.
-    hw_changes: int
-    sw_changes: int
-    sw_missing: int
-
-    # Do not use source states which would overwrite "State when
-    # inventory fails" in the ruleset "Do hardware/software Inventory".
-    # These are handled by the "Check_MK" service
-    fail_status: int
-    status_data_inventory: bool
-
-    @classmethod
-    def from_raw(cls, raw_parameters: dict) -> HWSWInventoryParameters:
-        return cls(
-            hw_changes=int(raw_parameters.get("hw-changes", 0)),
-            sw_changes=int(raw_parameters.get("sw-changes", 0)),
-            sw_missing=int(raw_parameters.get("sw-missing", 0)),
-            fail_status=int(raw_parameters.get("inv-fail-status", 1)),
-            status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
-        )
 
 
 # This def is used to keep the API-exposed object in sync with our

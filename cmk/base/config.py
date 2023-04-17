@@ -93,7 +93,6 @@ from cmk.utils.type_defs import (
     HostAgentConnectionMode,
     HostgroupName,
     HostName,
-    HWSWInventoryParameters,
     Item,
     Seconds,
     SectionName,
@@ -133,6 +132,7 @@ from cmk.checkers.check_table import (
 )
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckServiceWithNodes
+from cmk.checkers.inventory import HWSWInventoryParameters
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 import cmk.base._autochecks as autochecks

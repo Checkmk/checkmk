@@ -39,7 +39,6 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostgroupName,
     HostName,
-    HWSWInventoryParameters,
     SectionName,
     ServiceState,
 )
@@ -54,7 +53,7 @@ from cmk.fetchers.filecache import FileCacheOptions
 from cmk.checkers import parse_raw_data, SourceType
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.error_handling import CheckResultErrorHandler
-from cmk.checkers.inventory import InventoryPluginName
+from cmk.checkers.inventory import HWSWInventoryParameters, InventoryPluginName
 from cmk.checkers.submitters import get_submitter, Submitter
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection

@@ -16,19 +16,13 @@ from tests.testlib.base import Scenario
 import cmk.utils.debug
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode, UpdateResult
-from cmk.utils.type_defs import (
-    AgentRawData,
-    EVERYTHING,
-    HostAddress,
-    HostName,
-    HWSWInventoryParameters,
-    result,
-)
+from cmk.utils.type_defs import AgentRawData, EVERYTHING, HostAddress, HostName, result
 
 from cmk.fetchers import FetcherType
 
 from cmk.checkers import SourceInfo, SourceType
 from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers.inventory import HWSWInventoryParameters
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory

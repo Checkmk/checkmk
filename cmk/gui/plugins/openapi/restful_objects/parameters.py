@@ -57,7 +57,7 @@ TIMEPERIOD_NAME_FIELD = {
 
 GROUP_NAME_FIELD = {
     "name": String(
-        description="A name used as an identifier. Can be of arbitrary (sensible) length.",
+        description="The identifier name of the group.",
         example="pathname",
         pattern=GROUP_NAME_PATTERN,
     )

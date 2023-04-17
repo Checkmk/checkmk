@@ -451,15 +451,19 @@ def _grouping_construct_group_name(parent_group_name, child_group_name=""):
     'aard banana vark %s %s'
 
     >>> _grouping_construct_group_name('aard %s vark')
-    'aard  vark'
+    'aard %s vark'
 
     >>> _grouping_construct_group_name('aard %s', '')
-    'aard'
+    'aard %s'
     """
 
     format_specifiers_count = parent_group_name.count("%s")
     if not format_specifiers_count:
         return ("%s %s" % (parent_group_name, child_group_name)).strip()
+
+    if not child_group_name:
+        return parent_group_name
+
     return (
         parent_group_name % ((child_group_name,) + ("%s",) * (format_specifiers_count - 1))
     ).strip()

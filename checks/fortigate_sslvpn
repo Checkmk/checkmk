@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import check_levels, discover, get_parsed_item_data
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.fortigate import DETECT_FORTIGATE
+from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
 
 
 def parse_fortigate_sslvpn(info):

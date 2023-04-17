@@ -12,7 +12,7 @@ import time
 
 from cmk.base.check_api import get_age_human_readable, regex
 from cmk.base.config import check_info, factory_settings
-from cmk.base.plugins.agent_based.utils.fortigate import DETECT_FORTIGATE
+from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
 
 factory_settings["fortigate_signature_default_levels"] = {
     "av_age": (86400, 172800),

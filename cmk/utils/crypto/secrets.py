@@ -56,7 +56,9 @@ class _LocalSecret(ABC):
 class AuthenticationSecret(_LocalSecret):
     """Secret used to derive cookie authentication hash"""
 
-    path = paths.auth_secret_file
+    @property
+    def path(self) -> Path:
+        return paths.auth_secret_file
 
 
 class PasswordStoreSecret(_LocalSecret):
@@ -76,7 +78,9 @@ class EncrypterSecret(_LocalSecret):
     """Secret used to encrypt and authenticate secrets passed _through_ the GUI"""
 
     # TODO: Use a different secret for separation of concerns. If possible, rotate often. CMK-11925
-    path = paths.auth_secret_file
+    @property
+    def path(self) -> Path:
+        return paths.auth_secret_file
 
 
 class AutomationUserSecret:

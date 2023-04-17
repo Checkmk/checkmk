@@ -459,7 +459,10 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):  # pylint: disabl
             was_negated = isinstance(current_value, dict) and "$ne" in current_value
             new_value = {"$ne": new_tag} if was_negated else new_tag
             rule.conditions.host_tags[operation.tag_group_id] = new_value
-        elif mode == TagCleanupMode.DELETE:
+        # Example for current_value: {'$ne': 'my_tag'} / my_tag
+        elif mode == TagCleanupMode.DELETE and (
+            not isinstance(current_value, dict) and list(current_value)[0] not in ["$ne", "$nor"]
+        ):
             ruleset.delete_rule(rule)
 
     return affected_rulesets

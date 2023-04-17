@@ -13,7 +13,7 @@ from cmk.checkers import (
     FetcherFunction,
     InventoryPlugin,
     ParserFunction,
-    PSectionPlugin,
+    SectionPlugin,
     SummarizerFunction,
 )
 from cmk.checkers.inventory import InventoryPluginName
@@ -32,7 +32,7 @@ def inventorize_marked_hosts(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     summarizer: Callable[[HostName], SummarizerFunction],
-    section_plugins: Mapping[SectionName, PSectionPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
 ) -> None:
     autoinventory_queue.cleanup(

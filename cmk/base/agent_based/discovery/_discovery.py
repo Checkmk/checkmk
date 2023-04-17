@@ -19,7 +19,7 @@ from cmk.checkers import (
     DiscoveryPlugin,
     HostLabelDiscoveryPlugin,
     ParserFunction,
-    PSectionPlugin,
+    SectionPlugin,
     SourceInfo,
     SummarizerFunction,
 )
@@ -45,7 +45,7 @@ def execute_check_discovery(
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, PSectionPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],

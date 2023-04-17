@@ -40,7 +40,7 @@ from ._api import (
     PCheckPlugin,
     PInventoryResult,
     PluginSuppliedLabel,
-    PSectionPlugin,
+    SectionPlugin,
     Source,
     SummarizerFunction,
 )
@@ -69,7 +69,7 @@ __all__ = [
     "InventoryPlugin",
     "PInventoryResult",
     "PluginSuppliedLabel",
-    "PSectionPlugin",
+    "SectionPlugin",
     "SectionMarker",
     "SNMPParser",
     "SourceInfo",

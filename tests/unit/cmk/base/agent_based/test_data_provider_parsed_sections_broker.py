@@ -11,11 +11,10 @@ from pytest import MonkeyPatch
 
 from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
+from cmk.checkers import SectionPlugin
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.sectionparser import ParsedSectionsResolver, SectionsParser
 from cmk.checkers.type_defs import AgentRawDataSection
-
-import cmk.base.api.agent_based.register.section_plugins as section_plugins
 
 
 def _test_section(
@@ -24,11 +23,11 @@ def _test_section(
     parsed_section_name: str,
     parse_function: Callable,
     supersedes: Iterable[str],
-) -> section_plugins.AgentSectionPlugin:
-    return section_plugins.trivial_section_factory(SectionName(section_name))._replace(
-        parsed_section_name=ParsedSectionName(parsed_section_name),
-        parse_function=parse_function,
+) -> tuple[SectionName, SectionPlugin]:
+    return SectionName(section_name), SectionPlugin(
         supersedes={SectionName(n) for n in supersedes},
+        parse_function=parse_function,
+        parsed_section_name=ParsedSectionName(parsed_section_name),
     )
 
 
@@ -87,7 +86,7 @@ def test_parse_sections_unsuperseded(monkeypatch: MonkeyPatch) -> None:
     assert (
         ParsedSectionsResolver(
             make_parser(),
-            section_plugins={section.name: section for section in (SECTION_ONE, SECTION_THREE)},
+            section_plugins=dict((SECTION_ONE, SECTION_THREE)),
         ).resolve(ParsedSectionName("parsed"))
         is not None
     )
@@ -96,10 +95,7 @@ def test_parse_sections_unsuperseded(monkeypatch: MonkeyPatch) -> None:
 def test_parse_sections_superseded(monkeypatch: MonkeyPatch) -> None:
     assert (
         ParsedSectionsResolver(
-            make_parser(),
-            section_plugins={
-                section.name: section for section in (SECTION_ONE, SECTION_THREE, SECTION_FOUR)
-            },
+            make_parser(), section_plugins=dict((SECTION_ONE, SECTION_THREE, SECTION_FOUR))
         ).resolve(ParsedSectionName("parsed"))
         is None
     )

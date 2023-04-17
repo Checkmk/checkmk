@@ -39,7 +39,7 @@ from cmk.checkers import (
     InventoryPlugin,
     parse_raw_data,
     PCheckPlugin,
-    PSectionPlugin,
+    SectionPlugin,
     Source,
     SourceInfo,
 )
@@ -266,13 +266,18 @@ class ConfiguredFetcher:
         )
 
 
-class SectionPluginMapper(Mapping[SectionName, PSectionPlugin]):
+class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):
     # We should probably not tap into the private `register._config` module but
     # the data we need doesn't seem to be available elsewhere.  Anyway, this is
     # an *immutable* Mapping so we are actually on the safe side.
 
-    def __getitem__(self, __key: SectionName) -> PSectionPlugin:
-        return _api.get_section_plugin(__key)
+    def __getitem__(self, __key: SectionName) -> SectionPlugin:
+        plugin = _api.get_section_plugin(__key)
+        return SectionPlugin(
+            supersedes=plugin.supersedes,
+            parse_function=plugin.parse_function,
+            parsed_section_name=plugin.parsed_section_name,
+        )
 
     def __iter__(self) -> Iterator[SectionName]:
         return iter(

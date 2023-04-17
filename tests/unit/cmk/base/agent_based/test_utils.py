@@ -12,7 +12,7 @@ import pytest
 
 from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
-from cmk.checkers import HostKey, SourceType
+from cmk.checkers import HostKey, SectionPlugin, SourceType
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.sectionparser import ParsedSectionsResolver, SectionsParser
@@ -23,8 +23,6 @@ from cmk.checkers.sectionparserutils import (
 )
 from cmk.checkers.type_defs import AgentRawDataSection
 
-import cmk.base.api.agent_based.register.section_plugins as section_plugins
-
 
 def _test_section(
     *,
@@ -32,8 +30,8 @@ def _test_section(
     parsed_section_name: str,
     parse_function: Callable,
     supersedes: Iterable[str],
-) -> section_plugins.AgentSectionPlugin:
-    return section_plugins.trivial_section_factory(SectionName(section_name))._replace(
+) -> tuple[SectionName, SectionPlugin]:
+    return SectionName(section_name), SectionPlugin(
         parsed_section_name=ParsedSectionName(parsed_section_name),
         parse_function=parse_function,
         supersedes={SectionName(n) for n in supersedes},
@@ -113,10 +111,7 @@ def test_get_section_kwargs(
     providers = {
         host_key: ParsedSectionsResolver(
             SectionsParser(host_sections=node_sections, host_name=host_key.hostname),
-            section_plugins={
-                section.name: section
-                for section in (SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR)
-            },
+            section_plugins=dict((SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR)),
         ),
     }
 
@@ -188,18 +183,12 @@ def test_get_section_cluster_kwargs(
     providers = {
         HostKey(HostName("node1"), SourceType.HOST): ParsedSectionsResolver(
             SectionsParser(host_sections=node1_sections, host_name=HostName("node1")),
-            section_plugins={
-                section.name: section
-                for section in (SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR)
-            },
+            section_plugins=dict((SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR)),
         ),
         HostKey(HostName("node2"), SourceType.HOST): (
             ParsedSectionsResolver(
                 SectionsParser(host_sections=node2_sections, host_name=HostName("node2")),
-                section_plugins={
-                    section.name: section
-                    for section in (SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR)
-                },
+                section_plugins=dict((SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR)),
             )
         ),
     }

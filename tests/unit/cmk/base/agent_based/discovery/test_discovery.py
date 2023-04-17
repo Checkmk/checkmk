@@ -24,7 +24,7 @@ from cmk.snmplib.type_defs import SNMPRawDataSection
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkers import HostKey, SourceType
+from cmk.checkers import HostKey, SectionPlugin, SourceType
 from cmk.checkers.check_table import ServiceID
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult
@@ -67,7 +67,16 @@ from cmk.base.agent_based.discovery.autodiscovery import (
     ServicesTable,
 )
 from cmk.base.agent_based.discovery.utils import DiscoveryMode
+from cmk.base.api.agent_based.type_defs import SectionPlugin as SectionPluginAPI
 from cmk.base.config import ConfigCache
+
+
+def _as_plugin(plugin: SectionPluginAPI) -> SectionPlugin:
+    return SectionPlugin(
+        supersedes=plugin.supersedes,
+        parse_function=plugin.parse_function,
+        parsed_section_name=plugin.parsed_section_name,
+    )
 
 
 @pytest.fixture
@@ -719,7 +728,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                     host_name=HostName("test_node"),
                 ),
                 section_plugins={
-                    section_name: agent_based_register.get_section_plugin(section_name)
+                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
                     for section_name in (SectionName("kernel"), SectionName("uptime"))
                 },
             )
@@ -740,7 +749,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                     host_name=HostName("test_node"),
                 ),
                 section_plugins={
-                    section_name: agent_based_register.get_section_plugin(section_name)
+                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
                     for section_name in (
                         SectionName("uptime"),
                         SectionName("liebert_fans"),
@@ -1021,7 +1030,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                     host_name=hostname,
                 ),
                 section_plugins={
-                    section_name: agent_based_register.get_section_plugin(section_name)
+                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
                     for section_name in (SectionName("labels"), SectionName("df"))
                 },
             )
@@ -1136,7 +1145,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                     host_name=node1_hostname,
                 ),
                 section_plugins={
-                    section_name: agent_based_register.get_section_plugin(section_name)
+                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
                     for section_name in (SectionName("labels"), SectionName("df"))
                 },
             )
@@ -1176,7 +1185,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                     host_name=node2_hostname,
                 ),
                 section_plugins={
-                    section_name: agent_based_register.get_section_plugin(section_name)
+                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
                     for section_name in (SectionName("labels"), SectionName("df"))
                 },
             )

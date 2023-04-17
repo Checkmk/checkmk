@@ -27,7 +27,7 @@ from cmk.checkers import (
     HostLabelDiscoveryPlugin,
     ParserFunction,
     PCheckPlugin,
-    PSectionPlugin,
+    SectionPlugin,
     SummarizerFunction,
 )
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
@@ -69,7 +69,7 @@ def get_check_preview(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, PSectionPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, PCheckPlugin],

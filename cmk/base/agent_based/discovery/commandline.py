@@ -24,7 +24,7 @@ from cmk.checkers import (
     HostKey,
     HostLabelDiscoveryPlugin,
     ParserFunction,
-    PSectionPlugin,
+    SectionPlugin,
 )
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutochecksStore
@@ -57,7 +57,7 @@ def commandline_discovery(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     config_cache: ConfigCache,
-    section_plugins: Mapping[SectionName, PSectionPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],

@@ -17,7 +17,7 @@ from cmk.checkers import (
     FetcherFunction,
     InventoryPlugin,
     ParserFunction,
-    PSectionPlugin,
+    SectionPlugin,
     SummarizerFunction,
 )
 from cmk.checkers.inventory import HWSWInventoryParameters, InventoryPluginName
@@ -38,7 +38,7 @@ def commandline_inventory(
     summarizer: SummarizerFunction,
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: RawIntervalsFromConfig,
-    section_plugins: Mapping[SectionName, PSectionPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
 ) -> None:
@@ -76,7 +76,7 @@ def _commandline_inventory_on_host(
     inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: RawIntervalsFromConfig,
-    section_plugins: Mapping[SectionName, PSectionPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> None:

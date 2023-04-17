@@ -42,7 +42,7 @@ from cmk.checkers import (
     InventoryPlugin,
     ParserFunction,
     PInventoryResult,
-    PSectionPlugin,
+    SectionPlugin,
     SourceType,
     SummarizerFunction,
 )
@@ -81,7 +81,7 @@ def inventorize_host(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
-    section_plugins: Mapping[SectionName, PSectionPlugin],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,

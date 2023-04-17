@@ -47,7 +47,7 @@ __all__ = [
     "InventoryPlugin",
     "PInventoryResult",
     "PluginSuppliedLabel",
-    "PSectionPlugin",
+    "SectionPlugin",
     "Source",
     "SummarizerFunction",
 ]
@@ -215,20 +215,13 @@ class InventoryPlugin:
     ruleset_name: RuleSetName | None
 
 
-class PSectionPlugin(Protocol):
-    @property
-    def supersedes(self) -> Set[SectionName]:
-        ...
-
-    @property
-    def parse_function(self) -> Callable[..., object]:
-        # This function isn't typed precisely in the Check API.  Let's just
-        # keep the smallest common type of all the unions defined over there.
-        ...
-
-    @property
-    def parsed_section_name(self) -> ParsedSectionName:
-        ...
+@dataclass(frozen=True)
+class SectionPlugin:
+    supersedes: Set[SectionName]
+    # This function isn't typed precisely in the Check API.  Let's just
+    # keep the smallest common type of all the unions defined over there.
+    parse_function: Callable[..., object]
+    parsed_section_name: ParsedSectionName
 
 
 @dataclass(frozen=True)

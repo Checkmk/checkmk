@@ -14,10 +14,10 @@ from cmk.utils.type_defs import HostName, SectionName
 from cmk.checkers import HostKey, PHostLabelDiscoveryPlugin, SourceType
 from cmk.checkers.sectionparser import Provider, ResolvedResult
 
+import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.config import ConfigCache
 
-from ._parameters import get_host_label_parameters
-from .utils import QualifiedDiscovery
+from .utils import get_plugin_parameters, QualifiedDiscovery
 
 __all__ = [
     "analyse_host_labels",
@@ -191,10 +191,13 @@ def _discover_host_labels_for_source_type(
             kwargs = {"section": section_data}
 
             host_label_plugin = host_label_plugins[section_name]
-            host_label_params = get_host_label_parameters(
+            host_label_params = get_plugin_parameters(
                 host_key.hostname,
                 config_cache,
-                host_label_plugin,
+                default_parameters=host_label_plugin.host_label_default_parameters,
+                ruleset_name=host_label_plugin.host_label_ruleset_name,
+                ruleset_type=host_label_plugin.host_label_ruleset_type,
+                rules_getter_function=agent_based_register.get_host_label_ruleset,
             )
             if host_label_params is not None:
                 kwargs["params"] = host_label_params

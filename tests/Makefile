@@ -247,6 +247,18 @@ test-format-css:
 test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css
 
+test-lint-bazel:
+	../scripts/run-buildifier --lint=warn --mode=check
+
+test-lint-bazel-docker:
+	../scripts/run-in-docker.sh make --quiet test-lint-bazel
+
+test-format-bazel:
+	../scripts/run-buildifier --mode=check
+
+test-format-bazel-docker:
+	../scripts/run-in-docker.sh make --quiet test-format-bazel
+
 test-gui-crawl: prepare-playwright
 	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 

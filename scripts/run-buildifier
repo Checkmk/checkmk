@@ -1,0 +1,31 @@
+#!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e
+
+get_bazel_files() {
+    REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
+    OMD_PATH=$REPO_PATH/omd
+
+    # shellcheck disable=SC2086
+    find $OMD_PATH \
+        -type f \
+        \! -path "${OMD_PATH}/build/*" -a \
+        \( -name '*.bzl' \
+        -o -name '*.sky' \
+        -o -name BUILD.bazel \
+        -o -name BUILD \
+        -o -name '*.BUILD' \
+        -o -name 'BUILD.*.bazel' \
+        -o -name 'BUILD.*.oss' \
+        -o -name WORKSPACE \
+        -o -name WORKSPACE.bazel \
+        -o -name WORKSPACE.oss \
+        -o -name 'WORKSPACE.*.bazel' \
+        -o -name 'WORKSPACE.*.oss' \
+        \) -print
+}
+
+get_bazel_files | xargs buildifier "$@"

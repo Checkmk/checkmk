@@ -513,7 +513,7 @@ analyze: config.h
 	$(MAKE) -C livestatus clean
 	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++17"
 
-format: format-python format-c format-shell format-js format-css
+format: format-python format-c format-shell format-js format-css format-bazel
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
@@ -553,6 +553,9 @@ format-js:
 
 format-css:
 	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "web/htdocs/themes/**/*.scss"
+
+format-bazel:
+	scripts/run-buildifier --lint=fix --mode=fix
 
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h

@@ -846,7 +846,7 @@ def page_list(  # pylint: disable=too-many-branches
     make_header(html, title, breadcrumb, page_menu)
 
     for message in get_flashed_messages():
-        html.show_message(message)
+        html.show_message(message.msg)
 
     # Deletion of visuals
     delname = request.var("_delete")

@@ -8,6 +8,8 @@
 
 import pytest
 
+from tests.testlib import set_timezone
+
 import cmk.base.plugins.agent_based.livestatus_status as livestatus_status
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -763,22 +765,23 @@ _RESULTS = [
 
 
 def test_check() -> None:
-    yielded_results = list(
-        livestatus_status._generate_livestatus_results(
-            "heute",
-            Parameters(livestatus_status.livestatus_status_default_levels),
-            PARSED_STATUS,
-            PARSED_SSL,
-            {
-                "host_checks": [1, 2],
-                "service_checks": [1, 2],
-                "forks": [1, 2],
-                "connections": [1, 2],
-                "requests": [1, 2],
-                "log_messages": [1, 2],
-            },
-            581785200,
+    with set_timezone("UTC"):  # needed for certificate validity string
+        yielded_results = list(
+            livestatus_status._generate_livestatus_results(
+                "heute",
+                Parameters(livestatus_status.livestatus_status_default_levels),
+                PARSED_STATUS,
+                PARSED_SSL,
+                {
+                    "host_checks": [1, 2],
+                    "service_checks": [1, 2],
+                    "forks": [1, 2],
+                    "connections": [1, 2],
+                    "requests": [1, 2],
+                    "log_messages": [1, 2],
+                },
+                581785200,
+            )
         )
-    )
 
-    assert yielded_results == _RESULTS
+        assert yielded_results == _RESULTS

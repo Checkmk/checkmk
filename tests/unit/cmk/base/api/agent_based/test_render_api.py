@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 
 import pytest
-from pytest import MonkeyPatch
+
+from tests.testlib import set_timezone
 
 import cmk.base.api.agent_based.render as render
 
@@ -20,7 +20,8 @@ import cmk.base.api.agent_based.render as render
     ],
 )
 def test_date(epoch: float | None, output: str) -> None:
-    assert output == render.date(epoch=epoch)
+    with set_timezone("UTC"):
+        assert output == render.date(epoch=epoch)
 
 
 @pytest.mark.parametrize(
@@ -31,9 +32,9 @@ def test_date(epoch: float | None, output: str) -> None:
         (1587908220.0, "Apr 26 2020 13:37:00"),
     ],
 )
-def test_datetime(monkeypatch: MonkeyPatch, epoch: float | None, output: str) -> None:
-    monkeypatch.setattr(time, "localtime", time.gmtime)
-    assert output == render.datetime(epoch=epoch)
+def test_datetime(epoch: float | None, output: str) -> None:
+    with set_timezone("UTC"):
+        assert output == render.datetime(epoch=epoch)
 
 
 @pytest.mark.parametrize(

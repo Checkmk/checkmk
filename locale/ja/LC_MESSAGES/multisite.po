@@ -67301,6 +67301,13 @@ msgstr ""
 
 #, python-format
 msgid ""
+"You can use, modify and distribute Checkmk under the terms of the <a href="
+"\"%s\" target=\"_blank\">GNU GPL Version 2</a>."
+msgstr ""
+"<a href=\"%s\" target=\"_blank\">GNU GPL バージョン2</a>の条件の下で、Checkmk"
+"を使用、変更、および配布できます。"
+
+msgid ""
 "You can verify the single parts of your ldap configuration using this "
 "dialog. Simply make your configuration in the form on the left side and hit "
 "the \"Save & Test\" button to execute the tests. After the page reload, you "

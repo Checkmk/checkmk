@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Callable, Generator, Iterable, Mapping, Sequence, Set
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence, Set
+from dataclasses import dataclass
 from functools import partial
 from typing import Generic, Literal, NamedTuple, Protocol
 
@@ -40,7 +41,7 @@ __all__ = [
     "ParserFunction",
     "PCheckPlugin",
     "PDiscoveryPlugin",
-    "PHostLabelDiscoveryPlugin",
+    "HostLabelDiscoveryPlugin",
     "PInventoryPlugin",
     "PInventoryResult",
     "PluginSuppliedLabel",
@@ -234,22 +235,12 @@ class PSectionPlugin(Protocol):
         ...
 
 
-class PHostLabelDiscoveryPlugin(Protocol):
-    @property
-    def host_label_function(self) -> Callable[..., Generator[HostLabel, None, None]]:
-        ...
-
-    @property
-    def host_label_default_parameters(self) -> ParametersTypeAlias | None:
-        ...
-
-    @property
-    def host_label_ruleset_name(self) -> RuleSetName | None:
-        ...
-
-    @property
-    def host_label_ruleset_type(self) -> Literal["merged", "all"]:
-        ...
+@dataclass(frozen=True)
+class HostLabelDiscoveryPlugin:
+    function: Callable[..., Iterator[HostLabel]]
+    default_parameters: ParametersTypeAlias | None
+    ruleset_name: RuleSetName | None
+    ruleset_type: Literal["merged", "all"]
 
 
 def parse_raw_data(

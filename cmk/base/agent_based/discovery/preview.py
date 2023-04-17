@@ -23,10 +23,10 @@ from cmk.automations.results import CheckPreviewEntry
 from cmk.checkers import (
     FetcherFunction,
     HostKey,
+    HostLabelDiscoveryPlugin,
     ParserFunction,
     PCheckPlugin,
     PDiscoveryPlugin,
-    PHostLabelDiscoveryPlugin,
     PSectionPlugin,
     SummarizerFunction,
 )
@@ -70,7 +70,7 @@ def get_check_preview(
     fetcher: FetcherFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
-    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     discovery_plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],

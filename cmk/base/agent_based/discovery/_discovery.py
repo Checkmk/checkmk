@@ -16,9 +16,9 @@ from cmk.utils.type_defs import AgentRawData, HostName, Item, result, SectionNam
 from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.checkers import (
+    HostLabelDiscoveryPlugin,
     ParserFunction,
     PDiscoveryPlugin,
-    PHostLabelDiscoveryPlugin,
     PSectionPlugin,
     SourceInfo,
     SummarizerFunction,
@@ -46,7 +46,7 @@ def execute_check_discovery(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
-    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:

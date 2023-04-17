@@ -33,10 +33,10 @@ from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
 from cmk.checkers import (
+    HostLabelDiscoveryPlugin,
     parse_raw_data,
     PCheckPlugin,
     PDiscoveryPlugin,
-    PHostLabelDiscoveryPlugin,
     PInventoryPlugin,
     PSectionPlugin,
     Source,
@@ -283,9 +283,15 @@ class SectionPluginMapper(Mapping[SectionName, PSectionPlugin]):
         )
 
 
-class HostLabelPluginMapper(Mapping[SectionName, PHostLabelDiscoveryPlugin]):
-    def __getitem__(self, __key: SectionName) -> PHostLabelDiscoveryPlugin:
-        return _api.get_section_plugin(__key)
+class HostLabelPluginMapper(Mapping[SectionName, HostLabelDiscoveryPlugin]):
+    def __getitem__(self, __key: SectionName) -> HostLabelDiscoveryPlugin:
+        plugin = _api.get_section_plugin(__key)
+        return HostLabelDiscoveryPlugin(
+            function=plugin.host_label_function,
+            default_parameters=plugin.host_label_default_parameters,
+            ruleset_name=plugin.host_label_ruleset_name,
+            ruleset_type=plugin.host_label_ruleset_type,
+        )
 
     def __iter__(self) -> Iterator[SectionName]:
         return iter(

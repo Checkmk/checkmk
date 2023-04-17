@@ -11,7 +11,7 @@ from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.checkers import HostKey, PHostLabelDiscoveryPlugin, SourceType
+from cmk.checkers import HostKey, HostLabelDiscoveryPlugin, SourceType
 from cmk.checkers.sectionparser import Provider, ResolvedResult
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -31,7 +31,7 @@ __all__ = [
 def discover_cluster_labels(
     nodes: Sequence[HostName],
     config_cache: ConfigCache,
-    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     *,
     providers: Mapping[HostKey, Provider],
     load_labels: bool,
@@ -125,7 +125,7 @@ def do_save_labels(host_name: HostName, host_labels: QualifiedDiscovery[HostLabe
 def discover_host_labels(
     host_name: HostName,
     config_cache: ConfigCache,
-    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     *,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
@@ -172,7 +172,7 @@ def _all_parsing_results(
 
 
 def _discover_host_labels_for_source_type(
-    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     config_cache: ConfigCache,
     *,
     host_key: HostKey,
@@ -194,16 +194,16 @@ def _discover_host_labels_for_source_type(
             host_label_params = get_plugin_parameters(
                 host_key.hostname,
                 config_cache,
-                default_parameters=host_label_plugin.host_label_default_parameters,
-                ruleset_name=host_label_plugin.host_label_ruleset_name,
-                ruleset_type=host_label_plugin.host_label_ruleset_type,
+                default_parameters=host_label_plugin.default_parameters,
+                ruleset_name=host_label_plugin.ruleset_name,
+                ruleset_type=host_label_plugin.ruleset_type,
                 rules_getter_function=agent_based_register.get_host_label_ruleset,
             )
             if host_label_params is not None:
                 kwargs["params"] = host_label_params
 
             try:
-                for label in host_label_plugin.host_label_function(**kwargs):
+                for label in host_label_plugin.function(**kwargs):
                     console.vverbose(f"  {label.name}: {label.value} ({section_name})\n")
                     host_labels[label.name] = HostLabel(label.name, label.value, section_name)
             except (KeyboardInterrupt, MKTimeout):

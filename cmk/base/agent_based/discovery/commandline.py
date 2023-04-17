@@ -21,9 +21,9 @@ from cmk.utils.type_defs import HostName, SectionName
 from cmk.checkers import (
     FetcherFunction,
     HostKey,
+    HostLabelDiscoveryPlugin,
     ParserFunction,
     PDiscoveryPlugin,
-    PHostLabelDiscoveryPlugin,
     PSectionPlugin,
 )
 from cmk.checkers.checking import CheckPluginName
@@ -58,7 +58,7 @@ def commandline_discovery(
     fetcher: FetcherFunction,
     config_cache: ConfigCache,
     section_plugins: Mapping[SectionName, PSectionPlugin],
-    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
@@ -139,7 +139,7 @@ def _preprocess_hostnames(
 
 def _analyse_node_labels(
     host_name: HostName,
-    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     *,
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
@@ -179,7 +179,7 @@ def _analyse_node_labels(
 def _commandline_discovery_on_host(
     *,
     host_name: HostName,
-    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, PDiscoveryPlugin],

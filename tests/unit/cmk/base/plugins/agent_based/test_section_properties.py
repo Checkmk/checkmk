@@ -98,12 +98,6 @@ def test_detect_spec_dedup(
         ("orion_backup", "orion_batterytest", "orion_system"),
         ("pfsense_counter", "pfsense_if", "pfsense_status"),
         ("sentry_pdu", "sentry_pdu_outlets", "sentry_pdu_systempower"),
-        (
-            "fjdarye_controller_modules_flash",
-            "fjdarye_expanders",
-            "fjdarye_inlet_thermal_sensors",
-            "fjdarye_thermal_sensors",
-        ),
         (  # these are the same "by chance"
             "fjdarye_channel_adapters",
             "fjdarye_channel_modules",

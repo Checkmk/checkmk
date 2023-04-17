@@ -745,6 +745,8 @@ class ProxmoxVeSession:
             return response_json.get("data")
         except requests.exceptions.ReadTimeout:
             raise CannotRecover(f"Read timeout after {self._timeout}s when trying to GET {path}")
+        except requests.exceptions.ConnectionError as exc:
+            raise CannotRecover(f"Could not GET element {path} ({exc})") from exc
         except JSONDecodeError as e:
             raise CannotRecover("Couldn't parse API element %r" % path) from e
 

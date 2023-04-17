@@ -85,7 +85,7 @@ class ModeUserMigrate(WatoMode):
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
-                                    is_enabled=request.has_var("selection_id"),
+                                    is_enabled=request.has_var("selection"),
                                 )
                             ],
                         ),
@@ -122,7 +122,7 @@ class ModeUserMigrate(WatoMode):
         return menu
 
     def page(self) -> None:
-        if request.var("selection_id"):
+        if request.var("selection"):
             self._show_form_page()
         else:
             self._show_result_page()
@@ -271,7 +271,7 @@ def _get_attribute_choices() -> list[tuple[str, str]]:
 def _get_selected_users() -> list[str]:
     selected_users: list[str] = []
     for selection in user.get_rowselection(
-        request.get_str_input_mandatory("selection_id"),
+        request.get_str_input_mandatory("selection"),
         "users",
     ):
         selected_users.append(

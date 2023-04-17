@@ -175,7 +175,7 @@ class ModeUsers(WatoMode):
                     makeuri_contextless(
                         request,
                         [
-                            ("selection_id", weblib.selection_id()),
+                            ("selection", weblib.selection_id()),
                             ("mode", "user_migrate"),
                         ],
                     )
@@ -532,7 +532,7 @@ class ModeUsers(WatoMode):
                     table.cell(_u(vs_title) if isinstance(vs_title, str) else vs_title)
                     html.write_text(vs.value_to_html(user_spec.get(name, vs.default_value())))
 
-        html.hidden_field("selection_id", weblib.selection_id())
+        html.hidden_field("selection", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
 

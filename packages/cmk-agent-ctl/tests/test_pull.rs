@@ -523,8 +523,20 @@ async fn _test_pull_reload(prefix: &str, ip_addr: IpAddr, port: u16) -> AnyhowRe
     message_buf.clear();
     let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
     tcp_stream.read_to_end(&mut message_buf)?;
-    assert!(message_buf.is_empty());
-    assert!(std::net::TcpStream::connect(socket_addr).is_err());
+    assert!(
+        message_buf.is_empty(),
+        "port is {} message is {:#?}",
+        p,
+        message_buf
+    );
+    // give windows some time to close socket
+    #[cfg(windows)]
+    tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
+    assert!(
+        std::net::TcpStream::connect(socket_addr).is_err(),
+        "port is {} ",
+        p,
+    );
 
     teardown(test_dir, pull_proc_fixture, None)
         .await

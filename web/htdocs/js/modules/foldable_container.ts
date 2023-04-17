@@ -43,7 +43,7 @@ function toggle_tree_state(
                     handler_data.container.innerHTML = response_body;
                 },
                 handler_data: {
-                    container: oContainer,
+                    container: oContainer!,
                 },
             });
         }

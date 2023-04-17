@@ -34,7 +34,7 @@ class Search {
             Search.kill_previous_search();
             add_class(document.getElementById(this.clear_id), "clearable");
             this.display_search_results();
-            const obj = document.getElementById(this.search_id);
+            const obj = document.getElementById(this.search_id)!;
             add_class(obj, "search");
             g_call_ajax_obj = call_ajax(
                 "ajax_search_" +
@@ -47,7 +47,7 @@ class Search {
                         obj: obj,
                         menu_popup: document.getElementById(
                             "popup_menu_" + this.id
-                        ),
+                        )!,
                     },
                 }
             );

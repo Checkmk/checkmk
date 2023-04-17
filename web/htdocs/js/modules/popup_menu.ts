@@ -212,7 +212,7 @@ export function toggle_popup(
             handler_data: {
                 ident: ident,
                 content: content,
-                event: event,
+                event: event!,
             },
         });
     }

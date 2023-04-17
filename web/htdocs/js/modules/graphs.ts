@@ -1354,6 +1354,7 @@ function update_graph_hover_popup(event, graph) {
 
     ajax.call_ajax("ajax_graph_hover.py", {
         method: "POST",
+        //@ts-ignore
         response_handler: handle_graph_hover_popup_update,
         handler_data: {
             graph: graph,
@@ -1590,6 +1591,7 @@ function start_graph_update(canvas, post_data) {
 
     ajax.call_ajax("ajax_graph.py", {
         method: "POST",
+        //@ts-ignore
         response_handler: handle_graph_update,
         handler_data: get_graph_container(canvas),
         post_data: post_data,
@@ -1761,6 +1763,8 @@ function set_graph_timerange(graph_id, start_time, end_time) {
         ajax.call_ajax("ajax_graph.py", {
             method: "POST",
             post_data: post_data,
+            //this is related to the third argument of the function, which I think is never used in ajax.ts
+            //@ts-ignore
             response_handler: handle_graph_timerange_update,
             handler_data: get_graph_container(canvas),
         });

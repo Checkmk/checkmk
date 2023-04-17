@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 import * as utils from "utils";
 import * as ajax from "ajax";
 import {initialize_autocompleters, toggle_label_row_opacity} from "valuespecs";
+import {CMKAjaxReponse} from "types";
 
 interface TagifyState {
     inputText: string;
@@ -263,6 +264,10 @@ function kill_previous_autocomplete_call() {
     }
 }
 
+interface AjaxVsAutocomplete {
+    choices: [string | null, string][];
+}
+
 function ajax_call_autocomplete_labels(
     post_data: string,
     tagify: Tagify<CheckMKTagifyData>,
@@ -273,10 +278,11 @@ function ajax_call_autocomplete_labels(
         method: "POST",
         post_data: post_data,
         response_handler: function (
-            handler_data: {value: string; tagify: Tagify},
+            handler_data: {value: string; tagify: Tagify<CheckMKTagifyData>},
             ajax_response: string
         ) {
-            const response = JSON.parse(ajax_response);
+            const response: CMKAjaxReponse<AjaxVsAutocomplete> =
+                JSON.parse(ajax_response);
             if (response.result_code != 0) {
                 console.log(
                     "Error [" + response.result_code + "]: " + response.result
@@ -285,13 +291,15 @@ function ajax_call_autocomplete_labels(
             }
 
             const result_objects: {value: string}[] = [];
-            response.result.choices.forEach((entry: string[]) => {
+            response.result.choices.forEach(entry => {
                 result_objects.push({value: entry[1]});
             });
 
             handler_data.tagify.settings.whitelist.splice(
                 10,
+                //@ts-ignore // result is just a dict with choices filed so length is undefined!?
                 response.result.length,
+                //@ts-ignore // there is no matching function
                 ...result_objects
             );
             // render the suggestions dropdown

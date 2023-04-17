@@ -955,10 +955,7 @@ export function listofmultiple_add(
             trigger: triggerElement,
             ident: ident,
         },
-        response_handler: function (
-            handler_data: {trigger: HTMLElement; ident: string},
-            ajax_response: string
-        ) {
+        response_handler: function (handler_data, ajax_response: string) {
             const table = document.getElementById(
                 varprefix + "_table"
             ) as HTMLTableElement;

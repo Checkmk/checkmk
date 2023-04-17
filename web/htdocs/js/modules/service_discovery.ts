@@ -331,7 +331,7 @@ function trigger_delayed_active_checks() {
 }
 
 export function execute_active_check(entry: Check) {
-    const div = document.getElementById(entry.divid);
+    const div = document.getElementById(entry.divid)!;
     ajax.call_ajax("wato_ajax_execute_check.py", {
         post_data:
             "site=" +

@@ -994,7 +994,7 @@ interface Speedometer {
     program_start: number;
     percentage: number;
     last_perc: number;
-    title: string;
+    title?: string;
 }
 
 export function speedometer_show_speed(
@@ -1028,9 +1028,9 @@ export function speedometer_show_speed(
                 // (e.g. the snapin has been removed)
                 if (!oDiv) return;
 
-                oDiv.title = data.title;
+                oDiv.title = String(data.title);
                 oDiv = document.getElementById("speedometerbg");
-                oDiv!.title = data.title;
+                oDiv!.title = String(data.title);
 
                 move_needle(data.last_perc, data.percentage); // 50 * 100ms = 5s = refresh time
             } catch (ie) {

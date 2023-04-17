@@ -210,7 +210,7 @@ class ClearFailedNotificationPage(Page):
                 make_header(html, title, breadcrumb)
 
                 for message in get_flashed_messages():
-                    html.show_message(message)
+                    html.show_message(message.msg)
                 user_profile_async_replication_page(back_url="clear_failed_notifications.py")
                 return
 

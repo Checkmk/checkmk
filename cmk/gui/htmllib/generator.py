@@ -162,6 +162,13 @@ class HTMLWriter:
         """<script type="text/javascript" src="%(name)"/>\n"""
         self.write_html(render_element("script", "", type_="text/javascript", src=src))
 
+    def show_message_by_msg_type(
+        self,
+        msg: HTML | str,
+        msg_type: Literal["message", "warning", "error"],
+    ) -> None:
+        self._write(self._render_message(msg, msg_type))
+
     def show_message(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "message"))
 

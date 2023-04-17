@@ -971,7 +971,7 @@ class ListPage(Page, Generic[_Self]):
         make_header(html, title_plural, breadcrumb, page_menu)
 
         for message in get_flashed_messages():
-            html.show_message(message)
+            html.show_message(message.msg)
 
         # Deletion
         delname = request.var("_delete")

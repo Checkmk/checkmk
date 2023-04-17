@@ -47,7 +47,7 @@ class UserProfileReplicate(Page):
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
 
         for message in get_flashed_messages():
-            html.show_message(message)
+            html.show_message(message.msg)
 
         # Now, if in distributed environment where users can login to remote sites, set the trigger for
         # pushing the new user profile to the remote sites asynchronously

@@ -143,8 +143,8 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
     html.show_user_errors()
 
     # Show outcome of previous page (that redirected to this one)
-    for message in get_flashed_messages():
-        html.show_message(message)
+    for message in get_flashed_messages(with_categories=True):
+        html.show_message_by_msg_type(message.msg, message.msg_type)
 
     # Show content
     mode.handle_page()

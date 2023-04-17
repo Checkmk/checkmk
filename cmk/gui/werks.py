@@ -230,7 +230,7 @@ class ModeChangeLogPage(cmk.gui.pages.Page):
         )
 
         for message in get_flashed_messages():
-            html.show_message(message)
+            html.show_message(message.msg)
 
         handle_acknowledgement()
 

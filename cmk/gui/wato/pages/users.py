@@ -43,7 +43,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import get_connection, UserAttribute
+from cmk.gui.plugins.userdb.utils import active_connections, get_connection, UserAttribute
 from cmk.gui.plugins.wato.utils import (
     flash,
     make_confirm_delete_link,
@@ -182,6 +182,8 @@ class ModeUsers(WatoMode):
                 ),
                 is_shortcut=True,
                 is_suggested=True,
+                is_enabled=len(active_connections()) > 1,
+                disabled_tooltip=_("There is only one active user connector available"),
             )
 
     def _page_menu_entries_synchronized_users(self) -> Iterator[PageMenuEntry]:

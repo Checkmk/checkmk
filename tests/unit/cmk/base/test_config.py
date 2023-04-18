@@ -549,10 +549,18 @@ def test_host_config_additional_ipaddresses(
     "hostname_str,tags,result",
     [
         ("testhost", {}, True),
-        ("testhost", {"agent": "cmk-agent"}, True),
-        ("testhost", {"agent": "cmk-agent", "snmp_ds": "snmp-v2"}, True),
-        ("testhost", {"agent": "no-agent"}, False),
-        ("testhost", {"agent": "no-agent", "snmp_ds": "no-snmp"}, False),
+        ("testhost", {TagGroupID("agent"): TagID("cmk-agent")}, True),
+        (
+            "testhost",
+            {TagGroupID("agent"): TagID("cmk-agent"), TagGroupID("snmp_ds"): TagID("snmp-v2")},
+            True,
+        ),
+        ("testhost", {TagGroupID("agent"): TagID("no-agent")}, False),
+        (
+            "testhost",
+            {TagGroupID("agent"): TagID("no-agent"), TagGroupID("snmp_ds"): TagID("no-snmp")},
+            False,
+        ),
     ],
 )
 def test_is_tcp_host(

@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from tests.testlib.rest_api_client import PasswordTestClient
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -19,11 +19,11 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 @managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_password(
-    password_client: PasswordTestClient, aut_user_auth_wsgi_app: WebTestAppForCMK
+    clients: ClientRegistry, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
-    password_client.create(
+    clients.Password.create(
         ident="invalid%$",
         title="foobar",
         owner="admin",
@@ -33,7 +33,7 @@ def test_openapi_password(
         expect_ok=False,
     ).assert_status_code(400)
 
-    password_client.create(
+    clients.Password.create(
         ident="foo:invalid",
         title="foobar",
         owner="admin",
@@ -43,7 +43,7 @@ def test_openapi_password(
         expect_ok=False,
     ).assert_status_code(400)
 
-    resp = password_client.create(
+    resp = clients.Password.create(
         ident="foo",
         title="foobar",
         owner="admin",

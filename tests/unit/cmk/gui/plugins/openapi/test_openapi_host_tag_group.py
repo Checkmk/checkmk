@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from tests.testlib.rest_api_client import HostTagGroupTestClient, RestApiClient
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -16,11 +16,12 @@ from cmk.utils.tags import BuiltinTagConfig
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_tag_group_update(
-    host_tag_group_client: HostTagGroupTestClient, aut_user_auth_wsgi_app: WebTestAppForCMK
+    clients: ClientRegistry,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
-    host_tag_group_client.create(
+    clients.HostTagGroup.create(
         ident="invalid%$",
         title="foobar",
         tags=[{"ident": "pod", "title": "Pod"}],
@@ -252,6 +253,7 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
 
 def test_openapi_host_tag_with_only_one_option(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     with_host: list[str],
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
@@ -273,32 +275,11 @@ def test_openapi_host_tag_with_only_one_option(
         content_type="application/json",
     )
 
-    host = wsgi_app.get(
-        base + "/objects/host_config/example.com",
-        headers={"Accept": "application/json"},
-        status=200,
+    host = clients.Host.get("example.com")
+    clients.Host.edit(
+        host_name="example.com", attributes={"alias": "foobar", "tag_group_id999": "pod"}
     )
-
-    wsgi_app.put(
-        base + "/objects/host_config/example.com",
-        headers={"Accept": "application/json", "If-Match": host.headers["ETag"]},
-        content_type="application/json",
-        status=200,
-        params=json.dumps(
-            {
-                "attributes": {
-                    "alias": "foobar",
-                    "tag_group_id999": "pod",
-                }
-            }
-        ),
-    )
-
-    host = wsgi_app.get(
-        base + "/objects/host_config/example.com",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
+    host = clients.Host.get(host_name="example.com")
 
     assert host.json["extensions"]["attributes"]["alias"] == "foobar"
     assert host.json["extensions"]["attributes"]["tag_group_id999"] == "pod"
@@ -321,26 +302,10 @@ def test_openapi_host_tag_with_only_one_option(
     # assert error.json["detail"].startswith("These fields have problems")
     # assert error.json["fields"] == {"attributes": {"tag_group_id999": ["Unknown field."]}}
 
-    wsgi_app.put(
-        base + "/objects/host_config/example.com",
-        headers={"Accept": "application/json", "If-Match": host.headers["ETag"]},
-        content_type="application/json",
-        status=200,
-        params=json.dumps(
-            {
-                "attributes": {
-                    "tag_group_id999": None,  # deactivate
-                }
-            }
-        ),
+    clients.Host.edit(
+        host_name="example.com", attributes={"alias": "foobar", "tag_group_id999": None}
     )
-
-    host = wsgi_app.get(
-        base + "/objects/host_config/example.com",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
-
+    host = clients.Host.get("example.com")
     assert host.json["extensions"]["attributes"]["tag_group_id999"] is None
 
 
@@ -396,8 +361,8 @@ def test_openapi_host_tags_groups_without_topic_and_tags(
     )
 
 
-def test_openapi_host_tag_group_empty_tags(host_tag_group_client: HostTagGroupTestClient) -> None:
-    host_tag_group_client.create(
+def test_openapi_host_tag_group_empty_tags(clients: ClientRegistry) -> None:
+    clients.HostTagGroup.create(
         ident="group_id999",
         title="Kubernetes",
         help_text="Kubernetes Pods",
@@ -405,14 +370,14 @@ def test_openapi_host_tag_group_empty_tags(host_tag_group_client: HostTagGroupTe
         expect_ok=False,
     )
 
-    host_tag_group_client.create(
+    clients.HostTagGroup.create(
         ident="group_id999",
         title="Kubernetes",
         help_text="Kubernetes Pods",
         tags=[{"ident": "pod", "title": "Pod"}],
     )
 
-    host_tag_group_client.edit(
+    clients.HostTagGroup.edit(
         ident="group_id999",
         tags=[],
         expect_ok=False,
@@ -420,19 +385,19 @@ def test_openapi_host_tag_group_empty_tags(host_tag_group_client: HostTagGroupTe
 
 
 def test_openapi_delete_dependant_host_tag(
-    api_client: RestApiClient, host_tag_group_client: HostTagGroupTestClient
+    clients: ClientRegistry,
 ) -> None:
-    host_tag_group_client.create(
+    clients.HostTagGroup.create(
         ident="group_id999",
         title="Kubernetes",
         help_text="Kubernetes Pods",
         tags=[{"ident": "pod", "title": "Pod"}],
     )
-    api_client.create_host(
+    clients.Host.create(
         host_name="example.com",
         attributes={"tag_group_id999": "pod"},
     )
-    resp = host_tag_group_client.delete(
+    resp = clients.HostTagGroup.delete(
         ident="group_id999",
         repair=False,
         expect_ok=False,

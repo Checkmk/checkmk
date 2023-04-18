@@ -8,6 +8,14 @@ import random
 import string
 
 import pytest
+from pytest import FixtureRequest
+
+from tests.testlib.rest_api_client import (
+    ClientRegistry,
+    ContactGroupClient,
+    HostGroupClient,
+    ServiceGroupClient,
+)
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -17,22 +25,26 @@ from cmk.utils.type_defs.user_id import UserId
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
+@pytest.fixture
+def host(clients: ClientRegistry) -> HostGroupClient:
+    return clients.HostGroup
+
+
+@pytest.fixture
+def contact(clients: ClientRegistry) -> ContactGroupClient:
+    return clients.ContactGroup
+
+
+@pytest.fixture
+def service(clients: ClientRegistry) -> ServiceGroupClient:
+    return clients.ServiceGroup
+
+
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_required_alias_field_create(
-    base: str, group_type: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-) -> None:
-
-    group = {"name": "RandleMcMurphy", "customer": "provider"}
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + f"/domain-types/{group_type}_group_config/collections/all",
-        params=json.dumps(group),
-        status=400,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+def test_required_alias_field_create(group_type: str, request: FixtureRequest) -> None:
+    client = request.getfixturevalue(group_type)
+    client.create(name="RandleMcMurphy", expect_ok=False).assert_status_code(400)
 
 
 @managedtest

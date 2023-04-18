@@ -1018,9 +1018,7 @@ export function speedometer_show_speed(
         ) {
             let data: Speedometer;
             try {
-                const ajaxData: CMKAjaxReponse<Speedometer> =
-                    JSON.parse(response_body);
-                data = ajaxData.result;
+                data = JSON.parse(response_body);
 
                 let oDiv = document.getElementById("speedometer");
 

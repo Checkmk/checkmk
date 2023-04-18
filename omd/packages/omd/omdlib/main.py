@@ -31,7 +31,6 @@ import fcntl
 import io
 import logging
 import os
-import pty
 import pwd
 import random
 import re
@@ -1804,49 +1803,32 @@ def call_scripts(site: SiteContext, phase: str, add_env: Mapping[str, str] | Non
     for file in sorted(path.iterdir()):
         if file.name[0] == ".":
             continue
-        _call_script(phase, env, file)
+        sys.stdout.write(f'Executing {phase} script "{file.name}"...')
+        with subprocess.Popen(  # nosec
+            str(file),  # path-like args is not allowed when shell is true
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            env=env,
+        ) as proc:
+            if proc.stdout is None:
+                raise Exception("stdout needs to be set")
 
-
-def _call_script(phase: str, env: Mapping[str, str], file: Path) -> None:
-    sys.stdout.write(f'Executing {phase} script "{file.name}"...')
-    fd_parent, fd_child = pty.openpty()
-
-    parent = os.fdopen(fd_parent, buffering=1)
-    with subprocess.Popen(  # nosec
-        str(file),  # path-like args is not allowed when shell is true
-        shell=True,
-        stdout=fd_child,
-        stderr=fd_child,
-        encoding="utf-8",
-        env=env,
-    ) as proc:
-        if proc.stdout is None:
-            raise Exception("stdout needs to be set")
-
-        os.close(fd_child)
-        wrote_output = False
-        try:
-            while True:
-                line = parent.readline()
-                if not line:
-                    break
+            wrote_output = False
+            for line in proc.stdout:
                 if not wrote_output:
                     sys.stdout.write("\n")
                     wrote_output = True
 
                 sys.stdout.write(f"-| {line}")
                 sys.stdout.flush()
-        except IOError:
-            pass
-        finally:
-            if not pty:
-                parent.close()
 
-    if not proc.returncode:
-        sys.stdout.write(tty.ok + "\n")
-    else:
-        sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
-        raise SystemExit(1)
+        if not proc.returncode:
+            sys.stdout.write(tty.ok + "\n")
+        else:
+            sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
+            raise SystemExit(1)
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:

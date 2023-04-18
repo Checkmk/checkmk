@@ -662,37 +662,6 @@ def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
     "hostname_str,tags,result",
     [
         ("testhost", {}, False),
-        ("testhost", {TagGroupID("agent"): TagID("cmk-agent")}, False),
-        (
-            "testhost",
-            {TagGroupID("agent"): TagID("no-agent"), TagGroupID("snmp_ds"): TagID("snmp-v1")},
-            False,
-        ),
-        (
-            "testhost",
-            {TagGroupID("agent"): TagID("no-agent"), TagGroupID("snmp_ds"): TagID("no-snmp")},
-            False,
-        ),
-        (
-            "testhost",
-            {TagGroupID("agent"): TagID("cmk-agent"), TagGroupID("snmp_ds"): TagID("snmp-v1")},
-            True,
-        ),
-    ],
-)
-def test_is_dual_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result: bool
-) -> None:
-    hostname = HostName(hostname_str)
-    ts = Scenario()
-    ts.add_host(hostname, tags)
-    assert ts.apply(monkeypatch).is_dual_host(hostname) is result
-
-
-@pytest.mark.parametrize(
-    "hostname_str,tags,result",
-    [
-        ("testhost", {}, False),
         ("testhost", {TagGroupID("agent"): TagID("all-agents")}, True),
         ("testhost", {TagGroupID("agent"): TagID("special-agents")}, False),
         ("testhost", {TagGroupID("agent"): TagID("no-agent")}, False),

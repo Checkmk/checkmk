@@ -2665,9 +2665,6 @@ class ConfigCache:
     def is_dyndns_host(self, host_name: HostName) -> bool:
         return self.in_binary_hostlist(host_name, dyndns_hosts)
 
-    def is_dual_host(self, host_name: HostName) -> bool:
-        return self.is_tcp_host(host_name) and self.is_snmp_host(host_name)
-
     def is_all_agents_host(self, host_name: HostName) -> bool:
         return self.computed_datasources(host_name).is_all_agents_host
 

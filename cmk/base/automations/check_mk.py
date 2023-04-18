@@ -172,6 +172,8 @@ class AutomationDiscovery(DiscoveryAutomation):
                 # make the service reflect the new state as soon as possible.
                 self._trigger_discovery_check(config_cache, host_config)
 
+        discovery.rewrite_cluster_host_labels_file(config_cache, hostnames)
+
         return automation_results.DiscoveryResult(results)
 
 

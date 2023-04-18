@@ -79,7 +79,7 @@ from cmk.base.discovered_labels import HostLabel, ServiceLabel
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import analyse_host_labels, analyse_node_labels
+from ._host_labels import analyse_host_labels, analyse_node_labels, rewrite_cluster_host_labels_file
 from .utils import DiscoveryMode, QualifiedDiscovery, TimeLimitFilter
 
 _BasicTransition = Literal["old", "new", "vanished"]
@@ -197,6 +197,8 @@ def commandline_discovery(
             section.section_error("%s" % e)
         finally:
             cmk.utils.cleanup.cleanup_globals()
+
+    rewrite_cluster_host_labels_file(config_cache, host_names)
 
 
 def _preprocess_hostnames(
@@ -812,11 +814,13 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
 
     activation_required = False
     rediscovery_reference_time = time.time()
+    hosts_processed = set()
 
     with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
         for host_name in time_limited(autodiscovery_queue.queued_hosts()):
             if host_name not in process_hosts:
                 continue
+            hosts_processed.add(host_name)
 
             activation_required |= _discover_marked_host(
                 config_cache=config_cache,
@@ -825,6 +829,8 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
                 reference_time=rediscovery_reference_time,
                 oldest_queued=oldest_queued,
             )
+
+    rewrite_cluster_host_labels_file(config_cache, hosts_processed)
 
     if not activation_required:
         return

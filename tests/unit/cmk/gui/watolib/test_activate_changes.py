@@ -195,7 +195,6 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
     return expected
 
 
-@pytest.mark.usefixtures("monkeypatch")
 def test_get_replication_paths_defaults(edition: cmk_version.Edition) -> None:
     expected = _expected_replication_paths(edition)
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
@@ -356,7 +355,7 @@ def test_get_config_sync_file_infos() -> None:
     }
 
 
-def _create_get_config_sync_file_infos_test_config(base_dir):
+def _create_get_config_sync_file_infos_test_config(base_dir: Path) -> None:
     base_dir.joinpath("etc/d1").mkdir(parents=True, exist_ok=True)
 
     base_dir.joinpath("etc/d3").mkdir(parents=True, exist_ok=True)
@@ -423,7 +422,7 @@ def test_get_file_names_to_sync() -> None:
     )
 
 
-def _get_test_file_infos():
+def _get_test_file_infos() -> tuple[dict[str, ConfigSyncFileInfo], dict[str, ConfigSyncFileInfo]]:
     remote = {
         "remote-only": ConfigSyncFileInfo(
             st_mode=33200,
@@ -567,7 +566,7 @@ def test_get_sync_archive(tmp_path: Path) -> None:
         )
 
 
-def _get_test_sync_archive(tmp_path):
+def _get_test_sync_archive(tmp_path: Path) -> bytes:
     tmp_path.joinpath("etc").mkdir(parents=True, exist_ok=True)
     with tmp_path.joinpath("etc/abc").open("w", encoding="utf-8") as f:
         f.write("gä")

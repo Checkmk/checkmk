@@ -753,6 +753,7 @@ class TableDisplayHint:
 @dataclass(frozen=True)
 class ColumnDisplayHint:
     title: str
+    short: str | None
     _long_title_function: Callable[[], str]
     paint_function: PaintFunction
     sort_function: SortFunction
@@ -780,6 +781,7 @@ class ColumnDisplayHint:
         title = _make_title_function(raw_hint)(key)
         return cls(
             title=title,
+            short=raw_hint.get("short"),
             _long_title_function=_make_long_title_function(title, path),
             paint_function=paint_function,
             sort_function=_make_sort_function(raw_hint),
@@ -830,6 +832,7 @@ class AttributesDisplayHint:
 @dataclass(frozen=True)
 class AttributeDisplayHint:
     title: str
+    short: str | None
     _long_title_function: Callable[[], str]
     data_type: str
     paint_function: PaintFunction
@@ -850,6 +853,7 @@ class AttributeDisplayHint:
         title = _make_title_function(raw_hint)(key)
         return cls(
             title=title,
+            short=raw_hint.get("short"),
             _long_title_function=_make_long_title_function(title, path),
             data_type=data_type,
             paint_function=paint_function,
@@ -1332,7 +1336,7 @@ def _register_attribute_column(
             # - Firmware > Version
             # We want to keep column titles short, yet, to make up for overlapping we show the
             # long_title in the column title tooltips
-            "short": hint.title,
+            "short": hint.short or hint.title,
             "tooltip_title": hint.long_title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
@@ -1455,7 +1459,7 @@ def _register_table_column(
             # - Firmware > Version
             # We want to keep column titles short, yet, to make up for overlapping we show the
             # long_title in the column title tooltips
-            "short": hint.title,
+            "short": hint.short or hint.title,
             "tooltip_title": hint.long_title,
             "columns": [column],
             "paint": lambda row: hint.paint_function(row.get(column)),

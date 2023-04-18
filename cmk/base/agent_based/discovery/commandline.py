@@ -37,7 +37,12 @@ from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
-from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
+from ._host_labels import (
+    analyse_host_labels,
+    discover_host_labels,
+    do_load_labels,
+    rewrite_cluster_host_labels_file,
+)
 
 __all__ = ["commandline_discovery"]
 
@@ -91,6 +96,8 @@ def commandline_discovery(
             section.section_error("%s" % e)
         finally:
             cmk.utils.cleanup.cleanup_globals()
+
+    rewrite_cluster_host_labels_file(config_cache, non_cluster_host_names)
 
 
 def _preprocess_hostnames(

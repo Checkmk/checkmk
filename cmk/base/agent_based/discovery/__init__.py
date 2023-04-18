@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._discovery import execute_check_discovery
+from ._host_labels import rewrite_cluster_host_labels_file
 from .autodiscovery import (
     automation_discovery,
     discover_marked_hosts,
@@ -21,6 +22,7 @@ __all__ = [
     "automation_discovery",
     "commandline_discovery",
     "discover_marked_hosts",
+    "rewrite_cluster_host_labels_file",
     "execute_check_discovery",
     "get_check_preview",
     "get_host_services",

@@ -57,7 +57,12 @@ from cmk.base.core_config import MonitoringCore
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
+from ._host_labels import (
+    analyse_host_labels,
+    discover_host_labels,
+    do_load_labels,
+    rewrite_cluster_host_labels_file,
+)
 from .utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = ["schedule_discovery_check", "get_host_services"]
@@ -350,11 +355,13 @@ def discover_marked_hosts(
 
     activation_required = False
     rediscovery_reference_time = time.time()
+    hosts_processed = set()
 
     with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
         for host_name in time_limited(autodiscovery_queue.queued_hosts()):
             if host_name not in process_hosts:
                 continue
+            hosts_processed.add(host_name)
 
             activation_required |= _discover_marked_host(
                 host_name,
@@ -375,6 +382,8 @@ def discover_marked_hosts(
                 oldest_queued=oldest_queued,
                 on_error=on_error,
             )
+
+    rewrite_cluster_host_labels_file(config_cache, hosts_processed)
 
     if not activation_required:
         return

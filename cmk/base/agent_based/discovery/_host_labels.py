@@ -22,6 +22,7 @@ from .utils import QualifiedDiscovery
 __all__ = [
     "analyse_host_labels",
     "analyse_cluster_labels",
+    "rewrite_cluster_host_labels_file",
     "discover_host_labels",
     "do_load_labels",
 ]
@@ -77,6 +78,23 @@ def _merge_cluster_labels(
 ) -> Mapping[str, _TLabel]:
     """A cluster has all its nodes labels. Last node wins."""
     return {name: label for node_labels in all_node_labels for name, label in node_labels.items()}
+
+
+def rewrite_cluster_host_labels_file(
+    config_cache: config.ConfigCache, nodes: Iterable[HostName]
+) -> None:
+    affected_clusters = {
+        cluster for node_name in nodes for cluster in config_cache.clusters_of(node_name)
+    }
+    for cluster in affected_clusters:
+        DiscoveredHostLabelsStore(cluster).save(
+            _merge_cluster_labels(
+                [
+                    DiscoveredHostLabelsStore(node_name).load()
+                    for node_name in (config_cache.nodes_of(cluster) or ())  # "or ()" just for mypy
+                ]
+            )
+        )
 
 
 def analyse_host_labels(

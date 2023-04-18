@@ -35,6 +35,7 @@ from cmk.gui.views.inventory import (
     inv_paint_generic,
     inv_paint_if_oper_status,
     inv_paint_number,
+    inv_paint_service_status,
     inv_paint_size,
     NodeDisplayHint,
     RowTableInventory,
@@ -505,6 +506,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Key",
+                short=None,
                 _long_title_function=lambda: "Key",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
@@ -516,6 +518,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ColumnDisplayHint(
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
+                short=None,
                 _long_title_function=lambda: "Network interfaces ➤ Operational Status",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
@@ -527,7 +530,20 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Key",
+                short=None,
                 _long_title_function=lambda: "Node ➤ Key",
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                filter_class=None,
+            ),
+        ),
+        (
+            ("software", "applications", "check_mk", "sites"),
+            "cmc",
+            ColumnDisplayHint(
+                paint_function=inv_paint_service_status,
+                title="CMC status",
+                short="CMC",
+                _long_title_function=lambda: "Checkmk sites ➤ CMC status",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
             ),
@@ -538,6 +554,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
     hint = DISPLAY_HINTS.get_hints(path).get_column_hint(key)
 
     assert hint.title == expected.title
+    assert hint.short == expected.short
     assert hint.long_title == expected.long_title
     assert hint.long_inventory_title == expected.long_inventory_title
     assert callable(hint.paint_function)
@@ -552,6 +569,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Bar",
+                short=None,
                 _long_title_function=lambda: "Foo ➤ Bar",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
@@ -562,6 +580,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Package Version",
+                short=None,
                 _long_title_function=lambda: "Software packages ➤ Package Version",
                 sort_function=_decorate_sort_function(cmp_version),
                 filter_class=None,
@@ -572,6 +591,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Version",
+                short=None,
                 _long_title_function=lambda: "Software packages ➤ Version",
                 sort_function=_decorate_sort_function(cmp_version),
                 filter_class=FilterInvtableVersion,
@@ -582,6 +602,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_number,
                 title="Index",
+                short=None,
                 _long_title_function=lambda: "Network interfaces ➤ Index",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
@@ -592,6 +613,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
+                short=None,
                 _long_title_function=lambda: "Network interfaces ➤ Operational Status",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
@@ -644,6 +666,7 @@ def test_sort_attributes_pairs_displayhint(
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Key",
+                short=None,
                 _long_title_function=lambda: "Key",
                 is_show_more=True,
             ),
@@ -656,6 +679,7 @@ def test_sort_attributes_pairs_displayhint(
                 paint_function=inv_paint_size,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Size",
+                short=None,
                 _long_title_function=lambda: "Block Devices ➤ Size",
                 is_show_more=True,
             ),
@@ -668,6 +692,7 @@ def test_sort_attributes_pairs_displayhint(
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Key",
+                short=None,
                 _long_title_function=lambda: "Node ➤ Key",
                 is_show_more=True,
             ),
@@ -696,6 +721,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Bar",
+                short=None,
                 _long_title_function=lambda: "Foo ➤ Bar",
                 is_show_more=True,
             ),
@@ -707,6 +733,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="CPU Architecture",
+                short=None,
                 _long_title_function=lambda: "Processor ➤ CPU Architecture",
                 is_show_more=True,
             ),
@@ -718,6 +745,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Product",
+                short=None,
                 _long_title_function=lambda: "System ➤ Product",
                 is_show_more=False,
             ),
@@ -777,6 +805,7 @@ def test_registered_sorter_cmp() -> None:
         paint_function=inv_paint_generic,
         sort_function=_decorate_sort_function(_cmp_inv_generic),
         title="Product",
+        short=None,
         _long_title_function=lambda: "System ➤ Product",
         is_show_more=False,
     )

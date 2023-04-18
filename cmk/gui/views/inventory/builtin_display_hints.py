@@ -516,19 +516,24 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.check_mk.sites:*.num_hosts": {"title": _l("#Hosts")},
         ".software.applications.check_mk.sites:*.num_services": {"title": _l("#Services")},
         ".software.applications.check_mk.sites:*.check_mk_helper_usage": {
-            "title": _l("CMK helper usage")
+            "title": _l("CMK helper usage"),
+            "short": _l("CMK helper")
         },
         ".software.applications.check_mk.sites:*.fetcher_helper_usage": {
-            "title": _l("Fetcher helper usage")
+            "title": _l("Fetcher helper usage"),
+            "short": _l("Fetcher helper")
         },
         ".software.applications.check_mk.sites:*.checker_helper_usage": {
-            "title": _l("Checker helper usage")
+            "title": _l("Checker helper usage"),
+            "short": _l("Checker helper")
         },
         ".software.applications.check_mk.sites:*.livestatus_usage": {
-            "title": _l("Lice helper usage")
+            "title": _l("Live helper usage"),
+            "short": _l("Live helper")
         },
         ".software.applications.check_mk.sites:*.check_helper_usage": {
-            "title": _l("Actual helper usage")
+            "title": _l("Actual helper usage"),
+            "short": _l("Act. helper")
         },
         ".software.applications.check_mk.sites:*.autostart": {
             "title": _l("Autostart"),
@@ -536,50 +541,62 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".software.applications.check_mk.sites:*.apache": {
             "title": _l("Apache status"),
+            "short": _l("Apache"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.cmc": {
             "title": _l("CMC status"),
+            "short": _l("CMC"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.crontab": {
             "title": _l("Crontab status"),
+            "short": _l("Crontab"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.dcd": {
             "title": _l("DCD status"),
+            "short": _l("DCD"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.liveproxyd": {
             "title": _l("Liveproxyd status"),
+            "short": _l("Liveproxyd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.mkeventd": {
             "title": _l("MKEventd status"),
+            "short": _l("MKEventd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.mknotifyd": {
             "title": _l("MKNotifyd status"),
+            "short": _l("MKNotifyd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.rrdcached": {
             "title": _l("RRDCached status"),
+            "short": _l("RRDCached"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.stunnel": {
             "title": _l("STunnel status"),
+            "short": _l("STunnel"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.xinetd": {
             "title": _l("XInetd status"),
+            "short": _l("XInetd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.nagios": {
             "title": _l("Nagios status"),
+            "short": _l("Nagios"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.npcd": {
             "title": _l("NPCD status"),
+            "short": _l("NPCD"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.cluster.": {

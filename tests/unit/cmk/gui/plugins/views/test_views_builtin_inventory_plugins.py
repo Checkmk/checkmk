@@ -9,7 +9,7 @@ from cmk.gui.views.inventory import _RelatedRawHints, DisplayHints, inventory_di
 
 
 def test_display_hint_titles() -> None:
-    assert all("title" in hint and "short" not in hint for hint in inventory_displayhints.values())
+    assert all("title" in hint for hint in inventory_displayhints.values())
 
 
 _IGNORED_KEYS_BY_PATH = {

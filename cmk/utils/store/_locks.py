@@ -15,9 +15,9 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
+import cmk.utils.paths
 from cmk.utils.exceptions import MKConfigLockTimeout, MKTimeout
 from cmk.utils.i18n import _
-from cmk.utils.paths import default_config_dir
 
 _all = [
     "acquire_lock",
@@ -48,7 +48,9 @@ logger = logging.getLogger("cmk.store")
 
 
 def configuration_lockfile() -> str:
-    return default_config_dir + "/multisite.mk"
+    # for our path monkeypatching to have an effect when executing the unit tests, we need to use
+    # the full module path :(
+    return cmk.utils.paths.default_config_dir + "/multisite.mk"
 
 
 @contextmanager

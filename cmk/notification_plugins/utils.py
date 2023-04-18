@@ -139,7 +139,7 @@ def html_escape_context(context: Dict[str, str]) -> Dict[str, str]:
         if varname in unescaped_variables:
             return value
         if varname in permissive_variables:
-            return escape_permissive(value)
+            return escape_permissive(value, escape_links=False)
         return escape(value)
 
     return {variable: _escape_or_not_escape(variable, value) for variable, value in context.items()}

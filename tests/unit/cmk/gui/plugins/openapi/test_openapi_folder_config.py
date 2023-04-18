@@ -11,7 +11,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.testlib.rest_api_client import RestApiClient
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -72,7 +72,7 @@ def test_folder_schema() -> None:
 
 
 def test_openapi_folder_validation(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, api_client: RestApiClient
+    aut_user_auth_wsgi_app: WebTestAppForCMK, clients: ClientRegistry
 ) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
@@ -91,7 +91,7 @@ def test_openapi_folder_validation(
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
-    api_client.create_folder(
+    clients.Folder.create(
         folder_name="\\",
         title="test",
         parent="~",
@@ -847,8 +847,8 @@ def test_delete_root_folder(
     assert resp.json["detail"] == "Deleting the root folder is not permitted."
 
 
-def test_create_folder_with_name_as_empty_string(api_client: RestApiClient) -> None:
-    r = api_client.create_folder(
+def test_create_folder_with_name_as_empty_string(clients: ClientRegistry) -> None:
+    r = clients.Folder.create(
         folder_name="",
         title="some_foldeer_title",
         parent="~",

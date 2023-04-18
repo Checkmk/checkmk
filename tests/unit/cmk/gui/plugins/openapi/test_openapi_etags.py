@@ -6,7 +6,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.rest_api_client import RestApiClient
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
@@ -79,10 +79,10 @@ def test_openapi_etag_enabled(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     assert ("ipaddress", "127.0.0.1") in list(resp.json["extensions"]["attributes"].items())
 
 
-def test_openapi_etag_root_folder_regression(api_client: RestApiClient) -> None:
+def test_openapi_etag_root_folder_regression(clients: ClientRegistry) -> None:
     """Werkzeug generates ETags on its own if we don't set them ourselves. Since we can't turn
     that off, this tests that the ETag of the root folder is one we created ourselves."""
-    resp = api_client.get_folder("~")
+    resp = clients.Folder.get("~")
     assert len(resp.headers["ETag"]) == 66
 
-    api_client.edit_folder("~", title="blablabla")
+    clients.Folder.edit("~", title="blablabla")

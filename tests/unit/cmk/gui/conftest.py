@@ -26,20 +26,13 @@ from werkzeug.test import create_environ
 
 from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.rest_api_client import (
-    AgentTestClient,
-    AuxTagTestClient,
-    ContactGroupTestClient,
-    DowntimeTestClient,
+    ClientRegistry,
     expand_rel,
+    get_client_registry,
     get_link,
-    HostTagGroupTestClient,
-    PasswordTestClient,
     RequestHandler,
     Response,
     RestApiClient,
-    RulesetTestClient,
-    RulesTestClient,
-    TimePeriodTestClient,
 )
 from tests.testlib.users import create_and_destroy_user
 
@@ -544,49 +537,5 @@ def api_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RestApiCl
 
 
 @pytest.fixture()
-def auxtag_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> AuxTagTestClient:
-    return AuxTagTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
-
-
-@pytest.fixture()
-def timeperiod_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> TimePeriodTestClient:
-    return TimePeriodTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
-
-
-@pytest.fixture()
-def rule_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RulesTestClient:
-    return RulesTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
-
-
-@pytest.fixture()
-def ruleset_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RulesetTestClient:
-    return RulesetTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
-
-
-@pytest.fixture()
-def contactgroup_client(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
-) -> ContactGroupTestClient:
-    return ContactGroupTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
-
-
-@pytest.fixture()
-def host_tag_group_client(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
-) -> HostTagGroupTestClient:
-    return HostTagGroupTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
-
-
-@pytest.fixture()
-def password_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> PasswordTestClient:
-    return PasswordTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
-
-
-@pytest.fixture()
-def agent_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> AgentTestClient:
-    return AgentTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
-
-
-@pytest.fixture()
-def downtime_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> DowntimeTestClient:
-    return DowntimeTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+def clients(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> ClientRegistry:
+    return get_client_registry(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)

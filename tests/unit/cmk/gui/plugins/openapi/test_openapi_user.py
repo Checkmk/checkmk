@@ -16,7 +16,7 @@ from freezegun import freeze_time
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
-from tests.testlib.rest_api_client import RestApiClient
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
@@ -1350,28 +1350,26 @@ def test_create_user_with_non_existing_custom_attribute(
     )
 
 
-def test_user_with_invalid_id(api_client: RestApiClient) -> None:
-    api_client.create_user(
+def test_user_with_invalid_id(clients: ClientRegistry) -> None:
+    clients.User.create(
         username="!@#@%)@!#&)!@*#$", fullname="Sym Bols", expect_ok=False
     ).assert_status_code(400)
 
 
-def test_openapi_edit_non_existing_user_regression(api_client: RestApiClient) -> None:
-    api_client.edit_user(
+def test_openapi_edit_non_existing_user_regression(clients: ClientRegistry) -> None:
+    clients.User.edit(
         "i_do_not_exists", fullname="I hopefully won't crash the site!", expect_ok=False
     ).assert_status_code(404)
 
 
-def test_openapi_all_authorized_sites(api_client: RestApiClient) -> None:
-    api_client.create_user(
+def test_openapi_all_authorized_sites(clients: ClientRegistry) -> None:
+    clients.User.create(
         username="user1", fullname="User 1", authorized_sites=["all"], expect_ok=True
     )
-    api_client.create_user(
+    clients.User.create(
         username="user2", fullname="User 2", authorized_sites=["NO_SITE"], expect_ok=True
     )
-    api_client.edit_user(
-        username="user2", fullname="User 2", authorized_sites=["all"], expect_ok=True
-    )
+    clients.User.edit(username="user2", fullname="User 2", authorized_sites=["all"], expect_ok=True)
 
 
 @pytest.fixture(name="mock_users_config")
@@ -1409,11 +1407,11 @@ def fixture_mock_user_connections_config(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.mark.usefixtures("mock_users_config", "mock_user_connections_config")
-def test_openapi_auth_type_of_saml_user(api_client: RestApiClient) -> None:
+def test_openapi_auth_type_of_saml_user(clients: ClientRegistry) -> None:
     """
     Notes:
          - A SAML user (currently) cannot be created via the REST API
          - Assume that the user is already created
     """
-    resp = api_client.show_user("saml.user@example.com")
+    resp = clients.User.get("saml.user@example.com")
     assert resp.json["extensions"]["auth_option"] == {"auth_type": ConnectorType.SAML2}

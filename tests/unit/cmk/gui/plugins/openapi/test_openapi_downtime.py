@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
 import json
-from typing import Tuple
 
 import pytest
 
-from tests.testlib.rest_api_client import DowntimeTestClient, RestApiClient
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
@@ -1048,10 +1047,9 @@ def test_openapi_downtime_invalid_single(
 @pytest.mark.usefixtures("with_host")
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_user_in_service_but_not_in_host_contact_group_regression(
-    api_client: RestApiClient,
-    downtime_client: DowntimeTestClient,
+    clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
-    with_user: Tuple[str, str],
+    with_user: tuple[str, str],
 ) -> None:
     """Tests whether a user can put a service into downtime, even if she has no access to the host
     the service is run on.
@@ -1060,28 +1058,23 @@ def test_openapi_user_in_service_but_not_in_host_contact_group_regression(
     doesn't regard permissions as of now."""
     username, password = with_user
 
-    api_client.request(
-        "post",
-        url="/domain-types/contact_group_config/actions/bulk-create/invoke",
-        body={
-            "entries": [
-                {
-                    "name": "host_contact_group",
-                    "alias": "host_contact_group",
-                    "customer": "provider",
-                },
-                {
-                    "name": "service_contact_group",
-                    "alias": "service_contact_group",
-                    "customer": "provider",
-                },
-            ]
-        },
+    clients.ContactGroup.bulk_create(
+        groups=(
+            {
+                "name": "host_contact_group",
+                "alias": "host_contact_group",
+                "customer": "provider",
+            },
+            {
+                "name": "service_contact_group",
+                "alias": "service_contact_group",
+                "customer": "provider",
+            },
+        )
     )
 
-    api_client.edit_user(username, contactgroups=["service_contact_group"])
-
-    api_client.edit_host(
+    clients.User.edit(username, contactgroups=["service_contact_group"])
+    clients.Host.edit(
         host_name="heute", attributes={"contactgroups": {"groups": ["host_contact_group"]}}
     )
 
@@ -1115,8 +1108,8 @@ def test_openapi_user_in_service_but_not_in_host_contact_group_regression(
     )
 
     with mock_livestatus():
-        downtime_client.set_credentials(username, password)
-        downtime_client.create_for_services(
+        clients.Downtime.set_credentials(username, password)
+        clients.Downtime.create_for_services(
             start_time=datetime.datetime.now(),
             end_time=datetime.datetime.now() + datetime.timedelta(minutes=5),
             recur="hour",

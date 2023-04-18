@@ -13,7 +13,7 @@ from unittest import mock
 
 import pytest
 
-from tests.testlib.rest_api_client import AuxTagTestClient
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
@@ -262,7 +262,7 @@ def test_non_supported_accept_header(base: str, aut_user_auth_wsgi_app: WebTestA
 
 
 # ========= WATO disabled Validation =========
-def test_wato_disabled_exception(auxtag_client: AuxTagTestClient, set_config: SetConfig) -> None:
+def test_wato_disabled_exception(clients: ClientRegistry, set_config: SetConfig) -> None:
     test_data: dict[str, Any] = {
         "aux_tag_id": "aux_tag_id_1",
         "title": "aux_tag_1",
@@ -270,7 +270,7 @@ def test_wato_disabled_exception(auxtag_client: AuxTagTestClient, set_config: Se
         "help": "HELP",
     }
     with set_config(wato_enabled=False):
-        resp = auxtag_client.create(
+        resp = clients.AuxTag.create(
             tag_data=test_data,
             expect_ok=False,
         )
@@ -283,14 +283,14 @@ def test_wato_disabled_exception(auxtag_client: AuxTagTestClient, set_config: Se
 
 
 # ========= Permission Validation =========
-def test_permission_exception(auxtag_client: AuxTagTestClient) -> None:
+def test_permission_exception(clients: ClientRegistry) -> None:
     def validate(*args, **kwargs):
         return False
 
     with mock.patch(
         "cmk.gui.plugins.openapi.restful_objects.permissions.BasePerm.validate", validate
     ):
-        resp = auxtag_client.get(aux_tag_id="ping", expect_ok=False)
+        resp = clients.AuxTag.get(aux_tag_id="ping", expect_ok=False)
 
     resp.assert_status_code(500)
 
@@ -304,9 +304,7 @@ def test_permission_exception(auxtag_client: AuxTagTestClient) -> None:
 
 
 # ========= Crash Reporting Tests =========
-def test_crash_report_with_post(
-    auxtag_client: AuxTagTestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_crash_report_with_post(clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch) -> None:
     exc_title = "The Wizard of Oz (1939)"
     exc_detail = "Toto, I've a feeling we're not in Kansas anymore."
 
@@ -323,7 +321,7 @@ def test_crash_report_with_post(
         "topic": "topic_1",
         "help": "HELP",
     }
-    resp = auxtag_client.create(
+    resp = clients.AuxTag.create(
         tag_data=test_data,
         expect_ok=False,
     )

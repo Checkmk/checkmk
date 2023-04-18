@@ -22,6 +22,26 @@ JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
 
 
+API_DOMAIN = Literal[
+    "licensing",
+    "activation_run",
+    "user_config",
+    "host_config",
+    "folder_config",
+    "aux_tag",
+    "time_period",
+    "rule",
+    "ruleset",
+    "host_tag_group",
+    "password",
+    "agent",
+    "downtime",
+    "host_group_config",
+    "service_group_config",
+    "contact_group_config",
+]
+
+
 def _only_set_keys(body: dict[str, Any | None]) -> dict[str, Any]:
     return {k: v for k, v in body.items() if v is not None}
 
@@ -269,164 +289,62 @@ class RestApiClient:
             del kwargs["body"]
         return self.request(**kwargs, url_is_complete=True, expect_ok=expect_ok)
 
-    def get_folder(self, folder_name: str, expect_ok: bool = True) -> Response:
-        return self.request(
-            "get",
-            url=f"/objects/folder_config/{folder_name}",
-            expect_ok=expect_ok,
-        )
-
-    def create_folder(
-        self,
-        folder_name: str,
-        title: str,
-        parent: str,
-        attributes: Mapping[str, Any] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url="/domain-types/folder_config/collections/all",
-            body={
-                "name": folder_name,
-                "title": title,
-                "parent": parent,
-                "attributes": attributes or {},
-            },
-            expect_ok=expect_ok,
-        )
-
-    def edit_folder(
-        self,
-        folder_name: str,
-        title: str,
-        attributes: Mapping[str, Any] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        etag = self.get_folder(folder_name).headers["ETag"]
-        headers = {"IF-Match": etag}
-        body = {"title": title, "attributes": attributes}
-        return self.request(
-            "put",
-            url=f"/objects/folder_config/{folder_name}",
-            headers=headers,
-            body={k: v for k, v in body.items() if v is not None},
-            expect_ok=expect_ok,
-        )
-
-    def show_host(
-        self, host_name: str, effective_attributes: bool = False, expect_ok: bool = True
-    ) -> Response:
-        return self.request(
-            "get",
-            url=f"/objects/host_config/{host_name}",
-            query_params={"effective_attributes": "true" if effective_attributes else "false"},
-        )
-
-    def create_host(
+    def get_graph(
         self,
         host_name: str,
-        folder: str = "/",
-        attributes: Mapping[str, Any] | None = None,
-        bake_agent: bool | None = None,
+        service_description: str,
+        type_: Literal["single_metric", "graph"],
+        time_range: TimeRange,
+        graph_or_metric_id: str,
+        site: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        if bake_agent is not None:
-            query_params = {"bake_agent": "1" if bake_agent else "0"}
-        else:
-            query_params = {}
-        return self.request(
-            "post",
-            url="/domain-types/host_config/collections/all",
-            query_params=query_params,
-            body={"host_name": host_name, "folder": folder, "attributes": attributes or {}},
-            expect_ok=expect_ok,
-        )
-
-    def bulk_create_hosts(self, *args: JSON, expect_ok: bool = True) -> Response:
-        return self.request(
-            "post",
-            url="/domain-types/host_config/actions/bulk-create/invoke",
-            body={"entries": args},
-            expect_ok=expect_ok,
-        )
-
-    def create_cluster(
-        self,
-        host_name: str,
-        folder: str = "/",
-        nodes: list[str] | None = None,
-        attributes: Mapping[str, Any] | None = None,
-        bake_agent: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        if bake_agent is not None:
-            query_params = {"bake_agent": "1" if bake_agent else "0"}
-        else:
-            query_params = {}
-        return self.request(
-            "post",
-            url="/domain-types/host_config/collections/clusters",
-            query_params=query_params,
-            body={
-                "host_name": host_name,
-                "folder": folder,
-                "nodes": nodes or [],
-                "attributes": attributes or {},
-            },
-            expect_ok=expect_ok,
-        )
-
-    def get_host(self, host_name: str, expect_ok: bool = True) -> Response:
-        return self.request("get", url="/objects/host_config/" + host_name, expect_ok=expect_ok)
-
-    def edit_host(
-        self,
-        host_name: str,
-        folder: str | None = "/",
-        attributes: Mapping[str, Any] | None = None,
-        update_attributes: Mapping[str, Any] | None = None,
-        remove_attributes: Sequence[str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        etag = self.get_host(host_name).headers["ETag"]
-        headers = {"IF-Match": etag, "Accept": "application/json"}
         body = {
-            "attributes": attributes,
-            "update_attributes": update_attributes,
-            "remove_attributes": remove_attributes,
+            "host_name": host_name,
+            "service_description": service_description,
+            "type": type_,
+            "time_range": time_range,
         }
+        if type_ == "graph":
+            body["graph_id"] = graph_or_metric_id
+        if type_ == "single_metric":
+            body["metric_id"] = graph_or_metric_id
+
+        if site is not None:
+            body["site"] = site
+
         return self.request(
-            "put",
-            url="/objects/host_config/" + host_name,
-            body={k: v for k, v in body.items() if v is not None},
-            expect_ok=expect_ok,
-            headers=headers,
+            "post", url="/domain-types/metric/actions/get/invoke", body=body, expect_ok=expect_ok
         )
 
-    def bulk_edit_hosts(self, *args: JSON, expect_ok: bool = True) -> Response:
+
+CLIENTS: dict = {}
+
+
+def register_client(client):
+    CLIENTS[client.__name__.replace("Client", "")] = client
+
+    def client_register():
+        return client
+
+    return client_register
+
+
+@register_client
+class LicensingClient(RestApiClient):
+    domain: API_DOMAIN = "licensing"
+
+    def call_online_verification(self, expect_ok: bool = False) -> Response:
         return self.request(
-            "put",
-            url="/domain-types/host_config/actions/bulk-update/invoke",
-            body={"entries": args},
+            "post",
+            url="/domain-types/licensing/actions/verify/invoke",
             expect_ok=expect_ok,
         )
 
-    def edit_host_property(
-        self, host_name: str, property_name: str, property_value: Any, expect_ok: bool = True
-    ) -> Response:
-        etag = self.get_host(host_name).headers["ETag"]
-        headers = {"IF-Match": etag}
-        return self.request(
-            "put",
-            url=f"/objects/host_config/{host_name}/properties/{property_name}",
-            body=property_value,
-            headers=headers,
-            expect_ok=expect_ok,
-        )
 
-    def delete_host(self, host_name: str) -> Response:
-        return self.request("delete", url=f"/objects/host_config/{host_name}")
+@register_client
+class ActivateChangesClient(RestApiClient):
+    domain: API_DOMAIN = "activation_run"
 
     def activate_changes(
         self,
@@ -439,7 +357,7 @@ class RestApiClient:
             sites = []
         return self.request(
             "post",
-            url="/domain-types/activation_run/actions/activate-changes/invoke",
+            url=f"/domain-types/{self.domain}/actions/activate-changes/invoke",
             body={
                 "redirect": redirect,
                 "sites": sites,
@@ -458,7 +376,7 @@ class RestApiClient:
             sites = []
         response = self.request(
             "post",
-            url="/domain-types/activation_run/actions/activate-changes/invoke",
+            url=f"/domain-types/{self.domain}/actions/activate-changes/invoke",
             body={
                 "redirect": True,
                 "sites": sites,
@@ -496,46 +414,17 @@ class RestApiClient:
 
         return result
 
-    def call_online_verification(self, expect_ok: bool = False) -> Response:
-        return self.request(
-            "post",
-            url="/domain-types/licensing/actions/verify/invoke",
-            expect_ok=expect_ok,
-        )
 
-    def get_graph(
-        self,
-        host_name: str,
-        service_description: str,
-        type_: Literal["single_metric", "graph"],
-        time_range: TimeRange,
-        graph_or_metric_id: str,
-        site: str | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        body = {
-            "host_name": host_name,
-            "service_description": service_description,
-            "type": type_,
-            "time_range": time_range,
-        }
-        if type_ == "graph":
-            body["graph_id"] = graph_or_metric_id
-        if type_ == "single_metric":
-            body["metric_id"] = graph_or_metric_id
-
-        if site is not None:
-            body["site"] = site
-
-        return self.request(
-            "post", url="/domain-types/metric/actions/get/invoke", body=body, expect_ok=expect_ok
-        )
+@register_client
+class UserClient(RestApiClient):
+    domain: API_DOMAIN = "user_config"
 
     # TODO: add optional parameters
-    def create_user(
+    def create(
         self,
         username: str,
         fullname: str,
+        customer: str = "provider",
         authorized_sites: Sequence[str] | None = None,
         contactgroups: Sequence[str] | None = None,
         auth_option: dict[str, str] | None = None,
@@ -560,47 +449,24 @@ class RestApiClient:
             body["roles"] = roles
 
         if version.is_managed_edition():
-            body["customer"] = "provider"
+            body["customer"] = customer
 
         return self.request(
             "post",
-            url="/domain-types/user_config/collections/all",
+            url=f"/domain-types/{self.domain}/collections/all",
             body=body,
             expect_ok=expect_ok,
         )
 
-    def list_rulesets(
-        self,
-        fulltext: str | None = None,
-        folder: str | None = None,
-        deprecated: bool | None = None,
-        used: bool | None = None,
-        group: str | None = None,
-        name: str | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        query_params = urllib.parse.urlencode(
-            _only_set_keys(
-                {
-                    "fulltext": fulltext,
-                    "folder": folder,
-                    "deprecated": deprecated,
-                    "used": used,
-                    "group": group,
-                    "name": name,
-                }
-            )
-        )
-
+    def get(self, username: str, expect_ok: bool = True) -> Response:
         return self.request(
-            "get", url="/domain-types/ruleset/collections/all?" + query_params, expect_ok=expect_ok
+            "get",
+            url=f"/objects/{self.domain}/{username}",
+            expect_ok=expect_ok,
         )
-
-    def show_user(self, username: str, expect_ok: bool = True) -> Response:
-        return self.request("get", url=f"/objects/user_config/{username}", expect_ok=expect_ok)
 
     # TODO: add additional parameters
-    def edit_user(
+    def edit(
         self,
         username: str,
         fullname: str | None = None,
@@ -618,7 +484,7 @@ class RestApiClient:
 
         # if there is no object, there's probably no etag.
         # But we want the 404 from the request below!
-        etag = self.show_user(username, expect_ok=expect_ok).headers.get("E-Tag")
+        etag = self.get(username, expect_ok=expect_ok).headers.get("E-Tag")
         if etag is not None:
             headers = {"If-Match": etag}
         else:
@@ -626,23 +492,190 @@ class RestApiClient:
 
         return self.request(
             "put",
-            url=f"/objects/user_config/{username}",
+            url=f"/objects/{self.domain}/{username}",
             body={k: v for k, v in body.items() if v is not None},
             headers=headers,
             expect_ok=expect_ok,
         )
 
-    def bake_and_sign_agent(self, key_id: int, passphrase: str, expect_ok: bool = True) -> Response:
+
+@register_client
+class HostClient(RestApiClient):
+    domain: API_DOMAIN = "host_config"
+
+    def get(
+        self, host_name: str, effective_attributes: bool = False, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/host_config/{host_name}",
+            query_params={"effective_attributes": "true" if effective_attributes else "false"},
+            expect_ok=expect_ok,
+        )
+
+    def create(
+        self,
+        host_name: str,
+        folder: str = "/",
+        attributes: Mapping[str, Any] | None = None,
+        bake_agent: bool | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        if bake_agent is not None:
+            query_params = {"bake_agent": "1" if bake_agent else "0"}
+        else:
+            query_params = {}
         return self.request(
             "post",
-            url="/domain-types/agent/actions/bake_and_sign/invoke",
-            body={"key_id": key_id, "passphrase": passphrase},
+            url=f"/domain-types/{self.domain}/collections/all",
+            query_params=query_params,
+            body={"host_name": host_name, "folder": folder, "attributes": attributes or {}},
+            expect_ok=expect_ok,
+        )
+
+    def bulk_create(self, *args: JSON, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/bulk-create/invoke",
+            body={"entries": args},
+            expect_ok=expect_ok,
+        )
+
+    def create_cluster(
+        self,
+        host_name: str,
+        folder: str = "/",
+        nodes: list[str] | None = None,
+        attributes: Mapping[str, Any] | None = None,
+        bake_agent: bool | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        if bake_agent is not None:
+            query_params = {"bake_agent": "1" if bake_agent else "0"}
+        else:
+            query_params = {}
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/clusters",
+            query_params=query_params,
+            body={
+                "host_name": host_name,
+                "folder": folder,
+                "nodes": nodes or [],
+                "attributes": attributes or {},
+            },
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        host_name: str,
+        folder: str | None = "/",
+        attributes: Mapping[str, Any] | None = None,
+        update_attributes: Mapping[str, Any] | None = None,
+        remove_attributes: Sequence[str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        etag = self.get(host_name).headers["ETag"]
+        headers = {"IF-Match": etag, "Accept": "application/json"}
+        body = {
+            "attributes": attributes,
+            "update_attributes": update_attributes,
+            "remove_attributes": remove_attributes,
+        }
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/" + host_name,
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+            headers=headers,
+        )
+
+    def bulk_edit(self, *args: JSON, expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/domain-types/{self.domain}/actions/bulk-update/invoke",
+            body={"entries": args},
+            expect_ok=expect_ok,
+        )
+
+    def edit_property(
+        self,
+        host_name: str,
+        property_name: str,
+        property_value: Any,
+        expect_ok: bool = True,
+    ) -> Response:
+        etag = self.get(host_name).headers["ETag"]
+        headers = {"IF-Match": etag}
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{host_name}/properties/{property_name}",
+            body=property_value,
+            headers=headers,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, host_name: str) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{host_name}",
+        )
+
+
+@register_client
+class FolderClient(RestApiClient):
+    domain: API_DOMAIN = "folder_config"
+
+    def get(self, folder_name: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{folder_name}",
+            expect_ok=expect_ok,
+        )
+
+    def create(
+        self,
+        folder_name: str,
+        title: str,
+        parent: str,
+        attributes: Mapping[str, Any] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body={
+                "name": folder_name,
+                "title": title,
+                "parent": parent,
+                "attributes": attributes or {},
+            },
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        folder_name: str,
+        title: str,
+        attributes: Mapping[str, Any] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        etag = self.get(folder_name).headers["ETag"]
+        headers = {"IF-Match": etag}
+        body = {"title": title, "attributes": attributes}
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{folder_name}",
+            headers=headers,
+            body={k: v for k, v in body.items() if v is not None},
             expect_ok=expect_ok,
         )
 
 
-class AuxTagTestClient(RestApiClient):
-    domain: Literal["aux_tag"] = "aux_tag"
+@register_client
+class AuxTagClient(RestApiClient):
+    domain: API_DOMAIN = "aux_tag"
 
     def get(self, aux_tag_id: str, expect_ok: bool = True) -> Response:
         return self.request(
@@ -697,8 +730,9 @@ class AuxTagTestClient(RestApiClient):
         )
 
 
-class TimePeriodTestClient(RestApiClient):
-    domain: Literal["time_period"] = "time_period"
+@register_client
+class TimePeriodClient(RestApiClient):
+    domain: API_DOMAIN = "time_period"
 
     def get(self, time_period_id: str, expect_ok: bool = True) -> Response:
         return self.request(
@@ -744,8 +778,9 @@ class TimePeriodTestClient(RestApiClient):
         )
 
 
-class RulesTestClient(RestApiClient):
-    domain: Literal["rule"] = "rule"
+@register_client
+class RuleClient(RestApiClient):
+    domain: API_DOMAIN = "rule"
 
     def get(self, rule_id: str, expect_ok: bool = True) -> Response:
         return self.request(
@@ -754,7 +789,7 @@ class RulesTestClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def list_rules(self, ruleset: str, expect_ok: bool = True) -> Response:
+    def list(self, ruleset: str, expect_ok: bool = True) -> Response:
         url = f"/domain-types/{self.domain}/collections/all"
         if ruleset:
             url = f"/domain-types/{self.domain}/collections/all?ruleset_name={ruleset}"
@@ -805,21 +840,15 @@ class RulesTestClient(RestApiClient):
     def move(self, rule_id: str, options: dict[str, Any], expect_ok: bool = True) -> Response:
         return self.request(
             "post",
-            url=f"/objects/rule/{rule_id}/actions/move/invoke",
+            url=f"/objects/{self.domain}/{rule_id}/actions/move/invoke",
             body=options,
             expect_ok=expect_ok,
         )
 
 
-class RulesetTestClient(RestApiClient):
-    domain: Literal["ruleset"] = "ruleset"
-
-    def get_all(self, search_options: str | None = None, expect_ok: bool = True) -> Response:
-        url = f"/domain-types/{self.domain}/collections/all"
-        if search_options is not None:
-            url = f"/domain-types/{self.domain}/collections/all{search_options}"
-
-        return self.request("get", url=url, expect_ok=expect_ok)
+@register_client
+class RulesetClient(RestApiClient):
+    domain: API_DOMAIN = "ruleset"
 
     def get(self, ruleset_id: str, expect_ok: bool = True) -> Response:
         return self.request(
@@ -828,27 +857,40 @@ class RulesetTestClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def list(
+        self,
+        fulltext: str | None = None,
+        folder: str | None = None,
+        deprecated: bool | None = None,
+        used: bool | None = None,
+        group: str | None = None,
+        name: str | None = None,
+        search_options: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        url = f"/domain-types/{self.domain}/collections/all"
+        if search_options is not None:
+            url = f"/domain-types/{self.domain}/collections/all{search_options}"
+        else:
+            query_params = urllib.parse.urlencode(
+                _only_set_keys(
+                    {
+                        "fulltext": fulltext,
+                        "folder": folder,
+                        "deprecated": deprecated,
+                        "used": used,
+                        "group": group,
+                        "name": name,
+                    }
+                )
+            )
+            url = f"/domain-types/{self.domain}/collections/all?" + query_params
+        return self.request("get", url=url, expect_ok=expect_ok)
 
-class ContactGroupTestClient(RestApiClient):
-    domain: Literal["contact_group_config"] = "contact_group_config"
 
-    def create(self, name: str, alias: str, expect_ok: bool = True) -> Response:
-        body = {"name": name, "alias": alias}
-        if version.is_managed_edition():
-            body["customer"] = "provider"
-
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/collections/all",
-            body=body,
-            expect_ok=expect_ok,
-        )
-
-    # TODO: Add other contact group endpoints
-
-
-class HostTagGroupTestClient(RestApiClient):
-    domain: Literal["host_tag_group"] = "host_tag_group"
+@register_client
+class HostTagGroupClient(RestApiClient):
+    domain: API_DOMAIN = "host_tag_group"
 
     def create(
         self,
@@ -911,8 +953,9 @@ class HostTagGroupTestClient(RestApiClient):
         )
 
 
-class PasswordTestClient(RestApiClient):
-    domain: Literal["password"] = "password"
+@register_client
+class PasswordClient(RestApiClient):
+    domain: API_DOMAIN = "password"
 
     def create(
         self,
@@ -940,26 +983,36 @@ class PasswordTestClient(RestApiClient):
         )
 
 
-class AgentTestClient(RestApiClient):
-    domain: Literal["agent"] = "agent"
+@register_client
+class AgentClient(RestApiClient):
+    domain: API_DOMAIN = "agent"
 
     def bake(self, expect_ok: bool = True) -> Response:
         return self.request(
             "post",
-            url="/domain-types/agent/actions/bake/invoke",
+            url=f"/domain-types/{self.domain}/actions/bake/invoke",
             expect_ok=expect_ok,
         )
 
     def bake_status(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
-            url="/domain-types/agent/actions/baking_status/invoke",
+            url=f"/domain-types/{self.domain}/actions/baking_status/invoke",
+            expect_ok=expect_ok,
+        )
+
+    def bake_and_sign(self, key_id: int, passphrase: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/bake_and_sign/invoke",
+            body={"key_id": key_id, "passphrase": passphrase},
             expect_ok=expect_ok,
         )
 
 
-class DowntimeTestClient(RestApiClient):
-    domain: Literal["downtime"] = "downtime"
+@register_client
+class DowntimeClient(RestApiClient):
+    domain: API_DOMAIN = "downtime"
 
     def create_for_host(
         self,
@@ -981,7 +1034,10 @@ class DowntimeTestClient(RestApiClient):
             "downtime_type": "host",
         }
         return self.request(
-            "post", url="/domain-types/downtime/collections/host", body=body, expect_ok=expect_ok
+            "post",
+            url=f"/domain-types/{self.domain}/collections/host",
+            body=body,
+            expect_ok=expect_ok,
         )
 
     def create_for_services(
@@ -1006,5 +1062,96 @@ class DowntimeTestClient(RestApiClient):
             "downtime_type": "service",
         }
         return self.request(
-            "post", url="/domain-types/downtime/collections/service", body=body, expect_ok=expect_ok
+            "post",
+            url=f"/domain-types/{self.domain}/collections/service",
+            body=body,
+            expect_ok=expect_ok,
         )
+
+
+class GroupConfig(RestApiClient):
+    domain: API_DOMAIN
+
+    def bulk_create(self, groups: tuple[dict[str, str], ...], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            f"/domain-types/{self.domain}/actions/bulk-create/invoke",
+            body={"entries": groups},
+            expect_ok=expect_ok,
+        )
+
+    def list(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def bulk_edit(self, groups: tuple[dict[str, str], ...], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            f"/domain-types/{self.domain}/actions/bulk-update/invoke",
+            body={"entries": groups},
+            expect_ok=expect_ok,
+        )
+
+    def create(
+        self,
+        name: str,
+        alias: str | None = None,
+        customer: str = "provider",
+        expect_ok: bool = True,
+    ) -> Response:
+        body = {"name": name}
+        if alias is not None:
+            body.update({"alias": alias})
+        if version.is_managed_edition():
+            body.update({"customer": customer})
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+
+@register_client
+class HostGroupClient(GroupConfig):
+    domain: Literal["host_group_config"] = "host_group_config"
+
+
+@register_client
+class ServiceGroupClient(GroupConfig):
+    domain: Literal["service_group_config"] = "service_group_config"
+
+
+@register_client
+class ContactGroupClient(GroupConfig):
+    domain: Literal["contact_group_config"] = "contact_group_config"
+
+
+@dataclasses.dataclass
+class ClientRegistry:
+    Licensing: LicensingClient
+    ActivateChanges: ActivateChangesClient
+    User: UserClient
+    Host: HostClient
+    Folder: FolderClient
+    AuxTag: AuxTagClient
+    TimePeriod: TimePeriodClient
+    Rule: RuleClient
+    Ruleset: RulesetClient
+    HostTagGroup: HostTagGroupClient
+    Password: PasswordClient
+    Agent: AgentClient
+    Downtime: DowntimeClient
+    HostGroup: HostGroupClient
+    ServiceGroup: ServiceGroupClient
+    ContactGroup: ContactGroupClient
+
+
+def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
+    return ClientRegistry(
+        **{name: cls(request_handler, url_prefix) for name, cls in CLIENTS.items()}
+    )

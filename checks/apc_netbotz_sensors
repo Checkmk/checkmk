@@ -105,17 +105,11 @@ factory_settings["apc_netbotz_sensors_temp_default_levels"] = {
 
 
 def parse_apc_netbotz_sensors(info):
-    map_sensors = {
-        "1": "temp",
-        "2": "humidity",
-        "3": "dewpoint",
-    }
     parsed = {}
-    for oid_item, reading_str, label, plugged_in_state in info:
-        if plugged_in_state:
-            item_info = oid_item.split(".")
-            item_type = map_sensors[item_info[0]]
-            item_name = " ".join(item_info[2:])
+    for item_type, block in zip(("temp", "humidity", "dewpoint"), info):
+        for item_name, reading_str, label, plugged_in_state in block:
+            if not plugged_in_state:
+                continue
             parsed.setdefault(item_type, {}).setdefault(
                 item_name, {"reading": float(reading_str) / 10, "label": label}
             )
@@ -136,6 +130,13 @@ def check_apc_netbotz_sensors_temp(item, params, parsed, what):
     return None
 
 
+_OIDS = [
+    "1",  # NETBOTZV2-MIB::*SensorId
+    "2",  # NETBOTZV2-MIB::*SensorValue
+    "4",  # NETBOTZV2-MIB::*SensorLabel
+    "7",  # NETBOTZV2-MIB::*ValueStr; empty if sensor is not plugged in
+]
+
 check_info["apc_netbotz_sensors"] = {
     "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
     "parse_function": parse_apc_netbotz_sensors,
@@ -144,20 +145,11 @@ check_info["apc_netbotz_sensors"] = {
         item, params, parsed, "temp"
     ),
     "service_description": "Temperature %s",
-    "snmp_info": (
-        ".1.3.6.1.4.1.5528.100.4.1",
-        [
-            "1.1",  # temp
-            "2.1",  # humi
-            "3.1",  # dewPoint
-        ],
-        [
-            "1",  # NETBOTZV2-MIB::*SensorId
-            "2",  # NETBOTZV2-MIB::*SensorValue
-            "4",  # NETBOTZV2-MIB::*SensorLabel
-            "7",  # NETBOTZV2-MIB::*ValueStr; empty if sensor is not plugged in
-        ],
-    ),
+    "snmp_info": [
+        (".1.3.6.1.4.1.5528.100.4.1.1.1", _OIDS),
+        (".1.3.6.1.4.1.5528.100.4.1.2.1", _OIDS),
+        (".1.3.6.1.4.1.5528.100.4.1.3.1", _OIDS),
+    ],
     "default_levels_variable": "apc_netbotz_sensors_temp_default_levels",
     "group": "temperature",
 }

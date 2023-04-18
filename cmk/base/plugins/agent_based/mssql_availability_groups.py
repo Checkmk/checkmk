@@ -60,18 +60,6 @@ def _match_error_message(string_table: StringTable) -> ErrorMessage | None:
 
 
 def parse_mssql_availability_groups(string_table: StringTable) -> Section | ErrorMessage:
-    """
-    >>> parse_mssql_availability_groups(
-    ...   [["AGTEST_1", "SQL01\\\\TESTINSTANCE1", "2", "HEALTHY", "ONLINE"],
-    ...    ["AGTEST_2", "SQL01\\\\TESTINSTANCE1", "2", "HEALTHY", "ONLINE"],
-    ...    ["AGTEST_3", "SQL01\\\\TESTINSTANCE2", "0", "NOT_HEALTHY", "ONLINE_IN_PROGRESS"]]
-    ... ) == {
-    ...   "AGTEST_1": AGAttributes("SQL01\\\\TESTINSTANCE1", SyncState.HEALTHY),
-    ...   "AGTEST_2": AGAttributes("SQL01\\\\TESTINSTANCE1", SyncState.HEALTHY),
-    ...   "AGTEST_3": AGAttributes("SQL01\\\\TESTINSTANCE2", SyncState.NOT_HEALTHY),
-    ... }
-    True
-    """
     if (error_msg := _match_error_message(string_table)) is not None:
         return error_msg
 
@@ -87,23 +75,6 @@ def discover_mssql_availability_groups(section: Section | ErrorMessage) -> Disco
 
 
 def check_mssql_availability_groups(item: str, section: Section | ErrorMessage) -> CheckResult:
-    """
-    >>> section = {
-    ...   "AGTEST_1": AGAttributes("SQL01\\\\TESTINSTANCE1", SyncState.HEALTHY),
-    ...   "AGTEST_2": AGAttributes("SQL01\\\\TESTINSTANCE1", SyncState.HEALTHY),
-    ...   "AGTEST_3": AGAttributes("SQL01\\\\TESTINSTANCE2", SyncState.NOT_HEALTHY),
-    ... }
-    >>> list(check_mssql_availability_groups("AGTEST_1", section)) == [
-    ...   Result(state=State.OK, summary="Primary replica: SQL01\\\\TESTINSTANCE1"),
-    ...   Result(state=State.OK, summary="Synchronization state: HEALTHY"),
-    ... ]
-    True
-    >>> list(check_mssql_availability_groups("AGTEST_3", section)) == [
-    ...   Result(state=State.OK, summary="Primary replica: SQL01\\\\TESTINSTANCE2"),
-    ...   Result(state=State.CRIT, summary="Synchronization state: NOT_HEALTHY"),
-    ... ]
-    True
-    """
     if isinstance(section, ErrorMessage):
         yield Result(
             state=State.UNKNOWN,

@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Mapping
 from copy import deepcopy
 
 import pytest
 from freezegun import freeze_time
+from pytest import MonkeyPatch
 
 from cmk.base.plugins.agent_based import fileinfo as fileinfo_plugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -539,9 +541,11 @@ def test_fileinfo_discovery(
     info: StringTable,
     params: DiscoveryParams,
     expected_result: DiscoveryResult,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
+    monkeypatch.setattr(time, "localtime", time.gmtime)
     discovery_result = fileinfo_utils.discovery_fileinfo(params, section)
     assert list(discovery_result) == expected_result
 
@@ -828,9 +832,11 @@ def test_fileinfo_group_discovery(
     info: StringTable,
     params: DiscoveryParams,
     expected_result: DiscoveryResult,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
+    monkeypatch.setattr(time, "localtime", time.gmtime)
     discovery_result = fileinfo_utils.discovery_fileinfo_groups(params, section)
     assert list(discovery_result) == expected_result
 
@@ -967,8 +973,10 @@ def test_fileinfo_groups_check(
     item: str,
     params: Mapping[str, object],
     expected_result: CheckResult,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
+    monkeypatch.setattr(time, "localtime", time.gmtime)
     check_result = fileinfo_plugin.check_fileinfo_groups(item, params, section)
     assert list(check_result) == expected_result

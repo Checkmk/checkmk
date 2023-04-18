@@ -22,6 +22,7 @@ __all__ = [
     "analyse_cluster_labels",
     "discover_host_labels",
     "do_load_labels",
+    "rewrite_cluster_host_labels_file",
 ]
 
 
@@ -74,6 +75,23 @@ def _merge_cluster_labels(
 ) -> Mapping[str, _TLabel]:
     """A cluster has all its nodes labels. Last node wins."""
     return {name: label for node_labels in all_node_labels for name, label in node_labels.items()}
+
+
+def rewrite_cluster_host_labels_file(
+    nodes: Iterable[HostName],
+    *,
+    clusters_of: Mapping[HostName, Iterable[HostName]],
+    nodes_of: Mapping[HostName, Iterable[HostName]],
+) -> None:
+    affected_clusters = {
+        cluster for node_name in nodes for cluster in clusters_of.get(node_name, ())
+    }
+    for cluster in affected_clusters:
+        DiscoveredHostLabelsStore(cluster).save(
+            _merge_cluster_labels(
+                [DiscoveredHostLabelsStore(node_name).load() for node_name in nodes_of[cluster]]
+            )
+        )
 
 
 def analyse_host_labels(

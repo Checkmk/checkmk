@@ -228,6 +228,11 @@ class AutomationDiscovery(DiscoveryAutomation):
                 # make the service reflect the new state as soon as possible.
                 self._trigger_discovery_check(config_cache, hostname)
 
+        cluster_info = config_cache.get_cluster_cache_info()
+        discovery.rewrite_cluster_host_labels_file(
+            hostnames, clusters_of=cluster_info.clusters_of, nodes_of=cluster_info.nodes_of
+        )
+
         return ServiceDiscoveryResult(results)
 
 

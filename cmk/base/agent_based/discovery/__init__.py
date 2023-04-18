@@ -5,6 +5,7 @@
 
 from . import livestatus
 from ._discovery import execute_check_discovery
+from ._host_labels import rewrite_cluster_host_labels_file
 from .autodiscovery import automation_discovery, discover_marked_hosts, get_host_services
 from .commandline import commandline_discovery
 from .preview import CheckPreview, get_check_preview
@@ -20,5 +21,6 @@ __all__ = [
     "execute_check_discovery",
     "get_check_preview",
     "get_host_services",
+    "rewrite_cluster_host_labels_file",
     "livestatus",
 ]

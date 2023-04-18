@@ -1585,10 +1585,10 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
                 html.icon_button(edit_url, _("Edit this backup target"), "edit")
                 html.icon_button(delete_url, _("Delete this backup target"), "delete")
 
-                table.cell(_("ID"), target.ident, css=["narrow nowrap"])
-                table.cell(_("Title"), target.title, css=["narrow nowrap"])
-                table.cell(_("Type"), target.render_type())
-                table.cell(_("Destination"), target.render_destination())
+            table.cell(_("ID"), target.ident, css=["narrow nowrap"])
+            table.cell(_("Title"), target.title, css=["narrow nowrap"])
+            table.cell(_("Type"), target.render_type())
+            table.cell(_("Destination"), target.render_destination())
 
 
 class PageBackupTargets:

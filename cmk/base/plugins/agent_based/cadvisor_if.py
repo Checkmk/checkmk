@@ -25,11 +25,11 @@ _RESULTS_TO_ABANDON = {
 }
 _METRICS_TO_KEEP = {
     "in",
-    "if_in_discards",
-    "if_in_errors",
+    "indisc",
+    "inerr",
     "out",
-    "if_out_discards",
-    "if_out_errors",
+    "outdisc",
+    "outerr",
 }
 
 

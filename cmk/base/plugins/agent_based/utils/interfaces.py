@@ -21,7 +21,7 @@ from dataclasses import asdict, dataclass, fields, replace
 from functools import partial
 from typing import Any, assert_never, Literal
 from typing import Mapping as TypingMapping
-from typing import TypedDict, TypeVar
+from typing import ParamSpec, TypedDict, TypeVar
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -1356,6 +1356,57 @@ def _check_speed(attributes: Attributes, targetspeed: int | None) -> Result:
     return Result(state=State.OK, summary="Speed: %s" % (attributes.speed_as_text or "unknown"))
 
 
+_TCheckInterfaceParams = ParamSpec("_TCheckInterfaceParams")
+
+
+_METRICS_TO_LEGACY_MAP = {
+    "if_in_discards": "indisc",
+    "if_in_errors": "inerr",
+    "if_out_discards": "outdisc",
+    "if_out_errors": "outerr",
+    "if_in_mcast": "inmcast",
+    "if_in_bcast": "inbcast",
+    "if_out_mcast": "outmcast",
+    "if_out_bcast": "outbcast",
+    "if_in_unicast": "inucast",
+    "if_in_non_unicast": "innucast",
+    "if_out_unicast": "outucast",
+    "if_out_non_unicast": "outnucast",
+}
+
+
+# This is a workaround for the following problem: livestatus in combination with the Nagios core
+# only reports those metrics which are currently still updated. Metrics which were once produced but
+# are not updated anylonger are currently not reported in the livestatus metrics column. Hence,
+# renaming metrics currently leads to a loss of historic data in the CRE, even if there is a
+# corresponding translation. This issue will hopefully be eliminated in the 2.3. Once this is the
+# case, we can remove _rename_metrics_to_legacy.
+def _rename_metrics_to_legacy(
+    check_interfaces: Callable[_TCheckInterfaceParams, type_defs.CheckResult]
+) -> Callable[_TCheckInterfaceParams, type_defs.CheckResult]:
+    def rename_metrics_to_legacy(
+        *args: _TCheckInterfaceParams.args,
+        **kwargs: _TCheckInterfaceParams.kwargs,
+    ) -> type_defs.CheckResult:
+        yield from (
+            Metric(
+                name=_METRICS_TO_LEGACY_MAP.get(
+                    output.name,
+                    output.name,
+                ),
+                value=output.value,
+                levels=output.levels,
+                boundaries=output.boundaries,
+            )
+            if isinstance(output, Metric)
+            else output
+            for output in check_interfaces(*args, **kwargs)
+        )
+
+    return rename_metrics_to_legacy
+
+
+@_rename_metrics_to_legacy
 def check_single_interface(
     item: str,
     params: Mapping[str, Any],

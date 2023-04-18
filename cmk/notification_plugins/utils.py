@@ -140,7 +140,7 @@ def html_escape_context(context):
         if varname in unescaped_variables:
             return value
         if varname in permissive_variables:
-            return escape_permissive(value)
+            return escape_permissive(value, escape_links=False)
         return escape(value)
 
     for variable, value in context.items():

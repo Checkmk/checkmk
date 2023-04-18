@@ -24,6 +24,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 class SyncState(Enum):
     HEALTHY = "HEALTHY"
     NOT_HEALTHY = "NOT_HEALTHY"
+    PARTIALLY_HEALTHY = "PARTIALLY_HEALTHY"
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,7 @@ Section = Mapping[str, AGAttributes]
 _SYNC_STATE_MAPPING: Final[Mapping] = {
     SyncState.HEALTHY: State.OK,
     SyncState.NOT_HEALTHY: State.CRIT,
+    SyncState.PARTIALLY_HEALTHY: State.WARN,
 }
 
 _ERROR_REGEX = regex(r"(.*) ERROR: (.*)")

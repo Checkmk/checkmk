@@ -88,7 +88,7 @@ public:
     bool all_of_contacts(
         const std::function<bool(const IContact &)> &pred) const override;
 
-    std::unique_ptr<User> find_user(const std::string &name) override;
+    std::unique_ptr<const User> find_user(const std::string &name) override;
 
     std::chrono::system_clock::time_point last_logfile_rotation()
         const override;

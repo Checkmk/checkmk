@@ -142,7 +142,7 @@ bool NagiosCore::all_of_contacts(
         [&pred](const auto &entry) { return pred(*entry.second); });
 }
 
-std::unique_ptr<User> NagiosCore::find_user(const std::string &name) {
+std::unique_ptr<const User> NagiosCore::find_user(const std::string &name) {
     if (const auto *ctc = find_contact(name)) {
         return std::make_unique<AuthUser>(
             *ctc, _authorization._service, _authorization._group,

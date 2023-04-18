@@ -105,7 +105,8 @@ class DummyMonitoringCore : public MonitoringCore {
         const std::function<bool(const IContact &)> & /*pred*/) const override {
         return true;
     }
-    std::unique_ptr<User> find_user(const std::string & /*name*/) override {
+    std::unique_ptr<const User> find_user(
+        const std::string & /*name*/) override {
         return {};
     }
 

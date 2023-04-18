@@ -675,6 +675,9 @@ class JoinCell(Cell):
     def title(self, use_short: bool = True) -> str:
         return self._custom_title or self.join_value
 
+    def tooltip_title(self) -> str:
+        return self.title()
+
     def export_title(self) -> str:
         serv_painter = re.sub(r"[^\w]", "_", self.title().lower())
         return f"{self._painter_name}.{serv_painter}"

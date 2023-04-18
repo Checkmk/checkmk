@@ -48,6 +48,18 @@ from cmk.base.plugins.agent_based.mssql_availability_groups import (
         ),
         pytest.param(
             [
+                ["Some-name", "SQL\\\\SOME-INSTANCE-001", "1", "PARTIALLY_HEALTHY", "ONLINE"],
+            ],
+            {
+                "Some-name": AGAttributes(
+                    primary_replica="SQL\\\\SOME-INSTANCE-001",
+                    sync_state=SyncState.PARTIALLY_HEALTHY,
+                )
+            },
+            id="Partially healthy sync state",
+        ),
+        pytest.param(
+            [
                 ["SQL\\\\SOME-INSTANCE-001 ERROR: Danger danger"],
             ],
             ErrorMessage(instance="SQL\\\\SOME-INSTANCE-001", message="Danger danger"),
@@ -118,6 +130,22 @@ def test_discover_mssql_availability_groups(
                 ),
             ],
             id="Unhealthy sync state is CRIT",
+        ),
+        pytest.param(
+            {
+                "Some-name": AGAttributes(
+                    primary_replica="SQL\\\\SOME-INSTANCE-001",
+                    sync_state=SyncState.PARTIALLY_HEALTHY,
+                )
+            },
+            [
+                Result(state=State.OK, summary="Primary replica: SQL\\\\SOME-INSTANCE-001"),
+                Result(
+                    state=State.WARN,
+                    summary="Synchronization state: PARTIALLY_HEALTHY",
+                ),
+            ],
+            id="Partially healthy sync state is WARN",
         ),
         pytest.param(
             ErrorMessage(instance="SQL\\\\SOME-INSTANCE-001", message="Danger danger"),

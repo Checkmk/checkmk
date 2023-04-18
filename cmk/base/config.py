@@ -36,6 +36,7 @@ from typing import (
     Any,
     AnyStr,
     assert_never,
+    cast,
     Final,
     Literal,
     NamedTuple,
@@ -1906,7 +1907,7 @@ def _get_configured_parameters(
     return TimespecificParameters(
         [
             # parameters configured via checkgroup_parameters
-            TimespecificParameterSet.from_parameters(p)
+            TimespecificParameterSet.from_parameters(cast(LegacyCheckParameters, p))
             for p in _get_checkgroup_parameters(
                 config_cache, host, str(plugin.ruleset_name), item, descr
             )
@@ -1921,7 +1922,7 @@ def _get_checkgroup_parameters(
     checkgroup: RulesetName,
     item: Item,
     descr: ServiceName,
-) -> list[LegacyCheckParameters]:
+) -> Sequence[object]:
     rules = checkgroup_parameters.get(checkgroup)
     if rules is None:
         return []
@@ -2047,7 +2048,9 @@ class ConfigCache:
         self.__disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
         self.__labels: dict[HostName, Labels] = {}
         self.__label_sources: dict[HostName, LabelSources] = {}
-        self.__notification_plugin_parameters: dict[tuple[HostName, CheckPluginNameStr], dict] = {}
+        self.__notification_plugin_parameters: dict[
+            tuple[HostName, CheckPluginNameStr], Mapping[str, object]
+        ] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -2706,7 +2709,7 @@ class ConfigCache:
 
     def inventory_parameters(
         self, host_name: HostName, plugin: InventoryPlugin
-    ) -> dict[str, object]:
+    ) -> Mapping[str, object]:
         if plugin.ruleset_name is None:
             raise ValueError(plugin)
 
@@ -3024,8 +3027,8 @@ class ConfigCache:
 
     def notification_plugin_parameters(
         self, host_name: HostName, plugin_name: CheckPluginNameStr
-    ) -> dict:
-        def _impl() -> dict:
+    ) -> Mapping[str, object]:
+        def _impl() -> Mapping[str, object]:
             default: Sequence[RuleSpec[object]] = []
             return self.host_extra_conf_merged(
                 host_name, notification_parameters.get(plugin_name, default)
@@ -3865,7 +3868,7 @@ class ConfigCache:
 
     def host_extra_conf_merged(
         self, hostname: HostName, ruleset: Iterable[RuleSpec]
-    ) -> dict[str, Any]:
+    ) -> Mapping[str, Any]:
         return self.ruleset_matcher.get_host_ruleset_merged_dict(
             self.ruleset_match_object_of_host(hostname),
             ruleset,
@@ -3913,7 +3916,7 @@ class ConfigCache:
 
     def service_extra_conf_merged(
         self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]
-    ) -> dict[str, Any]:
+    ) -> Mapping[str, Any]:
         return self.ruleset_matcher.get_service_ruleset_merged_dict(
             self.ruleset_match_object_of_service(hostname, description), ruleset
         )

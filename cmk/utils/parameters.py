@@ -6,8 +6,8 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Callable, Iterable, Sequence
-from typing import Any, Final, TypedDict
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Final, TypedDict, TypeVar
 
 import cmk.utils.debug
 from cmk.utils.type_defs import LegacyCheckParameters, TimeperiodName
@@ -116,10 +116,12 @@ class TimespecificParameterSet:
         return boil_down_parameters(self._active_subsets(is_active), self.default)
 
 
+T = TypeVar("T")
+
+
 def boil_down_parameters(
-    parameters: Iterable[LegacyCheckParameters],
-    default: LegacyCheckParameters,
-) -> LegacyCheckParameters:
+    parameters: Iterable[T], default: Mapping[str, T] | T
+) -> Mapping[str, T] | T:
     """
     first occurrance wins:
     >>> boil_down_parameters([{'a': 1},{'a': 2, 'b': 3}], {})
@@ -130,7 +132,7 @@ def boil_down_parameters(
     (23, 42)
 
     """
-    merged: dict[str, Any] = {}
+    merged: dict[str, T] = {}
     for par in parameters:
         if not isinstance(par, dict):
             return par

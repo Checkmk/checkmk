@@ -80,7 +80,7 @@ def inventorize_host(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     section_plugins: Mapping[SectionName, SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
@@ -269,7 +269,7 @@ def _inventorize_real_host(
 def inventorize_status_data_of_real_host(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     providers: Mapping[HostKey, Provider],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
@@ -311,7 +311,7 @@ class ItemsOfInventoryPlugin:
 def _collect_inventory_plugin_items(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     providers: Mapping[HostKey, Provider],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],

@@ -153,7 +153,7 @@ def execute_checkmk_checks(
 def _do_inventory_actions_during_checking_for(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     params: HWSWInventoryParameters,
     providers: Mapping[HostKey, Provider],

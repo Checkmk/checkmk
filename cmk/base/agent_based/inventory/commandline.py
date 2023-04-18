@@ -73,7 +73,7 @@ def _commandline_inventory_on_host(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: RawIntervalsFromConfig,
     section_plugins: Mapping[SectionName, SectionPlugin],

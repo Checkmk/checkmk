@@ -43,7 +43,7 @@ def execute_active_check_inventory(
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: RawIntervalsFromConfig,
 ) -> ActiveCheckResult:

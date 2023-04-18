@@ -128,7 +128,7 @@ class AuxTagList:
                 self.append(aux_tag)
         return self
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[AuxTag]:
         yield from self._tags
 
     def get_tags(self) -> Sequence[AuxTag]:

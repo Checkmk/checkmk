@@ -47,7 +47,7 @@ class _Label:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r}, {self.value!r})"
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, self.__class__):
             raise TypeError(f"cannot compare {type(self)} to {type(other)}")
         return self.name == other.name and self.value == other.value

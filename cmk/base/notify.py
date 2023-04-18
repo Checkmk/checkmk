@@ -660,7 +660,7 @@ def rbn_finalize_plugin_parameters(
         return rule_parameters
 
     config_cache = config.get_config_cache()
-    parameters = config_cache.notification_plugin_parameters(hostname, plugin_name).copy()
+    parameters = dict(config_cache.notification_plugin_parameters(hostname, plugin_name)).copy()
     parameters.update(rule_parameters)
 
     # Added in 2.0.0b8. Applies if no value is set either in the notification rule

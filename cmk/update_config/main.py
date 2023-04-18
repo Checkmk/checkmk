@@ -52,18 +52,9 @@ def main(args: Sequence[str]) -> int:
     if arguments.debug:
         debug.enable()
 
-    logger = _setup_logging(arguments)
-
-    logger.info(
-        "%sATTENTION%s\n  Some steps may take a long time depending "
-        "on your installation.\n  Please be patient.\n",
-        tty.yellow,
-        tty.normal,
-    )
-
     _load_pre_plugins()
     try:
-        ConfigChecker(logger, arguments.conflict)()
+        ConfigChecker(arguments.conflict)()
     except MKUserError as e:
         sys.stderr.write(
             f"\nUpdate aborted: {e}.\n"
@@ -82,6 +73,8 @@ def main(args: Sequence[str]) -> int:
             "BEFORE starting the site again."
         )
         return 1
+
+    logger = _setup_logging(arguments)
 
     update_state = UpdateState.load(Path(paths.var_dir))
     _load_plugins(logger)
@@ -173,21 +166,20 @@ def _load_pre_plugins() -> None:
 
 
 class ConfigChecker:
-    def __init__(self, logger: logging.Logger, conflict_mode: ConflictMode) -> None:
-        self._logger: Final = logger
-        self.conflict_mode: Final = conflict_mode
+    def __init__(self, conflict_mode: ConflictMode) -> None:
+        self.conflict_mode = conflict_mode
 
     def __call__(self) -> None:
         pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
         total = len(pre_update_actions)
-        self._logger.info("Verifying Checkmk configuration...")
+        sys.stdout.write("Processing pre update actions...\n")
         for count, pre_action in enumerate(pre_update_actions, start=1):
-            self._logger.info(
-                f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}..."
+            sys.stdout.write(
+                f" {tty.bgmagenta}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...\n"
             )
             pre_action(self.conflict_mode)
 
-        self._logger.info(f"Done ({tty.green}success{tty.normal})\n")
+        sys.stdout.write("Finished pre update actions...\n")
 
 
 class ConfigUpdater:
@@ -213,6 +205,10 @@ class ConfigUpdater:
             self._initialize_base_environment()
 
             self._logger.info("Updating Checkmk configuration...")
+            self._logger.info(
+                f"{tty.red}ATTENTION{tty.normal}: Some steps may take a long time depending "
+                f"on your installation. Please be patient.",
+            )
 
             for count, action in enumerate(actions, start=1):
                 self._logger.info(

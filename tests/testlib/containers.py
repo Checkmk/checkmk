@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import logging
 import os
 import subprocess
 import sys
 import tarfile
 import time
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
@@ -38,7 +41,7 @@ def execute_tests_in_container(
     command: list[str],
     interactive: bool,
 ) -> int:
-    client = _docker_client()
+    client: docker.DockerClient = _docker_client()
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
 
@@ -132,7 +135,7 @@ def execute_tests_in_container(
         return exit_code
 
 
-def _docker_client():
+def _docker_client() -> docker.DockerClient:
     return docker.from_env(timeout=1200)
 
 
@@ -466,7 +469,7 @@ def _start(client, **kwargs):
     # after initialization
     container_id = client.api.create_container(**kwargs)["Id"]
     client.api.start(container_id)
-    c = client.containers.get(container_id)
+    c: docker.Container = client.containers.get(container_id)
 
     logger.info("Container ID: %s", c.short_id)
 
@@ -506,20 +509,20 @@ def _exec_run(c, cmd, **kwargs):
 
 
 def container_exec(
-    container,
-    cmd,
-    stdout=True,
-    stderr=True,
-    stdin=False,
-    tty=False,
-    privileged=False,
-    user="",
-    detach=False,
-    stream=False,
-    socket=False,
-    environment=None,
-    workdir=None,
-):
+    container: docker.Container,
+    cmd: str | list[object],
+    stdout: bool = True,
+    stderr: bool = True,
+    stdin: bool = False,
+    tty: bool = False,
+    privileged: bool = False,
+    user: str = "",
+    detach: bool = False,
+    stream: bool = False,
+    socket: bool = False,
+    environment: Mapping[str, str] | Sequence[str] | None = None,
+    workdir: str | None = None,
+) -> ContainerExec:
     """
     An enhanced version of #docker.Container.exec_run() which returns an object
     that can be properly inspected for the status of the executed commands.
@@ -527,7 +530,7 @@ def container_exec(
     Taken from https://github.com/docker/docker-py/issues/1989. Thanks!
     """
 
-    exec_id = container.client.api.exec_create(
+    exec_id: str = container.client.api.exec_create(
         container.id,
         cmd,
         stdout=stdout,
@@ -540,7 +543,7 @@ def container_exec(
         workdir=workdir,
     )["Id"]
 
-    output = container.client.api.exec_start(
+    output: Iterable[bytes] = container.client.api.exec_start(
         exec_id, detach=detach, tty=tty, stream=stream, socket=socket
     )
 
@@ -548,7 +551,9 @@ def container_exec(
 
 
 class ContainerExec:
-    def __init__(self, client, container_id, output) -> None:  # type: ignore[no-untyped-def]
+    def __init__(
+        self, client: docker.DockerClient, container_id: str, output: Iterable[bytes]
+    ) -> None:
         self.client = client
         self.id = container_id
         self.output = output

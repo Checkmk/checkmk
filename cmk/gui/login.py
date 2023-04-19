@@ -303,7 +303,7 @@ class LoginPage(Page):
         footer.append(
             HTML(
                 "&copy; %s"
-                % HTMLWriter.render_a("tribe29 GmbH", href="https://tribe29.com", target="_blank")
+                % HTMLWriter.render_a("Checkmk GmbH", href="https://tribe29.com", target="_blank")
             )
         )
 

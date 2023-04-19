@@ -669,10 +669,10 @@ class DiscoveryPageRenderer:
             self._show_discovery_empty(discovery_result, api_request)
             return
 
-        if self._snmp_source_failed(discovery_result.sources) and self._is_first_attempt(
-            api_request
-        ):
-            html.show_message(_("No SNMP data available. Please trigger a rescan."))
+        if self._source_failed(discovery_result.sources) and self._is_first_attempt(api_request):
+            html.show_message(
+                _("The problems above might be caused by missing caches. Please trigger a rescan.")
+            )
             return
 
         # We currently don't get correct information from cmk.base (the data sources). Better
@@ -736,11 +736,8 @@ class DiscoveryPageRenderer:
     def _is_first_attempt(self, api_request: dict) -> bool:
         return api_request["discovery_result"] is None
 
-    def _snmp_source_failed(self, sources: Mapping[str, tuple[int, str]]) -> bool:
-        try:
-            return sources["snmp"][0] != 0
-        except KeyError:
-            return False
+    def _source_failed(self, sources: Mapping[str, tuple[int, str]]) -> bool:
+        return any(source[0] != 0 for source in sources.values())
 
     def _group_check_table_by_state(
         self, check_table: Iterable[CheckPreviewEntry]

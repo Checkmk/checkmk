@@ -10,7 +10,7 @@ import json
 import time
 import traceback
 from collections.abc import Callable, Sequence
-from typing import Any, Literal
+from typing import Any, cast, Literal
 
 import livestatus
 
@@ -38,7 +38,7 @@ from cmk.gui.plugins.metrics.utils import (
     GraphRecipe,
 )
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import CombinedGraphSpec, TemplateGraphSpec
+from cmk.gui.type_defs import CombinedGraphSpec, GraphConsoldiationFunction, TemplateGraphSpec
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -98,7 +98,7 @@ def _answer_graph_image_request(
             "template",
             TemplateGraphSpec(
                 {
-                    "site": site,
+                    "site": livestatus.SiteId(site) if site else None,
                     "host_name": host_name,
                     "service_description": service_description,
                     "graph_index": None,  # all graphs
@@ -215,7 +215,7 @@ def render_graph_image(
 
 def graph_recipes_for_api_request(
     api_request: dict[str, Any]
-) -> tuple[GraphDataRange, list[GraphRecipe]]:
+) -> tuple[GraphDataRange, Sequence[GraphRecipe]]:
     # Get and validate the specification
     graph_identification = api_request.get("specification", [])
     if not graph_identification:
@@ -256,7 +256,10 @@ def graph_recipes_for_api_request(
 
     if api_request.get("consolidation_function"):
         for graph_recipe in graph_recipes:
-            graph_recipe["consolidation_function"] = api_request.get("consolidation_function")
+            graph_recipe["consolidation_function"] = cast(
+                GraphConsoldiationFunction,
+                api_request.get("consolidation_function"),
+            )
 
     return graph_data_range, graph_recipes
 

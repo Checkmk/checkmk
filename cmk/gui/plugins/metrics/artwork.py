@@ -87,7 +87,7 @@ class GraphArtwork(TypedDict):
     mirrored: bool
     # Actual data and axes
     curves: list[LayoutedCurve]
-    horizontal_rules: list[HorizontalRule]
+    horizontal_rules: Sequence[HorizontalRule]
     vertical_axis: VerticalAxis
     time_axis: TimeAxis
     # Displayed range

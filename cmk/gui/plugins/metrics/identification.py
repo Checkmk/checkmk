@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import MutableMapping
+from collections.abc import MutableMapping, Sequence
 from typing import Generic, TypeVar
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import GraphRecipe
-from cmk.gui.type_defs import ExplicitGraphSpec, GraphIdentifier
+from cmk.gui.plugins.metrics.utils import ExplicitGraphRecipe, GraphRecipe
+from cmk.gui.type_defs import ExplicitGraphSpec, GraphIdentifier, GraphSpec
 
 # .
 #   .--Identification------------------------------------------------------.
@@ -52,7 +52,7 @@ class GraphIdentificationTypes:
         self,
         graph_identification: GraphIdentifier,
         destination: str | None = None,
-    ) -> list[GraphRecipe]:
+    ) -> Sequence[GraphRecipe]:
         type_ident, spec_info = graph_identification
         type_cls = self._types[type_ident]
         return type_cls().create_graph_recipes(spec_info, destination=destination)
@@ -60,10 +60,11 @@ class GraphIdentificationTypes:
 
 graph_identification_types = GraphIdentificationTypes()
 
-T = TypeVar("T")
+_TGraphSpec = TypeVar("_TGraphSpec", bound=GraphSpec | str)
+_TGraphRecipe = TypeVar("_TGraphRecipe", bound=GraphRecipe)
 
 
-class GraphIdentification(Generic[T], abc.ABC):
+class GraphIdentification(Generic[_TGraphSpec, _TGraphRecipe], abc.ABC):
     """Abstract base class for all graph identification classes"""
 
     @classmethod
@@ -73,22 +74,33 @@ class GraphIdentification(Generic[T], abc.ABC):
 
     @abc.abstractmethod
     def create_graph_recipes(
-        self, ident_info: T, destination: str | None = None
-    ) -> list[GraphRecipe]:
+        self, ident_info: _TGraphSpec, destination: str | None = None
+    ) -> Sequence[_TGraphRecipe]:
         ...
 
 
-class GraphIdentificationExplicit(GraphIdentification[ExplicitGraphSpec]):
+class GraphIdentificationExplicit(GraphIdentification[ExplicitGraphSpec, ExplicitGraphRecipe]):
     @classmethod
     def ident(cls):
         return "explicit"
 
     def create_graph_recipes(
         self, ident_info: ExplicitGraphSpec, destination: str | None = None
-    ) -> list[GraphRecipe]:
-        graph_recipe = dict(ident_info)
-        graph_recipe["specification"] = ("explicit", ident_info)
-        return [graph_recipe]
+    ) -> list[ExplicitGraphRecipe]:
+        return [
+            {
+                "title": ident_info["title"],
+                "unit": ident_info["unit"],
+                "consolidation_function": ident_info["consolidation_function"],
+                "explicit_vertical_range": ident_info["explicit_vertical_range"],
+                "omit_zero_metrics": ident_info["omit_zero_metrics"],
+                "horizontal_rules": ident_info["horizontal_rules"],
+                "context": ident_info["context"],
+                "add_context_to_title": ident_info["add_context_to_title"],
+                "metrics": ident_info["metrics"],
+                "specification": ("explicit", ident_info),
+            }
+        ]
 
 
 graph_identification_types.register(GraphIdentificationExplicit)

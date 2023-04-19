@@ -197,7 +197,7 @@ class TimeSeries:
         return self.values
 
     def downsample(
-        self, twindow: TimeWindow, cf: ConsolidationFunctionName = "max"
+        self, twindow: TimeWindow, cf: ConsolidationFunctionName | None = "max"
     ) -> TimeSeriesValues:
         """Downsample time series by consolidation function
 

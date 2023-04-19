@@ -223,17 +223,17 @@ def _render_graph_title_elements(
         title_elements.append((graph_artwork["title"], None))
 
     # Only add host/service information for template based graphs
-    ident_type, spec_info = graph_artwork["definition"]["specification"]
-    if ident_type != "template":
+    specification = graph_artwork["definition"]["specification"]
+    if specification[0] != "template":
         return title_elements
 
-    title_elements.extend(title_info_elements(spec_info, title_format))
+    title_elements.extend(title_info_elements(specification[1], title_format))
 
     return title_elements
 
 
 def title_info_elements(
-    spec_info: dict[str, Any], title_format: Sequence[str]
+    spec_info: TemplateGraphSpec, title_format: Sequence[str]
 ) -> Iterable[tuple[str, str]]:
     if "add_host_name" in title_format:
         host_url = makeuri_contextless(
@@ -331,14 +331,13 @@ def _show_graph_html_content(
     if _graph_legend_enabled(graph_render_options, graph_artwork):
         _show_graph_legend(graph_artwork, graph_render_options)
 
-    model_params_repr = graph_artwork["definition"].get("model_params_repr")
-    model_params_display = (
-        graph_artwork["definition"].get("model_params", {}).get("display_model_parametrization")
-    )
-    if model_params_repr and model_params_display:
+    graph_definition = graph_artwork["definition"]
+    if graph_definition["specification"][0] == "forecast" and graph_definition["model_params"].get(
+        "display_model_parametrization"
+    ):
         html.open_div(align="center")
         html.h2(_("Forecast Parametrization"))
-        html.write_html(model_params_repr)
+        html.write_html(HTML(graph_definition["model_params_repr"]))
         html.close_div()
 
     html.close_div()

@@ -75,7 +75,7 @@ def fetch_rrd_data_for_graph(
     return rrd_data
 
 
-def align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction) -> None:
+def align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction | None) -> None:
     """RRDTool aligns start/end/step to its internal precision.
 
     This is returned as first 3 values in each RRD data row. Using that
@@ -151,7 +151,7 @@ def needed_elements_of_expression(
 
 
 def get_needed_sources(
-    metrics: Sequence[GraphMetric],
+    metrics: Sequence[GraphMetric] | Sequence[CombinedGraphMetricSpec],
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],

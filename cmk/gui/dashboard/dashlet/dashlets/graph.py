@@ -365,7 +365,7 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
 
         site = get_only_sites_from_context(context) or self._resolve_site(host)
         if isinstance(site, list):
-            site_id: str | None = "".join(site)
+            site_id: livestatus.SiteId | None = livestatus.SiteId("".join(site))
         else:
             site_id = site
 

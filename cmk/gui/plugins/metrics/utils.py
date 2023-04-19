@@ -11,7 +11,7 @@ import shlex
 from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from itertools import chain
-from typing import Any, Final, NotRequired, overload, TypedDict, TypeVar, Union
+from typing import Any, Final, Literal, NotRequired, overload, TypedDict, TypeVar, Union
 
 from livestatus import SiteId
 
@@ -37,6 +37,10 @@ from cmk.gui.plugins.visuals.utils import livestatus_query_bare
 from cmk.gui.type_defs import (
     Choice,
     Choices,
+    CombinedGraphIdentifier,
+    CustomGraphIdentifier,
+    ExplicitGraphIdentifier,
+    ForecastGraphIdentifier,
     GraphConsoldiationFunction,
     GraphMetric,
     GraphPresentation,
@@ -50,6 +54,8 @@ from cmk.gui.type_defs import (
     RGBColor,
     Row,
     RPNExpression,
+    SingleTimeseriesGraphIdentifier,
+    TemplateGraphIdentifier,
     TranslatedMetric,
     TranslatedMetrics,
     UnitInfo,
@@ -58,7 +64,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
+from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints, ValueSpecText
 
 LegacyPerfometer = tuple[str, Any]
 
@@ -124,13 +130,6 @@ class GraphTemplate(_GraphTemplateMandatory, total=False):
     omit_zero_metrics: bool
 
 
-GraphRecipe = dict[str, Any]
-
-
-RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
-RRDData = dict[RRDDataKey, TimeSeries]
-
-
 class CombinedMetric(GraphMetric):
     original_metrics: NotRequired[Sequence["GraphMetric"]]
 
@@ -142,6 +141,67 @@ class CombinedGraphMetricSpec(TypedDict):
     line_type: LineType
     expression: RPNExpression
     metric_definition: MetricDefinition
+
+
+class GraphRecipeIncomplete(TypedDict):
+    title: str
+    unit: str
+    explicit_vertical_range: GraphRange
+    horizontal_rules: Sequence[HorizontalRule]
+    omit_zero_metrics: bool
+    consolidation_function: GraphConsoldiationFunction | None
+
+
+class GraphRecipeBase(GraphRecipeIncomplete):
+    metrics: Sequence[GraphMetric]
+
+
+class TemplateGraphRecipe(GraphRecipeBase):
+    specification: TemplateGraphIdentifier
+
+
+class ExplicitGraphRecipe(GraphRecipeBase):
+    specification: ExplicitGraphIdentifier
+    context: VisualContext
+    add_context_to_title: bool
+
+
+class SingleTimeseriesGraphRecipe(GraphRecipeBase):
+    specification: SingleTimeseriesGraphIdentifier
+
+
+class CombinedGraphRecipe(GraphRecipeIncomplete):
+    metrics: Sequence[CombinedGraphMetricSpec]
+    specification: CombinedGraphIdentifier
+
+
+class ForecastGraphRecipeBase(GraphRecipeBase):
+    is_forecast: Literal[True]
+    model_params: dict[str, Any]
+
+
+class ForecastGraphRecipe(ForecastGraphRecipeBase):
+    specification: ForecastGraphIdentifier
+    model_params_repr: ValueSpecText
+    metric_id: NotRequired[tuple[HostName, ServiceName, _MetricName, str]]
+
+
+class CustomGraphRecipe(GraphRecipeBase):
+    specification: CustomGraphIdentifier
+
+
+GraphRecipe = (
+    TemplateGraphRecipe
+    | ExplicitGraphRecipe
+    | SingleTimeseriesGraphRecipe
+    | CombinedGraphRecipe
+    | ForecastGraphRecipe
+    | CustomGraphRecipe
+)
+
+
+RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
+RRDData = dict[RRDDataKey, TimeSeries]
 
 
 class MetricUnitColor(TypedDict):

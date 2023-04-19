@@ -14,6 +14,8 @@ from typing import Any, Literal, NamedTuple, NotRequired, TypedDict, Union
 
 from pydantic import BaseModel
 
+from livestatus import SiteId
+
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.crypto import HashAlgorithm
 from cmk.utils.crypto.certificate import (
@@ -651,7 +653,7 @@ class GraphSpec(TypedDict):
 
 
 class TemplateGraphSpec(GraphSpec):
-    site: str | None
+    site: SiteId | None
     host_name: HostName
     service_description: ServiceName
     graph_index: NotRequired[int | None]
@@ -697,11 +699,12 @@ CombinedGraphIdentifier = tuple[Literal["combined"], CombinedGraphSpec]
 CustomGraphIdentifier = tuple[Literal["custom"], str]
 ExplicitGraphIdentifier = tuple[Literal["explicit"], ExplicitGraphSpec]
 SingleTimeseriesGraphIdentifier = tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec]
+ForecastGraphIdentifier = tuple[Literal["forecast"], str]
 
 # We still need "Union" because of https://github.com/python/mypy/issues/11098
 GraphIdentifier = Union[
     CustomGraphIdentifier,
-    tuple[Literal["forecast"], str],
+    ForecastGraphIdentifier,
     TemplateGraphIdentifier,
     CombinedGraphIdentifier,
     ExplicitGraphIdentifier,

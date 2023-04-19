@@ -19,7 +19,7 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_template,
     get_graph_templates,
     GraphConsoldiationFunction,
-    GraphRecipe,
+    GraphRecipeBase,
     GraphTemplate,
     horizontal_rules_from_thresholds,
     MetricExpression,
@@ -28,6 +28,7 @@ from cmk.gui.plugins.metrics.utils import (
     replace_expressions,
     split_expression,
     stack_resolver,
+    TemplateGraphRecipe,
     translated_metrics_from_row,
     TranslatedMetrics,
 )
@@ -66,7 +67,7 @@ def matching_graph_templates(
     )
 
 
-class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec]):
+class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec, TemplateGraphRecipe]):
     @classmethod
     def ident(cls) -> str:
         return "template"
@@ -83,7 +84,7 @@ class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec]):
 
     def create_graph_recipes(
         self, ident_info: TemplateGraphSpec, destination: str | None = None
-    ) -> list[GraphRecipe]:
+    ) -> list[TemplateGraphRecipe]:
         graph_identification_info = ident_info
 
         try:
@@ -115,15 +116,28 @@ class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec]):
                 translated_metrics,
                 row,
             )
-            # Put the specification of this graph into the graph_recipe
-            spec_info = dict(graph_identification_info)
+
+            spec_info = graph_identification_info.copy()
             # Performance graph dashlets already use graph_id, but for example in reports, we still
             # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
             # done, we can remove the line below.
             spec_info["graph_index"] = index
             spec_info["graph_id"] = graph_template_tuned["id"]
-            graph_recipe["specification"] = ("template", spec_info)
-            graph_recipes.append(graph_recipe)
+
+            graph_recipes.append(
+                TemplateGraphRecipe(
+                    {
+                        "title": graph_recipe["title"],
+                        "metrics": graph_recipe["metrics"],
+                        "unit": graph_recipe["unit"],
+                        "explicit_vertical_range": graph_recipe["explicit_vertical_range"],
+                        "horizontal_rules": graph_recipe["horizontal_rules"],
+                        "omit_zero_metrics": graph_recipe["omit_zero_metrics"],
+                        "consolidation_function": graph_recipe["consolidation_function"],
+                        "specification": ("template", spec_info),
+                    }
+                )
+            )
         return graph_recipes
 
 
@@ -132,7 +146,7 @@ graph_identification_types.register(GraphIdentificationTemplate)
 
 def create_graph_recipe_from_template(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
-) -> GraphRecipe:
+) -> GraphRecipeBase:
     def _metric(metric_definition: MetricDefinition) -> GraphMetric:
         metric = GraphMetric(
             {

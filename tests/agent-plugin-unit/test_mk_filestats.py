@@ -18,24 +18,21 @@ else:
     import agents.plugins.mk_filestats as mk_filestats
 
 
-@pytest.fixture(name="lazyfile")
-def fixture_lazyfile():
-    mylazyfile = mk_filestats.FileStat.from_path(__file__)
-
-    # Overwrite the path to be reproducable...
-    mylazyfile.path = "test_mk_filestats.py"
-    return mylazyfile
+MYLAZYFILE = mk_filestats.FileStat.from_path(__file__)
+# Overwrite the path to be reproducable...
+MYLAZYFILE.writeable_path = mk_filestats.ensure_str("test_mk_filestats.py")
+MYLAZYFILE.regex_matchable_path = mk_filestats.ensure_str("test_mk_filestats.py")
 
 
 def test_lazy_file() -> None:
     lfile = mk_filestats.FileStat.from_path("/bla/no such file.txt")
-    assert lfile.path == "/bla/no such file.txt"
+    assert lfile.writeable_path == "/bla/no such file.txt"
     assert lfile.size is None
     assert lfile.age is None
     assert lfile.stat_status == "file vanished"
 
     lfile = mk_filestats.FileStat.from_path(__file__)  # this should exist...
-    assert lfile.path == __file__
+    assert lfile.writeable_path == __file__
     assert lfile.size == os.stat(__file__).st_size
     assert lfile.stat_status == "ok"
     assert isinstance(lfile.age, int)
@@ -151,9 +148,9 @@ def test_get_ouput_aggregator(output_value) -> None:  # type: ignore[no-untyped-
     ],
 )
 def test_output_aggregator_single_file_servicename(  # type: ignore[no-untyped-def]
-    lazyfile, group_name, expected
+    group_name, expected
 ) -> None:
-    actual = mk_filestats.output_aggregator_single_file(group_name, [lazyfile])
+    actual = mk_filestats.output_aggregator_single_file(group_name, [MYLAZYFILE])
     assert expected == list(actual)[0]
 
 
@@ -325,7 +322,10 @@ def test_grouping_multiple_groups(
     ) in enumerate(results_list):
         assert section_name_arg == expected_results_list[results_idx][0]
         for files_idx, single_file in enumerate(files):
-            assert single_file.path == expected_results_list[results_idx][1][files_idx].path
+            assert (
+                single_file.writeable_path
+                == expected_results_list[results_idx][1][files_idx].writeable_path
+            )
 
 
 @pytest.mark.parametrize("val", [None, "null"])

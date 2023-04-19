@@ -7,8 +7,6 @@ import pytest
 
 from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
 
-from cmk.checkers.checkresults import ActiveCheckResult
-
 
 @pytest.mark.parametrize(
     "params",
@@ -30,13 +28,3 @@ def test_noop_wrap_parameters() -> None:
 
 def test_noop_unwrap_parameters() -> None:
     assert {"levels": (1, 2)} == unwrap_parameters({"levels": (1, 2)})
-
-
-def test_active_check_result() -> None:
-
-    assert ActiveCheckResult.from_subresults(
-        ActiveCheckResult(0, "Ok", ("We're good",), ("metric1",)),
-        ActiveCheckResult(2, "Critical", ("We're doomed",), ("metric2",)),
-    ) == ActiveCheckResult(
-        2, "Ok, Critical(!!)", ["We're good", "We're doomed(!!)"], ["metric1", "metric2"]
-    )

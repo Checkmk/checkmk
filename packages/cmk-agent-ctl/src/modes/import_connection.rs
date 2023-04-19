@@ -79,11 +79,11 @@ mod tests {
 
     #[test]
     fn test_import() {
-        let r = config::test_helpers::TestRegistry::new();
-        let mut reg = r.registry;
+        let mut r = config::test_helpers::TestRegistry::new();
+        let reg = &mut r.registry;
         assert!(reg.is_empty());
         assert!(!reg.path().exists());
-        assert!(_import(&mut reg, &MockImportDataProvider {}).is_ok());
+        assert!(_import(reg, &MockImportDataProvider {}).is_ok());
         assert!(!reg.is_empty());
         assert!(reg.path().exists());
     }

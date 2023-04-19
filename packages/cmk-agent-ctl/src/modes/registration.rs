@@ -736,12 +736,12 @@ mod tests {
 
         #[test]
         fn test_existing() {
-            let r = TestRegistry::new();
-            let mut registry = r.registry;
+            let mut r = TestRegistry::new();
+            let registry = &mut r.registry;
             assert!(!registry.path().exists());
             assert!(direct_registration(
                 &registration_connection_config(None, None, false),
-                &mut registry,
+                registry,
                 &MockApi {
                     expect_root_cert: false,
                     expected_registration_method: Some(RegistrationMethod::Existing),
@@ -761,8 +761,8 @@ mod tests {
 
         #[test]
         fn test_new() {
-            let r = TestRegistry::new();
-            let mut registry = r.registry;
+            let mut r = TestRegistry::new();
+            let registry = &mut r.registry;
             assert!(!registry.path().exists());
             assert!(direct_registration(
                 &registration_connection_config(
@@ -770,7 +770,7 @@ mod tests {
                     Some(String::from("password")),
                     false
                 ),
-                &mut registry,
+                registry,
                 &MockApi {
                     expect_root_cert: true,
                     expected_registration_method: Some(RegistrationMethod::New),
@@ -1058,8 +1058,8 @@ mod tests {
 
         #[test]
         fn test_port_update_only() {
-            let r = TestRegistry::new();
-            let mut registry = r.registry;
+            let mut r = TestRegistry::new();
+            let registry = &mut r.registry;
             registry.register_connection(
                 &config::ConnectionMode::Pull,
                 &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
@@ -1089,7 +1089,7 @@ mod tests {
                     use_proxy: false,
                     validate_api_cert: false,
                 },
-                &mut registry,
+                registry,
                 &MockRegistrationPreConfiguredImpl {
                     is_registered_at_remote: true
                 },

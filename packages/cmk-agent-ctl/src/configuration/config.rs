@@ -634,46 +634,17 @@ pub mod test_helpers {
     use std::convert::From;
     use std::str::FromStr;
 
-    struct TestRegistryDir {
-        // Wrapping this TempDir in an Option allows us to call close() on it in drop().
-        pub dir: Option<tempfile::TempDir>,
-    }
-
-    impl TestRegistryDir {
-        pub fn new() -> Self {
-            let dir = Some(tempfile::tempdir().unwrap());
-            Self { dir }
-        }
-
-        pub fn create_registry(&self) -> Registry {
-            Registry::new(
-                self.dir
-                    .as_ref()
-                    .unwrap()
-                    .path()
-                    .join("registered_connections.json"),
-            )
-            .unwrap()
-        }
-    }
-
-    // Clippy is happy
-    impl Default for TestRegistryDir {
-        fn default() -> Self {
-            Self::new()
-        }
-    }
-
-    impl Drop for TestRegistryDir {
-        fn drop(&mut self) {
-            // We can manage to move the TempDir out (close() needs to) by replacing it with None.
-            self.dir.take().unwrap().close().unwrap();
-        }
-    }
-
     pub struct TestRegistry {
         pub registry: Registry,
-        _dir: TestRegistryDir,
+        _dir: Option<tempfile::TempDir>,
+    }
+
+    impl Drop for TestRegistry {
+        fn drop(&mut self) {
+            // We can manage to move the TempDir out (close() needs to) by replacing it with None.
+            // drop(self._dir);
+            self._dir.take().unwrap().close().unwrap();
+        }
     }
 
     impl Default for TestRegistry {
@@ -684,12 +655,22 @@ pub mod test_helpers {
 
     impl TestRegistry {
         pub fn new() -> Self {
-            let test_dir = TestRegistryDir::default();
-            let registry = test_dir.create_registry();
+            let test_dir = Some(tempfile::tempdir().unwrap());
+            let registry = TestRegistry::create_registry(&test_dir);
             Self {
                 registry,
                 _dir: test_dir,
             }
+        }
+
+        pub fn create_registry(dir: &Option<tempfile::TempDir>) -> Registry {
+            Registry::new(
+                dir.as_ref()
+                    .unwrap()
+                    .path()
+                    .join("registered_connections.json"),
+            )
+            .unwrap()
         }
 
         pub fn add_connection<T>(
@@ -992,7 +973,7 @@ mod test_registry {
     #[test]
     fn test_io() {
         let test_registry = TestRegistry::new().fill_registry();
-        let reg = test_registry.registry;
+        let reg = &test_registry.registry;
         assert!(!reg.path.exists());
 
         reg.save().unwrap();
@@ -1013,7 +994,7 @@ mod test_registry {
     #[test]
     fn test_reload() {
         let test_registry = TestRegistry::new().fill_registry();
-        let reg = test_registry.registry;
+        let reg = &test_registry.registry;
         reg.save().unwrap();
         let mut reg = Registry::from_file(&reg.path).unwrap();
         assert!(!reg.refresh().unwrap());
@@ -1040,8 +1021,8 @@ mod test_registry {
 
     #[test]
     fn test_register_push_connection_new() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         reg.register_connection(
             &ConnectionMode::Push,
             &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
@@ -1054,8 +1035,8 @@ mod test_registry {
 
     #[test]
     fn test_register_push_connection_from_pull() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         reg.register_connection(
             &ConnectionMode::Push,
             &site_spec::SiteID::from_str("server/pull-site").unwrap(),
@@ -1068,8 +1049,8 @@ mod test_registry {
 
     #[test]
     fn test_register_pull_connection_new() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         reg.register_connection(
             &ConnectionMode::Pull,
             &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
@@ -1082,8 +1063,8 @@ mod test_registry {
 
     #[test]
     fn test_register_pull_connection_from_push() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         reg.register_connection(
             &ConnectionMode::Pull,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
@@ -1096,8 +1077,8 @@ mod test_registry {
 
     #[test]
     fn test_register_imported_connection() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         let conn = trusted_connection();
         let uuid = conn.uuid;
         reg.register_imported_connection(conn);
@@ -1110,7 +1091,7 @@ mod test_registry {
     #[test]
     fn test_retrieve_standard_connection_by_uuid() {
         let test_registry = TestRegistry::new().fill_registry();
-        let reg = test_registry.registry;
+        let reg = &test_registry.registry;
         let uuid_push = reg.get_push_connections().next().unwrap().1.trust.uuid;
         let uuid_pull = reg
             .get_standard_pull_connections()
@@ -1139,8 +1120,8 @@ mod test_registry {
 
     #[test]
     fn test_is_empty() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         assert!(!reg.is_empty());
         reg.connections.push.clear();
         assert!(!reg.is_empty());
@@ -1153,7 +1134,7 @@ mod test_registry {
     #[test]
     fn test_pull_connections() {
         let test_registry = TestRegistry::new().fill_registry();
-        let reg = test_registry.registry;
+        let reg = &test_registry.registry;
         let pull_conns: Vec<&TrustedConnection> = reg.get_pull_connections().collect();
         assert!(pull_conns.len() == 2);
         assert!(
@@ -1171,7 +1152,7 @@ mod test_registry {
     #[test]
     fn test_registered_site_ids() {
         let test_registry = TestRegistry::new().fill_registry();
-        let reg = test_registry.registry;
+        let reg = &test_registry.registry;
         let mut reg_site_ids: Vec<String> = reg
             .get_registered_site_ids()
             .map(|s| s.to_string())
@@ -1182,8 +1163,8 @@ mod test_registry {
 
     #[test]
     fn test_get_mutable() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         let pull_conn = reg
             .get_standard_pull_connections()
             .next()
@@ -1208,8 +1189,8 @@ mod test_registry {
 
     #[test]
     fn test_delete_push() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         assert!(reg
             .delete_standard_connection(&site_spec::SiteID::from_str("server/push-site").unwrap())
             .is_ok());
@@ -1220,8 +1201,8 @@ mod test_registry {
 
     #[test]
     fn test_delete_pull() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         assert!(reg
             .delete_standard_connection(&site_spec::SiteID::from_str("server/pull-site").unwrap())
             .is_ok());
@@ -1232,8 +1213,8 @@ mod test_registry {
 
     #[test]
     fn test_delete_missing() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         assert_eq!(
             format!(
                 "{}",
@@ -1253,8 +1234,8 @@ mod test_registry {
     fn test_delete_imported_connection_ok() {
         let uuid_first_imported = uuid::Uuid::new_v4();
         let uuid_second_imported = uuid::Uuid::new_v4();
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         reg.connections.pull_imported.clear();
         reg.register_imported_connection(TrustedConnection::from(uuid_first_imported));
         reg.register_imported_connection(TrustedConnection::from(uuid_second_imported));
@@ -1268,8 +1249,8 @@ mod test_registry {
 
     #[test]
     fn test_delete_imported_connection_err() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         let uuid = uuid::Uuid::new_v4();
         assert_eq!(
             format!("{}", reg.delete_imported_connection(&uuid).unwrap_err()),
@@ -1282,16 +1263,16 @@ mod test_registry {
 
     #[test]
     fn test_clear() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         reg.clear();
         assert!(reg.is_empty());
     }
 
     #[test]
     fn test_clear_imported() {
-        let test_registry = TestRegistry::new().fill_registry();
-        let mut reg = test_registry.registry;
+        let mut test_registry = TestRegistry::new().fill_registry();
+        let reg = &mut test_registry.registry;
         reg.clear_imported();
         assert!(reg.is_imported_pull_empty());
         assert!(!reg.is_empty());
@@ -1299,8 +1280,8 @@ mod test_registry {
 
     #[test]
     fn test_legacy_pull_marker_handling() {
-        let test_registry = TestRegistry::new();
-        let mut registry = test_registry.registry;
+        let mut test_registry = TestRegistry::new();
+        let registry = &mut test_registry.registry;
         assert!(!registry.is_legacy_pull_active());
         assert!(registry.activate_legacy_pull().is_ok());
         assert!(registry.is_legacy_pull_active());

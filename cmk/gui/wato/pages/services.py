@@ -72,7 +72,6 @@ from cmk.gui.watolib.services import (
     DiscoveryState,
     execute_discovery_job,
     get_check_table,
-    has_active_job,
     has_discovery_action_specific_permissions,
     has_modification_specific_permissions,
     initial_discovery_result,
@@ -301,7 +300,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         )
 
         return {
-            "is_finished": not has_active_job(discovery_result),
+            "is_finished": not discovery_result.is_active(),
             "job_state": discovery_result.job_status["state"],
             "message": message,
             "body": page_code,
@@ -413,7 +412,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         ]
 
         if discovery_result.job_status["state"] == JobStatusStates.INITIALIZED:
-            if has_active_job(discovery_result):
+            if discovery_result.is_active():
                 return _("Initializing discovery...")
             if not cmk_check_entries:
                 return _("No discovery information available. Please perform a rescan.")
@@ -716,7 +715,7 @@ class DiscoveryPageRenderer:
             html.end_form()
 
     def _show_discovery_empty(self, discovery_result: DiscoveryResult, api_request: dict) -> None:
-        if self._is_active(discovery_result):
+        if discovery_result.is_active():
             return
 
         if self._host.is_cluster():
@@ -733,9 +732,6 @@ class DiscoveryPageRenderer:
                 % (url, _("Clustered services"))
             )
             return
-
-    def _is_active(self, discovery_result: DiscoveryResult) -> bool:
-        return discovery_result.job_status["is_active"]
 
     def _is_first_attempt(self, api_request: dict) -> bool:
         return api_request["discovery_result"] is None
@@ -848,7 +844,7 @@ class DiscoveryPageRenderer:
             if check.check_source in [DiscoveryState.UNDECIDED, DiscoveryState.VANISHED]:
                 fixall += 1
 
-        if self._is_active(discovery_result):
+        if discovery_result.is_active():
             enable_page_menu_entry(html, "stop")
             return
 
@@ -1060,7 +1056,7 @@ class DiscoveryPageRenderer:
             return
 
         css_classes = ["service_checkbox"]
-        if self._is_active(discovery_result):
+        if discovery_result.is_active():
             css_classes.append("disabled")
 
         table.cell(
@@ -1096,7 +1092,7 @@ class DiscoveryPageRenderer:
             return
 
         button_classes = ["service_button"]
-        if self._is_active(discovery_result):
+        if discovery_result.is_active():
             button_classes.append("disabled")
 
         checkbox_name = checkbox_id(entry.check_plugin_name, entry.item)

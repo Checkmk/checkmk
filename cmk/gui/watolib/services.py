@@ -158,6 +158,9 @@ class DiscoveryResult(NamedTuple):
             *rest,
         )
 
+    def is_active(self) -> bool:
+        return bool(self.job_status["is_active"])
+
 
 class DiscoveryOptions(NamedTuple):
     action: str
@@ -627,13 +630,7 @@ def initial_discovery_result(
 
 
 def _use_previous_discovery_result(previous_discovery_result: DiscoveryResult | None) -> bool:
-    if not previous_discovery_result:
-        return False
-
-    if has_active_job(previous_discovery_result):
-        return False
-
-    return True
+    return not (previous_discovery_result is None or previous_discovery_result.is_active())
 
 
 def _perform_update_host_labels(host, host_labels):
@@ -963,7 +960,3 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
 
     def _check_table_file_path(self):
         return os.path.join(self.get_work_dir(), "check_table.mk")
-
-
-def has_active_job(discovery_result: DiscoveryResult) -> bool:
-    return discovery_result.job_status["is_active"]

@@ -91,8 +91,9 @@ def parse(string_table: StringTable) -> SectionTableSpaces:
 
 
 def discover(section: SectionTableSpaces) -> DiscoveryResult:
-    for item in section.keys():
-        yield Service(item=item)
+    for item, tablespace in section.items():
+        if not tablespace.error:
+            yield Service(item=item)
 
 
 register.agent_section(name="mssql_tablespaces", parse_function=parse)

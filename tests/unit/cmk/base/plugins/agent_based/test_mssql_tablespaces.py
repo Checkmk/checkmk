@@ -8,7 +8,11 @@ from typing import Any
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.mssql_tablespaces import (
     check,
     discover,
@@ -81,14 +85,16 @@ def test_parse(string_table: StringTable, expected_section: SectionTableSpaces) 
 
 
 @pytest.mark.parametrize(
-    "string_table, expected_service",
+    "string_table, expected_services",
     [
-        pytest.param(WORKING_STRING_TABLE, Service(item="MSSQL_SQLEXPRESS master")),
-        pytest.param(ERROR_STRING_TABLE, Service(item="MSSQL_Katze Kitty")),
+        pytest.param(
+            WORKING_STRING_TABLE, [Service(item="MSSQL_SQLEXPRESS master")], id="working table"
+        ),
+        pytest.param(ERROR_STRING_TABLE, [], id="error"),
     ],
 )
-def test_discover(string_table: StringTable, expected_service: Service) -> None:
-    assert list(discover(parse(string_table))) == [expected_service]
+def test_discover(string_table: StringTable, expected_services: DiscoveryResult) -> None:
+    assert list(discover(parse(string_table))) == expected_services
 
 
 @pytest.mark.parametrize(

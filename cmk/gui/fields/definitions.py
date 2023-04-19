@@ -110,7 +110,7 @@ class PythonString(base.String):
 
 # NOTE
 # All these non-capturing match groups are there to properly distinguish the alternatives.
-FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+[~\\\/]?)|[0-9a-fA-F]{32})"
+FOLDER_PATTERN = r"^(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+[~\\\/]?)|[0-9a-fA-F]{32})$"
 
 
 class FolderField(base.String):
@@ -233,7 +233,7 @@ class BinaryExprSchema(BaseSchema):
 
     op = base.String(description="The operator.")
     left = base.String(
-        description="The LiveStatus column name.", pattern=r"([a-z]+\.)?[_a-z]+", example="name"
+        description="The LiveStatus column name.", pattern=r"^([a-z]+\.)?[_a-z]+$", example="name"
     )
     right = base.String(
         description="The value to compare the column to."
@@ -527,7 +527,7 @@ class _LiveStatusColumn(base.String):
         return value
 
 
-HOST_NAME_REGEXP = "[-0-9a-zA-Z_.]+"
+HOST_NAME_REGEXP = "^[-0-9a-zA-Z_.]+$"
 
 
 class HostField(base.String):

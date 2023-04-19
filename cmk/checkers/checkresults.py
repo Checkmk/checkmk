@@ -59,21 +59,25 @@ class ActiveCheckResult:
                 else self.summary,
                 "".join(f"{line}\n" for line in self.details),
             )
-        )
+        ).strip()
 
     @classmethod
     def from_subresults(cls, *subresults: ActiveCheckResult) -> ActiveCheckResult:
         return cls(
             state=worst_service_state(*(s.state for s in subresults), default=0),
-            summary=", ".join(
-                f"{s.summary}{state_markers[s.state]}" for s in subresults if s.summary
+            summary=", ".join(cls._add_marker(s.summary, s.state) for s in subresults if s.summary),
+            details=tuple(
+                detail
+                for s in subresults
+                for detail in [
+                    *s.details[:-1],
+                    *(cls._add_marker(d, s.state) for d in s.details[-1:]),
+                ]
             ),
-            details=sum(
-                (
-                    [*s.details[:-1], *(f"{d}{state_markers[s.state]}" for d in s.details[-1:])]
-                    for s in subresults
-                ),
-                [],
-            ),
-            metrics=sum((list(s.metrics) for s in subresults), []),
+            metrics=tuple(m for s in subresults for m in s.metrics),
         )
+
+    @staticmethod
+    def _add_marker(txt: str, state: int) -> str:
+        marker = state_markers[state]
+        return txt if txt.endswith(marker) else f"{txt}{marker}"

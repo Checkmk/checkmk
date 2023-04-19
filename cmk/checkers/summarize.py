@@ -77,7 +77,7 @@ def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveChe
         ActiveCheckResult(
             extract_status(exc),
             str(exc).rsplit("\n", maxsplit=1)[-1],
-            str(exc).split("\n") if str(exc) else (),
+            str(exc).split("\n") if "\n" in str(exc) else (),
         )
     ]
 

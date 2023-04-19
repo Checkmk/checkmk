@@ -27,7 +27,7 @@ def _handler() -> CheckResultErrorHandler:
     )
 
 
-def test_no_error_keeps_returns_status_from_callee() -> None:
+def test_no_error_keeps_status_from_callee() -> None:
     handler = _handler()
     result = handler.result
 
@@ -40,7 +40,7 @@ def test_no_error_keeps_returns_status_from_callee() -> None:
         )
         result = check_result.state, check_result.as_text()
 
-    assert result == (0, "summary | metrics x\ndetails\nlots of\n")
+    assert result == (0, "summary | metrics x\ndetails\nlots of")
     assert handler.result is None
 
 

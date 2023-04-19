@@ -41,6 +41,5 @@ void TableContactGroups::answerQuery(Query &query, const User & /*user*/) {
 
 Row TableContactGroups::get(const std::string &primary_key) const {
     // "name" is the primary key
-    auto cg = core()->find_contactgroup(primary_key);
-    return Row{cg ? cg->handle() : nullptr};
+    return Row{core()->find_contactgroup(primary_key)};
 }

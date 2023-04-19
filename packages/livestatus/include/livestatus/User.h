@@ -7,11 +7,14 @@
 #define auth_h
 
 #include <functional>
-#include <memory>
 #include <string>
 
-// Different versions of the system headers differ in their requirements. :-/
-#include "livestatus/Interface.h"  // IWYU pragma: keep
+class IContact;
+class IContactGroup;
+class IHost;
+class IHostGroup;
+class IService;
+class IServiceGroup;
 
 enum class ServiceAuthorization {
     loose = 0,   // contacts for hosts see all services
@@ -45,11 +48,10 @@ public:
 
 class AuthUser : public User {
 public:
-    AuthUser(
-        const IContact &auth_user, ServiceAuthorization service_auth,
-        GroupAuthorization group_auth,
-        std::function<std::unique_ptr<const IContactGroup>(const std::string &)>
-            find_contact_group);
+    AuthUser(const IContact &auth_user, ServiceAuthorization service_auth,
+             GroupAuthorization group_auth,
+             std::function<const IContactGroup *(const std::string &)>
+                 find_contact_group);
 
     [[nodiscard]] bool is_authorized_for_object(
         const IHost *hst, const IService *svc,
@@ -69,7 +71,7 @@ private:
     const IContact &auth_user_;
     ServiceAuthorization service_auth_;
     GroupAuthorization group_auth_;
-    std::function<std::unique_ptr<const IContactGroup>(const std::string &)>
+    std::function<const IContactGroup *(const std::string &)>
         find_contact_group_;
 };
 

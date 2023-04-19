@@ -111,7 +111,7 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.close_div()
 
         html.open_div(id_="info_footer")
-        html.span(_("© %s tribe29 GmbH. All Rights Reserved.") % time.strftime("%Y"))
+        html.span(_("© %s Checkmk GmbH. All Rights Reserved.") % time.strftime("%Y"))
         html.a(_("License agreement"), href="https://checkmk.com/legal.html", target="_blank")
         html.close_div()
 

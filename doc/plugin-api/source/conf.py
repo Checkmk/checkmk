@@ -25,8 +25,8 @@ sys.path.insert(0, os.path.abspath("../../../"))
 # -- Project information -----------------------------------------------------
 
 project = "Checkmk's Plugin API"
-copyright = "2020, tribe29 GmbH"  # pylint: disable=redefined-builtin
-author = "tribe29"
+copyright = "2023, Checkmk GmbH"  # pylint: disable=redefined-builtin
+author = "Checkmk GmbH"
 
 # -- General configuration ---------------------------------------------------
 

@@ -21,8 +21,8 @@ sys.path.insert(0, os.path.join(DOC_ROOT, "..", ".."))
 # -- Project information -----------------------------------------------------
 
 project = 'CheckMK'
-copyright = '2019, Tribe 29'
-author = 'Tribe 29'
+copyright = '2019, Checkmk GmbH'
+author = 'Checkmk GmbH'
 
 
 # -- General configuration ---------------------------------------------------

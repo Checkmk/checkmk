@@ -1612,7 +1612,7 @@ def _valuespec_active_checks_ldap():
             ),
             TextInput(
                 title=_("Base DN"),
-                help=_("LDAP base, e.g. ou=Development, o=tribe29 GmbH, c=de"),
+                help=_("LDAP base, e.g. ou=Development, o=Checkmk GmbH, c=de"),
                 allow_empty=False,
                 size=60,
             ),

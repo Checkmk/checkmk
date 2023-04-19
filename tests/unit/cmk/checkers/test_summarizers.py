@@ -45,7 +45,7 @@ class TestPiggybackSummarizer:
             ipaddress="1.2.3.4",
             time_settings=[("", "", 0)],
             is_piggyback=False,
-        ) == [ActiveCheckResult(0, "Success (but no data found)")]
+        ) == [ActiveCheckResult(0, "Success (but no data found for this host)")]
 
     def test_summarize_missing_data_with_is_piggyback_option(self) -> None:
         assert summarize_piggyback(

@@ -1,0 +1,16 @@
+Title: cisco_meraki_org_licenses_overview: Use NAME/ID as item name
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1681902550
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b5
+
+Previously we only used the organisation ID as item name. Now we added the
+organisation name and you have to rediscover the related {{Licenses Overview}}
+services.
+
+

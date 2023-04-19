@@ -193,7 +193,7 @@ def page_login() -> None:
     html.end_form()
     html.open_div(id_="loginfoot")
     html.img("themes/facelift/images/logo_cmk_small.png", class_="logomk")
-    html.div(HTML(_("&copy; <a target=\"_blank\" href=\"https://checkmk.com\">tribe29 GmbH</a>")),
+    html.div(HTML(_("&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>")),
              class_="copyright")
     html.close_div()  # close content-div
     html.close_div()

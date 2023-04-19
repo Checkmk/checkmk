@@ -587,7 +587,7 @@ class LoginPage(Page):
             footer.append("Version: %s" % cmk_version.__version__)
 
         footer.append("&copy; %s" %
-                      html.render_a("tribe29 GmbH", href="https://checkmk.com", target="_blank"))
+                      html.render_a("Checkmk GmbH", href="https://checkmk.com", target="_blank"))
 
         html.write(HTML(" - ").join(footer))
 

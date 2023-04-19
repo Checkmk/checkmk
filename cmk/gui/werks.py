@@ -110,7 +110,7 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
         html.close_div()
 
         html.open_div(id_="release_footer")
-        html.span(_("© 2020 tribe29 GmbH. All Rights Reserved."))
+        html.span(_("© 2020 Checkmk GmbH. All Rights Reserved."))
         html.a(_("License aggreement"), href="https://checkmk.com/legal.html", target="_blank")
         html.a(_("Imprint"), href="https://checkmk.com/impressum.html", target="_blank")
         html.close_div()

@@ -1067,7 +1067,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "msoffice_serviceplans",
         "mssql_connections",
         "mssql_instance",
-        "mssql_tablespaces",
         "mysql",
         "mysql.sessions",
         "mysql.innodb_io",

@@ -103,4 +103,4 @@ def summarize_piggyback(
 
     if is_piggyback:
         return [ActiveCheckResult(1, "Missing data")]
-    return [ActiveCheckResult(0, "Success (but no data found)")]
+    return [ActiveCheckResult(0, "Success (but no data found for this host)")]

@@ -39,6 +39,7 @@ from cmk.gui.type_defs import (
     Choices,
     GraphConsoldiationFunction,
     GraphPresentation,
+    HorizontalRule,
     LineType,
     MetricDefinition,
     MetricExpression,
@@ -47,6 +48,7 @@ from cmk.gui.type_defs import (
     RenderableRecipe,
     RGBColor,
     Row,
+    RPNExpression,
     TranslatedMetric,
     TranslatedMetrics,
     UnitInfo,
@@ -57,12 +59,9 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
 
-RPNExpression = tuple  # TODO: Improve this type
-
 LegacyPerfometer = tuple[str, Any]
 
 ScalarDefinition = Union[str, tuple[str, str | LazyString]]
-HorizontalRule = tuple[float, str, str, str | LazyString]
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
@@ -125,17 +124,6 @@ class GraphTemplate(_GraphTemplateMandatory, total=False):
 
 
 GraphRecipe = dict[str, Any]
-
-
-class _GraphMetricMandatory(TypedDict):
-    title: str
-    line_type: LineType
-    expression: RPNExpression
-
-
-class GraphMetric(_GraphMetricMandatory, total=False):
-    unit: str
-    color: str
 
 
 RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]

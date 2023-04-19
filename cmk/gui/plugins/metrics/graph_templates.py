@@ -19,7 +19,6 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_template,
     get_graph_templates,
     GraphConsoldiationFunction,
-    GraphMetric,
     GraphRecipe,
     GraphTemplate,
     horizontal_rules_from_thresholds,
@@ -27,13 +26,12 @@ from cmk.gui.plugins.metrics.utils import (
     metrics_used_in_expression,
     MetricUnitColor,
     replace_expressions,
-    RPNExpression,
     split_expression,
     stack_resolver,
     translated_metrics_from_row,
     TranslatedMetrics,
 )
-from cmk.gui.type_defs import MetricDefinition, Row, TemplateGraphSpec
+from cmk.gui.type_defs import GraphMetric, MetricDefinition, Row, RPNExpression, TemplateGraphSpec
 from cmk.gui.views.painter_options import PainterOptions
 
 

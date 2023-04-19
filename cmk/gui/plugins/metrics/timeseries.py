@@ -19,12 +19,12 @@ from cmk.gui.plugins.metrics.utils import (
     Curve,
     ExpressionParams,
     fade_color,
-    GraphMetric,
     parse_color,
     render_color,
     RRDData,
     time_series_expression_registry,
 )
+from cmk.gui.type_defs import GraphMetric
 
 # .
 #   .--Curves--------------------------------------------------------------.

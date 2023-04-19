@@ -9,8 +9,8 @@ import pytest
 
 import cmk.gui.metrics as metrics
 import cmk.gui.plugins.metrics.graph_templates as gt
-from cmk.gui.plugins.metrics.utils import GraphTemplate, RPNExpression
-from cmk.gui.type_defs import GraphConsoldiationFunction, MetricExpression
+from cmk.gui.plugins.metrics.utils import GraphTemplate
+from cmk.gui.type_defs import GraphConsoldiationFunction, MetricExpression, RPNExpression
 
 
 @pytest.mark.parametrize(

@@ -27,12 +27,11 @@ from cmk.gui.plugins.metrics.utils import (
     GraphDataRange,
     GraphRecipe,
     GraphRenderOptions,
-    HorizontalRule,
     SizeEx,
     unit_info,
     UnitInfo,
 )
-from cmk.gui.type_defs import CombinedGraphSpec, UnitRenderFunc
+from cmk.gui.type_defs import CombinedGraphSpec, HorizontalRule, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
 Label = tuple[float, str | None, int]

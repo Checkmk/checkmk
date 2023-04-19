@@ -25,12 +25,11 @@ from cmk.gui.plugins.metrics.utils import (
     CombinedGraphMetricSpec,
     GraphConsoldiationFunction,
     GraphDataRange,
-    GraphMetric,
     GraphRecipe,
     reverse_translate_metric_name,
     RRDData,
 )
-from cmk.gui.type_defs import ColumnName, CombinedGraphSpec
+from cmk.gui.type_defs import ColumnName, CombinedGraphSpec, GraphMetric
 
 
 def fetch_rrd_data_for_graph(

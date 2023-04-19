@@ -632,6 +632,20 @@ class RowShading(TypedDict):
     heading: RGBColor
 
 
+RPNExpression = tuple  # TODO: Improve this type
+
+HorizontalRule = tuple[float, str, str, str | LazyString]
+
+
+class GraphMetric(TypedDict):
+    title: str
+    line_type: LineType
+    expression: RPNExpression
+    unit: NotRequired[str]
+    color: NotRequired[str]
+    visible: NotRequired[bool]
+
+
 class GraphSpec(TypedDict):
     pass
 
@@ -645,18 +659,15 @@ class TemplateGraphSpec(GraphSpec):
 
 
 class ExplicitGraphSpec(GraphSpec):
-    # This is added during run time by GraphIdentificationExplicit.create_graph_recipes. Where is it used?
-    specification: NotRequired[tuple[Literal["explicit"], GraphSpec]]  # TODO: Use ExplicitGraphSpec
-    # I'd bet they are not mandatory. Needs to be figured out
-    title: NotRequired[str]
-    unit: NotRequired[str]
-    consolidation_function: NotRequired[GraphConsoldiationFunction | None]
-    explicit_vertical_range: NotRequired[tuple[float | None, float | None]]
-    omit_zero_metrics: NotRequired[bool]
-    horizontal_rules: NotRequired[list]  # TODO: Be more specific
-    context: NotRequired[VisualContext]
-    add_context_to_title: NotRequired[bool]
-    metrics: NotRequired[list]  # TODO: Be more specific
+    title: str
+    unit: str
+    consolidation_function: GraphConsoldiationFunction | None
+    explicit_vertical_range: tuple[float | None, float | None]
+    omit_zero_metrics: bool
+    horizontal_rules: Sequence[HorizontalRule]
+    context: VisualContext
+    add_context_to_title: bool
+    metrics: Sequence[GraphMetric]
 
 
 class CombinedGraphSpec(GraphSpec):

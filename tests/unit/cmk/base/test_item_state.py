@@ -7,6 +7,7 @@
 import pytest
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostName
 
 from cmk.base import item_state
 from cmk.base.api.agent_based import value_store
@@ -18,7 +19,7 @@ def test_item_state_prefix_required(monkeypatch) -> None:  # type: ignore[no-unt
     monkeypatch.setattr(
         value_store._global_state,
         "_active_host_value_store",
-        value_store.ValueStoreManager("test-host"),
+        value_store.ValueStoreManager(HostName("test-host")),
     )
     # we *must* set a prefix:
     with pytest.raises(MKGeneralException):

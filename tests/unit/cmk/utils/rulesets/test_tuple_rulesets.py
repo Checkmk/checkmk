@@ -19,6 +19,7 @@ from tests.testlib.base import Scenario
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.version as cmk_version
 from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
 from cmk.base.config import RuleSpec
@@ -33,12 +34,13 @@ def fake_version(monkeypatch):
 def ts(monkeypatch):
     ts = Scenario(site_id="site1")
     ts.add_host(
-        "host1",
+        HostName("host1"),
         tags={TagGroupID("agent"): TagID("no-agent"), TagGroupID("criticality"): TagID("test")},
     )
-    ts.add_host("host2", tags={TagGroupID("agent"): TagID("no-agent")})
+    ts.add_host(HostName("host2"), tags={TagGroupID("agent"): TagID("no-agent")})
     ts.add_host(
-        "host3", tags={TagGroupID("agent"): TagID("no-agent"), TagGroupID("site"): TagID("site2")}
+        HostName("host3"),
+        tags={TagGroupID("agent"): TagID("no-agent"), TagGroupID("site"): TagID("site2")},
     )
     ts.apply(monkeypatch)
     return ts
@@ -88,7 +90,7 @@ def test_service_extra_conf(ts: Scenario) -> None:
         {"condition": {"host_name": {"$nor": ["host2"]}}, "options": {}, "value": "12"},
     ]
 
-    assert ts.config_cache.service_extra_conf("host1", "service1", ruleset) == [
+    assert ts.config_cache.service_extra_conf(HostName("host1"), "service1", ruleset) == [
         "1",
         "2",
         "3",
@@ -99,7 +101,7 @@ def test_service_extra_conf(ts: Scenario) -> None:
         "12",
     ]
 
-    assert ts.config_cache.service_extra_conf("host1", "serv", ruleset) == [
+    assert ts.config_cache.service_extra_conf(HostName("host1"), "serv", ruleset) == [
         "1",
         "2",
         "3",
@@ -110,7 +112,12 @@ def test_service_extra_conf(ts: Scenario) -> None:
         "12",
     ]
 
-    assert ts.config_cache.service_extra_conf("host2", "service1", ruleset) == ["1", "2", "3", "11"]
+    assert ts.config_cache.service_extra_conf(HostName("host2"), "service1", ruleset) == [
+        "1",
+        "2",
+        "3",
+        "11",
+    ]
 
 
 @pytest.fixture(scope="function")
@@ -152,7 +159,7 @@ def host_ruleset():
 
 
 def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
-    assert ts.config_cache.host_extra_conf("host1", host_ruleset) == [
+    assert ts.config_cache.host_extra_conf(HostName("host1"), host_ruleset) == [
         {"1": True},
         {"2": True},
         {"3": True},
@@ -162,7 +169,7 @@ def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]])
         {"9": True},
     ]
 
-    assert ts.config_cache.host_extra_conf("host2", host_ruleset) == [
+    assert ts.config_cache.host_extra_conf(HostName("host2"), host_ruleset) == [
         {"1": True},
         {"2": True},
         {"8": True},
@@ -170,7 +177,7 @@ def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]])
 
 
 def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
-    assert ts.config_cache.host_extra_conf_merged("host1", host_ruleset) == {
+    assert ts.config_cache.host_extra_conf_merged(HostName("host1"), host_ruleset) == {
         "1": True,
         "2": True,
         "3": True,
@@ -180,7 +187,7 @@ def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Sequence[RuleSpec[ob
         "9": True,
     }
 
-    assert ts.config_cache.host_extra_conf_merged("host2", host_ruleset) == {
+    assert ts.config_cache.host_extra_conf_merged(HostName("host2"), host_ruleset) == {
         "1": True,
         "2": True,
         "8": True,
@@ -318,10 +325,12 @@ def test_in_boolean_serviceconf_list(
     ruleset, outcome_host1, outcome_host2 = parameters
 
     assert (
-        ts.config_cache.in_boolean_serviceconf_list("host1", "service1", ruleset) == outcome_host1
+        ts.config_cache.in_boolean_serviceconf_list(HostName("host1"), "service1", ruleset)
+        == outcome_host1
     )
     assert (
-        ts.config_cache.in_boolean_serviceconf_list("host2", "service2", ruleset) == outcome_host2
+        ts.config_cache.in_boolean_serviceconf_list(HostName("host2"), "service2", ruleset)
+        == outcome_host2
     )
 
 

@@ -12,6 +12,7 @@ from pytest_mock import MockerFixture
 
 import cmk.utils.auto_queue
 from cmk.utils.auto_queue import AutoQueue, TimeLimitFilter
+from cmk.utils.type_defs import HostName
 
 
 def test_time_limit_filter_iterates() -> None:
@@ -34,8 +35,8 @@ def test_time_limit_filter_stops() -> None:
 def _mocked_queue(tmpdir: Path) -> Iterator[AutoQueue]:
     adq = AutoQueue(tmpdir / "dir1")
     mockdir = Path(tmpdir)
-    (mockdir / "most").touch()
-    (mockdir / "lost").touch()
+    (mockdir / HostName("most")).touch()
+    (mockdir / HostName("lost")).touch()
     adq._dir = mockdir
     yield adq
 
@@ -60,26 +61,28 @@ class TestAutoQueue:
         assert not list(auto_queue.queued_hosts())
 
     def test_queued_populated(self, auto_queue: AutoQueue) -> None:
-        assert set(auto_queue.queued_hosts()) == {"most", "lost"}
+        assert set(auto_queue.queued_hosts()) == {HostName("most"), HostName("lost")}
 
     def test_add(self, tmpdir: Path, auto_queue: AutoQueue) -> None:
         auto_queue = AutoQueue(tmpdir / "dir2")
-        auto_queue.add("most")
-        assert list(auto_queue.queued_hosts()) == ["most"]
+        auto_queue.add(HostName("most"))
+        assert list(auto_queue.queued_hosts()) == [HostName("most")]
 
     def test_add_existing(self, tmpdir: Path, auto_queue: AutoQueue, mocker: MockerFixture) -> None:
         auto_queue = AutoQueue(tmpdir / "dir2")
-        auto_queue.add("most")
+        auto_queue.add(HostName("most"))
 
         mock_touch = mocker.patch.object(cmk.utils.auto_queue.Path, "touch")
-        auto_queue.add("most")
+        auto_queue.add(HostName("most"))
 
         mock_touch.assert_not_called()
 
     def test_remove(self, auto_queue: AutoQueue) -> None:
-        auto_queue.remove("lost")
-        assert list(auto_queue.queued_hosts()) == ["most"]
+        auto_queue.remove(HostName("lost"))
+        assert list(auto_queue.queued_hosts()) == [HostName("most")]
 
     def test_cleanup(self, auto_queue: AutoQueue) -> None:
-        auto_queue.cleanup(valid_hosts={"lost", "rost"}, logger=lambda x: None)
+        auto_queue.cleanup(
+            valid_hosts={HostName("lost"), HostName("rost")}, logger=lambda *args, **kw: None
+        )
         assert list(auto_queue.queued_hosts()) == ["lost"]

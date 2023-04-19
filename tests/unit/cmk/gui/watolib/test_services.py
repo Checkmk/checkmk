@@ -53,7 +53,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
                 ("load15", 1.32, 40.0, 80.0, 0, 8),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "active",
@@ -67,7 +67,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
             "WAITING - Active check, cannot be done offline",
             [],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
     ],
     host_labels={"cmk/check_mk_server": {"plugin_name": "labels", "value": "yes"}},

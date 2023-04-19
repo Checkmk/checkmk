@@ -38,6 +38,17 @@ INFO_MISSING_TIME_SYSLOG = deepcopy(INFO)
 INFO_MISSING_TIME_SYSLOG[4][3] = ""
 
 
+@pytest.fixture(name="disable_timezone")
+def disable_timezone_fixture(monkeypatch: MonkeyPatch) -> None:
+    """Some of our tests are based on predefined times in the past, filename lnked to this time
+    but verified using $DATE. Because $DATE considers timezone, and we have timezone randomizer,
+    those tests could be flaky. We have to disable timezone influence on some of our tests.
+    Alternative is a dynamic, timezone aware test fixtures and/or architecture which considers
+    timezone change.
+    """
+    monkeypatch.setattr(time, "localtime", time.gmtime)
+
+
 def test_fileinfo_min_max_age_levels() -> None:
     # This test has the following purpose:
     # For each file attr (size or age) the levels 'min*', 'max*' are evaluated.
@@ -537,15 +548,13 @@ def test_check_fileinfo_group_patterns_host_extra_conf(
         ),
     ],
 )
+@pytest.mark.usefixtures("disable_timezone")
 def test_fileinfo_discovery(
     info: StringTable,
     params: DiscoveryParams,
     expected_result: DiscoveryResult,
-    monkeypatch: MonkeyPatch,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-
-    monkeypatch.setattr(time, "localtime", time.gmtime)
     discovery_result = fileinfo_utils.discovery_fileinfo(params, section)
     assert list(discovery_result) == expected_result
 
@@ -828,15 +837,13 @@ def test_fileinfo_check(
         ),
     ],
 )
+@pytest.mark.usefixtures("disable_timezone")
 def test_fileinfo_group_discovery(
     info: StringTable,
     params: DiscoveryParams,
     expected_result: DiscoveryResult,
-    monkeypatch: MonkeyPatch,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-
-    monkeypatch.setattr(time, "localtime", time.gmtime)
     discovery_result = fileinfo_utils.discovery_fileinfo_groups(params, section)
     assert list(discovery_result) == expected_result
 
@@ -967,16 +974,14 @@ def test_fileinfo_group_discovery(
         ),
     ],
 )
+@pytest.mark.usefixtures("disable_timezone")
 @freeze_time("2021-07-12 12:00")
 def test_fileinfo_groups_check(
     info: StringTable,
     item: str,
     params: Mapping[str, object],
     expected_result: CheckResult,
-    monkeypatch: MonkeyPatch,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-
-    monkeypatch.setattr(time, "localtime", time.gmtime)
     check_result = fileinfo_plugin.check_fileinfo_groups(item, params, section)
     assert list(check_result) == expected_result

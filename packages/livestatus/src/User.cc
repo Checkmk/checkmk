@@ -9,13 +9,13 @@
 #include <utility>
 #include <vector>
 
+#include "livestatus/Interface.h"
 #include "livestatus/StringUtils.h"
 
-AuthUser::AuthUser(
-    const IContact &auth_user, ServiceAuthorization service_auth,
-    GroupAuthorization group_auth,
-    std::function<std::unique_ptr<const IContactGroup>(const std::string &)>
-        find_contact_group)
+AuthUser::AuthUser(const IContact &auth_user, ServiceAuthorization service_auth,
+                   GroupAuthorization group_auth,
+                   std::function<const IContactGroup *(const std::string &)>
+                       find_contact_group)
     : auth_user_{auth_user}
     , service_auth_{service_auth}
     , group_auth_{group_auth}
@@ -65,7 +65,7 @@ bool AuthUser::is_authorized_for_event(const std::string &precedence,
         auto groups{mk::ec::split_list(contact_groups)};
         return std::any_of(groups.begin(), groups.end(),
                            [this](const auto &group) {
-                               const auto cg = find_contact_group_(group);
+                               const auto *cg = find_contact_group_(group);
                                return cg && cg->isMember(auth_user_);
                            });
     };

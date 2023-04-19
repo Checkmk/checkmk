@@ -9,7 +9,6 @@
 #include <atomic>
 #include <cstdlib>
 #include <iterator>
-#include <memory>
 #include <utility>
 
 #include "Comment.h"
@@ -26,7 +25,6 @@
 #include "NebTimeperiod.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Average.h"
-#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"
@@ -75,6 +73,11 @@ NagiosCore::NagiosCore(
     for (const ::contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
         icontacts_[ctc] = std::make_unique<NebContact>(*ctc);
     }
+
+    for (const ::contactgroup *cg = contactgroup_list; cg != nullptr;
+         cg = cg->next) {
+        icontactgroups_[cg] = std::make_unique<NebContactGroup>(*cg);
+    }
 }
 
 std::unique_ptr<const IHost> NagiosCore::find_host(const std::string &name) {
@@ -117,14 +120,11 @@ std::unique_ptr<const IService> NagiosCore::find_service(
     return svc == nullptr ? nullptr : std::make_unique<NebService>(*svc);
 }
 
-std::unique_ptr<const IContactGroup> NagiosCore::find_contactgroup(
-    const std::string &name) {
+const IContactGroup *NagiosCore::find_contactgroup(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
-    if (const auto *cg =
-            ::find_contactgroup(const_cast<char *>(name.c_str()))) {
-        return std::make_unique<NebContactGroup>(*cg);
-    }
-    return {};
+    auto it = icontactgroups_.find(
+        ::find_contactgroup(const_cast<char *>(name.c_str())));
+    return it == icontactgroups_.end() ? nullptr : it->second.get();
 }
 
 std::unique_ptr<const IServiceGroup> NagiosCore::find_servicegroup(
@@ -151,9 +151,7 @@ std::unique_ptr<const User> NagiosCore::find_user(const std::string &name) {
     if (const auto *ctc = find_contact(name)) {
         return std::make_unique<AuthUser>(
             *ctc, _authorization._service, _authorization._group,
-            [this](const std::string &name) {
-                return this->find_contactgroup(name);
-            });
+            [this](const auto &n) { return this->find_contactgroup(n); });
     }
     return std::make_unique<UnknownUser>();
 }
@@ -294,12 +292,9 @@ bool NagiosCore::all_of_timeperiods(
 
 bool NagiosCore::all_of_contact_groups(
     const std::function<bool(const IContactGroup &)> &pred) const {
-    for (const auto *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
-        if (!pred(NebContactGroup{*cg})) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(
+        icontactgroups_.cbegin(), icontactgroups_.cend(),
+        [&pred](const auto &entry) { return pred(*entry.second); });
 }
 
 bool NagiosCore::all_of_host_groups(

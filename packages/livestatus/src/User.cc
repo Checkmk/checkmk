@@ -14,7 +14,7 @@
 AuthUser::AuthUser(
     const IContact &auth_user, ServiceAuthorization service_auth,
     GroupAuthorization group_auth,
-    std::function<std::unique_ptr<IContactGroup>(const std::string &)>
+    std::function<std::unique_ptr<const IContactGroup>(const std::string &)>
         make_contact_group)
     : auth_user_{auth_user}
     , service_auth_{service_auth}

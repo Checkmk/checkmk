@@ -49,7 +49,7 @@ public:
         const IContact &auth_user, ServiceAuthorization service_auth,
         GroupAuthorization group_auth,
         std::function<std::unique_ptr<const IContactGroup>(const std::string &)>
-            make_contact_group);
+            find_contact_group);
 
     [[nodiscard]] bool is_authorized_for_object(
         const IHost *hst, const IService *svc,
@@ -70,7 +70,7 @@ private:
     ServiceAuthorization service_auth_;
     GroupAuthorization group_auth_;
     std::function<std::unique_ptr<const IContactGroup>(const std::string &)>
-        make_contact_group_;
+        find_contact_group_;
 };
 
 class NoAuthUser : public User {

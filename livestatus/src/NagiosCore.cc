@@ -119,7 +119,12 @@ std::unique_ptr<const IService> NagiosCore::find_service(
 
 std::unique_ptr<const IContactGroup> NagiosCore::find_contactgroup(
     const std::string &name) {
-    return std::make_unique<NebContactGroup>(name);
+    // Older Nagios headers are not const-correct... :-P
+    if (const auto *cg =
+            ::find_contactgroup(const_cast<char *>(name.c_str()))) {
+        return std::make_unique<NebContactGroup>(*cg);
+    }
+    return {};
 }
 
 std::unique_ptr<const IServiceGroup> NagiosCore::find_servicegroup(
@@ -146,8 +151,8 @@ std::unique_ptr<const User> NagiosCore::find_user(const std::string &name) {
     if (const auto *ctc = find_contact(name)) {
         return std::make_unique<AuthUser>(
             *ctc, _authorization._service, _authorization._group,
-            [](const std::string &name) {
-                return std::make_unique<NebContactGroup>(name);
+            [this](const std::string &name) {
+                return this->find_contactgroup(name);
             });
     }
     return std::make_unique<UnknownUser>();

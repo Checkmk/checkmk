@@ -15,11 +15,11 @@ AuthUser::AuthUser(
     const IContact &auth_user, ServiceAuthorization service_auth,
     GroupAuthorization group_auth,
     std::function<std::unique_ptr<const IContactGroup>(const std::string &)>
-        make_contact_group)
+        find_contact_group)
     : auth_user_{auth_user}
     , service_auth_{service_auth}
     , group_auth_{group_auth}
-    , make_contact_group_{std::move(make_contact_group)} {}
+    , find_contact_group_{std::move(find_contact_group)} {}
 
 bool AuthUser::is_authorized_for_object(const IHost *hst, const IService *svc,
                                         bool authorized_if_no_host) const {
@@ -63,10 +63,11 @@ bool AuthUser::is_authorized_for_event(const std::string &precedence,
                                        const IHost *hst) const {
     auto is_authorized_via_contactgroups = [this, &contact_groups]() {
         auto groups{mk::ec::split_list(contact_groups)};
-        return std::any_of(
-            groups.begin(), groups.end(), [this](const auto &group) {
-                return make_contact_group_(group)->isMember(auth_user_);
-            });
+        return std::any_of(groups.begin(), groups.end(),
+                           [this](const auto &group) {
+                               const auto cg = find_contact_group_(group);
+                               return cg && cg->isMember(auth_user_);
+                           });
     };
     if (precedence == "rule") {
         if (!mk::ec::is_none(contact_groups)) {

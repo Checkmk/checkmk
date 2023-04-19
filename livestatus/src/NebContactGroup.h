@@ -13,31 +13,28 @@
 
 class NebContactGroup : public IContactGroup {
 public:
-    // Older Nagios headers are not const-correct... :-P
-    explicit NebContactGroup(const std::string &name)
-        : contact_group_{
-              ::find_contactgroup(const_cast<char *>(name.c_str()))} {}
     explicit NebContactGroup(const contactgroup &contact_group)
-        : contact_group_{&contact_group} {}
-    [[nodiscard]] const void *handle() const override { return contact_group_; }
-    // Older Nagios headers are not const-correct... :-P
+        : contact_group_{contact_group} {}
+
+    [[nodiscard]] const void *handle() const override {
+        return &contact_group_;
+    }
     [[nodiscard]] bool isMember(const IContact &contact) const override {
+        // Older Nagios headers are not const-correct... :-P
         return ::is_contact_member_of_contactgroup(
-                   const_cast<contactgroup *>(contact_group_),
+                   const_cast<contactgroup *>(&contact_group_),
                    const_cast<::contact *>(
                        static_cast<const ::contact *>(contact.handle()))) != 0;
     }
     [[nodiscard]] std::string name() const override {
-        return contact_group_->group_name == nullptr
-                   ? ""
-                   : contact_group_->group_name;
+        return contact_group_.group_name;
     }
     [[nodiscard]] std::string alias() const override {
-        return contact_group_->alias == nullptr ? "" : contact_group_->alias;
+        return contact_group_.alias == nullptr ? "" : contact_group_.alias;
     }
     [[nodiscard]] std::vector<std::string> contactNames() const override {
         std::vector<std::string> names;
-        for (const auto *cm = contact_group_->members; cm != nullptr;
+        for (const auto *cm = contact_group_.members; cm != nullptr;
              cm = cm->next) {
             names.emplace_back(cm->contact_ptr->name);
         }
@@ -45,7 +42,7 @@ public:
     }
 
 private:
-    const contactgroup *contact_group_;
+    const contactgroup &contact_group_;
 };
 
 #endif  // NebContactGroup_h

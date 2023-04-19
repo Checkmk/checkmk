@@ -10,7 +10,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ActivateChangesClient, HostClient
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
@@ -460,15 +460,19 @@ def test_automation_set_autochecks(site: Site) -> None:
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> None:
+def test_automation_update_dns_cache(
+    site: Site,
+    host_client: HostClient,
+    activate_changes_client: ActivateChangesClient,
+) -> None:
     cache_path = "var/check_mk/ipaddresses.cache"
 
     if site.file_exists(cache_path):
         site.delete_file(cache_path)
 
     try:
-        clients.Host.create(host_name="update-dns-cache-host.")
-        clients.Host.create(host_name="localhost")
+        host_client.create(host_name="update-dns-cache-host.")
+        host_client.create(host_name="localhost")
 
         site.write_text_file(cache_path, "{('bla', 4): '127.0.0.1'}")
 
@@ -485,9 +489,9 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
         assert cache[("localhost", 4)] == "127.0.0.1"
         assert ("bla", 4) not in cache
     finally:
-        clients.Host.delete("localhost")
-        clients.Host.delete("update-dns-cache-host.")
-        clients.ActivateChanges.call_activate_changes_and_wait_for_completion()
+        host_client.delete("localhost")
+        host_client.delete("update-dns-cache-host.")
+        activate_changes_client.call_activate_changes_and_wait_for_completion()
 
 
 # TODO: Test with the different cores

@@ -211,10 +211,10 @@ class FileCache(Generic[TRawData], abc.ABC):
             return raw_data
 
         if self.simulation:
-            raise MKFetcherError("Got no data (Simulation mode enabled and no cached data present)")
+            raise MKFetcherError("No cached data available (caching enforced via simulation mode)")
 
         if self.use_only_cache:
-            raise MKFetcherError("Got no data (use_only_cache)")
+            raise MKFetcherError("No cached data available")
 
         return raw_data
 

@@ -65,7 +65,7 @@ class LinkSchema(BaseSchema):
     method = fields.String(
         description="The HTTP method to use to traverse the link (get, post, put or delete)",
         required=True,
-        pattern="GET|PUT|POST|DELETE",
+        enum=["GET", "PUT", "POST", "DELETE"],
         example="GET",
     )
     type = fields.String(
@@ -399,7 +399,7 @@ class MoveFolder(BaseSchema):
             "The folder-id of the folder to which this folder shall be moved to. May "
             "be 'root' for the root-folder."
         ),
-        pattern="[a-fA-F0-9]{32}|root",
+        pattern="^[a-fA-F0-9]{32}$|root",
         example="root",
         required=True,
     )

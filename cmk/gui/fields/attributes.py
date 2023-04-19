@@ -345,14 +345,14 @@ class TimeAllowedRange(BaseSchema, CheckmkTuple):
             "The start time of day. Inclusive. " "Use ISO8601 format. Seconds are stripped."
         ),
         required=True,
-        pattern=r"\d\d\:\d\d\(:\d\d)?",
+        pattern=r"^\d\d\:\d\d\(:\d\d)?$",
     )
     end = Time(
         description=(
             "The end time of day. Inclusive. " "Use ISO8601 format. Seconds are stripped."
         ),
         required=True,
-        pattern=r"\d\d\:\d\d\(:\d\d)?",
+        pattern=r"^\d\d\:\d\d\(:\d\d)?$",
     )
 
 

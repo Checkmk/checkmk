@@ -116,7 +116,7 @@ class TimeRangeActive(BaseSchema):
     day = fields.String(
         description="The day for which time ranges are to be specified. The 'all' "
         "option allows to specify time ranges for all days.",
-        pattern=f"all|{'|'.join(weekday_ids())}",
+        enum=["all"] + weekday_ids(),
         load_default="all",
     )
     time_ranges = fields.List(

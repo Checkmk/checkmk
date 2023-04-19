@@ -42,7 +42,7 @@ IDENT_FIELD = {
             "in this number."
         ),
         example="49167bd012b44719a67956cf3ef7b3dd",
-        pattern="[a-fA-F0-9]{32}|root",
+        pattern="^[a-fA-F0-9]{32}$|root",
     )
 }
 

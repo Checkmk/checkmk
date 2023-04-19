@@ -29,7 +29,7 @@ class ConcreteTimeRange(BaseSchema):
 class ConcreteTimeRangeActive(BaseSchema):
     day = fields.String(
         description="The day for which the time ranges are specified",
-        pattern=f"{'|'.join(weekday_ids())}",
+        enum=weekday_ids(),
     )
     time_ranges = fields.List(
         fields.Nested(ConcreteTimeRange),

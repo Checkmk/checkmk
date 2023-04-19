@@ -1,0 +1,24 @@
+Title: schemas: regex pattern updates
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1681891305
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces a fix to the pattern attribute in various
+rest-api schemas.
+
+To avoid partial matches, regex patterns should start with
+the caret and end with the dollar symbol.
+
+Also, the + symbol should be preferred over the * symbol as
+the * symbol allowed for zero or more matches instead of
+1 or more which is what the + symbol gives us.
+
+For patterns that list possible options, e.g.
+  monday|tuesday|wedneday... etc
+they have instead been removed and replaced with enums.
+

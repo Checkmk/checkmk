@@ -481,7 +481,7 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
         site.delete_file(cache_path)
 
     try:
-        clients.Host.create(host_name="update-dns-cache-host.")
+        clients.Host.create(host_name="update-dns-cache-host")
         clients.Host.create(host_name="localhost")
 
         site.write_text_file(cache_path, "{('bla', 4): '127.0.0.1'}")
@@ -500,7 +500,7 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
         assert ("bla", 4) not in cache
     finally:
         clients.Host.delete("localhost")
-        clients.Host.delete("update-dns-cache-host.")
+        clients.Host.delete("update-dns-cache-host")
         clients.ActivateChanges.call_activate_changes_and_wait_for_completion()
 
 

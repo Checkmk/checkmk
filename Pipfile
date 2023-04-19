@@ -71,6 +71,7 @@ py-import-cycles = "==0.1.11"  # used in tests/Makefile
 types-pysaml2 = "==1.0.1"  # typing extension for pysaml2
 telnetlib3 = "==2.0.0"  # used by Windows Agent tests
 ruff = "==0.0.240"  # newer versions have problems with the match statement
+pexpect = "==4.8.0"  # used for update testing
 
 [packages]
 setuptools_scm = "==4.1.2"  # needed by various setup.py

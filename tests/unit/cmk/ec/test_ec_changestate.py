@@ -10,6 +10,8 @@ from tests.testlib import CMKEventConsole
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
+from cmk.utils.type_defs import HostName
+
 from cmk.ec.main import Event, EventStatus, StatusServer
 from cmk.ec.query import MKClientError
 
@@ -30,7 +32,7 @@ def test_change_event_state(event_status: EventStatus, status_server: StatusServ
     event: Event = {
         "host": "ABC1",
         "text": "not important",
-        "core_host": "ABC",
+        "core_host": HostName("ABC"),
     }
     event_status.new_event(CMKEventConsole.new_event(event))
     assert len(event_status.events()) == 1
@@ -49,12 +51,12 @@ def test_changetestate_of_multiple_events(
         {
             "host": "ABC1",
             "text": "event1 text",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         },
         {
             "host": "ABC2",
             "text": "event2 text",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         },
     ]
     for event in events:
@@ -77,12 +79,12 @@ def test_changestate_of_partially_existing_multiple_events(
         {
             "host": "ABC1",
             "text": "event1 text",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         },
         {
             "host": "ABC2",
             "text": "event2 text",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         },
     ]
     for event in events:

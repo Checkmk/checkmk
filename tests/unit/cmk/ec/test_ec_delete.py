@@ -7,6 +7,8 @@ from tests.testlib import CMKEventConsole
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
+from cmk.utils.type_defs import HostName
+
 from cmk.ec.main import Event, EventStatus, StatusServer
 
 
@@ -15,7 +17,7 @@ def test_delete_event(event_status: EventStatus, status_server: StatusServer) ->
     event: Event = {
         "host": "ABC1",
         "text": "not important",
-        "core_host": "ABC",
+        "core_host": HostName("ABC"),
     }
     event_status.new_event(CMKEventConsole.new_event(event))
 
@@ -33,12 +35,12 @@ def test_delete_multiple_events(event_status: EventStatus, status_server: Status
         {
             "host": "ABC1",
             "text": "event1 text",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         },
         {
             "host": "ABC2",
             "text": "event2 text",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         },
     ]
     for event in events:
@@ -60,12 +62,12 @@ def test_delete_partially_existing_multiple_events(
         {
             "host": "ABC1",
             "text": "event1 text",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         },
         {
             "host": "ABC2",
             "text": "event2 text",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         },
     ]
     for event in events:
@@ -90,12 +92,12 @@ def test_delete_events_of_host(event_status: EventStatus, status_server: StatusS
         {
             "host": "ABC1",
             "text": "event1 text",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         },
         {
             "host": "ABC1",
             "text": "event2 text",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         },
     ]
     for event in events:

@@ -78,7 +78,7 @@ def test_commandline_arguments_basics() -> None:
     )
 
     with pytest.raises(MKGeneralException):
-        core_config.commandline_arguments("bla", "blub", (1, 2))
+        core_config.commandline_arguments(HostName("bla"), "blub", (1, 2))
 
 
 @pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", "aädg"])
@@ -143,7 +143,7 @@ def test_commandline_arguments_list_with_invalid_type() -> None:
 
 def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
-    ts.add_host("test-host", tags={TagGroupID("agent"): TagID("no-agent")})
+    ts.add_host(HostName("test-host"), tags={TagGroupID("agent"): TagID("no-agent")})
     ts.set_option(
         "host_labels",
         {
@@ -181,7 +181,7 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     if cmk_version.is_managed_edition():
         expected_attrs["_CUSTOMER"] = "provider"
 
-    assert config_cache.get_host_attributes("test-host") == expected_attrs
+    assert config_cache.get_host_attributes(HostName("test-host")) == expected_attrs
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -189,21 +189,21 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     "hostname,result",
     [
         (
-            "localhost",
+            HostName("localhost"),
             {
                 "check_interval": 1.0,
                 "contact_groups": "ding",
             },
         ),
-        ("blub", {"check_interval": 40.0}),
+        (HostName("blub"), {"check_interval": 40.0}),
     ],
 )
 def test_get_cmk_passive_service_attributes(
     monkeypatch: pytest.MonkeyPatch, hostname: HostName, result: ObjectAttributes
 ) -> None:
     ts = Scenario()
-    ts.add_host("localhost")
-    ts.add_host("blub")
+    ts.add_host(HostName("localhost"))
+    ts.add_host(HostName("blub"))
     ts.set_option(
         "extra_service_conf",
         {

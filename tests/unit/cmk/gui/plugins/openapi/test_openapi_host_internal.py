@@ -14,6 +14,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.paths import data_source_push_agent_dir, received_outputs_dir
+from cmk.utils.type_defs import HostName
 
 from cmk.gui.exceptions import MKAuthException
 
@@ -72,7 +73,7 @@ def test_openapi_host_link_uuid_204(aut_user_auth_wsgi_app: WebTestAppForCMK) ->
         UUIDLinkManager(
             received_outputs_dir=received_outputs_dir,
             data_source_dir=data_source_push_agent_dir,
-        ).get_uuid("example.com")
+        ).get_uuid(HostName("example.com"))
         == uuid
     )
 
@@ -156,7 +157,7 @@ def test_openapi_host_register_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> N
         UUIDLinkManager(
             received_outputs_dir=received_outputs_dir,
             data_source_dir=data_source_push_agent_dir,
-        ).get_uuid("example.com")
+        ).get_uuid(HostName("example.com"))
         == uuid
     )
 

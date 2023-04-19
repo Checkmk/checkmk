@@ -8,6 +8,7 @@ from unittest.mock import call, MagicMock, patch
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs.user_id import UserId
 
 from cmk.automations.results import (
@@ -105,15 +106,15 @@ def fixture_check_transaction():
 
 
 @pytest.fixture(name="sample_host_name")
-def fixture_sample_host_name() -> str:
-    return "heute"
+def fixture_sample_host_name() -> HostName:
+    return HostName("heute")
 
 
 @pytest.fixture(name="sample_host")
 def fixture_sample_host(
     request_context: None,
     with_admin_login: UserId,
-    sample_host_name: str,
+    sample_host_name: HostName,
 ) -> Generator[CREHost, None, None]:
     hostname = sample_host_name
     hosts_and_folders.CREFolder.root_folder().create_hosts([(hostname, {}, None)])
@@ -147,7 +148,7 @@ def test_perform_discovery_none_action(
 
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
-    sample_host_name: str,
+    sample_host_name: HostName,
     sample_host: CREHost,
     mock_discovery_preview: MagicMock,
 ) -> None:
@@ -177,7 +178,7 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_perform_discovery_fix_all_with_previous_discovery_result(
     mocker: MockerFixture,
-    sample_host_name: str,
+    sample_host_name: HostName,
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
 ) -> None:
@@ -202,7 +203,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     output="Temperature: 43.0°C\nTemperature: 43.0°C\nConfiguration: prefer device levels over user levels (used device levels)",
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[HostName("TODAY")],
                 ),
                 CheckPreviewEntry(
                     check_source="active",
@@ -216,7 +217,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     output="WAITING - Active check, cannot be done offline",
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[HostName("TODAY")],
                 ),
             ],
             host_labels={
@@ -254,7 +255,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 output="Temperature: 42.0°C\nTemperature: 42.0°C\nConfiguration: prefer device levels over user levels (used device levels)",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[HostName("TODAY")],
             ),
             CheckPreviewEntry(
                 check_source="active",
@@ -268,7 +269,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 output="WAITING - Active check, cannot be done offline",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[HostName("TODAY")],
             ),
         ],
         host_labels={
@@ -306,7 +307,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         "NO_SITE",
         sample_host_name,
         {
-            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", {}, {}, ["TODAY"]),
+            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", {}, {}, [HostName("TODAY")]),
         },
     )
     mock_discovery_preview.assert_called_once()
@@ -325,7 +326,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_perform_discovery_single_update(
     mocker: MockerFixture,
-    sample_host_name: str,
+    sample_host_name: HostName,
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
 ) -> None:
@@ -364,7 +365,7 @@ def test_perform_discovery_single_update(
                     ),
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[HostName("TODAY")],
                 ),
                 CheckPreviewEntry(
                     check_source="old",
@@ -399,7 +400,7 @@ def test_perform_discovery_single_update(
                     ),
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[HostName("TODAY")],
                 ),
             ],
             host_labels={
@@ -416,7 +417,7 @@ def test_perform_discovery_single_update(
         job_status={
             "duration": 2.351154088973999,
             "estimated_duration": 2.37550950050354,
-            "host_name": "TODAY",
+            "host_name": HostName("TODAY"),
             "logfile_path": "~/var/log/web.log",
             "pid": 1363226,
             "ppid": 1363225,
@@ -464,7 +465,7 @@ def test_perform_discovery_single_update(
                 ),
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[HostName("TODAY")],
             ),
             CheckPreviewEntry(
                 check_source="new",
@@ -499,7 +500,7 @@ def test_perform_discovery_single_update(
                 ),
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[HostName("TODAY")],
             ),
         ],
         host_labels={
@@ -557,7 +558,7 @@ def test_perform_discovery_single_update(
 
 def test_perform_discovery_action_update_services(
     mocker: MockerFixture,
-    sample_host_name: str,
+    sample_host_name: HostName,
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
 ) -> None:
@@ -593,7 +594,7 @@ def test_perform_discovery_action_update_services(
                     output="0.04% used (5.59 MB of 15.54 GB), trend: -89.23 kB / 24 hours\n0.04% used (5.59 MB of 15.54 GB)\ntrend: -89.23 kB / 24 hours",
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[HostName("TODAY")],
                 ),
             ],
             host_labels={
@@ -655,7 +656,7 @@ def test_perform_discovery_action_update_services(
                 output="0.04% used (5.78 MB of 15.54 GB), trend: +10.38 kB / 24 hours\n0.04% used (5.78 MB of 15.54 GB)\ntrend: +10.38 kB / 24 hours",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[HostName("TODAY")],
             ),
             CheckPreviewEntry(
                 check_source="vanished",
@@ -676,7 +677,7 @@ def test_perform_discovery_action_update_services(
                 output="[docker0], (down)(!!), MAC: 02:42:E3:80:F5:EE, Speed: 10 MBit/s (assumed)\n[docker0]\nOperational state: down(!!)\nMAC: 02:42:E3:80:F5:EE\nSpeed: 10 MBit/s (assumed)",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[HostName("TODAY")],
             ),
         ],
         host_labels={
@@ -734,7 +735,7 @@ def test_perform_discovery_action_update_services(
 
 def test_perform_discovery_action_update_host_labels(
     mocker: MockerFixture,
-    sample_host_name: str,
+    sample_host_name: HostName,
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
 ) -> None:

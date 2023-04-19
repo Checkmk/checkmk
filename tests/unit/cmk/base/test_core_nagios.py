@@ -236,7 +236,7 @@ def test_create_nagios_host_spec(
     ts.add_host(HostName("host2"))
     ts.add_cluster(HostName("cluster1"))
 
-    ts.add_cluster(HostName("cluster2"), nodes=["node1", "node2"])
+    ts.add_cluster(HostName("cluster2"), nodes=[HostName("node1"), HostName("node2")])
     ts.add_host(HostName("node1"))
     ts.add_host(HostName("node2"))
     ts.add_host(HostName("switch"))
@@ -641,7 +641,7 @@ def test_create_nagios_servicedefs_active_check(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -786,7 +786,7 @@ def test_create_nagios_servicedefs_omit_service(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -835,7 +835,7 @@ def test_create_nagios_servicedefs_invalid_args(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
 
     with pytest.raises(exceptions.MKGeneralException, match=error_message):
-        core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+        core_nagios._create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs, {})
 
 
 @pytest.mark.parametrize(
@@ -901,7 +901,7 @@ def test_create_nagios_config_commands(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs, {})
     core_nagios._create_nagios_config_commands(cfg)
 
     assert outfile.getvalue() == expected_result

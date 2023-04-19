@@ -14,7 +14,7 @@ from cmk.utils.structured_data import StructuredDataNode
 
 import cmk.gui.inventory
 from cmk.gui.inventory import InventoryPath, TreeSource
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import HostName, Row
 
 
 @pytest.mark.parametrize(
@@ -127,26 +127,26 @@ def test_parse_tree_path(
     "hostname, row, expected_tree",
     [
         (None, {}, StructuredDataNode.deserialize({"loaded": "tree"})),
-        ("hostname", {}, StructuredDataNode.deserialize({"loaded": "tree"})),
+        (HostName("hostname"), {}, StructuredDataNode.deserialize({"loaded": "tree"})),
         (
-            "hostname",
+            HostName("hostname"),
             {"host_structured_status": b""},
             StructuredDataNode.deserialize({"loaded": "tree"}),
         ),
         (
-            "hostname",
+            HostName("hostname"),
             {"host_structured_status": b"{'deserialized': 'tree'}"},
             StructuredDataNode.deserialize({"deserialized": "tree"}),
         ),
     ],
 )
 def test__load_status_data_tree(
-    monkeypatch: MonkeyPatch, hostname: str | None, row: Row, expected_tree: StructuredDataNode
+    monkeypatch: MonkeyPatch, hostname: HostName | None, row: Row, expected_tree: StructuredDataNode
 ) -> None:
     monkeypatch.setattr(
         cmk.gui.inventory,
         "_load_structured_data_tree",
-        lambda t, hostname: StructuredDataNode.deserialize({"loaded": "tree"}),
+        lambda *args, **kw: StructuredDataNode.deserialize({"loaded": "tree"}),
     )
     status_data_tree = cmk.gui.inventory._load_status_data_tree(hostname, row)
     assert status_data_tree is not None
@@ -186,8 +186,8 @@ def test__merge_inventory_and_status_data_tree_both_None() -> None:
 
 def test_get_history_empty() -> None:
     for hostname in [
-        "inv-host",
-        "/inv-host",
+        HostName("inv-host"),
+        HostName("/inv-host"),
     ]:
         history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
 
@@ -196,7 +196,7 @@ def test_get_history_empty() -> None:
 
 
 def test_get_history_archive_but_no_inv_tree() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     # history
     cmk.utils.store.save_object_to_file(
@@ -212,7 +212,7 @@ def test_get_history_archive_but_no_inv_tree() -> None:
 
 @pytest.fixture(name="create_inventory_history")
 def _create_inventory_history() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     # history
     cmk.utils.store.save_object_to_file(
@@ -240,7 +240,7 @@ def _create_inventory_history() -> None:
 
 @pytest.mark.usefixtures("create_inventory_history")
 def test_get_history() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
     expected_results = [
         (1, 0, 0),
         (0, 1, 0),
@@ -300,7 +300,7 @@ def test_load_delta_tree(
     search_timestamp: int,
     expected_raw_delta_tree: dict,
 ) -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     delta_tree, corrupted_history_files = cmk.gui.inventory.load_delta_tree(
         hostname,
@@ -313,7 +313,7 @@ def test_load_delta_tree(
 
 @pytest.mark.usefixtures("create_inventory_history")
 def test_load_delta_tree_no_such_timestamp() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
     with pytest.raises(MKGeneralException) as e:
         cmk.gui.inventory.load_delta_tree(hostname, -1)
     assert "Found no history entry at the time of '-1' for the host 'inv-host'" == str(e.value)
@@ -321,7 +321,7 @@ def test_load_delta_tree_no_such_timestamp() -> None:
 
 @pytest.mark.usefixtures("create_inventory_history")
 def test_load_latest_delta_tree() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
     search_timestamp = int(Path(cmk.utils.paths.inventory_output_dir, hostname).stat().st_mtime)
 
     delta_tree, corrupted_history_files = cmk.gui.inventory.load_delta_tree(
@@ -338,7 +338,7 @@ def test_load_latest_delta_tree() -> None:
 
 
 def test_load_latest_delta_tree_no_archive_and_inv_tree() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     # current tree
     cmk.utils.store.save_object_to_file(
@@ -352,7 +352,7 @@ def test_load_latest_delta_tree_no_archive_and_inv_tree() -> None:
 
 
 def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     # history
     cmk.utils.store.save_object_to_file(
@@ -372,7 +372,7 @@ def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:
 
 
 def test_load_latest_delta_tree_one_archive_and_no_inv_tree() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     # history
     cmk.utils.store.save_object_to_file(

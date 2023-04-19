@@ -250,7 +250,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
 ) -> None:
     cluster_test = HostName("cluster.test")
     ts = Scenario()
-    ts.add_cluster(cluster_test, nodes=["node1.test", "node2.test"])
+    ts.add_cluster(cluster_test, nodes=[HostName("node1.test"), HostName("node2.test")])
     config_cache = ts.apply(monkeypatch)
 
     monkeypatch.setattr(
@@ -265,8 +265,8 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
 
     # empty for cluster (we have not clustered the service)
     assert [
-        HostKey(hostname="node1.test", source_type=SourceType.HOST),
-        HostKey(hostname="node2.test", source_type=SourceType.HOST),
+        HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
+        HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
     ] == checking._get_clustered_service_node_keys(
         config_cache, cluster_test, SourceType.HOST, "Test Service"
     )
@@ -280,7 +280,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     ts = Scenario()
     ts.add_host(node1)
     ts.add_host(node2)
-    ts.add_cluster(cluster, nodes=["node1.test", "node2.test"])
+    ts.add_cluster(cluster, nodes=[HostName("node1.test"), HostName("node2.test")])
     # add a fake rule, that defines a cluster
     ts.set_option(
         "clustered_services_mapping",
@@ -310,8 +310,8 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         lambda *args, **kw: "dummy.test.ip.0",
     )
     assert [
-        HostKey(hostname="node1.test", source_type=SourceType.HOST),
-        HostKey(hostname="node2.test", source_type=SourceType.HOST),
+        HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
+        HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
     ] == checking._get_clustered_service_node_keys(
         config_cache, cluster, SourceType.HOST, "Test Unclustered"
     )

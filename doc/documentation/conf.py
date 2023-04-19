@@ -26,8 +26,8 @@ sys.path.insert(0, os.path.join(DOC_ROOT, "..", ".."))
 # -- Project information -----------------------------------------------------
 
 project = "CheckMK"
-copyright = "2019, tribe29 GmbH"  # pylint: disable=redefined-builtin
-author = "tribe29 GmbH"
+copyright = "2023, Checkmk GmbH"  # pylint: disable=redefined-builtin
+author = "Checkmk GmbH"
 
 
 # -- General configuration ---------------------------------------------------

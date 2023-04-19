@@ -219,7 +219,7 @@ def page_login() -> None:
     html.open_div(id_="loginfoot")
     html.img("themes/facelift/images/logo_cmk_small.png", class_="logomk")
     html.div(
-        HTML(_('&copy; <a target="_blank" href="https://checkmk.com">tribe29 GmbH</a>')),
+        HTML(_('&copy; <a target="_blank" href="https://checkmk.com">Checkmk GmbH</a>')),
         class_="copyright",
     )
     html.close_div()  # close content-div

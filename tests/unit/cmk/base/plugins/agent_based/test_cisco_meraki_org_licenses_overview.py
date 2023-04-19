@@ -19,11 +19,11 @@ _STRING_TABLE = [
             '[{"status": "FOO", "expirationDate": "Feb 1, 2000 UTC", "licensedDeviceCounts":'
             '{"wireless": 10, "MV": 20, "Z1": 30, "MS120-48LP": 40, "MS120-48FP": 50, "MX250": 60,'
             '"MX64": 70, "MG21": 80, "MS120-8FP": 90, "MS225-48LP": 100, "MS225-48FP": 110},'
-            '"organizationId": "456"},'
+            '"id": "456"},'
             '{"status": "OK", "expirationDate": "Feb 1, 2000 UTC", "licensedDeviceCounts":'
             '{"wireless": 1, "MV": 2, "Z1": 3, "MS120-48LP": 4, "MS120-48FP": 5, "MX250": 6,'
             '"MX64": 7, "MG21": 8, "MS120-8FP": 9, "MS225-48LP": 10, "MS225-48FP": 11},'
-            '"organizationId": "123"}]'
+            '"id": "123"}]'
         ),
     ],
 ]

@@ -76,7 +76,29 @@ class FakeDashboard:
 @pytest.mark.parametrize(
     "args, expected_output_lines",
     [
-        ([], [""]),
+        (
+            [],
+            [
+                "<<<cisco_meraki_org_licenses_overview:sep(0)>>>",
+                '[{"id": "123"}, {"id": "456"}]',
+                "<<<<1.2.3.4>>>>",
+                "<<<cisco_meraki_org_device_info:sep(0)>>>",
+                '[{"lanIp": "1.2.3.4", "serial": "S123-1"}, {"lanIp": "1.2.3.4", "serial": "S123-2"}]',
+                "<<<cisco_meraki_org_device_status:sep(0)>>>",
+                '[{"lanIp": "1.2.3.4", "serial": "S123-1", "status": "online"}, {"lanIp": "1.2.3.4", "serial": "S123-2", "status": "online"}]',
+                "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
+                '[{"readings": [], "serial": "S123-1"}, {"readings": [], "serial": "S123-2"}]',
+                "<<<<>>>>",
+                "<<<<4.5.6.7>>>>",
+                "<<<cisco_meraki_org_device_info:sep(0)>>>",
+                '[{"lanIp": "4.5.6.7", "serial": "S456"}]',
+                "<<<cisco_meraki_org_device_status:sep(0)>>>",
+                '[{"lanIp": "4.5.6.7", "serial": "S456", "status": "online"}]',
+                "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
+                '[{"readings": [], "serial": "S456"}]',
+                "<<<<>>>>",
+            ],
+        ),
         (
             [
                 "--sections",

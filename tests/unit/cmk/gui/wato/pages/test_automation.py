@@ -129,5 +129,5 @@ class TestModeAutomation:
             "headers",
             {"x-checkmk-version": incomp_version, "x-checkmk-edition": "cee"},
         )
-        with pytest.raises(MKGeneralException, match="is incompatible"):
+        with pytest.raises(MKGeneralException, match="not compatible"):
             automation.ModeAutomation()._execute_cmk_automation()

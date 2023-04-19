@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+import dataclasses
 import logging
 import os
 import pwd
@@ -22,6 +23,7 @@ from cmk.utils.version import Edition
 logger = logging.getLogger()
 
 
+@dataclasses.dataclass
 class PExpectDialog:
     """An expected dialog for spawn_expect_message.
 
@@ -32,11 +34,10 @@ class PExpectDialog:
     optional  Specifies if the dialog message is optional.
     """
 
-    def __init__(self, expect: str, send: str, count: int = 1, optional: bool = False) -> None:
-        self.expect = expect
-        self.send = send
-        self.count = count
-        self.optional = optional
+    expect: str
+    send: str
+    count: int = 1
+    optional: bool = False
 
 
 def repo_path() -> Path:

@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger("agent_cisco_meraki")
 
 _BASE_CACHE_FILE_DIR = Path(tmp_dir) / "agents" / "agent_cisco_meraki"
 
-_API_NAME_ORGANISATION_ID: Final = "organizationId"
+_API_NAME_ORGANISATION_ID: Final = "id"
 _API_NAME_DEVICE_SERIAL: Final = "serial"
 _API_NAME_DEVICE_LAN_IP: Final = "lanIp"
 

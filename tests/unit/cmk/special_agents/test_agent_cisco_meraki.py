@@ -18,12 +18,12 @@ class FakeGetOrganisationIDsCache:
 class FakeOrganisations:
     def getOrganizations(self) -> Sequence[Mapping]:
         return [
-            {"organizationId": "123"},
-            {"organizationId": "456"},
+            {"id": "123"},
+            {"id": "456"},
         ]
 
     def getOrganizationLicensesOverview(self, organisation_id: str) -> Mapping | None:
-        return None if organisation_id == "789" else {"organizationId": organisation_id}
+        return None if organisation_id == "789" else {"id": organisation_id}
 
     def getOrganizationDevices(self, organisation_id: str, total_pages: str) -> Sequence[Mapping]:
         if organisation_id == "123":
@@ -84,7 +84,7 @@ class FakeDashboard:
             ],
             [
                 "<<<cisco_meraki_org_licenses_overview:sep(0)>>>",
-                '[{"organizationId": "123"}, {"organizationId": "456"}]',
+                '[{"id": "123"}, {"id": "456"}]',
             ],
         ),
         (

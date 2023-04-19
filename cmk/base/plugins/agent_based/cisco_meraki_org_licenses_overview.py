@@ -42,9 +42,7 @@ Section = Mapping[str, LicensesOverview]
 
 
 def parse_licenses_overview(string_table: StringTable) -> Section:
-    return {
-        str(row["organizationId"]): LicensesOverview.parse(row) for row in load_json(string_table)
-    }
+    return {str(row["id"]): LicensesOverview.parse(row) for row in load_json(string_table)}
 
 
 register.agent_section(

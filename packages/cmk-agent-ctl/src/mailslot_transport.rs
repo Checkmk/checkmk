@@ -244,7 +244,7 @@ mod tests {
     const MESSAGE_COUNT: i32 = 100;
 
     fn send_messages_to_mailslot(base_name: &str, count: i32) {
-        match MailslotClient::new(&MailslotName::local(&base_name)) {
+        match MailslotClient::new(&MailslotName::local(base_name)) {
             Ok(mut client) => {
                 for i in 0..count {
                     client
@@ -298,14 +298,14 @@ mod tests {
     async fn test_mailslot_backend() {
         let base_name = build_own_mailslot_name() + "_test";
         let mut backend = MailSlotBackend::new(&base_name).expect("Server is failed");
-        send_messages_to_mailslot(backend.used_name().clone(), MESSAGE_COUNT);
+        send_messages_to_mailslot(backend.used_name(), MESSAGE_COUNT);
         assert!(receive_expected_messages_from_mailslot(&mut backend.tx, MESSAGE_COUNT).await);
     }
 
     async fn async_collect_from_mailslot(duration: Duration) -> IoResult<Vec<u8>> {
         let base_name = build_own_mailslot_name() + "_test_async";
         let mut backend = MailSlotBackend::new(&base_name).expect("Server is failed");
-        send_messages_to_mailslot(backend.used_name().clone(), 1);
+        send_messages_to_mailslot(backend.used_name(), 1);
         let value = tokio::time::timeout(duration, backend.tx.recv())
             .await
             .unwrap_or_default() // in tests we ignore elapsed

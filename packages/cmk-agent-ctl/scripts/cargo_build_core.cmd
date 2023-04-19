@@ -69,7 +69,7 @@ if "%ctl_arg_format%" == "1" (
 :: Clippy
 if "%ctl_arg_clippy%" == "1" (
     powershell Write-Host "Run Rust clippy" -Foreground White
-    cargo clippy --release --target %target% -- --deny warnings 
+    cargo clippy --release --target %target% --tests -- --deny warnings 
     if ERRORLEVEL 1 (
         powershell Write-Host "Failed cargo clippy" -Foreground Red 
         exit /b 17

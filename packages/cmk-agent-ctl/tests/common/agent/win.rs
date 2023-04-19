@@ -35,11 +35,13 @@ pub async fn run_agent_response_loop(
         }
         let name = MailslotName::local(&extract_mailslot_name_from_yaml_text(&command));
         let result = MailslotClient::new(&name);
-        let mut client = result.expect(&format!(
-            "Name of the slot {}\\{} is probably incorrect",
-            name.domain, name.path
-        ));
-        if let Err(_) = client.send_message(output.as_bytes()) {
+        let mut client = result.unwrap_or_else(|_| {
+            panic!(
+                "Name of the slot {}\\{} is probably incorrect",
+                name.domain, name.path
+            )
+        });
+        if client.send_message(output.as_bytes()).is_err() {
             break;
         }
     }
@@ -49,7 +51,7 @@ pub async fn run_agent_response_loop(
 
 /// simplest possible extraction of the channel, we don't care about yaml
 fn extract_mailslot_name_from_yaml_text(command: &str) -> String {
-    let words: Vec<&str> = command.split(" ").into_iter().collect();
+    let words: Vec<&str> = command.split(' ').collect();
     words[4].trim().to_owned()
 }
 

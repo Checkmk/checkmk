@@ -531,9 +531,7 @@ mod tests {
 
         fn make_socket_exclusive() -> Socket {
             let socket_exclusive = Socket::new(Domain::IPV4, Type::STREAM, None).unwrap();
-            let socket_exclusive =
-                configure_socket(socket_exclusive, SocketMode::Exclusive).unwrap();
-            socket_exclusive
+            configure_socket(socket_exclusive, SocketMode::Exclusive).unwrap()
         }
 
         #[test]

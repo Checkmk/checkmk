@@ -735,7 +735,7 @@ def test_create_nagios_servicedefs_with_warnings(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, HostName("my_host"), host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 

@@ -174,7 +174,7 @@ def test_get_piggyback_raw_data_not_updated() -> None:
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
-    assert raw_data.info.source_hostname == "source1"
+    assert raw_data.info.source_hostname == HostName("source1")
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
     assert raw_data.info.successfully_processed is False
     assert raw_data.info.message == "Piggyback file not updated by source 'source1'"
@@ -324,7 +324,7 @@ def test_store_piggyback_raw_data_second_source() -> None:
         }
     assert len(raw_data_map) == 2
 
-    raw_data1, raw_data2 = raw_data_map["source1"], raw_data_map["source2"]
+    raw_data1, raw_data2 = raw_data_map[HostName("source1")], raw_data_map[HostName("source2")]
 
     assert raw_data1.info.file_path.parts[-2:] == (str(_TEST_HOST_NAME), "source1")
     assert raw_data1.info.successfully_processed is True

@@ -5,6 +5,8 @@
 
 from pytest_mock import MockerFixture
 
+from cmk.utils.type_defs import HostName
+
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.plugin_contexts import current_host, current_service
 
@@ -17,7 +19,7 @@ def test_check_levels_predictive_default_render_func(mocker: MockerFixture) -> N
         "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.2, 4.2, None, None))
     )
 
-    with current_host("unittest"), current_service(
+    with current_host(HostName("unittest")), current_service(
         CheckPluginName("test_check"), "unittest-service-description"
     ):
         result = next(utils.check_levels_predictive(42.42, metric_name="metric_name", levels={}))

@@ -12,7 +12,7 @@ from tests.testlib.base import Scenario
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import ParsedSectionName
+from cmk.utils.type_defs import HostName, ParsedSectionName
 
 from cmk.checkers.plugin_contexts import current_host
 
@@ -89,7 +89,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(
                     else [plugin.discovery_default_parameters]
                 )
 
-            with current_host("testhost"):  # host_extra_conf needs a host_name()
+            with current_host(HostName("testhost")):  # host_extra_conf needs a host_name()
                 if list(plugin.discovery_function(**kwargs)):
                     plugins_discovering_upon_empty.add(str(plugin.name))
 

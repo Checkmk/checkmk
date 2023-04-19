@@ -689,7 +689,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
     )
     ts.tags += add_tag_config
     ts.add_host(
-        "host",
+        HostName("host"),
         tags={
             TagGroupID("grp1"): TagID("v1"),
         },

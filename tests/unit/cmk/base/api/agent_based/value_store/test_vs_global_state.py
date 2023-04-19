@@ -8,6 +8,7 @@
 from pytest import MonkeyPatch
 
 import cmk.utils.store as store
+from cmk.utils.type_defs import HostName
 
 from cmk.checkers.check_table import ServiceID
 from cmk.checkers.checking import CheckPluginName
@@ -31,7 +32,7 @@ def test_load_host_value_store_loads_file(monkeypatch: MonkeyPatch) -> None:
     )
 
     with load_host_value_store(
-        "test_load_host_value_store_loads_file",
+        HostName("test_load_host_value_store_loads_file"),
         store_changes=False,
     ) as mgr:
         with mgr.namespace(service_id):

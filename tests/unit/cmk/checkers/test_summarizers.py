@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.utils.exceptions import MKAgentError, MKTimeout
-from cmk.utils.type_defs import ExitSpec
+from cmk.utils.type_defs import ExitSpec, HostName
 
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.summarize import summarize_failure, summarize_piggyback, summarize_success
@@ -41,7 +41,7 @@ class TestAgentSummarizer:
 class TestPiggybackSummarizer:
     def test_summarize_missing_data_without_is_piggyback_option(self) -> None:
         assert summarize_piggyback(
-            hostname="hostname",
+            hostname=HostName("hostname"),
             ipaddress="1.2.3.4",
             time_settings=[("", "", 0)],
             is_piggyback=False,
@@ -49,7 +49,7 @@ class TestPiggybackSummarizer:
 
     def test_summarize_missing_data_with_is_piggyback_option(self) -> None:
         assert summarize_piggyback(
-            hostname="hostname",
+            hostname=HostName("hostname"),
             ipaddress="1.2.3.4",
             time_settings=[("", "", 0)],
             is_piggyback=True,
@@ -58,7 +58,7 @@ class TestPiggybackSummarizer:
     @pytest.mark.skip("requires patching cmk.utils.piggyback :(")
     def test_summarize_existing_data_with_is_piggyback_option(self) -> None:
         assert summarize_piggyback(
-            hostname="hostname",
+            hostname=HostName("hostname"),
             ipaddress="1.2.3.4",
             time_settings=[("", "", 0)],
             is_piggyback=True,

@@ -1071,7 +1071,7 @@ def test_tcp_fetcher_dead_connection_timeout(
             address=("127.0.0.1", 12345),  # Will be ignored by the FakeSocket
             timeout=timeout_connect,
             # Boilerplate stuff to make the code not crash.
-            host_name="timeout_tcp_test",
+            host_name=HostName("timeout_tcp_test"),
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
         )

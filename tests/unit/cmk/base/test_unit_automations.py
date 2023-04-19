@@ -9,6 +9,7 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.type_defs import HostName
 
 from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 
@@ -60,7 +61,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
     automation = automations.AutomationAnalyseHost()
 
     ts = Scenario()
-    ts.add_host("test-host")
+    ts.add_host(HostName("test-host"))
     ts.set_option(
         "host_labels",
         {
@@ -81,7 +82,7 @@ def test_service_labels(monkeypatch):
     automation = automations.AutomationGetServicesLabels()
 
     ts = Scenario()
-    ts.add_host("test-host")
+    ts.add_host(HostName("test-host"))
     ts.set_ruleset(
         "service_label_rules",
         list[RuleSpec[dict[str, str]]](

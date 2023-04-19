@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from cmk.utils import version as cmk_version
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
+from cmk.utils.type_defs import HostName
 
 from cmk.automations.results import (
     ABCAutomationResult,
@@ -61,7 +62,7 @@ def test_serialization() -> None:
 
 class TestDiscoveryResult:
     HOSTS = {
-        "host_1": SingleHostDiscoveryResult(
+        HostName("host_1"): SingleHostDiscoveryResult(
             clustered_new=0,
             clustered_old=0,
             clustered_vanished=0,
@@ -74,7 +75,7 @@ class TestDiscoveryResult:
             self_total=0,
             self_total_host_labels=0,
         ),
-        "host_2": SingleHostDiscoveryResult(
+        HostName("host_2"): SingleHostDiscoveryResult(
             clustered_new=1,
             clustered_old=2,
             clustered_vanished=3,

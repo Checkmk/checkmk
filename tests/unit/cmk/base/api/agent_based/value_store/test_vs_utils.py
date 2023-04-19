@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from cmk.utils import store
+from cmk.utils.type_defs import HostName
 
 from cmk.checkers.check_table import ServiceID
 from cmk.checkers.checking import CheckPluginName
@@ -215,13 +216,14 @@ class Test_DiskSyncedMapping:
 class Test_ValueStore:
     @staticmethod
     def _get_store() -> _ValueStore:
+        host_name = HostName("moritz")
         return _ValueStore(
             data={
-                ("moritz", "check1", "item", "key1"): 42,
-                ("moritz", "check2", "item", "key2"): 23,
+                (host_name, "check1", "item", "key1"): 42,
+                (host_name, "check2", "item", "key2"): 23,
             },
             service_id=(CheckPluginName("check1"), "item"),
-            host_name="moritz",
+            host_name=host_name,
         )
 
     def test_separation(self) -> None:
@@ -238,7 +240,7 @@ class Test_ValueStore:
 class TestValueStoreManager:
     @staticmethod
     def test_namespace_context() -> None:
-        vsm = ValueStoreManager("test-host")
+        vsm = ValueStoreManager(HostName("test-host"))
         service_inner = ServiceID(CheckPluginName("unit_test_inner"), None)
         service_outer = ServiceID(CheckPluginName("unit_test_outer"), None)
 

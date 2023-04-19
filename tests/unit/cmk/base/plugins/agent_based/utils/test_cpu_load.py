@@ -5,6 +5,8 @@
 
 from unittest.mock import Mock
 
+from cmk.utils.type_defs import HostName
+
 from cmk.checkers.check_table import CheckPluginName
 from cmk.checkers.plugin_contexts import current_host, current_service
 
@@ -39,7 +41,7 @@ def test_cpu_loads_predictive(mocker: Mock) -> None:
         "cmk.base.check_api._prediction.get_levels",
         return_value=(None, (2.2, 4.2, None, None)),
     )
-    with current_host("unittest"), current_service(CheckPluginName("cpu_loads"), "item"):
+    with current_host(HostName("unittest")), current_service(CheckPluginName("cpu_loads"), "item"):
         assert list(
             check_cpu_load(
                 {

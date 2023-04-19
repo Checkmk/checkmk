@@ -11,6 +11,8 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.type_defs import HostName
+
 
 @pytest.fixture(autouse=True, scope="session")
 def _autouse_fix_register(fix_register):
@@ -38,7 +40,7 @@ def clear_config_caches(monkeypatch):
     _runtime_cache.clear()
 
     ts = Scenario()
-    ts.add_host("non-existent-testhost")
+    ts.add_host(HostName("non-existent-testhost"))
     ts.apply(monkeypatch)
 
 

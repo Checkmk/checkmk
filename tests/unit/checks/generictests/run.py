@@ -10,6 +10,7 @@ import freezegun
 from tests.testlib import Check, MissingCheckInfoError
 
 from cmk.utils.check_utils import maincheckify
+from cmk.utils.type_defs import HostName
 
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.plugin_contexts import current_host, current_service
@@ -237,9 +238,11 @@ def run(check_info, dataset):
 
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
-            with current_host("non-existent-testhost"), mock_item_state(mock_is), MockHostExtraConf(
-                check, mock_hec
-            ), MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
+            with current_host(HostName("non-existent-testhost")), mock_item_state(
+                mock_is
+            ), MockHostExtraConf(check, mock_hec), MockHostExtraConf(
+                check, mock_hecm, "host_extra_conf_merged"
+            ):
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu)
 
                 run_test_on_checks(check, subcheck, dataset, info_arg, immu)

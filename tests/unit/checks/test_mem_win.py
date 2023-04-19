@@ -11,6 +11,8 @@ from pytest_mock import MockerFixture
 
 from tests.unit.conftest import FixRegister
 
+from cmk.utils.type_defs import HostName
+
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.plugin_contexts import current_host, current_service
 
@@ -274,7 +276,7 @@ def test_mem_win(
         "cmk.base.check_api._prediction.get_levels",
         return_value=(100000, (90000, 110000, None, None)),
     )
-    with current_host("unittest-hn"), current_service(
+    with current_host(HostName("unittest-hn")), current_service(
         CheckPluginName("unittest_sd"), "unittest_sd_description"
     ):
         assert (

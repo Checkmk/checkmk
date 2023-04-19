@@ -116,7 +116,7 @@ def test_sanitize_snmp_encoding(
     expected: snmp_table.ResultColumnsDecoded,
 ) -> None:
     ts = Scenario()
-    ts.add_host("localhost")
+    ts.add_host(HostName("localhost"))
     ts.set_ruleset(
         "snmp_character_encodings",
         [
@@ -128,7 +128,7 @@ def test_sanitize_snmp_encoding(
     )
     config_cache = ts.apply(monkeypatch)
 
-    snmp_config = config_cache.make_snmp_config("localhost", "", SourceType.HOST)
+    snmp_config = config_cache.make_snmp_config(HostName("localhost"), "", SourceType.HOST)
     assert snmp_table._sanitize_snmp_encoding(columns, snmp_config.ensure_str) == expected
 
 
@@ -138,11 +138,17 @@ def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:
         "bulkwalk_hosts",
         [{"condition": {"host_name": ["localhost"]}, "value": True}],
     )
-    ts.add_host("abc")
-    ts.add_host("localhost")
+    ts.add_host(HostName("abc"))
+    ts.add_host(HostName("localhost"))
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_snmp_config("abc", "", SourceType.HOST).is_bulkwalk_host is False
-    assert config_cache.make_snmp_config("localhost", "", SourceType.HOST).is_bulkwalk_host is True
+    assert (
+        config_cache.make_snmp_config(HostName("abc"), "", SourceType.HOST).is_bulkwalk_host
+        is False
+    )
+    assert (
+        config_cache.make_snmp_config(HostName("localhost"), "", SourceType.HOST).is_bulkwalk_host
+        is True
+    )
 
 
 def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
@@ -155,17 +161,17 @@ def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
         "snmpv2c_hosts",
         [{"condition": {"host_name": ["v2c_h"]}, "value": True}],
     )
-    ts.add_host("bulkwalk_h")
-    ts.add_host("v2c_h")
-    ts.add_host("not_included")
+    ts.add_host(HostName("bulkwalk_h"))
+    ts.add_host(HostName("v2c_h"))
+    ts.add_host(HostName("not_included"))
     monkeypatch.setattr(ConfigCache, "_is_inline_backend_supported", lambda *args: True)
 
     config_cache = ts.apply(monkeypatch)
 
     # not bulkwalk and not v2c
-    assert config_cache.get_snmp_backend("not_included") is SNMPBackendEnum.CLASSIC
-    assert config_cache.get_snmp_backend("bulkwalk_h") is SNMPBackendEnum.INLINE
-    assert config_cache.get_snmp_backend("v2c_h") is SNMPBackendEnum.INLINE
+    assert config_cache.get_snmp_backend(HostName("not_included")) is SNMPBackendEnum.CLASSIC
+    assert config_cache.get_snmp_backend(HostName("bulkwalk_h")) is SNMPBackendEnum.INLINE
+    assert config_cache.get_snmp_backend(HostName("v2c_h")) is SNMPBackendEnum.INLINE
 
     # credentials is v3 -> INLINE
     monkeypatch.setattr(ConfigCache, "_snmp_credentials", lambda *args: ("a", "p"))

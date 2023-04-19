@@ -9,6 +9,8 @@ from tests.testlib import CMKEventConsole
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
+from cmk.utils.type_defs import HostName
+
 from cmk.ec.main import Event, EventStatus, StatusServer
 from cmk.ec.query import MKClientError
 
@@ -26,7 +28,7 @@ def test_update_event(
     event: Event = {
         "host": "host_1",
         "phase": start_phase,
-        "core_host": "ABC",
+        "core_host": HostName("ABC"),
     }
     event_status.new_event(CMKEventConsole.new_event(event))
     s = FakeStatusSocket(
@@ -49,7 +51,7 @@ def test_update_events_that_cant_be_acked(
     event: Event = {
         "host": "host_1",
         "phase": test_phase,
-        "core_host": "ABC",
+        "core_host": HostName("ABC"),
     }
     event_status.new_event(CMKEventConsole.new_event(event))
     s = FakeStatusSocket(b"COMMAND UPDATE;1;testuser;1;test_comment;test_contact_name")
@@ -65,7 +67,7 @@ def test_update_multiple_evens(event_status: EventStatus, status_server: StatusS
         {
             "host": f"host_{i}",
             "phase": "open",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         }
         for i in range(1, 11)
     ]

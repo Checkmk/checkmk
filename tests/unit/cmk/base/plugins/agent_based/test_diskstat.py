@@ -7,6 +7,8 @@
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.type_defs import HostName
+
 from cmk.checkers import plugin_contexts
 from cmk.checkers.checking import CheckPluginName
 
@@ -154,7 +156,7 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
     mocker.patch(
         "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.1, 4.1, None, None))
     )
-    with plugin_contexts.current_host("unittest-hn"), plugin_contexts.current_service(
+    with plugin_contexts.current_host(HostName("unittest-hn")), plugin_contexts.current_service(
         CheckPluginName("unittest_sd"),
         "unittest_sd_description",
     ):

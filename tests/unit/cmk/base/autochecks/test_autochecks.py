@@ -34,7 +34,7 @@ def autochecks_dir(monkeypatch, tmp_path):
 @pytest.fixture()
 def test_config(monkeypatch: pytest.MonkeyPatch) -> ConfigCache:
     ts = Scenario()
-    ts.add_host("host")
+    ts.add_host(HostName("host"))
     return ts.apply(monkeypatch)
 
 

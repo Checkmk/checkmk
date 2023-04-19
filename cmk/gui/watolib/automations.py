@@ -6,6 +6,8 @@
 used for doing inventory, showing the services of a host, deletion of a host
 and similar things."""
 
+from __future__ import annotations
+
 import ast
 import logging
 import re
@@ -24,6 +26,8 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.licensing.handler import LicenseState
+from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import PhaseOneResult, UserId
 
@@ -353,6 +357,7 @@ def get_url_raw(
         headers={
             "x-checkmk-version": cmk_version.__version__,
             "x-checkmk-edition": cmk_version.edition().short,
+            "x-checkmk-license-state": get_license_state().readable,
         },
     )
 
@@ -389,29 +394,74 @@ def _verify_compatibility(response: requests.Response) -> None:
 
     remote_version = response.headers.get("x-checkmk-version", "")
     remote_edition_short = response.headers.get("x-checkmk-edition", "")
+    remote_license_state = _parse_license_state(response.headers.get("x-checkmk-license-state", ""))
 
     if not remote_version or not remote_edition_short:
         return  # No validation
 
     if not isinstance(
         compatibility := compatible_with_central_site(
-            central_version, central_edition_short, remote_version, remote_edition_short
+            central_version,
+            central_edition_short,
+            remote_version,
+            remote_edition_short,
+            remote_license_state,
         ),
         cmk_version.VersionsCompatible,
     ):
         raise MKGeneralException(
-            _(
-                "The central (Version: %s, Edition: %s) and remote site "
-                "(Version: %s, Edition: %s) are not compatible. Reason: %s"
-            )
-            % (
+            make_incompatible_info(
                 central_version,
                 central_edition_short,
                 remote_version,
                 remote_edition_short,
+                remote_license_state,
                 compatibility,
             )
         )
+
+
+def _parse_license_state(raw_license_state: str) -> LicenseState | None:
+    try:
+        return LicenseState[raw_license_state]
+    except KeyError:
+        return None
+
+
+def make_incompatible_info(
+    central_version: str,
+    central_edition_short: str,
+    remote_version: str,
+    remote_edition_short: str,
+    remote_license_state: LicenseState | None,
+    compatibility: (
+        cmk_version.VersionsIncompatible | EditionsIncompatible | LicenseStateIncompatible
+    ),
+) -> str:
+    return _("The central (%s) and remote site (%s) are not compatible. Reason: %s") % (
+        _make_central_site_version_info(central_version, central_edition_short),
+        _make_remote_site_version_info(remote_version, remote_edition_short, remote_license_state),
+        compatibility,
+    )
+
+
+def _make_central_site_version_info(
+    central_version: str,
+    central_edition_short: str,
+) -> str:
+    return _("Version: %s, Edition: %s") % (central_version, central_edition_short)
+
+
+def _make_remote_site_version_info(
+    remote_version: str,
+    remote_edition_short: str,
+    remote_license_state: LicenseState | None,
+) -> str:
+    return _("Version: %s, Edition: %s, License state: %s") % (
+        remote_version,
+        remote_edition_short,
+        remote_license_state.readable if remote_license_state else _("unknown"),
+    )
 
 
 def get_url(
@@ -678,6 +728,14 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         job_interface.send_result_message(_("Finished."))
 
 
+class LicenseStateIncompatible:
+    def __init__(self, reason: str) -> None:
+        self._reason = reason
+
+    def __str__(self) -> str:
+        return self._reason
+
+
 class EditionsIncompatible:
     def __init__(self, reason: str) -> None:
         self._reason = reason
@@ -687,8 +745,17 @@ class EditionsIncompatible:
 
 
 def compatible_with_central_site(
-    central_version: str, central_edition_short: str, remote_version: str, remote_edition_short: str
-) -> cmk_version.VersionsCompatible | cmk_version.VersionsIncompatible | EditionsIncompatible:
+    central_version: str,
+    central_edition_short: str,
+    remote_version: str,
+    remote_edition_short: str,
+    remote_license_state: LicenseState | None,
+) -> (
+    cmk_version.VersionsCompatible
+    | cmk_version.VersionsIncompatible
+    | EditionsIncompatible
+    | LicenseStateIncompatible
+):
     """Whether or not a remote site version and edition is compatible with the central site
 
     The version check is handled by the version utils, the edition check is handled here.
@@ -697,17 +764,24 @@ def compatible_with_central_site(
 
     C*E != CME is not allowed
 
-    >>> str(c("2.0.0p3", "cee", "2.0.0p3", "cme"))
+    >>> str(c("2.2.0p1", "cce", "2.2.0p1", "cce", LicenseState.FREE))
+    'Remote site in license state free is not allowed'
+    >>> str(c("2.0.0p3", "cee", "2.0.0p3", "cme", LicenseState.LICENSED))
     'Mix of CME and non-CME is not supported.'
-    >>> str(c("2.0.0p3", "cme", "2.0.0p3", "cee"))
+    >>> str(c("2.0.0p3", "cme", "2.0.0p3", "cee", LicenseState.LICENSED))
     'Mix of CME and non-CME is not supported.'
-    >>> str(c("2.0.0p3", "cre", "2.0.0p3", "cme"))
+    >>> str(c("2.0.0p3", "cre", "2.0.0p3", "cme", LicenseState.LICENSED))
     'Mix of CME and non-CME is not supported.'
-    >>> str(c("2.0.0p3", "cme", "2.0.0p3", "cre"))
+    >>> str(c("2.0.0p3", "cme", "2.0.0p3", "cre", LicenseState.LICENSED))
     'Mix of CME and non-CME is not supported.'
-    >>> isinstance(c("2.0.0p3", "cme", "2.0.0p3", "cme"), cmk_version.VersionsCompatible)
+    >>> isinstance(c("2.0.0p3", "cme", "2.0.0p3", "cme", LicenseState.LICENSED), cmk_version.VersionsCompatible)
     True
     """
+    if remote_license_state is LicenseState.FREE:
+        return LicenseStateIncompatible(
+            "Remote site in license state %s is not allowed" % remote_license_state.readable
+        )
+
     # Pre 2.0.0p1 did not sent x-checkmk-* headers -> Not compabile
     if not all(
         (

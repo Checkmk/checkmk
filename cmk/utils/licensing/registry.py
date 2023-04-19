@@ -62,6 +62,10 @@ def get_license_message() -> str:
     return _make_licensing_handler().message
 
 
+def get_license_state() -> LicenseState:
+    return _make_licensing_handler().state
+
+
 def get_remaining_trial_time() -> RemainingTrialTime:
     handler = _make_licensing_handler()
     if handler.state is LicenseState.TRIAL:

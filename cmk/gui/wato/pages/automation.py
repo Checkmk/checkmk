@@ -15,6 +15,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -37,6 +38,7 @@ from cmk.gui.watolib.automations import (
     cmk_version_of_remote_automation_source,
     compatible_with_central_site,
     local_automation_failure,
+    make_incompatible_info,
 )
 
 
@@ -78,26 +80,26 @@ class ModeAutomationLogin(AjaxPage):
             if "x-checkmk-edition" in request.headers
             else request.get_ascii_input_mandatory("_edition_short")
         )
-
+        remote_version = cmk_version.__version__
+        remote_edition_short = cmk_version.edition().short
+        remote_license_state = get_license_state()
         if not isinstance(
             compatibility := compatible_with_central_site(
                 central_version,
                 central_edition_short,
-                cmk_version.__version__,
-                cmk_version.edition().short,
+                remote_version,
+                remote_edition_short,
+                remote_license_state,
             ),
             cmk_version.VersionsCompatible,
         ):
             raise MKGeneralException(
-                _(
-                    "Your central site (Version: %s, Edition: %s) is incompatible with this "
-                    "remote site (Version: %s, Edition: %s). Reason: %s"
-                )
-                % (
+                make_incompatible_info(
                     central_version,
                     central_edition_short,
-                    cmk_version.__version__,
-                    cmk_version.edition().short,
+                    remote_version,
+                    remote_edition_short,
+                    remote_license_state,
                     compatibility,
                 )
             )
@@ -140,25 +142,26 @@ class ModeAutomation(AjaxPage):
     def _verify_compatibility(self) -> None:
         central_version = request.headers.get("x-checkmk-version", "")
         central_edition_short = request.headers.get("x-checkmk-edition", "")
+        remote_version = cmk_version.__version__
+        remote_edition_short = cmk_version.edition().short
+        remote_license_state = get_license_state()
         if not isinstance(
             compatibility := compatible_with_central_site(
                 central_version,
                 central_edition_short,
-                cmk_version.__version__,
-                cmk_version.edition().short,
+                remote_version,
+                remote_edition_short,
+                remote_license_state,
             ),
             cmk_version.VersionsCompatible,
         ):
             raise MKGeneralException(
-                _(
-                    "Your central site (Version: %s, Edition: %s) is incompatible with this "
-                    "remote site (Version: %s, Edition: %s): Reason: %s"
-                )
-                % (
+                make_incompatible_info(
                     central_version,
                     central_edition_short,
-                    cmk_version.__version__,
-                    cmk_version.edition().short,
+                    remote_version,
+                    remote_edition_short,
+                    remote_license_state,
                     compatibility,
                 )
             )

@@ -21,6 +21,18 @@ class LicenseState(Enum):
     LICENSED = auto()
     UNLICENSED = auto()
 
+    @property
+    def readable(self) -> str:
+        if self is LicenseState.TRIAL:
+            return "trial"
+        if self is LicenseState.FREE:
+            return "free"
+        if self is LicenseState.LICENSED:
+            return "licensed"
+        if self is LicenseState.UNLICENSED:
+            return "unlicensed"
+        raise ValueError()
+
 
 class LicenseStateError(Exception):
     pass

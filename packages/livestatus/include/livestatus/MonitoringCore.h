@@ -53,7 +53,8 @@ public:
     virtual std::unique_ptr<const IService> find_service(
         const std::string &host_name,
         const std::string &service_description) = 0;
-    virtual const IContactGroup *find_contactgroup(const std::string &name) = 0;
+    virtual std::unique_ptr<const IContactGroup> find_contactgroup(
+        const std::string &name) = 0;
 
     virtual std::unique_ptr<const IServiceGroup> find_servicegroup(
         const std::string &name) = 0;

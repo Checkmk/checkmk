@@ -87,7 +87,7 @@ class DummyMonitoringCore : public MonitoringCore {
         const std::string & /*service_description*/) override {
         return {};
     }
-    const IContactGroup *find_contactgroup(
+    std::unique_ptr<const IContactGroup> find_contactgroup(
         const std::string & /*name*/) override {
         return {};
     }

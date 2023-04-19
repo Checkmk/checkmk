@@ -970,6 +970,7 @@ def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[object]:
         "offer MS-AZR-0143P",
         "offer MS-AZR-0015P",
         "offer MS-AZR-0144P",
+        "Customer does not have the privilege to see the cost",
     )
 
     LOGGER.debug("get usage details")

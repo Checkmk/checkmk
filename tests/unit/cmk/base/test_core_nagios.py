@@ -10,6 +10,7 @@ import io
 import itertools
 import os
 import subprocess
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -639,9 +640,13 @@ def test_create_nagios_servicedefs_active_check(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    license_counter = Counter("services")
+    core_nagios._create_nagios_servicedefs(
+        cfg, config_cache, "my_host", host_attrs, {}, license_counter
+    )
 
     assert outfile.getvalue() == expected_result
+    assert license_counter["services"] == 1
 
 
 @pytest.mark.parametrize(
@@ -733,7 +738,10 @@ def test_create_nagios_servicedefs_with_warnings(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    license_counter = Counter("services")
+    core_nagios._create_nagios_servicedefs(
+        cfg, config_cache, "my_host", host_attrs, {}, license_counter
+    )
 
     assert outfile.getvalue() == expected_result
 
@@ -784,9 +792,13 @@ def test_create_nagios_servicedefs_omit_service(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    license_counter = Counter("services")
+    core_nagios._create_nagios_servicedefs(
+        cfg, config_cache, "my_host", host_attrs, {}, license_counter
+    )
 
     assert outfile.getvalue() == expected_result
+    assert license_counter["services"] == 0
 
 
 @pytest.mark.parametrize(
@@ -831,9 +843,12 @@ def test_create_nagios_servicedefs_invalid_args(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    license_counter = Counter("services")
 
     with pytest.raises(exceptions.MKGeneralException, match=error_message):
-        core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+        core_nagios._create_nagios_servicedefs(
+            cfg, config_cache, "my_host", host_attrs, {}, license_counter
+        )
 
 
 @pytest.mark.parametrize(
@@ -899,7 +914,11 @@ def test_create_nagios_config_commands(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    license_counter = Counter("services")
+    core_nagios._create_nagios_servicedefs(
+        cfg, config_cache, "my_host", host_attrs, {}, license_counter
+    )
     core_nagios._create_nagios_config_commands(cfg)
 
+    assert license_counter["services"] == 1
     assert outfile.getvalue() == expected_result

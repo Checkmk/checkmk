@@ -83,7 +83,7 @@ from cmk.base.agent_based.confcheckers import (
 from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import ConfigCache
-from cmk.base.core_factory import create_core
+from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import make_parser
 
@@ -1192,7 +1192,12 @@ def mode_dump_nagios_config(args: list[HostName]) -> None:
 
     from cmk.base.core_nagios import create_config  # pylint: disable=import-outside-toplevel
 
-    create_config(sys.stdout, next(VersionedConfigPath.current()), args if len(args) else None)
+    create_config(
+        sys.stdout,
+        next(VersionedConfigPath.current()),
+        args if len(args) else None,
+        get_licensing_handler_type(),
+    )
 
 
 modes.register(

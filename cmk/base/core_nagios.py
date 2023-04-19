@@ -9,6 +9,7 @@ import os
 import py_compile
 import socket
 import sys
+from collections import Counter
 from collections.abc import Mapping
 from io import StringIO
 from pathlib import Path
@@ -24,6 +25,7 @@ from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import Labels
+from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
@@ -94,8 +96,14 @@ class NagiosCore(core_config.MonitoringCore):
         The user can then start the site with the old configuration and fix the configuration issue
         while the monitoring is running.
         """
+
         config_buffer = StringIO()
-        create_config(config_buffer, config_path, hostnames=None)
+        create_config(
+            config_buffer,
+            config_path,
+            hostnames=None,
+            licensing_handler_type=self._licensing_handler_type,
+        )
 
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
 
@@ -136,10 +144,21 @@ class NagiosConfig:
         self._outfile.write(x)
 
 
+def _validate_licensing(
+    licensing_handler_type: type[LicensingHandler], licensing_counter: Counter
+) -> None:
+    licensing_handler = licensing_handler_type.make()
+    if block_effect := licensing_handler.effect_core(
+        licensing_counter["services"], len(config.shadow_hosts)
+    ).block:
+        raise MKGeneralException(block_effect.message)
+
+
 def create_config(
     outfile: IO[str],
     config_path: VersionedConfigPath,
     hostnames: list[HostName] | None,
+    licensing_handler_type: type[LicensingHandler],
 ) -> None:
     if config.host_notification_periods != []:
         config_warnings.warn(
@@ -170,11 +189,15 @@ def create_config(
     _output_conf_header(cfg)
 
     stored_passwords = cmk.utils.password_store.load()
+
+    licensing_counter = Counter("services")
     all_host_labels: dict[HostName, CollectedHostLabels] = {}
     for hostname in sorted(hostnames):
         all_host_labels[hostname] = _create_nagios_config_host(
-            cfg, config_cache, hostname, stored_passwords
+            cfg, config_cache, hostname, stored_passwords, licensing_counter
         )
+
+    _validate_licensing(licensing_handler_type, licensing_counter)
 
     write_notify_host_file(config_path, all_host_labels)
 
@@ -205,6 +228,7 @@ def _create_nagios_config_host(
     config_cache: ConfigCache,
     hostname: HostName,
     stored_passwords: Mapping[str, str],
+    license_counter: Counter,
 ) -> CollectedHostLabels:
     cfg.write("\n# ----------------------------------------------------\n")
     cfg.write("# %s\n" % hostname)
@@ -218,11 +242,7 @@ def _create_nagios_config_host(
     return CollectedHostLabels(
         host_labels=get_labels_from_attributes(list(host_attrs.items())),
         service_labels=_create_nagios_servicedefs(
-            cfg,
-            config_cache,
-            hostname,
-            host_attrs,
-            stored_passwords,
+            cfg, config_cache, hostname, host_attrs, stored_passwords, license_counter
         ),
     )
 
@@ -340,6 +360,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     hostname: HostName,
     host_attrs: ObjectAttributes,
     stored_passwords: Mapping[str, str],
+    license_counter: Counter,
 ) -> dict[ServiceName, Labels]:
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
@@ -432,6 +453,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         )
 
         cfg.write(_format_nagios_object("service", service_spec))
+        license_counter["services"] += 1
 
         cfg.checknames_to_define.add(service.check_plugin_name)
         have_at_least_one_service = True
@@ -446,6 +468,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         service_spec.update(check_mk_attrs)
         service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, "Check_MK"))
         cfg.write(_format_nagios_object("service", service_spec))
+        license_counter["services"] += 1
 
     # legacy checks via active_checks
     actchecks = []
@@ -525,6 +548,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                         _extra_service_conf_of(cfg, config_cache, hostname, description)
                     )
                     cfg.write(_format_nagios_object("service", service_spec))
+                    license_counter["services"] += 1
 
                     # write service dependencies for active checks
                     cfg.write(get_dependencies(hostname, description))
@@ -610,6 +634,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             )
             service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
             cfg.write(_format_nagios_object("service", service_spec))
+            license_counter["services"] += 1
 
             # write service dependencies for custom checks
             cfg.write(get_dependencies(hostname, description))
@@ -639,6 +664,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         )
 
         cfg.write(_format_nagios_object("service", service_spec))
+        license_counter["services"] += 1
 
         if have_at_least_one_service:
             cfg.write(
@@ -664,6 +690,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             config_cache.default_address_family(hostname),
             "PING",
             host_attrs.get("_NODEIPS"),
+            license_counter,
         )
 
     if ConfigCache.address_family(hostname) is AddressFamily.DUAL_STACK:
@@ -676,6 +703,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                 socket.AF_INET,
                 "PING IPv4",
                 host_attrs.get("_NODEIPS_4"),
+                license_counter,
             )
         else:
             _add_ping_service(
@@ -686,6 +714,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                 socket.AF_INET6,
                 "PING IPv6",
                 host_attrs.get("_NODEIPS_6"),
+                license_counter,
             )
 
     return service_labels
@@ -699,6 +728,7 @@ def _add_ping_service(
     family: socket.AddressFamily,
     descr: ServiceName,
     node_ips: str | None,
+    licensing_counter: Counter,
 ) -> None:
     arguments = core_config.check_icmp_arguments_of(config_cache, host_name, family=family)
 
@@ -718,6 +748,7 @@ def _add_ping_service(
     service_spec.update(core_config.get_service_attributes(host_name, descr, config_cache))
     service_spec.update(_extra_service_conf_of(cfg, config_cache, host_name, descr))
     cfg.write(_format_nagios_object("service", service_spec))
+    licensing_counter["services"] += 1
 
 
 def _format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:

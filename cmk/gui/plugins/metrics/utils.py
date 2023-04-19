@@ -57,10 +57,9 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
 
+RPNExpression = tuple  # TODO: Improve this type
+
 LegacyPerfometer = tuple[str, Any]
-Atom = TypeVar("Atom")
-TransformedAtom = TypeVar("TransformedAtom")
-StackElement = Union[Atom, TransformedAtom]
 
 ScalarDefinition = Union[str, tuple[str, str | LazyString]]
 HorizontalRule = tuple[float, str, str, str | LazyString]
@@ -131,7 +130,7 @@ GraphRecipe = dict[str, Any]
 class _GraphMetricMandatory(TypedDict):
     title: str
     line_type: LineType
-    expression: StackElement
+    expression: RPNExpression
 
 
 class GraphMetric(_GraphMetricMandatory, total=False):
@@ -148,7 +147,7 @@ class CombinedGraphMetricSpec(TypedDict):
     color: str
     title: str
     line_type: LineType
-    expression: StackElement
+    expression: RPNExpression
     metric_definition: MetricDefinition
 
 
@@ -725,13 +724,17 @@ def _evaluate_rpn(
     )
 
 
+_TAtom = TypeVar("_TAtom")
+_TStackElement = TypeVar("_TStackElement")
+
+
 def stack_resolver(
-    elements: list[Atom],
-    is_operator: Callable[[Atom], bool],
-    apply_operator: Callable[[Atom, StackElement, StackElement], StackElement],
-    apply_element: Callable[[Atom], StackElement],
-) -> StackElement:
-    stack: list[StackElement] = []
+    elements: Sequence[_TAtom],
+    is_operator: Callable[[_TAtom], bool],
+    apply_operator: Callable[[_TAtom, _TStackElement, _TStackElement], _TStackElement],
+    apply_element: Callable[[_TAtom], _TStackElement],
+) -> _TStackElement:
+    stack: list[_TStackElement] = []
     for element in elements:
         if is_operator(element):
             if len(stack) < 2:

@@ -9,7 +9,7 @@ import pytest
 
 import cmk.gui.metrics as metrics
 import cmk.gui.plugins.metrics.graph_templates as gt
-from cmk.gui.plugins.metrics.utils import GraphTemplate, StackElement
+from cmk.gui.plugins.metrics.utils import GraphTemplate, RPNExpression
 from cmk.gui.type_defs import GraphConsoldiationFunction, MetricExpression
 
 
@@ -74,7 +74,7 @@ def test_rpn_consolidation_exception(
         ),
     ],
 )
-def test_rpn_stack(expression: MetricExpression, result: StackElement) -> None:
+def test_rpn_stack(expression: MetricExpression, result: RPNExpression) -> None:
     translated_metrics = metrics.translate_perf_data(
         "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;", "check_mk-df"
     )

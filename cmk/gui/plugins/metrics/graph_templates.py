@@ -27,16 +27,14 @@ from cmk.gui.plugins.metrics.utils import (
     metrics_used_in_expression,
     MetricUnitColor,
     replace_expressions,
+    RPNExpression,
     split_expression,
     stack_resolver,
-    StackElement,
     translated_metrics_from_row,
     TranslatedMetrics,
 )
 from cmk.gui.type_defs import MetricDefinition, Row, TemplateGraphSpec
 from cmk.gui.views.painter_options import PainterOptions
-
-RPNAtom = tuple  # TODO: Improve this type
 
 
 # Performance graph dashlets already use graph_id, but for example in reports, we still use
@@ -229,7 +227,7 @@ def metric_expression_to_graph_recipe_expression(
     translated_metrics: TranslatedMetrics,
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
-) -> StackElement:
+) -> RPNExpression:
     """Convert 'user,util,+,2,*' into this:
 
         ('operator',
@@ -249,7 +247,7 @@ def metric_expression_to_graph_recipe_expression(
     )
 
     expression = split_expression(expression)[0]
-    atoms: list[RPNAtom] = []
+    atoms: list[RPNExpression] = []
     # Break the RPN into parts and translate each part separately
     for part, cf in iter_rpn_expression(expression, enforced_consolidation_function):
         # Some parts are operators. We leave them. We are just interested in

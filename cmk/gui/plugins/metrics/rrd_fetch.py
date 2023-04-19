@@ -6,7 +6,7 @@
 
 import collections
 import time
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import Any
 
 import livestatus
@@ -28,8 +28,9 @@ from cmk.gui.plugins.metrics.utils import (
     GraphRecipe,
     reverse_translate_metric_name,
     RRDData,
+    RRDDataKey,
 )
-from cmk.gui.type_defs import ColumnName, CombinedGraphSpec, GraphMetric
+from cmk.gui.type_defs import ColumnName, CombinedGraphSpec, GraphMetric, RPNExpression
 
 
 def fetch_rrd_data_for_graph(
@@ -43,7 +44,19 @@ def fetch_rrd_data_for_graph(
         graph_recipe["metrics"], resolve_combined_single_metric_spec
     )
 
-    by_service = group_needed_rrd_data_by_service(needed_rrd_data)
+    by_service = group_needed_rrd_data_by_service(
+        (
+            (
+                entry[0],
+                entry[1],
+                entry[2],
+                entry[3],
+                entry[4],
+                entry[5],
+            )
+            for entry in needed_rrd_data
+        )
+    )
     rrd_data: RRDData = {}
     for (site, host_name, service_description), metrics in by_service.items():
         try:
@@ -116,12 +129,12 @@ def chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) ->
         data.end -= step
 
 
-def needed_elements_of_expression(  # type: ignore[no-untyped-def]
-    expression,
+def needed_elements_of_expression(
+    expression: RPNExpression,
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
-):
+) -> Iterator[tuple[Any, ...]]:
     if expression[0] in ["rrd", "scalar"]:
         yield tuple(expression[1:])
     elif expression[0] in ["operator", "transformation"]:
@@ -138,13 +151,13 @@ def needed_elements_of_expression(  # type: ignore[no-untyped-def]
 
 
 def get_needed_sources(
-    metrics: list[GraphMetric],
+    metrics: Sequence[GraphMetric],
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
     *,
     condition: Callable[[Any], bool] = lambda x: True,
-) -> set:
+) -> set[tuple[Any, ...]]:
     """Extract all metric data sources definitions
 
     metrics: List
@@ -162,14 +175,11 @@ def get_needed_sources(
     }
 
 
-NeededRRDData = set[
-    tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
-]
 MetricProperties = tuple[str, GraphConsoldiationFunction | None, float]
 
 
 def group_needed_rrd_data_by_service(
-    needed_rrd_data: NeededRRDData,
+    needed_rrd_data: Iterable[RRDDataKey],
 ) -> dict[tuple[SiteId, HostName, ServiceName], set[MetricProperties],]:
     by_service: dict[
         tuple[SiteId, HostName, ServiceName],

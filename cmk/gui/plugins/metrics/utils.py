@@ -11,7 +11,7 @@ import shlex
 from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from itertools import chain
-from typing import Any, Final, overload, TypedDict, TypeVar, Union
+from typing import Any, Final, NotRequired, overload, TypedDict, TypeVar, Union
 
 from livestatus import SiteId
 
@@ -38,6 +38,7 @@ from cmk.gui.type_defs import (
     Choice,
     Choices,
     GraphConsoldiationFunction,
+    GraphMetric,
     GraphPresentation,
     HorizontalRule,
     LineType,
@@ -128,6 +129,10 @@ GraphRecipe = dict[str, Any]
 
 RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
 RRDData = dict[RRDDataKey, TimeSeries]
+
+
+class CombinedMetric(GraphMetric):
+    original_metrics: NotRequired[Sequence["GraphMetric"]]
 
 
 class CombinedGraphMetricSpec(TypedDict):

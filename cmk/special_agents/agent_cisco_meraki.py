@@ -291,7 +291,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "--sections",
         nargs="+",
         choices=list(_SECTION_NAME_MAP),
-        default=[],
+        default=list(_SECTION_NAME_MAP),
         help="Explicit sections that are collected.",
     )
 

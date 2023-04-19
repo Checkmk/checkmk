@@ -19,6 +19,7 @@ from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import is_free
 from cmk.utils.site import omd_site
 
@@ -84,7 +85,13 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
 from cmk.gui.watolib.activate_changes import get_free_message
-from cmk.gui.watolib.automations import do_remote_automation, do_site_login, MKAutomationException
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    do_site_login,
+    make_remote_site_version_info,
+    MKAutomationException,
+    parse_license_state,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainLiveproxy
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
@@ -922,9 +929,10 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
         if status.success:
             assert not isinstance(status.response, Exception)
             icon = "success"
-            msg = _("Online (Version: %s, Edition: %s)") % (
+            msg = _("Online (%s)") % make_remote_site_version_info(
                 status.response.version,
                 status.response.edition,
+                status.response.license_state,
             )
         else:
             assert isinstance(status.response, Exception)
@@ -956,6 +964,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
 class PingResult(NamedTuple):
     version: str
     edition: str
+    license_state: LicenseState | None
 
 
 class ReplicationStatus(NamedTuple):
@@ -1037,7 +1046,11 @@ class ReplicationStatusFetcher:
             result = ReplicationStatus(
                 site_id=site_id,
                 success=True,
-                response=PingResult(**raw_result),
+                response=PingResult(
+                    version=raw_result["version"],
+                    edition=raw_result["edition"],
+                    license_state=parse_license_state(raw_result.get("license_state", "")),
+                ),
             )
             self._logger.debug("[%s] Finished" % site_id)
         except Exception as e:

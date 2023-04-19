@@ -9,6 +9,7 @@ from typing import Any
 
 import cmk.utils.plugin_registry
 import cmk.utils.version as cmk_version
+from cmk.utils.licensing.registry import get_license_state
 
 
 class AutomationCommand(abc.ABC):
@@ -50,4 +51,5 @@ class AutomationPing(AutomationCommand):
         return {
             "version": cmk_version.__version__,
             "edition": cmk_version.edition().short,
+            "license_state": get_license_state().name,
         }

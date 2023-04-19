@@ -394,7 +394,7 @@ def _verify_compatibility(response: requests.Response) -> None:
 
     remote_version = response.headers.get("x-checkmk-version", "")
     remote_edition_short = response.headers.get("x-checkmk-edition", "")
-    remote_license_state = _parse_license_state(response.headers.get("x-checkmk-license-state", ""))
+    remote_license_state = parse_license_state(response.headers.get("x-checkmk-license-state", ""))
 
     if not remote_version or not remote_edition_short:
         return  # No validation
@@ -421,7 +421,7 @@ def _verify_compatibility(response: requests.Response) -> None:
         )
 
 
-def _parse_license_state(raw_license_state: str) -> LicenseState | None:
+def parse_license_state(raw_license_state: str) -> LicenseState | None:
     try:
         return LicenseState[raw_license_state]
     except KeyError:
@@ -440,7 +440,7 @@ def make_incompatible_info(
 ) -> str:
     return _("The central (%s) and remote site (%s) are not compatible. Reason: %s") % (
         _make_central_site_version_info(central_version, central_edition_short),
-        _make_remote_site_version_info(remote_version, remote_edition_short, remote_license_state),
+        make_remote_site_version_info(remote_version, remote_edition_short, remote_license_state),
         compatibility,
     )
 
@@ -452,7 +452,7 @@ def _make_central_site_version_info(
     return _("Version: %s, Edition: %s") % (central_version, central_edition_short)
 
 
-def _make_remote_site_version_info(
+def make_remote_site_version_info(
     remote_version: str,
     remote_edition_short: str,
     remote_license_state: LicenseState | None,

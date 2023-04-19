@@ -532,6 +532,13 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
         pytest.param(
             Args(debug=False, services=["usage_details"]),
             None,
+            ApiError("Customer does not have the privilege to see the cost (Request ID: xxxx)"),
+            "",
+            id="api error customer not privileged",
+        ),
+        pytest.param(
+            Args(debug=False, services=["usage_details"]),
+            None,
             ApiError("unknown offer"),
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"

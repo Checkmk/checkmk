@@ -1,0 +1,17 @@
+Title: sap_hana: Enable clustering of active and passive nodes
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1682663516
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, we collected data only for databases in primary and
+logreplay_readaccess replication modes. For other replication modes
+only SAP HANA Status service was shown.
+
+In order to enable clustering of active and passive nodes,
+we now try to collect data for all replication modes and if the database
+cannot be accessed, the services of that host will go to STALE.

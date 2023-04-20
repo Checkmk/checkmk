@@ -616,15 +616,11 @@ def initial_discovery_result(
     host: CREHost,
     previous_discovery_result: DiscoveryResult | None,
 ) -> DiscoveryResult:
-    if _use_previous_discovery_result(previous_discovery_result):
-        assert previous_discovery_result is not None
-        return previous_discovery_result
-
-    return get_check_table(StartDiscoveryRequest(host, host.folder(), discovery_options))
-
-
-def _use_previous_discovery_result(previous_discovery_result: DiscoveryResult | None) -> bool:
-    return not (previous_discovery_result is None or previous_discovery_result.is_active())
+    return (
+        get_check_table(StartDiscoveryRequest(host, host.folder(), discovery_options))
+        if previous_discovery_result is None or previous_discovery_result.is_active()
+        else previous_discovery_result
+    )
 
 
 def _perform_update_host_labels(host, host_labels):

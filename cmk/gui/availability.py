@@ -2176,7 +2176,7 @@ def layout_timeline(  # pylint: disable=too-many-branches
             (
                 None,
                 "",
-                100.0 * (until_time - this_until_time) / total_duration,
+                100.0 * (until_time - current_time) / total_duration,
                 "unmonitored",
             )
         )

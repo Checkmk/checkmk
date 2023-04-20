@@ -597,6 +597,7 @@ class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
     graph_unit: GraphUnitRenderFunc
     description: str
     valuespec: Any  # TODO: better typing
+    conversion: Callable[[float], float]
 
 
 class _TranslatedMetricRequired(TypedDict):

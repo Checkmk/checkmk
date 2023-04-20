@@ -236,3 +236,18 @@ def test_estimate_levels(
         )
         == result
     )
+
+
+class TestTimeseries:
+    def test_conversion(self) -> None:
+        assert prediction.TimeSeries(
+            [1, 2, 3, 4, None, 5],
+            conversion=lambda v: 2 * v - 3,
+        ).values == [
+            2 * 4 - 3,
+            None,
+            2 * 5 - 3,
+        ]
+
+    def test_conversion_noop_default(self) -> None:
+        assert prediction.TimeSeries([1, 2, 3, 4, None, 5]).values == [4, None, 5]

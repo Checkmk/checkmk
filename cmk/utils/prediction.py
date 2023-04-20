@@ -147,6 +147,8 @@ class TimeSeries:
             Includes [start, end, step, *values]
         timewindow: tuple
             describes (start, end, step), in this case data has only values
+        conversion:
+            optional conversion to account for user-specific unit settings
         **metadata:
             additional information arguments
 
@@ -156,6 +158,7 @@ class TimeSeries:
         self,
         data: TimeSeriesValues,
         timewindow: tuple[Timestamp, Timestamp, Seconds] | None = None,
+        conversion: Callable[[float], float] = lambda v: v,
         **metadata: str,
     ) -> None:
         if timewindow is None:
@@ -169,7 +172,7 @@ class TimeSeries:
         self.start = int(timewindow[0])
         self.end = int(timewindow[1])
         self.step = int(timewindow[2])
-        self.values = data
+        self.values = [v if v is None else conversion(v) for v in data]
         self.metadata = metadata
 
     @property

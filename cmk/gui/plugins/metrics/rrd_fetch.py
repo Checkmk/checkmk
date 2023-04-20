@@ -29,6 +29,7 @@ from cmk.gui.plugins.metrics.utils import (
     GraphRecipe,
     reverse_translate_metric_name,
     RRDData,
+    unit_info,
 )
 from cmk.gui.type_defs import ColumnName, CombinedGraphSpec
 
@@ -43,6 +44,10 @@ def fetch_rrd_data_for_graph(
     needed_rrd_data = get_needed_sources(
         graph_recipe["metrics"], resolve_combined_single_metric_spec
     )
+    unit_conversion = unit_info[graph_recipe["unit"]].get(
+        "conversion",
+        lambda v: v,
+    )
 
     by_service = group_needed_rrd_data_by_service(needed_rrd_data)
     rrd_data: RRDData = {}
@@ -52,7 +57,8 @@ def fetch_rrd_data_for_graph(
                 site, host_name, service_description, metrics, graph_recipe, graph_data_range
             ):
                 rrd_data[(site, host_name, service_description, perfvar, cf, scale)] = TimeSeries(
-                    data
+                    data,
+                    conversion=unit_conversion,
                 )
         except livestatus.MKLivestatusNotFoundError:
             pass

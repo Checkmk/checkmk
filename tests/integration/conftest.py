@@ -30,6 +30,7 @@ def fixture_site() -> Site:
     sf = get_site_factory(
         prefix="int_",
         update_from_git=version == "git",
+        install_test_python_modules=False,
         fallback_branch=current_base_branch_name,
     )
 

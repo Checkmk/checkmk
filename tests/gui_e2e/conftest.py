@@ -30,6 +30,7 @@ def site() -> Iterator[Site]:
     drop_site = reuse == "0"
     sf = get_site_factory(
         prefix="gui_e2e_",
+        install_test_python_modules=False,
         fallback_branch=current_base_branch_name,
     )
 

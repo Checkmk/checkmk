@@ -239,6 +239,7 @@ def get_site() -> Site:
     logger.info("Setting up testsite")
     sf = get_site_factory(
         prefix="openapi_",
+        install_test_python_modules=False,
         fallback_branch=current_base_branch_name,
     )
     site_to_return = sf.get_existing_site("central")

@@ -24,7 +24,7 @@ from typing import Final, Literal
 import pytest
 
 from tests.testlib.openapi_session import CMKOpenApiSession
-from tests.testlib.utils import cmc_path, cme_path, cmk_path, is_containerized
+from tests.testlib.utils import cmc_path, cme_path, cmk_path, is_containerized, virtualenv_path
 from tests.testlib.version import CMKVersion, version_from_env
 from tests.testlib.web_session import CMKWebSession
 
@@ -44,6 +44,7 @@ class Site:
         site_id: str,
         reuse: bool = True,
         update_from_git: bool = False,
+        install_test_python_modules: bool = True,
         admin_password: str = "cmk",
         update: bool = False,
         update_conflict_mode: str = "install",
@@ -55,6 +56,7 @@ class Site:
         self.version: Final = version
 
         self.update_from_git = update_from_git
+        self.install_test_python_modules = install_test_python_modules
 
         self.reuse = reuse
 
@@ -644,6 +646,11 @@ class Site:
             self._enable_gui_debug_logging()
             self._tune_nagios()
 
+        if self.install_test_python_modules:
+            # Once this is removed, we can remove the special case from
+            # tests.integration.omd.test_permissions.test_site_file_permissions
+            self._install_test_python_modules()
+
         if self.update_from_git:
             self._update_with_f12_files()
 
@@ -845,6 +852,49 @@ class Site:
             # WatchLog is not able to handle log rotations. Disable the rotation during tests.
             "log_rotation_method=n\n",
         )
+
+    def _install_test_python_modules(self) -> None:
+        venv = virtualenv_path()
+        bin_dir = venv / "bin"
+        self._copy_python_modules_from(
+            venv / f"lib/python{PYTHON_VERSION_MAJOR}.{PYTHON_VERSION_MINOR}/site-packages"
+        )
+
+        # Some distros have a separate platfrom dependent library directory, handle it....
+        platlib64 = (
+            venv / f"lib64/python{PYTHON_VERSION_MAJOR}.{PYTHON_VERSION_MINOR}/site-packages"
+        )
+        if platlib64.exists():
+            self._copy_python_modules_from(platlib64)
+
+        for file_name in ["py.test", "pytest"]:
+            assert (
+                os.system(  # nosec
+                    "sudo rsync -a --chown %s:%s %s %s/local/bin"
+                    % (self.id, self.id, bin_dir / file_name, self.root)
+                )
+                >> 8
+                == 0
+            )
+
+    def _copy_python_modules_from(self, packages_dir: Path) -> None:
+        enforce_override = ["backports"]
+
+        for file_name in os.listdir(str(packages_dir)):
+            # Only copy modules that do not exist in regular module path
+            if file_name not in enforce_override:
+                if os.path.exists(
+                    f"{self.root}/lib/python{PYTHON_VERSION_MAJOR}.{PYTHON_VERSION_MINOR}/site-packages/{file_name}"
+                ):
+                    continue
+
+            assert (
+                os.system(  # nosec
+                    f"sudo rsync -a --chown {self.id}:{self.id} {packages_dir / file_name} {self.root}/local/lib/python{PYTHON_VERSION_MAJOR}/"
+                )
+                >> 8
+                == 0
+            )
 
     def rm(self, site_id: str | None = None) -> None:
         completed_process = subprocess.run(
@@ -1183,6 +1233,7 @@ class SiteFactory:
         self._sites: MutableMapping[str, Site] = {}
         self._index = 1
         self._update_from_git = update_from_git
+        self._install_test_python_modules = install_test_python_modules
         self._update = update
         self._update_conflict_mode = update_conflict_mode
         self._enforce_english_gui = enforce_english_gui
@@ -1231,6 +1282,7 @@ class SiteFactory:
             site_id=site_id,
             reuse=False,
             update_from_git=self._update_from_git,
+            install_test_python_modules=self._install_test_python_modules,
             update=self._update,
             enforce_english_gui=self._enforce_english_gui,
         )
@@ -1264,6 +1316,7 @@ class SiteFactory:
 def get_site_factory(
     *,
     prefix: str,
+    install_test_python_modules: bool,
     update_from_git: bool | None = None,
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> SiteFactory:
@@ -1286,6 +1339,7 @@ def get_site_factory(
         update_from_git=version.version_spec == CMKVersion.GIT
         if update_from_git is None
         else update_from_git,
+        install_test_python_modules=install_test_python_modules,
     )
 
 

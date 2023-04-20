@@ -24,6 +24,7 @@ def get_site() -> Site:
     drop_site = reuse == "0"
     sf = get_site_factory(
         prefix="crawl_",
+        install_test_python_modules=False,
         fallback_branch=current_base_branch_name,
     )
 

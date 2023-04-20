@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: Check_MK Enterprise License
+// Copyright (C) 2019 Checkmk GmbH - License: Check_MK Enterprise License
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 

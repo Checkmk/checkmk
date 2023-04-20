@@ -3,7 +3,10 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 def heirloommailx(version_str, sha256):
     http_archive(
         name = "heirloom-mailx",
-        urls = ["https://ftp.debian.org/debian/pool/main/h/heirloom-mailx/heirloom-mailx_" + version_str + ".orig.tar.gz"],
+        urls = [
+            "https://ftp.debian.org/debian/pool/main/h/heirloom-mailx/heirloom-mailx_" + version_str + ".orig.tar.gz",
+            "https://artifacts.lan.tribe29.com/repository/archives/heirloom-mailx_" + version_str + ".orig.tar.gz",
+        ],
         sha256 = sha256,
         build_file = "@omd_packages//packages/heirloom-mailx:BUILD.bazel",
         patches = [

@@ -23,7 +23,7 @@ TEST(SectionProviderSkype, Counters) {
     }
 }
 
-TEST(SectionProviderSkype, StandardRunIntegration) {
+TEST(SectionProviderSkype, StandardRunComponent) {
     SkypeProvider skype;
     EXPECT_TRUE(skype.generateContent().empty());
 }
@@ -32,7 +32,7 @@ TEST(SectionProviderSkype, StandardRunIntegration) {
 // We have no possibilities to install Skype Business on testing, dev and
 // integration machines.
 // We will use first best Windows counters as a base for our Skype provider
-TEST(SectionProviderSkype, SimulatedIntegration) {
+TEST(SectionProviderSkype, SimulatedComponent) {
     constexpr size_t base_size = 2U + 2U * 3U;
     constexpr size_t asp_size = 3U;
     constexpr size_t full_size = base_size + asp_size;

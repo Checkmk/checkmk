@@ -126,7 +126,7 @@ ExternalPort::IoParam makeIoParam(std::optional<uint32_t> pid) {
 }
 }  // namespace
 
-TEST_F(ExternalPortCheckProcessFixture, AnyProcessIntegration) {
+TEST_F(ExternalPortCheckProcessFixture, AnyProcessComponent) {
     disableElevatedAllowed();
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam({})));
 
@@ -136,7 +136,7 @@ TEST_F(ExternalPortCheckProcessFixture, AnyProcessIntegration) {
     EXPECT_EQ(remote_ip, text);
 }
 
-TEST_F(ExternalPortCheckProcessFixture, InvalidProcessIntegration) {
+TEST_F(ExternalPortCheckProcessFixture, InvalidProcessComponent) {
     disableElevatedAllowed();
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(1)));
 
@@ -146,7 +146,7 @@ TEST_F(ExternalPortCheckProcessFixture, InvalidProcessIntegration) {
     EXPECT_TRUE(remote_ip.empty());
 }
 
-TEST_F(ExternalPortCheckProcessFixture, InvalidProcessDefaultIntegration) {
+TEST_F(ExternalPortCheckProcessFixture, InvalidProcessDefaultComponent) {
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(1)));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
@@ -155,7 +155,7 @@ TEST_F(ExternalPortCheckProcessFixture, InvalidProcessDefaultIntegration) {
     EXPECT_EQ(remote_ip, text);
 }
 
-TEST_F(ExternalPortCheckProcessFixture, ValidProcessIntegration) {
+TEST_F(ExternalPortCheckProcessFixture, ValidProcessComponent) {
     disableElevatedAllowed();
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(::GetCurrentProcessId())));
 
@@ -205,7 +205,7 @@ public:
     bool delay_{false};
 };
 
-TEST_F(ExternalPortTestFixture, ReadIntegration) {
+TEST_F(ExternalPortTestFixture, ReadComponent) {
     tst::FirewallOpener fwo;
     ASSERT_TRUE(tst::WaitForSuccessSilent(1000ms, [this] {
         std::error_code ec;
@@ -303,7 +303,7 @@ void runThread(uint16_t port) {
 }
 }  // namespace
 
-TEST_F(ExternalPortTestFixture, MultiConnectIntegration) {
+TEST_F(ExternalPortTestFixture, MultiConnectComponent) {
     tst::FirewallOpener fwo;
     constexpr int thread_count{8};
     delay_ = true;
@@ -390,13 +390,13 @@ public:
     }
 };
 
-TEST_F(ExternalPortMailSlotFixture, NonEncryptedIntegration) {
+TEST_F(ExternalPortMailSlotFixture, NonEncryptedComponent) {
     EXPECT_TRUE(SendDataToMailSlot(mailbox_.GetName(), data_, nullptr));
     wait_for_effect();
     EXPECT_EQ(data_, result_);
 }
 
-TEST_F(ExternalPortMailSlotFixture, EncryptedIntegration) {
+TEST_F(ExternalPortMailSlotFixture, EncryptedComponent) {
     const auto commander = std::make_unique<encrypt::Commander>("aa");
     ASSERT_TRUE(SendDataToMailSlot(mailbox_.GetName(), data_, commander.get()));
     wait_for_effect();

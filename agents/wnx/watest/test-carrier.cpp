@@ -181,7 +181,7 @@ TEST_F(CarrierTestFixture, EstablishShutdown) {
     cc_.shutdownCommunication();
 }
 
-TEST_F(CarrierTestFixture, MailSlotIntegration) {
+TEST_F(CarrierTestFixture, MailSlotComponent) {
     auto summary_output = tools::ReadFileInVector(
         (tst::GetUnitTestFilesRoot() / L"summary.output").wstring().c_str());
 

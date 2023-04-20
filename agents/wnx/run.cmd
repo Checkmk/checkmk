@@ -253,7 +253,7 @@ net stop WinRing0_1_2_0
 copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /Y
 copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y
 powershell Write-Host "starting unit tests" -Foreground Cyan
-call call_unit_tests.cmd -*_Long:*Integration:*IntegrationExt:*Flaky
+call call_unit_tests.cmd -*_Simulation:*Component:*ComponentExt:*Flaky
 if not %errorlevel% == 0 powershell Write-Host "Failed Unit Test" -Foreground Red & call :halt 100
 powershell Write-Host "Unit test SUCCESS" -Foreground Green
 goto :eof

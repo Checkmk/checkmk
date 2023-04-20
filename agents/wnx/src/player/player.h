@@ -370,7 +370,7 @@ private:
     friend class PlayerTest;
     FRIEND_TEST(PlayerTest, All);
     FRIEND_TEST(PlayerTest, Extensions);
-    FRIEND_TEST(PlayerTest, RealLifeInventory_Long);
+    FRIEND_TEST(PlayerTest, RealLifeInventory_Simulation);
     FRIEND_TEST(v, StartStop);
 #endif
 };

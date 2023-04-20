@@ -126,7 +126,7 @@ std::pair<wtools::perf::DataSequence, uint32_t> GetKeyIndex() {
         details::LoadWinPerfData(std::to_wstring(ts_index), key_index);
     return {std::move(result), key_index};
 }
-TEST(WinPerf, MakeBodyForTSIntegration) {
+TEST(WinPerf, MakeBodyForTSComponent) {
     auto [result, key_index] = GetKeyIndex();
 
     auto object = wtools::perf::FindPerfObject(result, key_index);

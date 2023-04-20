@@ -603,10 +603,10 @@ private:
     friend class PluginTest;
     FRIEND_TEST(PluginTest, ApplyConfig);
     FRIEND_TEST(PluginTest, TimeoutCalc);
-    FRIEND_TEST(PluginTest, AsyncStartSimulation_Long);
-    FRIEND_TEST(PluginTest, AsyncDataPickup_Integration);
-    FRIEND_TEST(PluginTest, AsyncLocal_Integration);
-    FRIEND_TEST(PluginTest, SyncLocal_Integration);
+    FRIEND_TEST(PluginTest, AsyncStartSimulation_Simulation);
+    FRIEND_TEST(PluginTest, AsyncDataPickup_Component);
+    FRIEND_TEST(PluginTest, AsyncLocal_Component);
+    FRIEND_TEST(PluginTest, SyncLocal_Component);
 
     FRIEND_TEST(PluginTest, Entry);
 #endif

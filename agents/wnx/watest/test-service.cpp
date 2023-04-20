@@ -305,7 +305,7 @@ std::wstring getPortValue(std::wstring_view name, std::wstring_view app_name) {
 }
 }  // namespace
 
-TEST(CmaSrv, FirewallIntegration) {
+TEST(CmaSrv, FirewallComponent) {
     auto test_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(test_fs->loadFactoryConfig());
     auto cfg = cma::cfg::GetLoadedConfig();

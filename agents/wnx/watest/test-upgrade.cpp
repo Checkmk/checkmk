@@ -879,7 +879,7 @@ TEST(UpgradeTest, IgnoreApi) {
     EXPECT_FALSE(details::IsIgnoredFile("aasAA."));
 }
 
-TEST(UpgradeTest, TopLevelApi_Long) {
+TEST(UpgradeTest, TopLevelApi_Simulation) {
     if (!tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio)
             .w("Program is not elevated, testing is not possible");
@@ -903,7 +903,7 @@ TEST(UpgradeTest, TopLevelApi_Long) {
     EXPECT_TRUE(FindStopDeactivateLegacyAgent());
 }
 
-TEST(UpgradeTest, StopStartStopOhmIntegration) {
+TEST(UpgradeTest, StopStartStopOhmComponent) {
     auto lwa_path = FindLegacyAgent();
     if (!lwa_path.empty()) {
         GTEST_SKIP()
@@ -949,7 +949,7 @@ TEST(UpgradeTest, StopStartStopOhmIntegration) {
     EXPECT_EQ(status, SERVICE_RUNNING);
 }
 
-TEST(UpgradeTest, FindLwa_Long) {
+TEST(UpgradeTest, FindLwa_Simulation) {
     if (!tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio)
             .w("The Program is not elevated, testing is not possible");

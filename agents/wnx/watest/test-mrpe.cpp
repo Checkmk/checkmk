@@ -76,7 +76,7 @@ TEST_F(SectionProviderMrpeFixture, Construction) {
     EXPECT_TRUE(mrpe.generateContent().empty());
 }
 
-TEST_F(SectionProviderMrpeFixture, RunCachedIntegration) {
+TEST_F(SectionProviderMrpeFixture, RunCachedComponent) {
     MrpeProvider mrpe;
     auto yaml = cfg::GetLoadedConfig();
 

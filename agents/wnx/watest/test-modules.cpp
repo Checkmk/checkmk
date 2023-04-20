@@ -571,7 +571,7 @@ TEST_F(ModuleCommanderTest, FindModules) {
     EXPECT_FALSE(mc.isBelongsToModules(""));
 }
 
-TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
+TEST_F(ModuleCommanderTest, InstallModulesComponent) {
     auto zip_file = tst::MakePathToUnitTestFiles() / tst::install_cab_to_test;
     ASSERT_TRUE(fs::exists(zip_file))
         << "Please make '" << tst::install_cab_to_test << "' available";

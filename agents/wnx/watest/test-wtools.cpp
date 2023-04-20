@@ -247,7 +247,7 @@ protected:
     }
 };
 
-TEST_F(WtoolsKillProcessTreeFixture, Integration) {
+TEST_F(WtoolsKillProcessTreeFixture, Component) {
     using namespace std::chrono_literals;
 
     // we start process tree

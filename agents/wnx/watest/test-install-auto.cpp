@@ -17,7 +17,7 @@ using namespace std::string_literals;
 
 namespace cma::install {
 
-TEST(InstallAuto, FileControlIntegration) {
+TEST(InstallAuto, FileControlComponent) {
     tst::TempDirPair dirs{test_info_->name()};
     auto in = dirs.in();
     auto out = dirs.out();
@@ -146,7 +146,7 @@ private:
     std::unique_ptr<ExecuteUpdate> eu_;
 };
 
-TEST_F(InstallAutoSimulationFixture, BackupLogIntegration) {
+TEST_F(InstallAutoSimulationFixture, BackupLogComponent) {
     fs::path log_bak_file{eu()->getLogFileName()};
     log_bak_file.replace_extension(".log.bak");
 
@@ -157,7 +157,7 @@ TEST_F(InstallAutoSimulationFixture, BackupLogIntegration) {
     EXPECT_TRUE(fs::exists(log_bak_file));
 }
 
-TEST_F(InstallAutoSimulationFixture, CopyScriptToTempIntegration) {
+TEST_F(InstallAutoSimulationFixture, CopyScriptToTempComponent) {
     EXPECT_TRUE(eu()->copyScriptToTemp());
     EXPECT_TRUE(fs::exists(eu()->getTempScriptFile()));
 }
@@ -197,7 +197,7 @@ TEST(InstallAuto, PrepareExecutionFallback) {
     EXPECT_EQ(fs::path(msi_log_file).filename().u8string(), kMsiLogFileName);
 }
 
-TEST(InstallAuto, CheckForUpdateFileIntegration) {
+TEST(InstallAuto, CheckForUpdateFileComponent) {
     namespace fs = std::filesystem;
     auto msi = cma::cfg::GetMsiExecPath();
     ASSERT_TRUE(!msi.empty());
@@ -261,8 +261,8 @@ TEST(InstallAuto, FindAgentMsiSkippable) {
     ASSERT_TRUE(fs::exists(*agent_msi));
 }
 
-TEST(InstallAuto, FindProductMsi) {
-    auto msi = FindProductMsi(L"MSI Development Tools");
+TEST(InstallAuto, FindProductMsiComponent) {
+    const auto msi = FindProductMsi(L"MSI Development Tools");
     ASSERT_TRUE(msi);
     ASSERT_TRUE(fs::exists(*msi));
 }

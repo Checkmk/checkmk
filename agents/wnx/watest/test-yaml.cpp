@@ -866,7 +866,7 @@ TEST(AgentConfig, UTF16LE) {
     cma::OnStart(cma::AppType::test);
 }
 
-TEST(AgentConfig, FailScenario_Long) {
+TEST(AgentConfig, FailScenario_Simulation) {
     auto loader = [](auto &...str) -> bool {
         auto cfg_files = cma::tools::ConstructVectorWstring(str...);
 

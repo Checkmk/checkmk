@@ -30,7 +30,7 @@ protected:
     fs::path cab_file_;
 };
 
-TEST_F(ZipFixture, UnZipIntegration) {
+TEST_F(ZipFixture, UnZipComponent) {
     auto target = target_ / "unzip";
     auto work_file = zip_file_;
 
@@ -46,7 +46,7 @@ TEST_F(ZipFixture, UnZipIntegration) {
     ASSERT_FALSE(Extract(target, target));
 }
 
-TEST_F(ZipFixture, UnCabIntegration) {
+TEST_F(ZipFixture, UnCabComponent) {
     auto target = target_ / "uncab";
     auto work_file = cab_file_;
 

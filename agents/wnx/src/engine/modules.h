@@ -86,7 +86,7 @@ private:
     FRIEND_TEST(ModulesTest, IsMyScript);
 
     friend class ModuleCommanderTest;
-    FRIEND_TEST(ModuleCommanderTest, InstallModulesIntegration);
+    FRIEND_TEST(ModuleCommanderTest, InstallModulesComponent);
 
 #endif
 };
@@ -175,7 +175,7 @@ private:
 #if defined(ENABLE_WHITE_BOX_TESTING)
     friend class ModuleCommanderTest;
     FRIEND_TEST(ModuleCommanderTest, FindModules);
-    FRIEND_TEST(ModuleCommanderTest, InstallModulesIntegration);
+    FRIEND_TEST(ModuleCommanderTest, InstallModulesComponent);
     FRIEND_TEST(ModuleCommanderTest, Internal);
     FRIEND_TEST(ModuleCommanderTest, LowLevelFs);
     FRIEND_TEST(ModuleCommanderTest, PrepareToWork2);

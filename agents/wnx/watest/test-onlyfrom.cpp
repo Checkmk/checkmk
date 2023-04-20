@@ -292,7 +292,7 @@ TEST(OnlyFromTest, Config) {
     groups::g_global.loadFromMainConfig();
     auto only_froms = groups::g_global.getOnlyFrom();
 }
-TEST(OnlyFromTest, Ipv6AndIpv4Integration) {
+TEST(OnlyFromTest, Ipv6AndIpv4Component) {
     tst::FirewallOpener fwo;
 
     auto temp_fs{tst::TempCfgFs::CreateNoIo()};
@@ -353,7 +353,7 @@ TEST(OnlyFromTest, Ipv6AndIpv4Integration) {
     }
 }
 
-TEST(OnlyFromTest, Ipv4OnlyIntegration) {
+TEST(OnlyFromTest, Ipv4OnlyComponent) {
     tst::FirewallOpener fwo;
     auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));

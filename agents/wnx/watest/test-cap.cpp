@@ -499,7 +499,7 @@ TEST(CapTest, GetExampleYmlNames) {
 // We are checking three situation
 // Build  check_mk.install.yml is present, but not installed
 // Build  check_mk.install.yml is present and installed
-TEST(CapTest, ReInstallRestoreIntegration) {
+TEST(CapTest, ReInstallRestoreComponent) {
     enum class Mode { build, wato };
     for (auto mode : {Mode::build, Mode::wato}) {
         auto test_fs = tst::TempCfgFs::Create();

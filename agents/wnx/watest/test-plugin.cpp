@@ -233,7 +233,7 @@ TEST(PluginTest, TimeoutCalc) {
     }
 }
 
-TEST(PluginTest, JobStartStopIntegration) {
+TEST(PluginTest, JobStartStopComponent) {
     tst::TempDirPair dirs{test_info_->name()};
     fs::path temp_folder = dirs.in();
 
@@ -350,7 +350,7 @@ void AssignGroupUser(PluginEntry &pe, std::string_view group,
 }
 }  // namespace
 
-TEST(PluginTest, ApplyGroupUser_Integration) {
+TEST(PluginTest, ApplyGroupUser_Component) {
     auto group_name =
         wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
     PluginEntry pe("c:\\a\\x.cmd");
@@ -593,7 +593,7 @@ TEST(PluginTest, RemoveForbiddenNames) {
     EXPECT_TRUE(std::ranges::find(files, forbidden_file) == files.end());
 }
 
-TEST(PluginTest, FilesAndFoldersIntegration) {
+TEST(PluginTest, FilesAndFoldersComponent) {
     OnStartTest();
     {
         PathVector pv;
@@ -1131,7 +1131,7 @@ TEST(PluginTest, DuplicatedUnitsRemove) {
     EXPECT_FALSE(um[paths[6]].pattern().empty());
 }
 
-TEST(PluginTest, SyncStartSimulationFuture_Integration) {
+TEST(PluginTest, SyncStartSimulationFuture_Component) {
     const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     const std::vector<cfg::Plugins::ExeUnit> units = {
@@ -1331,7 +1331,7 @@ TEST(PluginTest, RemoveDuplicatedPlugins) {
     EXPECT_TRUE(x.size() == 3);
 }
 
-TEST(PluginTest, AsyncStartSimulation_Integration) {
+TEST(PluginTest, AsyncStartSimulation_Component) {
     const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     const auto files = PrepareFiles(plugin_desc_array_fast);
@@ -1443,7 +1443,7 @@ TEST_F(PluginExecuteFixture, AsyncPluginSingle) {
         EXPECT_EQ(base_table[0], "xxx");
     }
 }
-TEST(PluginTest, AsyncStartSimulation_Long) {
+TEST(PluginTest, AsyncStartSimulation_Simulation) {
     const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     const auto files = PrepareFiles(plugin_desc_array_slow);
@@ -1691,7 +1691,7 @@ std::string TestConvertToString(std::vector<char> accu) {
     return str;
 }
 
-TEST(PluginTest, AsyncDataPickup_Integration) {
+TEST(PluginTest, AsyncDataPickup_Component) {
     const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     auto files = PrepareFilesAndStructures(async0_files, R"(echo %time%)",
@@ -1802,7 +1802,7 @@ PluginDescVector local_files_async = {{1, "local0.cmd", "local0"},
 PluginDescVector local_files_sync = {{1, "local0_s.cmd", "local0_s"},
                                      {1, "local1_s.cmd", "local1_s"}};
 
-TEST(PluginTest, AsyncLocal_Integration) {
+TEST(PluginTest, AsyncLocal_Component) {
     const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     auto files = PrepareFilesAndStructures(local_files_async,
@@ -1902,7 +1902,7 @@ TEST(PluginTest, AsyncLocal_Integration) {
     }
 }  // namespace cma
 
-TEST(PluginTest, SyncLocal_Integration) {
+TEST(PluginTest, SyncLocal_Component) {
     const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     auto files = PrepareFilesAndStructures(local_files_sync,
@@ -1992,7 +1992,7 @@ TEST(PluginTest, ExeUnitApply) {
 
 // Check that plugin is started from the valid user in group
 // TODO(sk,au): Check why the test doesn't work on CI
-TEST(PluginTest, SyncPluginsGroupIntegrationExt) {
+TEST(PluginTest, SyncPluginsGroupComponentExt) {
     XLOG::setup::DuplicateOnStdio(true);
     ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false));
     const auto test_fs = tst::TempCfgFs::Create();
@@ -2103,7 +2103,7 @@ public:
     tst::TempCfgFs::ptr temp_fs;
 };
 
-TEST_F(PluginCmkUpdateAgentIgnoreFixture, CheckHardAndSoftIntegration) {
+TEST_F(PluginCmkUpdateAgentIgnoreFixture, CheckHardAndSoftComponent) {
     // check soft prevention(as is)
     EXPECT_EQ(runPlugins(), "<<<>>>\n1\r\n2\r\n<<<>>>\n");
 
@@ -2125,7 +2125,7 @@ TEST_F(PluginCmkUpdateAgentIgnoreFixture, CheckHardAndSoftIntegration) {
     EXPECT_EQ(runPlugins(), "<<<>>>\n1\r\n2\r\n<<<>>>\n");
 }
 
-TEST(PluginTest, SyncStartSimulation_Long) {
+TEST(PluginTest, SyncStartSimulation_Simulation) {
     auto test_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(test_fs->loadFactoryConfig());
     std::vector<cfg::Plugins::ExeUnit> units = {

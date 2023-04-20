@@ -89,7 +89,7 @@ TEST(DfTest, CalcUsage) {
     EXPECT_EQ(1, df::CalcUsage(99, 100));
 }
 
-TEST(DfTest, Integration) {
+TEST(DfTest, Component) {
     cma::provider::Df df;
     auto result = df.generateContent();
     ASSERT_TRUE(!result.empty());

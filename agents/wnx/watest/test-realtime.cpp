@@ -180,7 +180,7 @@ void WaitFor(const std::function<bool()> &predicat,
     }
 }
 
-TEST(RealtimeTest, Base_Long) {
+TEST(RealtimeTest, Base_Simulation) {
     // stub
     using namespace std::chrono;
 

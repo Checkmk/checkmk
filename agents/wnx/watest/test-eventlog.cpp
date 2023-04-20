@@ -40,7 +40,7 @@ TEST(EventLogTest, ChoosePos) {
     EXPECT_EQ(choosePos(cfg::kFromBegin), 0);
 }
 
-TEST(EventLogTest, ScanEventLogIntegration) {
+TEST(EventLogTest, ScanEventLogComponent) {
     for (auto vista_mode : {false, true}) {
         auto ptr = OpenEvl(L"Application", vista_mode);
         ASSERT_TRUE(ptr != nullptr);
@@ -106,7 +106,7 @@ TEST(EventLogTest, PrintEventLogOffset) {
     EXPECT_EQ(table.size(), ApplicationLogData().size() - 3);
 }
 
-TEST(EventLogTest, PrintEventLogIntegration) {
+TEST(EventLogTest, PrintEventLogComponent) {
     for (auto vista_mode : {false, true}) {
         auto ptr = OpenEvl(L"Application", vista_mode);
         ASSERT_TRUE(ptr != nullptr);
@@ -134,7 +134,7 @@ TEST(EventLogTest, PrintEventLogIntegration) {
     }
 }
 
-TEST(EventLogTest, BeginningOfTheHardwareLogIntegration) {
+TEST(EventLogTest, BeginningOfTheHardwareLogComponent) {
     auto ptr = OpenEvl(L"HardwareEvents", false);
     std::string str;
     const auto last =
@@ -147,7 +147,7 @@ TEST(EventLogTest, BeginningOfTheHardwareLogIntegration) {
     EXPECT_TRUE(str.empty());
 }
 
-TEST(EventLogTest, BeginningOfTheApplicationLogIntegration) {
+TEST(EventLogTest, BeginningOfTheApplicationLogComponent) {
     auto ptr = OpenEvl(L"Application", false);
     std::string str;
     auto _ =

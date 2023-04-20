@@ -141,7 +141,7 @@ TEST(PlayerTest, All) {
     EXPECT_TRUE(box.processes_.size() == 3);
 }
 
-TEST(PlayerTest, RealLifeInventory_Long) {
+TEST(PlayerTest, RealLifeInventory_Simulation) {
     using namespace std::chrono;
     using namespace std;
     using namespace cma::cfg;

@@ -43,7 +43,7 @@ const std::vector<std::string_view> g_special_processes{
 
 }  // namespace
 
-TEST(PsTest, Integration) {
+TEST(PsTest, Component) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     for (auto use_full_path : {false, true}) {

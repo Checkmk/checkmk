@@ -453,7 +453,7 @@ TEST_F(AgentControllerCreateArtifacts, From1620OldWithController) {
     EXPECT_TRUE(legacyExists());
 }
 
-TEST(AgentController, SimulationIntegration) {
+TEST(AgentController, SimulationComponent) {
     const auto m = GetModus();
     ON_OUT_OF_SCOPE(details::SetModus(m));
     details::SetModus(Modus::service);

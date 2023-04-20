@@ -73,7 +73,7 @@ TEST(WtoolsUserControl, AddDeleteCheckGroup) {
     EXPECT_EQ(Status::absent, lc.localGroupDel(g));
 }
 
-TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroupIntegration) {
+TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroupComponent) {
     using namespace std::literals::string_literals;
     LdapControl lc;
     if (SidToName(L"S-1-5-32-545", SidTypeGroup) != L"Users") {

@@ -296,7 +296,7 @@ private:
 TEST_F(SectionProvidersFixture, ServicesCtor) {
     EXPECT_EQ(getEngine().getUniqName(), section::kServices);
 }
-TEST_F(SectionProvidersFixture, ServicesIntegration) {
+TEST_F(SectionProvidersFixture, ServicesComponent) {
     auto content = getEngine().generateContent(section_name);
 
     // Validate content is presented and correct

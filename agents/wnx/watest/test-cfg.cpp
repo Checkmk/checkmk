@@ -127,7 +127,7 @@ TEST(CmaCfg, RemoveLegacy_Base) {
         registry::kMsiRemoveLegacyDefault));
 }
 
-TEST(CmaCfg, RemoveLegacy_Long) {
+TEST(CmaCfg, RemoveLegacy_Simulation) {
     auto temp_dir = cfg::GetTempDir();
     auto path = cfg::CreateWmicUninstallFile(temp_dir, "zzz");
     EXPECT_TRUE(!path.empty());
@@ -574,7 +574,7 @@ private:
 };
 }  // namespace
 
-TEST(CmaCfg, SetupPluginEnvironmentIntegration) {
+TEST(CmaCfg, SetupPluginEnvironmentComponent) {
     JobToCheckEnvironment job(test_info_->name());
     cfg::SetupPluginEnvironment();
     auto table = job.getEnvironment();

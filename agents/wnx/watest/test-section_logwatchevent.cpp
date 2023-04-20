@@ -663,7 +663,7 @@ TEST(LogWatchEventTest, TestAddLog) {
     }
 }
 
-TEST(LogWatchEventTest, CheckMakeBodyIntegration) {
+TEST(LogWatchEventTest, CheckMakeBodyComponent) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     LogWatchEvent lw;
     lw.loadConfig();

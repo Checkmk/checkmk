@@ -190,7 +190,7 @@ TEST(WmiProviderTest, OhmCtor) {
     EXPECT_EQ(ohm.columns().size(), 5);
 }
 
-TEST(WmiProviderTest, OhmIntegration) {
+TEST(WmiProviderTest, OhmComponent) {
     auto temp_fs{tst::TempCfgFs::Create()};
     ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
     Wmi ohm(kOhm, ohm::kSepChar);
@@ -223,7 +223,7 @@ constexpr std::array exch_names = {kMsExchActiveSync,     //
                                    kMsExchRpcClientAccess};
 constexpr size_t exch_count{exch_names.size()};
 
-TEST(WmiProviderTest, WmiSubSection_Integration) {
+TEST(WmiProviderTest, WmiSubSection_Component) {
     for (auto n : exch_names) {
         SubSection ss(n, SubSection::Type::full);
         auto ret = ss.generateContent(SubSection::Mode::standard);
@@ -256,7 +256,7 @@ TEST(WmiProviderTest, WmiSubSection_Integration) {
               std::string{"["} + std::string{kSubSectionSystemPerf} + "]");
 }
 
-TEST(WmiProviderTest, SubSectionMsExchIntegration) {
+TEST(WmiProviderTest, SubSectionMsExchComponent) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     EXPECT_TRUE(
         temp_fs->loadContent("global:\n"
@@ -278,7 +278,7 @@ TEST(WmiProviderTest, SubSectionMsExchIntegration) {
     }
 }
 
-TEST(WmiProviderTest, SimulationIntegration) {
+TEST(WmiProviderTest, SimulationComponent) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     EXPECT_TRUE(
         temp_fs->loadContent("global:\n"
@@ -439,7 +439,7 @@ TEST(WmiProviderTest, WmiWebServicesDefaults) {
     EXPECT_TRUE(wmi_web.isAllowedByTime());
 }
 
-TEST(WmiProviderTest, WmiWebServicesIntegration) {
+TEST(WmiProviderTest, WmiWebServicesComponent) {
     Wmi wmi_web(kWmiWebservices, wmi::kSepChar);
     auto body = wmi_web.generateContent();
 
@@ -452,7 +452,7 @@ TEST(WmiProviderTest, WmiWebServicesIntegration) {
 
 static const std::string section_name{cma::section::kUseEmbeddedName};
 #define FNAME_USE "x.xxx"
-TEST(WmiProviderTest, WmiDotnet_Integration) {
+TEST(WmiProviderTest, WmiDotnet_Component) {
     using namespace cma::section;
     using namespace cma::provider;
 
@@ -608,7 +608,7 @@ TEST_F(WmiProviderTestFixture, WmiMsExch) {
               cma::section::MakeHeader(kMsExch, wmi::kSepChar));
 }
 
-TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentIntegration) {
+TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentComponent) {
     if (wtools::GetServiceStatus(web_services_service) != 0) {
         GTEST_SKIP() << fmt::format(L"'{}' is presented", web_services_service);
     }
@@ -619,7 +619,7 @@ TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentIntegration) {
     ASSERT_TRUE(table.empty());
 }
 
-TEST_F(WmiProviderTestFixture, WmiWebServicesPresentedIntegration) {
+TEST_F(WmiProviderTestFixture, WmiWebServicesPresentedComponent) {
     if (wtools::GetServiceStatus(web_services_service) == 0) {
         GTEST_SKIP() << fmt::format(L"'{}' is absent", web_services_service);
     }

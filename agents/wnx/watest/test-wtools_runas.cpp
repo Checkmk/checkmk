@@ -41,7 +41,7 @@ static std::string ReadFromHandle(HANDLE h) {
     return buf.data();
 }
 
-TEST(WtoolsRunAs, NoUser_Integration) {
+TEST(WtoolsRunAs, NoUser_Component) {
     auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     auto in = temp_fs->data();
@@ -60,7 +60,7 @@ TEST(WtoolsRunAs, NoUser_Integration) {
 }
 
 // TODO(sk,au): Check why the test doesn't work on CI
-TEST(WtoolsRunAs, TestUser_IntegrationExt) {
+TEST(WtoolsRunAs, TestUser_ComponentExt) {
     wtools::uc::LdapControl lc;
     auto pwd = GenerateRandomString(12);
     std::wstring user = L"a1" + fmt::format(L"_{}", ::GetCurrentProcessId());

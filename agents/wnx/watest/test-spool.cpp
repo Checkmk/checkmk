@@ -18,7 +18,7 @@ TEST(SectionProviderSpool, Construction) {
     EXPECT_EQ(spool.getUniqName(), section::kSpool);
 }
 
-TEST(SectionProviderSpool, BaseApiIntegration) {
+TEST(SectionProviderSpool, BaseApiComponent) {
     namespace fs = std::filesystem;
     auto temp_fs{tst::TempCfgFs::Create()};
 
@@ -45,7 +45,7 @@ TEST(SectionProviderSpool, BaseApiIntegration) {
     EXPECT_FALSE(provider::IsSpoolFileValid(dir / "99xxx.z"));
 }
 
-TEST(SectionProviderSpool, FullIntegration) {
+TEST(SectionProviderSpool, FullComponent) {
     namespace fs = std::filesystem;
     auto temp_fs{tst::TempCfgFs::Create()};
     ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));

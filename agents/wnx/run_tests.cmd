@@ -1,17 +1,17 @@
 @echo off
 :: To execute all complicated tests of windows agent
-:: params regression, mid, mid_ext, mid_ext_long, integration, all
+:: params regression, component, ext, simulation, integration, all
 ::
-:: CI must run regression, mid, integration, all
-:: Dev machine must run also mid_ext and mid_ext_long
+:: CI must run regression, component, integration, all
+:: Dev machine must run also ext and simulation
 :: later tests may require some additional package installed which ae not suitable for CI VM
 SETLOCAL EnableDelayedExpansion
 
 if "%*" == "" (
 echo: Run default...
-set int_arg_mid=1
+set int_arg_component=1
 set int_arg_ext=
-set int_arg_long=
+set int_arg_simulation=
 set int_arg_integration=
 set int_arg_regression=
 set int_arg_plugins=
@@ -21,32 +21,32 @@ if "%~1"=="-h" goto Usage
 if "%~1"=="--help" goto Usage
 if "%~1"=="-?" goto Usage
 
-if "%~1"=="-A"              (set int_arg_all=1)     & shift & goto CheckOpts
-if "%~1"=="--all"           (set int_arg_all=1)     & shift & goto CheckOpts
+if "%~1"=="-A"              (set int_arg_all=1)           & shift & goto CheckOpts
+if "%~1"=="--all"           (set int_arg_all=1)           & shift & goto CheckOpts
 
-if "%~1"=="-M"              (set int_arg_mid=1)     & shift & goto CheckOpts
-if "%~1"=="--mid"           (set int_arg_mid=1)     & shift & goto CheckOpts
+if "%~1"=="-C"              (set int_arg_component=1)     & shift & goto CheckOpts
+if "%~1"=="--component"     (set int_arg_component=1)     & shift & goto CheckOpts
 
-if "%~1"=="-E"              (set int_arg_ext=1)     & shift & goto CheckOpts
-if "%~1"=="--ext"           (set int_arg_ext=1)     & shift & goto CheckOpts
+if "%~1"=="-E"              (set int_arg_ext=1)           & shift & goto CheckOpts
+if "%~1"=="--ext"           (set int_arg_ext=1)           & shift & goto CheckOpts
 
-if "%~1"=="-L"              (set int_arg_long=1)    & shift & goto CheckOpts
-if "%~1"=="--long"          (set int_arg_long=1)    & shift & goto CheckOpts
+if "%~1"=="-S"              (set int_arg_simulation=1)    & shift & goto CheckOpts
+if "%~1"=="--simulation"    (set int_arg_simulation=1)    & shift & goto CheckOpts
 
-if "%~1"=="-I"              (set int_arg_integration=1) & shift & goto CheckOpts
-if "%~1"=="--integration"   (set int_arg_integration=1) & shift & goto CheckOpts
+if "%~1"=="-I"              (set int_arg_integration=1)   & shift & goto CheckOpts
+if "%~1"=="--integration"   (set int_arg_integration=1)   & shift & goto CheckOpts
 
-if "%~1"=="-P"              (set int_arg_plugins=1)     & shift & goto CheckOpts
-if "%~1"=="--plugins"       (set int_arg_plugins=1)     & shift & goto CheckOpts
+if "%~1"=="-P"              (set int_arg_plugins=1)       & shift & goto CheckOpts
+if "%~1"=="--plugins"       (set int_arg_plugins=1)       & shift & goto CheckOpts
 
-if "%~1"=="-R"              (set int_arg_regression=1)  & shift & goto CheckOpts
-if "%~1"=="--regression"    (set int_arg_regression=1)  & shift & goto CheckOpts
+if "%~1"=="-R"              (set int_arg_regression=1)    & shift & goto CheckOpts
+if "%~1"=="--regression"    (set int_arg_regression=1)    & shift & goto CheckOpts
 
 )
 if "%int_arg_all%"=="1" (
-set int_arg_mid=1
+set int_arg_component=1
 set int_arg_ext=1
-set int_arg_long=1
+set int_arg_simulation=1
 set int_arg_integration=1
 set int_arg_regression=1
 set int_arg_plugins=1
@@ -57,36 +57,38 @@ set arte=%cur_dir%\..\..\artefacts
 set CHECKMK_GIT_DIR=%cur_dir%\..\..\
 
 
-call :mid
+call :component
 call :ext
-call :long
+call :simulation
 call :regression
 call :integration
 call :plugins
+goto :end
 
 goto :end
 
 
-:mid
-if not "%int_arg_mid%" == "1" powershell Write-Host "Skipped mid tests" -Foreground Yellow & goto :eof
-call call_unit_tests.cmd *Integration 
-if errorlevel 1 powershell write-Host "Mid FAIL!" -Foreground Red & call :halt 20
-powershell write-Host "Mid SUCCESS!" -Foreground Green
+
+:component
+if not "%int_arg_component%" == "1" powershell Write-Host "Skipped component tests" -Foreground Yellow & goto :eof
+call call_unit_tests.cmd *Component 
+if errorlevel 1 powershell write-Host "Component FAIL!" -Foreground Red & call :halt 20
+powershell write-Host "Component SUCCESS!" -Foreground Green
 goto :eof
 
 
 :ext
 if not "%int_arg_ext%" == "1" powershell Write-Host "Skipped ext tests" -Foreground Yellow & goto :eof
-call call_unit_tests.cmd *IntegrationExt
+call call_unit_tests.cmd *ComponentExt
 if errorlevel 1 powershell write-Host "Ext FAIL!" -Foreground Red & call :halt 21
 powershell write-Host "Ext SUCCESS!" -Foreground Green
 goto :eof
 
-:long
-if not "%int_arg_long%" == "1" powershell Write-Host "Skipped long tests" -Foreground Yellow & goto :eof
-call call_unit_tests.cmd *_Long
-if errorlevel 1 powershell write-Host "Long FAIL!" -Foreground Red & call :halt 21
-powershell write-Host "Long SUCCESS!" -Foreground Green
+:simulation
+if not "%int_arg_simulation%" == "1" powershell Write-Host "Skipped simulation tests" -Foreground Yellow & goto :eof
+call call_unit_tests.cmd *_Simulation
+if errorlevel 1 powershell write-Host "Simulation FAIL!" -Foreground Red & call :halt 21
+powershell write-Host "Simulation SUCCESS!" -Foreground Green
 goto :eof
 
 :regression
@@ -132,7 +134,6 @@ goto :eof
 exit /b 0
 goto :eof
 
-
 :Usage
 echo.
 echo.Usage:
@@ -142,16 +143,16 @@ echo.
 echo.Available arguments:
 echo.  -?, -h, --help       display help and exit
 echo.  -A, --all            run all possible tests
-echo.  -M, --mid            mid tests(marked with Integration suffix )
-echo.  -E, --ext            extended tests(marked with IntegrationExt suffix )
-echo.  -L, --long           long tests(marked with _Long suffix )
+echo.  -C, --component      component tests(marked with Component suffix )
+echo.  -E, --ext            extended component tests(marked with ComponentExt suffix )
+echo.  -S, --simulation     simulation tests(marked with _Simulation suffix )
 echo.  -I, --integration    integration tests
 echo.  -D, --regression     regression tests
 echo.  -f, --plugins        agent plugins test
 echo.
 echo.Examples:
 echo.
-echo %~nx0 --mid
+echo %~nx0 --component
 echo %~nx0 -R -I
 echo %~nx0 -A
 GOTO :EOF

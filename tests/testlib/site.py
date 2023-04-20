@@ -1099,11 +1099,13 @@ class Site:
 
         logger.info("After livestatus port lock")
 
-    def set_livestatus_port_from_config(self) -> None:
-        self._livestatus_port = int(self.get_config("LIVESTATUS_TCP_PORT"))
-
     def _gather_livestatus_port(self) -> None:
-        self._livestatus_port = self.get_free_port_from(9123)
+        if self.reuse and self.exists():
+            port = int(self.get_config("LIVESTATUS_TCP_PORT"))
+        else:
+            port = self.get_free_port_from(9123)
+
+        self._livestatus_port = port
 
     def get_free_port_from(self, port: int) -> int:
         used_ports = set()

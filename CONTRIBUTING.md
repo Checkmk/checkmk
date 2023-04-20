@@ -949,7 +949,7 @@ To ensure that, please always add our current licensing information to any new f
 The licensing information can be found at the beginning of already existing files and looks something like
 
 ```python
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 ```

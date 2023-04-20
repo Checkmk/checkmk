@@ -10,6 +10,7 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.type_defs import HostName
 
 from cmk.automations.results import GetConfigurationResult
 
@@ -305,7 +306,7 @@ class TestIndexBuilderAndSearcher:
 @pytest.fixture(name="created_host_url")
 def fixture_created_host_url() -> str:
     folder = Folder.root_folder()
-    folder.create_hosts([("host", {}, [])])
+    folder.create_hosts([(HostName("host"), {}, [])])
     return "wato.py?folder=&host=host&mode=edit_host"
 
 

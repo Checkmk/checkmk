@@ -19,7 +19,7 @@ from pytest import MonkeyPatch
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.redis import disable_redis
-from cmk.utils.type_defs import ContactgroupName, UserId
+from cmk.utils.type_defs import ContactgroupName, HostName, UserId
 
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 from cmk.gui import userdb
@@ -261,7 +261,7 @@ def test_mgmt_inherit_credentials_explicit_host(
     folder.create_hosts(
         [
             (
-                "test-host",
+                HostName("test-host"),
                 {
                     "ipaddress": "127.0.0.1",
                     "management_protocol": protocol,
@@ -305,7 +305,7 @@ def test_mgmt_inherit_credentials(
     folder.create_hosts(
         [
             (
-                "mgmt-host",
+                HostName("mgmt-host"),
                 {
                     "ipaddress": "127.0.0.1",
                     "management_protocol": protocol,
@@ -354,7 +354,7 @@ def test_mgmt_inherit_protocol_explicit_host(
     folder.create_hosts(
         [
             (
-                "mgmt-host",
+                HostName("mgmt-host"),
                 {
                     "ipaddress": "127.0.0.1",
                     "management_protocol": protocol,
@@ -399,7 +399,7 @@ def test_mgmt_inherit_protocol(
     folder.create_hosts(
         [
             (
-                "mgmt-host",
+                HostName("mgmt-host"),
                 {
                     "ipaddress": "127.0.0.1",
                 },
@@ -576,7 +576,7 @@ def test_subfolder_creation() -> None:
 def test_match_item_generator_hosts() -> None:
     assert list(
         hosts_and_folders.MatchItemGeneratorHosts(
-            "hosts",
+            HostName("hosts"),
             lambda: {
                 "host": {
                     "edit_url": "some_url",

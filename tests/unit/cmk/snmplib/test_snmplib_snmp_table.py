@@ -175,4 +175,4 @@ def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
 
     # credentials is v3 -> INLINE
     monkeypatch.setattr(ConfigCache, "_snmp_credentials", lambda *args: ("a", "p"))
-    assert config_cache.get_snmp_backend("not_included") is SNMPBackendEnum.INLINE
+    assert config_cache.get_snmp_backend(HostName("not_included")) is SNMPBackendEnum.INLINE

@@ -39,7 +39,7 @@ from tests.testlib.users import create_and_destroy_user
 import cmk.utils.log
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import UserId
+from cmk.utils.type_defs import HostName, UserId
 
 from cmk.automations.results import DeleteHostsResult
 
@@ -431,7 +431,7 @@ def with_host(
     request_context,
     with_admin_login,
 ):
-    hostnames = ["heute", "example.com"]
+    hostnames = [HostName("heute"), HostName("example.com")]
     hosts_and_folders.CREFolder.root_folder().create_hosts(
         [(hostname, {}, None) for hostname in hostnames],
     )

@@ -11,6 +11,8 @@ from typing import Any, Literal
 
 import pytest
 
+from cmk.utils.type_defs import HostName
+
 from cmk.checkers import CheckPlugin
 from cmk.checkers.check_table import ServiceID
 from cmk.checkers.checking import CheckPluginName
@@ -32,7 +34,7 @@ TEST_SERVICE_ID = ServiceID(CheckPluginName("unit_test_plugin"), "unit_test_item
 
 @pytest.fixture(name="vsm", scope="module")
 def _vsm():
-    vsm = ValueStoreManager("test-host")
+    vsm = ValueStoreManager(HostName("test-host"))
     return vsm
 
 

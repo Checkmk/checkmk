@@ -29,6 +29,7 @@ from tests.testlib.site import Site
 import cmk.utils.debug as debug
 import cmk.utils.log as log
 import cmk.utils.paths
+from cmk.utils.type_defs import HostName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
@@ -217,7 +218,7 @@ def backend_fixture(request, snmp_data_dir):
     config = SNMPHostConfig(
         is_ipv6_primary=False,
         ipaddress="127.0.0.1",
-        hostname="localhost",
+        hostname=HostName("localhost"),
         credentials="public",
         port=1337,
         # TODO: Use SNMPv2 over v1 for the moment

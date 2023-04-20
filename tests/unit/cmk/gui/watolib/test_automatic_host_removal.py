@@ -13,6 +13,7 @@ from tests.testlib import on_time
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
+from cmk.utils.type_defs import HostName
 
 from cmk.gui.watolib import automatic_host_removal
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -47,11 +48,11 @@ def fixture_setup_hosts() -> None:
         [
             (hostname, {}, None)
             for hostname in (
-                "host_crit_remove",
-                "host_crit_keep",
-                "host_ok",
-                "host_removal_disabled",
-                "host_no_rule_match",
+                HostName("host_crit_remove"),
+                HostName("host_crit_keep"),
+                HostName("host_ok"),
+                HostName("host_removal_disabled"),
+                HostName("host_no_rule_match"),
             )
         ],
     )

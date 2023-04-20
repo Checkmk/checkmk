@@ -11,6 +11,8 @@ from tests.testlib import CMKEventConsole
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
+from cmk.utils.type_defs import HostName
+
 from cmk.ec.config import ConfigFromWATO
 from cmk.ec.main import Event, EventStatus, StatusServer
 
@@ -32,7 +34,7 @@ def test_mkevent_check_query_perf(
         event_status.new_event(
             CMKEventConsole.new_event(
                 {
-                    "host": f"heute-{num}",
+                    "host": HostName(f"heute-{num}"),
                     "text": f"{time.time()} {num} BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R"
                     " j:O#A@J$ KLA@J $L:A@J :AMW: RAMR@: RMA@:LRMA@ L:RMA@ :AL@R MA:L@RM A@:LRMA@ :RLMA@ R:LA@RMM@RL:MA@R: AM@",
                     "core_host": f"heute-{num}",

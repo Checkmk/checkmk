@@ -1696,7 +1696,7 @@ def cluster_config_fixture(monkeypatch: MonkeyPatch) -> ConfigCache:
     ts = Scenario()
     ts.add_host(HostName("node1"))
     ts.add_host(HostName("host1"))
-    ts.add_cluster(HostName("cluster1"), nodes=["node1"])
+    ts.add_cluster(HostName("cluster1"), nodes=[HostName("node1")])
     return ts.apply(monkeypatch)
 
 
@@ -2349,7 +2349,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
 
     obj = config_cache.ruleset_match_object_of_service(xyz_host, "bla blä")
-    assert obj == RulesetMatchObject("xyz", "bla blä", {})
+    assert obj == RulesetMatchObject(HostName("xyz"), "bla blä", {})
 
     # Funny service description because the plugin isn't loaded.
     # We could patch config.service_description, but this is easier:
@@ -2357,7 +2357,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
 
     obj = config_cache.ruleset_match_object_of_service(test_host, description)
     service_labels = {"abc": "xä"}
-    assert obj == RulesetMatchObject("test-host", description, service_labels)
+    assert obj == RulesetMatchObject(HostName("test-host"), description, service_labels)
 
 
 @pytest.mark.parametrize(
@@ -2676,15 +2676,16 @@ cmc_host_rrd_config = [
 
 
 def _add_explicit_setting_in_folder(
-    folder_path: Path, setting_name: str, values: dict[str, Any]
+    folder_path: Path, setting_name: str, values: dict[HostName, Any]
 ) -> None:
     folder_path.mkdir(parents=True, exist_ok=True)
+    values_ = {str(k): v for k, v in values.items()}
     with (folder_path / "hosts.mk").open("w", encoding="utf-8") as f:
         f.write(
             f"""
 # Explicit settings for {setting_name}
 explicit_host_conf.setdefault('{setting_name}', {{}})
-explicit_host_conf['{setting_name}'].update({values})
+explicit_host_conf['{setting_name}'].update({values_})
 """
         )
 

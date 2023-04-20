@@ -11,11 +11,13 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.type_defs import HostName
+
 
 @pytest.fixture(name="core_scenario")
 def fixture_core_scenario(monkeypatch):
     ts = Scenario()
-    ts.add_host("test-host")
+    ts.add_host(HostName("test-host"))
     ts.set_option("ipaddresses", {"test-host": "127.0.0.1"})
     return ts.apply(monkeypatch)
 

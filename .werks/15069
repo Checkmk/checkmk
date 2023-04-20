@@ -1,6 +1,6 @@
 Title: Fix Email HTML Injection
 Class: security
-Compatible: incompat
+Compatible: incomp
 Component: notifications
 Date: 1678264782
 Edition: cre

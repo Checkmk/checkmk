@@ -1,5 +1,6 @@
 BRANCH_NAME = scm.branches[0].name
-FOLDER_ID = currentBuild.fullProjectName.split('/')[0..-2].join('/')
+ROOT_FOLDER = currentBuild.fullProjectName.split('/')[0]
+FOLDER = Jenkins.instance.getItemByFullName(currentBuild.fullProjectName).getParent().getFullName()
 
 def DISTRO_LIST_DEFAULT = ''
 def NODE = ''
@@ -16,7 +17,7 @@ withFolderProperties{
             CRON_PATTERN = '0 0 * * *' // 0:00 am
             RUN_INTEGRATION_TESTS = true
             RUN_IMAGE_TESTS = true
-            DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
+            DEPLOY_TO_WEBSITE = !ROOT_FOLDER.startsWith('Testing') // Do not deploy from Testing folder.
             BUILD_IMAGE = true
             break
         case 'cre':
@@ -72,7 +73,7 @@ properties([
 node: {
     label 'NODE'
     stage('Build Packages') {
-        build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-packages",
+        build(job: "${FOLDER}/nightly-${JOB_EDITION}/build-cmk-packages",
               parameters: [
                 [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
                 [$class: 'StringParameterValue', name: 'EDITION', value: EDITION],
@@ -82,7 +83,7 @@ node: {
     }
     if (BUILD_IMAGE) {
         stage('Build CMK IMAGE') {
-            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-image",
+            build(job: "${FOLDER}/nightly-${JOB_EDITION}/build-cmk-image",
                 parameters: [
                     [$class: 'StringParameterValue', name: 'EDITION', value: EDITION],
                     [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: DEPLOY_TO_WEBSITE],
@@ -96,7 +97,7 @@ node: {
     if (RUN_IMAGE_TESTS) {
         TEST_STAGES['Integration Test for Docker Container'] = {
             stage('Integration Test for Docker Container') {
-                build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-docker-integration",
+                build(job: "${FOLDER}/nightly-${JOB_EDITION}/test-docker-integration",
                     parameters: [
                         [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
                     ]
@@ -108,7 +109,7 @@ node: {
     if (RUN_INTEGRATION_TESTS) {
         TEST_STAGES['Composition Test for Packages'] = {
             stage('Composition Test for Packages') {
-                build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-composition",
+                build(job: "${FOLDER}/nightly-${JOB_EDITION}/test-composition",
                     parameters: [
                         [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
                         [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
@@ -122,7 +123,7 @@ node: {
 
     if (RUN_INTEGRATION_TESTS) {
         stage('Integration Test for Packages') {
-            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-integration",
+            build(job: "${FOLDER}/nightly-${JOB_EDITION}/test-integration",
                 parameters: [
                     [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
                     [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]

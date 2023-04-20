@@ -149,9 +149,9 @@ timeout(time: 12, unit: 'HOURS') {
                 AGENT_LIST.each { AGENT ->
                     AGENT_BUILDS['build agent ' + AGENT] = {
                         if (AGENT == 'windows') {
-                            def FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
-                            def WIN_PROJECT = "${FOLDER_ID}/windows-agent-build"
-                            def WIN_PY_PROJECT = "${FOLDER_ID}/Windows-Python-Build"
+                            def FOLDER = Jenkins.instance.getItemByFullName(currentBuild.fullProjectName).getParent().getFullName()
+                            def WIN_PROJECT = "${FOLDER}/windows-agent-build"
+                            def WIN_PY_PROJECT = "${FOLDER}/Windows-Python-Build"
 
                             def WIN_BUILD = build(job: WIN_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
                             copyArtifacts(

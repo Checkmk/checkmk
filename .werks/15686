@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.0.0p35
+Version: 2.0.0p36
 
 With Werk #15069 escaping for the <tt>Insert HTML section between body and table</tt> section was introduced.
 Unfortunately links were not allowed anymore.

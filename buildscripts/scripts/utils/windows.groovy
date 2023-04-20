@@ -51,7 +51,7 @@ def build(Map args) {
                  "unit_tests_results.zip"] :
             (args.TARGET == "test_integration") ? [
                 "agents/wnx",
-                "call run_integration_tests.cmd all",
+                "call run_integration_tests.cmd -M -I",
                  "integration_tests_results.zip"] :
             raise("${args.TARGET} is not known!")
         )

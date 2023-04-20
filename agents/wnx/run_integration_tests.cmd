@@ -64,13 +64,15 @@ call :regression
 call :integration
 call :plugins
 
+goto :end
+
 
 :mid
 if not "%int_arg_mid%" == "1" powershell Write-Host "Skipped mid tests" -Foreground Yellow & goto :eof
 call call_unit_tests.cmd *Integration 
 if errorlevel 1 powershell write-Host "Mid FAIL!" -Foreground Red & call :halt 20
 powershell write-Host "Mid SUCCESS!" -Foreground Green
-goto : eof
+goto :eof
 
 
 :ext
@@ -78,21 +80,21 @@ if not "%int_arg_ext%" == "1" powershell Write-Host "Skipped ext tests" -Foregro
 call call_unit_tests.cmd *IntegrationExt
 if errorlevel 1 powershell write-Host "Ext FAIL!" -Foreground Red & call :halt 21
 powershell write-Host "Ext SUCCESS!" -Foreground Green
-goto : eof
+goto :eof
 
 :long
 if not "%int_arg_long%" == "1" powershell Write-Host "Skipped long tests" -Foreground Yellow & goto :eof
 call call_unit_tests.cmd *_Long
 if errorlevel 1 powershell write-Host "Long FAIL!" -Foreground Red & call :halt 21
 powershell write-Host "Long SUCCESS!" -Foreground Green
-goto : eof
+goto :eof
 
 :regression
 if not "%int_arg_regression%" == "1" powershell Write-Host "Skipped regression tests" -Foreground Yellow & goto :eof
 call scripts\call_regression_tests.cmd
 if errorlevel 1 powershell write-Host "Regression FAIL!" -Foreground Red & call :halt 21
 powershell write-Host "Regression SUCCESS!" -Foreground Green
-goto : eof
+goto :eof
 
 
 :integration
@@ -100,7 +102,7 @@ if not "%int_arg_integration%" == "1" powershell Write-Host "Skipped integration
 call scripts\call_integration_tests.cmd
 if errorlevel 1 powershell write-Host "integration FAIL!" -Foreground Red & call :halt 21
 powershell write-Host "integration SUCCESS!" -Foreground Green
-goto : eof
+goto :eof
 
 
 :plugins
@@ -108,7 +110,7 @@ if not "%int_arg_plugins%" == "1" powershell Write-Host "Skipped plugins tests" 
 call scripts\call_ap_tests.cmd
 if errorlevel 1 powershell write-Host "plugins FAIL!" -Foreground Red & call :halt 21
 powershell write-Host "plugins SUCCESS!" -Foreground Green
-goto : eof
+goto :eof
 
 
 :: Sets the errorlevel and stops the batch immediately
@@ -126,6 +128,9 @@ goto :eof
 exit /b %time:~-2%
 goto :eof
 
+:end
+exit /b 0
+goto :eof
 
 
 :Usage

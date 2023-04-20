@@ -2173,7 +2173,7 @@ def layout_timeline(  # pylint: disable=too-many-branches
             spans.append((row_nr, title, width, css))
     # If timeline span ends before the current time, fill it up with
     # unmonitored entry until end
-    if avoptions["service_period"] == "honor" and this_until_time < until_time:  # GAP
+    if avoptions["service_period"] == "honor" and current_time < until_time:  # GAP
         spans.append(
             (
                 None,

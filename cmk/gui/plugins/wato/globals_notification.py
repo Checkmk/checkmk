@@ -61,7 +61,7 @@ class ConfigVariableEnableRBN(ConfigVariable):
             label=_("Enable new rule based notifications"),
             help=_(
                 "If you enable the new rule based notifications then the current plain text email and "
-                "&quot;flexible notifications&quot; will become inactive. Instead notificatios will "
+                "'flexible notifications' will become inactive. Instead notificatios will "
                 "be configured with the WATO module <i>Notifications</i> on a global base."
             ),
         )

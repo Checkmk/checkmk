@@ -389,7 +389,7 @@ class RulesetMatcher:
             if (labels := cond.get("host_labels", {})) and not matches_labels({}, labels):
                 continue
 
-            if not self.ruleset_optimizer.matches_host_name(cond.get("host_name"), ""):
+            if not self.ruleset_optimizer.matches_host_name(cond.get("host_name"), HostName("")):
                 continue
 
             entries.append(rule["value"])

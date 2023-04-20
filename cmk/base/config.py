@@ -1975,7 +1975,7 @@ def lookup_mgmt_board_ip_address(
 
 def lookup_ip_address(
     config_cache: ConfigCache,
-    host_name: HostName,
+    host_name: HostName | HostAddress,
     *,
     family: socket.AddressFamily | AddressFamily | None = None,
 ) -> HostAddress | None:
@@ -2585,7 +2585,7 @@ class ConfigCache:
         # First rule match
         return aliases[0]
 
-    def parents(self, host_name: HostName) -> list[str]:
+    def parents(self, host_name: HostName) -> Sequence[HostName]:
         """Returns the parents of a host configured via ruleset "parents"
 
         Use only those parents which are defined and active in all_hosts"""
@@ -3714,14 +3714,14 @@ class ConfigCache:
 
         return attrs
 
-    def get_cluster_nodes_for_config(self, host_name: HostName) -> list[HostName]:
+    def get_cluster_nodes_for_config(self, host_name: HostName) -> Sequence[HostName]:
         nodes = self.nodes_of(host_name)
         if nodes is None:
             return []
 
         self._verify_cluster_address_family(host_name, nodes)
         self._verify_cluster_datasource(host_name, nodes)
-        nodes = nodes[:]
+        nodes = list(nodes[:])
         for node in nodes:
             if node not in self.all_active_realhosts():
                 config_warnings.warn(
@@ -3977,7 +3977,7 @@ class ConfigCache:
         return self._clusters_of_cache.get(hostname, [])
 
     # TODO: cleanup None case
-    def nodes_of(self, hostname: HostName) -> list[HostName] | None:
+    def nodes_of(self, hostname: HostName) -> Sequence[HostName] | None:
         """Returns the nodes of a cluster. Returns None if no match."""
         return self._nodes_of_cache.get(hostname)
 

@@ -181,7 +181,7 @@ class TreeStore:
         self._tree_dir = Path(tree_dir)
         self._last_filepath = Path(tree_dir) / ".last"
 
-    def load(self, *, host_name: HostName | str) -> StructuredDataNode:
+    def load(self, *, host_name: HostName) -> StructuredDataNode:
         return load_tree(self._tree_file(host_name))
 
     def save(self, *, host_name: HostName, tree: StructuredDataNode, pretty: bool = False) -> None:
@@ -216,7 +216,7 @@ class TreeOrArchiveStore(TreeStore):
         super().__init__(tree_dir)
         self._archive_dir = Path(archive)
 
-    def load_previous(self, *, host_name: HostName | str) -> StructuredDataNode:
+    def load_previous(self, *, host_name: HostName) -> StructuredDataNode:
         if (tree_file := self._tree_file(host_name=host_name)).exists():
             return load_tree(tree_file)
 

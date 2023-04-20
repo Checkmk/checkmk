@@ -10,6 +10,7 @@ from typing import overload
 
 import cmk.utils.tags
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
@@ -677,9 +678,11 @@ class ModeCreateHost(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
+        host_name = request.var("host")
+        assert host_name is not None
         return Host(
             folder=Folder.current(),
-            host_name=request.var("host"),
+            host_name=HostName(host_name),
             attributes={},
             cluster_nodes=None,
         )
@@ -710,9 +713,11 @@ class ModeCreateCluster(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
+        host_name = request.var("host")
+        assert host_name is not None
         return Host(
             folder=Folder.current(),
-            host_name=request.var("host"),
+            host_name=HostName(host_name),
             attributes={},
             cluster_nodes=[],
         )

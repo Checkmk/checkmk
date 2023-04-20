@@ -135,11 +135,11 @@ class HostsStorageFieldsGenerator:
 
     @classmethod
     def custom_macros(
-        cls, custom_macros: dict[str, dict[str, str]]
+        cls, custom_macros: dict[str, dict[HostName, str]]
     ) -> dict[str, list[tuple[str, list[HostName]]]]:
         macros: dict[str, list[tuple[str, list[HostName]]]] = {}
         for custom_varname, entries in custom_macros.items():
-            if len(entries) == 0:
+            if not entries:
                 continue
             macros[custom_varname] = []
             for hostname, nagstring in entries.items():

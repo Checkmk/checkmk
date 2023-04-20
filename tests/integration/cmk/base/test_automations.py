@@ -194,8 +194,8 @@ def test_automation_inventory_single_host(site: Site) -> None:
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
-    assert result.hosts["modes-test-host"].error_text is None
+    assert result.hosts[HostName("modes-test-host")].diff_text == "Nothing was changed."
+    assert result.hosts[HostName("modes-test-host")].error_text is None
 
 
 @pytest.mark.usefixtures("test_cfg")
@@ -207,8 +207,8 @@ def test_automation_discovery_single_host(site: Site) -> None:
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
-    assert result.hosts["modes-test-host"].error_text is None
+    assert result.hosts[HostName("modes-test-host")].diff_text == "Nothing was changed."
+    assert result.hosts[HostName("modes-test-host")].error_text is None
 
 
 # old alias, drop after 2.2 release
@@ -221,10 +221,10 @@ def test_automation_inventory_multiple_hosts(site: Site) -> None:
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
-    assert result.hosts["modes-test-host"].error_text is None
-    assert result.hosts["modes-test-host2"].diff_text == "Nothing was changed."
-    assert result.hosts["modes-test-host2"].error_text is None
+    assert result.hosts[HostName("modes-test-host")].diff_text == "Nothing was changed."
+    assert result.hosts[HostName("modes-test-host")].error_text is None
+    assert result.hosts[HostName("modes-test-host2")].diff_text == "Nothing was changed."
+    assert result.hosts[HostName("modes-test-host2")].error_text is None
 
 
 @pytest.mark.usefixtures("test_cfg")
@@ -236,10 +236,10 @@ def test_automation_discovery_multiple_hosts(site: Site) -> None:
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
-    assert result.hosts["modes-test-host"].error_text is None
-    assert result.hosts["modes-test-host2"].diff_text == "Nothing was changed."
-    assert result.hosts["modes-test-host2"].error_text is None
+    assert result.hosts[HostName("modes-test-host")].diff_text == "Nothing was changed."
+    assert result.hosts[HostName("modes-test-host")].error_text is None
+    assert result.hosts[HostName("modes-test-host2")].diff_text == "Nothing was changed."
+    assert result.hosts[HostName("modes-test-host2")].error_text is None
 
 
 # old alias, drop after 2.2 release
@@ -305,8 +305,8 @@ def test_automation_inventory_with_cache_option(site: Site) -> None:
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
-    assert result.hosts["modes-test-host"].error_text is None
+    assert result.hosts[HostName("modes-test-host")].diff_text == "Nothing was changed."
+    assert result.hosts[HostName("modes-test-host")].error_text is None
 
 
 @pytest.mark.usefixtures("test_cfg")
@@ -318,8 +318,8 @@ def test_automation_discovery_with_cache_option(site: Site) -> None:
     )
 
     assert isinstance(result, results.ServiceDiscoveryResult)
-    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
-    assert result.hosts["modes-test-host"].error_text is None
+    assert result.hosts[HostName("modes-test-host")].diff_text == "Nothing was changed."
+    assert result.hosts[HostName("modes-test-host")].error_text is None
 
 
 @pytest.mark.usefixtures("test_cfg")
@@ -330,10 +330,10 @@ def test_automation_analyse_service_autocheck(site: Site) -> None:
         args=["modes-test-host", "Apache 127.0.0.1:5000 Status"],
     )
     assert isinstance(automation_result, results.AnalyseServiceResult)
-    assert automation_result.service_info["origin"] == "auto"
-    assert automation_result.service_info["checktype"] == "apache_status"
-    assert automation_result.service_info["item"] == "127.0.0.1:5000"
-    assert automation_result.service_info["checkgroup"] == "apache_status"
+    assert automation_result.service_info.get("origin") == "auto"
+    assert automation_result.service_info.get("checktype") == "apache_status"
+    assert automation_result.service_info.get("item") == "127.0.0.1:5000"
+    assert automation_result.service_info.get("checkgroup") == "apache_status"
 
 
 @pytest.mark.usefixtures("test_cfg")

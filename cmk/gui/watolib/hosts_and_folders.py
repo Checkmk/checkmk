@@ -1254,6 +1254,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         else:
             self._root_dir = wato_root_dir()
 
+        self._hosts: dict[HostName, CREHost] | None
         if self._path_existing_folder is not None:
             # Existing folder
             self._hosts = None
@@ -1656,11 +1657,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def object_ref(self) -> ObjectRef:
         return ObjectRef(ObjectRefType.Folder, self.path())
 
-    def hosts(self) -> dict[str, CREHost]:
+    def hosts(self) -> dict[HostName, CREHost]:
         self._load_hosts_on_demand()
+        assert self._hosts is not None
         return self._hosts
 
-    def num_hosts(self):
+    def num_hosts(self) -> int:
         # Do *not* load hosts here! This method must kept cheap
         return self._num_hosts
 
@@ -2541,6 +2543,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._delete_host_files(host_names, automation=automation)
 
         # 4. Actual modification
+        assert self._hosts is not None
         for host_name in host_names:
             host = self.hosts()[host_name]
             del self._hosts[host_name]
@@ -2649,6 +2652,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         # 2. Actual modification
         host.rename(newname)
+        assert self._hosts is not None
         del self._hosts[oldname]
         self._hosts[newname] = host
         add_change(
@@ -2693,12 +2697,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def _add_host(self, host):
         self._load_hosts_on_demand()
+        assert self._hosts is not None
         self._hosts[host.name()] = host
         host._folder = self
         self._num_hosts = len(self._hosts)
 
     def _remove_host(self, host):
         self._load_hosts_on_demand()
+        assert self._hosts is not None
         del self._hosts[host.name()]
         host._folder = None
         self._num_hosts = len(self._hosts)
@@ -3049,7 +3055,7 @@ class CREHost(WithPermissions, WithAttributes):
     # '--------------------------------------------------------------------'
 
     def __init__(  # type: ignore[no-untyped-def]
-        self, folder, host_name, attributes, cluster_nodes
+        self, folder, host_name: HostName, attributes, cluster_nodes
     ) -> None:
         super().__init__()
         self._folder = folder
@@ -3075,7 +3081,7 @@ class CREHost(WithPermissions, WithAttributes):
     def ident(self) -> str:
         return self.name()
 
-    def name(self) -> str:
+    def name(self) -> HostName:
         return self._name
 
     def alias(self):
@@ -3418,7 +3424,7 @@ class CREHost(WithPermissions, WithAttributes):
         self.folder().save_hosts()
         return True
 
-    def rename(self, new_name):
+    def rename(self, new_name: HostName) -> None:
         add_change(
             "rename-host",
             _l("Renamed host from %s into %s.") % (self.name(), new_name),

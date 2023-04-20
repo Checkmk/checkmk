@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Iterable
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -62,7 +63,7 @@ def do_scan_parents(hosts: list[HostName]) -> None:  # pylint: disable=too-many-
     out.output("Scanning for parents (%d processes)..." % config.max_num_processes)
     while hosts:
         chunk: list[HostName] = []
-        while len(chunk) < config.max_num_processes and len(hosts) > 0:
+        while len(chunk) < config.max_num_processes and hosts:
             host = hosts.pop()
 
             # skip hosts that already have a parent
@@ -121,7 +122,7 @@ def traceroute_available() -> str | None:
 
 def scan_parents_of(  # pylint: disable=too-many-branches
     config_cache: ConfigCache,
-    hosts: list[HostName],
+    hosts: Iterable[HostName],
     silent: bool = False,
     settings: dict[str, int] | None = None,
 ) -> Gateways:

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import textwrap
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
@@ -130,7 +130,7 @@ class Modes:
 
     def parse_hostname_list(
         self, args: list[str], with_clusters: bool = True, with_foreign_hosts: bool = False
-    ) -> list[HostName]:
+    ) -> Sequence[HostName]:
         config_cache = config.get_config_cache()
         if with_foreign_hosts:
             valid_hosts = config_cache.all_configured_realhosts()

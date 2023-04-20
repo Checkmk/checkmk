@@ -153,7 +153,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
             raise RuntimeError()
     else:
         parents_list = config_cache.parents(hostname)
-    if len(parents_list) > 0:
+    if parents_list:
         out.output(
             tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n"
         )

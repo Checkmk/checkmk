@@ -370,7 +370,7 @@ def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:
 
 class ABCBISearcher(ABC):
     def __init__(self) -> None:
-        self.hosts: dict[str, BIHostData] = {}
+        self.hosts: dict[HostName, BIHostData] = {}
         self._host_regex_match_cache: dict[str, dict] = {}
         self._host_regex_miss_cache: dict[str, dict] = {}
 
@@ -451,7 +451,7 @@ class NodeIdentifierInfo:
 class ABCBICompiledNode(ABC):
     def __init__(self) -> None:
         super().__init__()
-        self.required_hosts: list[tuple[SiteId, str]] = []
+        self.required_hosts: list[tuple[SiteId, HostName]] = []
         self._frozen_marker: FrozenMarker | None = None
 
     @property

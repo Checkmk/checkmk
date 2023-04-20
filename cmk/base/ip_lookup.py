@@ -92,7 +92,7 @@ def enforce_localhost() -> None:
 # FIXME: This different handling is bad. Clean this up!
 def lookup_ip_address(
     *,
-    host_name: HostName,
+    host_name: HostName | HostAddress,
     family: AddressFamily | socket.AddressFamily,
     configured_ip_address: HostAddress | None,
     simulation_mode: bool,

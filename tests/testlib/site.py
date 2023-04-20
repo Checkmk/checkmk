@@ -9,6 +9,7 @@ import glob
 import inspect
 import logging
 import os
+import pwd
 import shlex
 import shutil
 import subprocess
@@ -106,8 +107,12 @@ class Site:
     def live(self) -> livestatus.SingleSiteConnection:
         # Note: If the site comes from a SiteFactory instance, the TCP connection
         # is insecure, i.e. no TLS.
-        live = livestatus.SingleSiteConnection(
-            "tcp:%s:%d" % (self.http_address, self.livestatus_port)
+        live = (
+            livestatus.LocalConnection()
+            if self._is_running_as_site_user()
+            else livestatus.SingleSiteConnection(
+                "tcp:%s:%d" % (self.http_address, self.livestatus_port)
+            )
         )
         live.set_timeout(2)
         return live
@@ -314,6 +319,9 @@ class Site:
         )
         return state
 
+    def _is_running_as_site_user(self) -> bool:
+        return pwd.getpwuid(os.getuid()).pw_name == self.id
+
     def execute(  # type: ignore[no-untyped-def]
         self, cmd: list[str], *args, preserve_env: list[str] | None = None, **kwargs
     ) -> subprocess.Popen:
@@ -327,21 +335,25 @@ class Site:
             su_env_args = []
 
         kwargs.setdefault("encoding", "utf-8")
-        cmd_txt = " ".join(
-            [
-                "sudo",
-            ]
-            + sudo_env_args
-            + [
-                "su",
-                "-l",
-                self.id,
-            ]
-            + su_env_args
-            + [
-                "-c",
-                shlex.quote(" ".join(shlex.quote(p) for p in cmd)),
-            ]
+        cmd_txt = (
+            subprocess.list2cmdline(cmd)
+            if self._is_running_as_site_user()
+            else " ".join(
+                [
+                    "sudo",
+                ]
+                + sudo_env_args
+                + [
+                    "su",
+                    "-l",
+                    self.id,
+                ]
+                + su_env_args
+                + [
+                    "-c",
+                    shlex.quote(" ".join(shlex.quote(p) for p in cmd)),
+                ]
+            )
         )
         logger.info("Executing: %s", cmd_txt)
         kwargs["shell"] = True
@@ -381,7 +393,8 @@ class Site:
         return PythonHelper(self, helper_file)
 
     def omd(self, mode: str, *args: str) -> int:
-        cmd = ["sudo", "/usr/bin/omd", mode, self.id] + list(args)
+        sudo, site_id = ([], []) if self._is_running_as_site_user() else (["sudo"], [self.id])
+        cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
         completed_process = subprocess.run(
             cmd,
@@ -404,13 +417,19 @@ class Site:
         return os.path.join(self.root, rel_path)
 
     def read_file(self, rel_path: str) -> str:
-        p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE)
-        stdout = p.communicate()[0]
-        if p.returncode != 0:
-            raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
-        return stdout if stdout is not None else ""
+        if not self._is_running_as_site_user():
+            p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE)
+            stdout = p.communicate()[0]
+            if p.returncode != 0:
+                raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
+            return stdout if stdout is not None else ""
+        return open(self.path(rel_path)).read()
 
     def read_binary_file(self, rel_path: str) -> bytes:
+        if self._is_running_as_site_user():
+            with open(self.path(rel_path), "rb") as f:
+                return f.read()
+
         p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE, encoding=None)
         stdout = p.communicate()[0]
         if p.returncode != 0:
@@ -418,14 +437,22 @@ class Site:
         return stdout
 
     def delete_file(self, rel_path: str, missing_ok: bool = False) -> None:
-        p = self.execute(["rm", "-f", self.path(rel_path)])
-        if p.wait() != 0:
-            raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
+        if not self._is_running_as_site_user():
+            p = self.execute(["rm", "-f", self.path(rel_path)])
+            if p.wait() != 0:
+                raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
+        else:
+            Path(self.path(rel_path)).unlink(missing_ok=missing_ok)
 
     def delete_dir(self, rel_path: str) -> None:
-        p = self.execute(["rm", "-rf", self.path(rel_path)])
-        if p.wait() != 0:
-            raise Exception("Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait()))
+        if not self._is_running_as_site_user():
+            p = self.execute(["rm", "-rf", self.path(rel_path)])
+            if p.wait() != 0:
+                raise Exception(
+                    "Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait())
+                )
+        else:
+            shutil.rmtree(self.path(rel_path))
 
     def _call_tee(self, rel_target_path: str, content: bytes | str) -> None:
         with self.execute(
@@ -450,35 +477,55 @@ class Site:
             )
 
     def write_text_file(self, rel_path: str, content: str) -> None:
-        self._call_tee(rel_path, content)
+        if not self._is_running_as_site_user():
+            self._call_tee(rel_path, content)
+        else:
+            file_path = Path(self.path(rel_path))
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            with file_path.open("w", encoding="utf-8") as f:
+                f.write(content)
 
     def write_binary_file(self, rel_path: str, content: bytes) -> None:
-        self._call_tee(rel_path, content)
+        if not self._is_running_as_site_user():
+            self._call_tee(rel_path, content)
+        else:
+            file_path = Path(self.path(rel_path))
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            with file_path.open("wb") as f:
+                f.write(content)
 
     def create_rel_symlink(self, link_rel_target: str, rel_link_name: str) -> None:
-        with self.execute(
-            ["ln", "-s", link_rel_target, rel_link_name],
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE,
-        ) as p:
-            p.wait()
-        if p.returncode != 0:
-            raise Exception(
-                "Failed to create symlink from %s to ./%s. Exit-Code: %d"
-                % (rel_link_name, link_rel_target, p.returncode)
-            )
+        if not self._is_running_as_site_user():
+            with self.execute(
+                ["ln", "-s", link_rel_target, rel_link_name],
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+            ) as p:
+                p.wait()
+            if p.returncode != 0:
+                raise Exception(
+                    "Failed to create symlink from %s to ./%s. Exit-Code: %d"
+                    % (rel_link_name, link_rel_target, p.returncode)
+                )
+        else:
+            os.symlink(link_rel_target, os.path.join(self.root, rel_link_name))
 
     def resolve_path(self, rel_path: Path) -> Path:
-        p = self.execute(["readlink", "-e", self.path(str(rel_path))], stdout=subprocess.PIPE)
-        if p.wait() != 0:
-            raise Exception(f"Failed to read symlink at {rel_path}. Exit-Code: {p.wait()}")
-        if p.stdout is None:
-            raise Exception(f"Failed to read symlink at {rel_path}. No stdout.")
-        return Path(p.stdout.read().strip())
+        if not self._is_running_as_site_user():
+            p = self.execute(["readlink", "-e", self.path(str(rel_path))], stdout=subprocess.PIPE)
+            if p.wait() != 0:
+                raise Exception(f"Failed to read symlink at {rel_path}. Exit-Code: {p.wait()}")
+            if p.stdout is None:
+                raise Exception(f"Failed to read symlink at {rel_path}. No stdout.")
+            return Path(p.stdout.read().strip())
+        return Path(self.path(str(rel_path))).resolve()
 
     def file_exists(self, rel_path: str) -> bool:
-        p = self.execute(["test", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
-        return p.wait() == 0
+        if not self._is_running_as_site_user():
+            p = self.execute(["test", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
+            return p.wait() == 0
+
+        return os.path.exists(self.path(rel_path))
 
     def is_file(self, rel_path: str) -> bool:
         return self.execute(["test", "-f", self.path(rel_path)]).wait() == 0

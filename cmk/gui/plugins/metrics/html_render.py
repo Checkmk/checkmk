@@ -266,9 +266,6 @@ def title_info_elements(
             )
             yield service_description, service_url
 
-    if "add_metric_name" in title_format:
-        yield spec_info["metric"], ""
-
 
 def _show_html_graph_title(
     graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions

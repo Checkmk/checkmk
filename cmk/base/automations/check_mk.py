@@ -26,6 +26,8 @@ import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.password_store
+from cmk.utils.auto_queue import AutoQueue
+from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, OnError
@@ -117,12 +119,13 @@ from cmk.base.agent_based.confcheckers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
+from cmk.base.agent_based.discovery.autodiscovery import DiscoveryResult
+from cmk.base.agent_based.discovery.livestatus import schedule_discovery_check
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.config import ConfigCache, IgnoredServices
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
-from cmk.base.modes.check_mk import mode_autodiscovery
 from cmk.base.sources import make_parser
 
 HistoryFile = str
@@ -384,12 +387,83 @@ class AutomationAutodiscovery(DiscoveryAutomation):
 
     def execute(self, args: list[str]) -> AutodiscoveryResult:
         with redirect_stdout(open(os.devnull, "w")):
-            result = mode_autodiscovery({})
+            result = _execute_autodiscovery()
 
         return AutodiscoveryResult(*result)
 
 
 automations.register(AutomationAutodiscovery())
+
+
+def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
+    file_cache_options = FileCacheOptions(use_outdated=True)
+
+    if not (queue := AutoQueue(cmk.utils.paths.autodiscovery_dir)):
+        return {}, False
+
+    config.load()
+    config_cache = config.get_config_cache()
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.discovery"),
+    )
+    fetcher = ConfiguredFetcher(
+        config_cache,
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=False,
+        mode=Mode.DISCOVERY,
+        on_error=OnError.IGNORE,
+        selected_sections=NO_SELECTION,
+        simulation_mode=config.simulation_mode,
+        # autodiscovery is run every 5 minutes
+        # make sure we may use the file the active discovery check left behind:
+        max_cachefile_age=config.max_cachefile_age(discovery=600),
+    )
+    discovery_results, activation_required = discovery.autodiscovery(
+        queue,
+        config_cache=config_cache,
+        parser=parser,
+        fetcher=fetcher,
+        section_plugins=SectionPluginMapper(),
+        host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
+        plugins=DiscoveryPluginMapper(config_cache=config_cache),
+        get_service_description=config.service_description,
+        schedule_discovery_check=schedule_discovery_check,
+        on_error=OnError.IGNORE,
+    )
+
+    if not activation_required:
+        return discovery_results, False
+
+    core = create_core(config.monitoring_core)
+    with config.set_use_core_config(
+        autochecks_dir=Path(cmk.utils.paths.base_autochecks_dir),
+        discovered_host_labels_dir=cmk.utils.paths.base_discovered_host_labels_dir,
+    ):
+        try:
+            _config_cache.clear_all()
+            config_cache.initialize()
+
+            # reset these to their original value to create a correct config
+            if config.monitoring_core == "cmc":
+                cmk.base.core.do_reload(
+                    core,
+                    locking_mode=config.restart_locking,
+                    duplicates=config.duplicate_hosts(),
+                )
+            else:
+                cmk.base.core.do_restart(
+                    core,
+                    locking_mode=config.restart_locking,
+                    duplicates=config.duplicate_hosts(),
+                )
+        finally:
+            _config_cache.clear_all()
+            config_cache.initialize()
+
+    return discovery_results, True
 
 
 class AutomationSetAutochecks(DiscoveryAutomation):

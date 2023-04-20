@@ -20,7 +20,6 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 from cmk.utils.auto_queue import AutoQueue
-from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
@@ -81,8 +80,6 @@ from cmk.base.agent_based.confcheckers import (
     InventoryPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.agent_based.discovery.autodiscovery import DiscoveryResult
-from cmk.base.agent_based.discovery.livestatus import schedule_discovery_check
 from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import ConfigCache
@@ -1495,92 +1492,6 @@ modes.register(
         ],
     )
 )
-
-# .
-#   .--autodiscovery-------------------------------------------------------.
-#   |               _            _ _                                       |
-#   |    __ _ _   _| |_ ___   __| (_)___  ___ _____   _____ _ __ _   _     |
-#   |   / _` | | | | __/ _ \ / _` | / __|/ __/ _ \ \ / / _ \ '__| | | |    |
-#   |  | (_| | |_| | || (_) | (_| | \__ \ (_| (_) \ V /  __/ |  | |_| |    |
-#   |   \__,_|\__,_|\__\___/ \__,_|_|___/\___\___/ \_/ \___|_|   \__, |    |
-#   |                                                            |___/     |
-#   '----------------------------------------------------------------------'
-
-
-def mode_autodiscovery(
-    options: Mapping[str, Literal[True]]
-) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
-    file_cache_options = _handle_fetcher_options(options)._replace(use_outdated=True)
-
-    if not (queue := AutoQueue(cmk.utils.paths.autodiscovery_dir)):
-        console.verbose("Autodiscovery: No hosts marked by discovery check\n")
-        return {}, False
-
-    config.load()
-    config_cache = config.get_config_cache()
-    parser = ConfiguredParser(
-        config_cache,
-        selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.discovery"),
-    )
-    fetcher = ConfiguredFetcher(
-        config_cache,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        mode=FetchMode.DISCOVERY,
-        on_error=OnError.IGNORE,
-        selected_sections=NO_SELECTION,
-        simulation_mode=config.simulation_mode,
-        # autodiscovery is run every 5 minutes (see
-        # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
-        # make sure we may use the file the active discovery check left behind:
-        max_cachefile_age=config.max_cachefile_age(discovery=600),
-    )
-    discovery_results, activation_required = discovery.autodiscovery(
-        queue,
-        config_cache=config_cache,
-        parser=parser,
-        fetcher=fetcher,
-        section_plugins=SectionPluginMapper(),
-        host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-        plugins=DiscoveryPluginMapper(config_cache=config_cache),
-        get_service_description=config.service_description,
-        schedule_discovery_check=schedule_discovery_check,
-        on_error=OnError.IGNORE,
-    )
-
-    if not activation_required:
-        return discovery_results, False
-
-    console.verbose("\nRestarting monitoring core with updated configuration...\n")
-    core = create_core(config.monitoring_core)
-    with config.set_use_core_config(
-        autochecks_dir=Path(cmk.utils.paths.base_autochecks_dir),
-        discovered_host_labels_dir=cmk.utils.paths.base_discovered_host_labels_dir,
-    ):
-        try:
-            _config_cache.clear_all()
-            config_cache.initialize()
-
-            # reset these to their original value to create a correct config
-            if config.monitoring_core == "cmc":
-                cmk.base.core.do_reload(
-                    core,
-                    locking_mode=config.restart_locking,
-                    duplicates=config.duplicate_hosts(),
-                )
-            else:
-                cmk.base.core.do_restart(
-                    core,
-                    locking_mode=config.restart_locking,
-                    duplicates=config.duplicate_hosts(),
-                )
-        finally:
-            _config_cache.clear_all()
-            config_cache.initialize()
-
-    return discovery_results, True
 
 
 # .

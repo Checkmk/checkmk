@@ -197,8 +197,9 @@ _TEMPERATURE_UNIT_SPECS: Mapping[TemperatureUnit, UnitInfo] = {
     TemperatureUnit.FAHRENHEIT: {
         "title": _("Degree Fahrenheit"),
         "symbol": "°F",
-        "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v * 1.8 + 32), "°F"),
-        "js_render": "v => cmk.number_format.drop_dotzero(v * 1.8 + 32) + ' °F'",
+        "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v), "°F"),
+        "js_render": "v => cmk.number_format.drop_dotzero(v) + ' °F'",
+        "conversion": lambda v: v * 1.8 + 32,
     },
 }
 

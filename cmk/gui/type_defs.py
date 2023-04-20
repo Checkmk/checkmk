@@ -590,6 +590,7 @@ class UnitInfo(TypedDict):
     graph_unit: NotRequired[GraphUnitRenderFunc]
     description: NotRequired[str]
     valuespec: NotRequired[Any]  # TODO: better typing
+    conversion: NotRequired[Callable[[float], float]]
 
 
 class _TranslatedMetricRequired(TypedDict):

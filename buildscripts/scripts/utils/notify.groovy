@@ -87,7 +87,7 @@ def notify_error(error) {
                 cc: "", // the code owner maybe?
                 bcc: "",
                 from: "\"Greetings from CI\" <${JENKINS_MAIL}>",
-                replyTo: "<${TEAM_CI_MAIL}>",
+                replyTo: "${TEAM_CI_MAIL}",
                 subject: "Build failure in ${env.JOB_NAME}",
                 body: ("""
     |The following build failed:

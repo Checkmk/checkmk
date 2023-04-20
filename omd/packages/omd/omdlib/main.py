@@ -1788,7 +1788,7 @@ def pipe_pager() -> str:
     return ""
 
 
-def call_scripts(  # pylint: disable=too-many-branches
+def call_scripts(
     site: SiteContext, phase: str, open_pty: bool, add_env: Mapping[str, str] | None = None
 ) -> None:
     """Calls hook scripts in defined directories."""
@@ -1808,52 +1808,55 @@ def call_scripts(  # pylint: disable=too-many-branches
         if file.name[0] == ".":
             continue
         sys.stdout.write(f'Executing {phase} script "{file.name}"...')
-
-        if open_pty:
-            fd_parent, fd_child = pty.openpty()
-            stdout = stderr = fd_child
-        else:
-            stdout = subprocess.PIPE
-            stderr = subprocess.STDOUT
-
-        with subprocess.Popen(  # nosec
-            str(file),  # path-like args is not allowed when shell is true
-            shell=True,
-            stdout=stdout,
-            stderr=stderr,
-            encoding="utf-8",
-            env=env,
-        ) as proc:
-            if open_pty:
-                os.close(fd_child)
-                parent: IO[str] = os.fdopen(fd_parent, buffering=1)
-            else:
-                assert proc.stdout is not None
-                parent = proc.stdout
-
-            wrote_output = False
-            try:
-                while True:
-                    line = parent.readline()
-                    if not line:
-                        break
-                    if not wrote_output:
-                        sys.stdout.write("\n")
-                        wrote_output = True
-
-                    sys.stdout.write(f"-| {line}")
-                    sys.stdout.flush()
-            except IOError:
-                pass
-            finally:
-                if not pty:
-                    parent.close()
-
-        if not proc.returncode:
+        if (returncode := _call_script(phase, env, file, open_pty)) == 0:
             sys.stdout.write(tty.ok + "\n")
         else:
-            sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
+            sys.stdout.write(tty.error + " (exit code: %d)\n" % returncode)
             raise SystemExit(1)
+
+
+def _call_script(phase: str, env: Mapping[str, str], file: Path, open_pty: bool) -> int:
+    if open_pty:
+        fd_parent, fd_child = pty.openpty()
+        stdout = stderr = fd_child
+    else:
+        stdout = subprocess.PIPE
+        stderr = subprocess.STDOUT
+
+    with subprocess.Popen(  # nosec
+        str(file),  # path-like args is not allowed when shell is true
+        shell=True,
+        stdout=stdout,
+        stderr=stderr,
+        encoding="utf-8",
+        env=env,
+    ) as proc:
+        if open_pty:
+            os.close(fd_child)
+            parent: IO[str] = os.fdopen(fd_parent, buffering=1)
+        else:
+            assert proc.stdout is not None
+            parent = proc.stdout
+
+        wrote_output = False
+        try:
+            while True:
+                line = parent.readline()
+                if not line:
+                    break
+                if not wrote_output:
+                    sys.stdout.write("\n")
+                    wrote_output = True
+
+                sys.stdout.write(f"-| {line}")
+                sys.stdout.flush()
+        except IOError:
+            pass
+        finally:
+            if not pty:
+                parent.close()
+
+    return proc.returncode
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:

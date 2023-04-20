@@ -2,7 +2,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import logging
 import os
 
 import pytest
@@ -11,8 +10,6 @@ from tests.testlib.event_console import CMKEventConsole
 from tests.testlib.openapi_session import RequestSessionRequestHandler
 from tests.testlib.rest_api_client import ClientRegistry, get_client_registry, RestApiClient
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import current_base_branch_name
-from tests.testlib.version import CMKVersion
 from tests.testlib.web_session import CMKWebSession
 
 
@@ -23,38 +20,8 @@ def fixture_site() -> Site:
         # launch docker container
         # mount
         raise Exception
-
-    logging.info("Setting up testsite")
-
-    version = os.environ.get("VERSION", CMKVersion.DAILY)
-    sf = get_site_factory(
-        prefix="int_",
-        update_from_git=version == "git",
-        install_test_python_modules=False,
-        fallback_branch=current_base_branch_name,
-    )
-
-    site = sf.get_existing_site("test")
-
-    if os.environ.get("REUSE"):
-        logging.info("Reuse previously existing site in case it exists (REUSE=1)")
-        if not site.exists():
-            logging.info("Creating new site")
-            site = sf.get_site("test")
-        else:
-            logging.info("Reuse existing site")
-            site.start()
-    else:
-        if site.exists():
-            logging.info("Remove previously existing site (REUSE=0)")
-            site.rm()
-
-        logging.info("Creating new site")
-        site = sf.get_site("test")
-
-    logging.info("Site %s is ready!", site.id)
-
-    return site
+    sf = get_site_factory(prefix="int_", update_from_git=True, install_test_python_modules=True)
+    return sf.get_existing_site("test")
 
 
 @pytest.fixture(scope="session", name="web")

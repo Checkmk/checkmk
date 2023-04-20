@@ -16,7 +16,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 DIR_NAME="bazel"
 TARGET_DIR="/opt"
-BAZEL_VERSION="$(<${SCRIPT_DIR}/.bazelversion)"
+BAZEL_VERSION="$(<"${SCRIPT_DIR}"/.bazelversion)"
 BAZEL_EXE_FILE="bazel-${BAZEL_VERSION}-linux-x86_64"
 
 if [ "$1" != "link-only" ]; then

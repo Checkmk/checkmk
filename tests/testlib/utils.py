@@ -298,12 +298,17 @@ def spawn_expect_process(
                         p.send(dialog.send)
                     elif dialog.optional:
                         logger.info("Optional message not found; ignoring!")
-                        rc = 0
                         break
                     else:
-                        logger.warning("Required message not found; aborting!")
-                    if rc > 0 or counter >= dialog.count >= 1:
-                        # msg not found or reached max count
+                        logger.error(
+                            "Required message not found. "
+                            "The following has been found instead:\n"
+                            "%s",
+                            p.before,
+                        )
+                        break
+                    if counter >= dialog.count >= 1:
+                        # max count reached
                         break
             if p.isalive():
                 rc = p.expect(pexpect.EOF)

@@ -71,3 +71,9 @@ freetds(
     version_str="0.95.95",
     sha256="be7c90fc771f30411eff6ae3a0d2e55961f23a950a4d93c44d4c488006e64c70",
 )
+
+load("//packages/heirloom-pkgtools:heirloom-pkgtools_http.bzl", "heirloom_pkgtools")
+heirloom_pkgtools(
+    version_str="070227",
+    sha256="aa94d33550847d57c62138cabd0f742d4af2f14aa2bfb9e9d4a9427bf498e6cc",
+)

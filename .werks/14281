@@ -109,6 +109,6 @@ C-:
 CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H 8.8
 (https://www.first.org/cvss/calculator/3.1#CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H)
 
-CVE will be added later.
+We assigned CVE-2022-46302 to this vulnerability.
 
 We thank Jan-Philipp Litza (PLUTEX GmbH) for reporting this issue!

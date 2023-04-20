@@ -20,7 +20,7 @@ import re
 import socket
 import statistics
 import time
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from typing import Any, Literal
 from unittest import mock
@@ -430,6 +430,7 @@ program_start num_hosts num_services core_pid'
         query: str | list[str],
         match_type: MatchType = "strict",
         force_pos: int | None = None,
+        sites: Collection[SiteName] | None = None,
     ) -> MockLiveStatusConnection:
         """Add a LiveStatus query to be expected by this class.
 
@@ -449,6 +450,11 @@ program_start num_hosts num_services core_pid'
             force_pos:
                 Only used internally. Ignore.
 
+            site:
+                Optionally the sites where the query should be expected. NOTE: When this is not
+                given, we default to all configured sites, unless the query stats with `COMMAND`. In
+                this case, we default to the FIRST SITE configured.
+
         Returns:
             The object itself, so you can chain.
 
@@ -459,12 +465,19 @@ program_start num_hosts num_services core_pid'
             query = "\n".join(query)
         query = query.rstrip()
 
-        if query.startswith("COMMAND"):
-            first_conn = list(self.connections.values())[0]
-            first_conn.expect_query(query, match_type, force_pos)
+        if sites is not None:
+            if unknown_sites := set(sites) - set(self.connections):
+                raise ValueError(f"Unknown site(s): {','.join(unknown_sites)}")
+            connections: Iterable[MockSingleSiteConnection] = (
+                self.connections[site] for site in sites
+            )
+        elif query.startswith("COMMAND"):
+            connections = list(self.connections.values())[:1]
         else:
-            for single_conn in self.connections.values():
-                single_conn.expect_query(query, match_type, force_pos)
+            connections = self.connections.values()
+
+        for single_conn in connections:
+            single_conn.expect_query(query, match_type, force_pos)
         return self
 
 

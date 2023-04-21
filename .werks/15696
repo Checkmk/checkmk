@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p26
+Version: 2.1.0p27
 
 When setting the check interval of a Linux host to 5 minutes, you recently may have experienced sporadic connection resets.
 This results in a critical <i>Check_MK</i> service, showing a summary containing

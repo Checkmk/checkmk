@@ -106,7 +106,6 @@ def get_check_preview(
             providers=providers,
             on_error=on_error,
             load_labels=True,
-            save_labels=False,
         )
         if config_cache.is_cluster(host_name)
         else discover_host_labels(

@@ -1608,6 +1608,9 @@ def test__discover_services_on_cluster(
         assert not discovery_test_case.expected_services
         return
 
+    if discovery_test_case.save_labels:
+        return  # never called on cluster.
+
     scenario = cluster_scenario
     nodes = scenario.config_cache.nodes_of(scenario.parent)
     assert nodes is not None
@@ -1621,7 +1624,6 @@ def test__discover_services_on_cluster(
                 HostLabelPluginMapper(),
                 providers=scenario.providers,
                 load_labels=discovery_test_case.load_labels,
-                save_labels=discovery_test_case.save_labels,
                 on_error=OnError.RAISE,
             ),
             ruleset_matcher=scenario.config_cache.ruleset_matcher,
@@ -1650,6 +1652,9 @@ def test__discover_services_on_cluster(
 def test__perform_host_label_discovery_on_cluster(
     cluster_scenario: ClusterScenario, discovery_test_case: DiscoveryTestCase
 ) -> None:
+    if discovery_test_case.save_labels:
+        return  # never called on cluster.
+
     scenario = cluster_scenario
     nodes = scenario.config_cache.nodes_of(scenario.parent)
     assert nodes is not None
@@ -1661,7 +1666,6 @@ def test__perform_host_label_discovery_on_cluster(
             HostLabelPluginMapper(),
             providers=scenario.providers,
             load_labels=discovery_test_case.load_labels,
-            save_labels=discovery_test_case.save_labels,
             on_error=OnError.RAISE,
         ),
         ruleset_matcher=scenario.config_cache.ruleset_matcher,

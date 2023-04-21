@@ -7,6 +7,8 @@ import logging
 
 import pytest
 
+from tests.testlib import is_enterprise_repo
+
 from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
@@ -14,9 +16,9 @@ from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 from cmk.fetchers.snmp import make_backend
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
 
-try:
+if is_enterprise_repo():
     from cmk.fetchers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
-except ImportError:
+else:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
 

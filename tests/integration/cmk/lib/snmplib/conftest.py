@@ -23,7 +23,7 @@ from pysnmp.hlapi import (  # type: ignore[import]
     UdpTransportTarget,
 )
 
-from tests.testlib import wait_until
+from tests.testlib import is_enterprise_repo, wait_until
 from tests.testlib.site import Site
 
 import cmk.utils.debug as debug
@@ -36,10 +36,10 @@ from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
-try:
-    from cmk.checkers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
-except ImportError:
-    InlineSNMPBackend = None
+if is_enterprise_repo():
+    from cmk.fetchers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
+else:
+    InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
 logger = logging.getLogger(__name__)
 

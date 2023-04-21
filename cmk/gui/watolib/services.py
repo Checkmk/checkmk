@@ -32,6 +32,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
     job_registry,
+    JobStatusSpec,
     JobStatusStates,
 )
 from cmk.gui.config import active_config
@@ -898,18 +899,18 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
 
     def get_result(self, api_request: StartDiscoveryRequest) -> DiscoveryResult:
         """Executed from the outer world to report about the job state"""
-        job_status = dict(self.get_status())
-        job_status["is_active"] = self.is_active()
+        job_status = self.get_status()
+        job_status.is_active = self.is_active()
 
-        if job_status["is_active"]:
+        if job_status.is_active:
             check_table_created, result = self._pre_discovery_preview
         else:
             check_table_created, result = self._get_discovery_preview(api_request)
-            if job_status["state"] == JobStatusStates.EXCEPTION:
-                job_status.update(self._cleaned_up_status(job_status))
+            if job_status.state == JobStatusStates.EXCEPTION:
+                job_status = self._cleaned_up_status(job_status)
 
         return DiscoveryResult(
-            job_status=job_status,
+            job_status=dict(job_status),
             check_table_created=check_table_created,
             check_table=result.check_table,
             host_labels=result.host_labels,
@@ -937,23 +938,26 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         )
 
     @staticmethod
-    def _cleaned_up_status(job_status):
+    def _cleaned_up_status(job_status: JobStatusSpec) -> JobStatusSpec:
         # There might be an exception when calling above 'check_mk_automation'. For example
         # this may happen if a hostname is not resolvable. Then if the error is fixed, ie.
         # configuring an IP address of this host, and the discovery is started again, we put
         # the cached/last job exception into the current job progress update instead of displaying
         # the error in a CRIT message box again.
-        return {
-            "state": JobStatusStates.FINISHED,
-            "loginfo": {
-                "JobProgressUpdate": ["%s:" % _("Last progress update")]
-                + job_status["loginfo"]["JobProgressUpdate"]
-                + ["%s:" % _("Last exception")]
-                + job_status["loginfo"]["JobException"],
-                "JobException": [],
-                "JobResult": job_status["loginfo"]["JobResult"],
-            },
+        new_loginfo = {
+            "JobProgressUpdate": [
+                "%s:" % _("Last progress update"),
+                *job_status.loginfo["JobProgressUpdate"],
+                "%s:" % _("Last exception"),
+                *job_status.loginfo["JobException"],
+            ],
+            "JobException": [],
+            "JobResult": job_status.loginfo["JobResult"],
         }
+        return job_status.copy(
+            update={"state": JobStatusStates.FINISHED, "loginfo": new_loginfo},
+            deep=True,  # not sure, better play it safe.
+        )
 
     def _check_table_file_path(self):
         return os.path.join(self.get_work_dir(), "check_table.mk")

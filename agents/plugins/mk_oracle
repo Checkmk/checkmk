@@ -2569,7 +2569,6 @@ mk_ora_db_connect() {
         logging "[${sid}] [mk_ora_db_connect]" "TNS CFGTNSALIAS: $CFGTNSALIAS"
     fi
 
-    TNSPINGOK=no
     if [ -f "${TNS_ADMIN}/tnsnames.ora" ]; then
         if [ "${ORADBUSER:0:2}" = '/@' ]; then
             P_TNSALIAS_P=$(eval echo "${ORADBUSER:2}")
@@ -2603,14 +2602,6 @@ mk_ora_db_connect() {
         fi
 
         TNSALIAS=${SQLS_TNSALIAS:-${P_TNSALIAS_P}}
-
-        logging "[${sid}] [mk_ora_db_connect]" "TNS Alias PING: $TNSALIAS"
-
-        if "${ORACLE_HOME}"/bin/tnsping "$TNSALIAS" >/dev/null 2>&1; then
-            TNSPINGOK=yes
-        else
-            unset TNSALIAS
-        fi
     else
         if [ -z "$CFGTNSALIAS" ]; then
             unset TNSALIAS
@@ -2624,8 +2615,7 @@ mk_ora_db_connect() {
         "DB sys connect : $DBSYSCONNECT" \
         "DB host        : $DBHOST" \
         "DB port        : $DBPORT" \
-        "TNS alias      : $TNSALIAS" \
-        "TNS PING       : ${TNSPINGOK}"
+        "TNS alias      : $TNSALIAS"
 
     if [ ! "${ORACFGLINE}" ]; then
         # no configuration found
@@ -2643,7 +2633,7 @@ mk_ora_db_connect() {
             # connect with / and wallet
             ORADBUSER=""
             DBPASSWORD=""
-            if [ -z "$CFGTNSALIAS" ] && [ "$TNSPINGOK" = 'no' ]; then
+            if [ -z "$CFGTNSALIAS" ]; then
                 # create an EZCONNECT string when no tnsnames.ora is usable
                 # or no alias is configured in CFGTNSALIAS
                 # defaults to localhost:1521/<ORACLE_SID>

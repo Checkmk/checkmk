@@ -1024,6 +1024,8 @@ class ModeEditRuleset(WatoMode):
             ).service_info.get("labels", {})
 
         for folder, folder_rules in _get_groups(rules, self._folder):
+            if not folder.may("read"):
+                continue
             with table_element(
                 "rules_%s_%s" % (self._name, folder.ident()),
                 title="%s %s (%d)"

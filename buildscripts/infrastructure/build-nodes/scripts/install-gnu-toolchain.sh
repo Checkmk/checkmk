@@ -48,7 +48,7 @@ download_sources() {
     local MIRROR_BASE_URL=${NEXUS_ARCHIVES_URL}
     local MIRROR_URL=${MIRROR_BASE_URL}$FILE_NAME
     local MIRROR_CREDENTIALS="${NEXUS_USERNAME}:${NEXUS_PASSWORD}"
-    if ! _download_from_mirror "${FILE_NAME}" "${MIRROR_URL}"; then
+    if ! _download_from_mirror "${FILE_NAME}" "${MIRROR_URL}" "${MIRROR_CREDENTIALS}"; then
         log "File not available from ${MIRROR_URL}, creating"
 
         tar xzf "${GCC_ARCHIVE_NAME}"

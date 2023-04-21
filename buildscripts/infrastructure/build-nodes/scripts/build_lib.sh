@@ -15,9 +15,15 @@ _artifact_name() {
 _download_from_mirror() {
     local TARGET_PATH=$1
     local MIRROR_URL=$2
+    local MIRROR_CREDENTIALS=$3
+
+    if [ -z "${MIRROR_CREDENTIALS}" ]; then
+        log "No credentials given, not downloading, continuing with build ..."
+        return
+    fi
 
     log "Downloading ${MIRROR_URL}"
-    curl -1 -sSf -o "${TARGET_PATH}" "${MIRROR_URL}" || return
+    curl -u "${MIRROR_CREDENTIALS}" -1 -sSf -o "${TARGET_PATH}" "${MIRROR_URL}" || return
     log "Got ${TARGET_PATH} file from ${MIRROR_URL}"
 }
 
@@ -71,7 +77,7 @@ mirrored_download() {
     local MIRROR_URL=${MIRROR_BASE_URL}$FILE_NAME
     local MIRROR_CREDENTIALS="${NEXUS_USERNAME}:${NEXUS_PASSWORD}"
 
-    if ! _download_from_mirror "${TARGET_PATH}" "${MIRROR_URL}"; then
+    if ! _download_from_mirror "${TARGET_PATH}" "${MIRROR_URL}" "${MIRROR_CREDENTIALS}"; then
         log "File not available from ${MIRROR_URL}, downloading from ${UPSTREAM_URL}"
 
         _download_from_upstream "${TARGET_PATH}" "${UPSTREAM_URL}"
@@ -147,7 +153,7 @@ cached_build() {
     local MIRROR_URL=${MIRROR_BASE_URL}$FILE_NAME
     local MIRROR_CREDENTIALS="${NEXUS_USERNAME}:${NEXUS_PASSWORD}"
 
-    if _download_from_mirror "${ARCHIVE_PATH}" "${MIRROR_URL}"; then
+    if _download_from_mirror "${ARCHIVE_PATH}" "${MIRROR_URL}" "${MIRROR_CREDENTIALS}"; then
         _unpack_package "${ARCHIVE_PATH}" "${TARGET_DIR}"
     else
         build_package

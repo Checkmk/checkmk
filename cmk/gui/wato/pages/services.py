@@ -21,8 +21,6 @@ from cmk.utils.site import omd_site
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.checkers.checkresults import ServiceCheckResult
-
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.config import active_config
@@ -263,6 +261,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             update_target=None if update_target is None else update_target.value,
             update_services=update_services,
         )
+        if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
+            discovery_result = discovery_result._replace(
+                check_table=(), host_labels={}, new_labels={}, vanished_labels={}, changed_labels={}
+            )
 
         if not discovery_result.check_table_created and previous_discovery_result:
             discovery_result = previous_discovery_result._replace(
@@ -294,7 +296,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         performed_action = discovery_options.action
         discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
         message = (
-            self._get_status_message(discovery_result, performed_action)
+            self._get_status_message(previous_discovery_result, discovery_result, performed_action)
             if discovery_result.sources
             else None
         )
@@ -402,8 +404,11 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             return make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
 
     def _get_status_message(
-        self, discovery_result: DiscoveryResult, performed_action: DiscoveryAction
-    ) -> str | None:
+        self,
+        previous_discovery_result: DiscoveryResult | None,
+        discovery_result: DiscoveryResult,
+        performed_action: DiscoveryAction,
+    ) -> str:
         if performed_action is DiscoveryAction.UPDATE_HOST_LABELS:
             return _("The discovered host labels have been updated.")
 
@@ -441,27 +446,21 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             )
 
         messages = []
+        if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
+            messages.append(
+                _("The problems above might be caused by missing caches. Please trigger a rescan.")
+            )
+
         if discovery_result.job_status["state"] == JobStatusStates.STOPPED:
             messages.append(
                 _("%s was stopped after %s at %s.") % (job_title, duration_txt, finished_txt)
             )
 
-        if cmk_check_entries:
-            no_data_result = ServiceCheckResult.received_no_data()
-            no_data = all(
-                e.state == no_data_result.state and e.output == no_data_result.output
-                for e in cmk_check_entries
-            )
-            if no_data:
-                messages.append(_("No data for discovery available. Please perform a rescan."))
-        else:
-            messages.append(_("Found no services yet. To retry please execute a rescan."))
-
         progress_update_log = discovery_result.job_status["loginfo"]["JobProgressUpdate"]
         warnings = [f"<br>{line}" for line in progress_update_log if line.startswith("WARNING")]
 
         if discovery_result.job_status["state"] == JobStatusStates.FINISHED and not warnings:
-            return None
+            return " ".join(messages)
 
         messages.extend(warnings)
 
@@ -478,10 +477,15 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 html.close_div()
             messages.append(output_funnel.drain())
 
-        if messages:
-            return " ".join(messages)
+        return " ".join(messages)
 
-        return None
+    @staticmethod
+    def _sources_failed_on_first_attempt(
+        previous: DiscoveryResult | None,
+        current: DiscoveryResult,
+    ) -> bool:
+        """Only consider CRIT sources failed"""
+        return previous is None and any(source[0] == 2 for source in current.sources.values())
 
 
 class DiscoveryPageRenderer:
@@ -670,12 +674,6 @@ class DiscoveryPageRenderer:
                 self._show_empty_cluster_hint()
             return
 
-        if self._source_failed(discovery_result.sources) and self._is_first_attempt(api_request):
-            html.show_message(
-                _("The problems above might be caused by missing caches. Please trigger a rescan.")
-            )
-            return
-
         # We currently don't get correct information from cmk.base (the data sources). Better
         # don't display this until we have the information.
         # html.write_text("Using discovery information from %s" % cmk.utils.render.date_and_time(
@@ -727,12 +725,6 @@ class DiscoveryPageRenderer:
             )
             % (url, _("Clustered services"))
         )
-
-    def _is_first_attempt(self, api_request: dict) -> bool:
-        return api_request["discovery_result"] is None
-
-    def _source_failed(self, sources: Mapping[str, tuple[int, str]]) -> bool:
-        return any(source[0] != 0 for source in sources.values())
 
     def _group_check_table_by_state(
         self, check_table: Iterable[CheckPreviewEntry]

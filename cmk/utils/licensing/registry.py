@@ -31,7 +31,14 @@ class LicensingHandlerRegistry:
         return self._entries.__getitem__(key)
 
 
+# TODO remove registry and directly pass handlers
 licensing_handler_registry = LicensingHandlerRegistry()
+
+
+def get_available_licensing_handler_type() -> type[LicensingHandler]:
+    if (ed := edition()) is Edition.CRE:
+        return CRELicensingHandler
+    raise ValueError(ed)
 
 
 def _get_licensing_handler() -> type[LicensingHandler]:

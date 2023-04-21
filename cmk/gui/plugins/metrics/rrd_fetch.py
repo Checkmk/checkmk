@@ -26,12 +26,20 @@ from cmk.gui.plugins.metrics.utils import (
     GraphConsoldiationFunction,
     GraphDataRange,
     GraphRecipe,
+    metric_info,
     reverse_translate_metric_name,
     RRDData,
     RRDDataKey,
     unit_info,
 )
-from cmk.gui.type_defs import ColumnName, CombinedGraphSpec, GraphMetric, RPNExpression
+from cmk.gui.type_defs import (
+    ColumnName,
+    CombinedGraphSpec,
+    GraphMetric,
+    MetricName,
+    Row,
+    RPNExpression,
+)
 
 
 def fetch_rrd_data_for_graph(
@@ -252,7 +260,9 @@ def metric_in_all_rrd_columns(
 
 
 def merge_multicol(
-    row: dict[str, Any], rrdcols: list[ColumnName], params: dict[str, Any]
+    row: Row,
+    rrdcols: list[ColumnName],
+    desired_metric: MetricName,
 ) -> TimeSeries:
     """Establish single timeseries for desired metric
 
@@ -270,7 +280,6 @@ def merge_multicol(
     """
 
     relevant_ts = []
-    desired_metric = params["metric"]
     check_command = row["service_check_command"]
     translations = check_metrics.get(check_command, {})
 
@@ -293,4 +302,15 @@ def merge_multicol(
     _op_title, op_func = ts.time_series_operators()["MERGE"]
     single_value_series = [ts.op_func_wrapper(op_func, tsp) for tsp in zip(*relevant_ts)]
 
-    return TimeSeries(single_value_series)
+    return TimeSeries(
+        single_value_series,
+        conversion=_retrieve_unit_conversion_function(desired_metric),
+    )
+
+
+def _retrieve_unit_conversion_function(metric_name: MetricName) -> Callable[[float], float]:
+    if not (metric_spec := metric_info.get(metric_name)):
+        return lambda v: v
+    if (unit := metric_spec.get("unit")) is None:
+        return lambda v: v
+    return unit_info[unit].get("conversion", lambda v: v)

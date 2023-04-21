@@ -6,10 +6,12 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 
+import pytest
+
 from livestatus import SiteId
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.prediction import TimeSeries
+from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 
 import cmk.gui.plugins.metrics.rrd_fetch as rf
 from cmk.gui.config import active_config
@@ -126,3 +128,124 @@ def test_fetch_rrd_data_for_graph_with_conversion(
                 timewindow=(1, 2, 3),
             )
         }
+
+
+@pytest.mark.parametrize(
+    [
+        "default_temperature_unit",
+        "expected_data_points",
+    ],
+    [
+        pytest.param(
+            TemperatureUnit.CELSIUS,
+            [
+                53.69,
+                52.0033,
+                52.0933,
+                52.6133,
+                48.7208,
+                None,
+                None,
+                None,
+                None,
+                None,
+                49.15,
+                50.2533,
+                51.5817,
+                44.275,
+                40.3283,
+                38.8817,
+            ],
+            id="without unit conversion",
+        ),
+        pytest.param(
+            TemperatureUnit.FAHRENHEIT,
+            [
+                128.642,
+                125.60594,
+                125.76794,
+                126.70394,
+                119.69744,
+                None,
+                None,
+                None,
+                None,
+                None,
+                120.47,
+                122.45594000000001,
+                124.84706,
+                111.695,
+                104.59094,
+                101.98706,
+            ],
+            id="with unit conversion",
+        ),
+    ],
+)
+def test_merge_multicol(
+    default_temperature_unit: TemperatureUnit,
+    expected_data_points: TimeSeriesValues,
+) -> None:
+    active_config.default_temperature_unit = default_temperature_unit.value
+    assert rf.merge_multicol(
+        {
+            "rrddata:ambient_temp:ambient_temp.average:1682324616:1682497416:60": [0, 0, 0],
+            "rrddata:ambient_temp:ambient_temp.average:1682490216:1682497416:60": [0, 0, 0],
+            "rrddata:temp:temp.average:1682324616:1682497416:60": [
+                1682324400,
+                1682497800,
+                600,
+                53.69,
+                52.0033,
+                52.0933,
+                52.6133,
+                48.7208,
+                None,
+                None,
+                None,
+                None,
+                None,
+                49.15,
+                50.2533,
+                51.5817,
+                44.275,
+                40.3283,
+                38.8817,
+            ],
+            "rrddata:temp:temp.average:1682490216:1682497416:60": [
+                1682490180,
+                1682497440,
+                60,
+                50.05,
+                52.0167,
+                53.9833,
+                54.9833,
+                55.05,
+                55.05,
+                55.05,
+                54.2,
+                54.05,
+                54.05,
+                54.05,
+                54.05,
+                54.05,
+                54.05,
+                54.05,
+            ],
+            "rrddata:temperature:temperature.average:1682324616:1682497416:60": [0, 0, 0],
+            "rrddata:temperature:temperature.average:1682490216:1682497416:60": [0, 0, 0],
+            "rrddata:value:value.average:1682324616:1682497416:60": [0, 0, 0],
+            "rrddata:value:value.average:1682490216:1682497416:60": [0, 0, 0],
+            "service_check_command": "check_mk-lnx_thermal",
+        },
+        [
+            "rrddata:value:value.average:1682324616:1682497416:60",
+            "rrddata:temp:temp.average:1682324616:1682497416:60",
+            "rrddata:temperature:temperature.average:1682324616:1682497416:60",
+            "rrddata:ambient_temp:ambient_temp.average:1682324616:1682497416:60",
+        ],
+        "temp",
+    ) == TimeSeries(
+        expected_data_points,
+        timewindow=(1682324400, 1682497800, 600),
+    )

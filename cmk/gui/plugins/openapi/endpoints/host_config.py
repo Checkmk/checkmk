@@ -138,8 +138,19 @@ UPDATE_PERMISSIONS = permissions.AllPerm(
         permissions.Perm("wato.edit"),
         permissions.Perm("wato.edit_hosts"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
+        permissions.Undocumented(
+            permissions.Perm("wato.see_all_folders")
+        ),  # only used to check if user can see a host
     ]
 )
+
+
+def with_access_check_permission(perm: permissions.BasePerm) -> permissions.BasePerm:
+    """To check if a user can see a host, we currently need the 'wato.see_all_folders' permission.
+    Since this use is done internally only, we want to add it without documenting it."""
+    return permissions.AllPerm(
+        [perm, permissions.Undocumented(permissions.Perm("wato.see_all_folders"))]
+    )
 
 
 @Endpoint(
@@ -177,7 +188,7 @@ def create_host(params: Mapping[str, Any]) -> Response:
     etag="output",
     request_schema=request_schemas.CreateClusterHost,
     response_schema=response_schemas.HostConfigSchema,
-    permissions_required=PERMISSIONS,
+    permissions_required=with_access_check_permission(PERMISSIONS),
     query_params=[BAKE_AGENT_PARAM],
 )
 def create_cluster_host(params: Mapping[str, Any]) -> Response:
@@ -488,6 +499,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
             *PERMISSIONS.perms,
             permissions.Perm("wato.edit_hosts"),
             permissions.Perm("wato.rename_hosts"),
+            permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
         ]
     ),
 )
@@ -527,6 +539,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
             permissions.Perm("wato.edit"),
             permissions.Perm("wato.edit_hosts"),
             permissions.Perm("wato.move_hosts"),
+            permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
             *PERMISSIONS.perms,
         ]
     ),
@@ -564,7 +577,7 @@ def move(params: Mapping[str, Any]) -> Response:
     method="delete",
     path_params=[HOST_NAME],
     output_empty=True,
-    permissions_required=PERMISSIONS,
+    permissions_required=with_access_check_permission(PERMISSIONS),
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a host"""
@@ -582,7 +595,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     ".../delete",
     method="post",
     request_schema=request_schemas.BulkDeleteHost,
-    permissions_required=PERMISSIONS,
+    permissions_required=with_access_check_permission(PERMISSIONS),
     output_empty=True,
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:

@@ -667,7 +667,10 @@ class CreateHostDowntime(CreateHostDowntimeBase):
 
 
 class CreateServiceDowntime(CreateServiceDowntimeBase):
-    host_name = EXISTING_HOST_NAME  # Note: You don't need access to the host, only to the service
+    # We rely on the code in the endpoint itself to check if the host is there or not.
+    # Here, we don't want to 403 when the host is inaccessible to the user,
+    # but the specific service on that host can be accessed.
+    host_name = gui_fields.HostField(should_exist=None)
     service_descriptions = fields.List(
         fields.String(),
         uniqueItems=True,

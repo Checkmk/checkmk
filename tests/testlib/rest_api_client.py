@@ -1146,13 +1146,11 @@ class GroupConfig(RestApiClient):
     def create(
         self,
         name: str,
-        alias: str | None = None,
+        alias: str,
         customer: str = "provider",
         expect_ok: bool = True,
     ) -> Response:
-        body = {"name": name}
-        if alias is not None:
-            body.update({"alias": alias})
+        body = {"name": name, "alias": alias}
         if version.is_managed_edition():
             body.update({"customer": customer})
 

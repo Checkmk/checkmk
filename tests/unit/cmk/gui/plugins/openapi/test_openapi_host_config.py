@@ -1342,6 +1342,33 @@ def test_openapi_host_config_effective_attributes_schema_regression(
     )
 
 
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_config_show_host_disregards_contact_groups(clients: ClientRegistry) -> None:
+    """This test makes sure a user cannot see the config of a host that is not assigned to their contact groups."""
+    clients.ContactGroup.create("no_hosts_in_here", alias="no_hosts_in_here")
+    clients.ContactGroup.create("all_hosts_in_here", alias="all_hosts_in_here")
+
+    clients.User.create(
+        username="unable_to_see_host",
+        fullname="unable_to_see_host",
+        contactgroups=["no_hosts_in_here"],
+        auth_option={"auth_type": "password", "password": "supersecret"},
+    )
+
+    clients.Rule.create(
+        "host_contactgroups",
+        value_raw="'all_hosts_in_here'",
+        folder="/",
+        conditions={},
+    )
+
+    clients.Host.set_credentials("unable_to_see_host", "supersecret")
+
+    resp = clients.HostConfig.get("heute", expect_ok=False).assert_status_code(403)
+    assert resp.json["title"] == "Forbidden"
+    assert "heute" in resp.json["detail"]
+
+
 def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegistry) -> None:
     clients.ContactGroup.create(name="does_not_see_everything", alias="does_not_see_everything")
     clients.User.create(

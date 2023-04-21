@@ -577,6 +577,17 @@ class HostField(base.String):
             if self._should_exist and host is None:
                 raise self.make_error("should_exist", host_name=value)
 
+            if (
+                self._should_exist and host is not None and not host.may("read")
+            ):  # host is there but user isn't allowed see it
+                # TODO: This is probably the wrong Exception Type to use here.
+                # TODO: We're adressing this in CMK-13171
+                raise MKUserError(
+                    varname=None,
+                    message=f"You don't have access to this host: {value!r}",
+                    status=403,
+                )
+
             if not self._should_exist and host is not None:
                 raise self.make_error("should_not_exist", host_name=value)
 

@@ -5,6 +5,7 @@
 
 from typing import Any
 
+import mock
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
@@ -609,8 +610,10 @@ def test_update_status_host_200(
 ) -> None:
     class MockHost:
         @classmethod
-        def host(cls, *args: Any) -> bool:
-            return True
+        def host(cls, *args: Any) -> Any:
+            mock_host = mock.Mock()
+            mock_host.may = mock.Mock(return_value=True)
+            return mock_host
 
     monkeypatch.setattr("cmk.gui.fields.definitions.Host", MockHost)
 
@@ -637,8 +640,10 @@ def test_update_status_host_400(
 ) -> None:
     class MockHost:
         @classmethod
-        def host(cls, *args: Any) -> bool:
-            return True
+        def host(cls, *args: Any) -> Any:
+            mock_host = mock.Mock()
+            mock_host.may = mock.Mock(return_value=True)
+            return mock_host
 
     monkeypatch.setattr("cmk.gui.fields.definitions.Host", MockHost)
 

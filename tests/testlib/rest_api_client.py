@@ -512,7 +512,7 @@ class UserClient(RestApiClient):
 
 
 @register_client
-class HostClient(RestApiClient):
+class HostConfigClient(RestApiClient):
     domain: API_DOMAIN = "host_config"
 
     def get(
@@ -1129,13 +1129,11 @@ class GroupConfig(RestApiClient):
     def create(
         self,
         name: str,
-        alias: str | None = None,
+        alias: str,
         customer: str = "provider",
         expect_ok: bool = True,
     ) -> Response:
-        body = {"name": name}
-        if alias is not None:
-            body.update({"alias": alias})
+        body = {"name": name, "alias": alias}
         if version.is_managed_edition():
             body.update({"customer": customer})
 
@@ -1224,7 +1222,7 @@ class ClientRegistry:
     Licensing: LicensingClient
     ActivateChanges: ActivateChangesClient
     User: UserClient
-    Host: HostClient
+    HostConfig: HostConfigClient
     Folder: FolderClient
     AuxTag: AuxTagClient
     TimePeriod: TimePeriodClient

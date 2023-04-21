@@ -44,7 +44,7 @@ def service(clients: ClientRegistry) -> ServiceGroupClient:
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
 def test_required_alias_field_create(group_type: str, request: FixtureRequest) -> None:
     client = request.getfixturevalue(group_type)
-    client.create(name="RandleMcMurphy", expect_ok=False).assert_status_code(400)
+    client.create(name="RandleMcMurphy", alias=None, expect_ok=False).assert_status_code(400)
 
 
 @managedtest

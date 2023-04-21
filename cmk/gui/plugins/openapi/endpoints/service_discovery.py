@@ -70,6 +70,7 @@ DISCOVERY_PERMISSIONS = permissions.AllPerm(
         permissions.Optional(permissions.Perm("wato.service_discovery_to_ignored")),
         permissions.Optional(permissions.Perm("wato.service_discovery_to_removed")),
         permissions.Optional(permissions.Perm("wato.services")),
+        permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
     ]
 )
 
@@ -255,6 +256,7 @@ class UpdateDiscoveryPhase(BaseSchema):
                         permissions.Perm("wato.service_discovery_to_ignored"),
                         permissions.Perm("wato.service_discovery_to_undecided"),
                         permissions.Perm("wato.service_discovery_to_removed"),
+                        permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
                     ]
                 )
             ),

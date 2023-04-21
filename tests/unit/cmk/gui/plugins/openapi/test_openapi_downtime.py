@@ -1071,7 +1071,7 @@ def test_openapi_user_in_service_but_not_in_host_contact_group_regression(
     )
 
     clients.User.edit(username, contactgroups=["service_contact_group"])
-    clients.Host.edit(
+    clients.HostConfig.edit(
         host_name="heute", attributes={"contactgroups": {"groups": ["host_contact_group"]}}
     )
 

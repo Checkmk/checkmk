@@ -281,6 +281,7 @@ class PainterParameters(TypedDict, total=False):
     path_to_table: SDPath
     column_to_display: str
     columns_to_match: list[tuple[str, str]]
+    color_levels: tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
 
 
 def _make_default_painter_parameters() -> PainterParameters:

@@ -567,12 +567,14 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
 
         metric_name, normalized = normalize_perf_data(entry, check_command)
         mi, color_index = get_metric_info(metric_name, color_index)
+        unit_conversion = mi["unit"].get("conversion", lambda v: v)
+
         # https://github.com/python/mypy/issues/6462
         # new_entry = normalized
         new_entry: TranslatedMetric = {
             "orig_name": normalized["orig_name"],
-            "value": normalized["value"],
-            "scalar": normalized["scalar"],
+            "value": unit_conversion(normalized["value"]),
+            "scalar": {k: unit_conversion(v) for k, v in normalized["scalar"].items()},
             "scale": normalized["scale"],
             "auto_graph": normalized["auto_graph"],
             "title": str(mi["title"]),

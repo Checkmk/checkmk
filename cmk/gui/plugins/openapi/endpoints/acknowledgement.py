@@ -53,6 +53,7 @@ RW_PERMISSIONS = permissions.AllPerm(
                     permissions.Perm("general.see_all"),
                     permissions.Perm("bi.see_all"),
                     permissions.Perm("mkeventd.seeall"),
+                    permissions.Perm("wato.see_all_folders"),
                 ]
             )
         ),

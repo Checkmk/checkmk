@@ -115,6 +115,12 @@ PERMISSIONS = permissions.AllPerm(
 )
 
 
+def with_access_check_permission(perm: permissions.BasePerm) -> permissions.BasePerm:
+    """To check if a user can see a host, we currently need the 'wato.see_all_folders' permission.
+    Since this use is done internally only, we want to add it without documenting it."""
+    return permissions.AllPerm([perm, permissions.Ignore(permissions.Perm("wato.see_all_folders"))])
+
+
 @Endpoint(
     constructors.collection_href("host_config"),
     "cmk/create",
@@ -147,7 +153,7 @@ def create_host(params):
     etag="output",
     request_schema=request_schemas.CreateClusterHost,
     response_schema=response_schemas.HostConfigSchema,
-    permissions_required=PERMISSIONS,
+    permissions_required=with_access_check_permission(PERMISSIONS),
     query_params=[BAKE_AGENT_PARAM],
 )
 def create_cluster_host(params):
@@ -305,7 +311,7 @@ def _host_collection(
     etag="both",
     request_schema=request_schemas.UpdateNodes,
     response_schema=response_schemas.ObjectProperty,
-    permissions_required=permissions.Perm("wato.all_folders"),
+    permissions_required=with_access_check_permission(permissions.Perm("wato.all_folders")),
 )
 def update_nodes(params):
     """Update the nodes of a cluster host"""
@@ -334,7 +340,7 @@ def update_nodes(params):
     etag="both",
     request_schema=request_schemas.UpdateHost,
     response_schema=response_schemas.HostConfigSchema,
-    permissions_required=permissions.Perm("wato.all_folders"),
+    permissions_required=with_access_check_permission(permissions.Perm("wato.all_folders")),
 )
 def update_host(params):
     """Update a host"""
@@ -381,7 +387,7 @@ def update_host(params):
     error_schemas={
         400: BulkHostActionWithFailedHosts,
     },
-    permissions_required=permissions.Perm("wato.all_folders"),
+    permissions_required=with_access_check_permission(permissions.Perm("wato.all_folders")),
 )
 def bulk_update_hosts(params):
     """Bulk update hosts
@@ -443,6 +449,7 @@ def bulk_update_hosts(params):
             *PERMISSIONS.perms,
             permissions.Perm("wato.edit_hosts"),
             permissions.Perm("wato.rename_hosts"),
+            permissions.Ignore(permissions.Perm("wato.see_all_folders")),
         ]
     ),
 )
@@ -481,6 +488,8 @@ def rename_host(params):
             *PERMISSIONS.perms,
             permissions.Perm("wato.edit_hosts"),
             permissions.Perm("wato.move_hosts"),
+            permissions.Ignore(permissions.Perm("wato.see_all_folders")),
+            *PERMISSIONS.perms,
         ]
     ),
 )
@@ -516,7 +525,7 @@ def move(params):
     method="delete",
     path_params=[HOST_NAME],
     output_empty=True,
-    permissions_required=PERMISSIONS,
+    permissions_required=with_access_check_permission(PERMISSIONS),
 )
 def delete(params):
     """Delete a host"""
@@ -533,7 +542,7 @@ def delete(params):
     ".../delete",
     method="post",
     request_schema=request_schemas.BulkDeleteHost,
-    permissions_required=PERMISSIONS,
+    permissions_required=with_access_check_permission(PERMISSIONS),
     output_empty=True,
 )
 def bulk_delete(params):

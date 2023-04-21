@@ -77,6 +77,7 @@ def _link_with_uuid(
         [
             permissions.Perm("wato.all_folders"),
             permissions.Perm("wato.edit_hosts"),
+            permissions.Ignore(permissions.Perm("wato.see_all_folders")),
         ]
     ),
     output_empty=True,

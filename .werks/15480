@@ -1,0 +1,17 @@
+Title: Do not show rules of folders the user has no permission for
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1682074317
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Rules were shown to users that had no permission for the folder the rule was
+created for.
+We now hide such rules from none permitted users.
+
+Note: It was still not possible to edit such rules without permission.
+

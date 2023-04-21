@@ -6,15 +6,19 @@ def NODE = ''
 def DOCKER_TAG_DEFAULT
 def USE_OMD_PACKAGE_CACHE_DEFAULT
 def UPLOAD_PATH = ""
+def JOB_FOLDER = Jenkins.instance.getItemByFullName(currentBuild.fullProjectName)
+
 withFolderProperties{
     if(JOB_BASE_NAME == 'build-cmk-packages') {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST
         USE_OMD_PACKAGE_CACHE_DEFAULT = true
+        WIN_FOLDER = JOB_FOLDER.getParent().getParent().getFullName()
     } else {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST_TESTBUILD
         USE_OMD_PACKAGE_CACHE_DEFAULT = false
         // We don't want to mixup the daily test builds with the regular version builds
         UPLOAD_PATH = "testbuild/"
+        WIN_FOLDER = JOB_FOLDER.getParent().getFullName()
     }
 
     if(JOB_BASE_NAME == 'testbuild-cre') {
@@ -27,6 +31,8 @@ withFolderProperties{
     DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
+def WIN_PROJECT = "${WIN_FOLDER}/windows-agent-build"
+def WIN_PY_PROJECT = "${WIN_FOLDER}/Windows-Python-Build"
 def INTERNAL_UPLOAD_DEST = INTERNAL_DEPLOY_DEST + UPLOAD_PATH
 
 properties([
@@ -149,9 +155,6 @@ timeout(time: 12, unit: 'HOURS') {
                 AGENT_LIST.each { AGENT ->
                     AGENT_BUILDS['build agent ' + AGENT] = {
                         if (AGENT == 'windows') {
-                            def FOLDER = Jenkins.instance.getItemByFullName(currentBuild.fullProjectName).getParent().getParent().getFullName()
-                            def WIN_PROJECT = "${FOLDER}/windows-agent-build"
-                            def WIN_PY_PROJECT = "${FOLDER}/Windows-Python-Build"
 
                             def WIN_BUILD = build(job: WIN_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
                             copyArtifacts(

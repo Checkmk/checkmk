@@ -1586,7 +1586,7 @@ def test__perform_host_label_discovery_on_realhost(
 ) -> None:
     scenario = realhost_scenario
 
-    host_label_result = analyse_host_labels(
+    host_label_result, _kept_labels = analyse_host_labels(
         host_name=scenario.hostname,
         discovered_host_labels=discover_host_labels(
             scenario.hostname,
@@ -1656,7 +1656,7 @@ def test__perform_host_label_discovery_on_cluster(
     nodes = scenario.config_cache.nodes_of(scenario.parent)
     assert nodes is not None
 
-    host_label_result = analyse_host_labels(
+    host_label_result, _kept_labels = analyse_host_labels(
         scenario.parent,
         discovered_host_labels=discover_cluster_labels(
             nodes,

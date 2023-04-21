@@ -115,7 +115,7 @@ def automation_discovery(
         providers = make_providers(host_sections, section_plugins)
 
         if mode is not DiscoveryMode.REMOVE:
-            host_labels = analyse_host_labels(
+            host_labels, _kept_labels = analyse_host_labels(
                 host_name,
                 discovered_host_labels=discover_host_labels(
                     host_name,

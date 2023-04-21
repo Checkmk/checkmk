@@ -146,7 +146,7 @@ def _commandline_discovery_on_host(
 ) -> None:
     section.section_step("Analyse discovered host labels")
 
-    host_labels = analyse_host_labels(
+    host_labels, _kept_labels = analyse_host_labels(
         real_host_name,
         discovered_host_labels=discover_host_labels(
             real_host_name, host_label_plugins, providers=providers, on_error=on_error

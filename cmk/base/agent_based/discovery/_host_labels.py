@@ -22,7 +22,6 @@ __all__ = [
     "discover_cluster_labels",
     "discover_host_labels",
     "do_load_labels",
-    "do_save_labels",
 ]
 
 
@@ -65,15 +64,19 @@ def analyse_host_labels(
     existing_host_labels: Sequence[HostLabel],
     ruleset_matcher: RulesetMatcher,
     save_labels: bool,
-) -> QualifiedDiscovery[HostLabel]:
+) -> tuple[QualifiedDiscovery[HostLabel], Mapping[HostName, Sequence[HostLabel]]]:
     host_labels = QualifiedDiscovery[HostLabel](
         preexisting=existing_host_labels,
         current=discovered_host_labels,
         key=lambda hl: hl.label,
     )
 
+    kept_labels = list(_iter_kept_labels(host_labels))
     if save_labels:
-        do_save_labels(host_name, host_labels)
+        DiscoveredHostLabelsStore(host_name).save(
+            # TODO: serialization should move down the stack.
+            {label.name: label.to_dict() for label in kept_labels}
+        )
 
     if host_labels.new:  # what about vanished or changed?
         # Some check plugins like 'df' may discover services based on host labels.
@@ -101,18 +104,12 @@ def analyse_host_labels(
         # written to disk.
         ruleset_matcher.clear_caches()
 
-    return host_labels
+    return host_labels, {host_name: kept_labels}
 
 
 def do_load_labels(host_name: HostName) -> Sequence[HostLabel]:
     raw_label_dict = DiscoveredHostLabelsStore(host_name).load()
     return [HostLabel.from_dict(name, value) for name, value in raw_label_dict.items()]
-
-
-def do_save_labels(host_name: HostName, host_labels: QualifiedDiscovery[HostLabel]) -> None:
-    DiscoveredHostLabelsStore(host_name).save(
-        {l.name: l.to_dict() for l in _iter_kept_labels(host_labels)}
-    )
 
 
 def _iter_kept_labels(host_labels: QualifiedDiscovery[HostLabel]) -> Iterable[HostLabel]:

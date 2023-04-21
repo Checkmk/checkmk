@@ -49,6 +49,7 @@ call :build_agent_controller
 call :build_ohm
 call :build_msi
 call :set_msi_version
+call :unit_test
 call :sign_binaries
 call :deploy_to_artifacts
 

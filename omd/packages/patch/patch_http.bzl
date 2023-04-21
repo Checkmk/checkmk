@@ -3,7 +3,10 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 def patch(version_str, sha256):
     http_archive(
         name = "patch",
-        urls = ["https://ftp.gnu.org/gnu/patch/patch-" + version_str + ".tar.gz", "https://artifacts.lan.tribe29.com/repository/archives/patch-" + version_str + ".tar.gz"],
+        urls = [
+            "https://ftp.gnu.org/gnu/patch/patch-" + version_str + ".tar.gz",
+            "https://artifacts.lan.tribe29.com/repository/upstream-archives/patch-" + version_str + ".tar.gz",
+        ],
         sha256 = sha256,
         patches = [
                    '//packages/patch/patches:ed-style-01-missing-input-files.patch.dif',

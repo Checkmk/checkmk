@@ -5,7 +5,10 @@ def monitoring_plugins(version_str, sha256):
     http_archive(
         name="monitoring-plugins",
         build_file="@omd_packages//packages/monitoring-plugins:BUILD.monitoring-plugins.bazel",
-        url="https://www.monitoring-plugins.org/download/monitoring-plugins-" + version_str + ".tar.gz",
+        urls=[
+            "https://www.monitoring-plugins.org/download/monitoring-plugins-" + version_str + ".tar.gz",
+            "https://artifacts.lan.tribe29.com/repository/upstream-archives/monitoring-plugins-" + version_str + ".tar.gz",
+        ],
         sha256=sha256,
         strip_prefix="monitoring-plugins-" + version_str,
         patches=[

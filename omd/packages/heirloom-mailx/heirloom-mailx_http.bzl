@@ -6,7 +6,7 @@ def heirloommailx():
         name = "heirloom-mailx",
         urls = [
             "https://ftp.debian.org/debian/pool/main/h/heirloom-mailx/heirloom-mailx_" + HEIRLOOMMAILX_VERSION + ".orig.tar.gz",
-            "https://artifacts.lan.tribe29.com/repository/archives/heirloom-mailx_" + HEIRLOOMMAILX_VERSION + ".orig.tar.gz",
+            "https://artifacts.lan.tribe29.com/repository/upstream-archives/heirloom-mailx_" + HEIRLOOMMAILX_VERSION + ".orig.tar.gz",
         ],
         sha256 = "015ba4209135867f37a0245d22235a392b8bbed956913286b887c2e2a9a421ad",
         build_file = "@omd_packages//packages/heirloom-mailx:BUILD.bazel",

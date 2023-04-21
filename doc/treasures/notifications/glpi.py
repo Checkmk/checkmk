@@ -418,7 +418,6 @@ class TicketInterface:
 
 
 class InterfaceGLPI(TicketInterface):
-
     from xmlrpc.client import Error, Fault, ProtocolError, ResponseError, ServerProxy  # nosec
 
     urgency_map = {

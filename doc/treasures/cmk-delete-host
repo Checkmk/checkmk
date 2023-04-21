@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#Author: Andreas Boesl ab@mathias-kettner.de
+# Author: Andreas Boesl ab@mathias-kettner.de
 
 # This script
 # 1) deletes the given hosts from WATO
@@ -77,18 +77,23 @@ for hostname in sys.argv[1:]:
 
     wato_config_changed = True
     # Remove the host in WATO
-    command = "curl -s 'http://localhost/%(omd_site)s/check_mk/wato.py?mode=folder"\
-    "&_username=%(automation_user)s"\
-    "&_secret=%(automation_secret)s"\
-    "&_do_actions=yes"\
-    "&_do_confirm=yes"\
-    "&_delete_host=%(hostname)s"\
-    "&_transid=-1"\
-    "&folder=%(wato_folder)s' 1>/dev/null" % { "automation_user": automation_user,
-                                   "automation_secret": automation_secret,
-                                   "omd_site": omd_site,
-                                   "hostname": hostname,
-                                   "wato_folder": wato_folder }
+    command = (
+        "curl -s 'http://localhost/%(omd_site)s/check_mk/wato.py?mode=folder"
+        "&_username=%(automation_user)s"
+        "&_secret=%(automation_secret)s"
+        "&_do_actions=yes"
+        "&_do_confirm=yes"
+        "&_delete_host=%(hostname)s"
+        "&_transid=-1"
+        "&folder=%(wato_folder)s' 1>/dev/null"
+        % {
+            "automation_user": automation_user,
+            "automation_secret": automation_secret,
+            "omd_site": omd_site,
+            "hostname": hostname,
+            "wato_folder": wato_folder,
+        }
+    )
 
     os.system(command)  # nosec
 

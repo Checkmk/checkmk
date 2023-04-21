@@ -876,7 +876,14 @@ class Ruleset:
         return self.rulespec.valuespec
 
     def help(self) -> None | str | HTML:
-        return self.rulespec.help
+        try:
+            return self.rulespec.help
+        except NameError:
+            # This prevents the Ruleset page (e.g. 'Service monitoring rules')
+            # from crashing if the module cannot be loaded due to missing
+            # imports. This can be the case with external packages such as MKPs
+            # from the exchange.
+            return None
 
     def title(self) -> str | None:
         return self.rulespec.title

@@ -1,0 +1,15 @@
+Title: ruleset pages crash due to bugs in single rulesets
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1682066197
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Ruleset pages such as "Service monitoring rules" would crash in the event that
+there is a bug in one (or more) of the listed rulesets. This can be the case
+with external packages, e.g. from the Checkmk Exchange. This has been fixed:
+the ruleset page can be loaded and searched.

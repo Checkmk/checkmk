@@ -539,7 +539,7 @@ class HostConfigClient(RestApiClient):
     def get_all(self, effective_attributes: bool = False, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
-            "/domain-types/host_config/collections/all",
+            url=f"/domain-types/{self.domain}/collections/all",
             query_params={"effective_attributes": "true" if effective_attributes else "false"},
             expect_ok=expect_ok,
         )
@@ -651,6 +651,17 @@ class HostConfigClient(RestApiClient):
         return self.request(
             "delete",
             url=f"/objects/{self.domain}/{host_name}",
+        )
+
+    def move(self, host_name: str, target_folder: str, expect_ok: bool = True) -> Response:
+        etag = self.get(host_name).headers["ETag"]
+
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{host_name}/actions/move/invoke",
+            body={"target_folder": target_folder},
+            expect_ok=expect_ok,
+            headers={"IF-Match": etag, "Accept": "application/json"},
         )
 
 

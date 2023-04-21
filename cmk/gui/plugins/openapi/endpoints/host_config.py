@@ -62,7 +62,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
-from cmk.gui.plugins.openapi.utils import EXT, problem, serve_json
+from cmk.gui.plugins.openapi.utils import EXT, problem, ProblemException, serve_json
 from cmk.gui.valuespec import Hostname
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
@@ -515,6 +515,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     method="post",
     path_params=[HOST_NAME],
     etag="both",
+    additional_status_codes=[403],
     request_schema=request_schemas.MoveHost,
     response_schema=response_schemas.HostConfigSchema,
     permissions_required=permissions.AllPerm(
@@ -536,6 +537,28 @@ def move(params: Mapping[str, Any]) -> Response:
     _require_host_etag(host)
     current_folder = host.folder()
     target_folder: CREFolder = params["body"]["target_folder"]
+
+    # Here we make sure the user has write access to the destination folder,
+    # the source folder and the host itself. This should be handled in the schema.
+    # TODO: We're addressing this in CMK-13171
+
+    objs_not_part_of_the_user_contact_group = []
+    if not current_folder.is_contact(user):
+        objs_not_part_of_the_user_contact_group.append(str(current_folder))
+
+    if not target_folder.is_contact(user):
+        objs_not_part_of_the_user_contact_group.append(str(target_folder))
+
+    if not host.is_contact(user):
+        objs_not_part_of_the_user_contact_group.append(str(host))
+
+    if objs_not_part_of_the_user_contact_group:
+        raise ProblemException(
+            status=403,
+            title="Permission denied",
+            detail=f"The user doesn't belong to the required contact groups of the following objects to perform this action: {', '.join(objs_not_part_of_the_user_contact_group)}",
+        )
+
     if target_folder is current_folder:
         return problem(
             status=400,

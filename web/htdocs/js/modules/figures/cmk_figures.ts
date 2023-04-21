@@ -1,17 +1,18 @@
 import * as d3 from "d3";
 import crossfilter from "crossfilter2";
 import * as utils from "../utils";
+import {CMKAjaxReponse} from "types";
 
 export interface ElementSize {
-    width: number | null;
-    height: number | null;
+    width: number;
+    height: number;
 }
 
 // The FigureRegistry holds all figure class templates
 class FigureRegistry<T extends FigureData> {
     private _figures: Record<
         string,
-        new (div_selector, fixed_size?: any) => FigureBase<T>
+        new (div_selector: string, fixed_size?: any) => FigureBase<T>
     >;
 
     constructor() {
@@ -19,14 +20,17 @@ class FigureRegistry<T extends FigureData> {
     }
 
     register(
-        figure_class: new (div_selector, fixed_size?: any) => FigureBase<T>
+        figure_class: new (
+            div_selector: string,
+            fixed_size?: any
+        ) => FigureBase<T>
     ): void {
         this._figures[figure_class.prototype.ident()] = figure_class;
     }
 
     get_figure(
         ident: string
-    ): new (div_selector, fixed_size?: any) => FigureBase<T> {
+    ): new (div_selector: string, fixed_size?: any) => FigureBase<T> {
         return this._figures[ident];
     }
 }
@@ -48,7 +52,7 @@ class Scheduler {
     _last_update: number;
     _suspend_updates_until: number;
 
-    constructor(scheduled_function, update_interval) {
+    constructor(scheduled_function: () => void, update_interval: number) {
         this._scheduled_function = scheduled_function;
         this._update_interval = update_interval;
         this._enabled = false;
@@ -61,7 +65,7 @@ class Scheduler {
         return this._update_interval;
     }
 
-    set_update_interval(seconds) {
+    set_update_interval(seconds: number) {
         this._update_interval = seconds;
     }
 
@@ -73,12 +77,12 @@ class Scheduler {
         this._enabled = false;
     }
 
-    suspend_for(seconds) {
+    suspend_for(seconds: number) {
         this._suspend_updates_until =
             Math.floor(new Date().getTime() / 1000) + seconds;
     }
 
-    update_if_older_than(seconds) {
+    update_if_older_than(seconds: number) {
         const now = Math.floor(new Date().getTime() / 1000);
         if (now > this._last_update + seconds) {
             this._scheduled_function();
@@ -89,8 +93,7 @@ class Scheduler {
 
     force_update() {
         this._scheduled_function();
-        const now = Math.floor(new Date().getTime() / 1000);
-        this._last_update = now;
+        this._last_update = Math.floor(new Date().getTime() / 1000);
     }
 
     _schedule() {
@@ -107,42 +110,44 @@ class Scheduler {
     }
 }
 
-interface BodyContent {
-    interval: number | (() => void)[];
+interface FetchOperationsBodyContent {
+    interval: number;
+    fetch_in_progress?: boolean;
+    last_update?: number;
+    active?: boolean;
 }
-
-interface URLBody {
-    body: BodyContent;
-}
-
-interface URL {
-    url: URLBody;
-}
-
+type FetchHooksBodyContent = ((data?: any) => void)[];
 // Allows scheduling of multiple url calls
 // Registered hooks will be call on receiving data
 export class MultiDataFetcher {
     scheduler: Scheduler;
-    _fetch_operations: URL;
-    _fetch_hooks: URL;
+    _fetch_operations: Record<
+        string,
+        Record<string, FetchOperationsBodyContent>
+    >;
+    _fetch_hooks: Record<string, Record<string, FetchHooksBodyContent>>;
 
     constructor() {
         this.scheduler = new Scheduler(() => this._schedule_operations(), 1);
-        this._fetch_operations = {} as URL;
-        this._fetch_hooks = {} as URL;
+        this._fetch_operations = {};
+        this._fetch_hooks = {};
     }
 
     reset() {
         // Urls to call
         // {"url": {"body": {"interval": 10}}
-        this._fetch_operations = {} as URL;
+        this._fetch_operations = {};
 
         // Hooks to call when receiving data
         // {"url": {"body": [funcA, funcB]}}
-        this._fetch_hooks = {} as URL;
+        this._fetch_hooks = {};
     }
 
-    subscribe_hook(post_url, post_body, subscriber_func) {
+    subscribe_hook(
+        post_url: string,
+        post_body: string,
+        subscriber_func: (data?: any) => void
+    ) {
         // New url and body
         if (this._fetch_hooks[post_url] == undefined) {
             this._fetch_hooks[post_url] = {};
@@ -158,7 +163,7 @@ export class MultiDataFetcher {
         this._fetch_hooks[post_url][post_body].push(subscriber_func);
     }
 
-    add_fetch_operation(post_url, post_body, interval) {
+    add_fetch_operation(post_url: string, post_body: string, interval: number) {
         if (this._fetch_operations[post_url] == undefined)
             this._fetch_operations[post_url] = {};
 
@@ -166,7 +171,7 @@ export class MultiDataFetcher {
             this._default_operation_options(interval);
     }
 
-    _default_operation_options(interval) {
+    _default_operation_options(interval: number) {
         return {
             active: true, // May be used to temporarily disable the operation
             last_update: 0, // Last time the fetch operation was sent (not received)
@@ -184,19 +189,20 @@ export class MultiDataFetcher {
         }
     }
 
-    _process_operation(post_url, post_body) {
+    _process_operation(post_url: string, post_body: string) {
         const now = Math.floor(new Date().getTime() / 1000);
+
         const operation = this._fetch_operations[post_url][post_body];
         if (!operation.active || operation.fetch_in_progress) return;
 
-        if (operation.last_update + operation.interval > now) return;
+        if (operation.last_update! + operation.interval > now) return;
 
         operation.last_update = now;
         operation.fetch_in_progress = true;
         this._fetch(post_url, post_body);
     }
 
-    _fetch(post_url, post_body) {
+    _fetch(post_url: string, post_body: string) {
         // TODO: improve error handling, d3js supports promises
         d3.json(encodeURI(post_url), {
             credentials: "include",
@@ -206,11 +212,19 @@ export class MultiDataFetcher {
                 "Content-type": "application/x-www-form-urlencoded",
             },
         }).then(response =>
-            this._fetch_callback(post_url, post_body, response)
+            this._fetch_callback(
+                post_url,
+                post_body,
+                response as CMKAjaxReponse<{figure_response: any}>
+            )
         );
     }
 
-    _fetch_callback(post_url, post_body, api_response) {
+    _fetch_callback(
+        post_url: string,
+        post_body: string,
+        api_response: CMKAjaxReponse<{figure_response: any}>
+    ) {
         const response = api_response.result;
         const data = response.figure_response;
 
@@ -221,13 +235,16 @@ export class MultiDataFetcher {
             this._fetch_operations[post_url][post_body] == undefined
         )
             return;
+
         this._fetch_operations[post_url][post_body].last_update = now;
         this._fetch_operations[post_url][post_body].fetch_in_progress = false;
 
         // Inform subscribers
-        this._fetch_hooks[post_url][post_body].forEach(subscriber_func => {
-            subscriber_func(data);
-        });
+        this._fetch_hooks[post_url][post_body].forEach(
+            (subscriber_func: (data: any) => void) => {
+                subscriber_func(data);
+            }
+        );
     }
 }
 
@@ -247,36 +264,40 @@ interface ELementMargin {
 }
 
 export interface FigureData {
-    data;
-    plot_definitions;
+    //TODO: specify the types
+    data: any;
+    plot_definitions: any;
 }
 
 export abstract class FigureBase<T extends FigureData> {
-    _div_selector;
-    _div_selection: d3.Selection<HTMLDivElement, unknown, any, any>;
-    svg;
-    plot: d3.Selection<SVGElement, unknown, any, any>;
+    _div_selector: string;
+    _div_selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>;
+    svg: d3.Selection<SVGSVGElement, unknown, d3.BaseType, unknown> | null;
+    plot: d3.Selection<SVGGElement, unknown, any, any>;
     _fixed_size: string | ElementSize | null;
     margin: ELementMargin;
     _fetch_start: number;
     _fetch_data_latency: number;
-    _data_pre_processor_hooks;
-    _pre_render_hooks: ((data?) => void)[];
-    _post_render_hooks: ((data?) => void)[];
+    _data_pre_processor_hooks: ((data?: any) => T)[];
+    _pre_render_hooks: ((data?: any) => void)[];
+    _post_render_hooks: ((data?: any) => void)[];
     _post_url: string;
     _post_body: string;
-    _dashlet_spec;
+    _dashlet_spec: any; //TODO: specify this type starting from DashletConfig
     _data: T;
-    _crossfilter;
+    _crossfilter: any; //TODO: add @types/crossfilter
     scheduler: Scheduler;
-    figure_size;
-    plot_size;
+    figure_size!: {width: number; height: number};
+    plot_size!: {width: number; height: number};
 
     ident() {
         return "figure_base_class";
     }
 
-    constructor(div_selector, fixed_size: any = null) {
+    constructor(
+        div_selector: string,
+        fixed_size: undefined | string | ElementSize | null = null
+    ) {
         this._div_selector = div_selector; // The main container
         this._div_selection = d3.select(this._div_selector); // The d3-seletion of the main container
 
@@ -325,20 +346,20 @@ export abstract class FigureBase<T extends FigureData> {
 
     abstract getEmptyData(): T;
 
-    initialize(with_debugging) {
+    initialize(with_debugging?: boolean) {
         if (with_debugging) this._add_scheduler_debugging();
         this.show_loading_image();
     }
 
-    add_plot_definition(plot_definition) {
+    add_plot_definition(plot_definition: any) {
         this._data.plot_definitions.push(plot_definition);
     }
 
-    add_data(data) {
+    add_data(data: any) {
         this._data.data = this._data.data.concat(data);
     }
 
-    remove_plot_definition(plot_definition) {
+    remove_plot_definition(plot_definition: any) {
         const plot_id = plot_definition.id;
         for (const idx in this._data.plot_definitions) {
             const plot_def = this._data.plot_definitions[idx];
@@ -359,7 +380,7 @@ export abstract class FigureBase<T extends FigureData> {
                 height: this._div_selection.node().parentNode.offsetHeight,
             };
         }
-        this.figure_size = new_size;
+        this.figure_size = new_size as ElementSize;
         this.plot_size = {
             width:
                 this.figure_size.width - this.margin.left - this.margin.right,
@@ -381,29 +402,29 @@ export abstract class FigureBase<T extends FigureData> {
         this._div_selection.selectAll("div.loading_img").remove();
     }
 
-    subscribe_data_pre_processor_hook(func) {
+    subscribe_data_pre_processor_hook(func: (_data?: any) => any) {
         this._data_pre_processor_hooks.push(func);
     }
 
-    unsubscribe_data_pre_processor_hook(func) {
+    unsubscribe_data_pre_processor_hook(func: (_data?: any) => any) {
         const idx = this._data_pre_processor_hooks.indexOf(func);
         this._data_pre_processor_hooks.splice(idx, 1);
     }
 
-    subscribe_pre_render_hook(func) {
+    subscribe_pre_render_hook(func: (_data?: any) => void) {
         this._pre_render_hooks.push(func);
     }
 
-    unsubscribe_pre_render_hook(func) {
+    unsubscribe_pre_render_hook(func: (_data?: any) => void) {
         const idx = this._pre_render_hooks.indexOf(func);
         this._pre_render_hooks.splice(idx, 1);
     }
 
-    subscribe_post_render_hook(func) {
+    subscribe_post_render_hook(func: (data?: any) => void) {
         this._post_render_hooks.push(func);
     }
 
-    unsubscribe_post_render_hook(func) {
+    unsubscribe_post_render_hook(func: (data?: T) => void) {
         const idx = this._post_render_hooks.indexOf(func);
         this._post_render_hooks.splice(idx, 1);
     }
@@ -412,11 +433,11 @@ export abstract class FigureBase<T extends FigureData> {
         return 10;
     }
 
-    set_dashlet_spec(dashlet_spec) {
+    set_dashlet_spec(dashlet_spec: any) {
         this._dashlet_spec = dashlet_spec;
     }
 
-    set_post_url_and_body(url, body = "") {
+    set_post_url_and_body(url: string, body = "") {
         this._post_url = url;
         this._post_body = body;
     }
@@ -442,14 +463,18 @@ export abstract class FigureBase<T extends FigureData> {
                 "Content-type": "application/x-www-form-urlencoded",
             },
         })
-            .then(json_data => this._process_api_response(json_data))
+            .then(json_data =>
+                this._process_api_response(
+                    json_data as CMKAjaxReponse<{figure_response: T}>
+                )
+            )
             .catch(() => {
                 this._show_error_info("Error fetching data", "error");
                 this.remove_loading_image();
             });
     }
 
-    _process_api_response(api_response) {
+    _process_api_response(api_response: CMKAjaxReponse<{figure_response: T}>) {
         // Current api data format
         // {"result_code": 0, "result": {
         //      "figure_response": {
@@ -458,7 +483,10 @@ export abstract class FigureBase<T extends FigureData> {
         //      },
         // }}
         if (api_response.result_code != 0) {
-            this._show_error_info(api_response.result, api_response.severity);
+            this._show_error_info(
+                String(api_response.result),
+                api_response.severity
+            );
             return;
         }
         this._clear_error_info();
@@ -467,7 +495,7 @@ export abstract class FigureBase<T extends FigureData> {
             +(new Date().getDate() - this._fetch_start) / 1000;
     }
 
-    process_data(data) {
+    process_data(data: T) {
         this._data_pre_processor_hooks.forEach(pre_processor_func => {
             data = pre_processor_func(data);
         });
@@ -478,7 +506,7 @@ export abstract class FigureBase<T extends FigureData> {
         this._call_post_render_hooks(data);
     }
 
-    _show_error_info(error_info, div_class) {
+    _show_error_info(error_info: string, div_class: string) {
         this._div_selection
             .selectAll("div#figure_error")
             .data([null])
@@ -496,16 +524,16 @@ export abstract class FigureBase<T extends FigureData> {
         this.svg.style("display", null);
     }
 
-    _call_pre_render_hooks(data) {
+    _call_pre_render_hooks(data: T) {
         this._pre_render_hooks.forEach(hook => hook(data));
     }
 
-    _call_post_render_hooks(data) {
+    _call_post_render_hooks(data: T) {
         this._post_render_hooks.forEach(hook => hook(data));
     }
 
     // Triggers data update mechanics in a figure, e.g. store some data from response
-    update_data(data) {
+    update_data(data: T) {
         this._data = data;
     }
 
@@ -549,20 +577,19 @@ export abstract class FigureBase<T extends FigureData> {
             .on("click", () => this.scheduler.force_update());
     }
 
-    render_title(title, title_url) {
+    render_title(title: undefined | string, title_url: string) {
         if (!this.svg) return;
-        title = title ? [{title: title, url: title_url}] : [];
-
+        const renderedTitle = title ? [{title: title, url: title_url}] : [];
         let title_component = this.svg
-            .selectAll(".title")
-            .data(title)
+            .selectAll<SVGElement, unknown>(".title")
+            .data(renderedTitle)
             .join("g")
             .classed("title", true);
 
         const highlight_container = this._dashlet_spec.show_title == true;
 
         title_component
-            .selectAll("rect")
+            .selectAll<SVGRectElement, unknown>("rect")
             .data(d => [d])
             .join("rect")
             .attr("x", 0)
@@ -572,15 +599,16 @@ export abstract class FigureBase<T extends FigureData> {
             .classed(highlight_container ? "highlighted" : "", true);
 
         if (title_url) {
+            //@ts-ignore
             title_component = title_component
-                .selectAll("a")
+                .selectAll<HTMLAnchorElement, unknown>("a")
                 .data(d => [d])
                 .join("a")
                 .attr("xlink:href", d => d.url || "#");
         }
 
         const text_element = title_component
-            .selectAll("text")
+            .selectAll<SVGTextElement, unknown>("text")
             .data(d => [d])
             .join("text")
             .text(d => d.title)
@@ -601,7 +629,7 @@ export abstract class FigureBase<T extends FigureData> {
             );
         }
 
-        text_element.each((d, idx, nodes) => {
+        text_element.each((_d, idx, nodes) => {
             this._svg_text_overflow_ellipsis(
                 nodes[idx],
                 this.figure_size.width,
@@ -616,13 +644,17 @@ export abstract class FigureBase<T extends FigureData> {
      * @param {number} width - Max width for the text/tspan element
      * @param {number} padding - Padding for the text/tspan element
      */
-    _svg_text_overflow_ellipsis(node, width, padding) {
+    _svg_text_overflow_ellipsis(
+        node: SVGTextElement | SVGTSpanElement,
+        width: number,
+        padding: number
+    ) {
         let length = node.getComputedTextLength();
         if (length <= width - padding) return;
 
         const node_sel = d3.select(node);
         let text = node_sel.text();
-        d3.select(node.parentNode)
+        d3.select(node.parentNode as HTMLElement)
             .selectAll("title")
             .data(() => [text])
             .join("title")
@@ -639,6 +671,8 @@ export abstract class FigureBase<T extends FigureData> {
 
     get_scale_render_function() {
         // Create uniform behaviour with Graph dashlets: Display no unit at y-axis if value is 0
+        //this function might call itself forever!?
+        //@ts-ignore
         const f = render_function => v =>
             Math.abs(v) < 10e-16 ? "0" : render_function(v);
         if (this._data.plot_definitions.length > 0)
@@ -653,7 +687,7 @@ export interface TitledFigureData extends FigureData {
 }
 
 export class TextFigure extends FigureBase<TitledFigureData> {
-    constructor(div_selector, fixed_size = null) {
+    constructor(div_selector: string, fixed_size: ElementSize | null) {
         super(div_selector, fixed_size);
         this.margin = {top: 0, right: 0, bottom: 0, left: 0};
     }
@@ -662,7 +696,7 @@ export class TextFigure extends FigureBase<TitledFigureData> {
         return getEmptyBasicFigureData();
     }
 
-    initialize(debug) {
+    initialize(debug?: boolean) {
         FigureBase.prototype.initialize.call(this, debug);
         this.svg = this._div_selection.append("svg");
         this.plot = this.svg.append("g");
@@ -673,9 +707,10 @@ export class TextFigure extends FigureBase<TitledFigureData> {
             this.margin.top = 22; // magic number: title height
         }
         FigureBase.prototype.resize.call(this);
-        this.svg
-            .attr("width", this.figure_size.width)
-            .attr("height", this.figure_size.height);
+        this.svg!.attr("width", this.figure_size.width).attr(
+            "height",
+            this.figure_size.height
+        );
         this.plot.attr(
             "transform",
             "translate(" + this.margin.left + "," + this.margin.top + ")"
@@ -695,7 +730,8 @@ export function calculate_domain(data: {value: number}): [number, number] {
     return [lower + upper * (1 - 1 / 0.95), upper / 0.95];
 }
 
-export function adjust_domain(domain, metrics) {
+type Domain = [number, number];
+export function adjust_domain(domain: Domain, metrics: any): Domain {
     let [dmin, dmax] = domain;
 
     if (metrics.max != null && metrics.max <= dmax) dmax = metrics.max;
@@ -703,7 +739,7 @@ export function adjust_domain(domain, metrics) {
     return [dmin, dmax];
 }
 
-export function clamp(value, domain) {
+export function clamp(value: number, domain: Domain) {
     return Math.min(Math.max(value, domain[0]), domain[1]);
 }
 
@@ -713,7 +749,22 @@ export type Levels = {
     style: string;
 };
 
-export function make_levels(domain, bounds): [Levels, Levels, Levels] | [] {
+interface _Metric {
+    bounds: Bounds;
+    unit: any;
+}
+
+interface Bounds {
+    warn: null | number;
+    crit: null | number;
+    min: null | number;
+    max: null | number;
+}
+
+export function make_levels(
+    domain: Domain,
+    bounds: Bounds
+): [Levels, Levels, Levels] | [] {
     let dmin = domain[0];
     const dmax = domain[1];
     if (bounds.warn == null || bounds.crit == null) return [];
@@ -735,10 +786,10 @@ export function make_levels(domain, bounds): [Levels, Levels, Levels] | [] {
 
 // Base class for dc.js based figures (using crossfilter)
 export class DCFigureBase extends FigureBase<FigureData> {
-    _graph_group;
-    _dc_chart;
+    _graph_group: any;
+    _dc_chart: any;
 
-    constructor(div_selector, crossfilter, graph_group) {
+    constructor(div_selector: string, crossfilter: any, graph_group: any) {
         super(div_selector);
         this._crossfilter = crossfilter; // Shared dataset
         this._graph_group = graph_group; // Shared group among graphs
@@ -754,14 +805,26 @@ export class DCFigureBase extends FigureBase<FigureData> {
     }
 }
 
+interface FigureTooltipElementSize {
+    width: null | number;
+    height: null | number;
+}
+
 // Class which handles the display of a tooltip
 // It generates basic tooltips and handles its correct positioning
 export class FigureTooltip {
-    _tooltip;
-    figure_size: ElementSize;
-    plot_size: ElementSize;
+    _tooltip: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>;
+    figure_size: FigureTooltipElementSize;
+    plot_size: FigureTooltipElementSize;
 
-    constructor(tooltip_selection) {
+    constructor(
+        tooltip_selection: d3.Selection<
+            HTMLDivElement,
+            unknown,
+            d3.BaseType,
+            unknown
+        >
+    ) {
         this._tooltip = tooltip_selection;
         this._tooltip
             .style("opacity", 0)
@@ -771,20 +834,26 @@ export class FigureTooltip {
         this.plot_size = {width: null, height: null};
     }
 
-    update_sizes(figure_size, plot_size) {
+    update_sizes(
+        figure_size: FigureTooltipElementSize,
+        plot_size: FigureTooltipElementSize
+    ) {
         this.figure_size = figure_size;
         this.plot_size = plot_size;
     }
 
-    update_position(event) {
+    update_position(event: MouseEvent) {
         if (!this.active()) return;
 
         const tooltip_size = {
-            width: this._tooltip.node().offsetWidth,
-            height: this._tooltip.node().offsetHeight,
+            width: this._tooltip.node()!.offsetWidth,
+            height: this._tooltip.node()!.offsetHeight,
         };
 
-        const [x, y] = d3.pointer(event, event.target.closest("svg"));
+        const [x, y] = d3.pointer(
+            event,
+            (event.target as HTMLDivElement).closest("svg")
+        );
 
         const is_at_right_border =
             event.pageX >= document.body.clientWidth - tooltip_size.width;
@@ -806,7 +875,7 @@ export class FigureTooltip {
             .style("opacity", 1);
     }
 
-    add_support(node) {
+    add_support(node: SVGGElement) {
         const element = d3.select(node);
         element
             .on("mouseover", event => this._mouseover(event))
@@ -815,7 +884,7 @@ export class FigureTooltip {
     }
 
     activate() {
-        d3.select(this._tooltip.node().closest("div.dashlet")).style(
+        d3.select(this._tooltip.node()!.closest("div.dashlet")).style(
             "z-index",
             "99"
         );
@@ -823,7 +892,7 @@ export class FigureTooltip {
     }
 
     deactivate() {
-        d3.select(this._tooltip.node().closest("div.dashlet")).style(
+        d3.select(this._tooltip.node()!.closest("div.dashlet")).style(
             "z-index",
             ""
         );
@@ -834,15 +903,15 @@ export class FigureTooltip {
         return this._tooltip.style("display") != "none";
     }
 
-    _mouseover(event) {
-        const node_data = d3.select(event.target).datum();
+    _mouseover(event: MouseEvent) {
+        const node_data = d3.select(event.target as HTMLDivElement).datum();
         // @ts-ignore
         if (node_data == undefined || node_data.tooltip == undefined) return;
         this.activate();
     }
 
-    _mousemove(event) {
-        const node_data = d3.select(event.target).datum();
+    _mousemove(event: MouseEvent) {
+        const node_data = d3.select(event.target as HTMLDivElement).datum();
         // @ts-ignore
         if (node_data == undefined || node_data.tooltip == undefined) return;
         // @ts-ignore
@@ -850,9 +919,16 @@ export class FigureTooltip {
         this.update_position(event);
     }
 
-    _mouseleave(_event) {
+    _mouseleave(_event: MouseEvent) {
         this.deactivate();
     }
+}
+
+interface StateComponentOptions {
+    css_class: string;
+    label: string;
+    visible: boolean;
+    font_size?: number;
 }
 
 /**
@@ -865,16 +941,19 @@ export class FigureTooltip {
  * @param {string} options.font_size - Optional font size
  */
 // Figure which inherited from FigureBase. Needs access to svg and size
-export function state_component(figurebase, options) {
+export function state_component(
+    figurebase: FigureBase<FigureData>,
+    options: StateComponentOptions
+) {
     // TODO: use figurebase.svg as first parameter and move size to options
     if (!options.visible) {
-        figurebase.svg.selectAll(".state_component").remove();
+        figurebase.svg!.selectAll(".state_component").remove();
         return;
     }
     //hard fix for the moment
     const font_size = options.font_size ? options.font_size : 14;
-    const state_component = figurebase.svg
-        .selectAll(".state_component")
+    const state_component = figurebase
+        .svg!.selectAll(".state_component")
         .data([options])
         .join("g")
         .classed("state_component", true)
@@ -911,7 +990,7 @@ export function state_component(figurebase, options) {
         .text(d => d.label);
 }
 
-export function renderable_value(value, domain, plot) {
+export function renderable_value(value: any, _domain: Domain, plot: any) {
     const formatter = plot_render_function(plot);
     return {
         ...split_unit(formatter(value.value)),
@@ -921,7 +1000,7 @@ export function renderable_value(value, domain, plot) {
 
 // Adhoc hack to extract the unit from a formatted string, which has units
 // Once we migrate metric system to the frontend drop this
-export function split_unit(formatted_value) {
+export function split_unit(formatted_value?: string) {
     if (!formatted_value) return {};
     // Separated by space, most rendered quantities
     const splitted_text = formatted_value.split(" ");
@@ -936,28 +1015,36 @@ export function split_unit(formatted_value) {
     return {value: formatted_value, unit: ""};
 }
 
-export function getIn(object, ...args) {
+export function getIn(object: any, ...args: any[]) {
     return args.reduce((obj, level) => obj && obj[level], object);
 }
 
-export function get_function(render_string) {
+export function get_function(render_string: string) {
     return new Function(`"use strict"; return ${render_string}`)();
 }
 
-export function plot_render_function(plot) {
+export function plot_render_function(plot: any) {
     const js_render = getIn(plot, "metric", "unit", "js_render");
     if (js_render) return get_function(js_render);
+    //TODO: replace this function from string with a better solution
     return get_function(
         "function(v) { return cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 2, true); }"
     );
 }
 
-export function svc_status_css(paint, params) {
+export function svc_status_css(paint: string, params: any) {
     const status_cls =
         getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";
     if (status_cls.endsWith("0") && getIn(params, "status") === "not_ok")
         return "";
     return status_cls;
+}
+
+interface BackgroundStatueOptions {
+    size?: {width: number; height: number};
+    path_callback?: (path: d3.Path) => void;
+    css_class: string;
+    visible: boolean;
 }
 
 /**
@@ -978,13 +1065,16 @@ export function svc_status_css(paint, params) {
  * @param {string} options.css_class - Css classes to append to the background
  * @param {boolean} options.visible - Whether to draw the background at all
  */
-export function background_status_component(selection, options) {
+export function background_status_component(
+    selection: d3.Selection<SVGGElement, unknown, d3.BaseType, unknown>,
+    options: BackgroundStatueOptions
+) {
     const data = options.visible ? [null] : [];
 
     const path_callback =
         options.path_callback ||
         function (path) {
-            path.rect(0, 0, options.size.width, options.size.height);
+            path.rect(0, 0, options.size!.width, options.size!.height);
         };
 
     const background_path = d3.path();
@@ -996,6 +1086,17 @@ export function background_status_component(selection, options) {
         .join(enter => enter.insert("path", ":first-child"))
         .attr("class", `status_background ${options.css_class}`)
         .attr("d", background_path.toString());
+}
+
+interface MetricValueComponentOptions {
+    font_size?: number;
+    visible?: boolean;
+    value: {
+        url: string;
+        unit?: string;
+        value?: string;
+    };
+    position: {x: number; y: number};
 }
 
 /**
@@ -1012,8 +1113,11 @@ export function background_status_component(selection, options) {
  * @param {number} options.font_size - Size of the font, clamped to [12, 50]
  * @param {boolean} options.visible - Whether to draw the value at all
  */
-export function metric_value_component(selection, options) {
-    const font_size = clamp(options.font_size, [12, 50]);
+export function metric_value_component(
+    selection: d3.Selection<SVGGElement, unknown, d3.BaseType, unknown>,
+    options: MetricValueComponentOptions
+) {
+    const font_size = clamp(options.font_size!, [12, 50]);
     const data = options.visible ? [options.value] : [];
 
     const link = selection
@@ -1026,7 +1130,7 @@ export function metric_value_component(selection, options) {
         .selectAll("text")
         .data(d => [d])
         .join("text")
-        .text(d => d.value)
+        .text(d => String(d.value))
         .attr("x", options.position.x)
         .attr("y", options.position.y)
         .attr("text-anchor", "middle")
@@ -1040,10 +1144,16 @@ export function metric_value_component(selection, options) {
         .join("tspan")
         .style("font-size", font_size / 2 + "px")
         .style("font-weight", "lighter")
-        .text(d => d.unit);
+        .text(d => String(d.unit));
     if (options.value.unit !== "%") {
         unit.attr("dx", font_size / 6 + "px").attr("dy", font_size / 8 + "px");
     }
+}
+
+interface BigCenteredTextOptions {
+    font_size?: number;
+    visible?: boolean;
+    position?: {y?: number};
 }
 
 /**
@@ -1063,8 +1173,8 @@ export function metric_value_component(selection, options) {
  * * visible
  */
 export function metric_value_component_options_big_centered_text(
-    size,
-    options
+    size: ElementSize,
+    options: BigCenteredTextOptions
 ) {
     if (options == undefined) {
         options = {};

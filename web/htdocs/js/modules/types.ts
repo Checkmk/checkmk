@@ -1,7 +1,7 @@
 export interface CMKAjaxReponse<Result> {
     result_code: 0 | 1;
     result: Result;
-    serverity: "success" | "error";
+    severity: "success" | "error";
 }
 
 export type PartialK<T, K extends PropertyKey = PropertyKey> = Partial<

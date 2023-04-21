@@ -48,7 +48,12 @@ from cmk.base.api.agent_based.value_store import load_host_value_store, ValueSto
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
 
-from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
+from ._host_labels import (
+    analyse_host_labels,
+    discover_cluster_labels,
+    discover_host_labels,
+    do_load_labels,
+)
 from .autodiscovery import _Transition, get_host_services
 from .utils import QualifiedDiscovery
 
@@ -98,7 +103,16 @@ def get_check_preview(
 
     host_labels = analyse_host_labels(
         host_name,
-        discovered_host_labels=discover_host_labels(
+        discovered_host_labels=discover_cluster_labels(
+            config_cache.nodes_of(host_name) or (),
+            host_label_plugins,
+            providers=providers,
+            on_error=on_error,
+            load_labels=True,
+            save_labels=False,
+        )
+        if config_cache.is_cluster(host_name)
+        else discover_host_labels(
             host_name,
             host_label_plugins,
             providers=providers,

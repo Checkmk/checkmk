@@ -666,7 +666,8 @@ class DiscoveryPageRenderer:
 
     def _show_discovery_details(self, discovery_result: DiscoveryResult, api_request: dict) -> None:
         if not discovery_result.check_table:
-            self._show_discovery_empty(discovery_result, api_request)
+            if not discovery_result.is_active() and self._host.is_cluster():
+                self._show_empty_cluster_hint()
             return
 
         if self._source_failed(discovery_result.sources) and self._is_first_attempt(api_request):
@@ -714,24 +715,18 @@ class DiscoveryPageRenderer:
             html.hidden_fields()
             html.end_form()
 
-    def _show_discovery_empty(self, discovery_result: DiscoveryResult, api_request: dict) -> None:
-        if discovery_result.is_active():
-            return
-
-        if self._host.is_cluster():
-            html.br()
-            url = folder_preserving_link(
-                [("mode", "edit_ruleset"), ("varname", "clustered_services")]
+    @staticmethod
+    def _show_empty_cluster_hint() -> None:
+        html.br()
+        url = folder_preserving_link([("mode", "edit_ruleset"), ("varname", "clustered_services")])
+        html.show_message(
+            _(
+                "Could not find any service for your cluster. You first need to "
+                "specify which services of your nodes shal be added to the "
+                'cluster. This is done using the <a href="%s">%s</a> ruleset.'
             )
-            html.show_message(
-                _(
-                    "Could not find any service for your cluster. You first need to "
-                    "specify which services of your nodes shal be added to the "
-                    'cluster. This is done using the <a href="%s">%s</a> ruleset.'
-                )
-                % (url, _("Clustered services"))
-            )
-            return
+            % (url, _("Clustered services"))
+        )
 
     def _is_first_attempt(self, api_request: dict) -> bool:
         return api_request["discovery_result"] is None

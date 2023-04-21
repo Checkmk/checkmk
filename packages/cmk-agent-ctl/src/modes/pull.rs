@@ -22,7 +22,7 @@ use tokio_rustls::TlsAcceptor;
 const TLS_ID: &[u8] = b"16";
 const HEADER_VERSION: &[u8] = b"\x00\x00";
 const ONE_MINUTE: u64 = 60;
-const FIVE_MINUTES: u64 = 300;
+const PULL_ACTIVITY_TIMEOUT: u64 = 330; // Avoid exactly 5 minutes, as this is a common check interval
 
 struct ListeningConfig {
     pub addr_v4: Ipv4Addr,
@@ -332,17 +332,24 @@ async fn _pull_cycle(
 
     loop {
         let (stream, remote) = match match timeout(
-            Duration::from_secs(FIVE_MINUTES),
+            Duration::from_secs(PULL_ACTIVITY_TIMEOUT),
             listener.accept(),
         )
         .await
         {
             Ok(accepted_result) => accepted_result,
             Err(_) => {
-                debug!(
-                        "Got no pull request within five minutes. Registration may have changed, thus restarting pull handling."
+                // No connection within timeout. Refresh config and check if we're still active.
+                pull_state.refresh()?;
+                if !pull_state.is_active() {
+                    info!(
+                        "No pull connection registered, stop listening on {}.",
+                        listener.local_addr()?
                     );
-                return Ok(());
+                    return Ok(());
+                }
+                // If still active, don't return as this would close the socket - Just continue listening.
+                continue;
             }
         } {
             Ok(accepted) => accepted,
@@ -365,7 +372,7 @@ async fn _pull_cycle(
 
         // Check if pull was deactivated meanwhile before actually handling the request.
         if !pull_state.is_active() {
-            info!("Detected empty registry, closing current connection and stop listening.");
+            info!("No pull connection registered, closing current connection and stop listening.");
             return Ok(());
         }
 

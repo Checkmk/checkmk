@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 
 import pytest
 
@@ -13,6 +13,7 @@ import cmk.utils.version
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.metrics as metrics
+from cmk.gui.config import active_config
 from cmk.gui.plugins.metrics import utils
 from cmk.gui.plugins.metrics.utils import (
     hex_color_to_rgb_color,
@@ -21,6 +22,7 @@ from cmk.gui.plugins.metrics.utils import (
     TranslationInfo,
 )
 from cmk.gui.type_defs import Perfdata
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
 @pytest.mark.parametrize(
@@ -523,3 +525,34 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         assert all(100 <= component <= 200 for component in (r, g, b))
     else:
         assert all(60 <= component <= 230 for component in (r, g, b) if component)
+
+
+@pytest.mark.parametrize(
+    ["default_temperature_unit", "expected_value", "expected_scalars"],
+    [
+        pytest.param(
+            TemperatureUnit.CELSIUS,
+            59.05,
+            {"warn": 85.05, "crit": 85.05},
+            id="no unit conversion",
+        ),
+        pytest.param(
+            TemperatureUnit.FAHRENHEIT,
+            138.29,
+            {"warn": 185.09, "crit": 185.09},
+            id="with unit conversion",
+        ),
+    ],
+)
+def test_translate_metrics(
+    default_temperature_unit: TemperatureUnit,
+    expected_value: float,
+    expected_scalars: Mapping[str, float],
+) -> None:
+    active_config.default_temperature_unit = default_temperature_unit.value
+    translated_metric = utils.translate_metrics(
+        [("temp", 59.05, "", 85.05, 85.05, None, None)],
+        "check_mk-lnx_thermal",
+    )["temp"]
+    assert translated_metric["value"] == expected_value
+    assert translated_metric["scalar"] == expected_scalars

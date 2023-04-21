@@ -9,6 +9,7 @@ import re
 import subprocess
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
 
@@ -23,9 +24,31 @@ def simulate_backup_lock(site: Site) -> Iterator[None]:
     with site.execute(
         ["flock", "-x", "-n", str(mkbackup_lock_dir / f"mkbackup-{site.id}.lock"), "sleep", "300"]
     ) as p:
-        yield None
-        p.terminate()
-        p.wait()
+        try:
+            yield None
+        finally:
+            p.terminate()
+            p.wait()
+
+
+@pytest.fixture(name="cleanup_restore_lock")
+def cleanup_restore_lock_fixture(site: Site) -> Iterator[None]:
+    """Prevent conflict with file from other test runs
+
+    The restore lock is left behind after the restore. In case a new site
+    is created with the same name, there will be a permission conflict
+    resulting in a test failure."""
+
+    def rm() -> None:
+        restore_lock_path = Path(f"/tmp/restore-{site.id}.state")
+        if restore_lock_path.exists():
+            subprocess.run(["/usr/bin/sudo", "/usr/bin/rm", str(restore_lock_path)], check=True)
+
+    rm()
+    try:
+        yield
+    finally:
+        rm()
 
 
 @pytest.fixture(name="backup_path")
@@ -168,7 +191,7 @@ def _execute_backup(site: Site, job_id: str = "testjob") -> str:
 
 
 def _execute_restore(
-    site: Site, backup_id: str, env: Mapping[str, str] | None = None, restore_site: bool = True
+    site: Site, backup_id: str, env: Mapping[str, str] | None = None, stop_on_failure: bool = False
 ) -> None:
     p = site.execute(
         ["mkbackup", "restore", "test-target", backup_id],
@@ -185,10 +208,8 @@ def _execute_restore(
         assert "Restore completed" in stdout, "Invalid output: %r" % stdout
         assert p.wait() == 0
     except Exception:
-        if restore_site:
-            # Bring back the site in case the restore test fails which may leave the
-            # site in a stopped state
-            site.start()
+        if stop_on_failure:
+            pytest.exit("Stop test run after failed restore")
         raise
 
 
@@ -273,7 +294,7 @@ def test_mkbackup_simple_backup(site: Site) -> None:
     _execute_backup(site)
 
 
-@pytest.mark.usefixtures("test_cfg")
+@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_simple_restore(site: Site) -> None:
     backup_id = _execute_backup(site)
     _execute_restore(site, backup_id)
@@ -284,7 +305,7 @@ def test_mkbackup_encrypted_backup(site: Site) -> None:
     _execute_backup(site, job_id="testjob-encrypted")
 
 
-@pytest.mark.usefixtures("test_cfg")
+@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_encrypted_backup_and_restore(site: Site) -> None:
     backup_id = _execute_backup(site, job_id="testjob-encrypted")
 
@@ -294,13 +315,13 @@ def test_mkbackup_encrypted_backup_and_restore(site: Site) -> None:
     _execute_restore(site, backup_id, env)
 
 
-@pytest.mark.usefixtures("test_cfg")
+@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_compressed_backup_and_restore(site: Site) -> None:
     backup_id = _execute_backup(site, job_id="testjob-compressed")
     _execute_restore(site, backup_id)
 
 
-@pytest.mark.usefixtures("test_cfg")
+@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) -> None:
     backup_id = _execute_backup(site, job_id="testjob-no-history")
 
@@ -322,7 +343,7 @@ def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) ->
     _execute_restore(site, backup_id)
 
 
-@pytest.mark.usefixtures("test_cfg")
+@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_locking(site: Site) -> None:
     backup_id = _execute_backup(site, job_id="testjob-no-history")
     with simulate_backup_lock(site):
@@ -330,5 +351,5 @@ def test_mkbackup_locking(site: Site) -> None:
             _execute_backup(site)
         assert "Failed to get the exclusive backup lock" in str(locking_issue)
         with pytest.raises(AssertionError) as locking_issue:
-            _execute_restore(site, backup_id=backup_id)
+            _execute_restore(site, backup_id=backup_id, stop_on_failure=False)
         assert "Failed to get the exclusive backup lock" in str(locking_issue)

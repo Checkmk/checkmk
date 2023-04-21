@@ -216,7 +216,7 @@ def _get_site(
                 "#######################################################################"
                 "\033[0m"
             )
-        spawn_expect_process(
+        rc = spawn_expect_process(
             [
                 "/usr/bin/sudo",
                 "/usr/bin/omd",
@@ -253,6 +253,9 @@ def _get_site(
             else [],
             logfile_path=logfile_path,
         )
+
+        assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
+
         with open(logfile_path, "r") as logfile:
             logger.debug("OMD automation logfile: %s", logfile.read())
         # refresh the site object after creating the site

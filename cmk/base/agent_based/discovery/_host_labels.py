@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Discovery of HostLabels."""
 from collections.abc import Iterable, Mapping, Sequence
+from typing import TypeVar
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
@@ -33,7 +34,7 @@ def discover_cluster_labels(
     load_labels: bool,
     on_error: OnError,
 ) -> Sequence[HostLabel]:
-    nodes_host_labels: dict[str, HostLabel] = {}
+    discovered_by_node: list[Mapping[str, HostLabel]] = []
     for node in nodes:
         node_labels = QualifiedDiscovery[HostLabel](
             preexisting=do_load_labels(node) if load_labels else (),
@@ -42,10 +43,19 @@ def discover_cluster_labels(
             ),
             key=lambda hl: hl.label,
         )
+        discovered_by_node.append({l.name: l for l in _iter_kept_labels(node_labels)})
 
-        # keep the latest for every label.name
-        nodes_host_labels.update({l.name: l for l in _iter_kept_labels(node_labels)})
-    return list(nodes_host_labels.values())
+    return list(_merge_cluster_labels(discovered_by_node).values())
+
+
+_TLabel = TypeVar("_TLabel")
+
+
+def _merge_cluster_labels(
+    all_node_labels: Sequence[Mapping[str, _TLabel]]
+) -> Mapping[str, _TLabel]:
+    """A cluster has all its nodes labels. Last node wins."""
+    return {name: label for node_labels in all_node_labels for name, label in node_labels.items()}
 
 
 def analyse_host_labels(

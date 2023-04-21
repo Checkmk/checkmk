@@ -218,7 +218,7 @@ async fn _pull(
             continue;
         }
         info!("Start listening for incoming pull requests");
-        _pull_cycle(&mut pull_state, &mut guard, agent_output_collector.clone()).await?;
+        _pull_loop(&mut pull_state, &mut guard, agent_output_collector.clone()).await?;
     }
 }
 
@@ -323,7 +323,7 @@ fn tcp_listener(listening_config: ListeningConfig) -> AnyhowResult<TcpListenerSt
     );
 }
 
-async fn _pull_cycle(
+async fn _pull_loop(
     pull_state: &mut impl PullState,
     guard: &mut MaxConnectionsGuard,
     agent_output_collector: impl AgentOutputCollector,
@@ -331,14 +331,10 @@ async fn _pull_cycle(
     let listener = TcpListener::from_std(tcp_listener(pull_state.listening_config())?)?;
 
     loop {
-        let (stream, remote) = match match timeout(
+        let Ok(connection_attempt) = timeout(
             Duration::from_secs(PULL_ACTIVITY_TIMEOUT),
             listener.accept(),
-        )
-        .await
-        {
-            Ok(accepted_result) => accepted_result,
-            Err(_) => {
+        ).await else {
                 // No connection within timeout. Refresh config and check if we're still active.
                 pull_state.refresh()?;
                 if !pull_state.is_active() {
@@ -350,8 +346,9 @@ async fn _pull_cycle(
                 }
                 // If still active, don't return as this would close the socket - Just continue listening.
                 continue;
-            }
-        } {
+            };
+
+        let (stream, remote) = match connection_attempt {
             Ok(accepted) => accepted,
             Err(error) => {
                 warn!("Failed accepting pull connection. ({})", error);

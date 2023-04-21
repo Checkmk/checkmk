@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
+from unittest.mock import Mock
 
 import pytest
 
@@ -56,11 +57,13 @@ PROP_NAME = "foo"
         ),
     ],
 )
-def test_eval_multipath_info(propset, expected) -> None:  # type: ignore[no-untyped-def]
+def test_eval_multipath_info(
+    propset: str, expected: tuple[Mapping[str, Sequence[str]], Mapping[object, object]]
+) -> None:
     assert eval_multipath_info("", PROP_NAME, propset) == expected
 
 
-def test_cloning_vm_is_processed(mocker) -> None:  # type: ignore[no-untyped-def]
+def test_cloning_vm_is_processed(mocker: Mock) -> None:
     """
     VMs that are in the process of being cloned do not define runtime.host.
     Make sure that this does not lead to a KeyError.

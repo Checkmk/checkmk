@@ -19,7 +19,9 @@ from cmk.utils.structured_data import (
     make_filter,
     parse_visible_raw_path,
     RetentionIntervals,
+    SDKeys,
     SDNodeName,
+    SDPath,
     StructuredDataNode,
     Table,
     TableRetentions,
@@ -1256,8 +1258,10 @@ class ExpectedFilterResults(NamedTuple):
         ),
     ],
 )
-def test_make_filter(  # type: ignore[no-untyped-def]
-    entry, expected_path, expected_filter_results
+def test_make_filter(
+    entry: tuple[SDPath, SDKeys | None] | dict,
+    expected_path: SDPath,
+    expected_filter_results: ExpectedFilterResults,
 ) -> None:
     f = make_filter(entry)
 
@@ -1283,7 +1287,7 @@ def test_make_filter(  # type: ignore[no-untyped-def]
         ("path.to.node_1", ("path", "to", "node_1")),
     ],
 )
-def test_parse_visible_tree_path(raw_path, expected_path) -> None:  # type: ignore[no-untyped-def]
+def test_parse_visible_tree_path(raw_path: str, expected_path: SDPath) -> None:
     assert parse_visible_raw_path(raw_path) == expected_path
 
 

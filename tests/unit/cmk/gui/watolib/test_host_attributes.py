@@ -531,7 +531,7 @@ def test_host_attribute_topics_for_folders() -> None:
     ],
 )
 @pytest.mark.parametrize("new", [True, False])
-def test_host_attributes(for_what, new) -> None:  # type: ignore[no-untyped-def]
+def test_host_attributes(for_what: str, new: bool) -> None:
     topics = {
         "basic": [
             "alias",

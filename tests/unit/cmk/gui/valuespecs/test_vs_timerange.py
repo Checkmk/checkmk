@@ -44,7 +44,7 @@ import cmk.gui.valuespec as vs
         (("pnp_view", 5), ((1533142200, 1567702200), "Last 400 days")),
     ],
 )
-def test_timerange(entry, result) -> None:  # type: ignore[no-untyped-def]
+def test_timerange(entry: vs.TimerangeValue, result: tuple[vs.TimeRange, str]) -> None:
     with on_time("2019-09-05 16:50", "UTC"):
         assert vs.Timerange.compute_range(entry) == vs.ComputedTimerange(*result)
 
@@ -70,6 +70,8 @@ def test_timerange(entry, result) -> None:  # type: ignore[no-untyped-def]
         ("l1", "2020-03-25", ((1582934400, 1583020800), "29/02/2020")),
     ],
 )
-def test_timerange2(entry, refutcdate, result) -> None:  # type: ignore[no-untyped-def]
+def test_timerange2(
+    entry: vs.TimerangeValue, refutcdate: str, result: tuple[vs.TimeRange, str]
+) -> None:
     with on_time(refutcdate, "UTC"):
         assert vs.Timerange.compute_range(entry) == vs.ComputedTimerange(*result)

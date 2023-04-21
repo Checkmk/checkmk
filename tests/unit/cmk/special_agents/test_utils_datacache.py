@@ -24,7 +24,7 @@ class KeksDose(DataCache):
         return "live data"
 
 
-def test_datacache_init(tmp_path) -> None:  # type: ignore[no-untyped-def]
+def test_datacache_init(tmp_path: Path) -> None:
     tcache = KeksDose(tmp_path, "test")
     assert isinstance(tcache._cache_file_dir, Path)
     assert isinstance(tcache._cache_file, Path)
@@ -34,7 +34,7 @@ def test_datacache_init(tmp_path) -> None:  # type: ignore[no-untyped-def]
     assert tc_debug.debug
 
 
-def test_datacache_timestamp(tmp_path) -> None:  # type: ignore[no-untyped-def]
+def test_datacache_timestamp(tmp_path: Path) -> None:
     tcache = KeksDose(tmp_path, "test")
 
     assert tcache.cache_timestamp is None  # file doesn't exist yet
@@ -43,7 +43,7 @@ def test_datacache_timestamp(tmp_path) -> None:  # type: ignore[no-untyped-def]
     assert tcache.cache_timestamp == tcache._cache_file.stat().st_mtime
 
 
-def test_datacache_valid(monkeypatch, tmp_path) -> None:  # type: ignore[no-untyped-def]
+def test_datacache_valid(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     tcache = KeksDose(tmp_path, "test")
     tcache._write_to_cache("cached data")
 
@@ -61,7 +61,7 @@ def test_datacache_valid(monkeypatch, tmp_path) -> None:  # type: ignore[no-unty
     assert tcache.get_data(True) == "live data"
 
 
-def test_datacache_validity(monkeypatch, tmp_path) -> None:  # type: ignore[no-untyped-def]
+def test_datacache_validity(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     tcache = KeksDose(tmp_path, "test")
     tcache._write_to_cache("cached data")
 
@@ -79,6 +79,5 @@ def test_datacache_validity(monkeypatch, tmp_path) -> None:  # type: ignore[no-u
         ("2020-07-13 00:01:00.194", 60.194),
     ],
 )
-def test_get_seconds_since_midnight(now, result) -> None:  # type: ignore[no-untyped-def]
-    now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S.%f")
-    assert get_seconds_since_midnight(now) == result
+def test_get_seconds_since_midnight(now: str, result: float) -> None:
+    assert get_seconds_since_midnight(datetime.strptime(now, "%Y-%m-%d %H:%M:%S.%f")) == result

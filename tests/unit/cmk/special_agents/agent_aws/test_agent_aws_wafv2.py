@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from collections.abc import Callable, Mapping, Sequence
 from typing import Literal
 
 import pytest
@@ -12,6 +13,7 @@ import pytest
 from cmk.special_agents.agent_aws import (
     AWSConfig,
     NamingConvention,
+    OverallTags,
     ResultDistributor,
     WAFV2Limits,
     WAFV2Summary,
@@ -54,7 +56,10 @@ class FakeWAFV2Client:
         return {"TagInfoForResource": tags, "NextMarker": "string"}
 
 
-def create_sections(names, tags, is_regional):
+Wafv2Sections = Mapping[str, WAFV2Limits | WAFV2Summary | WAFV2WebACL]
+
+
+def create_sections(names: object | None, tags: OverallTags, is_regional: bool) -> Wafv2Sections:
     region = "region" if is_regional else "us-east-1"
     scope: Literal["REGIONAL", "CLOUDFRONT"] = "REGIONAL" if is_regional else "CLOUDFRONT"
 
@@ -82,8 +87,11 @@ def create_sections(names, tags, is_regional):
     }
 
 
+CreateWafv2Sections = Callable[[object | None, OverallTags], tuple[Wafv2Sections, Wafv2Sections]]
+
+
 @pytest.fixture()
-def get_wafv2_sections():
+def get_wafv2_sections() -> CreateWafv2Sections:
     def _create_wafv2_sections(names, tags):
         return create_sections(names, tags, True), create_sections(names, tags, False)
 
@@ -170,8 +178,11 @@ def _test_limits(wafv2_sections):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_limits(  # type: ignore[no-untyped-def]
-    get_wafv2_sections, names, tags, found_instances
+def test_agent_aws_wafv2_limits(
+    get_wafv2_sections: CreateWafv2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_limits(wafv2_sections)
@@ -195,8 +206,11 @@ def _test_summary(wafv2_summary, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_summary_w_limits(  # type: ignore[no-untyped-def]
-    get_wafv2_sections, names, tags, found_instances
+def test_agent_aws_wafv2_summary_w_limits(
+    get_wafv2_sections: CreateWafv2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _wafv2_limits_results = wafv2_sections["wafv2_limits"].run().results
@@ -204,8 +218,11 @@ def test_agent_aws_wafv2_summary_w_limits(  # type: ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_summary_wo_limits(  # type: ignore[no-untyped-def]
-    get_wafv2_sections, names, tags, found_instances
+def test_agent_aws_wafv2_summary_wo_limits(
+    get_wafv2_sections: CreateWafv2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_summary(wafv2_sections["wafv2_summary"], found_instances)
@@ -227,8 +244,11 @@ def _test_web_acl(wafv2_sections, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_web_acls_w_limits(  # type: ignore[no-untyped-def]
-    get_wafv2_sections, names, tags, found_instances
+def test_agent_aws_wafv2_web_acls_w_limits(
+    get_wafv2_sections: CreateWafv2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _wafv2_limits_results = wafv2_sections["wafv2_limits"].run().results
@@ -236,8 +256,11 @@ def test_agent_aws_wafv2_web_acls_w_limits(  # type: ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_web_acls_wo_limits(  # type: ignore[no-untyped-def]
-    get_wafv2_sections, names, tags, found_instances
+def test_agent_aws_wafv2_web_acls_wo_limits(
+    get_wafv2_sections: CreateWafv2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
         _test_web_acl(wafv2_sections, found_instances)

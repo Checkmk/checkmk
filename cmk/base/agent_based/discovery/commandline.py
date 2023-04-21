@@ -13,9 +13,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
-from cmk.utils.labels import HostLabel
 from cmk.utils.log import console, section
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import CheckPluginName, HostName, SectionName
 
 from cmk.checkers import (
@@ -40,7 +38,6 @@ from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
 from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
-from .utils import QualifiedDiscovery
 
 __all__ = ["commandline_discovery"]
 
@@ -133,30 +130,6 @@ def _preprocess_hostnames(
     return node_names
 
 
-# TODO: inline this.
-def _analyse_node_labels(
-    host_name: HostName,
-    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
-    *,
-    providers: Mapping[HostKey, Provider],
-    ruleset_matcher: RulesetMatcher,
-    load_labels: bool,
-    save_labels: bool,
-    on_error: OnError,
-) -> QualifiedDiscovery[HostLabel]:
-    """Discovery and analysis for real hosts (not clusters)."""
-    discovered_host_labels = discover_host_labels(
-        host_name, host_label_plugins, providers=providers, on_error=on_error
-    )
-    return analyse_host_labels(
-        host_name,
-        discovered_host_labels=discovered_host_labels,
-        existing_host_labels=do_load_labels(host_name) if load_labels else (),
-        ruleset_matcher=ruleset_matcher,
-        save_labels=save_labels,
-    )
-
-
 def _commandline_discovery_on_host(
     *,
     real_host_name: HostName,
@@ -173,14 +146,14 @@ def _commandline_discovery_on_host(
 
     section.section_step("Analyse discovered host labels")
 
-    host_labels = _analyse_node_labels(
+    host_labels = analyse_host_labels(
         real_host_name,
-        host_label_plugins,
-        providers=providers,
+        discovered_host_labels=discover_host_labels(
+            real_host_name, host_label_plugins, providers=providers, on_error=on_error
+        ),
+        existing_host_labels=do_load_labels(real_host_name) if load_labels else (),
         ruleset_matcher=config_cache.ruleset_matcher,
-        load_labels=load_labels,
         save_labels=True,
-        on_error=on_error,
     )
 
     count = len(host_labels.new) if host_labels.new else ("no new" if only_new else "no")

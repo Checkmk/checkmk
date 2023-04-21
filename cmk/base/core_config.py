@@ -22,6 +22,7 @@ import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import Labels
+from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import core_helper_config_dir
@@ -56,6 +57,9 @@ class CollectedHostLabels:
 
 
 class MonitoringCore(abc.ABC):
+    def __init__(self, licensing_handler_type: type[LicensingHandler]):
+        self._licensing_handler_type = licensing_handler_type
+
     @classmethod
     @abc.abstractmethod
     def name(cls) -> Literal["nagios", "cmc"]:

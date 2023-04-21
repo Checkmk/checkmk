@@ -46,6 +46,10 @@ if ! type "${1}" >/dev/null 2>&1; then
     exit 1
 fi
 
+cleanup() {
+    rm "${RUNNING_FILE}" 2>/dev/null
+}
+
 echo "start_time $(perl -e 'print time')" >"${TMP_FILE}" 2>/dev/null
 cp "${TMP_FILE}" "${RUNNING_FILE}" 2>/dev/null
 
@@ -57,6 +61,8 @@ if [ ! -w "${RUNNING_FILE}" ]; then
     exit $?
 fi
 
+trap "cleanup" 0
+
 program_with_args="$* 2>/dev/null 1>&2"
 info=$({
     /usr/bin/time -p sh -c "${program_with_args}" 2>&1
@@ -66,6 +72,5 @@ RC=$(echo "$info" | awk '{print $7}')
 
 (echo "$info" | awk '{print "exit_code "$7"\nreal_time "$2"\nuser_time "$4"\nsystem_time "$6""}') >>"${TMP_FILE}"
 
-rm "${RUNNING_FILE}"
 mv "${TMP_FILE}" "${COMPLETED_FILE}"
 exit "${RC}"

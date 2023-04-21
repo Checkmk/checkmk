@@ -46,6 +46,10 @@ if ! type "${1}" >/dev/null 2>&1; then
     exit 1
 fi
 
+cleanup() {
+    rm "${RUNNING_FILE}" 2>/dev/null
+}
+
 echo "start_time $(perl -e 'print time')" >"${TMP_FILE}" 2>/dev/null
 cp "${TMP_FILE}" "${RUNNING_FILE}" 2>/dev/null
 
@@ -57,10 +61,11 @@ if [ ! -w "${RUNNING_FILE}" ]; then
     exit $?
 fi
 
+trap "cleanup" 0
+
 /usr/bin/time -p "$@" 2>>"${TMP_FILE}" # the -p option writes to stderr, strangely...
 RC=$?
 echo "exit_code ${RC}" >>"${TMP_FILE}"
 
-rm "${RUNNING_FILE}"
 mv "${TMP_FILE}" "${COMPLETED_FILE}"
 exit $RC

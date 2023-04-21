@@ -31,7 +31,6 @@ def discover_cluster_labels(
     *,
     providers: Mapping[HostKey, Provider],
     load_labels: bool,
-    save_labels: bool,
     on_error: OnError,
 ) -> Sequence[HostLabel]:
     nodes_host_labels: dict[str, HostLabel] = {}
@@ -43,8 +42,6 @@ def discover_cluster_labels(
             ),
             key=lambda hl: hl.label,
         )
-        if save_labels:
-            do_save_labels(node, node_labels)
 
         # keep the latest for every label.name
         nodes_host_labels.update({l.name: l for l in _iter_kept_labels(node_labels)})

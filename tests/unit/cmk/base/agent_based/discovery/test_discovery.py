@@ -1623,28 +1623,12 @@ def test__discover_services_on_cluster(
         assert not discovery_test_case.expected_services
         return
 
+    if discovery_test_case.save_labels:
+        return  # never called on cluster.
+
     scenario = cluster_scenario
     nodes = scenario.config_cache.nodes_of(scenario.parent)
     assert nodes is not None
-
-    # We're depending on the changed host labels via the cache.
-    if discovery_test_case.save_labels:
-        analyse_host_labels(
-            scenario.parent,
-            discovered_host_labels=discover_cluster_labels(
-                nodes,
-                HostLabelPluginMapper(config_cache=scenario.config_cache),
-                providers=scenario.providers,
-                load_labels=discovery_test_case.load_labels,
-                save_labels=discovery_test_case.save_labels,
-                on_error=OnError.RAISE,
-            ),
-            ruleset_matcher=scenario.config_cache.ruleset_matcher,
-            existing_host_labels=(
-                do_load_labels(scenario.parent) if discovery_test_case.load_labels else ()
-            ),
-            save_labels=discovery_test_case.save_labels,
-        )
 
     discovered_services = _get_cluster_services(
         scenario.parent,
@@ -1665,6 +1649,9 @@ def test__discover_services_on_cluster(
 def test__perform_host_label_discovery_on_cluster(
     cluster_scenario: ClusterScenario, discovery_test_case: DiscoveryTestCase
 ) -> None:
+    if discovery_test_case.save_labels:
+        return  # never called on cluster.
+
     scenario = cluster_scenario
     nodes = scenario.config_cache.nodes_of(scenario.parent)
     assert nodes is not None
@@ -1676,7 +1663,6 @@ def test__perform_host_label_discovery_on_cluster(
             HostLabelPluginMapper(config_cache=scenario.config_cache),
             providers=scenario.providers,
             load_labels=discovery_test_case.load_labels,
-            save_labels=discovery_test_case.save_labels,
             on_error=OnError.RAISE,
         ),
         ruleset_matcher=scenario.config_cache.ruleset_matcher,

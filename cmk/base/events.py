@@ -248,10 +248,10 @@ def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> Co
         return None  # We must allow notifications without Livestatus access
 
 
-def add_rulebased_macros(raw_context: EventContext) -> None:
+def add_rulebased_macros(raw_context: EventContext, contacts_needed: bool) -> None:
     # For the rule based notifications we need the list of contacts
     # an object has. The CMC does send this in the macro "CONTACTS"
-    if "CONTACTS" not in raw_context:
+    if "CONTACTS" not in raw_context and contacts_needed:
         # Ensure that we don't reach this when the Microcore is enabled. Triggering this logic
         # with the Microcore might result in dead locks.
         if config.is_cmc():
@@ -279,6 +279,7 @@ def add_rulebased_macros(raw_context: EventContext) -> None:
 def complete_raw_context(  # pylint: disable=too-many-branches
     raw_context: EventContext,
     with_dump: bool,
+    contacts_needed: bool,
 ) -> None:
     """Extend the raw notification context
 
@@ -349,7 +350,7 @@ def complete_raw_context(  # pylint: disable=too-many-branches
         if (value := raw_context.get("LASTSERVICEOK")) is not None:
             raw_context["LASTSERVICEOK_REL"] = get_readable_rel_date(value)
 
-        add_rulebased_macros(raw_context)
+        add_rulebased_macros(raw_context, contacts_needed)
 
         # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
         # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)

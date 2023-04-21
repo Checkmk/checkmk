@@ -75,7 +75,7 @@ def execute_check_discovery(
     store_piggybacked_sections(host_sections_no_error)
     providers = make_providers(host_sections_no_error, section_plugins)
 
-    host_labels = analyse_host_labels(
+    host_labels, _kept_labels = analyse_host_labels(
         host_name,
         discovered_host_labels=discover_host_labels(
             host_name,

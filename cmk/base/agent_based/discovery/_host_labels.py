@@ -24,7 +24,6 @@ __all__ = [
     "discover_cluster_labels",
     "discover_host_labels",
     "do_load_labels",
-    "do_save_labels",
 ]
 
 
@@ -67,7 +66,7 @@ def analyse_host_labels(
     existing_host_labels: Sequence[HostLabel],
     ruleset_matcher: RulesetMatcher,
     save_labels: bool,
-) -> QualifiedDiscovery[HostLabel]:
+) -> tuple[QualifiedDiscovery[HostLabel], Mapping[str, HostLabel]]:
 
     host_labels = QualifiedDiscovery[HostLabel](
         preexisting=existing_host_labels,
@@ -75,10 +74,14 @@ def analyse_host_labels(
         key=lambda hl: hl.label,
     )
 
+    kept_labels = {l.name: l for l in _iter_kept_labels(host_labels)}
     if save_labels:
-        do_save_labels(host_name, host_labels)
+        DiscoveredHostLabelsStore(host_name).save(
+            # TODO: serialization should move down the stack.
+            {name: label.to_dict() for name, label in kept_labels.items()}
+        )
 
-    if host_labels.new:
+    if host_labels.new:  # what about vanished or changed?
         # Some check plugins like 'df' may discover services based on host labels.
         # A rule may look like:
         # [{
@@ -99,20 +102,16 @@ def analyse_host_labels(
         # based on these new host labels but we only got the cached result.
         # If we found new host labels, we have to evaluate these rules again in order
         # to find new services, eg. in 'inventory_df'. Thus we have to clear these caches.
+        #
+        # NOTE: currently this only works if we write the host labels to disk.
         ruleset_matcher.clear_caches()
 
-    return host_labels
+    return host_labels, kept_labels
 
 
 def do_load_labels(host_name: HostName) -> Sequence[HostLabel]:
     raw_label_dict = DiscoveredHostLabelsStore(host_name).load()
     return [HostLabel.from_dict(name, value) for name, value in raw_label_dict.items()]
-
-
-def do_save_labels(host_name: HostName, host_labels: QualifiedDiscovery[HostLabel]) -> None:
-    DiscoveredHostLabelsStore(host_name).save(
-        {l.name: l.to_dict() for l in _iter_kept_labels(host_labels)}
-    )
 
 
 def _iter_kept_labels(host_labels: QualifiedDiscovery[HostLabel]) -> Iterable[HostLabel]:

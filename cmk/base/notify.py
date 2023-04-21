@@ -323,7 +323,11 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> NotifyAna
     logger.debug(events.render_context_dump(raw_context))
 
     raw_context["LOGDIR"] = notification_logdir
-    events.complete_raw_context(raw_context, with_dump=config.notification_logging <= 10)
+    events.complete_raw_context(
+        raw_context,
+        with_dump=config.notification_logging <= 10,
+        contacts_needed=True,
+    )
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):

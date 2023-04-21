@@ -12,9 +12,9 @@ import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
 from hashlib import sha256
-from typing import Any, assert_never, Literal, NamedTuple, TypedDict
+from typing import Any, assert_never, Literal, NamedTuple, TypedDict, TypeVar
 
-from mypy_extensions import NamedArg
+from mypy_extensions import Arg, NamedArg
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.object_diff import make_diff_text
@@ -458,27 +458,34 @@ class Discovery:
         )
 
 
-def service_discovery_call(  # type: ignore[no-untyped-def]
-    perform_action_call: Callable[
-        [DiscoveryOptions, DiscoveryResult, NamedArg(CREHost, "host")],
-        DiscoveryResult,
-    ]
-    | Callable[
+_ActionCall = TypeVar(
+    "_ActionCall",
+    Callable[
         [
-            DiscoveryOptions,
-            DiscoveryResult,
-            list[str],
-            str | None,
-            str | None,
+            Arg(DiscoveryOptions, "discovery_options"),
+            Arg(DiscoveryResult, "discovery_result"),
             NamedArg(CREHost, "host"),
         ],
         DiscoveryResult,
-    ]
-):
-    def decorate(*args, **kwargs) -> DiscoveryResult:  # type: ignore[no-untyped-def]
+    ],
+    Callable[
+        [
+            Arg(DiscoveryOptions, "discovery_options"),
+            Arg(DiscoveryResult, "discovery_result"),
+            NamedArg(CREHost, "host"),
+            NamedArg(list[str], "update_services"),
+            NamedArg(str | None, "update_source"),
+            NamedArg(str | None, "update_target"),
+        ],
+        DiscoveryResult,
+    ],
+)
+
+
+def _service_discovery_call(perform_action_call: _ActionCall) -> _ActionCall:
+    def decorate(discovery_options: DiscoveryOptions, discovery_result: DiscoveryResult, *, host: CREHost, **kwargs) -> DiscoveryResult:  # type: ignore[no-untyped-def]
         user.need_permission("wato.services")
-        result = perform_action_call(*args, **kwargs)
-        host: CREHost = kwargs["host"]
+        result = perform_action_call(discovery_options, discovery_result, host=host, **kwargs)
         if not host.locked():
             host.clear_discovery_failed()
         return result
@@ -486,7 +493,7 @@ def service_discovery_call(  # type: ignore[no-untyped-def]
     return decorate
 
 
-@service_discovery_call
+@_service_discovery_call
 def perform_fix_all(
     discovery_options: DiscoveryOptions,
     discovery_result: DiscoveryResult,
@@ -510,7 +517,7 @@ def perform_fix_all(
     return discovery_result
 
 
-@service_discovery_call
+@_service_discovery_call
 def perform_host_label_discovery(
     discovery_options: DiscoveryOptions,
     discovery_result: DiscoveryResult,
@@ -525,7 +532,7 @@ def perform_host_label_discovery(
     return discovery_result
 
 
-@service_discovery_call
+@_service_discovery_call
 def perform_service_discovery(
     discovery_options: DiscoveryOptions,
     discovery_result: DiscoveryResult,

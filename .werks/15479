@@ -1,0 +1,15 @@
+Title: Fix error message in alert.log complaining about missing contacts
+Class: fix
+Compatible: compat
+Component: alerts
+Date: 1682072217
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p27
+
+On alert handler execution, an error message like "Error on completing raw
+context: Missing 'CONTACTS' in raw notification context. It should always be
+available when using the Microcore." was shown in ~/var/log/alert.log.
+
+The alerts were processed correctly, this error message was just misleading.

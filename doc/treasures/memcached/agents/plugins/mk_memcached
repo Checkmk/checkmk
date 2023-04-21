@@ -19,14 +19,14 @@ config_file = os.path.join(os.environ.get("MK_CONFDIR", "/etc/check_mk"), "memca
 if os.path.exists(config_file):
     exec(open(config_file).read(), settings, settings)
 
-if 'instances' in settings:
+if "instances" in settings:
     print("<<<memcached>>>")
     if settings.get("mode", "nc"):
         cmdline = 'echo "stats" | nc %s %s |sed -e "s/\\(STAT \\|END\\)//"'
     else:
-        cmdline = 'memcached-tool %s:%s stats'
+        cmdline = "memcached-tool %s:%s stats"
 
-    for instance in settings['instances']:
+    for instance in settings["instances"]:
         print("[%s:%s]" % (instance[0], instance[1]))
         for line in os.popen(cmdline % instance):  # nosec
             print(line.strip())

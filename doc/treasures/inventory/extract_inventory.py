@@ -141,7 +141,6 @@ def filt_it(package, relation):
             for item in field.split("."):
                 value = package[item]
                 if type(value) in (str, int, float) and re.search(should_be, value):
-
                     return False
     return True
 

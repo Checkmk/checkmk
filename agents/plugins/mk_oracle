@@ -2497,8 +2497,6 @@ mk_ora_db_connect() {
 
     else
         # working with locally running instances
-        # mk_oracle_dbusers.conf is for compatibility. Do not use it anymore
-        ORACLE_USERCONF=${MK_CONFDIR}/mk_oracle_dbuser.conf
         TNSALIAS=${ORACLE_SID}
 
         # ASM use '+' as 1st character in SID!
@@ -2528,13 +2526,6 @@ mk_ora_db_connect() {
             else
                 ORACFGLINE=${!dummy_upper}
             fi
-        fi
-
-        if [ -f "${ORACLE_USERCONF}" ] && [ "${ORACFGLINE}" = '' ]; then
-            # mk_oracle_dbuser.conf
-            ORACFGLINE=$("${GREP}" "^${ORACLE_SID}:" <"${ORACLE_USERCONF}")
-            # mk_oracle_dbuser has ORACLE_SID as 1. parameter. we need an offset for all values
-            offset=1
         fi
 
         CFGTNSALIAS=$(echo "${ORACFGLINE}" | cut -d":" -f$((6 + offset)))

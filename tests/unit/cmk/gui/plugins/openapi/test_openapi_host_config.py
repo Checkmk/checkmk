@@ -330,82 +330,36 @@ def test_openapi_hosts(
     clients.HostConfig.follow_link(resp.json, ".../delete").assert_status_code(204)
 
 
-@pytest.mark.usefixtures("with_host")
 def test_openapi_host_update_after_move(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
 ) -> None:
-    aut_user_auth_wsgi_app.post(
-        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "bar", "parent": "/"}',
-        status=200,
-        content_type="application/json",
-        headers={
-            "Accept": "application/json",
-        },
+    clients.ContactGroup.create(
+        name="all",
+        alias="all_alias",
     )
-
-    heute = aut_user_auth_wsgi_app.call_method(
-        "get",
-        "/NO_SITE/check_mk/api/1.0/objects/host_config/heute",
-        headers={
-            "Accept": "application/json",
-        },
+    clients.Folder.create(
+        folder_name="source_folder",
+        title="source_folder",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["all"]}},
     )
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        "/NO_SITE/check_mk/api/1.0/objects/host_config/heute/actions/move/invoke",
-        params='{"target_folder": "/new_folder"}',
-        headers={
-            "If-Match": heute.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
-        status=200,
+    clients.Folder.create(
+        folder_name="target_folder",
+        title="target_folder",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["all"]}},
     )
-
-    example = aut_user_auth_wsgi_app.call_method(
-        "get",
-        "/NO_SITE/check_mk/api/1.0/objects/host_config/example.com",
-        headers={
-            "Accept": "application/json",
-        },
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/source_folder",
     )
-
-    moved_example = aut_user_auth_wsgi_app.call_method(
-        "post",
-        "/NO_SITE/check_mk/api/1.0/objects/host_config/example.com/actions/move/invoke",
-        params='{"target_folder": "/new_folder"}',
-        headers={
-            "If-Match": example.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
-        status=200,
+    clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/target_folder",
     )
-
-    moved_example_updated = aut_user_auth_wsgi_app.follow_link(
-        moved_example,
-        ".../update",
-        status=200,
-        params=json.dumps({"attributes": {"alias": "foo"}}),
-        headers={
-            "If-Match": moved_example.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
-    )
-
-    aut_user_auth_wsgi_app.follow_link(
-        moved_example_updated,
-        ".../update",
-        status=200,
-        params=json.dumps({"attributes": {"alias": "foo"}}),
-        headers={
-            "If-Match": moved_example_updated.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
+    clients.HostConfig.edit(
+        host_name="TestHost1",
+        attributes={"alias": "foo"},
     )
 
 
@@ -1007,67 +961,42 @@ def test_openapi_host_rename_with_pending_activate_changes(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_move(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+def test_openapi_host_move(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(
+        name="all",
+        alias="all_alias",
     )
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
-        content_type="application/json",
-        status=200,
-        headers={"Accept": "application/json"},
+    clients.Folder.create(
+        folder_name="source_folder",
+        title="source_folder",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["all"]}},
     )
-
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/objects/host_config/foobar/actions/move/invoke",
-        params='{"target_folder": "/new_folder/"}',
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        content_type="application/json",
-        status=200,
+    clients.Folder.create(
+        folder_name="target_folder",
+        title="target_folder",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["all"]}},
+    )
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/source_folder",
+    )
+    clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/target_folder",
     )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_move_to_non_valid_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+def test_openapi_host_move_to_non_valid_folder(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/",
     )
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
-        content_type="application/json",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/objects/host_config/foobar/actions/move/invoke",
-        params='{"target_folder": "/"}',
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        content_type="application/json",
-        status=400,
-    )
+    clients.HostConfig.move(
+        host_name="TestHost1", target_folder="/folder-that-does-not-exist", expect_ok=False
+    ).assert_status_code(400)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1440,4 +1369,165 @@ def test_openapi_effective_attributes_are_transformed_on_their_way_out_regressio
         == resp_without_effective_attributes.json["value"][0]["extensions"]["attributes"][
             "meta_data"
         ]
+    )
+
+
+def test_move_to_folder_with_different_contact_group(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(
+        name="test_contact_group",
+        alias="cg_alias",
+    )
+
+    clients.User.create(
+        username="user1",
+        fullname="user1_fullname",
+        contactgroups=["test_contact_group"],
+        auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
+        roles=["admin"],
+    )
+
+    clients.Folder.create(
+        folder_name="Folder1",
+        title="Folder1",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["test_contact_group"]}},
+    )
+
+    clients.Folder.create(
+        folder_name="Folder2",
+        title="Folder2",
+        parent="/",
+    )  # no contact group set
+
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/Folder1",
+    )
+
+    clients.HostConfig.set_credentials(
+        username="user1",
+        password="asflkjas^asf@adf%5Ah!@%^sfadf",
+    )
+
+    resp = clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/Folder2",
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(403)
+    assert resp.json["title"] == "Permission denied"
+    assert (
+        resp.json["detail"]
+        == "The user doesn't belong to the required contact groups of the following objects to perform this action: Folder('Folder2', 'Folder2')"
+    )
+
+
+def test_move_from_folder_with_different_contact_group(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(
+        name="test_contact_group",
+        alias="cg_alias",
+    )
+
+    clients.User.create(
+        username="user1",
+        fullname="user1_fullname",
+        contactgroups=["test_contact_group"],
+        auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
+        roles=["admin"],
+    )
+
+    clients.Folder.create(
+        folder_name="Folder1",
+        title="Folder1",
+        parent="/",
+    )  # no contact group set
+
+    clients.Folder.create(
+        folder_name="Folder2",
+        title="Folder2",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["test_contact_group"]}},
+    )
+
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/Folder1",
+    )
+
+    clients.HostConfig.set_credentials(
+        username="user1",
+        password="asflkjas^asf@adf%5Ah!@%^sfadf",
+    )
+
+    resp = clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/Folder2",
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(403)
+    assert resp.json["title"] == "Permission denied"
+    assert (
+        resp.json["detail"]
+        == "The user doesn't belong to the required contact groups of the following objects to perform this action: Folder('Folder1', 'Folder1'), Host('TestHost1')"
+    )
+
+
+def test_move_host_different_contact_group(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(
+        name="test_contact_group_1",
+        alias="cg_alias1",
+    )
+    clients.ContactGroup.create(
+        name="test_contact_group2",
+        alias="cg_alias2",
+    )
+    clients.Folder.create(
+        folder_name="Folder1",
+        title="Folder1",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["test_contact_group_1"]}},
+    )
+
+    clients.Folder.create(
+        folder_name="Folder2",
+        title="Folder2",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["test_contact_group_1"]}},
+    )
+    # User has access to both folders (same contact group)
+    clients.User.create(
+        username="user1",
+        fullname="user1_fullname",
+        contactgroups=["test_contact_group_1"],
+        auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
+        roles=["admin"],
+    )
+
+    # As admin api user, create a host in test_contact_group2
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/Folder1",
+        attributes={"contactgroups": {"groups": ["test_contact_group2"]}},
+    )
+
+    # Switch to the test user created above who only has access to test_contact_group1
+    clients.HostConfig.set_credentials(
+        username="user1",
+        password="asflkjas^asf@adf%5Ah!@%^sfadf",
+    )
+
+    # Try to move the Host
+    resp = clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/Folder2",
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(403)
+    assert resp.json["title"] == "Permission denied"
+    assert (
+        resp.json["detail"]
+        == "The user doesn't belong to the required contact groups of the following objects to perform this action: Host('TestHost1')"
     )

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
-from collections.abc import MutableMapping, Sequence
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -12,18 +10,7 @@ import pytest
 
 from tests.testlib.site import Site
 
-from cmk.utils.type_defs import HostName
-
-from cmk.snmplib.type_defs import (
-    BackendOIDSpec,
-    BackendSNMPTree,
-    OID,
-    SNMPBackendEnum,
-    SNMPDecodedString,
-    SNMPHostConfig,
-    SNMPTable,
-    SpecialColumn,
-)
+from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
 
 INFO_TREE = BackendSNMPTree(
     base=".1.3.6.1.2.1.1",
@@ -34,24 +21,7 @@ INFO_TREE = BackendSNMPTree(
     ],
 )
 
-
-def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:
-    return SNMPHostConfig(
-        is_ipv6_primary=False,
-        ipaddress="127.0.0.1",
-        hostname=HostName("localhost"),
-        credentials="public",
-        port=1337,
-        # TODO: Use SNMPv2 over v1 for the moment
-        is_bulkwalk_host=False,
-        is_snmpv2or3_without_bulkwalk_host=True,
-        bulk_walk_size_of=10,
-        timing={},
-        oid_range_limits={},
-        snmpv3_contexts=[],
-        character_encoding=None,
-        snmp_backend=backend_type,
-    )
+from .snmp_helpers import default_config, get_single_oid, get_snmp_table
 
 
 # Missing in currently used dump:
@@ -74,7 +44,7 @@ def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:
 def test_get_data_types(
     site: Site, backend_type: SNMPBackendEnum, type_name: str, oid: str, expected_response: str
 ) -> None:
-    response = get_single_oid(site, oid, backend_type, default_config(backend_type))
+    response = get_single_oid(site, oid, backend_type, default_config(backend_type))[0]
     assert response == expected_response
     assert isinstance(response, str)
 
@@ -279,37 +249,3 @@ def test_get_simple_snmp_table_with_hex_str(site: Site, backend_type: SNMPBacken
             "\x00\x12yb\xf9@",
         ],
     ]
-
-
-def get_snmp_table(
-    site: Site, tree: BackendSNMPTree, backend_type: SNMPBackendEnum, config: SNMPHostConfig
-) -> tuple[Sequence[SNMPTable], MutableMapping[str, tuple[bool, list[tuple[str, bytes]]]]]:
-    return ast.literal_eval(
-        site.python_helper("helper_get_snmp_table.py").check_output(
-            input=repr(
-                (
-                    tree.to_json(),
-                    backend_type.serialize(),
-                    config.serialize(),
-                    str(Path(__file__).parent.resolve() / "snmp_data" / "cmk-walk"),
-                )
-            )
-        )
-    )
-
-
-def get_single_oid(
-    site: Site, oid: OID, backend_type: SNMPBackendEnum, config: SNMPHostConfig
-) -> SNMPDecodedString | None:
-    return ast.literal_eval(
-        site.python_helper("helper_get_single_oid.py").check_output(
-            input=repr(
-                (
-                    oid,
-                    backend_type.serialize(),
-                    config.serialize(),
-                    str(Path(__file__).parent.resolve() / "snmp_data" / "cmk-walk"),
-                )
-            )
-        )
-    )

@@ -10,10 +10,9 @@ from typing import Any, Mapping
 
 import cmk.utils.debug
 import cmk.utils.paths
-from cmk.utils.type_defs import HostName
 from cmk.utils.version import is_raw_edition
 
-from cmk.snmplib import snmp_cache, snmp_modes
+from cmk.snmplib import snmp_modes
 from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
@@ -33,8 +32,6 @@ backend_type = SNMPBackendEnum.deserialize(params[1])
 config = SNMPHostConfig.deserialize(params[2])
 cmk.utils.paths.snmpwalks_dir = params[3]
 
-snmp_cache.initialize_single_oid_cache(HostName("abc"), None)
-
 backend: type[SNMPBackend]
 match backend_type:
     case SNMPBackendEnum.INLINE:
@@ -46,11 +43,4 @@ match backend_type:
     case _:
         raise ValueError(backend_type)
 
-print(
-    repr(
-        (
-            snmp_modes.get_single_oid(oid, backend=backend(config, logger)),
-            snmp_cache.single_oid_cache(),
-        )
-    )
-)
+print(repr(snmp_modes.walk_for_export(oid, backend=backend(config, logger))))

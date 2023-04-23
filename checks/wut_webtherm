@@ -9,23 +9,27 @@ from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 
+_TYPE_TABLE_IDX = (1, 2, 3, 6, 7, 8, 9, 16, 18, 36, 37, 38, 42)
 
-def parse_wut_webtherm(info):
+
+def parse_wut_webtherm(string_table):
     map_sensor_type = {
         "1": "temp",
         "2": "humid",
         "3": "air_pressure",
     }
     parsed = {}
-    for index, reading_de, reading_en in info:
-        reading_str = reading_en or reading_de.replace(",", ".")
-        if reading_str and "---" not in reading_str:  # no 'continue' for now.
-            webtherm_type, sensor_id = index.split(".")
+    for webtherm_type, info in zip(_TYPE_TABLE_IDX, string_table):
+        for sensor_id, reading_de, reading_en in info:
+            reading_str = reading_en or reading_de.replace(",", ".")
+            if not reading_str or "---" in reading_str:
+                continue
+
             # Dependent on webtherm_type we have to determine
             # which sensors are available. Feel free to
             # declare more sensor types here.
             # We have only temperature sensors
-            if int(webtherm_type) <= 9:  # TODO: this is just a guess
+            if webtherm_type <= 9:  # TODO: this is just a guess
                 parsed[sensor_id] = {
                     "type": "temp",
                     "reading": float(reading_str),
@@ -74,15 +78,17 @@ check_info["wut_webtherm"] = {
     "inventory_function": inventory_wut_webtherm,
     "check_function": check_wut_webtherm,
     "service_description": "Temperature %s",
-    "snmp_info": (
-        ".1.3.6.1.4.1.5040.1.2",
-        ["1", "2", "3", "6", "7", "8", "9", "16", "18", "36", "37", "38", "42"],
-        [
-            "1.2.1.1",  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroSensorNo
-            "1.3.1.1",  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroTempValue
-            "1.8.1.1",  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroTempValuePkt
-        ],
-    ),
+    "snmp_info": [
+        (
+            f".1.3.6.1.4.1.5040.1.2.{idx}",
+            [
+                "1.2.1.1",  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroSensorNo
+                "1.3.1.1",  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroTempValue
+                "1.8.1.1",  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroTempValuePkt
+            ],
+        )
+        for idx in _TYPE_TABLE_IDX
+    ],
     "group": "temperature",
 }
 

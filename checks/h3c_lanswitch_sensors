@@ -11,8 +11,12 @@ from cmk.base.config import check_info
 Section = Mapping[str, str]
 
 
-def parse_h3c_lanswitch_sensors(string_table: list[list[str]]) -> Section:
-    return {h3c_lanswitch_genitem(oid_item): state for oid_item, state in string_table}
+def parse_h3c_lanswitch_sensors(string_table: list[list[list[str]]]) -> Section:
+    return {
+        h3c_lanswitch_genitem(device_class, item): state
+        for device_class, info in zip(("Fan", "Powersupply"), string_table)
+        for item, state in info
+    }
 
 
 def inventory_h3c_lanswitch_sensors(section: Section) -> list[tuple[str, dict]]:
@@ -41,20 +45,14 @@ check_info["h3c_lanswitch_sensors"] = {
     "inventory_function": inventory_h3c_lanswitch_sensors,
     "check_function": check_h3c_lanswitch_sensors,
     "service_description": "%s",
-    "snmp_info": (
-        ".1.3.6.1.4.1.43.45.1.2.23.1.9.1",
-        ["1.1", "2.1"],
-        [OID_END, "2"],
-    ),
+    "snmp_info": [
+        (".1.3.6.1.4.1.43.45.1.2.23.1.9.1.1.1", [OID_END, "2"]),
+        (".1.3.6.1.4.1.43.45.1.2.23.1.9.1.2.1", [OID_END, "2"]),
+    ],
 }
 
 
-def h3c_lanswitch_genitem(endoid):
-    deviceclass, _one, id_ = endoid.split(".")
-    if deviceclass == "1":
-        hwLswdev = "Fan"
-    else:
-        hwLswdev = "Powersupply"
+def h3c_lanswitch_genitem(device_class: str, id_: str) -> str:
     unitid = int(id_) // 65536
     num = int(id_) % 65536
-    return "Unit %d %s %d" % (unitid, hwLswdev, num)
+    return "Unit %d %s %d" % (unitid, device_class, num)

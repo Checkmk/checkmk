@@ -270,6 +270,34 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
     )
 
 
+def test_check_logwatch_ec_common_single_node_log_missing() -> None:
+    actual_result = list(
+        logwatch_ec.check_logwatch_ec_common(
+            "log3",
+            {
+                "facility": 17,  # default to "local1"
+                "method": "",  # local site
+                "monitor_logfilelist": True,
+                "monitor_logfile_access_state": 2,
+                "expected_logfiles": ["log3"],
+            },
+            {
+                "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
+            },
+            service_level=10,
+            value_store={},
+            hostname=HostName("test-host"),
+            message_forwarder=_FakeForwarder(),
+        )
+    )
+
+    assert actual_result == [
+        Result(state=State.WARN, summary="Missing logfiles: log3 (on node1)"),
+        Result(state=State.OK, summary="Forwarded 0 messages"),
+        Metric("messages", 0.0),
+    ]
+
+
 @pytest.mark.parametrize(
     ["cluster_section", "expected_result"],
     [
@@ -463,6 +491,33 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
     ) == [
         Result(state=State.OK, summary="Forwarded 2 messages from log1"),
         Metric("messages", 2.0),
+    ]
+
+
+def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
+    assert list(
+        logwatch_ec.check_logwatch_ec_common(
+            "log3",
+            {
+                "facility": 17,  # default to "local1"
+                "method": "",  # local site
+                "monitor_logfilelist": True,
+                "monitor_logfile_access_state": 2,
+                "expected_logfiles": ["log3"],
+            },
+            {
+                "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
+                "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
+            },
+            service_level=10,
+            value_store={},
+            hostname=HostName("test-host"),
+            message_forwarder=_FakeForwarder(),
+        )
+    ) == [
+        Result(state=State.WARN, summary="Missing logfiles: log3 (on node1, node2)"),
+        Result(state=State.OK, summary="Forwarded 0 messages"),
+        Metric("messages", 0.0),
     ]
 
 

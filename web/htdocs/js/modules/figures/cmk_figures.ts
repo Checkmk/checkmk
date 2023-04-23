@@ -263,10 +263,9 @@ interface ELementMargin {
     left: number;
 }
 
-export interface FigureData {
-    //TODO: specify the types
-    data: any;
-    plot_definitions: any;
+export interface FigureData<D = any, P = any> {
+    data: D[] | D;
+    plot_definitions: P[];
 }
 
 export abstract class FigureBase<T extends FigureData> {
@@ -682,21 +681,23 @@ export abstract class FigureBase<T extends FigureData> {
 }
 
 export interface TitledFigureData extends FigureData {
-    title?: string;
-    title_url?: string;
+    title: string;
+    title_url: string;
+}
+export interface TextFigureData<D = any, P = any> extends FigureData<D, P> {
+    title: string;
+    title_url: string;
 }
 
-export class TextFigure extends FigureBase<TitledFigureData> {
+export abstract class TextFigure<
+    T extends TextFigureData = TextFigureData
+> extends FigureBase<T> {
     constructor(div_selector: string, fixed_size: ElementSize | null) {
         super(div_selector, fixed_size);
         this.margin = {top: 0, right: 0, bottom: 0, left: 0};
     }
 
-    getEmptyData(): TitledFigureData {
-        return getEmptyBasicFigureData();
-    }
-
-    initialize(debug?: boolean) {
+    initialize(debug: boolean) {
         FigureBase.prototype.initialize.call(this, debug);
         this.svg = this._div_selection.append("svg");
         this.plot = this.svg.append("g");

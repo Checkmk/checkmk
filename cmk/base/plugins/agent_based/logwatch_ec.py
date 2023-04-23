@@ -16,6 +16,7 @@
 import ast
 import socket
 import time
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
@@ -265,6 +266,28 @@ class MessageForwaderProto(Protocol):
         ...
 
 
+UsedLogFiles = MutableMapping[str, list[tuple[str | None, str]]]
+
+
+def _get_missing_logfile_from_attr(
+    log_file_name: str, node_attrs: Sequence[tuple[str | None, str]]
+) -> str | None:
+    missing_nodes = [node_name for (node_name, node_attr) in node_attrs if node_attr == "missing"]
+    if not missing_nodes:
+        return None
+    if missing_node_names := [x for x in missing_nodes if x is not None]:
+        return f"{log_file_name} (on {', '.join(missing_node_names)})"
+    return log_file_name
+
+
+def _get_missing_logfiles_from_attr(used_logfiles: UsedLogFiles) -> Sequence:
+    return [
+        summary
+        for name, node_attrs in used_logfiles.items()
+        if (summary := _get_missing_logfile_from_attr(name, node_attrs))
+    ]
+
+
 def _filter_accumulated_lines(
     cluster_section: ClusterSection,
     item: str,
@@ -297,7 +320,11 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
             item in node_data.logfiles for node_data in parsed.values()
         ) or not logwatch.ec_forwarding_enabled(params, item):
             return
-        used_logfiles = [item]
+
+        used_logfiles: UsedLogFiles = defaultdict(list)
+        for node_name, node_data in parsed.items():
+            if item in node_data.logfiles:
+                used_logfiles[item].append((node_name, node_data.logfiles[item]["attr"]))
 
         yield from logwatch.check_unreadable_files(
             logwatch.get_unreadable_logfiles(item, parsed),
@@ -305,15 +332,13 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         )
 
     else:
+        used_logfiles = defaultdict(list)
         # Filter logfiles if some should be excluded
-        used_logfiles = sorted(
-            {
-                name
-                for node_data in parsed.values()
-                for name in node_data.logfiles
-                if logwatch.ec_forwarding_enabled(params, name)
-            }
-        )
+        for node_name, node_data in parsed.items():
+            for name, data in node_data.logfiles.items():
+                if logwatch.ec_forwarding_enabled(params, name):
+                    used_logfiles[name].append((node_name, data["attr"]))
+        used_logfiles = dict(sorted(used_logfiles.items()))
 
         for logfile in used_logfiles:
             yield from logwatch.check_unreadable_files(
@@ -333,7 +358,10 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
             )
         else:
             expected = params["expected_logfiles"]
-            missing = [f for f in expected if f not in used_logfiles]
+            missing = [
+                *_get_missing_logfiles_from_attr(used_logfiles),
+                *(f for f in expected if f not in used_logfiles),
+            ]
             if missing:
                 yield Result(
                     state=State.WARN,

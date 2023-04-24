@@ -678,11 +678,9 @@ class ModeCreateHost(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
-        host_name = request.var("host")
-        assert host_name is not None
         return Host(
             folder=Folder.current(),
-            host_name=HostName(host_name),
+            host_name=HostName(request.get_str_input_mandatory("host")),
             attributes={},
             cluster_nodes=None,
         )
@@ -713,11 +711,9 @@ class ModeCreateCluster(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
-        host_name = request.var("host")
-        assert host_name is not None
         return Host(
             folder=Folder.current(),
-            host_name=HostName(host_name),
+            host_name=HostName(request.get_str_input_mandatory("host")),
             attributes={},
             cluster_nodes=[],
         )

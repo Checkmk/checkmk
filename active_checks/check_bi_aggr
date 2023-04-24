@@ -242,11 +242,12 @@ if track_downtime:
         (
             "GET downtimes\n"
             "Columns: id\n"
-            "Filter: service_description = Aggr Host %s\n"
+            "Filter: hostname = %s\n"
+            "Filter: service_description = %s\n"
             "Filter: author = tracking\n"
             "Filter: end_time > %d"
         )
-        % (hostname, now)
+        % (hostname, aggr_name, now)
     )
     downtime_tracked = len(ids) > 0
     if downtime_tracked != is_aggr_in_downtime:
@@ -254,8 +255,8 @@ if track_downtime:
         if is_aggr_in_downtime:
             # need to track downtime
             conn.command(
-                "[%d] SCHEDULE_SVC_DOWNTIME;%s;Aggr Host %s;%d;%d;1;0;0;"
-                "tracking;Automatic downtime" % (now, hostname, hostname, now, 2147483647)
+                "[%d] SCHEDULE_SVC_DOWNTIME;%s;%s;%d;%d;1;0;0;"
+                "tracking;Automatic downtime" % (now, hostname, aggr_name, now, 2147483647)
             )
         else:
             for dt_id in ids:

@@ -25,7 +25,6 @@ This involves providing source package that was used for the build.
 As well as packages and docker images for all currently supported platforms.
 
 RHEL 7
-Debian 9
 Debian 11
 SLES 12 SP4
 SLES 12 SP5

@@ -2,7 +2,6 @@
     "enterprise": {
         "NAME": "Enterprise Edition",
         "DISTROS": [
-            "debian-9",
             "debian-10",
             "debian-11",
             "ubuntu-16.04",

@@ -1,0 +1,14 @@
+Title: Display error in "Effective rulesets" view.
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1682320596
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p38
+
+
+When configuring the agent ruleset <i>Set cache age for plugins (UNIX)</i>,
+the "Effective rulesets" view of a matching host crashed.

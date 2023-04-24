@@ -410,13 +410,14 @@ class ModeDiagnostics(WatoMode):
                     Dictionary(
                         title=_("Licensing Information"),
                         help=_(
-                            "Licensing files from var/check_mk/licensing and var/log/licensing.log.%s"
+                            "Licensing files from var/check_mk/licensing, etc/check_mk,"
+                            " var/check_mk/core and var/log/licensing.log.%s"
                         )
                         % _CHECKMK_FILES_NOTE,
                         elements=self._get_component_specific_checkmk_files_elements(
                             OPT_COMP_LICENSING,
                         ),
-                        default_keys=["licensing_files"],
+                        default_keys=["licensing_files", "log_files", "config_files"],
                     ),
                 )
             )

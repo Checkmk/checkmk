@@ -2,11 +2,12 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
 def patch(version_str, sha256):
+    filename = "patch-" + version_str + ".tar.gz"
     http_archive(
         name = "patch",
         urls = [
-            "https://ftp.gnu.org/gnu/patch/patch-" + version_str + ".tar.gz",
-            UPSTREAM_MIRROR_URL + "patch-" + version_str + ".tar.gz",
+            "https://ftp.gnu.org/gnu/patch/" + filename,
+            UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = sha256,
         patches = [

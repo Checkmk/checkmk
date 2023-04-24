@@ -2,12 +2,13 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
 def monitoring_plugins(version_str, sha256):
+    filename = "monitoring-plugins-" + version_str + ".tar.gz"
     http_archive(
         name="monitoring-plugins",
         build_file="@omd_packages//packages/monitoring-plugins:BUILD.monitoring-plugins.bazel",
         urls=[
-            "https://www.monitoring-plugins.org/download/monitoring-plugins-" + version_str + ".tar.gz",
-            UPSTREAM_MIRROR_URL + "monitoring-plugins-" + version_str + ".tar.gz",
+            "https://www.monitoring-plugins.org/download/" + filename,
+            UPSTREAM_MIRROR_URL + filename,
         ],
         sha256=sha256,
         strip_prefix="monitoring-plugins-" + version_str,

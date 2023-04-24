@@ -2,11 +2,12 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
 def heirloommailx(version_str, sha256):
+    filename = "heirloom-mailx_" + version_str + ".orig.tar.gz"
     http_archive(
         name = "heirloom-mailx",
         urls = [
-            "https://ftp.debian.org/debian/pool/main/h/heirloom-mailx/heirloom-mailx_" + version_str + ".orig.tar.gz",
-            UPSTREAM_MIRROR_URL + "heirloom-mailx_" + version_str + ".orig.tar.gz",
+            "https://ftp.debian.org/debian/pool/main/h/heirloom-mailx/" + filename,
+            UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = sha256,
         build_file = "@omd_packages//packages/heirloom-mailx:BUILD.bazel",

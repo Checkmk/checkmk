@@ -130,6 +130,7 @@ from cmk.gui.watolib.automations import (
     local_automation_failure,
     MKAutomationException,
     remote_automation_call_came_from_pre21,
+    remote_automation_caller_version,
 )
 from cmk.gui.watolib.changes import add_change, add_service_change, log_audit, make_diff_text
 from cmk.gui.watolib.config_domains import (

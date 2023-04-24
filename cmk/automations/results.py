@@ -52,7 +52,7 @@ _DeserializedType = TypeVar("_DeserializedType", bound="ABCAutomationResult")
 
 @dataclass  # type: ignore[misc]  # https://github.com/python/mypy/issues/5374
 class ABCAutomationResult(ABC):
-    def serialize(self) -> SerializedResult:
+    def serialize(self, for_cmk_version: Optional[int]) -> SerializedResult:
         return SerializedResult(repr(astuple(self)))
 
     def to_pre_21(self) -> object:
@@ -86,7 +86,7 @@ class DiscoveryResult(ABCAutomationResult):
     ) -> Mapping[HostName, SingleHostDiscoveryResult]:
         return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
 
-    def serialize(self) -> SerializedResult:
+    def serialize(self, for_cmk_version: Optional[int]) -> SerializedResult:
         return SerializedResult(repr(self._to_dict()))
 
     def to_pre_21(self) -> Mapping[Literal["results"], Mapping[HostName, Mapping[str, Any]]]:
@@ -132,7 +132,7 @@ class TryDiscoveryResult(ABCAutomationResult):
     def to_pre_21(self) -> Mapping[str, Any]:
         return asdict(self)
 
-    def serialize(self) -> SerializedResult:
+    def serialize(self, for_cmk_version: Optional[int]) -> SerializedResult:
         return SerializedResult(repr(astuple(self)))
 
     @classmethod

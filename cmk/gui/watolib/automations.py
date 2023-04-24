@@ -55,11 +55,18 @@ class MKAutomationException(MKGeneralException):
     pass
 
 
+def remote_automation_caller_version() -> Optional[int]:
+    # The header is sent by Checkmk as of 2.0.0p1.
+    if not (raw_remote_version := request.headers.get("x-checkmk-version")):
+        return None
+    return parse_check_mk_version(raw_remote_version)
+
+
 def remote_automation_call_came_from_pre21() -> bool:
     # The header is sent by Checkmk as of 2.0.0p1. In case it is missing, assume we are too old.
-    if not (remote_version := request.headers.get("x-checkmk-version")):
+    if (remote_version := remote_automation_caller_version()) is None:
         return True
-    return parse_check_mk_version(remote_version) < parse_check_mk_version("2.1.0i1")
+    return remote_version < parse_check_mk_version("2.1.0i1")
 
 
 def check_mk_local_automation_serialized(
@@ -630,12 +637,10 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
         automation_cmd: str,
         cmdline_cmd: Iterable[str],
     ) -> None:
+        result = result_type_registry[automation_cmd].deserialize(serialized_result)
         if remote_automation_call_came_from_pre21():
             try:
-                store.save_object_to_file(
-                    path,
-                    result_type_registry[automation_cmd].deserialize(serialized_result).to_pre_21(),
-                )
+                store.save_object_to_file(path, result.to_pre_21())
             except SyntaxError as e:
                 raise local_automation_failure(
                     command=automation_cmd,
@@ -644,10 +649,7 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
                     exc=e,
                 )
         else:
-            store.save_text_to_file(
-                path,
-                serialized_result,
-            )
+            store.save_text_to_file(path, result.serialize(remote_automation_caller_version()))
 
     def execute_automation(
         self,

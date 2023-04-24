@@ -187,11 +187,12 @@ class ModeAutomation(AjaxPage):
         cmk_command: str,
         cmdline_cmd: Iterable[str],
     ) -> str:
+        result = result_type_registry[cmk_command].deserialize(serialized_result)
         try:
             return (
-                repr(result_type_registry[cmk_command].deserialize(serialized_result).to_pre_21())
+                repr(result.to_pre_21())
                 if watolib.remote_automation_call_came_from_pre21()
-                else serialized_result
+                else result.serialize(watolib.remote_automation_caller_version())
             )
         except SyntaxError as e:
             raise watolib.local_automation_failure(

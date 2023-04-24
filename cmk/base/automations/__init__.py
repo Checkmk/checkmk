@@ -13,6 +13,7 @@ from typing import Any, Dict, List, NoReturn, Optional
 
 import cmk.utils.debug
 import cmk.utils.log as log
+import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins
@@ -74,7 +75,7 @@ class Automations:
         finally:
             profiling.output_profile()
 
-        out.output(result.serialize())
+        out.output(result.serialize(cmk_version.parse_check_mk_version(cmk_version.__version__)))
         out.output("\n")
 
         return 0

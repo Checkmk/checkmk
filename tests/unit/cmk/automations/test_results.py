@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Mapping, Sequence
 
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
-from cmk.utils.version import is_raw_edition
+from cmk.utils.version import __version__, is_raw_edition, parse_check_mk_version
 
 from cmk.automations.results import (
     ABCAutomationResult,
@@ -19,6 +19,8 @@ from cmk.automations.results import (
 )
 
 from cmk.base.automations import automations
+
+_THIS_VERSION = parse_check_mk_version(__version__)
 
 
 def test_result_type_registry_completeness() -> None:
@@ -57,7 +59,9 @@ def test_serialization() -> None:
             "123": "456",
         },
     )
-    assert automation_res_test == AutomationResultTest.deserialize(automation_res_test.serialize())
+    assert automation_res_test == AutomationResultTest.deserialize(
+        automation_res_test.serialize(_THIS_VERSION)
+    )
 
 
 class TestDiscoveryResult:
@@ -92,7 +96,7 @@ class TestDiscoveryResult:
 
     def test_serialization(self):
         assert DiscoveryResult.deserialize(
-            DiscoveryResult(self.HOSTS).serialize()
+            DiscoveryResult(self.HOSTS).serialize(_THIS_VERSION)
         ) == DiscoveryResult(self.HOSTS)
 
 
@@ -121,4 +125,4 @@ class TestTryDiscoveryResult:
             vanished_labels={},
             changed_labels={},
         )
-        assert TryDiscoveryResult.deserialize(result.serialize()) == result
+        assert TryDiscoveryResult.deserialize(result.serialize(_THIS_VERSION)) == result

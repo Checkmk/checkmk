@@ -59,6 +59,7 @@ def monkeymodule(request):
         ("TimeTicks", ".1.3.6.1.2.1.1.3.0", "449613886"),
     ],
 )
+@pytest.mark.usefixtures("snmpsim")
 def test_get_data_types(
     backend: SNMPBackend, type_name: str, oid: str, expected_response: str
 ) -> None:
@@ -78,6 +79,7 @@ def test_get_data_types(
     assert isinstance(table[0][0], str)
 
 
+@pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_not_resolvable(backend: SNMPBackend) -> None:
     if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
@@ -99,6 +101,7 @@ def test_get_simple_snmp_table_not_resolvable(backend: SNMPBackend) -> None:
         )
 
 
+@pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_wrong_credentials(backend: SNMPBackend) -> None:
     if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
@@ -140,6 +143,7 @@ def test_get_simple_snmp_table_bulkwalk(backend: SNMPBackend, bulk: bool) -> Non
     assert isinstance(table[0][0], str)
 
 
+@pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_fills_cache(backend: SNMPBackend) -> None:
     walk_cache: MutableMapping[str, tuple[bool, list[tuple[str, bytes]]]] = {}
 
@@ -157,6 +161,7 @@ def test_get_simple_snmp_table_fills_cache(backend: SNMPBackend) -> None:
     ]
 
 
+@pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table(backend: SNMPBackend) -> None:
     table = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
@@ -175,6 +180,7 @@ def test_get_simple_snmp_table(backend: SNMPBackend) -> None:
     assert isinstance(table[0][0], str)
 
 
+@pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_oid_end(backend: SNMPBackend) -> None:
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
@@ -198,6 +204,7 @@ def test_get_simple_snmp_table_oid_end(backend: SNMPBackend) -> None:
     ]
 
 
+@pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_oid_string(backend: SNMPBackend) -> None:
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
@@ -222,6 +229,7 @@ def test_get_simple_snmp_table_oid_string(backend: SNMPBackend) -> None:
     ]
 
 
+@pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_oid_bin(backend: SNMPBackend) -> None:
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
@@ -246,6 +254,7 @@ def test_get_simple_snmp_table_oid_bin(backend: SNMPBackend) -> None:
     ]
 
 
+@pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_oid_end_bin(backend: SNMPBackend) -> None:
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
@@ -270,6 +279,7 @@ def test_get_simple_snmp_table_oid_end_bin(backend: SNMPBackend) -> None:
     ]
 
 
+@pytest.mark.usefixtures("snmpsim")
 def test_get_simple_snmp_table_with_hex_str(backend: SNMPBackend) -> None:
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",

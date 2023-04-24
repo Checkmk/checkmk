@@ -58,7 +58,7 @@ def snmp_data_dir_fixture() -> Path:
     return Path(__file__).parent / "snmp_data"
 
 
-@pytest.fixture(name="snmpsim", scope="session", autouse=True)
+@pytest.fixture(name="snmpsim", scope="session")
 def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
     log.logger.setLevel(logging.DEBUG)
     debug.enable()

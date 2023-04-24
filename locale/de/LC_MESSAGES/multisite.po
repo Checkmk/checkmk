@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: marc.nerreter@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-04-21 06:00+0000\n"
-"Last-Translator: Elias Voelker <elias.voelker@tribe29.com>\n"
+"PO-Revision-Date: 2023-04-24 08:01+0000\n"
+"Last-Translator: Silke Paintner <silke.paintner@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -749,11 +749,10 @@ msgstr "%sRoundtrip-Minimum"
 msgid "%sRound trip standard devation"
 msgstr "%sRoundtrip-Standardabweichung"
 
-#, fuzzy
 msgid ""
 "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
 msgstr ""
-"&copy; <a target=\"_blank\" href=\"https://checkmk.com\">tribe29 GmbH</a>"
+"&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
 
 msgid "&lt;None&gt;"
 msgstr "&lt;keine&gt;"
@@ -5985,9 +5984,8 @@ msgstr "Eine andere Usersynchronisation läuft gerade: %s"
 msgid "AntiVirus last update age"
 msgstr "Alter des letzten AntiVirus-Updates"
 
-#, fuzzy
 msgid "Apache"
-msgstr "Apache DNS"
+msgstr "Apache"
 
 msgid "Apache ActiveMQ Queue lengths"
 msgstr "Apache ActiveMQ Warteschlangenlängen"
@@ -5996,7 +5994,7 @@ msgid "Apache ActiveMQ queues"
 msgstr "Apache ActiveMQ Warteschlangen"
 
 msgid "Apache Local Password File (htpasswd)"
-msgstr "Lokale Apache Passwort-Datei"
+msgstr "Lokale Apache Passwort-Datei (htpasswd)"
 
 msgid "Apache Server"
 msgstr "Apache-Server"
@@ -6009,15 +6007,15 @@ msgid ""
 "TCP mode, Event daemon config, Multiste authorisation, NSCA mode, TMP "
 "filesystem mode"
 msgstr ""
-"Apache Modus und TCP-Adresse und Port, Core, Liveproxy daemon und Livestatus "
-"TCP Modus, Event daemon Konfiguration, Multisite Autorisation, NSCA Modus, "
-"TMP Dateisystem Modus"
+"Apache Modus und TCP-Adresse und Port, Prozessorkern, Liveproxy-Daemon und "
+"Livestatus TCP Modus, Event-Daemon Konfiguration, Multisite Autorisation, "
+"NSCA Modus, TMP Dateisystem-Modus"
 
 msgid "Apache number of processes"
 msgstr "Anzahl Apache-Prozesse"
 
 msgid "Apache process tuning"
-msgstr "Apache-Prozesse"
+msgstr "Apache Prozessoptimierung"
 
 msgid "Apache process usage"
 msgstr "Auslastung der Apache-Prozesse"
@@ -8827,9 +8825,8 @@ msgstr "CLOSE_WAIT"
 msgid "CLOSING"
 msgstr "CLOSING"
 
-#, fuzzy
 msgid "CMC"
-msgstr "CMA"
+msgstr "CMC"
 
 msgid "CMC (Checkmk Microcore)"
 msgstr "CMC (Checkmk Micro Core)"
@@ -10419,7 +10416,6 @@ msgstr "Checkmk Instanzen des Hosts"
 msgid "Checkmk specific"
 msgstr "Checkmk-spezifisch"
 
-#, fuzzy
 msgid ""
 "Checkmk usually uses an interval of one minute for the active Checkmk check "
 "and for legacy checks. Here you can specify a larger interval. Please note, "
@@ -10427,12 +10423,12 @@ msgid ""
 "button). If you want to change the check interval of the 'Check_MK' service "
 "only, specify <tt><b>Check_MK$</b></tt> in the list of services."
 msgstr ""
-"Normalerweise werden aktive und legacy Checks im 1-Minuten-Intervall "
-"ausgeführt. Hier können Sie ein größeres Zeitintervall festlegen. Diese "
-"Einstellung wirkt sich nur auf aktive Checks (solche mit dem \"Neu ansetzen"
-"\" Button). Wenn Sie nur das Intervall für den Check_MK-Dienst ändern "
-"möchten, dann konfigurieren Sie <tt><b>Check_MK$</b></tt> in der Liste der "
-"Services."
+"Checkmk verwendet normalerweise ein Intervall von einer Minute für die "
+"aktive Checkmk-Prüfung und für ältere Prüfungen. Hier können Sie ein "
+"größeres Intervall festlegen. Bitte beachten Sie, dass diese Einstellung nur "
+"für aktive Checks gilt (solche mit dem Button \"Neu terminieren\"). Wenn Sie "
+"nur das Prüfintervall des Checks \"Check_MK\" ändern wollen, geben Sie "
+"<tt><b>Check_MK$</b></tt> in der Liste der Services an."
 
 msgid "Checkmk versions"
 msgstr "Checkmk-Versionen"
@@ -12937,7 +12933,6 @@ msgstr ""
 msgid "Count"
 msgstr "Anzahl"
 
-#, fuzzy
 msgid "Count (number of recent occurrances)"
 msgstr "Anzahl (Zahl von bisherigen Vorkommen)"
 
@@ -13624,9 +13619,8 @@ msgstr ""
 msgid "CronJobs"
 msgstr "CronJobs"
 
-#, fuzzy
 msgid "Crontab"
-msgstr "Kontakt"
+msgstr "Crontab"
 
 msgid "Crontab status"
 msgstr "Crontab-Status"
@@ -14152,7 +14146,7 @@ msgid "DB2 memory usage"
 msgstr "DB2-Speicherverbrauch"
 
 msgid "DCD"
-msgstr ""
+msgstr "DCD"
 
 msgid "DCD status"
 msgstr "DCD-Status"
@@ -19517,9 +19511,8 @@ msgstr ""
 msgid "Event processing time"
 msgstr "Ereignissverarbeitungszeit"
 
-#, fuzzy
 msgid "Event source IP address"
-msgstr "IPv4-/IPv6-Adresse der Ereignisquelle"
+msgstr "IP-Adresse der Ereignisquelle"
 
 msgid "Event statistics"
 msgstr "Event-Statistik"
@@ -19584,7 +19577,6 @@ msgstr "Ereignisse: Syslog Facility"
 msgid "Every day"
 msgstr "Jeden Tag"
 
-#, fuzzy
 msgid ""
 "Every time the plugin is executed, it gathers all relevant messages since "
 "its last execution. It then puts these messages in a bundle and stores it on "
@@ -19604,18 +19596,18 @@ msgstr ""
 "Meldungen seit seiner letzten Ausführung. Diese Nachrichten werden dann in "
 "einem Bündel zusammengefasst und auf der Festplatte gespeichert. Alle "
 "Pakete, die innerhalb dieser <i>Aufbewahrungsfrist</i> erstellt wurden, "
-"werden ausgegeben und an die Überwachungsstelle gesendet. Die Monitoring-"
-"Instanz verfolgt die Pakete und verarbeitet nur diejenigen, die sie noch "
+"werden ausgegeben und an die Monitoring-Instanz gesendet. Die Monitoring-"
+"Instanz überprüft die Pakete und verarbeitet nur diejenigen, die sie noch "
 "nicht gesehen hat. Dadurch wird verhindert, dass Nachrichten verloren gehen, "
-"wenn die übermittelten Agentenausgaben nicht im Rahmen eines Prüfzyklus "
+"wenn die übermittelten Agentenausgaben nicht im Rahmen eines Check-Zyklus "
 "verarbeitet werden (z. B. während der Erkennung oder beim Abrufen über "
 "<tt>cmk -d my_host</tt>).\n"
 "\n"
-"Es wird empfohlen, den Wert mindestens auf das Prüfintervall zu setzen (das "
-"standardmäßig 60 Sekunden beträgt). Beachten Sie, dass bei einer Einstellung "
-"auf das <i>N</i>-fache des Prüfintervalls die gesendete Datenmenge etwa das "
-"<i>N</i>-fache beträgt (ohne Berücksichtigung der Komprimierung durch den "
-"Agent Controller)."
+"Es wird empfohlen, den Wert mindestens auf das Check-Intervall zu setzen ("
+"das standardmäßig 60 Sekunden beträgt). Beachten Sie, dass bei einer "
+"Einstellung auf das <i>N</i>-fache des Check-Intervalls die gesendete "
+"Datenmenge etwa das <i>N</i>-fache beträgt (ohne Berücksichtigung der "
+"Komprimierung durch den Agent Controller)."
 
 msgid "Every week on..."
 msgstr "Jede Woche am..."
@@ -19668,7 +19660,6 @@ msgstr "Beispiel PromQL Abfrage: up{job=\"node_exporter\"}"
 msgid "Example configuration for systemd"
 msgstr "Beispielkonfiguration für systemd"
 
-#, fuzzy
 msgid "Example for Parameters"
 msgstr "Beispiel für Parameter"
 
@@ -23861,7 +23852,6 @@ msgstr ""
 "ermöglichen. Wenn die Option weggelassen wird, wird der Pfad <tt>/etc/"
 "check_mk</tt> genutzt."
 
-#, fuzzy
 msgid ""
 "Here you can specify an alternative user that the agent should be run as. "
 "Please note that only root has enough priviledges for all commands and "
@@ -24000,7 +23990,7 @@ msgstr ""
 "Reihenfolge der Regeln eine Rolle, d. h. Regeln weiter unten in der Liste "
 "werden von Regeln weiter oben überschrieben."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Here, you can specify how Checkmk will translate the exit code of a task "
 "into a monitoring state. This will overwrite the default mapping used by the "
@@ -24009,14 +23999,13 @@ msgid ""
 "be kept as the summary, then.<br><br>The following exit codes/monitoring "
 "states/summaries are specified as default:<br>%s"
 msgstr ""
-"Legen Sie fest, wie Checkmk den Exit-Code einer Aufgabe in einen Monitoring-"
-"Status übersetzt. Dies überschreibt die vom Check-Plugin verwendete Standard-"
-"Zuordnung. Sie können auch festlegen, dass die Standard-Zuordnung nur "
-"teilweise überschrieben wird, indem Sie nur den neuen Monitoring-Status "
-"angeben. Der Standardtext wird dann als Zusammenfassung beibehalten.\n"
-"\n"
-" Die Standardeinstellungen sind in der Anleitung des Checks beschrieben "
-"(siehe <i>%s</i>)."
+"Hier können Sie angeben, wie Checkmk den Exit-Code eines Tasks in einen "
+"Monitoring-Status umwandeln soll. Dies überschreibt die vom Check-Plugin "
+"verwendete Standardzuordnung. Sie können auch festlegen, dass die "
+"Standardzuordnung nur teilweise überschrieben wird, indem Sie nur den neuen "
+"Monitoring-Status angeben. Der Standardtext wird dann als Zusammenfassung "
+"beibehalten.<br><br>Die folgenden Exit-Codes/Überwachungszustände/Summen "
+"sind standardmäßig festgelegt:<br>%s"
 
 msgid "Hidden"
 msgstr "Versteckt"
@@ -25934,7 +25923,6 @@ msgstr ""
 "Multisite Statusansicht alarmiert - wenn die Ansicht für Klänge konfiguriert "
 "ist. Bei allen mitgelieferten Ansichten sind Klänge aktiviert."
 
-#, fuzzy
 msgid ""
 "If that user does not have the permission <i>See all events</i> then this "
 "permission controls wether he/she can see events that are not related to a "
@@ -25943,7 +25931,7 @@ msgid ""
 msgstr ""
 "Wenn dieser Benutzer die Berechtigung <i>Alle Events sehen</i> nicht hat, "
 "dann kontrolliert diese Berechtigung, ob er Events sehen kann, die keinen "
-"Bezug zu einem überwachten Host haben und denen über die Event-Regel keine "
+"Bezug zu einem überwachten Host haben und denen über die Ereignisregel keine "
 "spezifischen Kontaktgruppen zugewiesen wurden."
 
 msgid ""
@@ -28178,7 +28166,6 @@ msgstr "Systemd-Service installieren und aktivieren"
 msgid "Install and activate xinetd service"
 msgstr "Installieren und aktivieren des xinetd-Service"
 
-#, fuzzy
 msgid ""
 "Install only packages from trusted sources. Packages can potentially harm "
 "your Checkmk installation. It is recommended to use only packages from "
@@ -28187,9 +28174,9 @@ msgid ""
 msgstr ""
 "Installieren Sie nur Pakete aus vertrauenswürdigen Quellen. Pakete können "
 "Ihre Checkmk-Installation potenziell schädigen. Es wird empfohlen, nur "
-"Pakete aus vertrauenswürdigen Quellen zu verwenden. Besuchen Sie die <a href="
-"\"https://exchange.checkmk.com/\">Checkmk Exchange</a> um von tribe29 "
-"geprüfte Pakete zu erhalten."
+"Pakete aus vertrauenswürdigen Quellen zu verwenden.<br>Besuchen Sie die <a "
+"href=\"https://exchange.checkmk.com/\">Checkmk Exchange</a>, um von Checkmk "
+"GmbH geprüfte Pakete zu erhalten."
 
 msgid "Installation"
 msgstr "Installation"
@@ -29527,9 +29514,8 @@ msgstr "LDAP Attribut für Suche. Standard: <tt>(objectclass=*)</tt>."
 msgid "LDAP attribute to sync"
 msgstr "LDAP Attribut für Synchronisation"
 
-#, fuzzy
 msgid "LDAP base, e.g. ou=Development, o=Checkmk GmbH, c=de"
-msgstr "LDAP Base, z.B. ou=Development, o=tribe29 GmbH, c=de"
+msgstr "LDAP Base, z.B. ou=Development, o=Checkmk GmbH, c=de"
 
 #, python-format
 msgid ""
@@ -31081,9 +31067,8 @@ msgstr ""
 msgid "Liveproxy Daemon"
 msgstr "Livestatus-Proxy-Daeamon"
 
-#, fuzzy
 msgid "Liveproxyd"
-msgstr "Liveproxyd-Status"
+msgstr "Liveproxyd"
 
 msgid "Liveproxyd status"
 msgstr "Liveproxyd-Status"
@@ -31998,16 +31983,14 @@ msgstr "FEHLT '%s'"
 msgid "MK Remote Plugin Executor (MRPE)"
 msgstr "MK Remote Plugin Executor (MRPE)"
 
-#, fuzzy
 msgid "MKEventd"
-msgstr "Ereignis"
+msgstr "MKEventd"
 
 msgid "MKEventd status"
 msgstr "MKEventd Status"
 
-#, fuzzy
 msgid "MKNotifyd"
-msgstr "MKNotifyd Status"
+msgstr "MKNotifyd"
 
 msgid "MKNotifyd status"
 msgstr "MKNotifyd Status"
@@ -32782,10 +32765,8 @@ msgstr "Nur Alarme der Event Console zulassen"
 msgid "Match only during time period"
 msgstr "Nur während Zeitperiode zuordnen"
 
-#, fuzzy
 msgid "Match original source IP address"
-msgstr ""
-"Übereinstimmung mit der ursprünglichen Quell-IP-Adresse oder dem Netzwerk"
+msgstr "Übereinstimmung mit der ursprünglichen Quell-IP-Adresse"
 
 msgid "Match port states"
 msgstr "Matche Port-Zustände"
@@ -34928,7 +34909,7 @@ msgid "NODATA"
 msgstr "K.DATEN"
 
 msgid "NPCD"
-msgstr ""
+msgstr "NPCD"
 
 msgid "NPCD status"
 msgstr "NPCD-Status"
@@ -34969,9 +34950,8 @@ msgstr "NagVis: Sonstiges"
 msgid "NagVis: Sidebar element"
 msgstr "NagVis: Seitenleistenelement"
 
-#, fuzzy
 msgid "Nagios"
-msgstr "Nagios 3"
+msgstr "Nagios"
 
 msgid "Nagios 3"
 msgstr "Nagios 3"
@@ -37114,7 +37094,6 @@ msgstr "Anzahl von Alarme übersteigt erlaubte Höchstzahl"
 msgid "Number of objects"
 msgstr "Anzahl an Objekten"
 
-#, fuzzy
 msgid "Number of occurrances"
 msgstr "Anzahl der Vorkommen"
 
@@ -37804,9 +37783,9 @@ msgstr "Laufende Shard-Informationsanfragen"
 msgid "Online"
 msgstr "online"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Online (%s)"
-msgstr "online"
+msgstr "Online (%s)"
 
 msgid "Online submission"
 msgstr "Online-Übertragung"
@@ -41962,9 +41941,8 @@ msgstr "RRD-Speicherformat"
 msgid "RRD updates in journal of RRD Cache"
 msgstr "RRD-Updates im Journal des RRD-Caches"
 
-#, fuzzy
 msgid "RRDCached"
-msgstr "Zwischengespeichert"
+msgstr "RRDCached"
 
 msgid "RRDCached status"
 msgstr "RRDCached-Status"
@@ -42423,9 +42401,8 @@ msgstr "Redis-Datenbanken"
 msgid "Redis info"
 msgstr "Redis-Informationen"
 
-#, fuzzy
 msgid "Redis is not reachable, terminating"
-msgstr "Redis ist erreichbar"
+msgstr "Redis ist nicht erreichbar, wird beendet"
 
 msgid "Redis persistence"
 msgstr "Redis-Persistenz"
@@ -42623,7 +42600,6 @@ msgstr "Regulärer Ausdruck"
 msgid "Regular expression for logfile filtering"
 msgstr "Regulärer Ausdruck für Log-Datei-Filterung"
 
-#, fuzzy
 msgid "Regular expression for matching the syslog tag (case insenstive)"
 msgstr ""
 "Regulärer Ausdruck für die Übereinstimmung mit dem Syslog-Tag (Groß- und "
@@ -43353,9 +43329,8 @@ msgstr "Erf. Version"
 msgid "Request"
 msgstr "Bedarf"
 
-#, fuzzy
 msgid "Request IDs are not equal"
-msgstr "Die Bezeichnungen %s sind nicht erforderlich."
+msgstr "Anfrage-IDs sind nicht gleich"
 
 msgid "Request Method"
 msgstr "Requestmethode"
@@ -43587,10 +43562,10 @@ msgstr "Alle Regel-Zugriffszähler auf 0 zurückgesetzt"
 msgid "Resetted configuration variable %s to its default."
 msgstr "Variable %s auf Standardwert zurückgesetzt."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Resetted the rules of rule pack %s to the ones provided via MKP"
 msgstr ""
-"Die Regeln des Regelpakets %s auf die des bereitgestellten MKPs zurücksetzen"
+"Die Regeln des Regelpakets %s auf die des bereitgestellten MKPs zurückgesetzt"
 
 msgid "Resident items ratio"
 msgstr "Verhältnis der residenten Elemente"
@@ -43708,9 +43683,8 @@ msgstr "Beschränke Logfiles durch reguläre Ausdrücke (passend auf Prefix)"
 msgid "Restrict access to IP addresses"
 msgstr "Zugriff über IP-Adressen beschränken"
 
-#, fuzzy
 msgid "Restrict access to the following source IP addresses"
-msgstr "Zugriff auf die folgenden IPv4/IPv6-Adressen/-Netzwerke beschränken"
+msgstr "Zugriff auf die folgenden IP-Adressen beschränken"
 
 msgid "Restrict all"
 msgstr "verbiete alle"
@@ -44809,9 +44783,8 @@ msgstr "STARTTLS aktiviert."
 msgid "STIME"
 msgstr "STIME"
 
-#, fuzzy
 msgid "STunnel"
-msgstr "VPN Tunnel"
+msgstr "STunnel"
 
 msgid "STunnel status"
 msgstr "Tunnel-Status"
@@ -45669,9 +45642,8 @@ msgstr "Ereignisse an lokale Eventkonsole über Unix Socket senden"
 msgid "Send events to remote syslog host"
 msgstr "Ereignisse an entfernten syslog-Host senden"
 
-#, fuzzy
 msgid "Send host metrics to Graphite"
-msgstr "Metriken an Graphite senden"
+msgstr "Host-Metriken an Graphite senden"
 
 msgid "Send message"
 msgstr "Nachricht senden"
@@ -45703,9 +45675,8 @@ msgstr "Senden der Anfrage"
 msgid "Send seperate notifications to every recipient"
 msgstr "Einzelne Alarme für jeden Empfänger versenden"
 
-#, fuzzy
 msgid "Send service metrics to Graphite"
-msgstr "Metriken an Graphite senden"
+msgstr "Service-Metriken an Graphite senden"
 
 msgid "Send that many PINGs in one bulk:"
 msgstr "Sende so viele PINGs auf einmal:"
@@ -48149,13 +48120,12 @@ msgstr ""
 msgid "Some but not all package types are signed with key '%s'"
 msgstr "Einige, aber nicht alle Pakete sind signiert mit dem Schlüssel '%s'"
 
-#, fuzzy
 msgid ""
 "Some devices send texts in non-ASCII characters. Checkmk always assumes "
 "UTF-8 encoding. You can declare other  other encodings here"
 msgstr ""
-"Einige Hosts senden Text mit nicht-ASCII Zeichen. Check_MK erwartet immer "
-"UTF-8. Andere Kodierungen können Sie hier einstellen."
+"Einige Hosts senden Text mit nicht-ASCII Zeichen. Checkmk erwartet immer UTF-"
+"8 Kodierung. Andere Kodierungen können Sie hier einstellen."
 
 msgid ""
 "Some firewalls are not capable of dealing with a few thousand PING packets "
@@ -50525,9 +50495,8 @@ msgstr "Die IP-Adressen von %d Hosts wurden erfolgreich aktualisiert."
 msgid "Successfully updated user profile."
 msgstr "Benutzerprofil erfolgreich aktualisiert."
 
-#, fuzzy
 msgid "Successfully verified request ID"
-msgstr "Signaturen erfolgreich geprüft"
+msgstr "Anfrage-ID erfolgreich geprüft"
 
 msgid "Successfully verified signature"
 msgstr "Signaturen erfolgreich geprüft"
@@ -51327,7 +51296,7 @@ msgid ""
 "just one temperature sensor. "
 msgstr ""
 "Temperaturschwellwerte für Geräte wie DELL Powerconnect, die nur einen "
-"einzelnen Temperatursensor haben."
+"einzelnen Temperatursensor haben. "
 
 msgid ""
 "Temperature levels for hardware devices with a single temperature sensor."
@@ -52609,11 +52578,11 @@ msgstr ""
 "Der Zellabstand wird nur dann verwendet, wenn <b>keine</b> Trennlinien "
 "gezeichnet werden."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr ""
-"Die Zentrale (Version: %s, Edition: %s) und die Remote-Instanz (Version: %s, "
-"Edition: %s) sind nicht kompatibel. Grund: %s"
+"Die Zentralinstanz (%s) und die Remote-Instanz (%s) sind nicht kompatibel. "
+"Grund: %s"
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -53801,11 +53770,9 @@ msgstr "Der Job \"%s\" ist verschlüsselt"
 msgid "The job has been deleted."
 msgstr "Der Job wurde gelöscht."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The key pair already exists (Key: %d, Description: %s)"
-msgstr ""
-"Der Schlüssel bzw. das Zertifikat existiert bereits (Schlüssel: %d, "
-"Beschreibung: %s)"
+msgstr "Das Schlüsselpaar existiert bereits (Schlüssel: %d, Beschreibung: %s)"
 
 #, python-format
 msgid ""
@@ -55012,7 +54979,6 @@ msgstr "Diese Regelbedingung trifft nicht zu."
 msgid "The rule does not match"
 msgstr "Diese Regel trifft nicht zu"
 
-#, fuzzy
 msgid ""
 "The rule gives the possibility to run any script using a given user account. "
 "There are two modes of the rule: <i>group mode</i>, in the case Windows "
@@ -55026,19 +54992,19 @@ msgid ""
 "packages, distributed and installed with them on the target system. We "
 "highly recommend to use the <i>group mode</i> whenever possible."
 msgstr ""
-"Die Regel bietet die Möglichkeit, ein beliebiges Skript unter einem "
-"bestimmten Benutzerkonto auszuführen. Es gibt zwei Modi der Regel: "
-"<i>Gruppenmodus</i>, für den Fall, dass Windows Agent einen eigenen internen "
-"Benutzer in der gewünschten Gruppe bereitstellt, um das Skript auszuführen, "
-"oder <i>Benutzermodus</i>, in diesem Fall sollten Sie die vollständigen "
+"Die Regel bietet die Möglichkeit, jedes Skript unter einem bestimmten "
+"Benutzerkonto auszuführen. Es gibt zwei Modi der Regel: <i>Gruppenmodus</i>, "
+"für den Fall, dass Windows Agent seinen eigenen internen Benutzer in der "
+"angeforderten Gruppe bereitstellt, um das Skript auszuführen, oder "
+"<i>Benutzermodus</i>, in diesem Fall sollten Sie die vollständigen "
 "Anmeldeinformationen angeben. Der <i>Gruppenmodus</i> ist sicherer, da "
-"nirgendwo Anmeldedaten gespeichert werden müssen, außer im Agent intern. "
+"nirgendwo Anmeldedaten gespeichert werden müssen, außer intern im Agent. "
 "Wenn Sie den <i>Benutzermodus</i> verwenden, werden die angegebenen "
-"Anmeldeinformationen auf allen Checkmk-Servern gespeichert, auf die die "
-"Konfiguration angewendet wird. Die Anmeldeinformationen werden auch in die "
-"Agentbäckerei-Pakete eingebacken, verteilt und mit ihnen auf dem Zielsystem "
-"installiert.Wir empfehlen dringend, wann immer möglich den <i>Gruppenmodus</"
-"i> zu verwenden."
+"Anmeldeinformationen auf allen Checkmk-Servern <b>als Klartext gespeichert</"
+"b>, auf die die Konfiguration angewendet wird. Die Anmeldeinformationen (im "
+"Klartext) werden auch in die Agentenbäckerei-Pakete eingebacken, verteilt "
+"und mit ihnen auf dem Zielsystem installiert. Wir empfehlen dringend, wann "
+"immer möglich den <i>Gruppenmodus</i> zu verwenden."
 
 msgid "The rule is only applied to hosts directly in or below this folder."
 msgstr "Regel trifft nur auf Hosts in diesem Ordner (und darunter) zu."
@@ -55069,16 +55035,14 @@ msgstr ""
 "der hier angegebenen Kontaktgruppen bearbeitet werden - selbst, wenn sie "
 "keine Administratorrechte haben."
 
-#, fuzzy
 msgid ""
 "The rules does only apply when the event is being received from a certain IP "
 "address. You can specify either a single IP address or an IPv4 network in "
 "the notation X.X.X.X/Bits."
 msgstr ""
-"Die Regel trifft nur zu, wenn das Event von einer bestimmte IP-Adresse "
-"empfangen wird. Sie können entweder eine einzelne IP-Adresse angeben oder "
-"ein IPv4-/IPv6-Netzwerk in der Notation X.X.X.X/Bits oder X:X:.../Bits für "
-"IPv6"
+"Die Regel gilt nur, wenn das Ereignis von einer bestimmte IP-Adresse "
+"empfangen wird. Sie können entweder eine einzelne IP-Adresse oder ein IPv4-"
+"Netzwerk in der Notation X.X.X.X/Bits angeben."
 
 msgid ""
 "The rules does only apply when the given regular expression matches the host "
@@ -56646,7 +56610,6 @@ msgstr ""
 "Dies erlaubt dem Benutzer, Seitenleistenelemente hinzuzufügen, zu "
 "verschieben und zu entfernen."
 
-#, fuzzy
 msgid ""
 "This allows you to disable the replication without loosing your settings. If "
 "you check this box, then no replication will be done and the Event Console "
@@ -56654,7 +56617,7 @@ msgid ""
 msgstr ""
 "Damit schalten Sie die Replikation ab ohne Einstellungen zu verlieren. Wenn "
 "Sie dieses Kästchen ankreuzen, dann erfolgt keine Replikation und die Event "
-"Console reagiert als ihr eigener Master."
+"Console agiert als ihr eigener Master."
 
 msgid ""
 "This attribute is mandatory and there is no value defined in the host list "
@@ -56696,17 +56659,17 @@ msgstr "Dieser Sicherungs-Job existiert nicht."
 msgid "This backup target does not exist."
 msgstr "Dieses Sicherungsziel existiert nicht."
 
-#, fuzzy
 msgid ""
 "This boolean variable allows you to bring Checkmk into a dry run mode. No "
 "hosts will be contacted, no DNS lookups will take place and data is read "
 "from cache files that have been created during normal operation or have been "
 "copied here from another monitoring site."
 msgstr ""
-"Mit dieser Variable kann Check_MK in einen Testlauf-Modus geschaltet werden. "
-"Es werden keine Hosts und DNS-Informationen abgefragt. Die Daten werden aus "
-"den Cache-Dateien gelesen, die während eines normalen Check_MK-Laufs erzeugt "
-"wurden."
+"Mit dieser boolschen Variable kann Checkmk in einen Testlauf-Modus "
+"geschaltet werden. Es werden keine Hosts kontaktiert, es finden keine DNS-"
+"Abfragen statt und die Daten werden aus Cache-Dateien gelesen, die während "
+"des normalen Betriebs erstellt oder von einer anderen Monitoring-Instanz "
+"hierher kopiert wurden."
 
 msgid ""
 "This can be a local directory of your choice. You can also use this option "
@@ -56719,7 +56682,6 @@ msgstr ""
 "NFS, Samba oder ähnlichem ablegen wollen. Allerdings müssen Sie den "
 "Netzwerkfreigabe selbstständig unter dem gewählten Pfad einbinden."
 
-#, fuzzy
 msgid ""
 "This catalog of check plugins gives you a complete listing of all plugins "
 "that are shipped with your Checkmk installation. It also allows you to "
@@ -56727,11 +56689,11 @@ msgid ""
 "manually create services in case you cannot or do not want to rely on the "
 "automatic service discovery."
 msgstr ""
-"Der Katalog der Checkplugins listet alle mit Ihrer Check_MK-Installation "
-"ausgelieferten Plugins vollständig auf. Außerdem erlaubt er Zugriff auf die "
-"Regelsätze, um die Parameter für die Checks zu konfigurieren oder manuell "
-"Services anzulegen, falls sie die automatische Serviceerkennung nicht nutzen "
-"können oder wollen."
+"Der Katalog der Check-Plugins listet alle mit Ihrer Checkmk-Installation "
+"ausgelieferten Plugins auf. Außerdem erlaubt er Zugriff auf die Regelsätze, "
+"um die Parameter für die Checks zu konfigurieren und manuell Services "
+"anzulegen, falls Sie die automatische Service-Erkennung nicht nutzen können "
+"oder wollen."
 
 msgid "This change has been made by another user"
 msgstr "Diese Änderung wurde von einem anderen Benutzer gemacht"
@@ -57788,7 +57750,6 @@ msgstr "Diese Einstellung wurde in den Globalen Einstellungen gesetzt."
 msgid "This option has been modified."
 msgstr "Diese Einstellung wurde gesetzt."
 
-#, fuzzy
 msgid ""
 "This option helps you to protect the Event Console from resoure problems "
 "which may occur in case of too many current events at the same time."
@@ -65315,9 +65276,9 @@ msgstr "Version: %s"
 msgid "Version: %s, Edition: %s"
 msgstr "Online (Version: %s, Edition: %s)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Version: %s, Edition: %s, License state: %s"
-msgstr "Online (Version: %s, Edition: %s)"
+msgstr "Version: %s, Edition: %s, Lizenzstatus: %s"
 
 msgid "Vertical axis mirroring"
 msgstr "Vertikale Achse spiegeln"
@@ -69267,9 +69228,9 @@ msgstr ""
 msgid "You have permission to this host."
 msgstr "Für diesen Host haben Sie Berechtigungen."
 
-#, fuzzy, python-format
+#, python-format
 msgid "You have selected %d %s for migration: %s"
-msgstr "Sie haben <b>%d</b> Hosts für den Parent-Scan ausgewählt. "
+msgstr "Sie haben %d %s für die Migration ausgewählt: %s"
 
 #, python-format
 msgid ""
@@ -71598,9 +71559,8 @@ msgstr "Unterkategorien"
 msgid "success"
 msgstr "Erfolg"
 
-#, fuzzy
 msgid "synchronization"
-msgstr "Automatischer Benutzerabgleich"
+msgstr "Synchronisierung"
 
 msgid "synchronize"
 msgstr "synchronisieren"
@@ -71907,9 +71867,9 @@ msgstr "{actual} ist zu hoch. Erlaubtes Maximum ist {bound}."
 msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 
-#, fuzzy, python-format
+#, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
-msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #, python-format
 #~ msgid ""

@@ -160,12 +160,10 @@ function update(handler_data, response) {
     ds_container.innerHTML = response.datasources;
 
     // Update fix all button
-    if (response.fixall) {
-        const fixall_container = document.getElementById("fixall_container")!;
-        fixall_container.style.display = "block";
-        fixall_container.innerHTML = response.fixall;
-        utils.execute_javascript_by_object(fixall_container);
-    }
+    const fixall_container = document.getElementById("fixall_container")!;
+    fixall_container.style.display = response.fixall ? "block" : "none";
+    fixall_container.innerHTML = response.fixall;
+    utils.execute_javascript_by_object(fixall_container);
 
     // Update the content table
     var container = document.getElementById("service_container")!;

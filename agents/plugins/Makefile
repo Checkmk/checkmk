@@ -4,18 +4,20 @@ include ../../artifacts.make
 PIPENV := ../../scripts/run-pipenv
 THREE_TO_TWO := $(PIPENV) run 3to2
 
+# Not all plugins are working with Python 2 therefore these are skipped during 3to2 conversion
+PYTHON3_ONLY_PLUGINS := mk_sap.py
 # New plugins are expected to all have a .py extension. This will discover them
 # automatically.  Old plugins without extension are explicitly whitelistet here
 # to be found.
-PYTHON3_PLUGINS := $(wildcard *[^_2].py)
+PYTHON3_PLUGINS := $(filter-out $(PYTHON3_ONLY_PLUGINS), $(wildcard *[^_2].py))
 PYTHON2_PLUGINS := $(addsuffix _2.py,$(PYTHON3_PLUGINS:.py=))
 
 .PHONY: all clean
 
-all: $(PYTHON2_PLUGINS)
+all: $(PYTHON2_PLUGINS) $(addsuffix .py.checksum,$(PYTHON3_ONLY_PLUGINS:.py=))
 
 clean:
-	$(RM) *_2.py *.checksum
+	$(RM) $(PYTHON2_PLUGINS) *.checksum
 
 # During creation of the source packages we update the Checkmk version using
 # "make setversion" from the base directory. This updates the Checkmk version

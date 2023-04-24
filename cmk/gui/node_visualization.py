@@ -8,6 +8,7 @@ import itertools
 import json
 import os
 import time
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -73,7 +74,6 @@ from cmk.bi.lib import NodeResultBundle
 from cmk.bi.trees import BICompiledLeaf, BICompiledRule
 
 Mesh = set[str]
-Meshes = list[Mesh]
 
 
 def _get_topology_configuration(
@@ -713,8 +713,8 @@ class AjaxFetchTopology(AjaxPage):
         return topology_info
 
     def _reduce_mesh_nodes(  # pylint: disable=too-many-branches
-        self, meshes: Meshes, limit: int, topology: "Topology"
-    ) -> Meshes:
+        self, meshes: Sequence[Mesh], limit: int, topology: "Topology"
+    ) -> Sequence[Mesh]:
         """Reduce the number of nodes and put all nodes into a single mesh"""
         reduced_mesh = set()
 
@@ -778,7 +778,7 @@ class Topology:
         self._border_hosts: set[HostName] = set()
 
         self._errors: list[str] = []
-        self._meshes: Meshes = []
+        self._meshes: list[Mesh] = []
 
         # Node depth to next growth root
         self._depth_info: dict[str, int] = {}
@@ -843,7 +843,7 @@ class Topology:
     def errors(self) -> list[str]:
         return self._errors
 
-    def compute(self) -> Meshes:
+    def compute(self) -> Sequence[Mesh]:
         if not self._settings.frontend.growth_root_nodes and not self._hostnames_from_filters:
             return []
 
@@ -863,8 +863,7 @@ class Topology:
         for mesh in self._meshes:
             mesh -= self._border_hosts
 
-        meshes = self._postprocess_meshes(self._meshes)
-        return meshes
+        return self._postprocess_meshes(self._meshes)
 
     def _grow(self) -> None:
         self._fetch_root_nodes()
@@ -1013,7 +1012,7 @@ class Topology:
             new_hosts.append(host_data)
         return new_hosts
 
-    def _postprocess_meshes(self, meshes: Meshes) -> Meshes:
+    def _postprocess_meshes(self, meshes: list[Mesh]) -> Sequence[Mesh]:
         return meshes
 
     def _fetch_data_for_hosts(self, hostnames: set[HostName]) -> list[dict]:
@@ -1135,7 +1134,7 @@ class ParentChildNetworkTopology(Topology):
 
         return response
 
-    def _postprocess_meshes(self, meshes: Meshes) -> Meshes:
+    def _postprocess_meshes(self, meshes: list[Mesh]) -> Sequence[Mesh]:
         """Create a central node and add all monitoring sites as children"""
 
         central_node = {

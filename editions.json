@@ -20,13 +20,12 @@
             "sles-15sp2",
             "sles-15sp3",
             "sles-15sp4",
-            "cma",
             "cma-3"
         ],
         "DISTROS_TESTBUILD": [
             "ubuntu-22.04",
             "centos-7",
-            "cma"
+            "cma-3"
         ]
     },
     "raw": {

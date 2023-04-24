@@ -3,28 +3,48 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping
+from typing import NamedTuple
 
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
 
 
-def inventory_kentix_humidity(info):
-    if info:
-        return [(None, None)]
-    return []
+class Section(NamedTuple):
+    reading: float
+    lower_warn: float
+    upper_warn: float
+    text: str
 
 
-def check_kentix_humidity(_no_item, _no_params, info):
-    info[0][0] = info[0][0].split(".", 3)[-1]
-    value, lower_warn, upper_warn, _alarm, text = info[0]
-    temp = float(value) / 10
-    perfdata = [("humidity", temp, lower_warn + ":" + upper_warn)]
-    upper_warn = float(upper_warn)
-    lower_warn = float(lower_warn)
-    infotext = "%.1f%% (min/max at %.1f%%/%.1f%%)" % (temp, lower_warn, upper_warn)
-    if temp >= upper_warn or temp <= lower_warn:
+def parse_kentix_humidity(info: list[list[str]]) -> Section | None:
+    if not info:
+        return None
+    oid_value, lower_warn, upper_warn, _alarm, text = info[0]
+    return Section(
+        reading=float(oid_value.split(".", 3)[-1]) / 10,
+        lower_warn=float(lower_warn),
+        upper_warn=float(upper_warn),
+        text=text,
+    )
+
+
+def inventory_kentix_humidity(section: Section) -> Iterable[tuple[None, dict]]:
+    yield None, {}
+
+
+def check_kentix_humidity(
+    _no_item: None, _no_params: Mapping[str, object], section: Section
+) -> Iterable:
+    perfdata = [("humidity", section.reading, section.upper_warn, None)]
+    infotext = "%.1f%% (min/max at %.1f%%/%.1f%%)" % (
+        section.reading,
+        section.lower_warn,
+        section.upper_warn,
+    )
+    if section.reading >= section.upper_warn or section.reading <= section.lower_warn:
         state = 1
-        infotext = "%s:  %s" % (text, infotext)
+        infotext = "%s:  %s" % (section.text, infotext)
     else:
         state = 0
     return state, infotext, perfdata
@@ -32,6 +52,7 @@ def check_kentix_humidity(_no_item, _no_params, info):
 
 check_info["kentix_humidity"] = {
     "detect": DETECT_KENTIX,
+    "parse_function": parse_kentix_humidity,
     "check_function": check_kentix_humidity,
     "inventory_function": inventory_kentix_humidity,
     "service_description": "Humidity",

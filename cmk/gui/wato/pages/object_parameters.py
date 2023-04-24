@@ -8,7 +8,7 @@ modified via rules."""
 
 from collections.abc import Collection, Iterator
 
-from cmk.utils.type_defs import Item
+from cmk.utils.type_defs import HostName, Item
 
 from cmk.automations.results import AnalyseServiceResult
 
@@ -58,7 +58,7 @@ class ModeObjectParameters(WatoMode):
         return ModeEditHost
 
     def _from_vars(self):
-        self._hostname = request.get_ascii_input_mandatory("host")
+        self._hostname = HostName(request.get_ascii_input_mandatory("host"))
         host = Folder.current().host(self._hostname)
         if host is None:
             raise MKUserError("host", _("The given host does not exist."))

@@ -20,7 +20,7 @@ import cmk.utils.translations
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import regex
 from cmk.utils.render import Age
-from cmk.utils.type_defs import AgentRawData, HostName
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 logger = logging.getLogger("cmk.base")
 
@@ -68,7 +68,7 @@ _PiggybackTimeSettingsMap = Mapping[tuple[str | None, str], int]
 
 
 def get_piggyback_raw_data(
-    piggybacked_hostname: HostName | None,
+    piggybacked_hostname: HostName | HostAddress | None,
     time_settings: PiggybackTimeSettings,
 ) -> Sequence[PiggybackRawDataInfo]:
     """Returns the usable piggyback data for the given host
@@ -170,7 +170,7 @@ class _TimeSettingsMap:
     def __init__(
         self,
         source_hostnames: Container[HostName],
-        piggybacked_hostname: HostName,
+        piggybacked_hostname: HostName | HostAddress,
         time_settings: PiggybackTimeSettings,
     ) -> None:
         matching_time_settings: dict[tuple[str | None, str], int] = {}
@@ -188,7 +188,9 @@ class _TimeSettingsMap:
 
         self._expanded_settings: Final = matching_time_settings
 
-    def _match(self, key: str, source_hostname: HostName, piggybacked_hostname: HostName) -> int:
+    def _match(
+        self, key: str, source_hostname: HostName, piggybacked_hostname: HostName | HostAddress
+    ) -> int:
         with suppress(KeyError):
             return self._expanded_settings[(piggybacked_hostname, key)]
         with suppress(KeyError):
@@ -198,14 +200,14 @@ class _TimeSettingsMap:
     def max_cache_age(
         self,
         source_hostname: HostName,
-        piggybacked_hostname: HostName,
+        piggybacked_hostname: HostName | HostAddress,
     ) -> int:
         return self._match("max_cache_age", source_hostname, piggybacked_hostname)
 
     def validity_period(
         self,
         source_hostname: HostName,
-        piggybacked_hostname: HostName,
+        piggybacked_hostname: HostName | HostAddress,
     ) -> int | None:
         try:
             return self._match("validity_period", source_hostname, piggybacked_hostname)
@@ -215,7 +217,7 @@ class _TimeSettingsMap:
     def validity_state(
         self,
         source_hostname: HostName,
-        piggybacked_hostname: HostName,
+        piggybacked_hostname: HostName | HostAddress,
     ) -> int:
         try:
             return self._match("validity_state", source_hostname, piggybacked_hostname)
@@ -224,7 +226,7 @@ class _TimeSettingsMap:
 
 
 def _get_piggyback_processed_file_infos(
-    piggybacked_hostname: HostName,
+    piggybacked_hostname: HostName | HostAddress,
     time_settings: PiggybackTimeSettings,
 ) -> Sequence[PiggybackFileInfo]:
     """Gather a list of piggyback files to read for further processing.
@@ -250,7 +252,7 @@ def _get_piggyback_processed_file_infos(
 
 def _get_piggyback_processed_file_info(
     source_hostname: HostName,
-    piggybacked_hostname: HostName,
+    piggybacked_hostname: HostName | HostAddress,
     piggyback_file_path: Path,
     settings: _TimeSettingsMap,
 ) -> PiggybackFileInfo:
@@ -420,7 +422,9 @@ def _store_status_file_of(
 #   '----------------------------------------------------------------------'
 
 
-def get_source_hostnames(piggybacked_hostname: HostName | None = None) -> Sequence[HostName]:
+def get_source_hostnames(
+    piggybacked_hostname: HostName | HostAddress | None = None,
+) -> Sequence[HostName]:
     if piggybacked_hostname is None:
         return [
             HostName(source_host.name)
@@ -453,7 +457,7 @@ def _get_source_status_file_path(source_hostname: HostName) -> Path:
 
 def _get_piggybacked_file_path(
     source_hostname: HostName,
-    piggybacked_hostname: HostName,
+    piggybacked_hostname: HostName | HostAddress,
 ) -> Path:
     return cmk.utils.paths.piggyback_dir / piggybacked_hostname / source_hostname
 

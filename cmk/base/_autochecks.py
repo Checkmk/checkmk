@@ -24,7 +24,7 @@ ComputeCheckParameters = Callable[
     TimespecificParameters,
 ]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
-GetEffectviveHost = Callable[[HostName, str], str]
+GetEffectviveHost = Callable[[HostName, str], HostName]
 
 
 class AutochecksManager:

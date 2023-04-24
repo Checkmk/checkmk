@@ -494,7 +494,7 @@ class ModeRenameHost(WatoMode):
                 % (local_site, renamed_host_site),
             )
 
-        newname = request.get_ascii_input_mandatory("newname")
+        newname = HostName(request.get_ascii_input_mandatory("newname"))
         self._check_new_host_name("newname", newname)
         # Creating pending entry. That makes the site dirty and that will force a sync of
         # the config to that site before the automation is being done.

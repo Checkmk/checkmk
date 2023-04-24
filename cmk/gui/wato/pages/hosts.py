@@ -615,7 +615,7 @@ class CreateHostMode(ABCHostMode):
         attributes = collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
-        hostname = request.get_ascii_input_mandatory("host")
+        hostname = HostName(request.get_ascii_input_mandatory("host"))
         Hostname().validate_value(hostname, "host")
 
         folder = Folder.current()

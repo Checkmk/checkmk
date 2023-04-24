@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
 from typing import Any, Final, NamedTuple, Protocol
 
-from cmk.utils.type_defs import ClusterMode, state_markers
+from cmk.utils.type_defs import ClusterMode, HostName, state_markers
 
 from cmk.checkers import CheckPlugin
 from cmk.checkers.check_table import ServiceID
@@ -272,10 +272,10 @@ class NodeCheckExecutor:
 
         return NodeResults(results, metrics, ignores)
 
-    def _iter_node_kwargs(self, cluster_kwargs: _Kwargs) -> Iterable[tuple[str, _Kwargs]]:
+    def _iter_node_kwargs(self, cluster_kwargs: _Kwargs) -> Iterable[tuple[HostName, _Kwargs]]:
         """create kwargs for every nodes check function"""
         section_names = set(cluster_kwargs) - _NON_SECTION_KEYS
-        all_nodes: set[str] = {
+        all_nodes: set[HostName] = {
             node for section_name in section_names for node in cluster_kwargs[section_name]
         }
         yield from (
@@ -286,9 +286,9 @@ class NodeCheckExecutor:
 
     @staticmethod
     def _extract_node_kwargs(
-        nodes: Iterable[str],
+        nodes: Iterable[HostName],
         cluster_kwargs: _Kwargs,
-    ) -> Iterable[tuple[str, _Kwargs]]:
+    ) -> Iterable[tuple[HostName, _Kwargs]]:
         yield from (
             (n, {k: v if k in _NON_SECTION_KEYS else v.get(n) for k, v in cluster_kwargs.items()})
             for n in nodes
@@ -300,7 +300,7 @@ class NodeCheckExecutor:
 
     def _consume_checkresult(
         self,
-        node: str,
+        node: HostName,
         result_generator: CheckResult,
         value_store_manager: ValueStoreManager,
     ) -> Sequence[Result | Metric | IgnoreResults]:

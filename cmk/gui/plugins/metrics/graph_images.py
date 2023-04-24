@@ -15,7 +15,7 @@ from typing import Any, Literal
 import livestatus
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import Timestamp
+from cmk.utils.type_defs import HostName, Timestamp
 
 import cmk.gui.pdf as pdf
 from cmk.gui.config import active_config
@@ -65,7 +65,7 @@ def _answer_graph_image_request(
     ],
 ) -> None:
     try:
-        host_name = request.get_ascii_input_mandatory("host")
+        host_name = HostName(request.get_ascii_input_mandatory("host"))
         if not host_name:
             raise MKGeneralException(_('Missing mandatory "host" parameter'))
 

@@ -323,7 +323,9 @@ def _scan_ip_addresses(folder, ip_addresses):
     return found_hosts
 
 
-def _ping_worker(addresses: list[HostAddress], hosts: list[tuple[HostName, HostAddress]]) -> None:
+def _ping_worker(
+    addresses: list[HostAddress], hosts: list[tuple[HostName | HostAddress, HostAddress]]
+) -> None:
     while True:
         try:
             ipaddress = addresses.pop()
@@ -332,7 +334,7 @@ def _ping_worker(addresses: list[HostAddress], hosts: list[tuple[HostName, HostA
 
         if _ping(ipaddress):
             try:
-                host_name = socket.gethostbyaddr(ipaddress)[0]
+                host_name = HostName(socket.gethostbyaddr(ipaddress)[0])
             except OSError:
                 host_name = ipaddress
 

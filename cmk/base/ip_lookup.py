@@ -22,7 +22,7 @@ from cmk.utils.type_defs import HostAddress, HostName, UpdateDNSCacheResult
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
-IPLookupCacheId = tuple[HostName, socket.AddressFamily]
+IPLookupCacheId = tuple[HostName | HostAddress, socket.AddressFamily]
 
 
 _fake_dns: HostAddress | None = None
@@ -140,7 +140,7 @@ def lookup_ip_address(
 
 # Variables needed during the renaming of hosts (see automation.py)
 def cached_dns_lookup(
-    hostname: HostName,
+    hostname: HostName | HostAddress,
     *,
     family: socket.AddressFamily,
     force_file_cache_renewal: bool,
@@ -157,7 +157,9 @@ def cached_dns_lookup(
 
     2) inner layer: see _file_cached_dns_lookup
     """
-    cache = _config_cache.get("cached_dns_lookup")
+    cache: dict[
+        tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | None
+    ] = _config_cache.get("cached_dns_lookup")
     cache_id = hostname, family
 
     # Address has already been resolved in prior call to this function?
@@ -180,7 +182,7 @@ def cached_dns_lookup(
 
 
 def _file_cached_dns_lookup(
-    hostname: HostName,
+    hostname: HostName | HostAddress,
     family: socket.AddressFamily,
     *,
     force_file_cache_renewal: bool,
@@ -218,7 +220,7 @@ def _file_cached_dns_lookup(
 
 def _actual_dns_lookup(
     *,
-    host_name: HostName,
+    host_name: HostName | HostAddress,
     family: socket.AddressFamily,
     fallback: HostAddress | None = None,
 ) -> HostAddress:

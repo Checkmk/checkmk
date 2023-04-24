@@ -48,7 +48,7 @@ from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
 class ParentScanTask(NamedTuple):
     site_id: SiteId
     folder_path: Any
-    host_name: str
+    host_name: HostName
 
 
 class ParentScanResult(NamedTuple):

@@ -6,6 +6,7 @@
 from typing import Any, Literal, NewType, TypedDict
 
 from ._misc import TimeperiodName
+from .host import HostName
 
 __all__ = [
     # Types
@@ -154,7 +155,7 @@ class EventContext(TypedDict, total=False):
     HOSTCONTACTGROUPNAMES: str
     HOSTFORURL: str
     HOSTGROUPNAMES: str
-    HOSTNAME: str
+    HOSTNAME: HostName
     HOSTNOTIFICATIONNUMBER: str
     HOSTOUTPUT: str
     HOSTSTATE: Literal["UP", "DOWN", "UNREACHABLE"]

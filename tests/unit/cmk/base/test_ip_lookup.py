@@ -6,6 +6,7 @@
 import socket
 from collections.abc import Mapping
 from pathlib import Path
+from typing import TypeAlias
 
 import pytest
 from pytest import MonkeyPatch
@@ -13,10 +14,14 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAddress, HostName
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+
+_PersistedCache: TypeAlias = Mapping[
+    tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | None
+]
 
 
 @pytest.fixture(autouse=True)
@@ -95,7 +100,9 @@ def test_cached_dns_lookup_is_config_cached_none(monkeypatch: MonkeyPatch) -> No
 
 def test_cached_dns_lookup_is_persisted_cached_ok(monkeypatch: MonkeyPatch) -> None:
     config_ipcache = _empty()
-    persisted_cache = {(HostName("persisted_cached_host"), socket.AF_INET): "1.2.3.4"}
+    persisted_cache: _PersistedCache = {
+        (HostName("persisted_cached_host"), socket.AF_INET): "1.2.3.4"
+    }
 
     patch_config_cache(monkeypatch, config_ipcache)
     patch_persisted_cache(monkeypatch, persisted_cache)
@@ -128,7 +135,9 @@ def test_cached_dns_lookup_is_persisted_cached_ok(monkeypatch: MonkeyPatch) -> N
 
 def test_cached_dns_lookup_is_persisted_cached_ok_unchanged(monkeypatch: MonkeyPatch) -> None:
     config_ipcache = _empty()
-    persisted_cache = {(HostName("persisted_cached_host"), socket.AF_INET): "1.2.3.4"}
+    persisted_cache: _PersistedCache = {
+        (HostName("persisted_cached_host"), socket.AF_INET): "1.2.3.4"
+    }
 
     patch_config_cache(monkeypatch, config_ipcache)
     patch_persisted_cache(monkeypatch, persisted_cache)
@@ -225,7 +234,7 @@ def test_cached_dns_lookup_raises_once(monkeypatch: MonkeyPatch) -> None:
 
 def test_filecache_beats_failing_lookup(monkeypatch: MonkeyPatch) -> None:
     config_ipcache = _empty()
-    persisted_cache = {(HostName("test_host"), socket.AF_INET): "3.1.4.1"}
+    persisted_cache: _PersistedCache = {(HostName("test_host"), socket.AF_INET): "3.1.4.1"}
 
     patch_config_cache(monkeypatch, config_ipcache)
     patch_persisted_cache(monkeypatch, persisted_cache)
@@ -259,7 +268,9 @@ def clear_config_caches_ip_lookup(monkeypatch: MonkeyPatch) -> None:
 class TestIPLookupCacheSerialzer:
     def test_simple_cache(self) -> None:
         s = ip_lookup.IPLookupCacheSerializer()
-        cache_data = {(HostName("host1"), socket.AF_INET): "1"}
+        cache_data: Mapping[tuple[HostName | HostAddress, socket.AddressFamily], HostAddress] = {
+            (HostName("host1"), socket.AF_INET): "1"
+        }
         assert s.deserialize(s.serialize(cache_data)) == cache_data
 
 

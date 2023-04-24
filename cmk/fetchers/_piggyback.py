@@ -90,7 +90,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
 
     @staticmethod
     def _raw_data(
-        hostname: HostName | None,
+        hostname: HostName | HostAddress | None,
         time_settings: PiggybackTimeSettings,
     ) -> Sequence[PiggybackRawDataInfo]:
         return get_piggyback_raw_data(hostname if hostname else HostName(""), time_settings)

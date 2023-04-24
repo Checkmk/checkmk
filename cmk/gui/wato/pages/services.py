@@ -18,6 +18,7 @@ from cmk.utils.defines import short_service_state_name
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.html import get_html_state_marker
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import HostName
 
 from cmk.automations.results import CheckPreviewEntry
 
@@ -1457,7 +1458,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         if self._site not in sitenames():
             raise MKUserError("site", _("You called this page with an invalid site."))
 
-        self._host_name = request.get_ascii_input_mandatory("host")
+        self._host_name = HostName(request.get_ascii_input_mandatory("host"))
         self._host = Folder.current().host(self._host_name)
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))

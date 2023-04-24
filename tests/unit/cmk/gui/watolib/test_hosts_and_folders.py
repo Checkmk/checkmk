@@ -173,7 +173,7 @@ def test_write_and_read_host_attributes(
     )
 
     # Write data
-    write_data_folder.create_hosts([("testhost", attributes, [])])
+    write_data_folder.create_hosts([(HostName("testhost"), attributes, [])])
     write_folder_hosts = write_data_folder.hosts()
     assert len(write_folder_hosts) == 1
 
@@ -578,7 +578,7 @@ def test_match_item_generator_hosts() -> None:
         hosts_and_folders.MatchItemGeneratorHosts(
             HostName("hosts"),
             lambda: {
-                "host": {
+                HostName("host"): {
                     "edit_url": "some_url",
                     "alias": "alias",
                     "ipaddress": "1.2.3.4",

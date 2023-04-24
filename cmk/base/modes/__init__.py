@@ -140,7 +140,7 @@ class Modes:
         if with_clusters:
             valid_hosts = valid_hosts.union(config_cache.all_active_clusters())
 
-        hostlist = []
+        hostlist: list[HostName] = []
         for arg in args:
             if arg[0] != "@" and arg in valid_hosts:
                 hostlist.append(arg)

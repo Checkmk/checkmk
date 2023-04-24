@@ -12,6 +12,7 @@ from livestatus import OnlySites, SiteId
 from cmk.utils import store
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostName, ServiceName
 
 from cmk.gui.bi.bi_manager import BIManager
 from cmk.gui.bi.foldable_tree_renderer import (
@@ -349,9 +350,9 @@ def singlehost_table(
 def compute_bi_aggregation_filter(
     context: VisualContext, all_active_filters: Iterable[Filter]
 ) -> BIAggregationFilter:
-    only_hosts = []
+    only_hosts: list[HostName] = []
     only_group = []
-    only_service = []
+    only_service: list[tuple[HostName, ServiceName]] = []
     only_aggr_name = []
     group_prefix = []
 
@@ -359,7 +360,7 @@ def compute_bi_aggregation_filter(
         conf = context.get(active_filter.ident, {})
 
         if active_filter.ident == "aggr_hosts":
-            if (host_name := conf.get("aggr_host_host", "")) != "":
+            if (host_name := HostName(conf.get("aggr_host_host", ""))) != HostName(""):
                 only_hosts = [host_name]
         elif active_filter.ident == "aggr_group":
             if aggr_group := conf.get(active_filter.htmlvars[0]):
@@ -369,7 +370,7 @@ def compute_bi_aggregation_filter(
             # service_spec: site_id, host, service
             # Since no data has been fetched yet, the site is also unknown
             if all(service_spec):
-                only_service = [(service_spec[1], service_spec[2])]
+                only_service = [(HostName(service_spec[1]), service_spec[2])]
         elif active_filter.ident == "aggr_name":
             if aggr_name := conf.get("aggr_name"):
                 only_aggr_name = [aggr_name]

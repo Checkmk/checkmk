@@ -3,10 +3,10 @@ Class: feature
 Compatible: compat
 Component: checks
 Date: 1630923881
-Edition: cre
+Edition: cce
 Knowledge: undoc
 Level: 1
-Version: 2.1.0b1
+Version: 2.2.0b1
 
 Metrics will only be available if a health check is configured.
 The metrics ConnectionTime and TimeToFirstByte will only be available the option "Latency graphs" for the health check is activated.

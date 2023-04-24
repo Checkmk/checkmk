@@ -1,0 +1,27 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name="all_srcs",
+    srcs=glob(["**/*"], exclude=["bazel-*"]),
+)
+
+configure_make(
+    name="libgsf",
+    visibility=["//visibility:public"],
+    args=["-j4"],
+    lib_source=":all_srcs",
+    out_binaries=[
+        "gsf",
+        "gsf-office-thumbnailer",
+        "gsf-vba-dump",
+    ],
+    out_shared_libs=[
+          "libgsf-1.so.114.0.44",
+          "pkgconfig",
+    ],
+    out_static_libs=[
+        "libgsf-1.a",
+    ],
+    out_data_dirs = ["share"],
+    targets = ["install",],
+)

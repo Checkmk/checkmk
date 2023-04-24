@@ -19,9 +19,10 @@ def main() -> int:
             hash_site_id(omd_site()),
             create_sample,
         )
+        logger.info("Successfully updated the license usage")
         return 0
     except Exception as e:
-        logger.error("Error during license usage history update: %s", e)
+        logger.error("Error during license usage update: %s", e)
         return 1
 
 

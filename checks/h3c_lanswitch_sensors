@@ -3,29 +3,41 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping
 
 from cmk.base.check_api import contains, OID_END
 from cmk.base.config import check_info
 
-
-def inventory_h3c_lanswitch_sensors(info):
-    return [(h3c_lanswitch_genitem(line[0]), None) for line in info if line[1] in ["1", "2"]]
+Section = Mapping[str, str]
 
 
-def check_h3c_lanswitch_sensors(item, params, info):
+def parse_h3c_lanswitch_sensors(string_table: list[list[str]]) -> Section:
+    return {h3c_lanswitch_genitem(oid_item): state for oid_item, state in string_table}
+
+
+def inventory_h3c_lanswitch_sensors(section: Section) -> list[tuple[str, dict]]:
+    return [(item, {}) for item, state in section.items() if state in ["1", "2"]]
+
+
+def check_h3c_lanswitch_sensors(
+    item: str, _no_params: object, section: Section
+) -> Iterable[tuple[int, str]]:
+    if (status := section.get(item)) is None:
+        return
+
     # the values are:   active     (1), deactive   (2), not-install  (3), unsupport    (4)
-    for endoid, status in info:
-        if h3c_lanswitch_genitem(endoid) == item:
-            if status == "2":
-                return (2, "Sensor %s status is %s" % (item, status))
-            if status == "1":
-                return (0, "Sensor %s status is %s" % (item, status))
-            return (1, "Sensor % status is %s" % (item, status))
-    return (3, "Sensor %s not found" % item)
+    match status:
+        case "2":
+            yield 2, "Sensor %s status is %s" % (item, status)
+        case "1":
+            yield 0, "Sensor %s status is %s" % (item, status)
+        case _:
+            yield 1, "Sensor % status is %s" % (item, status)
 
 
 check_info["h3c_lanswitch_sensors"] = {
     "detect": contains(".1.3.6.1.2.1.1.1.0", "3com s"),
+    "parse_function": parse_h3c_lanswitch_sensors,
     "inventory_function": inventory_h3c_lanswitch_sensors,
     "check_function": check_h3c_lanswitch_sensors,
     "service_description": "%s",

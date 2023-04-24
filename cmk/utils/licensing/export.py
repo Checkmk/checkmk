@@ -16,7 +16,12 @@ from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
 
-LicenseUsageReportVersion: Final[str] = "2.0"
+LicenseUsageReportVersion: Final[str] = "2.1"
+
+
+class RawLicenseUsageReport(TypedDict):
+    VERSION: str
+    history: list[RawLicenseUsageSample]
 
 
 #   .--subscription details------------------------------------------------.
@@ -290,6 +295,10 @@ class LicenseUsageSampleParser(Protocol):
         ...
 
 
+class UnknownSampleParserError(Exception):
+    pass
+
+
 @dataclass
 class LicenseUsageSample:
     instance_id: UUID | None
@@ -352,10 +361,10 @@ class LicenseUsageSample:
         if version == "1.1":
             return cls._parse_sample_v1_1
 
-        if version == "2.0":
+        if version in ["2.0", "2.1"]:
             return cls._parse_sample_v2_0
 
-        raise ValueError("Unknown report version: %s" % version)
+        raise UnknownSampleParserError("Unknown report version: %r" % version)
 
     @classmethod
     def _parse_sample_v1_0(
@@ -493,7 +502,7 @@ class LicenseUsageHistory:
         return [sample.for_report() for sample in self._samples]
 
     @classmethod
-    def parse(cls, raw_report: object) -> LicenseUsageHistory:
+    def parse(cls, raw_report: object, *, site_hash: str | None = None) -> LicenseUsageHistory:
         if not isinstance(raw_report, dict):
             raise TypeError("Wrong report type: %r" % type(raw_report))
 
@@ -501,7 +510,9 @@ class LicenseUsageHistory:
             raise TypeError("Wrong report version type: %r" % type(version))
 
         parser = LicenseUsageSample.get_parser(version)
-        return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
+        return cls(
+            parser(raw_sample, site_hash=site_hash) for raw_sample in raw_report.get("history", [])
+        )
 
 
 # .

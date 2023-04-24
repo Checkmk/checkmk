@@ -54,7 +54,7 @@ heirloommailx(
     sha256="015ba4209135867f37a0245d22235a392b8bbed956913286b887c2e2a9a421ad",
 )
 
-load("//packages/monitoring-plugins:monitoring-plugins.bzl", "monitoring_plugins")
+load("//packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins")
 monitoring_plugins(
     version_str="2.3.2",  # version also listed in monitoring-plugins.make
     sha256="8d9405baf113a9f25e4fb961d56f9f231da02e3ada0f41dbb0fa4654534f717b",

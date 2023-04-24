@@ -93,3 +93,10 @@ libgsf(
     sha256 = "68bede10037164764992970b4cb57cd6add6986a846d04657af9d5fac774ffde",
     version_str = "1.14.44",
 )
+
+load("//packages/lcab:lcab_http.bzl", "lcab")
+
+lcab(
+    sha256 = "065f2c1793b65f28471c0f71b7cf120a7064f28d1c44b07cabf49ec0e97f1fc8",
+    version_str = "1.0b12",
+)

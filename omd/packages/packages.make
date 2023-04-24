@@ -135,6 +135,7 @@ include \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \
     packages/monitoring-plugins/monitoring-plugins.make \
+    packages/lcab/lcab.make \
     packages/msitools/msitools.make \
     packages/nagios/nagios.make \
     packages/nagvis/nagvis.make \

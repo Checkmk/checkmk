@@ -29,6 +29,7 @@ PACKAGES := \
     protobuf \
     python3-modules \
     rrdtool \
+	lcab \
     msitools \
     net-snmp \
     apache-omd \

@@ -85,7 +85,7 @@ def try_update_license_usage(
 
     The history has a max. length of 400 (days)."""
     if instance_id is None:
-        raise ValueError()
+        raise ValueError("No such instance ID")
 
     sample = do_create_sample(now, instance_id, site_hash)
 
@@ -301,7 +301,7 @@ def load_license_usage_history(
         ),
         dict,
     ):
-        raise TypeError()
+        raise TypeError("Wrong report type: %r" % type(raw_report))
 
     if not raw_report.get("history"):
         return LocalLicenseUsageHistory([])
@@ -346,13 +346,13 @@ class LocalLicenseUsageHistory:
         cls, raw_report: object, *, instance_id: UUID, site_hash: str
     ) -> LocalLicenseUsageHistory:
         if not isinstance(raw_report, dict):
-            raise TypeError()
+            raise TypeError("Wrong report type: %r" % type(raw_report))
 
         if not raw_report:
             return cls([])
 
         if not isinstance(version := raw_report.get("VERSION"), str):
-            raise TypeError()
+            raise TypeError("Wrong report version type: %r" % type(version))
 
         parser = LicenseUsageSample.get_parser(version)
         return cls(
@@ -368,7 +368,7 @@ class LocalLicenseUsageHistory:
         # - central: Checkmk 2.1 (report version 1.1)
         # - remote: Checkmk 2.2 (report version 2.0)
         if not isinstance(raw_report, dict):
-            raise TypeError()
+            raise TypeError("Wrong report type: %r" % type(raw_report))
 
         if not raw_report:
             return cls([])

@@ -240,7 +240,7 @@ class LicenseUsageExtensions:
         LicenseUsageExtensions(ntop=True)
         """
         if not isinstance(raw_extensions, dict):
-            raise TypeError()
+            raise TypeError("Wrong extensions type: %r" % type(raw_extensions))
 
         return cls(ntop=raw_extensions.get("ntop", False))
 
@@ -249,7 +249,7 @@ class LicenseUsageExtensions:
         # Old: {..., "extensions": {"ntop": True/False}, ...}
         # New: {..., "extension_ntop": True/False, ...}
         if not isinstance(raw_sample, dict):
-            raise TypeError()
+            raise TypeError("Wrong sample type: %r" % type(raw_sample))
 
         parsed_extensions = {
             ext_key: raw_sample.get(ext_key, raw_sample.get("extensions", {}).get(key, False))
@@ -355,7 +355,7 @@ class LicenseUsageSample:
         if version == "2.0":
             return cls._parse_sample_v2_0
 
-        raise ValueError()
+        raise ValueError("Unknown report version: %s" % version)
 
     @classmethod
     def _parse_sample_v1_0(
@@ -366,10 +366,10 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError()
+            raise TypeError("Parse sample 1.0: Wrong sample type: %r" % type(raw_sample))
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError()
+            raise ValueError("Parse sample 1.0: No such site hash")
 
         extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
@@ -401,10 +401,10 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError()
+            raise TypeError("Parse sample 1.1: Wrong sample type: %r" % type(raw_sample))
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError()
+            raise ValueError("Parse sample 1.1: No such site hash")
 
         extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
@@ -436,13 +436,13 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError()
+            raise TypeError("Parse sample 2.0: Wrong sample type: %r" % type(raw_sample))
 
         if not (raw_instance_id := raw_sample.get("instance_id")):
-            raise ValueError()
+            raise ValueError("Parse sample 2.0: No such instance ID")
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError()
+            raise ValueError("Parse sample 2.0: No such site hash")
 
         extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
@@ -495,10 +495,10 @@ class LicenseUsageHistory:
     @classmethod
     def parse(cls, raw_report: object) -> LicenseUsageHistory:
         if not isinstance(raw_report, dict):
-            raise TypeError()
+            raise TypeError("Wrong report type: %r" % type(raw_report))
 
         if not isinstance(version := raw_report.get("VERSION"), str):
-            raise TypeError()
+            raise TypeError("Wrong report version type: %r" % type(version))
 
         parser = LicenseUsageSample.get_parser(version)
         return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))

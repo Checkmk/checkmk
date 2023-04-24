@@ -3055,7 +3055,7 @@ class CREHost(WithPermissions, WithAttributes):
     # '--------------------------------------------------------------------'
 
     def __init__(  # type: ignore[no-untyped-def]
-        self, folder, host_name: HostName, attributes, cluster_nodes
+        self, folder, host_name, attributes, cluster_nodes
     ) -> None:
         super().__init__()
         self._folder = folder

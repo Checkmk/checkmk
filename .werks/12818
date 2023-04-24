@@ -3,10 +3,10 @@ Class: feature
 Compatible: compat
 Component: checks
 Date: 1625128288
-Edition: cre
+Edition: cce
 Knowledge: undoc
 Level: 1
-Version: 2.1.0b1
+Version: 2.2.0b1
 
 A checkplugin was added which monitors the following AWS Lambda metrics:
 * Duration

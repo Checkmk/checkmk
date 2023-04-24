@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, NamedTuple, Protocol, TypedDict
+from typing import Any, NamedTuple, Protocol
 from uuid import UUID
 
 import livestatus
@@ -26,6 +26,7 @@ from cmk.utils.licensing.export import (
     LicenseUsageReportVersion,
     LicenseUsageSample,
     RawLicenseUsageExtensions,
+    RawLicenseUsageReport,
     RawLicenseUsageSample,
 )
 from cmk.utils.licensing.helper import hash_site_id, load_instance_id, rot47
@@ -33,11 +34,6 @@ from cmk.utils.paths import licensing_dir
 from cmk.utils.site import omd_site
 
 CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
-
-
-class RawLicenseUsageReport(TypedDict):
-    VERSION: str
-    history: list[RawLicenseUsageSample]
 
 
 #   .--update--------------------------------------------------------------.
@@ -362,18 +358,16 @@ class LocalLicenseUsageHistory:
 
     @classmethod
     def parse_from_remote(cls, raw_report: object, *, site_hash: str) -> LocalLicenseUsageHistory:
-        # The report version from a remote site may not be known on the central site. Thus we always
-        # use the latest report verion of the central site.
-        # Example:
-        # - central: Checkmk 2.1 (report version 1.1)
-        # - remote: Checkmk 2.2 (report version 2.0)
         if not isinstance(raw_report, dict):
             raise TypeError("Wrong report type: %r" % type(raw_report))
 
         if not raw_report:
             return cls([])
 
-        parser = LicenseUsageSample.get_parser(LicenseUsageReportVersion)
+        if not isinstance(version := raw_report.get("VERSION"), str):
+            raise TypeError("Wrong report version type: %r" % type(version))
+
+        parser = LicenseUsageSample.get_parser(version)
         return cls(
             parser(raw_sample, instance_id=None, site_hash=site_hash)
             for raw_sample in raw_report.get("history", [])

@@ -9,6 +9,7 @@ from typing import Final
 
 import pytest
 
+from tests.testlib import repo_path
 from tests.testlib.site import Site
 
 import cmk.utils.msi_engine as msi_engine
@@ -20,7 +21,9 @@ EXPECTED_TEST_FILES: Final = [
     msi_engine.AGENT_UNSIGNED_MSI_FILE,
     "check_mk.user.yml",
 ]
-TEST_MSI_FILE: Final = Path("agents/wnx/test_files/msibuild/msi") / "check_mk_agent.msi"
+TEST_MSI_FILE: Final = Path(
+    repo_path() / "agents" / "wnx" / "test_files" / "msibuild" / "msi" / "check_mk_agent.msi"
+)
 
 
 @pytest.mark.parametrize("executable", EXPECTED_EXECUTABLES)

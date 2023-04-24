@@ -370,7 +370,11 @@ class Site:
         wrapping self.execute().
         """
         p = self.execute(
-            cmd, encoding="utf-8", stdout=subprocess.PIPE, stdin=subprocess.PIPE if input else None
+            cmd,
+            encoding="utf-8",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE if input else None,
         )
         stdout, stderr = p.communicate(input)
         if p.returncode != 0:

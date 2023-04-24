@@ -246,6 +246,11 @@ def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
     return psutil.Process(process_def.process.pid)
 
 
+@pytest.fixture(name="backend_type", params=SNMPBackendEnum)
+def backend_type_fixture(request: pytest.FixtureRequest) -> SNMPBackendEnum:
+    return request.param
+
+
 @pytest.fixture(name="backend", params=SNMPBackendEnum)
 def backend_fixture(request, snmp_data_dir):
     backend_type: SNMPBackendEnum = request.param

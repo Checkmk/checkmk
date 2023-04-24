@@ -867,14 +867,18 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             omd_site(),
         ) + urllib.parse.urlencode(
             [
-                ("_username", "automation"),
-                ("_secret", automation_secret),
                 ("host", checkmk_server_name),
                 ("name", "host_performance_graphs"),
             ]
         )
 
-        return requests.post(url)  # nosec B113
+        return requests.post(
+            url,
+            data={
+                "_username": "automation",
+                "_secret": automation_secret,
+            },
+        )
 
 
 class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):

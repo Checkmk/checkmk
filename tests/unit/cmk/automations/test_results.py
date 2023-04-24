@@ -7,8 +7,9 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.utils import version as cmk_version
+from cmk.utils.labels import HostLabel
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.automations.results import (
     ABCAutomationResult,
@@ -104,8 +105,8 @@ class TestTryDiscoveryResult:
             output="output",
             check_table=[
                 CheckPreviewEntry(
-                    check_source="check_source",
-                    check_plugin_name="check_plugin_name",
+                    check_source="my_check_source",
+                    check_plugin_name="my_check_plugin_name",
                     ruleset_name=None,
                     item=None,
                     discovered_parameters=None,
@@ -123,6 +124,7 @@ class TestTryDiscoveryResult:
             vanished_labels={},
             changed_labels={},
             source_results={"agent": (0, "Success")},
+            labels_by_host={HostName("my_host"): [HostLabel("cmk/foo", "bar", SectionName("baz"))]},
         )
         assert (
             ServiceDiscoveryPreviewResult.deserialize(

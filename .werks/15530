@@ -1,0 +1,14 @@
+Title: Discovered host labels: Update nodes when clusters are updated
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681472138
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If the discovered host labels have been updated via WATO for a cluster, the host labels of the affected nodes have not been updated accordingly.
+
+

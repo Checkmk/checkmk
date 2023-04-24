@@ -12,7 +12,8 @@ from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.labels import HostLabel
+from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.automations.results import (
     CheckPreviewEntry,
@@ -788,6 +789,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
     vanished_labels={},
     changed_labels={},
     source_results={"agent": (0, "Success")},
+    labels_by_host={
+        HostName("heute"): [HostLabel("cmk/check_mk_server", "yes", SectionName("labels"))]
+    },
 )
 
 

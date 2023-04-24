@@ -65,6 +65,7 @@ class CheckPreview:
     table: Sequence[CheckPreviewEntry]
     labels: QualifiedDiscovery[HostLabel]
     source_results: Mapping[str, ActiveCheckResult]
+    kept_labels: Mapping[HostName, Sequence[HostLabel]]
 
 
 def get_check_preview(
@@ -101,7 +102,7 @@ def get_check_preview(
     store_piggybacked_sections(host_sections_no_error)
     providers = make_providers(host_sections_no_error, section_plugins)
 
-    host_labels, _kept_labels_per_node = (
+    host_labels, kept_labels = (
         analyse_cluster_labels(
             host_name,
             config_cache.nodes_of(host_name) or (),
@@ -210,6 +211,7 @@ def get_check_preview(
         source_results={
             src.ident: result for (src, _sections), result in zip(parsed, summarizer(parsed))
         },
+        kept_labels=kept_labels,
     )
 
 

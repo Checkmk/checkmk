@@ -13,7 +13,7 @@ from typing import Any, TypedDict, TypeVar
 
 from cmk.utils import version as cmk_version
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.labels import HostLabelValueDict, Labels
+from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
@@ -137,17 +137,64 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     new_labels: DiscoveredHostLabelsDict
     vanished_labels: DiscoveredHostLabelsDict
     changed_labels: DiscoveredHostLabelsDict
+    labels_by_host: Mapping[HostName, Sequence[HostLabel]]
     source_results: Mapping[str, tuple[int, str]]
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        if for_cmk_version <= cmk_version.Version.from_str("2.2.0b2"):
+        if for_cmk_version < cmk_version.Version.from_str(
+            "2.1.0p27"
+        ):  # no source results, no labels by host
             return SerializedResult(repr(astuple(self)[:6]))
-        return SerializedResult(repr(astuple(self)))
+
+        if for_cmk_version < cmk_version.Version.from_str(
+            "2.2.0b1"
+        ):  # labels by host, but no source results
+            return self._serialize_as_dict()
+
+        if for_cmk_version < cmk_version.Version.from_str(
+            "2.2.0b2"
+        ):  # no source results, no labels by host
+            return SerializedResult(repr(astuple(self)[:6]))
+
+        if for_cmk_version < cmk_version.Version.from_str(
+            "2.2.0b6"
+        ):  # source_results, no labels by host
+            return SerializedResult(repr(astuple(self)[:6] + (self.source_results,)))
+
+        return self._serialize_as_dict()
+
+    def _serialize_as_dict(self) -> SerializedResult:
+        raw = asdict(self)
+        return SerializedResult(
+            repr(
+                {
+                    **raw,
+                    "labels_by_host": {
+                        str(host_name): [label.serialize() for label in labels]
+                        for host_name, labels in self.labels_by_host.items()
+                    },
+                }
+            )
+        )
 
     @classmethod
     def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryPreviewResult:
-        raw_output, raw_check_table, *raw_rest = literal_eval(serialized_result)
-        return cls(raw_output, [CheckPreviewEntry(*cpe) for cpe in raw_check_table], *raw_rest)
+        raw = literal_eval(serialized_result)
+        return cls(
+            output=raw["output"],
+            check_table=[CheckPreviewEntry(**cpe) for cpe in raw["check_table"]],
+            host_labels=raw["host_labels"],
+            new_labels=raw["new_labels"],
+            vanished_labels=raw["vanished_labels"],
+            changed_labels=raw["changed_labels"],
+            labels_by_host={
+                HostName(raw_host_name): [
+                    HostLabel.deserialize(raw_label) for raw_label in raw_host_labels
+                ]
+                for raw_host_name, raw_host_labels in raw["labels_by_host"].items()
+            },
+            source_results=raw["source_results"],
+        )
 
     @staticmethod
     def automation_call() -> str:

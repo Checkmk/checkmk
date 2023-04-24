@@ -10,7 +10,7 @@ from livestatus import SiteId
 
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.labels import HostLabelValueDict
+from cmk.utils.labels import HostLabel
 from cmk.utils.type_defs import HostName, ServiceName
 
 from cmk.automations import results
@@ -183,14 +183,14 @@ def set_autochecks(
 def update_host_labels(
     site_id: SiteId,
     host_name: HostName,
-    host_labels: Mapping[str, HostLabelValueDict],
+    host_labels: Sequence[HostLabel],
 ) -> results.UpdateHostLabelsResult:
     return _deserialize(
         _automation_serialized(
             "update-host-labels",
             siteid=site_id,
             args=[host_name],
-            indata=host_labels,
+            indata={label.name: label.to_dict() for label in host_labels},
         ),
         results.UpdateHostLabelsResult,
     )

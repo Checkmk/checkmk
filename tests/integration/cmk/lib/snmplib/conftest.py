@@ -40,7 +40,9 @@ from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
 if is_enterprise_repo():
-    from cmk.fetchers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
+    from cmk.fetchers.cee.snmp_backend.inline import (
+        InlineSNMPBackend,  # type: ignore[import] # pylint: disable=import-error,no-name-in-module
+    )
 else:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 

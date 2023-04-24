@@ -805,7 +805,7 @@ class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement)
     @property
     def description(self) -> str:
         return _(
-            "Licensing files (data and logs) from var/check_mk/licensing and var/log: %s"
+            "Licensing files (data, config and logs) from var/check_mk/licensing, etc/check_mk/multisite.d and var/log: %s"
         ) % ", ".join(self.rel_checkmk_files)
 
     @property

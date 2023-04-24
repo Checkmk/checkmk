@@ -286,7 +286,11 @@ def get_checkmk_log_files_map() -> CheckmkFilesMap:
     for root, _dirs, files in os.walk(cmk.utils.paths.log_dir):
         for file_name in files:
             filepath = Path(root).joinpath(file_name)
-            if filepath.suffix in (".log", ".state") or filepath.name == "stats":
+            if filepath.suffix in (".log", ".state") or filepath.name in (
+                "access_log",
+                "error_log",
+                "stats",
+            ):
                 rel_filepath = str(filepath.relative_to(cmk.utils.paths.log_dir))
                 files_map.setdefault(rel_filepath, filepath)
     return files_map
@@ -447,6 +451,13 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         sensitivity=CheckmkFileSensitivity(2),
         description="Contains the notification rules.",
     ),
+    "licensing.d/notification_settings.mk": CheckmkFileInfo(
+        components=[
+            OPT_COMP_LICENSING,
+        ],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="Contains set of users to be notified on licensing situations.",
+    ),
     "main.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
@@ -460,6 +471,13 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         ],
         sensitivity=CheckmkFileSensitivity(1),
         description="Contains the notification spooler's global settings.",
+    ),
+    "multisite.d/licensing_settings.mk": CheckmkFileInfo(
+        components=[
+            OPT_COMP_LICENSING,
+        ],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="Contains licensing related settings for mode of connection, e.g. online verification, credentials, etc.",
     ),
     "multisite.d/wato/bi_config.bi": CheckmkFileInfo(
         components=[
@@ -507,6 +525,7 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
     "core/state.pb": CheckmkFileInfo(
         components=[
             OPT_COMP_CMC,
+            OPT_COMP_LICENSING,
         ],
         sensitivity=CheckmkFileSensitivity(1),
         description="Contains the current status of the core in the protobuff format.",
@@ -533,6 +552,27 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         sensitivity=CheckmkFileSensitivity(0),
         description="Contains information about the licensing samples.",
     ),
+    "licensing/next_online_verification": CheckmkFileInfo(
+        components=[
+            OPT_COMP_LICENSING,
+        ],
+        sensitivity=CheckmkFileSensitivity(0),
+        description="Contains timing information about the licensing samples.",
+    ),
+    "licensing/verification_request_id": CheckmkFileInfo(
+        components=[
+            OPT_COMP_LICENSING,
+        ],
+        sensitivity=CheckmkFileSensitivity(0),
+        description="Stores the request id of each verification request against the license server.",
+    ),
+    "licensing/verification_response": CheckmkFileInfo(
+        components=[
+            OPT_COMP_LICENSING,
+        ],
+        sensitivity=CheckmkFileSensitivity(0),
+        description="Contains the raw response from license server.",
+    ),
     "licensing/verification_result.json": CheckmkFileInfo(
         components=[
             OPT_COMP_LICENSING,
@@ -552,6 +592,7 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
     "web.log": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
+            OPT_COMP_LICENSING,
         ],
         sensitivity=CheckmkFileSensitivity(1),
         description="The log file of the checkmk weg gui. Here you can find all kind of automations call, ldap sync and some failing GUI extensions.",
@@ -597,7 +638,9 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="This log file contains all requests that are sent to the site's apache server.",
     ),
     "apache/error_log": CheckmkFileInfo(
-        components=[],
+        components=[
+            OPT_COMP_LICENSING,
+        ],
         sensitivity=CheckmkFileSensitivity(1),
         description="this log file contains all errors that occur when requests are sent to the site's apache server.",
     ),

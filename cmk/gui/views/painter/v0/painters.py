@@ -4234,9 +4234,7 @@ class PainterDowntimeDuration(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if row["downtime_fixed"] == 0:
-            raw_minutes, seconds = divmod(int(row["downtime_duration"]), 60)
-            hours, minutes = divmod(raw_minutes, 60)
-            return "number", f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+            return "number", "%02d:%02d:00" % divmod(int(row["downtime_duration"] / 60.0), 60)
         return "", ""
 
 

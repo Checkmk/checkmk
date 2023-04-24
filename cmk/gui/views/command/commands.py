@@ -1293,7 +1293,7 @@ class CommandScheduleDowntimes(Command):
 
     def _vs_duration(self) -> Age:
         return Age(
-            display=["hours", "minutes", "seconds"],
+            display=["hours", "minutes"],
             title=_("Duration"),
             cssclass="inline",
         )

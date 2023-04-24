@@ -8,6 +8,9 @@ from unittest.mock import call, MagicMock, patch
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.labels import HostLabel
+from cmk.utils.type_defs import HostName, SectionName
+
 from cmk.automations.results import (
     CheckPreviewEntry,
     DeleteHostsResult,
@@ -73,6 +76,9 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
     vanished_labels={},
     changed_labels={},
     source_results={"agent": (0, "Success")},
+    labels_by_host={
+        HostName("heute"): [HostLabel("cmk/check_mk_server", "yes", SectionName("labels"))]
+    },
 )
 
 
@@ -200,7 +206,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     output="Temperature: 43.0°C\nTemperature: 43.0°C\nConfiguration: prefer device levels over user levels (used device levels)",
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[sample_host_name],
                 ),
                 CheckPreviewEntry(
                     check_source="active",
@@ -214,7 +220,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     output="WAITING - Active check, cannot be done offline",
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[sample_host_name],
                 ),
             ],
             host_labels={
@@ -225,6 +231,12 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             vanished_labels={},
             changed_labels={},
             source_results={"agent": (0, "Success")},
+            labels_by_host={
+                sample_host_name: [
+                    HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                    HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+                ],
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -252,7 +264,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 output="Temperature: 42.0°C\nTemperature: 42.0°C\nConfiguration: prefer device levels over user levels (used device levels)",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[sample_host_name],
             ),
             CheckPreviewEntry(
                 check_source="active",
@@ -266,7 +278,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 output="WAITING - Active check, cannot be done offline",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[sample_host_name],
             ),
         ],
         host_labels={
@@ -280,6 +292,12 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         vanished_labels={},
         changed_labels={},
         sources={"agent": (0, "Success")},
+        labels_by_host={
+            sample_host_name: [
+                HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+            ],
+        },
     )
 
     discovery_options = DiscoveryOptions(
@@ -304,7 +322,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         "NO_SITE",
         sample_host_name,
         {
-            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", {}, {}, ["TODAY"]),
+            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", {}, {}, [sample_host_name]),
         },
     )
     mock_discovery_preview.assert_called_once()
@@ -408,6 +426,12 @@ def test_perform_discovery_single_update(
             vanished_labels={},
             changed_labels={},
             source_results={"agent": (0, "Success")},
+            labels_by_host={
+                HostName("TODAY"): [
+                    HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                    HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+                ],
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -508,6 +532,12 @@ def test_perform_discovery_single_update(
         vanished_labels={},
         changed_labels={},
         sources={"agent": (0, "Success")},
+        labels_by_host={
+            HostName("TODAY"): [
+                HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+            ],
+        },
     )
 
     discovery_options = DiscoveryOptions(
@@ -591,7 +621,7 @@ def test_perform_discovery_action_update_services(
                     output="0.04% used (5.59 MB of 15.54 GB), trend: -89.23 kB / 24 hours\n0.04% used (5.59 MB of 15.54 GB)\ntrend: -89.23 kB / 24 hours",
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[sample_host_name],
                 ),
             ],
             host_labels={
@@ -602,13 +632,19 @@ def test_perform_discovery_action_update_services(
             vanished_labels={},
             changed_labels={},
             source_results={"agent": (0, "Success")},
+            labels_by_host={
+                sample_host_name: [
+                    HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                    HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+                ],
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
         job_status={
             "duration": 2.351154088973999,
             "estimated_duration": 2.37550950050354,
-            "host_name": "TODAY",
+            "host_name": sample_host_name,
             "logfile_path": "~/var/log/web.log",
             "pid": 1363226,
             "ppid": 1363225,
@@ -653,7 +689,7 @@ def test_perform_discovery_action_update_services(
                 output="0.04% used (5.78 MB of 15.54 GB), trend: +10.38 kB / 24 hours\n0.04% used (5.78 MB of 15.54 GB)\ntrend: +10.38 kB / 24 hours",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[sample_host_name],
             ),
             CheckPreviewEntry(
                 check_source="vanished",
@@ -674,7 +710,7 @@ def test_perform_discovery_action_update_services(
                 output="[docker0], (down)(!!), MAC: 02:42:E3:80:F5:EE, Speed: 10 MBit/s (assumed)\n[docker0]\nOperational state: down(!!)\nMAC: 02:42:E3:80:F5:EE\nSpeed: 10 MBit/s (assumed)",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[sample_host_name],
             ),
         ],
         host_labels={
@@ -685,6 +721,12 @@ def test_perform_discovery_action_update_services(
         vanished_labels={},
         changed_labels={},
         sources={"agent": (0, "Success")},
+        labels_by_host={
+            sample_host_name: [
+                HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+            ],
+        },
     )
 
     discovery_options = DiscoveryOptions(
@@ -715,7 +757,7 @@ def test_perform_discovery_action_update_services(
                 "Filesystem /opt/omd/sites/heute/tmp",
                 {"item_appearance": "mountpoint", "mountpoint_for_block_devices": "volume_name"},
                 {},
-                ["TODAY"],
+                [sample_host_name],
             )
         },
     )
@@ -751,6 +793,11 @@ def test_perform_discovery_action_update_host_labels(
             vanished_labels={},
             changed_labels={},
             source_results={"agent": (0, "Success")},
+            labels_by_host={
+                HostName(sample_host_name): [
+                    HostLabel("cmk/os_family", "linux", SectionName("check_mk"))
+                ],
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -783,6 +830,11 @@ def test_perform_discovery_action_update_host_labels(
         vanished_labels={"cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"}},
         changed_labels={},
         sources={"agent": (0, "Success")},
+        labels_by_host={
+            HostName(sample_host_name): [
+                HostLabel("cmk/os_family", "linux", SectionName("check_mk"))
+            ],
+        },
     )
 
     discovery_options = DiscoveryOptions(
@@ -806,10 +858,7 @@ def test_perform_discovery_action_update_host_labels(
     mock_update_host_labels.assert_called_once_with(
         "NO_SITE",
         sample_host_name,
-        {
-            "cmk/check_mk_server": {"plugin_name": "omd_info", "value": "yes"},
-            "cmk/os_family": {"plugin_name": "check_mk", "value": "linux"},
-        },
+        [HostLabel("cmk/os_family", "linux", SectionName("check_mk"))],
     )
     mock_set_autochecks.assert_not_called()
     mock_discovery_preview.assert_called_with(
@@ -820,4 +869,4 @@ def test_perform_discovery_action_update_host_labels(
     store = AuditLogStore(AuditLogStore.make_path())
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "update-host-labels"
-    ] == [f"Updated discovered host labels of '{sample_host_name}' with 2 labels"]
+    ] == [f"Updated discovered host labels of '{sample_host_name}' with 1 labels"]

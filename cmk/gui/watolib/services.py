@@ -17,7 +17,7 @@ from typing import Any, assert_never, Literal, Mapping, NamedTuple, TypedDict
 from mypy_extensions import NamedArg
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.labels import HostLabelValueDict
+from cmk.utils.labels import HostLabel, HostLabelValueDict
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import HostName, HostOrServiceConditions, Item
 
@@ -133,6 +133,7 @@ class DiscoveryResult(NamedTuple):
     new_labels: Mapping[str, HostLabelValueDict]
     vanished_labels: Mapping[str, HostLabelValueDict]
     changed_labels: Mapping[str, HostLabelValueDict]
+    labels_by_host: Mapping[HostName, Sequence[HostLabel]]
     sources: Mapping[str, tuple[int, str]]
 
     def serialize(self) -> str:
@@ -145,18 +146,40 @@ class DiscoveryResult(NamedTuple):
                 self.new_labels,
                 self.vanished_labels,
                 self.changed_labels,
+                {
+                    str(host_name): [label.serialize() for label in host_labels]
+                    for host_name, host_labels in self.labels_by_host.items()
+                },
                 self.sources,
             )
         )
 
     @classmethod
     def deserialize(cls, raw: str) -> "DiscoveryResult":
-        job_status, check_table_created, raw_check_table, *rest = ast.literal_eval(raw)
+        (
+            job_status,
+            check_table_created,
+            raw_check_table,
+            host_labels,
+            new_labels,
+            vanished_labels,
+            changed_labels,
+            raw_labels_by_host,
+            sources,
+        ) = ast.literal_eval(raw)
         return cls(
             job_status,
             check_table_created,
             [CheckPreviewEntry(*cpe) for cpe in raw_check_table],
-            *rest,
+            host_labels,
+            new_labels,
+            vanished_labels,
+            changed_labels,
+            {
+                HostName(raw_host_name): [HostLabel.deserialize(raw) for raw in raw_host_labels]
+                for raw_host_name, raw_host_labels in raw_labels_by_host.items()
+            },
+            sources,
         )
 
     def is_active(self) -> bool:
@@ -496,7 +519,7 @@ def perform_fix_all(
     """
     Handle fix all ('Accept All' on UI) discovery action
     """
-    _perform_update_host_labels({host.name(): discovery_result.host_labels})
+    _perform_update_host_labels(discovery_result.labels_by_host)
     Discovery(
         host,
         discovery_options,
@@ -518,7 +541,7 @@ def perform_host_label_discovery(
     host: CREHost,
 ) -> DiscoveryResult:
     """Handle update host labels discovery action"""
-    _perform_update_host_labels({host.name(): discovery_result.host_labels})
+    _perform_update_host_labels(discovery_result.labels_by_host)
     discovery_result = get_check_table(
         StartDiscoveryRequest(host, host.folder(), discovery_options)
     )
@@ -634,9 +657,7 @@ def _use_previous_discovery_result(previous_discovery_result: DiscoveryResult | 
     return not (previous_discovery_result is None or previous_discovery_result.is_active())
 
 
-def _perform_update_host_labels(
-    labels_by_nodes: Mapping[HostName, Mapping[str, HostLabelValueDict]]
-) -> None:
+def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[HostLabel]]) -> None:
     for host_name, host_labels in labels_by_nodes.items():
         if (host := CREHost.host(host_name)) is None:
             raise ValueError(f"no such host: {host_name!r}")
@@ -856,6 +877,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                 vanished_labels={},
                 changed_labels={},
                 source_results={},
+                labels_by_host={},
             ),
         )
 
@@ -926,6 +948,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             new_labels=result.new_labels,
             vanished_labels=result.vanished_labels,
             changed_labels=result.changed_labels,
+            labels_by_host=result.labels_by_host,
             sources=result.source_results,
         )
 

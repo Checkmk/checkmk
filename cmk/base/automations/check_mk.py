@@ -318,6 +318,7 @@ def _get_discovery_preview(
             source_results={
                 k: (r.state, r.as_text()) for k, r in check_preview.source_results.items()
             },
+            labels_by_host=check_preview.kept_labels,
         )
 
 

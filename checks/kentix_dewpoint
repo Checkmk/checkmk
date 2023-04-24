@@ -3,38 +3,46 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping
 
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
 
 #
 # 2017 comNET GmbH, Bjoern Mueller
 
-
-def inventory_kentix_dewpoint(info):
-    if info[0][0].startswith("2.1.3"):
-        return [("LAN", {})]
-    return [("Rack", {})]
+Section = Mapping[str, float]
 
 
-def check_kentix_dewpoint(item, params, info):
-    value = info[0][0].split(".", 3)[-1]
-    value = float(value) / 10
-    return check_temperature(value, params, "kentix_temp_%s" % item)
+def parse_kentix_dewpoint(string_table: list[list[str]]) -> Section:
+    for item, reading in zip(("LAN", "Rack"), string_table[0]):
+        try:
+            return {item: float(reading) / 10}
+        except ValueError:
+            pass
+    return {}
+
+
+def inventory_kentix_dewpoint(section: Section) -> Iterable[tuple[str, dict]]:
+    yield from ((item, {}) for item in section)
+
+
+def check_kentix_dewpoint(item: str, params: TempParamType, section: Section) -> Iterable:
+    if (reading := section.get(item)) is None:
+        return
+    yield check_temperature(reading, params, "kentix_temp_%s" % item)
 
 
 check_info["kentix_dewpoint"] = {
     "detect": DETECT_KENTIX,
+    "parse_function": parse_kentix_dewpoint,
     "inventory_function": inventory_kentix_dewpoint,
     "check_function": check_kentix_dewpoint,
     "service_description": "Dewpoint %s",
     "snmp_info": (
         ".1.3.6.1.4.1.37954",
-        ["2.1.3", "3.1.2"],
-        [
-            "1",  # DewpointValue
-        ],
+        ["2.1.3.1", "3.1.2.1"],
     ),
     "group": "temperature",
 }

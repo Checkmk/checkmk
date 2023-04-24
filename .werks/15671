@@ -1,0 +1,23 @@
+Title: SAML: use RSA-SHA256 to sign authentication requests
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1682337115
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+
+Checkmk would sign its authentication requests with RSA-SHA512. However, some
+identity providers (e.g. some versions of Microsoft ADFS) do not support any
+signature algorithms beyond SHA256. As a result, the authentication requests
+would be rejected with an error message similar to
+
+"Error details: MSIS7093: The message is not signed with expected signature
+algorithm. Message is signed with signature algorithm
+http://www.w3.org/2001/04/xmldsig-more#rsa-sha512. Expected signature algorithm
+http://www.w3.org/2001/04/xmldsig-more#rsa-sha256."
+
+For this reason, Checkmk now uses RSA-SHA256 to sign its authentication
+requests.

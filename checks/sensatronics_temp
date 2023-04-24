@@ -15,13 +15,17 @@ factory_settings["sensatronics_temp_default_levels"] = {"levels": (23.0, 25.0)}
 Section = Mapping[str, float]
 
 
-def parse_sensatronics_temp(string_table: list[list[str]]) -> Section:
+_TABLES = list(range(16))
+
+
+def parse_sensatronics_temp(string_table: list[list[list[str]]]) -> Section:
     parsed = {}
-    for oid_name, reading in string_table:
-        try:
-            parsed[oid_name] = float(reading)
-        except ValueError:
-            pass
+    for oid, block in zip(_TABLES, string_table):
+        for name, reading in block:
+            try:
+                parsed[f"{oid}.{name}"] = float(reading)
+            except ValueError:
+                pass
     return parsed
 
 
@@ -44,13 +48,15 @@ check_info["sensatronics_temp"] = {
     "inventory_function": inventory_sensatronics_temp,
     "service_description": "Temperature %s",
     "group": "temperature",
-    "snmp_info": (
-        ".1.3.6.1.4.1.16174.1.1.1.3",
-        list(range(16)),
-        [
-            "1.0",  # Sensor Name
-            "2.0",  # Sensor Value
-        ],
-    ),
+    "snmp_info": [
+        (
+            f".1.3.6.1.4.1.16174.1.1.1.3.{table}",
+            [
+                "1.0",  # Sensor Name
+                "2.0",  # Sensor Value
+            ],
+        )
+        for table in _TABLES
+    ],
     "default_levels_variable": "sensatronics_temp_default_levels",
 }

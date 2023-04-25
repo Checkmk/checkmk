@@ -927,7 +927,7 @@ class ModeFolder(WatoMode):
         table: Table,
         hostname: HostName,
         colspan: int,
-        host_errors: dict[str, list[str]],
+        host_errors: dict[HostName, list[str]],
         contact_group_names: dict[str, dict[str, Any]],
     ) -> None:
         host = self._folder.load_host(hostname)

@@ -79,13 +79,13 @@ class ContactGroupsField(TypedDict):
 class HostsStorageData:
     locked_hosts: bool
     all_hosts: list[HostName]
-    clusters: dict[HostName, Any]
+    clusters: dict[HostName, list[str]]
     attributes: dict[str, Any]
     custom_macros: dict[str, Any]
     host_tags: dict[HostName, Mapping[TagGroupID, TagID]]
     host_labels: dict[HostName, Labels]
     contact_groups: ContactGroupsField
-    explicit_host_conf: dict[str, dict[HostName, Any]]
+    explicit_host_conf: dict[str, dict[HostName, str]]
     host_attributes: dict[HostName, Any]
     folder_attributes: dict[str, FolderAttributesForBase]
 

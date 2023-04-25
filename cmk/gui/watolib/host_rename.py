@@ -317,7 +317,7 @@ def _rename_host_as_parent(
     folder_parent_renamed: list[CREFolder],
     in_folder: CREFolder,
 ) -> tuple[list[HostName | str], list[CREFolder]]:
-    parents = []
+    parents: list[HostName | str] = []
     for somehost in in_folder.hosts().values():
         if somehost.has_explicit_attribute("parents"):
             if somehost.rename_parent(oldname, newname):

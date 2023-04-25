@@ -375,14 +375,16 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(vsm: ValueStoreManager
         pytest.param(
             cluster_mode.NodeResults(
                 results={
-                    "Nodebert": [Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00")],
-                    "Nodett": [Result(state=State.OK, notice="[Nodett]: CPU load: 0.00")],
+                    HostName("Nodebert"): [
+                        Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00")
+                    ],
+                    HostName("Nodett"): [Result(state=State.OK, notice="[Nodett]: CPU load: 0.00")],
                 },
                 metrics={
-                    "Nodebert": [Metric("CPULoad", 0.00335345)],
-                    "Nodett": [Metric("CPULoad", 0.00387467)],
+                    HostName("Nodebert"): [Metric("CPULoad", 0.00335345)],
+                    HostName("Nodett"): [Metric("CPULoad", 0.00387467)],
                 },
-                ignore_results={"Nodebert": [], "Nodett": []},
+                ignore_results={HostName("Nodebert"): [], HostName("Nodett"): []},
             ),
             [
                 Result(state=State.OK, summary="Best: [Nodebert]"),
@@ -401,7 +403,7 @@ def test_summarizer_result_generation(
     expected_primary_result: CheckResult,
     expected_secondary_result: CheckResult,
 ) -> None:
-    clusterization_parameters = {"primary_node": "Nodebert"}
+    clusterization_parameters = {"primary_node": HostName("Nodebert")}
     summarizer = cluster_mode.Summarizer(
         node_results=node_results,
         label="Best",

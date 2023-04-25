@@ -12,6 +12,7 @@ from cmk.utils.misc import (  # pylint: disable=cmk-module-layer-violation
     is_daily_build_version,
     normalize_ip_addresses,
 )
+from cmk.utils.type_defs import HostName  # pylint: disable=cmk-module-layer-violation
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation
@@ -38,7 +39,7 @@ from .utils.checkmk import (
 
 
 def _get_configured_only_from() -> Union[None, str, list[str]]:
-    return get_config_cache().only_from(host_name())
+    return get_config_cache().only_from(HostName(host_name()))
 
 
 def discover_checkmk_agent(

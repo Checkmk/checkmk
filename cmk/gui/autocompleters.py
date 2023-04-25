@@ -10,7 +10,7 @@ from itertools import chain
 from livestatus import LivestatusColumn, MultiSiteConnection
 
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import MetricName
+from cmk.utils.type_defs import HostName, MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
@@ -87,7 +87,7 @@ def config_hostname_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
-    all_hosts: dict[str, CREHost] = Host.all()
+    all_hosts: dict[HostName, CREHost] = Host.all()
     match_pattern = re.compile(value, re.IGNORECASE)
     match_list: Choices = []
     for host_name, host_object in all_hosts.items():

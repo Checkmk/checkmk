@@ -2607,7 +2607,7 @@ class RuleConditionRenderer:
                 elif isinstance(host_spec, str):
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
-                    folder_hint = folder_lookup_cache.get(host_spec)
+                    folder_hint = folder_lookup_cache.get(HostName(host_spec))
                     if folder_hint is not None and (host := Host.host(host_spec)) is not None:
                         text_list.append(
                             HTMLWriter.render_b(HTMLWriter.render_a(host_spec, host.edit_url()))
@@ -2629,7 +2629,7 @@ class RuleConditionRenderer:
                     expression = _("is not") if is_negate else _("is")
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
-                    folder_hint = folder_lookup_cache.get(host_spec)
+                    folder_hint = folder_lookup_cache.get(HostName(host_spec))
                     if folder_hint is not None and (host := Host.host(host_spec)) is not None:
                         text_list.append(
                             escape_to_html(expression + " ")

@@ -135,9 +135,9 @@ def _cluster_check(
 
 
 class NodeResults(NamedTuple):
-    results: Mapping[str, Sequence[Result]]
-    metrics: Mapping[str, Sequence[Metric]]
-    ignore_results: Mapping[str, Sequence[IgnoreResults]]
+    results: Mapping[HostName, Sequence[Result]]
+    metrics: Mapping[HostName, Sequence[Metric]]
+    ignore_results: Mapping[HostName, Sequence[IgnoreResults]]
 
 
 class Summarizer:
@@ -147,7 +147,7 @@ class Summarizer:
         node_results: NodeResults,
         label: str,
         selector: Selector,
-        preferred: str | None,
+        preferred: HostName | None,
         unpreferred_node_state: State,
     ) -> None:
         self._node_results = node_results
@@ -162,9 +162,9 @@ class Summarizer:
 
     @staticmethod
     def _get_selected_nodes(
-        results_map: Mapping[str, Sequence[Result]],
+        results_map: Mapping[HostName, Sequence[Result]],
         selector: Selector,
-    ) -> set[str]:
+    ) -> set[HostName]:
         """Determine the best/worst nodes names"""
         nodes_by_states = defaultdict(set)
         for node, results in ((n, r) for n, r in results_map.items() if r):
@@ -229,10 +229,11 @@ class Summarizer:
         count = len(secondary_nodes)
         return State.CRIT if count >= levels[1] else State(count >= levels[0])
 
-    def metrics(self, node_name: str | None) -> CheckResult:
+    def metrics(self, node_name: HostName | None) -> CheckResult:
         used_node = node_name or self._pivoting
         if not (metrics := self._node_results.metrics.get(used_node, ())):
             return
+
         yield Result(
             state=State.OK,
             notice=f"[{used_node}] Metrics: {', '.join(m.name for m in metrics)}",

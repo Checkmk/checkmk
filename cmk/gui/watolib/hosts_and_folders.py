@@ -893,7 +893,7 @@ class BaseFolder:
 
         return breadcrumb
 
-    def host_names(self) -> Sequence[str]:
+    def host_names(self) -> Sequence[HostName]:
         return self.hosts().keys()
 
     def load_host(self, host_name: str) -> CREHost:
@@ -911,7 +911,7 @@ class BaseFolder:
     def has_hosts(self) -> bool:
         return len(self.hosts()) != 0
 
-    def host_validation_errors(self) -> dict[str, list[str]]:
+    def host_validation_errors(self) -> dict[HostName, list[str]]:
         return validate_all_hosts(self.host_names())
 
     def is_disk_folder(self) -> bool:
@@ -1313,6 +1313,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         # Build list of individual hosts
         for host_name in wato_hosts["host_attributes"].keys():
+            # typing: Conversion to HostName shouldn't be necessary.
+            host_name = HostName(host_name)
             host = self._create_host_from_variables(host_name, wato_hosts)
             self._hosts[host_name] = host
 
@@ -1364,12 +1366,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 storage.remove(Path(self.hosts_file_path_without_extension()))
             return
 
-        all_hosts: list[str] = []
-        clusters: dict[str, list[str]] = {}
+        all_hosts: list[HostName] = []
+        clusters: dict[HostName, list[str]] = {}
         # collect value for attributes that are to be present in Nagios
-        custom_macros: dict[str, dict[str, str]] = {}
+        custom_macros: dict[str, dict[HostName, str]] = {}
         # collect value for attributes that are explicitly set for one host
-        explicit_host_conf: dict[str, dict[str, str]] = {}
+        explicit_host_conf: dict[str, dict[HostName, str]] = {}
         cleaned_hosts = {}
         host_tags = {}
         host_labels = {}
@@ -1677,8 +1679,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             num += subfolder.num_hosts_recursively()
         return num
 
-    def all_hosts_recursively(self) -> dict[str, CREHost]:
-        hosts = {}
+    def all_hosts_recursively(self) -> dict[HostName, CREHost]:
+        hosts: dict[HostName, CREHost] = {}
         hosts.update(self.hosts())
         for subfolder in self.subfolders():
             hosts.update(subfolder.all_hosts_recursively())
@@ -3043,7 +3045,7 @@ class CREHost(WithPermissions, WithAttributes):
         return Folder.find_host_by_lookup_cache(host_name)
 
     @staticmethod
-    def all() -> dict[str, CREHost]:
+    def all() -> dict[HostName, CREHost]:
         return Folder.root_folder().all_hosts_recursively()
 
     @staticmethod
@@ -3773,10 +3775,10 @@ def call_hook_hosts_changed(folder: CREFolder) -> None:
 # symbols in the host list and the host detail view
 # Returns dictionary { hostname: [errors] }
 def validate_all_hosts(  # type: ignore[no-untyped-def]
-    hostnames: Sequence[str], force_all=False
-) -> dict[str, list[str]]:
+    hostnames: Sequence[HostName], force_all=False
+) -> dict[HostName, list[str]]:
     if hooks.registered("validate-all-hosts") and (len(hostnames) > 0 or force_all):
-        hosts_errors = {}
+        hosts_errors: dict[HostName, list[str]] = {}
         all_hosts = _collect_hosts(Folder.root_folder())
 
         if force_all:

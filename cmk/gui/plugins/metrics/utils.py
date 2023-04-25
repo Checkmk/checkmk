@@ -1048,7 +1048,7 @@ def metric_title(metric_name: _MetricName) -> str:
 
 
 def metric_recipe_and_unit(
-    host_name: HostName,
+    host_name: HostName | str,
     service_description: ServiceName,
     metric_name: _MetricName,
     consolidation_function: str,

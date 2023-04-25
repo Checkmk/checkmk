@@ -1717,7 +1717,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
                     value = inherited_value
 
             if for_what != "host_search" and not (for_what == "bulk" and not unique):
-                _tdclass, content = attr.paint(value, "")
+                _tdclass, content = attr.paint(value, HostName(""))
                 if not content:
                     content = _("empty")
 
@@ -2389,7 +2389,7 @@ def get_search_expression() -> None | str:
 
 def get_hostnames_from_checkboxes(
     filterfunc: Callable | None = None, deflt: bool = False
-) -> list[HostName]:
+) -> Sequence[HostName]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
     selected = user.get_rowselection(
@@ -2397,7 +2397,7 @@ def get_hostnames_from_checkboxes(
     )
     search_text = request.var("search")
 
-    selected_host_names: list[str] = []
+    selected_host_names: list[HostName] = []
     for host_name, host in sorted(_hosts_and_folders.Folder.current().hosts().items()):
         if (not search_text or _search_text_matches(host, search_text)) and (
             "_c_" + host_name

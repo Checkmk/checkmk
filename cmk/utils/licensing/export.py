@@ -502,7 +502,7 @@ class LicenseUsageHistory:
         return [sample.for_report() for sample in self._samples]
 
     @classmethod
-    def parse(cls, raw_report: object, *, site_hash: str | None = None) -> LicenseUsageHistory:
+    def parse(cls, raw_report: object) -> LicenseUsageHistory:
         if not isinstance(raw_report, dict):
             raise TypeError("Wrong report type: %r" % type(raw_report))
 
@@ -510,9 +510,7 @@ class LicenseUsageHistory:
             raise TypeError("Wrong report version type: %r" % type(version))
 
         parser = LicenseUsageSample.get_parser(version)
-        return cls(
-            parser(raw_sample, site_hash=site_hash) for raw_sample in raw_report.get("history", [])
-        )
+        return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
 
 
 # .

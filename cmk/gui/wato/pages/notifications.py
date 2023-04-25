@@ -7,6 +7,7 @@
 import abc
 import time
 from collections.abc import Collection, Iterator, Mapping
+from copy import deepcopy
 from datetime import datetime
 from typing import Any, NamedTuple, overload
 
@@ -76,6 +77,7 @@ from cmk.gui.valuespec import (
     rule_option_elements,
     TextInput,
     Tuple,
+    UUID,
 )
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
@@ -92,6 +94,7 @@ from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
     save_notification_rules,
 )
+from cmk.gui.watolib.sample_config import get_default_notification_rule, new_notification_rule_id
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
 
@@ -1150,13 +1153,13 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         if self._new:
             if self._clone_nr >= 0 and not request.var("_clear"):
-                self._rule = EventRule()
                 try:
-                    self._rule.update(self._rules[self._clone_nr])
+                    self._rule = deepcopy(self._rules[self._clone_nr])
+                    self._rule["rule_id"] = new_notification_rule_id()
                 except IndexError:
                     raise MKUserError(None, _("This %s does not exist.") % "notification rule")
             else:
-                self._rule = {}
+                self._rule = get_default_notification_rule()
         else:
             try:
                 self._rule = self._rules[self._edit_nr]
@@ -1451,6 +1454,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             + section_override
             + self._rule_match_conditions()
             + section_contacts
+            + [
+                (
+                    "rule_id",
+                    UUID(),
+                ),
+            ]
             + [
                 # Notification
                 (

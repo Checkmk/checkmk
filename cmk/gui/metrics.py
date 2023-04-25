@@ -448,8 +448,11 @@ class MetricometerRenderer(abc.ABC):
 
             expr, unit_name = self._perfometer["label"]
             value, unit, _color = evaluate(expr, self._translated_metrics)
-            if unit_name:
-                unit = unit_info[unit_name]
+            unit = unit_info[unit_name] if unit_name else unit
+
+            if isinstance(expr, int | float):
+                value = unit.get("conversion", lambda v: v)(expr)
+
             return unit["render"](value)
 
         return self._get_type_label()

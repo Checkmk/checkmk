@@ -90,17 +90,17 @@ types-setuptools = "*"  # used for type checking
 types-simplejson = "*"  # used for type checking
 types-six = "*"  # used for type checking
 types-urllib3 = "*"  # used for type checking
-botocore-stubs = "==1.29.105"  # used for type checking, keep version in sync with botocore
-boto3-stubs = "==1.26.105"  # used for type checking, keep version in sync with boto3
+botocore-stubs = "==1.29.119"  # used for type checking, keep version in sync with botocore
+boto3-stubs = "==1.26.119"  # used for type checking, keep version in sync with boto3
 pexpect = "*" # used for update testing
 
 [packages]
-setuptools-scm = "==4.1.2"  # needed by various setup.py
+setuptools-scm = "==7.1.0"  # needed by various setup.py
 six = "==1.16.0"  # direct dependency + needed by bcrypt, cryptography, pynacl, python-dateutil, vcrpy, python-active-directory
 python-dateutil = "==2.8.2"  # direct dependency
 pyyaml = "==6.0"  # needed by vcrpy
 wrapt = "==1.15.0"  # needed by vcrpy
-yarl = "==1.8.2"  # needed by vcrpy
+yarl = "==1.9.1"  # needed by vcrpy
 multidict = "==6.0.4"  # needed by yarl
 idna = "==3.4"  # needed by yarl
 vcrpy = "==4.2.1"  # used by various unit tests to mock HTTP transactions
@@ -112,7 +112,7 @@ bcrypt = "==3.2.2"  # needed by paramiko. NOTE: rust is needed for version >=4.0
 paramiko = "==2.10.3"
 pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes
-pycryptodomex = "==3.9.3"  # needed by pysnmp
+pycryptodomex = "==3.17"  # needed by pysnmp
 ply = "==3.11"  # needed by pysmi, python-active-directory
 pysmi = "==0.3.4"  # needed by pysnmp
 pysnmp = "==4.4.12"  # needed by Event Console
@@ -120,9 +120,9 @@ snmpsim = "==0.4.7"  # needed by SNMP integration tests
 certifi = "==2022.12.7"  # needed by requests
 chardet = "==5.1.0"  # needed by requests
 urllib3 = "==1.26.15"  # needed by requests
-pyopenssl = "==19.1.0"  # needed by requests with extras = ["security"]
+pyopenssl = "==21.0.0"  # needed by requests with extras = ["security"]
 pbr = "==5.11.1"  # needed by jira
-pyghmi = "==1.5.60"  # needed by base for IPMI
+pyghmi = "==1.5.61"  # needed by base for IPMI
 requests = {version = "==2.28.2",extras = ["security"]}  # needed by DCD, connexion
 pykerberos = "==1.2.4"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr, versions >=0.13.0 depend on pyspnego, which pulls in gssapi, which in turn fails on SLES because of https://github.com/pythongssapi/python-gssapi/issues/212
@@ -131,8 +131,8 @@ itsdangerous = "==2.1.2"  # needed by flask
 jinja2 = "==3.1.2"  # needed by flask
 more-itertools = "==9.1.0"  # needed by connexion through zipp, pytest
 zipp = "==3.15.0"  # needed by importlib-metadata
-attrs = "==22.2.0"  # needed by jsonschema
-importlib-metadata = "==6.1.0"  # needed by jsonschema
+attrs = "==23.1.0"  # needed by jsonschema
+importlib-metadata = "==6.6.0"  # needed by jsonschema
 pyrsistent = "==0.19.3"  # needed by jsonschema
 click = "==8.1.3"  # needed by flask
 werkzeug = "==2.2.3"  # direct dependency and needed by flask
@@ -140,7 +140,7 @@ jsonschema = "==4.17.3"  # needed by openapi-spec-validator
 flask = "==2.2.3"  # direct dependency
 pytz = "==2023.3"  # direct dependency
 openapi-spec-validator = "==0.5.6"  # direct dependency
-psutil = "==5.9.4"  # needed for omdlib
+psutil = "==5.9.5"  # needed for omdlib
 passlib = "==1.7.4"  # needed for omdlib
 defusedxml = "==0.7.1"  # needed by jira
 oauthlib = "==3.2.2"  # needed by requests-oauthlib and jira
@@ -153,7 +153,7 @@ pillow = "==9.5.0"
 python-ldap = "==3.4.3"  # needed by GUI (User sync), python-active-directory
 dicttoxml = "==1.7.16"  # needed by GUI (API XML format)
 cython = "==0.29.34"  # needed by numpy
-numpy = "==1.24.2"  # needed by GUI (metrics)
+numpy = "==1.24.3"  # needed by GUI (metrics)
 reportlab = "==3.6.12"  # needed by GUI (reporting)
 pypdf3 = "==1.0.6"  # needed by GUI (reporting)
 roman = "==4.0"  # needed by GUI (reporting)
@@ -162,9 +162,9 @@ google-auth = "==2.17.1"  # needed by kubernetes
 websocket-client = "==1.5.1"  # needed by kubernetes
 kubernetes = "==21.7.0"  # needed by kubernetes
 jmespath = "==1.0.1"  # needed by boto3 (aws)
-botocore = "==1.29.105"  # needed by boto3 (aws), keep version in sync with botocore-stubs
+botocore = "==1.29.119"  # needed by boto3 (aws), keep version in sync with botocore-stubs
 s3transfer = "==0.6.0"  # needed by boto3 (aws)
-boto3 = "==1.26.105"  # needed by boto3 (aws), keep version in sync with boto3-stubs
+boto3 = "==1.26.119"  # needed by boto3 (aws), keep version in sync with boto3-stubs
 python-snap7 = "==1.3"  # needed by Siemens PLC special agent
 pymssql = "==2.2.7"  # needed by check_sql active check
 pymysql = "==1.0.3"  # needed by check_sql active check
@@ -196,16 +196,16 @@ agent-receiver = {editable = true, path = "./agent-receiver"}
 pysmb = "==1.2.9.1"  # used by SMB share special agent
 google-cloud-monitoring = "==2.11.1"  # used by the gcp special agent
 google-cloud-asset = "==3.14.0"  # used by the gcp special agent
-exchangelib = "==4.9.0"  # used by active checks for mail
+exchangelib = "==5.0.2"  # used by active checks for mail
 lxml = "==4.9.2"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 grpcio = "==1.51.3"
 google-api-python-client = "==2.83.0"  # use rest api to query big query for gcp cost monitoring
 setproctitle = "==1.3.2"  # used by mkbench/dcd/liveproxyd
 black = {version = "==23.3.0", extras = ["d"]}  # used in our CI, the LSP-integration and in the OpenAPI part, "d" for broken black packaging only, see https://github.com/psf/black/issues/690
-meraki = "==1.30.0"  # used by special agent Cisco Meraki
+meraki = "==1.32.1"  # used by special agent Cisco Meraki
 feedparser = "==6.0.10"  # used by special agent Microsoft Azure Status
 pysaml2 = "==7.4.1"  # used by SSO via SAML2.0
-azure-storage-blob = "==12.15.0"  # used for backups to Azure Blob Storage
+azure-storage-blob = "==12.16.0"  # used for backups to Azure Blob Storage
 azure-identity = "==1.12.0"  # used for backups to Azure Blob Storage
 markdown = "==3.4.3"  # used for werk parsing
 

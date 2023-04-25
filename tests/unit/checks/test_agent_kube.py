@@ -14,8 +14,7 @@ from cmk.base.config import SpecialAgentInfoFunctionResult
 from cmk.gui.plugins.wato.special_agents import kube
 
 from cmk.special_agents.agent_kube import parse_arguments
-from cmk.special_agents.utils_kubernetes.common import LOGGER
-from cmk.special_agents.utils_kubernetes.query import make_api_client
+from cmk.special_agents.utils_kubernetes.query import parse_api_session_config
 
 pytestmark = pytest.mark.checks
 
@@ -528,8 +527,8 @@ def test_client_configuration_host(
         assert isinstance(element, str)
         arguments.append(element)
 
-    client = make_api_client(parse_arguments(arguments), LOGGER)
-    assert client.configuration.host == host
+    config = parse_api_session_config(parse_arguments(arguments))
+    assert config.api_server_endpoint == host
 
 
 @pytest.mark.parametrize(

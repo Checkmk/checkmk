@@ -92,6 +92,26 @@ class SessionConfig(BaseModel):
         return deserialize_http_proxy_config(self.usage_proxy).to_requests_proxies() or {}
 
 
+class APISessionConfig(BaseModel):
+    api_server_endpoint: str
+    token: str
+    api_server_proxy: str
+    k8s_api_read_timeout: int
+    k8s_api_connect_timeout: int
+    verify_cert_api: bool
+
+    class Config:
+        allow_mutable = False
+
+    def requests_timeout(self) -> TCPTimeout:
+        return TCPTimeout((self.k8s_api_connect_timeout, self.k8s_api_read_timeout))
+
+    def requests_proxies(self) -> MutableMapping[str, str]:
+        return dict(
+            deserialize_http_proxy_config(self.api_server_proxy).to_requests_proxies() or {}
+        )
+
+
 class CollectorSessionConfig(SessionConfig):
     cluster_collector_endpoint: str
 
@@ -121,6 +141,10 @@ _AllConfigs = CollectorSessionConfig | PrometheusSessionConfig | NoUsageConfig
 
 def parse_session_config(arguments: argparse.Namespace) -> _AllConfigs:
     return parse_obj_as(_AllConfigs, arguments.__dict__)  # type: ignore[arg-type]
+
+
+def parse_api_session_config(arguments: argparse.Namespace) -> APISessionConfig:
+    return APISessionConfig.parse_obj(arguments.__dict__)
 
 
 def send_requests(
@@ -167,35 +191,32 @@ def node_exporter_getter(
     return []
 
 
-def make_api_client(arguments: argparse.Namespace, logger: logging.Logger) -> client.ApiClient:  # type: ignore[no-any-unimported]
-    config = client.Configuration()
+def make_api_client(config: APISessionConfig, logger: logging.Logger) -> client.ApiClient:  # type: ignore[no-any-unimported]
+    client_config = client.Configuration()
 
-    host = arguments.api_server_endpoint
-    config.host = host
-    if arguments.token:
-        config.api_key_prefix["authorization"] = "Bearer"
-        config.api_key["authorization"] = arguments.token
+    host = config.api_server_endpoint
+    client_config.host = host
+    if config.token:
+        client_config.api_key_prefix["authorization"] = "Bearer"
+        client_config.api_key["authorization"] = config.token
 
-    http_proxy_config = deserialize_http_proxy_config(arguments.api_server_proxy)
-
-    # Mimic requests.get("GET", url=host, proxies=http_proxy_config.to_requests_proxies())
+    # Mimic requests.get("GET", url=host, proxies=http_proxy_client_config.to_requests_proxies())
     # function call, in order to obtain proxies in the same way as the requests library
     with requests.Session() as session:
         req = requests.models.Request(method="GET", url=host, data={}, params={})
         prep = session.prepare_request(req)
-        proxies: MutableMapping[str, str] = dict(http_proxy_config.to_requests_proxies() or {})
         proxies = session.merge_environment_settings(
-            prep.url, proxies, session.stream, session.verify, session.cert
+            prep.url, config.requests_proxies(), session.stream, session.verify, session.cert
         )["proxies"]
 
-    config.proxy = proxies.get(urlparse(host).scheme)
-    config.proxy_headers = requests.adapters.HTTPAdapter().proxy_headers(config.proxy)
+    client_config.proxy = proxies.get(urlparse(host).scheme)
+    client_config.proxy_headers = requests.adapters.HTTPAdapter().proxy_headers(client_config.proxy)
 
-    if arguments.verify_cert_api:
-        config.ssl_ca_cert = get_requests_ca()
+    if config.verify_cert_api:
+        client_config.ssl_ca_cert = get_requests_ca()
     else:
         logger.info("Disabling SSL certificate verification")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        config.verify_ssl = False
+        client_config.verify_ssl = False
 
-    return client.ApiClient(config)
+    return client.ApiClient(client_config)

@@ -18,18 +18,12 @@ def parse_wut_webtherm(info):
     }
     parsed = {}
     for index, reading_de, reading_en in info:
-        if reading_en:
-            reading_str = reading_en
-        elif reading_de:
-            reading_str = reading_de.replace(",", ".")
-        else:
-            reading_str = ""
-
-        webtherm_type, sensor_id = index.split(".")
-        # Dependent on webtherm_type we have to determine
-        # which sensors are available. Feel free to
-        # declare more sensor types here.
-        if "---" not in reading_str and reading_str:
+        reading_str = reading_en or reading_de.replace(",", ".")
+        if reading_str and "---" not in reading_str:  # no 'continue' for now.
+            webtherm_type, sensor_id = index.split(".")
+            # Dependent on webtherm_type we have to determine
+            # which sensors are available. Feel free to
+            # declare more sensor types here.
             # We have only temperature sensors
             if int(webtherm_type) <= 9:  # TODO: this is just a guess
                 parsed[sensor_id] = {

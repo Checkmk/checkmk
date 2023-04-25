@@ -45,8 +45,9 @@ from cmk.gui.plugins.metrics.utils import (
     translate_metrics,
     TranslatedMetrics,
     unit_info,
+    UnitInfo,
 )
-from cmk.gui.type_defs import CombinedGraphSpec, PerfometerSpec
+from cmk.gui.type_defs import CombinedGraphSpec, MetricExpression, PerfometerSpec
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = str | int | float
@@ -546,12 +547,13 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         summed = self._get_summed_values()
 
-        if "total" in self._perfometer:
-            total, _unit, _color = evaluate(self._perfometer["total"], self._translated_metrics)
-        else:
-            total = summed
-
-        if total == 0:
+        if (
+            total := (
+                summed
+                if (total_expression := self._perfometer.get("total")) is None
+                else self._evaluate_total(total_expression)
+            )
+        ) == 0:
             entry.append((100.0, get_themed_perfometer_bg_color()))
 
         else:
@@ -565,11 +567,19 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         return [entry]
 
-    def _get_type_label(self) -> str:
-        # Use unit of first metrics for output of sum. We assume that all
-        # stackes metrics have the same unit anyway
+    def _evaluate_total(self, total_expression: MetricExpression | int | float) -> float:
+        if isinstance(total_expression, float | int):
+            return self._unit().get("conversion", lambda v: v)(total_expression)
+        total, _unit, _color = evaluate(total_expression, self._translated_metrics)
+        return total
+
+    def _unit(self) -> UnitInfo:
+        # We assume that all expressions across all segments have the same unit
         _value, unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
-        return unit["render"](self._get_summed_values())
+        return unit
+
+    def _get_type_label(self) -> str:
+        return self._unit()["render"](self._get_summed_values())
 
     def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""

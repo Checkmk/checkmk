@@ -168,6 +168,12 @@ class PackageStore:
         if (local_package_path := self.local_packages / base_name).exists():
             return local_package_path
 
+        # if we're on the remote site, we have to consider this one:
+        if (
+            enabled_package_path := cmk.utils.paths.local_enabled_packages_dir / base_name
+        ).exists():
+            return enabled_package_path
+
         if (shipped_package_path := self.shipped_packages / base_name).exists():
             return shipped_package_path
 
@@ -184,6 +190,8 @@ class PackageStore:
         """
         package_path = self._get_existing_package_path(package_id)
         destination = self._enabled_path(package_id)
+        if package_path == destination:
+            return
 
         destination.parent.mkdir(parents=True, exist_ok=True)
         # We create a copy of the file in the local directory.

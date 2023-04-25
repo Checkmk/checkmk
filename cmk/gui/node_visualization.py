@@ -775,7 +775,7 @@ class Topology:
         self._known_nodes: dict[str, Any] = {}
 
         # Child/parent hosts at the depth boundary
-        self._border_hosts: set[HostName] = set()
+        self._border_hosts: set[str] = set()
 
         self._errors: list[str] = []
         self._meshes: list[Mesh] = []
@@ -810,23 +810,23 @@ class Topology:
             return None
         return self._known_nodes[hostname].get("icon_image")
 
-    def get_host_incoming(self, hostname: HostName) -> list[str]:
+    def get_host_incoming(self, hostname: str) -> list[str]:
         if hostname not in self._known_nodes:
             return []
         return self._known_nodes[hostname]["incoming"]
 
-    def get_host_outgoing(self, hostname: HostName) -> list[str]:
+    def get_host_outgoing(self, hostname: str) -> list[str]:
         if hostname not in self._known_nodes:
             return []
         return self._known_nodes[hostname]["outgoing"]
 
-    def is_growth_root(self, hostname: HostName) -> bool:
+    def is_growth_root(self, hostname: str) -> bool:
         return hostname in self._settings.frontend.growth_root_nodes
 
-    def is_growth_continue(self, hostname: HostName) -> bool:
+    def is_growth_continue(self, hostname: str) -> bool:
         return hostname in self._settings.frontend.growth_continue_nodes
 
-    def may_grow(self, hostname: HostName, mesh_hosts: Mesh) -> bool:
+    def may_grow(self, hostname: str, mesh_hosts: Mesh) -> bool:
         known_host = self._known_nodes.get(hostname)
         if not known_host:
             return True
@@ -834,7 +834,7 @@ class Topology:
         unknown_hosts = set(known_host["incoming"] + known_host["outgoing"]) - set(mesh_hosts)
         return len(unknown_hosts) > 0
 
-    def growth_forbidden(self, hostname: HostName) -> bool:
+    def growth_forbidden(self, hostname: str) -> bool:
         return hostname in self._settings.frontend.growth_forbidden_nodes
 
     def add_error(self, error: str) -> None:
@@ -991,12 +991,12 @@ class Topology:
             self._compute_meshes(border_hosts)
             growth_continue_nodes -= growth_nodes
 
-    def _compute_meshes(self, hostnames: set[HostName]) -> None:
+    def _compute_meshes(self, hostnames: set[str]) -> None:
         new_hosts = self._query_data(hostnames)
         self._update_meshes(new_hosts)
         self._check_mesh_size()
 
-    def _query_data(self, hostnames: set[HostName]) -> list[dict[str, Any]]:
+    def _query_data(self, hostnames: set[str]) -> list[dict[str, Any]]:
         if not hostnames:
             return []
 
@@ -1015,16 +1015,16 @@ class Topology:
     def _postprocess_meshes(self, meshes: list[Mesh]) -> Sequence[Mesh]:
         return meshes
 
-    def _fetch_data_for_hosts(self, hostnames: set[HostName]) -> list[dict]:
+    def _fetch_data_for_hosts(self, hostnames: set[str]) -> list[dict]:
         raise NotImplementedError()
 
-    def is_root_node(self, hostname: HostName) -> bool:
+    def is_root_node(self, hostname: str) -> bool:
         return len(self._known_nodes[hostname]["outgoing"]) == 0
 
-    def is_border_host(self, hostname: HostName) -> bool:
+    def is_border_host(self, hostname: str) -> bool:
         return hostname in self._border_hosts
 
-    def has_node_type(self, hostname: HostName) -> bool:
+    def has_node_type(self, hostname: str) -> bool:
         return self._known_nodes[hostname].get("node_type") is not None
 
     def growth_depth_overview(self) -> dict[int, set[str]]:
@@ -1033,7 +1033,7 @@ class Topology:
             overview.setdefault(depth, set()).add(hostname)
         return overview
 
-    def _update_meshes(self, new_hosts: list[dict[HostName, Any]]) -> None:
+    def _update_meshes(self, new_hosts: list[dict[str, Any]]) -> None:
         # Data flow is child->parent
         # Incoming data comes from child
         # Outgoing data goes to parent
@@ -1059,7 +1059,7 @@ class Topology:
 
         self._integrate_new_meshes(new_meshes)
 
-    def _integrate_new_meshes(self, new_meshes: list[set[HostName]]) -> None:
+    def _integrate_new_meshes(self, new_meshes: list[set[str]]) -> None:
         """Combines meshes with identical items"""
         self._meshes.extend(new_meshes)
         all_hosts = set(itertools.chain.from_iterable(self._meshes))
@@ -1100,7 +1100,7 @@ class ParentChildNetworkTopology(Topology):
     def get_mesh_root(self, mesh: set[str]) -> str:
         return self._topology_center_node_name
 
-    def _fetch_data_for_hosts(self, hostnames: set[HostName]) -> list[dict]:
+    def _fetch_data_for_hosts(self, hostnames: set[str]) -> list[dict]:
         hostname_filters = []
         if hostnames:
             for hostname in hostnames:

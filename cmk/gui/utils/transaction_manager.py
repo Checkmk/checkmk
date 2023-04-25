@@ -103,12 +103,17 @@ class TransactionManager:
             return False
 
         # Normal user/password auth user handling
-        timestamp = transid.split("/", 1)[0]
+        timestamp_str = transid.split("/", 1)[0]
+
+        try:
+            timestamp = int(timestamp_str)
+        except ValueError:
+            return False
 
         # If age is too old (one week), it is always
         # invalid:
         now = time.time()
-        if now - int(timestamp) >= 604800:  # 7 * 24 hours
+        if now - timestamp >= 604800:  # 7 * 24 hours
             return False
 
         # Now check, if this transid is a valid one

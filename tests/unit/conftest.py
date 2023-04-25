@@ -359,6 +359,7 @@ def use_fakeredis_client(monkeypatch):
         "Redis",
         FakeRedis,
     )
+    redis.get_redis_client().flushall()
 
 
 @pytest.fixture(autouse=True)

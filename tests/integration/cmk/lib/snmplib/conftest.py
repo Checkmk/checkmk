@@ -26,7 +26,7 @@ from pysnmp.hlapi import (  # type: ignore[import]
     UdpTransportTarget,
 )
 
-from tests.testlib import is_enterprise_repo, repo_path, wait_until
+from tests.testlib import repo_path, wait_until
 from tests.testlib.site import Site
 
 import cmk.utils.debug as debug
@@ -235,8 +235,8 @@ def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
 
 
 @pytest.fixture(name="backend_type", params=SNMPBackendEnum)
-def backend_type_fixture(request: pytest.FixtureRequest) -> SNMPBackendEnum:
+def backend_type_fixture(site: Site, request: pytest.FixtureRequest) -> SNMPBackendEnum:
     backend_type: SNMPBackendEnum = request.param
-    if not is_enterprise_repo() and backend_type is SNMPBackendEnum.INLINE:
+    if site.version.is_raw_edition() and backend_type is SNMPBackendEnum.INLINE:
         return pytest.skip("CEE feature only")
     return backend_type

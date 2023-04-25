@@ -862,14 +862,18 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             omd_site(),
         ) + urllib.parse.urlencode(
             [
-                ("_username", "automation"),
-                ("_secret", automation_secret),
                 ("host", checkmk_server_name),
                 ("name", "host_performance_graphs"),
             ]
         )
 
-        return requests.post(url)
+        return requests.post(
+            url,
+            data={
+                "_username": "automation",
+                "_secret": automation_secret,
+            },
+        )
 
     def _get_automation_secret(self) -> str:
         automation_secret_filepath = Path(cmk.utils.paths.var_dir).joinpath(

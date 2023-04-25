@@ -12,7 +12,7 @@ import subprocess
 from collections.abc import Iterator
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import assert_never, NamedTuple
+from typing import NamedTuple
 
 import psutil
 import pytest
@@ -31,20 +31,8 @@ from tests.testlib.site import Site
 
 import cmk.utils.debug as debug
 import cmk.utils.log as log
-import cmk.utils.paths
-from cmk.utils.type_defs import HostName
 
-import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
-
-from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
-
-if is_enterprise_repo():
-    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import] # pylint: disable=import-error,no-name-in-module
-        InlineSNMPBackend,
-    )
-else:
-    InlineSNMPBackend = None  # type: ignore[assignment, misc]
+from cmk.snmplib.type_defs import SNMPBackendEnum
 
 logger = logging.getLogger(__name__)
 
@@ -252,58 +240,3 @@ def backend_type_fixture(request: pytest.FixtureRequest) -> SNMPBackendEnum:
     if not is_enterprise_repo() and backend_type is SNMPBackendEnum.INLINE:
         return pytest.skip("CEE feature only")
     return backend_type
-
-
-@pytest.fixture(name="backend", params=SNMPBackendEnum)
-def backend_fixture(request, snmp_data_dir):
-    backend_type: SNMPBackendEnum = request.param
-    backend: type[SNMPBackend] | None
-    match backend_type:
-        case SNMPBackendEnum.INLINE:
-            backend = InlineSNMPBackend
-        case SNMPBackendEnum.CLASSIC:
-            backend = ClassicSNMPBackend
-        case SNMPBackendEnum.STORED_WALK:
-            backend = StoredWalkSNMPBackend
-        case _:
-            assert_never(backend_type)
-
-    if backend is None:
-        return pytest.skip("CEE feature only")
-
-    config = SNMPHostConfig(
-        is_ipv6_primary=False,
-        ipaddress="127.0.0.1",
-        hostname=HostName("localhost"),
-        credentials="public",
-        port=1337,
-        # TODO: Use SNMPv2 over v1 for the moment
-        is_bulkwalk_host=False,
-        is_snmpv2or3_without_bulkwalk_host=True,
-        bulk_walk_size_of=10,
-        timing={},
-        oid_range_limits={},
-        snmpv3_contexts=[],
-        character_encoding=None,
-        snmp_backend=backend_type,
-    )
-
-    snmpwalks_dir = cmk.utils.paths.snmpwalks_dir
-    # Point the backend to the test walks shipped with the test file in git
-    cmk.utils.paths.snmpwalks_dir = str(snmp_data_dir / "cmk-walk")
-
-    assert snmp_data_dir.exists()
-    assert (snmp_data_dir / "cmk-walk").exists()
-
-    yield backend(config, logger)
-
-    # Restore global variable.
-    cmk.utils.paths.snmpwalks_dir = snmpwalks_dir
-    return None
-
-
-@pytest.fixture(autouse=True)
-def clear_cache(monkeypatch):
-    monkeypatch.setattr(snmp_cache, "_g_single_oid_hostname", None)
-    monkeypatch.setattr(snmp_cache, "_g_single_oid_ipaddress", None)
-    monkeypatch.setattr(snmp_cache, "_g_single_oid_cache", {})

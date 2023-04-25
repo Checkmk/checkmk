@@ -793,21 +793,37 @@ class JobStatusStore:
         self._exceptions_path = Path(work_dir) / BackgroundJobDefines.exceptions_filename
 
     def read(self) -> JobStatusSpec:
+        initialized = JobStatusSpec(
+            state=JobStatusStates.INITIALIZED,
+            started=time.time(),
+            pid=None,
+            is_active=False,
+            loginfo={
+                "JobProgressUpdate": [
+                    _(
+                        "Waiting for first status update from the job. In case "
+                        "this message is shown for a longer time, the startup "
+                        "got interrupted."
+                    )
+                ],
+                "JobResult": [],
+                "JobException": [],
+            },
+        )
+
         if not self._jobstatus_path.exists():
-            return JobStatusSpec(
-                state=JobStatusStates.INITIALIZED,
-                started=time.time(),
-                pid=None,
-                is_active=False,
-                loginfo={
-                    "JobProgressUpdate": [],
-                    "JobResult": [],
-                    "JobException": [],
-                },
-            )
+            return initialized
+
+        initialized.started = self._jobstatus_path.stat().st_mtime
+
+        if not (raw_status_spec := self.read_raw()):
+            # Job status file might have just been created during locking. In this
+            # case the file does not have any content yet and falls back to the default
+            # value, which is an empty dict.
+            return initialized
 
         try:
-            data: JobStatusSpec = JobStatusSpec.parse_obj(self.read_raw())
+            data: JobStatusSpec = JobStatusSpec.parse_obj(raw_status_spec)
         finally:
             store.release_lock(str(self._jobstatus_path))
 
@@ -825,11 +841,9 @@ class JobStatusStore:
         return data
 
     def read_raw(self) -> dict[str, Any]:
-        status: dict[str, Any] | None = store.load_object_from_file(
-            self._jobstatus_path, default=None, lock=True
+        status: dict[str, Any] = store.load_object_from_file(
+            self._jobstatus_path, default={}, lock=True
         )
-        if not status:
-            raise ValueError(f"Invalid job status {status!r} found in {self._jobstatus_path}")
         return status
 
     def exists(self) -> bool:

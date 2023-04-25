@@ -25,19 +25,10 @@ import logging
 import re
 import sys
 from collections import Counter, defaultdict
-from collections.abc import (
-    Callable,
-    Collection,
-    Iterable,
-    Iterator,
-    Mapping,
-    MutableMapping,
-    Sequence,
-)
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
 from typing import Literal, NamedTuple, TypeVar
-from urllib.parse import urlparse
 
 import requests
 import urllib3
@@ -47,11 +38,9 @@ from pydantic import parse_raw_as
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.profile
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
-from cmk.special_agents.utils.request_helper import get_requests_ca
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
 from cmk.special_agents.utils_kubernetes.api_server import APIData, from_kubernetes
 from cmk.special_agents.utils_kubernetes.common import (
@@ -1642,40 +1631,6 @@ def request_cluster_collector(
     return parser(cluster_resp.content)
 
 
-def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
-    config = client.Configuration()
-
-    host = arguments.api_server_endpoint
-    config.host = host
-    if arguments.token:
-        config.api_key_prefix["authorization"] = "Bearer"
-        config.api_key["authorization"] = arguments.token
-
-    http_proxy_config = deserialize_http_proxy_config(arguments.api_server_proxy)
-
-    # Mimic requests.get("GET", url=host, proxies=http_proxy_config.to_requests_proxies())
-    # function call, in order to obtain proxies in the same way as the requests library
-    with requests.Session() as session:
-        req = requests.models.Request(method="GET", url=host, data={}, params={})
-        prep = session.prepare_request(req)
-        proxies: MutableMapping = dict(http_proxy_config.to_requests_proxies() or {})
-        proxies = session.merge_environment_settings(
-            prep.url, proxies, session.stream, session.verify, session.cert
-        )["proxies"]
-
-    config.proxy = proxies.get(urlparse(host).scheme)
-    config.proxy_headers = requests.adapters.HTTPAdapter().proxy_headers(config.proxy)
-
-    if arguments.verify_cert_api:
-        config.ssl_ca_cert = get_requests_ca()
-    else:
-        LOGGER.info("Disabling SSL certificate verification")
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        config.verify_ssl = False
-
-    return client.ApiClient(config)
-
-
 def pod_lookup_from_api_pod(api_pod: api.Pod) -> PodLookupName:
     return lookup_name(pod_namespace(api_pod), pod_name(api_pod))
 
@@ -2196,7 +2151,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
         with cmk.utils.profile.Profile(
             enabled=bool(arguments.profile), profile_file=arguments.profile
         ):
-            api_client = make_api_client(arguments)
+            api_client = query.make_api_client(arguments, LOGGER)
             LOGGER.info("Collecting API data")
 
             try:

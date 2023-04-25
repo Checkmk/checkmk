@@ -13,7 +13,9 @@ from cmk.base.config import SpecialAgentInfoFunctionResult
 
 from cmk.gui.plugins.wato.special_agents import kube
 
-from cmk.special_agents.agent_kube import make_api_client, parse_arguments
+from cmk.special_agents.agent_kube import parse_arguments
+from cmk.special_agents.utils_kubernetes.common import LOGGER
+from cmk.special_agents.utils_kubernetes.query import make_api_client
 
 pytestmark = pytest.mark.checks
 
@@ -514,7 +516,9 @@ def test_parse_namespace_patterns() -> None:
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_client_configuration_host(params: Mapping[str, object], host: str) -> None:
+def test_client_configuration_host(
+    params: Mapping[str, object], host: str, caplog: pytest.LogCaptureFixture
+) -> None:
     agent = SpecialAgent("agent_kube")
     arguments: list[str] = []
     argument_raw: SpecialAgentInfoFunctionResult = agent.argument_func(params, "kubi", "127.0.0.1")
@@ -524,7 +528,7 @@ def test_client_configuration_host(params: Mapping[str, object], host: str) -> N
         assert isinstance(element, str)
         arguments.append(element)
 
-    client = make_api_client(parse_arguments(arguments))
+    client = make_api_client(parse_arguments(arguments), LOGGER)
     assert client.configuration.host == host
 
 

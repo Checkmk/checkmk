@@ -886,11 +886,16 @@ modes.register(
 
 def mode_scan_parents(options: dict, args: list[str]) -> None:
     config.load(exclude_parents_mk=True)
+    config_cache = config.get_config_cache()
 
     if "procs" in options:
         config.max_num_processes = options["procs"]
 
-    cmk.base.parent_scan.do_scan_parents([HostName(hn) for hn in args])
+    cmk.base.parent_scan.do_scan_parents(
+        config_cache,
+        HostName(config.monitoring_host) if config.monitoring_host is not None else None,
+        [HostName(hn) for hn in args],
+    )
 
 
 modes.register(

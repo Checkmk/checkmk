@@ -25,9 +25,12 @@ import cmk.base.obsolete_output as out
 from cmk.base.config import ConfigCache
 
 
-def do_scan_parents(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branches
-    config_cache = config.get_config_cache()
-
+def do_scan_parents(
+    config_cache: ConfigCache,
+    monitoring_host: HostName | None,
+    hosts: list[HostName],
+) -> None:
+    # pylint: disable=too-many-branches
     if not hosts:
         hosts = list(sorted(config_cache.all_active_realhosts()))
 
@@ -72,7 +75,7 @@ def do_scan_parents(hosts: list[HostName]) -> None:  # pylint: disable=too-many-
                 continue
             chunk.append(host)
 
-        gws = scan_parents_of(config_cache, chunk)
+        gws = scan_parents_of(config_cache, monitoring_host, chunk)
 
         for host, (gw, _unused_state, _unused_ping_fails, _unused_message) in zip(chunk, gws):
             if gw:
@@ -86,14 +89,14 @@ def do_scan_parents(hosts: list[HostName]) -> None:  # pylint: disable=too-many-
                         gateway_hosts.add(gateway)
                         parent_hosts.append("%s|parent|ping" % gateway)
                         parent_ips[gateway] = gateway_ip
-                        if config.monitoring_host:
+                        if monitoring_host:
                             parent_rules.append(
-                                (config.monitoring_host, [gateway])
+                                (monitoring_host, [gateway])
                             )  # make Nagios a parent of gw
                 parent_rules.append((gateway, [host]))
-            elif host != config.monitoring_host and config.monitoring_host:
+            elif host != monitoring_host and monitoring_host:
                 # make monitoring host the parent of all hosts without real parent
-                parent_rules.append((config.monitoring_host, [host]))
+                parent_rules.append((monitoring_host, [host]))
 
     with outfilename.open(mode="w") as file:
         file.write("# Automatically created by --scan-parents at %s\n\n" % time.asctime())
@@ -122,6 +125,7 @@ def traceroute_available() -> str | None:
 
 def scan_parents_of(  # pylint: disable=too-many-branches
     config_cache: ConfigCache,
+    monitoring_host: HostName | None,
     hosts: Iterable[HostName],
     silent: bool = False,
     settings: dict[str, int] | None = None,
@@ -129,10 +133,8 @@ def scan_parents_of(  # pylint: disable=too-many-branches
     if settings is None:
         settings = {}
 
-    if config.monitoring_host:
-        nagios_ip = config.lookup_ip_address(
-            config_cache, config.monitoring_host, family=socket.AF_INET
-        )
+    if monitoring_host:
+        nagios_ip = config.lookup_ip_address(config_cache, monitoring_host, family=socket.AF_INET)
     else:
         nagios_ip = None
 
@@ -273,8 +275,8 @@ def scan_parents_of(  # pylint: disable=too-many-branches
             if ip == nagios_ip:
                 gateways.append((None, "root", 0, ""))  # We are the root-monitoring host
                 dot(tty.white, "N")
-            elif config.monitoring_host and nagios_ip:
-                gateways.append(((config.monitoring_host, nagios_ip, None), "direct", 0, ""))
+            elif monitoring_host and nagios_ip:
+                gateways.append(((monitoring_host, nagios_ip, None), "direct", 0, ""))
                 dot(tty.cyan, "L")
             else:
                 gateways.append((None, "direct", 0, ""))

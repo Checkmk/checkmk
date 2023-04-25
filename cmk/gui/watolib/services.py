@@ -6,6 +6,7 @@
 import ast
 import dataclasses
 import enum
+import functools
 import json
 import os
 import sys
@@ -484,7 +485,14 @@ _ActionCall = TypeVar(
 
 
 def _service_discovery_call(perform_action_call: _ActionCall) -> _ActionCall:
-    def decorate(discovery_options: DiscoveryOptions, discovery_result: DiscoveryResult, *, host: CREHost, **kwargs) -> DiscoveryResult:  # type: ignore[no-untyped-def]
+    @functools.wraps(perform_action_call)
+    def decorate(  # type: ignore[no-untyped-def]
+        discovery_options: DiscoveryOptions,
+        discovery_result: DiscoveryResult,
+        *,
+        host: CREHost,
+        **kwargs,
+    ) -> DiscoveryResult:
         user.need_permission("wato.services")
         result = perform_action_call(discovery_options, discovery_result, host=host, **kwargs)
         if not host.locked():

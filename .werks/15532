@@ -1,0 +1,15 @@
+Title: Extension packages: Disallow packages with no applicable Checkmk version
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1682419904
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Extension packages can specifiy a minimal required Checkmk version, and a Checkmk version when they expire.
+Choosing those versions carelessly could result in packages with no supported version at all.
+This is now validated against in the GUI.
+

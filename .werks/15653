@@ -1,0 +1,16 @@
+Title: agent_datadog: fix paging and handling of empty log message
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1682418410
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b6
+
+Prior to this werk, the agent raised an error whenever the response did not
+contain a link to the next page and when a log contained an empty message.
+Both cases are now covered with this werk.
+
+

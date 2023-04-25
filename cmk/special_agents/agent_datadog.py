@@ -498,7 +498,7 @@ class LogAttributes(pydantic.BaseModel, frozen=True):
     # It was observed to be missing when setting log_query to the empty string.
     attributes: Mapping[str, Any] = pydantic.Field(default={})
     host: str
-    message: str
+    message: str | None = None
     service: str
     status: str
     tags: Sequence[str]
@@ -557,6 +557,9 @@ class LogsQuerier:
             )
             yield from (Log.parse_obj(raw_log) for raw_log in response["data"])
             if (meta := response.get("meta")) is None:
+                break
+
+            if "page" not in meta:
                 break
             cursor = meta["page"].get("after")
 

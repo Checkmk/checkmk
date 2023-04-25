@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto, Enum
@@ -478,39 +478,6 @@ class LicenseUsageSample:
     def _restrict_platform(platform: str) -> str:
         # Restrict platform string to 50 chars due to the restriction of the license DB field.
         return platform[:50]
-
-
-# .
-#   .--history-------------------------------------------------------------.
-#   |                   _     _     _                                      |
-#   |                  | |__ (_)___| |_ ___  _ __ _   _                    |
-#   |                  | '_ \| / __| __/ _ \| '__| | | |                   |
-#   |                  | | | | \__ \ || (_) | |  | |_| |                   |
-#   |                  |_| |_|_|___/\__\___/|_|   \__, |                   |
-#   |                                             |___/                    |
-#   '----------------------------------------------------------------------'
-
-
-class LicenseUsageHistory:
-    def __init__(self, iterable: Iterable[LicenseUsageSample]) -> None:
-        self._samples = list(iterable)
-
-    def __iter__(self) -> Iterator[LicenseUsageSample]:
-        return iter(self._samples)
-
-    def for_report(self) -> list[RawLicenseUsageSample]:
-        return [sample.for_report() for sample in self._samples]
-
-    @classmethod
-    def parse(cls, raw_report: object) -> LicenseUsageHistory:
-        if not isinstance(raw_report, dict):
-            raise TypeError("Wrong report type: %r" % type(raw_report))
-
-        if not isinstance(version := raw_report.get("VERSION"), str):
-            raise TypeError("Wrong report version type: %r" % type(version))
-
-        parser = LicenseUsageSample.get_parser(version)
-        return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
 
 
 # .

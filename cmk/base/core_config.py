@@ -426,7 +426,7 @@ def _get_host_address_config(
 def iter_active_check_services(
     check_name: str,
     active_info: Mapping[str, Any],
-    hostname: str,
+    hostname: HostName,
     host_attrs: config.ObjectAttributes,
     params: dict[Any, Any],
     stored_passwords: Mapping[str, str],
@@ -706,7 +706,7 @@ def _extra_service_attributes(
 
 def write_notify_host_file(
     config_path: VersionedConfigPath,
-    labels_per_host: dict[HostName, CollectedHostLabels],
+    labels_per_host: Mapping[HostName, CollectedHostLabels],
 ) -> None:
     notify_labels_path: Path = _get_host_file_path(config_path)
     for host, labels in labels_per_host.items():

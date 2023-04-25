@@ -143,7 +143,7 @@ class Modes:
         hostlist: list[HostName] = []
         for arg in args:
             if arg[0] != "@" and arg in valid_hosts:
-                hostlist.append(arg)
+                hostlist.append(HostName(arg))
             else:
                 if arg[0] == "@":
                     arg = arg[1:]

@@ -341,7 +341,7 @@ def test_get_host_config(
                     "service_description": lambda _: "Active check of $HOSTNAME$",
                 }
             },
-            "myhost",
+            HostName("myhost"),
             {
                 "alias": "my_host_alias",
                 "_ADDRESS_4": "127.0.0.1",
@@ -365,7 +365,7 @@ def test_get_host_config(
                     ),
                 }
             },
-            "myhost",
+            HostName("myhost"),
             {
                 "alias": "my_host_alias",
                 "_ADDRESS_4": "127.0.0.1",
@@ -381,7 +381,7 @@ def test_get_host_config(
 def test_iter_active_check_services(
     check_name: str,
     active_check_info: Mapping[str, Mapping[str, str]],
-    hostname: str,
+    hostname: HostName,
     host_attrs: dict[str, Any],
     expected_result: Sequence[tuple[str, str]],
     monkeypatch: pytest.MonkeyPatch,

@@ -6,7 +6,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Final, NamedTuple
 
-from cmk.utils.type_defs import HostName, ParsedSectionName, ServiceState
+from cmk.utils.type_defs import ParsedSectionName, ServiceState
 
 from ._typedefs import HostKey
 from .checkresults import ActiveCheckResult
@@ -58,13 +58,13 @@ def get_section_cluster_kwargs(
     providers: Mapping[HostKey, Provider],
     node_keys: Sequence[HostKey],
     parsed_section_names: Sequence[ParsedSectionName],
-) -> Mapping[HostName, _SectionKwargs]:
+) -> Mapping[str, _SectionKwargs]:
     """Prepares section keyword arguments for a cluster host
 
     It returns a dictionary containing one optional dictionary[Host, ParsedSection]
     for each of the required sections, or an empty dictionary if no data was found at all.
     """
-    kwargs: dict[HostName, dict[str, ParsedSectionContent]] = {}
+    kwargs: dict[str, dict[str, ParsedSectionContent]] = {}
     for node_key in node_keys:
         node_kwargs = get_section_kwargs(providers, node_key, parsed_section_names)
         for key, sections_node_data in node_kwargs.items():

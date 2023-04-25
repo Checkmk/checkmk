@@ -19,6 +19,7 @@ from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.type_defs import HostName
 
 from cmk.checkers.checking import CheckPluginName
 
@@ -2388,7 +2389,7 @@ def get_search_expression() -> None | str:
 
 def get_hostnames_from_checkboxes(
     filterfunc: Callable | None = None, deflt: bool = False
-) -> list[str]:
+) -> list[HostName]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
     selected = user.get_rowselection(

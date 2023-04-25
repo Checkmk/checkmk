@@ -21,6 +21,7 @@ from cmk.utils.rulesets.tuple_rulesets import (
 )
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
 from cmk.utils.type_defs import (
+    HostAddress,
     HostName,
     HostOrServiceConditions,
     HostOrServiceConditionsSimple,
@@ -59,10 +60,10 @@ TagConditionNOR = TypedDict(
 TagCondition = TagID | None | TagConditionNE | TagConditionOR | TagConditionNOR
 # Here, we have data structures such as
 # {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
-TagsOfHosts: TypeAlias = dict[HostName, Mapping[TagGroupID, TagID]]
+TagsOfHosts: TypeAlias = dict[HostName | HostAddress, Mapping[TagGroupID, TagID]]
 
 
-PreprocessedHostRuleset: TypeAlias = dict[HostName, list[TRuleValue]]
+PreprocessedHostRuleset: TypeAlias = dict[HostName | HostAddress, list[TRuleValue]]
 PreprocessedPattern: TypeAlias = tuple[bool, Pattern[str]]
 PreprocessedServiceRuleset: TypeAlias = list[
     tuple[
@@ -105,7 +106,7 @@ class RuleSpec(Generic[TRuleValue], TypedDict, total=False):
 class LabelManager(NamedTuple):
     """Helper class to manage access to the host and service labels"""
 
-    explicit_host_labels: dict[str, Labels]
+    explicit_host_labels: dict[HostName, Labels]
     host_label_rules: Sequence[RuleSpec[dict[str, str]]]
     service_label_rules: Sequence[RuleSpec[dict[str, str]]]
     discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
@@ -118,7 +119,7 @@ class RulesetMatchObject:
 
     def __init__(
         self,
-        host_name: HostName | None = None,
+        host_name: HostName | HostAddress | None = None,
         service_description: ServiceName | None = None,
         service_labels: Labels | None = None,
     ) -> None:

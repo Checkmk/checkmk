@@ -99,7 +99,7 @@ snmp_bulk_size: list[RuleSpec[object]] = []
 snmp_default_community = "public"
 snmp_communities: list[RuleSpec[object]] = []
 # override the rule based configuration
-explicit_snmp_communities: dict[HostName, SNMPCredentials] = {}
+explicit_snmp_communities: dict[HostName | HostAddress, SNMPCredentials] = {}
 snmp_timing: list[RuleSpec[object]] = []
 snmp_character_encodings: list[RuleSpec[object]] = []
 
@@ -236,9 +236,9 @@ clustered_services_configuration: list[RuleSpec[object]] = []
 datasource_programs: list[RuleSpec[object]] = []
 service_dependencies: list = []
 # mapping from hostname to IPv4 address
-ipaddresses: dict[HostName, HostAddress] = {}
+ipaddresses: dict[HostName | HostAddress, HostAddress] = {}
 # mapping from hostname to IPv6 address
-ipv6addresses: dict[HostName, HostAddress] = {}
+ipv6addresses: dict[HostName | HostAddress, HostAddress] = {}
 # mapping from hostname to addtional IPv4 addresses
 additional_ipv4addresses: dict[HostName, list[HostAddress]] = {}
 # mapping from hostname to addtional IPv6 addresses

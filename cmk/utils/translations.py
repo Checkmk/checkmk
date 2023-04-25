@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from typing import cast, Literal, TypedDict
 
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import ServiceName
+from cmk.utils.type_defs import HostName, ServiceName
 
 
 # This can probably improved further by making it total and removing the None,
@@ -29,12 +29,12 @@ class TranslationOptionsSpec(TypedDict, total=False):
     regex: list[tuple[str, str]]
 
 
-def translate_hostname(translation: TranslationOptions, hostname: str) -> str:
-    return _translate(translation, hostname)
+def translate_hostname(translation: TranslationOptions, hostname: str) -> HostName:
+    return HostName(_translate(translation, str(hostname)))
 
 
 def translate_service_description(
-    translation: TranslationOptions, service_description: ServiceName
+    translation: TranslationOptions, service_description: str
 ) -> ServiceName:
     if service_description.strip() in [
         "Check_MK",
@@ -44,7 +44,7 @@ def translate_service_description(
         "Check_MK HW/SW Inventory",
     ]:
         return service_description.strip()
-    return _translate(translation, service_description)
+    return ServiceName(_translate(translation, str(service_description)))
 
 
 def _translate(translation: TranslationOptions, name: str) -> str:

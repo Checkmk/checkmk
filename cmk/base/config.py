@@ -2037,7 +2037,7 @@ class ConfigCache:
         self.__snmp_config: dict[tuple[HostName, HostAddress, SourceType], SNMPHostConfig] = {}
         self.__hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
         self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
-        self.__computed_datasources: dict[HostName, ComputedDataSources] = {}
+        self.__computed_datasources: dict[HostName | HostAddress, ComputedDataSources] = {}
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
         self.__active_checks: dict[HostName, list[tuple[str, list[Any]]]] = {}
         self.__special_agents: dict[HostName, Sequence[tuple[str, Mapping[str, object]]]] = {}
@@ -2120,7 +2120,7 @@ class ConfigCache:
         self._cache_match_object_service_checkgroup: dict[
             tuple[HostName, Item, ServiceName], RulesetMatchObject
         ] = {}
-        self._cache_match_object_host: dict[HostName, RulesetMatchObject] = {}
+        self._cache_match_object_host: dict[HostName | HostAddress, RulesetMatchObject] = {}
 
         # Host lookup
 
@@ -2625,7 +2625,7 @@ class ConfigCache:
         attrs = {key.upper() if key[0] == "_" else key: value for key, value in attrs.items()}
         return attrs
 
-    def computed_datasources(self, host_name: HostName) -> ComputedDataSources:
+    def computed_datasources(self, host_name: HostName | HostAddress) -> ComputedDataSources:
         with contextlib.suppress(KeyError):
             return self.__computed_datasources[host_name]
 
@@ -2636,7 +2636,7 @@ class ConfigCache:
     def is_tcp_host(self, host_name: HostName) -> bool:
         return self.computed_datasources(host_name).is_tcp
 
-    def is_snmp_host(self, host_name: HostName) -> bool:
+    def is_snmp_host(self, host_name: HostName | HostAddress) -> bool:
         return self.computed_datasources(host_name).is_snmp
 
     def is_piggyback_host(self, host_name: HostName) -> bool:
@@ -2662,7 +2662,7 @@ class ConfigCache:
             or self.has_management_board(host_name)
         )
 
-    def is_dyndns_host(self, host_name: HostName) -> bool:
+    def is_dyndns_host(self, host_name: HostName | HostAddress) -> bool:
         return self.in_binary_hostlist(host_name, dyndns_hosts)
 
     def is_all_agents_host(self, host_name: HostName) -> bool:
@@ -3000,9 +3000,9 @@ class ConfigCache:
 
     # TODO: check all call sites and remove this or make it private?
     @staticmethod
-    def tags(hostname: HostName) -> Mapping[TagGroupID, TagID]:
+    def tags(hostname: HostName | HostAddress) -> Mapping[TagGroupID, TagID]:
         """Returns the dict of all configured tag groups and values of a host."""
-        if hostname in host_tags:
+        with contextlib.suppress(KeyError):
             return host_tags[hostname]
 
         # Handle not existing hosts (No need to performance optimize this)
@@ -3143,7 +3143,7 @@ class ConfigCache:
             return None
         return entries[0]
 
-    def _snmp_credentials(self, host_name: HostName) -> SNMPCredentials:
+    def _snmp_credentials(self, host_name: HostName | HostAddress) -> SNMPCredentials:
         """Determine SNMP credentials for a specific host
 
         It the host is found int the map snmp_communities, that community is
@@ -3162,7 +3162,7 @@ class ConfigCache:
         # nothing configured for this host -> use default
         return snmp_default_community
 
-    def _is_host_snmp_v1(self, host_name: HostName) -> bool:
+    def _is_host_snmp_v1(self, host_name: HostName | HostAddress) -> bool:
         """Determines is host snmp-v1 using a bit Heuristic algorithm"""
         if isinstance(self._snmp_credentials(host_name), tuple):
             return False  # v3
@@ -3176,7 +3176,7 @@ class ConfigCache:
     def _is_inline_backend_supported() -> bool:
         return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
 
-    def get_snmp_backend(self, host_name: HostName) -> SNMPBackendEnum:
+    def get_snmp_backend(self, host_name: HostName | HostAddress) -> SNMPBackendEnum:
         if self.in_binary_hostlist(host_name, usewalk_hosts):
             return SNMPBackendEnum.STORED_WALK
 
@@ -3256,7 +3256,7 @@ class ConfigCache:
         return self.extra_attributes_of_service(hostname, "Check_MK")["check_interval"]
 
     @staticmethod
-    def address_family(host_name: HostName) -> AddressFamily:
+    def address_family(host_name: HostName | HostAddress) -> AddressFamily:
         # TODO(ml): [IPv6] clarify tag_groups vs tag_groups["address_family"]
         tag_groups = ConfigCache.tags(host_name)
         if (
@@ -3285,7 +3285,7 @@ class ConfigCache:
             return AddressFamily.IPv6
         return AddressFamily.IPv4
 
-    def default_address_family(self, hostname: HostName) -> socket.AddressFamily:
+    def default_address_family(self, hostname: HostName | HostAddress) -> socket.AddressFamily:
         def primary_ip_address_family_of() -> socket.AddressFamily:
             rules = self.host_extra_conf(hostname, primary_address_family)
             if rules and rules[0] == "ipv6":
@@ -3563,7 +3563,7 @@ class ConfigCache:
         self._cache_match_object_service_checkgroup[cache_id] = result
         return result
 
-    def ruleset_match_object_of_host(self, hostname: HostName) -> RulesetMatchObject:
+    def ruleset_match_object_of_host(self, hostname: HostName | HostAddress) -> RulesetMatchObject:
         """Construct the object that is needed to match the host rulesets
 
         Please note that the host attributes like host_folder and host_tags are
@@ -3871,7 +3871,9 @@ class ConfigCache:
             ruleset,
         )
 
-    def host_extra_conf(self, hostname: HostName, ruleset: Iterable[RuleSpec]) -> list:
+    def host_extra_conf(
+        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec]
+    ) -> list:
         return list(
             self.ruleset_matcher.get_host_ruleset_values(
                 self.ruleset_match_object_of_host(hostname),
@@ -3881,7 +3883,9 @@ class ConfigCache:
         )
 
     # TODO: Cleanup external in_binary_hostlist call sites
-    def in_binary_hostlist(self, hostname: HostName, ruleset: Iterable[RuleSpec]) -> bool:
+    def in_binary_hostlist(
+        self, hostname: HostName | HostAddress, ruleset: Iterable[RuleSpec]
+    ) -> bool:
         return self.ruleset_matcher.is_matching_host_ruleset(
             self.ruleset_match_object_of_host(hostname), ruleset
         )
@@ -3964,7 +3968,7 @@ class ConfigCache:
 
     def _setup_clusters_nodes_cache(self) -> None:
         for cluster, hosts in clusters.items():
-            clustername = cluster.split("|", 1)[0]
+            clustername = HostName(cluster.split("|", 1)[0])
             for name in hosts:
                 self._clusters_of_cache.setdefault(name, []).append(clustername)
             self._nodes_of_cache[clustername] = hosts

@@ -572,6 +572,9 @@ class ModeFolder(WatoMode):
 
         # Deletion of single hosts
         delname = request.var("_delete_host")
+        if delname is not None:
+            delname = HostName(delname)
+
         if delname and Folder.current().has_host(delname):
             Folder.current().delete_hosts([delname], automation=delete_hosts)
             return redirect(folder_url)
@@ -920,9 +923,9 @@ class ModeFolder(WatoMode):
 
     def _show_host_row(
         self,
-        rendered_hosts: list[str],
+        rendered_hosts: list[HostName],
         table: Table,
-        hostname: str,
+        hostname: HostName,
         colspan: int,
         host_errors: dict[str, list[str]],
         contact_group_names: dict[str, dict[str, Any]],

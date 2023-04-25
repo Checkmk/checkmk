@@ -12,7 +12,7 @@ import livestatus
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.macros import MacroMapping
-from cmk.utils.type_defs import MetricName
+from cmk.utils.type_defs import HostName, MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
@@ -356,6 +356,8 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         host = single_context.get("host")
         if not host:
             raise MKUserError("host", _("Missing needed host parameter."))
+
+        host = HostName(host)
 
         service = single_context.get("service")
         if not service:

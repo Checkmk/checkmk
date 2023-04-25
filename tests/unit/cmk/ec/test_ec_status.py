@@ -37,7 +37,7 @@ def test_mkevent_check_query_perf(
                     "host": HostName(f"heute-{num}"),
                     "text": f"{time.time()} {num} BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R"
                     " j:O#A@J$ KLA@J $L:A@J :AMW: RAMR@: RMA@:LRMA@ L:RMA@ :AL@R MA:L@RM A@:LRMA@ :RLMA@ R:LA@RMM@RL:MA@R: AM@",
-                    "core_host": f"heute-{num}",
+                    "core_host": HostName(f"heute-{num}"),
                 }
             )
         )

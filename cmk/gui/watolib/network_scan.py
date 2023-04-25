@@ -334,7 +334,7 @@ def _ping_worker(
 
         if _ping(ipaddress):
             try:
-                host_name = HostName(socket.gethostbyaddr(ipaddress)[0])
+                host_name: HostName | HostAddress = HostName(socket.gethostbyaddr(ipaddress)[0])
             except OSError:
                 host_name = ipaddress
 

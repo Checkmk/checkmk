@@ -53,7 +53,7 @@ class ConfigDomainCoreSettings:
 
     def validate(self) -> None:
         for hostname in self.hosts_to_update:
-            if not isinstance(hostname, HostName):
+            if not isinstance(hostname, str):
                 raise MKGeneralException(f"Invalid hostname type in ConfigDomain: {self}")
 
     def __post_init__(self) -> None:

@@ -8,6 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 import cmk.utils.prediction as prediction
+from cmk.utils.type_defs import HostName
 
 
 @pytest.mark.parametrize(
@@ -60,7 +61,7 @@ Filter: service_description = invent\n""",
         ),
     ],
 )
-def test_livestatus_lql(args: tuple[list[str], list[str], str], result: str) -> None:
+def test_livestatus_lql(args: tuple[list[HostName], list[str], str], result: str) -> None:
     assert prediction.livestatus_lql(*args) == result
 
 

@@ -7,13 +7,14 @@
 import os
 from datetime import datetime
 from typing import Any
+from uuid import uuid4
 
 from cmk.utils import store
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
-from cmk.utils.type_defs import EventRule
+from cmk.utils.type_defs import EventRule, NotificationRuleID
 
 from cmk.gui.groups import AllGroupSpecs, GroupName
 from cmk.gui.log import logger
@@ -84,6 +85,23 @@ def _create_sample_config() -> None:
             logger.exception("Exception in sample config generator [%s]", generator.ident())
 
     logger.log(VERBOSE, "Finished creating the sample config")
+
+
+def new_notification_rule_id() -> NotificationRuleID:
+    return NotificationRuleID(str(uuid4()))
+
+
+def get_default_notification_rule() -> EventRule:
+    return EventRule(
+        rule_id=new_notification_rule_id(),
+        allow_disable=True,
+        contact_all=False,
+        contact_all_with_email=False,
+        contact_object=True,
+        description="Notify all contacts of a host/service via HTML email",
+        disabled=False,
+        notify_plugin=("mail", {}),
+    )
 
 
 @sample_config_generator_registry.register
@@ -275,17 +293,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         rulesets.replace_folder_config(Folder.root_folder(), ruleset_config)
         rulesets.save()
 
-        notification_rules = [
-            EventRule(
-                allow_disable=True,
-                contact_all=False,
-                contact_all_with_email=False,
-                contact_object=True,
-                description="Notify all contacts of a host/service via HTML email",
-                disabled=False,
-                notify_plugin=("mail", {}),
-            ),
-        ]
+        notification_rules = [get_default_notification_rule()]
         save_notification_rules(notification_rules)
 
     def _initial_global_settings(self) -> dict[str, Any]:

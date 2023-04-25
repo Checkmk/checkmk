@@ -58,25 +58,32 @@ NotificationType = Literal[
 NotificationContext = NewType("NotificationContext", dict[str, str])
 PluginNotificationContext = dict[str, str]
 
+NotificationRuleID = NewType("NotificationRuleID", str)
 
-class EventRule(TypedDict, total=False):
+
+class _EventRuleMandatory(TypedDict):
+    rule_id: NotificationRuleID
+    allow_disable: bool
+    contact_all: bool
+    contact_all_with_email: bool
+    contact_object: bool
+    description: str
+    disabled: bool
+    notify_plugin: tuple[str, NotifyPluginParams]
+
+
+class EventRule(_EventRuleMandatory, total=False):
     """Event Rule
 
     used to be dict[str, Any], feel free to add stuff"""
 
     alert_handler: tuple[HandlerName, HandlerParameters]
-    allow_disable: bool
     contact: str
-    contact_all: bool
-    contact_all_with_email: bool
     contact_emails: list[str]
     contact_groups: list[str]
     contact_match_groups: list[str]
     contact_match_macros: list[tuple[str, str]]
-    contact_object: bool
     contact_users: list[str]
-    description: str
-    disabled: bool
     match_attempt: tuple[int, int]
     match_checktype: list[str]
     match_contactgroups: list[str]
@@ -105,8 +112,6 @@ class EventRule(TypedDict, total=False):
     match_sl: tuple[int, int]
     match_timeperiod: TimeperiodName
     notify_method: NotifyPluginParams
-    notify_plugin: tuple[str, NotifyPluginParams]
-    # tuple is the "new" way but we still have compatable code
     bulk: tuple[Literal["always", "timeperiod"], NotifyBulkParameters] | NotifyBulkParameters
 
 

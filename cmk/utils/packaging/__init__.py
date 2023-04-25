@@ -164,12 +164,14 @@ class PackageStore:
         (not to confuse with the path of a package file that is to be created!)
         """
         base_name = format_file_name(package_id)
+
         if (local_package_path := self.local_packages / base_name).exists():
             return local_package_path
-        if not (shipped_package_path := self.shipped_packages / base_name).exists():
-            # yes, this is a race condition. But we want to make the intention clear.
-            raise PackageError(f"no such package: {package_id.name} {package_id.version}")
-        return shipped_package_path
+
+        if (shipped_package_path := self.shipped_packages / base_name).exists():
+            return shipped_package_path
+
+        raise PackageError(f"No such package: {package_id.name} {package_id.version}")
 
     def _enabled_path(self, package_id: PackageID) -> Path:
         return self.enabled_packages / format_file_name(package_id)
@@ -221,7 +223,7 @@ def disable(
 
 def create(installer: Installer, manifest: Manifest, path_config: PathConfig) -> None:
     if installer.is_installed(manifest.name):
-        raise PackageError("Packet already exists.")
+        raise PackageError("Package already exists.")
 
     package_store = PackageStore(
         shipped_dir=path_config.packages_shipped_dir,
@@ -239,7 +241,7 @@ def edit(
     installer: Installer, pacname: PackageName, new_manifest: Manifest, path_config: PathConfig
 ) -> None:
     if not installer.is_installed(pacname):
-        raise PackageError("No such package")
+        raise PackageError(f"No such package installed: {pacname}")
 
     # Renaming: check for collision
     if pacname != new_manifest.name:

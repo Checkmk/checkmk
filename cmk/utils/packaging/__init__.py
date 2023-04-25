@@ -172,6 +172,12 @@ class PackageStore:
         if (local_package_path := self.local_packages / base_name).exists():
             return local_package_path
 
+        # if we're on the remote site, we have to consider this one:
+        if (
+            enabled_package_path := cmk.utils.paths.local_enabled_packages_dir / base_name
+        ).exists():
+            return enabled_package_path
+
         if (shipped_package_path := self.shipped_packages / base_name).exists():
             return shipped_package_path
 
@@ -291,6 +297,8 @@ def mark_as_enabled(package_store: PackageStore, package_id: PackageID) -> None:
     """
     package_path = package_store.get_existing_package_path(package_id)
     destination = cmk.utils.paths.local_enabled_packages_dir / package_path.name
+    if package_path == destination:
+        return
 
     destination.parent.mkdir(parents=True, exist_ok=True)
 

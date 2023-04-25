@@ -60,7 +60,8 @@ NagiosCore::NagiosCore(
     , _authorization(authorization)
     , _data_encoding(data_encoding)
     , _store(this) {
-    for (host *hst = host_list; hst != nullptr; hst = hst->next) {
+    for (::host *hst = host_list; hst != nullptr; hst = hst->next) {
+        ihosts_by_handle_[hst] = std::make_unique<NebHost>(*hst);
         if (const char *address = hst->address) {
             _hosts_by_designation[mk::unsafe_tolower(address)] = hst;
         }
@@ -79,6 +80,10 @@ NagiosCore::NagiosCore(
         icontactgroups_[cg] = std::make_unique<NebContactGroup>(*cg);
     }
 }
+const IHost *NagiosCore::ihost(const ::host *handle) const {
+    auto it = ihosts_by_handle_.find(handle);
+    return it == ihosts_by_handle_.end() ? nullptr : it->second.get();
+}
 
 std::unique_ptr<const IHost> NagiosCore::find_host(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
@@ -95,12 +100,9 @@ std::unique_ptr<const IHostGroup> NagiosCore::find_hostgroup(
 
 bool NagiosCore::all_of_hosts(
     const std::function<bool(const IHost &)> &pred) const {
-    for (const auto *hst = host_list; hst != nullptr; hst = hst->next) {
-        if (!pred(NebHost{*hst})) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(
+        ihosts_by_handle_.cbegin(), ihosts_by_handle_.cend(),
+        [pred](const auto &entry) { return pred(*entry.second); });
 }
 
 std::unique_ptr<const IHost> NagiosCore::getHostByDesignation(

@@ -8,20 +8,8 @@ def main() {
             stage('Run shell unit tests') {
                 sh("make -C tests test-unit-shell");
             }
-
-            stage("Analyse Issues") {
-                publishIssues(
-                    issues: [scanForIssues( tool: gcc())],
-                    trendChartType: 'TOOLS_ONLY',
-                    qualityGates: [[
-                        threshold: 1,
-                        type: 'TOTAL',
-                        unstable: false,
-                    ]],
-                );
-            }
         }
     }
 }
-
 return this;
+

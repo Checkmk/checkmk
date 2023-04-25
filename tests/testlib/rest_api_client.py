@@ -343,6 +343,17 @@ class LicensingClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def call_configure_licensing_settings(
+        self, settings: Mapping[str, str | Mapping[str, str]], expect_ok: bool = False
+    ) -> Response:
+        body = {"settings": settings}
+        return self.request(
+            "put",
+            url="/domain-types/licensing/actions/configure/invoke",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
 
 @register_client
 class ActivateChangesClient(RestApiClient):

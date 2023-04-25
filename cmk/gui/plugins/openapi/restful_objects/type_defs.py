@@ -65,6 +65,7 @@ CmkEndpointName = Literal[
     "cmk/bulk_discovery",
     "cmk/bulk_update",
     "cmk/compute",
+    "cmk/configure",
     "cmk/create",
     "cmk/create_aux_tag",
     "cmk/create_host",

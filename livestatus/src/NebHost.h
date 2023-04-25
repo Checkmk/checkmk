@@ -317,12 +317,11 @@ public:
         }
         return {names.begin(), names.end()};
     }
+
     [[nodiscard]] Attributes attributes(AttributeKind kind) const override {
-        if (const auto *p = host_.custom_variables) {
-            return CustomAttributes(p, kind);
-        }
-        return {};
+        return CustomAttributes(host_.custom_variables, kind);
     }
+
     [[nodiscard]] std::string filename() const override {
         return findCustomAttributeValue(host_.custom_variables,
                                         AttributeKind::custom_variables,

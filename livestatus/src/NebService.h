@@ -12,7 +12,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include "CustomAttributeMap.h"
 #include "NagiosCore.h"
 #include "NebHost.h"
 #include "livestatus/Attributes.h"
@@ -91,7 +90,8 @@ public:
     bool all_of_labels(
         const std::function<bool(const Attribute &)> &pred) const override {
         // TODO(sp) Avoid construction of temporary map
-        auto labels = CustomAttributeMap{AttributeKind::labels}(service_);
+        auto labels =
+            CustomAttributes(service_.custom_variables, AttributeKind::labels);
         return std::all_of(
             labels.cbegin(), labels.cend(),
             [&pred](const std::pair<std::string, std::string> &label) {

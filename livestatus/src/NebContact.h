@@ -8,7 +8,6 @@
 
 #include <algorithm>
 
-#include "CustomAttributeMap.h"
 #include "TimeperiodsCache.h"
 #include "livestatus/Interface.h"
 #include "nagios.h"
@@ -62,28 +61,19 @@ public:
             contact_.service_notification_period_ptr);
     }
     [[nodiscard]] Attributes customVariables() const override {
-        return contact_.custom_variables != nullptr
-                   ? CustomAttributes(contact_.custom_variables,
-                                      AttributeKind::custom_variables)
-                   : Attributes{};
+        return CustomAttributes(contact_.custom_variables,
+                                AttributeKind::custom_variables);
     }
     [[nodiscard]] Attributes tags() const override {
-        return contact_.custom_variables != nullptr
-                   ? CustomAttributes(contact_.custom_variables,
-                                      AttributeKind::tags)
-                   : Attributes{};
+        return CustomAttributes(contact_.custom_variables, AttributeKind::tags);
     }
     [[nodiscard]] Attributes labels() const override {
-        return contact_.custom_variables != nullptr
-                   ? CustomAttributes(contact_.custom_variables,
-                                      AttributeKind::labels)
-                   : Attributes{};
+        return CustomAttributes(contact_.custom_variables,
+                                AttributeKind::labels);
     }
     [[nodiscard]] Attributes labelSources() const override {
-        return contact_.custom_variables != nullptr
-                   ? CustomAttributes(contact_.custom_variables,
-                                      AttributeKind::label_sources)
-                   : Attributes{};
+        return CustomAttributes(contact_.custom_variables,
+                                AttributeKind::label_sources);
     }
 
     [[nodiscard]] uint32_t modifiedAttributes() const override {
@@ -93,7 +83,8 @@ public:
     bool all_of_labels(
         const std::function<bool(const Attribute &)> &pred) const override {
         // TODO(sp) Avoid construction of temporary map
-        auto labels = CustomAttributeMap{AttributeKind::labels}(contact_);
+        auto labels =
+            CustomAttributes(contact_.custom_variables, AttributeKind::labels);
         return std::all_of(
             labels.cbegin(), labels.cend(),
             [&pred](const std::pair<std::string, std::string> &label) {
@@ -102,7 +93,7 @@ public:
     }
 
 private:
-    const contact &contact_;
+    const ::contact &contact_;
 };
 
 #endif  // NebContact_h

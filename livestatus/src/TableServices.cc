@@ -14,11 +14,11 @@
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <unordered_map>
 #include <unordered_set>
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "CustomAttributeMap.h"
 #include "DynamicRRDColumn.h"
 #include "MacroExpander.h"
 #include "NagiosCore.h"
@@ -40,6 +40,7 @@
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/Logger.h"
+#include "livestatus/MapUtils.h"
 #include "livestatus/Metric.h"
 #include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
@@ -588,46 +589,81 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "custom_variable_names",
         "A list of the names of the custom variables", offsets,
-        CustomAttributeMap::Keys{AttributeKind::custom_variables}));
+        [](const service &svc) {
+            return mk::map_keys(CustomAttributes(
+                svc.custom_variables, AttributeKind::custom_variables));
+        }));
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables", offsets,
-        CustomAttributeMap::Values{AttributeKind::custom_variables}));
+        [](const service &svc) {
+            return mk::map_values(CustomAttributes(
+                svc.custom_variables, AttributeKind::custom_variables));
+        }));
     table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        offsets, CustomAttributeMap{AttributeKind::custom_variables}));
+        offsets, [](const service &svc) {
+            return CustomAttributes(svc.custom_variables,
+                                    AttributeKind::custom_variables);
+        }));
 
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "tag_names", "A list of the names of the tags", offsets,
-        CustomAttributeMap::Keys{AttributeKind::tags}));
+        [](const service &svc) {
+            return mk::map_keys(
+                CustomAttributes(svc.custom_variables, AttributeKind::tags));
+        }));
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "tag_values", "A list of the values of the tags", offsets,
-        CustomAttributeMap::Values{AttributeKind::tags}));
+        [](const service &svc) {
+            return mk::map_values(
+                CustomAttributes(svc.custom_variables, AttributeKind::tags));
+        }));
     table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "tags", "A dictionary of the tags", offsets,
-        CustomAttributeMap{AttributeKind::tags}));
+        [](const service &svc) {
+            return CustomAttributes(svc.custom_variables, AttributeKind::tags);
+        }));
 
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_names", "A list of the names of the labels", offsets,
-        CustomAttributeMap::Keys{AttributeKind::labels}));
+        [](const service &svc) {
+            return mk::map_keys(
+                CustomAttributes(svc.custom_variables, AttributeKind::labels));
+        }));
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_values", "A list of the values of the labels", offsets,
-        CustomAttributeMap::Values{AttributeKind::labels}));
+        [](const service &svc) {
+            return mk::map_values(
+                CustomAttributes(svc.custom_variables, AttributeKind::labels));
+        }));
     table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "labels", "A dictionary of the labels", offsets,
-        CustomAttributeMap{AttributeKind::labels}));
+        [](const service &svc) {
+            return CustomAttributes(svc.custom_variables,
+                                    AttributeKind::labels);
+        }));
 
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_source_names",
         "A list of the names of the label sources", offsets,
-        CustomAttributeMap::Keys{AttributeKind::label_sources}));
+        [](const service &svc) {
+            return mk::map_keys(CustomAttributes(svc.custom_variables,
+                                                 AttributeKind::label_sources));
+        }));
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_source_values",
         "A list of the values of the label sources", offsets,
-        CustomAttributeMap::Values{AttributeKind::label_sources}));
+        [](const service &svc) {
+            return mk::map_values(CustomAttributes(
+                svc.custom_variables, AttributeKind::label_sources));
+        }));
     table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "label_sources", "A dictionary of the label sources", offsets,
-        CustomAttributeMap{AttributeKind::label_sources}));
+        [](const service &svc) {
+            return CustomAttributes(svc.custom_variables,
+                                    AttributeKind::label_sources);
+        }));
 
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "groups", "A list of all service groups this object is in",

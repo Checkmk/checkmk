@@ -22150,12 +22150,6 @@ msgstr ""
 msgid "Found no rule packs."
 msgstr "Não encontrei pacotes de regras."
 
-#, fuzzy
-msgid "Found no services yet. To retry please execute a rescan."
-msgstr ""
-"Ainda não encontrei nenhum serviço. Para tentar novamente, por favor execute "
-"um scan completo."
-
 msgid ""
 "Found no user object for synchronization. Please check your filter settings."
 msgstr ""
@@ -36449,12 +36443,6 @@ msgstr "Sem Níveis"
 msgid "No SNMP"
 msgstr "Sem SNMP"
 
-#, fuzzy
-msgid "No SNMP data available. Please trigger a rescan."
-msgstr ""
-"Não há dados disponíveis para a descoberta. Por favor, realize uma varredura "
-"completa."
-
 msgid "No TLS"
 msgstr ""
 
@@ -36543,12 +36531,6 @@ msgstr "Sem dados"
 
 msgid "No data available"
 msgstr "Não há dados disponíveis"
-
-#, fuzzy
-msgid "No data for discovery available. Please perform a rescan."
-msgstr ""
-"Não há dados disponíveis para a descoberta. Por favor, realize uma varredura "
-"completa."
 
 msgid "No data from any site"
 msgstr "Sem dados de nenhum site"
@@ -55966,6 +55948,11 @@ msgstr ""
 msgid "The power supply sensor name as shown in the service"
 msgstr "O nome do sensor da fonte de alimentação como mostrado no serviço"
 
+msgid ""
+"The problems above might be caused by missing caches. Please trigger a "
+"rescan."
+msgstr ""
+
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "O sistema ESX consultado (vCenter / Host)"
 
@@ -72959,6 +72946,27 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~| msgid "Found no services yet. To retry please execute a full scan."
+#~ msgid "Found no services yet. To retry please execute a rescan."
+#~ msgstr ""
+#~ "Ainda não encontrei nenhum serviço. Para tentar novamente, por favor "
+#~ "execute um scan completo."
+
+#, fuzzy
+#~| msgid "No data for discovery available. Please perform a full scan."
+#~ msgid "No SNMP data available. Please trigger a rescan."
+#~ msgstr ""
+#~ "Não há dados disponíveis para a descoberta. Por favor, realize uma "
+#~ "varredura completa."
+
+#, fuzzy
+#~| msgid "No data for discovery available. Please perform a full scan."
+#~ msgid "No data for discovery available. Please perform a rescan."
+#~ msgstr ""
+#~ "Não há dados disponíveis para a descoberta. Por favor, realize uma "
+#~ "varredura completa."
 
 #, fuzzy, python-format
 #~| msgid "You are not logged into the remote site."

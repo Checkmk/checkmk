@@ -21409,10 +21409,6 @@ msgstr "一致する行が見つかりませんでした。別の検索語を試
 msgid "Found no rule packs."
 msgstr "ルールパックが見つかりませんでした。"
 
-msgid "Found no services yet. To retry please execute a rescan."
-msgstr ""
-"サービスが見つかりません。再試行するには、再スキャンを実行してください。"
-
 msgid ""
 "Found no user object for synchronization. Please check your filter settings."
 msgstr ""
@@ -35155,11 +35151,6 @@ msgstr "レベルなし"
 msgid "No SNMP"
 msgstr "SNMPなし"
 
-#, fuzzy
-msgid "No SNMP data available. Please trigger a rescan."
-msgstr ""
-"利用可能な発見のためのデータがありません。再スキャンを実行してください。"
-
 msgid "No TLS"
 msgstr "TLSなし"
 
@@ -35243,10 +35234,6 @@ msgstr "データなし"
 
 msgid "No data available"
 msgstr "データなし"
-
-msgid "No data for discovery available. Please perform a rescan."
-msgstr ""
-"利用可能な発見のためのデータがありません。再スキャンを実行してください。"
 
 msgid "No data from any site"
 msgstr "どのサイトからのデータもありません"
@@ -53924,6 +53911,11 @@ msgstr ""
 msgid "The power supply sensor name as shown in the service"
 msgstr "サービスで表示される電源センサー名"
 
+msgid ""
+"The problems above might be caused by missing caches. Please trigger a "
+"rescan."
+msgstr ""
+
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "照会されたESXシステム(vCenter /ホスト)"
 
@@ -70227,6 +70219,20 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Found no services yet. To retry please execute a rescan."
+#~ msgstr ""
+#~ "サービスが見つかりません。再試行するには、再スキャンを実行してください。"
+
+#, fuzzy
+#~| msgid "No data for discovery available. Please perform a rescan."
+#~ msgid "No SNMP data available. Please trigger a rescan."
+#~ msgstr ""
+#~ "利用可能な発見のためのデータがありません。再スキャンを実行してください。"
+
+#~ msgid "No data for discovery available. Please perform a rescan."
+#~ msgstr ""
+#~ "利用可能な発見のためのデータがありません。再スキャンを実行してください。"
 
 #, python-format
 #~ msgid ""

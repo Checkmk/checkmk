@@ -22012,11 +22012,6 @@ msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
 msgid "Found no rule packs."
 msgstr "Geen regelpakketten gevonden."
 
-msgid "Found no services yet. To retry please execute a rescan."
-msgstr ""
-"Nog geen diensten gevonden. Voer een nieuwe scan uit om het opnieuw te "
-"proberen."
-
 msgid ""
 "Found no user object for synchronization. Please check your filter settings."
 msgstr ""
@@ -36182,12 +36177,6 @@ msgstr "Geen niveaus"
 msgid "No SNMP"
 msgstr "Geen SNMP"
 
-#, fuzzy
-msgid "No SNMP data available. Please trigger a rescan."
-msgstr ""
-"Geen gegevens voor ontdekking beschikbaar. Gelieve een nieuwe scan uit te "
-"voeren."
-
 msgid "No TLS"
 msgstr "Geen TLS"
 
@@ -36272,11 +36261,6 @@ msgstr "Geen gegevens"
 
 msgid "No data available"
 msgstr "Geen gegevens beschikbaar"
-
-msgid "No data for discovery available. Please perform a rescan."
-msgstr ""
-"Geen gegevens voor ontdekking beschikbaar. Gelieve een nieuwe scan uit te "
-"voeren."
 
 msgid "No data from any site"
 msgstr "Geen gegevens van een site"
@@ -55581,6 +55565,11 @@ msgstr ""
 msgid "The power supply sensor name as shown in the service"
 msgstr "De naam van de voedingssensor zoals aangegeven in de service"
 
+msgid ""
+"The problems above might be caused by missing caches. Please trigger a "
+"rescan."
+msgstr ""
+
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "Het opgevraagde ESX systeem (vCenter / Host)"
 
@@ -72638,6 +72627,23 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Found no services yet. To retry please execute a rescan."
+#~ msgstr ""
+#~ "Nog geen diensten gevonden. Voer een nieuwe scan uit om het opnieuw te "
+#~ "proberen."
+
+#, fuzzy
+#~| msgid "No data for discovery available. Please perform a rescan."
+#~ msgid "No SNMP data available. Please trigger a rescan."
+#~ msgstr ""
+#~ "Geen gegevens voor ontdekking beschikbaar. Gelieve een nieuwe scan uit te "
+#~ "voeren."
+
+#~ msgid "No data for discovery available. Please perform a rescan."
+#~ msgstr ""
+#~ "Geen gegevens voor ontdekking beschikbaar. Gelieve een nieuwe scan uit te "
+#~ "voeren."
 
 #, fuzzy, python-format
 #~| msgid ""

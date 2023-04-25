@@ -22250,11 +22250,6 @@ msgstr ""
 msgid "Found no rule packs."
 msgstr "Je n'ai trouvé aucun pack de règles."
 
-msgid "Found no services yet. To retry please execute a rescan."
-msgstr ""
-"Aucun service n'a encore été trouvé. Pour réessayer, veuillez exécuter un "
-"rescan."
-
 msgid ""
 "Found no user object for synchronization. Please check your filter settings."
 msgstr ""
@@ -36577,12 +36572,6 @@ msgstr "Aucun niveau"
 msgid "No SNMP"
 msgstr "Non SNMP"
 
-#, fuzzy
-msgid "No SNMP data available. Please trigger a rescan."
-msgstr ""
-"Aucune donnée pour la découverte n'est disponible. Veuillez effectuer une "
-"nouvelle analyse."
-
 msgid "No TLS"
 msgstr "Pas de TLS"
 
@@ -36668,11 +36657,6 @@ msgstr "Pas de données"
 
 msgid "No data available"
 msgstr "Aucune donnée disponible"
-
-msgid "No data for discovery available. Please perform a rescan."
-msgstr ""
-"Aucune donnée pour la découverte n'est disponible. Veuillez effectuer une "
-"nouvelle analyse."
 
 msgid "No data from any site"
 msgstr "Aucune donnée provenant d'un site quelconque"
@@ -56239,6 +56223,11 @@ msgid "The power supply sensor name as shown in the service"
 msgstr ""
 "Le nom du capteur de l'alimentation électrique comme indiqué dans le service"
 
+msgid ""
+"The problems above might be caused by missing caches. Please trigger a "
+"rescan."
+msgstr ""
+
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "Le système ESX interrogé (vCenter / Host)"
 
@@ -73518,6 +73507,23 @@ msgstr ""
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Found no services yet. To retry please execute a rescan."
+#~ msgstr ""
+#~ "Aucun service n'a encore été trouvé. Pour réessayer, veuillez exécuter un "
+#~ "rescan."
+
+#, fuzzy
+#~| msgid "No data for discovery available. Please perform a rescan."
+#~ msgid "No SNMP data available. Please trigger a rescan."
+#~ msgstr ""
+#~ "Aucune donnée pour la découverte n'est disponible. Veuillez effectuer une "
+#~ "nouvelle analyse."
+
+#~ msgid "No data for discovery available. Please perform a rescan."
+#~ msgstr ""
+#~ "Aucune donnée pour la découverte n'est disponible. Veuillez effectuer une "
+#~ "nouvelle analyse."
 
 #, fuzzy
 #~| msgid "Configure the target mode for the system."

@@ -22172,11 +22172,6 @@ msgstr ""
 msgid "Found no rule packs."
 msgstr "No he encontrado ningún paquete de reglas."
 
-msgid "Found no services yet. To retry please execute a rescan."
-msgstr ""
-"Todavía no se ha encontrado ningún servicio. Para volver a intentarlo, "
-"ejecute una nueva exploración."
-
 msgid ""
 "Found no user object for synchronization. Please check your filter settings."
 msgstr ""
@@ -36458,12 +36453,6 @@ msgstr "Sin niveles"
 msgid "No SNMP"
 msgstr "No SNMP"
 
-#, fuzzy
-msgid "No SNMP data available. Please trigger a rescan."
-msgstr ""
-"No hay datos disponibles para el descubrimiento. Por favor, realice una "
-"nueva exploración."
-
 msgid "No TLS"
 msgstr "Sin TLS"
 
@@ -36548,11 +36537,6 @@ msgstr "No hay datos"
 
 msgid "No data available"
 msgstr "No hay datos disponibles"
-
-msgid "No data for discovery available. Please perform a rescan."
-msgstr ""
-"No hay datos disponibles para el descubrimiento. Por favor, realice una "
-"nueva exploración."
 
 msgid "No data from any site"
 msgstr "No hay datos de ningún sitio"
@@ -56037,6 +56021,11 @@ msgstr ""
 "El nombre del sensor de la fuente de alimentación como se muestra en el "
 "servicio"
 
+msgid ""
+"The problems above might be caused by missing caches. Please trigger a "
+"rescan."
+msgstr ""
+
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "El sistema ESX consultado (vCenter / Host)"
 
@@ -73208,6 +73197,23 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Found no services yet. To retry please execute a rescan."
+#~ msgstr ""
+#~ "Todavía no se ha encontrado ningún servicio. Para volver a intentarlo, "
+#~ "ejecute una nueva exploración."
+
+#, fuzzy
+#~| msgid "No data for discovery available. Please perform a rescan."
+#~ msgid "No SNMP data available. Please trigger a rescan."
+#~ msgstr ""
+#~ "No hay datos disponibles para el descubrimiento. Por favor, realice una "
+#~ "nueva exploración."
+
+#~ msgid "No data for discovery available. Please perform a rescan."
+#~ msgstr ""
+#~ "No hay datos disponibles para el descubrimiento. Por favor, realice una "
+#~ "nueva exploración."
 
 #, python-format
 #~ msgid ""

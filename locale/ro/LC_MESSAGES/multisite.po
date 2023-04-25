@@ -21575,9 +21575,6 @@ msgstr ""
 msgid "Found no rule packs."
 msgstr "Reguli"
 
-msgid "Found no services yet. To retry please execute a rescan."
-msgstr ""
-
 msgid ""
 "Found no user object for synchronization. Please check your filter settings."
 msgstr ""
@@ -35194,9 +35191,6 @@ msgstr ""
 msgid "No SNMP"
 msgstr ""
 
-msgid "No SNMP data available. Please trigger a rescan."
-msgstr ""
-
 msgid "No TLS"
 msgstr ""
 
@@ -35282,9 +35276,6 @@ msgid "No data"
 msgstr "% utilizare"
 
 msgid "No data available"
-msgstr ""
-
-msgid "No data for discovery available. Please perform a rescan."
 msgstr ""
 
 msgid "No data from any site"
@@ -53617,6 +53608,11 @@ msgid ""
 msgstr ""
 
 msgid "The power supply sensor name as shown in the service"
+msgstr ""
+
+msgid ""
+"The problems above might be caused by missing caches. Please trigger a "
+"rescan."
 msgstr ""
 
 msgid "The queried ESX system (vCenter / Host)"

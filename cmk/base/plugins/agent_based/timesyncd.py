@@ -156,7 +156,10 @@ def parse_timesyncd_ntpmessage(string_table: StringTable) -> NTPMessageSection |
     if len(ntp_message_lines) == 0:
         return None
     [ntp_message_line] = ntp_message_lines
-    [timezone_line] = [line[0] for line in string_table if line[0].startswith("Timezone")]
+    timezone_lines = [line[0] for line in string_table if line[0].startswith("Timezone")]
+    if len(timezone_lines) == 0:
+        return None
+    [timezone_line] = timezone_lines
     section = NTPMessageSection(
         receivetimestamp=_parse_ntp_message_timestamp(ntp_message_line, timezone_line)
     )

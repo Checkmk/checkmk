@@ -1,0 +1,23 @@
+Title: mk_filestats: Crash on baking with "Deploy without configuration"
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1682435785
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This is a regression that came with Checkmk 2.1.0p26/Werk #15458.
+
+When configuring the agent ruleset <i>Count, size and age of files - mk_filestat (Linux/Solaris)</i>
+and selecting "Deploy the Filestats plugin without configuration", previously, the agent bakery did
+crash with a message containing
+C+:
+cmk.utils.exceptions.MKGeneralException: Error running automation call bake-agents (exit code 2), error:
+‘bool’ object is not iterable
+C-:
+
+As a consequence of the fix, the structure of the ruleset had to be adapted to actually support rule merging.<br>
+See the inline help of the ruleset for more details.<br>
+However, existing rules will be auto-migrated to the new structure.

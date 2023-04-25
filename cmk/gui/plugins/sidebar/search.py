@@ -17,6 +17,7 @@ import livestatus
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException, MKGeneralException
+from cmk.utils.redis import get_redis_client
 
 import cmk.gui.sites as sites
 import cmk.gui.utils
@@ -1399,7 +1400,10 @@ class MenuSearchResultsRenderer:
             )
         if search_type == "setup":
             return (
-                IndexSearcher(PermissionsHandler()).search,
+                IndexSearcher(
+                    get_redis_client(),
+                    PermissionsHandler(),
+                ).search,
                 80,
             )
         raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")

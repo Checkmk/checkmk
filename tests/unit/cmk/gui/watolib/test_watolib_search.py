@@ -7,7 +7,9 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 import pytest
+from fakeredis import FakeRedis
 from pytest import MonkeyPatch
+from redis import Redis
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.type_defs import HostName
@@ -179,28 +181,35 @@ def fixture_match_item_generator_registry() -> MatchItemGeneratorRegistry:
     return match_item_generator_registry
 
 
+@pytest.fixture(name="redis_client")
+def fixture_redis_client() -> "Redis[str]":
+    return FakeRedis(decode_responses=True)
+
+
 @pytest.fixture(name="index_builder")
 def fixture_index_builder(
     match_item_generator_registry: MatchItemGeneratorRegistry,
+    redis_client: "Redis[str]",
 ) -> IndexBuilder:
-    return IndexBuilder(match_item_generator_registry)
+    return IndexBuilder(match_item_generator_registry, redis_client)
 
 
 @pytest.fixture(name="index_searcher")
-def fixture_index_searcher(index_builder: IndexBuilder) -> IndexSearcher:
-    index_searcher = IndexSearcher(PermissionsHandler())
-    index_searcher._redis_client = index_builder._redis_client
-    return index_searcher
+def fixture_index_searcher(
+    redis_client: "Redis[str]",
+) -> IndexSearcher:
+    return IndexSearcher(redis_client, PermissionsHandler())
 
 
 class TestIndexBuilder:
     @pytest.mark.usefixtures("with_admin_login")
     def test_update_only_not_built(
         self,
+        redis_client: "Redis[str]",
         index_builder: IndexBuilder,
     ) -> None:
         index_builder.build_changed_sub_indices(["something"])
-        assert not index_builder.index_is_built(index_builder._redis_client)
+        assert not index_builder.index_is_built(redis_client)
 
     @pytest.mark.usefixtures("with_admin_login")
     def test_language_after_built(
@@ -344,9 +353,9 @@ class TestPermissionHandler:
 
 class TestIndexSearcher:
     @pytest.mark.usefixtures("with_admin_login")
-    def test_search_no_index(self) -> None:
+    def test_search_no_index(self, redis_client: "Redis[str]") -> None:
         with pytest.raises(IndexNotFoundException):
-            list(IndexSearcher(PermissionsHandler()).search("change_dep"))
+            list(IndexSearcher(redis_client, PermissionsHandler()).search("change_dep"))
 
     def test_sort_search_results(self) -> None:
         def fake_permissions_check(_url: str) -> bool:
@@ -455,16 +464,11 @@ class TestRealisticSearch:
     )
     def test_real_search_without_exception(
         self,
+        redis_client: "Redis[str]",
     ) -> None:
-        builder = IndexBuilder(real_match_item_generator_registry)
-        builder.build_full_index()
-
-        assert builder.index_is_built(builder._redis_client)
-
-        searcher = IndexSearcher(PermissionsHandler())
-        searcher._redis_client = builder._redis_client
-
-        assert len(list(searcher.search("Host"))) > 4
+        IndexBuilder(real_match_item_generator_registry, redis_client).build_full_index()
+        assert IndexBuilder.index_is_built(redis_client)
+        assert len(list(IndexSearcher(redis_client, PermissionsHandler()).search("Host"))) > 4
 
     def _livestatus_mock(
         self,
@@ -480,26 +484,27 @@ class TestRealisticSearch:
         "fake_apache_default_globals",
         "fake_rrdcached_default_globals",
         "suppress_get_configuration_automation_call",
+        "mock_livestatus",
     )
     def test_index_is_built_as_super_user(
         self,
-        mock_livestatus: MockLiveStatusConnection,
+        redis_client: "Redis[str]",
     ) -> None:
         """
         We test that the index is always built as a super user.
         """
-
         with _UserContext(LoggedInNobody()):
-            builder = IndexBuilder(real_match_item_generator_registry)
-            builder.build_full_index()
-
-        searcher = IndexSearcher(PermissionsHandler())
-        searcher._redis_client = builder._redis_client
+            IndexBuilder(real_match_item_generator_registry, redis_client).build_full_index()
 
         # if the search index did not internally use the super user while building, this item would
         # be missing, because the match item generator for the setup menu only yields entries which
         # the current user is allowed to see
-        assert list(searcher.search("custom host attributes"))
+        assert list(
+            IndexSearcher(
+                redis_client,
+                PermissionsHandler(),
+            ).search("custom host attributes")
+        )
 
     @pytest.mark.usefixtures(
         "with_admin_login",
@@ -512,6 +517,7 @@ class TestRealisticSearch:
     def test_dcd_not_found_if_not_super_user(
         self,
         monkeypatch: MonkeyPatch,
+        redis_client: "Redis[str]",
     ) -> None:
         """
         This test ensures that test_index_is_built_as_super_user makes sense, ie. that if we do not
@@ -529,9 +535,11 @@ class TestRealisticSearch:
         )
 
         with _UserContext(LoggedInNobody()):
-            builder = IndexBuilder(real_match_item_generator_registry)
-            builder.build_full_index()
+            IndexBuilder(real_match_item_generator_registry, redis_client).build_full_index()
 
-        searcher = IndexSearcher(PermissionsHandler())
-        searcher._redis_client = builder._redis_client
-        assert not list(searcher.search("custom host attributes"))
+        assert not list(
+            IndexSearcher(
+                redis_client,
+                PermissionsHandler(),
+            ).search("custom host attributes")
+        )

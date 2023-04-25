@@ -101,9 +101,13 @@ class IndexBuilder:
     PREFIX_LOCALIZATION_INDEPENDENT = "si:li"
     PREFIX_LOCALIZATION_DEPENDENT = "si:ld"
 
-    def __init__(self, registry: MatchItemGeneratorRegistry) -> None:
+    def __init__(
+        self,
+        registry: MatchItemGeneratorRegistry,
+        redis_client: redis.Redis[str],
+    ) -> None:
         self._registry = registry
-        self._redis_client = get_redis_client()
+        self._redis_client = redis_client
 
     @staticmethod
     def add_to_prefix(prefix: str, to_add: object) -> str:
@@ -251,8 +255,8 @@ class IndexBuilder:
         )
 
     @classmethod
-    def index_is_built(cls, client: redis.Redis[str] | None = None) -> bool:
-        return (client or get_redis_client()).exists(cls._KEY_INDEX_BUILT) == 1
+    def index_is_built(cls, client: redis.Redis[str]) -> bool:
+        return client.exists(cls._KEY_INDEX_BUILT) == 1
 
 
 def _set_query_vars(query_vars: QueryVars) -> None:
@@ -326,8 +330,12 @@ class PermissionsHandler:
 
 
 class IndexSearcher:
-    def __init__(self, permissions_handler: PermissionsHandler) -> None:
-        self._redis_client = get_redis_client()
+    def __init__(
+        self,
+        redis_client: redis.Redis[str],
+        permissions_handler: PermissionsHandler,
+    ) -> None:
+        self._redis_client = redis_client
         if not redis_server_reachable(self._redis_client):
             raise RuntimeError("Redis server is not reachable")
         self._may_see_category = permissions_handler.may_see_category
@@ -381,12 +389,14 @@ class IndexSearcher:
             for topic in chain(results_localization_independent, results_localization_dependent)
         }
 
-    @staticmethod
-    def _launch_index_building_in_background_job() -> None:
+    def _launch_index_building_in_background_job(self) -> None:
         build_job = SearchIndexBackgroundJob()
         with suppress(BackgroundJobAlreadyRunning):
             build_job.start(
-                lambda job_interface: _index_building_in_background_job(job_interface=job_interface)
+                lambda job_interface: _index_building_in_background_job(
+                    job_interface,
+                    self._redis_client,
+                )
             )
 
     def _search_redis_categories(
@@ -507,9 +517,12 @@ class _SearchResultWithPermissionsCheck:
     permissions_check: Callable[[str], bool]
 
 
-def _index_building_in_background_job(job_interface: BackgroundProcessInterface) -> None:
+def _index_building_in_background_job(
+    job_interface: BackgroundProcessInterface,
+    redis_client: redis.Redis[str],
+) -> None:
     job_interface.send_progress_update(_("Building of search index started"))
-    IndexBuilder(match_item_generator_registry).build_full_index()
+    IndexBuilder(match_item_generator_registry, redis_client).build_full_index()
     job_interface.send_result_message(_("Search index successfully built"))
 
 
@@ -518,14 +531,22 @@ def _launch_requests_processing_background() -> None:
         return
     job = SearchIndexBackgroundJob()
     with suppress(BackgroundJobAlreadyRunning):
-        job.start(_process_update_requests_background)
+        job.start(
+            lambda job_interface: _process_update_requests_background(
+                job_interface,
+                get_redis_client(),
+            )
+        )
 
 
 register_builtin("request-start", _launch_requests_processing_background)
 
 
-def _process_update_requests_background(job_interface: BackgroundProcessInterface) -> None:
-    if not redis_server_reachable(get_redis_client()):
+def _process_update_requests_background(
+    job_interface: BackgroundProcessInterface,
+    redis_client: redis.Redis[str],
+) -> None:
+    if not redis_server_reachable(redis_client):
         job_interface.send_progress_update(_("Redis is not reachable, terminating"))
         return
 
@@ -533,23 +554,26 @@ def _process_update_requests_background(job_interface: BackgroundProcessInterfac
         _process_update_requests(
             read_and_remove_update_requests(),
             job_interface,
+            redis_client,
         )
 
 
 def _process_update_requests(
-    requests: UpdateRequests, job_interface: BackgroundProcessInterface
+    requests: UpdateRequests,
+    job_interface: BackgroundProcessInterface,
+    redis_client: redis.Redis[str],
 ) -> None:
     if requests["rebuild"]:
-        _index_building_in_background_job(job_interface)
+        _index_building_in_background_job(job_interface, redis_client)
         return
 
-    if not IndexBuilder.index_is_built():
+    if not IndexBuilder.index_is_built(redis_client):
         job_interface.send_progress_update(_("Search index not found, re-building from scratch"))
-        _index_building_in_background_job(job_interface)
+        _index_building_in_background_job(job_interface, redis_client)
         return
 
     job_interface.send_progress_update(_("Updating of search index started"))
-    IndexBuilder(match_item_generator_registry).build_changed_sub_indices(
+    IndexBuilder(match_item_generator_registry, redis_client).build_changed_sub_indices(
         requests["change_actions"]
     )
     job_interface.send_result_message(_("Search index successfully updated"))

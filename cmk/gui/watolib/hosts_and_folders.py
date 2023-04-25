@@ -1083,7 +1083,7 @@ def may_use_redis() -> bool:
 
 @request_memoize()
 def _redis_available() -> bool:
-    return redis_server_reachable()
+    return redis_server_reachable(get_redis_client())
 
 
 @contextmanager

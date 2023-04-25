@@ -327,12 +327,12 @@ class PermissionsHandler:
 
 class IndexSearcher:
     def __init__(self, permissions_handler: PermissionsHandler) -> None:
-        if not redis_server_reachable():
+        self._redis_client = get_redis_client()
+        if not redis_server_reachable(self._redis_client):
             raise RuntimeError("Redis server is not reachable")
         self._may_see_category = permissions_handler.may_see_category
         self._may_see_item_func = permissions_handler.permissions_for_items()
         self._user_id = user.ident
-        self._redis_client = get_redis_client()
 
     def search(self, query: SearchQuery) -> SearchResultsByTopic:
         """
@@ -514,7 +514,7 @@ def _index_building_in_background_job(job_interface: BackgroundProcessInterface)
 
 
 def _launch_requests_processing_background() -> None:
-    if not updates_requested():
+    if not updates_requested() or not redis_enabled():
         return
     job = SearchIndexBackgroundJob()
     with suppress(BackgroundJobAlreadyRunning):
@@ -525,7 +525,7 @@ register_builtin("request-start", _launch_requests_processing_background)
 
 
 def _process_update_requests_background(job_interface: BackgroundProcessInterface) -> None:
-    if not redis_server_reachable():
+    if not redis_server_reachable(get_redis_client()):
         job_interface.send_progress_update(_("Redis is not reachable, terminating"))
         return
 
@@ -574,6 +574,3 @@ class SearchIndexBackgroundJob(BackgroundJob):
                 stoppable=False,
             ),
         )
-
-    def start(self, target: Callable[[BackgroundProcessInterface], None]) -> None:
-        return super().start(target) if redis_enabled() else None

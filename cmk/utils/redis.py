@@ -31,9 +31,9 @@ def get_redis_client() -> Redis[str]:
     )
 
 
-def redis_server_reachable() -> bool:
+def redis_server_reachable(client: Redis) -> bool:
     try:
-        get_redis_client().ping()
+        client.ping()
     except RedisConnectionError:
         return False
     return True

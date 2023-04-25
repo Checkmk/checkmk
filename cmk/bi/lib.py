@@ -370,7 +370,8 @@ def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:
 
 class ABCBISearcher(ABC):
     def __init__(self) -> None:
-        self.hosts: dict[HostName, BIHostData] = {}
+        # The key may be a pattern / regex, so `str` is the correct type for the key.
+        self.hosts: dict[str, BIHostData] = {}
         self._host_regex_match_cache: dict[str, dict] = {}
         self._host_regex_miss_cache: dict[str, dict] = {}
 

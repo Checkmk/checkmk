@@ -5,8 +5,10 @@
 
 from livestatus import LivestatusResponse, LivestatusRow
 
+from cmk.utils.type_defs import HostName
+
 bi_structure_states = {
-    "heute": (
+    HostName("heute"): (
         "heute",
         {
             ("piggyback", "auto-piggyback"),
@@ -40,7 +42,7 @@ bi_structure_states = {
         "heute_alias",
         "heute",
     ),
-    "heute_clone": (
+    HostName("heute_clone"): (
         "heute",
         {
             ("piggyback", "auto-piggyback"),

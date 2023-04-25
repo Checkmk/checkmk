@@ -65,7 +65,8 @@ def get_cache_dir() -> Path:
 class BIStructureFetcher:
     def __init__(self, sites_callback: SitesCallback) -> None:
         self.sites_callback = sites_callback
-        self._hosts: dict[HostName, BIHostData] = {}
+        # The key may be a pattern / regex, so `str` is the correct type for the key.
+        self._hosts: dict[str, BIHostData] = {}
         self._have_sites: set[SiteId] = set()
         self._path_lock_structure_cache = Path(get_cache_dir(), "bi_structure_cache.LOCK")
 
@@ -78,7 +79,7 @@ class BIStructureFetcher:
         self._hosts.clear()
 
     @property
-    def hosts(self) -> dict[HostName, BIHostData]:
+    def hosts(self) -> dict[str, BIHostData]:
         return self._hosts
 
     def get_cached_program_starts(self) -> set[SiteProgramStart]:

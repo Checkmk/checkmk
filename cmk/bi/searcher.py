@@ -9,7 +9,6 @@ from typing import Any
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_condition, TagCondition
 from cmk.utils.tags import TagGroupID
-from cmk.utils.type_defs import HostName
 
 from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 
@@ -35,8 +34,9 @@ from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSe
 
 
 class BISearcher(ABCBISearcher):
-    def set_hosts(self, hosts: dict[HostName, BIHostData]) -> None:
+    def set_hosts(self, hosts: dict[str, BIHostData]) -> None:
         self.cleanup()
+        # The key may be a pattern / regex, so `str` is the correct type for the key.
         self.hosts = hosts
 
     def cleanup(self) -> None:

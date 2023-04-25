@@ -68,6 +68,9 @@ VARIABLES:
     - NAME: CHANGED_TYPESCRIPT_CONFIG
       SH: "echo '${CHANGED_FILES_REL}' | grep '^tsconfig.*.json' - || true"
 
+    - NAME: CHANGED_BAZEL_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep -e '\\.bzl$' -e '^BUILD.*' || true"
+
     - NAME: CHANGED_WEBPACK_CONFIG
       SH: "echo '${CHANGED_FILES_REL}' | grep '^webpack.config.js' - || true"
 
@@ -271,6 +274,20 @@ STAGES:
       COMMAND: "make --quiet test-format-css-docker &> ${RESULTS}/css-prettier.txt"
       TEXT_ON_SKIP: 'No CSS files changed'
       RESULT_CHECK_FILE_PATTERN: "results/css-prettier.txt"
+
+    - NAME: 'Bazel Format'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_BAZEL_FILES
+      DIR: 'tests'
+      COMMAND: "make --quiet test-format-bazel-docker &> ${RESULTS}/bazel-prettier.txt"
+      TEXT_ON_SKIP: 'No Bazel files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/bazel-prettier.txt"
+
+    - NAME: 'Bazel Lint'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_BAZEL_FILES
+      DIR: 'tests'
+      COMMAND: "make --quiet test-lint-bazel-docker &> ${RESULTS}/bazel-lint.txt"
+      TEXT_ON_SKIP: 'No Bazel files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/bazel-lint.txt"
 
     - NAME: 'Agent Plugin Unit Tests'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_AGENT_PLUGINS,CHANGED_AGENT_PLUGINS_TESTS,CHANGED_TESTS_MAKEFILE

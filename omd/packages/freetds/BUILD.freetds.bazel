@@ -1,20 +1,19 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
-    name="all_srcs",
-    srcs=glob(["**/*"], exclude=["bazel-*"]),
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
 )
 
 configure_make(
-    name="freetds",
-
-    lib_source=":all_srcs",
-
-    configure_command="configure",
-
-    configure_in_place=True,
-
-    configure_options=[
+    name = "freetds",
+    args = ["-j4 DESTDIR=$BUILD_TMPDIR/$INSTALL_PREFIX"],
+    configure_command = "configure",
+    configure_in_place = True,
+    configure_options = [
         "--enable-msdblib",
         "--prefix=''",
         "--sysconfdir=/etc/freetds",
@@ -24,8 +23,11 @@ configure_make(
         "--disable-pool",
         "--disable-odbc",
     ],
-
-    args=["-j4 DESTDIR=$BUILD_TMPDIR/$INSTALL_PREFIX"],
+    copts = [
+        # will be prepended to executable and appended to dynamic libraries,
+        # leaving all other "copts" non-optional, lol
+        "-Wl,--rpath,$ORIGIN_VAR/../lib",
+    ],
 
     # dict: Environment variables to set during the build.
     # $(execpath) macros may be used to point at files which are listed as data, deps, or build_data,
@@ -33,7 +35,7 @@ configure_make(
     # the build does not run in the exec root. This attribute is subject to make variable substitution.
     # No other macros are supported.Variables containing PATH (e.g. PATH, LD_LIBRARY_PATH, CPATH)
     # entries will be prepended to the existing variable.
-    env={
+    env = {
         #
         # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
         # combined with foreign_cc/configure_make's RPATH agnosticness
@@ -46,26 +48,19 @@ configure_make(
         # leaving us with RPATH placeholders of different size
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",  # expands to "$ORIGIN", lol
     },
-
-    copts=[
-        # will be prepended to executable and appended to dynamic libraries,
-        # leaving all other "copts" non-optional, lol
-        "-Wl,--rpath,$ORIGIN_VAR/../lib",
-    ],
-
-    deps=[],
-
-    targets=[
-        "all",
-        "install",
-    ],
-
-    # without this bazel complains about missing .a files, lol
-    out_headers_only=True,
+    lib_source = ":all_srcs",
 
     # Those are the directories we want to copied
-    out_data_dirs=[
+    out_data_dirs = [
         "include",
         "lib",
     ],
+
+    # without this bazel complains about missing .a files, lol
+    out_headers_only = True,
+    targets = [
+        "all",
+        "install",
+    ],
+    deps = [],
 )

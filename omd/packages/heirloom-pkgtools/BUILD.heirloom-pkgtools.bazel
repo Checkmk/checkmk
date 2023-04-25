@@ -1,22 +1,27 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "make")
 
 filegroup(
-    name="all_srcs",
-    srcs=glob(["**/*"], exclude=["bazel-*", "Makefile"]),
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = [
+            "bazel-*",
+            "Makefile",
+        ],
+    ),
 )
 
 make(
-    name="heirloom-pkgtools",
-    args=["-j4"],
-    lib_source=":all_srcs",
-    out_bin_dir="bin",
-    out_binaries=[
+    name = "heirloom-pkgtools",
+    args = ["-j4"],
+    lib_source = ":all_srcs",
+    out_bin_dir = "bin",
+    out_binaries = [
         "pkgmk",
         "pkgtrans",
     ],
-    out_data_dirs=["share"],
-    targets=[""],
-    postfix_script="""
+    out_data_dirs = ["share"],
+    postfix_script = """
         mkdir -p ${INSTALLDIR}/share/man/man1/
         for F in pkgmk pkgtrans; do \
             install -m 755 ${BUILD_TMPDIR}/pkgcmds/$F/$F ${INSTALLDIR}/bin/ ; \
@@ -24,5 +29,6 @@ make(
             gzip -f ${INSTALLDIR}/share/man/man1/$F.1 ; \
         done
 
-    """
+    """,
+    targets = [""],
 )

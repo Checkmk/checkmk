@@ -1,8 +1,11 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
-    name="all_srcs",
-    srcs=glob(["**/*"], exclude=["bazel-*"]),
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
 )
 
 #
@@ -11,24 +14,24 @@ filegroup(
 # https://bazel.build/docs/configurable-attributes
 #
 config_setting(
-    name="no_own_openssl",
-    values={"define": "no-own-openssl=true"},
+    name = "no_own_openssl",
+    values = {"define": "no-own-openssl=true"},
 )
 
 configure_make(
-    name="monitoring-plugins",
-    lib_source=":all_srcs",
+    name = "monitoring-plugins",
 
-    configure_command="configure",
-    configure_in_place=True,
+    # these, ladies and gentleman, are the "args"
+    args = ["-j6"],
 
     # In contrast to "sources", @build_data is a list of files we need
     # to build stuff, lol
-    build_data=["@omd_packages//packages/monitoring-plugins:cmk_password_store.h"],
-
-    configure_options=select({
-            ":no_own_openssl": [],
-            "//conditions:default": ["--with-openssl=$EXT_BUILD_DEPS/openssl"],
+    build_data = ["@omd_packages//packages/monitoring-plugins:cmk_password_store.h"],
+    configure_command = "configure",
+    configure_in_place = True,
+    configure_options = select({
+        ":no_own_openssl": [],
+        "//conditions:default": ["--with-openssl=$EXT_BUILD_DEPS/openssl"],
     }) + [
         # We're using here only the relative folder for snmp commands:
         # the full path will be dynamically calculated in the check_snmp/check_hpjd binary.
@@ -36,9 +39,12 @@ configure_make(
         "--with-snmpget-command=/bin/snmpget",
         "--with-snmpgetnext-command=/bin/snmpgetnext",
     ],
-
-    # these, ladies and gentleman, are the "args"
-    args=["-j6"],
+    copts = [
+        "-I$EXT_BUILD_ROOT/packages/monitoring-plugins/",
+        # will be prepended to executable and appended to dynamic libraries,
+        # leaving all other "copts" non-optional, lol
+        "-Wl,--rpath,$ORIGIN_VAR/../lib",
+    ],
 
     # dict: Environment variables to set during the build.
     # $(execpath) macros may be used to point at files which are listed as data, deps, or build_data,
@@ -46,7 +52,7 @@ configure_make(
     # the build does not run in the exec root. This attribute is subject to make variable substitution.
     # No other macros are supported.Variables containing PATH (e.g. PATH, LD_LIBRARY_PATH, CPATH)
     # entries will be prepended to the existing variable.
-    env={
+    env = {
         #
         # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
         # combined with foreign_cc/configure_make's RPATH agnosticness
@@ -59,29 +65,19 @@ configure_make(
         # leaving us with RPATH placeholders of different size
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",  # expands to "$ORIGIN", lol
     },
+    lib_source = ":all_srcs",
 
-    copts=[
-        "-I$EXT_BUILD_ROOT/packages/monitoring-plugins/",
-        # will be prepended to executable and appended to dynamic libraries,
-        # leaving all other "copts" non-optional, lol
-        "-Wl,--rpath,$ORIGIN_VAR/../lib",
+    # Those are the directories we want to copied
+    out_data_dirs = [
+        "libexec",
+        "share",
     ],
 
-    deps=select(
-        {
-            ":no_own_openssl": [],
-            "//conditions:default": ["@openssl"],
-        }
-    ),
-
-    targets=[
-        "all",
-        "install",
-        "install-root",
-    ],
+    # without this bazel complains about missing .a files, lol
+    out_headers_only = True,
 
     # str: Optional part of the shell script to be added after the make commands
-    postfix_script="""
+    postfix_script = """
         # unfortunately we can't restore symlinks here since they get destroed
         # _after_ this step
 
@@ -90,7 +86,7 @@ configure_make(
         # In case we need it, there is still a way to modify those binaries here:
         #   by copying, removing, modifying the copy and copying it back
         #   we achieve the same result
-        
+
         # remove files we don't want to be deployed
         rm -f "$INSTALLDIR/libexec/check_ifoperstatus" "$INSTALLDIR/libexec/check_ifstatus"
 
@@ -98,10 +94,15 @@ configure_make(
         cp ACKNOWLEDGEMENTS AUTHORS CODING COPYING FAQ NEWS README REQUIREMENTS SUPPORT THANKS \
           "$INSTALLDIR/share/doc/monitoring-plugins"
     """,
-
-    # without this bazel complains about missing .a files, lol
-    out_headers_only=True,
-
-    # Those are the directories we want to copied
-    out_data_dirs=["libexec", "share"],
+    targets = [
+        "all",
+        "install",
+        "install-root",
+    ],
+    deps = select(
+        {
+            ":no_own_openssl": [],
+            "//conditions:default": ["@openssl"],
+        },
+    ),
 )

@@ -10,6 +10,6 @@ def redis(version_str, sha256):
             UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = sha256,
-        build_file = '@omd_packages//packages/redis:BUILD.redis',
-        strip_prefix = 'redis-' + version_str,
+        build_file = "@omd_packages//packages/redis:BUILD.redis",
+        strip_prefix = "redis-" + version_str,
     )

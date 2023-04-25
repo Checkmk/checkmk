@@ -28,4 +28,4 @@ get_bazel_files() {
         \) -print
 }
 
-get_bazel_files | xargs buildifier "$@"
+get_bazel_files | xargs buildifier "$@" --warnings=-module-docstring

@@ -25,55 +25,64 @@ rules_foreign_cc_dependencies()
 #   '----------------------------------------------------------------------'
 
 load("//packages/patch:patch_http.bzl", "patch")
+
 patch(
-    version_str="2.7.6",
-    sha256="8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
+    sha256 = "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
+    version_str = "2.7.6",
 )
 
 load("//packages/redis:redis_http.bzl", "redis")
+
 redis(
-    version_str="6.2.6",
-    sha256="5b2b8b7a50111ef395bf1c1d5be11e6e167ac018125055daa8b5c2317ae131ab",
+    sha256 = "5b2b8b7a50111ef395bf1c1d5be11e6e167ac018125055daa8b5c2317ae131ab",
+    version_str = "6.2.6",
 )
 
 load("//packages/openssl:openssl_http.bzl", "openssl")
+
 openssl(
-    version_str="1.1.1q",
-    sha256="d7939ce614029cdff0b6c20f0e2e5703158a489a72b2507b8bd51bf8c8fd10ca",
+    sha256 = "d7939ce614029cdff0b6c20f0e2e5703158a489a72b2507b8bd51bf8c8fd10ca",
+    version_str = "1.1.1q",
 )
 
 load("//packages/xmlsec1:xmlsec1_http.bzl", "xmlsec1")
+
 xmlsec1(
-    version_str="1.2.37",
-    sha256="5f8dfbcb6d1e56bddd0b5ec2e00a3d0ca5342a9f57c24dffde5c796b2be2871c",
+    sha256 = "5f8dfbcb6d1e56bddd0b5ec2e00a3d0ca5342a9f57c24dffde5c796b2be2871c",
+    version_str = "1.2.37",
 )
 
 load("//packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx")
+
 heirloommailx(
-    version_str="12.5",
-    sha256="015ba4209135867f37a0245d22235a392b8bbed956913286b887c2e2a9a421ad",
+    sha256 = "015ba4209135867f37a0245d22235a392b8bbed956913286b887c2e2a9a421ad",
+    version_str = "12.5",
 )
 
 load("//packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins")
+
 monitoring_plugins(
-    version_str="2.3.2",  # version also listed in monitoring-plugins.make
-    sha256="8d9405baf113a9f25e4fb961d56f9f231da02e3ada0f41dbb0fa4654534f717b",
+    sha256 = "8d9405baf113a9f25e4fb961d56f9f231da02e3ada0f41dbb0fa4654534f717b",
+    version_str = "2.3.2",  # version also listed in monitoring-plugins.make
 )
 
 load("//packages/stunnel:stunnel_http.bzl", "stunnel")
+
 stunnel(
-    version_str="5.63",
-    sha256="c74c4e15144a3ae34b8b890bb31c909207301490bd1e51bfaaa5ffeb0a994617",
+    sha256 = "c74c4e15144a3ae34b8b890bb31c909207301490bd1e51bfaaa5ffeb0a994617",
+    version_str = "5.63",
 )
 
 load("//packages/freetds:freetds_http.bzl", "freetds")
+
 freetds(
-    version_str="0.95.95",
-    sha256="be7c90fc771f30411eff6ae3a0d2e55961f23a950a4d93c44d4c488006e64c70",
+    sha256 = "be7c90fc771f30411eff6ae3a0d2e55961f23a950a4d93c44d4c488006e64c70",
+    version_str = "0.95.95",
 )
 
 load("//packages/heirloom-pkgtools:heirloom-pkgtools_http.bzl", "heirloom_pkgtools")
+
 heirloom_pkgtools(
-    version_str="070227",
-    sha256="aa94d33550847d57c62138cabd0f742d4af2f14aa2bfb9e9d4a9427bf498e6cc",
+    sha256 = "aa94d33550847d57c62138cabd0f742d4af2f14aa2bfb9e9d4a9427bf498e6cc",
+    version_str = "070227",
 )

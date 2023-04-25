@@ -4,9 +4,9 @@ load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 def heirloom_pkgtools(version_str, sha256):
     filename = "heirloom-pkgtools-" + version_str + ".tar.bz2"
     http_archive(
-        name="heirloom-pkgtools",
-        build_file="@omd_packages//packages/heirloom-pkgtools:BUILD.heirloom-pkgtools.bazel",
-        strip_prefix="heirloom-pkgtools-" + version_str,
+        name = "heirloom-pkgtools",
+        build_file = "@omd_packages//packages/heirloom-pkgtools:BUILD.heirloom-pkgtools.bazel",
+        strip_prefix = "heirloom-pkgtools-" + version_str,
         patches = [
             "//packages/heirloom-pkgtools/patches:0000-set-linux-paths.dif",
             "//packages/heirloom-pkgtools/patches:0001-fix-invalid-open-call.dif",
@@ -23,9 +23,9 @@ def heirloom_pkgtools(version_str, sha256):
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",
-        urls=[
+        urls = [
             "https://sourceforge.net/projects/heirloom/files/heirloom-pkgtools/" + version_str + "/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
-        sha256=sha256,
+        sha256 = sha256,
     )

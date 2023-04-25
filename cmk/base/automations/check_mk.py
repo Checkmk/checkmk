@@ -1130,7 +1130,11 @@ class AutomationRestart(Automation):
         return CoreAction.RESTART
 
     def execute(self, args: list[str]) -> RestartResult:
-        return _execute_silently(self._mode(), None if not args else set(args))
+        if args:
+            nodes = set(HostName(hn) for hn in args)
+        else:
+            nodes = None
+        return _execute_silently(self._mode(), nodes)
 
     def _check_plugins_have_changed(self) -> bool:
         last_time = self._time_of_last_core_restart()
@@ -1183,7 +1187,7 @@ automations.register(AutomationReload())
 
 def _execute_silently(
     action: CoreAction,
-    hosts_to_update: set[str] | None = None,
+    hosts_to_update: set[HostName] | None = None,
     skip_config_locking_for_bakery: bool = False,
 ) -> RestartResult:
     with redirect_stdout(open(os.devnull, "w")):
@@ -1298,7 +1302,7 @@ class AutomationGetSectionInformation(Automation):
     needs_config = False
     needs_checks = True
 
-    def execute(self, args: list[str]) -> GetSectionInformationResult:
+    def execute(self, args: object) -> GetSectionInformationResult:
         section_infos = {
             str(section.name): {
                 # for now, we need only these two.

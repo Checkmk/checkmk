@@ -94,6 +94,9 @@ class VisualTypeViews(VisualType):
         if hostname == "":
             return False
 
+        if isinstance(hostname, int):
+            return False
+
         # TODO: host is not correctly validated by visuals. Do it here for the moment.
         try:
             Hostname().validate_value(hostname, None)
@@ -103,13 +106,14 @@ class VisualTypeViews(VisualType):
         if not (site_id := context.get("site")):
             return False
 
+        hostname = HostName(hostname)
         return _has_inventory_tree(
-            HostName(hostname),
+            hostname,
             SiteId(str(site_id)),
             link_from.get("has_inventory_tree", []),
             is_history=False,
         ) or _has_inventory_tree(
-            HostName(hostname),
+            hostname,
             SiteId(str(site_id)),
             link_from.get("has_inventory_tree_history", []),
             is_history=True,

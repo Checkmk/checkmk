@@ -359,8 +359,8 @@ def _get_ip_lookup_cache() -> IPLookupCache:
 def update_dns_cache(
     *,
     ip_lookup_configs: Iterable[IPLookupConfig],
-    configured_ipv4_addresses: Mapping[HostName, HostAddress],
-    configured_ipv6_addresses: Mapping[HostName, HostAddress],
+    configured_ipv4_addresses: Mapping[HostName | HostAddress, HostAddress],
+    configured_ipv6_addresses: Mapping[HostName | HostAddress, HostAddress],
     # Do these two even make sense? If either is set, this function
     # will just clear the cache.
     simulation_mode: bool,

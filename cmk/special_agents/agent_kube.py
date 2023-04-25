@@ -2152,7 +2152,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
         with cmk.utils.profile.Profile(
             enabled=bool(arguments.profile), profile_file=arguments.profile
         ):
-            api_client = query.make_api_client(arguments, LOGGER)
+            api_client = query.make_api_client(query.parse_api_session_config(arguments), LOGGER)
             LOGGER.info("Collecting API data")
 
             try:

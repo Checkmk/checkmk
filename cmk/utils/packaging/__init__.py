@@ -168,12 +168,14 @@ class PackageStore:
         """
         # TODO: can we drop this, and just hand out the bytes or create the "enabled link"?
         base_name = format_file_name(package_id)
+
         if (local_package_path := self.local_packages / base_name).exists():
             return local_package_path
-        if not (shipped_package_path := self.shipped_packages / base_name).exists():
-            # yes, this is a race condition. But we want to make the intention clear.
-            raise PackageException(f"no such package: {package_id.name} {package_id.version}")
-        return shipped_package_path
+
+        if (shipped_package_path := self.shipped_packages / base_name).exists():
+            return shipped_package_path
+
+        raise PackageException(f"No such package: {package_id.name} {package_id.version}")
 
 
 def disable(
@@ -223,7 +225,7 @@ def _find_path_and_package_info(
 
 def create(installer: Installer, manifest: Manifest, path_config: PathConfig) -> None:
     if installer.is_installed(manifest.name):
-        raise PackageException("Packet already exists.")
+        raise PackageException("Package already exists.")
 
     package_store = PackageStore()
 
@@ -237,7 +239,7 @@ def edit(
     installer: Installer, pacname: PackageName, new_manifest: Manifest, path_config: PathConfig
 ) -> None:
     if not installer.is_installed(pacname):
-        raise PackageException("No such package")
+        raise PackageException(f"No such package installed: {pacname}")
 
     # Renaming: check for collision
     if pacname != new_manifest.name:

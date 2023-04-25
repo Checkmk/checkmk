@@ -17,12 +17,13 @@ class Section(NamedTuple):
     text: str
 
 
-def parse_kentix_humidity(info: list[list[str]]) -> Section | None:
+def parse_kentix_humidity(string_table: list[list[list[str]]]) -> Section | None:
+    info = string_table[0] or string_table[1]
     if not info:
         return None
-    oid_value, lower_warn, upper_warn, _alarm, text = info[0]
+    value, lower_warn, upper_warn, _alarm, text = info[0]
     return Section(
-        reading=float(oid_value.split(".", 3)[-1]) / 10,
+        reading=float(value) / 10,
         lower_warn=float(lower_warn),
         upper_warn=float(upper_warn),
         text=text,
@@ -50,21 +51,23 @@ def check_kentix_humidity(
     return state, infotext, perfdata
 
 
+_OIDS = [
+    "1",  # humidityValue
+    "2",  # humidityMin
+    "3",  # humidityMax
+    "4",  # humidityAlarm, not used
+    "5",  # humidityAlarmtext
+]
+
+
 check_info["kentix_humidity"] = {
     "detect": DETECT_KENTIX,
     "parse_function": parse_kentix_humidity,
     "check_function": check_kentix_humidity,
     "inventory_function": inventory_kentix_humidity,
     "service_description": "Humidity",
-    "snmp_info": (
-        ".1.3.6.1.4.1.37954",
-        ["2.1.2", "3.1.2"],
-        [
-            "1",  # humidityValue
-            "2",  # humidityMin
-            "3",  # humidityMax
-            "4",  # humidityAlarm, not used
-            "5",  # humidityAlarmtext
-        ],
-    ),
+    "snmp_info": [
+        (".1.3.6.1.4.1.37954.2.1.2", _OIDS),
+        (".1.3.6.1.4.1.37954.3.1.2", _OIDS),
+    ],
 }

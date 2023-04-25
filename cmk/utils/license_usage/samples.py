@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import hashlib
 import json
 from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any, Dict, List
+
+from livestatus import SiteId
 
 from cmk.utils.license_usage.export import (
     ABCMonthlyServiceAverages,
@@ -34,6 +37,7 @@ class LicenseUsageExtensions:
 
 @dataclass
 class LicenseUsageSample:
+    site_hash: str
     version: str
     edition: str
     platform: str
@@ -61,12 +65,13 @@ class LicenseUsageHistoryDump:
         return _serialize(self)
 
     @classmethod
-    def deserialize(cls, raw_history_dump: bytes) -> "LicenseUsageHistoryDump":
+    def deserialize(cls, raw_history_dump: bytes, site_hash: str) -> "LicenseUsageHistoryDump":
         history_dump = _deserialize(raw_history_dump)
         return cls(
             VERSION=LicenseUsageHistoryDumpVersion,
             history=[
-                _migrate_sample(history_dump["VERSION"], s) for s in history_dump.get("history", [])
+                _migrate_sample(history_dump["VERSION"], s, site_hash)
+                for s in history_dump.get("history", [])
             ],
         )
 
@@ -85,7 +90,7 @@ def _deserialize(raw_dump: bytes) -> Dict:
         return {}
 
 
-def _migrate_sample(prev_dump_version: str, sample: Dict) -> LicenseUsageSample:
+def _migrate_sample(prev_dump_version: str, sample: Dict, site_hash: str) -> LicenseUsageSample:
     if prev_dump_version == "1.0":
         sample.setdefault("num_hosts_excluded", 0)
         sample.setdefault("num_services_excluded", 0)
@@ -95,7 +100,16 @@ def _migrate_sample(prev_dump_version: str, sample: Dict) -> LicenseUsageSample:
 
     migrated_extensions = _migrate_extensions(sample.get("extensions", {}))
     sample["extensions"] = LicenseUsageExtensions(**migrated_extensions)
+    sample.setdefault("site_hash", site_hash)
     return LicenseUsageSample(**sample)
+
+
+def hash_site_id(site_id: SiteId) -> str:
+    # We have to hash the site ID because some sites contain project names.
+    # This hash also has to be constant because it will be used as an DB index.
+    h = hashlib.new("sha256")
+    h.update(site_id.encode("utf-8"))
+    return h.hexdigest()
 
 
 def _migrate_extensions(extensions: Dict) -> Dict:

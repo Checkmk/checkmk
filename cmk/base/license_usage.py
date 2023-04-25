@@ -16,11 +16,13 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.license_usage.samples import (
+    hash_site_id,
     LicenseUsageExtensions,
     LicenseUsageHistoryDump,
     LicenseUsageSample,
     rot47,
 )
+from cmk.utils.site import omd_site
 
 import cmk.base.crash_reporting as crash_reporting
 
@@ -112,7 +114,7 @@ def _load_history_dump() -> LicenseUsageHistoryDump:
         history_filepath,
         default=b"{}",
     )
-    return LicenseUsageHistoryDump.deserialize(raw_history_dump)
+    return LicenseUsageHistoryDump.deserialize(raw_history_dump, hash_site_id(omd_site()))
 
 
 def _create_sample() -> Optional[LicenseUsageSample]:
@@ -140,6 +142,7 @@ def _create_sample() -> Optional[LicenseUsageSample]:
 
     general_infos = cmk_version.get_general_version_infos()
     return LicenseUsageSample(
+        site_hash=hash_site_id(omd_site()),
         version=cmk_version.omd_version(),
         edition=general_infos["edition"],
         platform=general_infos["os"],

@@ -10,6 +10,17 @@ import cmk.utils.license_usage.samples as license_usage_samples
 
 
 @pytest.mark.parametrize(
+    "site_name, site_hash",
+    [
+        ("my-site123", "28804d8e5c46e681365e0fc24a3759198f0f2bb420e2840fd78206a65652b7bf"),
+        ("my-Site123", "cf037e8451661caf7aa969357c1e4d182c37d3ef7d89fcc43e120ba0cd191662"),
+    ],
+)
+def test__hash_site_id(site_name, site_hash):
+    assert license_usage_samples.hash_site_id(site_name) == site_hash
+
+
+@pytest.mark.parametrize(
     "prev_dump_version, sample, result",
     [
         (
@@ -25,6 +36,7 @@ import cmk.utils.license_usage.samples as license_usage_samples
                 "num_services": 4,
             },
             license_usage_samples.LicenseUsageSample(
+                site_hash="e4986384b5735c5f4024050cfe8db2b288f007bbde5aa085d0aca12fa7096960",
                 version="",
                 edition="",
                 platform="",
@@ -56,6 +68,7 @@ import cmk.utils.license_usage.samples as license_usage_samples
                 "num_services": 4,
             },
             license_usage_samples.LicenseUsageSample(
+                site_hash="e4986384b5735c5f4024050cfe8db2b288f007bbde5aa085d0aca12fa7096960",
                 version="",
                 edition="",
                 platform="A very long string with len>50 describing the plat",
@@ -86,6 +99,7 @@ import cmk.utils.license_usage.samples as license_usage_samples
                 "num_services_excluded": 5,
             },
             license_usage_samples.LicenseUsageSample(
+                site_hash="e4986384b5735c5f4024050cfe8db2b288f007bbde5aa085d0aca12fa7096960",
                 version="",
                 edition="",
                 platform="",
@@ -119,6 +133,7 @@ import cmk.utils.license_usage.samples as license_usage_samples
                 },
             },
             license_usage_samples.LicenseUsageSample(
+                site_hash="e4986384b5735c5f4024050cfe8db2b288f007bbde5aa085d0aca12fa7096960",
                 version="",
                 edition="",
                 platform="",
@@ -137,11 +152,19 @@ import cmk.utils.license_usage.samples as license_usage_samples
     ],
 )
 def test__migrate_sample(prev_dump_version, sample, result):
-    assert license_usage_samples._migrate_sample(prev_dump_version, sample.copy()) == result
+    assert (
+        license_usage_samples._migrate_sample(
+            prev_dump_version,
+            sample.copy(),
+            "e4986384b5735c5f4024050cfe8db2b288f007bbde5aa085d0aca12fa7096960",
+        )
+        == result
+    )
 
 
 def test_history_try_add_sample_from_same_day() -> None:
     first_sample = license_usage_samples.LicenseUsageSample(
+        site_hash="e4986384b5735c5f4024050cfe8db2b288f007bbde5aa085d0aca12fa7096960",
         version="version",
         edition="edition",
         platform="platform",
@@ -157,6 +180,7 @@ def test_history_try_add_sample_from_same_day() -> None:
     history = license_usage_samples.LicenseUsageHistoryDump("1.1", [first_sample])
     history.add_sample(
         license_usage_samples.LicenseUsageSample(
+            site_hash="e4986384b5735c5f4024050cfe8db2b288f007bbde5aa085d0aca12fa7096960",
             version="version2",
             edition="edition2",
             platform="platform2",

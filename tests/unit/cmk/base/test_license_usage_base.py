@@ -19,6 +19,7 @@ from cmk.utils.license_usage.samples import (
 import cmk.base.license_usage as license_usage
 
 _license_usage_sample_example = LicenseUsageSample(
+    site_hash="e4986384b5735c5f4024050cfe8db2b288f007bbde5aa085d0aca12fa7096960",
     version="",
     edition="",
     platform="",
@@ -49,6 +50,7 @@ def test_update_history_de_serialize(monkeypatch):
         history=[
             _license_usage_sample_example,
             LicenseUsageSample(
+                site_hash="1666c3f500cd665c80369d4ce34d990f613c1e76ac37d7fc334dc20a9faf2b6e",
                 version="Foo",
                 edition="bär",
                 platform="Test 123 - tßßßzz",
@@ -69,7 +71,10 @@ def test_update_history_de_serialize(monkeypatch):
     serialized_history_dump = history_dump.serialize()
     assert isinstance(serialized_history_dump, bytes)
 
-    deserialized_history_dump = LicenseUsageHistoryDump.deserialize(serialized_history_dump)
+    deserialized_history_dump = LicenseUsageHistoryDump.deserialize(
+        serialized_history_dump,
+        "1666c3f500cd665c80369d4ce34d990f613c1e76ac37d7fc334dc20a9faf2b6e",
+    )
     assert isinstance(deserialized_history_dump, LicenseUsageHistoryDump)
 
     assert history_dump.VERSION == deserialized_history_dump.VERSION
@@ -125,6 +130,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
         VERSION="1.1",
         history=[
             LicenseUsageSample(
+                site_hash="e4986384b5735c5f4024050cfe8db2b288f007bbde5aa085d0aca12fa7096960",
                 version="",
                 edition="",
                 platform="",
@@ -140,6 +146,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 ),
             ),
             LicenseUsageSample(
+                site_hash="e4986384b5735c5f4024050cfe8db2b288f007bbde5aa085d0aca12fa7096960",
                 version="",
                 edition="",
                 platform="",
@@ -155,6 +162,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 ),
             ),
             LicenseUsageSample(
+                site_hash="e4986384b5735c5f4024050cfe8db2b288f007bbde5aa085d0aca12fa7096960",
                 version="",
                 edition="",
                 platform="",

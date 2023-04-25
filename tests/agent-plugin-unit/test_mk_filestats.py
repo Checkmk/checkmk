@@ -39,21 +39,21 @@ def mk_filestats():
 @pytest.fixture
 def lazyfile(mk_filestats):
     mylazyfile = mk_filestats.FileStat(__file__)
-
     # Overwrite the path to be reproducable...
-    mylazyfile.path = "test_mk_filestats.py"
+    mylazyfile.writeable_path = mk_filestats.ensure_str("test_mk_filestats.py")
+    mylazyfile.regex_matchable_path = mk_filestats.ensure_str("test_mk_filestats.py")
     return mylazyfile
 
 
 def test_lazy_file(mk_filestats):
     lfile = mk_filestats.FileStat("/bla/no such file.txt")
-    assert lfile.path == "/bla/no such file.txt"
+    assert lfile.writeable_path == "/bla/no such file.txt"
     assert lfile.size is None
     assert lfile.age is None
     assert lfile.stat_status == "file vanished"
 
     lfile = mk_filestats.FileStat(__file__)  # this should exist...
-    assert lfile.path == __file__
+    assert lfile.writeable_path == __file__
     assert lfile.size == os.stat(__file__).st_size
     assert lfile.stat_status == "ok"
     assert isinstance(lfile.age, int)
@@ -245,10 +245,11 @@ class TestConfigParsing:
 
 class MockedFileStatFile:
     def __init__(self, path):
-        self.path = path
+        self.writeable_path = path
+        self.regex_matchable_path = path
 
     def __eq__(self, other):
-        return self.path == other.path
+        return self.writeable_path == other.writeable_path
 
 
 @pytest.mark.parametrize(

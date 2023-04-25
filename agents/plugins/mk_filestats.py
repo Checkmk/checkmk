@@ -190,10 +190,25 @@ class FileStat(object):  # pylint: disable=useless-object-inheritance
     Only call os.stat once.
     """
 
-    def __init__(self, path):
+    def __init__(self, raw_path):
         super(FileStat, self).__init__()
-        LOGGER.debug("Creating FileStat(%r)", path)
-        self.path = ensure_text(path)
+        # raw_path is the value returned by iglob. This value cannot typed meaningfully:
+        # * if the path is utf-8 decodable, python2: unicode
+        # * if the path is not utf-8 decodable, python2: str
+        # * python3: str, possibly with surrogates aka it can only be encoded again like so:
+        #   str_with_surrogates.encode('utf-8', 'surrogateescape')
+        if sys.version_info[0] >= 3:
+            self.writeable_path = raw_path.encode("utf-8", "surrogateescape").decode(
+                "utf-8", "replace"
+            )
+        else:
+            if isinstance(raw_path, unicode):  # pylint: disable=undefined-variable
+                self.writeable_path = raw_path
+            else:
+                self.writeable_path = raw_path.decode("utf-8", "replace")
+        self.regex_matchable_path = self.writeable_path
+        LOGGER.debug("Creating FileStat(%r)", raw_path)
+
         self.stat_status = "ok"
         self.size = None
         self.age = None
@@ -202,10 +217,8 @@ class FileStat(object):  # pylint: disable=useless-object-inheritance
         self.isfile = True
         self.isdir = False
 
-        LOGGER.debug("os.stat(%r)", self.path)
-        path = self.path.encode("utf8")
         try:
-            stat = os.stat(path)
+            stat = os.stat(raw_path)
         except OSError as exc:
             self.stat_status = "file vanished" if exc.errno == errno.ENOENT else str(exc)
             return
@@ -226,13 +239,10 @@ class FileStat(object):  # pylint: disable=useless-object-inheritance
         self.isfile = S_ISREG(stat.st_mode)
         self.isdir = S_ISDIR(stat.st_mode)
 
-    def __repr__(self):
-        return "FileStat(%r)" % self.path
-
     def dumps(self):
         data = {
             "type": "file",
-            "path": self.path,
+            "path": self.writeable_path,
             "stat_status": self.stat_status,
             "size": self.size,
             "age": self.age,
@@ -261,20 +271,25 @@ class PatternIterator(object):  # pylint: disable=useless-object-inheritance
         super(PatternIterator, self).__init__()
         self._patterns = [os.path.abspath(os.path.expanduser(p)) for p in pattern_list]
 
-    def _iter_files(self, pattern):
-        for item in glob.iglob(pattern):
-            filestat = FileStat(item)
-            if filestat.isfile:
-                yield filestat
-            elif filestat.isdir:
-                for filestat in self._iter_files(os.path.join(item, "*")):
-                    yield filestat
+    def _iterate_folder(self, folder):
+        # equivalent to `find -type f`
+        for currentpath, _folders, files in os.walk(folder):
+            for file in files:
+                yield FileStat(os.path.join(currentpath, file))
 
     def __iter__(self):
-        for pat in self._patterns:
-            LOGGER.info("processing pattern: %r", pat)
-            for filestat in self._iter_files(pat):
-                yield filestat
+        for pattern in self._patterns:
+            LOGGER.info("processing pattern: %r", pattern)
+            # pattern needs to be a unicode/python3 str. Otherwise things might go sour, for instance:
+            # If we pass "*".encode("utf-8"), then a non-UTF-8 filesystem may no longer realize that
+            # b'\x2A' refers to a wildcard. Instead iglob is responsible for conversion.
+            for item in glob.iglob(pattern):
+                filestat = FileStat(item)
+                if filestat.isfile:
+                    yield filestat
+                if filestat.isdir:
+                    for filestat in self._iterate_folder(item):
+                        yield filestat
 
 
 def get_file_iterator(config):
@@ -369,12 +384,12 @@ class RegexFilter(AbstractFilter):
         self._regex = re.compile(ensure_text(regex_pattern), re.UNICODE)
 
     def matches(self, filestat):
-        return bool(self._regex.match(filestat.path))
+        return bool(self._regex.match(filestat.regex_matchable_path))
 
 
 class InverseRegexFilter(RegexFilter):
     def matches(self, filestat):
-        return not bool(self._regex.match(filestat.path))
+        return not bool(self._regex.match(filestat.regex_matchable_path))
 
 
 def get_file_filters(config):
@@ -469,13 +484,9 @@ def _grouping_construct_group_name(parent_group_name, child_group_name=""):
     ).strip()
 
 
-def _matches_regex(single_file, regex_pattern):
-    return bool(re.match(regex_pattern, single_file.path))
-
-
 def _get_matching_child_group(single_file, grouping_conditions):
     for child_group_name, grouping_condition in grouping_conditions:
-        if _matches_regex(single_file, grouping_condition["rule"]):
+        if re.match(grouping_condition["rule"], single_file.regex_matchable_path):
             return child_group_name
     return ""
 
@@ -576,7 +587,7 @@ def output_aggregator_single_file(group_name, files_iter):
             subsection_name = group_name
         else:
             subsection_name = group_name % (
-                (lazy_file.path,) + (("%s",) * (count_format_specifiers - 1))
+                (lazy_file.writeable_path,) + (("%s",) * (count_format_specifiers - 1))
             )
         yield "[[[single_file %s]]]" % subsection_name
         yield lazy_file.dumps()

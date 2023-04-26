@@ -1243,61 +1243,67 @@ def permission_action(
     new_perm: int,
     user_perm: int,
 ) -> str | None:
-    what = None
-    if new_type != "link" and user_type == new_type and user_perm != new_perm:
-        # Permissions have changed, but file type not
-        if old_type == new_type and user_perm != old_perm and old_perm != new_perm:
-            if user_confirms(
-                site,
-                conflict_mode,
-                "Permission conflict at " + relpath,
-                "The proposed permissions of %s have changed from %04o "
-                "to %04o in the new version, but you have set %04o. "
-                "May I use the new default permissions or do "
-                "you want to keep yours?" % (relpath, old_perm, new_perm, user_perm),
-                relpath,
-                "keep",
-                "Keep permissions at %04o" % user_perm,
-                "default",
-                "Set permission to %04o" % new_perm,
-            ):
-                what = "keep"
-            else:
-                what = "default"
+    if new_type == "link":
+        return None  # Do not touch symlinks
 
-        # Permissions have changed, no conflict with user
-        elif old_type == new_type and user_perm == old_perm:
-            what = "default"
+    if user_type != new_type:
+        return None  # Do not touch when type changed by the user
 
-        # Permissions are not correct: all other cases (where type is as expected)
-        elif old_perm != new_perm:
-            if old_perm == user_perm:
-                # The skel permissions are changed but the old skel permissions
-                # are still in place. In 2.2 the permissions for other were
-                # removed (Werk #15062). This results in a lot of questions for
-                # the user. If the user has not adjusted the permissions from
-                # the previous default, let's not ask so much questions, just
-                # adjust it, a info that the permissions were adjusted will be
-                # logged anyways
-                what = "default"
-            elif user_confirms(
-                site,
-                conflict_mode,
-                "Wrong permission of " + relpath,
-                "The proposed permissions of %s are %04o, but currently are "
-                "%04o. May I use the new default "
-                "permissions or keep yours?" % (relpath, new_perm, user_perm),
-                relpath,
-                "keep",
-                "Keep permissions at %04o" % user_perm,
-                "default",
-                "Set permission to %04o" % new_perm,
-            ):
-                what = "keep"
-            else:
-                what = "default"
+    if user_perm == new_perm:
+        return None  # Is already in correct state
 
-    return what
+    # Permissions have changed in all places, but file type not
+    if old_type == new_type and user_perm != old_perm and old_perm != new_perm:
+        if user_confirms(
+            site,
+            conflict_mode,
+            "Permission conflict at " + relpath,
+            "The proposed permissions of %s have changed from %04o "
+            "to %04o in the new version, but you have set %04o. "
+            "May I use the new default permissions or do "
+            "you want to keep yours?" % (relpath, old_perm, new_perm, user_perm),
+            relpath,
+            "keep",
+            "Keep permissions at %04o" % user_perm,
+            "default",
+            "Set permission to %04o" % new_perm,
+        ):
+            return "keep"
+        return "default"
+
+    # Permissions have changed, no conflict with user
+    if old_type == new_type and user_perm == old_perm:
+        return "default"
+
+    # Permissions are not correct: all other cases (where type is as expected)
+    if old_perm != new_perm:
+        if old_perm == user_perm:
+            # The skel permissions are changed but the old skel permissions
+            # are still in place. In 2.2 the permissions for other were
+            # removed (Werk #15062). This results in a lot of questions for
+            # the user. If the user has not adjusted the permissions from
+            # the previous default, let's not ask so much questions, just
+            # adjust it, a info that the permissions were adjusted will be
+            # logged anyways
+            return "default"
+
+        if user_confirms(
+            site,
+            conflict_mode,
+            "Wrong permission of " + relpath,
+            "The proposed permissions of %s are %04o, but currently are "
+            "%04o. May I use the new default "
+            "permissions or keep yours?" % (relpath, new_perm, user_perm),
+            relpath,
+            "keep",
+            "Keep permissions at %04o" % user_perm,
+            "default",
+            "Set permission to %04o" % new_perm,
+        ):
+            return "keep"
+        return "default"
+
+    return None
 
 
 def filetype(p: str) -> str | None:

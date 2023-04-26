@@ -441,7 +441,9 @@ section_statgrab() {
     # source: http://www.i-scream.org/libstatgrab/
     # binary: http://www.opencsw.org/
     if inpath statgrab; then
-        statgrab_vars="const. cpu. disk. general. mem. page. swap. user."
+        # "statgrab mem" is known to be slow on some systems, so we move it to the back.
+        # this way only statgrab_mem section will be affected if statgrab is killed by timeout.
+        statgrab_vars="general. const. user. cpu. page. disk. swap. mem."
         statgrab_sections="cpu disk page"
 
         # Collect net stats in the global zone and in local zones if dlstat is present.
@@ -458,8 +460,14 @@ section_statgrab() {
         }
         trap statgrab_cleanup EXIT
 
+        if inpath timeout; then
+            statgrab_wrapped() { timeout 20 statgrab "$@"; }
+        else
+            statgrab_wrapped() { statgrab "$@"; }
+        fi
+
         # shellcheck disable=SC2086
-        statgrab ${statgrab_vars} | grep -v md 1>$statgrab_temporary_file
+        statgrab_wrapped ${statgrab_vars} | grep -v md 1>$statgrab_temporary_file
         for s in ${statgrab_sections}; do
             echo "<<<statgrab_${s}>>>"
             grep "^${s}\." $statgrab_temporary_file | cut -d. -f2-99 | sed 's/ *= */ /'

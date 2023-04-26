@@ -17,7 +17,7 @@ from cmk.base.plugins.agent_based.utils.kube import HealthZ, KubeletInfo
             KubeletInfo(
                 version="1.2.3",
                 proxy_version="1.2.3",
-                health=HealthZ(status_code=200, response="ok", verbose_response=None),
+                health=HealthZ(status_code=200, response="ok"),
             ),
             [
                 Result(state=State.OK, summary="Healthy"),
@@ -29,15 +29,13 @@ from cmk.base.plugins.agent_based.utils.kube import HealthZ, KubeletInfo
             KubeletInfo(
                 version="1.2.3",
                 proxy_version="1.2.3",
-                health=HealthZ(
-                    status_code=500, response="bad", verbose_response="some\nlong\noutput\n"
-                ),
+                health=HealthZ(status_code=500, response="bad"),
             ),
             [
                 Result(state=State.CRIT, summary="Not healthy"),
                 Result(
                     state=State.OK,
-                    notice="Verbose response:\nsome\nlong\noutput\n",
+                    notice="Verbose response:\nbad",
                 ),
                 Result(state=State.OK, summary="Version 1.2.3"),
             ],

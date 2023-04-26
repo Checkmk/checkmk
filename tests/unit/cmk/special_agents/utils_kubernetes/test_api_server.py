@@ -46,20 +46,17 @@ def test_raw_api_get_healthz_ok(core_api: CoreAPI) -> None:
         result = core_api._get_healthz("/some_health_endpoint")
     assert result.status_code == 200
     assert result.response == "response-ok"
-    assert result.verbose_response is None
 
 
 def test_raw_api_get_healthz_nok(core_api: CoreAPI) -> None:
     with patch(CALL_API) as mock_request:
         mock_request.side_effect = [
             (FakeByteResponse("response-nok"), 500, {}),
-            (FakeByteResponse("verbose\nresponse\nnok"), 500, {}),
         ]
         result = core_api._get_healthz("/some_health_endpoint")
 
     assert result.status_code == 500
     assert result.response == "response-nok"
-    assert result.verbose_response == "verbose\nresponse\nnok"
 
 
 version_json_pytest_params = [

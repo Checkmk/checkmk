@@ -443,8 +443,6 @@ class NodeResources(BaseModel):
 class HealthZ(BaseModel):
     status_code: int
     response: str
-    # only set if status_code != 200
-    verbose_response: str | None
 
 
 class APIHealth(BaseModel):

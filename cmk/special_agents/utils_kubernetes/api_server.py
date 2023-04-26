@@ -122,14 +122,12 @@ class RawAPI:
         self,
         method: Literal["GET", "POST", "PUT", "OPTIONS", "DELETE"],
         resource_path: str,
-        query_params: dict[str, str] | None = None,
     ) -> RawAPIResponse:
         # Found the auth_settings here:
         # https://github.com/kubernetes-client/python/issues/528
         response, status_code, headers = self._api_client.call_api(
             resource_path,
             method,
-            query_params=query_params,
             auth_settings=["BearerToken"],
             _request_timeout=self.timeout,
             _preload_content=False,
@@ -170,31 +168,19 @@ class CoreAPI(RawAPI):
         return json.loads(self._request("GET", "/api/v1/nodes").response)
 
     def query_api_health(self) -> api.APIHealth:
+        # https://kubernetes.io/docs/reference/using-api/health-checks/
         return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
 
     def query_kubelet_health(self, node_name: str) -> api.HealthZ:
         return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
 
     def _get_healthz(self, url: str) -> api.HealthZ:
-        def get_health(query_params: dict[str, str] | None = None) -> tuple[int, str]:
-            # https://kubernetes.io/docs/reference/using-api/health-checks/
-            try:
-                response = self._request("GET", url, query_params=query_params)
-            except client.rest.ApiException as e:
-                return e.status, e.body
-            return response.status_code, response.response
-
-        status_code, response = get_health()
-        if status_code != 200:
-            _status_code, verbose_response = get_health({"verbose": "1"})
-        else:
-            verbose_response = None
-
-        return api.HealthZ(
-            response=response,
-            status_code=status_code,
-            verbose_response=verbose_response,
-        )
+        try:
+            response = self._request("GET", url)
+        except client.rest.ApiException as e:
+            status_code, r = e.status, e.body
+        status_code, r = response.status_code, response.response
+        return api.HealthZ(status_code=status_code, response=r)
 
 
 class AppsAPI:

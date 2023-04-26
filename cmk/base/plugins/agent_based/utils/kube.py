@@ -501,8 +501,6 @@ class NodeInfo(Section):
 class HealthZ(BaseModel):
     status_code: int
     response: str
-    # only set if status_code != 200
-    verbose_response: Optional[str]
 
 
 class KubeletInfo(Section):

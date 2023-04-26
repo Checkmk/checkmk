@@ -16,8 +16,8 @@ from cmk.base.plugins.agent_based.utils.kube import APIHealth, ClusterDetails, H
         pytest.param(
             ClusterDetails(
                 api_health=APIHealth(
-                    ready=HealthZ(status_code=200, response="ok", verbose_response=None),
-                    live=HealthZ(status_code=200, response="ok", verbose_response=None),
+                    ready=HealthZ(status_code=200, response="ok"),
+                    live=HealthZ(status_code=200, response="ok"),
                 )
             ),
             [
@@ -29,16 +29,14 @@ from cmk.base.plugins.agent_based.utils.kube import APIHealth, ClusterDetails, H
         pytest.param(
             ClusterDetails(
                 api_health=APIHealth(
-                    ready=HealthZ(
-                        status_code=500, response="nok", verbose_response="some\nvery\nlong\noutput"
-                    ),
-                    live=HealthZ(status_code=200, response="ok", verbose_response=None),
+                    ready=HealthZ(status_code=500, response="nok"),
+                    live=HealthZ(status_code=200, response="ok"),
                 )
             ),
             [
                 Result(state=State.OK, summary="Live"),
                 Result(state=State.CRIT, summary="Not ready"),
-                Result(state=State.OK, notice="Ready verbose response:\nsome\nvery\nlong\noutput"),
+                Result(state=State.OK, notice="Ready response:\nnok"),
                 Result(state=State.OK, summary="See service details for more information"),
             ],
             id="not_ready",

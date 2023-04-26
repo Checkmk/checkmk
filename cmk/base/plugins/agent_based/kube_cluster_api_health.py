@@ -25,11 +25,10 @@ def check(section: ClusterDetails) -> CheckResult:
             yield Result(state=State.OK, summary=name.title())
             continue
         yield Result(state=State.CRIT, summary=f"Not {name}")
-        if health.verbose_response:
-            yield Result(
-                state=State.OK,
-                notice=f"{name.title()} verbose response:\n{health.verbose_response}",
-            )
+        yield Result(
+            state=State.OK,
+            notice=f"{name.title()} response:\n{health.response}",
+        )
 
     if not all(h.status_code == 200 for _, h in name_and_health):
         yield Result(state=State.OK, summary="See service details for more information")

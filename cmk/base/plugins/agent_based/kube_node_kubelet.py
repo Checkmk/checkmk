@@ -21,10 +21,10 @@ def check_kube_node_kubelet(section: KubeletInfo) -> CheckResult:
         yield Result(state=State.OK, summary="Healthy")
     else:
         yield Result(state=State.CRIT, summary="Not healthy")
-        if section.health.verbose_response:
+        if section.health.response:
             yield Result(
                 state=State.OK,
-                notice=f"Verbose response:\n{section.health.verbose_response}",
+                notice=f"Verbose response:\n{section.health.response}",
             )
     yield Result(state=State.OK, summary=f"Version {section.version}")
 

@@ -48,7 +48,7 @@ from .utils_inventory import sort_inventory_result
             KubeletInfo(
                 version="1.2.3",
                 proxy_version="1.2.3",
-                health=HealthZ(status_code=200, response="ok", verbose_response=None),
+                health=HealthZ(status_code=200, response="ok"),
             ),
             [
                 Attributes(

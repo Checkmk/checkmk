@@ -299,7 +299,16 @@ class ModePatternEditor(WatoMode):
                     cls: List[str] = []
                     if match_class == "match first":
                         cls = ["state%d" % logwatch.level_state(state), "fillbackground"]
-                    table.cell(_("State"), html.render_span(logwatch.level_name(state)), css=cls)
+                    table.cell(
+                        _("Checkmk state"),
+                        html.render_span(logwatch.level_name(state)),
+                        css=cls,
+                    )
+                    table.cell(
+                        _("Logwatch state"),
+                        html.render_span(logwatch.logwatch_level_name(state)),
+                        css=cls,
+                    )
                     table.cell(_("Pattern"), html.render_tt(pattern))
                     table.cell(_("Comment"), comment)
                     table.cell(_("Matched line"), disp_match_txt)

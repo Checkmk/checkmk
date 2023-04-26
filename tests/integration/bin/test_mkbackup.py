@@ -42,7 +42,7 @@ def cleanup_restore_lock_fixture(site: Site) -> Iterator[None]:
     def rm() -> None:
         restore_lock_path = Path(f"/tmp/restore-{site.id}.state")
         if restore_lock_path.exists():
-            subprocess.run(["/usr/bin/sudo", "/usr/bin/rm", str(restore_lock_path)], check=True)
+            subprocess.run(["/usr/bin/sudo", "rm", str(restore_lock_path)], check=True)
 
     rm()
     try:

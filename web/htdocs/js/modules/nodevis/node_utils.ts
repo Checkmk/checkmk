@@ -5,7 +5,6 @@
 import {
     ContextMenuElement,
     d3SelectionG,
-    d3SelectionSvg,
     NodevisNode,
     NodevisWorld,
 } from "nodevis/type_defs";
@@ -24,6 +23,7 @@ type d3SelectionNodeText = d3.Selection<
     SVGGElement,
     any
 >;
+
 type d3SelectionQuickinfo = d3.Selection<
     HTMLDivElement,
     NodevisNode,
@@ -51,7 +51,12 @@ export class AbstractGUINode implements TypeWithName {
 
     // DOM references
     _selection: d3SelectionG | null;
-    _text_selection: d3SelectionNodeText | null;
+    _text_selection: d3.Selection<
+        SVGTextElement,
+        string,
+        SVGGElement,
+        any
+    > | null;
     _quickinfo_selection: d3SelectionQuickinfo | null;
 
     constructor(world: NodevisWorld, node: NodevisNode) {
@@ -78,7 +83,7 @@ export class AbstractGUINode implements TypeWithName {
         return this._selection;
     }
 
-    text_selection(): d3SelectionNodeText {
+    text_selection(): d3.Selection<SVGTextElement, string, SVGGElement, any> {
         if (this._text_selection == null)
             throw Error("Missing text selection for node " + this.id());
         return this._text_selection;
@@ -144,7 +149,7 @@ export class AbstractGUINode implements TypeWithName {
         dt_selection.exit().remove();
     }
 
-    render_into(selection: d3SelectionSvg) {
+    render_into(selection: d3SelectionG) {
         this._selection = this._render_into_transform(selection);
         // TODO: check usage
         this.node.data.selection = this._selection;
@@ -154,7 +159,9 @@ export class AbstractGUINode implements TypeWithName {
         this.update_node_state();
     }
 
-    _get_text(node: NodevisNode): string {
+    _get_text(node_id: string): string {
+        const node = this._world.nodes_layer.get_nodevis_node_by_id(node_id);
+        if (!node) return "";
         if (node.data.chunk.aggr_type == "single" && node.data.service)
             return node.data.service;
         return node.data.name;
@@ -169,8 +176,8 @@ export class AbstractGUINode implements TypeWithName {
 
         if (this._text_selection == null) {
             const text_selection = this.selection()
-                .selectAll<SVGTextElement, NodevisNode>("g text")
-                .data([this.node]);
+                .selectAll<SVGTextElement, string>("g text")
+                .data([this.id()]);
             this._text_selection = text_selection
                 .enter()
                 .append("g")
@@ -215,7 +222,7 @@ export class AbstractGUINode implements TypeWithName {
         selection.attr("text-anchor", "start");
     }
 
-    _render_into_transform(selection: d3SelectionSvg): d3SelectionG {
+    _render_into_transform(selection: d3SelectionG): d3SelectionG {
         let spawn_reference = this.node;
         if (this.node.parent && this.node.parent.x) {
             spawn_reference = this.node.parent;
@@ -224,9 +231,7 @@ export class AbstractGUINode implements TypeWithName {
         const spawn_point_y = spawn_reference.y;
 
         this.node.data.target_coords = {x: spawn_point_x, y: spawn_point_y};
-        return selection
-            .append("g")
-            .classed("node_element", true)
+        selection
             .attr(
                 "transform",
                 "translate(" + spawn_point_x + "," + spawn_point_y + ")"
@@ -237,6 +242,7 @@ export class AbstractGUINode implements TypeWithName {
             .on("contextmenu", event => {
                 this._world.nodes_layer.render_context_menu(event, this);
             });
+        return selection;
     }
 
     _get_details_url(): string {
@@ -427,8 +433,8 @@ export class AbstractGUINode implements TypeWithName {
 
     _show_table_quickinfo() {
         const table_selection = this.quickinfo_selection()
-            .selectAll<HTMLTableSectionElement, NodevisNode>("body table tbody")
-            .data([this.node], d => d.data.id);
+            .selectAll<HTMLTableSectionElement, string>("body table tbody")
+            .data([this.id()], d => d);
         const table = table_selection
             .enter()
             .append("body")
@@ -474,13 +480,21 @@ export class AbstractGUINode implements TypeWithName {
 
     render_object() {
         this.selection()
-            .append("a")
-            .attr("xlink:href", this._get_details_url())
-            .append("circle")
-            .attr("r", this.radius)
-            .classed("state_circle", true);
-
-        this.update_node_state();
+            .selectAll("a")
+            .data([this.id()])
+            .join(enter =>
+                enter
+                    .append("a")
+                    .each((_data, idx, nodes) => {
+                        const a = d3.select(nodes[idx]);
+                        const details_url = this._get_details_url();
+                        if (details_url != "")
+                            a.attr("xlink:href", details_url);
+                    })
+                    .append("circle")
+                    .attr("r", this.radius)
+                    .classed("state_circle", true)
+            );
     }
 
     update_position(enforce_transition = false) {

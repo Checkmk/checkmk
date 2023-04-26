@@ -9,9 +9,12 @@ from pathlib import Path
 from typing import Any
 
 import cmk.utils
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 
+from cmk.gui.config import active_config
 from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopologyMeshDepth
+from cmk.gui.watolib.utils import multisite_dir
 
 topology_dir = Path(cmk.utils.paths.var_dir) / "topology"
 topology_settings_lookup = topology_dir / "topology_settings"
@@ -115,3 +118,32 @@ class TopologyQueryIdentifier:
     def __hash__(self) -> int:
         hash_object = hashlib.sha256("#".join(self._identifier).encode("utf-8"))
         return int(hash_object.hexdigest(), 16)
+
+
+class BILayoutManagement:
+    _config_file = Path(multisite_dir()) / "bi_layouts.mk"
+
+    @classmethod
+    def save_layouts(cls) -> None:
+        store.save_to_mk_file(
+            str(BILayoutManagement._config_file),
+            "bi_layouts",
+            active_config.bi_layouts,
+            pprint_value=True,
+        )
+
+    @classmethod
+    def load_bi_template_layout(cls, template_id: str | None) -> Any:
+        return active_config.bi_layouts["templates"].get(template_id)
+
+    @classmethod
+    def load_bi_aggregation_layout(cls, aggregation_name: str | None) -> Any:
+        return active_config.bi_layouts["aggregations"].get(aggregation_name)
+
+    @classmethod
+    def get_all_bi_template_layouts(cls) -> Any:
+        return active_config.bi_layouts["templates"]
+
+    @classmethod
+    def get_all_bi_aggregation_layouts(cls) -> Any:
+        return active_config.bi_layouts["aggregations"]

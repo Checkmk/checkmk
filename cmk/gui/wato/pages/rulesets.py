@@ -712,9 +712,6 @@ class ModeEditRuleset(WatoMode):
             "back_mode", request.get_ascii_input_mandatory("ruleset_back_mode", "rulesets")
         )
 
-        if not may_edit_ruleset(self._name):
-            raise MKAuthException(_("You are not permitted to access this ruleset."))
-
         self._item: Optional[ServiceName] = None
         self._service: Optional[ServiceName] = None
 
@@ -1634,6 +1631,9 @@ class ABCEditRuleMode(WatoMode):
         self._back_mode = request.get_ascii_input_mandatory("back_mode", "edit_ruleset")
 
         self._set_folder()
+
+        if not self._folder.may("read"):
+            raise MKAuthException(_("You are not permitted to see this ruleset."))
 
         self._rulesets = watolib.FolderRulesets(self._folder)
         self._rulesets.load()

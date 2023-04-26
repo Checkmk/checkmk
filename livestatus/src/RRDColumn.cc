@@ -21,7 +21,16 @@
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
 #include "livestatus/MonitoringCore.h"
+#include "livestatus/PnpUtils.h"
 #include "livestatus/strutil.h"
+
+#ifdef CMC
+#include "CmcHost.h"
+#include "CmcService.h"
+#else
+#include "NebHost.h"
+#include "NebService.h"
+#endif
 
 RRDColumnArgs::RRDColumnArgs(const std::string &arguments,
                              const std::string &column_name) {
@@ -77,6 +86,39 @@ RRDColumnArgs::RRDColumnArgs(const std::string &arguments,
         invalid("too many arguments");
     }
 }
+
+std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
+    const IHost &hst, std::chrono::seconds timezone_offset) const {
+    return make(hst.name(), dummy_service_description(), timezone_offset);
+}
+
+std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
+    const IService &svc, std::chrono::seconds timezone_offset) const {
+    return make(svc.host().name(), svc.description(), timezone_offset);
+}
+
+#ifdef CMC
+std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
+    const Host &hst, std::chrono::seconds timezone_offset) const {
+    return (*this)(CmcHost{hst}, timezone_offset);
+}
+
+std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
+    const Service &svc, std::chrono::seconds timezone_offset) const {
+    return (*this)(CmcService{svc}, timezone_offset);
+}
+#else
+std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
+    const ::host &hst, std::chrono::seconds timezone_offset) const {
+    return (*this)(NebHost{hst}, timezone_offset);
+}
+
+std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
+    const ::service &svc, std::chrono::seconds timezone_offset) const {
+    return (*this)(NebService{svc}, timezone_offset);
+}
+#endif
+
 namespace {
 bool isVariableName(const std::string &token) {
     auto is_operator = [](char c) { return strchr("+-/*", c) != nullptr; };
@@ -116,14 +158,36 @@ std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
     }
     return std::make_pair(Metric::Name{str}, "MAX");
 }
+
+struct Data {
+    RRDDataMaker::C::time_point start;
+    RRDDataMaker::C::time_point end;
+    unsigned long step{0};
+    std::vector<double> values;
+
+    [[nodiscard]] std::vector<RRDDataMaker::value_type> as_vector(
+        std::chrono::seconds timezone_offset) const {
+        // We output meta data as first elements in the list. Note: In Python or
+        // JSON we could output nested lists. In CSV mode this is not possible
+        // and we rather stay compatible with CSV mode.
+        std::vector<RRDDataMaker::value_type> result;
+        result.reserve(values.size() + 3);
+        result.emplace_back(start + timezone_offset);
+        result.emplace_back(end + timezone_offset);
+        result.emplace_back(step);
+        result.insert(result.end(), values.cbegin(), values.cend());
+        return result;
+    }
+};
 };  // namespace
 
 // TODO(mk): Convert all of the RPN expressions that are available in RRDTool
 // and that have a different syntax then we have in our metrics system.
 // >= --> GE. Or should we also go with GE instead of >=?
 // Look at http://oss.oetiker.ch/rrdtool/doc/rrdgraph_rpn.en.html for details!
-detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
-                                    &host_name_service_description) const {
+std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
+    const std::string &host_name, const std::string &service_description,
+    std::chrono::seconds timezone_offset) const {
     // Prepare the arguments for rrdtool xport in a dynamic array of strings.
     // Note: The actual step might be different!
     std::vector<std::string> argv_s{
@@ -178,8 +242,7 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
         // by '_' here.
         auto [var, cf] = getVarAndCF(token);
         auto location =
-            _mc->metricLocation(host_name_service_description.first,
-                                host_name_service_description.second, var);
+            _mc->metricLocation(host_name, service_description, var);
         std::string rrd_varname;
         if (location.path_.empty() || location.data_source_name_.empty()) {
             rrd_varname = replace_all(var.string(), ".", '_');
@@ -280,15 +343,15 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
     // if an error already occurred.
     rrd_clear_error();
 
+    Data data;
     if (rrd_xport(static_cast<int>(argv_s.size()),
                   const_cast<char **>(argv.data()), &xxsize, &start, &end,
                   &step, &col_cnt, &legend_v, &rrd_data) != 0) {
         Warning(logger) << "Error accessing RRD: " << rrd_get_error();
-        return {};
+        return data.as_vector(timezone_offset);
     }
 
     // Since we have exactly one XPORT command, we expect exactly one column
-    detail::Data data;
     if (col_cnt != 1) {
         Error(logger) << "rrd_xport returned " << col_cnt
                       << " columns, but exactly one was expected.";
@@ -336,5 +399,5 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
     }
     free(legend_v);  // NOLINT
     free(rrd_data);  // NOLINT
-    return data;
+    return data.as_vector(timezone_offset);
 }

@@ -8,23 +8,24 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-// We keep <algorithm> for std::transform but IWYU wants it gone.
-#include <algorithm>  // IWYU pragma: keep
 #include <chrono>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
-#ifndef CMC
-#include "livestatus/PnpUtils.h"
-#include "nagios.h"
-#else
-#include "Host.h"
-#include "Object.h"
-#endif
 
 #include "livestatus/ListColumn.h"
 #include "livestatus/overload.h"  // IWYU pragma: keep
+
+#ifdef CMC
+class Host;
+class Service;
+#else
+#include "nagios.h"
+#endif
+
+class IHost;
+class IService;
 class ListRenderer;
 class MonitoringCore;
 
@@ -37,73 +38,39 @@ struct RRDColumnArgs {
     int max_entries;
 };
 
-namespace detail {
-struct Data {
-    using time_point = std::chrono::system_clock::time_point;
-    Data() : step{0} {}
-    Data(time_point s, time_point e, unsigned long d, std::vector<double> v)
-        : start{s}, end{e}, step{d}, values{std::move(v)} {}
-    time_point start;
-    time_point end;
-    unsigned long step;
-    std::vector<double> values;
-
-    [[nodiscard]] auto size() const { return values.size() + 3; }
-    [[nodiscard]] auto cbegin() const { return values.begin(); }
-    [[nodiscard]] auto cend() const { return values.end(); }
-};
-}  // namespace detail
-
 class RRDDataMaker {
-    using C = std::chrono::system_clock;
-
 public:
+    using C = std::chrono::system_clock;
     using value_type = std::variant<C::time_point, unsigned long, double>;
+
     RRDDataMaker(MonitoringCore *mc, RRDColumnArgs args)
         : _mc{mc}, _args{std::move(args)} {}
 
-    template <class T>
-    [[nodiscard]] std::vector<value_type> operator()(
-        const T &row, std::chrono::seconds timezone_offset) const {
-        const auto data = make(getHostNameServiceDesc(row));
+    std::vector<value_type> operator()(
+        const IHost &hst, std::chrono::seconds timezone_offset) const;
+    std::vector<value_type> operator()(
+        const IService &svc, std::chrono::seconds timezone_offset) const;
 
-        // We output meta data as first elements in the list. Note: In Python or
-        // JSON we could output nested lists. In CSV mode this is not possible
-        // and we rather stay compatible with CSV mode.
-        std::vector<value_type> v;
-        v.reserve(data.size());
-        v.emplace_back(data.start + timezone_offset);
-        v.emplace_back(data.end + timezone_offset);
-        v.emplace_back(data.step);
-        v.insert(v.end(), data.cbegin(), data.cend());
-
-        return v;
-    }
+// TODO(sp): Remove.
+#ifdef CMC
+    std::vector<value_type> operator()(
+        const Host &hst, std::chrono::seconds timezone_offset) const;
+    std::vector<value_type> operator()(
+        const Service &svc, std::chrono::seconds timezone_offset) const;
+#else
+    std::vector<value_type> operator()(
+        const ::host &hst, std::chrono::seconds timezone_offset) const;
+    std::vector<value_type> operator()(
+        const ::service &svc, std::chrono::seconds timezone_offset) const;
+#endif
 
 private:
     MonitoringCore *_mc;
     const RRDColumnArgs _args;
 
-#ifndef CMC
-    static std::pair<std::string, std::string> getHostNameServiceDesc(
-        const host &row) {
-        return {row.name, dummy_service_description()};
-    }
-
-    static std::pair<std::string, std::string> getHostNameServiceDesc(
-        const service &row) {
-        return {row.host_name, row.description};
-    }
-#else
-    static std::pair<std::string, std::string> getHostNameServiceDesc(
-        const Object &row) {
-        return {row.host()->name(), row.serviceDescription()};
-    }
-#endif
-
-    [[nodiscard]] detail::Data make(
-        const std::pair<std::string, std::string>
-            & /*host_name_service_description*/) const;
+    [[nodiscard]] std::vector<value_type> make(
+        const std::string &host_name, const std::string &service_description,
+        std::chrono::seconds timezone_offset) const;
 };
 
 struct RRDRenderer : ListColumnRenderer<RRDDataMaker::value_type> {

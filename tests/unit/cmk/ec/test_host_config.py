@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.ec.host_config import HostConfig, HostInfo
 
@@ -75,7 +75,7 @@ def fixture_livestatus(mock_livestatus: MockLiveStatusConnection) -> MockLiveSta
             HostInfo(
                 name=HostName("heute"),
                 alias="heute alias",
-                address="127.0.0.1",
+                address=HostAddress("127.0.0.1"),
                 custom_variables={
                     "FILENAME": "/wato/hosts.mk",
                     "ADDRESS_FAMILY": "4",

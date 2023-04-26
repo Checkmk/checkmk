@@ -243,7 +243,7 @@ def _string_from_ip_int(ip_int: int) -> HostAddress:
     for _unused in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
-    return ".".join(octets)
+    return HostAddress(".".join(octets))
 
 
 def _ip_addresses_of_network(spec):

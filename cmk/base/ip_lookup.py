@@ -62,16 +62,16 @@ def fallback_ip_for(family: socket.AddressFamily | AddressFamily) -> HostAddress
         family = AddressFamily.from_socket(family)
     match family:
         case AddressFamily.IPv4:
-            return "0.0.0.0"
+            return HostAddress("0.0.0.0")
         case AddressFamily.IPv6:
-            return "::"
+            return HostAddress("::")
         case _:
             # TODO(ml): [IPv6] This ignores `default_address_family()`
             # and falls back to IPv6, where IPv4 is the default almost
             # everywhere else.  Using "0.0.0.0" or "::" only makes sense
             # for a server anyway, so the users of this function are
             # most likely misconfigured.
-            return "::"
+            return HostAddress("::")
 
 
 def enforce_fake_dns(address: HostAddress) -> None:
@@ -114,7 +114,7 @@ def lookup_ip_address(
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
     if simulation_mode or _enforce_localhost or is_snmp_usewalk_host:
-        return "::1" if AddressFamily.IPv6 in family else "127.0.0.1"
+        return HostAddress("::1") if AddressFamily.IPv6 in family else HostAddress("127.0.0.1")
 
     # check if IP address is hard coded by the user
     if configured_ip_address:
@@ -225,7 +225,7 @@ def _actual_dns_lookup(
     fallback: HostAddress | None = None,
 ) -> HostAddress:
     try:
-        return socket.getaddrinfo(host_name, None, family)[0][4][0]
+        return HostAddress(socket.getaddrinfo(host_name, None, family)[0][4][0])
     except (MKTerminate, MKTimeout):
         # We should be more specific with the exception handler below, then we
         # could drop this special handling here

@@ -17,7 +17,14 @@ from tests.testlib.base import Scenario
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.type_defs import DiscoveryResult, EVERYTHING, HostName, RuleSetName, SectionName
+from cmk.utils.type_defs import (
+    DiscoveryResult,
+    EVERYTHING,
+    HostAddress,
+    HostName,
+    RuleSetName,
+    SectionName,
+)
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
@@ -905,7 +912,7 @@ _expected_host_labels = {
 def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     testhost = HostName("test-host")
     ts = Scenario()
-    ts.add_host(testhost, ipaddress="127.0.0.1")
+    ts.add_host(testhost, ipaddress=HostAddress("127.0.0.1"))
     ts.fake_standard_linux_agent_output(testhost)
     config_cache = ts.apply(monkeypatch)
     file_cache_options = FileCacheOptions()
@@ -963,7 +970,7 @@ class RealHostScenario(NamedTuple):
 def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     hostname = HostName("test-realhost")
     ts = Scenario()
-    ts.add_host(hostname, ipaddress="127.0.0.1")
+    ts.add_host(hostname, ipaddress=HostAddress("127.0.0.1"))
     config_cache = ts.apply(monkeypatch)
 
     agent_based_register.set_discovery_ruleset(

@@ -23,7 +23,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.checkers.check_table import ConfiguredService
 from cmk.checkers.checking import CheckPluginName
@@ -401,8 +401,10 @@ def test_iter_active_check_services(
     assert services == expected_result
 
 
-@pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-def test_template_translation(ipaddress: str | None, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("ipaddress", [None, HostAddress("127.0.0.1")])
+def test_template_translation(
+    ipaddress: HostAddress | None, monkeypatch: pytest.MonkeyPatch
+) -> None:
     template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
     hostname = HostName("testhost")
     ts = Scenario()

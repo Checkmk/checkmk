@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.log import logger
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs import HostAddress, HostName, SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import (
@@ -31,7 +31,7 @@ from cmk.base.config import ConfigCache
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,
     hostname=HostName("testhost"),
-    ipaddress="1.2.3.4",
+    ipaddress=HostAddress("1.2.3.4"),
     credentials="",
     port=42,
     is_bulkwalk_host=False,
@@ -128,7 +128,9 @@ def test_sanitize_snmp_encoding(
     )
     config_cache = ts.apply(monkeypatch)
 
-    snmp_config = config_cache.make_snmp_config(HostName("localhost"), "", SourceType.HOST)
+    snmp_config = config_cache.make_snmp_config(
+        HostName("localhost"), HostAddress("1.2.3.4"), SourceType.HOST
+    )
     assert snmp_table._sanitize_snmp_encoding(columns, snmp_config.ensure_str) == expected
 
 
@@ -142,11 +144,15 @@ def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(HostName("localhost"))
     config_cache = ts.apply(monkeypatch)
     assert (
-        config_cache.make_snmp_config(HostName("abc"), "", SourceType.HOST).is_bulkwalk_host
+        config_cache.make_snmp_config(
+            HostName("abc"), HostAddress("1.2.3.4"), SourceType.HOST
+        ).is_bulkwalk_host
         is False
     )
     assert (
-        config_cache.make_snmp_config(HostName("localhost"), "", SourceType.HOST).is_bulkwalk_host
+        config_cache.make_snmp_config(
+            HostName("localhost"), HostAddress("1.2.3.4"), SourceType.HOST
+        ).is_bulkwalk_host
         is True
     )
 

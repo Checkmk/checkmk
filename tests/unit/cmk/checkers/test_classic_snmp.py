@@ -10,7 +10,7 @@ import pytest
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import logger
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
@@ -29,7 +29,7 @@ def test_snmp_port_spec(port: int, expected: str) -> None:
     snmp_config = SNMPHostConfig(
         is_ipv6_primary=False,
         hostname=HostName("localhost"),
-        ipaddress="127.0.0.1",
+        ipaddress=HostAddress("127.0.0.1"),
         credentials="public",
         port=port,
         is_bulkwalk_host=False,
@@ -56,7 +56,7 @@ def test_snmp_proto_spec(is_ipv6: bool, expected: str) -> None:
     snmp_config = SNMPHostConfig(
         is_ipv6_primary=is_ipv6,
         hostname=HostName("localhost"),
-        ipaddress="127.0.0.1",
+        ipaddress=HostAddress("127.0.0.1"),
         credentials="public",
         port=161,
         is_bulkwalk_host=False,
@@ -85,7 +85,7 @@ class SNMPSettings(NamedTuple):
                 snmp_config=SNMPHostConfig(
                     is_ipv6_primary=False,
                     hostname=HostName("localhost"),
-                    ipaddress="127.0.0.1",
+                    ipaddress=HostAddress("127.0.0.1"),
                     credentials="public",
                     port=161,
                     is_bulkwalk_host=True,
@@ -121,7 +121,7 @@ class SNMPSettings(NamedTuple):
                 snmp_config=SNMPHostConfig(
                     is_ipv6_primary=False,
                     hostname=HostName("lohost"),
-                    ipaddress="127.0.0.1",
+                    ipaddress=HostAddress("127.0.0.1"),
                     credentials="public",
                     port=161,
                     is_bulkwalk_host=False,
@@ -158,7 +158,7 @@ class SNMPSettings(NamedTuple):
                 snmp_config=SNMPHostConfig(
                     is_ipv6_primary=False,
                     hostname=HostName("lohost"),
-                    ipaddress="public",
+                    ipaddress=HostAddress("1.2.3.4"),
                     credentials=("authNoPriv", "md5", "md5", "abc"),
                     port=161,
                     is_bulkwalk_host=False,
@@ -201,7 +201,7 @@ class SNMPSettings(NamedTuple):
                 snmp_config=SNMPHostConfig(
                     is_ipv6_primary=False,
                     hostname=HostName("lohost"),
-                    ipaddress="public",
+                    ipaddress=HostAddress("1.2.3.4"),
                     credentials=("noAuthNoPriv", "secname"),
                     port=161,
                     is_bulkwalk_host=False,
@@ -238,7 +238,7 @@ class SNMPSettings(NamedTuple):
                 snmp_config=SNMPHostConfig(
                     is_ipv6_primary=False,
                     hostname=HostName("lohost"),
-                    ipaddress="127.0.0.1",
+                    ipaddress=HostAddress("127.0.0.1"),
                     credentials=("authPriv", "md5", "secname", "auhtpassword", "DES", "privacybla"),
                     port=161,
                     is_bulkwalk_host=False,

@@ -411,7 +411,7 @@ _failed_ip_lookups: list[HostName] = []
 
 def ip_address_of(
     config_cache: ConfigCache, host_name: HostName, family: socket.AddressFamily | AddressFamily
-) -> str | None:
+) -> HostAddress | None:
     try:
         return lookup_ip_address(config_cache, host_name, family=family)
     except Exception as e:
@@ -1965,7 +1965,7 @@ def lookup_mgmt_board_ip_address(
                 config_cache.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK
                 and (config_cache.management_protocol(host_name) == "snmp")
             ),
-            override_dns=fake_dns,
+            override_dns=HostAddress(fake_dns) if fake_dns is not None else None,
             is_dyndns_host=config_cache.is_dyndns_host(host_name),
             force_file_cache_renewal=not use_dns_cache,
         )
@@ -2000,7 +2000,7 @@ def lookup_ip_address(
             config_cache.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK
             and config_cache.is_snmp_host(host_name)
         ),
-        override_dns=fake_dns,
+        override_dns=HostAddress(fake_dns) if fake_dns is not None else None,
         is_dyndns_host=config_cache.is_dyndns_host(host_name),
         force_file_cache_renewal=not use_dns_cache,
     )

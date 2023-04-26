@@ -216,7 +216,7 @@ class _Builder:
                 SNMPSource(
                     self.config_cache,
                     self.host_name,
-                    self.ipaddress or "127.0.0.1",
+                    self.ipaddress or HostAddress("127.0.0.1"),
                     max_age=self.max_age_snmp,
                     on_scan_error=self.on_scan_error,
                     selected_sections=self.selected_sections,

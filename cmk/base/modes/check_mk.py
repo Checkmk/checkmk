@@ -837,7 +837,7 @@ def mode_update_dns_cache() -> None:
         configured_ipv6_addresses=config.ipaddresses,
         configured_ipv4_addresses=config.ipv6addresses,
         simulation_mode=config.simulation_mode,
-        override_dns=config.fake_dns,
+        override_dns=HostAddress(config.fake_dns) if config.fake_dns is not None else None,
     )
 
 
@@ -2004,7 +2004,7 @@ def mode_check(
     hostname = HostName(args[0])
     ipaddress: HostAddress | None = None
     if len(args) == 2:
-        ipaddress = args[1]
+        ipaddress = HostAddress(args[1])
 
     config_cache = config.get_config_cache()
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)

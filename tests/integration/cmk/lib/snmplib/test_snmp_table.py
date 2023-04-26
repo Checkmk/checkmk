@@ -10,6 +10,8 @@ import pytest
 
 from tests.testlib.site import Site
 
+from cmk.utils.type_defs import HostAddress
+
 from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
 
 INFO_TREE = BackendSNMPTree(
@@ -65,7 +67,7 @@ def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBack
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = default_config(backend_type)._replace(ipaddress="bla.local")
+    config = default_config(backend_type)._replace(ipaddress=HostAddress("bla.local"))
 
     # TODO: Unify different error messages
     if config.snmp_backend is SNMPBackendEnum.INLINE:

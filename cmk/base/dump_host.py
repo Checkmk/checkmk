@@ -10,7 +10,7 @@ import cmk.utils.render
 import cmk.utils.tty as tty
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import tmp_dir
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
@@ -21,6 +21,7 @@ from cmk.checkers import Source, SourceType
 from cmk.checkers.check_table import LegacyCheckParameters
 
 import cmk.base.config as config
+import cmk.base.core
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
@@ -234,9 +235,13 @@ def _ip_address_for_dump_host(
     host_name: HostName,
     *,
     family: socket.AddressFamily,
-) -> str | None:
+) -> HostAddress | None:
     config_cache = config.get_config_cache()
     try:
         return config.lookup_ip_address(config_cache, host_name, family=family)
     except Exception:
-        return "" if config_cache.is_cluster(host_name) else ip_lookup.fallback_ip_for(family)
+        return (
+            HostAddress("")
+            if config_cache.is_cluster(host_name)
+            else ip_lookup.fallback_ip_for(family)
+        )

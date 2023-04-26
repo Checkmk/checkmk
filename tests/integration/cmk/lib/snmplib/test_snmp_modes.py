@@ -20,6 +20,8 @@ import pytest
 
 from tests.testlib.site import Site
 
+from cmk.utils.type_defs import HostAddress
+
 from cmk.snmplib import snmp_modes
 from cmk.snmplib.type_defs import OID, SNMPBackendEnum, SNMPHostConfig
 
@@ -33,7 +35,7 @@ def test_get_single_oid_ipv6(site: Site, backend_type: SNMPBackendEnum) -> None:
 
     config = default_config(backend_type)._replace(
         is_ipv6_primary=True,
-        ipaddress="::1",
+        ipaddress=HostAddress("::1"),
     )
 
     result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)
@@ -159,7 +161,7 @@ def test_get_single_oid_not_resolvable(site: Site, backend_type: SNMPBackendEnum
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = default_config(backend_type)._replace(ipaddress="bla.local")
+    config = default_config(backend_type)._replace(ipaddress=HostAddress("bla.local"))
 
     assert get_single_oid(site, ".1.3.6.1.2.1.1.7.0", backend_type, config)[0] is None
 

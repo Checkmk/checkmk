@@ -248,12 +248,12 @@ def scan_parents_of(  # pylint: disable=too-many-branches
         # 10  216.239.48.53  45.608 ms  47.121 ms 64.233.174.29  43.126 ms
         # 11  209.85.255.245  49.265 ms  40.470 ms  39.870 ms
         # 12  8.8.8.8  28.339 ms  28.566 ms  28.791 ms
-        routes: list[str | None] = []
+        routes: list[HostAddress | None] = []
         for line in lines[1:]:
             parts = line.split()
             route = parts[1]
             if route.count(".") == 3:
-                routes.append(route)
+                routes.append(HostAddress(route))
             elif route == "*":
                 routes.append(None)  # No answer from this router
             else:

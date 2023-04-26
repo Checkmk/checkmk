@@ -206,7 +206,7 @@ class StubFileCache(FileCache[TRawData]):
 class TestIPMIFetcher:
     @pytest.fixture
     def fetcher(self) -> IPMIFetcher:
-        return IPMIFetcher(address="1.2.3.4", username="us3r", password="secret")
+        return IPMIFetcher(address=HostAddress("1.2.3.4"), username="us3r", password="secret")
 
     def test_repr(self, fetcher: IPMIFetcher) -> None:
         assert isinstance(repr(fetcher), str)
@@ -234,7 +234,7 @@ class TestIPMIFetcher:
         )
         file_cache.write(AgentRawData(b"<<<whatever>>>"), Mode.CHECKING)
 
-        with IPMIFetcher(address="127.0.0.1", username="", password="") as fetcher:
+        with IPMIFetcher(address=HostAddress("127.0.0.1"), username="", password="") as fetcher:
             assert get_raw_data(file_cache, fetcher, Mode.CHECKING).is_ok()
 
     def test_command_raises_IpmiException_handling(self, monkeypatch: MonkeyPatch) -> None:
@@ -252,7 +252,7 @@ class TestIPMIFetcher:
             file_cache_mode=FileCacheMode.DISABLED,
         )
 
-        with IPMIFetcher(address="127.0.0.1", username="", password="") as fetcher:
+        with IPMIFetcher(address=HostAddress("127.0.0.1"), username="", password="") as fetcher:
             raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
         assert isinstance(raw_data.error, MKFetcherError)
@@ -396,7 +396,7 @@ class TestSNMPFetcherDeserialization:
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
-                ipaddress="1.2.3.4",
+                ipaddress=HostAddress("1.2.3.4"),
                 credentials="public",
                 port=42,
                 is_bulkwalk_host=False,
@@ -421,7 +421,7 @@ class TestSNMPFetcherDeserialization:
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
-                ipaddress="1.2.3.4",
+                ipaddress=HostAddress("1.2.3.4"),
                 credentials="public",
                 port=42,
                 is_bulkwalk_host=False,
@@ -526,7 +526,7 @@ class TestSNMPFetcherFetch:
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
-                ipaddress="1.2.3.4",
+                ipaddress=HostAddress("1.2.3.4"),
                 credentials="public",
                 port=42,
                 is_bulkwalk_host=False,
@@ -756,7 +756,7 @@ class TestSNMPFetcherFetchCache:
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
-                ipaddress="1.2.3.4",
+                ipaddress=HostAddress("1.2.3.4"),
                 credentials="public",
                 port=42,
                 is_bulkwalk_host=False,
@@ -826,7 +826,7 @@ class TestTCPFetcher:
     def fetcher(self) -> TCPFetcher:
         return TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 6556),
+            address=(HostAddress("1.2.3.4"), 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
@@ -857,7 +857,7 @@ class TestTCPFetcher:
         file_cache.cache = AgentRawData(b"cached_section")
         with TCPFetcher(
             family=socket.AF_INET,
-            address=("This is not an IP address. Connecting would fail.", 6556),
+            address=(HostAddress("999.999.999.999"), 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
@@ -879,7 +879,7 @@ class TestTCPFetcher:
         )
         with TCPFetcher(
             family=socket.AF_INET,
-            address=("This is not an IP address. Connecting fails.", 6556),
+            address=(HostAddress("999.999.999.999"), 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
@@ -893,7 +893,7 @@ class TestTCPFetcher:
         output = b"<<<section:sep(0)>>>\nbody\n"
         fetcher = TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 0),
+            address=(HostAddress("1.2.3.4"), 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
@@ -904,7 +904,7 @@ class TestTCPFetcher:
     def test_validate_protocol_plaintext_with_enforce_raises(self) -> None:
         fetcher = TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 0),
+            address=(HostAddress("1.2.3.4"), 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_handling=TCPEncryptionHandling.ANY_ENCRYPTED,
@@ -917,7 +917,7 @@ class TestTCPFetcher:
     def test_validate_protocol_no_tls_with_registered_host_raises(self) -> None:
         fetcher = TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 0),
+            address=(HostAddress("1.2.3.4"), 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,  # not relevant for this test
@@ -935,7 +935,7 @@ class TestTCPFetcher:
         ):
             TCPFetcher(
                 family=socket.AF_INET,
-                address=("1.2.3.4", 0),
+                address=(HostAddress("1.2.3.4"), 0),
                 host_name=HostName("irrelevant_for_this_test"),
                 timeout=0.0,
                 encryption_handling=encryption_handling,
@@ -945,7 +945,7 @@ class TestTCPFetcher:
     def test_validate_protocol_tls_required(self) -> None:
         fetcher = TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 0),
+            address=(HostAddress("1.2.3.4"), 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_handling=TCPEncryptionHandling.TLS_ENCRYPTED_ONLY,
@@ -1002,7 +1002,7 @@ class TestFetcherCaching:
         # We use the TCPFetcher to test a general feature of the fetchers.
         fetcher = TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 0),
+            address=(HostAddress("1.2.3.4"), 0),
             timeout=0.0,
             host_name=HostName("irrelevant_for_this_test"),
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
@@ -1068,7 +1068,7 @@ def test_tcp_fetcher_dead_connection_timeout(
     with FakeSocket(wait_connect=wait_connect, wait_data=wait_data, data=b"<<"):
         fetcher = TCPFetcher(
             family=socket.AF_INET,
-            address=("127.0.0.1", 12345),  # Will be ignored by the FakeSocket
+            address=(HostAddress("127.0.0.1"), 12345),  # Will be ignored by the FakeSocket
             timeout=timeout_connect,
             # Boilerplate stuff to make the code not crash.
             host_name=HostName("timeout_tcp_test"),

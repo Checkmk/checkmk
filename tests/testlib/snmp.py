@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import Any, Final
 
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs import HostAddress, HostName, SectionName
 
 from cmk.snmplib.snmp_table import get_snmp_table
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPBackendEnum, SNMPHostConfig
@@ -21,7 +21,7 @@ from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 SNMP_HOST_CONFIG: Final = SNMPHostConfig(
     False,
     HostName("unittest"),
-    "127.0.0.1",
+    HostAddress("127.0.0.1"),
     "",
     0,
     False,

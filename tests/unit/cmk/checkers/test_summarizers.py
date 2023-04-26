@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.utils.exceptions import MKAgentError, MKTimeout
-from cmk.utils.type_defs import ExitSpec, HostName
+from cmk.utils.type_defs import ExitSpec, HostAddress, HostName
 
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.summarize import summarize_failure, summarize_piggyback, summarize_success
@@ -42,7 +42,7 @@ class TestPiggybackSummarizer:
     def test_summarize_missing_data_without_is_piggyback_option(self) -> None:
         assert summarize_piggyback(
             hostname=HostName("hostname"),
-            ipaddress="1.2.3.4",
+            ipaddress=HostAddress("1.2.3.4"),
             time_settings=[("", "", 0)],
             is_piggyback=False,
         ) == [ActiveCheckResult(0, "Success (but no data found for this host)")]
@@ -50,7 +50,7 @@ class TestPiggybackSummarizer:
     def test_summarize_missing_data_with_is_piggyback_option(self) -> None:
         assert summarize_piggyback(
             hostname=HostName("hostname"),
-            ipaddress="1.2.3.4",
+            ipaddress=HostAddress("1.2.3.4"),
             time_settings=[("", "", 0)],
             is_piggyback=True,
         ) == [ActiveCheckResult(1, "Missing data")]
@@ -59,7 +59,7 @@ class TestPiggybackSummarizer:
     def test_summarize_existing_data_with_is_piggyback_option(self) -> None:
         assert summarize_piggyback(
             hostname=HostName("hostname"),
-            ipaddress="1.2.3.4",
+            ipaddress=HostAddress("1.2.3.4"),
             time_settings=[("", "", 0)],
             is_piggyback=True,
         ) == [ActiveCheckResult(0, "success"), ActiveCheckResult(0, "success")]

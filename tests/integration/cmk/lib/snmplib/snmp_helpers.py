@@ -9,7 +9,7 @@ from pathlib import Path
 
 from tests.testlib.site import Site
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.snmplib.type_defs import (
     BackendSNMPTree,
@@ -24,7 +24,7 @@ from cmk.snmplib.type_defs import (
 def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:
     return SNMPHostConfig(
         is_ipv6_primary=False,
-        ipaddress="127.0.0.1",
+        ipaddress=HostAddress("127.0.0.1"),
         hostname=HostName("localhost"),
         credentials="public",
         port=1337,

@@ -31,7 +31,7 @@ _BASE_CACHE_FILE_DIR = Path(tmp_dir) / "agents" / "agent_cisco_meraki"
 
 _API_NAME_ORGANISATION_ID: Final = "id"
 _API_NAME_DEVICE_SERIAL: Final = "serial"
-_API_NAME_DEVICE_LAN_IP: Final = "lanIp"
+_API_NAME_DEVICE_NAME: Final = "name"
 
 _SEC_NAME_LICENSES_OVERVIEW: Final = "licenses-overview"
 _SEC_NAME_DEVICE_INFO: Final = "_device_info"  # Not configurable, needed for piggyback
@@ -162,10 +162,18 @@ class MerakiOrganisation:
             devices_by_serial = {}
 
         for device in devices_by_serial.values():
+            try:
+                device_piggyback = str(device[_API_NAME_DEVICE_NAME])
+            except KeyError as e:
+                _LOGGER.debug(
+                    "Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e
+                )
+                continue
+
             yield self._make_section(
                 name=_SEC_NAME_DEVICE_INFO,
                 data=device,
-                piggyback=str(device[_API_NAME_DEVICE_LAN_IP]),
+                piggyback=device_piggyback,
             )
 
         if _SEC_NAME_DEVICE_STATUSES in self.config.section_names:
@@ -230,7 +238,7 @@ class MerakiOrganisation:
     ) -> str | None:
         try:
             serial = str(device[_API_NAME_DEVICE_SERIAL])
-            return str(devices_by_serial[serial][_API_NAME_DEVICE_LAN_IP])
+            return str(devices_by_serial[serial][_API_NAME_DEVICE_NAME])
         except KeyError as e:
             _LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e)
             return None

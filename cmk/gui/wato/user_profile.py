@@ -468,6 +468,8 @@ class UserChangePasswordPage(ABCUserProfilePage):
         forms.section(_("New Password Confirmation"))
         html.password_input('password2', autocomplete="new-password")
 
+        html.hidden_field("_origtarget", request.get_str_input("_origtarget"))
+
         forms.end()
         html.close_div()
         html.hidden_fields()

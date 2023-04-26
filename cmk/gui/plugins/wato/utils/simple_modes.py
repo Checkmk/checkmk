@@ -365,7 +365,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
 
     def title(self) -> str:
         if self._new:
-            return _("New %s") % self._mode_type.name_singular()
+            return _("Add %s") % self._mode_type.name_singular()
         return _("Edit %s: %s") % (self._mode_type.name_singular(), self._entry["title"])
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

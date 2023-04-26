@@ -767,7 +767,7 @@ class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec, "CustomSnapins"]):
             "clone": _("Clone element"),
             "create": _("Create element"),
             "edit": _("Edit element"),
-            "new": _("New element"),
+            "new": _("Add element"),
         }.get(phrase, pagetypes.Base.phrase(phrase))
 
     @classmethod

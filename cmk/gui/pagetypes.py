@@ -1953,7 +1953,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
             "clone": _("Clone topic"),
             "create": _("Create topic"),
             "edit": _("Edit topic"),
-            "new": _("New topic"),
+            "new": _("Add topic"),
         }.get(phrase, Base.phrase(phrase))
 
     @classmethod

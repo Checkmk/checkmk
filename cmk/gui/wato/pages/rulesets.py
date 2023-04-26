@@ -2760,7 +2760,7 @@ class ModeNewRule(ABCEditRuleMode):
         return "new_rule"
 
     def title(self) -> str:
-        return _("New rule: %s") % self._rulespec.title
+        return _("Add rule: %s") % self._rulespec.title
 
     def _set_folder(self) -> None:
         if request.has_var("_new_dflt_rule"):

@@ -670,7 +670,7 @@ class PageEditBackupJob:
             self._new = True
             self._ident = None
             self._job_cfg = {}
-            self._title = _("New backup job")
+            self._title = _("Add backup job")
 
     def title(self) -> str:
         return self._title
@@ -1679,7 +1679,7 @@ class PageEditBackupTarget:
             self._new = True
             self._ident = None
             self._target_cfg = {}
-            self._title = _("New backup target")
+            self._title = _("Add backup target")
 
     def title(self) -> str:
         return self._title

@@ -70,7 +70,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
             "clone": _("Clone bookmark list"),
             "create": _("Create bookmark list"),
             "edit": _("Edit bookmark list"),
-            "new": _("New list"),
+            "new": _("Add list"),
         }.get(phrase, pagetypes.Base.phrase(phrase))
 
     @classmethod

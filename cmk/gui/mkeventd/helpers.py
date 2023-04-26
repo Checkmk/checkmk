@@ -26,13 +26,13 @@ def action_choices(omit_hidden: bool = False) -> list[tuple[str, str]]:
     # to load them from the configuration.
     return [("@NOTIFY", _("Send monitoring notification"))] + [
         (a["id"], a["title"])
-        for a in _eventd_configuration().get("actions", [])
+        for a in eventd_configuration().get("actions", [])
         if not omit_hidden or not a.get("hidden")
     ]
 
 
 @request_memoize()
-def _eventd_configuration() -> ec.ConfigFromWATO:
+def eventd_configuration() -> ec.ConfigFromWATO:
     return ec.load_config(
         ec.settings("", cmk.utils.paths.omd_root, Path(cmk.utils.paths.default_config_dir), [""])
     )

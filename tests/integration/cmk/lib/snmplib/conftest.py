@@ -229,7 +229,8 @@ def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
         if not (children := proc.children()):
             return None
         if children[0].name() != "snmpsimd.py":
-            raise RuntimeError(f"Unexpected child processes: {children}")
+            logger.debug("Unexpected child processes: %s", children)
+            return None
         return children[0]
     return psutil.Process(process_def.process.pid)
 

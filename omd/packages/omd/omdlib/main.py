@@ -1253,6 +1253,16 @@ def permission_action(
     if user_perm == new_perm:
         return None  # Is already in correct state
 
+    # Special handling to prevent questions about standard situations (CMK-12090)
+    if old_perm != new_perm and relpath in (
+        "local/share/nagvis/htdocs/userfiles/images/maps",
+        "local/share/nagvis/htdocs/userfiles/images/shapes",
+        "etc/check_mk/multisite.d",
+        "etc/check_mk/conf.d",
+        "etc/check_mk/conf.d/wato",
+    ):
+        return "default"
+
     # Permissions have changed in all places, but file type not
     if old_type == new_type and user_perm != old_perm and old_perm != new_perm:
         if user_confirms(

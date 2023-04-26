@@ -47,8 +47,8 @@ from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
 
 from ._host_labels import (
+    analyse_cluster_labels,
     analyse_host_labels,
-    discover_cluster_labels,
     discover_host_labels,
     do_load_labels,
 )
@@ -98,25 +98,39 @@ def get_check_preview(
     store_piggybacked_sections(host_sections_no_error)
     providers = make_providers(host_sections_no_error, section_plugins)
 
-    host_labels, _kept_labels = analyse_host_labels(
-        host_name,
-        discovered_host_labels=discover_cluster_labels(
+    host_labels, _kept_labels_per_node = (
+        analyse_cluster_labels(
+            host_name,
             config_cache.nodes_of(host_name) or (),
-            host_label_plugins,
-            providers=providers,
-            on_error=on_error,
-            load_labels=True,
+            discovered_host_labels={
+                node_name: discover_host_labels(
+                    node_name,
+                    host_label_plugins,
+                    providers=providers,
+                    on_error=on_error,
+                )
+                for node_name in config_cache.nodes_of(host_name) or ()
+            },
+            existing_host_labels={
+                node_name: do_load_labels(node_name)
+                for node_name in config_cache.nodes_of(host_name) or ()
+            },
+            clusters_existing_host_labels=do_load_labels(host_name),
+            ruleset_matcher=config_cache.ruleset_matcher,
         )
         if config_cache.is_cluster(host_name)
-        else discover_host_labels(
+        else analyse_host_labels(
             host_name,
-            host_label_plugins,
-            providers=providers,
-            on_error=on_error,
-        ),
-        ruleset_matcher=config_cache.ruleset_matcher,
-        existing_host_labels=do_load_labels(host_name),
-        save_labels=False,
+            discovered_host_labels=discover_host_labels(
+                host_name,
+                host_label_plugins,
+                providers=providers,
+                on_error=on_error,
+            ),
+            ruleset_matcher=config_cache.ruleset_matcher,
+            existing_host_labels=do_load_labels(host_name),
+            save_labels=False,
+        )
     )
 
     for result in check_parsing_errors(

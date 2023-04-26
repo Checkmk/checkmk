@@ -57,8 +57,8 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.agent_based.discovery import _discovered_services
 from cmk.base.agent_based.discovery._discovery import _check_service_lists
 from cmk.base.agent_based.discovery._host_labels import (
+    analyse_cluster_labels,
     analyse_host_labels,
-    discover_cluster_labels,
     discover_host_labels,
     do_load_labels,
 )
@@ -1443,7 +1443,10 @@ _discovery_test_cases = [
             },
         ),
         on_cluster=ExpectedDiscoveryResultCluster(
-            expected_vanished_host_labels=[],
+            expected_vanished_host_labels=[
+                HostLabel("existing_label", "bar", SectionName("foo")),
+                HostLabel("another_label", "true", SectionName("labels")),
+            ],
             expected_old_host_labels=[],
             expected_new_host_labels=[
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
@@ -1493,7 +1496,10 @@ _discovery_test_cases = [
             },
         ),
         on_cluster=ExpectedDiscoveryResultCluster(
-            expected_vanished_host_labels=[],
+            expected_vanished_host_labels=[
+                HostLabel("existing_label", "bar", SectionName("foo")),
+                HostLabel("another_label", "true", SectionName("labels")),
+            ],
             expected_old_host_labels=[],
             expected_new_host_labels=[
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
@@ -1615,24 +1621,6 @@ def test__discover_services_on_cluster(
     nodes = scenario.config_cache.nodes_of(scenario.parent)
     assert nodes is not None
 
-    # We're depending on the changed host labels via the cache.
-    if discovery_test_case.save_labels:
-        analyse_host_labels(
-            scenario.parent,
-            discovered_host_labels=discover_cluster_labels(
-                nodes,
-                HostLabelPluginMapper(),
-                providers=scenario.providers,
-                load_labels=discovery_test_case.load_labels,
-                on_error=OnError.RAISE,
-            ),
-            ruleset_matcher=scenario.config_cache.ruleset_matcher,
-            existing_host_labels=(
-                do_load_labels(scenario.parent) if discovery_test_case.load_labels else ()
-            ),
-            save_labels=discovery_test_case.save_labels,
-        )
-
     discovered_services = _get_cluster_services(
         scenario.parent,
         config_cache=scenario.config_cache,
@@ -1659,20 +1647,25 @@ def test__perform_host_label_discovery_on_cluster(
     nodes = scenario.config_cache.nodes_of(scenario.parent)
     assert nodes is not None
 
-    host_label_result, _kept_labels = analyse_host_labels(
+    host_label_result, _kept_labels = analyse_cluster_labels(
         scenario.parent,
-        discovered_host_labels=discover_cluster_labels(
-            nodes,
-            HostLabelPluginMapper(),
-            providers=scenario.providers,
-            load_labels=discovery_test_case.load_labels,
-            on_error=OnError.RAISE,
+        nodes,
+        discovered_host_labels={
+            node: discover_host_labels(
+                node,
+                HostLabelPluginMapper(),
+                providers=scenario.providers,
+                on_error=OnError.RAISE,
+            )
+            for node in nodes
+        },
+        existing_host_labels=(
+            {node: do_load_labels(node) for node in nodes}
+            if discovery_test_case.load_labels
+            else {}
         ),
         ruleset_matcher=scenario.config_cache.ruleset_matcher,
-        existing_host_labels=(
-            do_load_labels(scenario.parent) if discovery_test_case.load_labels else ()
-        ),
-        save_labels=discovery_test_case.save_labels,
+        clusters_existing_host_labels=do_load_labels(scenario.parent),
     )
 
     assert (

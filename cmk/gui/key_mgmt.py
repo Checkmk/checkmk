@@ -358,7 +358,10 @@ class PageUploadKey:
         cert_spec: (tuple[Literal["upload"], tuple[str, str, bytes]] | tuple[Literal["text"], str]),
     ) -> str:
         if cert_spec[0] == "upload":
-            return cert_spec[1][2].decode("ascii")
+            try:
+                return cert_spec[1][2].decode("ascii")
+            except UnicodeDecodeError:
+                raise MKUserError(None, _("Could not decode key file"))
         return cert_spec[1]
 
     def _upload_key(self, key_file: str, alias: str, passphrase: PasswordType) -> None:
@@ -413,8 +416,19 @@ class PageUploadKey:
                     CascadingDropdown(
                         title=_("Key"),
                         choices=[
-                            ("upload", _("Upload CRT/PEM File"), FileUpload()),
-                            ("text", _("Paste PEM Content"), TextAreaUnicode()),
+                            (
+                                "upload",
+                                _("Upload CRT/PEM File"),
+                                FileUpload(
+                                    allowed_extensions=[".pem", ".crt"],
+                                    mime_types=[
+                                        "application/x-x509-user-cert",
+                                        "application/x-x509-ca-cert",
+                                        "application/pkix-cert",
+                                    ],
+                                ),
+                            ),
+                            ("text", _("Paste CRT/PEM Contents"), TextAreaUnicode()),
                         ],
                     ),
                 ),

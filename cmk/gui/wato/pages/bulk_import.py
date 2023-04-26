@@ -362,6 +362,8 @@ class ModeBulkImport(WatoMode):
                     "file",
                     UploadOrPasteTextFile(
                         elements=[],
+                        allowed_extensions=[".csv"],
+                        mime_types=["text/csv"],
                         title=_("Import Hosts"),
                         file_title=_("CSV File"),
                     ),

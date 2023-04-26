@@ -6634,6 +6634,7 @@ class FileUpload(ValueSpec[FileUploadModel]):
         self,
         allow_empty: bool = False,
         allowed_extensions: Iterable[str] | None = None,
+        mime_types: Iterable[str] | None = None,
         allow_empty_content: bool = True,
         # ValueSpec
         title: str | None = None,
@@ -6645,6 +6646,7 @@ class FileUpload(ValueSpec[FileUploadModel]):
         self._allow_empty = allow_empty
         self._allowed_extensions = allowed_extensions
         self._allow_empty_content = allow_empty_content
+        self._allowed_mime_types = mime_types
 
     def allow_empty(self) -> bool:
         return self._allow_empty
@@ -6657,7 +6659,7 @@ class FileUpload(ValueSpec[FileUploadModel]):
             raise MKUserError(varprefix, _("Please select a file."))
         assert isinstance(value, tuple)  # Hmmm...
 
-        file_name, _mime_type, content = value
+        file_name, mime, content = value
 
         if not self._allow_empty and (content == b"" or file_name == ""):
             raise MKUserError(varprefix, _("Please select a file."))
@@ -6666,18 +6668,20 @@ class FileUpload(ValueSpec[FileUploadModel]):
             raise MKUserError(
                 varprefix, _("The selected file is empty. Please select a non-empty file.")
             )
-        if self._allowed_extensions is not None:
-            matched = False
-            for extension in self._allowed_extensions:
-                if file_name.endswith(extension):
-                    matched = True
-                    break
-            if not matched:
-                raise MKUserError(
-                    varprefix,
-                    _("Invalid file name extension. Allowed are: %s")
-                    % ", ".join(self._allowed_extensions),
-                )
+        if self._allowed_extensions is not None and not any(
+            file_name.endswith(extension) for extension in self._allowed_extensions
+        ):
+            raise MKUserError(
+                varprefix,
+                _("Invalid file type expected %s received %s")
+                % (
+                    ", ".join(extension for extension in self._allowed_extensions),
+                    Path(file_name).suffix,
+                ),
+            )
+
+        if self._allowed_mime_types is not None and mime not in self._allowed_mime_types:
+            raise MKUserError(varprefix, _("Invalid file type."))
 
     def render_input(self, varprefix: str, value: FileUploadModel) -> None:
         html.upload_file(varprefix)
@@ -6707,6 +6711,7 @@ class ImageUpload(FileUpload):
         allow_empty: bool = False,
         allowed_extensions: Iterable[str] | None = None,
         allow_empty_content: bool = True,
+        mime_types: Iterable[str] | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -6723,6 +6728,7 @@ class ImageUpload(FileUpload):
             help=help,
             default_value=default_value,
             validate=validate,
+            mime_types=mime_types,
         )
 
     def render_input(self, varprefix: str, value: FileUploadModel) -> None:
@@ -6749,18 +6755,17 @@ class ImageUpload(FileUpload):
             super().render_input(varprefix, value)
 
     def _validate_value(self, value: FileUploadModel, varprefix: str) -> None:
+        super()._validate_value(value, varprefix)
         if not value:
             raise MKUserError(varprefix, _("Please choose a PNG image."))
         assert isinstance(value, tuple)  # Hmmm...
 
-        file_name, mime_type, content = value
+        content = value[2]
 
-        if (
-            not file_name.endswith(".png")
-            or mime_type != "image/png"
-            or not content.startswith(b"\x89PNG")
-        ):
-            raise MKUserError(varprefix, _("Please choose a PNG image."))
+        if not content.startswith(b"\x89PNG"):
+            raise MKUserError(
+                varprefix, _("Please choose a PNG image.")
+            )  # We could consider adding EXIF removing functionaility through the exif module.
 
         try:
             im = Image.open(io.BytesIO(content))
@@ -6786,6 +6791,8 @@ class UploadOrPasteTextFile(Alternative):
         show_alternative_title: bool = False,
         on_change: str | None = None,
         orientation: Literal["horizontal", "vertical"] = "vertical",
+        allowed_extensions: Iterable[str] | None = None,
+        mime_types: Iterable[str] | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -6794,7 +6801,12 @@ class UploadOrPasteTextFile(Alternative):
     ):
         f_title = _("File") if file_title is None else file_title
         additional_elements: list[ValueSpec] = [
-            FileUpload(title=_("Upload %s") % f_title, allow_empty=allow_empty),
+            FileUpload(
+                title=_("Upload %s") % f_title,
+                allow_empty=allow_empty,
+                allowed_extensions=allowed_extensions,
+                mime_types=mime_types,
+            ),
             TextAreaUnicode(
                 title=_("Content of %s") % f_title,
                 allow_empty=allow_empty,
@@ -8027,6 +8039,12 @@ class CAorCAChain(UploadOrPasteTextFile):
             file_title=_("CRT/PEM File") if file_title is None else file_title,
             allow_empty=allow_empty,
             elements=[_CAInput()],
+            mime_types=[
+                "application/x-x509-user-cert",
+                "application/x-x509-ca-cert",
+                "application/pkix-cert",
+            ],
+            allowed_extensions=[".pem", ".crt"],
             match=lambda val: 2
             if not isinstance(val, tuple)
             else (0 if isinstance(val[1], int) else 1),

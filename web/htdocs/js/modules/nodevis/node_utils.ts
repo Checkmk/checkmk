@@ -160,7 +160,7 @@ export class AbstractGUINode implements TypeWithName {
         return node.data.name;
     }
 
-    render_text() {
+    render_text(): void {
         if (this.node.data.show_text == false) {
             if (this._text_selection) this.text_selection().remove();
             this._text_selection = null;

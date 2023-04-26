@@ -498,6 +498,8 @@ def build_package(package_type, build_dir, env) {
         // * if we then build under an old distro, we get linker issues
         // * so as long as we don't have the protobuf build bazelized, we need to manually clean it up here.
         sh("rm -fr omd/build/intermediate_install/protobuf*")
+        sh("rm -fr omd/build/stamps/protobuf*")
+
 
         // used withEnv(env) before, but sadly Jenkins does not set 0 length environment variables
         // see also: https://issues.jenkins.io/browse/JENKINS-43632

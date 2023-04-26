@@ -126,7 +126,7 @@ def automation_discovery(
 
     try:
         # in "refresh" mode we first need to remove all previously discovered
-        # checks of the host, so that _get_host_services() does show us the
+        # checks of the host, so that get_host_services() does show us the
         # new discovered check parameters.
         if mode is DiscoveryMode.REFRESH:
             result.self_removed += config_cache.remove_autochecks(
@@ -165,10 +165,10 @@ def automation_discovery(
             host_labels = QualifiedDiscovery.empty()
 
         # Compute current state of new and existing checks
-        services = _get_host_services(
+        services = get_host_services(
             host_name,
-            config_cache,
-            providers,
+            config_cache=config_cache,
+            providers=providers,
             check_plugins=check_plugins,
             find_service_description=find_service_description,
             on_error=on_error,
@@ -205,48 +205,6 @@ def automation_discovery(
 
     result.self_total = result.self_new + result.self_kept
     return result
-
-
-def _get_host_services(
-    host_name: HostName,
-    config_cache: ConfigCache,
-    providers: Mapping[HostKey, Provider],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-    on_error: OnError,
-) -> ServicesByTransition:
-    services: ServicesTable[_Transition]
-    if config_cache.is_cluster(host_name):
-        services = {
-            **_get_cluster_services(
-                host_name,
-                config_cache=config_cache,
-                providers=providers,
-                check_plugins=check_plugins,
-                find_service_description=find_service_description,
-                on_error=on_error,
-            )
-        }
-    else:
-        services = {
-            **_get_node_services(
-                config_cache,
-                host_name,
-                check_plugins=check_plugins,
-                providers=providers,
-                host_of_clustered_service=config_cache.host_of_clustered_service,
-                find_service_description=find_service_description,
-                on_error=on_error,
-            )
-        }
-
-    services.update(
-        _reclassify_disabled_items(config_cache, host_name, services, find_service_description)
-    )
-
-    # remove the ones shadowed by enforced services
-    enforced_services = config_cache.enforced_services_table(host_name)
-    return _group_by_transition({k: v for k, v in services.items() if k not in enforced_services})
 
 
 def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches

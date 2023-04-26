@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0b6
+Version: 2.2.0b5
 
 Prior to this werk, the agent raised an error whenever the response did not
 contain a link to the next page and when a log contained an empty message.

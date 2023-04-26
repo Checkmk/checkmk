@@ -16,7 +16,6 @@ from tests.testlib import create_linux_test_host, on_time, repo_path
 from tests.testlib.site import Site
 
 import cmk.utils.prediction
-from cmk.utils import version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 

@@ -37,7 +37,7 @@ def parse_device_status(string_table: StringTable) -> DeviceStatus | None:
 
 
 register.agent_section(
-    name="cisco_meraki_org_device",
+    name="cisco_meraki_org_device_status",
     parse_function=parse_device_status,
 )
 
@@ -70,7 +70,6 @@ def check_device_status(section: DeviceStatus | None) -> CheckResult:
 
 register.check_plugin(
     name="cisco_meraki_org_device_status",
-    sections=["cisco_meraki_org_device"],
     service_name="Cisco Meraki Device Status",
     discovery_function=discover_device_status,
     check_function=check_device_status,

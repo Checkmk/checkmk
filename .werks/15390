@@ -1,0 +1,12 @@
+Title: cisco_meraki_org_device_status: Fix discovery of device status services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1682516912
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

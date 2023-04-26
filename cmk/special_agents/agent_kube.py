@@ -2151,13 +2151,12 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
         with cmk.utils.profile.Profile(
             enabled=bool(arguments.profile), profile_file=arguments.profile
         ):
-            api_client = query.make_api_client(query.parse_api_session_config(arguments), LOGGER)
+            client_config = query.parse_api_session_config(arguments)
             LOGGER.info("Collecting API data")
-
             try:
                 api_data = from_kubernetes(
-                    api_client,
-                    timeout=(arguments.k8s_api_connect_timeout, arguments.k8s_api_read_timeout),
+                    client_config,
+                    LOGGER,
                     query_kubelet_endpoints=MonitoredObject.pvcs in arguments.monitored_objects,
                 )
             except urllib3.exceptions.MaxRetryError as e:
@@ -2167,6 +2166,10 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 ) from e
             except client.ApiException as e:
                 raise CustomKubernetesApiException(e) from e
+            except requests.RequestException as e:
+                raise ClusterConnectionError(
+                    f"Failed to establish a connection at URL {e.request.url} "
+                ) from e
 
             # Namespaces are handled independently from the cluster object in order to improve
             # testability. The long term goal is to remove all objects from the cluster object

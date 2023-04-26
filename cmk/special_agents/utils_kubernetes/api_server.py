@@ -11,10 +11,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
+import requests
 import urllib3
 from kubernetes import client  # type: ignore[import]
 from pydantic import parse_obj_as
 
+from cmk.special_agents.utils_kubernetes import query
 from cmk.special_agents.utils_kubernetes.controllers import (
     map_controllers,
     map_controllers_top_to_down,
@@ -137,6 +139,19 @@ class RawAPI:
         )
 
 
+def send_request(
+    client_config: query.APISessionConfig,
+    request_client: requests.Session,
+    request: requests.Request,
+) -> requests.Response:
+    prepared_request = request_client.prepare_request(request)
+    return request_client.send(
+        prepared_request,
+        verify=client_config.verify_cert_api,
+        timeout=client_config.requests_timeout(),
+    )
+
+
 class CoreAPI(RawAPI):
     """
     readyz and livez is not part of the OpenAPI doc, so we have to query it directly.
@@ -182,9 +197,16 @@ class CoreAPI(RawAPI):
         )
 
 
-class AppsAPI(RawAPI):
+class AppsAPI:
+    def __init__(
+        self, client_config: query.APISessionConfig, request_client: requests.Session
+    ) -> None:
+        self._config = client_config
+        self._client = request_client
+
     def query_raw_statefulsets(self) -> JSONStatefulSetList:
-        return json.loads(self._request("GET", "/apis/apps/v1/statefulsets").response)
+        request = requests.Request("GET", self._config.url("/apis/apps/v1/statefulsets"))
+        return send_request(self._config, self._client, request).json()
 
 
 def _extract_sequence_based_identifier(git_version: str) -> str | None:
@@ -539,20 +561,22 @@ def create_api_data_v2(
 
 
 def from_kubernetes(
-    api_client: client.ApiClient,
-    timeout: tuple[int, int],
+    client_config: query.APISessionConfig,
+    logger: logging.Logger,
     query_kubelet_endpoints: bool,
 ) -> APIData:
     """
     This function provides a stable interface that should not change between kubernetes versions
     This should be the only data source for all special agent code!
     """
-    client_batch_api = ClientBatchAPI(api_client, timeout)
-    client_core_api = ClientCoreAPI(api_client, timeout)
-    client_apps_api = ClientAppsAPI(api_client, timeout)
+    api_client = query.make_api_client(client_config, logger)
+    api_client_requests = query.make_api_client_requests(client_config, logger)
+    client_batch_api = ClientBatchAPI(api_client, client_config.requests_timeout())
+    client_core_api = ClientCoreAPI(api_client, client_config.requests_timeout())
+    client_apps_api = ClientAppsAPI(api_client, client_config.requests_timeout())
 
-    core_api = CoreAPI(api_client, timeout)
-    apps_api = AppsAPI(api_client, timeout)
+    core_api = CoreAPI(api_client, client_config.requests_timeout())
+    apps_api = AppsAPI(client_config, api_client_requests)
     raw_version = core_api.query_raw_version()
     version = version_from_json(raw_version)
     _verify_version_support(version)

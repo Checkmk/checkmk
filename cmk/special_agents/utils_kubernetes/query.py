@@ -111,6 +111,9 @@ class APISessionConfig(BaseModel):
             deserialize_http_proxy_config(self.api_server_proxy).to_requests_proxies() or {}
         )
 
+    def url(self, resource_path: str) -> str:
+        return self.api_server_endpoint + resource_path
+
 
 class CollectorSessionConfig(SessionConfig):
     cluster_collector_endpoint: str
@@ -220,3 +223,15 @@ def make_api_client(config: APISessionConfig, logger: logging.Logger) -> client.
         client_config.verify_ssl = False
 
     return client.ApiClient(client_config)
+
+
+def make_api_client_requests(config: APISessionConfig, logger: logging.Logger) -> requests.Session:
+    if not config.verify_cert_api:
+        logger.warning("Disabling SSL certificate verification.")
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    session = requests.Session()
+    session.proxies.update(config.requests_proxies())
+    session.headers.update({"Authorization": f"Bearer {config.token}"})
+    session.headers.update({"Content-Type": "application/json"})
+    return session

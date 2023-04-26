@@ -28,12 +28,12 @@ class FakeOrganisations:
     def getOrganizationDevices(self, organisation_id: str, total_pages: str) -> Sequence[Mapping]:
         if organisation_id == "123":
             return [
-                {"serial": "S123-1", "lanIp": "1.2.3.4"},
-                {"serial": "S123-2", "lanIp": "1.2.3.4"},
+                {"serial": "S123-1", "lanIp": "1.2.3.4", "name": "dev1"},
+                {"serial": "S123-2", "lanIp": "1.2.3.5", "name": "dev2"},
             ]
 
         if organisation_id == "456":
-            return [{"serial": "S456", "lanIp": "4.5.6.7"}]
+            return [{"serial": "S456", "lanIp": "1.2.3.6"}]
 
         return []
 
@@ -42,12 +42,12 @@ class FakeOrganisations:
     ) -> Sequence[Mapping]:
         if organisation_id == "123":
             return [
-                {"serial": "S123-1", "lanIp": "1.2.3.4", "status": "online"},
-                {"serial": "S123-2", "lanIp": "1.2.3.4", "status": "online"},
+                {"serial": "S123-1", "lanIp": "1.2.3.4", "name": "dev1", "status": "online"},
+                {"serial": "S123-2", "lanIp": "1.2.3.5", "name": "dev2", "status": "online"},
             ]
 
         if organisation_id == "456":
-            return [{"serial": "S456", "lanIp": "4.5.6.7", "status": "online"}]
+            return [{"serial": "S456", "lanIp": "1.2.3.6", "name": "dev3", "status": "online"}]
 
         return []
 
@@ -81,21 +81,21 @@ class FakeDashboard:
             [
                 "<<<cisco_meraki_org_licenses_overview:sep(0)>>>",
                 '[{"id": "123"}, {"id": "456"}]',
-                "<<<<1.2.3.4>>>>",
+                "<<<<dev1>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "1.2.3.4", "serial": "S123-1"}, {"lanIp": "1.2.3.4", "serial": "S123-2"}]',
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1"}]',
                 "<<<cisco_meraki_org_device_status:sep(0)>>>",
-                '[{"lanIp": "1.2.3.4", "serial": "S123-1", "status": "online"}, {"lanIp": "1.2.3.4", "serial": "S123-2", "status": "online"}]',
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1", "status": "online"}]',
                 "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
-                '[{"readings": [], "serial": "S123-1"}, {"readings": [], "serial": "S123-2"}]',
+                '[{"readings": [], "serial": "S123-1"}]',
                 "<<<<>>>>",
-                "<<<<4.5.6.7>>>>",
+                "<<<<dev2>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "4.5.6.7", "serial": "S456"}]',
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2"}]',
                 "<<<cisco_meraki_org_device_status:sep(0)>>>",
-                '[{"lanIp": "4.5.6.7", "serial": "S456", "status": "online"}]',
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2", "status": "online"}]',
                 "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
-                '[{"readings": [], "serial": "S456"}]',
+                '[{"readings": [], "serial": "S123-2"}]',
                 "<<<<>>>>",
             ],
         ),
@@ -115,23 +115,17 @@ class FakeDashboard:
                 "device-statuses",
             ],
             [
-                "<<<<1.2.3.4>>>>",
+                "<<<<dev1>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                (
-                    '[{"lanIp": "1.2.3.4", "serial": "S123-1"},'
-                    ' {"lanIp": "1.2.3.4", "serial": "S123-2"}]'
-                ),
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1"}]',
                 "<<<cisco_meraki_org_device_status:sep(0)>>>",
-                (
-                    '[{"lanIp": "1.2.3.4", "serial": "S123-1", "status": "online"},'
-                    ' {"lanIp": "1.2.3.4", "serial": "S123-2", "status": "online"}]'
-                ),
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1", "status": "online"}]',
                 "<<<<>>>>",
-                "<<<<4.5.6.7>>>>",
+                "<<<<dev2>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "4.5.6.7", "serial": "S456"}]',
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2"}]',
                 "<<<cisco_meraki_org_device_status:sep(0)>>>",
-                '[{"lanIp": "4.5.6.7", "serial": "S456", "status": "online"}]',
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2", "status": "online"}]',
                 "<<<<>>>>",
             ],
         ),
@@ -141,20 +135,17 @@ class FakeDashboard:
                 "sensor-readings",
             ],
             [
-                "<<<<1.2.3.4>>>>",
+                "<<<<dev1>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                (
-                    '[{"lanIp": "1.2.3.4", "serial": "S123-1"},'
-                    ' {"lanIp": "1.2.3.4", "serial": "S123-2"}]'
-                ),
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1"}]',
                 "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
-                '[{"readings": [], "serial": "S123-1"}, {"readings": [], "serial": "S123-2"}]',
+                '[{"readings": [], "serial": "S123-1"}]',
                 "<<<<>>>>",
-                "<<<<4.5.6.7>>>>",
+                "<<<<dev2>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "4.5.6.7", "serial": "S456"}]',
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2"}]',
                 "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
-                '[{"readings": [], "serial": "S456"}]',
+                '[{"readings": [], "serial": "S123-2"}]',
                 "<<<<>>>>",
             ],
         ),

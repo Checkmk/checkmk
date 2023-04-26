@@ -335,3 +335,239 @@ def test_get_orig_working_directory_not_existing(tmp_path: Path) -> None:
 @pytest.mark.parametrize("edition", list(version.Edition))
 def test_get_edition(edition: version._EditionValue) -> None:
     assert omdlib.main._get_edition(f"1.2.3.{edition.short}") != "unknown"
+
+
+def test_permission_action_new_link_triggers_no_action() -> None:
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="link",
+            new_type="link",
+            user_type="link",
+            old_perm=123,
+            new_perm=125,
+            user_perm=124,
+        )
+        is None
+    )
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="file",
+            new_type="link",
+            user_type="file",
+            old_perm=123,
+            new_perm=125,
+            user_perm=124,
+        )
+        is None
+    )
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="link",
+            new_type="file",
+            user_type="link",
+            old_perm=123,
+            new_perm=125,
+            user_perm=124,
+        )
+        is None
+    )
+
+
+def test_permission_action_changed_type_triggers_no_action() -> None:
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="dir",
+            new_type="file",
+            user_type="dir",
+            old_perm=123,
+            new_perm=125,
+            user_perm=124,
+        )
+        is None
+    )
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="file",
+            new_type="dir",
+            user_type="file",
+            old_perm=123,
+            new_perm=125,
+            user_perm=124,
+        )
+        is None
+    )
+
+
+def test_permission_action_same_target_permission_triggers_no_action() -> None:
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="file",
+            new_type="file",
+            user_type="file",
+            old_perm=123,
+            new_perm=125,
+            user_perm=125,
+        )
+        is None
+    )
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="dir",
+            new_type="dir",
+            user_type="dir",
+            old_perm=123,
+            new_perm=125,
+            user_perm=125,
+        )
+        is None
+    )
+
+
+def test_permission_action_user_and_new_changed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: True)
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="file",
+            new_type="file",
+            user_type="file",
+            old_perm=123,
+            new_perm=124,
+            user_perm=125,
+        )
+        == "keep"
+    )
+
+
+def test_permission_action_user_and_new_changed_set_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="file",
+            new_type="file",
+            user_type="file",
+            old_perm=123,
+            new_perm=124,
+            user_perm=125,
+        )
+        == "default"
+    )
+
+
+def test_permission_action_new_changed_set_default() -> None:
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="file",
+            new_type="file",
+            user_type="file",
+            old_perm=123,
+            new_perm=124,
+            user_perm=123,
+        )
+        == "default"
+    )
+
+
+def test_permission_action_user_changed_no_action() -> None:
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="file",
+            new_type="file",
+            user_type="file",
+            old_perm=123,
+            new_perm=123,
+            user_perm=124,
+        )
+        is None
+    )
+
+
+def test_permission_action_old_and_new_changed_set_to_new() -> None:
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="file",
+            new_type="file",
+            user_type="file",
+            old_perm=123,
+            new_perm=124,
+            user_perm=123,
+        )
+        == "default"
+    )
+
+
+def test_permission_action_all_changed_incl_type_ask(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: True)
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="file",
+            new_type="dir",
+            user_type="dir",
+            old_perm=123,
+            new_perm=124,
+            user_perm=125,
+        )
+        == "keep"
+    )
+
+
+def test_permission_action_all_changed_incl_type_ask_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="my/file",
+            old_type="file",
+            new_type="dir",
+            user_type="dir",
+            old_perm=123,
+            new_perm=124,
+            user_perm=125,
+        )
+        == "default"
+    )

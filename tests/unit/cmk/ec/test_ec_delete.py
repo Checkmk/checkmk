@@ -15,7 +15,7 @@ from cmk.ec.main import Event, EventStatus, StatusServer
 def test_delete_event(event_status: EventStatus, status_server: StatusServer) -> None:
     """Delete 1 event"""
     event: Event = {
-        "host": "ABC1",
+        "host": HostName("ABC1"),
         "text": "not important",
         "core_host": HostName("ABC"),
     }
@@ -33,12 +33,12 @@ def test_delete_multiple_events(event_status: EventStatus, status_server: Status
     """Delete event list"""
     events: list[Event] = [
         {
-            "host": "ABC1",
+            "host": HostName("ABC1"),
             "text": "event1 text",
             "core_host": HostName("ABC"),
         },
         {
-            "host": "ABC2",
+            "host": HostName("ABC2"),
             "text": "event2 text",
             "core_host": HostName("ABC"),
         },
@@ -60,12 +60,12 @@ def test_delete_partially_existing_multiple_events(
     """Event list with a missing ID still deletes the existing ID"""
     events: list[Event] = [
         {
-            "host": "ABC1",
+            "host": HostName("ABC1"),
             "text": "event1 text",
             "core_host": HostName("ABC"),
         },
         {
-            "host": "ABC2",
+            "host": HostName("ABC2"),
             "text": "event2 text",
             "core_host": HostName("ABC"),
         },
@@ -90,12 +90,12 @@ def test_delete_events_of_host(event_status: EventStatus, status_server: StatusS
     """Delete all events of host"""
     events: list[Event] = [
         {
-            "host": "ABC1",
+            "host": HostName("ABC1"),
             "text": "event1 text",
             "core_host": HostName("ABC"),
         },
         {
-            "host": "ABC1",
+            "host": HostName("ABC1"),
             "text": "event2 text",
             "core_host": HostName("ABC"),
         },

@@ -26,7 +26,7 @@ def test_update_event(
 ) -> None:
     """Update and acknowledge one event"""
     event: Event = {
-        "host": "host_1",
+        "host": HostName("host_1"),
         "phase": start_phase,
         "core_host": HostName("ABC"),
     }
@@ -49,7 +49,7 @@ def test_update_events_that_cant_be_acked(
 ) -> None:
     """Update and acknowledge an event when the phase is not 'ack' or 'open'"""
     event: Event = {
-        "host": "host_1",
+        "host": HostName("host_1"),
         "phase": test_phase,
         "core_host": HostName("ABC"),
     }
@@ -65,7 +65,7 @@ def test_update_multiple_evens(event_status: EventStatus, status_server: StatusS
     """Update and acknowledge multiple events"""
     events: list[Event] = [
         {
-            "host": f"host_{i}",
+            "host": HostName(f"host_{i}"),
             "phase": "open",
             "core_host": HostName("ABC"),
         }

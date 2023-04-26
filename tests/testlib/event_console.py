@@ -9,6 +9,8 @@ from typing import Any
 
 from tests.testlib.site import Site
 
+from cmk.utils.type_defs import HostName
+
 from cmk.ec.event import Event
 
 
@@ -46,7 +48,7 @@ class CMKEventConsole:
             "first": now,
             "last": now,
             "comment": "",
-            "host": "test-host",
+            "host": HostName("test-host"),
             "ipaddress": "127.0.0.1",
             "application": "",
             "pid": 0,

@@ -231,7 +231,7 @@ class ECEventContext(EventContext, total=False):
     EC_PHASE: str
     EC_PID: str
     HOSTADDRESS: str
-    HOSTALIAS: HostName
+    HOSTALIAS: str
     HOSTDOWNTIME: str
     LASTSERVICESTATEID: str
     NOTIFICATIONAUTHOR: str

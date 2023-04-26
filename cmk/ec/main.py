@@ -916,7 +916,7 @@ class EventServer(ECServerThread):
         for event in self._event_status.events():
             if not event["host_in_downtime"]:
                 continue  # only care about events created in downtime
-            host_name: HostName = event["core_host"] or ""
+            host_name = HostName("") if event["core_host"] is None else event["core_host"]
             try:
                 in_downtime = host_downtimes[host_name]
             except KeyError:
@@ -1195,7 +1195,7 @@ class EventServer(ECServerThread):
                 "first": now,
                 "last": now,
                 "comment": "",
-                "host": "",
+                "host": HostName(""),
                 "ipaddress": "",
                 "application": "",
                 "pid": 0,
@@ -1203,7 +1203,7 @@ class EventServer(ECServerThread):
                 "facility": 1,  # user
                 "match_groups": (),
                 "match_groups_syslog_application": (),
-                "core_host": "",
+                "core_host": HostName(""),
                 "host_in_downtime": False,
             }
             self._add_rule_contact_groups_to_event(rule, event)
@@ -1654,7 +1654,7 @@ class EventServer(ECServerThread):
             event["text"] = replace_groups(rule["set_text"], event["text"], match_groups)
         if "set_host" in rule:
             event["orig_host"] = event["host"]
-            event["host"] = replace_groups(rule["set_host"], event["host"], match_groups)
+            event["host"] = HostName(replace_groups(rule["set_host"], event["host"], match_groups))
         if "set_application" in rule:
             event["application"] = replace_groups(
                 rule["set_application"], event["application"], match_groups
@@ -1670,7 +1670,7 @@ class EventServer(ECServerThread):
         except Exception:
             if self._config["debug_rules"]:
                 self._logger.exception('Unable to parse host "%s"', event.get("host"))
-            event["host"] = ""
+            event["host"] = HostName("")
 
     def log_message(self, event: Event) -> None:
         try:
@@ -1855,7 +1855,7 @@ class EventServer(ECServerThread):
             "first": now,
             "last": now,
             "comment": "",
-            "host": "",
+            "host": HostName(""),
             "ipaddress": "",
             "application": "Event Console",
             "pid": 0,
@@ -2894,7 +2894,7 @@ class EventStatus:
         # Add new columns and fix broken events
         for event in self._events:
             event.setdefault("ipaddress", "")
-            event.setdefault("host", "")
+            event.setdefault("host", HostName(""))
             event.setdefault("application", "")
             event.setdefault("pid", 0)
 
@@ -3080,7 +3080,7 @@ class EventStatus:
         # the hostname was rewritten, it wouldn't match anymore here.
         host = new_event["host"]
         if "set_host" in rule:
-            host = replace_groups(rule["set_host"], host, match_groups)
+            host = HostName(replace_groups(rule["set_host"], host, match_groups))
 
         if event["host"] != host:
             if debug:

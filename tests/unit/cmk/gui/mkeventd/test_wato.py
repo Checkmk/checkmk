@@ -11,6 +11,8 @@ from pytest import MonkeyPatch
 
 from livestatus import SiteId
 
+from cmk.utils.type_defs import HostName
+
 from cmk.ec.export import ECRulePack, Event, MkpRulePackProxy
 
 from cmk.gui.mkeventd import wato as mkeventd_wato
@@ -81,7 +83,7 @@ def test_send_event(monkeypatch: MonkeyPatch) -> None:
                 facility=17,
                 priority=1,
                 sl=20,
-                host="horst",
+                host=HostName("horst"),
                 ipaddress="127.0.0.1",
                 application="Barz App",
                 text="I am a unit test",

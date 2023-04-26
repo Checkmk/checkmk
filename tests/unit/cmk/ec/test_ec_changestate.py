@@ -30,7 +30,7 @@ def test_changestate_of_nonexistent_event(status_server: StatusServer) -> None:
 def test_change_event_state(event_status: EventStatus, status_server: StatusServer) -> None:
     """Changestate 1 event."""
     event: Event = {
-        "host": "ABC1",
+        "host": HostName("ABC1"),
         "text": "not important",
         "core_host": HostName("ABC"),
     }
@@ -49,12 +49,12 @@ def test_changetestate_of_multiple_events(
     """Changestate event list."""
     events: list[Event] = [
         {
-            "host": "ABC1",
+            "host": HostName("ABC1"),
             "text": "event1 text",
             "core_host": HostName("ABC"),
         },
         {
-            "host": "ABC2",
+            "host": HostName("ABC2"),
             "text": "event2 text",
             "core_host": HostName("ABC"),
         },
@@ -77,12 +77,12 @@ def test_changestate_of_partially_existing_multiple_events(
     """Event list with a missing ID still changes the state of the existing event IDs"""
     events: list[Event] = [
         {
-            "host": "ABC1",
+            "host": HostName("ABC1"),
             "text": "event1 text",
             "core_host": HostName("ABC"),
         },
         {
-            "host": "ABC2",
+            "host": HostName("ABC2"),
             "text": "event2 text",
             "core_host": HostName("ABC"),
         },

@@ -95,7 +95,7 @@ endef
 define pack_pkg_archive
 	@mkdir -p $(PACKAGE_CACHE_BASE)
 	@echo "+++ Load or build $1 to create local build package..."
-	@if [ -z "$(NEXUS_BUILD_CACHE_URL)" ] || ! curl -sSf -o "$1" "$(NEXUS_BUILD_CACHE_URL)/$(call cache_pkg_name,$2,$3)"; then \
+	@if [ -z "$(NEXUS_BUILD_CACHE_URL)" ] || ! curl -sSf -u "$(NEXUS_USERNAME):$(NEXUS_PASSWORD)" -o "$1" "$(NEXUS_BUILD_CACHE_URL)/$(call cache_pkg_name,$2,$3)"; then \
 	    if [ -z "$(NEXUS_BUILD_CACHE_URL)" ]; then \
 	        echo "+++ Nexus URL not configured. Building..." ; \
 	    else \
@@ -122,7 +122,7 @@ endef
 # $2: Directory name produced by the "intermediate install" target
 # $3: BUILD_ID of the given package
 define upload_pkg_archive
-	if [ -n "$(NEXUS_BUILD_CACHE_URL)" ] && ! curl -sf --head "$(NEXUS_BUILD_CACHE_URL)/$(call cache_pkg_name,$2,$3)" >/dev/null; then \
+	if [ -n "$(NEXUS_BUILD_CACHE_URL)" ] && ! curl -sf -u "$(NEXUS_USERNAME):$(NEXUS_PASSWORD)" --head "$(NEXUS_BUILD_CACHE_URL)/$(call cache_pkg_name,$2,$3)" >/dev/null; then \
 	    echo "+++ Package not found on nexus. Upload package..." && \
 	    if ! curl -sSf -u "$(NEXUS_USERNAME):$(NEXUS_PASSWORD)" --upload-file "$1" "$(NEXUS_BUILD_CACHE_URL)/" ; then \
                 echo "+++ ERROR: Upload failed. Continuing with build..." ; \

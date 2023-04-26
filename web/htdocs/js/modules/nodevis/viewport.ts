@@ -315,7 +315,7 @@ export class LayeredViewport {
         // Applying layouts needlessly
         // - cost performance
         // - may cause the gui to flicker/move with certain layouts
-        this._chunks_changed = false;
+        this._chunks_changed = this._node_chunk_list.length == 0;
 
         this.data_to_show.chunks.forEach(serialized_node_chunk => {
             this._consume_chunk_rawdata(serialized_node_chunk);
@@ -324,7 +324,7 @@ export class LayeredViewport {
         this._remove_obsolete_chunks();
         this._arrange_multiple_node_chunks();
 
-        this._world.force_simulation.restart_with_alpha(0.3);
+        //this._world.force_simulation.restart_with_alpha(0.3);
 
         this.update_layers();
         this._world.layout_manager.layout_applier.apply_multiple_layouts(
@@ -443,7 +443,7 @@ export class LayeredViewport {
                     // This node already has some coordinates
                     return;
 
-                const spawn_coords = this._compute_spawn_coords(
+                const spawn_coords = this.compute_spawn_coords(
                     node_chunk,
                     node
                 );
@@ -454,7 +454,7 @@ export class LayeredViewport {
         }
     }
 
-    _compute_spawn_coords(
+    compute_spawn_coords(
         node_chunk: NodeChunk,
         node: NodevisNode
     ): {x: number; y: number} {

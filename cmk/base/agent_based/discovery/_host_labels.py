@@ -19,35 +19,54 @@ from .utils import QualifiedDiscovery
 
 __all__ = [
     "analyse_host_labels",
-    "discover_cluster_labels",
+    "analyse_cluster_labels",
     "discover_host_labels",
     "do_load_labels",
 ]
 
 
-def discover_cluster_labels(
-    nodes: Sequence[HostName],
-    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
+def analyse_cluster_labels(
+    cluster_name: HostName,
+    node_names: Sequence[HostName],
     *,
-    providers: Mapping[HostKey, Provider],
-    load_labels: bool,
-    on_error: OnError,
-) -> Sequence[HostLabel]:
-    discovered_by_node: list[Mapping[str, HostLabel]] = []
-    for node in nodes:
-        node_labels = QualifiedDiscovery[HostLabel](
-            preexisting=do_load_labels(node) if load_labels else (),
-            current=discover_host_labels(
-                node, host_label_plugins, providers=providers, on_error=on_error
-            ),
-            key=lambda hl: hl.label,
+    discovered_host_labels: Mapping[HostName, Sequence[HostLabel]],
+    existing_host_labels: Mapping[HostName, Sequence[HostLabel]],
+    clusters_existing_host_labels: Sequence[HostLabel],
+    ruleset_matcher: RulesetMatcher,
+) -> tuple[QualifiedDiscovery[HostLabel], Mapping[HostName, Sequence[HostLabel]]]:
+    kept_labels: dict[HostName, Sequence[HostLabel]] = {}
+    for node_name in node_names:
+        _node_labels, kept_node_labels = analyse_host_labels(
+            node_name,
+            discovered_host_labels=discovered_host_labels.get(node_name, ()),
+            existing_host_labels=existing_host_labels.get(node_name, ()),
+            ruleset_matcher=ruleset_matcher,
+            save_labels=False,
         )
-        discovered_by_node.append({l.name: l for l in _iter_kept_labels(node_labels)})
+        kept_labels.update(kept_node_labels)
 
-    return list(_merge_cluster_labels(discovered_by_node).values())
+    cluster_labels = QualifiedDiscovery[HostLabel](
+        preexisting=clusters_existing_host_labels,
+        current=_merge_cluster_labels_sequence(
+            nodes_labels for node in node_names if (nodes_labels := kept_labels.get(node))
+        ),
+        key=lambda hl: hl.label,
+    )
+    kept_labels[cluster_name] = list(_iter_kept_labels(cluster_labels))
+
+    return cluster_labels, kept_labels
 
 
 _TLabel = TypeVar("_TLabel")
+
+
+def _merge_cluster_labels_sequence(
+    all_node_labels: Iterable[Iterable[HostLabel]],
+) -> Sequence[HostLabel]:
+    # rigorously use HostLabels until serialization in DiscoveredHostLabelsStore and consolidate with _merge_cluster_labels...
+    return list(
+        _merge_cluster_labels([{l.name: l for l in labels} for labels in all_node_labels]).values()
+    )
 
 
 def _merge_cluster_labels(

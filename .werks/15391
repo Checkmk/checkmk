@@ -1,0 +1,18 @@
+Title: cisco_meraki_org_licenses_overview: Short service description
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1682517091
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b6
+
+The service description of the check plugin
+{{cisco_meraki_org_licenses_overview}} was very long. Now we changed it from
+{{Cisco Meraki Organisation ITEM Licenses Overview}} to
+{{Cisco Meraki Licenses ITEM}}.
+In order to use the new service descriptions you have to rediscover these
+services.
+

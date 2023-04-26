@@ -119,7 +119,7 @@ def _check_expiration_date(
 
 register.check_plugin(
     name="cisco_meraki_org_licenses_overview",
-    service_name="Cisco Meraki Organisation %s Licenses Overview",
+    service_name="Cisco Meraki Licenses %s",
     discovery_function=discover_licenses_overview,
     check_function=check_licenses_overview,
     check_ruleset_name="cisco_meraki_org_licenses_overview",

@@ -1228,21 +1228,24 @@ class LayoutingMouseEventsOverlay {
         if (!this._world.layout_manager.is_node_drag_allowed()) return;
         event.sourceEvent.stopPropagation();
         this._dragged_node = d3.select(event.sourceEvent.target);
-        const dragged_node_datum = this._dragged_node.datum();
-        if (!dragged_node_datum) return;
 
-        this._apply_drag_force(dragged_node_datum, event.x, event.y);
+        const nodevis_node = this._world.nodes_layer.get_nodevis_node_by_id(
+            this._dragged_node.datum()
+        );
+        if (!nodevis_node) return;
+
+        this._apply_drag_force(nodevis_node, event.x, event.y);
         this._drag_start_x = event.x;
         this._drag_start_y = event.y;
 
-        const use_style = dragged_node_datum.data.use_style;
+        const use_style = nodevis_node.data.use_style;
         if (use_style) {
             this._world.layout_manager.toolbar_plugin
                 .layout_style_configuration()
                 .show_style_configuration(use_style);
         } else {
             this._world.layout_manager.layout_applier._convert_node(
-                dragged_node_datum,
+                nodevis_node,
                 LayoutStyleFixed
             );
         }
@@ -1267,21 +1270,21 @@ class LayoutingMouseEventsOverlay {
         )
             return;
 
-        const dragged_node_datum = this._dragged_node.datum();
-        if (!dragged_node_datum) return;
+        const nodevis_node = this._world.nodes_layer.get_nodevis_node_by_id(
+            this._dragged_node.datum()
+        );
+        if (!nodevis_node) return;
 
-        if (dragged_node_datum.data.use_style) {
+        if (nodevis_node.data.use_style) {
             if (
-                !dragged_node_datum.data.use_style.style_config.options
+                !nodevis_node.data.use_style.style_config.options
                     .detach_from_parent
             ) {
-                dragged_node_datum.data.use_style.style_config.options.detach_from_parent =
+                nodevis_node.data.use_style.style_config.options.detach_from_parent =
                     true;
                 this._world.layout_manager.toolbar_plugin
                     .layout_style_configuration()
-                    .show_style_configuration(
-                        dragged_node_datum.data.use_style
-                    );
+                    .show_style_configuration(nodevis_node.data.use_style);
             }
         }
 
@@ -1293,17 +1296,17 @@ class LayoutingMouseEventsOverlay {
         scale = 1 / last_zoom.k;
 
         this._apply_drag_force(
-            dragged_node_datum,
+            nodevis_node,
             this._drag_start_x + delta_x * scale,
             this._drag_start_y + delta_y * scale
         );
 
         this._world.force_simulation.restart_with_alpha(0.5);
-        if (dragged_node_datum.data.use_style) {
-            dragged_node_datum.data.use_style.force_style_translation();
-            dragged_node_datum.data.use_style.translate_coords();
+        if (nodevis_node.data.use_style) {
+            nodevis_node.data.use_style.force_style_translation();
+            nodevis_node.data.use_style.translate_coords();
         }
-        compute_node_position(dragged_node_datum);
+        compute_node_position(nodevis_node);
 
         // TODO: EXPERIMENTAL, will be removed in later commit
         for (const idx in this._world.layout_manager._active_styles) {
@@ -1324,30 +1327,31 @@ class LayoutingMouseEventsOverlay {
         )
             return;
 
-        const dragged_node_datum = this._dragged_node.datum();
-        if (!dragged_node_datum) return;
+        const nodevis_node = this._world.nodes_layer.get_nodevis_node_by_id(
+            this._dragged_node.datum()
+        );
+        if (!nodevis_node) return;
 
-        if (dragged_node_datum.data.use_style) {
+        if (nodevis_node.data.use_style) {
             const new_position =
                 this._world.layout_manager.get_viewport_percentage_of_node(
-                    dragged_node_datum
+                    nodevis_node
                 );
-            dragged_node_datum.data.use_style.style_config.position =
-                new_position;
-            dragged_node_datum.data.use_style.force_style_translation();
+            nodevis_node.data.use_style.style_config.position = new_position;
+            nodevis_node.data.use_style.force_style_translation();
         }
 
         if (
-            dragged_node_datum.data.use_style &&
-            dragged_node_datum.data.use_style instanceof LayoutStyleFixed
+            nodevis_node.data.use_style &&
+            nodevis_node.data.use_style instanceof LayoutStyleFixed
         ) {
-            dragged_node_datum.data.use_style.fix_node(dragged_node_datum);
+            nodevis_node.data.use_style.fix_node(nodevis_node);
         }
 
-        delete dragged_node_datum.data.node_positioning["drag"];
+        delete nodevis_node.data.node_positioning["drag"];
         this._world.layout_manager.translate_layout();
 
-        compute_node_position(dragged_node_datum);
+        compute_node_position(nodevis_node);
         this._world.layout_manager.create_undo_step();
     }
 }

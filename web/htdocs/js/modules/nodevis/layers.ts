@@ -301,6 +301,12 @@ export class LayeredNodesLayer extends FixLayer {
         return this.node_instances[node_id];
     }
 
+    get_nodevis_node_by_id(node_id: string): NodevisNode | null {
+        const gui_node = this.get_node_by_id(node_id);
+        if (!gui_node) return null;
+        return gui_node.node;
+    }
+
     get_links_for_node(node_id: string): AbstractLink[] {
         return this._links_for_node[node_id] || [];
     }

@@ -1028,8 +1028,9 @@ class ModeEditUser(WatoMode):
         html.open_b(style=["position: relative", "top: 4px;"])
         html.write_text(" &nbsp;")
         html.icon_button(
-            "javascript:cmk.wato.randomize_secret('automation_secret', 20);",
-            _("Create random secret"),
+            "javascript:cmk.wato.randomize_secret('automation_secret', 20, '%s');"
+            % _("Copied secret to clipboard"),
+            _("Create random secret and copy secret to clipboard"),
             "random",
         )
         html.close_b()

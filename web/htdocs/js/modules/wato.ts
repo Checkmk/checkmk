@@ -4,6 +4,7 @@
 
 import $ from "jquery";
 import * as utils from "utils";
+import Swal from "sweetalert2";
 
 // ----------------------------------------------------------------------------
 // General functions for WATO
@@ -256,7 +257,7 @@ function get_effective_tags() {
     return current_tags;
 }
 
-export function randomize_secret(id: string, len: number) {
+export function randomize_secret(id: string, len: number, message: string) {
     var secret = "";
     for (var i = 0; i < len; i++) {
         var c = parseInt(String(26 * Math.random() + 64));
@@ -264,6 +265,14 @@ export function randomize_secret(id: string, len: number) {
     }
     var oInput = document.getElementById(id) as HTMLInputElement;
     oInput.value = secret;
+    navigator.clipboard.writeText(secret);
+    Swal.fire({
+        icon: "success",
+        title: message,
+        showConfirmButton: false,
+        timer: 1500,
+        width: 350,
+    });
 }
 
 export function toggle_container(id: string) {

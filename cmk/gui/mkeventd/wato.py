@@ -36,6 +36,7 @@ import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.store as store
+import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
@@ -175,7 +176,7 @@ from cmk.gui.watolib.utils import site_neutral_path
 
 from .config_domain import ConfigDomainEventConsole
 from .defines import syslog_facilities, syslog_priorities
-from .helpers import action_choices, service_levels
+from .helpers import action_choices, eventd_configuration, service_levels
 from .livestatus import execute_command
 from .permission_section import PermissionSectionEventConsole
 from .rule_matching import event_rule_matches
@@ -2360,6 +2361,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         "disabled", _("This rule is currently disabled and will not be applied")
                     )
                 elif event:
+                    event["host"] = cmk.utils.translations.translate_hostname(
+                        eventd_configuration()["hostname_translation"], event["host"]
+                    )
                     result = match_event_rule(self._rule_pack, rule, event)
                     if not isinstance(result, ec.MatchSuccess):
                         html.icon("rulenmatch", _("Rule does not match: %s") % result.reason)

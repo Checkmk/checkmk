@@ -586,11 +586,7 @@ def test_permission_action_all_changed_incl_type_ask_default(
         "etc/check_mk/conf.d/wato",
     ],
 )
-def test_permission_action_all_changed_streamline_standard_directories(
-    monkeypatch: pytest.MonkeyPatch,
-    relpath: str,
-) -> None:
-    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)
+def test_permission_action_all_changed_streamline_standard_directories(relpath: str) -> None:
     assert (
         omdlib.main.permission_action(
             site=omdlib.main.SiteContext("bye"),

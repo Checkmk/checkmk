@@ -137,10 +137,10 @@ def automation_discovery(
             host_labels = QualifiedDiscovery.empty()
 
         # Compute current state of new and existing checks
-        services = _get_host_services(
+        services = get_host_services(
             host_name,
-            config_cache,
-            providers,
+            config_cache=config_cache,
+            providers=providers,
             plugins=plugins,
             get_service_description=get_service_description,
             on_error=on_error,
@@ -177,48 +177,6 @@ def automation_discovery(
 
     result.self_total = result.self_new + result.self_kept
     return result
-
-
-def _get_host_services(
-    host_name: HostName,
-    config_cache: ConfigCache,
-    providers: Mapping[HostKey, Provider],
-    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
-    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-    on_error: OnError,
-) -> ServicesByTransition:
-    services: ServicesTable[_Transition]
-    if config_cache.is_cluster(host_name):
-        services = {
-            **_get_cluster_services(
-                host_name,
-                config_cache=config_cache,
-                providers=providers,
-                plugins=plugins,
-                get_service_description=get_service_description,
-                on_error=on_error,
-            )
-        }
-    else:
-        services = {
-            **_get_node_services(
-                config_cache,
-                host_name,
-                plugins=plugins,
-                providers=providers,
-                get_effective_host=config_cache.effective_host,
-                get_service_description=get_service_description,
-                on_error=on_error,
-            )
-        }
-
-    services.update(
-        _reclassify_disabled_items(config_cache, host_name, services, get_service_description)
-    )
-
-    # remove the ones shadowed by enforced services
-    enforced_services = config_cache.enforced_services_table(host_name)
-    return _group_by_transition({k: v for k, v in services.items() if k not in enforced_services})
 
 
 def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches

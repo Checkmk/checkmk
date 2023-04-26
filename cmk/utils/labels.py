@@ -67,6 +67,17 @@ class HostLabel(_Label):
     __slots__ = ("plugin_name",)
 
     @classmethod
+    def deserialize(cls, raw: Mapping[str, str]) -> "HostLabel":
+        return cls(
+            name=str(raw["name"]),
+            value=str(raw["value"]),
+            plugin_name=None
+            if (raw_plugin_name := raw.get("plugin_name")) is None
+            else SectionName(raw_plugin_name),
+        )
+
+    # rather use (de)serialize
+    @classmethod
     def from_dict(cls, name: str, dict_label: HostLabelValueDict) -> "HostLabel":
         value = dict_label["value"]
         assert isinstance(value, str)
@@ -85,6 +96,21 @@ class HostLabel(_Label):
         super().__init__(name, value)
         self.plugin_name: Final = plugin_name
 
+    def serialize(self) -> Mapping[str, str]:
+        return (
+            {
+                "name": self.name,
+                "value": self.value,
+            }
+            if self.plugin_name is None
+            else {
+                "name": self.name,
+                "value": self.value,
+                "plugin_name": str(self.plugin_name),
+            }
+        )
+
+    # rather use (de)serialize
     def to_dict(self) -> HostLabelValueDict:
         return {
             "value": self.value,

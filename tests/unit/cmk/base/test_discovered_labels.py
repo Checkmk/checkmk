@@ -42,6 +42,14 @@ def test_host_labels_to_dict() -> None:
     }
 
 
+def test_discovered_host_labels_serialization() -> None:
+    for hl in (
+        HostLabel("äbc", "123", SectionName("sectionname")),
+        HostLabel("äbc", "123", None),
+    ):
+        assert hl == HostLabel.deserialize(hl.serialize())
+
+
 def test_host_labels_from_dict() -> None:
     label_dict: HostLabelValueDict = {
         "value": "123",

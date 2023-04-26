@@ -309,7 +309,14 @@ class ModePatternEditor(WatoMode):
                     )
 
                     table.cell(
-                        _("State"), HTMLWriter.render_span(logwatch.level_name(state)), css=cls
+                        _("Checkmk state"),
+                        HTMLWriter.render_span(logwatch.level_name(state)),
+                        css=cls,
+                    )
+                    table.cell(
+                        _("Logwatch state"),
+                        HTMLWriter.render_span(logwatch.logwatch_level_name(state)),
+                        css=cls,
                     )
                     table.cell(_("Pattern"), HTMLWriter.render_tt(pattern))
                     table.cell(_("Comment"), comment)

@@ -38,8 +38,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.node_vis_lib import BILayoutManagement
 from cmk.gui.nodevis_lib import (
+    BILayoutManagement,
     MKGrowthExceeded,
     MKGrowthInterruption,
     topology_configs_dir,
@@ -820,8 +820,11 @@ class Topology:
             return []
         return self._known_nodes[hostname]["outgoing"]
 
-    def is_growth_root(self, hostname: str) -> bool:
-        return hostname in self._settings.frontend.growth_root_nodes
+    def is_growth_root(self, hostname: HostName) -> bool:
+        return (
+            hostname in self._settings.frontend.growth_root_nodes
+            or hostname in self._hostnames_from_filters
+        )
 
     def is_growth_continue(self, hostname: str) -> bool:
         return hostname in self._settings.frontend.growth_continue_nodes

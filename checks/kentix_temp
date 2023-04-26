@@ -3,29 +3,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping
+from typing import NamedTuple
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
+from cmk.base.plugins.agent_based.utils.temperature import TempParamType
 
 
-def inventory_kentix_temp(info):
-    if info[0][0].startswith("2.1.1"):
-        return [("LAN", {})]
-    return [("Rack", {})]
+class Sensor(NamedTuple):
+    reading: float
+    dev_levels: tuple[float, float]
+    dev_levels_lower: tuple[float, float]
 
 
-def check_kentix_temp(item, params, info):
-    info[0][0] = info[0][0].split(".", 3)[-1]
-    value, lower_warn, upper_warn, _alarm, _text = info[0]
-    temp = float(value) / 10
+Section = Mapping[str, Sensor]
 
-    return check_temperature(
-        temp,
+
+def parse_kentix_temp(string_table: StringTable) -> Section:
+    section = {}
+    for oid_value, lower_warn, upper_warn, _alarm, _text in string_table:
+        type_, _one, _one, value = oid_value.split(".", 3)
+        item = "LAN" if type_ == "2" else "Rack"
+        section[item] = Sensor(
+            reading=float(value) / 10,
+            dev_levels=(float(upper_warn), float(upper_warn)),
+            dev_levels_lower=(float(lower_warn), float(lower_warn)),
+        )
+    return section
+
+
+def inventory_kentix_temp(section: Section) -> Iterable[tuple[str, dict]]:
+    yield from ((item, {}) for item in section)
+
+
+def check_kentix_temp(
+    item: str, params: TempParamType, section: Section
+) -> Iterable[tuple[int, str, list]]:
+    if (sensor := section.get(item)) is None:
+        return
+
+    yield check_temperature(
+        sensor.reading,
         params,
         "kentix_temp_%s" % item,
-        dev_levels=(float(upper_warn), float(upper_warn)),
-        dev_levels_lower=(float(lower_warn), float(lower_warn)),
+        dev_levels=sensor.dev_levels,
+        dev_levels_lower=sensor.dev_levels_lower,
     )
 
 

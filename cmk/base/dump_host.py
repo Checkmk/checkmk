@@ -120,9 +120,11 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         addresses = ipaddress
     else:
         try:
-            secondary = _ip_address_for_dump_host(
-                hostname,
-                family=config_cache.default_address_family(hostname),
+            secondary = str(
+                _ip_address_for_dump_host(
+                    hostname,
+                    family=config_cache.default_address_family(hostname),
+                )
             )
         except Exception:
             secondary = "X.X.X.X"

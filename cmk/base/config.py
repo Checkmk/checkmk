@@ -1950,7 +1950,9 @@ def lookup_mgmt_board_ip_address(
 ) -> HostAddress | None:
     mgmt_address: Final = config_cache.management_address(host_name)
     try:
-        mgmt_ipa = None if mgmt_address is None else HostAddress(ipaddress.ip_address(mgmt_address))
+        mgmt_ipa = (
+            None if mgmt_address is None else HostAddress(str(ipaddress.ip_address(mgmt_address)))
+        )
     except (ValueError, TypeError):
         mgmt_ipa = None
 

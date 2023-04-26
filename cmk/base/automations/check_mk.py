@@ -1369,6 +1369,7 @@ class AutomationDiagHost(Automation):
     ) -> DiagHostResult:
         hostname = HostName(args[0])
         test, ipaddress, snmp_community = args[1:4]
+        ipaddress = HostAddress(ipaddress)
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         config_cache = config.get_config_cache()
@@ -1817,7 +1818,7 @@ class AutomationUpdateDNSCache(Automation):
                 configured_ipv4_addresses=config.ipaddresses,
                 configured_ipv6_addresses=config.ipv6addresses,
                 simulation_mode=config.simulation_mode,
-                override_dns=config.fake_dns,
+                override_dns=HostAddress(config.fake_dns) if config.fake_dns is not None else None,
             )
         )
 

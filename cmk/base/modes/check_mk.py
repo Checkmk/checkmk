@@ -154,7 +154,7 @@ modes.register_general_option(
 )
 
 
-def option_fake_dns(a: str) -> None:
+def option_fake_dns(a: HostAddress) -> None:
     ip_lookup.enforce_fake_dns(a)
 
 

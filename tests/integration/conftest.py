@@ -86,3 +86,9 @@ def clients(site: Site) -> ClientRegistry:
     return get_client_registry(
         rq, f"{site.http_proto}://{site.http_address}:{site.apache_port}/{site.id}/check_mk/api/1.0"
     )
+
+
+@pytest.fixture()
+def skip_in_raw_edition(site: Site) -> None:
+    if site.version.is_raw_edition():
+        pytest.skip("Not relevant in raw edition")

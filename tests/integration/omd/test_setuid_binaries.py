@@ -11,8 +11,6 @@ import pytest
 
 from tests.testlib.site import Site
 
-from cmk.utils import version as cmk_version
-
 
 @pytest.mark.parametrize(
     "rel_path,expected_capability",
@@ -20,19 +18,14 @@ from cmk.utils import version as cmk_version
         ("bin/mkeventd_open514", "cap_net_bind_service=ep"),
         ("lib/nagios/plugins/check_icmp", "cap_net_raw=ep"),
         ("lib/nagios/plugins/check_dhcp", "cap_net_bind_service,cap_net_raw=ep"),
-        pytest.param(
-            "lib/cmc/icmpsender",
-            "cap_net_raw=ep",
-            marks=pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No cmc in raw edition"),
-        ),
-        pytest.param(
-            "lib/cmc/icmpreceiver",
-            "cap_net_raw=ep",
-            marks=pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No cmc in raw edition"),
-        ),
+        ("lib/cmc/icmpsender", "cap_net_raw=ep"),
+        ("lib/cmc/icmpreceiver", "cap_net_raw=ep"),
     ],
 )
 def test_binary_capability(site: Site, rel_path: str, expected_capability: str) -> None:
+    if rel_path in ("lib/cmc/icmpreceiver", "lib/cmc/icmpsender") and site.version.is_raw_edition():
+        pytest.skip("No cmc in raw edition")
+
     path = site.path(rel_path)
     assert os.path.exists(path)
 

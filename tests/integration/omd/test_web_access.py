@@ -8,8 +8,6 @@ import pytest
 from tests.testlib import CMKWebSession
 from tests.testlib.site import Site
 
-from cmk.utils import version as cmk_version
-
 
 def test_www_dir(site: Site) -> None:
     web = CMKWebSession(site)
@@ -72,7 +70,7 @@ def test_cmk_automation(site: Site) -> None:
     assert response.text == "Missing secret for automation command."
 
 
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="agent deployment not supported on CRE")
+@pytest.mark.usefixtures("skip_in_raw_edition")
 def test_cmk_deploy_agent(site: Site) -> None:
     web = CMKWebSession(site)
     response = web.get("/%s/check_mk/deploy_agent.py" % site.id)

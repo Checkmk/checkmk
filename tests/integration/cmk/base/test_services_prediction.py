@@ -68,8 +68,7 @@ custom_checks = [
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
-@pytest.mark.usefixtures("cfg_setup")
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
+@pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
 @pytest.mark.parametrize(
     "utcdate, timezone, period, result",
     [
@@ -138,8 +137,7 @@ def test_get_rrd_data(
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
-@pytest.mark.usefixtures("cfg_setup")
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
+@pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
 @pytest.mark.parametrize(
     "max_entries, result",
     [(400, (180, 401)), (20, (3600, 21)), (50, (1800, 41)), (1000, (120, 600)), (1200, (60, 1200))],
@@ -161,8 +159,7 @@ def test_get_rrd_data_point_max(site: Site, max_entries: int, result: tuple[int,
     assert (timeseries.step, len(timeseries.values)) == result
 
 
-@pytest.mark.usefixtures("cfg_setup")
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
+@pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
 @pytest.mark.parametrize(
     "utcdate, timezone, params, reference",
     [
@@ -459,8 +456,7 @@ def _load_expected_result(path: Path) -> object:
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
-@pytest.mark.usefixtures("cfg_setup")
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
+@pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
 @pytest.mark.parametrize(
     "utcdate, timezone, params",
     [
@@ -520,8 +516,7 @@ def test_calculate_data_for_prediction(
             assert getattr(data_for_pred, key) == expected_reference[key]
 
 
-@pytest.mark.usefixtures("cfg_setup")
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
+@pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
 @pytest.mark.parametrize(
     "timerange, result",
     [

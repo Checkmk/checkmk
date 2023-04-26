@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+from collections.abc import Sequence
 from typing import Any
 
 from livestatus import SiteId
@@ -45,3 +47,11 @@ class SiteChanges(ABCAppendStore[ChangeSpec]):
 
     def clear(self) -> None:
         self._path.unlink(missing_ok=True)
+
+    @staticmethod
+    def to_json(entries: Sequence[ChangeSpec]) -> str:
+        return json.dumps([SiteChanges._serialize(entry) for entry in entries])
+
+    @staticmethod
+    def from_json(raw: str) -> Sequence[ChangeSpec]:
+        return [SiteChanges._deserialize(entry) for entry in json.loads(raw)]

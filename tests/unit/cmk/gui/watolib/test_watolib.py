@@ -61,7 +61,8 @@ def test_registered_automation_commands() -> None:
         "checkmk-remote-automation-get-status",
         "discovered-host-label-sync",
         "remove-tls-registration",
-        "get-audit-logs",
+        "sync-remote-site",
+        "clear-site-changes",
         "hosts-for-auto-removal",
         "rename-hosts-uuid-link",
     ]

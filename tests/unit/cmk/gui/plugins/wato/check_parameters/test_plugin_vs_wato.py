@@ -278,6 +278,7 @@ class ErrorReporter:
         ("discovery", "inventory_heartbeat_crm_rules"),
         ("discovery", "inventory_sap_values"),
         ("discovery", "inventory_solaris_services_rules"),
+        ("discovery", "inventory_windows_tasks_rules"),
         ("discovery", "oracle_performance_discovery"),
         ("discovery", "sap_value_groups"),
         ("inventory", "active_checks:cmk_inv"),

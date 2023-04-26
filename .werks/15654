@@ -1,0 +1,18 @@
+Title: windows_tasks: allow discovery to decide if disabled tasks are included or not
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1682517205
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p29
+
+The Windows Tasks rule allowed the user to map 'not enabled' tasks to a specific state.
+This rule also allowed to target tasks which switched from an 'enabled' to a 'disabled' state
+between check cycles. However, tasks which were 'disabled' during discovery were previously
+filtered out and could therefore not benefit from this rule.
+
+This led to confusion as to what group was targeted by the specification 'not enabled'. This
+werk, therefore, introduces an appropriate discovery rule which allows the user to control
+whether 'disabled' tasks, at the point of discovery, are supposed to be monitored or not.

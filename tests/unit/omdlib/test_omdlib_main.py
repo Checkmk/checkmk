@@ -571,3 +571,37 @@ def test_permission_action_all_changed_incl_type_ask_default(
         )
         == "default"
     )
+
+
+# In 2.2 we removed world permissions from all the skel files. Some sites
+# had permissions that were different from previous defaults, resulting in
+# repeated questions to users which they should not be asked. See CMK-12090.
+@pytest.mark.parametrize(
+    "relpath",
+    [
+        "local/share/nagvis/htdocs/userfiles/images/maps",
+        "local/share/nagvis/htdocs/userfiles/images/shapes",
+        "etc/check_mk/multisite.d",
+        "etc/check_mk/conf.d",
+        "etc/check_mk/conf.d/wato",
+    ],
+)
+def test_permission_action_all_changed_streamline_standard_directories(
+    monkeypatch: pytest.MonkeyPatch,
+    relpath: str,
+) -> None:
+    monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)
+    assert (
+        omdlib.main.permission_action(
+            site=omdlib.main.SiteContext("bye"),
+            conflict_mode="ask",
+            relpath=relpath,
+            old_type="dir",
+            new_type="dir",
+            user_type="dir",
+            old_perm=int(0o775),
+            new_perm=int(0o770),
+            user_perm=int(0o750),
+        )
+        == "default"
+    )

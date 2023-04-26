@@ -1,0 +1,14 @@
+Title: solaris: Fix cleanup of temporary statgrab files
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1682515083
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Solaris Checkmk agent creates a temporary file /tmp/statgrab.XYZ where XYZ is
+the process id. This file was not always cleaned up.
+

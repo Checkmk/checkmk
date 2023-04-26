@@ -40,8 +40,9 @@ export class AbstractLink {
         switch (this._line_config.style) {
             case "straight": {
                 this._selection = selection
-                    .append("line")
-                    .classed("link_element", true)
+                    .selectAll("line")
+                    .data([this.id()])
+                    .join("line")
                     .attr("marker-end", "url(#triangle)")
                     .attr("stroke-width", function (d) {
                         return Math.max(1, 2 - d.depth);
@@ -51,8 +52,9 @@ export class AbstractLink {
             }
             default: {
                 this._selection = selection
-                    .append("path")
-                    .classed("link_element", true)
+                    .selectAll("path")
+                    .data([this.id()])
+                    .join("path")
                     .attr("fill", "none")
                     .attr("stroke-width", 1)
                     .style("stroke", this._color());

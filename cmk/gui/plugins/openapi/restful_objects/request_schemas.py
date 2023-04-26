@@ -605,7 +605,7 @@ class CreateDowntimeBase(BaseSchema):
     duration = fields.Integer(
         required=False,
         description=param_description(schedule_host_downtime.__doc__, "duration"),
-        example=3600,
+        example=60,
         load_default=0,
     )
     comment = fields.String(required=False, example="Security updates")
@@ -634,14 +634,14 @@ SERVICE_DESCRIPTION_FIELD = fields.String(required=False, example="CPU utilizati
 HOST_DURATION = fields.Integer(
     required=False,
     description=param_description(schedule_host_downtime.__doc__, "duration"),
-    example=3600,
+    example=60,
     load_default=0,
 )
 
 SERVICE_DURATION = fields.Integer(
     required=False,
     description=param_description(schedule_service_downtime.__doc__, "duration"),
-    example=3600,
+    example=60,
     load_default=0,
 )
 
@@ -670,7 +670,7 @@ class CreateServiceDowntime(CreateServiceDowntimeBase):
     duration = fields.Integer(
         required=False,
         description=param_description(schedule_service_downtime.__doc__, "duration"),
-        example=3600,
+        example=60,
         load_default=0,
     )
 
@@ -1170,7 +1170,7 @@ class IdleOption(BaseSchema):
         required=False,
         description="The duration in seconds of the individual idle timeout if individual is "
         "selected as idle timeout option.",
-        example=3600,
+        example=60,
         load_default=3600,
     )
 

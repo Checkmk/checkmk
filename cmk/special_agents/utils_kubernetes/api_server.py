@@ -9,10 +9,8 @@ import logging
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal
 
 import requests
-import urllib3
 from kubernetes import client  # type: ignore[import]
 from pydantic import parse_obj_as
 
@@ -106,35 +104,12 @@ class ClientAppsAPI:
         ).items
 
 
-@dataclass
-class RawAPIResponse:
-    response: str
-    status_code: int
-    headers: dict[str, str]
-
-
 class RawAPI:
-    def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
-        self.timeout = timeout
-        self._api_client = api_client
-
-    def _request(
-        self,
-        method: Literal["GET", "POST", "PUT", "OPTIONS", "DELETE"],
-        resource_path: str,
-    ) -> RawAPIResponse:
-        # Found the auth_settings here:
-        # https://github.com/kubernetes-client/python/issues/528
-        response, status_code, headers = self._api_client.call_api(
-            resource_path,
-            method,
-            auth_settings=["BearerToken"],
-            _request_timeout=self.timeout,
-            _preload_content=False,
-        )
-        return RawAPIResponse(
-            response=response.data.decode("utf-8"), status_code=status_code, headers=headers
-        )
+    def __init__(
+        self, client_config: query.APISessionConfig, request_client: requests.Session
+    ) -> None:
+        self._config = client_config
+        self._client = request_client
 
 
 def send_request(
@@ -156,16 +131,21 @@ class CoreAPI(RawAPI):
     """
 
     def query_raw_version(self) -> str:
-        return self._request("GET", "/version").response
+        request = requests.Request("GET", self._config.url("/version"))
+        return send_request(self._config, self._client, request).text
 
     def query_kubelet_metrics(self, node_name: str) -> str:
+        request = requests.Request(
+            "GET", self._config.url(f"/api/v1/nodes/{node_name}/proxy/metrics")
+        )
         try:
-            return self._request("GET", f"/api/v1/nodes/{node_name}/proxy/metrics").response
-        except (urllib3.exceptions.HTTPError, client.ApiException):
+            return send_request(self._config, self._client, request).text
+        except requests.RequestException:
             return ""
 
     def query_raw_nodes(self) -> JSONNodeList:
-        return json.loads(self._request("GET", "/api/v1/nodes").response)
+        request = requests.Request("GET", self._config.url("/api/v1/nodes"))
+        return send_request(self._config, self._client, request).json()
 
     def query_api_health(self) -> api.APIHealth:
         # https://kubernetes.io/docs/reference/using-api/health-checks/
@@ -174,22 +154,13 @@ class CoreAPI(RawAPI):
     def query_kubelet_health(self, node_name: str) -> api.HealthZ:
         return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
 
-    def _get_healthz(self, url: str) -> api.HealthZ:
-        try:
-            response = self._request("GET", url)
-        except client.rest.ApiException as e:
-            status_code, r = e.status, e.body
-        status_code, r = response.status_code, response.response
-        return api.HealthZ(status_code=status_code, response=r)
+    def _get_healthz(self, resource_path: str) -> api.HealthZ:
+        request = requests.Request("GET", self._config.url(resource_path))
+        response = send_request(self._config, self._client, request)
+        return api.HealthZ(status_code=response.status_code, response=response.text)
 
 
-class AppsAPI:
-    def __init__(
-        self, client_config: query.APISessionConfig, request_client: requests.Session
-    ) -> None:
-        self._config = client_config
-        self._client = request_client
-
+class AppsAPI(RawAPI):
     def query_raw_statefulsets(self) -> JSONStatefulSetList:
         request = requests.Request("GET", self._config.url("/apis/apps/v1/statefulsets"))
         return send_request(self._config, self._client, request).json()
@@ -561,7 +532,7 @@ def from_kubernetes(
     client_core_api = ClientCoreAPI(api_client, client_config.requests_timeout())
     client_apps_api = ClientAppsAPI(api_client, client_config.requests_timeout())
 
-    core_api = CoreAPI(api_client, client_config.requests_timeout())
+    core_api = CoreAPI(client_config, api_client_requests)
     apps_api = AppsAPI(client_config, api_client_requests)
     raw_version = core_api.query_raw_version()
     version = version_from_json(raw_version)

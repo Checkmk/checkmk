@@ -1203,7 +1203,47 @@ def update_file(  # pylint: disable=too-many-branches
     user_perm = get_file_permissions(user_path)
 
     # Fix permissions not for links and only if the new type is as expected
-    # and the current permissions are not as the should be
+    # and the current permissions are not as they should be
+    what = permission_action(
+        site=site,
+        conflict_mode=conflict_mode,
+        relpath=relpath,
+        old_type=old_type,
+        new_type=new_type,
+        user_type=user_type,
+        old_perm=old_perm,
+        new_perm=new_perm,
+        user_perm=user_perm,
+    )
+
+    if what == "keep":
+        sys.stdout.write(StateMarkers.warn + f" Permissions    {user_perm:04o} {fn} (unchanged)\n")
+    elif what == "default":
+        try:
+            os.chmod(user_path, new_perm)
+            sys.stdout.write(
+                StateMarkers.good + f" Permissions    {user_perm:04o} -> {new_perm:04o} {fn}\n"
+            )
+        except Exception as e:
+            sys.stdout.write(
+                StateMarkers.error
+                + " Permission:    cannot change %04o -> %04o %s: %s\n"
+                % (user_perm, new_perm, fn, e)
+            )
+
+
+def permission_action(
+    *,
+    site: SiteContext,
+    conflict_mode: str,
+    relpath: str,
+    old_type: str | None,
+    new_type: str | None,
+    user_type: str | None,
+    old_perm: int,
+    new_perm: int,
+    user_perm: int,
+) -> str | None:
     what = None
     if new_type != "link" and user_type == new_type and user_perm != new_perm:
 
@@ -1239,7 +1279,7 @@ def update_file(  # pylint: disable=too-many-branches
                 # removed (Werk #15062). This results in a lot of questions for
                 # the user. If the user has not adjusted the permissions from
                 # the previous default, let's not ask so much questions, just
-                # adhust it, a info that the permissions were adjusted will be
+                # adjust it, a info that the permissions were adjusted will be
                 # logged anyways
                 what = "default"
             elif user_confirms(
@@ -1259,22 +1299,7 @@ def update_file(  # pylint: disable=too-many-branches
             else:
                 what = "default"
 
-        if what == "keep":
-            sys.stdout.write(
-                StateMarkers.warn + f" Permissions    {user_perm:04o} {fn} (unchanged)\n"
-            )
-        elif what == "default":
-            try:
-                os.chmod(user_path, new_perm)
-                sys.stdout.write(
-                    StateMarkers.good + f" Permissions    {user_perm:04o} -> {new_perm:04o} {fn}\n"
-                )
-            except Exception as e:
-                sys.stdout.write(
-                    StateMarkers.error
-                    + " Permission:    cannot change %04o -> %04o %s: %s\n"
-                    % (user_perm, new_perm, fn, e)
-                )
+    return what
 
 
 def filetype(p: str) -> str | None:

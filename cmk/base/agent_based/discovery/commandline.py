@@ -13,9 +13,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
-from cmk.utils.labels import HostLabel
 from cmk.utils.log import console, section
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.checkers import (
@@ -40,13 +38,7 @@ import cmk.base.core
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
-from ._host_labels import (
-    analyse_host_labels,
-    discover_cluster_labels,
-    discover_host_labels,
-    do_load_labels,
-)
-from .utils import QualifiedDiscovery
+from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
 
 __all__ = ["commandline_discovery"]
 
@@ -71,10 +63,10 @@ def commandline_discovery(
     The list of hostnames is already prepared by the main code.
     If it is empty then we use all hosts and switch to using cache files.
     """
-    host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
+    non_cluster_host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
 
     # Now loop through all hosts
-    for host_name in sorted(host_names):
+    for host_name in sorted(non_cluster_host_names):
         section.section_begin(host_name)
         try:
             fetched = fetcher(host_name, ip_address=None)
@@ -82,7 +74,7 @@ def commandline_discovery(
             store_piggybacked_sections(host_sections)
             providers = make_providers(host_sections, section_plugins)
             _commandline_discovery_on_host(
-                host_name=host_name,
+                real_host_name=host_name,
                 host_label_plugins=host_label_plugins,
                 config_cache=config_cache,
                 providers=providers,
@@ -139,47 +131,9 @@ def _preprocess_hostnames(
     return node_names
 
 
-def _analyse_node_labels(
-    host_name: HostName,
-    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
-    *,
-    config_cache: ConfigCache,
-    providers: Mapping[HostKey, Provider],
-    ruleset_matcher: RulesetMatcher,
-    load_labels: bool,
-    save_labels: bool,
-    on_error: OnError,
-) -> QualifiedDiscovery[HostLabel]:
-    """Discovery and analysis for hosts and clusters."""
-    if config_cache.is_cluster(host_name):
-        nodes = config_cache.nodes_of(host_name)
-        if not nodes:
-            return QualifiedDiscovery.empty()
-
-        discovered_host_labels = discover_cluster_labels(
-            nodes,
-            host_label_plugins,
-            providers=providers,
-            load_labels=load_labels,
-            save_labels=save_labels,
-            on_error=on_error,
-        )
-    else:
-        discovered_host_labels = discover_host_labels(
-            host_name, host_label_plugins, providers=providers, on_error=on_error
-        )
-    return analyse_host_labels(
-        host_name,
-        discovered_host_labels=discovered_host_labels,
-        existing_host_labels=do_load_labels(host_name) if load_labels else (),
-        ruleset_matcher=ruleset_matcher,
-        save_labels=save_labels,
-    )
-
-
 def _commandline_discovery_on_host(
     *,
-    host_name: HostName,
+    real_host_name: HostName,
     host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
@@ -192,15 +146,14 @@ def _commandline_discovery_on_host(
 ) -> None:
     section.section_step("Analyse discovered host labels")
 
-    host_labels = _analyse_node_labels(
-        host_name,
-        host_label_plugins,
-        config_cache=config_cache,
-        providers=providers,
+    host_labels = analyse_host_labels(
+        real_host_name,
+        discovered_host_labels=discover_host_labels(
+            real_host_name, host_label_plugins, providers=providers, on_error=on_error
+        ),
+        existing_host_labels=do_load_labels(real_host_name) if load_labels else (),
         ruleset_matcher=config_cache.ruleset_matcher,
-        load_labels=load_labels,
         save_labels=True,
-        on_error=on_error,
     )
 
     count = len(host_labels.new) if host_labels.new else ("no new" if only_new else "no")
@@ -213,7 +166,7 @@ def _commandline_discovery_on_host(
 
     service_result = analyse_discovered_services(
         config_cache,
-        host_name,
+        real_host_name,
         providers=providers,
         plugins=plugins,
         run_plugin_names=run_plugin_names,
@@ -224,7 +177,7 @@ def _commandline_discovery_on_host(
 
     # TODO (mo): for the labels the corresponding code is in _host_labels.
     # We should put the persisting in one place.
-    AutochecksStore(host_name).write(service_result.present)
+    AutochecksStore(real_host_name).write(service_result.present)
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
     for name, count in sorted(new_per_plugin.items()):

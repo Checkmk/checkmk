@@ -58,9 +58,16 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.crypto.password_hashing import is_insecure_hash
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.license_usage.samples import hash_site_id, LicenseUsageHistoryDump
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import unescape
-from cmk.utils.store import load_from_mk_file, ObjectStore, save_mk_file
+from cmk.utils.store import (
+    load_bytes_from_file,
+    load_from_mk_file,
+    ObjectStore,
+    save_bytes_to_file,
+    save_mk_file,
+)
 from cmk.utils.type_defs import (
     BakeryTargetFolder,
     CheckPluginName,
@@ -367,6 +374,7 @@ class UpdateConfig:
             (self._update_bakery, "Update bakery links and settings"),
             (self._remove_old_custom_logos, "Remove old custom logos (CME)"),
             (self._fix_agent_receiver_symlinks, "Fix registered hosts symlinks"),
+            (self._update_license_usage_history, "Update license usage history"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -2018,6 +2026,17 @@ The following users in your current installation will become incompatible with C
             if link.target.is_absolute():
                 link.unlink()
                 link_manager.create_link(link.hostname, link.uuid, create_target_dir=False)
+
+    def _update_license_usage_history(self) -> None:
+        """Add site hash during license usage report update. Previously it was only added while submission"""
+        history_filepath = cmk.utils.paths.license_usage_dir.joinpath("history.json")
+        save_bytes_to_file(
+            history_filepath,
+            LicenseUsageHistoryDump.deserialize(
+                load_bytes_from_file(history_filepath, default=b"{}"),
+                hash_site_id(cmk.utils.site.omd_site()),
+            ).serialize(),
+        )
 
 
 class PasswordSanitizer:

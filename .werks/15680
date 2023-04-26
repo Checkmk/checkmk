@@ -1,0 +1,16 @@
+Title: downtimes: duration field changed from seconds to minutes
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1682483271
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue with the downtimes endpoint.  When
+creating a downtime, the duration field was accepting an integer
+that represented the downtime in seconds. The problem was that
+the gui shows this in minutes. The fix changes the duration
+field to accpet integers that represent minutes instead.
+

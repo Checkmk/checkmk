@@ -230,7 +230,7 @@ def schedule_service_downtime(  # type: ignore[no-untyped-def]
             triggered by the other downtime.
 
         duration:
-            Duration in seconds. When set, the downtime does not begin automatically at a nominated
+            Duration in minutes. When set, the downtime does not begin automatically at a nominated
             time, but when a real problem status appears for the service. Consequencely, the
             start_time/end_time is only the time window in which the scheduled downtime can begin.
 
@@ -266,7 +266,7 @@ def schedule_service_downtime(  # type: ignore[no-untyped-def]
         ...             _start_time,
         ...             _end_time,
         ...             recur="day_of_month",
-        ...             duration=120,
+        ...             duration=2,
         ...             comment="Boom")
 
     """
@@ -343,7 +343,7 @@ def schedule_servicegroup_service_downtime(  # type: ignore[no-untyped-def]
             triggered by the other downtime.
 
         duration:
-            Duration in seconds. When set, the downtime does not begin automatically at a nominated
+            Duration in minutes. When set, the downtime does not begin automatically at a nominated
             time, but when a real problem status appears for the host. Consequently, the
             start_time/end_time is only the time window in which the scheduled downtime can begin.
 
@@ -444,7 +444,7 @@ def schedule_hostgroup_host_downtime(  # type: ignore[no-untyped-def]
             triggered by the other downtime.
 
         duration:
-            Duration in seconds. When set, the downtime does not begin automatically at a nominated
+            Duration in minutes. When set, the downtime does not begin automatically at a nominated
             time, but when a real problem status appears for the host. Consequently, the
             start_time/end_time is only the time window in which the scheduled downtime can begin.
 
@@ -569,7 +569,7 @@ def schedule_host_downtime(  # type: ignore[no-untyped-def]
             triggered by the other downtime.
 
         duration:
-            Duration in seconds. When set, the downtime does not begin automatically at a nominated
+            Duration in minutes. When set, the downtime does not begin automatically at a nominated
             time, but when a real problem status appears for the host. Consequencely, the
             start_time/end_time is only the time window in which the scheduled downtime can begin.
 
@@ -601,7 +601,7 @@ def schedule_host_downtime(  # type: ignore[no-untyped-def]
         ...             _start_time,
         ...             _end_time,
         ...             recur="day_of_month",
-        ...             duration=120,
+        ...             duration=2,
         ...             comment="Boom")
 
     """
@@ -733,7 +733,7 @@ def _schedule_downtime(  # type: ignore[no-untyped-def]
             to_timestamp(end_time),
             recur_mode,
             trigger_id,
-            duration,
+            60 * duration,  # duration is in minutes but livestatus is expecting seconds.,
             user_id,
             comment.replace("\n", ""),
         ],

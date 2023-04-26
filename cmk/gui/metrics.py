@@ -502,10 +502,17 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             )
 
     def get_stack(self) -> MetricRendererStack:
-        value, _unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
+        value, unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return [
             self.get_stack_from_values(
-                value, self._perfometer["half_value"], self._perfometer["exponent"], color
+                value,
+                *self.estimate_parameters_for_converted_units(
+                    unit.get(
+                        "conversion",
+                        lambda v: v,
+                    )
+                ),
+                color,
             )
         ]
 
@@ -526,6 +533,11 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         base: int | float,
         color: str,
     ) -> list[tuple[int | float, str]]:
+        """
+        half_value: if value == half_value, the perfometer is filled by 50%
+        base: if we multiply value by base, the perfometer is filled by another 10%, unless we hit
+        the min/max cutoffs
+        """
         # Negative values are printed like positive ones (e.g. time offset)
         value = abs(float(value))
         if value == 0.0:
@@ -537,6 +549,38 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             pos = min(max(2, pos), 98)
 
         return [(pos, color), (100 - pos, get_themed_perfometer_bg_color())]
+
+    def estimate_parameters_for_converted_units(
+        self, conversion: Callable[[float], float]
+    ) -> tuple[float, float]:
+        """
+        Estimate a new half_value (50%-value) and a new exponent (10%-factor) for converted units.
+
+        Regarding the 50%-value, we can simply apply the conversion. However, regarding the 10%-
+        factor, it's certainly wrong to simply directly apply the conversion. For example, doing
+        that for the conversion degree celsius -> degree fahrenheit would yield a 10%-factor of 28.5
+        for degree fahrenheit (compared to 1.2 for degree celsius).
+
+        Instead, we estimate a new factor as follows:
+        h_50: 50%-value for original units
+        f_10: 10%-factor for original units
+        c: conversion function
+        h_50_c = c(h_50): 50%-value for converted units aka. converted 50%-value
+        f_10_c: 10%-factor for converted units
+
+        f_10_c = c(h_50 * f_10) / h_50_c
+                 --------------
+                 converted 60%-value
+                 -----------------------
+                 ratio of converted 60%- to converted 50%-value
+        """
+        h_50 = self._perfometer["half_value"]
+        f_10 = self._perfometer["exponent"]
+        h_50_c = conversion(self._perfometer["half_value"])
+        return (
+            h_50_c,
+            conversion(h_50 * f_10) / h_50_c,
+        )
 
 
 @renderer_registry.register

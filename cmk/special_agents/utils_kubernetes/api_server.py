@@ -7,6 +7,7 @@ import itertools
 import json
 import logging
 import re
+import typing
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
@@ -46,62 +47,80 @@ LOWEST_FUNCTIONING_VERSION = min(SUPPORTED_VERSIONS)
 SUPPORTED_VERSIONS_DISPLAY = ", ".join(f"v{major}.{minor}" for major, minor in SUPPORTED_VERSIONS)
 
 
-class ClientBatchAPI:
-    def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
-        self.connection = client.BatchV1Api(api_client)
-        self.timeout = timeout
+class FakeResponse:
+    def __init__(self, response: requests.Response):
+        self.data: str = response.text
 
+
+class ClientAPI:
+    def __init__(
+        self,
+        client_config: query.APISessionConfig,
+        request_client: requests.Session,
+        api_client: client.ApiClient,
+    ) -> None:
+        self._config = client_config
+        self._client = request_client
+        self._api_client = api_client
+
+    def _deserialize(self, response_type: str, data: requests.Response) -> typing.Any:
+        return self._api_client.deserialize(FakeResponse(data), response_type)
+
+
+class ClientBatchAPI(ClientAPI):
     def query_raw_cron_jobs(self) -> Sequence[client.V1CronJob]:
-        return self.connection.list_cron_job_for_all_namespaces(_request_timeout=self.timeout).items
+        request = requests.Request("GET", self._config.url("/apis/batch/v1/cronjobs"))
+        response = send_request(self._config, self._client, request)
+        return self._deserialize("V1CronJobList", response).items
 
     def query_raw_jobs(self) -> Sequence[client.V1Job]:
-        return self.connection.list_job_for_all_namespaces(_request_timeout=self.timeout).items
+        request = requests.Request("GET", self._config.url("/apis/batch/v1/jobs"))
+        response = send_request(self._config, self._client, request)
+        return self._deserialize("V1JobList", response).items
 
 
-class ClientCoreAPI:
-    def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
-        self.connection = client.CoreV1Api(api_client)
-        self.timeout = timeout
-
+class ClientCoreAPI(ClientAPI):
     def query_raw_pods(self) -> Sequence[client.V1Pod]:
-        return self.connection.list_pod_for_all_namespaces(_request_timeout=self.timeout).items
+        request = requests.Request("GET", self._config.url("/api/v1/pods"))
+        response = send_request(self._config, self._client, request)
+        return self._deserialize("V1PodList", response).items
 
     def query_raw_resource_quotas(self) -> Sequence[client.V1ResourceQuota]:
-        return self.connection.list_resource_quota_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
+        request = requests.Request("GET", self._config.url("/api/v1/resourcequotas"))
+        response = send_request(self._config, self._client, request)
+        return self._deserialize("V1ResourceQuotaList", response).items
 
     def query_raw_namespaces(self):
-        return self.connection.list_namespace(_request_timeout=self.timeout).items
+        request = requests.Request("GET", self._config.url("/api/v1/namespaces"))
+        response = send_request(self._config, self._client, request)
+        return self._deserialize("V1NamespaceList", response).items
 
-    def query_persistent_volume_claims(self):
-        return self.connection.list_persistent_volume_claim_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
+    def query_persistent_volume_claims(self) -> Sequence[client.V1PersistentVolumeClaim]:
+        request = requests.Request("GET", self._config.url("/api/v1/persistentvolumeclaims"))
+        response = send_request(self._config, self._client, request)
+        return self._deserialize("V1PersistentVolumeClaimList", response).items
 
     def query_persistent_volumes(self):
-        return self.connection.list_persistent_volume(_request_timeout=self.timeout).items
+        request = requests.Request("GET", self._config.url("/api/v1/persistentvolumes"))
+        response = send_request(self._config, self._client, request)
+        return self._deserialize("V1PersistentVolumeList", response).items
 
 
-class ClientAppsAPI:
-    def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
-        self.connection = client.AppsV1Api(api_client)
-        self.timeout = timeout
-
+class ClientAppsAPI(ClientAPI):
     def query_raw_deployments(self) -> Sequence[client.V1Deployment]:
-        return self.connection.list_deployment_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
+        request = requests.Request("GET", self._config.url("/apis/apps/v1/deployments"))
+        response = send_request(self._config, self._client, request)
+        return self._deserialize("V1DeploymentList", response).items
 
     def query_raw_daemon_sets(self) -> Sequence[client.V1DaemonSet]:
-        return self.connection.list_daemon_set_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
+        request = requests.Request("GET", self._config.url("/apis/apps/v1/daemonsets"))
+        response = send_request(self._config, self._client, request)
+        return self._deserialize("V1DaemonSetList", response).items
 
     def query_raw_replica_sets(self) -> Sequence[client.V1ReplicaSet]:
-        return self.connection.list_replica_set_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
+        request = requests.Request("GET", self._config.url("/apis/apps/v1/replicasets"))
+        response = send_request(self._config, self._client, request)
+        return self._deserialize("V1ReplicaSetList", response).items
 
 
 class RawAPI:
@@ -528,9 +547,9 @@ def from_kubernetes(
     """
     api_client = query.make_api_client(client_config, logger)
     api_client_requests = query.make_api_client_requests(client_config, logger)
-    client_batch_api = ClientBatchAPI(api_client, client_config.requests_timeout())
-    client_core_api = ClientCoreAPI(api_client, client_config.requests_timeout())
-    client_apps_api = ClientAppsAPI(api_client, client_config.requests_timeout())
+    client_batch_api = ClientBatchAPI(client_config, api_client_requests, api_client)
+    client_core_api = ClientCoreAPI(client_config, api_client_requests, api_client)
+    client_apps_api = ClientAppsAPI(client_config, api_client_requests, api_client)
 
     core_api = CoreAPI(client_config, api_client_requests)
     apps_api = AppsAPI(client_config, api_client_requests)

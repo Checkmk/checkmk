@@ -20,7 +20,6 @@ import contextlib
 import enum
 import functools
 import itertools
-import json
 import logging
 import re
 import sys
@@ -32,7 +31,6 @@ from typing import Literal, NamedTuple, TypeVar
 
 import requests
 import urllib3
-from kubernetes import client  # type: ignore[import]
 from pydantic import parse_raw_as
 
 import cmk.utils.password_store
@@ -1923,30 +1921,6 @@ def collector_exception_handler(
         )
 
 
-class CustomKubernetesApiException(Exception):
-    def __init__(self, api_exception: client.ApiException) -> None:
-        self.e = api_exception
-        super().__init__()
-
-    def __str__(self) -> str:
-        """
-
-        This is a modified version of __str__ method of client.kubernetes.ApiException.
-        It strips the first \n in order make the output of plugin check-mk more verbose.
-        """
-
-        error_message_visible_in_check_mk_service_summary = (
-            f"{self.e.status}, Reason: {self.e.reason}"
-        )
-
-        if self.e.body:
-            error_message_visible_in_check_mk_service_summary += (
-                f", Message: {json.loads(self.e.body).get('message')}"
-            )
-
-        return error_message_visible_in_check_mk_service_summary
-
-
 def pod_conditions(pod_status: api.PodStatus) -> section.PodConditions | None:
     if pod_status.conditions is None:
         return None
@@ -2164,8 +2138,6 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     f"Failed to establish a connection to {e.pool.host}:{e.pool.port} "
                     f"at URL {e.url}"
                 ) from e
-            except client.ApiException as e:
-                raise CustomKubernetesApiException(e) from e
             except requests.RequestException as e:
                 raise ClusterConnectionError(
                     f"Failed to establish a connection at URL {e.request.url} "

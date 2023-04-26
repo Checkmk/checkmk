@@ -5,57 +5,40 @@
 
 #include "ServiceListState.h"
 
+#include "livestatus/Interface.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/User.h"
 
-#ifdef CMC
-#include "CmcService.h"
-#include "Service.h"
-#include "State.h"
-#else
-#include "NebService.h"
-#endif
-
-int32_t ServiceListState::operator()(const value_type &svcs,
-                                     const User &user) const {
-    return getValueFromServices(user, _logictype, svcs);
-}
-
-// static
-int32_t ServiceListState::getValueFromServices(const User &user, Type logictype,
-                                               const value_type &svcs) {
-    int32_t result = 0;
-#ifdef CMC
-    for (const auto &svc : svcs) {
-        if (user.is_authorized_for_service(CmcService{*svc})) {
-            const auto *state = svc->state();
-            update(logictype, static_cast<ServiceState>(state->current_state_),
-                   static_cast<ServiceState>(state->hard_state_.last_),
-                   state->has_been_checked_, svc->handled(), result);
-        }
-    }
-#else
-    for (servicesmember *mem = svcs; mem != nullptr; mem = mem->next) {
-        service *svc = mem->service_ptr;
-        if (user.is_authorized_for_service(NebService{*svc})) {
-            update(logictype, static_cast<ServiceState>(svc->current_state),
-                   static_cast<ServiceState>(svc->last_hard_state),
-                   svc->has_been_checked != 0,
-                   svc->problem_has_been_acknowledged != 0 ||
-                       svc->scheduled_downtime_depth > 0,
-                   result);
-        }
-    }
-#endif
+int32_t ServiceListState::operator()(const IHost &hst, const User &user) const {
+    int32_t result{0};
+    hst.all_of_services([this, &user, &result](const IService &svc) {
+        update(svc, user, result);
+        return true;
+    });
     return result;
 }
 
-// static
-void ServiceListState::update(Type logictype, ServiceState current_state,
-                              ServiceState last_hard_state,
-                              bool has_been_checked, bool handled,
-                              int32_t &result) {
-    switch (logictype) {
+int32_t ServiceListState::operator()(const IServiceGroup &group,
+                                     const User &user) const {
+    int32_t result{0};
+    group.all([this, &user, &result](const IService &svc) {
+        update(svc, user, result);
+        return true;
+    });
+    return result;
+}
+
+void ServiceListState::update(const IService &svc, const User &user,
+                              int32_t &result) const {
+    if (!user.is_authorized_for_service(svc)) {
+        return;
+    }
+    auto current_state = static_cast<ServiceState>(svc.current_state());
+    auto last_hard_state = static_cast<ServiceState>(svc.last_hard_state());
+    auto has_been_checked = svc.has_been_checked();
+    auto handled = svc.problem_has_been_acknowledged() ||
+                   svc.scheduled_downtime_depth() > 0;
+    switch (type_) {
         case Type::num:
             result++;
             break;

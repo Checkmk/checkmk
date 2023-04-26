@@ -10,29 +10,25 @@
 
 #include <cstdint>
 
-#include "livestatus/Interface.h"
+class IHost;
+class IService;
+class IServiceGroup;
 class User;
 
 #ifdef CMC
-#include <memory>
-#include <unordered_set>
-
-#include "Host.h"
-#include "ObjectGroup.h"
+#include "CmcHost.h"
+#include "CmcServiceGroup.h"
 class Service;
+class Host;
+template <typename T>
+class ObjectGroup;
 #else
+#include "NebHost.h"
+#include "NebServiceGroup.h"
 #include "nagios.h"
 #endif
 
 class ServiceListState {
-    // TODO(sp) Actually we want an input_range of services.
-#ifdef CMC
-    using value_type = std::unordered_set<const Service *>;
-#else
-    using value_type = servicesmember *;
-#endif
-    friend class HostListState;
-
 public:
     enum class Type {
         num,
@@ -53,36 +49,33 @@ public:
         worst_hard_state,
     };
 
-    explicit ServiceListState(Type logictype) : _logictype{logictype} {}
+    explicit ServiceListState(Type type) : type_{type} {}
 
+    int32_t operator()(const IHost &hst, const User &user) const;
+    int32_t operator()(const IServiceGroup &g, const User &user) const;
+
+// TODO(sp): Remove.
 #ifdef CMC
     int32_t operator()(const Host &hst, const User &user) const {
-        auto v = value_type(hst._services.size());
-        for (const auto &e : hst._services) {
-            v.emplace(e.get());
-        }
-        return (*this)(v, user);
+        return (*this)(CmcHost{hst}, user);
     }
-    int32_t operator()(const ObjectGroup<Service> &g, const User &user) const {
-        return (*this)(value_type{g.begin(), g.end()}, user);
+    int32_t operator()(const ObjectGroup<Service> &group,
+                       const User &user) const {
+        return (*this)(CmcServiceGroup{group}, user);
     }
 #else
     int32_t operator()(const host &hst, const User &user) const {
-        return hst.services == nullptr ? 0 : (*this)(hst.services, user);
+        return (*this)(NebHost{hst}, user);
     }
-    int32_t operator()(const servicegroup &g, const User &user) const {
-        return g.members == nullptr ? 0 : (*this)(g.members, user);
+    int32_t operator()(const servicegroup &group, const User &user) const {
+        return (*this)(NebServiceGroup{group}, user);
     }
 #endif
-    int32_t operator()(const value_type &svcs, const User &user) const;
 
 private:
-    const Type _logictype;
-    static int32_t getValueFromServices(const User &user, Type logictype,
-                                        const value_type &svcs);
-    static void update(Type logictype, ServiceState current_state,
-                       ServiceState last_hard_state, bool has_been_checked,
-                       bool handled, int32_t &result);
+    const Type type_;
+
+    void update(const IService &svc, const User &user, int32_t &result) const;
 };
 
 #endif  // ServiceListState_h

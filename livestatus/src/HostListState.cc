@@ -5,54 +5,31 @@
 
 #include "HostListState.h"
 
+#include "ServiceListState.h"
 #include "livestatus/Interface.h"
+#include "livestatus/LogEntry.h"
 #include "livestatus/User.h"
 
-#ifdef CMC
-#include <memory>
-
-#include "CmcHost.h"
-#include "Host.h"
-#include "State.h"
-#else
-#include "NebHost.h"
-#endif
-
-int32_t HostListState::operator()(const value_type &hsts,
+int32_t HostListState::operator()(const IHostGroup &group,
                                   const User &user) const {
-    int32_t result = 0;
-#ifdef CMC
-    for (const auto *hst : hsts) {
-        if (user.is_authorized_for_host(CmcHost{*hst})) {
-            const auto *state = hst->state();
-            auto svcs = ServiceListState::value_type(hst->_services.size());
-            for (const auto &s : hst->_services) {
-                svcs.emplace(s.get());
-            }
-            update(user, static_cast<HostState>(state->current_state_),
-                   state->has_been_checked_, svcs, hst->handled(), result);
-        }
-    }
-#else
-    for (hostsmember *mem = hsts; mem != nullptr; mem = mem->next) {
-        host *hst = mem->host_ptr;
-        if (user.is_authorized_for_host(NebHost{*hst})) {
-            update(user, static_cast<HostState>(hst->current_state),
-                   hst->has_been_checked != 0, hst->services,
-                   hst->problem_has_been_acknowledged != 0 ||
-                       hst->scheduled_downtime_depth > 0,
-                   result);
-        }
-    }
-#endif
+    int32_t result{0};
+    group.all([this, &user, &result](const IHost &hst) {
+        update(hst, user, result);
+        return true;
+    });
     return result;
 }
 
-void HostListState::update(const User &user, HostState current_state,
-                           bool has_been_checked,
-                           const ServiceListState::value_type &services,
-                           bool handled, int32_t &result) const {
-    switch (_logictype) {
+void HostListState::update(const IHost &hst, const User &user,
+                           int32_t &result) const {
+    if (!user.is_authorized_for_host(hst)) {
+        return;
+    }
+    auto current_state = static_cast<HostState>(hst.current_state());
+    auto has_been_checked = hst.has_been_checked();
+    auto handled = hst.problem_has_been_acknowledged() ||
+                   hst.scheduled_downtime_depth() > 0;
+    switch (type_) {
         case Type::num_hst:
             result++;
             break;
@@ -93,40 +70,39 @@ void HostListState::update(const User &user, HostState current_state,
             }
             break;
         case Type::num_svc:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num, services);
+            result += ServiceListState{ServiceListState::Type::num}(hst, user);
             break;
         case Type::num_svc_pending:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num_pending, services);
+            result += ServiceListState{ServiceListState::Type::num_pending}(
+                hst, user);
             break;
         case Type::num_svc_handled_problems:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num_handled_problems, services);
+            result += ServiceListState{
+                ServiceListState::Type::num_handled_problems}(hst, user);
             break;
         case Type::num_svc_unhandled_problems:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num_unhandled_problems, services);
+            result += ServiceListState{
+                ServiceListState::Type::num_unhandled_problems}(hst, user);
             break;
         case Type::num_svc_ok:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num_ok, services);
+            result +=
+                ServiceListState{ServiceListState::Type::num_ok}(hst, user);
             break;
         case Type::num_svc_warn:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num_warn, services);
+            result +=
+                ServiceListState{ServiceListState::Type::num_warn}(hst, user);
             break;
         case Type::num_svc_crit:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num_crit, services);
+            result +=
+                ServiceListState{ServiceListState::Type::num_crit}(hst, user);
             break;
         case Type::num_svc_unknown:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num_unknown, services);
+            result += ServiceListState{ServiceListState::Type::num_unknown}(
+                hst, user);
             break;
         case Type::worst_svc_state: {
-            auto state = ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::worst_state, services);
+            auto state = ServiceListState{ServiceListState::Type::worst_state}(
+                hst, user);
             if (worse(static_cast<ServiceState>(state),
                       static_cast<ServiceState>(result))) {
                 result = state;
@@ -134,24 +110,24 @@ void HostListState::update(const User &user, HostState current_state,
             break;
         }
         case Type::num_svc_hard_ok:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num_hard_ok, services);
+            result += ServiceListState{ServiceListState::Type::num_hard_ok}(
+                hst, user);
             break;
         case Type::num_svc_hard_warn:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num_hard_warn, services);
+            result += ServiceListState{ServiceListState::Type::num_hard_warn}(
+                hst, user);
             break;
         case Type::num_svc_hard_crit:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num_hard_crit, services);
+            result += ServiceListState{ServiceListState::Type::num_hard_crit}(
+                hst, user);
             break;
         case Type::num_svc_hard_unknown:
-            result += ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::num_hard_unknown, services);
+            result += ServiceListState{
+                ServiceListState::Type::num_hard_unknown}(hst, user);
             break;
         case Type::worst_svc_hard_state: {
-            auto state = ServiceListState::getValueFromServices(
-                user, ServiceListState::Type::worst_hard_state, services);
+            auto state = ServiceListState{
+                ServiceListState::Type::worst_hard_state}(hst, user);
             if (worse(static_cast<ServiceState>(state),
                       static_cast<ServiceState>(result))) {
                 result = state;

@@ -680,6 +680,15 @@ def get_last_chunk(log_chunks):
 nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()='
 
 
+def logwatch_level_name(level):
+    return {
+        "O": "OK",
+        "W": "WARN",
+        "C": "CRIT",
+        "I": "IGNORE",
+    }[level]
+
+
 def level_name(level):
     if level == 'W':
         return 'WARN'

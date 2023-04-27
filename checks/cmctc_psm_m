@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from typing import NamedTuple
 
-from cmk.base.check_api import saveint
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.cmctc import DETECT_CMCTC
 
 # Table columns:
@@ -29,28 +31,43 @@ cmctc_pcm_m_sensor_types = {
 }
 
 
-def inventory_cmctc_psm_m(info):
-    return [
-        (line[7] + " " + line[0], None)
-        for line in info
-        if saveint(line[1]) in cmctc_pcm_m_sensor_types
-    ]
+class Sensor(NamedTuple):
+    status: int
+    unit: str
+    reading: float
+    description: str
 
 
-def check_cmctc_psm_m(item, no_params, info):
-    for line in info:
-        if line[7] + " " + line[0] != item:
-            continue
-        sensor_type = saveint(line[1])
-        unit = cmctc_pcm_m_sensor_types[sensor_type]
-        current_val = saveint(line[3]) / 10
-        output = "%s at %d%s " % (line[7], current_val, unit)
-        perf = [(unit, current_val, "", "", "", "")]
-        if int(line[2]) == 4:
-            return (0, output, perf)
-        return (2, output, perf)
+Section = Mapping[str, Sensor]
 
-    return (3, "Item no found in SNMP tree")
+
+def parse_cmctc_psm_m(string_table: StringTable) -> Section:
+    section = {}
+    for idx, type_, status, reading, _crit, _low, _warn, descr in string_table:
+        try:
+            section[f"{descr} {idx}"] = Sensor(
+                status=int(status),
+                unit=cmctc_pcm_m_sensor_types[int(type_)],
+                reading=float(reading) / 10.0,
+                description=descr,
+            )
+        except (KeyError, ValueError, TypeError):
+            pass
+    return section
+
+
+def inventory_cmctc_psm_m(section):
+    yield from ((item, {}) for item in section)
+
+
+def check_cmctc_psm_m(item, no_params, section):
+    if (sensor := section.get(item)) is None:
+        return
+    yield (
+        0 if sensor.status == 4 else 2,
+        "{sensor.description} at {sensor.reading}{sensor.unit}",
+        [(sensor.unit, sensor.reading)],
+    )
 
 
 check_info["cmctc_psm_m"] = {

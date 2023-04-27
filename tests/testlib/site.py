@@ -320,6 +320,11 @@ class Site:
         assert isinstance(cmd, list), "The command must be given as list"
 
         if preserve_env:
+            # Skip the test cases calling this for some distros
+            # Ubuntu 16.04 does not support --preserve-env nor --whitelist-environment
+            # Ubuntu 18.04 does not support --whitelist-environment
+            if os.environ.get("DISTRO") in ("ubuntu-16.04", "ubuntu-18.04"):
+                pytest.skip("preserve env not possible with 16.04 and 18.04")
             sudo_env_args = [f"--preserve-env={','.join(preserve_env)}"]
             su_env_args = ["--whitelist-environment", ",".join(preserve_env)]
         else:

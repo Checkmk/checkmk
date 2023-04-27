@@ -198,7 +198,7 @@ def _execute_restore(
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         env=env,
-        preserve_env=["MKBACKUP_PASSPHRASE"],
+        preserve_env=["MKBACKUP_PASSPHRASE"] if env and "MKBACKUP_PASSPHRASE" in env else None,
         encoding="utf-8",
     )
     stdout, stderr = p.communicate()

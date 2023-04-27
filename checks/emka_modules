@@ -12,6 +12,8 @@ from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
+_TABLES = ["1", "2", "3", "4"]
+
 
 def parse_emka_modules(info):  # pylint: disable=too-many-branches
     # basModuleCoIx == 0
@@ -68,19 +70,20 @@ def parse_emka_modules(info):  # pylint: disable=too-many-branches
         parsed.setdefault(table, {})
         parsed[table].setdefault(itemname, {"_location_": oidend})
 
-    for oidend, module_link, value, mode in info[1]:
-        table = map_component_types[oidend.split(".", 1)[0]]
-        location = ".".join(module_link.split(".")[-2:])
-        for entry, attrs in list(parsed.get(table, {}).items()):
-            item_location = attrs["_location_"]
-            if item_location != location:
-                continue
+    for table_idx, block in zip(_TABLES, info[1:5]):
+        for module_link, value, mode in block:
+            table = map_component_types[table_idx]
+            location = ".".join(module_link.split(".")[-2:])
+            for entry, attrs in list(parsed.get(table, {}).items()):
+                item_location = attrs["_location_"]
+                if item_location != location:
+                    continue
 
-            attrs["value"] = value
-            if mode:
-                attrs["mode"] = mode
+                attrs["value"] = value
+                if mode:
+                    attrs["mode"] = mode
 
-    for oidend, threshold in info[2]:
+    for oidend, threshold in info[6]:
         location, threshold_ty = oidend.split(".")
         if threshold_ty == "1":
             ty = "levels_lower"
@@ -103,7 +106,7 @@ def parse_emka_modules(info):  # pylint: disable=too-many-branches
     # 0.02  => 2/100 [multiplicator]/[divisor]
     # -30.0          [offset]
     # Notice, may also "=#\xb0C0.0230.0"
-    for oidend, equation_bin in info[3]:
+    for oidend, equation_bin in info[7]:
         equation = []
         part = []
         for entry in equation_bin:
@@ -216,15 +219,16 @@ check_info["emka_modules"] = {
             ],
         ),
         # In this order: alarm, handle, sensor, relay
-        (
-            ".1.3.6.1.4.1.13595.2.2",
-            ["1", "2", "3", "4"],
-            [
-                OID_END,
-                "1.3",  # ELM2-MIB::coHandleModuleLink
-                "1.4",  # ELM2-MIB::co*[Status/Value]
-                "1.15",  # ELM2-MIB::coSensorMode
-            ],
+        *(
+            (
+                f".1.3.6.1.4.1.13595.2.2.{table}",
+                [
+                    "1.3",  # ELM2-MIB::coHandleModuleLink
+                    "1.4",  # ELM2-MIB::co*[Status/Value]
+                    "1.15",  # ELM2-MIB::coSensorMode
+                ],
+            )
+            for table in _TABLES
         ),
         (
             ".1.3.6.1.4.1.13595.2.2.3.1",

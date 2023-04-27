@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping
+from typing import NamedTuple
 
-from cmk.base.check_api import saveint
 from cmk.base.check_legacy_includes.cmctc import cmctc_translate_status, cmctc_translate_status_text
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.cmctc import DETECT_CMCTC
 
 # Table columns:
@@ -21,34 +23,53 @@ from cmk.base.plugins.agent_based.utils.cmctc import DETECT_CMCTC
 # 7: description
 
 
-def inventory_cmctc_temp(info):
-    for line in info:
-        if saveint(line[1]) == 10:
-            yield line[0], None
+class Sensor(NamedTuple):
+    status: int
+    reading: int
+    levels: tuple[float, float]
+    levels_lower: tuple[float, float]
 
 
-def check_cmctc_temp(item, params, info):
-    for line in info:  # , value1, value2 in info:
-        if line[0] != item:
-            continue
+Section = Mapping[str, Sensor]
 
-        status, current, crit, low, warn = map(int, line[2:7])
 
-        return check_temperature(
-            current,
-            params,
-            "cmctc_temp_%s" % item,
-            dev_levels=(warn, crit),
-            dev_levels_lower=(low, float("-inf")),  # no lower critical level specified
-            dev_status=cmctc_translate_status(status),
-            dev_status_name="Unit: %s" % cmctc_translate_status_text(status),
+def parse_cmctc_temp(string_table: StringTable) -> Section:
+    return {
+        item: Sensor(
+            status=int(status),
+            reading=int(reading),
+            levels=(float(warn), float(crit)),
+            levels_lower=(float(low), float("-inf")),
         )
+        for item, type_, status, reading, crit, low, warn in string_table
+        if type_ and int(type_) == 10
+    }
+
+
+def inventory_cmctc_temp(section: Section) -> Iterable[tuple[str, dict]]:
+    yield from ((item, {}) for item in section)
+
+
+def check_cmctc_temp(item, params, section):
+    if (sensor := section.get(item)) is None:
+        return
+
+    yield check_temperature(
+        sensor.reading,
+        params,
+        "cmctc_temp_%s" % item,
+        dev_levels=sensor.levels,
+        dev_levels_lower=sensor.level_lower,
+        dev_status=cmctc_translate_status(sensor.status),
+        dev_status_name="Unit: %s" % cmctc_translate_status_text(sensor.status),
+    )
 
 
 check_info["cmctc.temp"] = {
     "detect": DETECT_CMCTC,
-    "check_function": check_cmctc_temp,
+    "parse_function": parse_cmctc_temp,
     "inventory_function": inventory_cmctc_temp,
+    "check_function": check_cmctc_temp,
     "service_description": "Temperature %s",
     "group": "temperature",
     "snmp_info": (

@@ -63,16 +63,7 @@ def test_try_update_license_usage() -> None:
             extension_ntop=True,
         ),
     )
-    assert (
-        len(
-            load_license_usage_history(
-                get_license_usage_report_filepath(),
-                instance_id,
-                site_hash,
-            )
-        )
-        == 1
-    )
+    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 1
 
 
 def test_try_update_license_usage_livestatus_socket_error() -> None:
@@ -90,16 +81,7 @@ def test_try_update_license_usage_livestatus_socket_error() -> None:
             site_hash,
             lambda *args, **kwargs: _mock_livestatus(),
         )
-    assert (
-        len(
-            load_license_usage_history(
-                get_license_usage_report_filepath(),
-                instance_id,
-                site_hash,
-            )
-        )
-        == 0
-    )
+    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
 
 
 def test_try_update_license_usage_livestatus_not_found_error() -> None:
@@ -117,16 +99,7 @@ def test_try_update_license_usage_livestatus_not_found_error() -> None:
             site_hash,
             lambda *args, **kwargs: _mock_livestatus(),
         )
-    assert (
-        len(
-            load_license_usage_history(
-                get_license_usage_report_filepath(),
-                instance_id,
-                site_hash,
-            )
-        )
-        == 0
-    )
+    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
 
 
 def test_try_update_license_usage_next_run_ts_not_reached() -> None:
@@ -157,16 +130,7 @@ def test_try_update_license_usage_next_run_ts_not_reached() -> None:
             extension_ntop=True,
         ),
     )
-    assert (
-        len(
-            load_license_usage_history(
-                get_license_usage_report_filepath(),
-                instance_id,
-                site_hash,
-            )
-        )
-        == 0
-    )
+    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
 
 
 @pytest.mark.parametrize(
@@ -209,7 +173,7 @@ def test_serialize_license_usage_report() -> None:
             },
         ],
     }
-    history = LocalLicenseUsageHistory.parse(
+    history = LocalLicenseUsageHistory.update(
         raw_report,
         instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
         site_hash="site-hash",
@@ -481,7 +445,7 @@ def test_license_usage_report(
     raw_report: Mapping[str, Any],
     expected_history: LocalLicenseUsageHistory,
 ) -> None:
-    history = LocalLicenseUsageHistory.parse(
+    history = LocalLicenseUsageHistory.update(
         raw_report,
         instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
         site_hash="site-hash",
@@ -508,7 +472,7 @@ def test_license_usage_report(
 
 def test_license_usage_report_from_remote() -> None:
     with pytest.raises(UnknownSampleParserError) as e:
-        LocalLicenseUsageHistory.parse_from_remote(
+        LocalLicenseUsageHistory.parse(
             {
                 "VERSION": "-1",
                 "history": [

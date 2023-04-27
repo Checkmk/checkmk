@@ -93,7 +93,7 @@ def try_update_license_usage(
         if now.dt.timestamp() < _get_next_run_ts(next_run_filepath):
             return
 
-        history = load_license_usage_history(report_filepath, instance_id, site_hash)
+        history = load_license_usage_history(report_filepath)
         history.add_sample(sample)
         save_license_usage_report(
             report_filepath,
@@ -285,7 +285,25 @@ def save_license_usage_report(report_filepath: Path, raw_report: RawLicenseUsage
     )
 
 
-def load_license_usage_history(
+def load_license_usage_history(report_filepath: Path) -> LocalLicenseUsageHistory:
+    if not isinstance(
+        raw_report := deserialize_dump(
+            store.load_bytes_from_file(
+                report_filepath,
+                default=b"{}",
+            )
+        ),
+        dict,
+    ):
+        raise TypeError("Wrong report type: %r" % type(raw_report))
+
+    if not raw_report.get("history"):
+        return LocalLicenseUsageHistory([])
+
+    return LocalLicenseUsageHistory.parse(raw_report)
+
+
+def update_license_usage_history(
     report_filepath: Path, instance_id: UUID, site_hash: str
 ) -> LocalLicenseUsageHistory:
     if not isinstance(
@@ -302,11 +320,7 @@ def load_license_usage_history(
     if not raw_report.get("history"):
         return LocalLicenseUsageHistory([])
 
-    return LocalLicenseUsageHistory.parse(
-        raw_report,
-        instance_id=instance_id,
-        site_hash=site_hash,
-    )
+    return LocalLicenseUsageHistory.update(raw_report, instance_id=instance_id, site_hash=site_hash)
 
 
 # .
@@ -338,7 +352,7 @@ class LocalLicenseUsageHistory:
         return [sample.for_report() for sample in self._samples]
 
     @classmethod
-    def parse(
+    def update(
         cls, raw_report: object, *, instance_id: UUID, site_hash: str
     ) -> LocalLicenseUsageHistory:
         if not isinstance(raw_report, dict):
@@ -357,7 +371,7 @@ class LocalLicenseUsageHistory:
         )
 
     @classmethod
-    def parse_from_remote(cls, raw_report: object) -> LocalLicenseUsageHistory:
+    def parse(cls, raw_report: object) -> LocalLicenseUsageHistory:
         if not isinstance(raw_report, dict):
             raise TypeError("Wrong report type: %r" % type(raw_report))
 

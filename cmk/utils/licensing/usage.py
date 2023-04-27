@@ -357,7 +357,7 @@ class LocalLicenseUsageHistory:
         )
 
     @classmethod
-    def parse_from_remote(cls, raw_report: object, *, site_hash: str) -> LocalLicenseUsageHistory:
+    def parse_from_remote(cls, raw_report: object) -> LocalLicenseUsageHistory:
         if not isinstance(raw_report, dict):
             raise TypeError("Wrong report type: %r" % type(raw_report))
 
@@ -369,7 +369,7 @@ class LocalLicenseUsageHistory:
 
         parser = LicenseUsageSample.get_parser(version)
         return cls(
-            parser(raw_sample, instance_id=None, site_hash=site_hash)
+            parser(raw_sample, instance_id=None, site_hash=None)
             for raw_sample in raw_report.get("history", [])
         )
 

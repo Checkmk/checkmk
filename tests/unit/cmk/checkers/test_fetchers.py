@@ -90,7 +90,7 @@ def clone_file_cache(file_cache: FileCache) -> FileCache:
 
 class TestFileCache:
     @pytest.fixture(params=[AgentFileCache, SNMPFileCache])
-    def file_cache(self, request) -> FileCache:  # type: ignore[no-untyped-def]
+    def file_cache(self, request: pytest.FixtureRequest) -> FileCache:
         return request.param(
             HostName("hostname"),
             path_template=os.devnull,
@@ -123,7 +123,9 @@ class TestAgentFileCache_and_SNMPFileCache:
         return tmp_path / "database"
 
     @pytest.fixture(params=[AgentFileCache, SNMPFileCache])
-    def file_cache(self, path: Path, request):  # type: ignore[no-untyped-def]
+    def file_cache(
+        self, path: Path, request: pytest.FixtureRequest
+    ) -> AgentFileCache | SNMPFileCache:
         return request.param(
             HostName("hostname"),
             path_template=str(path),
@@ -141,7 +143,12 @@ class TestAgentFileCache_and_SNMPFileCache:
         table: Sequence[SNMPTable] = []
         return {SectionName("X"): table}
 
-    def test_read_write(self, file_cache, path, raw_data) -> None:  # type: ignore[no-untyped-def]
+    def test_read_write(
+        self,
+        file_cache: FileCache,
+        path: Path,
+        raw_data: AgentRawData | SNMPRawData,
+    ) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ_WRITE
 
@@ -159,7 +166,12 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert clone.file_cache_mode is FileCacheMode.READ_WRITE
         assert clone.read(mode) == raw_data
 
-    def test_read_only(self, file_cache, path, raw_data) -> None:  # type: ignore[no-untyped-def]
+    def test_read_only(
+        self,
+        file_cache: FileCache,
+        path: Path,
+        raw_data: TRawData,
+    ) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ
 
@@ -170,7 +182,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert not path.exists()
         assert file_cache.read(mode) is None
 
-    def test_write_only(self, file_cache, path, raw_data) -> None:  # type: ignore[no-untyped-def]
+    def test_write_only(self, file_cache: FileCache, path: Path, raw_data: TRawData) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.WRITE
 
@@ -238,7 +250,7 @@ class TestIPMIFetcher:
             assert get_raw_data(file_cache, fetcher, Mode.CHECKING).is_ok()
 
     def test_command_raises_IpmiException_handling(self, monkeypatch: MonkeyPatch) -> None:
-        def open_(*args: object):  # type: ignore[no-untyped-def]
+        def open_(*args: object) -> None:
             raise IpmiException()
 
         monkeypatch.setattr(IPMIFetcher, "open", open_)
@@ -814,10 +826,10 @@ class _MockSock:
         self._used += len(use)
         return use
 
-    def __enter__(self, *_args) -> _MockSock:  # type: ignore[no-untyped-def]
+    def __enter__(self, *_args: object) -> _MockSock:
         return self
 
-    def __exit__(self, *_args) -> None:  # type: ignore[no-untyped-def]
+    def __exit__(self, *_args: object) -> None:
         pass
 
 

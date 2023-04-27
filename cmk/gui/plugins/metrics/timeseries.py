@@ -136,8 +136,11 @@ def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, 
     return 1, (0, 60, 60)
 
 
+Operator = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
+
+
 def time_series_math(
-    operator_id: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"],
+    operator_id: Operator,
     operands_evaluated: list[TimeSeries],
 ) -> TimeSeries | None:
     operators = time_series_operators()

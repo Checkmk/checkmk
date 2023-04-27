@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 import pytest
 
 from cmk.utils.exceptions import MKGeneralException
@@ -16,9 +18,9 @@ import cmk.gui.plugins.metrics.timeseries as ts
         pytest.param(("%", []), id="Unknown symbol"),
     ],
 )
-def test_time_series_math_exc_symbol(args) -> None:  # type: ignore[no-untyped-def]
+def test_time_series_math_exc_symbol(args: tuple[Literal["%"], list[ts.TimeSeries]]) -> None:
     with pytest.raises(MKGeneralException, match="Undefined operator"):
-        ts.time_series_math(*args)
+        ts.time_series_math(*args)  # type: ignore[arg-type]
 
 
 @pytest.mark.skip(reason="Skip operations when incorrect amount of timeseries data for operator")
@@ -34,12 +36,12 @@ def test_time_series_math_exc_symbol(args) -> None:  # type: ignore[no-untyped-d
         ),
     ],
 )
-def test_time_series_math_exc(args) -> None:  # type: ignore[no-untyped-def]
+def test_time_series_math_exc(args: tuple[ts.Operator, list[ts.TimeSeries]]) -> None:
     with pytest.raises(MKGeneralException):
         ts.time_series_math(*args)
 
 
 @pytest.mark.parametrize("operator", ["+", "*", "MAX", "MIN", "AVERAGE", "MERGE"])
-def test_time_series_math_stable_singles(operator) -> None:  # type: ignore[no-untyped-def]
+def test_time_series_math_stable_singles(operator: ts.Operator) -> None:
     test_ts = ts.TimeSeries([0, 180, 60, 6, 5, 10, None, -2, -3.14])
     assert ts.time_series_math(operator, [test_ts]) == test_ts

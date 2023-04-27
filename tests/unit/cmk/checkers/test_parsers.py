@@ -11,6 +11,8 @@ import logging
 import time
 from collections import defaultdict
 from collections.abc import Sequence
+from pathlib import Path
+from typing import Mapping
 
 import pytest
 
@@ -24,6 +26,8 @@ from cmk.fetchers.cache import PersistedSections, SectionStore
 
 from cmk.checkers import AgentParser, PiggybackMarker, SectionMarker, SNMPParser
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 
 @pytest.fixture(autouse=True)
@@ -52,7 +56,9 @@ class TestAgentParser:
         return SectionStore[AgentRawDataSection](store_path, logger=logger)
 
     @pytest.fixture
-    def parser(self, hostname: HostName, store, logger):  # type: ignore[no-untyped-def]
+    def parser(
+        self, hostname: HostName, store: SectionStore[AgentRawDataSection], logger: logging.Logger
+    ) -> AgentParser:
         return AgentParser(
             hostname,
             store,
@@ -64,7 +70,9 @@ class TestAgentParser:
             logger=logger,
         )
 
-    def test_missing_host_header(self, parser, store) -> None:  # type: ignore[no-untyped-def]
+    def test_missing_host_header(
+        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
+    ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
                 (
@@ -79,10 +87,10 @@ class TestAgentParser:
         assert ahs.sections == {}
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert store.load() == {}
+        assert not store.load()
 
-    def test_piggy_name_as_hostname_is_not_piggybacked(  # type: ignore[no-untyped-def]
-        self, parser, store, hostname: HostName
+    def test_piggy_name_as_hostname_is_not_piggybacked(
+        self, parser: AgentParser, store: SectionStore[AgentRawDataSection], hostname: HostName
     ) -> None:
         host_name_bytes = str(hostname).encode("ascii")
         raw_data = AgentRawData(
@@ -100,10 +108,10 @@ class TestAgentParser:
         assert ahs.sections == {}
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert store.load() == {}
+        assert not store.load()
 
-    def test_no_section_header_after_piggyback(  # type: ignore[no-untyped-def]
-        self, parser, store
+    def test_no_section_header_after_piggyback(
+        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -120,10 +128,10 @@ class TestAgentParser:
         assert ahs.sections == {}
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {HostName("piggy"): []}
-        assert store.load() == {}
+        assert not store.load()
 
-    def test_raw_section_populates_sections(  # type: ignore[no-untyped-def]
-        self, parser, store
+    def test_raw_section_populates_sections(
+        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -147,9 +155,11 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert store.load() == {}
+        assert not store.load()
 
-    def test_merge_split_raw_sections(self, parser, store) -> None:  # type: ignore[no-untyped-def]
+    def test_merge_split_raw_sections(
+        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
+    ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
                 (
@@ -191,10 +201,10 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert store.load() == {}
+        assert not store.load()
 
-    def test_nameless_sections_are_skipped(  # type: ignore[no-untyped-def]
-        self, parser, store
+    def test_nameless_sections_are_skipped(
+        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -226,10 +236,13 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert store.load() == {}
+        assert not store.load()
 
-    def test_nameless_piggybacked_sections_are_skipped(  # type: ignore[no-untyped-def]
-        self, parser, store, monkeypatch
+    def test_nameless_piggybacked_sections_are_skipped(
+        self,
+        parser: AgentParser,
+        store: SectionStore[AgentRawDataSection],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
@@ -269,10 +282,10 @@ class TestAgentParser:
                 b"b second line",
             ]
         }
-        assert store.load() == {}
+        assert not store.load()
 
-    def test_closing_piggyback_out_of_piggyback_section_closes_section(  # type: ignore[no-untyped-def]
-        self, parser, store
+    def test_closing_piggyback_out_of_piggyback_section_closes_section(
+        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -302,10 +315,13 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert store.load() == {}
+        assert not store.load()
 
-    def test_piggyback_populates_piggyback_raw_data(  # type: ignore[no-untyped-def]
-        self, parser, store, monkeypatch
+    def test_piggyback_populates_piggyback_raw_data(
+        self,
+        parser: AgentParser,
+        store: SectionStore[AgentRawDataSection],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
@@ -363,10 +379,13 @@ class TestAgentParser:
                 b"first line",
             ],
         }
-        assert store.load() == {}
+        assert not store.load()
 
-    def test_merge_split_piggyback_sections(  # type: ignore[no-untyped-def]
-        self, parser, store, monkeypatch
+    def test_merge_split_piggyback_sections(
+        self,
+        parser: AgentParser,
+        store: SectionStore[AgentRawDataSection],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
@@ -413,10 +432,13 @@ class TestAgentParser:
                 b"d line",
             ],
         }
-        assert store.load() == {}
+        assert not store.load()
 
-    def test_persist_option_populates_cache_info(  # type: ignore[no-untyped-def]
-        self, parser, store, mocker, monkeypatch
+    def test_persist_option_populates_cache_info(
+        self,
+        parser: AgentParser,
+        store: SectionStore[AgentRawDataSection],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
@@ -441,8 +463,11 @@ class TestAgentParser:
             }
         )
 
-    def test_persist_option_and_persisted_sections(  # type: ignore[no-untyped-def]
-        self, parser, store, mocker, monkeypatch
+    def test_persist_option_and_persisted_sections(
+        self,
+        parser: AgentParser,
+        store: SectionStore[AgentRawDataSection],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         monkeypatch.setattr(
@@ -484,8 +509,11 @@ class TestAgentParser:
             }
         )
 
-    def test_section_filtering_and_merging_host(  # type: ignore[no-untyped-def]
-        self, parser, store, monkeypatch
+    def test_section_filtering_and_merging_host(
+        self,
+        parser: AgentParser,
+        store: SectionStore[AgentRawDataSection],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         raw_data = AgentRawData(
@@ -507,7 +535,7 @@ class TestAgentParser:
             )
         )
 
-        ahs = parser.parse(raw_data, selection={SectionName("selected")})
+        ahs = parser.parse(raw_data, selection=frozenset({SectionName("selected")}))
 
         assert ahs.sections == {
             SectionName("selected"): [
@@ -534,8 +562,11 @@ class TestAgentParser:
             }
         )
 
-    def test_section_filtering_and_merging_piggyback(  # type: ignore[no-untyped-def]
-        self, parser, store, monkeypatch
+    def test_section_filtering_and_merging_piggyback(
+        self,
+        parser: AgentParser,
+        store: SectionStore[AgentRawDataSection],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         raw_data = AgentRawData(
@@ -559,7 +590,7 @@ class TestAgentParser:
             )
         )
 
-        ahs = parser.parse(raw_data, selection={SectionName("selected")})
+        ahs = parser.parse(raw_data, selection=frozenset({SectionName("selected")}))
 
         assert ahs.sections == {
             SectionName("selected"): [["7th", "line"], ["8th", "line"]],
@@ -572,10 +603,10 @@ class TestAgentParser:
                 b"4th line",
             ]
         }
-        assert store.load() == {}
+        assert not store.load()
 
-    def test_section_lines_are_correctly_ordered_with_different_separators(  # type: ignore[no-untyped-def]
-        self, parser, store
+    def test_section_lines_are_correctly_ordered_with_different_separators(
+        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -600,7 +631,7 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert store.load() == {}
+        assert not store.load()
 
     def test_section_lines_are_correctly_ordered_with_different_separators_and_piggyback(
         self, parser, store, monkeypatch
@@ -676,8 +707,11 @@ class TestSectionMarker:
             ("", None, {}),  # invalid section name
         ],
     )  # fmt: off
-    def test_options_from_headerline(  # type: ignore[no-untyped-def]
-        self, headerline, section_name, section_options
+    def test_options_from_headerline(
+        self,
+        headerline: str,
+        section_name: SectionName | None,
+        section_options: Mapping[str, object],
     ) -> None:
         try:
             SectionMarker.from_headerline(
@@ -739,7 +773,7 @@ class TestSNMPParser:
             logger=logging.Logger("test"),
         )
 
-    def test_empty_raw_data(self, parser) -> None:  # type: ignore[no-untyped-def]
+    def test_empty_raw_data(self, parser: SNMPParser) -> None:
         raw_data: SNMPRawData = {}
 
         host_sections = parser.parse(raw_data, selection=NO_SELECTION)
@@ -756,14 +790,17 @@ class TestSNMPParser:
         content_b = [["third", "line"], ["forth", "line"]]
         return {section_a: content_a, section_b: content_b}
 
-    def test_no_cache(self, parser, sections) -> None:  # type: ignore[no-untyped-def]
+    def test_no_cache(self, parser: SNMPParser, sections: dict[SectionName, StringTable]) -> None:
         host_sections = parser.parse(sections, selection=NO_SELECTION)
         assert host_sections.sections == sections
         assert host_sections.cache_info == {}
         assert not host_sections.piggybacked_raw_data
 
-    def test_with_persisted_sections(  # type: ignore[no-untyped-def]
-        self, parser, sections, monkeypatch
+    def test_with_persisted_sections(
+        self,
+        parser: SNMPParser,
+        sections: dict[SectionName, StringTable],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         monkeypatch.setattr(parser, "check_intervals", defaultdict(lambda: 33))
@@ -790,7 +827,9 @@ class TestSNMPParser:
 
 
 class MockStore(SectionStore):
-    def __init__(self, path, sections, *, logger) -> None:  # type: ignore[no-untyped-def]
+    def __init__(
+        self, path: str | Path, sections: PersistedSections, *, logger: logging.Logger
+    ) -> None:
         super().__init__(path, logger=logger)
         assert isinstance(sections, PersistedSections)
         self._sections = sections
@@ -807,9 +846,7 @@ class TestAgentPersistentSectionHandling:
     def logger(self):
         return logging.getLogger("test")
 
-    def test_update_with_empty_store_and_empty_raw_data(  # type: ignore[no-untyped-def]
-        self, logger
-    ) -> None:
+    def test_update_with_empty_store_and_empty_raw_data(self, logger: logging.Logger) -> None:
         section_store = MockStore(
             "/dev/null",
             PersistedSections[AgentRawDataSection]({}),
@@ -833,9 +870,7 @@ class TestAgentPersistentSectionHandling:
         assert ahs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_update_with_store_and_empty_raw_data(  # type: ignore[no-untyped-def]
-        self, logger
-    ) -> None:
+    def test_update_with_store_and_empty_raw_data(self, logger: logging.Logger) -> None:
         section_store = MockStore(
             "/dev/null",
             PersistedSections[AgentRawDataSection](
@@ -867,9 +902,7 @@ class TestAgentPersistentSectionHandling:
             }
         )
 
-    def test_update_with_empty_store_and_raw_data(  # type: ignore[no-untyped-def]
-        self, logger
-    ) -> None:
+    def test_update_with_empty_store_and_raw_data(self, logger: logging.Logger) -> None:
         raw_data = AgentRawData(b"<<<fresh>>>")
         section_store = MockStore(
             "/dev/null",
@@ -893,9 +926,7 @@ class TestAgentPersistentSectionHandling:
         assert ahs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_update_with_store_and_non_persisting_raw_data(  # type: ignore[no-untyped-def]
-        self, logger
-    ) -> None:
+    def test_update_with_store_and_non_persisting_raw_data(self, logger: logging.Logger) -> None:
         section_store = MockStore(
             "/dev/null",
             PersistedSections[AgentRawDataSection](
@@ -930,8 +961,8 @@ class TestAgentPersistentSectionHandling:
             }
         )
 
-    def test_update_with_store_and_persisting_raw_data(  # type: ignore[no-untyped-def]
-        self, logger, monkeypatch
+    def test_update_with_store_and_persisting_raw_data(
+        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         section_store = MockStore(
@@ -972,7 +1003,7 @@ class TestAgentPersistentSectionHandling:
             }
         )
 
-    def test_update_store_with_newest(self, logger) -> None:  # type: ignore[no-untyped-def]
+    def test_update_store_with_newest(self, logger: logging.Logger) -> None:
         section_store = MockStore(
             "/dev/null",
             PersistedSections[AgentRawDataSection](
@@ -1004,7 +1035,9 @@ class TestAgentPersistentSectionHandling:
             }
         )
 
-    def test_keep_outdated_false(self, logger, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    def test_keep_outdated_false(
+        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
         raw_data = AgentRawData(b"<<<another_section>>>")
@@ -1034,7 +1067,9 @@ class TestAgentPersistentSectionHandling:
         assert ahs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_keep_outdated_true(self, logger, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    def test_keep_outdated_true(
+        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
         raw_data = AgentRawData(b"<<<another_section>>>")
@@ -1077,9 +1112,7 @@ class TestSNMPPersistedSectionHandling:
     def logger(self):
         return logging.getLogger("test")
 
-    def test_update_with_empty_store_and_persisted(  # type: ignore[no-untyped-def]
-        self, logger
-    ) -> None:
+    def test_update_with_empty_store_and_persisted(self, logger: logging.Logger) -> None:
         section_store = MockStore(
             "/dev/null",
             PersistedSections[SNMPRawDataSection]({}),
@@ -1100,7 +1133,7 @@ class TestSNMPPersistedSectionHandling:
         assert shs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_update_with_empty_persisted(self, logger) -> None:  # type: ignore[no-untyped-def]
+    def test_update_with_empty_persisted(self, logger: logging.Logger) -> None:
         section_store = MockStore(
             "/dev/null",
             PersistedSections[SNMPRawDataSection](
@@ -1127,7 +1160,7 @@ class TestSNMPPersistedSectionHandling:
             SectionName("stored"): (0, 0, [["old"]]),
         }
 
-    def test_update_with_empty_store(self, logger) -> None:  # type: ignore[no-untyped-def]
+    def test_update_with_empty_store(self, logger: logging.Logger) -> None:
         section_store = MockStore(
             "/dev/null",
             PersistedSections[SNMPRawDataSection]({}),
@@ -1149,7 +1182,7 @@ class TestSNMPPersistedSectionHandling:
         assert shs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_update_with_persisted_and_store(self, logger) -> None:  # type: ignore[no-untyped-def]
+    def test_update_with_persisted_and_store(self, logger: logging.Logger) -> None:
         section_store = MockStore(
             "/dev/null",
             PersistedSections[SNMPRawDataSection](
@@ -1180,8 +1213,8 @@ class TestSNMPPersistedSectionHandling:
             SectionName("stored"): (0, 0, [["old"]]),
         }
 
-    def test_check_intervals_updates_persisted(  # type: ignore[no-untyped-def]
-        self, logger, monkeypatch
+    def test_check_intervals_updates_persisted(
+        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
@@ -1213,7 +1246,9 @@ class TestSNMPPersistedSectionHandling:
             }
         )
 
-    def test_keep_outdated_false(self, logger, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    def test_keep_outdated_false(
+        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
         section_store = MockStore(
@@ -1238,7 +1273,9 @@ class TestSNMPPersistedSectionHandling:
         assert shs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_keep_outdated_true(self, logger, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    def test_keep_outdated_true(
+        self, logger: logging.Logger, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
         section_store = MockStore(
@@ -1272,14 +1309,14 @@ class TestSNMPPersistedSectionHandling:
 
 class TestMarkers:
     @pytest.mark.parametrize("line", [b"<<<x>>>", b"<<<x:cached(10, 5)>>>"])
-    def test_section_header(self, line) -> None:  # type: ignore[no-untyped-def]
+    def test_section_header(self, line: bytes) -> None:
         assert SectionMarker.is_header(line) is True
         assert SectionMarker.is_footer(line) is False
         assert PiggybackMarker.is_header(line) is False
         assert PiggybackMarker.is_footer(line) is False
 
     @pytest.mark.parametrize("line", [b"<<<>>>", b"<<<:cached(10, 5)>>>"])
-    def test_section_footer(self, line) -> None:  # type: ignore[no-untyped-def]
+    def test_section_footer(self, line: bytes) -> None:
         assert SectionMarker.is_header(line) is False
         assert SectionMarker.is_footer(line) is True
         assert PiggybackMarker.is_header(line) is False

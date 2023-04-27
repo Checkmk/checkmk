@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # fmt: off
 
+from collections.abc import Mapping
+
 import pytest
 from apispec import APISpec
 from marshmallow import post_load, Schema, ValidationError
@@ -107,7 +109,7 @@ def spec_fixture():
                    ])
 
 
-def test_apispec_plugin_string_to_schema_dict(spec) -> None: # type: ignore[no-untyped-def]
+def test_apispec_plugin_string_to_schema_dict(spec: APISpec) -> None:
     # Schema suffix of schemas gets stripped by library
     spec.components.schema('MovieDict', schema=MovieDictSchema)
 
@@ -120,7 +122,7 @@ def test_apispec_plugin_string_to_schema_dict(spec) -> None: # type: ignore[no-u
     }
 
 
-def test_apispec_plugin_string_to_string_dict(spec) -> None: # type: ignore[no-untyped-def]
+def test_apispec_plugin_string_to_string_dict(spec: APISpec) -> None:
     # Schema suffix of schemas gets stripped by library
     spec.components.schema('CustomTagDict', schema=CustomTagDictSchema)
     schemas = spec.to_dict()['components']['schemas']
@@ -135,7 +137,7 @@ def test_apispec_plugin_string_to_string_dict(spec) -> None: # type: ignore[no-u
     }
 
 
-def test_apispec_plugin_parameters(spec) -> None: # type: ignore[no-untyped-def]
+def test_apispec_plugin_parameters(spec: APISpec) -> None:
     # Different code paths are executed here. We need to make sure our plugin handles this.
     spec.components.parameter('var', 'path', {'description': "Some path variable"})
 
@@ -148,7 +150,7 @@ def test_apispec_plugin_parameters(spec) -> None: # type: ignore[no-untyped-def]
         (EmailSchema, {'bob': 'bob@example.com'}, {'bob': 'bob@example.com'}),
     ],
 )
-def test_typed_dictionary_success(schema_class: type[SchemaABC], in_data, expected_result) -> None: # type: ignore[no-untyped-def]
+def test_typed_dictionary_success(schema_class: type[SchemaABC], in_data: Mapping[str,object], expected_result: Mapping[str,object]) -> None:
     schema = schema_class()
     result = schema.load(in_data)
     assert result == expected_result
@@ -160,7 +162,7 @@ def test_typed_dictionary_success(schema_class: type[SchemaABC], in_data, expect
     (IntegerDictSchema, {'bar': 'eins'}),
     (EmailSchema, {'hans': 'foo'}),
 ])
-def test_typed_dictionary_failed_validation(schema_class, in_data) -> None: # type: ignore[no-untyped-def]
+def test_typed_dictionary_failed_validation(schema_class: type[SchemaABC], in_data: Mapping[str,object]) -> None:
     schema = schema_class()
     with pytest.raises(ValidationError):
         schema.load(in_data)

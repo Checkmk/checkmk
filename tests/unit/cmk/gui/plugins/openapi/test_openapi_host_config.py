@@ -1149,10 +1149,10 @@ def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestA
 
 
 @managedtest
-def test_openapi_host_with_custom_attributes(  # type: ignore[no-untyped-def]
+def test_openapi_host_with_custom_attributes(
     clients: ClientRegistry,
-    custom_host_attribute_basic_topic,
-):
+    custom_host_attribute_basic_topic: None,
+) -> None:
     resp = clients.Host.create(
         host_name="example.com",
         attributes={

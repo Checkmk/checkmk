@@ -1,0 +1,19 @@
+Title: Bug fixes for <tt>cmk.gui.plugins.metrics.utils.indexed_color</tt>
+Class: fix
+Compatible: incomp
+Component: metrics
+Date: 1682588405
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk is mainly relevant to users who deploy or develop custom Checkmk plugins. For all other
+users, the werk might result in some changes regarding the colors of certain metrics in graphs.
+
+The above mentioned function, also available via <tt>cmk.gui.plugins.metrics.indexed_color</tt>,
+computes colors for graphs. It was buggy in multiple ways:
+
+LI: There was no validation of the input arguments <tt>idx</tt> and <tt>total</tt>. We now ensure that <tt>0 <= idx <= total</tt> and <tt>total > 0</tt>. If these requirements are violated, an error is raised.
+LI: <tt>indexed_color</tt> crashed for certain (valid) parameter combinations. For small values of <tt>idx</tt>, <tt>indexed_color</tt> returns values from a fixed set of pre-defined colors. Once this set was exhausted, the function crashed if <tt>idx</tt> was close to <tt>total</tt>.
+LI: Depending on the value of <tt>total</tt>, <tt>indexed_color</tt> produced very dark colors after exhausting the pre-defined set. Instead, we now always start with the same brightness and then then become successively darker.

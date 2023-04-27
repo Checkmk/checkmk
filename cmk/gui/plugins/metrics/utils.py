@@ -325,6 +325,11 @@ _COLOR_WHEEL_SIZE = 48
 
 
 def indexed_color(idx: int, total: int) -> str:
+    if total < 1:
+        raise MKGeneralException(f"{total=} must be larger than zero")
+    if not 0 <= idx <= total:
+        raise MKGeneralException(f"{idx=} must be in the range 0 <= idx <= {total=}.")
+
     if idx < _COLOR_WHEEL_SIZE:
         # use colors from the color wheel if possible
         base_col = (idx % 4) + 1
@@ -334,16 +339,29 @@ def indexed_color(idx: int, total: int) -> str:
 
     # generate distinct rgb values. these may be ugly ; also, they
     # may overlap with the colors from the wheel
-    idx = idx - _COLOR_WHEEL_SIZE
-    base_color = idx % 7  # red, green, blue, red+green, red+blue,
-    # green+blue, red+green+blue
-    delta = int(255.0 / ((total - _COLOR_WHEEL_SIZE) / 7))
-    offset = int(255 - (delta * ((idx / 7.0) + 1)))
+    idx_shifted = idx - _COLOR_WHEEL_SIZE
+    total_shifted = total - _COLOR_WHEEL_SIZE
 
-    red = int(base_color in [0, 3, 4, 6])
-    green = int(base_color in [1, 3, 5, 6])
-    blue = int(base_color in [2, 4, 5, 6])
-    return rgb_color_to_hex_color(red * offset, green * offset, blue * offset)
+    # 7 possible rgb combinations: # red, green, blue, red+green, red+blue, green+blue, red+green+blue
+    rgb_combination = idx_shifted % 7
+    red = int(rgb_combination in [0, 3, 4, 6])
+    green = int(rgb_combination in [1, 3, 5, 6])
+    blue = int(rgb_combination in [2, 4, 5, 6])
+
+    # avoid too dark and too light greys
+    if red and green and blue:
+        rgb_value_min = 100
+        rgb_value_max = 200
+    # avoid too dark colors (cannot be distinguished)
+    else:
+        rgb_value_min = 60
+        rgb_value_max = 230
+
+    rgb_value = rgb_value_min + int(
+        (rgb_value_max - rgb_value_min) * (1 - idx_shifted / total_shifted)
+    )
+
+    return rgb_color_to_hex_color(red * rgb_value, green * rgb_value, blue * rgb_value)
 
 
 def parse_perf_values(

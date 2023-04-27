@@ -37,6 +37,7 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
     serialize_wato_parameters,
 )
+from cmk.utils.site import omd_site
 
 from cmk.automations.results import CreateDiagnosticsDumpResult
 
@@ -63,17 +64,9 @@ from cmk.gui.pages import Page, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, redirect, WatoMode
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.type_defs import ActionResult, PermissionName
-from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
-from cmk.gui.valuespec import (
-    CascadingDropdown,
-    Dictionary,
-    DropdownChoice,
-    DualListChoice,
-    FixedValue,
-    ValueSpec,
-)
+from cmk.gui.valuespec import CascadingDropdown, Dictionary, DualListChoice, FixedValue, ValueSpec
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
@@ -183,10 +176,19 @@ class ModeDiagnostics(WatoMode):
             elements=[
                 (
                     "site",
-                    DropdownChoice(
+                    FixedValue(
+                        value=True,
                         title=_("Site"),
-                        choices=get_activation_site_choices(),
+                        totext=omd_site(),
+                        help=_("Collect diagnostics data from the local site."),
                     ),
+                    # TODO: Collecting dumps from a remote site often fails, depending on
+                    # the amount of data. See CMK-11374. Once, that's solved, reactivate
+                    # this dropdown, again:
+                    # DropdownChoice(
+                    #    title=_("Site"),
+                    #    choices=get_activation_site_choices(),
+                    # ),
                 ),
                 # TODO: provide the possibility to chose multiple sites
                 # (
@@ -671,7 +673,9 @@ def _merge_results(results) -> CreateDiagnosticsDumpResult:  # type:ignore[no-un
 
 def _join_sub_tars(tarfile_paths: list[str]) -> str:
     tarfile_path = str(
-        cmk.utils.paths.diagnostics_dir.joinpath(str(uuid.uuid4())).with_suffix(".tar.gz")
+        cmk.utils.paths.diagnostics_dir.joinpath("sddump_%s" % str(uuid.uuid4())).with_suffix(
+            ".tar.gz"
+        )
     )
     with tarfile.open(name=tarfile_path, mode="w:gz") as dest:
         for filepath in tarfile_paths:

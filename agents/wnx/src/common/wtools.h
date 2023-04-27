@@ -168,6 +168,8 @@ enum class StopMode {
     ignore,  // do nothing
 };
 
+class InternalUsersDb;
+
 // Abstract Interface template for SERVICE PROCESSOR:
 // WE ARE NOT GOING TO USE AT ALL.
 // One binary - one object of one class
@@ -185,6 +187,8 @@ public:
     virtual void cleanupOnStop() {
         // may  be but not should overridden
     }
+
+    virtual InternalUsersDb *getInternalUsers() = 0;
 };
 
 // keeps two handles
@@ -1027,10 +1031,31 @@ bool PatchFileLineEnding(const std::filesystem::path &fname) noexcept;
 
 using InternalUser = std::pair<std::wstring, std::wstring>;  // name, password
 
+class InternalUsersDb {
+public:
+    InternalUsersDb() = default;
+    InternalUsersDb(const InternalUsersDb &) = delete;
+    InternalUsersDb(InternalUsersDb &&) = delete;
+    InternalUsersDb &operator=(const InternalUsersDb &) = delete;
+    InternalUsersDb &operator=(InternalUsersDb &&) = delete;
+    ~InternalUsersDb() { killAll(); }
+    InternalUser obtainUser(std::wstring_view group);
+    void killAll();
+    size_t size() const;
+
+private:
+    mutable std::mutex users_lock_;
+    std::unordered_map<std::wstring, wtools::InternalUser> users_;
+};
+
 InternalUser CreateCmaUserInGroup(const std::wstring &group_name) noexcept;
+InternalUser CreateCmaUserInGroup(const std::wstring &group_name,
+                                  std::wstring_view prefix) noexcept;
 bool RemoveCmaUser(const std::wstring &user_name) noexcept;
 std::wstring GenerateRandomString(size_t max_length) noexcept;
 std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept;
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group,
+                                        std::wstring_view prefix) noexcept;
 
 class Bstr {
 public:

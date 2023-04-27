@@ -10,6 +10,7 @@
 #include <string_view>
 
 #include "common/wtools.h"
+#include "common/wtools_user_control.h"
 #include "test_tools.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
@@ -740,6 +741,25 @@ TEST(Wtools, GetServiceStatus) {
     EXPECT_EQ(GetServiceStatus(L"snmptrap"), SERVICE_STOPPED);
     EXPECT_EQ(GetServiceStatus(L"vds-bad-service"), 0U);
     EXPECT_EQ(GetServiceStatus(L"SamSS"), SERVICE_RUNNING);
+}
+
+TEST(Wtools, InternalUsersDbIntegration) {
+    const auto group_name = SidToName(L"S-1-5-32-545", SidTypeGroup);
+    auto iu = std::make_unique<InternalUsersDb>();
+    auto [name, pwd] = iu->obtainUser(group_name);
+    if (!name.empty()) {
+        EXPECT_EQ(name, L"cmk_TST_"s + group_name);
+        EXPECT_EQ(iu->size(), 1U);
+
+        auto [name_2, pwd_2] = iu->obtainUser(group_name);
+        EXPECT_TRUE(!name_2.empty());
+        EXPECT_EQ(name_2, L"cmk_TST_"s + group_name);
+        EXPECT_EQ(name, name_2);
+        EXPECT_EQ(iu->size(), 1U);
+        iu.reset();
+        const uc::LdapControl lc;
+        ASSERT_EQ(lc.userDel(name), uc::Status::absent);
+    }
 }
 
 }  // namespace wtools

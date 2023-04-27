@@ -2596,17 +2596,27 @@ std::wstring CmaUserPrefix() noexcept {
 }
 }  // namespace
 
-std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group,
+                                        std::wstring_view prefix) noexcept {
     if (group.empty()) {
         return {};
     }
 
-    auto prefix = CmaUserPrefix();
-    return prefix.empty() ? std::wstring{} : prefix + group.data();
+    return prefix.empty() ? std::wstring{}
+                          : std::wstring{prefix} + group.data();
+}
+
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
+    return GenerateCmaUserNameInGroup(group, CmaUserPrefix());
 }
 
 InternalUser CreateCmaUserInGroup(const std::wstring &group_name) noexcept {
-    auto name = GenerateCmaUserNameInGroup(group_name);
+    return CreateCmaUserInGroup(group_name, CmaUserPrefix());
+}
+
+InternalUser CreateCmaUserInGroup(const std::wstring &group_name,
+                                  std::wstring_view prefix) noexcept {
+    auto name = GenerateCmaUserNameInGroup(group_name, prefix);
     if (name.empty()) {
         XLOG::l("Failed to create user name");
         return {};
@@ -2640,7 +2650,7 @@ InternalUser CreateCmaUserInGroup(const std::wstring &group_name) noexcept {
 }
 
 bool RemoveCmaUser(const std::wstring &user_name) noexcept {
-    uc::LdapControl primary_dc;
+    const uc::LdapControl primary_dc;
     return primary_dc.userDel(user_name) != uc::Status::error;
 }
 
@@ -3379,6 +3389,38 @@ uint32_t GetServiceStatus(const std::wstring &name) noexcept {
     const ServiceControl sc(name, ServiceControl::Mode::query);
     return sc.getStatus();
 }
+
+InternalUser InternalUsersDb::obtainUser(std::wstring_view group) {
+    const std::wstring group_name(group);
+    std::lock_guard lk(users_lock_);
+
+    if (auto it = users_.find(group_name); it != users_.end()) {
+        return it->second;
+    }
+
+    auto iu = wtools::CreateCmaUserInGroup(group_name);
+    if (iu.first.empty()) {
+        return {};
+    }
+
+    users_[group_name] = iu;
+
+    return iu;
+}
+
+void InternalUsersDb::killAll() {
+    std::lock_guard lk(users_lock_);
+    for (const auto &iu : users_ | std::views::values) {
+        RemoveCmaUser(iu.first);
+    }
+    users_.clear();
+}
+
+size_t InternalUsersDb::size() const {
+    std::lock_guard lk(users_lock_);
+    return users_.size();
+}
+
 }  // namespace wtools
 
 // verified code from the legacy client

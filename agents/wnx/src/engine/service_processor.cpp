@@ -162,7 +162,6 @@ void ServiceProcessor::cleanupOnStop() {
     if (GetModus() != Modus::service) {
         XLOG::l("Invalid call!");
     }
-    KillAllInternalUsers();
 
     TryCleanOnExit();
 }

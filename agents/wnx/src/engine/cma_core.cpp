@@ -314,13 +314,13 @@ cfg::Plugins::ExeUnit *GetEntrySafe(UnitMap &unit_map, const std::string &key) {
     }
 }
 
-void UpdatePluginMapWithUnitMap(PluginMap &out, UnitMap &um,
-                                ExecType exec_type) {
+void UpdatePluginMapWithUnitMap(PluginMap &out, UnitMap &um, ExecType exec_type,
+                                wtools::InternalUsersDb *iu) {
     for (const auto &[name, unit] : um) {
         auto *ptr = GetEntrySafe(out, name);
         if (ptr != nullptr) {
             if (unit.run()) {
-                ptr->applyConfigUnit(unit, exec_type);
+                ptr->applyConfigUnit(unit, exec_type, iu);
             } else {
                 ptr->removeFromExecution();
             }
@@ -329,7 +329,7 @@ void UpdatePluginMapWithUnitMap(PluginMap &out, UnitMap &um,
                 out.try_emplace(name, name);
                 ptr = GetEntrySafe(out, name);
                 if (ptr != nullptr) {
-                    ptr->applyConfigUnit(unit, exec_type);
+                    ptr->applyConfigUnit(unit, exec_type, iu);
                 }
             }
         }
@@ -422,9 +422,10 @@ void RemoveDuplicatedEntriesByName(UnitMap &um, ExecType exec_type) {
 }
 
 namespace {
-std::optional<std::wstring> GetTrustee(const cfg::Plugins::ExeUnit &unit) {
-    if (!unit.group().empty()) {
-        return ObtainInternalUser(wtools::ConvertToUtf16(unit.group())).first;
+std::optional<std::wstring> GetTrustee(const cfg::Plugins::ExeUnit &unit,
+                                       wtools::InternalUsersDb *iu) {
+    if (!unit.group().empty() && iu != nullptr) {
+        return iu->obtainUser(wtools::ConvertToUtf16(unit.group())).first;
     }
     if (unit.user().empty()) {
         return {};
@@ -438,14 +439,16 @@ void AllowAccess(const fs::path &f, std::wstring_view name) {
         STANDARD_RIGHTS_ALL | GENERIC_ALL, GRANT_ACCESS, OBJECT_INHERIT_ACE);
 }
 void ConditionallyAllowAccess(const fs::path &f,
-                              const cfg::Plugins::ExeUnit &unit) {
-    if (const auto trustee = GetTrustee(unit)) {
+                              const cfg::Plugins::ExeUnit &unit,
+                              wtools::InternalUsersDb *iu) {
+    if (const auto trustee = GetTrustee(unit, iu)) {
         AllowAccess(f, *trustee);
     }
 }
 }  // namespace
 
-void ApplyEverythingToPluginMap(PluginMap &plugin_map,
+void ApplyEverythingToPluginMap(wtools::InternalUsersDb *iu,
+                                PluginMap &plugin_map,
                                 const std::vector<cfg::Plugins::ExeUnit> &units,
                                 const std::vector<fs::path> &found_files,
                                 ExecType exec_type) {
@@ -473,7 +476,7 @@ void ApplyEverythingToPluginMap(PluginMap &plugin_map,
                 XLOG::t("To plugin '{}' to be applied rule '{}'", f,
                         it->sourceText());
                 exe->apply(entry_full_name, it->source());
-                ConditionallyAllowAccess(f, *exe);
+                ConditionallyAllowAccess(f, *exe, iu);
             }
 
             ApplyEverythingLogResult(fmt_string, entry_full_name, exec_type);
@@ -499,12 +502,12 @@ void ApplyEverythingToPluginMap(PluginMap &plugin_map,
         }
     }
     // apply config for presented
-    UpdatePluginMapWithUnitMap(plugin_map, um, exec_type);
+    UpdatePluginMapWithUnitMap(plugin_map, um, exec_type, iu);
 }
 
 // Main API
-void UpdatePluginMap(PluginMap &plugin_map, ExecType exec_type,
-                     const PathVector &found_files,
+void UpdatePluginMap(wtools::InternalUsersDb *iu, PluginMap &plugin_map,
+                     ExecType exec_type, const PathVector &found_files,
                      const std::vector<cfg::Plugins::ExeUnit> &units,
                      bool check_exists) {
     if (found_files.empty() || units.empty()) {
@@ -515,7 +518,7 @@ void UpdatePluginMap(PluginMap &plugin_map, ExecType exec_type,
     const auto really_found =
         FilterPathVector(found_files, units, check_exists);
     FilterPluginMap(plugin_map, really_found);
-    ApplyEverythingToPluginMap(plugin_map, units, really_found, exec_type);
+    ApplyEverythingToPluginMap(iu, plugin_map, units, really_found, exec_type);
     RemoveDuplicatedPlugins(plugin_map, check_exists);
 }
 
@@ -1089,14 +1092,14 @@ wtools::InternalUser PluginsExecutionUser2Iu(std::string_view user) {
     return {table[0], L""};
 }
 
-void PluginEntry::fillInternalUser() {
+void PluginEntry::fillInternalUser(wtools::InternalUsersDb *iu) {
     // reset all to be safe due to possible future errors in logic
     iu_.first.clear();
     iu_.second.clear();
 
     // group is coming first
-    if (!group_.empty()) {
-        iu_ = ObtainInternalUser(wtools::ConvertToUtf16(group_));
+    if (!group_.empty() && (iu != nullptr)) {
+        iu_ = iu->obtainUser(wtools::ConvertToUtf16(group_));
         XLOG::t("Entry '{}' uses user '{}' as group config", path(),
                 wtools::ToUtf8(iu_.first));
         return;
@@ -1466,12 +1469,10 @@ std::vector<char> RunAsyncPlugins(PluginMap &plugins, int &total,
 }  // namespace cma
 
 namespace cma {
-std::mutex g_users_lock;
-std::unordered_map<std::wstring, wtools::InternalUser> g_users;
-constexpr bool g_enable_ps1_proxy{true};
+constexpr bool enable_ps1_proxy{true};
 
 std::wstring LocatePs1Proxy() {
-    if constexpr (!g_enable_ps1_proxy) {
+    if constexpr (!enable_ps1_proxy) {
         return L"";
     }
 
@@ -1497,32 +1498,6 @@ std::wstring MakePowershellWrapper() noexcept {
         XLOG::l("Exception when finding powershell e:{}", e);
         return L"";
     }
-}
-
-wtools::InternalUser ObtainInternalUser(std::wstring_view group) {
-    const std::wstring group_name(group);
-    std::lock_guard lk(g_users_lock);
-
-    if (auto it = g_users.find(group_name); it != g_users.end()) {
-        return it->second;
-    }
-
-    auto iu = wtools::CreateCmaUserInGroup(group_name);
-    if (iu.first.empty()) {
-        return {};
-    }
-
-    g_users[group_name] = iu;
-
-    return iu;
-}
-
-void KillAllInternalUsers() {
-    std::lock_guard lk(g_users_lock);
-    for (const auto &iu : g_users | std::views::values) {
-        wtools::RemoveCmaUser(iu.first);
-    }
-    g_users.clear();
 }
 
 }  // namespace cma

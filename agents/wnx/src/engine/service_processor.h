@@ -222,6 +222,7 @@ public:
     void pauseService() override;
     void shutdownService(wtools::StopMode stop_mode) override;
     void continueService() override;
+    wtools::InternalUsersDb *getInternalUsers() override { return &iu_; }
 
     // \brief - serves test in command line
     void startServiceAsLegacyTest();
@@ -264,6 +265,7 @@ public:
     bool stopRunningOhmProcess() noexcept;
 
 private:
+    wtools::InternalUsersDb iu_;
     std::vector<uint8_t> makeTestString(const char *text) const {
         const std::string test{text == nullptr ? "" : text};
         return std::vector<uint8_t>{test.begin(), test.end()};

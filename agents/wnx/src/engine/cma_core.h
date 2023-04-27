@@ -26,10 +26,7 @@
 #include "logger.h"
 #include "tools/_misc.h"
 
-namespace cma {
-wtools::InternalUser ObtainInternalUser(std::wstring_view group);
-void KillAllInternalUsers();
-}  // namespace cma
+namespace cma {}  // namespace cma
 
 namespace cma::srv {
 class ServiceProcessor;
@@ -468,7 +465,8 @@ public:
     }
 
     template <typename T>
-    void applyConfigUnit(const T &unit, ExecType exec_type) {
+    void applyConfigUnit(const T &unit, ExecType exec_type,
+                         wtools::InternalUsersDb *iu) {
         if (retry() != unit.retry() || timeout() != unit.timeout()) {
             XLOG::t("Important params changed, reset retry '{}'", path_);
             failures_ = 0;
@@ -504,8 +502,7 @@ public:
         }
 
         correctRetry();
-
-        fillInternalUser();
+        fillInternalUser(iu);
 
         exec_type_ = exec_type;
         defined_ = true;
@@ -541,8 +538,8 @@ public:
     const wtools::InternalUser &getUser() const noexcept { return iu_; }
 
 protected:
+    void fillInternalUser(wtools::InternalUsersDb *iu);
     std::optional<std::string> startProcessName();
-    void fillInternalUser();
     void restartAsyncThreadIfFinished(const std::wstring &id);
     void markAsForRestart() {
         XLOG::l.i("markAsForRestart {}", path());
@@ -636,22 +633,23 @@ std::vector<std::filesystem::path> RemoveDuplicatedFilesByName(
     const std::vector<std::filesystem::path> &found_files, ExecType exec_type);
 
 void ApplyEverythingToPluginMap(
-    PluginMap &plugin_map, const std::vector<cfg::Plugins::ExeUnit> &units,
+    wtools::InternalUsersDb *iu, PluginMap &plugin_map,
+    const std::vector<cfg::Plugins::ExeUnit> &units,
     const std::vector<std::filesystem::path> &found_files, ExecType exec_type);
 
 void FilterPluginMap(PluginMap &out_map, const PathVector &found_files);
 
 void RemoveDuplicatedPlugins(PluginMap &plugin_map, bool check_exists);
 
-void UpdatePluginMap(PluginMap &plugin_map, ExecType exec_type,
-                     const PathVector &found_files,
+void UpdatePluginMap(wtools::InternalUsersDb *iu, PluginMap &plugin_map,
+                     ExecType exec_type, const PathVector &found_files,
                      const std::vector<cfg::Plugins::ExeUnit> &units,
                      bool check_exists);
 
-inline void UpdatePluginMap(PluginMap &plugin_map, ExecType exec_type,
-                            const PathVector &found_files,
+inline void UpdatePluginMap(wtools::InternalUsersDb *iu, PluginMap &plugin_map,
+                            ExecType exec_type, const PathVector &found_files,
                             const std::vector<cfg::Plugins::ExeUnit> &units) {
-    return UpdatePluginMap(plugin_map, exec_type, found_files, units, true);
+    return UpdatePluginMap(iu, plugin_map, exec_type, found_files, units, true);
 }
 
 void UpdatePluginMapCmdLine(PluginMap &plugin_map, srv::ServiceProcessor *sp);

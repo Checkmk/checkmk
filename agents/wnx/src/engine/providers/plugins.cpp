@@ -184,7 +184,7 @@ void PluginsProvider::loadConfig() {
     // linking exe units with all plugins in map
     std::vector<cfg::Plugins::ExeUnit> exe_units;
     cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-    UpdatePluginMap(pm_, exec_type_, files, exe_units, true);
+    UpdatePluginMap(getHostSp() == nullptr ? nullptr : getHostSp()->getInternalUsers(), pm_, exec_type_, files, exe_units, true);
     XLOG::d.t("Left [{}] files to execute in '{}'", pm_.size(), uniq_name_);
 
     updateCommandLine();

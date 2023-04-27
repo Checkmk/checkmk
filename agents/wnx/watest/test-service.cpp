@@ -34,6 +34,8 @@ public:
         return L"log.log";
     }
 
+    wtools::InternalUsersDb *getInternalUsers() override { return nullptr; }
+
     bool stopped_ = false;
     bool started_ = false;
     bool paused_ = false;

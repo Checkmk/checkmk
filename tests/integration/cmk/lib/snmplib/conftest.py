@@ -226,12 +226,11 @@ def _is_listening(process_def: ProcessDef) -> bool:
 def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
     if process_def.with_sudo:
         proc = psutil.Process(process_def.process.pid)
-        if not (children := proc.children()):
-            return None
-        if children[0].name() != "snmpsimd.py":
-            logger.debug("Unexpected child processes: %s", children)
-            return None
-        return children[0]
+        for child in (children := proc.children(recursive=True)):
+            if child.name() != "snmpsimd.py":
+                return child
+        logger.debug("Did not find snmpsimd in children %r", children)
+        return None
     return psutil.Process(process_def.process.pid)
 
 

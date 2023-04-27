@@ -197,7 +197,6 @@ class CMKOpenApiSession(requests.Session):
         return response.json()["extensions"], response.headers["Etag"]
 
     def edit_user(self, username: str, user_spec: Mapping[str, Any], etag: str) -> None:
-        print(user_spec)
         response = self.put(
             f"objects/user_config/{username}",
             headers={

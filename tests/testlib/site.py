@@ -995,7 +995,6 @@ class Site:
             start_again = True
             self.stop()
 
-        logger.info("Have livestatus port lock")
         self.set_config("LIVESTATUS_TCP", "on")
         self._gather_livestatus_port()
         self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
@@ -1003,8 +1002,6 @@ class Site:
 
         if start_again:
             self.start()
-
-        logger.info("After livestatus port lock")
 
     def set_livestatus_port_from_config(self) -> None:
         self._livestatus_port = int(self.get_config("LIVESTATUS_TCP_PORT"))

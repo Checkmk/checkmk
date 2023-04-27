@@ -33,6 +33,8 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
+    CheckmkFileEncryption,
+    CheckmkFileInfoByRelFilePathMap,
     CheckmkFilesMap,
     DiagnosticsElementCSVResult,
     DiagnosticsElementFilepaths,
@@ -52,6 +54,7 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
 )
 from cmk.utils.i18n import _
+from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.log import console, section
 from cmk.utils.site import omd_site
 from cmk.utils.structured_data import load_tree
@@ -698,28 +701,52 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
     def _checkmk_files_map(self) -> CheckmkFilesMap:
         raise NotImplementedError
 
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+    def _copy_and_decrypt(self, rel_filepath: Path, tmp_dump_folder: Path) -> Path | None:
         checkmk_files_map = self._checkmk_files_map
+
+        filepath = checkmk_files_map.get(str(rel_filepath))
+        if filepath is None or not filepath.exists():
+            return None
+
+        # Respect file path (2), otherwise the paths of same named files are forgotten (1).
+        # We want to pack a folder hierarchy.
+
+        filename = Path(filepath).name
+        subfolder = Path(str(filepath).replace(str(cmk.utils.paths.omd_root) + "/", "")).parent
+
+        # Create relative path in tmp tree
+        tmp_folder = tmp_dump_folder.joinpath(subfolder)
+        tmp_folder.mkdir(parents=True, exist_ok=True)
+
+        # Decrypt if file is encrypted, else only copy
+        encryption = CheckmkFileEncryption.none
+
+        tmp_filepath = tmp_folder.joinpath(filename)
+        file_info = CheckmkFileInfoByRelFilePathMap.get(str(rel_filepath))
+
+        if file_info is not None:
+            encryption = file_info.encryption
+
+        if encryption == CheckmkFileEncryption.rot47:
+            with Path(filepath).open("rb") as source:
+                json_data = json.dumps(deserialize_dump(source.read()), sort_keys=True, indent=4)
+                store.save_text_to_file(tmp_filepath, json_data)
+        else:
+            shutil.copy(str(filepath), str(tmp_filepath))
+
+        return tmp_filepath
+
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         unknown_files = []
+
         for rel_filepath in self.rel_checkmk_files:
-            filepath = checkmk_files_map.get(rel_filepath)
-            if filepath is None or not filepath.exists():
-                unknown_files.append(rel_filepath)
+            tmp_filepath = self._copy_and_decrypt(Path(rel_filepath), tmp_dump_folder)
+
+            if tmp_filepath is None:
+                unknown_files.append(str(rel_filepath))
                 continue
 
-            # Respect file path (2), otherwise the paths of same named files are forgotten (1).
-            # We want to pack a folder hierarchy.
-
-            filename = Path(filepath).name
-            subfolder = Path(str(filepath).replace(str(cmk.utils.paths.omd_root) + "/", "")).parent
-
-            # Create relative path in tmp tree
-            tmp_folder = tmp_dump_folder.joinpath(subfolder)
-            tmp_folder.mkdir(parents=True, exist_ok=True)
-
-            tmp_filepath = shutil.copy(str(filepath), str(tmp_folder.joinpath(filename)))
-
-            yield Path(tmp_filepath)
+            yield tmp_filepath
 
         if unknown_files:
             raise DiagnosticsElementError("No such files: %s" % ", ".join(unknown_files))

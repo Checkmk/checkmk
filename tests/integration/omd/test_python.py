@@ -199,7 +199,6 @@ def test_03_pip_interpreter_version(site: Site, pip_cmd: PipCommand) -> None:
     assert version.startswith("pip 22.3.1")
 
 
-@pytest.mark.skip("TODO: Figure out what's going on after the next nightly")
 def test_04_pip_user_can_install_non_wheel_packages(site: Site) -> None:
     # ibm_db must be compiled from source, so choosing this also ensures that the Python headers
     # can be found by pip
@@ -214,7 +213,6 @@ def test_04_pip_user_can_install_non_wheel_packages(site: Site) -> None:
 
 
 @pytest.mark.parametrize("pip_cmd", SUPPORTED_PIP_CMDS)
-@pytest.mark.skip("TODO: Figure out what's going on after the next nightly")
 def test_05_pip_user_can_install_wheel_packages(site: Site, pip_cmd: PipCommand) -> None:
     # We're using here another package which is needed for check_sql but not deployed by us
     package_name = "cx_Oracle"

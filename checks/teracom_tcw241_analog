@@ -6,12 +6,15 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, contains, discover, get_parsed_item_data, OID_END
+from cmk.base.check_api import check_levels, contains, discover, get_parsed_item_data
 from cmk.base.config import check_info
 
 AnalogSensor = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "AnalogSensor", "description maximum minimum voltage"
 )
+
+
+_TABLES = ["1", "2", "3", "4"]
 
 
 def parse_tcw241_analog(info):
@@ -33,12 +36,14 @@ def parse_tcw241_analog(info):
     :return: list of namedtuples for analog sensors
     """
     try:
-        sensor_parameter, voltages = info[0], info[1][0]
+        sensor_parameter, voltages = info[:4], info[4][0]
     except IndexError:
         return {}
 
     info_dict = {}
-    for (oid, description, maximum, minimum), voltage in zip(sensor_parameter, voltages):
+    for item, ((description, maximum, minimum),), voltage in zip(
+        _TABLES, sensor_parameter, voltages
+    ):
         try:
             sensor_voltage = float(voltage) / 1000.0
             sensor_maximum = float(maximum) / 1000.0
@@ -49,7 +54,7 @@ def parse_tcw241_analog(info):
         if sensor_minimum < 1 or sensor_maximum < 1:
             continue
 
-        info_dict[oid.split(".")[0]] = AnalogSensor(
+        info_dict[item] = AnalogSensor(
             description=str(description),
             maximum=sensor_maximum,
             minimum=sensor_minimum,
@@ -84,15 +89,16 @@ check_info["teracom_tcw241_analog"] = {
     "inventory_function": discover(),
     "service_description": "Analog Sensor %s",
     "snmp_info": [
-        (
-            ".1.3.6.1.4.1.38783.3.2.2.2",
-            ["1", "2", "3", "4"],  # Voltage 1  # Voltage 2  # Voltage 3  # Voltage 4
-            [
-                OID_END,
-                "1",  # Voltage description
-                "2",  # Voltage maximum x1000 in Integer format
-                "3",  # Voltage minimum x1000 in Integer format
-            ],
+        *(
+            (
+                f".1.3.6.1.4.1.38783.3.2.2.2.{table}",
+                [
+                    "1",  # Voltage description
+                    "2",  # Voltage maximum x1000 in Integer format
+                    "3",  # Voltage minimum x1000 in Integer format
+                ],
+            )
+            for table in _TABLES
         ),
         (
             ".1.3.6.1.4.1.38783.3.3.2",

@@ -616,7 +616,7 @@ def _jinja_environment() -> jinja2.Environment:
     # NOTE:
     # This is not a security problem, as this is an Environment which accepts no data from the web
     # but is only used to fill in our code examples.
-    tmpl_env = jinja2.Environment(  # nosec
+    tmpl_env = jinja2.Environment(  # nosec B701 # BNS:bbfc92
         extensions=["jinja2.ext.loopcontrols"],
         autoescape=False,  # because copy-paste we don't want HTML entities in our code examples.
         loader=jinja2.DictLoader(TEMPLATES),

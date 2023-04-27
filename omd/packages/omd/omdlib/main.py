@@ -516,10 +516,11 @@ def patch_template_file(  # pylint: disable=too-many-branches
     # Now create a patch from old to new and immediately apply on
     # existing - possibly user modified - file.
 
-    result = os.system(  # nosec
+    result = os.system(  # nosec B602 # BNS:2b5952
         "diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s"
         % (old_orig_path, new_orig_path, new_site.dir, dst)
     )
+
     try_chown(dst, new_site.name)
     try_chown(dst + ".rej", new_site.name)
     try_chown(dst + ".orig", new_site.name)
@@ -562,17 +563,24 @@ def patch_template_file(  # pylint: disable=too-many-branches
             elif choice == "keep":
                 break
             elif choice == "edit":
-                os.system(f"{get_editor()} '{dst}'")  # nosec
+                with subprocess.Popen(
+                    [get_editor(), dst],
+                ):
+                    pass
             elif choice == "diff":
-                os.system(f"diff -u {old_orig_path} {new_orig_path}{pipe_pager()}")  # nosec
+                os.system(
+                    f"diff -u {old_orig_path} {new_orig_path}{pipe_pager()}"
+                )  # nosec B602 # BNS:2b5952
             elif choice == "brute":
-                os.system(  # nosec
+                os.system(  # nosec B602 # BNS:2b5952
                     f"sed 's@/{old_site.name}/@/{new_site.name}/@g' {dst}.orig > {dst}"
                 )
                 changed = len(
                     [
                         l
-                        for l in os.popen(f"diff {dst}.orig {dst}").readlines()  # nosec
+                        for l in os.popen(
+                            f"diff {dst}.orig {dst}"
+                        ).readlines()  # nosec B602 # BNS:2b5952
                         if l.startswith(">")
                     ]
                 )
@@ -583,10 +591,13 @@ def patch_template_file(  # pylint: disable=too-many-branches
                         "Did brute-force replace, changed %s%d%s lines:\n"
                         % (tty.bold, changed, tty.normal)
                     )
-                    os.system(f"diff -u {dst}.orig {dst}")  # nosec
+                    with subprocess.Popen(["diff", "-u", dst + ".orig", dst]):
+                        pass
                     break
             elif choice == "you":
-                os.system(f"pwd ; diff -u {old_orig_path} {dst}.orig{pipe_pager()}")  # nosec
+                os.system(
+                    f"pwd ; diff -u {old_orig_path} {dst}.orig{pipe_pager()}"
+                )  # nosec B602 # BNS:2b5952
             elif choice == "restore":
                 os.rename(dst + ".orig", dst)
                 sys.stdout.write("Restored your version.\n")
@@ -611,8 +622,9 @@ def patch_template_file(  # pylint: disable=too-many-branches
 
                 sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
                 thedir = "/".join(dst.split("/")[:-1])
-                os.system(f"su - {new_site.name} -c 'cd {thedir} ; bash -i'")  # nosec
-
+                os.system(
+                    f"su - {new_site.name} -c 'cd {thedir} ; bash -i'"
+                )  # nosec B602 # BNS:2b5952
     # remove unnecessary files
     try:
         os.remove(dst + ".skel." + old_site.name)
@@ -681,13 +693,18 @@ def merge_update_file(  # pylint: disable=too-many-branches
         elif choice == "keep":
             break
         elif choice == "edit":
-            os.system(f"{editor} '{user_path}'")  # nosec
+            with subprocess.Popen([editor, user_path]):
+                pass
         elif choice == "diff":
-            os.system(f"diff -u {user_path}.orig {user_path}-{new_version}{pipe_pager()}")  # nosec
+            os.system(
+                f"diff -u {user_path}.orig {user_path}-{new_version}{pipe_pager()}"
+            )  # nosec B602 # BNS:2b5952
         elif choice == "you":
-            os.system(f"diff -u {user_path}-{old_version} {user_path}.orig{pipe_pager()}")  # nosec
+            os.system(
+                f"diff -u {user_path}-{old_version} {user_path}.orig{pipe_pager()}"
+            )  # nosec B602 # BNS:2b5952
         elif choice == "new":
-            os.system(  # nosec
+            os.system(  # nosec B602 # BNS:2b5952
                 "diff -u %s-%s %s-%s%s"
                 % (user_path, old_version, user_path, new_version, pipe_pager())
             )
@@ -711,7 +728,7 @@ def merge_update_file(  # pylint: disable=too-many-branches
                 sys.stdout.write(" %-25s: changes that haven't been merged\n" % relname + ".rej")
 
             sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-            os.system("cd '%s' ; bash -i" % user_path.parent)  # nosec
+            os.system("cd '%s' ; bash -i" % user_path.parent)  # nosec B602 # BNS:2b5952
         elif choice == "restore":
             Path(f"{user_path}.orig").rename(user_path)
             user_path.chmod(permissions)
@@ -719,7 +736,8 @@ def merge_update_file(  # pylint: disable=too-many-branches
             break
         elif choice == "try again":
             Path(f"{user_path}.orig").rename(user_path)
-            os.system(f"{editor} '{user_path}'")  # nosec
+            with subprocess.Popen([editor, user_path]):
+                pass
             if _try_merge(site, conflict_mode, relpath, old_version, new_version) == 0:
                 sys.stdout.write(
                     "Successfully merged changes from %s -> %s into %s\n"
@@ -785,12 +803,12 @@ def _try_merge(
                     skel_content = b""
                     break
         Path(f"{user_path}-{version}").write_bytes(replace_tags(skel_content, site.replacements))
-    version_patch = os.popen(  # nosec
+    version_patch = os.popen(  # nosec B602 # BNS:2b5952
         f"diff -u {user_path}-{old_version} {user_path}-{new_version}"
     ).read()
 
     # First try to merge the changes in the version into the users' file
-    f = os.popen(  # nosec
+    f = os.popen(  # nosec B602 # BNS:2b5952
         "%s/bin/patch --force --backup --forward --silent --merge %s >/dev/null"
         % (site.dir, user_path),
         "w",
@@ -1845,7 +1863,7 @@ def call_scripts(site: SiteContext, phase: str, add_env: Mapping[str, str] | Non
         if file.name[0] == ".":
             continue
         sys.stdout.write(f'Executing {phase} script "{file.name}"...')
-        with subprocess.Popen(  # nosec
+        with subprocess.Popen(  # nosec B602 # BNS:2b5952
             str(file),  # path-like args is not allowed when shell is true
             shell=True,
             stdout=subprocess.PIPE,
@@ -1986,9 +2004,13 @@ def main_setversion(
     # to control the path to the omd binary, manpage and so on
     if use_update_alternatives():
         if version == "auto":
-            os.system("update-alternatives --auto omd")  # nosec
+            with subprocess.Popen(["update-alternatives", "--auto", "omd"]):
+                pass
         else:
-            os.system("update-alternatives --set omd /omd/versions/%s" % version)  # nosec
+            with subprocess.Popen(
+                ["update-alternatives", "--set", "omd", "/omd/versions/" + version]
+            ):
+                pass
     else:
         if os.path.islink("/omd/versions/default"):
             os.remove("/omd/versions/default")
@@ -2341,7 +2363,8 @@ def main_rm(
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
     # for this dedicated action and switch to the user in that subprocess
-    os.system("omd stop %s" % site.name)  # nosec
+    with subprocess.Popen(["omd", "stop", site.name]):
+        pass
 
     reuse = "reuse" in options
     kill = "kill" in options
@@ -2510,14 +2533,17 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
         if not reuse:
             os.mkdir(new_site.dir)
 
-        addopts = ""
+        addopts = []
         for p in omdlib.backup.get_exclude_patterns(options):
-            addopts += " --exclude '/%s'" % p
+            addopts += ["--exclude", "/%s" % p]
 
         if global_opts.verbose:
-            addopts += " -v"
+            addopts += ["-v"]
 
-        os.system(f"rsync -arx {addopts} '{old_site.dir}/' '{new_site.dir}/'")  # nosec
+        with subprocess.Popen(
+            ["rsync", "-arx"] + addopts + [old_site.dir + "/", new_site.dir + "/"]
+        ):
+            pass
 
         httpdlogdir = new_site.dir + "/var/log/apache"
         if not os.path.exists(httpdlogdir):
@@ -2691,7 +2717,7 @@ def print_diff(
             arrow = tty.magenta + "->" + tty.normal
             if "c" in status:
                 source_content = file_contents(site, source_file)
-                if os.system("which colordiff > /dev/null 2>&1") == 0:  # nosec
+                if os.system("which colordiff > /dev/null 2>&1") == 0:  # nosec B602 # BNS:2b5952
                     diff = "colordiff"
                 else:
                     diff = "diff"
@@ -2702,7 +2728,6 @@ def print_diff(
                     input=source_content,
                     check=False,
                 )
-
             elif status == "p":
                 sys.stdout.write(f"    {source_perm} {arrow} {target_perm}\n")
             elif "t" in status:
@@ -3501,7 +3526,8 @@ def prepare_restore_as_root(
         if not site.is_stopped() and "kill" not in options:
             bail_out("Cannot restore '%s' while it is running." % (site.name))
         else:
-            os.system("omd stop %s" % site.name)  # nosec
+            with subprocess.Popen(["omd", "stop", site.name]):
+                pass
         unmount_tmpfs(site, kill="kill" in options)
 
     if not reuse:

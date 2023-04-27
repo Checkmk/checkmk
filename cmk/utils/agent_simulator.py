@@ -35,7 +35,7 @@ def process(output: AgentRawData) -> AgentRawData:
                 "us know."
             )
             # simfunc = output[i + 2:e]
-            # replacement = str(eval(b"agentsim_" + simfunc)).encode("utf-8")  # nosec
+            # replacement = str(eval(b"agentsim_" + simfunc)).encode("utf-8")
             # output = AgentRawData(output[:i] + replacement + output[e + 1:])
     except MKGeneralException:
         raise

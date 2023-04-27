@@ -92,7 +92,7 @@ def parse_address_and_port(address_and_port, ssl_ports):
     server_port = int(_server_port)
 
     # Use localhost when listening globally
-    if server_address == "0.0.0.0":  # nosec - B104
+    if server_address == "0.0.0.0":  # nosec B104 # BNS:537c43
         server_address = "127.0.0.1"
     elif server_address == "::":
         server_address = "[::1]"

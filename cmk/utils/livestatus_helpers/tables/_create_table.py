@@ -66,7 +66,7 @@ def transform_csv(table_name: str) -> None:
     Returns:
         Nothing.
     """
-    env = jinja2.Environment(undefined=jinja2.StrictUndefined)  # nosec
+    env = jinja2.Environment(undefined=jinja2.StrictUndefined)  # nosec B701 # BNS:bbfc92
     template = env.from_string(TABLE_FILE_TEMPLATE)
     columns = ["description", "name", "table", "type"]
 

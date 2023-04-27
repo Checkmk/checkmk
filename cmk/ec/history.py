@@ -475,17 +475,24 @@ def _grep_pipeline(
     Optimization: use grep in order to reduce amount of read lines based on some frequently used
     filters. It's OK if the filters don't match 100% accurately on the right lines. If in doubt, you
     can output more lines than necessary. This is only a kind of prefiltering.
+
+    >>> _grep_pipeline([])
+    []
+
+    >>> _grep_pipeline([("event_core_host", '=', lambda x: True, '|| ping')])
+    ["grep -F -e '|| ping'"]
+
     """
     return [
         command
         for column_name, operator_name, _predicate, argument in filters
         if column_name in _GREPABLE_COLUMNS
-        for command in [_grep_command(operator_name, argument)]
+        for command in [_grep_command(operator_name, str(argument))]
         if command is not None
     ]
 
 
-def _grep_command(operator_name: OperatorName, argument: Any) -> str | None:
+def _grep_command(operator_name: OperatorName, argument: str) -> str | None:
     if operator_name == "=":
         return f"grep -F {_grep_pattern(argument)}"
     if operator_name == "=~":
@@ -497,8 +504,8 @@ def _grep_command(operator_name: OperatorName, argument: Any) -> str | None:
     return None
 
 
-def _grep_pattern(argument: Any) -> str:
-    return f"-e {shlex.quote(str(argument))}"
+def _grep_pattern(argument: str) -> str:
+    return f"-e {shlex.quote(argument)}"
 
 
 def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[Any]:
@@ -616,7 +623,7 @@ def parse_history_file(
     entries: list[Any] = []
     with subprocess.Popen(
         cmd,
-        shell=True,  # nosec
+        shell=True,  # nosec B602 # BNS:67522a
         close_fds=True,
         stdout=subprocess.PIPE,
     ) as grep:

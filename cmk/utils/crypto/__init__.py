@@ -18,8 +18,8 @@ class HashAlgorithm(Enum):
     """This is just a facade to selected hash algorithms from cryptography"""
 
     # TODO: burn it...
-    MD5 = crypto_hashes.MD5()  # nosec
-    Sha1 = crypto_hashes.SHA1()  # nosec
+    MD5 = crypto_hashes.MD5()  # nosec B303 # BNS:e9bfaa
+    Sha1 = crypto_hashes.SHA1()  # nosec B303 # BNS:e9bfaa
     Sha256 = crypto_hashes.SHA256()
     Sha384 = crypto_hashes.SHA384()
     Sha512 = crypto_hashes.SHA512()

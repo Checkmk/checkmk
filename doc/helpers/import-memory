@@ -227,7 +227,8 @@ class GraphVizFormatter:
         #       _spawn("eog", neato_image)
 
         dot_image = f"dot-{filename}.png"
-        os.system(f"dot -Tpng -o{dot_image} {filename}")  # nosec
+        with subprocess.Popen(["dot", "-Tpng", "-o" + dot_image, filename]):
+            pass
         log("Wrote %s", os.path.abspath(dot_image))
         _spawn("eog", dot_image)
 

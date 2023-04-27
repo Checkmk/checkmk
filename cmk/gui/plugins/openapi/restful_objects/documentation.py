@@ -54,7 +54,7 @@ def defaults_bold(text: str) -> str:
 
 @functools.lru_cache
 def _jinja_env():
-    env = jinja2.Environment(  # nosec
+    env = jinja2.Environment(  # nosec B701 # BNS:bbfc92
         extensions=["jinja2.ext.loopcontrols"],
         autoescape=False,  # because copy-paste we don't want HTML entities in our code examples.
         loader=jinja2.DictLoader(TEMPLATES),

@@ -21,7 +21,7 @@ def parse_kentix_humidity(string_table: list[list[list[str]]]) -> Section | None
     info = string_table[0] or string_table[1]
     if not info:
         return None
-    value, lower_warn, upper_warn, _alarm, text = info[0]
+    value, lower_warn, upper_warn, text = info[0]
     return Section(
         reading=float(value) / 10,
         lower_warn=float(lower_warn),
@@ -55,7 +55,6 @@ _OIDS = [
     "1",  # humidityValue
     "2",  # humidityMin
     "3",  # humidityMax
-    "4",  # humidityAlarm, not used
     "5",  # humidityAlarmtext
 ]
 

@@ -35,7 +35,7 @@ def parse_kentix_temp(string_table: List[StringTable]) -> Section:
             dev_levels_lower=(float(lower_warn), float(lower_warn)),
         )
         for item, block in zip(_TABLES.values(), string_table)
-        for value, lower_warn, upper_warn, _alarm, _text in block
+        for value, lower_warn, upper_warn in block
     }
 
 
@@ -70,8 +70,6 @@ check_info["kentix_temp"] = {
                 "1",  # temperatureValue
                 "2",  # temperatureMin
                 "3",  # temperatureMax
-                "4",  # temperatureAlarm, not used here
-                "5",  # temperatureAlarmtext
             ],
         )
         for table in _TABLES

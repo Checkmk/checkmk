@@ -16,7 +16,7 @@ import socket
 import subprocess
 import sys
 from collections.abc import Iterable, Mapping, Sequence
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout, suppress
 from itertools import islice
 from pathlib import Path
 from typing import Any, cast
@@ -1117,16 +1117,9 @@ class ABCDeleteHosts:
             for folder in os.listdir(baked_agents_dir):
                 self._delete_if_exists(f"{folder}/{hostname}")
 
-    def _delete_logwatch_and_piggyback_dirs(self, hostname: HostName) -> None:
-        # logwatch and piggyback folders
-        for what_dir in [
-            f"{logwatch_dir}/{hostname}",
-            str(tmp_dir / f"piggyback{hostname}"),
-        ]:
-            try:
-                shutil.rmtree(what_dir)
-            except FileNotFoundError:
-                continue
+    def _delete_logwatch(self, hostname: HostName) -> None:
+        with suppress(FileNotFoundError):
+            shutil.rmtree(f"{logwatch_dir}/{hostname}")
 
     def _delete_if_exists(self, path: str) -> None:
         """Delete the given file or folder in case it exists"""
@@ -1170,7 +1163,7 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
 
         self._delete_datasource_dirs(hostname)
         self._delete_baked_agents(hostname)
-        self._delete_logwatch_and_piggyback_dirs(hostname)
+        self._delete_logwatch(hostname)
 
 
 automations.register(AutomationDeleteHosts())
@@ -1209,7 +1202,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
             self._delete_if_exists(path)
 
         self._delete_datasource_dirs(hostname)
-        self._delete_logwatch_and_piggyback_dirs(hostname)
+        self._delete_logwatch(hostname)
 
 
 automations.register(AutomationDeleteHostsKnownRemote())

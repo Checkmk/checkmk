@@ -25,7 +25,7 @@ from cmk.utils.licensing.usage import (
     get_license_usage_report_filepath,
     HostsOrServicesCloudCounter,
     LicenseUsageReportVersion,
-    load_license_usage_history,
+    load_raw_license_usage_history,
     LocalLicenseUsageHistory,
     Now,
     RawLicenseUsageReport,
@@ -63,7 +63,14 @@ def test_try_update_license_usage() -> None:
             extension_ntop=True,
         ),
     )
-    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 1
+    assert (
+        len(
+            LocalLicenseUsageHistory.parse(
+                load_raw_license_usage_history(get_license_usage_report_filepath())
+            )
+        )
+        == 1
+    )
 
 
 def test_try_update_license_usage_livestatus_socket_error() -> None:
@@ -81,7 +88,14 @@ def test_try_update_license_usage_livestatus_socket_error() -> None:
             site_hash,
             lambda *args, **kwargs: _mock_livestatus(),
         )
-    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
+    assert (
+        len(
+            LocalLicenseUsageHistory.parse(
+                load_raw_license_usage_history(get_license_usage_report_filepath())
+            )
+        )
+        == 0
+    )
 
 
 def test_try_update_license_usage_livestatus_not_found_error() -> None:
@@ -99,7 +113,14 @@ def test_try_update_license_usage_livestatus_not_found_error() -> None:
             site_hash,
             lambda *args, **kwargs: _mock_livestatus(),
         )
-    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
+    assert (
+        len(
+            LocalLicenseUsageHistory.parse(
+                load_raw_license_usage_history(get_license_usage_report_filepath())
+            )
+        )
+        == 0
+    )
 
 
 def test_try_update_license_usage_next_run_ts_not_reached() -> None:
@@ -130,7 +151,14 @@ def test_try_update_license_usage_next_run_ts_not_reached() -> None:
             extension_ntop=True,
         ),
     )
-    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
+    assert (
+        len(
+            LocalLicenseUsageHistory.parse(
+                load_raw_license_usage_history(get_license_usage_report_filepath())
+            )
+        )
+        == 0
+    )
 
 
 @pytest.mark.parametrize(

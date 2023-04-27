@@ -1394,7 +1394,13 @@ export function update_unit_selector(selectbox: string, metric_prefix: string) {
         });
     };
     const metric_selector = $("#" + metric_prefix);
-    change_unit_to_match_metric(metric_selector.val());
+    const metric_selected = metric_selector.val();
+    // Only update unit info if no metric was selected before. This honors
+    // changed values in the unit section. Otherwise the default unit will
+    // always be set on editing a Gauge dashlet or the Metric history painter.
+    if (metric_selected === null) {
+        change_unit_to_match_metric(metric_selected);
+    }
     metric_selector.on("change", event =>
         change_unit_to_match_metric((event.target as HTMLOptionElement).value)
     );

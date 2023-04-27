@@ -9,10 +9,21 @@ import pytest
 
 from cmk.special_agents import agent_cisco_meraki
 
+_ORGANISATIONS = [
+    agent_cisco_meraki._Organisation(id_="123", name="org-name1"),
+    agent_cisco_meraki._Organisation(id_="456", name="org-name2"),
+    agent_cisco_meraki._Organisation(id_="789", name="org-name3"),
+]
 
-class FakeGetOrganisationIDsCache:
-    def get_live_data(self) -> Sequence[str]:
-        return ["123", "456", "789"]
+
+class FakeGetOrganisationsByIDCache:
+    def get_live_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
+        return _ORGANISATIONS
+
+
+class FakeGetOrganisationsCache:
+    def get_live_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
+        return _ORGANISATIONS
 
 
 class FakeOrganisations:
@@ -83,7 +94,8 @@ class FakeDashboard:
                 '[{"id": "123"}, {"id": "456"}]',
                 "<<<<dev1>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1"}]',
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-1"}]',
                 "<<<cisco_meraki_org_device_status:sep(0)>>>",
                 '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1", "status": "online"}]',
                 "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
@@ -91,7 +103,8 @@ class FakeDashboard:
                 "<<<<>>>>",
                 "<<<<dev2>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2"}]',
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-2"}]',
                 "<<<cisco_meraki_org_device_status:sep(0)>>>",
                 '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2", "status": "online"}]',
                 "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
@@ -117,13 +130,15 @@ class FakeDashboard:
             [
                 "<<<<dev1>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1"}]',
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-1"}]',
                 "<<<cisco_meraki_org_device_status:sep(0)>>>",
                 '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1", "status": "online"}]',
                 "<<<<>>>>",
                 "<<<<dev2>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2"}]',
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-2"}]',
                 "<<<cisco_meraki_org_device_status:sep(0)>>>",
                 '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2", "status": "online"}]',
                 "<<<<>>>>",
@@ -137,13 +152,15 @@ class FakeDashboard:
             [
                 "<<<<dev1>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "1.2.3.4", "name": "dev1", "serial": "S123-1"}]',
+                '[{"lanIp": "1.2.3.4", "name": "dev1", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-1"}]',
                 "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
                 '[{"readings": [], "serial": "S123-1"}]',
                 "<<<<>>>>",
                 "<<<<dev2>>>>",
                 "<<<cisco_meraki_org_device_info:sep(0)>>>",
-                '[{"lanIp": "1.2.3.5", "name": "dev2", "serial": "S123-2"}]',
+                '[{"lanIp": "1.2.3.5", "name": "dev2", "organisation_id": "123", '
+                '"organisation_name": "org-name1", "serial": "S123-2"}]',
                 "<<<cisco_meraki_org_sensor_readings:sep(0)>>>",
                 '[{"readings": [], "serial": "S123-2"}]',
                 "<<<<>>>>",
@@ -177,8 +194,13 @@ def test_agent_cisco_meraki_main(
     )
     monkeypatch.setattr(
         agent_cisco_meraki,
-        "GetOrganisationIDsCache",
-        lambda a: FakeGetOrganisationIDsCache(),
+        "GetOrganisationsByIDCache",
+        lambda *args, **kwargs: FakeGetOrganisationsByIDCache(),
+    )
+    monkeypatch.setattr(
+        agent_cisco_meraki,
+        "GetOrganisationsCache",
+        lambda *args, **kwargs: FakeGetOrganisationsCache(),
     )
 
     agent_cisco_meraki.agent_cisco_meraki_main(

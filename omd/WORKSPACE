@@ -100,3 +100,10 @@ lcab(
     sha256 = "065f2c1793b65f28471c0f71b7cf120a7064f28d1c44b07cabf49ec0e97f1fc8",
     version_str = "1.0b12",
 )
+
+load("//packages/msitools:msitools_http.bzl", "msitools")
+
+msitools(
+    sha256 = "ebbdd9aa714a6a6ada4450aff5e86351cf910d09b24a85645425737602d75df5",
+    version_str = "0.94",
+)

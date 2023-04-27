@@ -42,16 +42,13 @@ def parse_infoblox_temp(info):
 
     parsed = {}
     # Just for a better handling
-    for index, state, descr in list(zip(["", "1", "2", ""], info[0], info[1]))[1:]:
-        if ":" in descr:
-            name, val_str = descr.split(":", 1)
-            val, unit = val_str.split()
-            val = float(val)
+    for index, state, descr in list(zip(["", "1", "2", ""], info[0][0], info[1][0]))[1:]:
+        if ":" not in descr:
+            continue
 
-        else:
-            name = descr
-            val = None
-            unit = None
+        name, val_str = descr.split(":", 1)
+        r_val, unit = val_str.split()
+        val = float(r_val)
 
         what_name = "%s %s" % (name, index)
         parsed.setdefault(
@@ -59,7 +56,7 @@ def parse_infoblox_temp(info):
             {
                 "state": map_states[state],
                 "reading": val,
-                "unit": unit,
+                "unit": unit.lower(),
             },
         )
 
@@ -67,25 +64,22 @@ def parse_infoblox_temp(info):
 
 
 def inventory_infoblox_temp(parsed):
-    for name, infos in parsed.items():
-        if infos["reading"] is not None and infos["unit"] is not None:
-            yield name, {}
+    yield from ((name, {}) for name in parsed)
 
 
 def check_infoblox_temp(item, params, parsed):
-    if item in parsed:
-        reading = parsed[item]["reading"]
-        devunit = parsed[item]["unit"].lower()
-        devstate, devstatename = parsed[item]["state"]
-        return check_temperature(
-            reading,
-            params,
-            "infoblox_cpu_temp_%s" % item,
-            dev_status=devstate,
-            dev_status_name=devstatename,
-            dev_unit=devunit,
-        )
-    return None
+    if sensor := parsed.get(item):
+        return None
+
+    devstate, devstatename = sensor["state"]
+    return check_temperature(
+        sensor["reading"],
+        params,
+        "infoblox_cpu_temp_%s" % item,
+        dev_status=devstate,
+        dev_status_name=devstatename,
+        dev_unit=sensor["unit"],
+    )
 
 
 check_info["infoblox_temp"] = {
@@ -94,16 +88,18 @@ check_info["infoblox_temp"] = {
     "inventory_function": inventory_infoblox_temp,
     "check_function": check_infoblox_temp,
     "service_description": "Temperature %s",
-    "snmp_info": (
-        ".1.3.6.1.4.1.7779.3.1.1.2.1.10.1",
-        ["2", "3"],
-        [
-            OID_END,
-            "39",  # IB-PLATFORMONE-MIB::ibNodeService[Desc/Status].cpu1-temp
-            "40",  # IB-PLATFORMONE-MIB::ibNodeService[Desc/Status].cpu2-temp
-            "41",  # IB-PLATFORMONE-MIB::ibNodeService[Desc/Status].sys-temp
-        ],
-    ),
+    "snmp_info": [
+        (
+            f".1.3.6.1.4.1.7779.3.1.1.2.1.10.1.{table}",
+            [
+                OID_END,
+                "39",  # IB-PLATFORMONE-MIB::ibNodeService[Desc/Status].cpu1-temp
+                "40",  # IB-PLATFORMONE-MIB::ibNodeService[Desc/Status].cpu2-temp
+                "41",  # IB-PLATFORMONE-MIB::ibNodeService[Desc/Status].sys-temp
+            ],
+        )
+        for table in ["2", "3"]
+    ],
     "group": "temperature",
     "default_levels_variable": "infoblox_temp_default_levels",
 }

@@ -115,7 +115,6 @@ def _get_import_names_from_pipfile() -> list[ImportName]:
     # * listing *all* import names explicit
     # --> huge maintenance effort...
     packagename_to_importname = {
-        "attrs": "attrs",
         "black": "black",
         "docstring-parser": "docstring_parser",
         "idna": "idna",

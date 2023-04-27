@@ -3,7 +3,7 @@
 import * as d3 from "d3";
 import * as dc from "dc";
 import * as cmk_figures from "cmk_figures";
-import * as crossfilter from "crossfilter2";
+import crossfilter from "crossfilter2";
 
 export interface Rows {
     classes: string[];

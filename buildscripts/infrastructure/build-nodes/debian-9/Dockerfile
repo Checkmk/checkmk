@@ -5,7 +5,9 @@ FROM ${IMAGE_DEBIAN_9} as base
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
-RUN apt-get update \
+RUN sed -i -re 's/([a-z]{2}\.)?deb.debian.org|security.debian.org/archive.debian.org/g' /etc/apt/sources.list \
+    && sed -i '/stretch-update/d' /etc/apt/sources.list \
+    && apt-get update \
     && apt-get install -y \
     default-libmysqlclient-dev \
     gdebi \

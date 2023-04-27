@@ -1,0 +1,20 @@
+Title: cisco_meraki_org_device_info: Add more information to HW/SW inventory
+Class: feature
+Compatible: compat
+Component: inv
+Date: 1682587814
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0b6
+
+The following fields of a device are added:
+<ul>
+<li>Address</li>
+<li>Product type (if available)</li>
+<li>Organisation ID</li>
+<li>Organisation name</li>
+</ul>
+
+

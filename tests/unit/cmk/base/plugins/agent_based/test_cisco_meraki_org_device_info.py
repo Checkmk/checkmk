@@ -20,7 +20,7 @@ _STRING_TABLE = [
             '"address": "1600 Pennsylvania Ave", "notes": "My AP\'s note",'
             '"tags": " recently-added ", "networkId": "N_24329156", "serial": "Q234-ABCD-5678",'
             '"model": "MR34", "mac": "00:11:22:33:44:55", "lanIp": "1.2.3.4",'
-            '"firmware": "wireless-25-14"}]'
+            '"firmware": "wireless-25-14", "organisation_id": "123", "organisation_name": "org-name"}]'
         ),
     ]
 ]
@@ -44,6 +44,10 @@ _STRING_TABLE = [
                         "model": "MR34",
                         "mac": "00:11:22:33:44:55",
                         "firmware": "wireless-25-14",
+                        "address": "1600 Pennsylvania Ave",
+                        "product_type": "",
+                        "organisation_id": "123",
+                        "organisation_name": "org-name",
                     },
                 )
             ],

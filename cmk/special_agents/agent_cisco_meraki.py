@@ -5,13 +5,14 @@
 
 from __future__ import annotations
 
+import abc
 import argparse
 import logging
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
 from pathlib import Path
-from typing import Final
+from typing import Final, TypedDict
 
 import meraki  # type: ignore[import]
 
@@ -108,7 +109,14 @@ class Section:
 #   '----------------------------------------------------------------------'
 
 
-class GetOrganisationIDsCache(DataCache):
+class _Organisation(TypedDict):
+    # See https://developer.cisco.com/meraki/api-v1/#!get-organizations
+    # if you want to extend this
+    id_: str
+    name: str
+
+
+class _ABCGetOrganisationsCache(DataCache):
     def __init__(self, config: MerakiConfig) -> None:
         super().__init__(_BASE_CACHE_FILE_DIR / config.hostname / "organisations", "organisations")
         self._dashboard = config.dashboard
@@ -121,10 +129,36 @@ class GetOrganisationIDsCache(DataCache):
     def get_validity_from_args(self, *args: object) -> bool:
         return True
 
-    def get_live_data(self, *args: object) -> Sequence[str]:
+    @abc.abstractmethod
+    def get_live_data(self, *args: object) -> Sequence[_Organisation]:
+        raise NotImplementedError()
+
+
+class GetOrganisationsByIDCache(_ABCGetOrganisationsCache):
+    def __init__(self, config: MerakiConfig, org_ids: Sequence[str]) -> None:
+        super().__init__(config)
+        self._org_ids = org_ids
+
+    def get_live_data(self, *args: object) -> Sequence[_Organisation]:
+        def _get_organisation(org_id: str) -> _Organisation:
+            try:
+                org = self._dashboard.organizations.getOrganization(org_id)
+            except meraki.exceptions.APIError as e:
+                _LOGGER.debug("Get organisation by ID %r: %r", org_id, e)
+                return _Organisation(id_=org_id, name="")
+            return _Organisation(id_=org["id"], name=org["name"])
+
+        return [_get_organisation(org_id) for org_id in self._org_ids]
+
+
+class GetOrganisationsCache(_ABCGetOrganisationsCache):
+    def get_live_data(self, *args: object) -> Sequence[_Organisation]:
         try:
             return [
-                organisation[_API_NAME_ORGANISATION_ID]
+                _Organisation(
+                    id_=organisation["id"],
+                    name=organisation["name"],
+                )
                 for organisation in self._dashboard.organizations.getOrganizations()
             ]
         except meraki.exceptions.APIError as e:
@@ -146,7 +180,11 @@ class GetOrganisationIDsCache(DataCache):
 @dataclass(frozen=True)
 class MerakiOrganisation:
     config: MerakiConfig
-    organisation_id: str
+    organisation: _Organisation
+
+    @property
+    def organisation_id(self) -> str:
+        return self.organisation["id_"]
 
     def query(self) -> Iterator[Section]:
         if _SEC_NAME_LICENSES_OVERVIEW in self.config.section_names:
@@ -204,9 +242,18 @@ class MerakiOrganisation:
             return None
 
     def _get_devices_by_serial(self) -> Mapping[str, MerakiAPIData]:
+        def _update_device(device: dict[str, object]) -> MerakiAPIData:
+            device.update(
+                {
+                    "organisation_id": self.organisation["id_"],
+                    "organisation_name": self.organisation["name"],
+                }
+            )
+            return device
+
         try:
             return {
-                str(device[_API_NAME_DEVICE_SERIAL]): device
+                str(device[_API_NAME_DEVICE_SERIAL]): _update_device(device)
                 for device in self.config.dashboard.organizations.getOrganizationDevices(
                     self.organisation_id, total_pages="all"
                 )
@@ -320,10 +367,12 @@ class MerakiConfig:
     section_names: Sequence[str]
 
 
-def _get_organisation_ids(config: MerakiConfig, orgs: Sequence[str]) -> Sequence[str]:
+def _get_organisations(config: MerakiConfig, org_ids: Sequence[str]) -> Sequence[_Organisation]:
     if not _need_organisations(config.section_names):
         return []
-    return orgs if orgs else GetOrganisationIDsCache(config).get_live_data()
+    return (
+        GetOrganisationsByIDCache(config, org_ids) if org_ids else GetOrganisationsCache(config)
+    ).get_live_data()
 
 
 def _need_organisations(section_names: Sequence[str]) -> bool:
@@ -360,8 +409,8 @@ def agent_cisco_meraki_main(args: Args) -> int:
 
     sections = _query_meraki_objects(
         organisations=[
-            MerakiOrganisation(config, organisation_id)
-            for organisation_id in _get_organisation_ids(config, args.orgs)
+            MerakiOrganisation(config, organisation)
+            for organisation in _get_organisations(config, args.orgs)
         ]
     )
 

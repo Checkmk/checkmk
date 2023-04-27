@@ -19,6 +19,11 @@ class DeviceInfo:
     model: str
     mac: str
     firmware: str
+    address: str
+    product_type: str
+    # extra fields
+    organisation_id: str
+    organisation_name: str
 
     @classmethod
     def parse(cls, row: MerakiAPIData) -> "DeviceInfo":
@@ -29,6 +34,11 @@ class DeviceInfo:
             model=str(row["model"]),
             mac=str(row["mac"]),
             firmware=str(row["firmware"]),
+            address=str(row["address"]),
+            # may missing in older API versions
+            product_type=str(row.get("productType", "")),
+            organisation_id=str(row["organisation_id"]),
+            organisation_name=str(row["organisation_name"]),
         )
 
 

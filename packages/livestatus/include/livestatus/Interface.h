@@ -85,8 +85,8 @@ public:
 class IHost {
 public:
     virtual ~IHost() = default;
-    [[nodiscard]] virtual bool hasContact(const IContact &) const = 0;
     [[nodiscard]] virtual const void *handle() const = 0;
+    [[nodiscard]] virtual bool hasContact(const IContact &) const = 0;
     [[nodiscard]] virtual std::string notificationPeriodName() const = 0;
     [[nodiscard]] virtual std::string servicePeriodName() const = 0;
 
@@ -204,9 +204,9 @@ public:
 class IService {
 public:
     virtual ~IService() = default;
+    [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual const IHost &host() const = 0;
     [[nodiscard]] virtual bool hasContact(const IContact &) const = 0;
-    [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string notificationPeriodName() const = 0;
     [[nodiscard]] virtual std::string servicePeriodName() const = 0;
 
@@ -230,8 +230,12 @@ public:
 class IHostGroup {
 public:
     virtual ~IHostGroup() = default;
-    [[nodiscard]] virtual std::string name() const = 0;
     [[nodiscard]] virtual const void *handle() const = 0;
+    [[nodiscard]] virtual std::string name() const = 0;
+    [[nodiscard]] virtual std::string alias() const = 0;
+    [[nodiscard]] virtual std::string notes() const = 0;
+    [[nodiscard]] virtual std::string notes_url() const = 0;
+    [[nodiscard]] virtual std::string action_url() const = 0;
     virtual bool all(const std::function<bool(const IHost &)> &pred) const = 0;
 };
 

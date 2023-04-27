@@ -33,6 +33,7 @@ In general, we follow the standard GitHub workflow which roughly works like this
  3. **Commit** changes to your own feature branch
  4. **Push** your work back up to your forked repository
  5. Submit a **Pull request** (PR) so that we can review your changes
+ 6. Sign the necessary [CLA](./doc/cla/cla.md) either directly in the PR via the bot, or sent the signed document to cla@tribe29.com ([further information](./doc/cla/cla_readme.md)).
 
  ⚠ Please reply when asked for more information or to update your PR in case in didn't meet the requirements (e.g. failed checks).
 If there's no response from the author for a longer period of time, we will close the PR (after giving you a heads up).

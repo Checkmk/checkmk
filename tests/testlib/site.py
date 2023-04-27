@@ -594,7 +594,7 @@ class Site:
             if not self.version.is_raw_edition():
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
-                self._enable_cmc_tooling("helgrind")
+                self._enable_cmc_tooling(tool=None)
                 self._disable_cmc_log_rotation()
                 self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()

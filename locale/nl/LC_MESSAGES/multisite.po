@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 #
@@ -494,8 +494,8 @@ msgstr[1] ""
 msgid "%d sites %s: %s"
 msgstr "%d sites %s: %s"
 
-#, python-format
-msgid "%d sites without history: %s"
+#, fuzzy, python-format
+msgid "%d sites with errors: %s"
 msgstr "%d sites zonder geschiedenis: %s"
 
 #, python-format
@@ -15823,6 +15823,10 @@ msgstr ""
 "Afhankelijk van de nauwkeurigheid kan de eenheid milliseconden of "
 "micoseconden zijn."
 
+#, fuzzy, python-format
+msgid "Deploy %s"
+msgstr "Agenten inzetten"
+
 msgid "Deploy AD-Replication plugin"
 msgstr "AD-Replicatie plugin implementeren"
 
@@ -17503,6 +17507,22 @@ msgstr "Geef de hostnaam niet weer"
 
 msgid "Do not encrypt the backup"
 msgstr "De backup niet versleutelen"
+
+#, fuzzy
+msgid ""
+"Do not forget to activate the plugin (i.e., deploy with or without "
+"configuration in at least one of your rules. It can be useful to create "
+"rules that are only partially filled out. Since the rule execution is done "
+"on a <i>per parameter</i> base you can for example create one rule at the "
+"top of your list that just sets the activation to <i>no</i> for just some of "
+"your hosts without setting any of the other parameters."
+msgstr ""
+"Vergeet niet om de plugin te activeren in ten minste één van je regels. Het "
+"kan handig zijn om regels te maken die slechts gedeeltelijk zijn ingevuld. "
+"Omdat de regel wordt uitgevoerd op een <i>per parameter</i> basis kun je "
+"bijvoorbeeld een regel bovenaan je lijst maken die alleen de activatie op "
+"<i>nee</i> zet voor slechts enkele van je hosts zonder de andere parameters "
+"in te stellen."
 
 msgid ""
 "Do not forget to activate the plugin in at least one of your rules. It can "
@@ -28139,6 +28159,10 @@ msgstr "Onverenigbaar - TODO"
 msgid "Incompatible Werks"
 msgstr "Onverenigbare Werks"
 
+#, fuzzy, python-format
+msgid "Incompatible version: %s"
+msgstr "Onverenigbare Werks"
+
 msgid "Incompatible werk"
 msgstr "Onverenigbaar werk"
 
@@ -28146,6 +28170,10 @@ msgid "Incompatible werks"
 msgstr "Onverenigbare werken"
 
 msgid "Incomplete Calls"
+msgstr "Onvolledige oproepen"
+
+#, fuzzy
+msgid "Incomplete report"
 msgstr "Onvolledige oproepen"
 
 msgid ""
@@ -28954,6 +28982,10 @@ msgstr "Ongeldige reguliere expressie '%s': %s"
 #, python-format
 msgid "Invalid regular expression: %s"
 msgstr "Ongeldige reguliere expressie: %s"
+
+#, fuzzy
+msgid "Invalid report"
+msgstr "Ongeldige ident"
 
 #, python-format
 msgid "Invalid report element type '%s'"
@@ -30983,12 +31015,14 @@ msgstr "Licentiestatus"
 
 #, python-format
 msgid ""
-"Licensing files (data and logs) from var/check_mk/licensing and var/log: %s"
+"Licensing files (data, config and logs) from var/check_mk/licensing, etc/"
+"check_mk/multisite.d and var/log: %s"
 msgstr ""
 
 #, python-format
 msgid ""
-"Licensing files from var/check_mk/licensing and var/log/licensing.log.%s"
+"Licensing files from var/check_mk/licensing, etc/check_mk, var/check_mk/core "
+"and var/log/licensing.log.%s"
 msgstr ""
 
 #, fuzzy
@@ -48986,8 +49020,10 @@ msgstr ""
 "Sorry, u kunt de contactgroep '<b>%s</b>' niet toewijzen omdat u geen lid "
 "bent van die groep. Uw groepen zijn: <b>%s</b>"
 
-#, python-format
-msgid "Sorry, you cannot create combined graphs for more than %d objects"
+#, fuzzy, python-format
+msgid ""
+"Sorry, you cannot create combined graphs for more than %d objects. Please "
+"add more filters to match on less hosts/services."
 msgstr ""
 "Sorry, u kunt geen gecombineerde grafieken maken voor meer dan %d objecten"
 
@@ -48995,8 +49031,10 @@ msgstr ""
 msgid "Sorry, you cannot edit the folder %s. It is locked."
 msgstr "Sorry, u kunt de map %s niet bewerken. Deze is vergrendeld."
 
-#, python-format
-msgid "Sorry, you cannot have more than %d metrics in a combined graph."
+#, fuzzy, python-format
+msgid ""
+"Sorry, you cannot have more than %d metrics in a combined graph. Please add "
+"more filters to match on less metrics."
 msgstr ""
 "Sorry, je kunt niet meer dan %d metrieken in een gecombineerde grafiek "
 "hebben."
@@ -54031,6 +54069,12 @@ msgstr ""
 msgid "The file %s needs to be created and maintained manually."
 msgstr "Het bestand %s moet handmatig worden aangemaakt en onderhouden."
 
+#, fuzzy, python-format
+msgid ""
+"The file %s needs to be created and maintained manually.<br>Configuration "
+"entries provided with this rule will be ignored."
+msgstr "Het bestand %s moet handmatig worden aangemaakt en onderhouden."
+
 #, fuzzy
 msgid "The file does not contain XML text"
 msgstr "Het logbestand bestaat niet op de site."
@@ -58562,7 +58606,7 @@ msgid ""
 "to use the character \"@\" in any of your subgroup names. If this is the "
 "case, please choose any ASCII character that is NOT used in any of your "
 "subgroup names. You can also specify a combination of characters. For "
-"information: the subgroup delimiter is used to seperate the subgroup name "
+"information: the subgroup delimiter is used to separate the subgroup name "
 "from the main section name in the configuration file. For example: [My "
 "Subgroup@My Main Section]."
 msgstr ""
@@ -66438,6 +66482,11 @@ msgstr "Wachtende verbindingen"
 
 msgid "Waiting containers"
 msgstr "Wachtende containers"
+
+msgid ""
+"Waiting for first status update from the job. In case this message is shown "
+"for a longer time, the startup got interrupted."
+msgstr ""
 
 msgid "Waiting for new master initialization"
 msgstr "Wachten op nieuwe master initialisatie"

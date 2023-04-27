@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 #
@@ -482,9 +482,9 @@ msgstr[2] "Adaugă element"
 msgid "%d sites %s: %s"
 msgstr ""
 
-#, python-format
-msgid "%d sites without history: %s"
-msgstr ""
+#, fuzzy, python-format
+msgid "%d sites with errors: %s"
+msgstr "Renunț cu o eroare"
 
 #, fuzzy, python-format
 msgid "%d specific settings"
@@ -15342,6 +15342,10 @@ msgid ""
 "micoseconds."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Deploy %s"
+msgstr "cu context"
+
 msgid "Deploy AD-Replication plugin"
 msgstr ""
 
@@ -17073,6 +17077,15 @@ msgid "Do not display the host name"
 msgstr ""
 
 msgid "Do not encrypt the backup"
+msgstr ""
+
+msgid ""
+"Do not forget to activate the plugin (i.e., deploy with or without "
+"configuration in at least one of your rules. It can be useful to create "
+"rules that are only partially filled out. Since the rule execution is done "
+"on a <i>per parameter</i> base you can for example create one rule at the "
+"top of your list that just sets the activation to <i>no</i> for just some of "
+"your hosts without setting any of the other parameters."
 msgstr ""
 
 msgid ""
@@ -26803,6 +26816,10 @@ msgstr ""
 msgid "Incompatible Werks"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Incompatible version: %s"
+msgstr "Confirmă Problemele"
+
 #, fuzzy
 msgid "Incompatible werk"
 msgstr "Confirmă Problemele"
@@ -26813,6 +26830,10 @@ msgstr "Confirmă Problemele"
 
 msgid "Incomplete Calls"
 msgstr ""
+
+#, fuzzy
+msgid "Incomplete report"
+msgstr "Conexiuni Active"
 
 msgid ""
 "Increase this value if WMI-based services are switching constantly into "
@@ -27626,6 +27647,10 @@ msgstr ""
 #, python-format
 msgid "Invalid regular expression: %s"
 msgstr ""
+
+#, fuzzy
+msgid "Invalid report"
+msgstr "Nume tablespace"
 
 #, python-format
 msgid "Invalid report element type '%s'"
@@ -29742,12 +29767,14 @@ msgstr "licente nefolosite"
 
 #, python-format
 msgid ""
-"Licensing files (data and logs) from var/check_mk/licensing and var/log: %s"
+"Licensing files (data, config and logs) from var/check_mk/licensing, etc/"
+"check_mk/multisite.d and var/log: %s"
 msgstr ""
 
 #, python-format
 msgid ""
-"Licensing files from var/check_mk/licensing and var/log/licensing.log.%s"
+"Licensing files from var/check_mk/licensing, etc/check_mk, var/check_mk/core "
+"and var/log/licensing.log.%s"
 msgstr ""
 
 #, fuzzy
@@ -48015,7 +48042,9 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "Sorry, you cannot create combined graphs for more than %d objects"
+msgid ""
+"Sorry, you cannot create combined graphs for more than %d objects. Please "
+"add more filters to match on less hosts/services."
 msgstr ""
 
 #, python-format
@@ -48023,7 +48052,9 @@ msgid "Sorry, you cannot edit the folder %s. It is locked."
 msgstr ""
 
 #, python-format
-msgid "Sorry, you cannot have more than %d metrics in a combined graph."
+msgid ""
+"Sorry, you cannot have more than %d metrics in a combined graph. Please add "
+"more filters to match on less metrics."
 msgstr ""
 
 msgid "Sorry, you have no permission for this host."
@@ -52412,6 +52443,12 @@ msgstr ""
 msgid "The file %s needs to be created and maintained manually."
 msgstr ""
 
+#, python-format
+msgid ""
+"The file %s needs to be created and maintained manually.<br>Configuration "
+"entries provided with this rule will be ignored."
+msgstr ""
+
 #, fuzzy
 msgid "The file does not contain XML text"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
@@ -55861,7 +55898,7 @@ msgid ""
 "to use the character \"@\" in any of your subgroup names. If this is the "
 "case, please choose any ASCII character that is NOT used in any of your "
 "subgroup names. You can also specify a combination of characters. For "
-"information: the subgroup delimiter is used to seperate the subgroup name "
+"information: the subgroup delimiter is used to separate the subgroup name "
 "from the main section name in the configuration file. For example: [My "
 "Subgroup@My Main Section]."
 msgstr ""
@@ -62943,6 +62980,11 @@ msgstr "Conexiuni Active"
 #, fuzzy
 msgid "Waiting containers"
 msgstr "Conexiuni Active"
+
+msgid ""
+"Waiting for first status update from the job. In case this message is shown "
+"for a longer time, the startup got interrupted."
+msgstr ""
 
 msgid "Waiting for new master initialization"
 msgstr ""

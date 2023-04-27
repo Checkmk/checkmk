@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 #
@@ -494,8 +494,8 @@ msgstr[1] ""
 msgid "%d sites %s: %s"
 msgstr "%d locais %s: %s"
 
-#, python-format
-msgid "%d sites without history: %s"
+#, fuzzy, python-format
+msgid "%d sites with errors: %s"
 msgstr "Sites %d sem histórico: %s"
 
 #, python-format
@@ -15901,6 +15901,10 @@ msgid ""
 msgstr ""
 "Dependendo da precisão, a unidade pode ser milissegundos ou micossegundos."
 
+#, fuzzy, python-format
+msgid "Deploy %s"
+msgstr "Implantar agentes"
+
 msgid "Deploy AD-Replication plugin"
 msgstr "Implantar plug-in de replicação AD"
 
@@ -17615,6 +17619,22 @@ msgstr "Não mostrar o nome do anfitrião"
 
 msgid "Do not encrypt the backup"
 msgstr "Não encripte o backup"
+
+#, fuzzy
+msgid ""
+"Do not forget to activate the plugin (i.e., deploy with or without "
+"configuration in at least one of your rules. It can be useful to create "
+"rules that are only partially filled out. Since the rule execution is done "
+"on a <i>per parameter</i> base you can for example create one rule at the "
+"top of your list that just sets the activation to <i>no</i> for just some of "
+"your hosts without setting any of the other parameters."
+msgstr ""
+"Não se esqueça de activar o plugin em pelo menos uma das suas regras. Pode "
+"ser útil criar regras que são apenas parcialmente preenchidas. Como a "
+"execução das regras é feita em uma base <i> por parâmetro</i> você pode, por "
+"exemplo, criar uma regra no topo da sua lista que apenas define a ativação "
+"para <i>no</i> para apenas alguns dos seus hosts sem definir nenhum dos "
+"outros parâmetros."
 
 msgid ""
 "Do not forget to activate the plugin in at least one of your rules. It can "
@@ -28283,6 +28303,10 @@ msgstr "Incompatível - TODO"
 msgid "Incompatible Werks"
 msgstr "Incompatíveis Werks"
 
+#, fuzzy, python-format
+msgid "Incompatible version: %s"
+msgstr "Incompatíveis Werks"
+
 msgid "Incompatible werk"
 msgstr "Incompatível estavam"
 
@@ -28290,6 +28314,10 @@ msgid "Incompatible werks"
 msgstr "Incompatíveis"
 
 msgid "Incomplete Calls"
+msgstr "Chamadas Incompletas"
+
+#, fuzzy
+msgid "Incomplete report"
 msgstr "Chamadas Incompletas"
 
 msgid ""
@@ -29108,6 +29136,10 @@ msgstr "Expressão inválida regular '%s': %s"
 #, python-format
 msgid "Invalid regular expression: %s"
 msgstr "Expressão regular inválida: %s"
+
+#, fuzzy
+msgid "Invalid report"
+msgstr "Ident inválido"
 
 #, python-format
 msgid "Invalid report element type '%s'"
@@ -31184,12 +31216,14 @@ msgstr "Status do licenciamento"
 
 #, python-format
 msgid ""
-"Licensing files (data and logs) from var/check_mk/licensing and var/log: %s"
+"Licensing files (data, config and logs) from var/check_mk/licensing, etc/"
+"check_mk/multisite.d and var/log: %s"
 msgstr ""
 
 #, python-format
 msgid ""
-"Licensing files from var/check_mk/licensing and var/log/licensing.log.%s"
+"Licensing files from var/check_mk/licensing, etc/check_mk, var/check_mk/core "
+"and var/log/licensing.log.%s"
 msgstr ""
 
 #, fuzzy
@@ -49398,8 +49432,10 @@ msgstr ""
 "Desculpe, você não pode atribuir o grupo de contato '<b>%s</b>' porque você "
 "não é membro desse grupo. Os seus grupos são: <b>%s</b>"
 
-#, python-format
-msgid "Sorry, you cannot create combined graphs for more than %d objects"
+#, fuzzy, python-format
+msgid ""
+"Sorry, you cannot create combined graphs for more than %d objects. Please "
+"add more filters to match on less hosts/services."
 msgstr ""
 "Desculpe, não é possível criar gráficos combinados para mais de %d objetos"
 
@@ -49407,8 +49443,10 @@ msgstr ""
 msgid "Sorry, you cannot edit the folder %s. It is locked."
 msgstr "Desculpe, você não pode editar a pasta %s. Está bloqueada."
 
-#, python-format
-msgid "Sorry, you cannot have more than %d metrics in a combined graph."
+#, fuzzy, python-format
+msgid ""
+"Sorry, you cannot have more than %d metrics in a combined graph. Please add "
+"more filters to match on less metrics."
 msgstr ""
 "Desculpe, você não pode ter mais do que %d de métricas em um gráfico "
 "combinado."
@@ -54447,6 +54485,12 @@ msgstr ""
 msgid "The file %s needs to be created and maintained manually."
 msgstr "O ficheiro %s precisa de ser criado e mantido manualmente."
 
+#, fuzzy, python-format
+msgid ""
+"The file %s needs to be created and maintained manually.<br>Configuration "
+"entries provided with this rule will be ignored."
+msgstr "O ficheiro %s precisa de ser criado e mantido manualmente."
+
 #, fuzzy
 msgid "The file does not contain XML text"
 msgstr "O logfile não existe no site."
@@ -58894,7 +58938,7 @@ msgid ""
 "to use the character \"@\" in any of your subgroup names. If this is the "
 "case, please choose any ASCII character that is NOT used in any of your "
 "subgroup names. You can also specify a combination of characters. For "
-"information: the subgroup delimiter is used to seperate the subgroup name "
+"information: the subgroup delimiter is used to separate the subgroup name "
 "from the main section name in the configuration file. For example: [My "
 "Subgroup@My Main Section]."
 msgstr ""
@@ -66794,6 +66838,11 @@ msgstr "Ligações em espera"
 #, fuzzy
 msgid "Waiting containers"
 msgstr "Ligações em espera"
+
+msgid ""
+"Waiting for first status update from the job. In case this message is shown "
+"for a longer time, the startup got interrupted."
+msgstr ""
 
 msgid "Waiting for new master initialization"
 msgstr "À espera de uma nova inicialização principal"

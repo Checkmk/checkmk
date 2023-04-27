@@ -1,4 +1,4 @@
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 #
@@ -491,8 +491,8 @@ msgstr[0] "%d サイト %s 。"
 msgid "%d sites %s: %s"
 msgstr "%d サイト %s: %s"
 
-#, python-format
-msgid "%d sites without history: %s"
+#, fuzzy, python-format
+msgid "%d sites with errors: %s"
 msgstr "履歴のない%dサイト:%s"
 
 #, python-format
@@ -15348,6 +15348,10 @@ msgid ""
 "micoseconds."
 msgstr "精度に応じて、単位はミリ秒またはマイクロ秒のいずれかになります。"
 
+#, fuzzy, python-format
+msgid "Deploy %s"
+msgstr "エージェントを展開する"
+
 msgid "Deploy AD-Replication plugin"
 msgstr "ADレプリケーションプラグインをデプロイする"
 
@@ -16984,6 +16988,21 @@ msgstr "ホスト名を表示しない"
 
 msgid "Do not encrypt the backup"
 msgstr "バックアップを暗号化しないでください"
+
+#, fuzzy
+msgid ""
+"Do not forget to activate the plugin (i.e., deploy with or without "
+"configuration in at least one of your rules. It can be useful to create "
+"rules that are only partially filled out. Since the rule execution is done "
+"on a <i>per parameter</i> base you can for example create one rule at the "
+"top of your list that just sets the activation to <i>no</i> for just some of "
+"your hosts without setting any of the other parameters."
+msgstr ""
+"少なくとも1つのルールでプラグインをアクティブ化することを忘れないでください。"
+"部分的にしか記入されていないルールを作成すると便利な場合があります。ルールの"
+"実行は<i>パラメータごと</i>に基づいて行われるため、たとえば、リストの一番上に"
+"1つのルールを作成して、他のパラメータを設定せずにホストの一部のルールのアク"
+"ティブ化を<i>いいえ</i>に設定することができます。。"
 
 msgid ""
 "Do not forget to activate the plugin in at least one of your rules. It can "
@@ -27346,6 +27365,10 @@ msgstr "互換性がない - TODO"
 msgid "Incompatible Werks"
 msgstr "互換性のないwerk"
 
+#, fuzzy, python-format
+msgid "Incompatible version: %s"
+msgstr "互換性のないwerk"
+
 msgid "Incompatible werk"
 msgstr "互換性のないwerk"
 
@@ -27353,6 +27376,10 @@ msgid "Incompatible werks"
 msgstr "互換性のないワーク"
 
 msgid "Incomplete Calls"
+msgstr "不完全な呼び出し"
+
+#, fuzzy
+msgid "Incomplete report"
 msgstr "不完全な呼び出し"
 
 msgid ""
@@ -28138,6 +28165,10 @@ msgstr "無効な正規表現 '%s': %s"
 #, python-format
 msgid "Invalid regular expression: %s"
 msgstr "無効な正規表現: %s"
+
+#, fuzzy
+msgid "Invalid report"
+msgstr "無効なID"
 
 #, python-format
 msgid "Invalid report element type '%s'"
@@ -30092,13 +30123,15 @@ msgstr "ライセンス"
 
 #, fuzzy, python-format
 msgid ""
-"Licensing files (data and logs) from var/check_mk/licensing and var/log: %s"
+"Licensing files (data, config and logs) from var/check_mk/licensing, etc/"
+"check_mk/multisite.d and var/log: %s"
 msgstr "var/check_mk/core:%s にあるコア・ファイル（設定、状態、履歴）"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Licensing files from var/check_mk/licensing and var/log/licensing.log.%s"
-msgstr ""
+"Licensing files from var/check_mk/licensing, etc/check_mk, var/check_mk/core "
+"and var/log/licensing.log.%s"
+msgstr "var/check_mk/core:%s にあるコア・ファイル（設定、状態、履歴）"
 
 #, fuzzy
 msgid "Licensing notification settings"
@@ -47650,8 +47683,10 @@ msgstr ""
 "いため、割り当てることができません。あなたのグループは次のとおりです: <b>%s</"
 "b>"
 
-#, python-format
-msgid "Sorry, you cannot create combined graphs for more than %d objects"
+#, fuzzy, python-format
+msgid ""
+"Sorry, you cannot create combined graphs for more than %d objects. Please "
+"add more filters to match on less hosts/services."
 msgstr ""
 "申し訳ありませんが、%d を超えるオブジェクトの結合グラフを作成することはできま"
 "せん"
@@ -47660,8 +47695,10 @@ msgstr ""
 msgid "Sorry, you cannot edit the folder %s. It is locked."
 msgstr "申し訳ありませんが、フォルダ %sは編集できません。ロックされています。"
 
-#, python-format
-msgid "Sorry, you cannot have more than %d metrics in a combined graph."
+#, fuzzy, python-format
+msgid ""
+"Sorry, you cannot have more than %d metrics in a combined graph. Please add "
+"more filters to match on less metrics."
 msgstr ""
 "申し訳ありませんが、結合されたグラフに %d を超えるメトリックを含めることはで"
 "きません。"
@@ -52460,6 +52497,12 @@ msgstr ""
 msgid "The file %s needs to be created and maintained manually."
 msgstr "ファイル %s は、手動で作成および保守する必要があります。"
 
+#, fuzzy, python-format
+msgid ""
+"The file %s needs to be created and maintained manually.<br>Configuration "
+"entries provided with this rule will be ignored."
+msgstr "ファイル %s は、手動で作成および保守する必要があります。"
+
 msgid "The file does not contain XML text"
 msgstr "ファイルにXMLテキストが含まれていません"
 
@@ -56765,7 +56808,7 @@ msgid ""
 "to use the character \"@\" in any of your subgroup names. If this is the "
 "case, please choose any ASCII character that is NOT used in any of your "
 "subgroup names. You can also specify a combination of characters. For "
-"information: the subgroup delimiter is used to seperate the subgroup name "
+"information: the subgroup delimiter is used to separate the subgroup name "
 "from the main section name in the configuration file. For example: [My "
 "Subgroup@My Main Section]."
 msgstr ""
@@ -64295,6 +64338,11 @@ msgstr "接続を待機しています"
 
 msgid "Waiting containers"
 msgstr "待機中コンテナ"
+
+msgid ""
+"Waiting for first status update from the job. In case this message is shown "
+"for a longer time, the startup got interrupted."
+msgstr ""
 
 msgid "Waiting for new master initialization"
 msgstr "新しいマスターの初期化を待っています"

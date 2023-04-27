@@ -507,38 +507,37 @@ def test_license_usage_report(
 
 
 def test_license_usage_report_from_remote() -> None:
-    raw_report = {
-        "VERSION": "-1",
-        "history": [
-            {
-                "instance_id": "4b66f726-c4fc-454b-80a6-4917d1b386ce",
-                "site_hash": "remote-site-hash",
-                "version": "",
-                "edition": "",
-                "platform": (
-                    "A very long string with len>50 describing the platform"
-                    " a Checkmk server is operating on."
-                ),
-                "is_cma": False,
-                "sample_time": 1,
-                "timezone": "",
-                "num_hosts": 2,
-                "num_hosts_cloud": 1,
-                "num_hosts_shadow": 6,
-                "num_hosts_excluded": 3,
-                "num_services": 4,
-                "num_services_cloud": 2,
-                "num_services_shadow": 7,
-                "num_services_excluded": 5,
-                "extension_ntop": True,
-                "VERY_NEW_FIELD": "VERY NEW VALUE",
-            }
-        ],
-    }
-    site_hash = "remote-site-hash-2"
     with pytest.raises(UnknownSampleParserError) as e:
-        LocalLicenseUsageHistory.parse_from_remote(raw_report, site_hash=site_hash)
-
+        LocalLicenseUsageHistory.parse_from_remote(
+            {
+                "VERSION": "-1",
+                "history": [
+                    {
+                        "instance_id": "4b66f726-c4fc-454b-80a6-4917d1b386ce",
+                        "site_hash": "remote-site-hash",
+                        "version": "",
+                        "edition": "",
+                        "platform": (
+                            "A very long string with len>50 describing the platform"
+                            " a Checkmk server is operating on."
+                        ),
+                        "is_cma": False,
+                        "sample_time": 1,
+                        "timezone": "",
+                        "num_hosts": 2,
+                        "num_hosts_cloud": 1,
+                        "num_hosts_shadow": 6,
+                        "num_hosts_excluded": 3,
+                        "num_services": 4,
+                        "num_services_cloud": 2,
+                        "num_services_shadow": 7,
+                        "num_services_excluded": 5,
+                        "extension_ntop": True,
+                        "VERY_NEW_FIELD": "VERY NEW VALUE",
+                    }
+                ],
+            }
+        )
     assert str(e.value) == "Unknown report version: '-1'"
 
 

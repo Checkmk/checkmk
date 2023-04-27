@@ -152,7 +152,7 @@ class Crawler:
 
         self._todos = deque([Url(self.site.internal_url)])
 
-    async def crawl(self, max_tasks: int = 10) -> None:
+    async def crawl(self, max_tasks: int) -> None:
         browser, storage_state = await self.create_browser_and_storage_state()
         # makes sure authentication cookies is also available in the "requests" session.
         for cookie_dict in storage_state["cookies"]:

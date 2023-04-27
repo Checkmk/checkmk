@@ -12,7 +12,7 @@ from tests.testlib.crawler import Crawler, Iterable, mutate_url_with_xss_payload
 
 
 def test_crawl(test_crawler: Crawler) -> None:
-    asyncio.run(test_crawler.crawl(max_tasks=int(os.environ.get("GUI_CRAWLER_TASK_LIMIT", 10))))
+    asyncio.run(test_crawler.crawl(max_tasks=int(os.environ.get("GUI_CRAWLER_TASK_LIMIT", 5))))
 
 
 @pytest.mark.type("unit")

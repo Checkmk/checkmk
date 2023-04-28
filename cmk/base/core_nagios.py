@@ -145,7 +145,7 @@ def _validate_licensing(
 ) -> None:
     licensing_handler = licensing_handler_type.make()
     if block_effect := licensing_handler.effect_core(
-        licensing_counter["services"], len(config.shadow_hosts)
+        licensing_counter["services"], len(config.get_shadow_hosts())
     ).block:
         raise MKGeneralException(block_effect.message)
 

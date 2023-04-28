@@ -12,7 +12,9 @@ def get_licensing_handler_type() -> type[LicensingHandler]:
     if is_raw_edition():
         from cmk.utils.licensing.registry import get_available_licensing_handler_type
     else:
-        from cmk.utils.cee.licensing.registry import get_available_licensing_handler_type
+        from cmk.utils.cee.licensing.registry import (  # type: ignore  # pylint: disable=no-name-in-module,import-error
+            get_available_licensing_handler_type,
+        )
     return get_available_licensing_handler_type()
 
 

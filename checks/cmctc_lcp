@@ -12,18 +12,27 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.cmctc import DETECT_CMCTC
 
-# mypy: disable-error-code="list-item"
-
 
 class Sensor(NamedTuple):
     index_: str
     status: str
-    value: str
-    high: str
-    low: str
-    warn: str
+    reading: float
+    high: float
+    low: float
+    warn: float
     description: str
     type_: str
+
+    def has_levels(self) -> bool:
+        return {self.low, self.warn, self.high} != {0.0} and self.low < self.high
+
+    @property
+    def levels(self) -> tuple[float, float] | None:
+        return (self.warn, self.high) if self.has_levels() else None
+
+    @property
+    def levels_lower(self) -> tuple[float, float] | None:
+        return (self.low, float("-inf")) if self.has_levels() else None
 
 
 Section = Mapping[str, Sensor]
@@ -78,14 +87,14 @@ def parse_cmctc_lcp(string_table: StringTable) -> Section:
         else index: Sensor(
             index_=index,
             status=status,
-            value=value,
-            high=high,
-            low=low,
-            warn=warn,
+            reading=float(reading),
+            high=float(high),
+            low=float(low),
+            warn=float(warn),
             description=description,
             type_=sensor_spec[1],
         )
-        for index, typeid, status, value, high, low, warn, description in string_table
+        for index, typeid, status, reading, high, low, warn, description in string_table
         if (sensor_spec := _CMCTC_LCP_SENSORS.get(typeid))
     }
 
@@ -128,32 +137,27 @@ def check_cmctc_lcp(
         return
 
     unit = map_unit[sensor.type_]
-    value = int(sensor.value)
     infotext = ""
     if sensor.description:
         infotext += "[%s] " % sensor.description
     state, extra_info = map_sensor_state[sensor.status]
-    yield state, "%s%d%s" % (infotext, value, unit), []
+    yield state, "%s%d%s" % (infotext, int(sensor.reading), unit), []
 
     extra_state = 0
     if params:
         warn, crit = params
-        perfdata = [(sensortype, value, warn, crit)]
-        if value >= crit:
+        perfdata = [(sensortype, sensor.reading, warn, crit)]
+        if sensor.reading >= crit:
             extra_state = 2
-        elif value >= warn:
+        elif sensor.reading >= warn:
             extra_state = 1
 
         if extra_state:
             extra_info += " (warn/crit at %d/%d%s)" % (warn, crit, unit)
     else:
-        perfdata = [(sensortype, value)]
-        # Assumption: if high and low are both 0
-        # then there are no device levels
-        if not (int(sensor.high) == 0 and int(sensor.low) == 0) and int(sensor.high) > int(
-            sensor.low
-        ):
-            if value >= int(sensor.high) or value <= int(sensor.low):
+        perfdata = [(sensortype, sensor.reading, None, None)]
+        if sensor.has_levels():
+            if sensor.reading >= sensor.high or sensor.reading <= sensor.low:
                 extra_state = 2
                 extra_info += " (device lower/upper crit at %s/%s%s)" % (
                     sensor.low,
@@ -175,22 +179,12 @@ def check_cmctc_lcp_temp(
         return
 
     status = int(sensor.status)
-    levels = (
-        None
-        if sensor.high == sensor.low == sensor.warn == "0"
-        else (float(sensor.warn), float(sensor.high))
-    )
-    levels_low = (
-        None
-        if sensor.high == sensor.low == sensor.warn == "0"
-        else (float(sensor.low), float("-inf"))
-    )  # no lower critical level specified
     yield check_temperature(
-        float(sensor.value),
+        sensor.reading,
         params,
         "cmctc_lcp_temp_%s" % item,
-        dev_levels=levels,
-        dev_levels_lower=levels_low,
+        dev_levels=sensor.levels,
+        dev_levels_lower=sensor.levels_lower,
         dev_status=cmctc_translate_status(status),
         dev_status_name="Unit: %s" % cmctc_translate_status_text(status),
     )

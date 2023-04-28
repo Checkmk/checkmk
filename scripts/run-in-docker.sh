@@ -69,6 +69,7 @@ docker run -a stdout -a stderr \
     --rm \
     ${TERMINAL_FLAG} \
     --init \
+    --cpus 1.5 \
     -u "${UID}:$(id -g)" \
     -v "${REPO_DIR}:${REPO_DIR}" \
     -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \

@@ -227,7 +227,7 @@ def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
     if process_def.with_sudo:
         proc = psutil.Process(process_def.process.pid)
         for child in (children := proc.children(recursive=True)):
-            if child.name() != "snmpsimd.py":
+            if child.name() == "snmpsimd.py":
                 return child
         logger.debug("Did not find snmpsimd in children %r", children)
         return None

@@ -212,6 +212,7 @@ class DummyMonitoringCore : public MonitoringCore {
     [[nodiscard]] int32_t numHosts() const override { return {}; }
     [[nodiscard]] int32_t numServices() const override { return {}; }
     [[nodiscard]] std::string programVersion() const override { return {}; }
+    [[nodiscard]] std::string edition() const override { return {}; }
 
     [[nodiscard]] int32_t externalCommandBufferSlots() const override {
         return {};
@@ -245,6 +246,7 @@ class DummyMonitoringCore : public MonitoringCore {
 
     [[nodiscard]] bool hasEventHandlers() const override { return {}; }
 
+    [[nodiscard]] std::string license_state() const override { return {}; }
     [[nodiscard]] bool isTrialExpired(
         std::chrono::system_clock::time_point /*now*/) const override {
         return {};
@@ -1006,6 +1008,7 @@ static ColumnDefinitions status_columns() {
         {"connections", ColumnType::double_},
         {"connections_rate", ColumnType::double_},
         {"core_pid", ColumnType::int_},
+        {"edition", ColumnType::string},
         {"enable_event_handlers", ColumnType::int_},
         {"enable_flap_detection", ColumnType::int_},
         {"enable_notifications", ColumnType::int_},
@@ -1036,6 +1039,7 @@ static ColumnDefinitions status_columns() {
         {"is_trial_expired", ColumnType::int_},
         {"last_command_check", ColumnType::time},
         {"last_log_rotation", ColumnType::time},
+        {"license_state", ColumnType::string},
         {"license_usage_history", ColumnType::blob},
         {"livechecks", ColumnType::double_},
         {"livechecks_rate", ColumnType::double_},

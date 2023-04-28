@@ -123,6 +123,7 @@ public:
     [[nodiscard]] virtual int32_t numHosts() const = 0;
     [[nodiscard]] virtual int32_t numServices() const = 0;
     [[nodiscard]] virtual std::string programVersion() const = 0;
+    [[nodiscard]] virtual std::string edition() const = 0;
 
     [[nodiscard]] virtual int32_t externalCommandBufferSlots() const = 0;
     [[nodiscard]] virtual int32_t externalCommandBufferUsage() const = 0;
@@ -146,6 +147,7 @@ public:
 
     [[nodiscard]] virtual bool hasEventHandlers() const = 0;
 
+    [[nodiscard]] virtual std::string license_state() const = 0;
     [[nodiscard]] virtual bool isTrialExpired(
         std::chrono::system_clock::time_point now) const = 0;
 

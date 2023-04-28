@@ -194,6 +194,9 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<StringColumn<MonitoringCore>>(
         "program_version", "The version of the monitoring daemon", offsets,
         [](const MonitoringCore &r) { return r.programVersion(); }));
+    addColumn(std::make_unique<StringColumn<MonitoringCore>>(
+        "edition", "The edition of the site", offsets,
+        [](const MonitoringCore &r) { return r.edition(); }));
 
     // External command buffer
     addColumn(std::make_unique<IntColumn<MonitoringCore>>(
@@ -295,6 +298,9 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "Whether or not at alert handler rules are configured (0/1)", offsets,
         [](const MonitoringCore &r) { return r.hasEventHandlers(); }));
 
+    addColumn(std::make_unique<StringColumn<MonitoringCore>>(
+        "license_state", "The current license state of the site", offsets,
+        [](const MonitoringCore &r) { return r.license_state(); }));
     addColumn(std::make_unique<BoolColumn<MonitoringCore>>(
         "is_trial_expired", "Whether or not expired trial of demo version",
         offsets, [](const MonitoringCore &r) {

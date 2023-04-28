@@ -347,6 +347,7 @@ int32_t NagiosCore::intervalLength() const { return interval_length; }
 int32_t NagiosCore::numHosts() const { return g_num_hosts; }
 int32_t NagiosCore::numServices() const { return g_num_services; }
 std::string NagiosCore::programVersion() const { return get_program_version(); }
+std::string NagiosCore::edition() const { return "DUMMY_EDITION"; }
 
 int32_t NagiosCore::externalCommandBufferSlots() const {
     return nagios_compat_external_command_buffer_slots();
@@ -387,6 +388,8 @@ double NagiosCore::helperUsageChecker() const { return 0.0; }
 bool NagiosCore::hasEventHandlers() const {
     return g_any_event_handler_enabled;
 }
+
+std::string NagiosCore::license_state() const { return "DUMMY_LICENSE_STATE"; }
 
 bool NagiosCore::isTrialExpired(
     std::chrono::system_clock::time_point /*now*/) const {

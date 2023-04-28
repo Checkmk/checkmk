@@ -146,6 +146,7 @@ public:
     int32_t numHosts() const override;
     int32_t numServices() const override;
     std::string programVersion() const override;
+    std::string edition() const override;
 
     int32_t externalCommandBufferSlots() const override;
     int32_t externalCommandBufferUsage() const override;
@@ -169,6 +170,7 @@ public:
 
     bool hasEventHandlers() const override;
 
+    std::string license_state() const override;
     bool isTrialExpired(
         std::chrono::system_clock::time_point now) const override;
 

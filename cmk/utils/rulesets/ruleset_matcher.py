@@ -155,6 +155,14 @@ class RulesetMatchObject:
         )
 
 
+_TLabel = TypeVar("_TLabel")
+
+
+def merge_cluster_labels(all_node_labels: Sequence[Mapping[str, _TLabel]]) -> Mapping[str, _TLabel]:
+    """A cluster has all its nodes labels. Last node wins."""
+    return {name: label for node_labels in all_node_labels for name, label in node_labels.items()}
+
+
 class RulesetMatcher:
     """Performing matching on host / service rulesets
 
@@ -876,8 +884,15 @@ class RulesetOptimizer:
             match_object, self._labels.host_label_rules
         )
 
+    def _discovered_labels_of_host(self, hostname: HostName) -> Labels:
+        return (
+            self._load_discovered_labels_file(hostname)
+            if (nodes := self._nodes_of.get(hostname)) is None
+            else merge_cluster_labels([self._load_discovered_labels_file(node) for node in nodes])
+        )
+
     @staticmethod
-    def _discovered_labels_of_host(hostname: HostName) -> Labels:
+    def _load_discovered_labels_file(hostname: HostName) -> Labels:
         return {
             label_id: label["value"]
             for label_id, label in DiscoveredHostLabelsStore(hostname).load().items()

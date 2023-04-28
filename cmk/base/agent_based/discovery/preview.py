@@ -116,7 +116,6 @@ def get_check_preview(
                 node_name: do_load_labels(node_name)
                 for node_name in config_cache.nodes_of(host_name) or ()
             },
-            clusters_existing_host_labels=do_load_labels(host_name),
             ruleset_matcher=config_cache.ruleset_matcher,
         )
         if config_cache.is_cluster(host_name)

@@ -50,12 +50,7 @@ from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import (
-    analyse_host_labels,
-    discover_host_labels,
-    do_load_labels,
-    rewrite_cluster_host_labels_file,
-)
+from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
 from .utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = ["get_host_services"]
@@ -360,11 +355,6 @@ def autodiscovery(
             if discovery_result:
                 discovery_results[host_name] = discovery_result
                 activation_required |= activate_host
-
-    cluster_info = config_cache.get_cluster_cache_info()
-    rewrite_cluster_host_labels_file(
-        hosts_processed, clusters_of=cluster_info.clusters_of, nodes_of=cluster_info.nodes_of
-    )
 
     return discovery_results, activation_required
 

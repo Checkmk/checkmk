@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Discovery of HostLabels."""
 from collections.abc import Iterable, Mapping, Sequence
-from typing import TypeVar
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+from cmk.utils.rulesets.ruleset_matcher import merge_cluster_labels, RulesetMatcher
 from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.checkers import HostKey, HostLabelDiscoveryPlugin, SourceType
@@ -22,7 +21,6 @@ __all__ = [
     "analyse_cluster_labels",
     "discover_host_labels",
     "do_load_labels",
-    "rewrite_cluster_host_labels_file",
 ]
 
 
@@ -32,7 +30,6 @@ def analyse_cluster_labels(
     *,
     discovered_host_labels: Mapping[HostName, Sequence[HostLabel]],
     existing_host_labels: Mapping[HostName, Sequence[HostLabel]],
-    clusters_existing_host_labels: Sequence[HostLabel],
     ruleset_matcher: RulesetMatcher,
 ) -> tuple[QualifiedDiscovery[HostLabel], Mapping[HostName, Sequence[HostLabel]]]:
     kept_labels: dict[HostName, Sequence[HostLabel]] = {}
@@ -47,7 +44,9 @@ def analyse_cluster_labels(
         kept_labels.update(kept_node_labels)
 
     cluster_labels = QualifiedDiscovery[HostLabel](
-        preexisting=clusters_existing_host_labels,
+        preexisting=_merge_cluster_labels_sequence(
+            nodes_labels for node in node_names if (nodes_labels := existing_host_labels.get(node))
+        ),
         current=_merge_cluster_labels_sequence(
             nodes_labels for node in node_names if (nodes_labels := kept_labels.get(node))
         ),
@@ -58,40 +57,13 @@ def analyse_cluster_labels(
     return cluster_labels, kept_labels
 
 
-_TLabel = TypeVar("_TLabel")
-
-
 def _merge_cluster_labels_sequence(
     all_node_labels: Iterable[Iterable[HostLabel]],
 ) -> Sequence[HostLabel]:
     # rigorously use HostLabels until serialization in DiscoveredHostLabelsStore and consolidate with _merge_cluster_labels...
     return list(
-        _merge_cluster_labels([{l.name: l for l in labels} for labels in all_node_labels]).values()
+        merge_cluster_labels([{l.name: l for l in labels} for labels in all_node_labels]).values()
     )
-
-
-def _merge_cluster_labels(
-    all_node_labels: Sequence[Mapping[str, _TLabel]]
-) -> Mapping[str, _TLabel]:
-    """A cluster has all its nodes labels. Last node wins."""
-    return {name: label for node_labels in all_node_labels for name, label in node_labels.items()}
-
-
-def rewrite_cluster_host_labels_file(
-    nodes: Iterable[HostName],
-    *,
-    clusters_of: Mapping[HostName, Iterable[HostName]],
-    nodes_of: Mapping[HostName, Iterable[HostName]],
-) -> None:
-    affected_clusters = {
-        cluster for node_name in nodes for cluster in clusters_of.get(node_name, ())
-    }
-    for cluster in affected_clusters:
-        DiscoveredHostLabelsStore(cluster).save(
-            _merge_cluster_labels(
-                [DiscoveredHostLabelsStore(node_name).load() for node_name in nodes_of[cluster]]
-            )
-        )
 
 
 def analyse_host_labels(

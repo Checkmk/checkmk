@@ -295,8 +295,6 @@ private:
     bool stop_requested_ = false;
     thread_callback callback_ = [] { return true; };  // nothing
 
-    uint16_t working_port_ = cma::cfg::kMainPort;
-
     // First Class Objects
     cma::world::ExternalPort external_port_;
     AsyncAnswer &getAsyncAnswer() { return answer_; }

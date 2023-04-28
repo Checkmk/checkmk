@@ -70,18 +70,32 @@ void ServiceProcessor::startService() {
         return;
     }
 
-    auto installed = cfg::cap::Install();
-    cfg::upgrade::UpgradeLegacy(cfg::upgrade::Force::no);
-
-    // service must reload config, because service may reconfigure itself
-    ReloadConfig();
-
+    const auto results = executeOptionalTasks();
     rm_lwa_thread_ = std::thread(&cfg::rm_lwa::Execute);
-
     thread_ = std::thread(&ServiceProcessor::mainThread, this, &external_port_,
-                          installed);
+                          results.cap_installed);
 
     XLOG::l.t("Successful start of thread");
+}
+
+ServiceProcessor::OptionalTasksResults
+ServiceProcessor::executeOptionalTasks() {
+    switch (GetModus()) {
+        case Modus::service: {
+            const bool installed = cfg::cap::Install();
+            cfg::upgrade::UpgradeLegacy(cfg::upgrade::Force::no);
+            // service must reload config: service may reconfigure itself
+            ReloadConfig();
+            return {.cap_installed = installed};
+        }
+        case Modus::integration:
+            [[fallthrough]];
+        case Modus::app:
+            [[fallthrough]];
+        case Modus::test:
+            break;
+    }
+    return {};
 }
 
 void ServiceProcessor::startServiceAsLegacyTest() {

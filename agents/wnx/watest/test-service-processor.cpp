@@ -3,6 +3,7 @@
 //
 #include "pch.h"
 
+#include <numeric>
 #include <ranges>
 
 #include "carrier.h"
@@ -257,17 +258,39 @@ bool MailboxCallback(const cma::mailslot::Slot *slot, const void *data, int len,
 }
 }  // namespace
 
+// TODO(sk): move this function in test_tools
+/// Not easy to test
+std::optional<uint16_t> findFreePort(uint16_t start, uint16_t range) {
+    for (auto port_num = start; port_num < start + range; ++port_num) {
+        asio::ip::tcp::endpoint ep(asio::ip::address_v6::any(), port_num);
+        asio::io_context context;
+        try {
+            asio::ip::tcp::acceptor acceptor(context, ep.protocol());
+            acceptor.bind(ep);
+            return port_num;
+        } catch (std::exception &) {
+            // not available
+        }
+    }
+
+    return {};
+}
+
 class ServiceProcessorTestFixture : public ::testing::Test {
 public:
     void SetUp() override {
         temp_fs = tst::TempCfgFs::CreateNoIo();
+        const auto port = findFreePort(21550, 100);
+        ASSERT_TRUE(port.has_value());
         ASSERT_TRUE(
-            temp_fs->loadContent("global:\n"
-                                 "  enabled: yes\n"
-                                 "  sections: check_mk\n"
-                                 "system:\n"
-                                 "  controller:\n"
-                                 "    agent_channel: mailslot\n"));
+            temp_fs->loadContent(fmt::format("global:\n"
+                                             "  enabled: yes\n"
+                                             "  sections: check_mk\n"
+                                             "  port: {}\n"
+                                             "system:\n"
+                                             "  controller:\n"
+                                             "    agent_channel: mailslot\n",
+                                             *port)));
         mailbox.ConstructThread(MailboxCallback, 20, &md,
                                 wtools::SecurityLevel::standard);
         sp.startService();
@@ -294,10 +317,10 @@ public:
                         }};
     carrier::CoreCarrier cc;
 };
-TEST_F(ServiceProcessorTestFixture, YamlOverMailSlot) {
+TEST_F(ServiceProcessorTestFixture, YamlOverMailSlotComponent) {
     ASSERT_TRUE(cc.establishCommunication(sp.getInternalPort()));
     cc.sendYaml("TestSite", cmd);
-    tst::WaitForSuccessSilent(1000ms, [this] { return !md.data.empty(); });
+    tst::WaitForSuccessSilent(2000ms, [this] { return !md.data.empty(); });
     EXPECT_GE(md.data.size(), 100U);
     std::string s{md.data.data(), md.data.size()};
     EXPECT_TRUE(s.starts_with("<<<check_mk>>>"));

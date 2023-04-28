@@ -266,6 +266,10 @@ public:
 
 private:
     wtools::InternalUsersDb iu_;
+    struct OptionalTasksResults {
+        bool cap_installed{false};
+    };
+    static OptionalTasksResults executeOptionalTasks();
     std::vector<uint8_t> makeTestString(const char *text) const {
         const std::string test{text == nullptr ? "" : text};
         return std::vector<uint8_t>{test.begin(), test.end()};

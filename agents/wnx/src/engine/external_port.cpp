@@ -525,7 +525,8 @@ void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
 
     } catch (std::exception &e) {
         registerAsioContext(nullptr);  // cleanup
-        std::cerr << "Exception: " << e.what() << "\n";
+        std::cerr << "Exception in IO/ip: " << e.what() << "port " << port
+                  << " \n";
         XLOG::l(XLOG::kCritError)("IO broken with exception {}", e.what());
     }
 }
@@ -544,7 +545,7 @@ void ExternalPort::mailslotThreadProc(const ReplyFunc &reply_func,
         XLOG::l.i("IO ends...");
 
     } catch (std::exception &e) {
-        std::cerr << "Exception: " << e.what() << "\n";
+        std::cerr << "Exception in IO/ms: " << e.what() << "\n";
         XLOG::l(XLOG::kCritError)("IO broken with exception {}", e.what());
     }
 }

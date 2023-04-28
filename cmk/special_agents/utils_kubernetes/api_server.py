@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import itertools
 import json
 import logging
@@ -153,14 +154,15 @@ class CoreAPI(RawAPI):
         request = requests.Request("GET", self._config.url("/version"))
         return send_request(self._config, self._client, request).text
 
-    def query_kubelet_metrics(self, node_name: str) -> str:
-        request = requests.Request(
-            "GET", self._config.url(f"/api/v1/nodes/{node_name}/proxy/metrics")
-        )
-        try:
-            return send_request(self._config, self._client, request).text
-        except requests.RequestException:
-            return ""
+    def query_kubelet_metrics(self, node_names: Sequence[str]) -> Sequence[str]:
+        result = []
+        for node_name in node_names:
+            request = requests.Request(
+                "GET", self._config.url(f"/api/v1/nodes/{node_name}/proxy/metrics")
+            )
+            with contextlib.suppress(requests.RequestException):
+                result.append(send_request(self._config, self._client, request).text)
+        return result
 
     def query_raw_nodes(self) -> JSONNodeList:
         request = requests.Request("GET", self._config.url("/api/v1/nodes"))
@@ -170,8 +172,11 @@ class CoreAPI(RawAPI):
         # https://kubernetes.io/docs/reference/using-api/health-checks/
         return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
 
-    def query_kubelet_health(self, node_name: str) -> api.HealthZ:
-        return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
+    def query_kubelet_health(self, node_names: Sequence[str]) -> Mapping[str, api.HealthZ]:
+        return {
+            node_name: self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
+            for node_name in node_names
+        }
 
     def _get_healthz(self, resource_path: str) -> api.HealthZ:
         request = requests.Request("GET", self._config.url(resource_path))
@@ -358,6 +363,7 @@ def query_raw_api_data_v2(
     query_kubelet_endpoints: bool,
 ) -> UnparsedAPIData:
     raw_nodes = core_api.query_raw_nodes()
+    node_names = [raw_node["metadata"]["name"] for raw_node in raw_nodes["items"]]
     return UnparsedAPIData(
         raw_jobs=client_batch_api.query_raw_jobs(),
         raw_cron_jobs=client_batch_api.query_raw_cron_jobs(),
@@ -371,17 +377,9 @@ def query_raw_api_data_v2(
         raw_daemonsets=client_apps_api.query_raw_daemon_sets(),
         raw_statefulsets=apps_api.query_raw_statefulsets(),
         raw_replica_sets=client_apps_api.query_raw_replica_sets(),
-        node_to_kubelet_health={
-            raw_node["metadata"]["name"]: core_api.query_kubelet_health(
-                raw_node["metadata"]["name"]
-            )
-            for raw_node in raw_nodes["items"]
-        },
+        node_to_kubelet_health=core_api.query_kubelet_health(node_names),
         api_health=core_api.query_api_health(),
-        raw_kubelet_open_metrics_dumps=[
-            core_api.query_kubelet_metrics(raw_node["metadata"]["name"])
-            for raw_node in raw_nodes["items"]
-        ]
+        raw_kubelet_open_metrics_dumps=core_api.query_kubelet_metrics(node_names)
         if query_kubelet_endpoints
         else [],
     )

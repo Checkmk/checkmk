@@ -20,6 +20,7 @@ from cmk.utils.html import get_html_state_marker
 from cmk.utils.labels import HostLabelValueDict
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName
+from cmk.utils.version import __version__, Version
 
 from cmk.automations.results import CheckPreviewEntry
 
@@ -61,6 +62,7 @@ from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automations import cmk_version_of_remote_automation_source
 from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, folder_preserving_link, Host
 from cmk.gui.watolib.rulespecs import rulespec_registry
@@ -215,7 +217,8 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
         )
 
     def execute(self, api_request: StartDiscoveryRequest) -> str:
-        return execute_discovery_job(api_request).serialize()
+        central_version = cmk_version_of_remote_automation_source(request)
+        return execute_discovery_job(api_request).serialize(central_version)
 
 
 @page_registry.register_page("ajax_service_discovery")
@@ -314,7 +317,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "pending_changes_info": ActivateChanges().get_pending_changes_info().message,
             "pending_changes_tooltip": get_pending_changes_tooltip(),
             "discovery_options": discovery_options._asdict(),
-            "discovery_result": discovery_result.serialize(),
+            "discovery_result": discovery_result.serialize(Version.from_str(__version__)),
         }
 
     def _perform_discovery_action(

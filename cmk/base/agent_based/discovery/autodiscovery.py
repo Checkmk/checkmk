@@ -14,7 +14,7 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.utils.exceptions import MKTimeout, OnError
-from cmk.utils.labels import HostLabel
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     DiscoveryResult,
@@ -50,7 +50,7 @@ from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
+from ._host_labels import analyse_host_labels, discover_host_labels
 from .utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = ["get_host_services"]
@@ -124,7 +124,7 @@ def automation_discovery(
                     on_error=on_error,
                 ),
                 ruleset_matcher=config_cache.ruleset_matcher,
-                existing_host_labels=do_load_labels(host_name),
+                existing_host_labels=DiscoveredHostLabelsStore(host_name).load(),
                 save_labels=True,
             )
             result.self_new_host_labels = len(host_labels.new)

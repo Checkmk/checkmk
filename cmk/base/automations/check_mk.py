@@ -549,8 +549,12 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
 
     def execute(self, args: list[str]) -> UpdateHostLabelsResult:
         hostname = HostName(args[0])
-        new_host_labels = ast.literal_eval(sys.stdin.read())
-        DiscoveredHostLabelsStore(hostname).save(new_host_labels)
+        DiscoveredHostLabelsStore(hostname).save(
+            [
+                HostLabel.from_dict(name, hl_dict)
+                for name, hl_dict in ast.literal_eval(sys.stdin.read()).items()
+            ]
+        )
 
         config_cache = config.get_config_cache()
         self._trigger_discovery_check(config_cache, hostname)

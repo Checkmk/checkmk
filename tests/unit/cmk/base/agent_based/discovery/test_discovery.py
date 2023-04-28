@@ -61,7 +61,6 @@ from cmk.base.agent_based.discovery._host_labels import (
     analyse_cluster_labels,
     analyse_host_labels,
     discover_host_labels,
-    do_load_labels,
 )
 from cmk.base.agent_based.discovery.autodiscovery import (
     _get_cluster_services,
@@ -900,12 +899,7 @@ _expected_services: dict = {
     (CheckPluginName("uptime"), None): {},
 }
 
-_expected_host_labels = {
-    "cmk/os_family": {
-        "plugin_name": "check_mk",
-        "value": "linux",
-    },
-}
+_expected_host_labels = [HostLabel("cmk/os_family", "linux", SectionName("check_mk"))]
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -989,16 +983,10 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
         ),
     )
     DiscoveredHostLabelsStore(hostname).save(
-        {
-            "existing_label": {
-                "plugin_name": "foo",
-                "value": "bar",
-            },
-            "another_label": {
-                "plugin_name": "labels",
-                "value": "true",
-            },
-        }
+        [
+            HostLabel("existing_label", "bar", SectionName("foo")),
+            HostLabel("another_label", "true", SectionName("labels")),
+        ]
     )
 
     providers = {
@@ -1095,12 +1083,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
         ),
     )
     DiscoveredHostLabelsStore(node1_hostname).save(
-        {
-            "node1_existing_label": {
-                "plugin_name": "node1_plugin",
-                "value": "true",
-            }
-        }
+        [HostLabel("node1_existing_label", "true", SectionName("node1_plugin"))]
     )
 
     providers = {
@@ -1199,15 +1182,15 @@ class ExpectedDiscoveryResultRealHost(NamedTuple):
     expected_vanished_host_labels: Sequence[HostLabel]
     expected_old_host_labels: Sequence[HostLabel]
     expected_new_host_labels: Sequence[HostLabel]
-    expected_stored_labels: dict
+    expected_stored_labels: Sequence[HostLabel]
 
 
 class ExpectedDiscoveryResultCluster(NamedTuple):
     expected_vanished_host_labels: Sequence[HostLabel]
     expected_old_host_labels: Sequence[HostLabel]
     expected_new_host_labels: Sequence[HostLabel]
-    expected_stored_labels_node1: dict
-    expected_stored_labels_node2: dict
+    expected_stored_labels_node1: Sequence[HostLabel]
+    expected_stored_labels_node2: Sequence[HostLabel]
 
 
 class DiscoveryTestCase(NamedTuple):
@@ -1239,20 +1222,11 @@ _discovery_test_cases = [
             expected_new_host_labels=[
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
             ],
-            expected_stored_labels={
-                "another_label": {
-                    "plugin_name": "labels",
-                    "value": "true",
-                },
-                "existing_label": {
-                    "plugin_name": "foo",
-                    "value": "bar",
-                },
-                "cmk/check_mk_server": {
-                    "plugin_name": "labels",
-                    "value": "yes",
-                },
-            },
+            expected_stored_labels=[
+                HostLabel("existing_label", "bar", SectionName("foo")),
+                HostLabel("another_label", "true", SectionName("labels")),
+                HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
+            ],
         ),
         on_cluster=ExpectedDiscoveryResultCluster(
             expected_vanished_host_labels=[],
@@ -1262,22 +1236,13 @@ _discovery_test_cases = [
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
                 HostLabel("node2_live_label", "true", SectionName("labels")),
             ],
-            expected_stored_labels_node1={
-                "cmk/check_mk_server": {
-                    "plugin_name": "labels",
-                    "value": "yes",
-                },
-                "node1_existing_label": {
-                    "plugin_name": "node1_plugin",
-                    "value": "true",
-                },
-            },
-            expected_stored_labels_node2={
-                "node2_live_label": {
-                    "plugin_name": "labels",
-                    "value": "true",
-                },
-            },
+            expected_stored_labels_node1=[
+                HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
+                HostLabel("node1_existing_label", "true", SectionName("node1_plugin")),
+            ],
+            expected_stored_labels_node2=[
+                HostLabel("node2_live_label", "true", SectionName("labels")),
+            ],
         ),
     ),
     # check discovery
@@ -1297,16 +1262,10 @@ _discovery_test_cases = [
             expected_new_host_labels=[
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
             ],
-            expected_stored_labels={
-                "another_label": {
-                    "plugin_name": "labels",
-                    "value": "true",
-                },
-                "existing_label": {
-                    "plugin_name": "foo",
-                    "value": "bar",
-                },
-            },
+            expected_stored_labels=[
+                HostLabel("existing_label", "bar", SectionName("foo")),
+                HostLabel("another_label", "true", SectionName("labels")),
+            ],
         ),
         on_cluster=ExpectedDiscoveryResultCluster(
             expected_vanished_host_labels=[],
@@ -1317,13 +1276,10 @@ _discovery_test_cases = [
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
                 HostLabel("node2_live_label", "true", SectionName("labels")),
             ],
-            expected_stored_labels_node1={
-                "node1_existing_label": {
-                    "plugin_name": "node1_plugin",
-                    "value": "true",
-                },
-            },
-            expected_stored_labels_node2={},
+            expected_stored_labels_node1=[
+                HostLabel("node1_existing_label", "true", SectionName("node1_plugin")),
+            ],
+            expected_stored_labels_node2=[],
         ),
     ),
     # do discovery: only_new == False
@@ -1341,12 +1297,9 @@ _discovery_test_cases = [
             expected_new_host_labels=[
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
             ],
-            expected_stored_labels={
-                "cmk/check_mk_server": {
-                    "plugin_name": "labels",
-                    "value": "yes",
-                },
-            },
+            expected_stored_labels=[
+                HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
+            ],
         ),
         on_cluster=ExpectedDiscoveryResultCluster(
             expected_vanished_host_labels=[],
@@ -1355,18 +1308,12 @@ _discovery_test_cases = [
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
                 HostLabel("node2_live_label", "true", SectionName("labels")),
             ],
-            expected_stored_labels_node1={
-                "cmk/check_mk_server": {
-                    "plugin_name": "labels",
-                    "value": "yes",
-                },
-            },
-            expected_stored_labels_node2={
-                "node2_live_label": {
-                    "plugin_name": "labels",
-                    "value": "true",
-                },
-            },
+            expected_stored_labels_node1=[
+                HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
+            ],
+            expected_stored_labels_node2=[
+                HostLabel("node2_live_label", "true", SectionName("labels")),
+            ],
         ),
     ),
     # discover on host: mode == "remove"
@@ -1385,16 +1332,10 @@ _discovery_test_cases = [
             expected_new_host_labels=[
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
             ],
-            expected_stored_labels={
-                "another_label": {
-                    "plugin_name": "labels",
-                    "value": "true",
-                },
-                "existing_label": {
-                    "plugin_name": "foo",
-                    "value": "bar",
-                },
-            },
+            expected_stored_labels=[
+                HostLabel("existing_label", "bar", SectionName("foo")),
+                HostLabel("another_label", "true", SectionName("labels")),
+            ],
         ),
         on_cluster=ExpectedDiscoveryResultCluster(
             expected_vanished_host_labels=[],
@@ -1403,13 +1344,10 @@ _discovery_test_cases = [
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
                 HostLabel("node2_live_label", "true", SectionName("labels")),
             ],
-            expected_stored_labels_node1={
-                "node1_existing_label": {
-                    "plugin_name": "node1_plugin",
-                    "value": "true",
-                },
-            },
-            expected_stored_labels_node2={},
+            expected_stored_labels_node1=[
+                HostLabel("node1_existing_label", "true", SectionName("node1_plugin")),
+            ],
+            expected_stored_labels_node2=[],
         ),
     ),
     # discover on host: mode == "only-host-labels"
@@ -1425,16 +1363,10 @@ _discovery_test_cases = [
             expected_new_host_labels=[
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
             ],
-            expected_stored_labels={
-                "another_label": {
-                    "plugin_name": "labels",
-                    "value": "true",
-                },
-                "existing_label": {
-                    "plugin_name": "foo",
-                    "value": "bar",
-                },
-            },
+            expected_stored_labels=[
+                HostLabel("existing_label", "bar", SectionName("foo")),
+                HostLabel("another_label", "true", SectionName("labels")),
+            ],
         ),
         on_cluster=ExpectedDiscoveryResultCluster(
             expected_vanished_host_labels=[],
@@ -1443,13 +1375,10 @@ _discovery_test_cases = [
                 HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),
                 HostLabel("node2_live_label", "true", SectionName("labels")),
             ],
-            expected_stored_labels_node1={
-                "node1_existing_label": {
-                    "plugin_name": "node1_plugin",
-                    "value": "true",
-                },
-            },
-            expected_stored_labels_node2={},
+            expected_stored_labels_node1=[
+                HostLabel("node1_existing_label", "true", SectionName("node1_plugin")),
+            ],
+            expected_stored_labels_node2=[],
         ),
     ),
 ]
@@ -1479,7 +1408,9 @@ def test__discover_host_labels_and_services_on_realhost(
             ),
             ruleset_matcher=scenario.config_cache.ruleset_matcher,
             existing_host_labels=(
-                do_load_labels(scenario.hostname) if discovery_test_case.load_labels else ()
+                DiscoveredHostLabelsStore(scenario.hostname).load()
+                if discovery_test_case.load_labels
+                else ()
             ),
             save_labels=discovery_test_case.save_labels,
         )
@@ -1515,7 +1446,9 @@ def test__perform_host_label_discovery_on_realhost(
         ),
         ruleset_matcher=scenario.config_cache.ruleset_matcher,
         existing_host_labels=(
-            do_load_labels(scenario.hostname) if discovery_test_case.load_labels else ()
+            DiscoveredHostLabelsStore(scenario.hostname).load()
+            if discovery_test_case.load_labels
+            else ()
         ),
         save_labels=discovery_test_case.save_labels,
     )
@@ -1588,7 +1521,7 @@ def test__perform_host_label_discovery_on_cluster(
             for node in nodes
         },
         existing_host_labels=(
-            {node: do_load_labels(node) for node in nodes}
+            {node: DiscoveredHostLabelsStore(node).load() for node in nodes}
             if discovery_test_case.load_labels
             else {}
         ),

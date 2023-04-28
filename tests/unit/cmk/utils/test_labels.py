@@ -38,7 +38,7 @@ def test_discovered_host_labels_store_file_path(discovered_host_labels_dir: Path
 def test_discovered_host_labels_store_load_default(discovered_host_labels_dir: Path) -> None:
     store = DiscoveredHostLabelsStore(HostName("host"))
     assert not store.file_path.exists()
-    assert store.load() == {}
+    assert not store.load()
 
 
 def test_get_updated_host_label_files(discovered_host_labels_dir: Path) -> None:

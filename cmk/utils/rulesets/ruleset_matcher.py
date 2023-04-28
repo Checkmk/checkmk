@@ -900,17 +900,11 @@ class RulesetOptimizer:
 
     def _discovered_labels_of_host(self, hostname: HostName) -> Labels:
         return (
-            {
-                label_id: label["value"]
-                for label_id, label in DiscoveredHostLabelsStore(hostname).load().items()
-            }
+            {l.name: l.value for l in DiscoveredHostLabelsStore(hostname).load()}
             if (nodes := self._nodes_of.get(hostname)) is None
             else merge_cluster_labels(
                 [
-                    {
-                        label_id: label["value"]
-                        for label_id, label in DiscoveredHostLabelsStore(node).load().items()
-                    }
+                    {l.name: l.value for l in DiscoveredHostLabelsStore(node).load()}
                     for node in nodes
                 ]
             )

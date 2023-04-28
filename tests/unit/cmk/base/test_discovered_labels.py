@@ -75,15 +75,13 @@ def discovered_host_labels_dir_fixture(tmp_path: Path, monkeypatch: MonkeyPatch)
 def test_discovered_host_labels_store_save(discovered_host_labels_dir: Path) -> None:
     store = DiscoveredHostLabelsStore(HostName("host"))
 
-    label_dict: dict[str, HostLabelValueDict] = {  # save below expects Dict[Any, Any] :-|
-        "xyz": {"value": "äbc", "plugin_name": "sectionname"}
-    }
+    labels = [HostLabel("xyz", "äbc", SectionName("sectionname"))]
 
     assert not store.file_path.exists()
 
-    store.save(label_dict)
+    store.save(labels)
     assert store.file_path.exists()
-    assert store.load() == label_dict
+    assert store.load() == labels
 
 
 def test_label() -> None:
@@ -107,11 +105,6 @@ def test_discovered_host_labels_path(discovered_host_labels_dir: Path) -> None:
     config.get_config_cache().initialize()
     assert not (discovered_host_labels_dir / hostname).exists()
     DiscoveredHostLabelsStore(HostName(hostname)).save(
-        {
-            "something": {
-                "value": "wonderful",
-                "plugin_name": "norris",
-            }
-        }
+        [HostLabel("something", "wonderful", SectionName("norris"))]
     )
     assert (discovered_host_labels_dir / (hostname + ".mk")).exists()

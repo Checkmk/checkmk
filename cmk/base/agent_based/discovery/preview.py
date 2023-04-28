@@ -12,7 +12,7 @@ import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.exceptions import OnError
-from cmk.utils.labels import HostLabel, ServiceLabel
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
@@ -48,12 +48,7 @@ from cmk.base.api.agent_based.value_store import load_host_value_store, ValueSto
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
 
-from ._host_labels import (
-    analyse_cluster_labels,
-    analyse_host_labels,
-    discover_host_labels,
-    do_load_labels,
-)
+from ._host_labels import analyse_cluster_labels, analyse_host_labels, discover_host_labels
 from .autodiscovery import _Transition, get_host_services
 from .utils import QualifiedDiscovery
 
@@ -116,7 +111,7 @@ def get_check_preview(
                 for node_name in config_cache.nodes_of(host_name) or ()
             },
             existing_host_labels={
-                node_name: do_load_labels(node_name)
+                node_name: DiscoveredHostLabelsStore(node_name).load()
                 for node_name in config_cache.nodes_of(host_name) or ()
             },
             ruleset_matcher=config_cache.ruleset_matcher,
@@ -131,7 +126,7 @@ def get_check_preview(
                 on_error=on_error,
             ),
             ruleset_matcher=config_cache.ruleset_matcher,
-            existing_host_labels=do_load_labels(host_name),
+            existing_host_labels=DiscoveredHostLabelsStore(host_name).load(),
             save_labels=False,
         )
     )

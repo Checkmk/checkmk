@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 from ast import literal_eval
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Final, Self, TypedDict
 
 import cmk.utils.paths
@@ -161,12 +161,19 @@ class DiscoveredHostLabelsStore:
         )
         self.file_path: Final = self._store.path
 
-    def load(self) -> Mapping[str, HostLabelValueDict]:
-        return self._store.read_obj(default={})
+    def load(self) -> Sequence[HostLabel]:
+        return [
+            HostLabel(
+                name,
+                raw["value"],
+                None if (raw_name := raw["plugin_name"]) is None else SectionName(raw_name),
+            )
+            for name, raw in self._store.read_obj(default={}).items()
+        ]
 
-    def save(self, labels: Mapping[str, HostLabelValueDict]) -> None:
+    def save(self, labels: Iterable[HostLabel]) -> None:
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
-        self._store.write_obj(labels)
+        self._store.write_obj({l.name: l.to_dict() for l in labels})
 
 
 class BuiltinHostLabelsStore:

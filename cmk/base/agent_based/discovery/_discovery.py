@@ -10,7 +10,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import OnError
-from cmk.utils.labels import HostLabel
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.type_defs import AgentRawData, HostName, Item, result, SectionName, ServiceName
 
 from cmk.snmplib.type_defs import SNMPRawData
@@ -31,7 +31,7 @@ from cmk.checkers.sectionparserutils import check_parsing_errors
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
+from ._host_labels import analyse_host_labels, discover_host_labels
 from .autodiscovery import get_host_services, ServicesByTransition
 from .utils import DiscoveryMode, QualifiedDiscovery
 
@@ -73,7 +73,7 @@ def execute_check_discovery(
             on_error=OnError.RAISE,
         ),
         ruleset_matcher=config_cache.ruleset_matcher,
-        existing_host_labels=do_load_labels(host_name),
+        existing_host_labels=DiscoveredHostLabelsStore(host_name).load(),
         save_labels=False,
     )
     services = get_host_services(

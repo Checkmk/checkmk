@@ -13,6 +13,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
+from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console, section
 from cmk.utils.type_defs import HostName, SectionName
 
@@ -38,7 +39,7 @@ import cmk.base.core
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
-from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
+from ._host_labels import analyse_host_labels, discover_host_labels
 
 __all__ = ["commandline_discovery"]
 
@@ -151,7 +152,9 @@ def _commandline_discovery_on_host(
         discovered_host_labels=discover_host_labels(
             real_host_name, host_label_plugins, providers=providers, on_error=on_error
         ),
-        existing_host_labels=do_load_labels(real_host_name) if load_labels else (),
+        existing_host_labels=DiscoveredHostLabelsStore(real_host_name).load()
+        if load_labels
+        else (),
         ruleset_matcher=config_cache.ruleset_matcher,
         save_labels=True,
     )

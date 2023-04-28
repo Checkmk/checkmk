@@ -50,12 +50,12 @@ public:
 
     std::vector<Entry> operator()(const T &t, const User &user) const {
         std::vector<Entry> entries{};
-        for (const auto &hst : relatives_(t)) {
-            if (user.is_authorized_for_host(CmcHost{*hst})) {
+        for (const auto &mem : relatives_(t)) {
+            CmcHost hst{*mem};
+            if (user.is_authorized_for_host(hst)) {
                 entries.emplace_back(
-                    hst->name(),
-                    static_cast<HostState>(hst->state()->current_state_),
-                    hst->state()->has_been_checked_);
+                    hst.name(), static_cast<HostState>(hst.current_state()),
+                    hst.has_been_checked());
             }
         }
         return entries;
@@ -71,11 +71,11 @@ public:
         std::vector<Entry> entries{};
         for (const hostsmember *mem = relatives_(t); mem != nullptr;
              mem = mem->next) {
-            host *hst = mem->host_ptr;
-            if (user.is_authorized_for_host(NebHost{*hst})) {
-                entries.emplace_back(hst->name,
-                                     static_cast<HostState>(hst->current_state),
-                                     hst->has_been_checked != 0);
+            NebHost hst{*mem->host_ptr};
+            if (user.is_authorized_for_host(hst)) {
+                entries.emplace_back(
+                    hst.name(), static_cast<HostState>(hst.current_state()),
+                    hst.has_been_checked());
             }
         }
         return entries;

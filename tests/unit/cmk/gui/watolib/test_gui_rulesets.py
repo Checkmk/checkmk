@@ -13,6 +13,7 @@ import pytest
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils import version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RuleSpec
 
 import cmk.gui.utils
@@ -24,7 +25,9 @@ import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
-from cmk.gui.watolib.rulesets import RuleOptions
+from cmk.gui.wato.pages.rulesets import Rule
+from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
+from cmk.gui.watolib.rulesets import RuleOptions, Ruleset
 
 
 def _ruleset(ruleset_name) -> rulesets.Ruleset:  # type:ignore[no-untyped-def]
@@ -746,3 +749,55 @@ def test_diff_to_secret_and_other_attribute_changed(  # type:ignore[no-untyped-d
     diff = old.diff_to(new)
     assert "Redacted secrets changed." in diff
     assert 'changed from "old_value" to "new_value".' in diff
+
+
+def test_rules_grouped_by_folder() -> None:
+    """Test sort order of rules"""
+    expected_folder_order: list[CREFolder] = [
+        Folder("folder2/folder2/folder2", "folder2"),
+        Folder("folder2/folder2/folder1", "folder1"),
+        Folder("folder2/folder2", "folder2"),
+        Folder("folder2/folder1/folder2", "folder2"),
+        Folder("folder2/folder1/folder1", "folder1"),
+        Folder("folder2/folder1", "folder1"),
+        Folder("folder2", "folder2"),
+        Folder("folder1/folder2/folder2", "folder2"),
+        Folder("folder1/folder2/folder1", "folder1"),
+        Folder("folder1/folder2", "folder2"),
+        Folder("folder1/folder1/folder2", "folder2"),
+        Folder("folder1/folder1/folder1", "folder1"),
+        Folder("folder1/folder1", "folder1"),
+        Folder("folder1", "folder1"),
+        Folder("folder4", "abc"),
+        Folder("", "Main"),
+    ]
+
+    root: CREFolder = Folder.root_folder()
+    ruleset: Ruleset = Ruleset("only_hosts", {"TAG1": "TG1"})
+    rules: list[tuple[CREFolder, int, Rule]] = [
+        (root, 0, Rule.from_ruleset_defaults(root, ruleset))
+    ]
+
+    for nr in range(1, 3):
+        folder = Folder("folder%d" % nr, parent_folder=root)
+        rules.append((folder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
+        for x in range(1, 3):
+            subfolder = Folder("folder%d" % x, parent_folder=folder)
+            rules.append((subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
+            for y in range(1, 3):
+                sub_subfolder = Folder("folder%d" % y, parent_folder=subfolder)
+                rules.append((sub_subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
+
+    # Also test renamed folder
+    folder4 = Folder("folder4", parent_folder=root)
+    folder4._title = "abc"  # pylint: disable=protected-access
+    rules.append((folder4, 0, Rule.from_ruleset_defaults(folder4, ruleset)))
+
+    sorted_rules = sorted(
+        rules, key=lambda x: (x[0].path().split("/"), len(rules) - x[1]), reverse=True
+    )
+    with disable_redis():
+        assert (
+            list(rule[0] for rule in rulesets.rules_grouped_by_folder(sorted_rules, root))
+            == expected_folder_order
+        )

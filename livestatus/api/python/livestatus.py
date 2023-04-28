@@ -744,8 +744,7 @@ class SingleSiteConnection(Helpers):
             except Exception:
                 self.disconnect()
                 raise MKLivestatusSocketError(
-                    "Malformed output. Livestatus TCP socket might be unreachable or wrong "
-                    "encryption settings are used."
+                    f"Malformed response header {resp!r}. Livestatus TCP socket might be unreachable or wrong encryption settings are used."
                 )
 
             # Apply a lower timeout for the content because the data is already available

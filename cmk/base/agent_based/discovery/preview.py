@@ -114,7 +114,6 @@ def get_check_preview(
                 node_name: DiscoveredHostLabelsStore(node_name).load()
                 for node_name in config_cache.nodes_of(host_name) or ()
             },
-            ruleset_matcher=config_cache.ruleset_matcher,
         )
         if config_cache.is_cluster(host_name)
         else analyse_host_labels(
@@ -125,9 +124,7 @@ def get_check_preview(
                 providers=providers,
                 on_error=on_error,
             ),
-            ruleset_matcher=config_cache.ruleset_matcher,
             existing_host_labels=DiscoveredHostLabelsStore(host_name).load(),
-            save_labels=False,
         )
     )
 

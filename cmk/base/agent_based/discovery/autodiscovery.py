@@ -115,7 +115,7 @@ def automation_discovery(
         providers = make_providers(host_sections, section_plugins)
 
         if mode is not DiscoveryMode.REMOVE:
-            host_labels, _kept_labels = analyse_host_labels(
+            host_labels, kept_labels = analyse_host_labels(
                 host_name,
                 discovered_host_labels=discover_host_labels(
                     host_name,
@@ -123,12 +123,15 @@ def automation_discovery(
                     providers=providers,
                     on_error=on_error,
                 ),
-                ruleset_matcher=config_cache.ruleset_matcher,
                 existing_host_labels=DiscoveredHostLabelsStore(host_name).load(),
-                save_labels=True,
             )
             result.self_new_host_labels = len(host_labels.new)
             result.self_total_host_labels = len(host_labels.present)
+
+            DiscoveredHostLabelsStore(host_name).save(kept_labels[host_name])
+            if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
+                # Rulesets for service discovery can match based on the hosts labels.
+                config_cache.ruleset_matcher.clear_caches()
 
             if mode is DiscoveryMode.ONLY_HOST_LABELS:
                 result.diff_text = _make_diff(host_labels.vanished, host_labels.new, (), ())

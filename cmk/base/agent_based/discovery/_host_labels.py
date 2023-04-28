@@ -6,9 +6,9 @@
 from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
-from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.labels import HostLabel
 from cmk.utils.log import console
-from cmk.utils.rulesets.ruleset_matcher import merge_cluster_labels, RulesetMatcher
+from cmk.utils.rulesets.ruleset_matcher import merge_cluster_labels
 from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.checkers import HostKey, HostLabelDiscoveryPlugin, SourceType
@@ -29,7 +29,6 @@ def analyse_cluster_labels(
     *,
     discovered_host_labels: Mapping[HostName, Sequence[HostLabel]],
     existing_host_labels: Mapping[HostName, Sequence[HostLabel]],
-    ruleset_matcher: RulesetMatcher,
 ) -> tuple[QualifiedDiscovery[HostLabel], Mapping[HostName, Sequence[HostLabel]]]:
     kept_labels: dict[HostName, Sequence[HostLabel]] = {}
     for node_name in node_names:
@@ -37,8 +36,6 @@ def analyse_cluster_labels(
             node_name,
             discovered_host_labels=discovered_host_labels.get(node_name, ()),
             existing_host_labels=existing_host_labels.get(node_name, ()),
-            ruleset_matcher=ruleset_matcher,
-            save_labels=False,
         )
         kept_labels.update(kept_node_labels)
 
@@ -70,46 +67,13 @@ def analyse_host_labels(
     *,
     discovered_host_labels: Sequence[HostLabel],
     existing_host_labels: Sequence[HostLabel],
-    ruleset_matcher: RulesetMatcher,
-    save_labels: bool,
 ) -> tuple[QualifiedDiscovery[HostLabel], Mapping[HostName, Sequence[HostLabel]]]:
     host_labels = QualifiedDiscovery[HostLabel](
         preexisting=existing_host_labels,
         current=discovered_host_labels,
         key=lambda hl: hl.label,
     )
-
-    kept_labels = list(_iter_kept_labels(host_labels))
-    if save_labels:
-        DiscoveredHostLabelsStore(host_name).save(kept_labels)
-
-    if host_labels.new:  # what about vanished or changed?
-        # Some check plugins like 'df' may discover services based on host labels.
-        # A rule may look like:
-        # [{
-        #     'value': {
-        #         'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
-        #         'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']
-        #     },
-        #     'condition': {
-        #         'host_labels': {
-        #             'cmk/check_mk_server': 'yes'
-        #         }
-        #     }
-        # }]
-        # In the first step 'discover_host_labels' the ruleset optimizer caches the
-        # result of the evaluation of these rules. Contemporary we may find new host
-        # labels which are not yet taken into account by the ruleset optimizer.
-        # In the next step '_discover_services' we want to discover new services
-        # based on these new host labels but we only got the cached result.
-        # If we found new host labels, we have to evaluate these rules again in order
-        # to find new services, eg. in 'inventory_df'. Thus we have to clear these caches.
-        #
-        # NOTE: This will not work for the discovery preview, as the host labels are not
-        # written to disk.
-        ruleset_matcher.clear_caches()
-
-    return host_labels, {host_name: kept_labels}
+    return host_labels, {host_name: list(_iter_kept_labels(host_labels))}
 
 
 def _iter_kept_labels(host_labels: QualifiedDiscovery[HostLabel]) -> Iterable[HostLabel]:

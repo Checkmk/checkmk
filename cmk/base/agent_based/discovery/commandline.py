@@ -147,7 +147,7 @@ def _commandline_discovery_on_host(
 ) -> None:
     section.section_step("Analyse discovered host labels")
 
-    host_labels, _kept_labels = analyse_host_labels(
+    host_labels, kept_labels = analyse_host_labels(
         real_host_name,
         discovered_host_labels=discover_host_labels(
             real_host_name, host_label_plugins, providers=providers, on_error=on_error
@@ -155,9 +155,12 @@ def _commandline_discovery_on_host(
         existing_host_labels=DiscoveredHostLabelsStore(real_host_name).load()
         if load_labels
         else (),
-        ruleset_matcher=config_cache.ruleset_matcher,
-        save_labels=True,
     )
+
+    DiscoveredHostLabelsStore(real_host_name).save(kept_labels[real_host_name])
+    if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
+        # Rulesets for service discovery can match based on the hosts labels.
+        config_cache.ruleset_matcher.clear_caches()
 
     count = len(host_labels.new) if host_labels.new else ("no new" if only_new else "no")
     section.section_success(f"Found {count} host labels")
@@ -178,8 +181,6 @@ def _commandline_discovery_on_host(
         on_error=on_error,
     )
 
-    # TODO (mo): for the labels the corresponding code is in _host_labels.
-    # We should put the persisting in one place.
     AutochecksStore(real_host_name).write(service_result.present)
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)

@@ -72,9 +72,7 @@ def execute_check_discovery(
             providers=providers,
             on_error=OnError.RAISE,
         ),
-        ruleset_matcher=config_cache.ruleset_matcher,
         existing_host_labels=DiscoveredHostLabelsStore(host_name).load(),
-        save_labels=False,
     )
     services = get_host_services(
         host_name,

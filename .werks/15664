@@ -1,0 +1,17 @@
+Title: <tt>inv_cisco_vlans</tt>: Fix <tt>'list' object has no attribute 'id_'</tt>
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1682682282
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The inventory plugin <tt>inv_cisco_vlans</tt> crashed with
+
+C+:
+'list' object has no attribute 'id_'
+C-:
+
+This error was shown in the service output of the HW/SW inventory service of affected hosts.

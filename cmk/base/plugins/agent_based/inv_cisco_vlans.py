@@ -142,6 +142,7 @@ register.snmp_section(
         ],
     ),
     detect=DETECT_CISCO,
+    parse_function=parse_inv_cisco_vlans,
 )
 
 

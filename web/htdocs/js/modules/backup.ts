@@ -70,12 +70,18 @@ function handle_job_detail_error(
     msg.setAttribute("id", "job_detail_msg");
     msg.className = "message";
 
-    let txt = "Could not update the job details.";
+    let txt = "";
     if (handler_data.is_site)
-        txt += " The site will be started again after the restore.";
-    else txt += " Maybe the device is currently being rebooted.";
+        txt +=
+            "The restore is still in progress. Please keep this page open until it's finished." +
+            "<br><br>The site will automatically stop and restart during the restore process.";
+    else
+        txt +=
+            "Could not update the job details. Maybe the device is currently being rebooted.";
 
-    txt += "<br>Will continue trying to refresh the job details.";
+    txt +=
+        "<br>You may see error messages on this page while it is stopping and restarting." +
+        "<br>These should disappear with the refresh at the end of the process.";
 
     txt += "<br><br>HTTP status code: " + status_code;
     if (error_msg) txt += ", Error: " + error_msg;

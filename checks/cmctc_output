@@ -35,9 +35,16 @@ from cmk.base.plugins.agent_based.utils.cmctc import DETECT_CMCTC
 # .1.3.6.1.4.1.2606.4.2.5.6.2.1.9.2 1
 # .1.3.6.1.4.1.2606.4.2.5.6.2.1.9.3 1
 
+_TABLES = [
+    "3",  # cmcTcUnit1OutputTable
+    "4",  # cmcTcUnit2OutputTable
+    "5",  # cmcTcUnit3OutputTable
+    "6",  # cmcTcUnit4OutputTable
+]
+
 
 def parse_cmctc_output(info):
-    def parse_output_sensor(sensor):
+    def parse_output_sensor(table_idx, sensor):
         type_map = {
             # ID    Type                                    Unit      Perfkey
             "4": ("Door locking TS8 Ergoform", "", None),
@@ -138,16 +145,17 @@ def parse_cmctc_output(info):
         if parsed["status"] == "not available":
             return None
 
-        name = "%s %s" % (sensor_type, index)
+        name = "%s %s.%s" % (sensor_type, table_idx, index)
 
         return name, parsed
 
     parsed = {}
-    for sensor in info:
-        parsed_sensor = parse_output_sensor(sensor)
-        if parsed_sensor:
-            name, data = parsed_sensor
-            parsed[name] = data
+    for table_idx, sensor_block in zip(_TABLES, info):
+        for sensor in sensor_block:
+            parsed_sensor = parse_output_sensor(table_idx, sensor)
+            if parsed_sensor:
+                name, data = parsed_sensor
+                parsed[name] = data
 
     return parsed
 
@@ -190,24 +198,21 @@ check_info["cmctc_output"] = {
     "inventory_function": inventory_cmctc_output,
     "check_function": check_cmctc_output,
     "service_description": "%s",
-    "snmp_info": (
-        ".1.3.6.1.4.1.2606.4.2",  # RITTAL-CMC-TC-MIB
-        [
-            "3",  # cmcTcUnit1OutputTable
-            "4",  # cmcTcUnit2OutputTable
-            "5",  # cmcTcUnit3OutputTable
-            "6",  # cmcTcUnit4OutputTable
-        ],
-        [
-            "6.2.1.1",  # unit1OutputIndex
-            "6.2.1.2",  # unit1OutputType
-            "6.2.1.3",  # unit1OutputText
-            "6.2.1.4",  # unit1OutputStatus
-            "6.2.1.5",  # unit1OutputValue
-            "6.2.1.6",  # unit1OutputSet
-            "6.2.1.7",  # unit1OutputConfig
-            "6.2.1.8",  # unit1OutputDelay
-            "6.2.1.9",  # unit1OutputTimeoutAction
-        ],
-    ),
+    "snmp_info": [
+        (
+            f".1.3.6.1.4.1.2606.4.2.{table}",  # RITTAL-CMC-TC-MIB
+            [
+                "6.2.1.1",  # unit1OutputIndex
+                "6.2.1.2",  # unit1OutputType
+                "6.2.1.3",  # unit1OutputText
+                "6.2.1.4",  # unit1OutputStatus
+                "6.2.1.5",  # unit1OutputValue
+                "6.2.1.6",  # unit1OutputSet
+                "6.2.1.7",  # unit1OutputConfig
+                "6.2.1.8",  # unit1OutputDelay
+                "6.2.1.9",  # unit1OutputTimeoutAction
+            ],
+        )
+        for table in _TABLES
+    ],
 }

@@ -142,6 +142,7 @@ register.snmp_section(
         ],
     ),
     detect=contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+    parse_function=parse_inv_cisco_vlans,
 )
 
 

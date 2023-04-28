@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
+from psutil import Process
 
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
@@ -22,12 +23,22 @@ from cmk.utils.paths import mkbackup_lock_dir
 @contextmanager
 def simulate_backup_lock(site: Site) -> Iterator[None]:
     with site.execute(
-        ["flock", "-x", "-n", str(mkbackup_lock_dir / f"mkbackup-{site.id}.lock"), "sleep", "300"]
+        [
+            "flock",
+            "-o",
+            "-x",
+            "-n",
+            str(mkbackup_lock_dir / f"mkbackup-{site.id}.lock"),
+            "sleep",
+            "300",
+        ]
     ) as p:
         try:
             yield None
         finally:
-            p.terminate()
+            for c in Process(p.pid).children(recursive=True):
+                if c.name() == "sleep":
+                    assert site.execute(["kill", str(c.pid)]).wait() == 0
             p.wait()
 
 

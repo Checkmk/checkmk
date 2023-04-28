@@ -47,7 +47,7 @@ SYSTEM_TESTS := \
     test-gui-crawl \
     test-xss-crawl \
     test-gui-e2e
-PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO --log-cli-format="%(asctime)s %(levelname)s %(message)s"
+PYTEST_SYSTEM_TEST_ARGS := -p "no:cov"
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.7, we need to convert them, just like it is done for the agent plugins (see

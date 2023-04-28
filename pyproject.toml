@@ -147,10 +147,8 @@ warn_untyped_fields = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# -p no:cacheprovider -> Disable caching. This is needed to make the
-# integration tests work which are executed as site user.
 # --durations=20: Show the 20 slowest tests
-addopts = "-p no:cacheprovider -rs --durations=20"
+addopts = "--log-cli-level=INFO --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20"
 markers = [
     "checks: Run all existing test cases for checks.",
 ]

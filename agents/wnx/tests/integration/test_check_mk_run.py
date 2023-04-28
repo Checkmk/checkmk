@@ -48,7 +48,6 @@ _WMI_SECTIONS: Final = {
 _INTERNAL_SECTIONS: Final = _NOT_WMI_SECTIONS.union(_WMI_SECTIONS)
 
 
-@pytest.mark.skip
 @pytest.mark.parametrize(
     "only_from, description",
     [
@@ -100,7 +99,6 @@ def config_no_wmi_fixture(default_yaml_config: YamlDict) -> YamlDict:
     return default_yaml_config
 
 
-@pytest.mark.skip
 def test_check_mk_no_wmi(  # type: ignore[no-untyped-def]
     main_exe: Path,
     config_no_wmi: YamlDict,

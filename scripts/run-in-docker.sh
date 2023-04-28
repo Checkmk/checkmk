@@ -59,6 +59,11 @@ fi
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
 : "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
+: "${DOCKER_RESOURCE_FLAGS:="\
+    --oom-kill-disable \
+    --memory=4g \
+    --cpu-shares=256 --cpuset-cpus="0-$(($(nproc) - 2))"\
+    "}"
 
 if [ -t 0 ]; then
     echo "Running in Docker container from image ${IMAGE_ID} (cmd=${CMD}) (workdir=${PWD})"
@@ -67,6 +72,7 @@ fi
 # shellcheck disable=SC2086
 docker run -a stdout -a stderr \
     --rm \
+    ${DOCKER_RESOURCE_FLAGS} \
     ${TERMINAL_FLAG} \
     --init \
     -u "${UID}:$(id -g)" \

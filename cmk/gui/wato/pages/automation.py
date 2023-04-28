@@ -214,7 +214,7 @@ class ModeAutomation(AjaxPage):
             return (
                 result_type_registry[cmk_command]
                 .deserialize(serialized_result)
-                .serialize(cmk_version_of_remote_automation_source())
+                .serialize(cmk_version_of_remote_automation_source(request))
             )
         except SyntaxError as e:
             raise local_automation_failure(

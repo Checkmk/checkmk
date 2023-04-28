@@ -44,7 +44,7 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config
@@ -63,9 +63,9 @@ class MKAutomationException(MKGeneralException):
     pass
 
 
-def cmk_version_of_remote_automation_source() -> cmk_version.Version:
+def cmk_version_of_remote_automation_source(remote_request: Request) -> cmk_version.Version:
     # The header is sent by Checkmk as of 2.0.0p1. In case it is missing, assume we are too old.
-    return cmk_version.Version(request.headers.get("x-checkmk-version", "1.6.0p1"))
+    return cmk_version.Version(remote_request.headers.get("x-checkmk-version", "1.6.0p1"))
 
 
 def check_mk_local_automation_serialized(
@@ -694,7 +694,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
                 path,
                 result_type_registry[automation_cmd]
                 .deserialize(serialized_result)
-                .serialize(cmk_version_of_remote_automation_source()),
+                .serialize(cmk_version_of_remote_automation_source(request)),
             )
         except SyntaxError as e:
             raise local_automation_failure(

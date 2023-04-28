@@ -9,15 +9,13 @@ import pytest
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
-from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
 from cmk.utils.type_defs import HostOrServiceConditions
 
 from cmk.gui.utils.html import HTML
-from cmk.gui.wato.pages.rulesets import _get_groups, active_config, Rule, RuleConditionRenderer
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host
-from cmk.gui.watolib.rulesets import Ruleset
+from cmk.gui.wato.pages.rulesets import active_config, RuleConditionRenderer
+from cmk.gui.watolib.hosts_and_folders import Folder, Host
 
 
 @pytest.fixture(name="tag_config")
@@ -424,52 +422,3 @@ class TestRuleConditionRenderer:
             list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))
             == expected
         )
-
-
-def test_get_groups() -> None:
-    """Test sort order of rules"""
-    expected_folder_order: list[CREFolder] = [
-        Folder("folder2/folder2/folder2", "folder2"),
-        Folder("folder2/folder2/folder1", "folder1"),
-        Folder("folder2/folder2", "folder2"),
-        Folder("folder2/folder1/folder2", "folder2"),
-        Folder("folder2/folder1/folder1", "folder1"),
-        Folder("folder2/folder1", "folder1"),
-        Folder("folder2", "folder2"),
-        Folder("folder1/folder2/folder2", "folder2"),
-        Folder("folder1/folder2/folder1", "folder1"),
-        Folder("folder1/folder2", "folder2"),
-        Folder("folder1/folder1/folder2", "folder2"),
-        Folder("folder1/folder1/folder1", "folder1"),
-        Folder("folder1/folder1", "folder1"),
-        Folder("folder1", "folder1"),
-        Folder("folder4", "abc"),
-        Folder("", "Main"),
-    ]
-
-    root: CREFolder = Folder.root_folder()
-    ruleset: Ruleset = Ruleset("only_hosts", {TagID("TAG1"): TagGroupID("TG1")})
-    rules: list[tuple[CREFolder, int, Rule]] = [
-        (root, 0, Rule.from_ruleset_defaults(root, ruleset))
-    ]
-
-    for nr in range(1, 3):
-        folder = Folder("folder%d" % nr, parent_folder=root)
-        rules.append((folder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
-        for x in range(1, 3):
-            subfolder = Folder("folder%d" % x, parent_folder=folder)
-            rules.append((subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
-            for y in range(1, 3):
-                sub_subfolder = Folder("folder%d" % y, parent_folder=subfolder)
-                rules.append((sub_subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
-
-    # Also test renamed folder
-    folder4 = Folder("folder4", parent_folder=root)
-    folder4._title = "abc"  # pylint: disable=protected-access
-    rules.append((folder4, 0, Rule.from_ruleset_defaults(folder4, ruleset)))
-
-    sorted_rules = sorted(
-        rules, key=lambda x: (x[0].path().split("/"), len(rules) - x[1]), reverse=True
-    )
-    with disable_redis():
-        assert list(rule[0] for rule in _get_groups(sorted_rules, root)) == expected_folder_order

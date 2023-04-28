@@ -6,10 +6,11 @@
 from __future__ import annotations
 
 import dataclasses
+import itertools
 import os
 import pprint
 import re
-from collections.abc import Callable, Container, Iterable, Mapping
+from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping
 from enum import auto, Enum
 from pathlib import Path
 from typing import Any, assert_never, cast, Final
@@ -1470,3 +1471,22 @@ def service_description_to_condition(service_description: str) -> HostOrServiceC
     {'$regex': 'a / b / c \\\\ d \\\\ e$'}
     """
     return {"$regex": "%s$" % escape_regex_chars(service_description)}
+
+
+def rules_grouped_by_folder(
+    rules: list[tuple[CREFolder, int, Rule]],
+    current_folder: CREFolder,
+) -> Generator[tuple[CREFolder, Iterator[tuple[CREFolder, int, Rule]]], None, None]:
+    """Get ruleset groups in correct sort order. Sort by title_path() to honor
+    renamed folders"""
+    sorted_rules: list[tuple[CREFolder, int, Rule]] = sorted(
+        rules,
+        key=lambda x: (x[0].title_path(), len(rules) - x[1]),
+        reverse=True,
+    )
+    return (
+        (folder, folder_rules)  #
+        for folder, folder_rules in itertools.groupby(sorted_rules, key=lambda rule: rule[0])
+        if folder.is_transitive_parent_of(current_folder)
+        or current_folder.is_transitive_parent_of(folder)
+    )

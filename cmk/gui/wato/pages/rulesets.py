@@ -7,11 +7,10 @@
 from __future__ import annotations
 
 import abc
-import itertools
 import json
 import pprint
 import re
-from collections.abc import Collection, Generator, Iterable, Iterator, Mapping
+from collections.abc import Collection, Iterable, Mapping
 from dataclasses import asdict
 from enum import auto, Enum
 from typing import Any, cast, overload
@@ -110,6 +109,7 @@ from cmk.gui.watolib.rulesets import (
     Rule,
     RuleConditions,
     RuleOptions,
+    rules_grouped_by_folder,
     Ruleset,
     RulesetCollection,
     SearchOptions,
@@ -1108,7 +1108,7 @@ class ModeEditRuleset(WatoMode):
                 self._service,
             ).labels
 
-        for folder, folder_rules in _get_groups(rules, self._folder):
+        for folder, folder_rules in rules_grouped_by_folder(rules, self._folder):
             with table_element(
                 f"rules_{self._name}_{folder.ident()}",
                 title="%s %s (%d)"
@@ -1405,25 +1405,6 @@ class ModeEditRuleset(WatoMode):
         html.hidden_field("mode", "new_rule")
         html.hidden_field("folder", self._folder.path())
         html.end_form()
-
-
-def _get_groups(
-    rules: list[tuple[CREFolder, int, Rule]],
-    current_folder: CREFolder,
-) -> Generator[tuple[CREFolder, Iterator[tuple[CREFolder, int, Rule]]], None, None]:
-    """Get ruleset groups in correct sort order. Sort by title_path() to honor
-    renamed folders"""
-    sorted_rules: list[tuple[CREFolder, int, Rule]] = sorted(
-        rules,
-        key=lambda x: (x[0].title_path(), len(rules) - x[1]),
-        reverse=True,
-    )
-    return (
-        (folder, folder_rules)  #
-        for folder, folder_rules in itertools.groupby(sorted_rules, key=lambda rule: rule[0])
-        if folder.is_transitive_parent_of(current_folder)
-        or current_folder.is_transitive_parent_of(folder)
-    )
 
 
 @mode_registry.register

@@ -16,6 +16,7 @@ import urllib3
 from kubernetes import client  # type: ignore[import]
 from pydantic import parse_obj_as
 
+from cmk.special_agents.utils_kubernetes import query
 from cmk.special_agents.utils_kubernetes.controllers import (
     map_controllers,
     map_controllers_top_to_down,
@@ -539,7 +540,7 @@ def create_api_data_v2(
 
 
 def from_kubernetes(
-    api_client: client.ApiClient,
+    client_config: query.APISessionConfig,
     timeout: tuple[int, int],
     query_kubelet_endpoints: bool,
 ) -> APIData:
@@ -547,22 +548,23 @@ def from_kubernetes(
     This function provides a stable interface that should not change between kubernetes versions
     This should be the only data source for all special agent code!
     """
-    client_batch_api = ClientBatchAPI(api_client, timeout)
-    client_core_api = ClientCoreAPI(api_client, timeout)
-    client_apps_api = ClientAppsAPI(api_client, timeout)
+    with query.make_api_client(client_config, LOGGER) as api_client:
+        client_batch_api = ClientBatchAPI(api_client, timeout)
+        client_core_api = ClientCoreAPI(api_client, timeout)
+        client_apps_api = ClientAppsAPI(api_client, timeout)
 
-    core_api = CoreAPI(api_client, timeout)
-    apps_api = AppsAPI(api_client, timeout)
-    raw_version = core_api.query_raw_version()
-    version = version_from_json(raw_version)
-    _verify_version_support(version)
+        core_api = CoreAPI(api_client, timeout)
+        apps_api = AppsAPI(api_client, timeout)
+        raw_version = core_api.query_raw_version()
+        version = version_from_json(raw_version)
+        _verify_version_support(version)
 
-    return create_api_data_v2(
-        core_api,
-        apps_api,
-        client_batch_api,
-        client_core_api,
-        client_apps_api,
-        version.git_version,
-        query_kubelet_endpoints,
-    )
+        return create_api_data_v2(
+            core_api,
+            apps_api,
+            client_batch_api,
+            client_core_api,
+            client_apps_api,
+            version.git_version,
+            query_kubelet_endpoints,
+        )

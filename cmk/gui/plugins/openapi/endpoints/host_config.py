@@ -298,10 +298,11 @@ def _bulk_host_action_response(
 def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
     """Show all hosts"""
     root_folder = Folder.root_folder()
-    root_folder.need_recursive_permission("read")
     effective_attributes: bool = param.get("effective_attributes", False)
+
+    hosts = (host for host in root_folder.all_hosts_recursively().values() if host.may("read"))
     return serve_host_collection(
-        root_folder.all_hosts_recursively().values(),
+        hosts,
         effective_attributes=effective_attributes,
     )
 

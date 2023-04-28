@@ -14,6 +14,7 @@ from typing import Generic, TypeVar
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
 _VT = TypeVar("_VT")
@@ -66,6 +67,17 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
                 ]
         except FileNotFoundError:
             return []
+        except SyntaxError as e:
+            raise MKUserError(
+                None,
+                _(
+                    "The audit log can not be shown because of "
+                    "a syntax error in %s.<br><br>Please review and fix the file "
+                    "content or remove the file before you visit this page "
+                    "again.<br><br>The problematic entry is:<br>%s"
+                )
+                % (f.name, e.text),
+            )
 
     def read(self) -> Sequence[_VT]:
         with store.locked(self._path):

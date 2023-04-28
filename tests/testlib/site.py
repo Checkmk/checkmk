@@ -323,8 +323,15 @@ class Site:
             # Skip the test cases calling this for some distros
             # Ubuntu 16.04 does not support --preserve-env nor --whitelist-environment
             # Ubuntu 18.04 does not support --whitelist-environment
-            if os.environ.get("DISTRO") in ("ubuntu-16.04", "ubuntu-18.04"):
-                pytest.skip("preserve env not possible with 16.04 and 18.04")
+            if os.environ.get("DISTRO") in (
+                "ubuntu-16.04",
+                "ubuntu-18.04",
+                "centos-7",
+                "centos-8",
+                "sles-12sp3",
+                "sles-12sp4",
+            ):
+                pytest.skip("preserve env not possible in this environment")
             sudo_env_args = [f"--preserve-env={','.join(preserve_env)}"]
             su_env_args = ["--whitelist-environment", ",".join(preserve_env)]
         else:

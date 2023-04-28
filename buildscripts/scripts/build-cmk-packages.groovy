@@ -44,7 +44,7 @@ def main() {
 
     /// don't add $WORKSPACE based values here, since $docker_args is being
     /// used on different nodes
-    def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024";
+    def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024 --cpus 1.5";
 
     def (jenkins_base_folder, distro_key, omd_env_vars, upload_path_suffix) = (
         env.JOB_BASE_NAME == "testbuild" ? [

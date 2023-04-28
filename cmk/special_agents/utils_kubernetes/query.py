@@ -16,17 +16,14 @@ import json
 import logging
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping
 from typing import final, NewType, Union
-from urllib.parse import urlparse
 
 import requests
 import urllib3
-from kubernetes import client  # type: ignore[import]
 from pydantic import BaseModel, parse_obj_as, ValidationError
 
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
 from cmk.special_agents.utils import node_exporter
-from cmk.special_agents.utils.request_helper import get_requests_ca
 from cmk.special_agents.utils_kubernetes.prometheus_api import (
     parse_raw_response,
     Response,
@@ -192,37 +189,6 @@ def node_exporter_getter(
             {"value": sample.value[1], "labels": sample.metric} for sample in result.data.result
         ]
     return []
-
-
-def make_api_client(config: APISessionConfig, logger: logging.Logger) -> client.ApiClient:  # type: ignore[no-any-unimported]
-    client_config = client.Configuration()
-
-    host = config.api_server_endpoint
-    client_config.host = host
-    if config.token:
-        client_config.api_key_prefix["authorization"] = "Bearer"
-        client_config.api_key["authorization"] = config.token
-
-    # Mimic requests.get("GET", url=host, proxies=http_proxy_client_config.to_requests_proxies())
-    # function call, in order to obtain proxies in the same way as the requests library
-    with requests.Session() as session:
-        req = requests.models.Request(method="GET", url=host, data={}, params={})
-        prep = session.prepare_request(req)
-        proxies = session.merge_environment_settings(
-            prep.url, config.requests_proxies(), session.stream, session.verify, session.cert
-        )["proxies"]
-
-    client_config.proxy = proxies.get(urlparse(host).scheme)
-    client_config.proxy_headers = requests.adapters.HTTPAdapter().proxy_headers(client_config.proxy)
-
-    if config.verify_cert_api:
-        client_config.ssl_ca_cert = get_requests_ca()
-    else:
-        logger.info("Disabling SSL certificate verification")
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        client_config.verify_ssl = False
-
-    return client.ApiClient(client_config)
 
 
 def make_api_client_requests(config: APISessionConfig, logger: logging.Logger) -> requests.Session:

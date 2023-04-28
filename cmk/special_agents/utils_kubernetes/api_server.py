@@ -54,75 +54,80 @@ class FakeResponse:
         self.data: str = response.text
 
 
+class Deserializer:
+    def __init__(self):
+        self._api_client = client.ApiClient()
+
+    def run(self, response_type: str, data: requests.Response) -> typing.Any:
+        return self._api_client.deserialize(FakeResponse(data), response_type)
+
+
 class ClientAPI:
     def __init__(
         self,
         client_config: query.APISessionConfig,
         request_client: requests.Session,
-        api_client: client.ApiClient,
+        deserizalizer: Deserializer,
     ) -> None:
         self._config = client_config
         self._client = request_client
-        self._api_client = api_client
-
-    def _deserialize(self, response_type: str, data: requests.Response) -> typing.Any:
-        return self._api_client.deserialize(FakeResponse(data), response_type)
+        self._deserializer = deserizalizer
 
 
 class ClientBatchAPI(ClientAPI):
     def query_raw_cron_jobs(self) -> Sequence[client.V1CronJob]:
         request = requests.Request("GET", self._config.url("/apis/batch/v1/cronjobs"))
         response = send_request(self._config, self._client, request)
-        return self._deserialize("V1CronJobList", response).items
+        return self._deserializer.run("V1CronJobList", response).items
 
     def query_raw_jobs(self) -> Sequence[client.V1Job]:
         request = requests.Request("GET", self._config.url("/apis/batch/v1/jobs"))
         response = send_request(self._config, self._client, request)
-        return self._deserialize("V1JobList", response).items
+        return self._deserializer.run("V1JobList", response).items
 
 
 class ClientCoreAPI(ClientAPI):
     def query_raw_pods(self) -> Sequence[client.V1Pod]:
         request = requests.Request("GET", self._config.url("/api/v1/pods"))
         response = send_request(self._config, self._client, request)
-        return self._deserialize("V1PodList", response).items
+        return self._deserializer.run("V1PodList", response).items
 
     def query_raw_resource_quotas(self) -> Sequence[client.V1ResourceQuota]:
         request = requests.Request("GET", self._config.url("/api/v1/resourcequotas"))
         response = send_request(self._config, self._client, request)
-        return self._deserialize("V1ResourceQuotaList", response).items
+        return self._deserializer.run("V1ResourceQuotaList", response).items
 
     def query_raw_namespaces(self):
         request = requests.Request("GET", self._config.url("/api/v1/namespaces"))
         response = send_request(self._config, self._client, request)
-        return self._deserialize("V1NamespaceList", response).items
+        return self._deserializer.run("V1NamespaceList", response).items
 
     def query_persistent_volume_claims(self) -> Sequence[client.V1PersistentVolumeClaim]:
         request = requests.Request("GET", self._config.url("/api/v1/persistentvolumeclaims"))
         response = send_request(self._config, self._client, request)
-        return self._deserialize("V1PersistentVolumeClaimList", response).items
+        return self._deserializer.run("V1PersistentVolumeClaimList", response).items
 
     def query_persistent_volumes(self):
         request = requests.Request("GET", self._config.url("/api/v1/persistentvolumes"))
         response = send_request(self._config, self._client, request)
-        return self._deserialize("V1PersistentVolumeList", response).items
+        return self._deserializer.run("V1PersistentVolumeList", response).items
 
 
 class ClientAppsAPI(ClientAPI):
     def query_raw_deployments(self) -> Sequence[client.V1Deployment]:
         request = requests.Request("GET", self._config.url("/apis/apps/v1/deployments"))
         response = send_request(self._config, self._client, request)
-        return self._deserialize("V1DeploymentList", response).items
+        return self._deserializer.run("V1DeploymentList", response).items
 
     def query_raw_daemon_sets(self) -> Sequence[client.V1DaemonSet]:
         request = requests.Request("GET", self._config.url("/apis/apps/v1/daemonsets"))
         response = send_request(self._config, self._client, request)
-        return self._deserialize("V1DaemonSetList", response).items
+        return self._deserializer.run("V1DaemonSetList", response).items
 
     def query_raw_replica_sets(self) -> Sequence[client.V1ReplicaSet]:
         request = requests.Request("GET", self._config.url("/apis/apps/v1/replicasets"))
         response = send_request(self._config, self._client, request)
-        return self._deserialize("V1ReplicaSetList", response).items
+        return self._deserializer.run("V1ReplicaSetList", response).items
 
 
 class RawAPI:
@@ -547,11 +552,11 @@ def from_kubernetes(
     This function provides a stable interface that should not change between kubernetes versions
     This should be the only data source for all special agent code!
     """
-    api_client = query.make_api_client(client_config, logger)
+    deserizalizer = Deserializer()
     api_client_requests = query.make_api_client_requests(client_config, logger)
-    client_batch_api = ClientBatchAPI(client_config, api_client_requests, api_client)
-    client_core_api = ClientCoreAPI(client_config, api_client_requests, api_client)
-    client_apps_api = ClientAppsAPI(client_config, api_client_requests, api_client)
+    client_batch_api = ClientBatchAPI(client_config, api_client_requests, deserizalizer)
+    client_core_api = ClientCoreAPI(client_config, api_client_requests, deserizalizer)
+    client_apps_api = ClientAppsAPI(client_config, api_client_requests, deserizalizer)
 
     core_api = CoreAPI(client_config, api_client_requests)
     apps_api = AppsAPI(client_config, api_client_requests)

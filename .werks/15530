@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0b5
+Version: 2.2.0b6
 
 The only way of updating the discovered host labels of a cluster was to do it via the WATO service discovery page.
 Doing this, on the other hand, would not update the host labels of the affected nodes accordingly.

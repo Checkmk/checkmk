@@ -235,38 +235,37 @@ class SNMPTrapEngine:
 
 class SNMPTrapTranslator:
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
-        super().__init__()
         self._logger = logger
-        translation_config = config["translate_snmptraps"]
-        if translation_config is False:
-            self.translate = self._translate_simple
-        elif translation_config == (True, {}):
-            self._mib_resolver = self._construct_resolver(
-                logger, settings.paths.compiled_mibs_dir.value, False
-            )
-            self.translate = self._translate_via_mibs
-        elif translation_config == (True, {"add_description": True}):
-            self._mib_resolver = self._construct_resolver(
-                logger, settings.paths.compiled_mibs_dir.value, True
-            )
-            self.translate = self._translate_via_mibs
-        else:
-            raise Exception("invalid SNMP trap translation")
+        match config["translate_snmptraps"]:
+            case False:
+                self.translate = self._translate_simple
+            case (True, {}):
+                self._init_translate_via_mibs(
+                    settings.paths.compiled_mibs_dir.value,
+                    load_texts=False,
+                )
+            case (True, {"add_description": True}):
+                self._init_translate_via_mibs(
+                    settings.paths.compiled_mibs_dir.value,
+                    load_texts=True,
+                )
+            case _:
+                raise Exception("invalid SNMP trap translation")
+
+    def _init_translate_via_mibs(self, path: Path, *, load_texts: bool) -> None:
+        self._mib_resolver = self._construct_resolver(self._logger, path, load_texts=load_texts)
+        self.translate = self._translate_via_mibs
 
     @staticmethod
     def _construct_resolver(
-        logger: Logger, mibs_dir: Path, load_texts: bool
+        logger: Logger, mibs_dir: Path, *, load_texts: bool
     ) -> pysnmp.smi.view.MibViewController | None:
         try:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 
-            # load MIBs from our compiled MIB
-            builder.addMibSources(*[pysnmp.smi.builder.DirMibSource(str(mibs_dir))])
-
-            # explicit System MIBs
-            builder.addMibSources(
-                *[pysnmp.smi.builder.DirMibSource(str(Path("/usr/share/snmp/mibs")))]
-            )
+            # we need compiled Mib Dir and explicit system Mib Dir
+            for source in [str(mibs_dir), "/usr/share/snmp/mibs"]:
+                builder.addMibSources(*[pysnmp.smi.builder.DirMibSource(source)])
 
             # Indicate if we wish to load DESCRIPTION and other texts from MIBs
             builder.loadTexts = load_texts
@@ -289,8 +288,9 @@ class SNMPTrapTranslator:
     def _translate_simple(self, ipaddress: str, var_bind_list: VarBinds) -> list[tuple[str, str]]:
         return [self._translate_binding_simple(oid, value) for oid, value in var_bind_list]
 
+    @staticmethod
     def _translate_binding_simple(
-        self, oid: pysnmp.proto.rfc1902.ObjectName, value: SimpleAsn1Type
+        oid: pysnmp.proto.rfc1902.ObjectName, value: SimpleAsn1Type
     ) -> tuple[str, str]:
         if oid.asTuple() == (1, 3, 6, 1, 2, 1, 1, 3, 0):
             key = "Uptime"

@@ -22,8 +22,6 @@ from cmk.base.api.agent_based.type_defs import (
 
 from ..utils_legacy import CheckInfoElement
 
-LayoutRecoverSuboids = list[tuple[str]]
-
 
 def get_section_name(check_plugin_name: str) -> str:
     return check_plugin_name.split(".", 1)[0]
@@ -44,32 +42,6 @@ def _create_agent_parse_function(
 
     parse_function.__name__ = original_parse_function.__name__
     return parse_function
-
-
-def _create_layout_recover_function(suboids_list: list[LayoutRecoverSuboids | None]) -> Callable:
-    """Get a function that recovers the legacy data layout
-
-    By adding the created elements to one long list,
-    we change the data structure of created OID values.
-    We have to define a function to undo this, and restore the old data layout.
-    """
-    elements_lengths = [len(i) if i is not None else 1 for i in suboids_list]
-    cumulative_lengths = [sum(elements_lengths[:i]) for i in range(len(elements_lengths) + 1)]
-    index_pairs = list(zip(cumulative_lengths, cumulative_lengths[1:]))
-
-    def layout_recover_function(string_table):
-        reformatted = []
-        for suboids, (begin, end) in zip(suboids_list, index_pairs):
-            if suboids is None:
-                new_table = string_table[begin]
-            else:
-                new_table = []
-                for suboid, subtable in zip(suboids, string_table[begin:end]):
-                    new_table += [[f"{suboid}.{row[0]}"] + row[1:] for row in subtable]
-            reformatted.append(new_table)
-        return reformatted
-
-    return layout_recover_function
 
 
 def _extract_conmmon_part(oids: list) -> tuple[str, list]:
@@ -97,7 +69,7 @@ def _extract_conmmon_part(oids: list) -> tuple[str, list]:
 
 def _create_snmp_trees_from_tuple(
     snmp_info_element: tuple,
-) -> tuple[list[SNMPTree], LayoutRecoverSuboids | None]:
+) -> SNMPTree:
     """Create a SNMPTrees from (part of) a legacy definition
 
     Legacy definition *elements* can be 2-tuple or 3-tuple.
@@ -107,20 +79,11 @@ def _create_snmp_trees_from_tuple(
      * oids are not the empty string.
     """
     assert isinstance(snmp_info_element, tuple)
-    assert len(snmp_info_element) in (2, 3)
-    base = snmp_info_element[0].rstrip(".")
-
-    # "Triple"-case: recursively return a list
-    if len(snmp_info_element) == 3:
-        tmp_base, suboids, oids = snmp_info_element
-        base_list = [("{}.{}".format(tmp_base, str(i).strip("."))) for i in suboids]
-        return (
-            sum((_create_snmp_trees_from_tuple((base, oids))[0] for base in base_list), []),
-            suboids,
-        )
+    raw_base, raw_oids = snmp_info_element
+    base = raw_base.rstrip(".")
 
     # this fixes 7 weird cases:
-    oids = ["%d" % oid if isinstance(oid, int) and oid > 0 else oid for oid in snmp_info_element[1]]
+    oids = ["%d" % oid if isinstance(oid, int) and oid > 0 else oid for oid in raw_oids]
 
     if "" in oids:  # this fixes 19 cases
         base, tail = str(base).rsplit(".", 1)
@@ -130,34 +93,24 @@ def _create_snmp_trees_from_tuple(
         if common:
             base = f"{base}.{common}"
 
-    return [SNMPTree(base=base, oids=oids)], None
+    return SNMPTree(base=base, oids=oids)
 
 
 def _create_snmp_trees(snmp_info: Any) -> tuple[list[SNMPTree], Callable]:
     """Create SNMPTrees from legacy definition
 
-    Legacy definitions can be 2-tuple, 3-tuple, or a list
-    of any of those.
+    Legacy definitions can be 2-tuple or a list of those.
     We convert these to a list of SNMPTree objects, and also return
     a function to transform the resulting value data structure back
     to the one the legacy prase or function expects.
     """
     if isinstance(snmp_info, tuple):
-        tree_spec, reco_oids = _create_snmp_trees_from_tuple(snmp_info)
-        if reco_oids is None:
-            return tree_spec, lambda table: table[0]
-        recovery = _create_layout_recover_function([reco_oids])
-        return tree_spec, lambda table: recovery(table)[0]
+        tree_spec = _create_snmp_trees_from_tuple(snmp_info)
+        return [tree_spec], lambda table: table[0]
 
     assert isinstance(snmp_info, list)
 
-    trees_and_suboids = [_create_snmp_trees_from_tuple(element) for element in snmp_info]
-    trees: list[SNMPTree] = sum((tree for tree, _suboids in trees_and_suboids), [])
-    suboids_list = [suboids for _tree, suboids in trees_and_suboids]
-
-    layout_recover_function = _create_layout_recover_function(suboids_list)
-
-    return trees, layout_recover_function
+    return [_create_snmp_trees_from_tuple(element) for element in snmp_info], lambda x: x
 
 
 def _create_snmp_parse_function(

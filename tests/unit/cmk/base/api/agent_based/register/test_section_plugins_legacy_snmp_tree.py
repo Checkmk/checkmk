@@ -8,100 +8,38 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.snmplib.type_defs import SpecialColumn
-
-from cmk.base.api.agent_based.register.section_plugins_legacy import (
-    _create_layout_recover_function,
-    _create_snmp_trees_from_tuple,
-    LayoutRecoverSuboids,
-)
+from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees_from_tuple
 from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPTree
-from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.check_api import OID_END, OID_STRING
-
-DATA_2X2 = [["1", "2"], ["3", "4"]]
+from cmk.base.check_api import OID_END
 
 
 @pytest.mark.parametrize(
-    "suboids_list, input_data, expected_output",
-    [
-        (
-            [None],
-            [DATA_2X2],
-            [DATA_2X2],
-        ),
-        (
-            [None, ["2", "3"]],
-            [DATA_2X2, DATA_2X2, DATA_2X2],
-            [
-                DATA_2X2,
-                [
-                    ["2.1", "2"],
-                    ["2.3", "4"],
-                    ["3.1", "2"],
-                    ["3.3", "4"],
-                ],
-            ],
-        ),
-    ],
-)
-def test_create_layout_recover_function(
-    suboids_list: list[LayoutRecoverSuboids | None],
-    input_data: StringTable,
-    expected_output: StringTable,
-) -> None:
-    layout_recover_func = _create_layout_recover_function(suboids_list)
-    assert layout_recover_func(input_data) == expected_output
-
-
-@pytest.mark.parametrize(
-    "element, expected_tree, expected_suboids",
+    "element, expected_tree",
     [
         (
             (".1.2.3", ["4", "5"]),
-            [SNMPTree(base=".1.2.3", oids=["4", "5"])],
-            None,
+            SNMPTree(base=".1.2.3", oids=["4", "5"]),
         ),
         (
             (".1.2.3", ["4", ""]),
-            [SNMPTree(base=".1.2", oids=["3.4", "3"])],
-            None,
+            SNMPTree(base=".1.2", oids=["3.4", "3"]),
         ),
         (
             (".1.2", ["3.4", "3.5"]),
-            [SNMPTree(base=".1.2.3", oids=["4", "5"])],
-            None,
+            SNMPTree(base=".1.2.3", oids=["4", "5"]),
         ),
         (
             (".1.2.3", list(range(4, 6))),
-            [SNMPTree(base=".1.2.3", oids=["4", "5"])],
-            None,
+            SNMPTree(base=".1.2.3", oids=["4", "5"]),
         ),
         (
             (".1.2.3", [OID_END]),
-            [SNMPTree(base=".1.2.3", oids=[OIDEnd()])],
-            None,
-        ),
-        (
-            (".1.2.3", ["4", 5], ["1", "2", "3"]),
-            [
-                SNMPTree(base=".1.2.3.4", oids=["1", "2", "3"]),
-                SNMPTree(base=".1.2.3.5", oids=["1", "2", "3"]),
-            ],
-            ["4", 5],
-        ),
-        # not used in mainline code, but test it anyway:
-        (
-            (".1.2.3", [OID_STRING]),
-            # discouraged by typing, but will still work:
-            [SNMPTree(base=".1.2.3", oids=[SpecialColumn.STRING])],
-            None,
+            SNMPTree(base=".1.2.3", oids=[OIDEnd()]),
         ),
     ],
 )
 def test_create_snmp_trees_from_tuple(
     element: tuple[str, Sequence[str | int], Sequence[str]],
     expected_tree: Sequence[SNMPTree],
-    expected_suboids: LayoutRecoverSuboids | None,
 ) -> None:
-    assert _create_snmp_trees_from_tuple(element) == (expected_tree, expected_suboids)
+    assert _create_snmp_trees_from_tuple(element) == expected_tree

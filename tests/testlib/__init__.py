@@ -22,6 +22,7 @@ from typing import Any, Final
 import freezegun
 import pytest
 import urllib3
+from psutil import Process
 
 from tests.testlib.compare_html import compare_html
 from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
@@ -218,7 +219,9 @@ class WatchLog:
 
     def __exit__(self, *exc_info):
         if self._tail_process is not None:
-            self._tail_process.terminate()
+            for c in Process(self._tail_process.pid).children(recursive=True):
+                if c.name() == "tail":
+                    assert self._site.execute(["kill", str(c.pid)]).wait() == 0
             self._tail_process.wait()
             self._tail_process = None
 

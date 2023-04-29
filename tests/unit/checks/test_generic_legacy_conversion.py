@@ -55,8 +55,10 @@ def test_snmp_tree_translation(fix_plugin_legacy: FixPluginLegacy) -> None:
     for check_info_element in fix_plugin_legacy.check_info.values():
         if (info_spec := check_info_element.get("snmp_info")) is None:
             continue
-        new_trees, recover_function = _create_snmp_trees(info_spec)
-        assert callable(recover_function)  # is tested separately
+        new_trees = _create_snmp_trees(info_spec)
+
+        if isinstance(new_trees, SNMPTree):
+            continue
         assert isinstance(new_trees, list)
         assert all(isinstance(tree, SNMPTree) for tree in new_trees)
 

@@ -96,7 +96,7 @@ def _create_snmp_trees_from_tuple(
     return SNMPTree(base=base, oids=oids)
 
 
-def _create_snmp_trees(snmp_info: Any) -> tuple[list[SNMPTree], Callable]:
+def _create_snmp_trees(snmp_info: Any) -> list[SNMPTree] | SNMPTree:
     """Create SNMPTrees from legacy definition
 
     Legacy definitions can be 2-tuple or a list of those.
@@ -105,26 +105,21 @@ def _create_snmp_trees(snmp_info: Any) -> tuple[list[SNMPTree], Callable]:
     to the one the legacy prase or function expects.
     """
     if isinstance(snmp_info, tuple):
-        tree_spec = _create_snmp_trees_from_tuple(snmp_info)
-        return [tree_spec], lambda table: table[0]
+        return _create_snmp_trees_from_tuple(snmp_info)
 
     assert isinstance(snmp_info, list)
 
-    return [_create_snmp_trees_from_tuple(element) for element in snmp_info], lambda x: x
+    return [_create_snmp_trees_from_tuple(element) for element in snmp_info]
 
 
 def _create_snmp_parse_function(
     original_parse_function: Callable | None,
-    recover_layout_function: Callable,
     handle_empty_info: bool,
 ) -> SNMPParseFunction:
     """Wrap parse function to comply to new API
 
     The created parse function will comply to the new signature requirement of
     accepting exactly one argument by the name "string_table".
-
-    Additionally we undo the change of the data layout induced by the new
-    spec for SNMPTrees.
 
     The old API would stop processing if the parse function returned something falsey,
     while the new API will consider *everything but* None a valid parse result,
@@ -136,12 +131,10 @@ def _create_snmp_parse_function(
         if not handle_empty_info and not any(string_table):
             return None
 
-        relayouted_string_table = recover_layout_function(string_table)
-
         if original_parse_function is None:
-            return relayouted_string_table or None
+            return string_table or None
 
-        return original_parse_function(relayouted_string_table) or None
+        return original_parse_function(string_table) or None
 
     if original_parse_function is not None:
         parse_function.__name__ = original_parse_function.__name__
@@ -184,11 +177,10 @@ def create_snmp_section_plugin_from_legacy(
         # This would add 19 plugins to list of failures, but some are on the list anyway.
         raise NotImplementedError("cannot auto-migrate cluster aware plugins")
 
-    trees, recover_layout_function = _create_snmp_trees(snmp_info)
+    trees = _create_snmp_trees(snmp_info)
 
     parse_function = _create_snmp_parse_function(
         check_info_element.get("parse_function"),
-        recover_layout_function,
         handle_empty_info=bool(check_info_element.get("handle_empty_info")),
     )
 

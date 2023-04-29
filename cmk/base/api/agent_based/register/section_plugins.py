@@ -122,10 +122,15 @@ def _create_snmp_parse_function(
             return lambda string_table: string_table[0]
         return lambda string_table: string_table
 
-    if needs_unpacking:
-        return lambda string_table: parse_function(string_table[0])
-    # _validate_parse_function should have ensured this is the correct type:
-    return parse_function  # type: ignore[return-value]
+    if not needs_unpacking:
+        # _validate_parse_function should have ensured this is the correct type:
+        return parse_function  # type: ignore[return-value]
+
+    @functools.wraps(parse_function)
+    def unpacking_parse_function(string_table):
+        return parse_function(string_table[0])  # type: ignore[misc] # no, it's not None.
+
+    return unpacking_parse_function
 
 
 def _validate_supersedings(own_name: SectionName, supersedes: list[SectionName]) -> None:

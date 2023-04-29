@@ -60,7 +60,6 @@ def test_create_agent_parse_function() -> None:
 def test_create_snmp_parse_function() -> None:
     compliant_parse_function = section_plugins_legacy._create_snmp_parse_function(
         original_parse_function=old_school_parse_function,
-        recover_layout_function=lambda x: x,
         handle_empty_info=False,
     )
 
@@ -86,7 +85,6 @@ def test_create_snmp_parse_function() -> None:
 def test_create_snmp_parse_function_handle_empty() -> None:
     compliant_parse_function = section_plugins_legacy._create_snmp_parse_function(
         original_parse_function=old_school_parse_function,
-        recover_layout_function=lambda x: x,
         handle_empty_info=True,
     )
 

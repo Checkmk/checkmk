@@ -67,10 +67,10 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	install -m 644 $(CHECK_MK_RAW_PRECOMPILED_WERKS) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
-	install -m 664 $(REPO_PATH)/checks/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
+	install -m 644 $(REPO_PATH)/checks/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
-	install -m 775 $(REPO_PATH)/notifications/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
+	install -m 755 $(REPO_PATH)/notifications/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
 	tar -c -C $(REPO_PATH)/web \
@@ -98,7 +98,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/livestatus/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman
-	install -m 664 $(REPO_PATH)/checkman/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman
+	install -m 644 $(REPO_PATH)/checkman/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents
 	tar -c -C $(REPO_PATH)/agents \

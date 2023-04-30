@@ -13,5 +13,5 @@ $(STUNNEL_INSTALL): $(STUNNEL_BUILD)
 	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(STUNNEL)/$(STUNNEL)/share/$(STUNNEL).bash $(DESTDIR)$(OMD_ROOT)/skel/etc/bash_completion.d/
 	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(STUNNEL)/skel/ $(DESTDIR)$(OMD_ROOT)/skel
 	cd $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/ && $(LN) -sf ../init.d/$(STUNNEL) 85-$(STUNNEL)
-	chmod 664 $(DESTDIR)$(OMD_ROOT)/skel/etc/logrotate.d/$(STUNNEL)
-	chmod 664 $(DESTDIR)$(OMD_ROOT)/skel/etc/$(STUNNEL)/server.conf
+	chmod 640 $(DESTDIR)$(OMD_ROOT)/skel/etc/logrotate.d/$(STUNNEL)
+	chmod 640 $(DESTDIR)$(OMD_ROOT)/skel/etc/$(STUNNEL)/server.conf

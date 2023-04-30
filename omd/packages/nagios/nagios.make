@@ -2,7 +2,7 @@ NAGIOS := nagios
 NAGIOS_VERS := 3.5.1
 NAGIOS_DIR := $(NAGIOS)-$(NAGIOS_VERS)
 # Increase this to enforce a recreation of the build cache
-NAGIOS_BUILD_ID := 4-$(EDITION_SHORT)
+NAGIOS_BUILD_ID := 5-$(EDITION_SHORT)
 
 NAGIOS_UNPACK := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-unpack
 NAGIOS_PATCHING := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-patching
@@ -47,7 +47,7 @@ $(NAGIOS_INTERMEDIATE_INSTALL): $(NAGIOS_BUILD)
 	$(MAKE) DESTDIR=$(NAGIOS_INSTALL_DIR) -C $(NAGIOS_BUILD_DIR) install-base
 	
 	$(MKDIR) $(NAGIOS_INSTALL_DIR)/lib/nagios
-	install -m 664 $(NAGIOS_BUILD_DIR)/p1.pl $(NAGIOS_INSTALL_DIR)/lib/nagios
+	install -m 644 $(NAGIOS_BUILD_DIR)/p1.pl $(NAGIOS_INSTALL_DIR)/lib/nagios
 	
 	# Copy package documentations to have these information in the binary packages
 	$(MKDIR) $(NAGIOS_INSTALL_DIR)/share/doc/$(NAGIOS)

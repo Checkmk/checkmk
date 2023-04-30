@@ -43,7 +43,7 @@
         "./web/htdocs/js/modules/views.ts",
         "./web/htdocs/js/modules/hover.ts",
         "./web/htdocs/js/modules/help.ts",
-        //"./web/htdocs/js/modules/background_job.ts",
+        "./web/htdocs/js/modules/background_job.ts",
         "./web/htdocs/js/modules/profile_replication.ts",
         "./web/htdocs/js/modules/sla.ts",
         "./web/htdocs/js/modules/host_diagnose.ts",

@@ -152,9 +152,6 @@ $(PRE_INSTALL): $(BUILD_HELPER_DIR)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/omd
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man1
-	chmod 755 $(DESTDIR)$(OMD_ROOT)/share
-	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/man
-	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/man/man1
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
 	$(call log_time,$@,done)
 	touch $@
@@ -212,6 +209,10 @@ $(INSTALL_GLOBAL): $(SKEL_PERMISSIONS) $(BOM)
 	install -m 644 Licenses.README.txt $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.README.txt
 	install -m 644 License_texts.pdf $(DESTDIR)$(OMD_ROOT)/share/doc/License_texts.pdf
 	install -m 644 $(BOM) $(DESTDIR)$(OMD_ROOT)/share/doc/$(BOM)
+
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/man
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/man/man1
 
 	if [ -f COMMIT ]; then \
 	    install -m 644 COMMIT $(DESTDIR)$(OMD_ROOT)/share/doc ; \

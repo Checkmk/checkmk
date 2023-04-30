@@ -43,10 +43,10 @@ $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/conf.d
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/maps
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/geomap
-	chmod 640 $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/geomap/demo-locations.csv
 	$(RM) $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/maps/*.cfg
 	$(MV) $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/conf.d/*.ini.php $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/conf.d
 	$(MV) $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/geomap/demo-*.csv $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/geomap
+	chmod 640 $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/geomap/demo-locations.csv
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles/images/maps
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles/images/maps
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles/images/maps/*.png

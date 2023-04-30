@@ -255,7 +255,9 @@ def import_module_and_get_file_path(site: Site, import_name: str) -> str:
     return p.communicate()[0].rstrip()
 
 
-def test_python_preferred_encoding() -> None:
-    import locale  # pylint: disable=import-outside-toplevel
-
-    assert locale.getpreferredencoding() == "UTF-8"
+def test_python_preferred_encoding(site: Site) -> None:
+    p = site.execute(
+        ["python3", "-c", "import locale; print(locale.getpreferredencoding())"],
+        stdout=subprocess.PIPE,
+    )
+    assert p.communicate()[0].rstrip() == "UTF-8"

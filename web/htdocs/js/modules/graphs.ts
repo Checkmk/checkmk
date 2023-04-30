@@ -1542,7 +1542,6 @@ function update_graph_hover_popup(event: Event, graph: GraphArtwork) {
 
     ajax.call_ajax("ajax_graph_hover.py", {
         method: "POST",
-        //@ts-ignore
         response_handler: handle_graph_hover_popup_update,
         handler_data: {
             graph: graph,
@@ -1557,14 +1556,8 @@ function handle_graph_hover_popup_update(
         graph: GraphArtwork;
         event: Event;
     },
-    ajax_response: string,
-    http_code: unknown
+    ajax_response: string
 ) {
-    if (http_code !== undefined) {
-        //console.log("Error calling AJAX web service for graph hover update: " + ajax_response);
-        g_graph_update_in_process = false;
-        return;
-    }
     let popup_data: GraphHover;
     try {
         popup_data = JSON.parse(ajax_response);
@@ -1816,14 +1809,8 @@ function set_graph_update_cooldown() {
 
 function handle_graph_update(
     graph_container: HTMLElement,
-    ajax_response: string,
-    http_code: unknown
+    ajax_response: string
 ) {
-    if (http_code !== undefined) {
-        //console.log("Error calling AJAX web service for graph update: " + ajax_response);
-        g_graph_update_in_process = false;
-        return;
-    }
     let response: AjaxGraph;
     try {
         response = JSON.parse(ajax_response);
@@ -1984,7 +1971,6 @@ function set_graph_timerange(
             method: "POST",
             post_data: post_data,
             //this is related to the third argument of the function, which I think is never used in ajax.ts
-            //@ts-ignore
             response_handler: handle_graph_timerange_update,
             handler_data: get_graph_container(canvas),
         });
@@ -1994,11 +1980,8 @@ function set_graph_timerange(
 // First updates the current graph and then continues with the next graph
 function handle_graph_timerange_update(
     graph_container: HTMLElement,
-    ajax_response: string,
-    //DO we need http_code since AJAX always calls a function with the first two
-    //so the third is always undefined?
-    http_code: unknown
+    ajax_response: string
 ) {
-    handle_graph_update(graph_container, ajax_response, http_code);
+    handle_graph_update(graph_container, ajax_response);
     update_next_graph_timerange();
 }

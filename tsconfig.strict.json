@@ -56,7 +56,8 @@
         //"./web/htdocs/js/modules/figures/cmk_figures_plugins.ts",
         "./web/htdocs/js/modules/quicksearch.ts",
         "./web/htdocs/js/modules/webauthn.ts",
-        "./web/htdocs/js/modules/search.ts"
+        "./web/htdocs/js/modules/search.ts",
+        "./enterprise/web/htdocs/js/modules/figures/cmk_tabs.ts"
     ],
     "exclude": [
         "./web/**/*",

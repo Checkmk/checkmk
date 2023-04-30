@@ -603,7 +603,9 @@ class Site:
             assert os.path.exists("/omd/sites/%s" % self.id)
 
             self._ensure_sample_config_is_present()
+            self._set_number_of_apache_processes()
             if not self.version.is_raw_edition():
+                self._set_number_of_cmc_helpers()
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
                 self._enable_cmc_tooling(tool=None)
@@ -752,6 +754,33 @@ class Site:
         self.write_text_file(
             "etc/default/cmc",
             f'CMC_DAEMON_PREPEND="/opt/bin/valgrind --tool={tool} --quiet --log-file=$OMD_ROOT/var/log/cmc-{tool}.log"\n',
+        )
+
+    def _set_number_of_apache_processes(self) -> None:
+        self.makedirs("etc/apache/conf.d")
+        self.write_text_file(
+            "etc/apache/conf.d/tune-server-pool.conf",
+            "\n".join(
+                [
+                    "MinSpareServers 1",
+                    "MaxSpareServers 2",
+                    "ServerLimit 5",
+                    "MaxClients 5",
+                ]
+            ),
+        )
+
+    def _set_number_of_cmc_helpers(self) -> None:
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_text_file(
+            "etc/check_mk/conf.d/cmc-helpers.mk",
+            "\n".join(
+                [
+                    "cmc_check_helpers = 2",
+                    "cmc_fetcher_helpers = 2",
+                    "cmc_checker_helpers = 2",
+                ]
+            ),
         )
 
     def _enable_cmc_core_dumps(self) -> None:

@@ -1727,12 +1727,11 @@ def _extract_agent_and_snmp_sections(
 
         check_info_dict = check_info.get(section_name, check_info[check_plugin_name])
         try:
-            if (checks_snmp_info := check_info_dict.get("snmp_info")) is not None:
+            if "fetch" in check_info_dict:
                 agent_based_register.add_section_plugin(
                     create_snmp_section_plugin_from_legacy(
                         section_name,
                         check_info_dict,
-                        checks_snmp_info,
                         validate_creation_kwargs=validate_creation_kwargs,
                     )
                 )

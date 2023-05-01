@@ -44,74 +44,6 @@ def _create_agent_parse_function(
     return parse_function
 
 
-def _extract_conmmon_part(oids: list) -> tuple[str, list]:
-    common = ""
-
-    def _get_head(oids):
-        for oid in oids:
-            if isinstance(oid, int):
-                continue
-            oid = str(oid).strip(".")
-            if "." in oid:
-                return oid.split(".", 1)[0]
-        return None
-
-    head = _get_head(oids)
-    while head is not None and all(
-        "." in str(o) and str(o).split(".", 1)[0] == head for o in oids if not isinstance(o, int)
-    ):
-        oids = [o if isinstance(o, int) else type(o)(str(o).split(".", 1)[1]) for o in oids]
-        common = f"{common}.{head}"
-        head = _get_head(oids)
-
-    return common.strip("."), oids
-
-
-def _create_snmp_trees_from_tuple(
-    snmp_info_element: tuple,
-) -> SNMPTree:
-    """Create a SNMPTrees from (part of) a legacy definition
-
-    Legacy definition *elements* can be 2-tuple or 3-tuple.
-    We are quite generous here: we will make sure that
-     * base will not end with '.'
-     * subtrees are strings, starting but not ending with '.'
-     * oids are not the empty string.
-    """
-    assert isinstance(snmp_info_element, tuple)
-    raw_base, raw_oids = snmp_info_element
-    base = raw_base.rstrip(".")
-
-    # this fixes 7 weird cases:
-    oids = ["%d" % oid if isinstance(oid, int) and oid > 0 else oid for oid in raw_oids]
-
-    if "" in oids:  # this fixes 19 cases
-        base, tail = str(base).rsplit(".", 1)
-        oids = [o if isinstance(o, int) else type(o)((f"{tail}.{o}").strip(".")) for o in oids]
-    else:  # this fixes 21 cases
-        common, oids = _extract_conmmon_part(oids)
-        if common:
-            base = f"{base}.{common}"
-
-    return SNMPTree(base=base, oids=oids)
-
-
-def _create_snmp_trees(snmp_info: Any) -> list[SNMPTree] | SNMPTree:
-    """Create SNMPTrees from legacy definition
-
-    Legacy definitions can be 2-tuple or a list of those.
-    We convert these to a list of SNMPTree objects, and also return
-    a function to transform the resulting value data structure back
-    to the one the legacy prase or function expects.
-    """
-    if isinstance(snmp_info, tuple):
-        return _create_snmp_trees_from_tuple(snmp_info)
-
-    assert isinstance(snmp_info, list)
-
-    return [_create_snmp_trees_from_tuple(element) for element in snmp_info]
-
-
 def _create_snmp_parse_function(
     original_parse_function: Callable | None,
     handle_empty_info: bool,
@@ -168,7 +100,6 @@ def create_agent_section_plugin_from_legacy(
 def create_snmp_section_plugin_from_legacy(
     check_plugin_name: str,
     check_info_element: CheckInfoElement,
-    snmp_info: Any,
     *,
     validate_creation_kwargs: bool,
 ) -> SNMPSectionPlugin:

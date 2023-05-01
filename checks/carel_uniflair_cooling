@@ -49,7 +49,7 @@ def check_carel_uniflair_cooling(item, _no_params, info):
 
 check_info["carel_uniflair_cooling"] = {
     # All the OIDs of this checks seems to be wrong for the current version
-    # of this device, so the scan function is disbaled until we have better information
+    # of this device, so the detection is disbaled until we have better information
     "detect": DETECT_NEVER,
     "check_function": check_carel_uniflair_cooling,
     "inventory_function": inventory_carel_uniflair_cooling,

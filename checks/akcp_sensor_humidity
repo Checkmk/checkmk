@@ -24,14 +24,5 @@ check_info["akcp_sensor_humidity"] = {
         base=".1.3.6.1.4.1.3854.1.2.2.1.17.1",
         oids=["1", "3", "4", "5"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.3854.1.2.2.1.17.1",
-        [
-            1,  # SPAGENT-MIB::sensorProbeHumidityDescription
-            3,  # SPAGENT-MIB::sensorProbeHumidityPercent
-            4,  # SPAGENT-MIB::sensorProbeHumidityStatus
-            5,  # SPAGENT-MIB::sensorProbeHumidityOnline
-        ],
-    ),
     "group": "humidity",
 }

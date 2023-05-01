@@ -64,24 +64,6 @@ check_info["arbor_peakflow_tms"] = {
             oids=["1.2.0", "2.1.0"],
         ),
     ],
-    "snmp_info": [
-        (
-            ".1.3.6.1.4.1.9694.1.5.2",
-            [
-                "6.0",  # deviceDiskUsage
-                "7.0",  # devicePhysicalMemoryUsage
-                "8.0",  # deviceSwapSpaceUsage
-                "1.0",  # tmsHostFault
-            ],
-        ),
-        (
-            ".1.3.6.1.4.1.9694.1.5.5",
-            [
-                "1.2.0",  # tmsLastUpdate
-                "2.1.0",  # tmsMitigationLastUpdate
-            ],
-        ),
-    ],
 }
 
 check_info["arbor_peakflow_tms.disk_usage"] = {

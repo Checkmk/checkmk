@@ -68,9 +68,5 @@ check_info["genua_fan"] = {
             oids=["2", "3", "4"],
         ),
     ],
-    "snmp_info": [
-        (".1.3.6.1.4.1.3717.2.1.1.1.1", ["2", "3", "4"]),  # "fanName"  # "fanRPM"  # "fanState"
-        (".1.3.6.1.4.1.3137.2.1.1.1.1", ["2", "3", "4"]),  # "fanName"  # "fanRPM"  # "fanState"
-    ],
     "default_levels_variable": "genua_fan_default_levels",
 }

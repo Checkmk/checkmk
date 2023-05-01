@@ -160,11 +160,6 @@ check_info["apc_netbotz_sensors"] = {
             oids=["1", "2", "4", "7"],
         ),
     ],
-    "snmp_info": [
-        (".1.3.6.1.4.1.5528.100.4.1.1.1", _OIDS),
-        (".1.3.6.1.4.1.5528.100.4.1.2.1", _OIDS),
-        (".1.3.6.1.4.1.5528.100.4.1.3.1", _OIDS),
-    ],
     "default_levels_variable": "apc_netbotz_sensors_temp_default_levels",
     "group": "temperature",
 }

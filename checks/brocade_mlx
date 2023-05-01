@@ -87,7 +87,6 @@ check_info["brocade_mlx.module_status"] = {
             oids=[OIDEnd(), "5"],
         ),
     ],
-    "snmp_info": brocade_mlx_info,
 }
 
 # .
@@ -186,7 +185,6 @@ check_info["brocade_mlx.module_mem"] = {
             oids=[OIDEnd(), "5"],
         ),
     ],
-    "snmp_info": brocade_mlx_info,
     "group": "memory_multiitem",
 }
 
@@ -287,6 +285,5 @@ check_info["brocade_mlx.module_cpu"] = {
             oids=[OIDEnd(), "5"],
         ),
     ],
-    "snmp_info": brocade_mlx_info,
     "group": "cpu_utilization_multiitem",
 }

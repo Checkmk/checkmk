@@ -49,17 +49,4 @@ check_info["stormshield_packets"] = {
         base=".1.3.6.1.4.1.11256.1.4.1.1",
         oids=["2", "3", "6", "11", "12", "16", "23", "24"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.11256.1.4.1.1",
-        [
-            "2",  # Description
-            "3",  # Name
-            "6",  # IfType
-            "11",  # PktAccepted
-            "12",  # PktBlocked
-            "16",  # PktIcmp
-            "23",  # TcpConnCount
-            "24",  # UdpConnCount
-        ],
-    ),
 }

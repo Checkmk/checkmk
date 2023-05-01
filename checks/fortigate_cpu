@@ -30,6 +30,5 @@ check_info["fortigate_cpu"] = {
         base=".1.3.6.1.4.1.12356.1",
         oids=["8"],
     ),
-    "snmp_info": (".1.3.6.1.4.1.12356.1", [8]),
     "default_levels_variable": "fortigate_cpu_default_levels",
 }

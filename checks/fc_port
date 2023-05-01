@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import all_of, BINARY, get_average, get_rate, not_exists, startswith
+from cmk.base.check_api import all_of, get_average, get_rate, not_exists, startswith
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, render, SNMPTree
@@ -301,64 +301,40 @@ check_info["fc_port"] = {
             "1.10.1.17",
             "1.10.1.23",
             OIDBytes("4.5.1.4"),
-            OIDBytes("4.5.1.5"),
-            OIDBytes("4.5.1.6"),
-            OIDBytes("4.5.1.7"),
-            OIDBytes("4.5.1.8"),
-            OIDBytes("4.5.1.28"),
-            OIDBytes("4.5.1.40"),
-            OIDBytes("4.5.1.50"),
-        ],
-    ),
-    "snmp_info": (
-        ".1.3.6.1.3.94",
-        [
-            "1.10.1.2",  # connUnitPortIndex                             # 0
-            "1.10.1.3",  # connUnitPortType                              # 1
-            "1.10.1.6",  # connUnitPortState:                            # 2
-            # user selected state of the port hardware
-            "1.10.1.7",  # connUnitPortStatus:                           # 3
-            # operational status for the port
-            "1.10.1.15",  # connUnitPortSpeed:                            # 4
-            # The speed of the port in kilobytes per second.
-            "1.10.1.17",  # connUnitPortName                              # 5
-            "1.10.1.23",  # connUnitPortHWSTate:                          # 6
-            # hardware detected state of the port
-            BINARY("4.5.1.4"),  # connUnitPortStatCountTxObjects:                    # 7
             # The number of frames/packets/IOs/etc that have been transmitted
             # by this port. Note: A Fibre Channel frame starts with SOF and
             # ends with EOF. FC loop devices should not count frames passed
             # through. This value represents the sum total for all other Tx
-            BINARY("4.5.1.5"),  # connUnitPortStatCountRxObjects:                    # 8
+            OIDBytes("4.5.1.5"),
             # The number of frames/packets/IOs/etc that have been received
             # by this port. Note: A Fibre Channel frame starts with SOF and
             # ends with EOF. FC loop devices should not count frames passed
             # through. This value represents the sum total for all other Rx
-            BINARY("4.5.1.6"),  # connUnitPortStatCountTxElements:                   # 9
+            OIDBytes("4.5.1.6"),
             # The number of octets or bytes that have been transmitted
             # by this port. One second periodic polling of the port. This
             # value is saved and compared with the next polled value to
             # compute net throughput. Note, for Fibre Channel, ordered
             # sets are not included in the count.
-            BINARY("4.5.1.7"),  # connUnitPortStatCountRxElements:                   # 10
+            OIDBytes("4.5.1.7"),
             # The number of octets or bytes that have been received.
             # by this port. One second periodic polling of the port. This
             # value is saved and compared with the next polled value to
             # compute net throughput. Note, for Fibre Channel, ordered
             # sets are not included in the count.
-            BINARY("4.5.1.8"),  # connUnitPortStatCountBBCreditZero:            # 11
+            OIDBytes("4.5.1.8"),
             # Count of transitions in/out of BBcredit zero state.
             # The other side is not providing any credit.
-            BINARY("4.5.1.28"),  # connUnitPortStatCountClass3Discards:          # 12
+            OIDBytes("4.5.1.28"),
             # Count of Class 3 Frames that were discarded upon reception
             # at this port.  There is no FBSY or FRJT generated for Class 3
             # Frames.  They are simply discarded if they cannot be delivered.
-            BINARY("4.5.1.40"),  # connUnitPortStatCountInvalidCRC:              # 13
+            OIDBytes("4.5.1.40"),
             # Count of frames received with invalid CRC. This count is
             # part of the Link Error Status Block (LESB). (FC-PH 29.8). Loop
             # ports should not count CRC errors passing through when
             # monitoring.
-            BINARY("4.5.1.50"),  # connUnitPortStatCountEncodingDisparityErrors: # 14
+            OIDBytes("4.5.1.50"),
             # Count of disparity errors received at this port.
         ],
     ),

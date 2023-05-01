@@ -124,22 +124,6 @@ check_info["raritan_px_sensors"] = {
         base=".1.3.6.1.4.1.13742.4.3.3.1",
         oids=["1", "4", "2", "40", "16", "17", "41", "31", "32", "33", "34"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.13742.4.3.3.1",
-        [
-            "1",  # sensorID
-            "4",  # sensorName
-            "2",  # sensorType
-            "40",  # sensorState
-            "16",  # sensorUnit
-            "17",  # sensorDecimalDigits
-            "41",  # sensorValue
-            "31",  # sensorLowerCrit
-            "32",  # sensorLowerWarn
-            "33",  # sensorUpperCrit
-            "34",  # sensorUpperWarn
-        ],
-    ),
     "group": "temperature",
 }
 

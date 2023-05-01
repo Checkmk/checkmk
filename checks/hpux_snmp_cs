@@ -36,7 +36,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate, MKCounterWrapped, OID_END, startswith
+from cmk.base.check_api import get_rate, MKCounterWrapped, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -78,7 +78,6 @@ check_info["hpux_snmp_cs"] = {
         base=".1.3.6.1.4.1.11.2.3.1",
         oids=[OIDEnd(), "1"],
     ),
-    "snmp_info": (".1.3.6.1.4.1.11.2.3.1", [OID_END, 1]),
 }
 
 

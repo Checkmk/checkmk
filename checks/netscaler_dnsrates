@@ -59,12 +59,5 @@ check_info["netscaler_dnsrates"] = {
         base=".1.3.6.1.4.1.5951.4.1.1.53.1",
         oids=["1", "2"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.5951.4.1.1.53.1",
-        [  # nsDnsServerStatsGroup
-            1,  # dnsTotQueries
-            2,  # dnsTotAnswers
-        ],
-    ),
     "default_levels_variable": "netscaler_dnsrates_default_levels",
 }

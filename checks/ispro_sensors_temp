@@ -48,17 +48,5 @@ check_info["ispro_sensors_temp"] = {
         base=".1.3.6.1.4.1.19011.1.3.2.1.3",
         oids=["1.1.1.2", "1.1.1.3", "1.1.1.4", "2.2.1.3", "2.2.1.4", "2.2.1.5", "2.2.1.6"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.19011.1.3.2.1.3",
-        [
-            "1.1.1.2",  # ISPRO-MIB::isDeviceMonitorTemperatureName
-            "1.1.1.3",  # ISPRO-MIB::isDeviceMonitorTemperature (unit is 0.01 degree)
-            "1.1.1.4",  # ISPRO-MIB::isDeviceMonitorTemperatureAlarm
-            "2.2.1.3",  # ISPRO-MIB::isDeviceConfigTemperatureLowWarning
-            "2.2.1.4",  # ISPRO-MIB::isDeviceConfigTemperatureLowCritical
-            "2.2.1.5",  # ISPRO-MIB::isDeviceConfigTemperatureHighWarning
-            "2.2.1.6",  # ISPRO-MIB::isDeviceConfigTemperatureHighCritical
-        ],
-    ),
     "group": "temperature",
 }

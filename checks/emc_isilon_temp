@@ -67,13 +67,6 @@ check_info["emc_isilon_temp"] = {
         base=".1.3.6.1.4.1.12124.2.54.1",
         oids=["3", "4"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.12124.2.54.1",
-        [
-            "3",  # ISILON-MIB::tempSensorDescription
-            "4",  # ISILON-MIB::tempSensorValue
-        ],
-    ),
     "default_levels_variable": "emc_isilon_temp_default_levels",
 }
 

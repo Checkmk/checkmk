@@ -52,12 +52,5 @@ check_info["juniper_screenos_cpu"] = {
         base=".1.3.6.1.4.1.3224.16.1",
         oids=["2", "4"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.3224.16.1",
-        [
-            2,  # jnxOperating1MinLoadAvg
-            4,  # jnxOperating15MinLoadAvg
-        ],
-    ),
     "default_levels_variable": "juniper_screenos_cpu_default_levels",
 }

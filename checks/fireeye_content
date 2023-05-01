@@ -69,13 +69,5 @@ check_info["fireeye_content"] = {
         base=".1.3.6.1.4.1.25597.11.5.1",
         oids=["5", "6", "7"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.25597.11.5.1",
-        [
-            "5",  # FE-FIREEYE-MIB::feSecurityContentVersion
-            "6",  # FE-FIREEYE-MIB::feLastContentUpdatePassed
-            "7",  # FE-FIREEYE-MIB::feLastContentUpdateTime
-        ],
-    ),
     "group": "fireeye_content",
 }

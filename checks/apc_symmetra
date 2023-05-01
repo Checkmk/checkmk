@@ -311,33 +311,6 @@ check_info["apc_symmetra"] = {
             ],
         ),
     ],
-    "snmp_info": [
-        (
-            ".1.3.6.1.4.1.318.1.1.10.4.2.3.1",
-            [  # additional temp sensors
-                "3",  # name
-                "5",  # temp
-            ],
-        ),
-        # A Note on the order of OIDs: If the 11.1.1.0 is not the last to be polled,
-        # this leads to bogus values for some other OIDs on some devices.
-        (
-            ".1.3.6.1.4.1.318.1.1.1",
-            [
-                "2.1.1.0",  # PowerNet-MIB::upsBasicBatteryStatus,
-                "4.1.1.0",  # PowerNet-MIB::upsBasicOutputStatus,
-                "2.2.1.0",  # PowerNet-MIB::upsAdvBatteryCapacity,
-                "2.2.4.0",  # PowerNet-MIB::upsAdvBatteryReplaceIndicator,
-                "2.2.6.0",  # PowerNet-MIB::upsAdvBatteryNumOfBadBattPacks,
-                "2.2.3.0",  # PowerNet-MIB::upsAdvBatteryRunTimeRemaining,
-                "7.2.6.0",  # PowerNet-MIB::upsAdvTestCalibrationResults
-                "7.2.4.0",  # PowerNet-MIB::upsLastDiagnosticsDate
-                "2.2.2.0",  # PowerNet-MIB::upsAdvBatteryTemperature,
-                "2.2.9.0",  # PowerNet-MIB::upsAdvBatteryCurrent,
-                "11.1.1.0",  # PowerNet-MIB::upsBasicStateOutputState
-            ],
-        ),
-    ],
     "group": "apc_symentra",
     "default_levels_variable": "apc_default_levels",
 }

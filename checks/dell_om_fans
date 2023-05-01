@@ -77,18 +77,5 @@ check_info["dell_om_fans"] = {
         base=".1.3.6.1.4.1.674.10892.1.700.12.1",
         oids=["2", "5", "6", "8", "10", "11", "12", "13"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.674.10892.1.700.12.1",
-        [
-            "2",  # MIB-Dell-10892::coolingDeviceIndex
-            "5",  # MIB-Dell-10892::coolingDeviceStatus
-            "6",  # MIB-Dell-10892::coolingDeviceReading
-            "8",  # MIB-Dell-10892::coolingDeviceLocationName
-            "10",  # MIB-Dell-10892::coolingDeviceUpperNonCriticalThreshold
-            "11",  # MIB-Dell-10892::coolingDeviceUpperCriticalThreshold
-            "12",  # MIB-Dell-10892::coolingDeviceLowerNonCriticalThreshold
-            "13",  # MIB-Dell-10892::coolingDeviceLowerCriticalThreshold
-        ],
-    ),
     "group": "hw_fans",
 }

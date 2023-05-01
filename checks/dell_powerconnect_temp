@@ -78,12 +78,5 @@ check_info["dell_powerconnect_temp"] = {
         base=".1.3.6.1.4.1.89.53.15.1",
         oids=["9", "10"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.89.53.15.1",
-        [
-            "9",  # RADLAN-Physicaldescription-MIB::rlPhdUnitEnvParamTempSensorValue
-            "10",  # RADLAN-Physicaldescription-MIB::rlPhdUnitEnvParamTempSensorStatus
-        ],
-    ),
     "group": "temperature",
 }

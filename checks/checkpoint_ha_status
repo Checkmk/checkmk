@@ -63,17 +63,4 @@ check_info["checkpoint_ha_status"] = {
         base=".1.3.6.1.4.1.2620.1.5",
         oids=["2", "3", "4", "5", "6", "7", "101", "103"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.2620.1.5",
-        [
-            2,  # haInstalled
-            3,  # haVerMajor
-            4,  # haVerMinor
-            5,  # haStarted
-            6,  # haState
-            7,  # haBlockState
-            101,  # haStatCode
-            103,  # haStatLong
-        ],
-    ),
 }

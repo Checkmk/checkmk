@@ -38,12 +38,5 @@ check_info["juniper_screenos_temp"] = {
         base=".1.3.6.1.4.1.3224.21.4.1",
         oids=["4", "3"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.3224.21.4.1",
-        [
-            4,  # Name
-            3,  # Temperatur
-        ],
-    ),
     "default_levels_variable": "juniper_screenos_temp_default_levels",
 }

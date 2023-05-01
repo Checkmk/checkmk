@@ -83,7 +83,6 @@ check_info["fast_lta_headunit.status"] = {
             oids=["1", "2", "5"],
         )
     ],
-    "snmp_info": fast_lta_headunit_info,
 }
 
 # .
@@ -144,7 +143,6 @@ check_info["fast_lta_headunit.replication"] = {
             oids=["1", "2", "5"],
         )
     ],
-    "snmp_info": fast_lta_headunit_info,
 }
 
 # .

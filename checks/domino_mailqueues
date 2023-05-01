@@ -52,15 +52,5 @@ check_info["domino_mailqueues"] = {
         base=".1.3.6.1.4.1.334.72.1.1.4",
         oids=["1", "6", "21", "31", "34"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.334.72.1.1.4",
-        [
-            "1",  # lnDeadMail
-            "6",  # lnWaitingMail
-            "21",  # lnMailHold
-            "31",  # lnMailTotalPending
-            "34",  # InMailWaitingforDNS
-        ],
-    ),
     "group": "domino_mailqueues",
 }

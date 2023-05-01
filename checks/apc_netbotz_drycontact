@@ -41,7 +41,7 @@
 # .1.3.6.1.4.1.318.1.1.10.4.3.2.1.8.2.6 2
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, OID_END
+from cmk.base.check_api import discover, get_parsed_item_data
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.apc import DETECT
@@ -86,14 +86,5 @@ check_info["apc_netbotz_drycontact"] = {
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.10.4.3.2.1",
         oids=[OIDEnd(), "3", "4", "5"],
-    ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.318.1.1.10.4.3.2.1",
-        [
-            OID_END,
-            "3",  # memInputsStatusInputName
-            "4",  # memInputsStatusInputLocation
-            "5",  # inputOpenLowMEM
-        ],
     ),
 }

@@ -74,21 +74,5 @@ check_info["fortisandbox_queues"] = {
         base=".1.3.6.1.4.1.12356.118.5.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.12356.118.5.1",
-        [
-            "1",  # fsaFTypeExe
-            "2",  # fsaFTypePDF
-            "3",  # fsaFTypeDOC
-            "4",  # fsaFTypeFLASH
-            "5",  # fsaFTypeWEB
-            "6",  # fsaFTypeAndroid
-            "7",  # fsaFTypeMAC
-            "8",  # fsaFTypeURL
-            "9",  # fsaFTypeExtra
-            "10",  # fsaFTypeNOVM
-            "11",  # fsaFTypePre
-        ],
-    ),
     "group": "fortisandbox_queues",
 }

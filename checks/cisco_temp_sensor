@@ -91,7 +91,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import all_of, CACHED_OID, contains, exists, OID_END
+from cmk.base.check_api import all_of, contains, exists
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDCached, OIDEnd, SNMPTree
 
@@ -182,35 +182,6 @@ check_info["cisco_temp_sensor"] = {
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.91.1.2.1.1",
             oids=[OIDEnd(), "4"],
-        ),
-    ],
-    "snmp_info": [
-        (
-            ".1.3.6.1.2.1.47.1.1.1.1",
-            [
-                OID_END,
-                CACHED_OID(2),  # entPhysicalDescription
-            ],
-        ),
-        # Type and current state
-        (
-            ".1.3.6.1.4.1.9.9.91.1.1.1.1",
-            [
-                OID_END,
-                1,  # Type (see above), 8 = Celsius, 12 = truth value
-                2,  # Scale, 8 == milli
-                3,  # Precision
-                4,  # Most recent measurement
-                5,  # Status of the sensor 1 == ok, 2 == cannot report, 3 == broken
-            ],
-        ),
-        # Threshold
-        (
-            ".1.3.6.1.4.1.9.9.91.1.2.1.1",
-            [
-                OID_END,
-                4,  # Thresholds
-            ],
         ),
     ],
 }

@@ -47,9 +47,5 @@ check_info["stormshield_updates"] = {
         base=".1.3.6.1.4.1.11256.1.9.1.1",
         oids=["2", "3", "4"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.11256.1.9.1.1",
-        ["2", "3", "4"],  # SubSystem  # State  # LastUpdate
-    ),
     "group": "stormshield_updates",
 }

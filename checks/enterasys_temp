@@ -41,6 +41,5 @@ check_info["enterasys_temp"] = {
         base=".1.3.6.1.4.1.52.4.1.1.8.1",
         oids=["1"],
     ),
-    "snmp_info": (".1.3.6.1.4.1.52.4.1.1.8.1", [1]),  # chEnvAmbientTemp
     "group": "temperature",
 }

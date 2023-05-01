@@ -68,23 +68,6 @@ check_info["fireeye_raid"] = {
             oids=["2", "3", "4"],
         ),
     ],
-    "snmp_info": [
-        (
-            ".1.3.6.1.4.1.25597.11.2.1",
-            [
-                "1",  # FE-FIREEYE_MIB::feRaidStatus
-                "2",  # FE-FIREEYE_MIB::feRaidIsHealthy
-            ],
-        ),
-        (
-            ".1.3.6.1.4.1.25597.11.2.1.3.1",
-            [
-                "2",  # FE-FIREEYE_MIB::fePhysicalDiskName
-                "3",  # FE-FIREEYE_MIB::fePhysicalDiskStatus
-                "4",  # FE-FIREEYE_MIB::fePhysicalDiskIsHealthy
-            ],
-        ),
-    ],
 }
 
 # .

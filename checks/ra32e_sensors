@@ -149,40 +149,6 @@ check_info["ra32e_sensors"] = {
             for table in _SENSOR_TABLES
         ),
     ],
-    "snmp_info": [  # ROOMALERT32E-MIB
-        (
-            ".1.3.6.1.4.1.20916.1.8.1.1",
-            [
-                "1.2",  # internal-tempc
-                "2.1",  # internal-humidity
-                "4.2",  # internal-heat-indexC
-            ],
-        ),
-        *(
-            (
-                f".1.3.6.1.4.1.20916.1.8.1.2.{table}",
-                [
-                    # Note:
-                    # The output depends on the kind of sensor and a sensor only outputs relevant values.
-                    # The following sensors are mentioned in the MIB from the 13th September 2017:
-                    #
-                    # sensor            | values
-                    # ---------------------------------
-                    # Temperature       | 1, 2
-                    # Temp/Active Power | 1, 2, 3
-                    # Temp/Analog       | 1, 2, 3, 4
-                    # Temp/Humidity     | 1, 2, 3, 4, 5
-                    #
-                    "1",  # digital-sen[1-8]-1 --> Temperature, Temp/Humidity, Temp/Analog, Temp/Active Power: temperature in Celsius
-                    "2",  # digital-sen[1-8]-2 --> Temperature, Temp/Humidity, Temp/Analog, Temp/Active Power: temperature in Fahrenheit
-                    "3",  # digital-sen[1-8]-3 --> Temp/Humidity: %RH - Temp/Analog: voltage - Temp/Active Power: power state (1=power detected, 0=no power detected)
-                    "4",  # digital-sen[1-8]-4 --> Temp/Humidity: heat index Fahrenheit - Temp/Analog: custom reading
-                    "5",  # digital-sen[1-8]-5 --> Temp/Humidity: heat index Celsius
-                ],
-            )
-            for table in _SENSOR_TABLES
-        ),
-    ],
     "group": "temperature",
     "default_levels_variable": "ra32e_temp_defaultlevels",
 }

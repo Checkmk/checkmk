@@ -53,16 +53,6 @@ check_info["apc_inrow_temp"] = {
         base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
         oids=["7", "9", "11", "24", "26"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
-        [
-            "7",  # airIRRCUnitStatusRackInletTempMetric
-            "9",  # airIRRCUnitStatusSupplyAirTempMetric
-            "11",  # airIRRCUnitStatusReturnAirTempMetric
-            "24",  # airIRRCUnitStatusEnteringFluidTemperatureMetric
-            "26",  # airIRRCUnitStatusLeavingFluidTemperatureMetric
-        ],
-    ),
     "group": "temperature",
     "default_levels_variable": "apc_inrow_temp_default_levels",
 }

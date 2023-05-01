@@ -48,13 +48,6 @@ check_info["pulse_secure_mem_util"] = {
         base=".1.3.6.1.4.1.12532",
         oids=["11", "24"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.12532",
-        [
-            "11",  # iveMemoryUtil
-            "24",  # iveSwapUtil
-        ],
-    ),
     "group": "pulse_secure_mem_util",
     "default_levels_variable": "pulse_secure_mem_util_def_levels",
 }

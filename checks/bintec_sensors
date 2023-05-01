@@ -12,17 +12,6 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-bintec_sensors_info = (
-    ".1.3.6.1.4.1.272.4.17.7.1.1.1",
-    [
-        2,  # sensorNumber
-        3,  # sensorDescr
-        4,  # sensorType
-        5,  # sensorValue
-        7,  # sensorMeasurementUnit
-    ],
-)
-
 #   .--fans----------------------------------------------------------------.
 #   |                          __                                          |
 #   |                         / _| __ _ _ __  ___                          |
@@ -61,7 +50,6 @@ check_info["bintec_sensors.fan"] = {
         base=".1.3.6.1.4.1.272.4.17.7.1.1.1",
         oids=["2", "3", "4", "5", "7"],
     ),
-    "snmp_info": bintec_sensors_info,
     "default_levels_variable": "bintec_sensors_fan_default_levels",
     "group": "hw_fans",
 }
@@ -103,7 +91,6 @@ check_info["bintec_sensors.temp"] = {
         base=".1.3.6.1.4.1.272.4.17.7.1.1.1",
         oids=["2", "3", "4", "5", "7"],
     ),
-    "snmp_info": bintec_sensors_info,
     "default_levels_variable": "bintec_sensors_temp_default_levels",
 }
 
@@ -148,7 +135,6 @@ check_info["bintec_sensors.voltage"] = {
         base=".1.3.6.1.4.1.272.4.17.7.1.1.1",
         oids=["2", "3", "4", "5", "7"],
     ),
-    "snmp_info": bintec_sensors_info,
 }
 
 # .

@@ -59,15 +59,5 @@ check_info["sensatronics_temp"] = {
         )
         for table in _TABLES
     ],
-    "snmp_info": [
-        (
-            f".1.3.6.1.4.1.16174.1.1.1.3.{table}",
-            [
-                "1.0",  # Sensor Name
-                "2.0",  # Sensor Value
-            ],
-        )
-        for table in _TABLES
-    ],
     "default_levels_variable": "sensatronics_temp_default_levels",
 }

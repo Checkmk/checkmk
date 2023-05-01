@@ -61,14 +61,5 @@ check_info["hitachi_hnas_temp"] = {
         base=".1.3.6.1.4.1.11096.6.1.1.1.2.1.9.1",
         oids=["1", "2", "3", "4"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.11096.6.1.1.1.2.1.9.1",
-        [
-            1,  # temperatureSensorClusterNode
-            2,  # temperatureSensorIndex
-            3,  # temperatureSensorStatus
-            4,  # temperatureSensorCReading
-        ],
-    ),
     "group": "temperature",
 }

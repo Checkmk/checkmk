@@ -18,15 +18,5 @@ check_info["fsc_sc2_temp"] = {
         base=".1.3.6.1.4.1.231.2.10.2.2.10.5.1.1",
         oids=["3", "5", "6", "7", "8"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.231.2.10.2.2.10.5.1.1",
-        [
-            "3",  # sc2tempSensorDesignation
-            "5",  # sc2tempSensorStatus
-            "6",  # sc2tempCurrentTemperature
-            "7",  # sc2tempWarningLevel
-            "8",  # sc2tempCriticalLevel
-        ],
-    ),
     "group": "temperature",
 }

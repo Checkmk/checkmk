@@ -43,13 +43,6 @@ check_info["datapower_mem"] = {
         base=".1.3.6.1.4.1.14685.3.1.5",
         oids=["2", "3"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.14685.3.1.5",
-        [
-            "2",  # dpStatusMemoryStatusTotalMemory
-            "3",  # dpStatusMemoryStatusUsedMemory
-        ],
-    ),
     "group": "memory_simple",
     "default_levels_variable": "datapower_mem_default_levels",
 }

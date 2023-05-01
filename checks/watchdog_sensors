@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import any_of, OID_END, startswith
+from cmk.base.check_api import any_of, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -150,27 +150,6 @@ check_info["watchdog_sensors"] = {
         SNMPTree(
             base=".1.3.6.1.4.1.21239.5.1.2.1",
             oids=[OIDEnd(), "3", "4", "5", "6", "7", "8"],
-        ),
-    ],
-    "snmp_info": [
-        (
-            ".1.3.6.1.4.1.21239.5.1.1",
-            [
-                "2",  # GEIST-V4-MIB::productVersion
-                "7",  # GEIST-V4-MIB::temperatureUnits
-            ],
-        ),
-        (
-            ".1.3.6.1.4.1.21239.5.1.2.1",
-            [
-                OID_END,
-                "3",  # GEIST-V4-MIB::internalName
-                "4",  # GEIST-V4-MIB::internalLabel    but internalAvail    if version 3.2.0
-                "5",  # GEIST-V4-MIB::internalAvail    but internalTemp     if version 3.2.0
-                "6",  # GEIST-V4-MIB::internalTemp     but internalHumidity if version 3.2.0
-                "7",  # GEIST-V4-MIB::internalHumidity but internalDewPoint if version 3.2.0
-                "8",  # GEIST-V4-MIB::internalDewPoint but empty            if version 3.2.0
-            ],
         ),
     ],
 }

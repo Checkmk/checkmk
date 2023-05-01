@@ -42,6 +42,5 @@ check_info["domino_transactions"] = {
         base=".1.3.6.1.4.1.334.72.1.1.6.3",
         oids=["2"],
     ),
-    "snmp_info": (".1.3.6.1.4.1.334.72.1.1.6.3", [2]),
     "group": "domino_transactions",
 }

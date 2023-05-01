@@ -112,20 +112,4 @@ check_info["silverpeak_VX6000"] = {
             oids=["3", "5", "6"],
         ),
     ],
-    "snmp_info": [
-        (
-            ".1.3.6.1.4.1.23867.3.1.1.1",
-            [
-                "4",  # spsActiveAlarmCount
-            ],
-        ),
-        (
-            ".1.3.6.1.4.1.23867.3.1.1.2.1.1",
-            [
-                "3",  # spsActiveAlarmSeverity
-                "5",  # spsActiveAlarmDescr
-                "6",  # spsActiveAlarmSource
-            ],
-        ),
-    ],
 }

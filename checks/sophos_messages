@@ -53,12 +53,4 @@ check_info["sophos_messages"] = {
         base=".1.3.6.1.4.1.2604.1.1.1.4.1",
         oids=["2", "3", "4"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.2604.1.1.1.4.1",
-        [
-            "2",  # counterType -> read-only
-            "3",  # counterInbound
-            "4",  # counterOutbound
-        ],
-    ),
 }

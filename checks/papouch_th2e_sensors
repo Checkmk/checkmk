@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import all_of, contains, OID_END, startswith
+from cmk.base.check_api import all_of, contains, startswith
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -107,15 +107,6 @@ check_info["papouch_th2e_sensors"] = {
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.18248.20.1.2.1.1",
         oids=[OIDEnd(), "1", "2", "3"],
-    ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.18248.20.1.2.1.1",
-        [
-            OID_END,
-            "1",  # the_v01-MIB::inChStatus
-            "2",  # the_v01-MIB::inChValue
-            "3",  # the_v01-MIB::inChUnits
-        ],
     ),
     "group": "temperature",
 }

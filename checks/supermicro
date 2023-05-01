@@ -87,31 +87,6 @@ check_info["supermicro"] = {
             oids=["1", "2", "4"],
         ),
     ],
-    "snmp_info": [
-        (
-            ".1.3.6.1.4.1.10876.2.1.1.1.1",
-            [
-                2,  # smHealthMonitorName
-                3,  # smHealthMonitorType
-                4,  # smHealthMonitorReading
-                5,  # smHealthMonitorHighLimit
-                6,  # smHealthMonitorLowLimit
-                11,  # smHealthMonitorReadingUnit
-                12,  # smHealthMonitorStatus
-            ],
-        ),
-        (
-            ".1.3.6.1.4.1.10876.2",
-            [
-                2,  # smHealthAllinoneStatus
-                3,  # smHealthAllinoneMsg
-            ],
-        ),
-        (
-            ".1.3.6.1.4.1.10876.100.1.4.1",
-            [1, 2, 4],  # diskSerialNumber  # diskName
-        ),  # diskSmartStatus
-    ],
 }
 
 # .

@@ -33,12 +33,6 @@ check_info["netextreme_cpu_util"] = {
         base=".1.3.6.1.4.1.1916.1.32.1.2",
         oids=["0"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.1916.1.32.1.2",
-        [
-            "0",  # EXTREME-SOFTWARE-MONITOR-MIB::extremeCpuMonitorTotalUtilization
-        ],
-    ),
     "group": "cpu_utilization",
     "default_levels_variable": "netextreme_cpu_util_default_levels",
 }

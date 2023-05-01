@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, OID_END
+from cmk.base.check_api import discover
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -64,15 +64,6 @@ check_info["netextreme_psu_out"] = {
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.1916.1.1.1.38.1",
         oids=[OIDEnd(), "3", "4", "5"],
-    ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.1916.1.1.1.38.1",
-        [
-            OID_END,  # Power Supply Index
-            "3",  # extremePowerSupplyOutputVoltage
-            "4",  # extremePowerSupplyOutputCurrent
-            "5",  # extremePowerSupplyOutputUnitMultiplier
-        ],
     ),
     "group": "el_inphase",
     "default_levels_variable": "netextreme_psu_out_default_levels",

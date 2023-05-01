@@ -35,11 +35,4 @@ check_info["infoblox_grid_status"] = {
         base=".1.3.6.1.4.1.7779.3.1.1.2.1",
         oids=["15", "16"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.7779.3.1.1.2.1",
-        [
-            "15",  # IB-PLATFORMONE-MIB::ibGridMasterVIP
-            "16",  # IB-PLATFORMONE-MIB::ibGridReplicationState
-        ],
-    ),
 }

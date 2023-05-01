@@ -23,6 +23,5 @@ class CheckInfoElement(TypedDict):
     ]
     parse_function: NotRequired[Callable[[list], object]]
     group: NotRequired[str]
-    snmp_info: NotRequired[tuple | list]
     default_levels_variable: NotRequired[str]
     service_description: NotRequired[str]

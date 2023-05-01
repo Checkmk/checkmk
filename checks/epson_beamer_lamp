@@ -43,6 +43,5 @@ check_info["epson_beamer_lamp"] = {
         base=".1.3.6.1.4.1.1248.4.1.1.1.1",
         oids=["0"],
     ),
-    "snmp_info": (".1.3.6.1.4.1.1248.4.1.1.1.1", ["0"]),
     "group": "lamp_operation_time",
 }

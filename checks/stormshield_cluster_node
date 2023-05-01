@@ -99,21 +99,5 @@ check_info["stormshield_cluster_node"] = {
         base=".1.3.6.1.4.1.11256.1.11.7.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.11256.1.11.7.1",
-        [
-            "1",  # Index
-            "2",  # Serial
-            "3",  # Online
-            "4",  # Model
-            "5",  # Version
-            "6",  # License
-            "7",  # Quality
-            "8",  # Priority
-            "9",  # StatusForced
-            "10",  # Active
-            "11",  # Uptime
-        ],
-    ),
     "group": "stormshield_quality",
 }

@@ -31,6 +31,5 @@ check_info["tplink_poe_summary"] = {
         base=".1.3.6.1.4.1.11863.6.56.1.1.1",
         oids=["3"],
     ),
-    "snmp_info": (".1.3.6.1.4.1.11863.6.56.1.1.1", ["3"]),
     "group": "epower_single",
 }

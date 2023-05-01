@@ -41,13 +41,5 @@ check_info["stormshield_policy"] = {
         base=".1.3.6.1.4.1.11256.1.8.1.1",
         oids=["2", "3", "5"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.11256.1.8.1.1",
-        [
-            "2",  # snsPolicyName
-            "3",  # snsPolicySlotName
-            "5",  # snsPolicySync
-        ],
-    ),
     "group": "stormshield",
 }

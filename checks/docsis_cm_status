@@ -22,7 +22,7 @@
 # docsIfCmStatusInvalidRegistrationResponses  1.3.6.1.2.1.10.127.1.2.2.1.9
 
 
-from cmk.base.check_api import any_of, equals, OID_END
+from cmk.base.check_api import any_of, equals
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -93,14 +93,6 @@ check_info["docsis_cm_status"] = {
     "fetch": SNMPTree(
         base=".1.3.6.1.2.1.10.127.1.2.2.1",
         oids=[OIDEnd(), "1", "3"],
-    ),
-    "snmp_info": (
-        ".1.3.6.1.2.1.10.127.1.2.2.1",
-        [
-            OID_END,
-            1,  # docsIfCmStatusValue
-            3,  # docsIfCmStatusTxPower
-        ],
     ),
     "default_levels_variable": "docsis_cm_status_default_levels",
     "group": "docsis_cm_status",

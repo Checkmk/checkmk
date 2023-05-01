@@ -80,13 +80,6 @@ check_info["fortigate_ipsecvpn"] = {
         base=".1.3.6.1.4.1.12356.101.12.2.2.1",
         oids=["3", "20"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.12356.101.12.2.2.1",
-        [
-            3,  # fgVpnTunEntPhase2Name
-            20,  # fgVpnTunEntStatus
-        ],
-    ),
     "default_levels_variable": "fortigate_ipsecvpn_default_levels",
     "group": "ipsecvpn",
 }

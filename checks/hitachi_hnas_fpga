@@ -48,8 +48,5 @@ check_info["hitachi_hnas_fpga"] = {
         base=".1.3.6.1.4.1.11096.6.1.1.6.1.4.1",
         oids=["1", "2", "3", "4"],
     ),
-    "snmp_info": (".1.3.6.1.4.1.11096.6.1.1.6.1.4.1", [1, 2, 3, 4]),
-    # fpgaUtilizationCnIndex (=PNode), fpgaUtilizationFpgaIndex (=ID),
-    # fpgaUtilizationFpgaName, fpgaUtilization
     "group": "fpga_utilization",
 }

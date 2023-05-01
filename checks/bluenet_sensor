@@ -60,15 +60,6 @@ check_info["bluenet_sensor"] = {
         base=".1.3.6.1.4.1.21695.1.10.7.3.1",
         oids=["1", "2", "4", "5"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.21695.1.10.7.3.1",
-        [
-            1,  # e3lpmSensor
-            2,  # e3lpmSensorType
-            4,  # e3lpmSensorTemperatureCelsius
-            5,  # e3lpmSensorHumidity
-        ],
-    ),
 }
 
 # .

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import OID_END
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
@@ -63,27 +62,6 @@ check_info["emc_datadomain_disks"] = {
         SNMPTree(
             base=".1.3.6.1.4.1.19746.1.6.2.1.1",
             oids=["6"],
-        ),
-    ],
-    "snmp_info": [
-        (
-            ".1.3.6.1.4.1.19746.1.6.1.1.1",
-            [
-                1,  # diskPropEnclosureID
-                2,  # diskPropIndex
-                4,  # diskModel
-                5,  # diskFirmwareVersion
-                6,  # diskSerialNumber
-                7,  # diskPropCapacity
-                8,  # diskPropState
-                OID_END,
-            ],
-        ),
-        (
-            ".1.3.6.1.4.1.19746.1.6.2.1.1",
-            [
-                6,  # diskBusy
-            ],
         ),
     ],
 }

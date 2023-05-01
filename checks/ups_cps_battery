@@ -116,13 +116,5 @@ check_info["ups_cps_battery"] = {
         base=".1.3.6.1.4.1.3808.1.1.1.2.2",
         oids=["1", "3", "4"],
     ),
-    "snmp_info": (
-        ".1.3.6.1.4.1.3808.1.1.1.2.2",
-        [
-            "1",  # upsAdvanceBatteryCapacity .1.3.6.1.4.1.3808.1.1.1.2.2.1 = Gauge
-            "3",  # upsAdvanceBatteryTemperature .1.3.6.1.4.1.3808.1.1.1.2.2.3 = Gauge, devices also return 'NULL'
-            "4",  # upsAdvanceBatteryRunTimeRemaining .1.3.6.1.4.1.3808.1.1.1.2.2.4 = TimeTicks
-        ],
-    ),
     "group": "ups_capacity",
 }

@@ -90,7 +90,6 @@ check_info["kentix_amp_sensors"] = {
             oids=["2"],
         )
     ],
-    "snmp_info": [(".1.3.6.1.4.1.37954.1.2", [""])],
 }
 
 # .

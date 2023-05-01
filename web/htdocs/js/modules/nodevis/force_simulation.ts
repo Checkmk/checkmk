@@ -24,7 +24,6 @@ export class ForceSimulation {
         this._simulation = d3.forceSimulation<NodevisNode>();
         this._simulation.stop();
         this._simulation.alpha(0);
-        this._simulation.alphaDecay(0.03);
         this._simulation.alphaMin(0.1);
         this._simulation.on("tick", () => this.tick_called());
         this._simulation.on("end", () => this._simulation_end());

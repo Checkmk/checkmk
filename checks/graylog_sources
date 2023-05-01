@@ -94,8 +94,8 @@ factory_settings["graylog_sources_default_levels"] = {}
 check_info["graylog_sources"] = {
     "parse_function": parse_graylog_sources,
     "check_function": check_graylog_sources,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "default_levels_variable": "graylog_sources_default_levels",
-    "service_description": "Graylog Source %s",
-    "group": "graylog_sources",
+    "service_name": "Graylog Source %s",
+    "check_ruleset_name": "graylog_sources",
 }

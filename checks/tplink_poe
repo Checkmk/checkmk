@@ -90,8 +90,8 @@ check_info["tplink_poe"] = {
     "detect": DETECT_TPLINK,
     "parse_function": parse_tplink_poe,
     "check_function": check_tplink_poe,
-    "inventory_function": inventory_tplink_poe,
-    "service_description": "POE%s consumption",
+    "discovery_function": inventory_tplink_poe,
+    "service_name": "POE%s consumption",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",

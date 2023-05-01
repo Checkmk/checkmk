@@ -90,10 +90,10 @@ def check_postgres_stat_database(item, params, parsed):
 
 check_info["postgres_stat_database"] = {
     "parse_function": parse_postgres_stat_database,
-    "inventory_function": inventory_postgres_stat_database,
+    "discovery_function": inventory_postgres_stat_database,
     "check_function": check_postgres_stat_database,
-    "service_description": "PostgreSQL DB %s Statistics",
-    "group": "postgres_stat_database",
+    "service_name": "PostgreSQL DB %s Statistics",
+    "check_ruleset_name": "postgres_stat_database",
 }
 
 
@@ -122,7 +122,7 @@ def check_postgres_stat_database_size(item, params, parsed):
 
 check_info["postgres_stat_database.size"] = {
     "check_function": check_postgres_stat_database_size,
-    "inventory_function": inventory_postgres_stat_database,
-    "service_description": "PostgreSQL DB %s Size",
-    "group": "postgres_stat_database",
+    "discovery_function": inventory_postgres_stat_database,
+    "service_name": "PostgreSQL DB %s Size",
+    "check_ruleset_name": "postgres_stat_database",
 }

@@ -53,12 +53,12 @@ check_info["emc_datadomain_mtree"] = {
     "detect": DETECT_DATADOMAIN,
     "parse_function": parse_emc_datadomain_mtree,
     "check_function": check_emc_datadomain_mtree,
-    "inventory_function": discover(),
-    "service_description": "MTree %s",
+    "discovery_function": discover(),
+    "service_name": "MTree %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.19746.1.15.2.1.1",
         oids=["2", "3", "4"],
     ),
-    "group": "emc_datadomain_mtree",
+    "check_ruleset_name": "emc_datadomain_mtree",
     "default_levels_variable": "emc_datadomain_mtree_default_levels",
 }

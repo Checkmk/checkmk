@@ -43,9 +43,9 @@ def check_pandacom_fan(item, params, info):
 
 check_info["pandacom_fan"] = {
     "detect": DETECT_PANDACOM,
-    "inventory_function": inventory_pandacom_fan,
+    "discovery_function": inventory_pandacom_fan,
     "check_function": check_pandacom_fan,
-    "service_description": "Fan %s",
+    "service_name": "Fan %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.3652.3.2.3.1",
         oids=["1", "2"],

@@ -112,9 +112,9 @@ def check_db2_tablespaces(item, params, parsed):
 
 check_info["db2_tablespaces"] = {
     "parse_function": parse_db2_dbs,
-    "service_description": "DB2 Tablespace %s",
+    "service_name": "DB2 Tablespace %s",
     "check_function": check_db2_tablespaces,
-    "inventory_function": inventory_db2_tablespaces,
-    "group": "db2_tablespaces",
+    "discovery_function": inventory_db2_tablespaces,
+    "check_ruleset_name": "db2_tablespaces",
     "default_levels_variable": "db2_tablespaces_default_levels",
 }

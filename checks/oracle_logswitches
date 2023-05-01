@@ -65,8 +65,8 @@ def check_oracle_logswitches(item, params, info):
 
 check_info["oracle_logswitches"] = {
     "check_function": check_oracle_logswitches,
-    "inventory_function": inventory_oracle_logswitches,
-    "service_description": "ORA %s Logswitches",
-    "group": "oracle_logswitches",
+    "discovery_function": inventory_oracle_logswitches,
+    "service_name": "ORA %s Logswitches",
+    "check_ruleset_name": "oracle_logswitches",
     "default_levels_variable": "oracle_logswitches_default_levels",
 }

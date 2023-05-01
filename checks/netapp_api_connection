@@ -42,8 +42,8 @@ def check_netapp_api_connection(_no_item, params, info):
 
 
 check_info["netapp_api_connection"] = {
-    "inventory_function": inventory_netapp_api_connection,
+    "discovery_function": inventory_netapp_api_connection,
     "check_function": check_netapp_api_connection,
-    "service_description": "NetApp filer connection",
-    "group": "netapp_instance",
+    "service_name": "NetApp filer connection",
+    "check_ruleset_name": "netapp_instance",
 }

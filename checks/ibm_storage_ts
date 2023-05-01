@@ -21,8 +21,8 @@ def check_ibm_storage_ts(_no_item, _no_params, info):
 check_info["ibm_storage_ts"] = {
     "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2.6.210"),
     "check_function": check_ibm_storage_ts,
-    "inventory_function": inventory_ibm_storage_ts,
-    "service_description": "Info",
+    "discovery_function": inventory_ibm_storage_ts,
+    "service_name": "Info",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.2.6.210.1",
@@ -79,8 +79,8 @@ def check_ibm_storage_ts_status(_no_item, _no_params, info):
 
 check_info["ibm_storage_ts.status"] = {
     "check_function": check_ibm_storage_ts_status,
-    "inventory_function": inventory_ibm_storage_ts_status,
-    "service_description": "Status",
+    "discovery_function": inventory_ibm_storage_ts_status,
+    "service_name": "Status",
 }
 
 
@@ -112,8 +112,8 @@ def check_ibm_storage_ts_library(item, _no_params, info):
 
 check_info["ibm_storage_ts.library"] = {
     "check_function": check_ibm_storage_ts_library,
-    "inventory_function": inventory_ibm_storage_ts_library,
-    "service_description": "Library %s",
+    "discovery_function": inventory_ibm_storage_ts_library,
+    "service_name": "Library %s",
 }
 
 
@@ -140,6 +140,6 @@ def check_ibm_storage_ts_drive(item, params, info):
 
 check_info["ibm_storage_ts.drive"] = {
     "check_function": check_ibm_storage_ts_drive,
-    "inventory_function": inventory_ibm_storage_ts_drive,
-    "service_description": "Drive %s",
+    "discovery_function": inventory_ibm_storage_ts_drive,
+    "service_name": "Drive %s",
 }

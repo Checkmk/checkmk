@@ -29,9 +29,9 @@ def check_acme_powersupply(item, _no_params, info):
 
 check_info["acme_powersupply"] = {
     "detect": DETECT_ACME,
-    "inventory_function": inventory_acme_powersupply,
+    "discovery_function": inventory_acme_powersupply,
     "check_function": check_acme_powersupply,
-    "service_description": "Power supply %s",
+    "service_name": "Power supply %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.9148.3.3.1.5.1.1",
         oids=["3", "4"],

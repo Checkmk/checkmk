@@ -86,6 +86,6 @@ def check_iptables(_no_item, params, parsed):
 check_info["iptables"] = {
     "parse_function": parse_iptables,
     "check_function": check_iptables,
-    "inventory_function": inventory_iptables,
-    "service_description": "Iptables",
+    "discovery_function": inventory_iptables,
+    "service_name": "Iptables",
 }

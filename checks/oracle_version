@@ -34,6 +34,6 @@ def check_oracle_version(item, _no_params, info):
 
 check_info["oracle_version"] = {
     "check_function": check_oracle_version,
-    "inventory_function": inventory_oracle_version,
-    "service_description": "ORA Version %s",
+    "discovery_function": inventory_oracle_version,
+    "service_name": "ORA Version %s",
 }

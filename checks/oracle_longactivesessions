@@ -83,8 +83,8 @@ def check_oracle_longactivesessions(item, params, info):
 
 check_info["oracle_longactivesessions"] = {
     "check_function": check_oracle_longactivesessions,
-    "inventory_function": inventory_oracle_longactivesessions,
-    "service_description": "ORA %s Long Active Sessions",
+    "discovery_function": inventory_oracle_longactivesessions,
+    "service_name": "ORA %s Long Active Sessions",
     "default_levels_variable": "oracle_longactivesessions_defaults",
-    "group": "oracle_longactivesessions",
+    "check_ruleset_name": "oracle_longactivesessions",
 }

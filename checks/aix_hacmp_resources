@@ -71,8 +71,8 @@ def check_aix_hacmp_resources(item, params, data):
 check_info["aix_hacmp_resources"] = {
     "default_levels_variable": "aix_hacmp_resources",
     "parse_function": parse_aix_hacmp_resources,
-    "inventory_function": inventory_aix_hacmp_resources,
+    "discovery_function": inventory_aix_hacmp_resources,
     "check_function": check_aix_hacmp_resources,
-    "service_description": "HACMP RG %s",
-    "group": "hacmp_resources",
+    "service_name": "HACMP RG %s",
+    "check_ruleset_name": "hacmp_resources",
 }

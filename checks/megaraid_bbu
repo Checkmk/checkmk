@@ -110,6 +110,6 @@ def check_megaraid_bbu(item, _no_params, section):
 check_info["megaraid_bbu"] = {
     "parse_function": megaraid_bbu_parse,
     "check_function": check_megaraid_bbu,
-    "inventory_function": discover_megaraid_bbu,
-    "service_description": "RAID BBU %s",
+    "discovery_function": discover_megaraid_bbu,
+    "service_name": "RAID BBU %s",
 }

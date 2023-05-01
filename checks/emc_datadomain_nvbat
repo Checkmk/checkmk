@@ -39,8 +39,8 @@ def check_emc_datadomain_nvbat(item, _no_params, info):
 check_info["emc_datadomain_nvbat"] = {
     "detect": DETECT_DATADOMAIN,
     "check_function": check_emc_datadomain_nvbat,
-    "inventory_function": inventory_emc_datadomain_nvbat,
-    "service_description": "NVRAM Battery %s",
+    "discovery_function": inventory_emc_datadomain_nvbat,
+    "service_name": "NVRAM Battery %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.19746.1.2.3.1.1",
         oids=["1", "2", "3", "4"],

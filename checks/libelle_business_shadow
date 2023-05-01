@@ -288,8 +288,8 @@ def check_libelle_business_shadow_info(_no_item, _no_params, info):
 
 check_info["libelle_business_shadow.info"] = {
     "check_function": check_libelle_business_shadow_info,
-    "inventory_function": inventory_libelle_business_shadow_info,
-    "service_description": "Libelle Business Shadow Info",
+    "discovery_function": inventory_libelle_business_shadow_info,
+    "service_name": "Libelle Business Shadow Info",
 }
 
 # .
@@ -326,8 +326,8 @@ def check_libelle_business_shadow_status(_no_item, _no_params, info):
 
 check_info["libelle_business_shadow.status"] = {
     "check_function": check_libelle_business_shadow_status,
-    "inventory_function": inventory_libelle_business_shadow_status,
-    "service_description": "Libelle Business Shadow Status",
+    "discovery_function": inventory_libelle_business_shadow_status,
+    "service_name": "Libelle Business Shadow Status",
 }
 
 # .
@@ -367,8 +367,8 @@ def check_libelle_business_shadow_process(_no_item, _no_params, info):
 
 check_info["libelle_business_shadow.process"] = {
     "check_function": check_libelle_business_shadow_process,
-    "inventory_function": inventory_libelle_business_shadow_process,
-    "service_description": "Libelle Business Shadow Process",
+    "discovery_function": inventory_libelle_business_shadow_process,
+    "service_name": "Libelle Business Shadow Process",
 }
 
 # .
@@ -402,9 +402,9 @@ def check_libelle_business_shadow_archive_dir(item, params, info):
 
 check_info["libelle_business_shadow.archive_dir"] = {
     "check_function": check_libelle_business_shadow_archive_dir,
-    "inventory_function": inventory_libelle_business_shadow_archive_dir,
-    "service_description": "Libelle Business Shadow %s",
-    "group": "filesystem",
+    "discovery_function": inventory_libelle_business_shadow_archive_dir,
+    "service_name": "Libelle Business Shadow %s",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
 

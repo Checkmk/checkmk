@@ -56,10 +56,10 @@ def check_msexch_rpcclientaccess(_no_item, params, parsed):
 
 
 check_info["msexch_rpcclientaccess"] = {
-    "inventory_function": discover_msexch_rpcclientaccess,
+    "discovery_function": discover_msexch_rpcclientaccess,
     "check_function": check_msexch_rpcclientaccess,
     "parse_function": parse_wmi_table,
-    "service_description": "Exchange RPC Client Access",
-    "group": "msx_rpcclientaccess",
+    "service_name": "Exchange RPC Client Access",
+    "check_ruleset_name": "msx_rpcclientaccess",
     "default_levels_variable": "msexch_rpcclientaccess_defaultlevels",
 }

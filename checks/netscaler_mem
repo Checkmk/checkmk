@@ -40,9 +40,9 @@ def check_netscaler_mem(_no_item, params, info):
 check_info["netscaler_mem"] = {
     "detect": SNMP_DETECT,
     "check_function": check_netscaler_mem,
-    "inventory_function": inventory_netscaler_mem,
-    "service_description": "Memory",
-    "group": "netscaler_mem",
+    "discovery_function": inventory_netscaler_mem,
+    "service_name": "Memory",
+    "check_ruleset_name": "netscaler_mem",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.41",
         oids=["2", "4"],

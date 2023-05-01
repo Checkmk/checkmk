@@ -136,9 +136,9 @@ def check_emcvnx_raidgroups_list_luns(item, _no_params, info):
 
 
 check_info["emcvnx_raidgroups.list_luns"] = {
-    "inventory_function": inventory_emcvnx_raidgroups,
+    "discovery_function": inventory_emcvnx_raidgroups,
     "check_function": check_emcvnx_raidgroups_list_luns,
-    "service_description": "RAID Group %s LUNs",
+    "service_name": "RAID Group %s LUNs",
 }
 
 # .
@@ -173,9 +173,9 @@ def check_emcvnx_raidgroups_list_disks(item, _no_params, info):
 
 
 check_info["emcvnx_raidgroups.list_disks"] = {
-    "inventory_function": inventory_emcvnx_raidgroups,
+    "discovery_function": inventory_emcvnx_raidgroups,
     "check_function": check_emcvnx_raidgroups_list_disks,
-    "service_description": "RAID Group %s Disks",
+    "service_name": "RAID Group %s Disks",
 }
 
 # .
@@ -230,10 +230,10 @@ factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 check_info["emcvnx_raidgroups.capacity"] = {
-    "inventory_function": inventory_emcvnx_raidgroups_capacity,
+    "discovery_function": inventory_emcvnx_raidgroups_capacity,
     "check_function": check_emcvnx_raidgroups_capacity,
-    "service_description": "RAID Group %s Capacity",
-    "group": "filesystem",
+    "service_name": "RAID Group %s Capacity",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
 
@@ -284,10 +284,10 @@ def check_emcvnx_raidgroups_capacity_contiguous(item, params, info):
 
 
 check_info["emcvnx_raidgroups.capacity_contiguous"] = {
-    "inventory_function": inventory_emcvnx_raidgroups_capacity_contiguous,
+    "discovery_function": inventory_emcvnx_raidgroups_capacity_contiguous,
     "check_function": check_emcvnx_raidgroups_capacity_contiguous,
-    "service_description": "RAID Group %s Capacity Contiguous",
-    "group": "filesystem",
+    "service_name": "RAID Group %s Capacity Contiguous",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
 

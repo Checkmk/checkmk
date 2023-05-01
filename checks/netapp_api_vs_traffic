@@ -222,7 +222,7 @@ check_info["netapp_api_vs_traffic"] = {
     "parse_function": lambda info: netapp_api_parse_lines(
         info, custom_keys=["protocol", "instance_name"]
     ),
-    "inventory_function": inventory_netapp_api_vs_traffic,
+    "discovery_function": inventory_netapp_api_vs_traffic,
     "check_function": check_netapp_api_vs_traffic,
-    "service_description": "Traffic vServer %s",
+    "service_name": "Traffic vServer %s",
 }

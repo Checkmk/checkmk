@@ -140,12 +140,12 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
 
 check_info["netapp_api_environment"] = {
     "check_function": check_netapp_api_environment_discrete,
-    "inventory_function": discover_api_environment(
+    "discovery_function": discover_api_environment(
         lambda v: v["sensor-name"].startswith("PSU") and v["sensor-name"].endswith(" FAULT")
     ),
     "parse_function": _parse_netapp_api_environment,
-    "service_description": "PSU Controller %s",
-    "group": "hw_psu",
+    "service_name": "PSU Controller %s",
+    "check_ruleset_name": "hw_psu",
 }
 
 
@@ -155,45 +155,45 @@ def _is_fan(_sensor_name) -> bool:
 
 check_info["netapp_api_environment.fan_faults"] = {
     "check_function": check_netapp_api_environment_discrete,
-    "inventory_function": discover_api_environment(
+    "discovery_function": discover_api_environment(
         lambda v: _is_fan(v.get("sensor-name")) and v["sensor-name"].endswith(" Fault")
     ),
     "parse_function": _parse_netapp_api_environment,
-    "service_description": "Fan Controller %s",
-    "group": "hw_fans",
+    "service_name": "Fan Controller %s",
+    "check_ruleset_name": "hw_fans",
 }
 
 check_info["netapp_api_environment.temperature"] = {
     "check_function": check_netapp_api_environment_threshold,
-    "inventory_function": discover_api_environment(lambda v: v.get("sensor-type") == "thermal"),
+    "discovery_function": discover_api_environment(lambda v: v.get("sensor-type") == "thermal"),
     "parse_function": _parse_netapp_api_environment,
-    "service_description": "System Temperature %s",
-    "group": "temperature",
+    "service_name": "System Temperature %s",
+    "check_ruleset_name": "temperature",
 }
 
 check_info["netapp_api_environment.fans"] = {
     "check_function": check_netapp_api_environment_threshold,
-    "inventory_function": discover_api_environment(lambda v: v.get("sensor-type") == "fan"),
+    "discovery_function": discover_api_environment(lambda v: v.get("sensor-type") == "fan"),
     "parse_function": _parse_netapp_api_environment,
-    "service_description": "System Fans %s",
-    "group": "hw_fans",
+    "service_name": "System Fans %s",
+    "check_ruleset_name": "hw_fans",
 }
 
 check_info["netapp_api_environment.voltage"] = {
     "check_function": check_netapp_api_environment_threshold,
-    "inventory_function": discover_api_environment(
+    "discovery_function": discover_api_environment(
         lambda v: v.get("sensor-type") == "voltage" and v.get("value-units")
     ),
     "parse_function": _parse_netapp_api_environment,
-    "service_description": "System Voltage %s",
-    "group": "voltage",
+    "service_name": "System Voltage %s",
+    "check_ruleset_name": "voltage",
 }
 
 check_info["netapp_api_environment.current"] = {
     "check_function": check_netapp_api_environment_threshold,
-    "inventory_function": discover_api_environment(
+    "discovery_function": discover_api_environment(
         lambda v: v.get("sensor-type") == "current" and v.get("value-units")
     ),
     "parse_function": _parse_netapp_api_environment,
-    "service_description": "System Currents %s",
+    "service_name": "System Currents %s",
 }

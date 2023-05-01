@@ -40,8 +40,8 @@ def check_systemtime(item, params, parsed):
 
 check_info["systemtime"] = {
     "check_function": check_systemtime,
-    "inventory_function": discover_single,
-    "service_description": "System Time",
-    "group": "systemtime",
+    "discovery_function": discover_single,
+    "service_name": "System Time",
+    "check_ruleset_name": "systemtime",
     "default_levels_variable": "systemtime_default_levels",
 }

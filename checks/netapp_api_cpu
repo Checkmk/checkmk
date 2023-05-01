@@ -72,23 +72,23 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
 
 # Clustermode CPU utilization
 check_info["netapp_api_cpu"] = {
-    "inventory_function": inventory_netapp_api_cpu,
+    "discovery_function": inventory_netapp_api_cpu,
     "check_function": lambda item, params, parsed: check_netapp_api_cpu_utilization(
         item, params, parsed, "clustermode"
     ),
-    "service_description": "CPU utilization Node %s",
-    "group": "cpu_utilization_multiitem",
+    "service_name": "CPU utilization Node %s",
+    "check_ruleset_name": "cpu_utilization_multiitem",
 }
 
 # 7Mode CPU utilization
 check_info["netapp_api_cpu.utilization"] = {
-    "inventory_function": inventory_netapp_api_cpu_utilization,
+    "discovery_function": inventory_netapp_api_cpu_utilization,
     "check_function": lambda item, params, parsed: check_netapp_api_cpu_utilization(
         item, params, parsed, "7mode"
     ),
-    "service_description": "CPU utilization",
+    "service_name": "CPU utilization",
     "default_levels_variable": "netapp_api_cpu_cm_default_levels",
-    "group": "cpu_utilization",
+    "check_ruleset_name": "cpu_utilization",
 }
 
 
@@ -122,7 +122,7 @@ def check_netapp_api_nvram_bat(item, _no_params, parsed):
 
 # Clustermode NVRAM Bat
 check_info["netapp_api_cpu.nvram_bat"] = {
-    "inventory_function": inventory_netapp_api_nvram_bat,
+    "discovery_function": inventory_netapp_api_nvram_bat,
     "check_function": check_netapp_api_nvram_bat,
-    "service_description": "NVRAM Battery %s",
+    "service_name": "NVRAM Battery %s",
 }

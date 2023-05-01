@@ -105,6 +105,6 @@ def check_sylo(item, params, info):
 
 check_info["sylo"] = {
     "check_function": check_sylo,
-    "inventory_function": inventory_sylo,
-    "service_description": "Sylo",
+    "discovery_function": inventory_sylo,
+    "service_name": "Sylo",
 }

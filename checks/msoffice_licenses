@@ -104,9 +104,9 @@ def check_msoffice_licenses(item, params, item_data):
 
 check_info["msoffice_licenses"] = {
     "parse_function": parse_msoffice_licenses,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_msoffice_licenses,
-    "service_description": "MS Office Licenses %s",
-    "group": "msoffice_licenses",
+    "service_name": "MS Office Licenses %s",
+    "check_ruleset_name": "msoffice_licenses",
     "default_levels_variable": "msoffice_licenses_levels",
 }

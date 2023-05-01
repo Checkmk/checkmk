@@ -80,6 +80,6 @@ def check_wmic_process(item, params, info):
 
 check_info["wmic_process"] = {
     "check_function": check_wmic_process,
-    "service_description": "Process %s",
-    "group": "wmic_process",
+    "service_name": "Process %s",
+    "check_ruleset_name": "wmic_process",
 }

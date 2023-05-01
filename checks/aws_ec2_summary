@@ -33,7 +33,7 @@ def check_aws_ec2_summary(item, params, parsed):
 
 check_info["aws_ec2_summary"] = {
     "parse_function": parse_aws,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_aws_ec2_summary,
-    "service_description": "AWS/EC2 Summary",
+    "service_name": "AWS/EC2 Summary",
 }

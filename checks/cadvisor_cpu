@@ -50,8 +50,8 @@ def check_cadvisor_cpu(_item, params, parsed):
 
 check_info["cadvisor_cpu"] = {
     "parse_function": parse_cadvisor_cpu,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_cadvisor_cpu,
-    "service_description": "CPU utilization",
-    "group": "cpu_utilization",
+    "service_name": "CPU utilization",
+    "check_ruleset_name": "cpu_utilization",
 }

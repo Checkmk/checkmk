@@ -117,10 +117,10 @@ def check_suseconnect(_no_item, params, section: Section):
 
 
 check_info["suseconnect"] = {
-    "service_description": "SLES license",
+    "service_name": "SLES license",
     # section is migrated already!
-    "inventory_function": inventory_suseconnect,
+    "discovery_function": inventory_suseconnect,
     "check_function": check_suseconnect,
-    "group": "sles_license",
+    "check_ruleset_name": "sles_license",
     "default_levels_variable": "sles_license_default_levels",
 }

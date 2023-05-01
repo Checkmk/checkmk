@@ -36,13 +36,13 @@ def check_datapower_mem(item, params, info):
 
 check_info["datapower_mem"] = {
     "detect": DETECT,
-    "inventory_function": inventory_datapower_mem,
+    "discovery_function": inventory_datapower_mem,
     "check_function": check_datapower_mem,
-    "service_description": "Memory",
+    "service_name": "Memory",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.5",
         oids=["2", "3"],
     ),
-    "group": "memory_simple",
+    "check_ruleset_name": "memory_simple",
     "default_levels_variable": "datapower_mem_default_levels",
 }

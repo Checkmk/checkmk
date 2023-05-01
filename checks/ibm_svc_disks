@@ -102,8 +102,8 @@ def check_ibm_svc_disks(_no_item, params, parsed):
 check_info["ibm_svc_disks"] = {
     "parse_function": parse_ibm_svc_disks,
     "check_function": check_ibm_svc_disks,
-    "inventory_function": discover_single,
-    "service_description": "Disk Summary",
-    "group": "netapp_disks",
+    "discovery_function": discover_single,
+    "service_name": "Disk Summary",
+    "check_ruleset_name": "netapp_disks",
     "default_levels_variable": "filer_disks_default_levels",
 }

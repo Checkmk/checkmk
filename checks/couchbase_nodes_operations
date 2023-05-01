@@ -36,15 +36,15 @@ def check_couchbase_nodes_operations(item, params, parsed):
 
 check_info["couchbase_nodes_operations"] = {
     "parse_function": parse_couchbase_nodes_operations,
-    "inventory_function": discover(lambda k, _v: k is not None),
+    "discovery_function": discover(lambda k, _v: k is not None),
     "check_function": check_couchbase_nodes_operations,
-    "service_description": "Couchbase %s Operations",
-    "group": "couchbase_ops",
+    "service_name": "Couchbase %s Operations",
+    "check_ruleset_name": "couchbase_ops",
 }
 
 check_info["couchbase_nodes_operations.total"] = {
-    "inventory_function": discover(lambda k, _v: k is None),
+    "discovery_function": discover(lambda k, _v: k is None),
     "check_function": check_couchbase_nodes_operations,
-    "service_description": "Couchbase Total Operations",
-    "group": "couchbase_ops_nodes",
+    "service_name": "Couchbase Total Operations",
+    "check_ruleset_name": "couchbase_ops_nodes",
 }

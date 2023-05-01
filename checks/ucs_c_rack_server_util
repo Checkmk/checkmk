@@ -85,10 +85,10 @@ def check_ucs_c_rack_server_util(item, params, data):
 
 check_info["ucs_c_rack_server_util"] = {
     "parse_function": parse_ucs_c_rack_server_util,
-    "inventory_function": inventory_ucs_c_rack_server_util,
+    "discovery_function": inventory_ucs_c_rack_server_util,
     "check_function": check_ucs_c_rack_server_util,
-    "group": "overall_utilization_multiitem",
-    "service_description": "Overall Utilization %s",
+    "check_ruleset_name": "overall_utilization_multiitem",
+    "service_name": "Overall Utilization %s",
     "default_levels_variable": "ucs_c_rack_server_util_overall_default_levels",
 }
 
@@ -108,10 +108,10 @@ def check_ucs_c_rack_server_util_cpu(item, params, data):
 
 
 check_info["ucs_c_rack_server_util.cpu"] = {
-    "inventory_function": inventory_ucs_c_rack_server_util,
+    "discovery_function": inventory_ucs_c_rack_server_util,
     "check_function": check_ucs_c_rack_server_util_cpu,
-    "group": "cpu_utilization_multiitem",
-    "service_description": "CPU Utilization %s",
+    "check_ruleset_name": "cpu_utilization_multiitem",
+    "service_name": "CPU Utilization %s",
     "default_levels_variable": "ucs_c_rack_server_util_cpu_default_levels",
 }
 
@@ -135,10 +135,10 @@ def check_ucs_c_rack_server_util_pci_io(item, params, data):
 
 
 check_info["ucs_c_rack_server_util.pci_io"] = {
-    "inventory_function": inventory_ucs_c_rack_server_util,
+    "discovery_function": inventory_ucs_c_rack_server_util,
     "check_function": check_ucs_c_rack_server_util_pci_io,
-    "group": "pci_io_utilization_multiitem",
-    "service_description": "PCI IO Utilization %s",
+    "check_ruleset_name": "pci_io_utilization_multiitem",
+    "service_name": "PCI IO Utilization %s",
     "default_levels_variable": "ucs_c_rack_server_util_pci_io_default_levels",
 }
 
@@ -162,9 +162,9 @@ def check_ucs_c_rack_server_util_mem(item, params, data):
 
 
 check_info["ucs_c_rack_server_util.mem"] = {
-    "inventory_function": inventory_ucs_c_rack_server_util,
+    "discovery_function": inventory_ucs_c_rack_server_util,
     "check_function": check_ucs_c_rack_server_util_mem,
-    "group": "memory_utilization_multiitem",
-    "service_description": "Memory Utilization %s",
+    "check_ruleset_name": "memory_utilization_multiitem",
+    "service_name": "Memory Utilization %s",
     "default_levels_variable": "ucs_c_rack_server_util_mem_default_levels",
 }

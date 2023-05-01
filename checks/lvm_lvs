@@ -62,9 +62,9 @@ def check_lvm_lvs(item, params, entry):
 
 check_info["lvm_lvs"] = {
     "parse_function": parse_lvm_lvs,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_lvm_lvs,
-    "service_description": "LVM LV Pool %s",
+    "service_name": "LVM LV Pool %s",
     "default_levels_variable": "lvm_lvs_default_levels",
-    "group": "lvm_lvs_pools",
+    "check_ruleset_name": "lvm_lvs_pools",
 }

@@ -155,10 +155,10 @@ def check_oracle_instance(item, params, section):  # pylint: disable=too-many-br
 check_info["oracle_instance"] = {
     # section is already migrated!
     "check_function": check_oracle_instance,
-    "inventory_function": discover(),
-    "service_description": "ORA %s Instance",
+    "discovery_function": discover(),
+    "service_name": "ORA %s Instance",
     "default_levels_variable": "oracle_instance_defaults",
-    "group": "oracle_instance",
+    "check_ruleset_name": "oracle_instance",
 }
 
 
@@ -200,7 +200,7 @@ def check_oracle_instance_uptime(item, params, parsed):
 
 check_info["oracle_instance.uptime"] = {
     "check_function": check_oracle_instance_uptime,
-    "inventory_function": discover_oracle_instance_uptime,
-    "service_description": "ORA %s Uptime",
-    "group": "uptime_multiitem",
+    "discovery_function": discover_oracle_instance_uptime,
+    "service_name": "ORA %s Uptime",
+    "check_ruleset_name": "uptime_multiitem",
 }

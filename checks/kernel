@@ -56,8 +56,8 @@ def check_kernel(item, params, parsed):
 check_info["kernel"] = {
     # section is already migrated!
     "check_function": check_kernel,
-    "service_description": "Kernel %s",
-    "group": "vm_counter",
+    "service_name": "Kernel %s",
+    "check_ruleset_name": "vm_counter",
 }
 
 # .
@@ -116,8 +116,8 @@ def check_kernel_performance(_no_item, params, parsed):
 
 
 check_info["kernel.performance"] = {
-    "inventory_function": inventory_kernel_performance,
+    "discovery_function": inventory_kernel_performance,
     "check_function": check_kernel_performance,
-    "service_description": "Kernel Performance",
-    "group": "kernel_performance",
+    "service_name": "Kernel Performance",
+    "check_ruleset_name": "kernel_performance",
 }

@@ -195,8 +195,8 @@ def check_ibm_svc_nodestats_diskio(item, _no_params, info):
 
 check_info["ibm_svc_nodestats.diskio"] = {
     "check_function": check_ibm_svc_nodestats_diskio,
-    "inventory_function": inventory_ibm_svc_nodestats_diskio,
-    "service_description": "Disk IO %s",
+    "discovery_function": inventory_ibm_svc_nodestats_diskio,
+    "service_name": "Disk IO %s",
 }
 
 # .
@@ -232,8 +232,8 @@ def check_ibm_svc_nodestats_iops(item, _no_params, info):
 
 check_info["ibm_svc_nodestats.iops"] = {
     "check_function": check_ibm_svc_nodestats_iops,
-    "inventory_function": inventory_ibm_svc_nodestats_iops,
-    "service_description": "Disk IOPS %s",
+    "discovery_function": inventory_ibm_svc_nodestats_iops,
+    "service_name": "Disk IOPS %s",
 }
 
 # .
@@ -269,8 +269,8 @@ def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
 
 check_info["ibm_svc_nodestats.disk_latency"] = {
     "check_function": check_ibm_svc_nodestats_disk_latency,
-    "inventory_function": inventory_ibm_svc_nodestats_disk_latency,
-    "service_description": "Disk Latency %s",
+    "discovery_function": inventory_ibm_svc_nodestats_disk_latency,
+    "service_name": "Disk Latency %s",
 }
 
 # .
@@ -304,9 +304,9 @@ def check_ibm_svc_nodestats_cpu(item, params, info):
 
 check_info["ibm_svc_nodestats.cpu_util"] = {
     "check_function": check_ibm_svc_nodestats_cpu,
-    "inventory_function": inventory_ibm_svc_nodestats_cpu,
-    "service_description": "CPU utilization %s",
-    "group": "cpu_utilization_multiitem",
+    "discovery_function": inventory_ibm_svc_nodestats_cpu,
+    "service_name": "CPU utilization %s",
+    "check_ruleset_name": "cpu_utilization_multiitem",
 }
 
 # .
@@ -349,6 +349,6 @@ def check_ibm_svc_nodestats_cache(item, _no_params, info):
 
 check_info["ibm_svc_nodestats.cache"] = {
     "check_function": check_ibm_svc_nodestats_cache,
-    "inventory_function": inventory_ibm_svc_nodestats_cache,
-    "service_description": "Cache %s",
+    "discovery_function": inventory_ibm_svc_nodestats_cache,
+    "service_name": "Cache %s",
 }

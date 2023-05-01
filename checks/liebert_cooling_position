@@ -33,13 +33,13 @@ def check_liebert_cooling_position(item, params, data):
 check_info["liebert_cooling_position"] = {
     "detect": DETECT_LIEBERT,
     "parse_function": parse_liebert_wrapper,
-    "inventory_function": discover(lambda key, _value: key.startswith("Free Cooling")),
+    "discovery_function": discover(lambda key, _value: key.startswith("Free Cooling")),
     "check_function": check_liebert_cooling_position,
-    "service_description": "%s",
+    "service_name": "%s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=["10.1.2.1.5303", "20.1.2.1.5303", "30.1.2.1.5303"],
     ),
     "default_levels_variable": "liebert_cooling_position_default_levels",
-    "group": "liebert_cooling_position",
+    "check_ruleset_name": "liebert_cooling_position",
 }

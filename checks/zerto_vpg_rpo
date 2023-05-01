@@ -44,8 +44,8 @@ def check_zerto_vpg_rpo(_item, _params, data):
 
 check_info["zerto_vpg_rpo"] = {
     "parse_function": parse_zerto_vpg,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_zerto_vpg_rpo,
-    "service_description": "Zerto VPG RPO %s",
-    "group": "zerto_vpg_rpo",
+    "service_name": "Zerto VPG RPO %s",
+    "check_ruleset_name": "zerto_vpg_rpo",
 }

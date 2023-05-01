@@ -68,6 +68,6 @@ def parse_netstat(info):
 check_info["netstat"] = {
     "parse_function": parse_netstat,
     "check_function": check_netstat_generic,
-    "service_description": "TCP Connection %s",
-    "group": "tcp_connections",
+    "service_name": "TCP Connection %s",
+    "check_ruleset_name": "tcp_connections",
 }

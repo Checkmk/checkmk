@@ -116,9 +116,9 @@ def check_elasticsearch_cluster_health(_no_item, params, parsed):
 check_info["elasticsearch_cluster_health"] = {
     "parse_function": parse_elasticsearch_cluster_health,
     "check_function": check_elasticsearch_cluster_health,
-    "inventory_function": inventory_elasticsearch_cluster_health,
-    "service_description": "Elasticsearch Cluster Health",
-    "group": "elasticsearch_cluster_health",
+    "discovery_function": inventory_elasticsearch_cluster_health,
+    "service_name": "Elasticsearch Cluster Health",
+    "check_ruleset_name": "elasticsearch_cluster_health",
 }
 
 factory_settings["elasticsearch_cluster_shards"] = {
@@ -164,10 +164,10 @@ def check_elasticsearch_cluster_health_shards(_no_item, params, parsed):
 check_info["elasticsearch_cluster_health.shards"] = {
     "parse_function": parse_elasticsearch_cluster_health,
     "check_function": check_elasticsearch_cluster_health_shards,
-    "inventory_function": inventory_elasticsearch_cluster_health,
+    "discovery_function": inventory_elasticsearch_cluster_health,
     "default_levels_variable": "elasticsearch_cluster_shards",
-    "service_description": "Elasticsearch Cluster Shards",
-    "group": "elasticsearch_cluster_shards",
+    "service_name": "Elasticsearch Cluster Shards",
+    "check_ruleset_name": "elasticsearch_cluster_shards",
 }
 
 
@@ -193,7 +193,7 @@ def check_elasticsearch_cluster_health_tasks(_no_item, params, parsed):
 check_info["elasticsearch_cluster_health.tasks"] = {
     "parse_function": parse_elasticsearch_cluster_health,
     "check_function": check_elasticsearch_cluster_health_tasks,
-    "inventory_function": inventory_elasticsearch_cluster_health,
-    "service_description": "Elasticsearch Cluster Tasks",
-    "group": "elasticsearch_cluster_tasks",
+    "discovery_function": inventory_elasticsearch_cluster_health,
+    "service_name": "Elasticsearch Cluster Tasks",
+    "check_ruleset_name": "elasticsearch_cluster_tasks",
 }

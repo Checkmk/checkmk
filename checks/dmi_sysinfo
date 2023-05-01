@@ -40,6 +40,6 @@ def check_dmi_sysinfo(item, param, info):
 
 check_info["dmi_sysinfo"] = {
     "check_function": check_dmi_sysinfo,
-    "inventory_function": inventory_dmi_sysinfo,
-    "service_description": "DMI Sysinfo",
+    "discovery_function": inventory_dmi_sysinfo,
+    "service_name": "DMI Sysinfo",
 }

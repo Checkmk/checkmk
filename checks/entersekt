@@ -40,9 +40,9 @@ def check_entersekt_status(item, params, info):
 
 check_info["entersekt"] = {
     "detect": all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.38235.2.3.1.0")),
-    "inventory_function": inventory_entersekt,
+    "discovery_function": inventory_entersekt,
     "check_function": check_entersekt_status,
-    "service_description": "Entersekt Server Status",
+    "service_name": "Entersekt Server Status",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.38235.2",
         oids=["3.1.0", "3.4.0", "3.8.0", "3.9.0", "17.1.0"],
@@ -93,10 +93,10 @@ def check_entersekt_emrerrors(item, params, info):
 
 
 check_info["entersekt.emrerrors"] = {
-    "inventory_function": inventory_entersekt_emrerrors,
+    "discovery_function": inventory_entersekt_emrerrors,
     "check_function": check_entersekt_emrerrors,
-    "service_description": "Entersekt http EMR Errors",
-    "group": "entersekt_emrerrors",
+    "service_name": "Entersekt http EMR Errors",
+    "check_ruleset_name": "entersekt_emrerrors",
 }
 
 # .
@@ -144,10 +144,10 @@ def check_entersekt_ecerterrors(item, params, info):
 
 
 check_info["entersekt.ecerterrors"] = {
-    "inventory_function": inventory_entersekt_ecerterrors,
+    "discovery_function": inventory_entersekt_ecerterrors,
     "check_function": check_entersekt_ecerterrors,
-    "service_description": "Entersekt http Ecert Errors",
-    "group": "entersekt_ecerterrors",
+    "service_name": "Entersekt http Ecert Errors",
+    "check_ruleset_name": "entersekt_ecerterrors",
 }
 
 
@@ -194,10 +194,10 @@ def check_entersekt_soaperrors(item, params, info):
 
 
 check_info["entersekt.soaperrors"] = {
-    "inventory_function": inventory_entersekt_soaperrors,
+    "discovery_function": inventory_entersekt_soaperrors,
     "check_function": check_entersekt_soaperrors,
-    "service_description": "Entersekt Soap Service Errors",
-    "group": "entersekt_soaperrors",
+    "service_name": "Entersekt Soap Service Errors",
+    "check_ruleset_name": "entersekt_soaperrors",
 }
 
 # .
@@ -257,8 +257,8 @@ def check_entersekt_certexpiry(item, params, info):
 
 
 check_info["entersekt.certexpiry"] = {
-    "inventory_function": inventory_entersekt_certexpiry,
+    "discovery_function": inventory_entersekt_certexpiry,
     "check_function": check_entersekt_certexpiry,
-    "service_description": "Entersekt Certificate Expiration",
-    "group": "entersekt_certexpiry",
+    "service_name": "Entersekt Certificate Expiration",
+    "check_ruleset_name": "entersekt_certexpiry",
 }

@@ -38,9 +38,9 @@ check_info["artec_documents"] = {
         contains(".1.3.6.1.2.1.1.1.0", "version"),
         contains(".1.3.6.1.2.1.1.1.0", "serial"),
     ),
-    "inventory_function": inventory_artec_documents,
+    "discovery_function": inventory_artec_documents,
     "check_function": check_artec_documents,
-    "service_description": "Documents",
+    "service_name": "Documents",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.31560.0.0.3.1",
         oids=["3", "1"],

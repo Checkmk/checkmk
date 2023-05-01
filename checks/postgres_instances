@@ -57,7 +57,7 @@ def check_postgres_instances(item, _no_params, parsed):
 
 check_info["postgres_instances"] = {
     "parse_function": parse_postgres_instances,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_postgres_instances,
-    "service_description": "PostgreSQL Instance %s",
+    "service_name": "PostgreSQL Instance %s",
 }

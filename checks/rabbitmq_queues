@@ -138,7 +138,7 @@ def check_rabbitmq_queues(item, params, parsed):
 check_info["rabbitmq_queues"] = {
     "parse_function": parse_rabbitmq_queues,
     "check_function": check_rabbitmq_queues,
-    "inventory_function": discover(),
-    "service_description": "RabbitMQ Queue %s",
-    "group": "rabbitmq_queues",
+    "discovery_function": discover(),
+    "service_name": "RabbitMQ Queue %s",
+    "check_ruleset_name": "rabbitmq_queues",
 }

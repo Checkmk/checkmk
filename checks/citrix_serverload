@@ -36,8 +36,8 @@ def check_citrix_serverload(_no_item, params, info):
 
 
 check_info["citrix_serverload"] = {
-    "group": "citrix_load",
+    "check_ruleset_name": "citrix_load",
     "check_function": check_citrix_serverload,
-    "inventory_function": inventory_citrix_serverload,
-    "service_description": "Citrix Serverload",
+    "discovery_function": inventory_citrix_serverload,
+    "service_name": "Citrix Serverload",
 }

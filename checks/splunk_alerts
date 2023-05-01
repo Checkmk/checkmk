@@ -30,7 +30,7 @@ def check_splunk_alerts(_no_item, params, info):
 
 check_info["splunk_alerts"] = {
     "check_function": check_splunk_alerts,
-    "inventory_function": inventory_splunk_alerts,
-    "service_description": "Splunk Alerts",
-    "group": "splunk_alerts",
+    "discovery_function": inventory_splunk_alerts,
+    "service_name": "Splunk Alerts",
+    "check_ruleset_name": "splunk_alerts",
 }

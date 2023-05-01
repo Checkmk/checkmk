@@ -102,8 +102,8 @@ def check_isc_dhcpd(item, params, parsed):
 
 check_info["isc_dhcpd"] = {
     "parse_function": parse_isc_dhcpd,
-    "inventory_function": inventory_isc_dhcpd,
+    "discovery_function": inventory_isc_dhcpd,
     "check_function": check_isc_dhcpd,
-    "service_description": "DHCP Pool %s",
-    "group": "win_dhcp_pools",
+    "service_name": "DHCP Pool %s",
+    "check_ruleset_name": "win_dhcp_pools",
 }

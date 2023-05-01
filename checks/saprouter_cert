@@ -108,9 +108,9 @@ def check_saprouter_cert(_no_item, params, parsed):
 
 check_info["saprouter_cert"] = {
     "parse_function": parse_saprouter_cert,
-    "inventory_function": inventory_saprouter_cert,
+    "discovery_function": inventory_saprouter_cert,
     "check_function": check_saprouter_cert,
-    "service_description": "SAP router certificate",
+    "service_name": "SAP router certificate",
     "default_levels_variable": "saprouter_cert_default_levels",
-    "group": "saprouter_cert_age",
+    "check_ruleset_name": "saprouter_cert_age",
 }

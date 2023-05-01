@@ -103,8 +103,8 @@ def check_qlogic_sanbox_temp(item, _no_params, info):
 
 check_info["qlogic_sanbox.temp"] = {
     "check_function": check_qlogic_sanbox_temp,
-    "inventory_function": inventory_qlogic_sanbox_temp,
-    "service_description": "Temperature Sensor %s",
+    "discovery_function": inventory_qlogic_sanbox_temp,
+    "service_name": "Temperature Sensor %s",
 }
 
 # .
@@ -167,6 +167,6 @@ def check_qlogic_sanbox_psu(item, _no_params, info):
 
 check_info["qlogic_sanbox.psu"] = {
     "check_function": check_qlogic_sanbox_psu,
-    "inventory_function": inventory_qlogic_sanbox_psu,
-    "service_description": "PSU %s",
+    "discovery_function": inventory_qlogic_sanbox_psu,
+    "service_name": "PSU %s",
 }

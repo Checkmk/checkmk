@@ -73,9 +73,9 @@ def check_ibm_svc_enclosurestats_temp(item, params, info):
 
 check_info["ibm_svc_enclosurestats.temp"] = {
     "check_function": check_ibm_svc_enclosurestats_temp,
-    "inventory_function": inventory_ibm_svc_enclosurestats_temp,
-    "service_description": "Temperature Enclosure %s",
-    "group": "temperature",
+    "discovery_function": inventory_ibm_svc_enclosurestats_temp,
+    "service_name": "Temperature Enclosure %s",
+    "check_ruleset_name": "temperature",
     "default_levels_variable": "ibm_svc_enclosurestats_temperature_default_levels",
 }
 
@@ -107,6 +107,6 @@ def check_ibm_svc_enclosurestats_power(item, _no_params, info):
 
 check_info["ibm_svc_enclosurestats.power"] = {
     "check_function": check_ibm_svc_enclosurestats_power,
-    "inventory_function": inventory_ibm_svc_enclosurestats_power,
-    "service_description": "Power Enclosure %s",
+    "discovery_function": inventory_ibm_svc_enclosurestats_power,
+    "service_name": "Power Enclosure %s",
 }

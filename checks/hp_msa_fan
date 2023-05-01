@@ -80,7 +80,7 @@ def check_hp_msa_fan(item, params, parsed):
 
 check_info["hp_msa_fan"] = {
     "parse_function": parse_hp_msa,
-    "inventory_function": inventory_hp_msa_fan,
+    "discovery_function": inventory_hp_msa_fan,
     "check_function": check_hp_msa_fan,
-    "service_description": "Fan %s",
+    "service_name": "Fan %s",
 }

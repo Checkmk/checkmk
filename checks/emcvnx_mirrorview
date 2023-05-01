@@ -136,7 +136,7 @@ def check_emcvnx_mirrorview(item, params, parsed):
 
 check_info["emcvnx_mirrorview"] = {
     "parse_function": parse_emcvnx_mirrorview,
-    "inventory_function": inventory_emcvnx_mirrorview,
+    "discovery_function": inventory_emcvnx_mirrorview,
     "check_function": check_emcvnx_mirrorview,
-    "service_description": "Mirror view %s",
+    "service_name": "Mirror view %s",
 }

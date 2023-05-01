@@ -29,7 +29,7 @@ def check_sansymphony_virtualdiskstatus(_no_item, _no_params, data):
 
 check_info["sansymphony_virtualdiskstatus"] = {
     "parse_function": parse_sansymphony_virtualdiskstatus,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_sansymphony_virtualdiskstatus,
-    "service_description": "sansymphony Virtual Disk %s",
+    "service_name": "sansymphony Virtual Disk %s",
 }

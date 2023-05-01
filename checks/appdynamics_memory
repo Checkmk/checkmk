@@ -101,8 +101,8 @@ def check_appdynamics_memory(item, params, info):  # pylint: disable=too-many-br
 
 
 check_info["appdynamics_memory"] = {
-    "inventory_function": inventory_appdynamics_memory,
+    "discovery_function": inventory_appdynamics_memory,
     "check_function": check_appdynamics_memory,
-    "service_description": "AppDynamics Memory %s",
-    "group": "jvm_memory",
+    "service_name": "AppDynamics Memory %s",
+    "check_ruleset_name": "jvm_memory",
 }

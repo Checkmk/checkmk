@@ -91,7 +91,7 @@ def check_nginx_status(item, params, data):
 check_info["nginx_status"] = {
     "parse_function": parse_nginx_status,
     "check_function": check_nginx_status,
-    "inventory_function": discover(),
-    "service_description": "Nginx %s Status",
-    "group": "nginx_status",
+    "discovery_function": discover(),
+    "service_name": "Nginx %s Status",
+    "check_ruleset_name": "nginx_status",
 }

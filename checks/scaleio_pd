@@ -46,10 +46,10 @@ def check_scaleio_pd(item, params, parsed):
 
 check_info["scaleio_pd"] = {
     "parse_function": lambda info: parse_scaleio(info, "PROTECTION_DOMAIN"),
-    "inventory_function": inventory_scaleio_pd,
+    "discovery_function": inventory_scaleio_pd,
     "check_function": check_scaleio_pd,
-    "service_description": "ScaleIO PD capacity %s",
-    "group": "filesystem",
+    "service_name": "ScaleIO PD capacity %s",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
 
@@ -72,7 +72,7 @@ def check_scaleio_pd_status(item, _no_params, parsed):
 
 
 check_info["scaleio_pd.status"] = {
-    "inventory_function": inventory_scaleio_pd_status,
+    "discovery_function": inventory_scaleio_pd_status,
     "check_function": check_scaleio_pd_status,
-    "service_description": "ScaleIO PD status %s",
+    "service_name": "ScaleIO PD status %s",
 }

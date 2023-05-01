@@ -77,8 +77,8 @@ def check_elasticsearch_nodes(item, params, item_data):
 check_info["elasticsearch_nodes"] = {
     "parse_function": parse_elasticsearch_nodes,
     "check_function": check_elasticsearch_nodes,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "default_levels_variable": "elasticsearch_nodes",
-    "service_description": "Elasticsearch Node %s",
-    "group": "elasticsearch_nodes",
+    "service_name": "Elasticsearch Node %s",
+    "check_ruleset_name": "elasticsearch_nodes",
 }

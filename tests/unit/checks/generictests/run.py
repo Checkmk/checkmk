@@ -84,11 +84,11 @@ def get_discovery_expected(subcheck, dataset):
     return DiscoveryResult(discovery_raw)
 
 
-def get_discovery_actual(check, info_arg, immu):
+def get_discovery_actual(check: Check, info_arg: object, immu: Immutables) -> DiscoveryResult:
     """Validate and return actual DiscoveryResult"""
     print(f"discovery: {check.name!r}")
 
-    disco_func = check.info.get("inventory_function")
+    disco_func = check.info.get("discovery_function")
     if not disco_func:
         return DiscoveryResult()
 

@@ -56,7 +56,7 @@ def check_k8s_daemon_pods(_no_item, _params, parsed):
 
 check_info["k8s_daemon_pods"] = {
     # section is already migrated
-    "inventory_function": inventory_k8s_daemon_pods,
+    "discovery_function": inventory_k8s_daemon_pods,
     "check_function": check_k8s_daemon_pods,
-    "service_description": "Daemon Pods",
+    "service_name": "Daemon Pods",
 }

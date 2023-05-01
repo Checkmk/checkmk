@@ -79,8 +79,8 @@ def check_ucs_c_rack_server_temp(item, params, temperature):
 
 check_info["ucs_c_rack_server_temp"] = {
     "parse_function": parse_ucs_c_rack_server_temp,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_ucs_c_rack_server_temp,
-    "group": "temperature",
-    "service_description": "Temperature %s",
+    "check_ruleset_name": "temperature",
+    "service_name": "Temperature %s",
 }

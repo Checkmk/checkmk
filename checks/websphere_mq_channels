@@ -113,8 +113,8 @@ def check_websphere_mq_channels(item, params, parsed):
 check_info["websphere_mq_channels"] = {
     "parse_function": parse_websphere_mq_channels,
     "check_function": check_websphere_mq_channels,
-    "inventory_function": inventory_websphere_mq_channels,
-    "service_description": "MQ Channel %s",
+    "discovery_function": inventory_websphere_mq_channels,
+    "service_name": "MQ Channel %s",
     "default_levels_variable": "websphere_mq_channels_default_levels",
-    "group": "websphere_mq_channels",
+    "check_ruleset_name": "websphere_mq_channels",
 }

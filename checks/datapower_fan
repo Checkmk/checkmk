@@ -41,7 +41,7 @@ def check_datapower_fan(item, _no_params, section):
 
 
 check_info["datapower_fan"] = {
-    "inventory_function": inventory_datapower_fan,
+    "discovery_function": inventory_datapower_fan,
     "check_function": check_datapower_fan,
-    "service_description": "Fan %s",
+    "service_name": "Fan %s",
 }

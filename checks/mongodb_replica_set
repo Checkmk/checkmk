@@ -200,10 +200,10 @@ def _calculate_replication_lag(start_operation_time, secondary_operation_time):
 check_info["mongodb_replica_set"] = {
     "default_levels_variable": "mongodb_replica_set_levels",
     "parse_function": parse_mongodb_replica_set,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_mongodb_replica_set_lag,
-    "service_description": "MongoDB Replication Lag",
-    "group": "mongodb_replica_set",
+    "service_name": "MongoDB Replication Lag",
+    "check_ruleset_name": "mongodb_replica_set",
 }
 
 #   .--primary election----------------------------------------------------.
@@ -291,10 +291,10 @@ def _get_primary_election_time(primary):
 
 
 check_info["mongodb_replica_set.election"] = {
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_mongodb_primary_election,
-    "service_description": "MongoDB Replica Set Primary Election",
-    "group": "mongodb_replica_set",
+    "service_name": "MongoDB Replica Set Primary Election",
+    "check_ruleset_name": "mongodb_replica_set",
 }
 
 

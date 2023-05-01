@@ -29,6 +29,6 @@ def check_netapp_api_vf_status(item, _no_params, info):
 
 check_info["netapp_api_vf_status"] = {
     "check_function": check_netapp_api_vf_status,
-    "inventory_function": inventory_netapp_api_vf_status,
-    "service_description": "vFiler Status %s",
+    "discovery_function": inventory_netapp_api_vf_status,
+    "service_name": "vFiler Status %s",
 }

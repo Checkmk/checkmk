@@ -195,7 +195,7 @@ def check_solaris_fmadm(_no_item, params, parsed):
 
 check_info["solaris_fmadm"] = {
     "parse_function": parse_solaris_fmadm,
-    "inventory_function": inventory_solaris_fmadm,
+    "discovery_function": inventory_solaris_fmadm,
     "check_function": check_solaris_fmadm,
-    "service_description": "FMD Status",
+    "service_name": "FMD Status",
 }

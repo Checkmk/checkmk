@@ -221,68 +221,68 @@ check_info["cmctc_lcp"] = {
 
 check_info["cmctc_lcp.access"] = {
     "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, "access"),
-    "inventory_function": lambda info: inventory_cmctc_lcp(info, "access"),
-    "service_description": "Access %s",
+    "discovery_function": lambda info: inventory_cmctc_lcp(info, "access"),
+    "service_name": "Access %s",
 }
 
 check_info["cmctc_lcp.blower"] = {
     "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, "blower"),
-    "inventory_function": lambda info: inventory_cmctc_lcp(info, "blower"),
-    "service_description": "Blower %s",
+    "discovery_function": lambda info: inventory_cmctc_lcp(info, "blower"),
+    "service_name": "Blower %s",
 }
 
 check_info["cmctc_lcp.blowergrade"] = {
     "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, "blowergrade"),
-    "inventory_function": lambda info: inventory_cmctc_lcp(info, "blowergrade"),
-    "service_description": "Blower Grade %s",
+    "discovery_function": lambda info: inventory_cmctc_lcp(info, "blowergrade"),
+    "service_name": "Blower Grade %s",
 }
 
 check_info["cmctc_lcp.current"] = {
     "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, "current"),
-    "inventory_function": lambda info: inventory_cmctc_lcp(info, "current"),
-    "service_description": "Current %s",
+    "discovery_function": lambda info: inventory_cmctc_lcp(info, "current"),
+    "service_name": "Current %s",
 }
 
 check_info["cmctc_lcp.flow"] = {
     "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, "flow"),
-    "inventory_function": lambda info: inventory_cmctc_lcp(info, "flow"),
-    "service_description": "Waterflow %s",
+    "discovery_function": lambda info: inventory_cmctc_lcp(info, "flow"),
+    "service_name": "Waterflow %s",
 }
 
 check_info["cmctc_lcp.humidity"] = {
     "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, "humidity"),
-    "inventory_function": lambda info: inventory_cmctc_lcp(info, "humidity"),
-    "service_description": "Humidity %s",
+    "discovery_function": lambda info: inventory_cmctc_lcp(info, "humidity"),
+    "service_name": "Humidity %s",
 }
 
 check_info["cmctc_lcp.position"] = {
     "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, "position"),
-    "inventory_function": lambda info: inventory_cmctc_lcp(info, "position"),
-    "service_description": "Position %s",
+    "discovery_function": lambda info: inventory_cmctc_lcp(info, "position"),
+    "service_name": "Position %s",
 }
 
 check_info["cmctc_lcp.regulator"] = {
     "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, "regulator"),
-    "inventory_function": lambda info: inventory_cmctc_lcp(info, "regulator"),
-    "service_description": "Regulator %s",
+    "discovery_function": lambda info: inventory_cmctc_lcp(info, "regulator"),
+    "service_name": "Regulator %s",
 }
 
 check_info["cmctc_lcp.status"] = {
     "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, "status"),
-    "inventory_function": lambda info: inventory_cmctc_lcp(info, "status"),
-    "service_description": "Status %s",
+    "discovery_function": lambda info: inventory_cmctc_lcp(info, "status"),
+    "service_name": "Status %s",
 }
 
 check_info["cmctc_lcp.user"] = {
     "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, "user"),
-    "inventory_function": lambda info: inventory_cmctc_lcp(info, "user"),
-    "service_description": "User Sensor %s",
+    "discovery_function": lambda info: inventory_cmctc_lcp(info, "user"),
+    "service_name": "User Sensor %s",
 }
 
 # temperature check is standardised
 check_info["cmctc_lcp.temp"] = {
     "check_function": check_cmctc_lcp_temp,
-    "inventory_function": inventory_cmctc_lcp_temp,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "discovery_function": inventory_cmctc_lcp_temp,
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
 }

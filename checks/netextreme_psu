@@ -30,13 +30,13 @@ def parse_netextreme_psu(info):
 check_info["netextreme_psu"] = {
     "detect": DETECT_NETEXTREME,
     "parse_function": parse_netextreme_psu,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_elphase,
-    "service_description": "Power Supply %s",
+    "service_name": "Power Supply %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.1916.1.1.1.40",
         oids=["1", "2"],
     ),
-    "group": "el_inphase",
+    "check_ruleset_name": "el_inphase",
     "default_levels_variable": "netextreme_psu_default_levels",
 }

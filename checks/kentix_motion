@@ -84,10 +84,10 @@ def check_kentix_motion(
 check_info["kentix_motion"] = {
     "detect": DETECT_KENTIX,
     "parse_function": parse_kentix_motion,
-    "inventory_function": inventory_kentix_motion,
+    "discovery_function": inventory_kentix_motion,
     "check_function": check_kentix_motion,
-    "service_description": "Motion Detector %s",
-    "group": "motion",
+    "service_name": "Motion Detector %s",
+    "check_ruleset_name": "motion",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.37954.2.1.5",

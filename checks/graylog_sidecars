@@ -167,8 +167,8 @@ def _handle_collector_states(collector_state, params):
 check_info["graylog_sidecars"] = {
     "parse_function": parse_graylog_sidecars,
     "check_function": check_graylog_sidecars,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "default_levels_variable": "graylog_sidecars_default_levels",
-    "service_description": "Graylog Sidecar %s",
-    "group": "graylog_sidecars",
+    "service_name": "Graylog Sidecar %s",
+    "check_ruleset_name": "graylog_sidecars",
 }

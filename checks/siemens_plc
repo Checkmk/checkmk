@@ -59,10 +59,10 @@ def check_siemens_plc_temp(item, params, info):
 
 
 check_info["siemens_plc.temp"] = {
-    "inventory_function": inventory_siemens_plc_temp,
+    "discovery_function": inventory_siemens_plc_temp,
     "check_function": check_siemens_plc_temp,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
     "default_levels_variable": "siemens_plc_temp_default_levels",
 }
 
@@ -98,10 +98,10 @@ def check_siemens_plc_flag(item, params, info):
 
 
 check_info["siemens_plc.flag"] = {
-    "inventory_function": inventory_siemens_plc_flag,
+    "discovery_function": inventory_siemens_plc_flag,
     "check_function": check_siemens_plc_flag,
-    "service_description": "Flag %s",
-    "group": "siemens_plc_flag",
+    "service_name": "Flag %s",
+    "check_ruleset_name": "siemens_plc_flag",
 }
 
 # .
@@ -161,10 +161,10 @@ def check_siemens_plc_duration(item, params, info):
 
 
 check_info["siemens_plc.duration"] = {
-    "inventory_function": inventory_siemens_plc_duration,
+    "discovery_function": inventory_siemens_plc_duration,
     "check_function": check_siemens_plc_duration,
-    "service_description": "Duration %s",
-    "group": "siemens_plc_duration",
+    "service_name": "Duration %s",
+    "check_ruleset_name": "siemens_plc_duration",
 }
 
 # .
@@ -208,10 +208,10 @@ def check_siemens_plc_counter(item, params, info):
 
 
 check_info["siemens_plc.counter"] = {
-    "inventory_function": inventory_siemens_plc_counter,
+    "discovery_function": inventory_siemens_plc_counter,
     "check_function": check_siemens_plc_counter,
-    "service_description": "Counter %s",
-    "group": "siemens_plc_counter",
+    "service_name": "Counter %s",
+    "check_ruleset_name": "siemens_plc_counter",
 }
 
 # .
@@ -239,9 +239,9 @@ def check_siemens_plc_info(item, _no_params, info):
 
 
 check_info["siemens_plc.info"] = {
-    "inventory_function": inventory_siemens_plc_info,
+    "discovery_function": inventory_siemens_plc_info,
     "check_function": check_siemens_plc_info,
-    "service_description": "Info %s",
+    "service_name": "Info %s",
 }
 
 # .
@@ -275,7 +275,7 @@ def check_siemens_plc_cpu_state(_no_item, _no_params, info):
 
 
 check_info["siemens_plc_cpu_state"] = {
-    "inventory_function": inventory_siemens_plc_cpu_state,
+    "discovery_function": inventory_siemens_plc_cpu_state,
     "check_function": check_siemens_plc_cpu_state,
-    "service_description": "CPU state",
+    "service_name": "CPU state",
 }

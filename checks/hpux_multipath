@@ -113,7 +113,7 @@ def check_hpux_multipath(item, params, info):
 
 check_info["hpux_multipath"] = {
     "check_function": check_hpux_multipath,
-    "inventory_function": inventory_hpux_multipath,
-    "service_description": "Multipath %s",
-    "group": "hpux_multipath",
+    "discovery_function": inventory_hpux_multipath,
+    "service_name": "Multipath %s",
+    "check_ruleset_name": "hpux_multipath",
 }

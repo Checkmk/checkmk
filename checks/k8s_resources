@@ -73,25 +73,25 @@ check_info["k8s_resources"] = {
 }
 
 check_info["k8s_resources.pods"] = {
-    "inventory_function": get_k8s_resources_inventory_function("pods"),
+    "discovery_function": get_k8s_resources_inventory_function("pods"),
     "check_function": get_k8s_resources_check_function("pods", 0, str),
-    "service_description": "Pod resources",
-    "group": "k8s_resources",
+    "service_name": "Pod resources",
+    "check_ruleset_name": "k8s_resources",
     "default_levels_variable": "k8s_resources_default_levels",
 }
 
 check_info["k8s_resources.cpu"] = {
-    "inventory_function": get_k8s_resources_inventory_function("cpu"),
+    "discovery_function": get_k8s_resources_inventory_function("cpu"),
     "check_function": get_k8s_resources_check_function("cpu", 0.0, lambda x: "%.3f" % x),
-    "service_description": "CPU resources",
-    "group": "k8s_resources",
+    "service_name": "CPU resources",
+    "check_ruleset_name": "k8s_resources",
     "default_levels_variable": "k8s_resources_default_levels",
 }
 
 check_info["k8s_resources.memory"] = {
-    "inventory_function": get_k8s_resources_inventory_function("memory"),
+    "discovery_function": get_k8s_resources_inventory_function("memory"),
     "check_function": get_k8s_resources_check_function("memory", 0.0, get_bytes_human_readable),
-    "service_description": "Memory resources",
-    "group": "k8s_resources",
+    "service_name": "Memory resources",
+    "check_ruleset_name": "k8s_resources",
     "default_levels_variable": "k8s_resources_default_levels",
 }

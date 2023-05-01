@@ -100,9 +100,9 @@ def check_ceph_status(_no_item, params, parsed):
 
 check_info["ceph_status"] = {
     "parse_function": parse_ceph_status,
-    "inventory_function": inventory_ceph_status,
+    "discovery_function": inventory_ceph_status,
     "check_function": check_ceph_status,
-    "service_description": "Ceph Status",
+    "service_name": "Ceph Status",
     "default_levels_variable": "ceph_status_default_levels",
 }
 
@@ -170,11 +170,11 @@ def check_ceph_status_osds(_no_item, params, parsed):
 
 
 check_info["ceph_status.osds"] = {
-    "inventory_function": inventory_ceph_status_osds,
+    "discovery_function": inventory_ceph_status_osds,
     "check_function": check_ceph_status_osds,
-    "service_description": "Ceph OSDs",
+    "service_name": "Ceph OSDs",
     "default_levels_variable": "ceph_osds_default_levels",
-    "group": "ceph_osds",
+    "check_ruleset_name": "ceph_osds",
 }
 
 # .
@@ -242,9 +242,9 @@ def check_ceph_status_pgs(_no_item, params, parsed):
 
 
 check_info["ceph_status.pgs"] = {
-    "inventory_function": inventory_ceph_status_pgs,
+    "discovery_function": inventory_ceph_status_pgs,
     "check_function": check_ceph_status_pgs,
-    "service_description": "Ceph PGs",
+    "service_name": "Ceph PGs",
 }
 
 # .
@@ -277,9 +277,9 @@ def check_ceph_status_mgrs(_no_item, params, parsed):
 
 
 check_info["ceph_status.mgrs"] = {
-    "inventory_function": inventory_ceph_status_mgrs,
+    "discovery_function": inventory_ceph_status_mgrs,
     "check_function": check_ceph_status_mgrs,
-    "service_description": "Ceph MGRs",
+    "service_name": "Ceph MGRs",
     "default_levels_variable": "ceph_mgrs_default_levels",
-    "group": "ceph_mgrs",
+    "check_ruleset_name": "ceph_mgrs",
 }

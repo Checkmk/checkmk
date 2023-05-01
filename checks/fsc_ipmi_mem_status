@@ -54,6 +54,6 @@ def check_fsc_ipmi_mem_status(name, _no_params, info):
 
 check_info["fsc_ipmi_mem_status"] = {
     "check_function": check_fsc_ipmi_mem_status,
-    "inventory_function": inventory_fsc_ipmi_mem_status,
-    "service_description": "IPMI Memory status %s",
+    "discovery_function": inventory_fsc_ipmi_mem_status,
+    "service_name": "IPMI Memory status %s",
 }

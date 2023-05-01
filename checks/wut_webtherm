@@ -76,9 +76,9 @@ check_info["wut_webtherm"] = {
     "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5040.1.2."),
     "default_levels_variable": "wut_webtherm_defaultlevels",
     "parse_function": parse_wut_webtherm,
-    "inventory_function": inventory_wut_webtherm,
+    "discovery_function": inventory_wut_webtherm,
     "check_function": check_wut_webtherm,
-    "service_description": "Temperature %s",
+    "service_name": "Temperature %s",
     "fetch": [
         SNMPTree(
             base=f".1.3.6.1.4.1.5040.1.2.{idx}.1",
@@ -90,7 +90,7 @@ check_info["wut_webtherm"] = {
         )
         for idx in _TYPE_TABLE_IDX
     ],
-    "group": "temperature",
+    "check_ruleset_name": "temperature",
 }
 
 # .
@@ -119,9 +119,9 @@ def check_wut_webtherm_pressure(item, _no_params, parsed):
 
 
 check_info["wut_webtherm.pressure"] = {
-    "inventory_function": inventory_wut_webtherm_pressure,
+    "discovery_function": inventory_wut_webtherm_pressure,
     "check_function": check_wut_webtherm_pressure,
-    "service_description": "Pressure %s",
+    "service_name": "Pressure %s",
 }
 
 # .
@@ -152,10 +152,10 @@ def check_wut_webtherm_humidity(item, params, parsed):
 
 
 check_info["wut_webtherm.humidity"] = {
-    "inventory_function": inventory_wut_webtherm_humidity,
+    "discovery_function": inventory_wut_webtherm_humidity,
     "check_function": check_wut_webtherm_humidity,
-    "service_description": "Humidity %s",
-    "group": "humidity",
+    "service_name": "Humidity %s",
+    "check_ruleset_name": "humidity",
 }
 
 # .

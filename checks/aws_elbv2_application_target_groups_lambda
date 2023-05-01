@@ -44,8 +44,8 @@ def check_aws_application_elb_target_groups_lambda(item, params, data):
 
 check_info["aws_elbv2_application_target_groups_lambda"] = {
     "parse_function": parse_aws_elbv2_target_groups_lambda,
-    "inventory_function": discover(lambda k, v: "RequestCount" in v),
+    "discovery_function": discover(lambda k, v: "RequestCount" in v),
     "check_function": check_aws_application_elb_target_groups_lambda,
-    "service_description": "AWS/ApplicationELB Lambda %s",
-    "group": "aws_elbv2_target_errors",
+    "service_name": "AWS/ApplicationELB Lambda %s",
+    "check_ruleset_name": "aws_elbv2_target_errors",
 }

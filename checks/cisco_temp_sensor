@@ -168,8 +168,8 @@ check_info["cisco_temp_sensor"] = {
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.91.1.1.1.1.*")
     ),
     "check_function": check_cisco_temp_sensor,
-    "inventory_function": inventory_cisco_temp_sensor,
-    "service_description": "Temperature %s",
+    "discovery_function": inventory_cisco_temp_sensor,
+    "service_name": "Temperature %s",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",

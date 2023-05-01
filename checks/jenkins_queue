@@ -157,8 +157,8 @@ def check_jenkins_queue(_no_item, params, parsed):
 check_info["jenkins_queue"] = {
     "parse_function": parse_jenkins_queue,
     "check_function": check_jenkins_queue,
-    "inventory_function": inventory_jenkins_queue,
+    "discovery_function": inventory_jenkins_queue,
     "default_levels_variable": "jenkins_queue_default_levels",
-    "service_description": "Jenkins Queue",
-    "group": "jenkins_queue",
+    "service_name": "Jenkins Queue",
+    "check_ruleset_name": "jenkins_queue",
 }

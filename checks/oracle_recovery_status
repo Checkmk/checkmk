@@ -205,7 +205,7 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
 
 check_info["oracle_recovery_status"] = {
     "check_function": check_oracle_recovery_status,
-    "inventory_function": inventory_oracle_recovery_status,
-    "service_description": "ORA %s Recovery Status",
-    "group": "oracle_recovery_status",
+    "discovery_function": inventory_oracle_recovery_status,
+    "service_name": "ORA %s Recovery Status",
+    "check_ruleset_name": "oracle_recovery_status",
 }

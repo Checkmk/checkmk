@@ -164,9 +164,9 @@ def check_postfix_mailq(item, params, parsed):
 
 check_info["postfix_mailq"] = {
     "parse_function": parse_postfix_mailq,
-    "inventory_function": inventory_postfix_mailq,
+    "discovery_function": inventory_postfix_mailq,
     "check_function": check_postfix_mailq,
-    "service_description": "Postfix Queue %s",
+    "service_name": "Postfix Queue %s",
     "default_levels_variable": "postfix_mailq_default_levels",
-    "group": "mail_queue_length",
+    "check_ruleset_name": "mail_queue_length",
 }

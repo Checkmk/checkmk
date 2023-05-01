@@ -50,10 +50,10 @@ def parse_peakflow_sp(info):
 check_info["arbor_peakflow_sp"] = {
     "detect": startswith(".1.3.6.1.2.1.1.1.0", "Peakflow SP"),
     "check_function": check_arbor_memory,
-    "inventory_function": inventory_arbor_memory,
+    "discovery_function": inventory_arbor_memory,
     "parse_function": parse_peakflow_sp,
-    "service_description": "Memory",
-    "group": "memory_arbor",
+    "service_name": "Memory",
+    "check_ruleset_name": "memory_arbor",
     "default_levels_variable": "arbor_memory_default_levels",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.9694.1.4.2.1",
@@ -63,9 +63,9 @@ check_info["arbor_peakflow_sp"] = {
 
 check_info["arbor_peakflow_sp.disk_usage"] = {
     "check_function": check_arbor_disk_usage,
-    "inventory_function": inventory_arbor_disk_usage,
-    "service_description": "Disk Usage %s",
-    "group": "filesystem",
+    "discovery_function": inventory_arbor_disk_usage,
+    "service_name": "Disk Usage %s",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
 
@@ -83,6 +83,6 @@ def check_arbor_peakflow_sp_flows(_no_item, params, parsed):
 
 check_info["arbor_peakflow_sp.flows"] = {
     "check_function": check_arbor_peakflow_sp_flows,
-    "inventory_function": inventory_arbor_peakflow_sp_flows,
-    "service_description": "Flow Count",
+    "discovery_function": inventory_arbor_peakflow_sp_flows,
+    "service_name": "Flow Count",
 }

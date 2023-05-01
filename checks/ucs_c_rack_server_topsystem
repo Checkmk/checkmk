@@ -68,7 +68,7 @@ def check_ucs_c_rack_server_topsystem(item, _no_params, data):
 
 check_info["ucs_c_rack_server_topsystem"] = {
     "parse_function": parse_ucs_c_rack_server_topsystem,
-    "inventory_function": inventory_ucs_c_rack_server_topsystem,
+    "discovery_function": inventory_ucs_c_rack_server_topsystem,
     "check_function": check_ucs_c_rack_server_topsystem,
-    "service_description": "UCS C-Series Rack Server TopSystem Info",
+    "service_name": "UCS C-Series Rack Server TopSystem Info",
 }

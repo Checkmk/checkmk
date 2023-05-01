@@ -30,9 +30,9 @@ def check_aws_glacier_limits(item, params, region_data):
 
 check_info["aws_glacier_limits"] = {
     "parse_function": parse_aws_limits_generic,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_aws_glacier_limits,
-    "service_description": "AWS/Glacier Limits %s",
-    "group": "aws_glacier_limits",
+    "service_name": "AWS/Glacier Limits %s",
+    "check_ruleset_name": "aws_glacier_limits",
     "default_levels_variable": "aws_glacier_limits_default_levels",
 }

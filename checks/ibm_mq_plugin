@@ -51,7 +51,7 @@ def check_ibm_mq_plugin(_no_item, params, parsed):
 check_info["ibm_mq_plugin"] = {
     "parse_function": parse_ibm_mq_plugin,
     "check_function": check_ibm_mq_plugin,
-    "inventory_function": inventory_ibm_mq_plugin,
-    "service_description": "IBM MQ Plugin",
-    "group": "ibm_mq_plugin",
+    "discovery_function": inventory_ibm_mq_plugin,
+    "service_name": "IBM MQ Plugin",
+    "check_ruleset_name": "ibm_mq_plugin",
 }

@@ -83,10 +83,10 @@ def check_genua_pfstate(item, params, info):
 
 check_info["genua_pfstate"] = {
     "detect": DETECT_GENUA,
-    "inventory_function": inventory_genua_pfstate,
+    "discovery_function": inventory_genua_pfstate,
     "check_function": check_genua_pfstate,
-    "service_description": "Paketfilter Status",
-    "group": "pf_used_states",
+    "service_name": "Paketfilter Status",
+    "check_ruleset_name": "pf_used_states",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.3717.2.1.1.6",

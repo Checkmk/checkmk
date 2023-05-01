@@ -63,8 +63,8 @@ def check_cisco_prime_wifi_connections(item, params, parsed):
 
 check_info["cisco_prime_wifi_connections"] = {
     "parse_function": lambda info: parse_cisco_prime("clientCountsDTO", info),
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_cisco_prime_wifi_connections,
-    "service_description": "Cisco Prime WiFi Connections",
-    "group": "cisco_prime_wifi_connections",
+    "service_name": "Cisco Prime WiFi Connections",
+    "check_ruleset_name": "cisco_prime_wifi_connections",
 }

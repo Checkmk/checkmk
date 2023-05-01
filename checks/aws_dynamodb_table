@@ -180,28 +180,28 @@ def check_aws_dynamodb_latency(item, params, parsed):
 
 
 check_info["aws_dynamodb_table.read_capacity"] = {
-    "inventory_function": lambda p: inventory_aws_generic_single(
+    "discovery_function": lambda p: inventory_aws_generic_single(
         p, ["Sum_ConsumedReadCapacityUnits"]
     ),
     "check_function": check_aws_dynamodb_read_capacity,
-    "service_description": "AWS/DynamoDB Read Capacity",
-    "group": "aws_dynamodb_capacity",
+    "service_name": "AWS/DynamoDB Read Capacity",
+    "check_ruleset_name": "aws_dynamodb_capacity",
     "default_levels_variable": "aws_dynamodb_capacity_defaults",
 }
 
 check_info["aws_dynamodb_table.write_capacity"] = {
-    "inventory_function": lambda p: inventory_aws_generic_single(
+    "discovery_function": lambda p: inventory_aws_generic_single(
         p, ["Sum_ConsumedWriteCapacityUnits"]
     ),
     "check_function": check_aws_dynamodb_write_capacity,
-    "service_description": "AWS/DynamoDB Write Capacity",
-    "group": "aws_dynamodb_capacity",
+    "service_name": "AWS/DynamoDB Write Capacity",
+    "check_ruleset_name": "aws_dynamodb_capacity",
     "default_levels_variable": "aws_dynamodb_capacity_defaults",
 }
 
 check_info["aws_dynamodb_table.latency"] = {
-    "inventory_function": inventory_aws_dynamodb_latency,
+    "discovery_function": inventory_aws_dynamodb_latency,
     "check_function": check_aws_dynamodb_latency,
-    "service_description": "AWS/DynamoDB Latency",
-    "group": "aws_dynamodb_latency",
+    "service_name": "AWS/DynamoDB Latency",
+    "check_ruleset_name": "aws_dynamodb_latency",
 }

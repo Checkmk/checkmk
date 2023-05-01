@@ -22,9 +22,9 @@ def check_aws_dynamodb_limits(item, params, region_data):
 
 check_info["aws_dynamodb_limits"] = {
     "parse_function": parse_aws_limits_generic,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_aws_dynamodb_limits,
-    "service_description": "AWS/DynamoDB Limits %s",
-    "group": "aws_dynamodb_limits",
+    "service_name": "AWS/DynamoDB Limits %s",
+    "check_ruleset_name": "aws_dynamodb_limits",
     "default_levels_variable": "aws_dynamodb_limits_default_levels",
 }

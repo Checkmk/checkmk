@@ -46,6 +46,6 @@ def check_nfsexports(item, _no_params, info):
 
 check_info["nfsexports"] = {
     "check_function": check_nfsexports,
-    "inventory_function": inventory_nfsexports,
-    "service_description": "NFS export %s",
+    "discovery_function": inventory_nfsexports,
+    "service_name": "NFS export %s",
 }

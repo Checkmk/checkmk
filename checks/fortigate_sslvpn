@@ -55,11 +55,11 @@ def check_fortigate_sslvpn(_item, params, data):
 
 check_info["fortigate_sslvpn"] = {
     "detect": DETECT_FORTIGATE,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_fortigate_sslvpn,
     "parse_function": parse_fortigate_sslvpn,
-    "service_description": "VPN SSL %s",
-    "group": "fortigate_sslvpn",
+    "service_name": "VPN SSL %s",
+    "check_ruleset_name": "fortigate_sslvpn",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.12356.101.3.2.1.1",

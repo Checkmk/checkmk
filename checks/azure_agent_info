@@ -168,9 +168,9 @@ def check_azure_agent_info(_no_item, params, parsed):
 
 check_info["azure_agent_info"] = {
     "parse_function": parse_azure_agent_info,
-    "inventory_function": discovery_azure_agent_info,
+    "discovery_function": discovery_azure_agent_info,
     "check_function": check_azure_agent_info,
-    "service_description": "Azure Agent Info",
+    "service_name": "Azure Agent Info",
     "default_levels_variable": "azure_agent_info_levels",
-    "group": "azure_agent_info",
+    "check_ruleset_name": "azure_agent_info",
 }

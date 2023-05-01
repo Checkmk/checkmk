@@ -192,9 +192,9 @@ def ibm_mq_get_qtime(qtime, label, key):
 
 check_info["ibm_mq_queues"] = {
     # section is already migrated!
-    "inventory_function": inventory_ibm_mq_queues,
+    "discovery_function": inventory_ibm_mq_queues,
     "check_function": check_ibm_mq_queues,
-    "service_description": "IBM MQ Queue %s",
+    "service_name": "IBM MQ Queue %s",
     "default_levels_variable": "ibm_mq_queues_default_levels",
-    "group": "ibm_mq_queues",
+    "check_ruleset_name": "ibm_mq_queues",
 }

@@ -78,7 +78,7 @@ def check_winperf_mem(_unused, params, info):
 
 check_info["winperf_mem"] = {
     "check_function": check_winperf_mem,
-    "inventory_function": inventory_winperf_mem,
-    "service_description": "Memory Pages",
-    "group": "mem_pages",
+    "discovery_function": inventory_winperf_mem,
+    "service_name": "Memory Pages",
+    "check_ruleset_name": "mem_pages",
 }

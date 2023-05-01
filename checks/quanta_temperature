@@ -53,11 +53,11 @@ def check_quanta_temperature(item, params, entry):
 
 check_info["quanta_temperature"] = {
     "detect": DETECT_QUANTA,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "parse_function": parse_quanta,
     "check_function": check_quanta_temperature,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
     # these is no good oid identifier for quanta devices, thats why the first oid is used here
     "fetch": [
         SNMPTree(

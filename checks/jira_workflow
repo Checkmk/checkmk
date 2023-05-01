@@ -66,7 +66,7 @@ def check_jira_workflow(item, params, item_data):
 check_info["jira_workflow"] = {
     "parse_function": parse_jira_workflow,
     "check_function": check_jira_workflow,
-    "inventory_function": discover(),
-    "service_description": "Jira Workflow %s",
-    "group": "jira_workflow",
+    "discovery_function": discover(),
+    "service_name": "Jira Workflow %s",
+    "check_ruleset_name": "jira_workflow",
 }

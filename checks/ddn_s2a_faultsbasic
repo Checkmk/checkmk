@@ -69,10 +69,10 @@ def check_ddn_s2a_faultsbasic_disks(_no_item, params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.disks"] = {
-    "inventory_function": inventory_ddn_s2a_faultsbasic_disks,
+    "discovery_function": inventory_ddn_s2a_faultsbasic_disks,
     "check_function": check_ddn_s2a_faultsbasic_disks,
-    "service_description": "DDN S2A Disks",
-    "group": "disk_failures",
+    "service_name": "DDN S2A Disks",
+    "check_ruleset_name": "disk_failures",
 }
 
 # .
@@ -117,9 +117,9 @@ def check_ddn_s2a_faultsbasic_temp(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.temp"] = {
-    "inventory_function": inventory_ddn_s2a_faultsbasic_temp,
+    "discovery_function": inventory_ddn_s2a_faultsbasic_temp,
     "check_function": check_ddn_s2a_faultsbasic_temp,
-    "service_description": "DDN S2A Temperature",
+    "service_name": "DDN S2A Temperature",
 }
 
 # .
@@ -149,9 +149,9 @@ def check_ddn_s2a_faultsbasic_ps(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.ps"] = {
-    "inventory_function": inventory_ddn_s2a_faultsbasic_ps,
+    "discovery_function": inventory_ddn_s2a_faultsbasic_ps,
     "check_function": check_ddn_s2a_faultsbasic_ps,
-    "service_description": "DDN S2A Power Supplies",
+    "service_name": "DDN S2A Power Supplies",
 }
 
 # .
@@ -194,10 +194,10 @@ def check_ddn_s2a_faultsbasic_fans(_no_item, params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.fans"] = {
-    "inventory_function": inventory_ddn_s2a_faultsbasic_fans,
+    "discovery_function": inventory_ddn_s2a_faultsbasic_fans,
     "check_function": check_ddn_s2a_faultsbasic_fans,
-    "service_description": "DDN S2A Fans",
-    "group": "fan_failures",
+    "service_name": "DDN S2A Fans",
+    "check_ruleset_name": "fan_failures",
 }
 
 # .
@@ -228,9 +228,9 @@ def check_ddn_s2a_faultsbasic_pingfault(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.pingfault"] = {
-    "inventory_function": inventory_ddn_s2a_faultsbasic_pingfault,
+    "discovery_function": inventory_ddn_s2a_faultsbasic_pingfault,
     "check_function": check_ddn_s2a_faultsbasic_pingfault,
-    "service_description": "DDN S2A Ping Fault Status",
+    "service_name": "DDN S2A Ping Fault Status",
 }
 
 # .
@@ -257,9 +257,9 @@ def check_ddn_s2a_faultsbasic_bootstatus(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.bootstatus"] = {
-    "inventory_function": inventory_ddn_s2a_faultsbasic_bootstatus,
+    "discovery_function": inventory_ddn_s2a_faultsbasic_bootstatus,
     "check_function": check_ddn_s2a_faultsbasic_bootstatus,
-    "service_description": "DDN S2A Boot Status",
+    "service_name": "DDN S2A Boot Status",
 }
 
 # .
@@ -302,9 +302,9 @@ def check_ddn_s2a_faultsbasic_cachecoh(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.cachecoh"] = {
-    "inventory_function": inventory_ddn_s2a_faultsbasic_cachecoh,
+    "discovery_function": inventory_ddn_s2a_faultsbasic_cachecoh,
     "check_function": check_ddn_s2a_faultsbasic_cachecoh,
-    "service_description": "DDN S2A Cache Coherency",
+    "service_name": "DDN S2A Cache Coherency",
 }
 
 # .
@@ -337,9 +337,9 @@ def check_ddn_s2a_faultsbasic_dualcomm(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.dualcomm"] = {
-    "inventory_function": inventory_ddn_s2a_faultsbasic_dualcomm,
+    "discovery_function": inventory_ddn_s2a_faultsbasic_dualcomm,
     "check_function": check_ddn_s2a_faultsbasic_dualcomm,
-    "service_description": "DDN S2A Dual Communication",
+    "service_name": "DDN S2A Dual Communication",
 }
 
 # .
@@ -371,9 +371,9 @@ def check_ddn_s2a_faultsbasic_ethernet(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.ethernet"] = {
-    "inventory_function": inventory_ddn_s2a_faultsbasic_ethernet,
+    "discovery_function": inventory_ddn_s2a_faultsbasic_ethernet,
     "check_function": check_ddn_s2a_faultsbasic_ethernet,
-    "service_description": "DDN S2A Ethernet",
+    "service_name": "DDN S2A Ethernet",
 }
 
 # .
@@ -408,7 +408,7 @@ def check_ddn_s2a_faultsbasic(item, _no_params, parsed):
 
 check_info["ddn_s2a_faultsbasic"] = {
     "parse_function": parse_ddn_s2a_faultsbasic,
-    "inventory_function": inventory_ddn_s2a_faultsbasic,
+    "discovery_function": inventory_ddn_s2a_faultsbasic,
     "check_function": check_ddn_s2a_faultsbasic,
-    "service_description": "DDN S2A Unit %s",
+    "service_name": "DDN S2A Unit %s",
 }

@@ -33,9 +33,9 @@ def check_ucs_c_rack_server_led(
 
 
 check_info["ucs_c_rack_server_led"] = {
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_ucs_c_rack_server_led,
-    "service_description": "LED %s",
-    "group": "ucs_c_rack_server_led",
+    "service_name": "LED %s",
+    "check_ruleset_name": "ucs_c_rack_server_led",
     "default_levels_variable": "ucs_c_rack_server_led_default_levels",
 }

@@ -30,11 +30,11 @@ def check_fireeye_active_vms(_no_item, params, info):
 
 check_info["fireeye_active_vms"] = {
     "detect": fireeye.DETECT,
-    "inventory_function": discover_fireeye_active_vms,
+    "discovery_function": discover_fireeye_active_vms,
     "check_function": check_fireeye_active_vms,
-    "service_description": "Active VMs",
+    "service_name": "Active VMs",
     "default_levels_variable": "active_vm_levels",
-    "group": "fireeye_active_vms",
+    "check_ruleset_name": "fireeye_active_vms",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1.9",
         oids=["0"],

@@ -69,8 +69,8 @@ def check_splunk_license_usage(item, params, parsed):
 check_info["splunk_license_usage"] = {
     "parse_function": parse_splunk_license_usage,
     "check_function": check_splunk_license_usage,
-    "inventory_function": inventory_splunk_license_usage,
-    "service_description": "Splunk License Usage",
-    "group": "splunk_license_usage",
+    "discovery_function": inventory_splunk_license_usage,
+    "service_name": "Splunk License Usage",
+    "check_ruleset_name": "splunk_license_usage",
     "default_levels_variable": "splunk_license_usage_default_levels",
 }

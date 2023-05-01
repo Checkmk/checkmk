@@ -158,8 +158,8 @@ factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 check_info["ibm_svc_mdiskgrp"] = {
     "parse_function": parse_ibm_svc_mdiskgrp,
     "check_function": check_ibm_svc_mdiskgrp,
-    "inventory_function": inventory_ibm_svc_mdiskgrp,
-    "service_description": "Pool Capacity %s",
-    "group": "ibm_svc_mdiskgrp",
+    "discovery_function": inventory_ibm_svc_mdiskgrp,
+    "service_name": "Pool Capacity %s",
+    "check_ruleset_name": "ibm_svc_mdiskgrp",
     "default_levels_variable": "filesystem_default_levels",
 }

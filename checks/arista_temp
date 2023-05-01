@@ -49,11 +49,11 @@ check_info["arista_temp"] = {
     "detect": startswith(".1.3.6.1.2.1.1.1.0", "arista networks"),
     "parse_function": parse_arista_temp,
     "check_function": check_arista_temp,
-    "inventory_function": discover(),
-    "service_description": "Temperature %s",
+    "discovery_function": discover(),
+    "service_name": "Temperature %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.2.1",
         oids=["47.1.1.1.1.2", "99.1.1.1.3", "99.1.1.1.4"],
     ),
-    "group": "temperature",
+    "check_ruleset_name": "temperature",
 }

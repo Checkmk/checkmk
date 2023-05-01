@@ -56,12 +56,12 @@ def check_dmraid_ldisks(item, _no_params, info):
 
 check_info["dmraid.ldisks"] = {
     "check_function": check_dmraid_ldisks,
-    "inventory_function": inventory_dmraid_ldisks,
-    "service_description": "RAID LDisk %s",
+    "discovery_function": inventory_dmraid_ldisks,
+    "service_name": "RAID LDisk %s",
 }
 
 check_info["dmraid.pdisks"] = {
     "check_function": check_dmraid_pdisks,
-    "inventory_function": inventory_dmraid_pdisks,
-    "service_description": "RAID PDisk %s",
+    "discovery_function": inventory_dmraid_pdisks,
+    "service_name": "RAID PDisk %s",
 }

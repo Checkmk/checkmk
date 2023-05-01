@@ -50,6 +50,6 @@ def check_openvpn_clients(item, _no_params, info):
 
 check_info["openvpn_clients"] = {
     "check_function": check_openvpn_clients,
-    "inventory_function": inventory_openvpn_clients,
-    "service_description": "OpenVPN Client %s",
+    "discovery_function": inventory_openvpn_clients,
+    "service_name": "OpenVPN Client %s",
 }

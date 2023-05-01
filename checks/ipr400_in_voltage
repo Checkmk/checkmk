@@ -35,9 +35,9 @@ def check_ipr400_in_voltage(item, params, info):
 check_info["ipr400_in_voltage"] = {
     "detect": startswith(".1.3.6.1.2.1.1.1.0", "ipr voip device ipr400"),
     "check_function": check_ipr400_in_voltage,
-    "inventory_function": inventory_ipr400_in_voltage,
-    "service_description": "IN Voltage %s",
-    "group": "evolt",
+    "discovery_function": inventory_ipr400_in_voltage,
+    "service_name": "IN Voltage %s",
+    "check_ruleset_name": "evolt",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.27053.1.4.5.10",
         oids=["0"],

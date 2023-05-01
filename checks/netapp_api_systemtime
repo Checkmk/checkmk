@@ -64,8 +64,8 @@ def check_netapp_api_systemtime(item, params, entry):
 
 check_info["netapp_api_systemtime"] = {
     "parse_function": parse_netapp_api_systemtime,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_netapp_api_systemtime,
-    "service_description": "Systemtime %s",
-    "group": "netapp_systemtime",
+    "service_name": "Systemtime %s",
+    "check_ruleset_name": "netapp_systemtime",
 }

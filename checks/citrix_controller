@@ -48,9 +48,9 @@ def check_citrix_controller_services(_no_item, _no_params, info):
 
 
 check_info["citrix_controller.services"] = {
-    "inventory_function": inventory_citrix_controller_services,
+    "discovery_function": inventory_citrix_controller_services,
     "check_function": check_citrix_controller_services,
-    "service_description": "Citrix Active Site Services",
+    "service_name": "Citrix Active Site Services",
 }
 
 # .
@@ -95,10 +95,10 @@ def check_citrix_controller_registered(_no_item, params, info):
 
 
 check_info["citrix_controller.registered"] = {
-    "inventory_function": inventory_citrix_controller_registered,
+    "discovery_function": inventory_citrix_controller_registered,
     "check_function": check_citrix_controller_registered,
-    "service_description": "Citrix Desktops Registered",
-    "group": "citrix_desktops_registered",
+    "service_name": "Citrix Desktops Registered",
+    "check_ruleset_name": "citrix_desktops_registered",
 }
 
 # .
@@ -157,10 +157,10 @@ def check_citrix_controller_sessions(_no_item, params, info):
 
 
 check_info["citrix_controller.sessions"] = {
-    "inventory_function": inventory_citrix_controller_sessions,
+    "discovery_function": inventory_citrix_controller_sessions,
     "check_function": check_citrix_controller_sessions,
-    "service_description": "Citrix Total Sessions",
-    "group": "citrix_sessions",
+    "service_name": "Citrix Total Sessions",
+    "check_ruleset_name": "citrix_sessions",
 }
 
 # .
@@ -222,9 +222,9 @@ def check_citrix_controller_licensing(_no_item, _no_params, info):
 
 
 check_info["citrix_controller.licensing"] = {
-    "inventory_function": inventory_citrix_controller_licensing,
+    "discovery_function": inventory_citrix_controller_licensing,
     "check_function": check_citrix_controller_licensing,
-    "service_description": "Citrix Controller Licensing",
+    "service_name": "Citrix Controller Licensing",
 }
 
 # .
@@ -266,7 +266,7 @@ def check_citrix_controller(_no_item, _no_params, info):
 
 
 check_info["citrix_controller"] = {
-    "inventory_function": inventory_citrix_controller,
+    "discovery_function": inventory_citrix_controller,
     "check_function": check_citrix_controller,
-    "service_description": "Citrix Controller State",
+    "service_name": "Citrix Controller State",
 }

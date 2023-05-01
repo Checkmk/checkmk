@@ -35,7 +35,7 @@ def check_jolokia_info(item, _no_params, data):
 
 check_info["jolokia_info"] = {
     "parse_function": parse_jolokia_info,
-    "service_description": "JVM %s",
+    "service_name": "JVM %s",
     "check_function": check_jolokia_info,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
 }

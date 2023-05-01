@@ -126,10 +126,10 @@ def check_icom_repeater_ps_volt(_no_item, params, parsed):
 
 
 check_info["icom_repeater.ps_volt"] = {
-    "inventory_function": inventory_icom_repeater_ps_volt,
+    "discovery_function": inventory_icom_repeater_ps_volt,
     "check_function": check_icom_repeater_ps_volt,
-    "service_description": "Power Supply Voltage",
-    "group": "ps_voltage",
+    "service_name": "Power Supply Voltage",
+    "check_ruleset_name": "ps_voltage",
 }
 
 # .
@@ -188,10 +188,10 @@ def check_icom_repeater_pll_volt(item, params, parsed):
 
 
 check_info["icom_repeater.pll_volt"] = {
-    "inventory_function": inventory_icom_repeater_pll_volt,
+    "discovery_function": inventory_icom_repeater_pll_volt,
     "check_function": check_icom_repeater_pll_volt,
-    "service_description": "%s PLL Lock Voltage",
-    "group": "pll_lock_voltage",
+    "service_name": "%s PLL Lock Voltage",
+    "check_ruleset_name": "pll_lock_voltage",
 }
 
 # .
@@ -229,11 +229,11 @@ def check_icom_repeater_temp(_no_item, params, parsed):
 
 
 check_info["icom_repeater.temp"] = {
-    "inventory_function": inventory_icom_repeater_temp,
+    "discovery_function": inventory_icom_repeater_temp,
     "default_levels_variable": "icom_repeater_temp_default_levels",
     "check_function": check_icom_repeater_temp,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
 }
 
 # .
@@ -270,9 +270,9 @@ def check_icom_repeater(_no_item, _no_params, parsed):
 check_info["icom_repeater"] = {
     "detect": contains(".1.3.6.1.2.1.1.1.0", "fr5000"),
     "parse_function": parse_icom_repeater,
-    "inventory_function": inventory_icom_repeater,
+    "discovery_function": inventory_icom_repeater,
     "check_function": check_icom_repeater,
-    "service_description": "Repeater Info",
+    "service_name": "Repeater Info",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.2021.8.1",
         oids=["1", "2", "101"],

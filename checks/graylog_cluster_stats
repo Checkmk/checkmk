@@ -74,9 +74,9 @@ def check_graylog_cluster_stats(_no_item, params, parsed):
 check_info["graylog_cluster_stats"] = {
     "parse_function": parse_graylog_agent_data,
     "check_function": check_graylog_cluster_stats,
-    "inventory_function": discover_single,
-    "service_description": "Graylog Cluster Stats",
-    "group": "graylog_cluster_stats",
+    "discovery_function": discover_single,
+    "service_name": "Graylog Cluster Stats",
+    "check_ruleset_name": "graylog_cluster_stats",
 }
 
 
@@ -183,10 +183,10 @@ def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
 
 check_info["graylog_cluster_stats.elastic"] = {
     "check_function": check_graylog_cluster_stats_elastic,
-    "inventory_function": inventory_graylog_cluster_stats_elastic,
+    "discovery_function": inventory_graylog_cluster_stats_elastic,
     "default_levels_variable": "graylog_cluster_stats_elastic_defaultlevels",
-    "service_description": "Graylog Cluster Elasticsearch Stats",
-    "group": "graylog_cluster_stats_elastic",
+    "service_name": "Graylog Cluster Elasticsearch Stats",
+    "check_ruleset_name": "graylog_cluster_stats_elastic",
 }
 
 
@@ -252,7 +252,7 @@ def check_graylog_cluster_stats_mongodb(_no_item, params, parsed):
 
 check_info["graylog_cluster_stats.mongodb"] = {
     "check_function": check_graylog_cluster_stats_mongodb,
-    "inventory_function": inventory_graylog_cluster_stats_mongodb,
-    "service_description": "Graylog Cluster MongoDB Stats",
-    "group": "graylog_cluster_stats_mongodb",
+    "discovery_function": inventory_graylog_cluster_stats_mongodb,
+    "service_name": "Graylog Cluster MongoDB Stats",
+    "check_ruleset_name": "graylog_cluster_stats_mongodb",
 }

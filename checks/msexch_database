@@ -116,10 +116,10 @@ def check_msexch_database(item, params, parsed):
 
 
 check_info["msexch_database"] = {
-    "inventory_function": inventory_msexch_database,
+    "discovery_function": inventory_msexch_database,
     "check_function": check_msexch_database,
     "parse_function": parse_msexch_database,
-    "service_description": "Exchange Database %s",
-    "group": "msx_database",
+    "service_name": "Exchange Database %s",
+    "check_ruleset_name": "msx_database",
     "default_levels_variable": "msexch_database_defaultlevels",
 }

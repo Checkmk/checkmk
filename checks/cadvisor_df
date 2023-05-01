@@ -37,7 +37,7 @@ def check_cadvisor_df(item, _params, parsed):
 
 check_info["cadvisor_df"] = {
     "parse_function": parse_cadvisor_df,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_cadvisor_df,
-    "service_description": "Filesystem",
+    "service_name": "Filesystem",
 }

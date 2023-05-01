@@ -20,7 +20,7 @@ def check_innovaphone_mem(_no_item, params, info):
 
 check_info["innovaphone_mem"] = {
     "check_function": check_innovaphone_mem,
-    "inventory_function": inventory_innovaphone_mem,
-    "service_description": "Memory",
-    "group": "innovaphone_mem",
+    "discovery_function": inventory_innovaphone_mem,
+    "service_name": "Memory",
+    "check_ruleset_name": "innovaphone_mem",
 }

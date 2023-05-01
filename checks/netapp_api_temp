@@ -65,10 +65,10 @@ def check_netapp_api_temp(item, params, parsed):
 
 check_info["netapp_api_temp"] = {
     "check_function": check_netapp_api_temp,
-    "inventory_function": inventory_netapp_api_temp,
+    "discovery_function": inventory_netapp_api_temp,
     "parse_function": lambda info: netapp_api_parse_lines(
         info, custom_keys=["temp-sensor-list", "temp-sensor-element-no"]
     ),
-    "group": "temperature",
-    "service_description": "Temperature %s",
+    "check_ruleset_name": "temperature",
+    "service_name": "Temperature %s",
 }

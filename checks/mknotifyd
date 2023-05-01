@@ -230,9 +230,9 @@ def check_mknotifyd(item, _no_params, parsed):
 
 check_info["mknotifyd"] = {
     "parse_function": parse_mknotifyd,
-    "inventory_function": inventory_mknotifyd,
+    "discovery_function": inventory_mknotifyd,
     "check_function": check_mknotifyd,
-    "service_description": "OMD %s Notification Spooler",
+    "service_name": "OMD %s Notification Spooler",
 }
 
 #   .--Connections---------------------------------------------------------.
@@ -291,7 +291,7 @@ def check_mknotifyd_connection(item, _no_params, parsed):
 
 
 check_info["mknotifyd.connection"] = {
-    "inventory_function": inventory_mknotifyd_connection,
+    "discovery_function": inventory_mknotifyd_connection,
     "check_function": check_mknotifyd_connection,
-    "service_description": "OMD %s Notify Connection",
+    "service_name": "OMD %s Notify Connection",
 }

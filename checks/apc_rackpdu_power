@@ -10,8 +10,8 @@ from cmk.base.config import check_info
 
 check_info["apc_rackpdu_power"] = {
     # section already migrated
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_elphase,
-    "service_description": "PDU %s",
-    "group": "el_inphase",
+    "service_name": "PDU %s",
+    "check_ruleset_name": "el_inphase",
 }

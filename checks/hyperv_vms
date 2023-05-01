@@ -159,8 +159,8 @@ def check_hyperv_vms(_item, params, vm):
 check_info["hyperv_vms"] = {
     "parse_function": parse_hyperv_vms,
     "check_function": check_hyperv_vms,
-    "inventory_function": inventory_hyperv_vms,
-    "service_description": "VM %s",
-    "group": "hyperv_vms",
+    "discovery_function": inventory_hyperv_vms,
+    "service_name": "VM %s",
+    "check_ruleset_name": "hyperv_vms",
     "default_levels_variable": "hyperv_vms_default_levels",
 }

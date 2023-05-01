@@ -32,7 +32,7 @@ def check_innovaphone_channels(item, params, info):
 
 check_info["innovaphone_channels"] = {
     "check_function": check_innovaphone_channels,
-    "inventory_function": inventory_innovaphone_channels,
-    "service_description": "Channel %s",
-    "group": "hw_single_channelserature",
+    "discovery_function": inventory_innovaphone_channels,
+    "service_name": "Channel %s",
+    "check_ruleset_name": "hw_single_channelserature",
 }

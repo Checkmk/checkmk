@@ -57,10 +57,10 @@ def check_msexch_isclienttype(item, params, parsed):
 
 
 check_info["msexch_isclienttype"] = {
-    "inventory_function": discover_msexch_isclienttype,
+    "discovery_function": discover_msexch_isclienttype,
     "check_function": check_msexch_isclienttype,
     "parse_function": parse_wmi_table,
-    "service_description": "Exchange IS Client Type %s",
-    "group": "msx_info_store",
+    "service_name": "Exchange IS Client Type %s",
+    "check_ruleset_name": "msx_info_store",
     "default_levels_variable": "msexch_isclienttype_defaultlevels",
 }

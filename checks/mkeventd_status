@@ -124,7 +124,7 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
 
 check_info["mkeventd_status"] = {
     "parse_function": parse_mkeventd_status,
-    "inventory_function": inventory_mkeventd_status,
+    "discovery_function": inventory_mkeventd_status,
     "check_function": check_mkeventd_status,
-    "service_description": "OMD %s Event Console",
+    "service_name": "OMD %s Event Console",
 }

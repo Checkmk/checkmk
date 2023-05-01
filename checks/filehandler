@@ -43,8 +43,8 @@ def check_filehandler(_no_item, params, info):
 
 check_info["filehandler"] = {
     "check_function": check_filehandler,
-    "inventory_function": inventory_filehandler,
-    "service_description": "Filehandler",
+    "discovery_function": inventory_filehandler,
+    "service_name": "Filehandler",
     "default_levels_variable": "filehandler_default_levels",
-    "group": "filehandler",
+    "check_ruleset_name": "filehandler",
 }

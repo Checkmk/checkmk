@@ -55,8 +55,8 @@ def check_citrix_sessions(_no_item, params, info):
 
 
 check_info["citrix_sessions"] = {
-    "group": "citrix_sessions",
+    "check_ruleset_name": "citrix_sessions",
     "check_function": check_citrix_sessions,
-    "inventory_function": inventory_citrix_sessions,
-    "service_description": "Citrix Sessions",
+    "discovery_function": inventory_citrix_sessions,
+    "service_name": "Citrix Sessions",
 }

@@ -41,8 +41,8 @@ def check_emc_isilon_clusterhealth(item, _no_params, info):
 check_info["emc_isilon.clusterhealth"] = {
     "detect": DETECT_ISILON,
     "check_function": check_emc_isilon_clusterhealth,
-    "inventory_function": inventory_emc_isilon_clusterhealth,
-    "service_description": "Cluster Health",
+    "discovery_function": inventory_emc_isilon_clusterhealth,
+    "service_name": "Cluster Health",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.12124.1.1",
@@ -80,8 +80,8 @@ def check_emc_isilon_nodehealth(item, _no_params, info):
 check_info["emc_isilon.nodehealth"] = {
     "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "check_function": check_emc_isilon_nodehealth,
-    "inventory_function": inventory_emc_isilon_nodehealth,
-    "service_description": "Node Health",
+    "discovery_function": inventory_emc_isilon_nodehealth,
+    "service_name": "Node Health",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.12124.1.1",
@@ -114,8 +114,8 @@ def check_emc_isilon_nodes(item, _no_params, info):
 check_info["emc_isilon.nodes"] = {
     "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "check_function": check_emc_isilon_nodes,
-    "inventory_function": inventory_emc_isilon_nodes,
-    "service_description": "Nodes",
+    "discovery_function": inventory_emc_isilon_nodes,
+    "service_name": "Nodes",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.12124.1.1",
@@ -143,8 +143,8 @@ def check_emc_isilon_names(item, _no_params, info):
 check_info["emc_isilon.names"] = {
     "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "check_function": check_emc_isilon_names,
-    "inventory_function": inventory_emc_isilon_names,
-    "service_description": "Isilon Info",
+    "discovery_function": inventory_emc_isilon_names,
+    "service_name": "Isilon Info",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.12124.1.1",

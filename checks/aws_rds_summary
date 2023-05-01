@@ -46,9 +46,9 @@ def check_aws_rds_summary(item, params, parsed):
 
 check_info["aws_rds_summary"] = {
     "parse_function": parse_aws_rds_summary,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_aws_rds_summary,
-    "service_description": "AWS/RDS Summary",
+    "service_name": "AWS/RDS Summary",
 }
 
 # .
@@ -86,7 +86,7 @@ def check_aws_rds_summary_db(item, params, data):
 
 
 check_info["aws_rds_summary.db_status"] = {
-    "inventory_function": lambda p: inventory_aws_generic(p, ["DBInstanceStatus"]),
+    "discovery_function": lambda p: inventory_aws_generic(p, ["DBInstanceStatus"]),
     "check_function": check_aws_rds_summary_db,
-    "service_description": "AWS/RDS %s Info",
+    "service_name": "AWS/RDS %s Info",
 }

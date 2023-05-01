@@ -67,8 +67,8 @@ def check_oracle_recovery_area(item, params, info):
 
 check_info["oracle_recovery_area"] = {
     "check_function": check_oracle_recovery_area,
-    "inventory_function": inventory_oracle_recovery_area,
-    "service_description": "ORA %s Recovery Area",
+    "discovery_function": inventory_oracle_recovery_area,
+    "service_name": "ORA %s Recovery Area",
     "default_levels_variable": "oracle_recovery_area_defaults",
-    "group": "oracle_recovery_area",
+    "check_ruleset_name": "oracle_recovery_area",
 }

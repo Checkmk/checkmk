@@ -46,7 +46,7 @@ def check_netapp_api_vs_status(item, _no_params, data):
 
 check_info["netapp_api_vs_status"] = {
     "parse_function": parse_netapp_api_vs_status,
-    "inventory_function": discover(lambda k, values: "state" in values),
+    "discovery_function": discover(lambda k, values: "state" in values),
     "check_function": check_netapp_api_vs_status,
-    "service_description": "vServer Status %s",
+    "service_name": "vServer Status %s",
 }

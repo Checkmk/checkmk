@@ -47,10 +47,10 @@ def check_msexch_isstore(item, params, parsed):
 
 
 check_info["msexch_isstore"] = {
-    "inventory_function": discover_msexch_isstore,
+    "discovery_function": discover_msexch_isstore,
     "check_function": check_msexch_isstore,
     "parse_function": parse_wmi_table,
-    "service_description": "Exchange IS Store %s",
-    "group": "msx_info_store",
+    "service_name": "Exchange IS Store %s",
+    "check_ruleset_name": "msx_info_store",
     "default_levels_variable": "msexch_info_store_defaultlevels",
 }

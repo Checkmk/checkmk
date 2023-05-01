@@ -237,8 +237,8 @@ def check_md(item, _no_params, parsed):  # pylint: disable=too-many-branches
 
 check_info["md"] = {
     "parse_function": parse_md,
-    "inventory_function": inventory_md,
+    "discovery_function": inventory_md,
     "check_function": check_md,
-    "service_description": "MD Softraid %s",
-    "group": "raid",
+    "service_name": "MD Softraid %s",
+    "check_ruleset_name": "raid",
 }

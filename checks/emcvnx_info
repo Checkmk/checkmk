@@ -141,9 +141,9 @@ def check_emcvnx_info(item, _no_params, parsed):
 
 check_info["emcvnx_info"] = {
     "parse_function": parse_emcvnx_info,
-    "inventory_function": lambda x: inventory_emcvnx_info(x, "info"),
+    "discovery_function": lambda x: inventory_emcvnx_info(x, "info"),
     "check_function": check_emcvnx_info,
-    "service_description": "EMC VNX Info",
+    "service_name": "EMC VNX Info",
 }
 
 #   .--Storage-------------------------------------------------------------.
@@ -163,9 +163,9 @@ def check_emcvnx_storage(item, params, parsed):
 
 
 check_info["emcvnx_info.storage"] = {
-    "inventory_function": lambda x: inventory_emcvnx_info(x, "storage"),
+    "discovery_function": lambda x: inventory_emcvnx_info(x, "storage"),
     "check_function": check_emcvnx_storage,
-    "service_description": "EMC VNX Storage Processor",
+    "service_name": "EMC VNX Storage Processor",
 }
 
 #   .--Link----------------------------------------------------------------.
@@ -188,9 +188,9 @@ def check_emcvnx_link(item, params, parsed):
 
 
 check_info["emcvnx_info.link"] = {
-    "inventory_function": lambda x: inventory_emcvnx_info(x, "link"),
+    "discovery_function": lambda x: inventory_emcvnx_info(x, "link"),
     "check_function": check_emcvnx_link,
-    "service_description": "EMC VNX Link",
+    "service_name": "EMC VNX Link",
 }
 
 #   .--Config--------------------------------------------------------------.
@@ -210,9 +210,9 @@ def check_emcvnx_config(item, params, parsed):
 
 
 check_info["emcvnx_info.config"] = {
-    "inventory_function": lambda x: inventory_emcvnx_info(x, "config"),
+    "discovery_function": lambda x: inventory_emcvnx_info(x, "config"),
     "check_function": check_emcvnx_config,
-    "service_description": "EMC VNX Config",
+    "service_name": "EMC VNX Config",
 }
 
 #   .--IO------------------------------------------------------------------.
@@ -235,7 +235,7 @@ def check_emcvnx_io(item, params, parsed):
 
 
 check_info["emcvnx_info.io"] = {
-    "inventory_function": lambda x: inventory_emcvnx_info(x, "io"),
+    "discovery_function": lambda x: inventory_emcvnx_info(x, "io"),
     "check_function": check_emcvnx_io,
-    "service_description": "EMC VNX IO",
+    "service_name": "EMC VNX IO",
 }

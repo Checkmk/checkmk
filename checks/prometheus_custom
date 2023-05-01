@@ -142,7 +142,7 @@ def check_prometheus_custom(item, params, data):
 check_info["prometheus_custom"] = {
     "parse_function": parse_prometheus_custom,
     "check_function": check_prometheus_custom,
-    "inventory_function": discover(),
-    "service_description": "%s",
-    "group": "prometheus_custom",
+    "discovery_function": discover(),
+    "service_name": "%s",
+    "check_ruleset_name": "prometheus_custom",
 }

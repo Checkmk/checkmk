@@ -36,13 +36,13 @@ def check_ucd_disk(item, params, info):
 
 check_info["ucd_disk"] = {
     "detect": ucd_hr_detection.PREFER_HR_ELSE_UCD,
-    "inventory_function": inventory_ucd_disk,
+    "discovery_function": inventory_ucd_disk,
     "check_function": check_ucd_disk,
-    "service_description": "Filesystem %s",
+    "service_name": "Filesystem %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.2021.9.1",
         oids=["2", "6", "7"],
     ),
-    "group": "filesystem",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

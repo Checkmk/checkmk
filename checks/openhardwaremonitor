@@ -164,12 +164,12 @@ def _check_openhardwaremonitor_wmistatus(data):
 #   '----------------------------------------------------------------------'
 
 check_info["openhardwaremonitor"] = {
-    "inventory_function": lambda parsed: inventory_openhardwaremonitor("Clock", parsed),
+    "discovery_function": lambda parsed: inventory_openhardwaremonitor("Clock", parsed),
     "check_function": lambda item, params, parsed: check_openhardwaremonitor(
         "Clock", item, params, parsed
     ),
     "parse_function": parse_openhardwaremonitor,
-    "service_description": "Clock %s",
+    "service_name": "Clock %s",
 }
 
 # .
@@ -202,10 +202,10 @@ def check_openhardwaremonitor_temperature(item, params, parsed):
 
 
 check_info["openhardwaremonitor.temperature"] = {
-    "inventory_function": lambda parsed: inventory_openhardwaremonitor("Temperature", parsed),
+    "discovery_function": lambda parsed: inventory_openhardwaremonitor("Temperature", parsed),
     "check_function": check_openhardwaremonitor_temperature,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
     "default_levels_variable": "openhardwaremonitor_temperature_default_levels",
 }
 
@@ -220,11 +220,11 @@ check_info["openhardwaremonitor.temperature"] = {
 #   '----------------------------------------------------------------------'
 
 check_info["openhardwaremonitor.power"] = {
-    "inventory_function": lambda parsed: inventory_openhardwaremonitor("Power", parsed),
+    "discovery_function": lambda parsed: inventory_openhardwaremonitor("Power", parsed),
     "check_function": lambda item, params, parsed: check_openhardwaremonitor(
         "Power", item, params, parsed
     ),
-    "service_description": "Power %s",
+    "service_name": "Power %s",
 }
 
 # .
@@ -252,11 +252,11 @@ def check_openhardwaremonitor_fan(item, params, parsed):
 
 
 check_info["openhardwaremonitor.fan"] = {
-    "inventory_function": lambda parsed: inventory_openhardwaremonitor("Fan", parsed),
+    "discovery_function": lambda parsed: inventory_openhardwaremonitor("Fan", parsed),
     "check_function": check_openhardwaremonitor_fan,
-    "service_description": "Fan %s",
+    "service_name": "Fan %s",
     "default_levels_variable": "openhardwaremonitor_fan_default_levels",
-    "group": "hw_fans",
+    "check_ruleset_name": "hw_fans",
 }
 
 # .
@@ -317,9 +317,9 @@ def check_openhardwaremonitor_smart(item, params, parsed):
 # combines different sensors per item (but not all, i.e. hdd temperature is still
 # reported as a temperature item)
 check_info["openhardwaremonitor.smart"] = {
-    "inventory_function": inventory_openhardwaremonitor_smart,
+    "discovery_function": inventory_openhardwaremonitor_smart,
     "check_function": check_openhardwaremonitor_smart,
-    "service_description": "SMART %s Stats",
+    "service_name": "SMART %s Stats",
     "default_levels_variable": "openhardwaremonitor_smart_default_levels",
-    "group": "openhardwaremonitor_smart",
+    "check_ruleset_name": "openhardwaremonitor_smart",
 }

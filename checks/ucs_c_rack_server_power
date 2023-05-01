@@ -70,9 +70,9 @@ def check_ucs_c_rack_server_power(item, params, data):
 
 check_info["ucs_c_rack_server_power"] = {
     "parse_function": parse_ucs_c_rack_server_power,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_ucs_c_rack_server_power,
-    "group": "power_multiitem",
-    "service_description": "Motherboard Power Statistics %s",
+    "check_ruleset_name": "power_multiitem",
+    "service_name": "Motherboard Power Statistics %s",
     "default_levels_variable": "ucs_c_rack_server_util_power_default_levels",
 }

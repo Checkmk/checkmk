@@ -137,8 +137,8 @@ def _get_as_int(data, key):
 
 check_info["mongodb_replication_info"] = {
     "parse_function": parse_mongodb_replication_info,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_mongodb_replication_info,
-    "service_description": "MongoDB Replication Info",
-    "group": "mongodb_replication_info",
+    "service_name": "MongoDB Replication Info",
+    "check_ruleset_name": "mongodb_replication_info",
 }

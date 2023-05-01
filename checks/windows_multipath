@@ -55,8 +55,8 @@ def check_windows_multipath(item, params, info):
 
 
 check_info["windows_multipath"] = {
-    "inventory_function": inventory_windows_multipath,
+    "discovery_function": inventory_windows_multipath,
     "check_function": check_windows_multipath,
-    "service_description": "Multipath",
-    "group": "windows_multipath",
+    "service_name": "Multipath",
+    "check_ruleset_name": "windows_multipath",
 }

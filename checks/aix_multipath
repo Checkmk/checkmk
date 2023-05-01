@@ -60,6 +60,6 @@ def check_aix_multipath(item, params, info):
 
 check_info["aix_multipath"] = {
     "check_function": check_aix_multipath,
-    "inventory_function": inventory_aix_multipath,
-    "service_description": "Multipath %s",
+    "discovery_function": inventory_aix_multipath,
+    "service_name": "Multipath %s",
 }

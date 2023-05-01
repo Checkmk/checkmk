@@ -64,10 +64,10 @@ def check_fireeye_mail(_no_item, params, info):
 
 check_info["fireeye_mail"] = {
     "detect": DETECT,
-    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "discovery_function": lambda info: inventory_fireeye_generic(info, False, True),
     "check_function": check_fireeye_mail,
-    "service_description": "Received Mail Rates",
-    "group": "fireeye_mail",
+    "service_name": "Received Mail Rates",
+    "check_ruleset_name": "fireeye_mail",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",
         oids=[
@@ -123,10 +123,10 @@ def check_fireeye_attachment(_no_item, params, info):
 
 
 check_info["fireeye_mail.attachment"] = {
-    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "discovery_function": lambda info: inventory_fireeye_generic(info, False, True),
     "check_function": check_fireeye_attachment,
-    "service_description": "Mails Containing Attachment",
-    "group": "fireeye_mail",
+    "service_name": "Mails Containing Attachment",
+    "check_ruleset_name": "fireeye_mail",
 }
 
 #   .--url-----------------------------------------------------------------.
@@ -158,10 +158,10 @@ def check_fireeye_url(_no_item, params, info):
 
 
 check_info["fireeye_mail.url"] = {
-    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "discovery_function": lambda info: inventory_fireeye_generic(info, False, True),
     "check_function": check_fireeye_url,
-    "service_description": "Mails Containing URL",
-    "group": "fireeye_mail",
+    "service_name": "Mails Containing URL",
+    "check_ruleset_name": "fireeye_mail",
 }
 
 #   .--statistics----------------------------------------------------------.
@@ -215,10 +215,10 @@ def check_fireeye_mail_statistics(_no_item, params, info):
 
 
 check_info["fireeye_mail.statistics"] = {
-    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "discovery_function": lambda info: inventory_fireeye_generic(info, False, True),
     "check_function": check_fireeye_mail_statistics,
-    "service_description": "Mail Processing Statistics",
-    "group": "fireeye_mail",
+    "service_name": "Mail Processing Statistics",
+    "check_ruleset_name": "fireeye_mail",
 }
 
 #   .--received------------------------------------------------------------.
@@ -248,8 +248,8 @@ def check_fireeye_mail_received(_no_item, params, info):
 
 
 check_info["fireeye_mail.received"] = {
-    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "discovery_function": lambda info: inventory_fireeye_generic(info, False, True),
     "check_function": check_fireeye_mail_received,
-    "service_description": "Mails Received",
+    "service_name": "Mails Received",
     "default_levels_variable": "received_levels",
 }

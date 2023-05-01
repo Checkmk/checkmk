@@ -67,7 +67,7 @@ def check_sap_hana_connect(item, params, parsed):
 
 check_info["sap_hana_connect"] = {
     "parse_function": parse_sap_hana_connect,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_sap_hana_connect,
-    "service_description": "SAP HANA CONNECT %s",
+    "service_name": "SAP HANA CONNECT %s",
 }

@@ -169,9 +169,9 @@ def parse_hp_msa_volume(info):
 
 check_info["hp_msa_volume"] = {
     "parse_function": parse_hp_msa_volume,
-    "inventory_function": inventory_hp_msa_health,
+    "discovery_function": inventory_hp_msa_health,
     "check_function": check_hp_msa_volume_health,
-    "service_description": "Volume Health %s",
+    "service_name": "Volume Health %s",
 }
 
 # .
@@ -206,9 +206,9 @@ factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 check_info["hp_msa_volume.df"] = {
-    "inventory_function": inventory_hp_msa_volume_df,
+    "discovery_function": inventory_hp_msa_volume_df,
     "check_function": check_hp_msa_volume_df,
-    "service_description": "Filesystem %s",
-    "group": "filesystem",
+    "service_name": "Filesystem %s",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

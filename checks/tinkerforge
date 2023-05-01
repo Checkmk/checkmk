@@ -138,36 +138,36 @@ def check_tinkerforge_motion(item, params, parsed):
 
 
 check_info["tinkerforge"] = {
-    "inventory_function": lambda parsed: inventory_tinkerforge("master", parsed),
+    "discovery_function": lambda parsed: inventory_tinkerforge("master", parsed),
     "check_function": check_tinkerforge_master,
     "parse_function": parse_tinkerforge,
-    "service_description": "Master %s",
+    "service_name": "Master %s",
 }
 
 check_info["tinkerforge.temperature"] = {
-    "inventory_function": lambda parsed: inventory_tinkerforge("temperature", parsed),
+    "discovery_function": lambda parsed: inventory_tinkerforge("temperature", parsed),
     "check_function": check_tinkerforge_temperature,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
 }
 
 check_info["tinkerforge.ambient"] = {
-    "inventory_function": lambda parsed: inventory_tinkerforge("ambient", parsed),
+    "discovery_function": lambda parsed: inventory_tinkerforge("ambient", parsed),
     "check_function": check_tinkerforge_ambient,
-    "group": "brightness",
-    "service_description": "Ambient Light %s",
+    "check_ruleset_name": "brightness",
+    "service_name": "Ambient Light %s",
 }
 
 check_info["tinkerforge.humidity"] = {
-    "inventory_function": lambda parsed: inventory_tinkerforge("humidity", parsed),
+    "discovery_function": lambda parsed: inventory_tinkerforge("humidity", parsed),
     "check_function": check_tinkerforge_humidity,
-    "group": "humidity",
-    "service_description": "Humidity %s",
+    "check_ruleset_name": "humidity",
+    "service_name": "Humidity %s",
 }
 
 check_info["tinkerforge.motion"] = {
-    "inventory_function": lambda parsed: inventory_tinkerforge("motion", parsed),
+    "discovery_function": lambda parsed: inventory_tinkerforge("motion", parsed),
     "check_function": check_tinkerforge_motion,
-    "group": "motion",
-    "service_description": "Motion Detector %s",
+    "check_ruleset_name": "motion",
+    "service_name": "Motion Detector %s",
 }

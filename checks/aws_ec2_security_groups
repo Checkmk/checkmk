@@ -31,7 +31,7 @@ def check_aws_ec2_security_groups(item, params, parsed):
 
 check_info["aws_ec2_security_groups"] = {
     "parse_function": parse_aws,
-    "inventory_function": inventory_aws_ec2_security_groups,
+    "discovery_function": inventory_aws_ec2_security_groups,
     "check_function": check_aws_ec2_security_groups,
-    "service_description": "AWS/EC2 Security Groups",
+    "service_name": "AWS/EC2 Security Groups",
 }

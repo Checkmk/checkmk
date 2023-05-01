@@ -43,8 +43,8 @@ check_info["netapp_vfiler"] = {
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.789"),
     ),
     "check_function": check_netapp_vfiler,
-    "inventory_function": inventory_netapp_vfiler,
-    "service_description": "vFiler Status %s",
+    "discovery_function": inventory_netapp_vfiler,
+    "service_name": "vFiler Status %s",
     # get the vfName and vfState from the vfEntry table
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.789.1.16.3.1",

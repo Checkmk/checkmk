@@ -71,7 +71,7 @@ def check_ucs_c_rack_server_health(item, params, health):
 
 check_info["ucs_c_rack_server_health"] = {
     "parse_function": parse_ucs_c_rack_server_health,
-    "inventory_function": inventory_ucs_c_rack_server_health,
+    "discovery_function": inventory_ucs_c_rack_server_health,
     "check_function": check_ucs_c_rack_server_health,
-    "service_description": "Health %s",
+    "service_name": "Health %s",
 }

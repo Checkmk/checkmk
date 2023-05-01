@@ -147,8 +147,8 @@ check_info["security_master"] = {
     "detect": startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.35491"),
     "parse_function": parse_security_master,
     "check_function": check_security_master,
-    "inventory_function": lambda parsed: inventory_security_master_sensors(parsed, "smoke"),
-    "service_description": "Sensor %s",
+    "discovery_function": lambda parsed: inventory_security_master_sensors(parsed, "smoke"),
+    "service_name": "Sensor %s",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.35491.30",
@@ -183,10 +183,10 @@ def check_security_master_humidity(item, params, parsed):
 
 
 check_info["security_master.humidity"] = {
-    "inventory_function": lambda parsed: inventory_security_master_sensors(parsed, "humidity"),
+    "discovery_function": lambda parsed: inventory_security_master_sensors(parsed, "humidity"),
     "check_function": check_security_master_humidity,
-    "service_description": "Sensor %s",
-    "group": "humidity",
+    "service_name": "Sensor %s",
+    "check_ruleset_name": "humidity",
 }
 
 #   .--temp----------------------------------------------------------------.
@@ -225,9 +225,9 @@ def check_security_master_temperature(item, params, parsed):
 
 
 check_info["security_master.temp"] = {
-    "inventory_function": lambda parsed: inventory_security_master_sensors(parsed, "temp"),
+    "discovery_function": lambda parsed: inventory_security_master_sensors(parsed, "temp"),
     "check_function": check_security_master_temperature,
-    "service_description": "Sensor %s",
-    "group": "temperature",
+    "service_name": "Sensor %s",
+    "check_ruleset_name": "temperature",
     "default_levels_variable": "security_master_temp_default_levels",
 }

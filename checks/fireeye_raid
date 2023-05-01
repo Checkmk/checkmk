@@ -55,9 +55,9 @@ def check_fireeye_raid(_no_item, _no_params, parsed):
 check_info["fireeye_raid"] = {
     "detect": DETECT,
     "parse_function": parse_fireeye_raid,
-    "inventory_function": lambda parsed: inventory_fireeye_generic(parsed.get("raid", []), False),
+    "discovery_function": lambda parsed: inventory_fireeye_generic(parsed.get("raid", []), False),
     "check_function": check_fireeye_raid,
-    "service_description": "RAID status",
+    "service_name": "RAID status",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.25597.11.2.1",
@@ -91,7 +91,7 @@ def check_fireeye_raid_disks(item, _no_params, parsed):
 
 
 check_info["fireeye_raid.disks"] = {
-    "inventory_function": lambda parsed: inventory_fireeye_generic(parsed.get("disks", []), True),
+    "discovery_function": lambda parsed: inventory_fireeye_generic(parsed.get("disks", []), True),
     "check_function": check_fireeye_raid_disks,
-    "service_description": "Disk status %s",
+    "service_name": "Disk status %s",
 }

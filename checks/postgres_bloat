@@ -157,8 +157,8 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
 check_info["postgres_bloat"] = {
     "parse_function": postgres.parse_dbs,
     "check_function": check_postgres_bloat,
-    "inventory_function": inventory_postgres_bloat,
-    "service_description": "PostgreSQL Bloat %s",
-    "group": "db_bloat",
+    "discovery_function": inventory_postgres_bloat,
+    "service_name": "PostgreSQL Bloat %s",
+    "check_ruleset_name": "db_bloat",
     "default_levels_variable": "postgres_bloat_default_levels",
 }

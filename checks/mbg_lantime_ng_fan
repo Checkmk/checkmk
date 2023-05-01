@@ -66,8 +66,8 @@ check_info["mbg_lantime_ng_fan"] = {
     "detect": DETECT_MBG_LANTIME_NG,
     "check_function": check_mbg_lantime_ng_fan,
     "parse_function": parse_mbg_lantime_ng_fan,
-    "inventory_function": discover(lambda k, value: value["status"]["name"] != "not available"),
-    "service_description": "Fan %s",
+    "discovery_function": discover(lambda k, value: value["status"]["name"] != "not available"),
+    "service_name": "Fan %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.1.2.1",
         oids=["1", "2", "3"],

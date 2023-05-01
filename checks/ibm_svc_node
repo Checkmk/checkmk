@@ -80,6 +80,6 @@ def check_ibm_svc_node(item, _no_params, data):
 check_info["ibm_svc_node"] = {
     "parse_function": parse_ibm_svc_node,
     "check_function": check_ibm_svc_node,
-    "inventory_function": discover(),
-    "service_description": "IO Group %s",
+    "discovery_function": discover(),
+    "service_name": "IO Group %s",
 }

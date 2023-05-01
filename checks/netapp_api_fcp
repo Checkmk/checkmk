@@ -226,8 +226,8 @@ def parse_netapp_api_fcp(info):
 
 check_info["netapp_api_fcp"] = {
     "parse_function": parse_netapp_api_fcp,
-    "inventory_function": inventory_netapp_api_fcp,
+    "discovery_function": inventory_netapp_api_fcp,
     "check_function": check_netapp_api_fcp,
-    "service_description": "Interface FCP %s",
-    "group": "fcp",
+    "service_name": "Interface FCP %s",
+    "check_ruleset_name": "fcp",
 }

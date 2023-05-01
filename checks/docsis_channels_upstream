@@ -174,9 +174,9 @@ check_info["docsis_channels_upstream"] = {
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20858.2.600"),
     ),
     "parse_function": parse_docsis_channels_upstream,
-    "inventory_function": inventory_docsis_channels_upstream,
+    "discovery_function": inventory_docsis_channels_upstream,
     "check_function": check_docsis_channels_upstream,
-    "service_description": "Upstream Channel %s",
+    "service_name": "Upstream Channel %s",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.2.1.10.127.1.1.2.1",
@@ -192,5 +192,5 @@ check_info["docsis_channels_upstream"] = {
         ),
     ],
     "default_levels_variable": "docsis_channels_upstream_default_levels",
-    "group": "docsis_channels_upstream",
+    "check_ruleset_name": "docsis_channels_upstream",
 }

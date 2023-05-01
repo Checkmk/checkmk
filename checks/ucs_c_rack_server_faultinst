@@ -52,7 +52,7 @@ def check_ucs_c_rack_server_faultinst(
 
 
 check_info["ucs_c_rack_server_faultinst"] = {
-    "inventory_function": lambda p: [(None, {})],
+    "discovery_function": lambda p: [(None, {})],
     "check_function": check_ucs_c_rack_server_faultinst,
-    "service_description": "Fault Instances Rack",
+    "service_name": "Fault Instances Rack",
 }

@@ -265,9 +265,9 @@ def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
 
 
 check_info["oracle_jobs"] = {
-    "service_description": "ORA %s Job",
-    "group": "oracle_jobs",
+    "service_name": "ORA %s Job",
+    "check_ruleset_name": "oracle_jobs",
     "check_function": check_oracle_jobs,
-    "inventory_function": inventory_oracle_jobs,
+    "discovery_function": inventory_oracle_jobs,
     "default_levels_variable": "oracle_jobs_defaults",
 }

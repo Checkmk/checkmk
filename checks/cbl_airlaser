@@ -206,12 +206,12 @@ check_info["cbl_airlaser"] = {
 
 check_info["cbl_airlaser.status"] = {
     "check_function": check_cbl_airlaser_status,
-    "inventory_function": inventory_cbl_airlaser,
-    "service_description": "CBL Airlaser Status",
+    "discovery_function": inventory_cbl_airlaser,
+    "service_name": "CBL Airlaser Status",
 }
 
 check_info["cbl_airlaser.hardware"] = {
     "check_function": check_cbl_airlaser_hw,
-    "inventory_function": inventory_cbl_airlaser,
-    "service_description": "CBL Airlaser Hardware",
+    "discovery_function": inventory_cbl_airlaser,
+    "service_name": "CBL Airlaser Hardware",
 }

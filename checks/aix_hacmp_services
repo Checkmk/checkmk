@@ -109,7 +109,7 @@ def check_aix_hacmp_services(item, _no_params, data):
 
 check_info["aix_hacmp_services"] = {
     "parse_function": parse_aix_hacmp_services,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_aix_hacmp_services,
-    "service_description": "HACMP Service %s",
+    "service_name": "HACMP Service %s",
 }

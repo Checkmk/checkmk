@@ -77,6 +77,6 @@ def check_hpux_fchba(item, _no_params, info):
 
 check_info["hpux_fchba"] = {
     "check_function": check_hpux_fchba,
-    "inventory_function": inventory_hpux_fchba,
-    "service_description": "FC HBA %s",
+    "discovery_function": inventory_hpux_fchba,
+    "service_name": "FC HBA %s",
 }

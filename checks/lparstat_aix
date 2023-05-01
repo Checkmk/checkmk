@@ -39,8 +39,8 @@ def check_lparstat(_no_item, _no_params, section: Section):
 check_info["lparstat_aix"] = {
     # section migrated already!
     "check_function": check_lparstat,
-    "inventory_function": inventory_lparstat,
-    "service_description": "lparstat",
+    "discovery_function": inventory_lparstat,
+    "service_name": "lparstat",
 }
 
 
@@ -91,7 +91,7 @@ def check_lparstat_aix_cpu(_no_item, params, section: Section):
 check_info["lparstat_aix.cpu_util"] = {
     # section migrated already!
     "check_function": check_lparstat_aix_cpu,
-    "inventory_function": inventory_lparstat_aix_cpu,
-    "service_description": "CPU utilization",
-    "group": "cpu_iowait",
+    "discovery_function": inventory_lparstat_aix_cpu,
+    "service_name": "CPU utilization",
+    "check_ruleset_name": "cpu_iowait",
 }

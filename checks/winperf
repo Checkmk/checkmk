@@ -110,12 +110,12 @@ def check_win_diskstat(item, params, info):
 
 check_info["winperf.cpuusage"] = {
     "check_function": check_win_cpuusage,
-    "inventory_function": inventory_win_cpuusage,
-    "service_description": "CPU Usage",
+    "discovery_function": inventory_win_cpuusage,
+    "service_name": "CPU Usage",
 }
 
 check_info["winperf.diskstat"] = {
     "check_function": check_win_diskstat,
-    "inventory_function": inventory_win_diskstat,
-    "service_description": "Disk IO",
+    "discovery_function": inventory_win_diskstat,
+    "service_name": "Disk IO",
 }

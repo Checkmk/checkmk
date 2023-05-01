@@ -81,10 +81,10 @@ def check_stulz_temp(item, params, parsed):
 check_info["stulz_temp"] = {
     "detect": DETECT_STULZ,
     "parse_function": parse_stulz_temp,
-    "inventory_function": inventory_stulz_temp,
+    "discovery_function": inventory_stulz_temp,
     "check_function": check_stulz_temp,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1",
         oids=[OIDEnd(), "1"],

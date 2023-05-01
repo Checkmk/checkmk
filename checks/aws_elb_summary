@@ -10,7 +10,7 @@ from cmk.base.config import check_info
 
 check_info["aws_elb_summary"] = {
     "parse_function": parse_aws,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_aws_elb_summary_generic,
-    "service_description": "AWS/ELB Summary",
+    "service_name": "AWS/ELB Summary",
 }

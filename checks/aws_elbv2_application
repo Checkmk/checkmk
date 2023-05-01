@@ -76,10 +76,10 @@ def check_aws_elbv2_application_lcu(item, params, parsed):
 
 check_info["aws_elbv2_application"] = {
     "parse_function": parse_aws_elbv2_application,
-    "inventory_function": lambda p: inventory_aws_generic_single(p, ["ConsumedLCUs"]),
+    "discovery_function": lambda p: inventory_aws_generic_single(p, ["ConsumedLCUs"]),
     "check_function": check_aws_elbv2_application_lcu,
-    "service_description": "AWS/ApplicationELB LCUs",
-    "group": "aws_elbv2_lcu",
+    "service_name": "AWS/ApplicationELB LCUs",
+    "check_ruleset_name": "aws_elbv2_lcu",
 }
 
 # .
@@ -131,11 +131,11 @@ def check_aws_elbv2_application_connections(item, params, parsed):
 
 check_info["aws_elbv2_application.connections"] = {
     "parse_function": parse_aws_elbv2_application,
-    "inventory_function": lambda p: inventory_aws_generic_single(
+    "discovery_function": lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_application_connection_types, requirement=any
     ),
     "check_function": check_aws_elbv2_application_connections,
-    "service_description": "AWS/ApplicationELB Connections",
+    "service_name": "AWS/ApplicationELB Connections",
 }
 
 # .
@@ -159,10 +159,10 @@ def check_aws_elbv2_application_http_elb(item, params, parsed):
 
 
 check_info["aws_elbv2_application.http_elb"] = {
-    "inventory_function": lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
+    "discovery_function": lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
     "check_function": check_aws_elbv2_application_http_elb,
-    "service_description": "AWS/ApplicationELB HTTP ELB",
-    "group": "aws_elb_http",
+    "service_name": "AWS/ApplicationELB HTTP ELB",
+    "check_ruleset_name": "aws_elb_http",
 }
 
 # .
@@ -204,11 +204,11 @@ def check_aws_elbv2_application_http_redirects(item, params, parsed):
 
 
 check_info["aws_elbv2_application.http_redirects"] = {
-    "inventory_function": lambda p: inventory_aws_generic_single(
+    "discovery_function": lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_application_http_redirects_metrics, requirement=any
     ),
     "check_function": check_aws_elbv2_application_http_redirects,
-    "service_description": "AWS/ApplicationELB HTTP Redirects",
+    "service_name": "AWS/ApplicationELB HTTP Redirects",
 }
 
 # .
@@ -259,9 +259,9 @@ def check_aws_elbv2_application_statistics(item, params, parsed):
 
 
 check_info["aws_elbv2_application.statistics"] = {
-    "inventory_function": lambda p: inventory_aws_generic_single(
+    "discovery_function": lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_application_statistics_metrics, requirement=any
     ),
     "check_function": check_aws_elbv2_application_statistics,
-    "service_description": "AWS/ApplicationELB Statistics",
+    "service_name": "AWS/ApplicationELB Statistics",
 }

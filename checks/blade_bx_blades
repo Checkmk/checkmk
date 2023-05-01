@@ -38,9 +38,9 @@ def check_blade_bx_blades(item, _no_params, info):
 
 check_info["blade_bx_blades"] = {
     "detect": DETECT_BLADE_BX,
-    "inventory_function": inventory_blade_bx_blades,
+    "discovery_function": inventory_blade_bx_blades,
     "check_function": check_blade_bx_blades,
-    "service_description": "Blade %s",
+    "service_name": "Blade %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.7244.1.1.1.4.2.1.1",
         oids=["1", "2", "5", "21"],

@@ -66,9 +66,9 @@ def check_informix_tabextents(item, params, parsed):
 
 check_info["informix_tabextents"] = {
     "parse_function": parse_informix_tabextents,
-    "inventory_function": inventory_informix_tabextents,
+    "discovery_function": inventory_informix_tabextents,
     "check_function": check_informix_tabextents,
-    "service_description": "Informix Table Extents %s",
-    "group": "informix_tabextents",
+    "service_name": "Informix Table Extents %s",
+    "check_ruleset_name": "informix_tabextents",
     "default_levels_variable": "informix_tabextents_default_levels",
 }

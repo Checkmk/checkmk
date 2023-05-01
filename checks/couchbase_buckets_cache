@@ -25,8 +25,8 @@ def check_couchbase_buckets_cache(_item, params, data):
 
 check_info["couchbase_buckets_cache"] = {
     "parse_function": parse_couchbase_lines,
-    "inventory_function": discover(lambda k, v: "ep_cache_miss_rate" in v),
+    "discovery_function": discover(lambda k, v: "ep_cache_miss_rate" in v),
     "check_function": check_couchbase_buckets_cache,
-    "service_description": "Couchbase Bucket %s Cache",
-    "group": "couchbase_cache",
+    "service_name": "Couchbase Bucket %s Cache",
+    "check_ruleset_name": "couchbase_cache",
 }

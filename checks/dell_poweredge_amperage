@@ -23,12 +23,12 @@ check_info["dell_poweredge_amperage"] = {
 
 check_info["dell_poweredge_amperage.power"] = {
     "check_function": check_dell_poweredge_amperage,
-    "inventory_function": inventory_dell_poweredge_amperage_power,
-    "service_description": "%s",
+    "discovery_function": inventory_dell_poweredge_amperage_power,
+    "service_name": "%s",
 }
 
 check_info["dell_poweredge_amperage.current"] = {
     "check_function": check_dell_poweredge_amperage,
-    "inventory_function": inventory_dell_poweredge_amperage_current,
-    "service_description": "%s",
+    "discovery_function": inventory_dell_poweredge_amperage_current,
+    "service_name": "%s",
 }

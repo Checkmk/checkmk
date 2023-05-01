@@ -218,8 +218,8 @@ def _mongodb_collections_get_as_int(data, key):
 check_info["mongodb_collections"] = {
     "default_levels_variable": "mongodb_collections_levels",
     "parse_function": parse_mongodb_collections,
-    "inventory_function": inventory_mongodb_collections,
+    "discovery_function": inventory_mongodb_collections,
     "check_function": check_mongodb_collections,
-    "service_description": "MongoDB Collection: %s",
-    "group": "mongodb_collections",
+    "service_name": "MongoDB Collection: %s",
+    "check_ruleset_name": "mongodb_collections",
 }

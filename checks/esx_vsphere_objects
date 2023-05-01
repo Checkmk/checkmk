@@ -102,10 +102,10 @@ def check_esx_vsphere_objects(item, params, parsed):
 
 check_info["esx_vsphere_objects"] = {
     "parse_function": parse_esx_vsphere_objects,
-    "inventory_function": inventory_esx_vsphere_objects,
+    "discovery_function": inventory_esx_vsphere_objects,
     "check_function": check_esx_vsphere_objects,
-    "service_description": "%s",
-    "group": "esx_vsphere_objects",
+    "service_name": "%s",
+    "check_ruleset_name": "esx_vsphere_objects",
     "default_levels_variable": "esx_vsphere_objects_default_levels",
 }
 
@@ -140,8 +140,8 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
 
 
 check_info["esx_vsphere_objects.count"] = {
-    "inventory_function": inventory_esx_vsphere_objects_count,
+    "discovery_function": inventory_esx_vsphere_objects_count,
     "check_function": check_esx_vsphere_objects_count,
-    "service_description": "Object count",
-    "group": "esx_vsphere_objects_count",
+    "service_name": "Object count",
+    "check_ruleset_name": "esx_vsphere_objects_count",
 }

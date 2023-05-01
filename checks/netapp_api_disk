@@ -33,8 +33,8 @@ def check_netapp_api_disk_summary(_no_item, params, section):
 check_info["netapp_api_disk.summary"] = {
     # section is already migrated!
     "check_function": check_netapp_api_disk_summary,
-    "inventory_function": inventory_netapp_api_disk_summary,
-    "service_description": "NetApp Disks Summary",
-    "group": "netapp_disks",
+    "discovery_function": inventory_netapp_api_disk_summary,
+    "service_name": "NetApp Disks Summary",
+    "check_ruleset_name": "netapp_disks",
     "default_levels_variable": "filer_disks_default_levels",
 }

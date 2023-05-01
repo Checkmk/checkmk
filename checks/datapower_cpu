@@ -24,13 +24,13 @@ def check_datapower_cpu(_no_item, params, info):
 
 check_info["datapower_cpu"] = {
     "detect": DETECT,
-    "inventory_function": inventory_datapower_cpu,
+    "discovery_function": inventory_datapower_cpu,
     "check_function": check_datapower_cpu,
-    "service_description": "CPU Utilization",
+    "service_name": "CPU Utilization",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.14",
         oids=["2"],
     ),
-    "group": "cpu_utilization",
+    "check_ruleset_name": "cpu_utilization",
     "default_levels_variable": "datapower_cpu_default_levels",
 }

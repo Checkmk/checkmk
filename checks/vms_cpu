@@ -70,7 +70,7 @@ def check_vms_cpu(_no_item, params, parsed):
 check_info["vms_cpu"] = {
     "parse_function": parse_vms_cpu,
     "check_function": check_vms_cpu,
-    "inventory_function": inventory_vms_cpu,
-    "service_description": "CPU utilization",
-    "group": "cpu_iowait",
+    "discovery_function": inventory_vms_cpu,
+    "service_name": "CPU utilization",
+    "check_ruleset_name": "cpu_iowait",
 }

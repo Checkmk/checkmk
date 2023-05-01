@@ -88,16 +88,16 @@ def check_couchbase_buckets_operations(_item, params, data):
 
 check_info["couchbase_buckets_operations"] = {
     "parse_function": parse_couchbase_buckets_operations,
-    "inventory_function": discover(lambda k, v: k is not None and "ops" in v),
+    "discovery_function": discover(lambda k, v: k is not None and "ops" in v),
     "check_function": check_couchbase_buckets_operations,
-    "service_description": "Couchbase Bucket %s Operations",
-    "group": "couchbase_ops",
+    "service_name": "Couchbase Bucket %s Operations",
+    "check_ruleset_name": "couchbase_ops",
 }
 
 check_info["couchbase_buckets_operations.total"] = {
     "parse_function": parse_couchbase_buckets_operations,
-    "inventory_function": discover(lambda k, v: k is None and "ops" in v),
+    "discovery_function": discover(lambda k, v: k is None and "ops" in v),
     "check_function": check_couchbase_buckets_operations,
-    "service_description": "Couchbase Bucket Operations",
-    "group": "couchbase_ops_buckets",
+    "service_name": "Couchbase Bucket Operations",
+    "check_ruleset_name": "couchbase_ops_buckets",
 }

@@ -34,12 +34,12 @@ def check_bvip_poe(_no_item, params, info):
 check_info["bvip_poe"] = {
     "detect": DETECT_BVIP,
     "check_function": check_bvip_poe,
-    "inventory_function": inventory_bvip_poe,
-    "service_description": "POE Power",
+    "discovery_function": inventory_bvip_poe,
+    "service_name": "POE Power",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1",
         oids=["10"],
     ),
-    "group": "epower_single",
+    "check_ruleset_name": "epower_single",
     "default_levels_variable": "bvip_poe_default_levels",
 }

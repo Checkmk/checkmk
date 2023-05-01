@@ -68,10 +68,10 @@ def check_aws_glacier_archives(item, params, parsed):
 
 check_info["aws_glacier"] = {
     "parse_function": parse_aws_glacier,
-    "inventory_function": inventory_aws_glacier,
+    "discovery_function": inventory_aws_glacier,
     "check_function": check_aws_glacier_archives,
-    "service_description": "AWS/Glacier Vault: %s",
-    "group": "aws_glacier_vault_archives",
+    "service_name": "AWS/Glacier Vault: %s",
+    "check_ruleset_name": "aws_glacier_vault_archives",
 }
 
 # .
@@ -115,8 +115,8 @@ def check_aws_glacier_summary(item, params, parsed):
 
 
 check_info["aws_glacier.summary"] = {
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_aws_glacier_summary,
-    "service_description": "AWS/Glacier Summary",
-    "group": "aws_glacier_vaults",
+    "service_name": "AWS/Glacier Summary",
+    "check_ruleset_name": "aws_glacier_vaults",
 }

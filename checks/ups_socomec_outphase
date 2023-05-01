@@ -37,11 +37,11 @@ def check_ups_socomec_outphase(item, params, parsed):
 check_info["ups_socomec_outphase"] = {
     "detect": DETECT_SOCOMEC,
     "parse_function": parse_ups_socomec_outphase,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_ups_socomec_outphase,
     "default_levels_variable": "socomec_outphase_default_levels",
-    "service_description": "Output %s",
-    "group": "ups_outphase",
+    "service_name": "Output %s",
+    "check_ruleset_name": "ups_outphase",
     # Phase Index, Voltage/dV, Current/dA, Load/%
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.4.4.1",

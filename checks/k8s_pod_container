@@ -41,7 +41,7 @@ def check_k8s_pod_container(_no_item, params, parsed):
 
 check_info["k8s_pod_container"] = {
     # section is already migrated
-    "inventory_function": inventory_k8s_pod_container,
+    "discovery_function": inventory_k8s_pod_container,
     "check_function": check_k8s_pod_container,
-    "service_description": "Container",
+    "service_name": "Container",
 }

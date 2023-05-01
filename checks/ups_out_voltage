@@ -22,10 +22,10 @@ def discover_ups_out_voltage(info: list[list[str]]) -> Iterable[tuple[str, tuple
 
 check_info["ups_out_voltage"] = {
     "detect": DETECT_UPS_GENERIC,
-    "inventory_function": discover_ups_out_voltage,
+    "discovery_function": discover_ups_out_voltage,
     "check_function": check_ups_out_voltage,
-    "service_description": "OUT voltage phase %s",
-    "group": "evolt",
+    "service_name": "OUT voltage phase %s",
+    "check_ruleset_name": "evolt",
     "fetch": SNMPTree(
         base=".1.3.6.1.2.1.33.1.4.4.1",
         oids=[OIDEnd(), "2"],

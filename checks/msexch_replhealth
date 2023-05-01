@@ -53,7 +53,7 @@ def check_msexch_replhealth(item, _no_params, info):
 
 
 check_info["msexch_replhealth"] = {
-    "inventory_function": inventory_msexch_replhealth,
+    "discovery_function": inventory_msexch_replhealth,
     "check_function": check_msexch_replhealth,
-    "service_description": "Exchange Replication Health %s",
+    "service_name": "Exchange Replication Health %s",
 }

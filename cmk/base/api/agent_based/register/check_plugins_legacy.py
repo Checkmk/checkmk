@@ -41,7 +41,7 @@ def _create_discovery_function(
     # 1) ensure we have the correct signature
     # 2) ensure it is a generator of Service instances
     def discovery_migration_wrapper(section: object) -> object:
-        disco_func = check_info_element.get("inventory_function")
+        disco_func = check_info_element.get("discovery_function")
         if not callable(disco_func):  # never discover:
             return
 
@@ -122,7 +122,7 @@ def _normalize_check_function_return_value(subresults: object) -> list:
 
 def _create_check_function(name: str, check_info_element: CheckInfoElement) -> Callable:
     """Create an API compliant check function"""
-    service_descr = check_info_element["service_description"]
+    service_descr = check_info_element["service_name"]
     if not isinstance(service_descr, str):
         raise ValueError(f"[{name}]: invalid service description: {service_descr!r}")
 
@@ -329,13 +329,13 @@ def create_check_plugin_from_legacy(
     return create_check_plugin(
         name=new_check_name,
         sections=[check_plugin_name.split(".", 1)[0]],
-        service_name=check_info_element["service_description"],
+        service_name=check_info_element["service_name"],
         discovery_function=discovery_function,
         discovery_default_parameters=None,  # legacy madness!
         discovery_ruleset_name=None,
         check_function=check_function,
         check_default_parameters=check_default_parameters,
-        check_ruleset_name=check_info_element.get("group"),
+        check_ruleset_name=check_info_element.get("check_ruleset_name"),
         # Legacy check plugins may return an item even if the service description
         # does not contain a '%s'. In this case the old check API assumes an implicit,
         # trailing '%s'. Therefore, we disable this validation for legacy check plugins.

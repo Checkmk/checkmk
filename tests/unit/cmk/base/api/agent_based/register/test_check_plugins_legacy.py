@@ -24,8 +24,8 @@ def dummy_generator(section):  # pylint: disable=unused-argument
 
 
 MINIMAL_CHECK_INFO: CheckInfoElement = {
-    "service_description": "Norris Device",
-    "inventory_function": dummy_generator,
+    "service_name": "Norris Device",
+    "discovery_function": dummy_generator,
     "check_function": dummy_generator,
 }
 
@@ -47,7 +47,7 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
 
     new_function = check_plugins_legacy._create_discovery_function(
         "norris",
-        {"inventory_function": insane_discovery},
+        {"discovery_function": insane_discovery},
         {"params_string": {"levels": "default"}},
     )
 
@@ -81,7 +81,7 @@ def test_create_check_function() -> None:
         "test_plugin",
         {
             "check_function": insane_check,
-            "service_description": "Foo %s",
+            "service_name": "Foo %s",
         },
     )
 
@@ -128,7 +128,7 @@ def test_create_check_function_with_empty_summary_in_details() -> None:
         "test_plugin",
         {
             "check_function": insane_check,
-            "service_description": "Foo %s",
+            "service_name": "Foo %s",
         },
     )
 
@@ -160,7 +160,7 @@ def test_create_check_function_without_details() -> None:
         "test_plugin",
         {
             "check_function": insane_check,
-            "service_description": "Foo %s",
+            "service_name": "Foo %s",
         },
     )
 
@@ -188,7 +188,7 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
         "test_plugin",
         {
             "check_function": insane_check,
-            "service_description": "Foo %s",
+            "service_name": "Foo %s",
         },
     )
 
@@ -214,7 +214,7 @@ def test_create_check_plugin_from_legacy_wo_params() -> None:
 
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]
-    assert plugin.service_name == MINIMAL_CHECK_INFO["service_description"]
+    assert plugin.service_name == MINIMAL_CHECK_INFO["service_name"]
     assert plugin.discovery_function.__name__ == "discovery_migration_wrapper"
     assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None
@@ -226,7 +226,7 @@ def test_create_check_plugin_from_legacy_wo_params() -> None:
 
 def test_create_check_plugin_from_legacy_with_params() -> None:
     check_info_element = MINIMAL_CHECK_INFO.copy()
-    check_info_element["group"] = "norris_rule"
+    check_info_element["check_ruleset_name"] = "norris_rule"
     check_info_element["default_levels_variable"] = "norris_default_levels"
 
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
@@ -238,7 +238,7 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
 
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]
-    assert plugin.service_name == MINIMAL_CHECK_INFO["service_description"]
+    assert plugin.service_name == MINIMAL_CHECK_INFO["service_name"]
     assert plugin.discovery_function.__name__ == "discovery_migration_wrapper"
     assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None

@@ -1765,7 +1765,7 @@ def _extract_check_plugins(
     errors = []
     for check_plugin_name, check_info_dict in sorted(check_info.items()):
         # skip pure section declarations:
-        if check_info_dict.get("service_description") is None:
+        if check_info_dict.get("service_name") is None:
             continue
         try:
             present_plugin = agent_based_register.get_check_plugin(

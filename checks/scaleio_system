@@ -45,9 +45,9 @@ def check_scaleio_system(item, params, parsed):
 
 check_info["scaleio_system"] = {
     "parse_function": lambda info: parse_scaleio(info, "SYSTEM"),
-    "inventory_function": inventory_scaleio_system,
+    "discovery_function": inventory_scaleio_system,
     "check_function": check_scaleio_system,
-    "service_description": "ScaleIO System %s",
-    "group": "filesystem",
+    "service_name": "ScaleIO System %s",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

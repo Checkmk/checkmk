@@ -74,7 +74,7 @@ def check_postgres_locks(item, params, parsed):
 check_info["postgres_locks"] = {
     "parse_function": postgres.parse_dbs,
     "check_function": check_postgres_locks,
-    "inventory_function": inventory_postgres_locks,
-    "service_description": "PostgreSQL Locks %s",
-    "group": "postgres_locks",
+    "discovery_function": inventory_postgres_locks,
+    "service_name": "PostgreSQL Locks %s",
+    "check_ruleset_name": "postgres_locks",
 }

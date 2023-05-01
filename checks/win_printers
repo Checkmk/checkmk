@@ -117,8 +117,8 @@ def check_win_printers(item, params, data):
 check_info["win_printers"] = {
     "parse_function": parse_win_printers,
     "check_function": check_win_printers,
-    "group": "windows_printer_queues",
-    "inventory_function": inventory_win_printers,
-    "service_description": "Printer %s",
+    "check_ruleset_name": "windows_printer_queues",
+    "discovery_function": inventory_win_printers,
+    "service_name": "Printer %s",
     "default_levels_variable": "win_printer_default_levels",
 }

@@ -61,6 +61,6 @@ def check_jenkins_instance(_no_item, _no_params, parsed):
 check_info["jenkins_instance"] = {
     "parse_function": parse_jenkins_instance,
     "check_function": check_jenkins_instance,
-    "inventory_function": inventory_jenkins_instance,
-    "service_description": "Jenkins Instance",
+    "discovery_function": inventory_jenkins_instance,
+    "service_name": "Jenkins Instance",
 }

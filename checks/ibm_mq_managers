@@ -112,7 +112,7 @@ def check_ibm_mq_managers(item, params, data):  # pylint: disable=too-many-branc
 check_info["ibm_mq_managers"] = {
     # section is already migrated!
     "check_function": check_ibm_mq_managers,
-    "inventory_function": inventory_ibm_mq_managers,
-    "service_description": "IBM MQ Manager %s",
-    "group": "ibm_mq_managers",
+    "discovery_function": inventory_ibm_mq_managers,
+    "service_name": "IBM MQ Manager %s",
+    "check_ruleset_name": "ibm_mq_managers",
 }

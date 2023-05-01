@@ -28,8 +28,8 @@ def check_lvm_vgs(item, params, info):
 
 check_info["lvm_vgs"] = {
     "check_function": check_lvm_vgs,
-    "inventory_function": inventory_lvm_vgs,
-    "service_description": "LVM VG %s",
-    "group": "volume_groups",
+    "discovery_function": inventory_lvm_vgs,
+    "service_name": "LVM VG %s",
+    "check_ruleset_name": "volume_groups",
     "default_levels_variable": "filesystem_default_levels",
 }

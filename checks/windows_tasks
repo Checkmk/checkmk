@@ -214,8 +214,8 @@ factory_settings["windows_tasks"] = {
 check_info["windows_tasks"] = {
     "parse_function": parse_windows_tasks,
     "check_function": check_windows_tasks,
-    "inventory_function": inventory_windows_tasks,
-    "service_description": "Task %s",
-    "group": "windows_tasks",
+    "discovery_function": inventory_windows_tasks,
+    "service_name": "Task %s",
+    "check_ruleset_name": "windows_tasks",
     "default_levels_variable": "windows_tasks",
 }

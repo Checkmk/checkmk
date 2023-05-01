@@ -32,7 +32,7 @@ def check_logins(_no_item, params, info):
 
 check_info["logins"] = {
     "check_function": check_logins,
-    "inventory_function": inventory_logins,
-    "service_description": "Logins",
-    "group": "logins",
+    "discovery_function": inventory_logins,
+    "service_name": "Logins",
+    "check_ruleset_name": "logins",
 }

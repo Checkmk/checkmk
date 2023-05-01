@@ -89,9 +89,9 @@ def check_informix_dbspaces(item, params, parsed):
 
 check_info["informix_dbspaces"] = {
     "parse_function": parse_informix_dbspaces,
-    "inventory_function": inventory_informix_dbspaces,
+    "discovery_function": inventory_informix_dbspaces,
     "check_function": check_informix_dbspaces,
-    "service_description": "Informix Tablespace %s",
-    "group": "informix_dbspaces",
+    "service_name": "Informix Tablespace %s",
+    "check_ruleset_name": "informix_dbspaces",
     "default_levels_variable": "informix_dbspaces_default_levels",
 }

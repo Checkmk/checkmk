@@ -171,7 +171,7 @@ def check_ad_replication(item, params, info):
 
 check_info["ad_replication"] = {
     "check_function": check_ad_replication,
-    "inventory_function": inventory_ad_replication,
-    "service_description": "AD Replication %s",
-    "group": "ad_replication",
+    "discovery_function": inventory_ad_replication,
+    "service_name": "AD Replication %s",
+    "check_ruleset_name": "ad_replication",
 }

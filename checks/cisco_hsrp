@@ -111,9 +111,9 @@ check_info["cisco_hsrp"] = {
     "detect": all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.106.1.1.1.0")
     ),
-    "inventory_function": inventory_cisco_hsrp,
+    "discovery_function": inventory_cisco_hsrp,
     "check_function": check_cisco_hsrp,
-    "service_description": "HSRP Group %s",
+    "service_name": "HSRP Group %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.9.9.106.1.2.1.1",
         oids=[OIDEnd(), "11", "13", "14", "15", "16"],

@@ -167,9 +167,9 @@ def check_rabbitmq_nodes(item, params, parsed):
 check_info["rabbitmq_nodes"] = {
     "parse_function": parse_rabbitmq_nodes,
     "check_function": check_rabbitmq_nodes,
-    "inventory_function": discover(),
-    "service_description": "RabbitMQ Node %s",
-    "group": "rabbitmq_nodes",
+    "discovery_function": discover(),
+    "service_name": "RabbitMQ Node %s",
+    "check_ruleset_name": "rabbitmq_nodes",
     "default_levels_variable": "rabbitmq_nodes_default_levels",
 }
 
@@ -218,9 +218,9 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
 
 check_info["rabbitmq_nodes.filedesc"] = {
     "check_function": check_rabbitmq_nodes_filedesc,
-    "inventory_function": discover(lambda k, values: "fd" in values),
-    "service_description": "RabbitMQ Node %s Filedesc",
-    "group": "rabbitmq_nodes_filedesc",
+    "discovery_function": discover(lambda k, values: "fd" in values),
+    "service_name": "RabbitMQ Node %s Filedesc",
+    "check_ruleset_name": "rabbitmq_nodes_filedesc",
 }
 
 
@@ -242,9 +242,9 @@ def check_rabbitmq_nodes_sockets(item, params, parsed):
 
 check_info["rabbitmq_nodes.sockets"] = {
     "check_function": check_rabbitmq_nodes_sockets,
-    "inventory_function": discover(lambda k, values: "sockets" in values),
-    "service_description": "RabbitMQ Node %s Sockets",
-    "group": "rabbitmq_nodes_sockets",
+    "discovery_function": discover(lambda k, values: "sockets" in values),
+    "service_name": "RabbitMQ Node %s Sockets",
+    "check_ruleset_name": "rabbitmq_nodes_sockets",
 }
 
 
@@ -266,9 +266,9 @@ def check_rabbitmq_nodes_proc(item, params, parsed):
 
 check_info["rabbitmq_nodes.proc"] = {
     "check_function": check_rabbitmq_nodes_proc,
-    "inventory_function": discover(lambda k, values: "proc" in values),
-    "service_description": "RabbitMQ Node %s Processes",
-    "group": "rabbitmq_nodes_proc",
+    "discovery_function": discover(lambda k, values: "proc" in values),
+    "service_name": "RabbitMQ Node %s Processes",
+    "check_ruleset_name": "rabbitmq_nodes_proc",
 }
 
 
@@ -300,9 +300,9 @@ def check_rabbitmq_nodes_mem(item, params, parsed):
 
 check_info["rabbitmq_nodes.mem"] = {
     "check_function": check_rabbitmq_nodes_mem,
-    "inventory_function": discover(lambda k, values: "mem" in values),
-    "service_description": "RabbitMQ Node %s Memory",
-    "group": "memory_multiitem",
+    "discovery_function": discover(lambda k, values: "mem" in values),
+    "service_name": "RabbitMQ Node %s Memory",
+    "check_ruleset_name": "memory_multiitem",
 }
 
 _UNITS_NODES_GC = {"gc_num_rate": "1/s"}
@@ -351,9 +351,9 @@ def check_rabbitmq_nodes_uptime(item, params, parsed):
 
 check_info["rabbitmq_nodes.uptime"] = {
     "check_function": check_rabbitmq_nodes_uptime,
-    "inventory_function": discover(lambda k, values: "uptime" in values),
-    "service_description": "RabbitMQ Node %s Uptime",
-    "group": "rabbitmq_nodes_uptime",
+    "discovery_function": discover(lambda k, values: "uptime" in values),
+    "service_name": "RabbitMQ Node %s Uptime",
+    "check_ruleset_name": "rabbitmq_nodes_uptime",
 }
 
 
@@ -402,7 +402,7 @@ def _handle_output(params, value, total, info_text, perf_key):
 
 check_info["rabbitmq_nodes.gc"] = {
     "check_function": check_rabbitmq_nodes_gc,
-    "inventory_function": discover(lambda k, values: "gc" in values),
-    "service_description": "RabbitMQ Node %s GC",
-    "group": "rabbitmq_nodes_gc",
+    "discovery_function": discover(lambda k, values: "gc" in values),
+    "service_name": "RabbitMQ Node %s GC",
+    "check_ruleset_name": "rabbitmq_nodes_gc",
 }

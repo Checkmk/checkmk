@@ -155,8 +155,8 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
 check_info["veeam_client"] = {
     "parse_function": parse_veeam_client,
     "check_function": check_veeam_client,
-    "inventory_function": inventory_veeam_client,
-    "service_description": "VEEAM Client %s",
-    "group": "veeam_backup",
+    "discovery_function": inventory_veeam_client,
+    "service_name": "VEEAM Client %s",
+    "check_ruleset_name": "veeam_backup",
     "default_levels_variable": "veeam_client",
 }

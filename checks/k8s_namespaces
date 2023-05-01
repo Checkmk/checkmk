@@ -30,7 +30,7 @@ def check_k8s_namespaces(item, _no_params, status):
 
 check_info["k8s_namespaces"] = {
     "parse_function": parse_k8s,
-    "inventory_function": inventory_k8s_namespaces,
+    "discovery_function": inventory_k8s_namespaces,
     "check_function": check_k8s_namespaces,
-    "service_description": "Namespace %s",
+    "service_name": "Namespace %s",
 }

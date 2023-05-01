@@ -168,7 +168,7 @@ def check_skype(_no_item, params, parsed):
 
 
 check_info["skype"] = {
-    "inventory_function": lambda table: inventory_wmi_table_total(
+    "discovery_function": lambda table: inventory_wmi_table_total(
         table,
         required_tables=[
             "LS:WEB - Address Book Web Query",
@@ -180,8 +180,8 @@ check_info["skype"] = {
     ),
     "check_function": check_skype,
     "parse_function": lambda info: parse_wmi_table(info, key="instance"),
-    "service_description": "Skype Web Components",
-    "group": "skype",
+    "service_name": "Skype Web Components",
+    "check_ruleset_name": "skype",
     "default_levels_variable": "skype_defaultlevels",
 }
 
@@ -222,7 +222,7 @@ def check_skype_mcu(_no_item, _no_params, parsed):
 
 
 check_info["skype.mcu"] = {
-    "inventory_function": lambda parsed: inventory_wmi_table_total(
+    "discovery_function": lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[
             "LS:DATAMCU - MCU Health And Performance",
@@ -232,7 +232,7 @@ check_info["skype.mcu"] = {
         ],
     ),
     "check_function": check_skype_mcu,
-    "service_description": "Skype MCU Health",
+    "service_name": "Skype MCU Health",
 }
 
 
@@ -270,7 +270,7 @@ def check_skype_conferencing(_no_item, params, parsed):
 
 
 check_info["skype.conferencing"] = {
-    "inventory_function": lambda table: inventory_wmi_table_total(
+    "discovery_function": lambda table: inventory_wmi_table_total(
         table,
         required_tables=[
             "LS:CAA - Operations",
@@ -279,8 +279,8 @@ check_info["skype.conferencing"] = {
     ),
     "check_function": check_skype_conferencing,
     "parse_function": lambda info: parse_wmi_table(info, key="instance"),
-    "service_description": "Skype Conferencing",
-    "group": "skype_conferencing",
+    "service_name": "Skype Conferencing",
+    "check_ruleset_name": "skype_conferencing",
     "default_levels_variable": "skype_conferencing_defaultlevels",
 }
 
@@ -434,10 +434,10 @@ def check_skype_sip_stack(_no_item, params, parsed):
 
 
 check_info["skype.sip_stack"] = {
-    "inventory_function": discover_skype_sip_stack,
+    "discovery_function": discover_skype_sip_stack,
     "check_function": check_skype_sip_stack,
-    "service_description": "Skype SIP Stack",
-    "group": "skype_sip",
+    "service_name": "Skype SIP Stack",
+    "check_ruleset_name": "skype_sip",
     "default_levels_variable": "skype_sip_defaultlevels",
 }
 
@@ -486,7 +486,7 @@ def check_skype_mediation_server(_no_item, params, parsed):
 
 
 check_info["skype.mediation_server"] = {
-    "inventory_function": lambda parsed: inventory_wmi_table_total(
+    "discovery_function": lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[
             "LS:MediationServer - Health Indices",
@@ -496,8 +496,8 @@ check_info["skype.mediation_server"] = {
         ],
     ),
     "check_function": check_skype_mediation_server,
-    "service_description": "Skype Mediation Server",
-    "group": "skype_mediation_server",
+    "service_name": "Skype Mediation Server",
+    "check_ruleset_name": "skype_mediation_server",
     "default_levels_variable": "skype_mediation_server_defaultlevels",
 }
 
@@ -515,12 +515,12 @@ def check_skype_edge_auth(_no_item, params, parsed):
 
 
 check_info["skype.edge_auth"] = {
-    "inventory_function": lambda parsed: inventory_wmi_table_total(
+    "discovery_function": lambda parsed: inventory_wmi_table_total(
         parsed, required_tables=["LS:A/V Auth - Requests"]
     ),
     "check_function": check_skype_edge_auth,
-    "service_description": "Skype Edge Authentification",
-    "group": "skype_edgeauth",
+    "service_name": "Skype Edge Authentification",
+    "check_ruleset_name": "skype_edgeauth",
     "default_levels_variable": "skype_edgeauth_defaultlevels",
 }
 
@@ -588,12 +588,12 @@ def check_skype_av_edge(item, params, parsed):
 
 
 check_info["skype.edge"] = {
-    "inventory_function": lambda parsed: inventory_wmi_table_instances(
+    "discovery_function": lambda parsed: inventory_wmi_table_instances(
         parsed, required_tables=["LS:A/V Edge - TCP Counters", "LS:A/V Edge - UDP Counters"]
     ),
     "check_function": check_skype_av_edge,
-    "service_description": "Skype AV Edge %s",
-    "group": "skype_edge",
+    "service_name": "Skype AV Edge %s",
+    "check_ruleset_name": "skype_edge",
     "default_levels_variable": "skype_edge_defaultlevels",
 }
 
@@ -619,12 +619,12 @@ def check_skype_data_proxy(item, params, parsed):
 
 
 check_info["skype.data_proxy"] = {
-    "inventory_function": lambda parsed: inventory_wmi_table_instances(
+    "discovery_function": lambda parsed: inventory_wmi_table_instances(
         parsed, required_tables=["LS:DATAPROXY - Server Connections"]
     ),
     "check_function": check_skype_data_proxy,
-    "service_description": "Skype Data Proxy %s",
-    "group": "skype_proxy",
+    "service_name": "Skype Data Proxy %s",
+    "check_ruleset_name": "skype_proxy",
     "default_levels_variable": "skype_proxy_defaultlevels",
 }
 
@@ -652,12 +652,12 @@ def check_skype_xmpp_proxy(_no_item, params, parsed):
 
 
 check_info["skype.xmpp_proxy"] = {
-    "inventory_function": lambda parsed: inventory_wmi_table_total(
+    "discovery_function": lambda parsed: inventory_wmi_table_total(
         parsed, required_tables=["LS:XmppFederationProxy - Streams"]
     ),
     "check_function": check_skype_xmpp_proxy,
-    "service_description": "Skype XMPP Proxy",
-    "group": "skype_xmpp",
+    "service_name": "Skype XMPP Proxy",
+    "check_ruleset_name": "skype_xmpp",
     "default_levels_variable": "skype_xmpp_defaultlevels",
 }
 
@@ -695,7 +695,7 @@ def check_skype_mobile(_no_item, params, parsed):
 
 
 check_info["skype.mobile"] = {
-    "inventory_function": lambda parsed: inventory_wmi_table_total(
+    "discovery_function": lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[
             "LS:WEB - UCWA",
@@ -703,7 +703,7 @@ check_info["skype.mobile"] = {
         ],
     ),
     "check_function": check_skype_mobile,
-    "service_description": "Skype Mobile Sessions",
-    "group": "skype_mobile",
+    "service_name": "Skype Mobile Sessions",
+    "check_ruleset_name": "skype_mobile",
     "default_levels_variable": "skype_mobile_defaultlevels",
 }

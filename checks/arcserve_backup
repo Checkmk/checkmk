@@ -156,6 +156,6 @@ def check_arcserve_backup(item, _no_params, info):  # pylint: disable=too-many-b
 
 check_info["arcserve_backup"] = {
     "check_function": check_arcserve_backup,
-    "inventory_function": inventory_arcserve_backup,
-    "service_description": "Arcserve Backup %s",
+    "discovery_function": inventory_arcserve_backup,
+    "service_name": "Arcserve Backup %s",
 }

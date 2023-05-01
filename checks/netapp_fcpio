@@ -60,9 +60,9 @@ check_info["netapp_fcpio"] = {
         startswith(".1.3.6.1.2.1.1.1.0", "NetApp Release"), exists(".1.3.6.1.4.1.789.1.17.20.0")
     ),
     "check_function": check_netapp_fcpio,
-    "inventory_function": lambda info: [(None, "netapp_fcpio_default_levels")],
-    "service_description": "FCP I/O",
-    "group": "netapp_fcportio",
+    "discovery_function": lambda info: [(None, "netapp_fcpio_default_levels")],
+    "service_name": "FCP I/O",
+    "check_ruleset_name": "netapp_fcportio",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.789.1.17",
         oids=["20", "21"],

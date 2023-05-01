@@ -108,11 +108,11 @@ def check_jolokia_jvm_memory(_item, params, instance_data):
 
 check_info["jolokia_jvm_memory"] = {
     "parse_function": parse_jolokia_jvm_memory,
-    "inventory_function": discover_jolokia_jvm_memory,
+    "discovery_function": discover_jolokia_jvm_memory,
     "check_function": check_jolokia_jvm_memory,
-    "service_description": "JVM %s Memory",
+    "service_name": "JVM %s Memory",
     "default_levels_variable": "jolokia_jvm_memory",
-    "group": "jvm_memory",
+    "check_ruleset_name": "jvm_memory",
 }
 
 # .
@@ -165,9 +165,9 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
 
 
 check_info["jolokia_jvm_memory.pools"] = {
-    "inventory_function": discover_jolokia_jvm_memory_pools,
+    "discovery_function": discover_jolokia_jvm_memory_pools,
     "check_function": check_jolokia_jvm_memory_pools,
-    "service_description": "JVM %s",
+    "service_name": "JVM %s",
     "default_levels_variable": "jolokia_jvm_memory_pools",
-    "group": "jvm_memory_pools",
+    "check_ruleset_name": "jvm_memory_pools",
 }

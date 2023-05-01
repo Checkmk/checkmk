@@ -103,8 +103,8 @@ def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
 check_info["allnet_ip_sensoric.tension"] = {
     # section already migrated!
     "check_function": check_allnet_ip_sensoric_tension,
-    "inventory_function": inventory_allnet_ip_sensoric_tension,
-    "service_description": "Electric Tension %s",
+    "discovery_function": inventory_allnet_ip_sensoric_tension,
+    "service_name": "Electric Tension %s",
 }
 
 # .
@@ -142,9 +142,9 @@ def check_allnet_ip_sensoric_temp(item, params, parsed):
 check_info["allnet_ip_sensoric.temp"] = {
     # section already migrated!
     "check_function": check_allnet_ip_sensoric_temp,
-    "inventory_function": inventory_allnet_ip_sensoric_temp,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "discovery_function": inventory_allnet_ip_sensoric_temp,
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
     "default_levels_variable": "allnet_ip_sensoric_temp_default_levels",
 }
 
@@ -183,9 +183,9 @@ def check_allnet_ip_sensoric_humidity(item, params, parsed):
 check_info["allnet_ip_sensoric.humidity"] = {
     # section already migrated!
     "check_function": check_allnet_ip_sensoric_humidity,
-    "inventory_function": inventory_allnet_ip_sensoric_humidity,
-    "service_description": "Humidity %s",
-    "group": "humidity",
+    "discovery_function": inventory_allnet_ip_sensoric_humidity,
+    "service_name": "Humidity %s",
+    "check_ruleset_name": "humidity",
 }
 
 # .
@@ -223,8 +223,8 @@ def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
 check_info["allnet_ip_sensoric.pressure"] = {
     # section already migrated!
     "check_function": check_allnet_ip_sensoric_pressure,
-    "inventory_function": inventory_allnet_ip_sensoric_pressure,
-    "service_description": "Pressure %s",
+    "discovery_function": inventory_allnet_ip_sensoric_pressure,
+    "service_name": "Pressure %s",
 }
 
 # .

@@ -30,7 +30,7 @@ def check_storeonce4x_d2d_services(_item, _params, parsed):
 
 check_info["storeonce4x_d2d_services"] = {
     "parse_function": parse_storeonce4x_d2d_services,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_storeonce4x_d2d_services,
-    "service_description": "D2D Services",
+    "service_name": "D2D Services",
 }

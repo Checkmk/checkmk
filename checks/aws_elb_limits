@@ -22,9 +22,9 @@ def check_aws_elb_limits(item, params, region_data):
 
 check_info["aws_elb_limits"] = {
     "parse_function": parse_aws_limits_generic,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_aws_elb_limits,
-    "service_description": "AWS/ELB Limits %s",
-    "group": "aws_elb_limits",
+    "service_name": "AWS/ELB Limits %s",
+    "check_ruleset_name": "aws_elb_limits",
     "default_levels_variable": "aws_elb_limits_default_levels",
 }

@@ -60,9 +60,9 @@ def check_aws_ec2_limits(item, params, region_data):
 
 check_info["aws_ec2_limits"] = {
     "parse_function": parse_aws_limits_generic,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_aws_ec2_limits,
-    "service_description": "AWS/EC2 Limits %s",
-    "group": "aws_ec2_limits",
+    "service_name": "AWS/EC2 Limits %s",
+    "check_ruleset_name": "aws_ec2_limits",
     "default_levels_variable": "aws_ec2_limits_default_levels",
 }

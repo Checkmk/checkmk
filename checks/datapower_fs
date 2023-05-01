@@ -47,10 +47,10 @@ def check_datapower_fs(item, params, info):
 
 check_info["datapower_fs"] = {
     "detect": DETECT,
-    "inventory_function": inventory_datapower_fs,
+    "discovery_function": inventory_datapower_fs,
     "check_function": check_datapower_fs,
-    "service_description": "Filesystem %s",
-    "group": "filesystem",
+    "service_name": "Filesystem %s",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.29",

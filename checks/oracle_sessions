@@ -85,9 +85,9 @@ def check_oracle_sessions(item, params, parsed):
 
 check_info["oracle_sessions"] = {
     "parse_function": parse_oracle_sessions,
-    "inventory_function": inventory_oracle_sessions,
+    "discovery_function": inventory_oracle_sessions,
     "check_function": check_oracle_sessions,
-    "service_description": "ORA %s Sessions",
-    "group": "oracle_sessions",
+    "service_name": "ORA %s Sessions",
+    "check_ruleset_name": "oracle_sessions",
     "default_levels_variable": "oracle_sessions_default_levels",
 }

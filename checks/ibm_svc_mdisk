@@ -81,8 +81,8 @@ def check_ibm_svc_mdisk(item, params, data):
 check_info["ibm_svc_mdisk"] = {
     "parse_function": parse_ibm_svc_mdisk,
     "check_function": check_ibm_svc_mdisk,
-    "inventory_function": inventory_ibm_svc_mdisk,
-    "service_description": "MDisk %s",
-    "group": "ibm_svc_mdisk",
+    "discovery_function": inventory_ibm_svc_mdisk,
+    "service_name": "MDisk %s",
+    "check_ruleset_name": "ibm_svc_mdisk",
     "default_levels_variable": "ibm_svc_mdisk_default_levels",
 }

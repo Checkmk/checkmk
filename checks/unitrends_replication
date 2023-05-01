@@ -34,6 +34,6 @@ def check_unitrends_replication(item, _no_params, info):
 
 check_info["unitrends_replication"] = {
     "check_function": check_unitrends_replication,
-    "inventory_function": inventory_unitrends_replication,
-    "service_description": "Replicaion %s",
+    "discovery_function": inventory_unitrends_replication,
+    "service_name": "Replicaion %s",
 }

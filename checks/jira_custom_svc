@@ -125,7 +125,7 @@ def _get_value_diff(diff_name, svc_value, timespan):
 check_info["jira_custom_svc"] = {
     "parse_function": parse_jira_custom_svc,
     "check_function": check_jira_custom_svc,
-    "inventory_function": discover(),
-    "service_description": "Jira %s",
-    "group": "jira_custom_svc",
+    "discovery_function": discover(),
+    "service_name": "Jira %s",
+    "check_ruleset_name": "jira_custom_svc",
 }

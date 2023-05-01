@@ -24,8 +24,8 @@ def check_emc_isilon_ifs(item, params, section: FSBlock):
 check_info["emc_isilon_ifs"] = {
     # section already migrated
     "check_function": check_emc_isilon_ifs,
-    "inventory_function": inventory_emc_isilon_ifs,
-    "service_description": "Filesystem %s",
-    "group": "filesystem",
+    "discovery_function": inventory_emc_isilon_ifs,
+    "service_name": "Filesystem %s",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

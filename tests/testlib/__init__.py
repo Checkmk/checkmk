@@ -49,6 +49,8 @@ from cmk.utils.type_defs import HostName
 
 from cmk.checkers.checking import CheckPluginName
 
+from cmk.base.api.agent_based.register.utils_legacy import CheckInfoElement
+
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -345,7 +347,7 @@ class Check(BaseCheck):
         super().__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
-        self.info = config.check_info[self.name]
+        self.info: CheckInfoElement = config.check_info[self.name]
         self._migrated_plugin = register.get_check_plugin(
             CheckPluginName(self.name.replace(".", "_"))
         )
@@ -362,7 +364,7 @@ class Check(BaseCheck):
         return parse_func(info)
 
     def run_discovery(self, info):
-        disco_func = self.info.get("inventory_function")
+        disco_func = self.info.get("discovery_function")
         if not disco_func:
             raise MissingCheckInfoError(
                 "Check '%s' " % self.name + "has no discovery function defined"

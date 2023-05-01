@@ -64,10 +64,10 @@ check_info["ups_eaton_enviroment"] = {
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1"),
     ),
     "default_levels_variable": "ups_eaton_enviroment_default",
-    "inventory_function": inventory_ups_eaton_enviroment,
+    "discovery_function": inventory_ups_eaton_enviroment,
     "check_function": check_ups_eaton_enviroment,
-    "service_description": "Enviroment",
-    "group": "eaton_enviroment",
+    "service_name": "Enviroment",
+    "check_ruleset_name": "eaton_enviroment",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.534.1.6",
         oids=["1", "5", "6"],

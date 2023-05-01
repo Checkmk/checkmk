@@ -41,10 +41,10 @@ def check_raritan_pdu_inlet(item, params, info):
 check_info["raritan_pdu_inlet"] = {
     "detect": DETECT_RARITAN,
     "parse_function": parse_raritan_pdu_inlet,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_raritan_pdu_inlet,
-    "service_description": "Input %s",
-    "group": "el_inphase",
+    "service_name": "Input %s",
+    "check_ruleset_name": "el_inphase",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.13742.6.3.3.6.1",

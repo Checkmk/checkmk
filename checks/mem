@@ -149,11 +149,11 @@ def camelcase_to_underscored(name):
 
 
 check_info["mem.linux"] = {
-    "inventory_function": inventory_mem_linux,
+    "discovery_function": inventory_mem_linux,
     "check_function": check_mem_linux,
-    "service_description": "Memory",
+    "service_name": "Memory",
     "default_levels_variable": "mem_linux_default_levels",
-    "group": "memory_linux",
+    "check_ruleset_name": "memory_linux",
 }
 
 # .
@@ -355,9 +355,9 @@ def check_mem_windows(_no_item, params, section):
 
 check_info["mem.win"] = {
     "check_function": check_mem_windows,
-    "inventory_function": inventory_mem_win,
-    "service_description": "Memory",
-    "group": "memory_pagefile_win",
+    "discovery_function": inventory_mem_win,
+    "service_name": "Memory",
+    "check_ruleset_name": "memory_pagefile_win",
     "default_levels_variable": "memory_win_default_levels",
 }
 
@@ -434,7 +434,7 @@ def check_mem_vmalloc(_item, params, section):
 
 
 check_info["mem.vmalloc"] = {
-    "inventory_function": inventory_mem_vmalloc,
+    "discovery_function": inventory_mem_vmalloc,
     "check_function": check_mem_vmalloc,
-    "service_description": "Vmalloc address space",
+    "service_name": "Vmalloc address space",
 }

@@ -47,10 +47,10 @@ def check_bluecat_ha(item, params, info):
 check_info["bluecat_ha"] = {
     "detect": DETECT_BLUECAT,
     "check_function": check_bluecat_ha,
-    "inventory_function": inventory_bluecat_ha,
-    "service_description": "HA State",
+    "discovery_function": inventory_bluecat_ha,
+    "service_name": "HA State",
     "default_levels_variable": "bluecat_ha",
-    "group": "bluecat_ha",
+    "check_ruleset_name": "bluecat_ha",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.5.2.1",
         oids=["1"],

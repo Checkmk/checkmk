@@ -55,9 +55,9 @@ def check_citrix_hostsystem_vms(_no_item, _no_params, parsed):
 
 
 check_info["citrix_hostsystem.vms"] = {
-    "inventory_function": inventory_citrix_hostsystem_vms,
+    "discovery_function": inventory_citrix_hostsystem_vms,
     "check_function": check_citrix_hostsystem_vms,
-    "service_description": "Citrix VMs",
+    "service_name": "Citrix VMs",
 }
 
 # .
@@ -83,7 +83,7 @@ def check_citrix_hostsystem(_no_item, _no_params, parsed):
 
 check_info["citrix_hostsystem"] = {
     "parse_function": parse_citrix_hostsystem,
-    "inventory_function": inventory_citrix_hostsystem,
+    "discovery_function": inventory_citrix_hostsystem,
     "check_function": check_citrix_hostsystem,
-    "service_description": "Citrix Host Info",
+    "service_name": "Citrix Host Info",
 }

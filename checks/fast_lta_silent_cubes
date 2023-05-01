@@ -47,8 +47,8 @@ check_info["fast_lta_silent_cubes"] = {
 
 check_info["fast_lta_silent_cubes.capacity"] = {
     "check_function": check_fast_lta_silent_cubes_status,
-    "inventory_function": inventory_fast_lta_silent_cubes_status,
-    "service_description": "Fast LTA SC Capacity %s",
-    "group": "filesystem",
+    "discovery_function": inventory_fast_lta_silent_cubes_status,
+    "service_name": "Fast LTA SC Capacity %s",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

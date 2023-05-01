@@ -42,6 +42,6 @@ def check_netapp_api_protocol(item, _no_params, parsed):
 check_info["netapp_api_protocol"] = {
     "parse_function": netapp_api_parse_lines,
     "check_function": check_netapp_api_protocol,
-    "inventory_function": inventory_netapp_api_protocol,
-    "service_description": "Protocol %s",
+    "discovery_function": inventory_netapp_api_protocol,
+    "service_name": "Protocol %s",
 }

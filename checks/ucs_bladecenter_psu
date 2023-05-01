@@ -94,10 +94,10 @@ def check_ucs_bladecenter_psu(item, params, psu):
 
 check_info["ucs_bladecenter_psu"] = {
     "parse_function": ucs_bladecenter_psu_parse,
-    "inventory_function": inventory_ucs_bladecenter_psu,
+    "discovery_function": inventory_ucs_bladecenter_psu,
     "check_function": check_ucs_bladecenter_psu,
-    "service_description": "Voltage %s",
-    "group": "ucs_bladecenter_chassis_voltage",
+    "service_name": "Voltage %s",
+    "check_ruleset_name": "ucs_bladecenter_chassis_voltage",
     "default_levels_variable": "ucs_bladecenter_psu_default_levels",
 }
 
@@ -133,10 +133,10 @@ def check_ucs_bladecenter_psu_switch_power(item, params, psu):
 
 
 check_info["ucs_bladecenter_psu.switch_power"] = {
-    "inventory_function": inventory_ucs_bladecenter_psu_switch_power,
+    "discovery_function": inventory_ucs_bladecenter_psu_switch_power,
     "check_function": check_ucs_bladecenter_psu_switch_power,
-    "service_description": "Power Supply %s",
-    "group": "el_inphase",
+    "service_name": "Power Supply %s",
+    "check_ruleset_name": "el_inphase",
 }
 
 # .
@@ -176,9 +176,9 @@ def check_ucs_bladecenter_psu_chassis_temp(item, params, parsed):
 
 
 check_info["ucs_bladecenter_psu.chassis_temp"] = {
-    "inventory_function": inventory_ucs_bladecenter_psu_chassis_temp,
+    "discovery_function": inventory_ucs_bladecenter_psu_chassis_temp,
     "check_function": check_ucs_bladecenter_psu_chassis_temp,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
     "default_levels_variable": "ucs_bladecenter_psu_chassis_temp_default_levels",
 }

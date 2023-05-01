@@ -36,6 +36,6 @@ def check_windows_broadcom_bonding(item, params, info):
 
 check_info["windows_broadcom_bonding"] = {
     "check_function": check_windows_broadcom_bonding,
-    "inventory_function": inventory_windows_broadcom_bonding,
-    "service_description": "Bonding Interface %s",
+    "discovery_function": inventory_windows_broadcom_bonding,
+    "service_name": "Bonding Interface %s",
 }

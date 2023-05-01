@@ -63,9 +63,9 @@ def check_citrix_state_controller(_no_item, _no_params, parsed):
 
 
 check_info["citrix_state.controller"] = {
-    "inventory_function": inventory_citrix_state_controller,
+    "discovery_function": inventory_citrix_state_controller,
     "check_function": check_citrix_state_controller,
-    "service_description": "Citrix Controller",
+    "service_name": "Citrix Controller",
 }
 
 # .
@@ -90,9 +90,9 @@ def check_citrix_state_hosting_server(_no_item, _no_params, parsed):
 
 
 check_info["citrix_state.hosting_server"] = {
-    "inventory_function": inventory_citrix_state_hosting_server,
+    "discovery_function": inventory_citrix_state_hosting_server,
     "check_function": check_citrix_state_hosting_server,
-    "service_description": "Citrix Hosting Server",
+    "service_name": "Citrix Hosting Server",
 }
 
 # .
@@ -157,8 +157,8 @@ def check_citrix_state(_no_item, params, parsed):
 
 check_info["citrix_state"] = {
     "parse_function": parse_citrix_state,
-    "inventory_function": inventory_citrix_state,
+    "discovery_function": inventory_citrix_state,
     "check_function": check_citrix_state,
-    "service_description": "Citrix Instance State",
-    "group": "citrix_state",
+    "service_name": "Citrix Instance State",
+    "check_ruleset_name": "citrix_state",
 }

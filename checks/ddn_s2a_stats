@@ -63,10 +63,10 @@ def check_ddn_s2a_stats_readhits(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.readhits"] = {
-    "inventory_function": inventory_ddn_s2a_stats_readhits,
+    "discovery_function": inventory_ddn_s2a_stats_readhits,
     "check_function": check_ddn_s2a_stats_readhits,
-    "service_description": "DDN S2A Read Hits %s",
-    "group": "read_hits",
+    "service_name": "DDN S2A Read Hits %s",
+    "check_ruleset_name": "read_hits",
 }
 
 # .
@@ -135,10 +135,10 @@ def check_ddn_s2a_stats_io(item, params, parsed):
 
 check_info["ddn_s2a_stats.io"] = {
     "default_levels_variable": "ddn_s2a_stats_io_default_levels",
-    "inventory_function": inventory_ddn_s2a_stats_io,
+    "discovery_function": inventory_ddn_s2a_stats_io,
     "check_function": check_ddn_s2a_stats_io,
-    "service_description": "DDN S2A IO %s",
-    "group": "storage_iops",
+    "service_name": "DDN S2A IO %s",
+    "check_ruleset_name": "storage_iops",
 }
 
 # .
@@ -210,8 +210,8 @@ def check_ddn_s2a_stats(item, params, parsed):
 check_info["ddn_s2a_stats"] = {
     "default_levels_variable": "ddn_s2a_stats_default_levels",
     "parse_function": parse_ddn_s2a_stats,
-    "inventory_function": inventory_ddn_s2a_stats,
+    "discovery_function": inventory_ddn_s2a_stats,
     "check_function": check_ddn_s2a_stats,
-    "service_description": "DDN S2A Data Rate %s",
-    "group": "storage_throughput",
+    "service_name": "DDN S2A Data Rate %s",
+    "check_ruleset_name": "storage_throughput",
 }

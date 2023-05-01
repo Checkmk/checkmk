@@ -102,10 +102,10 @@ def check_esx_vsphere_datastores(item, params, data):
 
 check_info["esx_vsphere_datastores"] = {
     "parse_function": parse_esx_vsphere_datastores,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_esx_vsphere_datastores,
-    "service_description": "Filesystem %s",
-    "group": "esx_vsphere_datastores",
+    "service_name": "Filesystem %s",
+    "check_ruleset_name": "esx_vsphere_datastores",
     "default_levels_variable": "filesystem_default_levels",
 }
 

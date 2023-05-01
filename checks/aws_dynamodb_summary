@@ -47,7 +47,7 @@ def check_aws_dynamodb_summary(item, params, parsed):
 
 check_info["aws_dynamodb_summary"] = {
     "parse_function": parse_aws,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_aws_dynamodb_summary,
-    "service_description": "AWS/DynamoDB Summary",
+    "service_name": "AWS/DynamoDB Summary",
 }

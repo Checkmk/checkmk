@@ -129,8 +129,8 @@ def check_postgres_connections(item, params, parsed):
 check_info["postgres_connections"] = {
     "parse_function": postgres.parse_dbs,
     "check_function": check_postgres_connections,
-    "inventory_function": inventory_postgres_connections,
-    "service_description": "PostgreSQL Connections %s",
-    "group": "db_connections",
+    "discovery_function": inventory_postgres_connections,
+    "service_name": "PostgreSQL Connections %s",
+    "check_ruleset_name": "db_connections",
     "default_levels_variable": "postgres_connections_default_levels",
 }

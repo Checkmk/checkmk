@@ -41,9 +41,9 @@ def check_liebert_pump(item, _no_params, parsed):
 check_info["liebert_pump"] = {
     "detect": DETECT_LIEBERT,
     "parse_function": parse_liebert_wrapper,
-    "inventory_function": discover(lambda key, _value: "threshold" not in key.lower()),
+    "discovery_function": discover(lambda key, _value: "threshold" not in key.lower()),
     "check_function": check_liebert_pump,
-    "service_description": "%s",
+    "service_name": "%s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=[

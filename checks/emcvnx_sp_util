@@ -66,8 +66,8 @@ def check_emcvnx_sp_util(item, params, parsed):
 
 check_info["emcvnx_sp_util"] = {
     "parse_function": parse_emcvnx_sp_util,
-    "inventory_function": inventory_emcvnx_sp_util,
+    "discovery_function": inventory_emcvnx_sp_util,
     "check_function": check_emcvnx_sp_util,
-    "service_description": "Storage Processor Utilization",
-    "group": "sp_util",
+    "service_name": "Storage Processor Utilization",
+    "check_ruleset_name": "sp_util",
 }

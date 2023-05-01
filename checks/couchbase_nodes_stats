@@ -24,10 +24,10 @@ def check_couchbase_nodes_cpu_util(_item, params, data):
 
 
 check_info["couchbase_nodes_stats.cpu_util"] = {
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_couchbase_nodes_cpu_util,
-    "service_description": "Couchbase %s CPU utilization",
-    "group": "cpu_utilization_multiitem",
+    "service_name": "Couchbase %s CPU utilization",
+    "check_ruleset_name": "cpu_utilization_multiitem",
 }
 
 factory_settings["memory_default_levels"] = MEMORY_DEFAULT_LEVELS
@@ -65,9 +65,9 @@ def check_couchbase_nodes_mem(_item, params, data):
 
 
 check_info["couchbase_nodes_stats.mem"] = {
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_couchbase_nodes_mem,
-    "service_description": "Couchbase %s Memory",
-    "group": "memory_multiitem",
+    "service_name": "Couchbase %s Memory",
+    "check_ruleset_name": "memory_multiitem",
     "default_levels_variable": "memory_default_levels",
 }

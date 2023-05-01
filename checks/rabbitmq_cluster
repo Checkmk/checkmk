@@ -128,8 +128,8 @@ def check_rabbitmq_cluster(_no_item, params, parsed):
 check_info["rabbitmq_cluster"] = {
     "parse_function": parse_rabbitmq_cluster,
     "check_function": check_rabbitmq_cluster,
-    "inventory_function": inventory_rabbitmq_cluster,
-    "service_description": "RabbitMQ Cluster",
+    "discovery_function": inventory_rabbitmq_cluster,
+    "service_name": "RabbitMQ Cluster",
 }
 
 
@@ -163,9 +163,9 @@ def check_rabbitmq_cluster_messages(_no_item, params, parsed):
 
 check_info["rabbitmq_cluster.messages"] = {
     "check_function": check_rabbitmq_cluster_messages,
-    "inventory_function": inventory_rabbitmq_cluster_messages,
-    "service_description": "RabbitMQ Cluster Messages",
-    "group": "rabbitmq_cluster_messages",
+    "discovery_function": inventory_rabbitmq_cluster_messages,
+    "service_name": "RabbitMQ Cluster Messages",
+    "check_ruleset_name": "rabbitmq_cluster_messages",
 }
 
 
@@ -213,7 +213,7 @@ def _handle_output(params, value, key, infotext, hr_func):
 
 check_info["rabbitmq_cluster.stats"] = {
     "check_function": check_rabbitmq_cluster_stats,
-    "inventory_function": inventory_rabbitmq_cluster_stats,
-    "service_description": "RabbitMQ Cluster Stats",
-    "group": "rabbitmq_cluster_stats",
+    "discovery_function": inventory_rabbitmq_cluster_stats,
+    "service_name": "RabbitMQ Cluster Stats",
+    "check_ruleset_name": "rabbitmq_cluster_stats",
 }

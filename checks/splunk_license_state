@@ -109,8 +109,8 @@ def check_splunk_license_state(item, params, item_data):
 check_info["splunk_license_state"] = {
     "parse_function": parse_splunk_license_state,
     "check_function": check_splunk_license_state,
-    "inventory_function": discover(),
-    "service_description": "Splunk License %s",
-    "group": "splunk_license_state",
+    "discovery_function": discover(),
+    "service_name": "Splunk License %s",
+    "check_ruleset_name": "splunk_license_state",
     "default_levels_variable": "splunk_license_state_default_levels",
 }

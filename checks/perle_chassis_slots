@@ -43,7 +43,7 @@ def check_perle_chassis_slots(item, _no_params, info):
 
 check_info["perle_chassis_slots"] = {
     # section is already migrated!
-    "inventory_function": inventory_perle_chassis_slots,
+    "discovery_function": inventory_perle_chassis_slots,
     "check_function": check_perle_chassis_slots,
-    "service_description": "Chassis status slot %s",
+    "service_name": "Chassis status slot %s",
 }

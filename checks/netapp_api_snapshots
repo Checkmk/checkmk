@@ -75,8 +75,8 @@ check_info["netapp_api_snapshots"] = {
         info, custom_keys=["volume_snapshot"], as_dict_list=True
     ),
     "check_function": check_netapp_api_snapshots,
-    "inventory_function": inventory_netapp_api_snapshots,
+    "discovery_function": inventory_netapp_api_snapshots,
     "default_levels_variable": "netapp_api_snapshots_default_levels",
-    "service_description": "Snapshots Volume %s",
-    "group": "netapp_snapshots",
+    "service_name": "Snapshots Volume %s",
+    "check_ruleset_name": "netapp_snapshots",
 }

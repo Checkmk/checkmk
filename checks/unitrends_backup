@@ -57,6 +57,6 @@ def check_unitrends_backup(item, _no_params, info):
 
 check_info["unitrends_backup"] = {
     "check_function": check_unitrends_backup,
-    "inventory_function": inventory_unitrends_backup,
-    "service_description": "Schedule %s",
+    "discovery_function": inventory_unitrends_backup,
+    "service_name": "Schedule %s",
 }

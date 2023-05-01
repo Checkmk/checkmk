@@ -38,9 +38,9 @@ def check_cisco_prime_wifi_access_points(item, params, parsed):
 
 check_info["cisco_prime_wifi_access_points"] = {
     "parse_function": lambda info: parse_cisco_prime("accessPointsDTO", info),
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_cisco_prime_wifi_access_points,
     "default_levels_variable": "cisco_prime_wifi_access_points",
-    "service_description": "Cisco Prime WiFi Access Points",
-    "group": "cisco_prime_wifi_access_points",
+    "service_name": "Cisco Prime WiFi Access Points",
+    "check_ruleset_name": "cisco_prime_wifi_access_points",
 }

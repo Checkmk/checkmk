@@ -59,9 +59,9 @@ from cmk.base.config import check_info, factory_settings
 
 check_info["hp_msa_psu"] = {
     "parse_function": parse_hp_msa,
-    "inventory_function": inventory_hp_msa_health,
+    "discovery_function": inventory_hp_msa_health,
     "check_function": check_hp_msa_health,
-    "service_description": "Power Supply Health %s",
+    "service_name": "Power Supply Health %s",
 }
 
 # .
@@ -111,11 +111,11 @@ def check_hp_msa_psu(_item, params, data):
 
 
 check_info["hp_msa_psu.sensor"] = {
-    "inventory_function": inventory_hp_msa_psu,
+    "discovery_function": inventory_hp_msa_psu,
     "check_function": check_hp_msa_psu,
-    "service_description": "Power Supply Voltage %s",
+    "service_name": "Power Supply Voltage %s",
     "default_levels_variable": "hp_msa_psu_default_levels",
-    "group": "hp_msa_psu_voltage",
+    "check_ruleset_name": "hp_msa_psu_voltage",
 }
 
 # .
@@ -139,9 +139,9 @@ def check_hp_msa_psu_temp(item, params, data):
 
 
 check_info["hp_msa_psu.temp"] = {
-    "inventory_function": inventory_hp_msa_psu,
+    "discovery_function": inventory_hp_msa_psu,
     "check_function": check_hp_msa_psu_temp,
-    "service_description": "Temperature Power Supply %s",
-    "group": "temperature",
+    "service_name": "Temperature Power Supply %s",
+    "check_ruleset_name": "temperature",
     "default_levels_variable": "hp_msa_psu_temp_default_levels",
 }

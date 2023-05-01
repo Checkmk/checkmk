@@ -34,8 +34,8 @@ def check_cisco_vpn_sessions(item, params, data):
 
 
 check_info["cisco_vpn_sessions"] = {
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_cisco_vpn_sessions,
-    "service_description": "VPN Sessions %s",
-    "group": "cisco_vpn_sessions",
+    "service_name": "VPN Sessions %s",
+    "check_ruleset_name": "cisco_vpn_sessions",
 }

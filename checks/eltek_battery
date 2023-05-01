@@ -62,9 +62,9 @@ def check_eltek_battery(_no_item, _no_params, parsed):
 check_info["eltek_battery"] = {
     "detect": DETECT_ELTEK,
     "parse_function": parse_eltek_battery,
-    "inventory_function": inventory_eltek_battery,
+    "discovery_function": inventory_eltek_battery,
     "check_function": check_eltek_battery,
-    "service_description": "Battery Breaker Status",
+    "service_name": "Battery Breaker Status",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.12148.9.3",
         oids=["2", "3", "4", "5"],
@@ -101,10 +101,10 @@ def check_eltek_battery_temp(item, params, parsed):
 
 
 check_info["eltek_battery.temp"] = {
-    "inventory_function": inventory_eltek_battery_temp,
+    "discovery_function": inventory_eltek_battery_temp,
     "check_function": check_eltek_battery_temp,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
     "default_levels_variable": "eltek_battery_temp_default_variables",
 }
 
@@ -125,9 +125,9 @@ factory_settings["eltek_battery_phase_default_variables"] = {
 }
 
 check_info["eltek_battery.supply"] = {
-    "inventory_function": lambda parsed: discover()(parsed["supply"]),
+    "discovery_function": lambda parsed: discover()(parsed["supply"]),
     "check_function": lambda item, params, parsed: check_elphase(item, params, parsed["supply"]),
-    "service_description": "Battery %s",
-    "group": "el_inphase",
+    "service_name": "Battery %s",
+    "check_ruleset_name": "el_inphase",
     "default_levels_variable": "eltek_battery_phase_default_variables",
 }

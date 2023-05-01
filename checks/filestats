@@ -300,16 +300,16 @@ def discover_filestats_single(key, data):
 
 
 check_info["filestats.single"] = {
-    "inventory_function": discover_filestats_single,
+    "discovery_function": discover_filestats_single,
     "check_function": check_filestats_single,
-    "service_description": "File %s",
-    "group": "filestats_single",
+    "service_name": "File %s",
+    "check_ruleset_name": "filestats_single",
 }
 
 check_info["filestats"] = {
     "parse_function": parse_filestats,
-    "inventory_function": discover_filestats,
+    "discovery_function": discover_filestats,
     "check_function": check_filestats,
-    "service_description": "File group %s",
-    "group": "filestats",
+    "service_name": "File group %s",
+    "check_ruleset_name": "filestats",
 }

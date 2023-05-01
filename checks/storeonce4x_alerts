@@ -47,7 +47,7 @@ def check_storeonce4x_alerts(_item, _param, parsed):
 
 check_info["storeonce4x_alerts"] = {
     "parse_function": parse_storeonce4x_alerts,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_storeonce4x_alerts,
-    "service_description": "Alerts",
+    "service_name": "Alerts",
 }

@@ -42,7 +42,7 @@ def check_statgrab_cpu(_no_item, params, info):
 
 check_info["statgrab_cpu"] = {
     "check_function": check_statgrab_cpu,
-    "inventory_function": inventory_statgrab_cpu,
-    "service_description": "CPU utilization",
-    "group": "cpu_iowait",
+    "discovery_function": inventory_statgrab_cpu,
+    "service_name": "CPU utilization",
+    "check_ruleset_name": "cpu_iowait",
 }

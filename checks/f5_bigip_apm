@@ -24,9 +24,9 @@ def check_f5_bigip_apm(item, _no_params, info):
 
 check_info["f5_bigip_apm"] = {
     "detect": DETECT,
-    "inventory_function": inventory_f5_bigip_apm,
+    "discovery_function": inventory_f5_bigip_apm,
     "check_function": check_f5_bigip_apm,
-    "service_description": "SSL/VPN Connections",
+    "service_name": "SSL/VPN Connections",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.3375.2.6.1.5.3",
         oids=["0"],

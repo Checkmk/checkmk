@@ -39,9 +39,9 @@ check_info["mbg_lantime_state"] = {
         not_exists(".1.3.6.1.4.1.5597.30.0.2.*"),
     ),
     "check_function": check_mbg_lantime_state,
-    "inventory_function": inventory_mbg_lantime_state,
-    "service_description": "LANTIME State",
-    "group": "mbg_lantime_state",
+    "discovery_function": inventory_mbg_lantime_state,
+    "service_name": "LANTIME State",
+    "check_ruleset_name": "mbg_lantime_state",
     "default_levels_variable": "mbg_lantime_state_default_levels",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.5597.3.1",

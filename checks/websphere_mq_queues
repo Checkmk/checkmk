@@ -157,8 +157,8 @@ def check_websphere_mq_queues(item, params, parsed):
 
 check_info["websphere_mq_queues"] = {
     "parse_function": parse_websphere_mq_queues,
-    "inventory_function": inventory_websphere_mq_queues,
+    "discovery_function": inventory_websphere_mq_queues,
     "check_function": check_websphere_mq_queues,
-    "service_description": "MQ Queue %s",
-    "group": "websphere_mq",
+    "service_name": "MQ Queue %s",
+    "check_ruleset_name": "websphere_mq",
 }

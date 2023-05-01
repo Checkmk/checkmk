@@ -24,10 +24,10 @@ def check_perle_psmu_powersupplies(item, params, parsed):
 
 check_info["perle_psmu"] = {
     # section is already migrated!
-    "inventory_function": lambda info: inventory_perle_psmu(info, "psustate"),
+    "discovery_function": lambda info: inventory_perle_psmu(info, "psustate"),
     "check_function": check_perle_psmu_powersupplies,
-    "service_description": "Power supply %s",
-    "group": "el_inphase",
+    "service_name": "Power supply %s",
+    "check_ruleset_name": "el_inphase",
 }
 
 
@@ -39,7 +39,7 @@ def check_perle_psmu_fans(item, _no_params, parsed):
 
 
 check_info["perle_psmu.fan"] = {
-    "inventory_function": lambda info: inventory_perle_psmu(info, "fanstate"),
+    "discovery_function": lambda info: inventory_perle_psmu(info, "fanstate"),
     "check_function": check_perle_psmu_fans,
-    "service_description": "Fan %s",
+    "service_name": "Fan %s",
 }

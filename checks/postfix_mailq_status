@@ -59,7 +59,7 @@ def check_postfix_mailq_status(item, params, parsed):
 
 check_info["postfix_mailq_status"] = {
     "parse_function": parse_postfix_mailq_status,
-    "inventory_function": inventory_postfix_mailq_status,
+    "discovery_function": inventory_postfix_mailq_status,
     "check_function": check_postfix_mailq_status,
-    "service_description": "Postfix status %s",
+    "service_name": "Postfix status %s",
 }

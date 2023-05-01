@@ -42,7 +42,7 @@ def check_k8s_conditions(item, _no_params, value):
 
 check_info["k8s_conditions"] = {
     "parse_function": parse_k8s,
-    "inventory_function": inventory_k8s_conditions,
+    "discovery_function": inventory_k8s_conditions,
     "check_function": check_k8s_conditions,
-    "service_description": "Condition %s",
+    "service_name": "Condition %s",
 }

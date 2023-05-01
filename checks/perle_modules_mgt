@@ -41,9 +41,9 @@ def check_perle_modules_mgt(item, _no_params, info):
 
 check_info["perle_modules_mgt"] = {
     "detect": DETECT_PERLE,
-    "inventory_function": inventory_perle_modules_mgt,
+    "discovery_function": inventory_perle_modules_mgt,
     "check_function": check_perle_modules_mgt,
-    "service_description": "Chassis slot %s MGT",
+    "service_name": "Chassis slot %s MGT",
     # If you change snmp info please adapt the related inventory plugin
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.1966.21.1.1.1.1.4.5",

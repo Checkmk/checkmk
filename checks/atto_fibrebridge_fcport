@@ -41,11 +41,11 @@ def check_atto_fibrebridge_fcport(item, params, info):
 
 check_info["atto_fibrebridge_fcport"] = {
     "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
-    "inventory_function": inventory_atto_fibrebridge_fcport,
+    "discovery_function": inventory_atto_fibrebridge_fcport,
     "check_function": check_atto_fibrebridge_fcport,
-    "service_description": "FC Port %s",
+    "service_name": "FC Port %s",
     "default_levels_variable": "atto_fibrebridge_fcport",
-    "group": "fcport_words",
+    "check_ruleset_name": "fcport_words",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.4547.2.3.3.2.1",
         oids=[OIDEnd(), "2", "3"],

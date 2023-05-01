@@ -117,8 +117,8 @@ def _handle_readable_output(value):
 check_info["graylog_license"] = {
     "parse_function": parse_graylog_agent_data,
     "check_function": check_graylog_license,
-    "inventory_function": inventory_graylog_license,
+    "discovery_function": inventory_graylog_license,
     "default_levels_variable": "graylog_license_default_levels",
-    "service_description": "Graylog License",
-    "group": "graylog_license",
+    "service_name": "Graylog License",
+    "check_ruleset_name": "graylog_license",
 }

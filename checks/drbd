@@ -354,10 +354,10 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
 
 
 check_info["drbd"] = {
-    "inventory_function": lambda info: inventory_drbd(info, "drbd"),
+    "discovery_function": lambda info: inventory_drbd(info, "drbd"),
     "check_function": check_drbd_general,
-    "group": "drbd",
-    "service_description": "DRBD %s status",
+    "check_ruleset_name": "drbd",
+    "service_name": "DRBD %s status",
 }
 
 
@@ -390,10 +390,10 @@ def check_drbd_net(item, params, info):
 
 
 check_info["drbd.net"] = {
-    "inventory_function": lambda info: inventory_drbd(info, "drbd.net"),
+    "discovery_function": lambda info: inventory_drbd(info, "drbd.net"),
     "check_function": check_drbd_net,
-    "group": "drbd.net",
-    "service_description": "DRBD %s net",
+    "check_ruleset_name": "drbd.net",
+    "service_name": "DRBD %s net",
 }
 
 
@@ -415,10 +415,10 @@ def check_drbd_disk(item, params, info):
 
 
 check_info["drbd.disk"] = {
-    "inventory_function": lambda info: inventory_drbd(info, "drbd.disk"),
+    "discovery_function": lambda info: inventory_drbd(info, "drbd.disk"),
     "check_function": check_drbd_disk,
-    "group": "drbd.disk",
-    "service_description": "DRBD %s disk",
+    "check_ruleset_name": "drbd.disk",
+    "service_name": "DRBD %s disk",
 }
 
 
@@ -452,8 +452,8 @@ def check_drbd_stats(item, params, info):
 
 
 check_info["drbd.stats"] = {
-    "inventory_function": lambda info: inventory_drbd(info, "drbd.stats"),
+    "discovery_function": lambda info: inventory_drbd(info, "drbd.stats"),
     "check_function": check_drbd_stats,
-    "group": "drbd.stats",
-    "service_description": "DRBD %s stats",
+    "check_ruleset_name": "drbd.stats",
+    "service_name": "DRBD %s stats",
 }

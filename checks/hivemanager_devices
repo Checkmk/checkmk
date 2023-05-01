@@ -99,8 +99,8 @@ def check_hivemanager_devices(item, params, info):  # pylint: disable=too-many-b
 
 check_info["hivemanager_devices"] = {
     "check_function": check_hivemanager_devices,
-    "inventory_function": inventory_hivemanager_devices,
-    "service_description": "Client %s",
+    "discovery_function": inventory_hivemanager_devices,
+    "service_name": "Client %s",
     "default_levels_variable": "hivemanger_devices",
-    "group": "hivemanager_devices",
+    "check_ruleset_name": "hivemanager_devices",
 }

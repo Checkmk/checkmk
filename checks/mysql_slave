@@ -80,8 +80,8 @@ def check_mysql_slave(_no_item, params, data):
 
 check_info["mysql_slave"] = {
     "parse_function": parse_mysql_slave,
-    "inventory_function": discover(lambda k, v: bool(v)),
+    "discovery_function": discover(lambda k, v: bool(v)),
     "check_function": check_mysql_slave,
-    "service_description": "MySQL DB Slave %s",
-    "group": "mysql_slave",
+    "service_name": "MySQL DB Slave %s",
+    "check_ruleset_name": "mysql_slave",
 }

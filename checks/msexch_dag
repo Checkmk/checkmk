@@ -145,9 +145,9 @@ def check_msexch_dag_dbcopy(item, params, info):
 
 
 check_info["msexch_dag.dbcopy"] = {
-    "inventory_function": inventory_msexch_dag_dbcopy,
+    "discovery_function": inventory_msexch_dag_dbcopy,
     "check_function": check_msexch_dag_dbcopy,
-    "service_description": "Exchange DAG DBCopy for %s",
+    "service_name": "Exchange DAG DBCopy for %s",
 }
 
 # .
@@ -184,9 +184,9 @@ def check_msexch_dag_contentindex(item, _no_params, info):
 
 
 check_info["msexch_dag.contentindex"] = {
-    "inventory_function": inventory_msexch_dag_contentindex,
+    "discovery_function": inventory_msexch_dag_contentindex,
     "check_function": check_msexch_dag_contentindex,
-    "service_description": "Exchange DAG ContentIndex of %s",
+    "service_name": "Exchange DAG ContentIndex of %s",
 }
 
 # .
@@ -232,8 +232,8 @@ def check_msexch_dag_copyqueue(item, params, info):
 
 
 check_info["msexch_dag.copyqueue"] = {
-    "inventory_function": inventory_msexch_dag_copyqueue,
+    "discovery_function": inventory_msexch_dag_copyqueue,
     "check_function": check_msexch_dag_copyqueue,
-    "service_description": "Exchange DAG CopyQueue of %s",
-    "group": "msexch_copyqueue",
+    "service_name": "Exchange DAG CopyQueue of %s",
+    "check_ruleset_name": "msexch_copyqueue",
 }

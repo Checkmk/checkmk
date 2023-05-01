@@ -17,8 +17,8 @@ check_info["akcp_sensor_drycontact"] = {
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1"), not_exists(".1.3.6.1.4.1.3854.2.*")
     ),
     "check_function": check_akcp_sensor_drycontact,
-    "inventory_function": inventory_akcp_sensor_no_params,
-    "service_description": "Dry Contact %s",
+    "discovery_function": inventory_akcp_sensor_no_params,
+    "service_name": "Dry Contact %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.3854.1.2.2.1.18.1",
         oids=["1", "3", "5"],

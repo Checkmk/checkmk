@@ -77,7 +77,7 @@ def check_scaleio_devices(item, params, devices):
 
 check_info["scaleio_devices"] = {
     "parse_function": parse_scaleio_devices,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_scaleio_devices,
-    "service_description": "ScaleIO Data Server %s Devices",
+    "service_name": "ScaleIO Data Server %s Devices",
 }

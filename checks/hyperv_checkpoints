@@ -54,7 +54,7 @@ def check_hyperv_checkpoints(item, params, info):
 
 check_info["hyperv_checkpoints"] = {
     "check_function": check_hyperv_checkpoints,
-    "inventory_function": inventory_hyperv_checkpoints,
-    "service_description": "HyperV Checkpoints",
-    "group": "vm_snapshots",
+    "discovery_function": inventory_hyperv_checkpoints,
+    "service_name": "HyperV Checkpoints",
+    "check_ruleset_name": "vm_snapshots",
 }

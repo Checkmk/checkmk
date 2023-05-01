@@ -53,6 +53,6 @@ def check_heartbeat_nodes(item, params, info):
 
 check_info["heartbeat_nodes"] = {
     "check_function": check_heartbeat_nodes,
-    "inventory_function": inventory_heartbeat_nodes,
-    "service_description": "Heartbeat Node %s",
+    "discovery_function": inventory_heartbeat_nodes,
+    "service_name": "Heartbeat Node %s",
 }

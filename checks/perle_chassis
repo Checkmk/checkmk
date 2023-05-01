@@ -34,9 +34,9 @@ def check_perle_chassis(_no_item, _no_params, section):
 
 
 check_info["perle_chassis"] = {
-    "inventory_function": inventory_perle_chassis,
+    "discovery_function": inventory_perle_chassis,
     "check_function": check_perle_chassis,
-    "service_description": "Chassis status",
+    "service_name": "Chassis status",
 }
 
 
@@ -49,8 +49,8 @@ def check_perle_chassis_temp(item, params, section):
 
 
 check_info["perle_chassis.temp"] = {
-    "inventory_function": inventory_perle_chassis_temp,
+    "discovery_function": inventory_perle_chassis_temp,
     "check_function": check_perle_chassis_temp,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
 }

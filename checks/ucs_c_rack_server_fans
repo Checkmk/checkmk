@@ -51,7 +51,7 @@ def check_ucs_c_rack_server_fans(item, _no_params, data):
 
 check_info["ucs_c_rack_server_fans"] = {
     "parse_function": parse_ucs_c_rack_server_fans,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_ucs_c_rack_server_fans,
-    "service_description": "Fan %s",
+    "service_name": "Fan %s",
 }

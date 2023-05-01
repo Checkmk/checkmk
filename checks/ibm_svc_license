@@ -56,8 +56,8 @@ def check_ibm_svc_license(item, params, parsed):
 
 check_info["ibm_svc_license"] = {
     "check_function": check_ibm_svc_license,
-    "inventory_function": inventory_ibm_svc_license,
+    "discovery_function": inventory_ibm_svc_license,
     "parse_function": parse_ibm_svc_license,
-    "service_description": "License %s",
-    "group": "ibmsvc_licenses",
+    "service_name": "License %s",
+    "check_ruleset_name": "ibmsvc_licenses",
 }

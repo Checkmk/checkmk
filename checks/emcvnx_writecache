@@ -33,7 +33,7 @@ def check_emcvnx_writecache(item, params, info):
 
 
 check_info["emcvnx_writecache"] = {
-    "inventory_function": inventory_emcvnx_writecache,
+    "discovery_function": inventory_emcvnx_writecache,
     "check_function": check_emcvnx_writecache,
-    "service_description": "Write Cache State %s",
+    "service_name": "Write Cache State %s",
 }

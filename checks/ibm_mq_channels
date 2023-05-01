@@ -77,7 +77,7 @@ def check_ibm_mq_channels(item, params, parsed):
 check_info["ibm_mq_channels"] = {
     # section is already migrated!
     "check_function": check_ibm_mq_channels,
-    "inventory_function": inventory_ibm_mq_channels,
-    "service_description": "IBM MQ Channel %s",
-    "group": "ibm_mq_channels",
+    "discovery_function": inventory_ibm_mq_channels,
+    "service_name": "IBM MQ Channel %s",
+    "check_ruleset_name": "ibm_mq_channels",
 }

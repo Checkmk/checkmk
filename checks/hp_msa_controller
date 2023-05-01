@@ -66,8 +66,8 @@ def check_hp_msa_controller_cpu(item, params, parsed):
 
 check_info["hp_msa_controller"] = {
     "parse_function": parse_hp_msa,
-    "inventory_function": inventory_hp_msa_controller_cpu,
+    "discovery_function": inventory_hp_msa_controller_cpu,
     "check_function": check_hp_msa_controller_cpu,
-    "service_description": "CPU Utilization %s",
-    "group": "cpu_utilization_multiitem",
+    "service_name": "CPU Utilization %s",
+    "check_ruleset_name": "cpu_utilization_multiitem",
 }

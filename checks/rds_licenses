@@ -68,8 +68,8 @@ def check_rds_licenses(item, params, data):
 
 check_info["rds_licenses"] = {
     "parse_function": parse_rds_licenses,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_rds_licenses,
-    "service_description": "RDS Licenses %s",
-    "group": "rds_licenses",
+    "service_name": "RDS Licenses %s",
+    "check_ruleset_name": "rds_licenses",
 }

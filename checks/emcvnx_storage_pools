@@ -139,10 +139,10 @@ def check_emcvnx_storage_pools(item, params, parsed):
 
 check_info["emcvnx_storage_pools"] = {
     "parse_function": parse_emcvnx_storage_pools,
-    "inventory_function": inventory_emcvnx_storage_pools,
+    "discovery_function": inventory_emcvnx_storage_pools,
     "check_function": check_emcvnx_storage_pools,
-    "service_description": "Pool %s General",
-    "group": "emcvnx_storage_pools",
+    "service_name": "Pool %s General",
+    "check_ruleset_name": "emcvnx_storage_pools",
     "default_levels_variable": "emcvnx_storage_pools_default_levels",
 }
 
@@ -232,10 +232,10 @@ def check_emcvnx_storage_pools_tiering(item, params, data):
 
 
 check_info["emcvnx_storage_pools.tiering"] = {
-    "inventory_function": inventory_emcvnx_storage_pools_tiering,
+    "discovery_function": inventory_emcvnx_storage_pools_tiering,
     "check_function": check_emcvnx_storage_pools_tiering,
-    "service_description": "Pool %s Tiering Status",
-    "group": "emcvnx_storage_pools_tiering",
+    "service_name": "Pool %s Tiering Status",
+    "check_ruleset_name": "emcvnx_storage_pools_tiering",
     "default_levels_variable": "emcvnx_storage_pools_tiering_default_levels",
 }
 
@@ -318,9 +318,9 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
 
 
 check_info["emcvnx_storage_pools.tieringtypes"] = {
-    "inventory_function": inventory_emcvnx_storage_pools_tieringtypes,
+    "discovery_function": inventory_emcvnx_storage_pools_tieringtypes,
     "check_function": check_emcvnx_storage_pools_tieringtypes,
-    "service_description": "Pool %s tiering",
+    "service_name": "Pool %s tiering",
 }
 
 # .
@@ -377,7 +377,7 @@ def check_emcvnx_storage_pools_deduplication(_no_item, _no_params, data):
 
 
 check_info["emcvnx_storage_pools.deduplication"] = {
-    "inventory_function": inventory_emcvnx_storage_pools,
+    "discovery_function": inventory_emcvnx_storage_pools,
     "check_function": check_emcvnx_storage_pools_deduplication,
-    "service_description": "Pool %s Deduplication",
+    "service_name": "Pool %s Deduplication",
 }

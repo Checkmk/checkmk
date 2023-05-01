@@ -162,8 +162,8 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
 check_info["oracle_dataguard_stats"] = {
     # section is already migrated!
     "check_function": check_oracle_dataguard_stats,
-    "inventory_function": inventory_oracle_dataguard_stats,
-    "service_description": "ORA %s Dataguard-Stats",
+    "discovery_function": inventory_oracle_dataguard_stats,
+    "service_name": "ORA %s Dataguard-Stats",
     "default_levels_variable": "oracle_dataguard_stats",
-    "group": "oracle_dataguard_stats",
+    "check_ruleset_name": "oracle_dataguard_stats",
 }

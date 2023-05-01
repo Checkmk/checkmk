@@ -26,13 +26,13 @@ def check_netextreme_cpu_util(_no_item, params, info):
 
 check_info["netextreme_cpu_util"] = {
     "detect": DETECT_NETEXTREME,
-    "inventory_function": inventory_netextreme_cpu_util,
+    "discovery_function": inventory_netextreme_cpu_util,
     "check_function": check_netextreme_cpu_util,
-    "service_description": "CPU utilization",
+    "service_name": "CPU utilization",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.1916.1.32.1.2",
         oids=["0"],
     ),
-    "group": "cpu_utilization",
+    "check_ruleset_name": "cpu_utilization",
     "default_levels_variable": "netextreme_cpu_util_default_levels",
 }

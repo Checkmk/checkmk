@@ -27,10 +27,10 @@ def check_mbg_lantime_ng_temp(item, params, info):
 check_info["mbg_lantime_ng_temp"] = {
     "detect": DETECT_MBG_LANTIME_NG,
     "check_function": check_mbg_lantime_ng_temp,
-    "inventory_function": inventory_mbg_lantime_ng_temp,
-    "service_description": "Temperature %s",
+    "discovery_function": inventory_mbg_lantime_ng_temp,
+    "service_name": "Temperature %s",
     "default_levels_variable": "mbg_lantime_ng_temp_default_levels",
-    "group": "temperature",
+    "check_ruleset_name": "temperature",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.2",
         oids=["1"],

@@ -30,7 +30,7 @@ def check_aws_exceptions(item, params, parsed):
 
 check_info["aws_exceptions"] = {
     "parse_function": parse_aws_exceptions,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_aws_exceptions,
-    "service_description": "AWS Exceptions",
+    "service_name": "AWS Exceptions",
 }

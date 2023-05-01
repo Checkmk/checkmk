@@ -30,7 +30,7 @@ def check_mongodb_counters(item, _no_params, parsed):
 
 
 check_info["mongodb_counters"] = {
-    "inventory_function": inventory_mongodb_counters,
+    "discovery_function": inventory_mongodb_counters,
     "check_function": check_mongodb_counters,
-    "service_description": "MongoDB Counters %s",
+    "service_name": "MongoDB Counters %s",
 }

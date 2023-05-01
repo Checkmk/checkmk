@@ -29,10 +29,10 @@ check_info["fortigate_sessions"] = {
         exists(".1.3.6.1.4.1.12356.1.10.0"),
         not_exists(".1.3.6.1.4.1.12356.101.4.1.8.0"),
     ),
-    "inventory_function": inventory_fortigate_sessions,
+    "discovery_function": inventory_fortigate_sessions,
     "check_function": check_fortigate_sessions,
-    "group": "fortigate_sessions",
-    "service_description": "Sessions",
+    "check_ruleset_name": "fortigate_sessions",
+    "service_name": "Sessions",
     # uses mib FORTINET-MIB-280
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.12356.1",

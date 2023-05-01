@@ -18,11 +18,11 @@ check_info["akcp_sensor_humidity"] = {
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1"), not_exists(".1.3.6.1.4.1.3854.2.*")
     ),
     "check_function": check_akcp_humidity,
-    "inventory_function": inventory_akcp_humidity,
-    "service_description": "Humidity %s",
+    "discovery_function": inventory_akcp_humidity,
+    "service_name": "Humidity %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.3854.1.2.2.1.17.1",
         oids=["1", "3", "4", "5"],
     ),
-    "group": "humidity",
+    "check_ruleset_name": "humidity",
 }

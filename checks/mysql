@@ -66,9 +66,9 @@ def check_mysql_version(_no_item, _no_params, data):
 
 check_info["mysql"] = {
     "parse_function": parse_mysql,
-    "inventory_function": discover(lambda k, values: "version" in values),
+    "discovery_function": discover(lambda k, values: "version" in values),
     "check_function": check_mysql_version,
-    "service_description": "MySQL Version %s",
+    "service_name": "MySQL Version %s",
 }
 
 # .
@@ -116,10 +116,10 @@ def check_mysql_sessions(_no_item, params, data):
 
 
 check_info["mysql.sessions"] = {
-    "inventory_function": discover(lambda k, values: len(values) > 200),
+    "discovery_function": discover(lambda k, values: len(values) > 200),
     "check_function": check_mysql_sessions,
-    "service_description": "MySQL Sessions %s",
-    "group": "mysql_sessions",
+    "service_name": "MySQL Sessions %s",
+    "check_ruleset_name": "mysql_sessions",
 }
 
 # .
@@ -143,10 +143,10 @@ def check_mysql_iostat(item, params, data):
 
 
 check_info["mysql.innodb_io"] = {
-    "inventory_function": discover(lambda k, values: "Innodb_data_read" in values),
+    "discovery_function": discover(lambda k, values: "Innodb_data_read" in values),
     "check_function": check_mysql_iostat,
-    "service_description": "MySQL InnoDB IO %s",
-    "group": "mysql_innodb_io",
+    "service_name": "MySQL InnoDB IO %s",
+    "check_ruleset_name": "mysql_innodb_io",
 }
 
 # .
@@ -227,10 +227,10 @@ def mysql_connections(instance, values):
 
 
 check_info["mysql.connections"] = {
-    "inventory_function": mysql_connections,
+    "discovery_function": mysql_connections,
     "check_function": check_mysql_connections,
-    "service_description": "MySQL Connections %s",
-    "group": "mysql_connections",
+    "service_name": "MySQL Connections %s",
+    "check_ruleset_name": "mysql_connections",
 }
 
 # .
@@ -275,9 +275,9 @@ def check_mysql_galerasync(item, _no_params, data):
 
 
 check_info["mysql.galerasync"] = {
-    "inventory_function": inventory_mysql_galerasync,
+    "discovery_function": inventory_mysql_galerasync,
     "check_function": check_mysql_galerasync,
-    "service_description": "MySQL Galera Sync %s",
+    "service_name": "MySQL Galera Sync %s",
 }
 
 # .
@@ -315,9 +315,9 @@ def check_mysql_galeradonor(item, params, data):
 
 
 check_info["mysql.galeradonor"] = {
-    "inventory_function": inventory_mysql_galeradonor,
+    "discovery_function": inventory_mysql_galeradonor,
     "check_function": check_mysql_galeradonor,
-    "service_description": "MySQL Galera Donor %s",
+    "service_name": "MySQL Galera Donor %s",
     "default_levels_variable": "MYSQL_GALERA_DEFAULT_PARAMETERS",
 }
 
@@ -350,9 +350,9 @@ def check_mysql_galerastartup(item, _no_params, data):
 
 
 check_info["mysql.galerastartup"] = {
-    "inventory_function": inventory_mysql_galerastartup,
+    "discovery_function": inventory_mysql_galerastartup,
     "check_function": check_mysql_galerastartup,
-    "service_description": "MySQL Galera Startup %s",
+    "service_name": "MySQL Galera Startup %s",
 }
 
 # .
@@ -396,9 +396,9 @@ def check_mysql_galerasize(item, params, data):
 
 
 check_info["mysql.galerasize"] = {
-    "inventory_function": inventory_mysql_galerasize,
+    "discovery_function": inventory_mysql_galerasize,
     "check_function": check_mysql_galerasize,
-    "service_description": "MySQL Galera Size %s",
+    "service_name": "MySQL Galera Size %s",
     "default_levels_variable": "MYSQL_GALERA_DEFAULT_PARAMETERS",
 }
 
@@ -433,7 +433,7 @@ def check_mysql_galerastatus(item, _no_params, data):
 
 
 check_info["mysql.galerastatus"] = {
-    "inventory_function": inventory_mysql_galerastatus,
+    "discovery_function": inventory_mysql_galerastatus,
     "check_function": check_mysql_galerastatus,
-    "service_description": "MySQL Galera Status %s",
+    "service_name": "MySQL Galera Status %s",
 }

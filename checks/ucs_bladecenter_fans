@@ -82,9 +82,9 @@ def check_ucs_bladecenter_fans(item, _no_params, parsed):
 
 check_info["ucs_bladecenter_fans"] = {
     "parse_function": parse_ucs_bladecenter_fans,
-    "inventory_function": inventory_ucs_bladecenter_fans,
+    "discovery_function": inventory_ucs_bladecenter_fans,
     "check_function": check_ucs_bladecenter_fans,
-    "service_description": "Fans %s",
+    "service_name": "Fans %s",
 }
 
 # .
@@ -125,9 +125,9 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
 
 
 check_info["ucs_bladecenter_fans.temp"] = {
-    "inventory_function": inventory_ucs_bladecenter_fans_temp,
+    "discovery_function": inventory_ucs_bladecenter_fans_temp,
     "check_function": check_ucs_bladecenter_fans_temp,
-    "service_description": "Temperature %s",
-    "group": "temperature",
+    "service_name": "Temperature %s",
+    "check_ruleset_name": "temperature",
     "default_levels_variable": "ucs_bladecenter_fans_temp_default_levels",
 }

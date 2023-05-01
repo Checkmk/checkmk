@@ -51,7 +51,7 @@ def check_aws_wafv2_summary(item, params, parsed):
 
 check_info["aws_wafv2_summary"] = {
     "parse_function": parse_aws,
-    "inventory_function": discover_single,
+    "discovery_function": discover_single,
     "check_function": check_aws_wafv2_summary,
-    "service_description": "AWS/WAFV2 Summary",
+    "service_name": "AWS/WAFV2 Summary",
 }

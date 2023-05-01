@@ -38,12 +38,12 @@ def check_kentix_dewpoint(item: str, params: TempParamType, section: Section) ->
 check_info["kentix_dewpoint"] = {
     "detect": DETECT_KENTIX,
     "parse_function": parse_kentix_dewpoint,
-    "inventory_function": inventory_kentix_dewpoint,
+    "discovery_function": inventory_kentix_dewpoint,
     "check_function": check_kentix_dewpoint,
-    "service_description": "Dewpoint %s",
+    "service_name": "Dewpoint %s",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.37954",
         oids=["2.1.3.1", "3.1.2.1"],
     ),
-    "group": "temperature",
+    "check_ruleset_name": "temperature",
 }

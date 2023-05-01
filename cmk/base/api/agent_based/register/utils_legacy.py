@@ -18,10 +18,10 @@ class CheckInfoElement(TypedDict):
     detect: NotRequired[SNMPDetectSpecification]
     fetch: NotRequired[list[SNMPTree] | SNMPTree]
     check_function: NotRequired[Callable]
-    inventory_function: NotRequired[
+    discovery_function: NotRequired[
         Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]] | Iterable[Service]]
     ]
     parse_function: NotRequired[Callable[[list], object]]
-    group: NotRequired[str]
+    check_ruleset_name: NotRequired[str]
     default_levels_variable: NotRequired[str]
-    service_description: NotRequired[str]
+    service_name: NotRequired[str]

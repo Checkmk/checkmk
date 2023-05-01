@@ -24,9 +24,9 @@ def check_aws_wafv2_limits(item, params, region_data):
 
 check_info["aws_wafv2_limits"] = {
     "parse_function": parse_aws_limits_generic,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_aws_wafv2_limits,
-    "service_description": "AWS/WAFV2 Limits %s",
-    "group": "aws_wafv2_limits",
+    "service_name": "AWS/WAFV2 Limits %s",
+    "check_ruleset_name": "aws_wafv2_limits",
     "default_levels_variable": "aws_wafv2_limits_default_levels",
 }

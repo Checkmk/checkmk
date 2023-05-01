@@ -58,9 +58,9 @@ def check_dell_compellent_disks(_item, _no_params, data):
 check_info["dell_compellent_disks"] = {
     "detect": DETECT_DELL_COMPELLENT,
     "parse_function": parse_dell_compellent_disks,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_dell_compellent_disks,
-    "service_description": "Disk %s",
+    "service_name": "Disk %s",
     "fetch": [
         SNMPTree(
             base=".1.3.6.1.4.1.674.11000.2000.500.1.2.14.1",

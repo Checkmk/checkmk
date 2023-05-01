@@ -42,8 +42,8 @@ def check_docker_node_disk_usage(_no_item, params, data):
 
 check_info["docker_node_disk_usage"] = {
     "parse_function": parse_docker_node_disk_usage,
-    "inventory_function": discover(),
+    "discovery_function": discover(),
     "check_function": check_docker_node_disk_usage,
-    "service_description": "Docker disk usage - %s",
-    "group": "docker_node_disk_usage",
+    "service_name": "Docker disk usage - %s",
+    "check_ruleset_name": "docker_node_disk_usage",
 }

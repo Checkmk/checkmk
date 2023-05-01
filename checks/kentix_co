@@ -47,13 +47,13 @@ def check_kentix_co(item: str, params: dict, section: int) -> Iterable:
 check_info["kentix_co"] = {
     "detect": DETECT_KENTIX,
     "parse_function": parse_kentix_co,
-    "inventory_function": inventory_kentix_co,
+    "discovery_function": inventory_kentix_co,
     "check_function": check_kentix_co,
     "default_levels_variable": "kentix_co",
-    "service_description": "Carbon Monoxide",
+    "service_name": "Carbon Monoxide",
     "fetch": SNMPTree(
         base=".1.3.6.1.4.1.37954",
         oids=["2.1.4.1", "3.1.3.1"],
     ),
-    "group": "carbon_monoxide",
+    "check_ruleset_name": "carbon_monoxide",
 }

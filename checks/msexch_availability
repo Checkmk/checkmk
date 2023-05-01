@@ -27,8 +27,8 @@ def check_msexch_availability(item, params, parsed):
 
 
 check_info["msexch_availability"] = {
-    "inventory_function": discover_msexch_availability,
+    "discovery_function": discover_msexch_availability,
     "check_function": check_msexch_availability,
     "parse_function": parse_wmi_table,
-    "service_description": "Exchange Availability Service",
+    "service_name": "Exchange Availability Service",
 }

@@ -83,6 +83,6 @@ check_info["hpux_snmp_cs"] = {
 
 check_info["hpux_snmp_cs.cpu"] = {
     "check_function": check_hpux_snmp_cpu,
-    "service_description": "CPU utilization",
-    "inventory_function": inventory_hpux_snmp_cpu,
+    "service_name": "CPU utilization",
+    "discovery_function": inventory_hpux_snmp_cpu,
 }

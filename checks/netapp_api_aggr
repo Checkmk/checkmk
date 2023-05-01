@@ -40,8 +40,8 @@ def check_netapp_api_aggr(item, params, aggr):
 check_info["netapp_api_aggr"] = {
     "check_function": check_netapp_api_aggr,
     "parse_function": netapp_api_parse_lines,
-    "inventory_function": inventory_netapp_api_aggr,
-    "service_description": "Aggregation %s",
-    "group": "filesystem",
+    "discovery_function": inventory_netapp_api_aggr,
+    "service_name": "Aggregation %s",
+    "check_ruleset_name": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

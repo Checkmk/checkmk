@@ -406,74 +406,114 @@ export class LayeredNodesLayer extends FixLayer {
     }
 
     update_data(): void {
-        this._update_links();
         this._update_nodes();
+        this._update_links();
     }
 
     _update_nodes(): void {
         const visible_nodes = this._world.viewport
             .get_all_nodes()
             .filter(d => !d.data.invisible);
-        const nodes_selection = this.nodes_selection
-            .selectAll<SVGGElement, NodevisNode>(".node_element")
-            .data(visible_nodes, d => d.data.id);
 
-        // Create new nodes
-        nodes_selection.enter().each((node_data, idx, node_list) => {
-            // @ts-ignore
-            this._create_node(node_data).render_into(d3.select(node_list[idx]));
+        const old_node_instances: {[name: string]: AbstractGUINode} =
+            this.node_instances;
+        this.node_instances = {};
+
+        // Update data
+        const node_ids: string[] = [];
+        visible_nodes.forEach(node_config => {
+            const new_node = this._create_node(node_config);
+            this.node_instances[new_node.id()] = new_node;
+            node_ids.push(new_node.id());
         });
-        // Existing nodes: Update bound data in all nodes
-        nodes_selection.each((node_data, idx, node_list) =>
-            this._update_node(node_data, d3.select(node_list[idx]))
-        );
-        // Remove obsolete nodes
-        nodes_selection
-            .exit<NodevisNode>()
-            .each(node_data => this._remove_node(node_data))
-            .classed("node_element", false)
-            .transition()
-            .attr("transform", node => {
-                // Move vanishing nodes, back to their parent nodes
-                if (node.parent)
-                    return node.parent.data.selection.attr("transform");
-                else return node.data.selection.attr("transform");
+
+        // Update GUI
+        this.nodes_selection
+            .selectAll<SVGGElement, string>(".node_element")
+            .data(node_ids, d => {
+                return d;
             })
+            .join(
+                enter => enter.append("g").classed("node_element", true),
+                update => update,
+                exit =>
+                    exit.each((node_id, idx, node_list) => {
+                        this._add_node_vanish_animation(
+                            d3.select(node_list[idx]),
+                            node_id,
+                            old_node_instances
+                        );
+                    })
+            )
+            .each((node_id, idx, node_list) => {
+                this.node_instances[node_id].render_into(
+                    d3.select(node_list[idx])
+                );
+            });
+    }
+
+    _add_node_vanish_animation(node, node_id, old_node_instances) {
+        const old_instance = old_node_instances[node_id];
+        if (!old_instance) {
+            node.remove();
+            return;
+        }
+
+        const vanish_coords = this._world.viewport.scale_to_zoom(
+            this._world.viewport.compute_spawn_coords(
+                old_instance.node.data.chunk,
+                old_instance.node
+            )
+        );
+
+        // Move vanishing nodes, back to their parent nodes
+        node.transition()
+            .duration(DefaultTransition.duration())
+            .attr(
+                "transform",
+                "translate(" + vanish_coords.x + "," + vanish_coords.y + ")"
+            )
             .style("opacity", 0)
             .remove();
     }
 
     _update_links(): void {
-        const links = this._world.viewport.get_all_links();
+        const link_configs = this._world.viewport.get_all_links();
         this._links_for_node = {};
+
+        // Recreate instances
         this.link_instances = {};
+        const link_ids: Set<string> = new Set();
+        link_configs.forEach(link_config => {
+            const link_id = compute_link_id(link_config);
+            if (link_ids.has(link_id)) {
+                return;
+            }
 
-        this.links_selection
-            .selectAll<SVGGElement, NodevisLink>(".link_element")
-            .remove();
+            const new_link = this._create_link(link_config);
+            this.link_instances[link_id] = new_link;
+            link_ids.add(link_id);
 
-        // TODO: rewrite this block, fix typescript
-        this.links_selection
-            .selectAll<SVGGElement, NodevisLink>(".link_element")
-            .data(links, d => compute_link_id(d))
-            .enter()
-            .each((link_data, idx, links) =>
-                // @ts-ignore
-                this._create_link(link_data, d3.select(links[idx]))
-            );
-
-        for (const [_key, link_instance] of Object.entries(
-            this.link_instances
-        )) {
-            const source_id = link_instance._link_data.source.data.id;
-            const target_id = link_instance._link_data.target.data.id;
+            // Update quick references: {node_id : connected link[]}
+            const source_id = link_config.source.data.id;
+            const target_id = link_config.target.data.id;
             source_id in this._links_for_node ||
                 (this._links_for_node[source_id] = []);
             target_id in this._links_for_node ||
                 (this._links_for_node[target_id] = []);
-            this._links_for_node[source_id].push(link_instance);
-            this._links_for_node[target_id].push(link_instance);
-        }
+            this._links_for_node[source_id].push(new_link);
+            this._links_for_node[target_id].push(new_link);
+        });
+
+        // Update GUI
+        this.links_selection
+            .selectAll<SVGGElement, string>("g.link_element")
+            .data(link_ids, d => d)
+            .join("g")
+            .classed("link_element", true)
+            .each((link_id, idx, nodes) => {
+                this.link_instances[link_id].render_into(d3.select(nodes[idx]));
+            });
     }
 
     _create_node(node_data: NodevisNode): AbstractGUINode {
@@ -481,9 +521,7 @@ export class LayeredNodesLayer extends FixLayer {
             node_data.data.node_type
         );
         // @ts-ignore
-        const new_node = new node_class(this._world, node_data);
-        this.node_instances[new_node.id()] = new_node;
-        return new_node;
+        return new node_class(this._world, node_data);
     }
 
     _update_node(node_data: NodevisNode, selection: d3SelectionG): void {
@@ -496,29 +534,11 @@ export class LayeredNodesLayer extends FixLayer {
         );
     }
 
-    _remove_node(node_data: NodevisNode): void {
-        delete this.node_instances[node_data.data.id];
-    }
-
-    _create_link(
-        link_data: NodevisLink,
-        selection: d3.Selection<EnterElement, unknown, SVGGElement, any>
-    ): void {
+    _create_link(link_data: NodevisLink): AbstractLink {
         const link_class = link_type_class_registry.get_class(
             link_data.config.type
         );
-        const new_link = new link_class(this._world, link_data);
-        this.link_instances[new_link.id()] = new_link;
-        new_link.render_into(selection);
-    }
-
-    _update_link(link_data: NodevisLink, selection: d3SelectionG): void {
-        // TODO: create a function within the link instance to update its data
-        // TODO: this is probably broken
-        selection.selectAll("*").each(function () {
-            d3.select(this).datum(link_data);
-        });
-        this.link_instances[compute_link_id(link_data)]._link_data = link_data;
+        return new link_class(this._world, link_data);
     }
 
     _remove_link(link_data: NodevisLink): void {
@@ -547,11 +567,8 @@ export class LayeredNodesLayer extends FixLayer {
                 false;
     }
 
-    render_context_menu(
-        event: MouseEvent,
-        gui_node: AbstractGUINode | null
-    ): void {
-        if (!this._world.layout_manager.edit_layout && !gui_node) return; // Nothing to show
+    render_context_menu(event: MouseEvent, node_id: string | null): void {
+        if (!this._world.layout_manager.edit_layout && !node_id) return; // Nothing to show
 
         //        let coords : Coords = {x: 0, y:0};
         //        if (node_instance) {
@@ -573,6 +590,9 @@ export class LayeredNodesLayer extends FixLayer {
         // TODO: remove this, apply general update pattern..
         this.popup_menu_selection.selectAll("*").remove();
         const content_ul = this.popup_menu_selection.append("ul");
+
+        let gui_node: AbstractGUINode | null = null;
+        if (node_id) gui_node = this._world.nodes_layer.get_node_by_id(node_id);
 
         // Create li for each item
         if (this._world.layout_manager.edit_layout) {

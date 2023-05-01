@@ -287,12 +287,9 @@ export class AbstractLayoutStyle extends Object {
                     value: this.style_root_node.data.name,
                 };
             } else {
-                // End node: Match by hostname or service
-                matcher_conditions.hostname = {
-                    value: this.style_root_node.data.hostname,
-                };
-                matcher_conditions.service = {
-                    value: this.style_root_node.data.service,
+                // End node: Match by id
+                matcher_conditions.id = {
+                    value: this.style_root_node.data.id,
                 };
             }
         } else {
@@ -571,6 +568,7 @@ export interface StyleMatcherConditions {
     rule_name?: MatcherConditionValue;
     hostname?: MatcherConditionValue;
     service?: MatcherConditionValue;
+    id?: MatcherConditionValue;
 }
 
 export interface StyleConfig {

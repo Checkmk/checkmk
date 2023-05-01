@@ -107,10 +107,7 @@ export class AbstractLayer extends Object {
         return;
     }
 
-    render_context_menu(
-        _event: MouseEvent,
-        _node_instance: null | AbstractGUINode = null
-    ): void {
+    render_context_menu(_event: MouseEvent, node_id: string | null): void {
         return;
     }
 

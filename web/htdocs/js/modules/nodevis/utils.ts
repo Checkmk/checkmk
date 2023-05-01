@@ -59,11 +59,26 @@ export class NodeMatcher {
     find_node(matcher: StyleMatcherConditions): NodevisNode | null {
         const nodes_to_check: NodevisNode[] = this._get_all_nodes();
 
+        if (this._is_bi_rule_matcher(matcher)) {
+            for (const idx in nodes_to_check) {
+                const node = nodes_to_check[idx];
+                if (node.data.node_type != "bi_aggregator") continue;
+                if (this._match_by_bi_rule(matcher, node)) return node;
+            }
+        }
+
         for (const idx in nodes_to_check) {
             const node = nodes_to_check[idx];
-            if (this._match_node(matcher, node)) return node;
+            if (node.data.node_type == "bi_aggregator") continue;
+            if (this._match_by_generic_attr(matcher, node)) return node;
         }
         return null;
+    }
+
+    _is_bi_rule_matcher(matcher): boolean {
+        if (matcher.rule_name) return true;
+        if (matcher.rule_id) return true;
+        return false;
     }
 
     // Duplicate to viewport.ts:get_all_nodes
@@ -75,51 +90,7 @@ export class NodeMatcher {
         return all_nodes;
     }
 
-    _get_aggregator_nodes(): NodevisNode[] {
-        const aggregator_nodes: NodevisNode[] = [];
-        this._chunk_list.forEach(partition => {
-            partition.nodes.forEach(node => {
-                if (node.children) aggregator_nodes.push(node);
-            });
-        });
-        return aggregator_nodes;
-    }
-
-    _get_leaf_nodes(): NodevisNode[] {
-        const leaf_nodes: NodevisNode[] = [];
-        this._chunk_list.forEach(partition => {
-            partition.nodes.forEach(node => {
-                if (!node._children) leaf_nodes.push(node);
-            });
-        });
-        return leaf_nodes;
-    }
-
-    _match_node(matcher, node: NodevisNode): boolean {
-        // TODO: cleanup, remove BI components
-        // Basic matches
-        const elements: [string, boolean][] = [
-            ["hostname", true],
-            ["service", true],
-            ["id", true],
-        ];
-        for (const idx in elements) {
-            const entry = elements[idx];
-            const match_type = entry[0];
-            const not_for_bi_aggregator = entry[1];
-            if (matcher[match_type] && !matcher[match_type].disabled) {
-                if (
-                    not_for_bi_aggregator &&
-                    node.data.node_type == "bi_aggregator"
-                )
-                    return false;
-                if (node.data[match_type] != matcher[match_type].value)
-                    return false;
-            }
-        }
-
-        if (node.data.node_type != "bi_aggregator") return true;
-
+    _match_by_bi_rule(matcher, node: NodevisNode): boolean {
         // List matches
         const list_elements = ["aggr_path_name", "aggr_path_id"];
         for (const idx in list_elements) {
@@ -148,6 +119,18 @@ export class NodeMatcher {
         )
             return false;
 
+        return true;
+    }
+
+    _match_by_generic_attr(matcher, node: NodevisNode): boolean {
+        const match_types = ["hostname", "service", "id"];
+        for (const idx in match_types) {
+            const match_type = match_types[idx];
+            if (matcher[match_type] && !matcher[match_type].disabled) {
+                if (node.data[match_type] != matcher[match_type].value)
+                    return false;
+            }
+        }
         return true;
     }
 }

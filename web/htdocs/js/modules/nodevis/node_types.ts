@@ -263,7 +263,7 @@ export class TopologySiteNode extends TopologyNode {
     render_object() {
         this.selection()
             .selectAll("circle")
-            .data([null])
+            .data([this.id()])
             .enter()
             .append("circle")
             .attr("r", this.radius)
@@ -271,7 +271,7 @@ export class TopologySiteNode extends TopologyNode {
 
         this.selection()
             .selectAll("image")
-            .data([null])
+            .data([this.id()])
             .enter()
             .append("svg:image")
             .attr("xlink:href", "themes/facelift/images/icon_sites.svg")

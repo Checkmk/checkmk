@@ -60,6 +60,7 @@ def check_kentix_temp(
 
 check_info["kentix_temp"] = {
     "detect": DETECT_KENTIX,
+    "parse_function": parse_kentix_temp,
     "check_function": check_kentix_temp,
     "inventory_function": inventory_kentix_temp,
     "service_description": "Temperature %s",

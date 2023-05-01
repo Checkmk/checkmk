@@ -380,10 +380,6 @@ export class LayeredNodesLayer extends FixLayer {
                 new_line_style;
         });
 
-        this.links_selection
-            .selectAll<SVGGElement, NodevisLink>(".link_element")
-            .each(link_data => this._remove_link(link_data))
-            .remove();
         this.update_data();
         this.update_gui(true);
     }
@@ -523,25 +519,11 @@ export class LayeredNodesLayer extends FixLayer {
         return new node_class(this._world, node_data);
     }
 
-    _update_node(node_data: NodevisNode, selection: d3SelectionG): void {
-        selection.selectAll("*").each(function () {
-            d3.select(this).datum(node_data);
-        });
-        this.node_instances[node_data.data.id].update_node_data(
-            node_data,
-            selection
-        );
-    }
-
     _create_link(link_data: NodevisLink): AbstractLink {
         const link_class = link_type_class_registry.get_class(
             link_data.config.type
         );
         return new link_class(this._world, link_data);
-    }
-
-    _remove_link(link_data: NodevisLink): void {
-        delete this.link_instances[compute_link_id(link_data)];
     }
 
     update_gui(force = false): void {

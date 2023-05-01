@@ -272,6 +272,7 @@ export class LayoutManagerLayer extends FixLayer {
         for (const idx in this._active_styles) {
             this._active_styles[idx].update_gui();
         }
+        this.update_style_indicators();
     }
 
     update_style_indicators(force = false): void {
@@ -1657,7 +1658,10 @@ class LayoutApplier {
                 }
             }
 
-            if (layout_settings.config.style_configs) {
+            if (
+                !this._world.layout_manager.edit_layout &&
+                layout_settings.config.style_configs
+            ) {
                 node_chunk.layout_instance.style_configs = this._merge_styles(
                     node_chunk.layout_instance.style_configs,
                     layout_settings.config.style_configs

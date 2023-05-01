@@ -102,7 +102,7 @@ export class AbstractLayer extends Object {
         return;
     }
 
-    update_gui(): void {
+    update_gui(_force_gui_update = false): void {
         return;
     }
 

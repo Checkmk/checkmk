@@ -37,30 +37,30 @@ export class AbstractLink {
     }
 
     render_into(selection): void {
-        switch (this._line_config.style) {
-            case "straight": {
-                this._selection = selection
-                    .selectAll("line")
-                    .data([this.id()])
-                    .join("line")
-                    .attr("marker-end", "url(#triangle)")
-                    .attr("stroke-width", function (d) {
-                        return Math.max(1, 2 - d.depth);
-                    })
-                    .style("stroke", this._color());
-                break;
-            }
-            default: {
-                this._selection = selection
-                    .selectAll("path")
-                    .data([this.id()])
-                    .join("path")
-                    .attr("fill", "none")
-                    .attr("stroke-width", 1)
-                    .style("stroke", this._color());
-                break;
-            }
-        }
+        // Straigth line style
+        const line_selection = selection
+            .selectAll("line")
+            .data(this._line_config.style == "straight" ? [this.id()] : [])
+            .join("line")
+            .attr("marker-end", "url(#triangle)")
+            .attr("stroke-width", function (d) {
+                return Math.max(1, 2 - d.depth);
+            })
+            .style("stroke", this._color());
+
+        // Elbow and round style
+        const path_selection = selection
+            .selectAll("path")
+            .data(this._line_config.style != "straight" ? [this.id()] : [])
+            .join("path")
+            .attr("fill", "none")
+            .attr("stroke-width", 1)
+            .style("stroke", this._color());
+
+        this._selection =
+            this._line_config.style == "straight"
+                ? line_selection
+                : path_selection;
         if (this._line_config.dashed) this.selection().classed("dashed", true);
     }
 

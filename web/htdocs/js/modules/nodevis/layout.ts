@@ -1210,7 +1210,7 @@ class LayoutingMouseEventsOverlay {
     constructor(world: NodevisWorld) {
         this._world = world;
         this.drag = d3
-            .drag()
+            .drag<SVGElement, string>()
             .on("start.drag", event => this._dragstarted(event))
             .on("drag.drag", event => this._dragging(event))
             .on("end.drag", event => this._dragended(event));
@@ -1223,6 +1223,13 @@ class LayoutingMouseEventsOverlay {
             .call(this.drag);
     }
 
+    _get_scaled_event_coords(event): {x: number; y: number} {
+        return {
+            x: event.x / this._world.viewport.last_zoom.k,
+            y: event.y / this._world.viewport.last_zoom.k,
+        };
+    }
+
     _dragstarted(event) {
         if (!this._world.layout_manager.is_node_drag_allowed()) return;
         event.sourceEvent.stopPropagation();
@@ -1233,9 +1240,11 @@ class LayoutingMouseEventsOverlay {
         );
         if (!nodevis_node) return;
 
-        this._apply_drag_force(nodevis_node, event.x, event.y);
-        this._drag_start_x = event.x;
-        this._drag_start_y = event.y;
+        const scaled_event = this._get_scaled_event_coords(event);
+        this._apply_drag_force(nodevis_node, scaled_event.x, scaled_event.y);
+
+        this._drag_start_x = scaled_event.x;
+        this._drag_start_y = scaled_event.y;
 
         const use_style = nodevis_node.data.use_style;
         if (use_style) {
@@ -1287,17 +1296,14 @@ class LayoutingMouseEventsOverlay {
             }
         }
 
-        let scale = 1.0;
-        const delta_x = event.x - this._drag_start_x;
-        const delta_y = event.y - this._drag_start_y;
-
-        const last_zoom = this._world.viewport.last_zoom;
-        scale = 1 / last_zoom.k;
+        const scaled_event = this._get_scaled_event_coords(event);
+        const delta_x = scaled_event.x - this._drag_start_x;
+        const delta_y = scaled_event.y - this._drag_start_y;
 
         this._apply_drag_force(
             nodevis_node,
-            this._drag_start_x + delta_x * scale,
-            this._drag_start_y + delta_y * scale
+            this._drag_start_x + delta_x,
+            this._drag_start_y + delta_y
         );
 
         this._world.force_simulation.restart_with_alpha(0.5);
@@ -1651,14 +1657,11 @@ class LayoutApplier {
                 }
             }
 
-            if (
-                layout_settings.config.style_configs &&
-                node_chunk.layout_instance
-            ) {
-                node_chunk.layout_instance.style_configs =
-                    layout_settings.config.style_configs.concat(
-                        node_chunk.layout_instance.style_configs
-                    );
+            if (layout_settings.config.style_configs) {
+                node_chunk.layout_instance.style_configs = this._merge_styles(
+                    node_chunk.layout_instance.style_configs,
+                    layout_settings.config.style_configs
+                );
                 layout_settings.config.style_configs.length = 0;
             }
 
@@ -1694,6 +1697,31 @@ class LayoutApplier {
             this._world.layout_manager._world.force_simulation.restart_with_alpha(
                 2
             );
+    }
+
+    _merge_styles(
+        primary: StyleConfig[],
+        secondary: StyleConfig[]
+    ): StyleConfig[] {
+        const merged_styles: Map<string, StyleConfig> = new Map();
+        primary.forEach(style_config => {
+            merged_styles.set(
+                JSON.stringify({
+                    matcher: style_config.matcher,
+                    type: style_config.type,
+                }),
+                style_config
+            );
+        });
+        secondary.forEach(style_config => {
+            const style_id = JSON.stringify({
+                matcher: style_config.matcher,
+                type: style_config.type,
+            });
+            if (merged_styles.has(style_id)) return;
+            merged_styles.set(style_id, style_config);
+        });
+        return Array.from(merged_styles.values());
     }
 
     _get_grouped_styles(nodes_with_style) {

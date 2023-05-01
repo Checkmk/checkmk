@@ -3,7 +3,6 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import {d3SelectionDiv, d3SelectionG, NodevisWorld} from "nodevis/type_defs";
-import {AbstractGUINode} from "nodevis/node_utils";
 import {AbstractClassRegistry} from "nodevis/utils";
 
 export interface LayerSelections {
@@ -107,10 +106,7 @@ export class AbstractLayer extends Object {
         return;
     }
 
-    render_context_menu(
-        _event: MouseEvent,
-        _node_instance: null | AbstractGUINode = null
-    ): void {
+    render_context_menu(_event: MouseEvent, _node_id: string | null): void {
         return;
     }
 

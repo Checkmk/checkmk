@@ -216,6 +216,8 @@ export class AbstractGUINode implements TypeWithName {
     }
 
     _render_into_transform(selection: d3SelectionG): d3SelectionG {
+        if (selection.attr("transform") != null) return selection;
+
         let spawn_reference = this.node;
         if (this.node.parent && this.node.parent.x) {
             spawn_reference = this.node.parent;
@@ -233,7 +235,7 @@ export class AbstractGUINode implements TypeWithName {
             .on("mouseover", () => this._show_quickinfo())
             .on("mouseout", () => this._hide_quickinfo())
             .on("contextmenu", event => {
-                this._world.nodes_layer.render_context_menu(event, this);
+                this._world.nodes_layer.render_context_menu(event, this.id());
             });
         return selection;
     }

@@ -532,7 +532,7 @@ class NodeVisualizationBIDataMapper:
         if parent_node:
             p_aggr_path_id = parent_node.get("aggr_path_id")
             if isinstance(p_aggr_path_id, list):
-                aggr_path_name.extend(p_aggr_path_id)
+                aggr_path_id.extend(p_aggr_path_id)
             p_aggr_path_name = parent_node.get("aggr_path_name")
             if isinstance(p_aggr_path_name, list):
                 aggr_path_name.extend(p_aggr_path_name)

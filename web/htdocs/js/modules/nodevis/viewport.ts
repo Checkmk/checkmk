@@ -324,14 +324,13 @@ export class LayeredViewport {
         this._remove_obsolete_chunks();
         this._arrange_multiple_node_chunks();
 
-        //this._world.force_simulation.restart_with_alpha(0.3);
-
-        this.update_layers();
+        this.update_data_of_layers();
         this._world.layout_manager.layout_applier.apply_multiple_layouts(
             this.get_hierarchy_list(),
             this._chunks_changed || this.always_update_layout
         );
         this._world.layout_manager.compute_node_positions();
+        this.update_gui_of_layers(true);
 
         this.update_active_overlays();
     }
@@ -606,9 +605,9 @@ export class LayeredViewport {
         this._world.force_simulation.restart_with_alpha(0.5);
     }
 
-    update_layers() {
+    update_layers(force_gui_update = false) {
         this.update_data_of_layers();
-        this.update_gui_of_layers();
+        this.update_gui_of_layers(force_gui_update);
     }
 
     update_data_of_layers() {
@@ -618,10 +617,10 @@ export class LayeredViewport {
         }
     }
 
-    update_gui_of_layers() {
+    update_gui_of_layers(force_gui_update = false) {
         for (const layer_id in this._layers) {
             if (!this._layers[layer_id].is_enabled()) continue;
-            this._layers[layer_id].update_gui();
+            this._layers[layer_id].update_gui(force_gui_update);
         }
     }
 

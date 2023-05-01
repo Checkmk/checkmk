@@ -198,7 +198,10 @@ export class AbstractGUINode implements TypeWithName {
                 })
                 .merge(text_selection);
         }
+    }
 
+    _update_text_position() {
+        if (!this._text_selection) return;
         const text_positioning =
             this.node.data.current_positioning.text_positioning;
         if (text_positioning) {
@@ -515,6 +518,7 @@ export class AbstractGUINode implements TypeWithName {
         if (parseInt(this.selection().attr("in_transit")) > 0) {
             return;
         }
+
         const transition = this.add_optional_transition(
             this.selection(),
             enforce_transition
@@ -529,7 +533,7 @@ export class AbstractGUINode implements TypeWithName {
         );
 
         this.update_quickinfo_position();
-        this.render_text();
+        this._update_text_position();
         this.node.data.transition_info.type =
             this.node.data.current_positioning.type;
     }

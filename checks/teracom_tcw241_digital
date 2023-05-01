@@ -6,6 +6,7 @@
 
 from cmk.base.check_api import contains, discover, get_parsed_item_data
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
 def parse_tcw241_digital(info):
@@ -63,6 +64,16 @@ check_info["teracom_tcw241_digital"] = {
     "check_function": check_tcw241_digital,
     "inventory_function": discover(),
     "service_description": "Digital Sensor %s",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.38783.3.2.2.3",
+            oids=["1.0", "2.0", "3.0", "4.0"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.38783.3.3.3",
+            oids=["1.0", "2.0", "3.0", "4.0"],
+        ),
+    ],
     "snmp_info": [
         (
             ".1.3.6.1.4.1.38783.3.2.2.3",

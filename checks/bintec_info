@@ -6,6 +6,7 @@
 
 from cmk.base.check_api import any_of, equals
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
 def inventory_bintec_info(info):
@@ -36,5 +37,9 @@ check_info["bintec_info"] = {
     "service_description": "Bintec Info",
     # 1.3.6.1.4.1.272.4.1.31.0 S/N
     # 1.3.6.1.4.1.272.4.1.26.0 SW Version
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.272.4.1",
+        oids=["26.0", "31.0"],
+    ),
     "snmp_info": (".1.3.6.1.4.1.272.4.1", ["26.0", "31.0"]),
 }

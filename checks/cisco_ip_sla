@@ -8,6 +8,7 @@
 
 from cmk.base.check_api import all_of, BINARY, contains, exists, get_parsed_item_data, OID_END
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, OIDEnd, SNMPTree
 
 factory_settings["cisco_ip_sla_default_levels"] = {
     "state": "active",
@@ -179,6 +180,24 @@ check_info["cisco_ip_sla"] = {
     "service_description": "Cisco IP SLA %s",
     "group": "cisco_ip_sla",
     "default_levels_variable": "cisco_ip_sla_default_levels",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.42.1.2.2.1",
+            oids=[OIDEnd(), OIDBytes("2"), OIDBytes("6"), "37"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.42.1.2.1.1",
+            oids=[OIDEnd(), "2", "3", "4", "5"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.42.1.2.9.1",
+            oids=[OIDEnd(), "10", "2", "5", "6", "7"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.42.1.2.10.1",
+            oids=[OIDEnd(), "1", "2"],
+        ),
+    ],
     "snmp_info": [
         (
             ".1.3.6.1.4.1.9.9.42.1.2.2.1",

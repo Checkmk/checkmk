@@ -7,6 +7,7 @@
 from cmk.base.check_api import any_of, contains
 from cmk.base.check_legacy_includes.hitachi_hus import check_hitachi_hus, inventory_hitachi_hus
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 check_info["hitachi_hus_dku"] = {
     "detect": any_of(
@@ -17,6 +18,10 @@ check_info["hitachi_hus_dku"] = {
     "inventory_function": inventory_hitachi_hus,
     "check_function": check_hitachi_hus,
     "service_description": "HUS DKU Chassis %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.116.5.11.4.1.1.7.1",
+        oids=["1", "2", "3", "4", "5"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.116.5.11.4.1.1.7.1",
         [

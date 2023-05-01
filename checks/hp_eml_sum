@@ -6,6 +6,7 @@
 
 from cmk.base.check_api import equals
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 hp_eml_sum_map = {
     # snmp_value: (nagios_status, txt)
@@ -43,6 +44,10 @@ check_info["hp_eml_sum"] = {
     "check_function": check_hp_eml_sum,
     "inventory_function": inventory_hp_eml_sum,
     "service_description": "Summary Status",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.11.2.36.1.1.5.1.1",
+        oids=["3", "7", "9", "10", "11"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.11.2.36.1.1.5.1.1",
         [

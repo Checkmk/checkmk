@@ -8,6 +8,7 @@ import time
 
 from cmk.base.check_api import check_levels, get_rate, OID_END, startswith
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 factory_settings["atto_fibrebridge_fcport"] = {
     "fc_tx_words": None,
@@ -45,6 +46,10 @@ check_info["atto_fibrebridge_fcport"] = {
     "service_description": "FC Port %s",
     "default_levels_variable": "atto_fibrebridge_fcport",
     "group": "fcport_words",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.4547.2.3.3.2.1",
+        oids=[OIDEnd(), "2", "3"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.4547.2.3.3.2.1",
         [

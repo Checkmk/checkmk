@@ -11,7 +11,7 @@ import time
 from cmk.base.check_api import all_of, BINARY, get_average, get_rate, not_exists, startswith
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
 from cmk.base.config import check_info, factory_settings
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, render, SNMPTree
 
 # Taken from connUnitPortState
 # user selected state of the port hardware
@@ -289,6 +289,26 @@ check_info["fc_port"] = {
     "detect": all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         not_exists(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*"),
+    ),
+    "fetch": SNMPTree(
+        base=".1.3.6.1.3.94",
+        oids=[
+            "1.10.1.2",
+            "1.10.1.3",
+            "1.10.1.6",
+            "1.10.1.7",
+            "1.10.1.15",
+            "1.10.1.17",
+            "1.10.1.23",
+            OIDBytes("4.5.1.4"),
+            OIDBytes("4.5.1.5"),
+            OIDBytes("4.5.1.6"),
+            OIDBytes("4.5.1.7"),
+            OIDBytes("4.5.1.8"),
+            OIDBytes("4.5.1.28"),
+            OIDBytes("4.5.1.40"),
+            OIDBytes("4.5.1.50"),
+        ],
     ),
     "snmp_info": (
         ".1.3.6.1.3.94",

@@ -9,6 +9,7 @@ import time
 from cmk.base.check_api import check_levels, get_average, get_rate
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
 
@@ -67,6 +68,27 @@ check_info["fireeye_mail"] = {
     "check_function": check_fireeye_mail,
     "service_description": "Received Mail Rates",
     "group": "fireeye_mail",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.25597.13.1",
+        oids=[
+            "1",
+            "4",
+            "7",
+            "10",
+            "13",
+            "16",
+            "19",
+            "22",
+            "25",
+            "28",
+            "31",
+            "34",
+            "37",
+            "50",
+            "51",
+            "52",
+        ],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.25597.13.1",
         [

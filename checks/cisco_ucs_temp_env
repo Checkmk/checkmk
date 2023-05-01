@@ -7,6 +7,7 @@
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # comNET GmbH, Fabian Binder - 2018-05-30
 
@@ -46,6 +47,10 @@ check_info["cisco_ucs_temp_env"] = {
     "check_function": check_cisco_ucs_temp_env,
     "default_levels_variable": "cisco_ucs_temp_env_default_levels",
     "service_description": "Temperature %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.9.9.719.1.9.44.1",
+        oids=["4", "8", "13", "21"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.9.9.719.1.9.44.1",
         [

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
 
 # .1.3.6.1.4.1.3717.2.1.3.1.1.1 1
@@ -61,6 +62,10 @@ check_info["genua_vpn"] = {
     "inventory_function": inventory_genua_vpn,
     "check_function": check_genua_vpn,
     "service_description": "VPN %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.3717.2.1.3.1",
+        oids=["1", "2", "3", "4", "5", "6"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.3717.2.1.3.1",
         [

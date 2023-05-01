@@ -9,6 +9,7 @@ from itertools import chain
 from cmk.base.check_api import all_of, any_of, equals, exists, not_exists, OID_END
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 factory_settings["akcp_daisy_temp_defaultlevels"] = {"levels": (28.0, 32.0)}
 
@@ -41,6 +42,40 @@ check_info["akcp_daisy_temp"] = {
     "check_function": check_akcp_daisy_temp,
     "inventory_function": inventory_akcp_daisy_temp,
     "service_description": "Temperature %s",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.3854.1.2.2.1.19.33.1.2.1",
+            oids=[OIDEnd(), "1", "2", "14"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.3854.1.2.2.1.19.33.2.2.1",
+            oids=[OIDEnd(), "1", "2", "14"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.3854.1.2.2.1.19.33.3.2.1",
+            oids=[OIDEnd(), "1", "2", "14"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.3854.1.2.2.1.19.33.4.2.1",
+            oids=[OIDEnd(), "1", "2", "14"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.3854.1.2.2.1.19.33.5.2.1",
+            oids=[OIDEnd(), "1", "2", "14"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.3854.1.2.2.1.19.33.6.2.1",
+            oids=[OIDEnd(), "1", "2", "14"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.3854.1.2.2.1.19.33.7.2.1",
+            oids=[OIDEnd(), "1", "2", "14"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.3854.1.2.2.1.19.33.8.2.1",
+            oids=[OIDEnd(), "1", "2", "14"],
+        ),
+    ],
     "snmp_info": [
         (
             f".1.3.6.1.4.1.3854.1.2.2.1.19.33.{table}",

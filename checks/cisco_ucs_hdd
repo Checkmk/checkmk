@@ -12,7 +12,7 @@ from typing import Final, Iterable, Mapping, NamedTuple
 
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 
 _HOT_SPARE_VALUES: Final = {3, 4}
 
@@ -71,6 +71,10 @@ check_info["cisco_ucs_hdd"] = {
     "inventory_function": discover_cisco_ucs_hdd,
     "check_function": check_cisco_ucs_hdd,
     "service_description": "HDD %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.9.9.719.1.45.4.1",
+        oids=["6", "7", "9", "12", "13", "14", "18"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.9.9.719.1.45.4.1",
         [

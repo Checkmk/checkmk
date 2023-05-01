@@ -6,6 +6,7 @@
 
 from cmk.base.check_api import check_levels
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.sophos import DETECT_SOPHOS
 
 
@@ -34,5 +35,9 @@ check_info["sophos_disk"] = {
     "check_function": check_sophos_disk,
     "service_description": "Disk usage",
     "group": "sophos_disk",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.21067.2.1.2.3",
+        oids=["2"],
+    ),
     "snmp_info": (".1.3.6.1.4.1.21067.2.1.2.3", [2]),
 }

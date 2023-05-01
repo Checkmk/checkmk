@@ -52,6 +52,7 @@
 
 from cmk.base.check_api import all_of, contains, exists, OID_END
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 hsrp_states = {1: "initial", 2: "learn", 3: "listen", 4: "speak", 5: "standby", 6: "active"}
 
@@ -113,6 +114,10 @@ check_info["cisco_hsrp"] = {
     "inventory_function": inventory_cisco_hsrp,
     "check_function": check_cisco_hsrp,
     "service_description": "HSRP Group %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.9.9.106.1.2.1.1",
+        oids=[OIDEnd(), "11", "13", "14", "15", "16"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.9.9.106.1.2.1.1",
         [

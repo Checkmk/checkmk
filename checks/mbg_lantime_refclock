@@ -6,6 +6,7 @@
 
 from cmk.base.check_api import equals
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 mbg_lantime_refclock_refmode_map = {
     "0": "notavailable",
@@ -88,6 +89,10 @@ check_info["mbg_lantime_refclock"] = {
     "check_function": check_mbg_lantime_refclock,
     "inventory_function": inventory_mbg_lantime_refclock,
     "service_description": "LANTIME Refclock",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.5597.3.2",
+        oids=["4", "6", "7", "9", "10", "16"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.5597.3.2",
         [

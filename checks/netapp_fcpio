@@ -10,6 +10,7 @@ import time
 
 from cmk.base.check_api import all_of, exists, get_bytes_human_readable, get_rate, startswith
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 netapp_fcpio_default_levels = {"read": (None, None), "write": (None, None)}
 
@@ -62,5 +63,9 @@ check_info["netapp_fcpio"] = {
     "inventory_function": lambda info: [(None, "netapp_fcpio_default_levels")],
     "service_description": "FCP I/O",
     "group": "netapp_fcportio",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.789.1.17",
+        oids=["20", "21"],
+    ),
     "snmp_info": (".1.3.6.1.4.1.789.1.17", [20, 21]),
 }

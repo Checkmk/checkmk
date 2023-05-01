@@ -7,6 +7,7 @@
 from cmk.base.check_api import startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # Example:
 # .1.3.6.1.4.1.89.53.15.1.9.1 = INTEGER: 42
@@ -73,6 +74,10 @@ check_info["dell_powerconnect_temp"] = {
     "inventory_function": inventory_dell_powerconnect_temp,
     "service_description": "Temperature %s",
     "default_levels_variable": "dell_powerconnect_temp_default_values",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.89.53.15.1",
+        oids=["9", "10"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.89.53.15.1",
         [

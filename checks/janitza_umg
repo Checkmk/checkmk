@@ -10,7 +10,7 @@ from cmk.base.check_api import any_of, check_levels, equals
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 
 # 508 and 604 have the same mib
 janitza_umg_device_map = {
@@ -115,6 +115,44 @@ check_info["janitza_umg"] = {
     "service_description": "Input %s",
     "default_levels_variable": "janitza_umg_inphase_default_levels",
     "group": "el_inphase",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.2.1.1.2",
+            oids=["0"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.34278",
+            oids=["1"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.34278",
+            oids=["2"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.34278",
+            oids=["3"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.34278",
+            oids=["4"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.34278",
+            oids=["5"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.34278",
+            oids=["6"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.34278",
+            oids=["7"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.34278",
+            oids=["8"],
+        ),
+    ],
     "snmp_info": [
         (".1.3.6.1.2.1.1.2", ["0"]),  # device id
         (".1.3.6.1.4.1.34278", ["1"]),  # rmsPhase

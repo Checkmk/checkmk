@@ -6,6 +6,7 @@
 
 from cmk.base.check_api import all_of, any_of, exists, startswith
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 fast_lta_headunit_info = [
     (".1.3.6.1.4.1.27417.2", [1, 2, 5])  # headUnitStatus  # replicationMode  # replicationRunning
@@ -76,6 +77,12 @@ check_info["fast_lta_headunit.status"] = {
     "check_function": check_fast_lta_headunit_status,
     "inventory_function": inventory_fast_lta_headunit_status,
     "service_description": "Fast LTA Headunit Status",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.27417.2",
+            oids=["1", "2", "5"],
+        )
+    ],
     "snmp_info": fast_lta_headunit_info,
 }
 
@@ -131,6 +138,12 @@ check_info["fast_lta_headunit.replication"] = {
     "check_function": check_fast_lta_headunit_replication,
     "inventory_function": inventory_fast_lta_headunit_replication,
     "service_description": "Fast LTA Replication",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.27417.2",
+            oids=["1", "2", "5"],
+        )
+    ],
     "snmp_info": fast_lta_headunit_info,
 }
 

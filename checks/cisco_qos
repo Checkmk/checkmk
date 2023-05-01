@@ -19,7 +19,7 @@ from cmk.base.check_api import (
     saveint,
 )
 from cmk.base.config import check_info, factory_settings
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, render, SNMPTree
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
@@ -327,6 +327,56 @@ check_info["cisco_qos"] = {
     "inventory_function": inventory_cisco_qos,
     "group": "cisco_qos",
     "default_levels_variable": "cisco_qos_default_levels",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.166.1.1.1.1",
+            oids=[OIDEnd(), "4"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.166.1.6.1.1",
+            oids=[OIDEnd(), "1"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.166.1.7.1.1",
+            oids=[OIDEnd(), "1"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.166.1.5.1.1",
+            oids=[OIDEnd(), "2"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.166.1.15.1.1",
+            oids=[OIDEnd(), "9"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.166.1.15.1.1",
+            oids=[OIDEnd(), "16"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.2.1.2.2.1",
+            oids=[OIDEnd(), "2"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.2.1.2.2.1",
+            oids=[OIDEnd(), "5"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.166.1.5.1.1",
+            oids=[OIDEnd(), "4"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.166.1.9.1.1",
+            oids=[OIDEnd(), "1"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.166.1.9.1.1",
+            oids=[OIDEnd(), "2"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.166.1.5.1.1",
+            oids=[OIDEnd(), "3"],
+        ),
+    ],
     "snmp_info": [
         (".1.3.6.1.4.1.9.9.166.1", [OID_END, "1.1.1.4"]),  # qosIfIndex
         (".1.3.6.1.4.1.9.9.166.1", [OID_END, "6.1.1.1"]),  # qosPolicies

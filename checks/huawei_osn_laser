@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_OSN
 
 # The dBm should not get too low. So we check only for lower levels
@@ -66,6 +67,10 @@ check_info["huawei_osn_laser"] = {
     "inventory_function": inventory_huawei_osn_laser,
     "check_function": check_huawei_osn_laser,
     "service_description": "Laser %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.2011.2.25.3.40.50.119.10.1",
+        oids=["6.200", "2.200", "2.203", "2.252", "2.253"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.2011.2.25.3.40.50.119.10.1",
         [

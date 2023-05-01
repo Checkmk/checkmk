@@ -34,6 +34,7 @@
 
 from cmk.base.check_api import any_of, contains
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 dell_powerconnect_psu_status_map = {
     "1": "normal",
@@ -100,6 +101,16 @@ check_info["dell_powerconnect_psu"] = {
     "check_function": check_dell_powerconnect_psu,
     "inventory_function": inventory_dell_powerconnect_psu,
     "service_description": "Sensor %s",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.674.10895.3000.1.2.100.1",
+            oids=["0"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.674.10895.3000.1.2.110.7.2.1",
+            oids=["1", "2", "3", "4"],
+        ),
+    ],
     "snmp_info": [
         (".1.3.6.1.4.1.674.10895.3000.1.2.100.1", ["0"]),  # productIdentificationDisplayName
         (

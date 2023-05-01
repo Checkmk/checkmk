@@ -10,6 +10,7 @@ import time
 
 from cmk.base.check_api import discover_single, startswith
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
 def get_time(timefromdevice):
@@ -81,6 +82,16 @@ check_info["hepta"] = {
     "inventory_function": discover_single,
     "check_function": check_hepta,
     "service_description": "HPF Info",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.12527.29",
+            oids=["1.1.0", "1.3.0", "1.4.0", "1.5.0", "1.6.0", "2.1.2.0", "3.1.0", "3.5.0"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.12527.40",
+            oids=["1.1.0", "1.3.0", "1.4.0", "1.5.0", "1.6.0", "2.1.2.0", "3.1.0", "3.5.0"],
+        ),
+    ],
     "snmp_info": [
         (
             f".1.3.6.1.4.1.12527.{table}",

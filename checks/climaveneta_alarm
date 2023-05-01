@@ -6,6 +6,7 @@
 
 from cmk.base.check_api import equals, OID_END
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 climaveneta_alarms = {
     # 20  : "Global (general)",
@@ -85,5 +86,9 @@ check_info["climaveneta_alarm"] = {
     "check_function": check_climaveneta_alarm,
     "inventory_function": inventory_climaveneta_alarm,
     "service_description": "Alarm Status",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.9839.2.1",
+        oids=[OIDEnd(), "1"],
+    ),
     "snmp_info": (".1.3.6.1.4.1.9839.2.1", [OID_END, 1]),
 }

@@ -7,6 +7,7 @@
 from cmk.base.check_api import equals
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # this is currently here only to prevent error messages when upgrading
 factory_settings["adva_fsp_temp_default_levels"] = {}
@@ -50,6 +51,16 @@ check_info["adva_fsp_temp"] = {
     "inventory_function": inventory_adva_fsp_temp,
     "check_function": check_adva_fsp_temp,
     "service_description": "Temperature %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.2544",
+        oids=[
+            "1.11.2.4.2.1.1.1",
+            "1.11.2.4.2.1.1.2",
+            "1.11.2.4.2.1.1.3",
+            "2.5.5.1.1.1",
+            "2.5.5.2.1.5",
+        ],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.2544",
         [

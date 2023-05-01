@@ -8,6 +8,7 @@
 
 from cmk.base.check_api import all_of, any_of, equals, exists, startswith
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 sync_name_mapping = {
     "1": "Synced",
@@ -60,6 +61,10 @@ check_info["stormshield_cluster"] = {
     "inventory_function": inventory_stormshield_cluster,
     "check_function": check_stormshield_cluster,
     "service_description": "HA Status",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.11256.1.11",
+        oids=["1", "2", "3", "5", "6", "8"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.11256.1.11",
         [

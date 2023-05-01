@@ -10,6 +10,7 @@ from cmk.base.check_api import startswith
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.636159851 nbAlinkEnc_0_4_TEMP
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.882181375 nbAlinkEnc_2_1_TEMP
@@ -145,6 +146,20 @@ check_info["apc_netbotz_sensors"] = {
         item, params, parsed, "temp"
     ),
     "service_description": "Temperature %s",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.5528.100.4.1.1.1",
+            oids=["1", "2", "4", "7"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.5528.100.4.1.2.1",
+            oids=["1", "2", "4", "7"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.5528.100.4.1.3.1",
+            oids=["1", "2", "4", "7"],
+        ),
+    ],
     "snmp_info": [
         (".1.3.6.1.4.1.5528.100.4.1.1.1", _OIDS),
         (".1.3.6.1.4.1.5528.100.4.1.2.1", _OIDS),

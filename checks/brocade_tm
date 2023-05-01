@@ -14,6 +14,7 @@ import time
 
 from cmk.base.check_api import get_rate
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
 
 factory_settings["brocade_tm_default_levels"] = {
@@ -85,6 +86,10 @@ check_info["brocade_tm"] = {
     "service_description": "TM %s",
     "group": "brocade_tm",
     "default_levels_variable": "brocade_tm_default_levels",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.1991.1.14.2.1.2.2.1",
+        oids=["3", "4", "5", "6", "9", "11", "13", "15"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.1991.1.14.2.1.2.2.1",
         [

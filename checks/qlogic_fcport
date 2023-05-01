@@ -10,7 +10,7 @@ import time
 
 from cmk.base.check_api import any_of, get_rate, OID_END, startswith
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, render, SNMPTree
 
 # settings for inventory: which ports should be inventorized
 qlogic_fcport_inventory_opstates = ["1", "3"]
@@ -228,6 +228,37 @@ check_info["qlogic_fcport"] = {
     "check_function": check_qlogic_fcport,
     "inventory_function": inventory_qlogic_fcport,
     "service_description": "FC Port %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.2.1.75.1",
+        oids=[
+            OIDEnd(),
+            "2.1.1.3",
+            "2.2.1.1",
+            "2.2.1.2",
+            "3.1.1.1",
+            "3.1.1.2",
+            "3.1.1.4",
+            "3.1.1.5",
+            "3.1.1.6",
+            "3.1.1.8",
+            "3.1.1.9",
+            "3.1.1.10",
+            "3.1.1.11",
+            "3.1.1.12",
+            "4.2.1.1",
+            "4.2.1.2",
+            "4.2.1.3",
+            "4.2.1.4",
+            "4.2.1.5",
+            "4.2.1.6",
+            "4.2.1.7",
+            "4.3.1.1",
+            "4.3.1.2",
+            "4.3.1.3",
+            "4.3.1.4",
+            "4.3.1.5",
+        ],
+    ),
     "snmp_info": (
         ".1.3.6.1.2.1.75.1",
         [

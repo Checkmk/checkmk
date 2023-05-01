@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.infoblox import DETECT_INFOBLOX
 
 # .1.3.6.1.4.1.7779.3.1.1.2.1.15.0 X.X.X.X --> IB-PLATFORMONE-MIB::ibGridMasterVIP.0
@@ -30,6 +31,10 @@ check_info["infoblox_grid_status"] = {
     "inventory_function": inventory_infoblox_grid_status,
     "check_function": check_infoblox_grid_status,
     "service_description": "Grid replication",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.7779.3.1.1.2.1",
+        oids=["15", "16"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.7779.3.1.1.2.1",
         [

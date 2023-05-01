@@ -6,6 +6,7 @@
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
 
 factory_settings["brocade_mlx_temperature_default_levels"] = {"levels": (105.0, 110.0)}
@@ -47,6 +48,10 @@ check_info["brocade_mlx_temp"] = {
     "check_function": check_brocade_mlx_temp,
     "inventory_function": inventory_brocade_mlx_temp,
     "service_description": "Temperature %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.1991.1.1.2.13.1.1",
+        oids=["3", "4"],
+    ),
     "snmp_info": (".1.3.6.1.4.1.1991.1.1.2.13.1.1", [3, 4]),  # descr, temperature
     "default_levels_variable": "brocade_mlx_temperature_default_levels",
     "group": "temperature",

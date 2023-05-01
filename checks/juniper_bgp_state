@@ -6,6 +6,7 @@
 
 from cmk.base.check_api import BINARY, discover, get_parsed_item_data
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, SNMPTree
 from cmk.base.plugins.agent_based.utils.ip_format import clean_v4_address, clean_v6_address
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER
 
@@ -77,6 +78,10 @@ check_info["juniper_bgp_state"] = {
     "check_function": check_juniper_bgp_state,
     "inventory_function": discover(),
     "service_description": "BGP Status Peer %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.2636.5.1.1.2.1.1.1",
+        oids=["2", "3", OIDBytes("11")],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.2636.5.1.1.2.1.1.1",
         [

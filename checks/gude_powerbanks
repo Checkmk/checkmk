@@ -9,6 +9,7 @@
 from cmk.base.check_api import any_of, OID_END, startswith
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 # Knowledge from customer:
 # Devices with OID_END=38 are 12 port power switches with two powerbanks.
@@ -87,6 +88,20 @@ check_info["gude_powerbanks"] = {
     "inventory_function": inventory_gude_powerbanks,
     "check_function": check_elphase,
     "service_description": "Powerbank %s",
+    "fetch": [
+        SNMPTree(
+            base=f".1.3.6.1.4.1.28507.{table}.1.3.1.2.1",
+            oids=[OIDEnd(), "3"],
+        )
+        for table in _TABLES
+    ]
+    + [
+        SNMPTree(
+            base=f".1.3.6.1.4.1.28507.{table}.1.5.1.2.1",
+            oids=[OIDEnd(), "2", "3", "4", "5", "6", "7", "10"],
+        )
+        for table in _TABLES
+    ],
     "snmp_info": [
         (
             f".1.3.6.1.4.1.28507.{table}",

@@ -9,6 +9,7 @@
 
 from cmk.base.check_api import contains
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
 def inventory_apc_sts_source(info):
@@ -36,5 +37,9 @@ check_info["apc_sts_source"] = {
     "inventory_function": inventory_apc_sts_source,
     "check_function": check_apc_sts_source,
     "service_description": "Source",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.705.2",
+        oids=["3.5", "4.5"],
+    ),
     "snmp_info": (".1.3.6.1.4.1.705.2", ["3.5", "4.5"]),
 }

@@ -12,6 +12,7 @@ from cmk.base.check_legacy_includes.raritan import (
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
 def parse_raritan_emx(info):
@@ -106,6 +107,10 @@ check_info["raritan_emx"] = {
     "inventory_function": inventory_raritan_emx_temp,
     "check_function": check_raritan_emx_temp,
     "service_description": "Temperature %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.13742.9",
+        oids=["1.4.1.1.1", "1.4.1.1.4", "1.4.1.1.2", "2.1.1.3", "1.4.1.1.5", "2.1.1.2"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.13742.9",
         [

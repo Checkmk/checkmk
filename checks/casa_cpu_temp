@@ -7,6 +7,7 @@
 from cmk.base.check_api import OID_END
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.casa import DETECT_CASA
 
 
@@ -55,6 +56,24 @@ check_info["casa_cpu_temp"] = {
     "parse_function": parse_casa_info_temp,
     "service_description": "Temperature CPU %s",
     "group": "temperature",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.2.1.47.1.1.1.1",
+            oids=[OIDEnd(), "2"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.2.1.99.1.1.1",
+            oids=[OIDEnd(), "4"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.2.1.99.1.1.1",
+            oids=[OIDEnd(), "5"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.2.1.99.1.1.1",
+            oids=[OIDEnd(), "6"],
+        ),
+    ],
     "snmp_info": [
         (".1.3.6.1.2.1.47.1.1.1.1.2", [OID_END, ""]),  # Entity descriptions, quite long...
         (".1.3.6.1.2.1.99.1.1.1.4", [OID_END, ""]),  # Temperatures, Value

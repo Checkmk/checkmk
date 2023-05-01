@@ -10,6 +10,7 @@ from cmk.base.check_api import startswith
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 bintec_sensors_info = (
     ".1.3.6.1.4.1.272.4.17.7.1.1.1",
@@ -56,6 +57,10 @@ check_info["bintec_sensors.fan"] = {
     "check_function": check_bintec_sensors_fan,
     "inventory_function": inventory_bintec_sensors_fan,
     "service_description": "%s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.272.4.17.7.1.1.1",
+        oids=["2", "3", "4", "5", "7"],
+    ),
     "snmp_info": bintec_sensors_info,
     "default_levels_variable": "bintec_sensors_fan_default_levels",
     "group": "hw_fans",
@@ -94,6 +99,10 @@ check_info["bintec_sensors.temp"] = {
     "inventory_function": inventory_bintec_sensors_temp,
     "service_description": "Temperature %s",
     "group": "temperature",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.272.4.17.7.1.1.1",
+        oids=["2", "3", "4", "5", "7"],
+    ),
     "snmp_info": bintec_sensors_info,
     "default_levels_variable": "bintec_sensors_temp_default_levels",
 }
@@ -135,6 +144,10 @@ check_info["bintec_sensors.voltage"] = {
     "check_function": check_bintec_sensors_voltage,
     "inventory_function": inventory_bintec_sensors_voltage,
     "service_description": "Voltage %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.272.4.17.7.1.1.1",
+        oids=["2", "3", "4", "5", "7"],
+    ),
     "snmp_info": bintec_sensors_info,
 }
 

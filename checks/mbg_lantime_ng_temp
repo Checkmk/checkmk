@@ -6,6 +6,7 @@
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
 
 factory_settings["mbg_lantime_ng_temp_default_levels"] = {
@@ -30,6 +31,10 @@ check_info["mbg_lantime_ng_temp"] = {
     "service_description": "Temperature %s",
     "default_levels_variable": "mbg_lantime_ng_temp_default_levels",
     "group": "temperature",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.5597.30.0.5.2",
+        oids=["1"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.5597.30.0.5.2",
         [

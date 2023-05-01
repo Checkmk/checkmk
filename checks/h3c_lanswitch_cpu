@@ -21,6 +21,7 @@
 
 from cmk.base.check_api import contains, OID_END
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 
 def h3c_lanswitch_cpu_genitem(item):
@@ -76,6 +77,10 @@ check_info["h3c_lanswitch_cpu"] = {
     "inventory_function": inventory_h3c_lanswitch_cpu,
     "check_function": check_h3c_lanswitch_cpu,
     "service_description": "CPU Utilization %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.43.45.1.6.1.1.1",
+        oids=[OIDEnd(), "3"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.43.45.1.6.1.1.1",
         [OID_END, "3"],  # 5-min average load.

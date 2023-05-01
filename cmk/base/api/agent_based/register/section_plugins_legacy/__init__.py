@@ -177,8 +177,6 @@ def create_snmp_section_plugin_from_legacy(
         # This would add 19 plugins to list of failures, but some are on the list anyway.
         raise NotImplementedError("cannot auto-migrate cluster aware plugins")
 
-    trees = _create_snmp_trees(snmp_info)
-
     parse_function = _create_snmp_parse_function(
         check_info_element.get("parse_function"),
         handle_empty_info=bool(check_info_element.get("handle_empty_info")),
@@ -187,7 +185,7 @@ def create_snmp_section_plugin_from_legacy(
     return create_snmp_section_plugin(
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
-        fetch=trees,
+        fetch=check_info_element["fetch"],
         detect_spec=check_info_element["detect"],
         validate_creation_kwargs=validate_creation_kwargs,
     )

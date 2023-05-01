@@ -6,6 +6,7 @@
 
 from cmk.base.check_api import startswith
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 threads_default_levels = {"levels": ("levels", (2000, 4000))}
 
@@ -36,6 +37,10 @@ check_info["bluecat_threads"] = {
     "inventory_function": inventory_bluecat_threads,
     "service_description": "Number of threads",
     "group": "threads",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.13315.100.200.1.1.2",
+        oids=["1"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.13315.100.200.1.1.2",
         [

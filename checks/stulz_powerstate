@@ -6,6 +6,7 @@
 
 from cmk.base.check_api import OID_END
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.stulz import DETECT_STULZ
 
 
@@ -32,5 +33,9 @@ check_info["stulz_powerstate"] = {
     "check_function": check_stulz_powerstate,
     "inventory_function": inventory_stulz_powerstate,
     "service_description": "State %s ",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.29462.10.2.1.4.1.1.1.1013",
+        oids=[OIDEnd(), "1"],
+    ),
     "snmp_info": (".1.3.6.1.4.1.29462.10.2.1.4.1.1.1.1013", [OID_END, 1]),
 }

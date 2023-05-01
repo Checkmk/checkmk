@@ -12,6 +12,7 @@
 
 from cmk.base.check_api import equals
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
 def inventory_adva_fsp_current(info):
@@ -50,6 +51,16 @@ check_info["adva_fsp_current"] = {
     "inventory_function": inventory_adva_fsp_current,
     "check_function": check_adva_fsp_current,
     "service_description": "Power Supply %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.2544",
+        oids=[
+            "1.11.2.4.2.2.1.1",
+            "1.11.2.4.2.2.1.2",
+            "1.11.2.4.2.2.1.3",
+            "2.5.5.1.1.1",
+            "2.5.5.2.1.5",
+        ],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.2544",
         [

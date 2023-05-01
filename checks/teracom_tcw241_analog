@@ -8,6 +8,7 @@ import collections
 
 from cmk.base.check_api import check_levels, contains, discover, get_parsed_item_data
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 AnalogSensor = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "AnalogSensor", "description maximum minimum voltage"
@@ -88,6 +89,23 @@ check_info["teracom_tcw241_analog"] = {
     "check_function": check_tcw241_analog,
     "inventory_function": discover(),
     "service_description": "Analog Sensor %s",
+    "fetch": [
+        *(
+            SNMPTree(
+                f".1.3.6.1.4.1.38783.3.2.2.2.{table}",
+                [
+                    "1",  # Voltage description
+                    "2",  # Voltage maximum x1000 in Integer format
+                    "3",  # Voltage minimum x1000 in Integer format
+                ],
+            )
+            for table in _TABLES
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.38783.3.3.2",
+            oids=["1.0", "2.0", "3.0", "4.0"],
+        ),
+    ],
     "snmp_info": [
         *(
             (

@@ -6,6 +6,7 @@
 
 from cmk.base.check_legacy_includes.mcafee_gateway import inventory_mcafee_gateway_generic
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
 # TODO together with other mcafee-emailgateway-info checks?
@@ -21,6 +22,10 @@ check_info["mcafee_emailgateway_spam_mcafee"] = {
     "inventory_function": inventory_mcafee_gateway_generic,
     "check_function": check_mcafee_emailgateway_spam_mcafee,
     "service_description": "Spam McAfee",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.1230.2.4.1.2.3.6",
+        oids=["10", "11"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.1230.2.4.1.2.3.6",
         [

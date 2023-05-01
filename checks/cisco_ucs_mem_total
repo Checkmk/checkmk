@@ -6,6 +6,7 @@
 
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # comNET GmbH, Fabian Binder - 2018-05-30
 
@@ -26,6 +27,10 @@ check_info["cisco_ucs_mem_total"] = {
     "check_function": check_cisco_ucs_mem_total,
     "inventory_function": inventory_cisco_ucs_mem_total,
     "service_description": "Memory total",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.9.9.719.1.9.35.1",
+        oids=["9"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.9.9.719.1.9.35.1",
         [

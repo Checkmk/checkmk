@@ -7,6 +7,7 @@
 from cmk.base.check_api import discover, OID_END
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 
 # .1.3.6.1.4.1.1916.1.1.1.38.1.3.1.1 11960 --> EXTREME-SYSTEM-MIB::extremePowerSupplyOutputVoltage.1.1
@@ -60,6 +61,10 @@ check_info["netextreme_psu_out"] = {
     "inventory_function": discover(),
     "check_function": check_elphase,
     "service_description": "Power Supply %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.1916.1.1.1.38.1",
+        oids=[OIDEnd(), "3", "4", "5"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.1916.1.1.1.38.1",
         [

@@ -6,6 +6,7 @@
 
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # Agent / MIB output
 # SysChassisPowerSupplyEntry ::=
@@ -53,5 +54,9 @@ check_info["f5_bigip_psu"] = {
     "inventory_function": inventory_f5_bigip_psu,
     "service_description": "PSU %s",
     # Get ID and status from the SysChassisPowerSupplyTable
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.3375.2.1.3.2.2.2.1",
+        oids=["1", "2"],
+    ),
     "snmp_info": (".1.3.6.1.4.1.3375.2.1.3.2.2.2.1", [1, 2]),
 }

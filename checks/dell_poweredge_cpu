@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.dell_poweredge import (
     inventory_dell_poweredge_cpu,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_IDRAC_POWEREDGE
 
 check_info["dell_poweredge_cpu"] = {
@@ -16,6 +17,16 @@ check_info["dell_poweredge_cpu"] = {
     "check_function": check_dell_poweredge_cpu,
     "inventory_function": inventory_dell_poweredge_cpu,
     "service_description": "%s",
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.674.10892.5.4.1100.32.1",
+            oids=["1", "2", "4", "5", "7"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.674.10892.5.4.1100.30.1",
+            oids=["1", "2", "23"],
+        ),
+    ],
     "snmp_info": [
         (
             ".1.3.6.1.4.1.674.10892.5.4.1100.32.1",

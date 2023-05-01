@@ -9,6 +9,7 @@
 from cmk.base.check_api import contains
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 #   .--Parse function------------------------------------------------------.
 #   |  ____                        __                  _   _               |
@@ -272,6 +273,10 @@ check_info["icom_repeater"] = {
     "inventory_function": inventory_icom_repeater,
     "check_function": check_icom_repeater,
     "service_description": "Repeater Info",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.2021.8.1",
+        oids=["1", "2", "101"],
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.2021.8.1",
         [

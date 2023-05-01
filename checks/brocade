@@ -8,6 +8,7 @@ from cmk.base.check_api import any_of, equals, saveint, startswith
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # Example output from agent:
 # [['1', '24', 'SLOT #0: TEMP #1'],
@@ -70,6 +71,10 @@ check_info["brocade.fan"] = {
     "inventory_function": inventory_brocade_fan,
     "service_description": "FAN %s",
     "group": "hw_fans",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.1588.2.1.1.1.1.22.1",
+        oids=["3", "4", "5"],
+    ),
     "snmp_info": brocade_info,
 }
 
@@ -102,6 +107,10 @@ check_info["brocade.power"] = {
     "check_function": check_brocade_power,
     "inventory_function": inventory_brocade_power,
     "service_description": "Power supply %s",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.1588.2.1.1.1.1.22.1",
+        oids=["3", "4", "5"],
+    ),
     "snmp_info": brocade_info,
 }
 
@@ -133,6 +142,10 @@ check_info["brocade.temp"] = {
     "inventory_function": inventory_brocade_temp,
     "service_description": "Temperature Ambient %s",
     "group": "temperature",
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.1588.2.1.1.1.1.22.1",
+        oids=["3", "4", "5"],
+    ),
     "snmp_info": brocade_info,
     "default_levels_variable": "brocade_temp_default_levels",
 }

@@ -53,14 +53,21 @@ def test_snmp_info_snmp_detect_equal(fix_plugin_legacy: FixPluginLegacy) -> None
 
 def test_snmp_tree_translation(fix_plugin_legacy: FixPluginLegacy) -> None:
     for check_info_element in fix_plugin_legacy.check_info.values():
-        if (info_spec := check_info_element.get("snmp_info")) is None:
-            continue
-        new_trees = _create_snmp_trees(info_spec)
+        old_tuple_spec = check_info_element.get("snmp_info")
+        new_trees_spec = check_info_element.get("fetch")
 
-        if isinstance(new_trees, SNMPTree):
+        if old_tuple_spec is None:
+            assert new_trees_spec is None
             continue
-        assert isinstance(new_trees, list)
-        assert all(isinstance(tree, SNMPTree) for tree in new_trees)
+
+        new_trees_converted = _create_snmp_trees(old_tuple_spec)
+        if new_trees_spec is not None:
+            assert new_trees_spec == new_trees_converted
+
+        if isinstance(new_trees_converted, SNMPTree):
+            continue
+        assert isinstance(new_trees_converted, list)
+        assert all(isinstance(tree, SNMPTree) for tree in new_trees_converted)
 
 
 def test_subcheck_snmp_info_consistent(fix_plugin_legacy: FixPluginLegacy) -> None:

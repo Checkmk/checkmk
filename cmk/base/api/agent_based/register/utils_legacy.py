@@ -7,6 +7,7 @@ from collections.abc import Callable, Iterable, Mapping
 from typing import NotRequired, TypedDict
 
 from cmk.base.api.agent_based.checking_classes import Service
+from cmk.base.api.agent_based.section_classes import SNMPTree
 
 from ..section_classes import SNMPDetectSpecification
 
@@ -15,6 +16,7 @@ _DiscoveredParameters = Mapping | tuple | str | None
 
 class CheckInfoElement(TypedDict):
     detect: NotRequired[SNMPDetectSpecification]
+    fetch: NotRequired[list[SNMPTree] | SNMPTree]
     check_function: NotRequired[Callable]
     inventory_function: NotRequired[
         Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]] | Iterable[Service]]

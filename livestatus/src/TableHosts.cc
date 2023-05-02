@@ -17,7 +17,6 @@
 #include <vector>
 
 #include "DynamicRRDColumn.h"
-#include "HostListRenderer.h"
 #include "RRDColumn.h"
 #include "ServiceListState.h"
 #include "livestatus/AttributeBitmaskColumn.h"
@@ -30,6 +29,7 @@
 #include "livestatus/DowntimeRenderer.h"
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/DynamicFileColumn.h"
+#include "livestatus/HostListRenderer.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
@@ -767,7 +767,7 @@ void TableHosts::answerQuery(Query &query, const User &user) {
     // If we know the host group, we simply iterate over it.
     if (auto value = query.stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using host group index with '" << *value << "'";
-        if (const auto hg = core()->find_hostgroup(*value)) {
+        if (const auto *hg = core()->find_hostgroup(*value)) {
             hg->all([&process](const IHost &h) { return process(h); });
         }
         return;

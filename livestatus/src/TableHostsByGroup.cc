@@ -28,7 +28,7 @@ TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
     }),
                            LockComments::yes, LockDowntimes::yes);
     TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
-        return r.rawData<host_and_group>()->group->handle();
+        return r.rawData<host_and_group>()->group;
     }));
 }
 

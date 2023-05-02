@@ -43,7 +43,7 @@ public:
     virtual ~MonitoringCore() = default;
 
     [[nodiscard]] virtual const IHost *find_host(const std::string &name) = 0;
-    [[nodiscard]] virtual std::unique_ptr<const IHostGroup> find_hostgroup(
+    [[nodiscard]] virtual const IHostGroup *find_hostgroup(
         const std::string &name) const = 0;
     virtual std::unique_ptr<const IHost> getHostByDesignation(
         const std::string &designation) = 0;

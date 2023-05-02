@@ -28,6 +28,7 @@ set(livestatus_headers
     ${header_location}/FileSystemHelper.h
     ${header_location}/Filter.h
     ${header_location}/global_counters.h
+    ${header_location}/HostListRenderer.h
     ${header_location}/HostServiceState.h
     ${header_location}/InputBuffer.h
     ${header_location}/IntAggregator.h
@@ -108,6 +109,7 @@ set(livestatus_sources
     FileSystemHelper.cc
     Filter.cc
     global_counters.cc
+    HostListRenderer.cc
     HostServiceState.cc
     InputBuffer.cc
     IntFilter.cc

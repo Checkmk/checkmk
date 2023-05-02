@@ -97,7 +97,6 @@ liblivestatusneb_a_LD_FLAGS = \
     $(AM_LDFLAGS) \
     $(RRDTOOL_LD_FLAGS)
 liblivestatusneb_a_SOURCES = \
-        HostListRenderer.cc \
         HostListState.cc \
         MacroExpander.cc \
         NagiosCore.cc \

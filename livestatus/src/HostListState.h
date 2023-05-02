@@ -14,14 +14,6 @@ class IHost;
 class IHostGroup;
 class User;
 
-#ifdef CMC
-#include "CmcHostGroup.h"
-class HostGroup;
-#else
-#include "NebHostGroup.h"
-#include "nagios.h"
-#endif
-
 class HostListState {
 public:
     enum class Type {
@@ -56,17 +48,6 @@ public:
     explicit HostListState(Type type) : type_(type) {}
 
     int32_t operator()(const IHostGroup &group, const User &user) const;
-
-// TODO(sp): Remove.
-#ifdef CMC
-    int32_t operator()(const HostGroup &group, const User &user) const {
-        return (*this)(CmcHostGroup{group}, user);
-    }
-#else
-    int32_t operator()(const hostgroup &group, const User &user) const {
-        return (*this)(NebHostGroup{group}, user);
-    }
-#endif
 
 private:
     const Type type_;

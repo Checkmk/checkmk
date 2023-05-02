@@ -120,7 +120,7 @@ def execute_check_discovery(
     return ActiveCheckResult.from_subresults(
         *itertools.chain(
             services_result,
-            [host_labels_result],
+            host_labels_result,
             (r for r in summarizer(host_sections) if r.state != 0),
             parsing_errors_results,
             [
@@ -170,7 +170,7 @@ def _check_service_lists(
                     0,
                     "",
                     [
-                        "%s: %s: %s"
+                        "%s service: %s: %s"
                         % (
                             title.capitalize(),
                             discovered_service.check_plugin_name,
@@ -200,8 +200,6 @@ def _check_service_lists(
                 )
             ):
                 need_rediscovery = True
-        else:
-            subresults.append(ActiveCheckResult(0, "", [f"No {title} services found"]))
 
     for (discovered_service, _found_on_nodes) in services_by_transition.get("ignored", []):
         subresults.append(
@@ -209,7 +207,7 @@ def _check_service_lists(
                 0,
                 "",
                 [
-                    "Ignored: %s: %s"
+                    "Ignored service: %s: %s"
                     % (
                         discovered_service.check_plugin_name,
                         find_service_description(host_name, *discovered_service.id()),
@@ -219,7 +217,7 @@ def _check_service_lists(
         )
 
     if not any(s.summary for s in subresults):
-        subresults.insert(0, ActiveCheckResult(0, "All services up to date"))
+        subresults.insert(0, ActiveCheckResult(0, "Services: all up to date"))
     return subresults, need_rediscovery
 
 
@@ -256,17 +254,37 @@ def _check_host_labels(
     host_labels: QualifiedDiscovery[HostLabel],
     severity_new_host_label: int,
     discovery_mode: DiscoveryMode,
-) -> tuple[ActiveCheckResult, bool]:
+) -> tuple[Sequence[ActiveCheckResult], bool]:
+    subresults = []
+    if host_labels.new:
+        subresults.append(_make_labels_result("new", host_labels.new, severity_new_host_label))
+    if host_labels.vanished:
+        subresults.append(_make_labels_result("vanished", host_labels.vanished, 0))
     return (
         (
-            ActiveCheckResult(severity_new_host_label, f"New host labels: {len(host_labels.new)}"),
+            subresults,
             discovery_mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
         )
-        if host_labels.new
+        if subresults
         else (
-            ActiveCheckResult(0, "All host labels up to date"),
+            [ActiveCheckResult(0, "Host labels: all up to date")],
             False,
         )
+    )
+
+
+def _make_labels_result(
+    qualifier: str, labels: Sequence[HostLabel], severity: int
+) -> ActiveCheckResult:
+    plugin_count = Counter(l.plugin_name for l in labels)
+    info = ", ".join(f"{key}: {count}" for key, count in plugin_count.items())
+    return ActiveCheckResult(
+        severity,
+        f"{qualifier.capitalize()} host labels: {len(labels)} ({info})",
+        [
+            f"{qualifier.capitalize()} host label: {l.plugin_name}: {l.name}:{l.value}"
+            for l in labels
+        ],
     )
 
 

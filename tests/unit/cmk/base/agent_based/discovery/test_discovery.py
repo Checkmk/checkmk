@@ -55,7 +55,7 @@ from cmk.base.agent_based.data_provider import (
     SectionsParser,
 )
 from cmk.base.agent_based.discovery import _discovered_services
-from cmk.base.agent_based.discovery._discovery import _check_service_lists
+from cmk.base.agent_based.discovery._discovery import _check_host_labels, _check_service_lists
 from cmk.base.agent_based.discovery._host_labels import (
     analyse_cluster_labels,
     analyse_host_labels,
@@ -72,7 +72,7 @@ from cmk.base.agent_based.discovery.autodiscovery import (
     ServicesByTransition,
     ServicesTable,
 )
-from cmk.base.agent_based.discovery.utils import DiscoveryMode
+from cmk.base.agent_based.discovery.utils import DiscoveryMode, QualifiedDiscovery
 from cmk.base.config import ConfigCache
 
 
@@ -673,14 +673,14 @@ def test__check_service_table(
             0,
             "",
             [
-                "Unmonitored: check_plugin_name: Test Description New Item 1",
+                "Unmonitored service: check_plugin_name: Test Description New Item 1",
             ],
         ),
         ActiveCheckResult(
             0,
             "",
             [
-                "Unmonitored: check_plugin_name: Test Description New Item 2",
+                "Unmonitored service: check_plugin_name: Test Description New Item 2",
             ],
         ),
         ActiveCheckResult(1, "Unmonitored services: 2 (check_plugin_name: 2)"),
@@ -688,19 +688,71 @@ def test__check_service_table(
             0,
             "",
             [
-                "Vanished: check_plugin_name: Test Description Vanished Item 1",
+                "Vanished service: check_plugin_name: Test Description Vanished Item 1",
             ],
         ),
         ActiveCheckResult(
             0,
             "",
             [
-                "Vanished: check_plugin_name: Test Description Vanished Item 2",
+                "Vanished service: check_plugin_name: Test Description Vanished Item 2",
             ],
         ),
         ActiveCheckResult(0, "Vanished services: 2 (check_plugin_name: 2)"),
     ]
     assert need_rediscovery == result_need_rediscovery
+
+
+def test__check_host_labels_up_to_date() -> None:
+    assert _check_host_labels(
+        QualifiedDiscovery(
+            preexisting=[
+                HostLabel("this", "unchanged", SectionName("labels")),
+                HostLabel("that", "unchanged", SectionName("my_section")),
+                HostLabel("anotherone", "thesame", SectionName("labels")),
+            ],
+            current=[
+                HostLabel("this", "unchanged", SectionName("labels")),
+                HostLabel("that", "unchanged", SectionName("my_section")),
+                HostLabel("anotherone", "thesame", SectionName("labels")),
+            ],
+            key=lambda l: l.name,
+        ),
+        1,
+        DiscoveryMode.FIXALL,
+    ) == ([ActiveCheckResult(0, "Host labels: all up to date")], False)
+
+
+def test__check_host_labels_changed() -> None:
+    assert _check_host_labels(
+        QualifiedDiscovery(
+            preexisting=[
+                HostLabel("this", "unchanged", SectionName("labels")),
+                HostLabel("that", "changes", SectionName("my_section")),
+                HostLabel("anotherone", "vanishes", SectionName("my_section")),
+            ],
+            current=[
+                HostLabel("this", "unchanged", SectionName("labels")),
+                HostLabel("that", "yay-new-value", SectionName("my_section")),
+                HostLabel("yetanotherone", "isnew", SectionName("labels")),
+            ],
+            key=lambda l: l.name,
+        ),
+        1,
+        DiscoveryMode.FIXALL,
+    ) == (
+        [
+            ActiveCheckResult(
+                1, "New host labels: 1 (labels: 1)", ["New host label: labels: yetanotherone:isnew"]
+            ),
+            ActiveCheckResult(
+                0,
+                "Vanished host labels: 1 (my_section: 1)",
+                ["Vanished host label: my_section: anotherone:vanishes"],
+            ),
+        ],
+        True,
+    )
 
 
 @pytest.mark.usefixtures("fix_register")

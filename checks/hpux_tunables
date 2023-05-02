@@ -44,9 +44,6 @@
 
 from cmk.base.config import check_info, factory_settings
 
-hpux_tunables_nproc_default_levels = (90.0, 96.0)
-hpux_tunables_nkthread_default_levels = (80.0, 85.0)
-
 
 def parse_hpux_tunables(info):
     parsed = {}

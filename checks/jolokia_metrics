@@ -28,9 +28,6 @@ from cmk.base.config import check_info
 # 8080 Uptime 572011375
 # 8080,java.lang:name=PS_MarkSweep,type=GarbageCollector CollectionCount 0
 
-# Number of threads warn, crit
-jolokia_metrics_threads_default_levels = (80, 100)
-
 # Number of sessions low crit, low warn, high warn, high crit
 jolokia_metrics_app_sess_default_levels = (-1, -1, 800, 1000)
 

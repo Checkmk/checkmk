@@ -11,7 +11,6 @@ import time
 from cmk.base.check_api import check_levels, discover_single, get_age_human_readable
 from cmk.base.config import check_info, factory_settings
 
-systemtime_default_values = (30, 60)
 factory_settings["systemtime_default_levels"] = {"levels": (30, 60)}
 
 

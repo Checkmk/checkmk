@@ -9,10 +9,6 @@ from cmk.base.check_legacy_includes.raritan import raritan_map_state
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-raritan_pdu_plugs_default = (
-    '"on"'  # only to be downwards compatible and can be removed any decade now.
-)
-
 
 def parse_raritan_pdu_plugs(info):
     parsed = {}

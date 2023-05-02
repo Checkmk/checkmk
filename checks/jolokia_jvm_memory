@@ -32,8 +32,6 @@ factory_settings.update(
     }
 )
 
-MB = 1024 * 1024
-
 
 def parse_jolokia_jvm_memory(info):
     parsed = {}

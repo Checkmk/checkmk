@@ -22,11 +22,6 @@ from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 #    UCD-SNMP-MIB::ssIORawReceived.0 = Counter32: 445747508
 #    UCD-SNMP-MIB::ssCpuRawSoftIRQ.0 = Counter32: 277402
 
-# Although this variable is no longer used we keep it for backwards
-# compatibility so that old configs in automation calls autocheck do not
-# crash.
-kernel_util_default_levels = None
-
 
 def parse_ucd_cpu_util(info):
     if not info:

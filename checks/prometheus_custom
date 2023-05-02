@@ -15,13 +15,6 @@ from cmk.base.check_api import (
 )
 from cmk.base.config import check_info
 
-NAME_TRANSLATION = {
-    "mem": "Memory",
-    "perc": "Percentage",
-    "ql": "Queue Length",
-    "recv": "Received",
-}
-
 ERROR_DETAILS = {
     "query error": "does not produce a valid result",
     "unsupported query": "produces more than one result (only one allowed)",

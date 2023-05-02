@@ -10,8 +10,6 @@ from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYST
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.utils.df import FSBlock
 
-MIBI = 1024**2
-
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 

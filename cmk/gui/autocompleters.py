@@ -5,6 +5,7 @@
 
 import re
 from collections.abc import Callable, Collection, Iterable, Mapping
+from html import unescape
 from itertools import chain
 
 from livestatus import LivestatusColumn, MultiSiteConnection
@@ -170,7 +171,7 @@ def wato_folder_choices_autocompleter(value: str, params: dict) -> Choices:
         if match_pattern.search(name) is not None:
             # select2 omits empty strings ("") as option therefore the path of the Main folder is
             # replaced by a placeholder
-            matching_folders.append((path, name) if path != "" else ("@main", name))
+            matching_folders.append((path, unescape(name)) if path != "" else ("@main", name))
     return matching_folders
 
 

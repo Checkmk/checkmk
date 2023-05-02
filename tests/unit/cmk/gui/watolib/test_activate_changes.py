@@ -54,9 +54,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             site_path="etc/check_mk/conf.d/distributed_wato.mk",
             excludes=[],
         ),
-        ReplicationPath(
-            ty="dir", ident="omd", site_path="etc/omd", excludes=["allocated_ports", "site.conf"]
-        ),
+        ReplicationPath(ty="dir", ident="omd", site_path="etc/omd", excludes=["site.conf"]),
         ReplicationPath(
             ty="dir",
             ident="frozen_aggregations",

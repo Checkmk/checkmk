@@ -1,0 +1,23 @@
+Title: <tt>omd update</tt> reports <tt>etc/omd/allocated_ports</tt> as unwanted
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1684940207
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p1
+
+During an update from 2.2.0b6+ to 2.2.0, the following message was displayed:
+
+C+:
+* Unwanted       etc/omd/allocated_ports (unchanged, removed by you)
+C-:
+
+This message can be safely ignored. When updating from 2.2.0 to 2.2.0p1+, Checkmk will report
+
+C+:
+ * Obsolete       etc/omd/allocated_ports
+C-:
+
+Afterwards, no further messages about this file will be displayed.

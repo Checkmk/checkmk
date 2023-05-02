@@ -51,4 +51,5 @@ check_info["juniper_screenos_cpu"] = {
             4,  # jnxOperating15MinLoadAvg
         ],
     ),
+    "default_levels_variable": "juniper_screenos_cpu_default_levels",
 }

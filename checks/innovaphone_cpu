@@ -25,4 +25,5 @@ check_info["innovaphone_cpu"] = {
     "service_description": "CPU utilization",
     "has_perfdata": True,
     "group": "cpu_utilization",
+    "default_levels_variable": "innovaphone_cpu_default_levels",
 }

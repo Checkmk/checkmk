@@ -59,4 +59,5 @@ check_info["juniper_trpz_cpu_util"] = {
             3,  # trpzSysCpuLast5MinutesLoad
         ],
     ),
+    "default_levels_variable": "juniper_trpz_cpu_util_default_levels",
 }

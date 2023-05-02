@@ -42,4 +42,5 @@ check_info["juniper_cpu"] = {
             22,  # jnxOperating15MinLoadAvg
         ],
     ),
+    "default_levels_variable": "juniper_cpu_default_levels",
 }

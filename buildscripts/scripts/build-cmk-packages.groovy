@@ -462,7 +462,14 @@ def create_source_package(workspace, source_dir, cmk_version) {
             }
             sh "cp ${agents_dir}/{${artifacts}} ${target_dir}"
             sh "${scripts_dir}/${patch_script} ${target_dir}/${signed_msi} ${target_dir}/${unsigned_msi} ${target_dir}/${patch_file}"
-            sh 'make dist || cat /root/.npm/_logs/*-debug.log'
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'nexus',
+                    passwordVariable: 'NEXUS_PASSWORD',
+                    usernameVariable: 'NEXUS_USERNAME')
+            ]) {
+                sh 'make dist || cat /root/.npm/_logs/*-debug.log'
+            }
         }
     }
 }
@@ -568,7 +575,7 @@ def get_valid_build_id(jobName) {
     /// In order to avoid unnessessary builds for the given job, we check if we
     /// can use the last completed build instead.
     /// That's the case if the following requirements are met:
-    /// - there _is_ a last completed build 
+    /// - there _is_ a last completed build
     /// - it's been successful
     /// - it's from same day
     /// - VERSION parameter matches with current build's
@@ -585,7 +592,7 @@ def get_valid_build_id(jobName) {
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(lastBuild.getTime());
-        def lastBuildDay = calendar.get(Calendar.DAY_OF_YEAR);    
+        def lastBuildDay = calendar.get(Calendar.DAY_OF_YEAR);
 
         if (currentBuildVersion in ["daily", "git"] &&
             lastBuildParameters.VERSION == currentBuildVersion &&

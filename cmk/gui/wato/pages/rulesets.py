@@ -1706,7 +1706,7 @@ class ABCEditRuleMode(WatoMode):
 
     def ensure_permissions(self) -> None:
         super().ensure_permissions()
-        if not may_edit_ruleset(self._name) or not self._folder.may("read"):
+        if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
 
     @classmethod

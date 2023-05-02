@@ -9,8 +9,6 @@ import pytest
 
 import omdlib.main
 
-import cmk.utils.version
-
 
 # Explicitly don't patch the base path here
 @pytest.fixture(autouse=True)

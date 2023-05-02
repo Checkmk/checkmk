@@ -6,12 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover
-from cmk.base.config import check_info
+from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
 
-ups_in_freq_default_levels = (45, 40)  # warning / critical
+factory_settings["ups_in_freq_default_levels"] = {"levels_lower": (45, 40)}
 
 
 def parse_ups_in_freq(info):
@@ -25,9 +24,8 @@ def parse_ups_in_freq(info):
     return parsed
 
 
-@discover(default_params="ups_in_freq_default_levels")
-def inventory_ups_in_freq(key, freq):
-    return freq is not None and freq > 0
+def discover_ups_in_freq(parsed):
+    yield from ((item, {}) for item, freq in parsed.items() if freq is not None and freq > 0)
 
 
 def check_ups_in_freq(item, params, parsed):
@@ -37,7 +35,7 @@ def check_ups_in_freq(item, params, parsed):
 
     infotext = "%.1f Hz" % freq
     state = 0
-    warn, crit = params
+    warn, crit = params["levels_lower"]
     if freq < crit:
         state = 2
     elif freq < warn:
@@ -50,7 +48,7 @@ def check_ups_in_freq(item, params, parsed):
 check_info["ups_in_freq"] = {
     "detect": DETECT_UPS_GENERIC,
     "parse_function": parse_ups_in_freq,
-    "discovery_function": inventory_ups_in_freq,
+    "discovery_function": discover_ups_in_freq,
     "check_function": check_ups_in_freq,
     "service_name": "IN frequency phase %s",
     "check_ruleset_name": "efreq",
@@ -58,4 +56,5 @@ check_info["ups_in_freq"] = {
         base=".1.3.6.1.2.1.33.1.3.3.1",
         oids=[OIDEnd(), "2"],
     ),
+    "default_levels_variable": "ups_in_freq_default_levels",
 }

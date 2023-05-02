@@ -169,13 +169,13 @@ def check_janitza_umg_freq(item, params, parsed):
     return check_levels(
         float(parsed["Frequency"]) / 100.0,
         "in_freq",
-        (None, None) + params["levels"],
+        (None, None) + params["levels_lower"],
         human_readable_func=render.frequency,
         infoname="Frequency",
     )
 
 
-factory_settings["janitza_umg_freq_default_levels"] = {"levels": (0, 0)}
+factory_settings["janitza_umg_freq_default_levels"] = {"levels_lower": (0, 0)}
 
 
 check_info["janitza_umg.freq"] = {

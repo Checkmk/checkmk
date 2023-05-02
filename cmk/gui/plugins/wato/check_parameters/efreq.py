@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Integer, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput, Tuple
 
 
 def _item_spec_efreq():
@@ -19,15 +19,26 @@ def _item_spec_efreq():
 
 
 def _parameter_valuespec_efreq():
-    return Tuple(
-        help=_(
-            "Levels for the nominal frequencies of AC devices "
-            "like UPSs or PDUs. Several phases may be addressed independently."
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels_lower",
+                    Tuple(
+                        help=_(
+                            "Levels for the nominal frequencies of AC devices "
+                            "like UPSs or PDUs. Several phases may be addressed independently."
+                        ),
+                        elements=[
+                            Integer(title=_("warning if below"), unit="Hz", default_value=40),
+                            Integer(title=_("critical if below"), unit="Hz", default_value=45),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=[],
         ),
-        elements=[
-            Integer(title=_("warning if below"), unit="Hz", default_value=40),
-            Integer(title=_("critical if below"), unit="Hz", default_value=45),
-        ],
+        migrate=lambda p: p if isinstance(p, dict) else {"levels_lower": p},
     )
 
 

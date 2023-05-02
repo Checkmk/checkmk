@@ -8,8 +8,7 @@ description:
  This check monitors the state of temperature sensors on older Cisco
  devices using data from the {CISCO-ENVMON-MIB}. This checks is useful
  for devices which do not provide the current temperature value and threshold
- information. It thus does not collect performance data. Use {cisco_temp_perf}
- if your devices provides such data.
+ information. It thus does not collect performance data.
 
  Depending on the state of the sensor the checks can
  be {OK}, {WARN}, {CRIT} or {UNKNOWN}.

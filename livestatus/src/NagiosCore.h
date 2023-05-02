@@ -59,6 +59,7 @@ struct NagiosPathConfig {
     std::filesystem::path history_archive_directory;
     std::filesystem::path rrd_multiple_directory;
     std::filesystem::path rrdcached_socket;
+    std::filesystem::path state_file_created;
 };
 
 class NagiosCore : public MonitoringCore {
@@ -67,7 +68,8 @@ public:
                std::map<unsigned long, std::unique_ptr<Comment>> &comments,
                NagiosPathConfig paths, const NagiosLimits &limits,
                NagiosAuthorization authorization, Encoding data_encoding,
-               std::string edition);
+               std::string edition,
+               std::chrono::system_clock::time_point state_file_created);
 
     // TODO(sp) Nuke this
     const IHost *ihost(const ::host *handle) const;
@@ -214,6 +216,7 @@ private:
     const NagiosAuthorization _authorization;
     Encoding _data_encoding;
     std::string edition_;
+    std::chrono::system_clock::time_point state_file_created_;
     Store _store;
     std::unordered_map<const ::host *, std::unique_ptr<IHost>>
         ihosts_by_handle_;

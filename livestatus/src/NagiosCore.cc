@@ -52,7 +52,8 @@ NagiosCore::NagiosCore(
     std::map<unsigned long, std::unique_ptr<Comment>> &comments,
     NagiosPathConfig paths, const NagiosLimits &limits,
     NagiosAuthorization authorization, Encoding data_encoding,
-    std::string edition)
+    std::string edition,
+    std::chrono::system_clock::time_point state_file_created)
     : _downtimes{downtimes}
     , _comments{comments}
     , _logger_livestatus(Logger::getLogger("cmk.livestatus"))
@@ -61,6 +62,7 @@ NagiosCore::NagiosCore(
     , _authorization(authorization)
     , _data_encoding(data_encoding)
     , edition_{std::move(edition)}
+    , state_file_created_{state_file_created}
     , _store(this) {
     for (::host *hst = host_list; hst != nullptr; hst = hst->next) {
         ihosts_by_handle_[hst] = std::make_unique<NebHost>(*hst);
@@ -402,7 +404,7 @@ double NagiosCore::averageRunnableJobsFetcher() const { return 0.0; }
 double NagiosCore::averageRunnableJobsChecker() const { return 0.0; }
 
 std::chrono::system_clock::time_point NagiosCore::stateFileCreatedTime() const {
-    return {};
+    return state_file_created_;
 }
 
 Encoding NagiosCore::dataEncoding() { return _data_encoding; }

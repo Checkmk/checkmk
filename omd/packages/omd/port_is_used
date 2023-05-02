@@ -13,28 +13,23 @@ port_is_used () {
             continue
         fi
 
-        allocated_ports=/omd/sites/$S/etc/omd/allocated_ports
         site_conf=/omd/sites/$S/etc/omd/site.conf
 
-        # if the allocated_ports config file does not exist
-        # read ports from site.conf file
-        if [ -f $allocated_ports ]; then
-            conf=$allocated_ports
-        else
-            conf=$site_conf
-        fi
-
         if [ "${S}" = "${OMD_SITE}" ]; then
-            if [ $(grep "='${PORT}'" "$conf" | grep -v "${KEY}" | wc -l) -gt 0 ]; then
+            # happens when a new site is created
+            if [ ! -f site_conf ]; then
+                continue
+            fi
+            if [ $(grep "='${PORT}'" "$site_conf" | grep -v "${KEY}" | wc -l) -gt 0 ]; then
                 return 0
             fi
         else
-            if ! ls $conf >/dev/null 2>&1; then
+            if ! ls $site_conf >/dev/null 2>&1; then
                 echo "ERROR: Failed to read config ${conf} of site ${S}. ${KEY} port will possibly be allocated twice" >&2
                 continue
             fi
 
-            if [ $(grep -v ^#  < $conf | grep "='${PORT}'" | wc -l) -gt 0 ]; then
+            if [ $(grep -v ^#  < $site_conf | grep "='${PORT}'" | wc -l) -gt 0 ]; then
                 return 0
             fi
         fi
@@ -42,22 +37,9 @@ port_is_used () {
     return 1
 }
 
-allocate_port () {
-    local KEY=$1
-    local PORT=$2
-
-    conf=/omd/sites/$OMD_SITE/etc/omd/allocated_ports
-    if grep "^${KEY}=.*" $conf >/dev/null 2>&1; then
-        sed -i "s/${KEY}=.*/${KEY}='${PORT}'/" $conf
-    else
-        echo "${KEY}='${PORT}'" >> $conf
-    fi
-}
-
 KEY=$1
 PORT=$2
 while port_is_used "$KEY" "$PORT"; do
     PORT=$((PORT + 1))
 done
-allocate_port "$KEY" "$PORT"
 echo "$PORT"

@@ -50,8 +50,8 @@ def notify_error(error) {
         if (isFirstFailure && !isChangeValidation && !isTriggerJob && !isTesting) {
             /// include me for now to give me the chance to debug
             def notify_emails = [
-                "timotheus.bachinger@tribe29.com",
-                "frans.fuerst@tribe29.com",
+                "timotheus.bachinger@checkmk.com",
+                "frans.fuerst@checkmk.com",
             ];
             currentBuild.changeSets.each { changeSet ->
                 print("|| error-reporting:   changeSet=${changeSet}");
@@ -68,17 +68,17 @@ def notify_error(error) {
             // See: https://ci.lan.tribe29.com/configure
             // So ensure here we only notify internal addresses.
             notify_emails = notify_emails.unique(false).findAll({
-                it != "weblate@checkmk.com" && it.endsWith("@tribe29.com")
+                it != "weblate@checkmk.com" && it.endsWith("@checkmk.com")
             });
 
             /// Inform cloud devs if cloud burns
             if (currentBuild.fullProjectName.contains("build-cmk-cloud-images")) {
-                notify_emails += "max.linke@tribe29.com"
+                notify_emails += "max.linke@checkmk.com"
             }
 
             /// fallback - for investigation
             notify_emails = notify_emails ?: [
-                "timotheus.bachinger@tribe29.com", "frans.fuerst@tribe29.com"];
+                "timotheus.bachinger@checkmk.com", "frans.fuerst@checkmk.com"];
 
             print("|| error-reporting: notify_emails ${notify_emails}");
 

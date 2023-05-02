@@ -603,7 +603,9 @@ class Site:
             assert os.path.exists("/omd/sites/%s" % self.id)
 
             self._ensure_sample_config_is_present()
-            self._set_number_of_apache_processes()
+            # This seems to cause an issue with GUI and XSS crawl (they take too long or seem to
+            # hang) job. Disable as a quick fix. We may have to parametrize this per job type.
+            # self._set_number_of_apache_processes()
             if not self.version.is_raw_edition():
                 self._set_number_of_cmc_helpers()
                 self._enable_cmc_core_dumps()

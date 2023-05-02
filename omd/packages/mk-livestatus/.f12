@@ -7,6 +7,7 @@ SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
+EDITION=$(sudo su - "$SITE" -c "python3 -c 'from cmk.utils.version import edition; print(edition().long)'")
 
 (
     cd skel || exit 1
@@ -21,4 +22,4 @@ ROOT=/omd/sites/$SITE
 sudo cp "$PWD/"LIVESTATUS_[[:upper:]]* "$ROOT/lib/omd/hooks"
 
 sudo find "$ROOT/etc" -type f -exec \
-    perl -pi -e "s|###SITE###|$SITE|g; s|###ROOT###|$ROOT|g" "{}" \;
+    perl -pi -e "s|###SITE###|$SITE|g; s|###ROOT###|$ROOT|g; s|###EDITION###|$EDITION|g" "{}" \;

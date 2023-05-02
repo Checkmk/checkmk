@@ -95,7 +95,8 @@ public:
                     paths_(),
                     NagiosLimits{},
                     NagiosAuthorization{},
-                    Encoding::utf8};
+                    Encoding::utf8,
+                    "enterprise"};
     TableCrashReports table{&core};
     const std::string header{"component;id\n"};
 

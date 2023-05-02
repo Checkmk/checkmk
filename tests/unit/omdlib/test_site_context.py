@@ -40,11 +40,13 @@ def test_site_context_version(monkeypatch) -> None:  # type:ignore[no-untyped-de
     assert site.version == "2018.08.11.cee"
 
 
-def test_site_context_replacements(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_replacements() -> None:
     site = omdlib.main.SiteContext("dingeling")
+
     assert site.replacements["###SITE###"] == "dingeling"
     assert site.replacements["###ROOT###"] == "/omd/sites/dingeling"
-    assert len(site.replacements) == 2
+    assert site.replacements["###EDITION###"] in ("raw", "enterprise", "cloud", "managed")
+    assert len(site.replacements) == 3
 
 
 def test_site_context_exists(monkeypatch) -> None:  # type:ignore[no-untyped-def]

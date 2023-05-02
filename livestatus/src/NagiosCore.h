@@ -66,7 +66,8 @@ public:
     NagiosCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
                std::map<unsigned long, std::unique_ptr<Comment>> &comments,
                NagiosPathConfig paths, const NagiosLimits &limits,
-               NagiosAuthorization authorization, Encoding data_encoding);
+               NagiosAuthorization authorization, Encoding data_encoding,
+               std::string edition);
 
     std::unique_ptr<const IHost> find_host(const std::string &name) override;
     std::unique_ptr<const IHost> getHostByDesignation(
@@ -206,6 +207,7 @@ private:
     const NagiosLimits _limits;
     const NagiosAuthorization _authorization;
     Encoding _data_encoding;
+    std::string edition_;
     Store _store;
     // host is never nullptr
     std::unordered_map<std::string, host *> _hosts_by_designation;

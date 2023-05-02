@@ -43,7 +43,7 @@ def notify_error(error) {
     // It seems the option "Allowed domains" is not working properly.
     // See: https://ci.lan.tribe29.com/configure
     // So ensure here we only notify internal addresses.
-    is_internal_author = AUTHOR_MAIL.endsWith("@tribe29.com") || AUTHOR_MAIL.endsWith("@mathias-kettner.de")
+    is_internal_author = AUTHOR_MAIL.endsWith("@checkmk.com") || AUTHOR_MAIL.endsWith("@mathias-kettner.de")
 
     if(AUTHOR_MAIL != "weblate@checkmk.com" && is_internal_author) {
         mail_build_failed(error)

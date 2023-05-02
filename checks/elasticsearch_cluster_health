@@ -88,7 +88,7 @@ def inventory_elasticsearch_cluster_health(parsed):
     yield None, {}
 
 
-def check_elasticsearch_cluster_health(no_item, params, parsed):
+def check_elasticsearch_cluster_health(_no_item, params, parsed):
     for info, values in sorted(parsed["Info"].items()):
         value = values[0]
         infotext = values[1]
@@ -126,7 +126,7 @@ factory_settings["elasticsearch_cluster_shards"] = {
 }
 
 
-def check_elasticsearch_cluster_health_shards(no_item, params, parsed):
+def check_elasticsearch_cluster_health_shards(_no_item, params, parsed):
     if (shards := parsed.get("Shards")) is None:
         return
 
@@ -171,7 +171,7 @@ check_info["elasticsearch_cluster_health.shards"] = {
 }
 
 
-def check_elasticsearch_cluster_health_tasks(no_item, params, parsed):
+def check_elasticsearch_cluster_health_tasks(_no_item, params, parsed):
     if (tasks := parsed.get("Tasks")) is None:
         return
 

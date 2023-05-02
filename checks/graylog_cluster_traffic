@@ -32,7 +32,7 @@ from cmk.base.config import check_info
 # 15022425, "2019-09-10T21:00:00.000Z": 7688443}}
 
 
-def check_graylog_cluster_traffic(no_item, params, parsed):
+def check_graylog_cluster_traffic(_no_item, params, parsed):
     if parsed is None:
         return
 

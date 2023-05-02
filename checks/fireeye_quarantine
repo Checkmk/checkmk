@@ -19,7 +19,7 @@ def discover_fireeye_quarantine(string_table):
         yield None, {}
 
 
-def check_fireeye_quarantine(no_item, params, info):
+def check_fireeye_quarantine(_no_item, params, info):
     usage = int(info[0][0])
     return check_levels(
         usage,

@@ -51,7 +51,7 @@ factory_settings["jenkins_queue_default_levels"] = {
 }
 
 
-def check_jenkins_queue(no_item, params, parsed):
+def check_jenkins_queue(_no_item, params, parsed):
     if not parsed:
         yield 0, "Queue length: 0 Tasks"
         return

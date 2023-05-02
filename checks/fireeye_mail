@@ -238,7 +238,7 @@ check_info["fireeye_mail.statistics"] = {
 factory_settings["received_levels"] = {"rate": (6000, 7000)}
 
 
-def check_fireeye_mail_received(no_item, params, info):
+def check_fireeye_mail_received(_no_item, params, info):
     start, end, received = info[0][13:16]
     yield 0, "Mails received between %s and %s: %s" % (start, end, received)
     start_timestamp = time.mktime(time.strptime(start, "%m/%d/%y %H:%M:%S"))

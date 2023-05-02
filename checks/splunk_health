@@ -47,7 +47,7 @@ def inventory_splunk_health(parsed):
     yield None, {}
 
 
-def check_splunk_health(no_item, params, parsed):
+def check_splunk_health(_no_item, params, parsed):
     long_output = ""
 
     for key in [

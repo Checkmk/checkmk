@@ -13,7 +13,7 @@ def inventory_enterasys_lsnat(info):
     return [(None, {})]
 
 
-def check_enterasys_lsnat(no_item, params, info):
+def check_enterasys_lsnat(_no_item, params, info):
     if not info:
         return 3, "LSNAT bindings info is missing"
 

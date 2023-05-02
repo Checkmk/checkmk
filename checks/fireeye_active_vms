@@ -17,7 +17,7 @@ def discover_fireeye_active_vms(string_table):
         yield None, {}
 
 
-def check_fireeye_active_vms(no_item, params, info):
+def check_fireeye_active_vms(_no_item, params, info):
     value = int(info[0][0])
     return check_levels(
         value,

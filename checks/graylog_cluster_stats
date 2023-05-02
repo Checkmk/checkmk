@@ -50,7 +50,7 @@ from cmk.base.config import check_info, factory_settings
 # "alarmcallback_count_by_type": {}}}']]
 
 
-def check_graylog_cluster_stats(no_item, params, parsed):
+def check_graylog_cluster_stats(_no_item, params, parsed):
     if not parsed:
         return
 
@@ -95,7 +95,7 @@ factory_settings["graylog_cluster_stats_elastic_defaultlevels"] = {
 
 
 def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
-    no_item,
+    _no_item,
     params,
     parsed,
 ):
@@ -197,7 +197,7 @@ def inventory_graylog_cluster_stats_mongodb(parsed):
     return []
 
 
-def check_graylog_cluster_stats_mongodb(no_item, params, parsed):
+def check_graylog_cluster_stats_mongodb(_no_item, params, parsed):
     mongo_data = parsed.get("mongo")
     if mongo_data is None:
         return

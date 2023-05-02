@@ -57,7 +57,7 @@ def inventory_splunk_jobs(parsed):
     yield None, {}
 
 
-def check_splunk_jobs(no_item, params, parsed):
+def check_splunk_jobs(_no_item, params, parsed):
     data = parsed["job"][0]
 
     for key, value, infotext in [

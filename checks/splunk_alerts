@@ -15,7 +15,7 @@ def inventory_splunk_alerts(info):
     yield None, {}
 
 
-def check_splunk_alerts(no_item, params, info):
+def check_splunk_alerts(_no_item, params, info):
     try:
         value = int(info[0][0])
     except (IndexError, ValueError):

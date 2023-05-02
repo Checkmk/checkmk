@@ -76,7 +76,7 @@ def inventory_arbor_peakflow_sp_flows(parsed):
     return []
 
 
-def check_arbor_peakflow_sp_flows(no_item, params, parsed):
+def check_arbor_peakflow_sp_flows(_no_item, params, parsed):
     flows = int(parsed["flows"])
     return 0, "%d flows" % flows, [("flows", flows)]
 

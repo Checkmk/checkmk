@@ -194,10 +194,6 @@ def _extract_sequence_based_identifier(git_version: str) -> str | None:
     '1.20.0'
     >>> _extract_sequence_based_identifier("    v1.20.0")  # some white space is allowed
     '1.20.0'
-    >>> _extract_sequence_based_identifier("v   1.20.0")  # but only in specific cases
-
-    >>> _extract_sequence_based_identifier("a1.20.0")  # v or whitespace are the only allowed letters at the start
-
     >>> _extract_sequence_based_identifier("v1.21.9-eks-0d102a7")  # flavors are ok, but discarded
     '1.21.9'
     >>> _extract_sequence_based_identifier("v1")  # sequences without minor are allowed
@@ -213,6 +209,10 @@ def _extract_sequence_based_identifier(git_version: str) -> str | None:
     >>> _extract_sequence_based_identifier("")  # empty strings are not allowed
 
     >>> _extract_sequence_based_identifier("abc")  # nonesense is also not allowed
+
+    >>> _extract_sequence_based_identifier("v   1.20.0")  # but only in specific cases
+
+    >>> _extract_sequence_based_identifier("a1.20.0")  # v or whitespace are the only allowed letters at the start
 
     """
     version_match = VERSION_MATCH_RE.fullmatch(git_version)

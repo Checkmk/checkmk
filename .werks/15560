@@ -1,0 +1,16 @@
+Title: Drop support for Debian-9
+Class: fix
+Compatible: incomp
+Component: omd
+Date: 1683015405
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b6
+
+
+Checkmk won't be built anymore for Debian-9 (stretch) from 2.2.0 and upwards as Debian-9's LTS support ended on June 30, 2022:
+https://wiki.debian.org/LTS
+
+The support from our side was already dropped during the beta phase with <tt>2.2.0b5</tt>.
+

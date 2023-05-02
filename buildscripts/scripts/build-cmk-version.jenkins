@@ -438,7 +438,14 @@ def create_source_package(WORKSPACE, CMK_VERS) {
                 sh "cp ${WORKSPACE}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
             }
             sh "cp ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,python-3.cab,python-3.4.cab} agents/windows"
-            sh 'make dist || cat /root/.npm/_logs/*-debug.log'
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'nexus',
+                    passwordVariable: 'NEXUS_PASSWORD',
+                    usernameVariable: 'NEXUS_USERNAME')
+            ]) {
+                sh 'make dist || cat /root/.npm/_logs/*-debug.log'
+            }
         }
     }
 }

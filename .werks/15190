@@ -1,0 +1,16 @@
+Title: Allow agent registration using an IP address as hostname
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683025886
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+IP addresses can now be used as hostnames again when registering new agents with the Agent Controller.
+
+This fixes a regression that was introduced with Checkmk 2.1.0p12 / Werk #14385.
+
+

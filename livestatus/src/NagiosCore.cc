@@ -51,7 +51,8 @@ NagiosCore::NagiosCore(
     std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
     std::map<unsigned long, std::unique_ptr<Comment>> &comments,
     NagiosPathConfig paths, const NagiosLimits &limits,
-    NagiosAuthorization authorization, Encoding data_encoding)
+    NagiosAuthorization authorization, Encoding data_encoding,
+    std::string edition)
     : _downtimes{downtimes}
     , _comments{comments}
     , _logger_livestatus(Logger::getLogger("cmk.livestatus"))
@@ -59,6 +60,7 @@ NagiosCore::NagiosCore(
     , _limits(limits)
     , _authorization(authorization)
     , _data_encoding(data_encoding)
+    , edition_{std::move(edition)}
     , _store(this) {
     for (::host *hst = host_list; hst != nullptr; hst = hst->next) {
         ihosts_by_handle_[hst] = std::make_unique<NebHost>(*hst);
@@ -347,7 +349,7 @@ int32_t NagiosCore::intervalLength() const { return interval_length; }
 int32_t NagiosCore::numHosts() const { return g_num_hosts; }
 int32_t NagiosCore::numServices() const { return g_num_services; }
 std::string NagiosCore::programVersion() const { return get_program_version(); }
-std::string NagiosCore::edition() const { return "DUMMY_EDITION"; }
+std::string NagiosCore::edition() const { return edition_; }
 
 int32_t NagiosCore::externalCommandBufferSlots() const {
     return nagios_compat_external_command_buffer_slots();

@@ -9,6 +9,8 @@ import pytest
 
 import omdlib.main
 
+import cmk.utils.version
+
 
 # Explicitly don't patch the base path here
 @pytest.fixture(autouse=True)
@@ -40,11 +42,13 @@ def test_site_context_version(monkeypatch: pytest.MonkeyPatch) -> None:
     assert site.version == "2018.08.11.cee"
 
 
-def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_site_context_replacements() -> None:
     site = omdlib.main.SiteContext("dingeling")
+
     assert site.replacements["###SITE###"] == "dingeling"
     assert site.replacements["###ROOT###"] == "/omd/sites/dingeling"
-    assert len(site.replacements) == 2
+    assert site.replacements["###EDITION###"] in ("raw", "enterprise", "cloud", "managed")
+    assert len(site.replacements) == 3
 
 
 def test_site_context_exists(monkeypatch: pytest.MonkeyPatch) -> None:

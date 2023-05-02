@@ -66,7 +66,8 @@ public:
     NagiosCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
                std::map<unsigned long, std::unique_ptr<Comment>> &comments,
                NagiosPathConfig paths, const NagiosLimits &limits,
-               NagiosAuthorization authorization, Encoding data_encoding);
+               NagiosAuthorization authorization, Encoding data_encoding,
+               std::string edition);
 
     // TODO(sp) Nuke this
     const IHost *ihost(const ::host *handle) const;
@@ -212,6 +213,7 @@ private:
     const NagiosLimits _limits;
     const NagiosAuthorization _authorization;
     Encoding _data_encoding;
+    std::string edition_;
     Store _store;
     std::unordered_map<const ::host *, std::unique_ptr<IHost>>
         ihosts_by_handle_;

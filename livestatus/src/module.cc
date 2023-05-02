@@ -91,6 +91,9 @@ int g_max_fd_ever = 0;
 static NagiosPathConfig fl_paths;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static std::string fl_edition{"free"};
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static bool fl_should_terminate;
 
 struct ThreadInfo {
@@ -717,7 +720,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
         case NEBTYPE_PROCESS_START:
             fl_core =
                 new NagiosCore(fl_downtimes, fl_comments, fl_paths, fl_limits,
-                               fl_authorization, fl_data_encoding);
+                               fl_authorization, fl_data_encoding, fl_edition);
             fl_client_queue = new ClientQueue_t{};
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
@@ -1009,6 +1012,8 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                     Warning(logger) << "invalid data_encoding " << right
                                     << ", allowed are utf8, latin1 and mixed";
                 }
+            } else if (left == "edition") {
+                fl_edition = right;
             } else if (left == "livecheck") {
                 Warning(logger)
                     << "livecheck has been removed from Livestatus, sorry.";

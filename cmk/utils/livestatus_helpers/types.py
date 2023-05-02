@@ -42,10 +42,6 @@ class Table(abc.ABC):
         return columns
 
 
-class Hurz:
-    pass
-
-
 class NoTable(Table):
     """Like a livestatus table, but not really.
 

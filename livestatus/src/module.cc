@@ -11,6 +11,7 @@
 // IWYU pragma: no_include <ext/alloc_traits.h>
 #include "config.h"
 
+#include <endian.h>
 #include <pthread.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -32,6 +33,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -92,6 +94,9 @@ static NagiosPathConfig fl_paths;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static std::string fl_edition{"free"};
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static std::chrono::system_clock::time_point fl_state_file_created;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static bool fl_should_terminate;
@@ -720,7 +725,8 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
         case NEBTYPE_PROCESS_START:
             fl_core =
                 new NagiosCore(fl_downtimes, fl_comments, fl_paths, fl_limits,
-                               fl_authorization, fl_data_encoding, fl_edition);
+                               fl_authorization, fl_data_encoding, fl_edition,
+                               fl_state_file_created);
             fl_client_queue = new ClientQueue_t{};
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
@@ -1014,6 +1020,8 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 }
             } else if (left == "edition") {
                 fl_edition = right;
+            } else if (left == "state_file_created") {
+                fl_paths.state_file_created = right;
             } else if (left == "livecheck") {
                 Warning(logger)
                     << "livecheck has been removed from Livestatus, sorry.";
@@ -1061,6 +1069,46 @@ void omd_advertize(Logger *logger) {
     }
 }
 
+namespace {
+uint64_t readle64(std::istream &is) {
+    // TODO(sp): Use std::endian + std::byteswap when we have C++23
+    uint64_t buffer{};
+    is.read(reinterpret_cast<char *>(&buffer), sizeof(buffer));
+    return le64toh(buffer);
+}
+
+void writele64(std::ostream &os, uint64_t value) {
+    // TODO(sp): Use std::endian + std::byteswap when we have C++23
+    uint64_t buffer{htole64(value)};
+    os.write(reinterpret_cast<const char *>(&buffer), sizeof(buffer));
+}
+
+std::optional<std::chrono::system_clock::time_point> stateFileCreated(
+    const std::filesystem::path &state_file_created) {
+    std::ifstream ifs{state_file_created, std::ios::binary};
+    if (ifs.is_open()) {
+        return mk::demangleTimePoint(readle64(ifs));
+    }
+    if (generic_error{}.code() != std::errc::no_such_file_or_directory) {
+        generic_error ge{"cannot open timestamp file \"" +
+                         state_file_created.string() + "\" for reading"};
+        Critical(fl_logger_nagios) << ge;
+        return {};
+    }
+    fl_state_file_created = std::chrono::system_clock::now();
+    std::ofstream ofs{state_file_created, std::ios::binary};
+    if (!ofs.is_open()) {
+        generic_error ge{"cannot open timestamp file \"" +
+                         state_file_created.string() + "\" for writing"};
+        Critical(fl_logger_nagios) << ge;
+        return {};
+    }
+    writele64(ofs, mk::mangleTimePoint(fl_state_file_created));
+    return fl_state_file_created;
+}
+
+}  // namespace
+
 // Called from Nagios after we have been loaded.
 extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                               void *handle) {
@@ -1094,6 +1142,13 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
     }
 
     register_callbacks();
+
+    if (auto state_file_created =
+            stateFileCreated(fl_paths.state_file_created)) {
+        fl_state_file_created = *state_file_created;
+    } else {
+        return 1;  // TODO(sp): Cleanup, same for returns above.
+    }
 
     /* Unfortunately, we cannot start our socket thread right now.
        Nagios demonizes *after* having loaded the NEB modules. When

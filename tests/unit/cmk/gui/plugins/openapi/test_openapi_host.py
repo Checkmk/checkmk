@@ -5,6 +5,8 @@
 
 import pytest
 
+from tests.testlib.rest_api_client import ClientRegistry
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
@@ -138,3 +140,36 @@ def test_openapi_livestatus_hosts_single_column(
             headers={"Accept": "application/json"},
             status=200,
         )
+
+
+def test_openapi_livestatus_single_host(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    live.add_table(
+        "hosts",
+        [
+            {
+                "name": "heute",
+                "address": "127.0.0.1",
+                "alias": "heute",
+                "downtimes_with_info": [],
+                "scheduled_downtime_depth": 0,
+            },
+        ],
+    )
+
+    live.expect_query(
+        [
+            "GET hosts",
+            "Columns: name",
+            "Filter: name = heute",
+        ],
+    )
+    with live:
+        resp = clients.Host.get(host_name="heute", columns=["name"])
+
+    assert set(resp.json["extensions"]) == {"name"}

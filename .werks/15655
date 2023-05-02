@@ -1,0 +1,15 @@
+Title: host: addition of show single host endpoint
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1683032836
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the list hosts collection endpoint returned hosts
+which also included a link to the respective host. Following those links
+returned an error as the endpoint did not exist. This is now added
+with this werk.
+

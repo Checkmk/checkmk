@@ -54,7 +54,8 @@ from cmk.gui.plugins.openapi.restful_objects import (
     permissions,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.utils import serve_json
+from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.plugins.openapi.utils import problem, serve_json
 
 from cmk import fields
 
@@ -80,6 +81,12 @@ class HostParameters(BaseSchema):
     )
     query = gui_fields.query_field(Hosts, required=False)
     columns = gui_fields.column_field(Hosts, mandatory=[Hosts.name], example=["name"])
+
+
+class SingleHostParameters(BaseSchema):
+    columns = gui_fields.column_field(
+        Hosts, mandatory=[Hosts.name], example=["name"], required=False
+    )
 
 
 PERMISSIONS = permissions.Ignore(
@@ -121,16 +128,58 @@ def list_hosts(params: Mapping[str, Any]) -> Response:
     return serve_json(
         constructors.collection_object(
             domain_type="host",
-            value=[
-                constructors.domain_object(
-                    domain_type="host",
-                    title=f"{entry['name']}",
-                    identifier=entry["name"],
-                    editable=False,
-                    deletable=False,
-                    extensions=entry,
-                )
-                for entry in result
-            ],
+            value=[_host_object(entry["name"], entry) for entry in result],
         )
+    )
+
+
+@Endpoint(
+    constructors.object_href("host", "{host_name}"),
+    "cmk/show",
+    method="get",
+    tag_group="Monitoring",
+    blacklist_in=["swagger-ui"],
+    path_params=[
+        {
+            "host_name": gui_fields.HostField(
+                description="The host name",
+                should_exist=None,
+                example="example.com",
+                required=True,
+            ),
+        }
+    ],
+    query_params=[SingleHostParameters],
+    response_schema=response_schemas.DomainObject,
+    permissions_required=PERMISSIONS,
+)
+def show_host(params: Mapping[str, Any]) -> Response:
+    """Show host"""
+    live = sites.live()
+    host_name = params["host_name"]
+
+    q = Query(
+        columns=params.get("columns", [Hosts.name, Hosts.alias, Hosts.address]),
+        filter_expr=Hosts.name.op("=", host_name),
+    )
+
+    try:
+        host = q.fetchone(live)
+    except ValueError:
+        return problem(
+            status=404,
+            title="The requested host was not found",
+            detail=f"The host name {host_name} did not match any host",
+        )
+    return serve_json(_host_object(host_name, host))
+
+
+def _host_object(host_name: str, host: dict) -> DomainObject:
+    return constructors.domain_object(
+        domain_type="host",
+        identifier=host_name,
+        title=host_name,
+        extensions=host,
+        editable=False,
+        deletable=False,
     )

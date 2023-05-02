@@ -26,6 +26,7 @@ API_DOMAIN = Literal[
     "licensing",
     "activation_run",
     "user_config",
+    "host",
     "host_config",
     "folder_config",
     "aux_tag",
@@ -507,6 +508,22 @@ class UserClient(RestApiClient):
             url=f"/objects/{self.domain}/{username}",
             body={k: v for k, v in body.items() if v is not None},
             headers=headers,
+            expect_ok=expect_ok,
+        )
+
+
+@register_client
+class HostClient(RestApiClient):
+    domain: API_DOMAIN = "host"
+
+    def get(self, host_name: str, columns: Sequence[str], expect_ok: bool = True) -> Response:
+        url = f"/objects/host/{host_name}"
+        if columns:
+            url = f"{url}?{'&'.join(f'columns={c}' for c in columns)}"
+
+        return self.request(
+            "get",
+            url=url,
             expect_ok=expect_ok,
         )
 
@@ -1216,6 +1233,7 @@ class ClientRegistry:
     Licensing: LicensingClient
     ActivateChanges: ActivateChangesClient
     User: UserClient
+    Host: HostClient
     HostConfig: HostConfigClient
     Folder: FolderClient
     AuxTag: AuxTagClient

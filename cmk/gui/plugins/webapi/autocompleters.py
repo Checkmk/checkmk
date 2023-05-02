@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from html import unescape
 from itertools import chain
 from typing import Callable, Collection, Dict, Iterable, Mapping, Optional, Tuple
 
@@ -194,7 +195,7 @@ def wato_folder_choices_autocompleter(value: str, params: Dict) -> Choices:
         if match_pattern.search(name) is not None:
             # select2 omits empty strings ("") as option therefore the path of the Main folder is
             # replaced by a placeholder
-            matching_folders.append((path, name) if path != "" else ("@main", name))
+            matching_folders.append((path, unescape(name)) if path != "" else ("@main", name))
     return matching_folders
 
 

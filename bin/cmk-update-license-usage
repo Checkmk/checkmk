@@ -5,8 +5,14 @@
 
 import sys
 
-from cmk.utils.licensing.helper import hash_site_id, init_logging, load_instance_id
+from cmk.utils.licensing.helper import (
+    get_instance_id_filepath,
+    hash_site_id,
+    init_logging,
+    load_instance_id,
+)
 from cmk.utils.licensing.usage import create_sample, Now, try_update_license_usage
+from cmk.utils.paths import omd_root
 from cmk.utils.site import omd_site
 
 
@@ -15,7 +21,7 @@ def main() -> int:
     try:
         try_update_license_usage(
             Now.make(),
-            load_instance_id(),
+            load_instance_id(get_instance_id_filepath(omd_root)),
             hash_site_id(omd_site()),
             create_sample,
         )

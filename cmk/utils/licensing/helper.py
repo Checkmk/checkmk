@@ -10,7 +10,7 @@ from uuid import UUID
 
 import livestatus
 
-from cmk.utils.paths import log_dir, omd_root
+from cmk.utils.paths import log_dir
 
 
 def init_logging() -> logging.Logger:
@@ -29,13 +29,19 @@ def init_logging() -> logging.Logger:
     return logger
 
 
-def _get_instance_id_filepath() -> Path:
-    return Path(omd_root, "etc/omd/instance_id")
+def get_instance_id_filepath(omd_root: Path) -> Path:
+    return omd_root / "etc/omd/instance_id"
 
 
-def load_instance_id() -> UUID | None:
+def save_instance_id(*, filepath: Path, instance_id: UUID) -> None:
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    with filepath.open("w", encoding="utf-8") as fp:
+        fp.write(str(instance_id))
+
+
+def load_instance_id(filepath: Path) -> UUID | None:
     try:
-        with _get_instance_id_filepath().open("r", encoding="utf-8") as fp:
+        with filepath.open("r", encoding="utf-8") as fp:
             return UUID(fp.read())
     except (FileNotFoundError, ValueError):
         return None

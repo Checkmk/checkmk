@@ -29,7 +29,6 @@ KNOWN_WORLD_WRITABLE_FILES = {
     "tmp/run/mkeventd/events",  # So others can write events
 }
 KNOWN_WORLD_READABLE_FILES = {
-    "etc/omd/allocated_ports",  # Other sites use this to check for free ports
     "etc/omd/site.conf",  # Other sites use this to check for free ports
 }
 

@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.2.0b6"
+$CMK_VERSION = "2.2.0b7"
 ####
 ## Monitor Windows Tasks
 ##

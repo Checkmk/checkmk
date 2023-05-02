@@ -137,10 +137,28 @@ def test_register_register_with_hostname_unauthorized(
     assert response.json() == {"detail": "You do not have the permission for agent pairing."}
 
 
-def test_register_register_with_hostname_ok(
+@pytest.mark.parametrize(
+    "hostname,valid",
+    [
+        ("myhost", True),
+        ("test.checkmk.com", True),
+        ("127.0.0.1", True),
+        ("93.184.216.34", True),
+        ("0:0:0:0:0:0:0:1", True),
+        ("2606:2800:220:1:248:1893:25c8:1946", True),
+        ("::", True),
+        ("::1", True),
+        ("", False),
+        ("...", False),
+        ("my/../host", False),  # this is a regression test for CMK-11202
+    ],
+)
+def test_register_register_with_hostname_hostname_validity(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID,
+    hostname: str,
+    valid: bool,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.host_configuration",
@@ -149,39 +167,23 @@ def test_register_register_with_hostname_ok(
             is_cluster=False,
         ),
     )
-    mocker.patch(
-        "agent_receiver.endpoints.link_host_with_uuid",
-        return_value=None,
-    )
+    mocker.patch("agent_receiver.endpoints.link_host_with_uuid", return_value=None)
+
     response = client.post(
         "/register_with_hostname",
         auth=("herbert", "joergl"),
         json={
             "uuid": str(uuid),
-            "host_name": "myhost",
-        },
-    )
-    assert response.status_code == 204
-    assert not response.text
-
-
-# this is a regression test for CMK-11202
-def test_register_register_with_hostname_invalid(
-    mocker: MockerFixture,
-    client: TestClient,
-    uuid: UUID,
-) -> None:
-    response = client.post(
-        "/register_with_hostname",
-        auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": "my/../host",
+            "host_name": hostname,
         },
     )
 
-    assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid hostname: 'my/../host'"}
+    if valid:
+        assert response.status_code == 204
+        assert not response.text
+    else:
+        assert response.status_code == 400
+        assert response.json() == {"detail": f"Invalid hostname: '{hostname}'"}
 
 
 def test_register_with_labels_unauthenticated(

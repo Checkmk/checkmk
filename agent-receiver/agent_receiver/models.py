@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+import socket
 from enum import Enum
 from typing import Mapping, NamedTuple, Optional
 from uuid import UUID
@@ -22,10 +23,10 @@ class PairingResponse(BaseModel):
     client_cert: str
 
 
-# duplicated from cmk.gui.valuespec
 def _is_valid_host_name(hostname: str) -> bool:
+    # duplicated from cmk.gui.valuespec
     # http://stackoverflow.com/questions/2532053/validate-a-hostname-string/2532344#2532344
-    if len(hostname) > 255:
+    if not hostname or len(hostname) > 255:
         return False
 
     if hostname[-1] == ".":
@@ -41,6 +42,54 @@ def _is_valid_host_name(hostname: str) -> bool:
     return all(allowed.match(x) for x in hostname.split("."))
 
 
+def _is_valid_ipv4_address(address: str) -> bool:
+    # duplicated from cmk.gui.valuespec
+    # http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python/4017219#4017219
+    try:
+        socket.inet_pton(socket.AF_INET, address)
+    except AttributeError:  # no inet_pton here, sorry
+        try:
+            socket.inet_aton(address)
+        except socket.error:
+            return False
+
+        return address.count(".") == 3
+
+    except socket.error:  # not a valid address
+        return False
+
+    return True
+
+
+def _is_valid_ipv6_address(address: str) -> bool:
+    # duplicated from cmk.gui.valuespec
+    # http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python/4017219#4017219
+    try:
+        address = address.split("%")[0]
+        socket.inet_pton(socket.AF_INET6, address)
+    except socket.error:  # not a valid address
+        return False
+    return True
+
+
+def _is_valid_hostname_or_ip(uri: str) -> bool:
+    """Check if the given URI is a valid hostname or IP address
+
+    Some examples (see unit tests for more):
+    >>> _is_valid_hostname_or_ip("test.checkmk.com")
+    True
+    >>> _is_valid_hostname_or_ip("127.0.0.1")
+    True
+    >>> _is_valid_hostname_or_ip("2606:2800:220:1:248:1893:25c8:1946")
+    True
+    >>> _is_valid_hostname_or_ip("::1")
+    True
+    >>> _is_valid_hostname_or_ip("my/../host")
+    False
+    """
+    return _is_valid_host_name(uri) or _is_valid_ipv4_address(uri) or _is_valid_ipv6_address(uri)
+
+
 class RegistrationWithHNBody(BaseModel):
     uuid: UUID
     host_name: str
@@ -48,7 +97,7 @@ class RegistrationWithHNBody(BaseModel):
     @validator("host_name")
     @classmethod
     def valid_hostname(cls, v):
-        if not _is_valid_host_name(v):
+        if not _is_valid_hostname_or_ip(v):
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid hostname: '{v}'",

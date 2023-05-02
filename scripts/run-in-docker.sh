@@ -60,6 +60,12 @@ fi
 : "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 
+# Limit CPU weight to 1/4 and used CPUs to N-CPUs - 2 in order to keep system usable
+: "${DOCKER_RESOURCE_FLAGS:="\
+    --cpu-shares=256 \
+    --cpuset-cpus="0-$(($(nproc) - 2))" \
+    "}"
+
 if [ -t 0 ]; then
     echo "Running in Docker container from image ${IMAGE_ID} (cmd=${CMD}) (workdir=${PWD})"
 fi
@@ -67,9 +73,9 @@ fi
 # shellcheck disable=SC2086
 docker run -a stdout -a stderr \
     --rm \
+    ${DOCKER_RESOURCE_FLAGS} \
     ${TERMINAL_FLAG} \
     --init \
-    --cpus 1.5 \
     -u "${UID}:$(id -g)" \
     -v "${REPO_DIR}:${REPO_DIR}" \
     -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \

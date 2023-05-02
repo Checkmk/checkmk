@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.config import check_info
+from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.utils.bvip import DETECT_BVIP
 
-bvip_poe_default_levels = {"levels": (50.0, 60.0)}
+factory_settings["bvip_poe_default_levels"] = {"levels": (50.0, 60.0)}
 
 
 def inventory_bvip_poe(info):
@@ -37,4 +37,5 @@ check_info["bvip_poe"] = {
     "service_description": "POE Power",
     "snmp_info": (".1.3.6.1.4.1.3967.1.1", [10]),
     "group": "epower_single",
+    "default_levels_variable": "bvip_poe_default_levels",
 }

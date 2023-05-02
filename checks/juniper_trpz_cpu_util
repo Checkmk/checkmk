@@ -5,10 +5,10 @@
 
 
 from cmk.base.check_api import savefloat
-from cmk.base.config import check_info
+from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_TRPZ
 
-juniper_trpz_cpu_util_default_levels = {"util": (80.0, 90.0)}
+factory_settings["juniper_trpz_cpu_util_default_levels"] = {"util": (80.0, 90.0)}
 
 
 def inventory_juniper_trpz_cpu_util(info):
@@ -62,4 +62,5 @@ check_info["juniper_trpz_cpu_util"] = {
             3,  # trpzSysCpuLast5MinutesLoad
         ],
     ),
+    "default_levels_variable": "juniper_trpz_cpu_util_default_levels",
 }

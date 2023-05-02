@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.config import check_info
+from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_SCREENOS
 
-juniper_screenos_cpu_default_levels = {"util": (80.0, 90.0)}
+factory_settings["juniper_screenos_cpu_default_levels"] = {"util": (80.0, 90.0)}
 
 
 def inventory_juniper_screenos_cpu(info):
@@ -54,4 +54,5 @@ check_info["juniper_screenos_cpu"] = {
             4,  # jnxOperating15MinLoadAvg
         ],
     ),
+    "default_levels_variable": "juniper_screenos_cpu_default_levels",
 }

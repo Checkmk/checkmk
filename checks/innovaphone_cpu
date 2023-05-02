@@ -6,9 +6,9 @@
 
 from cmk.base.check_api import saveint
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
+from cmk.base.config import check_info, factory_settings
 
-innovaphone_cpu_default_levels = {"util": (90.0, 95.0)}
+factory_settings["innovaphone_cpu_default_levels"] = {"util": (90.0, 95.0)}
 
 
 def inventory_innovaphone_cpu(info):
@@ -25,4 +25,5 @@ check_info["innovaphone_cpu"] = {
     "inventory_function": inventory_innovaphone_cpu,
     "service_description": "CPU utilization",
     "group": "cpu_utilization",
+    "default_levels_variable": "innovaphone_cpu_default_levels",
 }

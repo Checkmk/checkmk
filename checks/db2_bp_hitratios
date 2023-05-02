@@ -61,7 +61,7 @@ def inventory_db2_bp_hitratios(parsed):
                 yield "%s:%s" % (key, field[0]), {}
 
 
-def check_db2_bp_hitratios(item, no_params, parsed):
+def check_db2_bp_hitratios(item, _no_params, parsed):
     db_instance, field = item.rsplit(":", 1)
     db = parsed.get(db_instance)
     if not db:

@@ -15,7 +15,7 @@ def inventory_db2_version(info):
         yield line[0].split(" ", 1)[0], None
 
 
-def check_db2_version(item, no_params, info):
+def check_db2_version(item, _no_params, info):
     for line in info:
         tokens = line[0].split(" ", 1)
         if len(tokens) < 2:

@@ -77,7 +77,7 @@ def inventory_citrix_hostsystem(parsed):
     return []
 
 
-def check_citrix_hostsystem(_no_item, no_params, parsed):
+def check_citrix_hostsystem(_no_item, _no_params, parsed):
     return 0, "Citrix Pool Name: %s" % parsed["pool"]
 
 

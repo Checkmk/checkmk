@@ -13,7 +13,7 @@ def inventory_casa_power(info):
     yield from ((str(idx), None) for idx in range(len(info)))
 
 
-def check_casa_power(item, no_params, info):
+def check_casa_power(item, _no_params, info):
     unit_nr = int(item)
     if len(info) < unit_nr:
         return (3, "Power Supply %s not found in snmp output" % item)

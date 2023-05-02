@@ -16,7 +16,7 @@ def inventory_casa_fan(info):
     return inventory
 
 
-def check_casa_fan(item, no_params, info):
+def check_casa_fan(item, _no_params, info):
     for idx, (nr, speed) in enumerate(info[0]):
         if item == nr:
             fan_status = info[1][idx][1]

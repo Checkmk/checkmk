@@ -41,6 +41,7 @@ class Sensor(NamedTuple):
 
 Section = Mapping[str, Sensor]
 
+
 # Each of the up to 4 units has its own subtree
 _SUBTREES = ("3", "4", "5", "6")
 
@@ -65,7 +66,7 @@ def inventory_cmctc_psm_m(section):
     yield from ((item, {}) for item in section)
 
 
-def check_cmctc_psm_m(item, no_params, section):
+def check_cmctc_psm_m(item, _no_params, section):
     if (sensor := section.get(item)) is None:
         return
     yield (

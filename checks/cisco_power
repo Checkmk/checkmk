@@ -56,7 +56,7 @@ def inventory_cisco_power(info):
                 yield ("%s %s" % (name, entry)), None
 
 
-def check_cisco_power(item, no_params, info):
+def check_cisco_power(item, _no_params, info):
     for sid, textinfo, state, source in info:
         if (
             cisco_sensor_item(textinfo, sid) == item

@@ -1848,7 +1848,9 @@ def pipe_pager() -> str:
     return ""
 
 
-def call_scripts(site: SiteContext, phase: str, add_env: Mapping[str, str] | None = None) -> None:
+def call_scripts(
+    site: SiteContext, phase: str, open_pty: bool, add_env: Mapping[str, str] | None = None
+) -> None:
     """Calls hook scripts in defined directories."""
     path = Path(site.dir, "lib", "omd", "scripts", phase)
     if not path.exists():
@@ -1865,26 +1867,35 @@ def call_scripts(site: SiteContext, phase: str, add_env: Mapping[str, str] | Non
     for file in sorted(path.iterdir()):
         if file.name[0] == ".":
             continue
-        _call_script(phase, env, file)
+        _call_script(phase, open_pty, env, file)
 
 
-def _call_script(phase: str, env: Mapping[str, str], file: Path) -> None:
+def _call_script(  # pylint: disable=too-many-branches
+    phase: str, open_pty: bool, env: Mapping[str, str], file: Path
+) -> None:
     sys.stdout.write(f'Executing {phase} script "{file.name}"...')
-    fd_parent, fd_child = pty.openpty()
+    if open_pty:
+        fd_parent, fd_child = pty.openpty()
+        stdout = stderr = fd_child
+    else:
+        stdout = subprocess.PIPE
+        stderr = subprocess.STDOUT
 
-    parent = os.fdopen(fd_parent, buffering=1)
     with subprocess.Popen(  # nosec B602 # BNS:2b5952
         str(file),  # path-like args is not allowed when shell is true
         shell=True,
-        stdout=fd_child,
-        stderr=fd_child,
+        stdout=stdout,
+        stderr=stderr,
         encoding="utf-8",
         env=env,
     ) as proc:
-        if proc.stdout is None:
-            raise Exception("stdout needs to be set")
+        if open_pty:
+            os.close(fd_child)
+            parent: IO[str] = os.fdopen(fd_parent, buffering=1)
+        else:
+            assert proc.stdout is not None
+            parent = proc.stdout
 
-        os.close(fd_child)
         wrote_output = False
         try:
             while True:
@@ -2369,7 +2380,7 @@ def finalize_site_as_user(
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
         save_instance_id(file_path=get_instance_id_file_path(Path(site.dir)), instance_id=uuid4())
 
-    call_scripts(site, "post-" + command_type.short)
+    call_scripts(site, "post-" + command_type.short, open_pty=sys.stdout.isatty())
 
 
 def main_rm(
@@ -2899,6 +2910,7 @@ def main_update(  # pylint: disable=too-many-branches
     ):
         bail_out("Aborted.")
 
+    is_tty = sys.stdout.isatty()
     start_logging(site.dir + "/var/log/update.log")
 
     sys.stdout.write(
@@ -2974,6 +2986,7 @@ def main_update(  # pylint: disable=too-many-branches
     call_scripts(
         site,
         "update-pre-hooks",
+        open_pty=is_tty,
         add_env={
             "OMD_CONFLICT_MODE": conflict_mode,
             "OMD_TO_EDITION": to_edition,
@@ -2993,7 +3006,7 @@ def main_update(  # pylint: disable=too-many-branches
 
     save_site_conf(site)
 
-    call_scripts(site, "post-update")
+    call_scripts(site, "post-update", open_pty=is_tty)
 
     if from_edition != "cloud" and to_edition == "cloud":
         sys.stdout.write(

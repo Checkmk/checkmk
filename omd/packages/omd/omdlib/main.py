@@ -516,7 +516,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
     # Now create a patch from old to new and immediately apply on
     # existing - possibly user modified - file.
 
-    result = os.system(  # nosec B602 # BNS:2b5952
+    result = os.system(  # nosec B605 # BNS:2b5952
         "diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s"
         % (old_orig_path, new_orig_path, new_site.dir, dst)
     )
@@ -570,9 +570,9 @@ def patch_template_file(  # pylint: disable=too-many-branches
             elif choice == "diff":
                 os.system(
                     f"diff -u {old_orig_path} {new_orig_path}{pipe_pager()}"
-                )  # nosec B602 # BNS:2b5952
+                )  # nosec B605 # BNS:2b5952
             elif choice == "brute":
-                os.system(  # nosec B602 # BNS:2b5952
+                os.system(  # nosec B605 # BNS:2b5952
                     f"sed 's@/{old_site.name}/@/{new_site.name}/@g' {dst}.orig > {dst}"
                 )
                 changed = len(
@@ -580,7 +580,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
                         l
                         for l in os.popen(
                             f"diff {dst}.orig {dst}"
-                        ).readlines()  # nosec B602 # BNS:2b5952
+                        ).readlines()  # nosec B605 # BNS:2b5952
                         if l.startswith(">")
                     ]
                 )
@@ -597,7 +597,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
             elif choice == "you":
                 os.system(
                     f"pwd ; diff -u {old_orig_path} {dst}.orig{pipe_pager()}"
-                )  # nosec B602 # BNS:2b5952
+                )  # nosec B605 # BNS:2b5952
             elif choice == "restore":
                 os.rename(dst + ".orig", dst)
                 sys.stdout.write("Restored your version.\n")
@@ -624,7 +624,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
                 thedir = "/".join(dst.split("/")[:-1])
                 os.system(
                     f"su - {new_site.name} -c 'cd {thedir} ; bash -i'"
-                )  # nosec B602 # BNS:2b5952
+                )  # nosec B605 # BNS:2b5952
     # remove unnecessary files
     try:
         os.remove(dst + ".skel." + old_site.name)
@@ -698,13 +698,13 @@ def merge_update_file(  # pylint: disable=too-many-branches
         elif choice == "diff":
             os.system(
                 f"diff -u {user_path}.orig {user_path}-{new_version}{pipe_pager()}"
-            )  # nosec B602 # BNS:2b5952
+            )  # nosec B605 # BNS:2b5952
         elif choice == "you":
             os.system(
                 f"diff -u {user_path}-{old_version} {user_path}.orig{pipe_pager()}"
-            )  # nosec B602 # BNS:2b5952
+            )  # nosec B605 # BNS:2b5952
         elif choice == "new":
-            os.system(  # nosec B602 # BNS:2b5952
+            os.system(  # nosec B605 # BNS:2b5952
                 "diff -u %s-%s %s-%s%s"
                 % (user_path, old_version, user_path, new_version, pipe_pager())
             )
@@ -728,7 +728,7 @@ def merge_update_file(  # pylint: disable=too-many-branches
                 sys.stdout.write(" %-25s: changes that haven't been merged\n" % relname + ".rej")
 
             sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-            os.system("cd '%s' ; bash -i" % user_path.parent)  # nosec B602 # BNS:2b5952
+            os.system("cd '%s' ; bash -i" % user_path.parent)  # nosec B605 # BNS:2b5952
         elif choice == "restore":
             Path(f"{user_path}.orig").rename(user_path)
             user_path.chmod(permissions)
@@ -803,12 +803,12 @@ def _try_merge(
                     skel_content = b""
                     break
         Path(f"{user_path}-{version}").write_bytes(replace_tags(skel_content, site.replacements))
-    version_patch = os.popen(  # nosec B602 # BNS:2b5952
+    version_patch = os.popen(  # nosec B605 # BNS:2b5952
         f"diff -u {user_path}-{old_version} {user_path}-{new_version}"
     ).read()
 
     # First try to merge the changes in the version into the users' file
-    f = os.popen(  # nosec B602 # BNS:2b5952
+    f = os.popen(  # nosec B605 # BNS:2b5952
         "%s/bin/patch --force --backup --forward --silent --merge %s >/dev/null"
         % (site.dir, user_path),
         "w",
@@ -2717,7 +2717,7 @@ def print_diff(
             arrow = tty.magenta + "->" + tty.normal
             if "c" in status:
                 source_content = file_contents(site, source_file)
-                if os.system("which colordiff > /dev/null 2>&1") == 0:  # nosec B602 # BNS:2b5952
+                if os.system("which colordiff > /dev/null 2>&1") == 0:  # nosec B605 # BNS:2b5952
                     diff = "colordiff"
                 else:
                     diff = "diff"

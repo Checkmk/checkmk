@@ -57,7 +57,7 @@ class ZertoRequest:
         self._headers = {"x-zerto-session": session_id, "content-type": "application/json"}
 
     def get_vms_data(self):
-        response = requests.get(  # nosec B501 # BNS:016141
+        response = requests.get(  # nosec B501, B113 # BNS:016141, BNS:773085
             self._endpoint, headers=self._headers, verify=False
         )
 
@@ -83,12 +83,12 @@ class ZertoConnection:
     def get_session_id(self, authentication):
         url = "%s/session/add" % self.base_url
         if authentication == "windows":
-            response = requests.post(  # nosec B501 # BNS:016141
+            response = requests.post(  # nosec B501, B113 # BNS:016141, BNS:77308
                 url, auth=self._credentials, verify=False
             )
         else:
             headers = {"content-type": "application/json"}
-            response = requests.post(  # nosec B501 # BNS:016141
+            response = requests.post(  # nosec B501, B113 # BNS:016141, BNS:773085
                 url, auth=self._credentials, headers=headers, verify=False
             )
 

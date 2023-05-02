@@ -29,8 +29,13 @@ from cmk.utils.licensing.export import (
     RawLicenseUsageReport,
     RawLicenseUsageSample,
 )
-from cmk.utils.licensing.helper import hash_site_id, load_instance_id, rot47
-from cmk.utils.paths import licensing_dir
+from cmk.utils.licensing.helper import (
+    get_instance_id_filepath,
+    hash_site_id,
+    load_instance_id,
+    rot47,
+)
+from cmk.utils.paths import licensing_dir, omd_root
 from cmk.utils.site import omd_site
 
 CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
@@ -444,7 +449,7 @@ def get_license_usage_report_validity() -> LicenseUsageReportValidity:
         if report_filepath.stat().st_size == 0:
             try_update_license_usage(
                 Now.make(),
-                load_instance_id(),
+                load_instance_id(get_instance_id_filepath(omd_root)),
                 hash_site_id(omd_site()),
                 create_sample,
             )

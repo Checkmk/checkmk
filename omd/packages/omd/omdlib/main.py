@@ -46,6 +46,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from enum import auto, Enum
 from pathlib import Path
 from typing import BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn
+from uuid import uuid4
 
 import psutil
 
@@ -77,7 +78,6 @@ from omdlib.dialog import (
     user_confirms,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.instance_id import has_instance_id, save_instance_id
 from omdlib.skel_permissions import Permissions, read_skel_permissions, skel_permissions_file_path
 from omdlib.system_apache import (
     delete_apache_hook,
@@ -119,6 +119,7 @@ from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.password_hashing import hash_password
 from cmk.utils.exceptions import MKTerminate
+from cmk.utils.licensing.helper import get_instance_id_filepath, save_instance_id
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.type_defs.result import Error, OK, Result
@@ -250,9 +251,9 @@ def all_sites() -> Iterable[str]:
 def start_site(version_info: VersionInfo, site: SiteContext) -> None:
     prepare_and_populate_tmpfs(version_info, site)
     call_init_scripts(site.dir, "start")
-    if not has_instance_id(site):
+    if not (instance_id_filepath := get_instance_id_filepath(Path(site.dir))).exists():
         # Existing sites may not have an instance ID yet. After an update we create a new one.
-        save_instance_id(site)
+        save_instance_id(filepath=instance_id_filepath, instance_id=uuid4())
 
 
 def stop_if_not_stopped(site: SiteContext) -> None:
@@ -2347,7 +2348,7 @@ def finalize_site_as_user(
     save_site_conf(site)
 
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
-        save_instance_id(site)
+        save_instance_id(filepath=get_instance_id_filepath(Path(site.dir)), instance_id=uuid4())
 
     call_scripts(site, "post-" + command_type.short)
 
@@ -3132,9 +3133,9 @@ def main_init_action(  # pylint: disable=too-many-branches
             save_tmpfs_dump(site)
 
         if command == "start":
-            if not has_instance_id(site):
+            if not (instance_id_filepath := get_instance_id_filepath(Path(site.dir))).exists():
                 # Existing sites may not have an instance ID yet. After an update we create a new one.
-                save_instance_id(site)
+                save_instance_id(filepath=instance_id_filepath, instance_id=uuid4())
             _update_license_usage(site)
 
         sys.exit(exit_status)

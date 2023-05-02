@@ -165,7 +165,7 @@ def inventory_allnet_ip_sensoric_humidity(parsed):
     return [
         (
             allnet_ip_sensoric_compose_item(sensor, sensor_data),
-            "allnet_ip_sensoric_humidity_default_levels",
+            allnet_ip_sensoric_humidity_default_levels,
         )
         for sensor, sensor_data in parsed.items()
         if _match_function_or_unit(sensor_data, "2", "%")

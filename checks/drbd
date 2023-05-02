@@ -211,11 +211,11 @@ def inventory_drbd(info, checktype):
                     "diskstates_inventory": parsed["ds"],
                 }
             elif checktype == "drbd.net":
-                levels = "drbd_net_default_levels"
+                levels = drbd_net_default_levels
             elif checktype == "drbd.disk":
-                levels = "drbd_disk_default_levels"
+                levels = drbd_disk_default_levels
             elif checktype == "drbd.stats":
-                levels = "drbd_stats_default_levels"
+                levels = drbd_stats_default_levels
             inventory.append(("drbd%s" % line[0][:-1], levels))
     return inventory
 

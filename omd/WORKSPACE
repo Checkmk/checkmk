@@ -88,7 +88,8 @@ heirloom_pkgtools(
 )
 
 load("//packages/libgsf:libgsf_http.bzl", "libgsf")
+
 libgsf(
-    version_str="1.14.44",
-    sha256="68bede10037164764992970b4cb57cd6add6986a846d04657af9d5fac774ffde"
+    sha256 = "68bede10037164764992970b4cb57cd6add6986a846d04657af9d5fac774ffde",
+    version_str = "1.14.44",
 )

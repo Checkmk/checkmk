@@ -1,0 +1,13 @@
+Title: Set Default Password Policy
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1683118210
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+New Checkmk sites will be created with a twelve (12) character minimum length for users' passwords, this can be edited within the site <i>(Setup > General > Global settings > Edit global setting > Password policy for local accounts)</i>.
+Existing sites will have their password policy updated to a twelve (12) character minimum length had password policy not been previously defined, if a password policy is already in use the existing configuration will not change.
+The password policy minimum length can still be manually set to less then twelve (12) characters.

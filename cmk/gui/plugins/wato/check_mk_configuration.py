@@ -2373,6 +2373,7 @@ class ConfigVariablePasswordPolicy(ConfigVariable):
                     Integer(
                         title=_("Minimum password length"),
                         minvalue=1,
+                        default_value=12,
                     ),
                 ),
                 (

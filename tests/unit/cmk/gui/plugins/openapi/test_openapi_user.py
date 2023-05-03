@@ -202,7 +202,7 @@ def test_openapi_user_minimal_password_settings(
         "customer": "provider",
         "auth_option": {
             "auth_type": "password",
-            "password": "password",
+            "password": "password1234",
             "enforce_password_change": True,
         },
     }
@@ -404,7 +404,7 @@ def test_openapi_user_internal_with_notifications(
 
 
 test_data_update_auth_options = (
-    ({"auth_option": {"auth_type": "password", "password": "newpassword"}}, 1),
+    ({"auth_option": {"auth_type": "password", "password": "newpassword1"}}, 1),
     ({"auth_option": {"auth_type": "automation", "secret": "DEYQEQQPYCFFBYH@AVMC"}}, 1),
     ({"auth_option": {"auth_type": "remove"}}, 1),
     (None, 0),
@@ -461,7 +461,7 @@ def test_openapi_user_edit_auth(
         "fullname": alias,
         "customer": "provider",
         "roles": ["user"],
-        "auth_option": {"auth_type": "password", "password": "password"},
+        "auth_option": {"auth_type": "password", "password": "password1234"},
     }
 
     base = "/NO_SITE/check_mk/api/1.0"
@@ -810,7 +810,7 @@ def test_global_full_configuration(
         "username": "cmkuser",
         "fullname": "Mathias Kettner",
         "customer": "global",
-        "auth_option": {"auth_type": "password", "password": "password"},
+        "auth_option": {"auth_type": "password", "password": "password1234"},
         "disable_login": False,
         "contact_options": {"email": "user@example.com"},
         "pager_address": "",
@@ -913,7 +913,7 @@ def test_openapi_user_update_contact_options(
         "username": "cmkuser",
         "fullname": "Mathias Kettner",
         "customer": "global",
-        "auth_option": {"auth_type": "password", "password": "password"},
+        "auth_option": {"auth_type": "password", "password": "password1234"},
         "disable_login": False,
         "pager_address": "",
         "idle_timeout": {"option": "global"},
@@ -1064,7 +1064,7 @@ def test_user_enforce_password_change_option(
         "customer": "global",
         "auth_option": {
             "auth_type": "password",
-            "password": "password",
+            "password": "password1234",
             "enforce_password_change": True,
         },
     }
@@ -1107,7 +1107,7 @@ def test_response_schema_compatible_with_request_schema(
         "customer": "global",
         "auth_option": {
             "auth_type": "password",
-            "password": "password",
+            "password": "password1234",
             "enforce_password_change": True,
         },
     }

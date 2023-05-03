@@ -371,7 +371,11 @@ class CREConfig:
     lock_on_logon_failures: int | None = None
     user_idle_timeout: int | None = 5400
     single_user_session: int | None = None
-    password_policy: dict = field(default_factory=dict)
+    password_policy: dict[str, Any] = field(
+        default_factory=lambda: {
+            "min_length": 12,
+        }
+    )
 
     user_localizations: dict[str, dict[str, str]] = field(
         default_factory=lambda: {

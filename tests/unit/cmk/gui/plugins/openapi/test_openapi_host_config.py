@@ -1354,7 +1354,7 @@ def test_openapi_host_config_show_host_disregards_contact_groups(clients: Client
         username="unable_to_see_host",
         fullname="unable_to_see_host",
         contactgroups=["no_hosts_in_here"],
-        auth_option={"auth_type": "password", "password": "supersecret"},
+        auth_option={"auth_type": "password", "password": "supersecretish"},
     )
 
     clients.Rule.create(
@@ -1364,7 +1364,7 @@ def test_openapi_host_config_show_host_disregards_contact_groups(clients: Client
         conditions={},
     )
 
-    clients.Host.set_credentials("unable_to_see_host", "supersecret")
+    clients.Host.set_credentials("unable_to_see_host", "supersecretish")
 
     resp = clients.HostConfig.get("heute", expect_ok=False).assert_status_code(403)
     assert resp.json["title"] == "Forbidden"
@@ -1377,7 +1377,7 @@ def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegi
         username="unable_to_see_all_host",
         fullname="unable_to_see_all_host",
         contactgroups=["does_not_see_everything"],
-        auth_option={"auth_type": "password", "password": "supersecret"},
+        auth_option={"auth_type": "password", "password": "supersecretish"},
     )
 
     clients.HostConfig.create(
@@ -1388,7 +1388,7 @@ def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegi
         host_name="should_not_be_invisible",
     )
 
-    clients.Host.set_credentials("unable_to_see_all_host", "supersecret")
+    clients.Host.set_credentials("unable_to_see_all_host", "supersecretish")
     resp = clients.HostConfig.get_all()
     host_names = [entry["id"] for entry in resp.json["value"]]
     assert "should_be_visible" in host_names

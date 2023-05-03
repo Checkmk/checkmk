@@ -32,11 +32,9 @@ import io
 import logging
 import os
 import pwd
-import random
 import re
 import shutil
 import signal
-import string
 import subprocess
 import sys
 import tarfile
@@ -297,7 +295,7 @@ def create_version_symlink(site: SiteContext, version: str) -> None:
 def calculate_admin_password(options: CommandOptions) -> Password:
     if pw := options.get("admin-password"):
         return Password(pw)
-    return Password(random_password())
+    return Password.random(12)
 
 
 def set_admin_password(site: SiteContext, pw: Password) -> None:
@@ -4574,10 +4572,6 @@ def exec_other_omd(site: SiteContext, version: str, command: str) -> NoReturn:
             "Site %s uses version %s which is not installed.\n"
             "Please reinstall that version and retry this command." % (site.name, version)
         )
-
-
-def random_password() -> str:
-    return "".join(random.choice(string.ascii_letters + string.digits) for i in range(8))
 
 
 def ensure_mkbackup_lock_dir_rights() -> None:

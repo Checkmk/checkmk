@@ -34,7 +34,7 @@ def fixture_test_user(site: Site) -> Iterator[None]:
     site.openapi.create_user(
         username=username,
         fullname="Harry Hirsch",
-        password="1234",
+        password="1234abcdabcd",
         email=f"{site.id}@localhost",
         contactgroups=["all"],
     )

@@ -237,13 +237,13 @@ def test_inventory_oracle_performance(
         )
     ],
 )
-def test_check_oracle_performance_dbtime(  # type: ignore[no-untyped-def]
+def test_check_oracle_performance_dbtime(
     get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
-    expected_result,
-):
+    expected_result: CheckResult,
+) -> None:
     assert list(opc.check_oracle_performance_dbtime(item, params, section)) == expected_result
 
 
@@ -277,12 +277,12 @@ def test_check_oracle_performance_dbtime(  # type: ignore[no-untyped-def]
         )
     ],
 )
-def test_check_oracle_performance_memory(  # type: ignore[no-untyped-def]
+def test_check_oracle_performance_memory(
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
-    expected_result,
-):
+    expected_result: CheckResult,
+) -> None:
     assert list(opc.check_oracle_performance_memory(item, params, section)) == expected_result
 
 
@@ -323,13 +323,13 @@ def test_check_oracle_performance_memory(  # type: ignore[no-untyped-def]
         )
     ],
 )
-def test_check_oracle_performance_iostat_ios(  # type: ignore[no-untyped-def]
+def test_check_oracle_performance_iostat_ios(
     get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
-    expected_result,
-):
+    expected_result: CheckResult,
+) -> None:
     assert list(opc.check_oracle_performance_iostat_ios(item, params, section)) == expected_result
 
 
@@ -362,11 +362,11 @@ def test_check_oracle_performance_iostat_ios(  # type: ignore[no-untyped-def]
         )
     ],
 )
-def test_check_oracle_performance_waitclasses(  # type: ignore[no-untyped-def]
+def test_check_oracle_performance_waitclasses(
     get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
-    expected_result,
-):
+    expected_result: CheckResult,
+) -> None:
     assert list(opc.check_oracle_performance_waitclasses(item, params, section)) == expected_result

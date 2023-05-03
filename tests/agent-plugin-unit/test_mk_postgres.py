@@ -360,9 +360,7 @@ class TestWindows:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
-    def test_factory_without_instance(  # type: ignore[no-untyped-def]
-        self, mock_Popen, mock_isfile
-    ) -> None:
+    def test_factory_without_instance(self, mock_Popen: Mock, mock_isfile: Mock) -> None:
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [

@@ -3,12 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
+
+from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
 from cmk.checkers.checking import CheckPluginName
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
@@ -16,6 +21,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
 @pytest.mark.parametrize(
@@ -47,8 +53,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
         ),
     ],
 )
-def test_parse_sap_hana_ess(  # type: ignore[no-untyped-def]
-    fix_register, info, expected_result
+def test_parse_sap_hana_ess(
+    fix_register: FixRegister, info: StringTable, expected_result: Mapping[str, object]
 ) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_ess")]
     result = section_plugin.parse_function(info)
@@ -68,8 +74,8 @@ def test_parse_sap_hana_ess(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_sap_hana_ess(  # type: ignore[no-untyped-def]
-    fix_register, info, expected_result
+def test_inventory_sap_hana_ess(
+    fix_register: FixRegister, info: StringTable, expected_result: DiscoveryResult
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_ess")]
@@ -120,8 +126,8 @@ def test_inventory_sap_hana_ess(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_sap_hana_ess(  # type: ignore[no-untyped-def]
-    fix_register, item, info, expected_result
+def test_check_sap_hana_ess(
+    fix_register: FixRegister, item: str, info: StringTable, expected_result: CheckResult
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_ess")]
@@ -139,7 +145,7 @@ def test_check_sap_hana_ess(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_sap_hana_ess_stale(fix_register, item, info) -> None:  # type: ignore[no-untyped-def]
+def test_check_sap_hana_ess_stale(fix_register: FixRegister, item: str, info: StringTable) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_ess")]
     with pytest.raises(IgnoreResultsError):

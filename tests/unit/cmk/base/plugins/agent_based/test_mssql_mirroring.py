@@ -3,14 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.mssql_mirroring import (
     check_mssql_mirroring,
     cluster_check_mssql_mirroring,
     discover_mssql_mirroring,
     MirroringConfig,
+    MirroringSection,
     parse_mssql_mirroring,
 )
 
@@ -118,7 +123,7 @@ from cmk.base.plugins.agent_based.mssql_mirroring import (
         ),
     ],
 )
-def test_parse_mssql_mirroring(string_table, parsed_config) -> None:  # type: ignore[no-untyped-def]
+def test_parse_mssql_mirroring(string_table: StringTable, parsed_config: MirroringSection) -> None:
     assert parse_mssql_mirroring(string_table) == parsed_config
 
 
@@ -197,8 +202,8 @@ def test_parse_mssql_mirroring(string_table, parsed_config) -> None:  # type: ig
         ),
     ],
 )
-def test_discover_mssql_mirroring(  # type: ignore[no-untyped-def]
-    string_table, discovered_services
+def test_discover_mssql_mirroring(
+    string_table: StringTable, discovered_services: DiscoveryResult
 ) -> None:
     assert (
         list(discover_mssql_mirroring(parse_mssql_mirroring(string_table))) == discovered_services
@@ -284,8 +289,8 @@ def test_discover_mssql_mirroring(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_mssql_mirroring(  # type: ignore[no-untyped-def]
-    item, params, section, check_result
+def test_check_mssql_mirroring(
+    item: str, params: Mapping[str, int], section: MirroringSection, check_result: CheckResult
 ) -> None:
     assert list(check_mssql_mirroring(item, params, section)) == check_result
 
@@ -412,7 +417,10 @@ def test_check_mssql_mirroring(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_cluster_check_mssql_mirroring(  # type: ignore[no-untyped-def]
-    item, params, section, check_result
+def test_cluster_check_mssql_mirroring(
+    item: str,
+    params: Mapping[str, int],
+    section: Mapping[str, MirroringSection | None],
+    check_result: CheckResult,
 ) -> None:
     assert list(cluster_check_mssql_mirroring(item, params, section)) == check_result

@@ -69,11 +69,11 @@ RESULT = {
         (DATA, ignore_params, RESULT),
     ],
 )
-def test_agent_alertmanager_parse(  # type: ignore[no-untyped-def]
+def test_agent_alertmanager_parse(
     data: dict[str, Any],
     ignore_alerts: agent_alertmanager.IgnoreAlerts,
     result: agent_alertmanager.Groups,
-):
+) -> None:
     assert agent_alertmanager.parse_rule_data(data["groups"], ignore_alerts) == result
 
 
@@ -93,13 +93,13 @@ def test_agent_alertmanager_parse(  # type: ignore[no-untyped-def]
         ("foo", "ignoreme", "firing", ignore_params, {}),
     ],
 )
-def test_alertmanager_is_rule_ignored(  # type: ignore[no-untyped-def]
+def test_alertmanager_is_rule_ignored(
     rule_name: str,
     rule_group: str,
     rule_state: str,
     ignore_alerts: agent_alertmanager.IgnoreAlerts,
     result: agent_alertmanager.Groups,
-):
+) -> None:
     data = {
         "groups": [
             {

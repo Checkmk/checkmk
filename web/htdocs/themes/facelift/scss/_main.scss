@@ -386,8 +386,11 @@ ul.treeangle {
     display: block;
     padding-left: 20px;
     margin: 0;
-    margin-left: 16px;
     list-style: disc;
+
+    &:not(.single) {
+      margin-left: 16px;
+    }
   }
 }
 

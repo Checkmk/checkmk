@@ -285,7 +285,7 @@ def render_tree_folder(tree_id, folder, js_func):
             for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
                 render_tree_folder(tree_id, subfolder, js_func)
     else:
-        html.li(title)
+        html.li(title, class_="single")
 
     html.close_ul()
 

@@ -8,6 +8,7 @@ import itertools
 import json
 import logging
 import re
+import time
 import typing
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -156,7 +157,10 @@ class CoreAPI(RawAPI):
 
     def query_kubelet_metrics(self, node_names: Sequence[str]) -> Sequence[str]:
         result = []
-        for node_name in node_names:
+        finish_time = time.time() + 30.0
+        node_queue = list(node_names)
+        while time.time() < finish_time and node_queue:
+            node_name = node_queue.pop()
             request = requests.Request(
                 "GET", self._config.url(f"/api/v1/nodes/{node_name}/proxy/metrics")
             )

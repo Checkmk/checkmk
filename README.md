@@ -1,6 +1,6 @@
 # Checkmk - Your complete IT monitoring solution
 
-![PR-CI status](https://github.com/tribe29/checkmk/actions/workflows/pr.yaml/badge.svg)
+![PR-CI status](https://github.com/Checkmk/checkmk/actions/workflows/pr.yaml/badge.svg)
 
 Checkmk is available in several editions.
 The Checkmk Raw Edition is free and 100% open-source.
@@ -24,7 +24,7 @@ Nice! Before contributing please check out our [contribution guidelines](CONTRIB
 ## Building on your own packages
 
 It is highly recommended to use the prebuilt Checkmk packages we [provide](https://checkmk.com/download.php).
-But if you really want to build your own packages, you either need to download the source packages from our website or check out the [Git repository](https://github.com/tribe29/checkmk).
+But if you really want to build your own packages, you either need to download the source packages from our website or check out the [Git repository](https://github.com/Checkmk/checkmk).
 
 We're building the Checkmk packages within specific docker images for the different distros.
 Please find the Dockerfiles under buildscripts/infrastructure/build-nodes/ in order to get an idea what's needed to build it locally.

@@ -1,0 +1,20 @@
+Title: Agent controller auto-registration rules: Avoid error when updating remote sites with active configuration replication
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1683117151
+Edition: cce
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When updating the Checkmk version of a remote site with active configuration replication whose
+central site had configured rules from the ruleset
+<a href="https://docs.checkmk.com/master/en/hosts_autoregister.html#rule_autoregister_bakery">Agent controller auto-registration (Cloud Edition)</a>,
+users might have ecountered errors such as
+
+C+:
+-| Exception: The configured site is not known to this site. You can only register to sites known to the central site, because the controller will only trust certificates signed by the central sites CA.
+C-:
+
+during the update. These errors can be safely ignored and will not occur anymore.

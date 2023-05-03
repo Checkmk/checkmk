@@ -8145,6 +8145,7 @@ class SetupSiteChoice(DropdownChoice):
         help_separator: str | None = None,
         prefix_values: bool = False,
         empty_text: str | None = None,
+        invalid_choice: DropdownInvalidChoice = "complain",
         invalid_choice_error: str | None = None,
         no_preselect_title: str | None = None,
         on_change: str | None = None,
@@ -8165,7 +8166,7 @@ class SetupSiteChoice(DropdownChoice):
             help_separator=help_separator,
             prefix_values=prefix_values,
             empty_text=empty_text,
-            invalid_choice="complain",
+            invalid_choice=invalid_choice,
             invalid_choice_title=_("Unknown site (%s)"),
             invalid_choice_error=_("The configured site is not known to this site.")
             if invalid_choice_error is None

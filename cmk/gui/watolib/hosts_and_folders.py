@@ -74,7 +74,6 @@ from cmk.gui.utils import urls
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link
 from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ConfigDomainName
@@ -4022,7 +4021,7 @@ def ajax_popup_host_action_menu() -> None:
         )
         html.open_a(
             href="",
-            onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.confirmed_form_submit, %s);"
+            onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.confirmed_form_submit, %s); cmk.popup_menu.close_popup()"
             % json.dumps(
                 [
                     form_name,
@@ -4037,12 +4036,22 @@ def ajax_popup_host_action_menu() -> None:
 
     # Delete host
     if request.get_str_input("show_delete_link"):
-        delete_url = make_confirm_delete_link(
-            url=make_action_link([("mode", "folder"), ("_delete_host", host.name())]),
+        delete_host_options: dict[str, str | dict[str, str]] = confirmed_form_submit_options(
             title=_("Delete host"),
+            confirm_button=_("Remove"),
             suffix=host.name(),
         )
-        html.open_a(href=delete_url)
+        html.open_a(
+            href="",
+            onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.confirmed_form_submit, %s); cmk.popup_menu.close_popup()"
+            % json.dumps(
+                [
+                    form_name,
+                    "_bulk_delete",
+                    delete_host_options,
+                ]
+            ),
+        )
         html.icon("delete")
         html.write_text(_("Delete host"))
         html.close_a()

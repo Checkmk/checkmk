@@ -44,7 +44,12 @@ from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
 from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
+from ._host_labels import (
+    analyse_cluster_labels,
+    analyse_host_labels,
+    discover_host_labels,
+    do_load_labels,
+)
 from .autodiscovery import AutocheckServiceWithNodes, get_host_services, ServicesByTransition
 from .utils import DiscoveryMode, QualifiedDiscovery
 
@@ -77,18 +82,40 @@ def execute_check_discovery(
     store_piggybacked_sections(host_sections_no_error)
     providers = make_providers(host_sections_no_error, section_plugins)
 
-    host_labels, _kept_labels = analyse_host_labels(
-        host_name,
-        discovered_host_labels=discover_host_labels(
+    host_labels, _kept_labels = (
+        analyse_cluster_labels(
             host_name,
-            host_label_plugins,
-            providers=providers,
-            on_error=OnError.RAISE,
-        ),
-        ruleset_matcher=config_cache.ruleset_matcher,
-        existing_host_labels=do_load_labels(host_name),
-        save_labels=False,
+            config_cache.nodes_of(host_name) or (),
+            discovered_host_labels={
+                node_name: discover_host_labels(
+                    node_name,
+                    host_label_plugins,
+                    providers=providers,
+                    on_error=OnError.RAISE,
+                )
+                for node_name in config_cache.nodes_of(host_name) or ()
+            },
+            existing_host_labels={
+                node_name: do_load_labels(node_name)
+                for node_name in config_cache.nodes_of(host_name) or ()
+            },
+            ruleset_matcher=config_cache.ruleset_matcher,
+        )
+        if config_cache.is_cluster(host_name)
+        else analyse_host_labels(
+            host_name,
+            discovered_host_labels=discover_host_labels(
+                host_name,
+                host_label_plugins,
+                providers=providers,
+                on_error=OnError.RAISE,
+            ),
+            ruleset_matcher=config_cache.ruleset_matcher,
+            existing_host_labels=do_load_labels(host_name),
+            save_labels=False,
+        )
     )
+
     services = get_host_services(
         host_name,
         config_cache=config_cache,

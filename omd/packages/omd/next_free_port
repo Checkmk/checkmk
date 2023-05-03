@@ -2,7 +2,7 @@
 #
 # return next free port for key
 #
-# usage: $OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT 5000
+# usage: $OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT 5000
 
 
 port_is_used () {

@@ -8,14 +8,14 @@
 
 case "$1" in
     default)
-        PORT=$($OMD_ROOT/lib/omd/port_is_used LIVESTATUS_TCP_PORT 6557)
+        PORT=$($OMD_ROOT/lib/omd/next_free_port LIVESTATUS_TCP_PORT 6557)
         echo "$PORT"
     ;;
     choices)
         echo "[0-9]{1,5}"
     ;;
     set)
-        PORT=$($OMD_ROOT/lib/omd/port_is_used LIVESTATUS_TCP_PORT $2)
+        PORT=$($OMD_ROOT/lib/omd/next_free_port LIVESTATUS_TCP_PORT $2)
 
         if [ "$PORT" != "$2" ]; then
             echo "Livestatus port $2 is in use. I've choosen $PORT instead." >&2

@@ -5,7 +5,7 @@
 
 import os
 import tempfile
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import assert_never
 
@@ -97,7 +97,7 @@ def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
     )
 
 
-@lru_cache
+@cache
 def _pem_serizialized_site_root_cert() -> str:
     return serialize_to_pem(site_root_certificate())
 

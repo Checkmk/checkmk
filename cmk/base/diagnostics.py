@@ -19,7 +19,7 @@ import urllib.parse
 import uuid
 from collections.abc import Iterator, Mapping
 from datetime import datetime
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -268,12 +268,12 @@ class DiagnosticsDump:
 #   '----------------------------------------------------------------------
 
 
-@lru_cache
+@cache
 def get_omd_config() -> site.OMDConfig:
     return site.get_omd_config()
 
 
-@lru_cache
+@cache
 def get_checkmk_server_name() -> HostName | None:
     result = livestatus.LocalConnection().query(
         f"GET services\nColumns: host_name\nFilter: service_description ~ OMD {omd_site()} performance\n"

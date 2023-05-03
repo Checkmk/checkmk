@@ -9,7 +9,7 @@ import enum
 import io
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
-from functools import lru_cache
+from functools import cache, lru_cache
 from pathlib import Path
 from typing import Any, Generic, TypedDict, TypeVar
 
@@ -274,7 +274,7 @@ class RawHostsStorage(ABCHostsStorage[HostsData]):
         return store.load_object_from_file(str(file_path), default={})
 
 
-@lru_cache
+@cache
 def make_experimental_hosts_storage(storage_format: StorageFormat) -> ABCHostsStorage | None:
     if storage_format == StorageFormat.RAW:
         return RawHostsStorage()

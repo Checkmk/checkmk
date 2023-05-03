@@ -9,7 +9,7 @@ import logging
 import re
 import warnings
 from collections.abc import Iterable
-from functools import lru_cache
+from functools import cache
 from itertools import chain
 from pathlib import Path
 from typing import NewType
@@ -129,7 +129,7 @@ def prune_imports(imports: Iterable[ImportName]) -> set[ImportName]:
     }
 
 
-@lru_cache(maxsize=None)
+@cache
 def imports_for_file(path: Path) -> set[ImportName]:
     # We don't care about warnings from 3rd party packages
     with path.open("rb") as source_file, warnings.catch_warnings():
@@ -193,7 +193,7 @@ def packagenames_to_libnames(repopath: Path) -> dict[NormalizedPackageName, list
     }
 
 
-@lru_cache(maxsize=None)
+@cache
 def get_pipfile_libs(repopath: Path) -> dict[PackageName, list[ImportName]]:
     """Collect info from Pipfile with additions from site-packages
 

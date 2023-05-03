@@ -25,7 +25,7 @@ import time
 import traceback
 import uuid
 from collections.abc import Mapping, Sequence
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Any, cast, Literal, overload, Union
 
@@ -1167,7 +1167,7 @@ def rbn_all_contacts(with_email: bool = False) -> list[ContactName]:
     return [contact_id for (contact_id, contact) in config.contacts.items() if contact.get("email")]
 
 
-@lru_cache
+@cache
 def _contactgroup_members() -> Mapping[ContactgroupName, set[ContactName]]:
     """Get the members of all contact groups
 

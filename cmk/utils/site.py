@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 
 from livestatus import SiteId
@@ -16,7 +16,7 @@ from cmk.utils.i18n import _
 OMDConfig = dict[str, str]
 
 
-@lru_cache
+@cache
 def omd_site() -> SiteId:
     try:
         return SiteId(os.environ["OMD_SITE"])

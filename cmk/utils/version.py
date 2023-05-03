@@ -19,7 +19,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Any, Final, NamedTuple, Self
 
@@ -40,13 +40,13 @@ class Edition(_EditionValue, enum.Enum):
     CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
 
 
-@lru_cache
+@cache
 def omd_version() -> str:
     version_link = cmk.utils.paths.omd_root / "version"
     return version_link.resolve().name
 
 
-@lru_cache
+@cache
 def edition() -> Edition:
     try:
         return Edition[omd_version().split(".")[-1].upper()]

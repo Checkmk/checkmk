@@ -19,7 +19,7 @@ import time
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
-from functools import lru_cache
+from functools import cache
 from io import BytesIO
 from typing import Any, Literal, NamedTuple, NewType, TypedDict
 
@@ -353,7 +353,7 @@ class Helpers:
         return [sum(column) for column in zip(*data)]
 
 
-@lru_cache
+@cache
 def get_livestatus_blob_columns() -> set[LivestatusColumn]:
     # These columns should get queried from the core
     return {

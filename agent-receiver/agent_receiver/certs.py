@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime
-from functools import lru_cache
+from functools import cache
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from cryptography.hazmat.primitives.hashes import SHA256
@@ -71,7 +71,7 @@ def extract_cn_from_csr(csr: CertificateSigningRequest) -> str:
     return csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
 
 
-@lru_cache
+@cache
 def agent_root_ca() -> tuple[Certificate, RSAPrivateKey]:
     pem_bytes = agent_ca_path().read_bytes()
     return load_pem_x509_certificate(pem_bytes), load_pem_private_key(pem_bytes, None)

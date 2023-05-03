@@ -11,7 +11,7 @@ import typing
 import warnings
 from collections.abc import Iterator
 from contextlib import contextmanager
-from functools import lru_cache
+from functools import cache
 from typing import Any
 
 from flask import Flask
@@ -23,7 +23,7 @@ from cmk.gui.http import Response
 Environments = typing.Literal["production", "testing", "development"]
 
 
-@lru_cache
+@cache
 def session_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     # TODO: Temporary hack. Can be removed once #12954 has been ported from 2.0.0
     from cmk.gui.wsgi.app import make_wsgi_app

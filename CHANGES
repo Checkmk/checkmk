@@ -1,16 +1,17 @@
-The textual changelog of Check_MK is created for regular releases only. If you
+The textual changelog of Checkmk is created for regular releases only. If you
 want to see these changelogs, take a look at these files that you can find in
 your monitoring sites:
 
-All Editions:        share/doc/check_mk/ChangeLog
-Enterprise Edition:  share/doc/check_mk_enterprise/ChangeLog
+All Editions:             share/doc/check_mk/ChangeLog
+Enterprise Edition:       share/doc/check_mk_enterprise/ChangeLog
+Managed Services Edition: share/doc/check_mk_managed/ChangeLog
+Cloud Edition:            share/doc/check_mk_cloud/ChangeLog
 
 If you want to see the changes of a specific version and maybe filter the
 changes in a flexible way, please check out the list of changes on our
-website (http://mathias-kettner.de/check_mk_werks.php?HTML=yes),
-see the werk list in your site (click on version number in the sidebar of
-the GUI) or execute the "./werk list" command from the git directory of
-Check_MK.
+website (https://checkmk.com/werks), see the werk list in your site (click
+"Help" in the navigation bar, then "Change log (Werks)") or execute the
+"./werk list" command from the git directory of Checkmk.
 
 From the git of Check_MK, you can create the ChangeLog file with the command
-"make ChangeLog".
+"make `pwd`/ChangeLog".

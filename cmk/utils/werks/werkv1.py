@@ -42,7 +42,7 @@ class RawWerkV1(BaseModel, RawWerk):
         return Werk(
             compatible=(
                 Compatibility.COMPATIBLE
-                if self.compatible == "comp"
+                if self.compatible == "compat"
                 else Compatibility.NOT_COMPATIBLE
             ),
             version=self.version,

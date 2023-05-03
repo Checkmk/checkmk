@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: marc.nerreter@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-04-27 14:25+0000\n"
-"Last-Translator: Marcel Arentz <marcel.arentz@tribe29.com>\n"
+"PO-Revision-Date: 2023-04-30 12:12+0000\n"
+"Last-Translator: Mattias Schlenker <mattias.schlenker@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -1540,7 +1540,7 @@ msgid ""
 "present yet.</p>"
 msgstr ""
 "<p>Hier kann eine Liste von Pfad-Mustern eintragen werden, die vom Agenten "
-"in der Sektion <tt>fileinfo</tt> gesendet werden. Es können Globbing-Muster, "
+"im Abschnitt <tt>fileinfo</tt> gesendet werden. Es können Globbing-Muster, "
 "wie z.B. <tt>C:\\foo\\*.log</tt> oder <tt>/var/*/*.log</tt> verwendet "
 "werden. Standardmäßig wird die Größe und das Alter jeder gefundenen Datei "
 "überwacht. Durch die Verwendung von Dateigruppen kann alternativ eine Gruppe "
@@ -1555,8 +1555,8 @@ msgstr ""
 "nur Dateien, die das aktuelle Datum enthalten vom Agenten gesendet werden. "
 "Die Datumsvariable kann z.B. zusammen mit Dateigruppen verwendet werden, um "
 "Dateien zu überwachen, die täglich in einem Ordner angelegt werden. Dabei "
-"ist zu beachten, dass die Option <i>Nur während der folgenden Tageszeiten "
-"prüfen</i> aktiviert werden sollte. Andernfalls wird eine Warnung angezeigt, "
+"ist zu beachten, dass die Option Nur während der folgenden Tageszeiten "
+"prüfen aktiviert werden sollte. Andernfalls wird eine Warnung angezeigt, "
 "wenn die Dateien sich vorhanden sind.</p>"
 
 msgid ""
@@ -2339,13 +2339,13 @@ msgid ""
 "supported on linux and windows agents as well as devices monitored through "
 "the host-resource mib"
 msgstr ""
-"Ein einzelner Thread, der einen einzelnen Kern vollständig auslastet ("
-"möglicherweise aufgrund eines Fehlers), kann unbemerkt bleiben, wenn nur die "
-"Gesamtauslastung der CPU überwacht wird. Mit dieser Konfiguration schlägt "
-"Checkmk Alarm, wenn ein einzelner Kern über einen längeren Zeitraum einen "
-"Auslastungsschwellwert überschreitet. Dies wird derzeit nur von Linux- und "
-"Windows-Agenten sowie von Geräten unterstützt, die über die Host-Ressourcen-"
-"Mib überwacht werden"
+"Ein einzelner Thread, der einen einzelnen Kern vollständig auslastet "
+"(möglicherweise aufgrund eines Fehlers), kann unbemerkt bleiben, wenn nur "
+"die Gesamtauslastung der CPU überwacht wird. Mit dieser Konfiguration "
+"schlägt Checkmk Alarm, wenn ein einzelner Kern über einen längeren Zeitraum "
+"einen Auslastungsschwellwert überschreitet. Dies wird derzeit nur von Linux- "
+"und Windows-Agenten sowie von Geräten unterstützt, die über die Host-"
+"Ressourcen-Mib überwacht werden"
 
 msgid "A stored SNMP walk"
 msgstr "Gespeicherter SNMP-Walk"
@@ -3237,8 +3237,8 @@ msgid ""
 "set of monitored logs, see logname for that"
 msgstr ""
 "Aktiviere die moderne Eventlog-API, die in Vista eingeführt wurde. Pro: "
-"Unterstützt neue Logs, die in Vista eingeführt wurden. Kontra: Nur in Vista ("
-"Server 2008) und neuer verfügbar, geringe Testabdeckung, ggfs. langsamer. "
+"Unterstützt neue Logs, die in Vista eingeführt wurden. Kontra: Nur in Vista "
+"(Server 2008) und neuer verfügbar, geringe Testabdeckung, ggfs. langsamer. "
 "Beachte: Ist die Option gesetzt, ändert dies nicht das Standardverhalten von "
 "zu überwachenden Logs, siehe auch Protokollname"
 
@@ -3545,6 +3545,10 @@ msgstr "Präfix hinzufügen"
 msgid "Add Rule ID"
 msgstr "Regel-ID hinzufügen"
 
+#, fuzzy
+msgid "Add SLA"
+msgstr "SLA bearbeiten"
+
 msgid "Add Suffix"
 msgstr "Endung hinzufügen"
 
@@ -3586,6 +3590,14 @@ msgstr "Hilfsmerkmal hinzufügen"
 msgid "Add auxiliary tag"
 msgstr "Hilfsmerkmal hinzufügen"
 
+#, fuzzy
+msgid "Add backup job"
+msgstr "Neuer Backup-Job"
+
+#, fuzzy
+msgid "Add backup target"
+msgstr "Neues Sicherungsziel"
+
 msgid "Add child node generator"
 msgstr "Generator für Child-Node hinzufügen"
 
@@ -3594,6 +3606,10 @@ msgstr "Cluster hinzufügen"
 
 msgid "Add cluster mapping"
 msgstr "Clusterzuordnung hinzufügen"
+
+#, fuzzy
+msgid "Add collection"
+msgstr "Verbindung hinzufügen"
 
 msgid "Add column"
 msgstr "Spalte hinzufügen"
@@ -3671,6 +3687,14 @@ msgstr "Filter hinzufügen"
 msgid "Add folder"
 msgstr "Ordner hinzufügen"
 
+#, fuzzy
+msgid "Add forecast"
+msgstr "Neue Vorhersage"
+
+#, fuzzy
+msgid "Add graph"
+msgstr "Gruppe hinzufügen"
+
 msgid "Add group"
 msgstr "Gruppe hinzufügen"
 
@@ -3709,6 +3733,10 @@ msgid "Add label condition"
 msgstr "Label-Bedingung hinzufügen"
 
 msgid "Add limits"
+msgstr "Schwellwerte hinzufügen"
+
+#, fuzzy
+msgid "Add list"
 msgstr "Schwellwerte hinzufügen"
 
 msgid "Add macro"
@@ -3907,6 +3935,10 @@ msgstr "Regel im Ordner %s hinzufügen"
 msgid "Add rule pack"
 msgstr "Regelpaket hinzufügen"
 
+#, fuzzy, python-format
+msgid "Add rule: %s"
+msgstr "BI-Regel %s hinzufügen"
+
 msgid "Add schedule"
 msgstr "Aufgabenplaner hinzufügen"
 
@@ -3933,6 +3965,10 @@ msgstr "Sortierer hinzufügen"
 
 msgid "Add state configuration"
 msgstr "Neue Statuskonfiguriation hinzufügen"
+
+#, fuzzy
+msgid "Add stored report"
+msgstr "Gespeicherten Bericht Editieren"
 
 msgid "Add tag"
 msgstr "Tag hinzufügen"
@@ -4013,6 +4049,14 @@ msgstr "Zur Abfrage hinzufügen"
 
 msgid "Add to trusted CAs"
 msgstr "Zu vertrauenswürdigen CAs hinzufügen"
+
+#, fuzzy
+msgid "Add topic"
+msgstr "Neues Thema hinzufügen"
+
+#, fuzzy
+msgid "Add tuning"
+msgstr "Tunnel hinzufügen"
 
 msgid "Add tuning configuration"
 msgstr "Neue Tuning-Konfiguration hinzufügen"
@@ -6099,9 +6143,6 @@ msgstr "Application Load Balancer"
 
 msgid "Application Pool name"
 msgstr "Name des Anwendungspools"
-
-msgid "Application account ID"
-msgstr "ID des Anwendungskontos"
 
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Anwendungs- und Netzwerklastausgleich (ELBv2)"
@@ -10336,6 +10377,12 @@ msgstr ""
 "versuchen, den Bulk Walk zu deaktivieren, indem Sie das Regelset \"Bulk "
 "Walks auf SNMPv2c/v3 deaktivieren\" verwenden."
 
+#, fuzzy, python-format
+msgid "Checkmk edition: %s"
+msgstr ""
+"Checkmk-Ausnahme: %s\n"
+"%s"
+
 msgid "Checkmk extension packages (MKPs)"
 msgstr "Checkmk-Erweiterungspakete (MKPs)"
 
@@ -10417,6 +10464,10 @@ msgstr "Checkmk Instanzen des Hosts"
 
 msgid "Checkmk specific"
 msgstr "Checkmk-spezifisch"
+
+#, fuzzy
+msgid "Checkmk state"
+msgstr "Checkmk Instanz"
 
 msgid ""
 "Checkmk usually uses an interval of one minute for the active Checkmk check "
@@ -11311,6 +11362,10 @@ msgstr "Sammle Diagnose-Dump"
 
 msgid "Collect diagnostics"
 msgstr "Sammle Diagnosedaten"
+
+#, fuzzy
+msgid "Collect diagnostics data from the local site."
+msgstr "Verbinde zur lokalen Instanz"
 
 msgid "Collect information about OS and Checkmk version"
 msgstr "Sammle Informationen über die Betriebssystem- und Checkmk-Version"
@@ -12718,6 +12773,10 @@ msgstr "Wartezeit nach fehlgeschlagenem Verbindungsversuch"
 msgid "Copied rules from master"
 msgstr "Regeln vom Master kopiert"
 
+#, fuzzy
+msgid "Copied secret to clipboard"
+msgstr "Regelwertdarstellung in die Zwischenablage kopieren"
+
 msgid "Copied the event rules from the master into the local configuration"
 msgstr "Ereignisregeln vom Master in lokale Konfiguration kopiert"
 
@@ -13242,8 +13301,8 @@ msgstr "Erzeuge Zufallshosts"
 msgid "Create random monitoring data"
 msgstr "Erzeuge zufällige Monitoringdaten"
 
-msgid "Create random secret"
-msgstr "Erzeuge Zufallspasswort"
+msgid "Create random secret and copy secret to clipboard"
+msgstr "Zufälliges Passwort erzeugen und in die Zwischenablage kopieren"
 
 msgid ""
 "Create real-time data executing the following agent plugins (Linux only)"
@@ -19023,10 +19082,6 @@ msgstr "End-Zeit"
 msgid "End-to-end latency"
 msgstr "End-to-End Latenz"
 
-#, python-format
-msgid "End: %s"
-msgstr "Ende: %s"
-
 msgid "Ended"
 msgstr "Beendet"
 
@@ -22581,10 +22636,6 @@ msgstr "Gruppen Basis-DN"
 msgid "Group Werks by"
 msgstr "Werks gruppieren nach"
 
-#, python-format
-msgid "Group and managed services use: %s"
-msgstr "Group and managed services use: %s"
-
 msgid "Group base DN"
 msgstr "Gruppen Base DN"
 
@@ -25544,7 +25595,7 @@ msgid "Idle Timeout"
 msgstr "Inaktivitäts-Timeout"
 
 msgid "Idle clean up of worker"
-msgstr ""
+msgstr "Idle clean up der Worker-Prozesse"
 
 msgid "Idle connections"
 msgstr "Inaktive Verbindungen"
@@ -25873,9 +25924,9 @@ msgstr ""
 "Wenn für eine bestimmte Zeit kein ICMP oder TCP-SYN/RST-Paket von einem Host "
 "gesehen wird, dann wird dieser als down angenommen. Diese Zeit kann man hier "
 "einstellen. Der Standardwert das 2,5-fache normale Intervall für den Host. "
-"<b>Hinweis</b>: Diese Einstellung wird nicht gemessen vom Zeitpunkt, wann "
-"das letzte PING-Paket gesendet wurde, sondern von dem Zeitpunkt, zu dem das "
-"letzte Paket von dem Host <b>empfangen</b> wurde."
+"<b>Hinweis</b>: Diese Einstellung wird <i>nicht</i> gemessen vom Zeitpunkt, "
+"wann das letzte PING-Paket gesendet wurde, sondern von dem Zeitpunkt, zu dem "
+"das letzte Paket von dem Host empfangen wurde."
 
 msgid ""
 "If no explicit time range is being provided then the report defaults to this "
@@ -28398,6 +28449,10 @@ msgstr ""
 "Interner Fehler: %s\n"
 "%s"
 
+#, fuzzy
+msgid "Internal user"
+msgstr "Interner Fehler"
+
 msgid "Interpretation of Config Sync Status"
 msgstr "Interpratation des Konfigurationssynchronisationsstatus"
 
@@ -28514,7 +28569,7 @@ msgid "Invalid automation secret."
 msgstr "Ungültiges Automatisierungspasswort."
 
 msgid "Invalid back URL provided."
-msgstr ""
+msgstr "Fehlerhafte Rückkehradresse angegeben."
 
 msgid "Invalid call: No profiles set."
 msgstr "Ungültiger Anruf: Keine Profile gesetzt."
@@ -30604,6 +30659,14 @@ msgstr "Lizenzvereinbarung"
 msgid "License details"
 msgstr "Lizenzdetails"
 
+#, fuzzy, python-format
+msgid "License end: %s"
+msgstr "Lizenziert"
+
+#, fuzzy, python-format
+msgid "License start: %s"
+msgstr "Lizenzstatus"
+
 msgid "License state"
 msgstr "Lizenzstatus"
 
@@ -30619,10 +30682,18 @@ msgstr "Lizenzprüfung"
 msgid "Licensed"
 msgstr "Lizenziert"
 
+#, fuzzy, python-format
+msgid "Licensed services: %s"
+msgstr "Lizenzierbare Services"
+
 msgid "Licenses"
 msgstr "Lizenzen"
 
 msgid "Licensing"
+msgstr "Lizenzierung"
+
+#, fuzzy
+msgid "Licensing ID"
 msgstr "Lizenzierung"
 
 msgid "Licensing Information"
@@ -30749,10 +30820,6 @@ msgstr "Limitierung der maximalen Zahl von Zeilen in Tabellen"
 
 msgid "Limit width"
 msgstr "Breite begrenzen"
-
-#, python-format
-msgid "Limit: %s"
-msgstr "Limit: %s"
 
 msgid "Limits"
 msgstr "Limits"
@@ -31699,6 +31766,10 @@ msgstr "Logwatch"
 
 msgid "Logwatch Event Console Forwarding"
 msgstr "Logwatch Event Console Weiterleitung"
+
+#, fuzzy
+msgid "Logwatch state"
+msgstr "Logwatch Muster"
 
 msgid "Long - Use the full docker container ID"
 msgstr "Lang - Die gesamte Docker container ID verwenden"
@@ -32674,7 +32745,8 @@ msgid "Mapping of MTree state to monitoring state"
 msgstr "Zuordnung MTree-Status -- Monitoring-Status"
 
 msgid "Mapping of operational and admin state to monitoring state"
-msgstr "Abbildung des Betriebs- und Verwaltungsstatus auf den Monitoring-Status"
+msgstr ""
+"Abbildung des Betriebs- und Verwaltungsstatus auf den Monitoring-Status"
 
 msgid "March"
 msgstr "März"
@@ -33960,6 +34032,11 @@ msgstr "Minimale Leselatenz"
 
 msgid "Minimum required Checkmk version"
 msgstr "Minimal benötigte Checkmk-Version"
+
+msgid ""
+"Minimum required Checkmk version should not be greater than the latest "
+"allowed one!"
+msgstr ""
 
 #, python-format
 msgid "Minimum required Checkmk version: %s"
@@ -35517,10 +35594,6 @@ msgstr "Keine Piggyback-Daten verwenden"
 msgid "New"
 msgstr "Neu"
 
-#, python-format
-msgid "New %s"
-msgstr "Neu %s"
-
 msgid "New Action"
 msgstr "Neue Aktione"
 
@@ -35532,9 +35605,6 @@ msgstr "Neues Passwort"
 
 msgid "New Password Confirmation"
 msgstr "Neues Passwort bestätigen"
-
-msgid "New SLA"
-msgstr "Neue SLA"
 
 msgid "New TLS Connections"
 msgstr "Neue TLS-Verbindungen"
@@ -35553,15 +35623,6 @@ msgstr ""
 msgid "New aggregations are frozen"
 msgstr "Neue Aggregationen sind eingefroren"
 
-msgid "New backup job"
-msgstr "Neuer Backup-Job"
-
-msgid "New backup target"
-msgstr "Neues Sicherungsziel"
-
-msgid "New collection"
-msgstr "Neue Sammlung"
-
 msgid "New connections"
 msgstr "Neue Verbindungen"
 
@@ -35570,9 +35631,6 @@ msgstr "Obere Schwellwerte für neue Verbindungen"
 
 msgid "New custom graph..."
 msgstr "Neuer Benutzergraph..."
-
-msgid "New element"
-msgstr "Neues Element"
 
 msgid "New entries"
 msgstr "Neue Einträge"
@@ -35586,38 +35644,16 @@ msgstr "Neue Funktion"
 msgid "New files in Spool"
 msgstr "Neue Dateien im Spooler"
 
-msgid "New forecast"
-msgstr "Neue Vorhersage"
-
 msgid "New forecast graph..."
 msgstr "Neuer Vorhersagegraph..."
-
-msgid "New graph"
-msgstr "Neuer Graph"
 
 msgid "New host label: "
 msgid_plural "New host labels: "
 msgstr[0] "Neues Host-Label: "
 msgstr[1] "Neue Host-Labels: "
 
-msgid "New list"
-msgstr "Neue Liste"
-
 msgid "New name"
 msgstr "Neuer Name"
-
-#, python-format
-msgid "New rule: %s"
-msgstr "Neue Regel: %s"
-
-msgid "New stored report"
-msgstr "Neuer Gespeicherter Bericht"
-
-msgid "New topic"
-msgstr "Neues Thema"
-
-msgid "New tuning"
-msgstr "Neue Anpassung"
 
 msgid "New view"
 msgstr "Neue Ansicht"
@@ -49284,10 +49320,6 @@ msgstr "Start!"
 msgid "Start-Time"
 msgstr "Beginn"
 
-#, python-format
-msgid "Start: %s"
-msgstr "Start: %s"
-
 msgid "Started"
 msgstr "Gestartet"
 
@@ -52501,6 +52533,13 @@ msgstr ""
 "Kontaktgruppen in Checkmk existieren müssen, damit sie zugeordnet werden "
 "können."
 
+#, python-format
+msgid ""
+"The audit log can not be shown because of a syntax error in %s."
+"<br><br>Please review and fix the file content or remove the file before you "
+"visit this page again.<br><br>The problematic entry is:<br>%s"
+msgstr ""
+
 msgid ""
 "The availability is computed by processing entries from a data table of "
 "historic events and state phases. In order to avoid a hanging system in "
@@ -53275,9 +53314,9 @@ msgid ""
 "The file %s needs to be created and maintained manually.<br>Configuration "
 "entries provided with this rule will be ignored."
 msgstr ""
-"Die Datei %s muss manuell erstellt und gepflegt "
-"werden.<br>Konfigurationseinträge, die mit dieser Regel bereitgestellt "
-"werden, werden ignoriert."
+"Die Datei %s muss manuell erstellt und gepflegt werden."
+"<br>Konfigurationseinträge, die mit dieser Regel bereitgestellt werden, "
+"werden ignoriert."
 
 msgid "The file does not contain XML text"
 msgstr "Die Datei enthält keinen XML-Text"
@@ -58191,8 +58230,8 @@ msgid ""
 "snapins) will be invisible."
 msgstr ""
 "Mit dieser Berechtigung dürfen Benutzer Setup - Checkmks Web Verwaltungs-"
-"Werkzeug verwenden. Ohne diese Berechtigung sind alle Verweise auf Setup ("
-"Buttons, Links, Snapins) nicht sichtbar."
+"Werkzeug verwenden. Ohne diese Berechtigung sind alle Verweise auf Setup "
+"(Buttons, Links, Snapins) nicht sichtbar."
 
 msgid ""
 "This permissions provides a checkbox and timerange in the personal settings "
@@ -62627,6 +62666,10 @@ msgstr "Unbekannt"
 msgid "Unknown %s group: %s"
 msgstr "Unbekannte %s-Gruppe: %s"
 
+#, fuzzy, python-format
+msgid "Unknown (%s)"
+msgstr "Unbekannte Instanz (%s)"
+
 msgid "Unknown - DUnknown"
 msgstr "Unknown - DUnknown"
 
@@ -66405,11 +66448,11 @@ msgstr ""
 "erhalten einen Knoten für jedes Child des gefundenen Hosts. Der Platzhalter "
 "<tt>$HOSTNAME$</tt> enthält den Namen des gefundenen Childs und der "
 "Platzhalter <tt>$HOSTALIAS$</tt> enthält dessen Alias.<br><br>Bei der "
-"Auswahl von <i>Die Parents der gefundenen Hosts</i> werden die Bedingungen ("
-"Tags und Host-Name) verwendet, um einen Host zu finden, aber es wird ein "
+"Auswahl von <i>Die Parents der gefundenen Hosts</i> werden die Bedingungen "
+"(Tags und Host-Name) verwendet, um einen Host zu finden, aber es wird ein "
 "Knoten für jeden der Parent-Hosts des gefundenen Hosts erstellt. Der "
-"Platzhalter <tt>$HOSTNAME$</tt> enthält den Namen des Child-Hosts und "
-"<tt>$2$</tt> den Namen des Parent-Hosts."
+"Platzhalter <tt>$HOSTNAME$</tt> enthält den Namen des Child-Hosts und <tt>"
+"$2$</tt> den Namen des Parent-Hosts."
 
 msgid ""
 "When sending notifications from the monitoring system to the event console "
@@ -71796,6 +71839,60 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Application account ID"
+#~ msgstr "ID des Anwendungskontos"
+
+#, python-format
+#~ msgid "End: %s"
+#~ msgstr "Ende: %s"
+
+#, python-format
+#~ msgid "Group and managed services use: %s"
+#~ msgstr "Group and managed services use: %s"
+
+#, python-format
+#~ msgid "Limit: %s"
+#~ msgstr "Limit: %s"
+
+#, python-format
+#~ msgid "Start: %s"
+#~ msgstr "Start: %s"
+
+#~ msgid "Create random secret"
+#~ msgstr "Erzeuge Zufallspasswort"
+
+#, python-format
+#~ msgid "New %s"
+#~ msgstr "Neu %s"
+
+#~ msgid "New SLA"
+#~ msgstr "Neue SLA"
+
+#~ msgid "New collection"
+#~ msgstr "Neue Sammlung"
+
+#~ msgid "New element"
+#~ msgstr "Neues Element"
+
+#~ msgid "New graph"
+#~ msgstr "Neuer Graph"
+
+#~ msgid "New list"
+#~ msgstr "Neue Liste"
+
+#, python-format
+#~ msgid "New rule: %s"
+#~ msgstr "Neue Regel: %s"
+
+#~ msgid "New stored report"
+#~ msgstr "Neuer Gespeicherter Bericht"
+
+#~ msgid "New topic"
+#~ msgstr "Neues Thema"
+
+#~ msgid "New tuning"
+#~ msgstr "Neue Anpassung"
+
 #~ msgid "Found no services yet. To retry please execute a rescan."
 #~ msgstr ""
 #~ "Es wurden noch keine Services gefunden. Um es erneut zu versuchen, führen "
@@ -73961,14 +74058,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 #~ msgid "Authorization Error. Insufficent permissions for '%s'"
 #~ msgstr "Authentifizierungsfehler. Unzureichende Berechtigung für '%s'"
 
-#, python-format
-#~ msgid ""
-#~ "Checkmk exception: %s\n"
-#~ "%s"
-#~ msgstr ""
-#~ "Checkmk-Ausnahme: %s\n"
-#~ "%s"
-
 #~ msgid "Currently not supported with this Checkmk Edition"
 #~ msgstr "Derzeit nicht unterstützt mit dieser Checkmk Edition"
 
@@ -74296,9 +74385,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Backplane"
 #~ msgstr "Backplane"
-
-#~ msgid "Checkmk site"
-#~ msgstr "Checkmk Instanz"
 
 #~ msgid "Checkmk version"
 #~ msgstr "Checkmk-Version"
@@ -77937,9 +78023,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Log: Output"
 #~ msgstr "Log: Ausgabe"
-
-#~ msgid "Logwatch Patterns"
-#~ msgstr "Logwatch Muster"
 
 #~ msgid "Long output of check plugin (multiline)"
 #~ msgstr "Check-Plugin: Mehrzeilige Ausgabe"

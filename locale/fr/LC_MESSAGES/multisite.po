@@ -3612,6 +3612,10 @@ msgstr "Ajouter un préfixe"
 msgid "Add Rule ID"
 msgstr "Ajouter une règle ID"
 
+#, fuzzy
+msgid "Add SLA"
+msgstr "Modifier SLA"
+
 msgid "Add Suffix"
 msgstr "Ajouter un suffixe"
 
@@ -3655,6 +3659,14 @@ msgstr "Ajouter une étiquette aux"
 msgid "Add auxiliary tag"
 msgstr "Ajouter une balise auxiliaire"
 
+#, fuzzy
+msgid "Add backup job"
+msgstr "Nouvelle tâche de sauvegarde"
+
+#, fuzzy
+msgid "Add backup target"
+msgstr "Nouvelle cible de sauvegarde"
+
 msgid "Add child node generator"
 msgstr "Ajouter un générateur de nœuds enfants"
 
@@ -3663,6 +3675,10 @@ msgstr "Ajouter une grappe"
 
 msgid "Add cluster mapping"
 msgstr "Ajouter une cartographie de cluster"
+
+#, fuzzy
+msgid "Add collection"
+msgstr "Ajouter une connexion"
 
 msgid "Add column"
 msgstr "Ajouter une colonne"
@@ -3743,6 +3759,14 @@ msgstr "Ajouter un filtre"
 msgid "Add folder"
 msgstr "Ajouter un dossier"
 
+#, fuzzy
+msgid "Add forecast"
+msgstr "Nouvelle prévision"
+
+#, fuzzy
+msgid "Add graph"
+msgstr "Ajouter un groupe"
+
 msgid "Add group"
 msgstr "Ajouter un groupe"
 
@@ -3779,6 +3803,10 @@ msgid "Add label condition"
 msgstr "Ajouter une condition d'étiquette"
 
 msgid "Add limits"
+msgstr "Ajouter des limites"
+
+#, fuzzy
+msgid "Add list"
 msgstr "Ajouter des limites"
 
 msgid "Add macro"
@@ -3978,6 +4006,10 @@ msgstr "Ajouter une règle dans le dossier %s."
 msgid "Add rule pack"
 msgstr "Ajouter un paquet de règles"
 
+#, fuzzy, python-format
+msgid "Add rule: %s"
+msgstr "Ajouter la règle BI %s"
+
 msgid "Add schedule"
 msgstr "Ajouter un horaire"
 
@@ -4004,6 +4036,10 @@ msgstr "Ajouter un trieur"
 
 msgid "Add state configuration"
 msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+msgid "Add stored report"
+msgstr "Modifier un rapport stocké"
 
 msgid "Add tag"
 msgstr "Ajouter une étiquette"
@@ -4085,6 +4121,14 @@ msgstr "Indices à interroger"
 
 msgid "Add to trusted CAs"
 msgstr "Ajouter aux CA de confiance"
+
+#, fuzzy
+msgid "Add topic"
+msgstr "Ajouter un nouveau sujet"
+
+#, fuzzy
+msgid "Add tuning"
+msgstr "Ajouter un tunnel"
 
 msgid "Add tuning configuration"
 msgstr "Ajouter une configuration de réglage"
@@ -6241,10 +6285,6 @@ msgstr "Équilibreurs de charge d'applications"
 
 msgid "Application Pool name"
 msgstr "Nom du pool d'applications"
-
-#, fuzzy
-msgid "Application account ID"
-msgstr "Application"
 
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Équilibrage de la charge des applications et des réseaux (ELBv2)"
@@ -10597,6 +10637,12 @@ msgstr ""
 "être bogués. Dans ce cas, vous pouvez essayer de désactiver la marche en "
 "vrac à l'aide du jeu de règles \"Disable bulk walks on SNMPv2c/v3\" ;."
 
+#, fuzzy, python-format
+msgid "Checkmk edition: %s"
+msgstr ""
+"Exception Checkmk : %s\n"
+"%s"
+
 #, fuzzy
 msgid "Checkmk extension packages (MKPs)"
 msgstr "Gérer et créer des paquets d'extension Checkmk (MKP)."
@@ -10678,6 +10724,10 @@ msgstr "Sites de contrôle"
 
 msgid "Checkmk specific"
 msgstr "Checkmk spécifique"
+
+#, fuzzy
+msgid "Checkmk state"
+msgstr "Site de Checkmk"
 
 #, fuzzy
 msgid ""
@@ -11594,6 +11644,10 @@ msgstr "Collecte des données de diagnostic"
 
 msgid "Collect diagnostics"
 msgstr "Recueillir les diagnostics"
+
+#, fuzzy
+msgid "Collect diagnostics data from the local site."
+msgstr "Se connecter au site local"
 
 msgid "Collect information about OS and Checkmk version"
 msgstr ""
@@ -13024,6 +13078,11 @@ msgstr ""
 msgid "Copied rules from master"
 msgstr "Copie des règles du maître"
 
+#, fuzzy
+msgid "Copied secret to clipboard"
+msgstr ""
+"Copier la représentation de la valeur de la règle dans le presse-papiers"
+
 msgid "Copied the event rules from the master into the local configuration"
 msgstr "Copie des règles d'événements du maître dans la configuration locale."
 
@@ -13554,8 +13613,8 @@ msgstr "Créer un secret aléatoire"
 msgid "Create random monitoring data"
 msgstr "Créer des données de contrôle aléatoires"
 
-msgid "Create random secret"
-msgstr "Créer un secret aléatoire"
+msgid "Create random secret and copy secret to clipboard"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -19484,10 +19543,6 @@ msgstr "Fin des temps"
 msgid "End-to-end latency"
 msgstr "Latence de bout en bout"
 
-#, python-format
-msgid "End: %s"
-msgstr ""
-
 msgid "Ended"
 msgstr "Terminé"
 
@@ -23115,10 +23170,6 @@ msgstr "Numéro de base du groupe"
 
 msgid "Group Werks by"
 msgstr "Travaux de groupe par"
-
-#, python-format
-msgid "Group and managed services use: %s"
-msgstr ""
 
 msgid "Group base DN"
 msgstr "Base du groupe DN"
@@ -29030,6 +29081,10 @@ msgstr ""
 "Erreur interne : %s\n"
 "%s"
 
+#, fuzzy
+msgid "Internal user"
+msgstr "Erreur interne"
+
 msgid "Interpretation of Config Sync Status"
 msgstr "Interprétation de l'état de la Config Sync"
 
@@ -31320,6 +31375,14 @@ msgstr "Contrat de licence"
 msgid "License details"
 msgstr "État de la licence"
 
+#, fuzzy, python-format
+msgid "License end: %s"
+msgstr "Licences"
+
+#, fuzzy, python-format
+msgid "License start: %s"
+msgstr "État de la licence"
+
 msgid "License state"
 msgstr "État de la licence"
 
@@ -31338,12 +31401,20 @@ msgstr "Vérification du certificat SSL"
 msgid "Licensed"
 msgstr "Licences"
 
+#, fuzzy, python-format
+msgid "Licensed services: %s"
+msgstr "Services désactivés"
+
 #, fuzzy
 msgid "Licenses"
 msgstr "Licences"
 
 #, fuzzy
 msgid "Licensing"
+msgstr "Statut des licences"
+
+#, fuzzy
+msgid "Licensing ID"
 msgstr "Statut des licences"
 
 #, fuzzy
@@ -31470,10 +31541,6 @@ msgstr "Limiter le nombre de lignes affichées dans les tableaux"
 
 msgid "Limit width"
 msgstr "Largeur de la limite"
-
-#, python-format
-msgid "Limit: %s"
-msgstr ""
 
 msgid "Limits"
 msgstr "Limites"
@@ -32459,6 +32526,10 @@ msgstr "Logwatch"
 
 msgid "Logwatch Event Console Forwarding"
 msgstr "Transfert de console d'événements Logwatch"
+
+#, fuzzy
+msgid "Logwatch state"
+msgstr "Logwatch"
 
 msgid "Long - Use the full docker container ID"
 msgstr "Long - Utiliser l'ID complet du conteneur docker"
@@ -34814,6 +34885,11 @@ msgstr "Temps d'attente minimum pour la lecture"
 msgid "Minimum required Checkmk version"
 msgstr "Version minimale requise Checkmk"
 
+msgid ""
+"Minimum required Checkmk version should not be greater than the latest "
+"allowed one!"
+msgstr ""
+
 #, python-format
 msgid "Minimum required Checkmk version: %s"
 msgstr ""
@@ -36422,10 +36498,6 @@ msgstr "Ne jamais utiliser les données de ferroutage"
 msgid "New"
 msgstr "Nouveau"
 
-#, python-format
-msgid "New %s"
-msgstr "Nouveau %s"
-
 msgid "New Action"
 msgstr "Nouvelle action"
 
@@ -36438,9 +36510,6 @@ msgstr "Nouveau mot de passe"
 
 msgid "New Password Confirmation"
 msgstr "Confirmation du nouveau mot de passe"
-
-msgid "New SLA"
-msgstr "Nouveau SLA"
 
 #, fuzzy
 msgid "New TLS Connections"
@@ -36461,15 +36530,6 @@ msgstr ""
 msgid "New aggregations are frozen"
 msgstr "Arbre des groupes d'agrégation BI"
 
-msgid "New backup job"
-msgstr "Nouvelle tâche de sauvegarde"
-
-msgid "New backup target"
-msgstr "Nouvelle cible de sauvegarde"
-
-msgid "New collection"
-msgstr "Nouvelle collection"
-
 #, fuzzy
 msgid "New connections"
 msgstr "Nouvelles connexions"
@@ -36480,9 +36540,6 @@ msgstr "Conteneurs en pause aux niveaux supérieurs"
 
 msgid "New custom graph..."
 msgstr "Nouveau graphique personnalisé..."
-
-msgid "New element"
-msgstr "Nouvel élément"
 
 msgid "New entries"
 msgstr "Nouvelles entrées"
@@ -36496,38 +36553,16 @@ msgstr "Nouvelle fonction"
 msgid "New files in Spool"
 msgstr "Nouveaux fichiers dans le Spool"
 
-msgid "New forecast"
-msgstr "Nouvelle prévision"
-
 msgid "New forecast graph..."
 msgstr "Nouveau graphique de prévision..."
-
-msgid "New graph"
-msgstr "Nouveau graphique"
 
 msgid "New host label: "
 msgid_plural "New host labels: "
 msgstr[0] "Nouvelle étiquette d'hôte : "
 msgstr[1] ""
 
-msgid "New list"
-msgstr "Nouvelle liste"
-
 msgid "New name"
 msgstr "Nouveau nom"
-
-#, python-format
-msgid "New rule: %s"
-msgstr "Nouvelle règle : %s"
-
-msgid "New stored report"
-msgstr "Nouveau rapport stocké"
-
-msgid "New topic"
-msgstr "Nouveau sujet"
-
-msgid "New tuning"
-msgstr "Nouveau réglage"
 
 msgid "New view"
 msgstr "Nouvelle vue"
@@ -50611,10 +50646,6 @@ msgstr "Commencez !"
 msgid "Start-Time"
 msgstr "Heure de début"
 
-#, fuzzy, python-format
-msgid "Start: %s"
-msgstr "Commencé à : %s."
-
 msgid "Started"
 msgstr "Démarré"
 
@@ -53936,6 +53967,13 @@ msgid ""
 "The attribute used to map contact groups between your identity provider and "
 "Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
 "mapped."
+msgstr ""
+
+#, python-format
+msgid ""
+"The audit log can not be shown because of a syntax error in %s."
+"<br><br>Please review and fix the file content or remove the file before you "
+"visit this page again.<br><br>The problematic entry is:<br>%s"
 msgstr ""
 
 msgid ""
@@ -64158,6 +64196,10 @@ msgstr "Inconnu"
 msgid "Unknown %s group: %s"
 msgstr "Groupe %s inconnu : %s"
 
+#, fuzzy, python-format
+msgid "Unknown (%s)"
+msgstr "Site inconnu (%s)"
+
 #, fuzzy
 msgid "Unknown - DUnknown"
 msgstr "Secondaire - DUInconnu"
@@ -73557,6 +73599,51 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
+#, fuzzy
+#~| msgid "Application"
+#~ msgid "Application account ID"
+#~ msgstr "Application"
+
+#, fuzzy, python-format
+#~| msgid "Started at: %s."
+#~ msgid "Start: %s"
+#~ msgstr "Commencé à : %s."
+
+#~ msgid "Create random secret"
+#~ msgstr "Créer un secret aléatoire"
+
+#, python-format
+#~ msgid "New %s"
+#~ msgstr "Nouveau %s"
+
+#~ msgid "New SLA"
+#~ msgstr "Nouveau SLA"
+
+#~ msgid "New collection"
+#~ msgstr "Nouvelle collection"
+
+#~ msgid "New element"
+#~ msgstr "Nouvel élément"
+
+#~ msgid "New graph"
+#~ msgstr "Nouveau graphique"
+
+#~ msgid "New list"
+#~ msgstr "Nouvelle liste"
+
+#, python-format
+#~ msgid "New rule: %s"
+#~ msgstr "Nouvelle règle : %s"
+
+#~ msgid "New stored report"
+#~ msgstr "Nouveau rapport stocké"
+
+#~ msgid "New topic"
+#~ msgstr "Nouveau sujet"
+
+#~ msgid "New tuning"
+#~ msgstr "Nouveau réglage"
+
 #~ msgid "Found no services yet. To retry please execute a rescan."
 #~ msgstr ""
 #~ "Aucun service n'a encore été trouvé. Pour réessayer, veuillez exécuter un "
@@ -75801,14 +75888,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #~ msgid "Authorization Error. Insufficent permissions for '%s'"
 #~ msgstr "Erreur d'autorisation. Autorisations insuffisantes pour '%s'."
 
-#, python-format
-#~ msgid ""
-#~ "Checkmk exception: %s\n"
-#~ "%s"
-#~ msgstr ""
-#~ "Exception Checkmk : %s\n"
-#~ "%s"
-
 #~ msgid "Currently not supported with this Checkmk Edition"
 #~ msgstr "Actuellement non supporté par cette édition de Checkmk"
 
@@ -76121,9 +76200,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Backplane"
 #~ msgstr "Fond de panier"
-
-#~ msgid "Checkmk site"
-#~ msgstr "Site de Checkmk"
 
 #~ msgid "Checkmk version"
 #~ msgstr "Version de Checkmk"

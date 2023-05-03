@@ -3462,6 +3462,10 @@ msgstr "プレフィックスを追加"
 msgid "Add Rule ID"
 msgstr "ルールIDを追加"
 
+#, fuzzy
+msgid "Add SLA"
+msgstr "SLAを編集する"
+
 msgid "Add Suffix"
 msgstr "サフィックスを追加する"
 
@@ -3503,6 +3507,14 @@ msgstr "auxタグを追加"
 msgid "Add auxiliary tag"
 msgstr "補助タグを追加する"
 
+#, fuzzy
+msgid "Add backup job"
+msgstr "新しいバックアップジョブ"
+
+#, fuzzy
+msgid "Add backup target"
+msgstr "新しいバックアップターゲット"
+
 msgid "Add child node generator"
 msgstr "子ノードジェネレータを追加します"
 
@@ -3511,6 +3523,10 @@ msgstr "クラスターを追加する"
 
 msgid "Add cluster mapping"
 msgstr "クラスターマッピングを追加する"
+
+#, fuzzy
+msgid "Add collection"
+msgstr "接続を追加"
 
 msgid "Add column"
 msgstr "列を追加"
@@ -3589,6 +3605,14 @@ msgstr "フィルタを追加"
 msgid "Add folder"
 msgstr "フォルダを追加"
 
+#, fuzzy
+msgid "Add forecast"
+msgstr "新しいフォーキャスト"
+
+#, fuzzy
+msgid "Add graph"
+msgstr "グループを追加"
+
 msgid "Add group"
 msgstr "グループを追加"
 
@@ -3625,6 +3649,10 @@ msgid "Add label condition"
 msgstr "ラベル条件を追加"
 
 msgid "Add limits"
+msgstr "制限を追加する"
+
+#, fuzzy
+msgid "Add list"
 msgstr "制限を追加する"
 
 msgid "Add macro"
@@ -3820,6 +3848,10 @@ msgstr "%sフォルダ内のルール追加"
 msgid "Add rule pack"
 msgstr "ルールパックを追加する"
 
+#, fuzzy, python-format
+msgid "Add rule: %s"
+msgstr "BIルール %s を追加します"
+
 msgid "Add schedule"
 msgstr "スケジュールを追加"
 
@@ -3846,6 +3878,10 @@ msgstr "ソーターを追加"
 
 msgid "Add state configuration"
 msgstr "状態構成を追加する"
+
+#, fuzzy
+msgid "Add stored report"
+msgstr "保存されたレポートを編集する"
 
 msgid "Add tag"
 msgstr "タグ付けする"
@@ -3927,6 +3963,14 @@ msgstr "クエリに追加"
 
 msgid "Add to trusted CAs"
 msgstr "信頼できるCAに追加する"
+
+#, fuzzy
+msgid "Add topic"
+msgstr "新しいトピックを追加する"
+
+#, fuzzy
+msgid "Add tuning"
+msgstr "トンネルを追加"
 
 msgid "Add tuning configuration"
 msgstr "チューニング構成を追加する"
@@ -5974,10 +6018,6 @@ msgstr "アプリケーションロードバランサー"
 
 msgid "Application Pool name"
 msgstr "アプリケーションプール名"
-
-#, fuzzy
-msgid "Application account ID"
-msgstr "アプリケーション"
 
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "アプリケーションとネットワークの負荷分散(ELBv2)"
@@ -10159,6 +10199,12 @@ msgstr ""
 "ルセット「Disable bulk walks on SNMPv2c/v3 」を使用して、バルクウォークを無効"
 "にしてみるとよいでしょう。"
 
+#, fuzzy, python-format
+msgid "Checkmk edition: %s"
+msgstr ""
+"Checkmk例外:%s\n"
+"%s"
+
 msgid "Checkmk extension packages (MKPs)"
 msgstr "Checkmk拡張パッケージ(MKP)"
 
@@ -10239,6 +10285,10 @@ msgstr "Checkmkサイト"
 
 msgid "Checkmk specific"
 msgstr "Checkmk固有"
+
+#, fuzzy
+msgid "Checkmk state"
+msgstr "Checkmkサイト"
 
 #, fuzzy
 msgid ""
@@ -11106,6 +11156,10 @@ msgstr "診断ダンプを収集する"
 
 msgid "Collect diagnostics"
 msgstr "診断を収集する"
+
+#, fuzzy
+msgid "Collect diagnostics data from the local site."
+msgstr "ローカルサイトに接続する"
 
 msgid "Collect information about OS and Checkmk version"
 msgstr "OSとCheckmkのバージョンに関する情報を収集する"
@@ -12475,6 +12529,10 @@ msgstr "接続/ハートビートに失敗した後の冷却期間"
 msgid "Copied rules from master"
 msgstr "マスターからコピーされたルール"
 
+#, fuzzy
+msgid "Copied secret to clipboard"
+msgstr "ルール値表記をクリップボードにコピーする"
+
 msgid "Copied the event rules from the master into the local configuration"
 msgstr "マスターからローカル構成にイベントルールをコピーしました"
 
@@ -12993,8 +13051,8 @@ msgstr "ランダムな秘密を作成する"
 msgid "Create random monitoring data"
 msgstr "ランダムな監視データを作成する"
 
-msgid "Create random secret"
-msgstr "ランダムな秘密を作成する"
+msgid "Create random secret and copy secret to clipboard"
+msgstr ""
 
 msgid ""
 "Create real-time data executing the following agent plugins (Linux only)"
@@ -18716,10 +18774,6 @@ msgstr "終了時間"
 msgid "End-to-end latency"
 msgstr "エンドツーエンドのレイテンシ"
 
-#, python-format
-msgid "End: %s"
-msgstr "End: %s"
-
 msgid "Ended"
 msgstr "終了しました"
 
@@ -22217,10 +22271,6 @@ msgstr "グループベース-DN"
 
 msgid "Group Werks by"
 msgstr "によるグループワーク"
-
-#, python-format
-msgid "Group and managed services use: %s"
-msgstr ""
 
 msgid "Group base DN"
 msgstr "グループベースDN"
@@ -27890,6 +27940,10 @@ msgstr ""
 "内部エラー: %s\n"
 "%s"
 
+#, fuzzy
+msgid "Internal user"
+msgstr "内部エラー"
+
 msgid "Interpretation of Config Sync Status"
 msgstr "構成同期ステータスの解釈"
 
@@ -30087,6 +30141,14 @@ msgstr "ライセンス契約"
 msgid "License details"
 msgstr "ライセンス詳細"
 
+#, fuzzy, python-format
+msgid "License end: %s"
+msgstr "ライセンス"
+
+#, fuzzy, python-format
+msgid "License start: %s"
+msgstr "ライセンスの状態"
+
 msgid "License state"
 msgstr "ライセンスの状態"
 
@@ -30103,11 +30165,19 @@ msgstr "ライセンス検証"
 msgid "Licensed"
 msgstr "ライセンス"
 
+#, fuzzy, python-format
+msgid "Licensed services: %s"
+msgstr "無効なサービス"
+
 #, fuzzy
 msgid "Licenses"
 msgstr "ライセンス"
 
 msgid "Licensing"
+msgstr "ライセンス"
+
+#, fuzzy
+msgid "Licensing ID"
 msgstr "ライセンス"
 
 #, fuzzy
@@ -30228,10 +30298,6 @@ msgstr "表に表示される行数を制限する"
 
 msgid "Limit width"
 msgstr "幅を制限する"
-
-#, python-format
-msgid "Limit: %s"
-msgstr "制限: %s"
 
 msgid "Limits"
 msgstr "制限"
@@ -31192,6 +31258,10 @@ msgstr "ログウォッチ"
 
 msgid "Logwatch Event Console Forwarding"
 msgstr "Logwatchイベントコンソール転送"
+
+#, fuzzy
+msgid "Logwatch state"
+msgstr "ログウォッチ"
 
 msgid "Long - Use the full docker container ID"
 msgstr "長い - 完全なDockerコンテナIDを使用します"
@@ -33456,6 +33526,11 @@ msgstr "最小読み取り待機時間"
 msgid "Minimum required Checkmk version"
 msgstr "最低限必要なCheckmkバージョン"
 
+msgid ""
+"Minimum required Checkmk version should not be greater than the latest "
+"allowed one!"
+msgstr ""
+
 #, python-format
 msgid "Minimum required Checkmk version: %s"
 msgstr "最低限必要なCheckmkバージョン: %s"
@@ -35004,10 +35079,6 @@ msgstr "ピギーバックデータは絶対に使用しないでください"
 msgid "New"
 msgstr "新しい"
 
-#, python-format
-msgid "New %s"
-msgstr "新しい %s"
-
 msgid "New Action"
 msgstr "新しいアクション"
 
@@ -35020,9 +35091,6 @@ msgstr "新しいパスワード"
 
 msgid "New Password Confirmation"
 msgstr "新しいパスワードの確認"
-
-msgid "New SLA"
-msgstr "新しいSLA"
 
 #, fuzzy
 msgid "New TLS Connections"
@@ -35042,15 +35110,6 @@ msgstr ""
 msgid "New aggregations are frozen"
 msgstr "新しいアグリケーションの凍結"
 
-msgid "New backup job"
-msgstr "新しいバックアップジョブ"
-
-msgid "New backup target"
-msgstr "新しいバックアップターゲット"
-
-msgid "New collection"
-msgstr "新しいコレクション"
-
 msgid "New connections"
 msgstr "新しい接続"
 
@@ -35059,9 +35118,6 @@ msgstr "新しい接続の上位レベル"
 
 msgid "New custom graph..."
 msgstr "新しいカスタムグラフ..."
-
-msgid "New element"
-msgstr "新しい要素"
 
 msgid "New entries"
 msgstr "新しいエントリ"
@@ -35075,37 +35131,15 @@ msgstr "新機能"
 msgid "New files in Spool"
 msgstr "スプールの新しいファイル"
 
-msgid "New forecast"
-msgstr "新しいフォーキャスト"
-
 msgid "New forecast graph..."
 msgstr "新しい予測グラフ..."
-
-msgid "New graph"
-msgstr "新しいグラフ"
 
 msgid "New host label: "
 msgid_plural "New host labels: "
 msgstr[0] "新しいホストラベル: "
 
-msgid "New list"
-msgstr "新しいリスト"
-
 msgid "New name"
 msgstr "新しい名前"
-
-#, python-format
-msgid "New rule: %s"
-msgstr "新しいルール: %s"
-
-msgid "New stored report"
-msgstr "新しく保存されたレポート"
-
-msgid "New topic"
-msgstr "新しいトピック"
-
-msgid "New tuning"
-msgstr "新しいチューニング"
 
 msgid "New view"
 msgstr "新しいビュー"
@@ -48627,10 +48661,6 @@ msgstr "開始!"
 msgid "Start-Time"
 msgstr "始まる時間"
 
-#, python-format
-msgid "Start: %s"
-msgstr "開始: %s"
-
 msgid "Started"
 msgstr "開始"
 
@@ -51777,6 +51807,13 @@ msgstr ""
 "IDプロバイダとCheckmkの間でコンタクトグループをマッピングするために使用される"
 "属性です。連絡先グループは、マッピングするためにCheckmkに存在する必要があるこ"
 "とに注意してください。"
+
+#, python-format
+msgid ""
+"The audit log can not be shown because of a syntax error in %s."
+"<br><br>Please review and fix the file content or remove the file before you "
+"visit this page again.<br><br>The problematic entry is:<br>%s"
+msgstr ""
 
 msgid ""
 "The availability is computed by processing entries from a data table of "
@@ -61396,6 +61433,10 @@ msgstr "不明"
 msgid "Unknown %s group: %s"
 msgstr "不明な %s グループ: %s"
 
+#, fuzzy, python-format
+msgid "Unknown (%s)"
+msgstr "不明なサイト(%s)"
+
 msgid "Unknown - DUnknown"
 msgstr "不明 - DUnknown"
 
@@ -70268,6 +70309,58 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#, fuzzy
+#~| msgid "Application"
+#~ msgid "Application account ID"
+#~ msgstr "アプリケーション"
+
+#, python-format
+#~ msgid "End: %s"
+#~ msgstr "End: %s"
+
+#, python-format
+#~ msgid "Limit: %s"
+#~ msgstr "制限: %s"
+
+#, python-format
+#~ msgid "Start: %s"
+#~ msgstr "開始: %s"
+
+#~ msgid "Create random secret"
+#~ msgstr "ランダムな秘密を作成する"
+
+#, python-format
+#~ msgid "New %s"
+#~ msgstr "新しい %s"
+
+#~ msgid "New SLA"
+#~ msgstr "新しいSLA"
+
+#~ msgid "New collection"
+#~ msgstr "新しいコレクション"
+
+#~ msgid "New element"
+#~ msgstr "新しい要素"
+
+#~ msgid "New graph"
+#~ msgstr "新しいグラフ"
+
+#~ msgid "New list"
+#~ msgstr "新しいリスト"
+
+#, python-format
+#~ msgid "New rule: %s"
+#~ msgstr "新しいルール: %s"
+
+#~ msgid "New stored report"
+#~ msgstr "新しく保存されたレポート"
+
+#~ msgid "New topic"
+#~ msgstr "新しいトピック"
+
+#~ msgid "New tuning"
+#~ msgstr "新しいチューニング"
+
 #~ msgid "Found no services yet. To retry please execute a rescan."
 #~ msgstr ""
 #~ "サービスが見つかりません。再試行するには、再スキャンを実行してください。"
@@ -72211,14 +72304,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgid "Authorization Error. Insufficent permissions for '%s'"
 #~ msgstr "承認エラー. '%s'の権限が不十分です"
 
-#, python-format
-#~ msgid ""
-#~ "Checkmk exception: %s\n"
-#~ "%s"
-#~ msgstr ""
-#~ "Checkmk例外:%s\n"
-#~ "%s"
-
 #~ msgid "Currently not supported with this Checkmk Edition"
 #~ msgstr "現在、このCheckmkエディションではサポートされていません"
 
@@ -72482,9 +72567,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Backplane"
 #~ msgstr "バックプレーン"
-
-#~ msgid "Checkmk site"
-#~ msgstr "Checkmkサイト"
 
 #~ msgid "Checkmk version"
 #~ msgstr "Checkmkバージョン"

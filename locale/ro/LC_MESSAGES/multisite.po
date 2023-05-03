@@ -3257,6 +3257,10 @@ msgid "Add Rule ID"
 msgstr "Adaugă Contoar"
 
 #, fuzzy
+msgid "Add SLA"
+msgstr "Adaugă Condiție"
+
+#, fuzzy
 msgid "Add Suffix"
 msgstr "Adaugă filtre"
 
@@ -3306,6 +3310,14 @@ msgstr "Adaugă Condiție"
 msgid "Add auxiliary tag"
 msgstr "Adaugă nume de senzor"
 
+#, fuzzy
+msgid "Add backup job"
+msgstr "Adaugă Condiție"
+
+#, fuzzy
+msgid "Add backup target"
+msgstr "Eticheta Auxiliara noua"
+
 msgid "Add child node generator"
 msgstr ""
 
@@ -3316,6 +3328,10 @@ msgstr "Adaugă Contoar"
 #, fuzzy
 msgid "Add cluster mapping"
 msgstr "Adaugă o nouă mapare"
+
+#, fuzzy
+msgid "Add collection"
+msgstr "Conexiune Noua"
 
 msgid "Add column"
 msgstr "Adaugă coloanâ"
@@ -3409,6 +3425,14 @@ msgid "Add folder"
 msgstr "Adaugă filtre"
 
 #, fuzzy
+msgid "Add forecast"
+msgstr "Element nou"
+
+#, fuzzy
+msgid "Add graph"
+msgstr "Adaugă group de model"
+
+#, fuzzy
 msgid "Add group"
 msgstr "Adaugă group de model"
 
@@ -3454,6 +3478,10 @@ msgid "Add label condition"
 msgstr "Adaugă Condiție"
 
 msgid "Add limits"
+msgstr "Adaugă limite"
+
+#, fuzzy
+msgid "Add list"
 msgstr "Adaugă limite"
 
 #, fuzzy
@@ -3696,6 +3724,10 @@ msgstr "Agregare noua"
 msgid "Add rule pack"
 msgstr "Reguli"
 
+#, fuzzy, python-format
+msgid "Add rule: %s"
+msgstr "Adaugă o regulă de rol"
+
 #, fuzzy
 msgid "Add schedule"
 msgstr "Adaugă o regulă de rol"
@@ -3731,6 +3763,10 @@ msgstr "Adaugă Contoar"
 #, fuzzy
 msgid "Add state configuration"
 msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+msgid "Add stored report"
+msgstr "(nici un raport)"
 
 #, fuzzy
 msgid "Add tag"
@@ -3828,6 +3864,14 @@ msgstr "Adaugă Contoar"
 #, fuzzy
 msgid "Add to trusted CAs"
 msgstr "Adaugă la Favorite"
+
+#, fuzzy
+msgid "Add topic"
+msgstr "Adaugă o nouă mapare"
+
+#, fuzzy
+msgid "Add tuning"
+msgstr "Adaugă tunel"
 
 msgid "Add tuning configuration"
 msgstr "Adaugă configurație de ajustare"
@@ -5886,10 +5930,6 @@ msgstr "Numele Aplicatiei"
 
 #, fuzzy
 msgid "Application Pool name"
-msgstr "Numele Aplicatiei"
-
-#, fuzzy
-msgid "Application account ID"
 msgstr "Numele Aplicatiei"
 
 msgid "Application and Network Load Balancing (ELBv2)"
@@ -10006,6 +10046,10 @@ msgid ""
 "disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Checkmk edition: %s"
+msgstr "Perioada de timp Noua"
+
 #, fuzzy
 msgid "Checkmk extension packages (MKPs)"
 msgstr "Dezactiveaza Notificarile"
@@ -10077,6 +10121,10 @@ msgstr "Privire de ansamblu"
 #, fuzzy
 msgid "Checkmk specific"
 msgstr "Perioada de timp Noua"
+
+#, fuzzy
+msgid "Checkmk state"
+msgstr "Privire de ansamblu"
 
 msgid ""
 "Checkmk usually uses an interval of one minute for the active Checkmk check "
@@ -10943,6 +10991,10 @@ msgstr "Adaugă informații despre contact"
 
 #, fuzzy
 msgid "Collect diagnostics"
+msgstr "Adaugă informații despre contact"
+
+#, fuzzy
+msgid "Collect diagnostics data from the local site."
 msgstr "Adaugă informații despre contact"
 
 msgid "Collect information about OS and Checkmk version"
@@ -12284,6 +12336,9 @@ msgstr ""
 msgid "Copied rules from master"
 msgstr ""
 
+msgid "Copied secret to clipboard"
+msgstr ""
+
 msgid "Copied the event rules from the master into the local configuration"
 msgstr ""
 
@@ -12843,7 +12898,7 @@ msgstr "Adaugă sau șterge elemente"
 msgid "Create random monitoring data"
 msgstr ""
 
-msgid "Create random secret"
+msgid "Create random secret and copy secret to clipboard"
 msgstr ""
 
 msgid ""
@@ -18821,10 +18876,6 @@ msgstr ""
 msgid "End-to-end latency"
 msgstr "Perioada de timp Noua"
 
-#, fuzzy, python-format
-msgid "End: %s"
-msgstr "Adăugat %s"
-
 msgid "Ended"
 msgstr ""
 
@@ -22443,10 +22494,6 @@ msgid "Group Base-DN"
 msgstr ""
 
 msgid "Group Werks by"
-msgstr ""
-
-#, python-format
-msgid "Group and managed services use: %s"
 msgstr ""
 
 #, fuzzy
@@ -27366,6 +27413,10 @@ msgid ""
 "%s"
 msgstr ""
 
+#, fuzzy
+msgid "Internal user"
+msgstr "Nume nou"
+
 msgid "Interpretation of Config Sync Status"
 msgstr ""
 
@@ -29726,6 +29777,14 @@ msgstr "% utilizare"
 msgid "License details"
 msgstr "Stare adiministrativă"
 
+#, fuzzy, python-format
+msgid "License end: %s"
+msgstr "Stare adiministrativă"
+
+#, fuzzy, python-format
+msgid "License start: %s"
+msgstr "Stare adiministrativă"
+
 #, fuzzy
 msgid "License state"
 msgstr "Stare adiministrativă"
@@ -29746,12 +29805,20 @@ msgstr "Activare Configurare"
 msgid "Licensed"
 msgstr "Stare adiministrativă"
 
+#, fuzzy, python-format
+msgid "Licensed services: %s"
+msgstr "servicii"
+
 #, fuzzy
 msgid "Licenses"
 msgstr "Stare adiministrativă"
 
 #, fuzzy
 msgid "Licensing"
+msgstr "licente nefolosite"
+
+#, fuzzy
+msgid "Licensing ID"
 msgstr "licente nefolosite"
 
 #, fuzzy
@@ -29878,10 +29945,6 @@ msgstr ""
 #, fuzzy
 msgid "Limit width"
 msgstr "latime"
-
-#, fuzzy, python-format
-msgid "Limit: %s"
-msgstr "Adaugă limite"
 
 #, fuzzy
 msgid "Limits"
@@ -30863,6 +30926,10 @@ msgstr "Editeaza regulile de loguri"
 
 msgid "Logwatch Event Console Forwarding"
 msgstr ""
+
+#, fuzzy
+msgid "Logwatch state"
+msgstr "Editeaza regulile de loguri"
 
 #, fuzzy
 msgid "Long - Use the full docker container ID"
@@ -33336,6 +33403,11 @@ msgstr "Perioada de timp Noua"
 msgid "Minimum required Checkmk version"
 msgstr "Numarul maxim de conexiuni"
 
+msgid ""
+"Minimum required Checkmk version should not be greater than the latest "
+"allowed one!"
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Minimum required Checkmk version: %s"
 msgstr "Numarul maxim de conexiuni"
@@ -35015,10 +35087,6 @@ msgstr ""
 msgid "New"
 msgstr ""
 
-#, python-format
-msgid "New %s"
-msgstr ""
-
 msgid "New Action"
 msgstr ""
 
@@ -35033,9 +35101,6 @@ msgstr "Parola"
 #, fuzzy
 msgid "New Password Confirmation"
 msgstr "Confirma Parola"
-
-msgid "New SLA"
-msgstr ""
 
 #, fuzzy
 msgid "New TLS Connections"
@@ -35052,17 +35117,6 @@ msgstr ""
 msgid "New aggregations are frozen"
 msgstr "Agregare noua"
 
-msgid "New backup job"
-msgstr ""
-
-#, fuzzy
-msgid "New backup target"
-msgstr "Eticheta Auxiliara noua"
-
-#, fuzzy
-msgid "New collection"
-msgstr "Conexiune Noua"
-
 #, fuzzy
 msgid "New connections"
 msgstr "Conexiune Noua"
@@ -35074,10 +35128,6 @@ msgstr "trei nivele"
 #, fuzzy
 msgid "New custom graph..."
 msgstr "Grup nou"
-
-#, fuzzy
-msgid "New element"
-msgstr "Adaungă un nou element"
 
 #, fuzzy
 msgid "New entries"
@@ -35095,16 +35145,8 @@ msgid "New files in Spool"
 msgstr ""
 
 #, fuzzy
-msgid "New forecast"
-msgstr "Element nou"
-
-#, fuzzy
 msgid "New forecast graph..."
 msgstr "Grup nou"
-
-#, fuzzy
-msgid "New graph"
-msgstr "Cautare noua"
 
 #, fuzzy
 msgid "New host label: "
@@ -35113,26 +35155,8 @@ msgstr[0] "Verificări active"
 msgstr[1] "Verificări active"
 msgstr[2] "Verificări active"
 
-#, fuzzy
-msgid "New list"
-msgstr "Element nou"
-
 msgid "New name"
 msgstr "Nume nou"
-
-#, python-format
-msgid "New rule: %s"
-msgstr ""
-
-msgid "New stored report"
-msgstr ""
-
-#, fuzzy
-msgid "New topic"
-msgstr "Adaugă o nouă mapare"
-
-msgid "New tuning"
-msgstr ""
 
 #, fuzzy
 msgid "New view"
@@ -48839,10 +48863,6 @@ msgstr ""
 msgid "Start-Time"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Start: %s"
-msgstr "Setari"
-
 msgid "Started"
 msgstr ""
 
@@ -51867,6 +51887,13 @@ msgid ""
 "The attribute used to map contact groups between your identity provider and "
 "Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
 "mapped."
+msgstr ""
+
+#, python-format
+msgid ""
+"The audit log can not be shown because of a syntax error in %s."
+"<br><br>Please review and fix the file content or remove the file before you "
+"visit this page again.<br><br>The problematic entry is:<br>%s"
 msgstr ""
 
 msgid ""
@@ -59896,6 +59923,10 @@ msgstr ""
 #, python-format
 msgid "Unknown %s group: %s"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Unknown (%s)"
+msgstr "necunoscut"
 
 msgid "Unknown - DUnknown"
 msgstr ""
@@ -68265,6 +68296,43 @@ msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Application account ID"
+#~ msgstr "Numele Aplicatiei"
+
+#, fuzzy, python-format
+#~| msgid "Added: %s"
+#~ msgid "End: %s"
+#~ msgstr "Adăugat %s"
+
+#, fuzzy, python-format
+#~ msgid "Limit: %s"
+#~ msgstr "Adaugă limite"
+
+#, fuzzy, python-format
+#~ msgid "Start: %s"
+#~ msgstr "Setari"
+
+#, fuzzy
+#~ msgid "New collection"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "New element"
+#~ msgstr "Adaungă un nou element"
+
+#, fuzzy
+#~ msgid "New graph"
+#~ msgstr "Cautare noua"
+
+#, fuzzy
+#~ msgid "New list"
+#~ msgstr "Element nou"
+
+#, fuzzy
+#~ msgid "New topic"
+#~ msgstr "Adaugă o nouă mapare"
+
+#, fuzzy
 #~ msgid "Configure the target state of the remote support tunnel."
 #~ msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -69063,12 +69131,6 @@ msgstr ""
 #~ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy, python-format
-#~ msgid ""
-#~ "Checkmk exception: %s\n"
-#~ "%s"
-#~ msgstr "Perioada de timp Noua"
-
-#, fuzzy, python-format
 #~ msgid "Folder %s does not exist"
 #~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
@@ -69723,10 +69785,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Standby Status"
 #~ msgstr "Statusul Serverului"
-
-#, fuzzy
-#~ msgid "Internal links"
-#~ msgstr "Nume nou"
 
 #, fuzzy
 #~ msgid "Tactical overview"

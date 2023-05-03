@@ -86,6 +86,7 @@ PARAMETERS = [
             "service_description": fields.String(
                 description="The service description of the selected host",
                 example="Filesystem /boot",
+                required=True,
             ),
         }
     ],

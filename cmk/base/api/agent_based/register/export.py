@@ -68,7 +68,7 @@ def agent_section(
       parse_function:      The function responsible for parsing the raw agent data.
                            It must accept exactly one argument by the name 'string_table'.
                            It may return an arbitrary object. Note that if the return value is
-                           `None`, no forther processing will take place (just as if the agent had
+                           `None`, no further processing will take place (just as if the agent had
                            not sent any data).
                            This function may raise arbitrary exceptions, which will be dealt with
                            by the checking engine. You should expect well formatted data.
@@ -89,10 +89,10 @@ def agent_section(
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugins needs the merged result of the
+                           It describes whether this plugin needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
-      supersedes:          A list of section names which are superseded by this sections. If this
+      supersedes:          A list of section names which are superseded by this section. If this
                            section will be parsed to something that is not `None` (see above) all
                            superseded section will not be considered at all.
 
@@ -176,7 +176,7 @@ def snmp_section(
       detect:              The conditions on single OIDs that will result in the attempt to
                            fetch snmp data and discover services.
                            This should only match devices to which the section is applicable.
-                           It is higly recomended to check the system description OID at the very
+                           It is highly recommended to check the system description OID at the very
                            first, as this will make the discovery much more responsive and consume
                            less resources.
 
@@ -190,7 +190,7 @@ def snmp_section(
                            It will be passed either a single :class:`StringTable`, or a list
                            of them, depending on the value type of the `fetch` argument.
                            It may return an arbitrary object. Note that if the return value is
-                           `None`, no forther processing will take place (just as if the agent had
+                           `None`, no further processing will take place (just as if the agent had
                            not sent any data).
                            This function may raise arbitrary exceptions, which will be dealt with
                            by the checking engine. You should expect well formatted data.
@@ -211,10 +211,10 @@ def snmp_section(
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugins needs the merged result of the
+                           It describes whether this plugin needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
-      supersedes:          A list of section names which are superseded by this sections. If this
+      supersedes:          A list of section names which are superseded by this section. If this
                            section will be parsed to something that is not `None` (see above) all
                            superseded section will not be considered at all.
 
@@ -287,8 +287,9 @@ def check_plugin(
 
       discovery_ruleset_type:   The ruleset type is either :class:`RuleSetType.ALL` or
                                 :class:`RuleSetType.MERGED`.
-                                It describes whether this plugins needs the merged result of the effective rules,
-                                or every individual rule matching for the current host.
+                                It describes whether this plugin needs the merged result of the
+                                effective rules, or every individual rule matching for the current
+                                host.
 
       check_function:           The check_function. Arguments must be 'item' (if the service has an
                                 item), 'params' (if check default parameters are defined) and

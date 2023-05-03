@@ -59,6 +59,7 @@ from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_i
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName, UserId
+from cmk.gui.utils.compatibility import make_remote_site_version_info
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
@@ -88,7 +89,6 @@ from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automations import (
     do_remote_automation,
     do_site_login,
-    make_remote_site_version_info,
     MKAutomationException,
     parse_license_state,
 )

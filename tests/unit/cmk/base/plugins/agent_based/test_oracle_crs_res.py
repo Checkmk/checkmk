@@ -11,11 +11,38 @@ import pytest
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
+    Metric,
     Result,
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.oracle_crs_res import check, discover, parse, Resource, Section
+from cmk.base.plugins.agent_based.oracle_crs_res import (
+    check_oracle_crs_res,
+    discover_oracle_crs_res,
+    parse_oracle_crs_res,
+    Resource,
+    Section,
+)
+
+_STRING_TABLE_BOTH_OFFLINE = [
+    ["nodename", "ezszds8q"],
+    ["csslocal", "NAME=ora.asm"],
+    ["csslocal", "TYPE=ora.asm.type"],
+    ["ezszds8q", "TYPE=ora.diskgroup.type"],
+    ["ezszds8q", "STATE=ONLINE on ezszds8q"],
+    ["ezszds8q", "TARGET=ONLINE"],
+    ["ezszds8q", "NAME=ora.ASST_MLOG.dg"],
+    ["ezszds8q", "TYPE=ora.diskgroup.type"],
+    ["ezszds8q", "STATE=OFFLINE on ezszds8q"],
+    ["ezszds8q", "TARGET=ONLINE"],
+    ["ezszds9q", "NAME=ora.ASST_MLOG.dg"],
+    ["ezszds9q", "TYPE=ora.diskgroup.type"],
+    ["ezszds9q", "STATE=OFFLINE on ezszds9q"],
+    ["ezszds9q", "TARGET=ONLINE"],
+]
+
+
+_DEFAULT_PARAMETERS_ORACLE_CRS_RES = {"number_of_nodes_not_in_target_state": (1, 2)}
 
 
 @pytest.fixture(name="string_table")
@@ -42,7 +69,7 @@ oracle_host|TARGET=ONLINE"""
 
 @pytest.fixture(name="section")
 def fixture_section(string_table: StringTable) -> Section:
-    return parse(string_table)
+    return parse_oracle_crs_res(string_table)
 
 
 def test_parse(section: Section) -> None:
@@ -69,7 +96,7 @@ def test_parse(section: Section) -> None:
 
 
 def test_discover(section: Section) -> None:
-    services = list(discover(section))
+    services = list(discover_oracle_crs_res(section))
     assert services == [
         Service(item="ora.cluster_interconnect.haip"),
         Service(item="ora.DG_CLUSTER.dg"),
@@ -84,28 +111,97 @@ def test_discover(section: Section) -> None:
     ],
 )
 def test_check_item_not_in_section(section: Section, item: str, summary: str) -> None:
-    results = list(check(item=item, section=section))
+    results = list(
+        check_oracle_crs_res(
+            item=item,
+            params=_DEFAULT_PARAMETERS_ORACLE_CRS_RES,
+            section=section,
+        )
+    )
     assert results == [Result(state=State.CRIT, summary=summary)]
 
 
 def test_check_item_not_in_section_and_cluster_down(section: Section) -> None:
     with pytest.raises(IgnoreResultsError):
-        list(check(item="foo", section=section))
+        list(
+            check_oracle_crs_res(
+                item="foo",
+                params=_DEFAULT_PARAMETERS_ORACLE_CRS_RES,
+                section=section,
+            )
+        )
 
 
 @pytest.mark.parametrize(
     "item, results",
     [
-        (
+        pytest.param(
             "ora.DG_CLUSTER.dg",
             [
-                Result(state=State.OK, summary="online"),
-                Result(state=State.OK, summary="on host2: online"),
-                Result(state=State.CRIT, summary="on oracle_host: off, target state online"),
+                Result(
+                    state=State.WARN,
+                    summary="Number of nodes not in target state: 1 (warn/crit at 1/2)",
+                ),
+                Metric("oracle_number_of_nodes_not_in_target_state", 1.0, levels=(1.0, 2.0)),
+                Result(
+                    state=State.OK,
+                    summary="online; on host2: online; on oracle_host: off, target state online",
+                ),
             ],
         ),
-        ("ora.cluster_interconnect.haip", [Result(state=State.OK, summary="local: online")]),
+        pytest.param(
+            "ora.cluster_interconnect.haip",
+            [
+                Result(state=State.OK, summary="Number of nodes not in target state: 0"),
+                Metric("oracle_number_of_nodes_not_in_target_state", 0.0, levels=(1.0, 2.0)),
+                Result(state=State.OK, summary="local: online"),
+            ],
+        ),
     ],
 )
 def test_check_item_in_section(section: Section, item: str, results: Sequence[Result]) -> None:
-    assert results == list(check(item=item, section=section))
+    assert results == list(
+        check_oracle_crs_res(
+            item=item,
+            params=_DEFAULT_PARAMETERS_ORACLE_CRS_RES,
+            section=section,
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    "item, string_table, expected_check_result",
+    [
+        pytest.param(
+            "ora.ASST_MLOG.dg",
+            _STRING_TABLE_BOTH_OFFLINE,
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Number of nodes not in target state: 2 (warn/crit at 1/2)",
+                ),
+                Metric("oracle_number_of_nodes_not_in_target_state", 2.0, levels=(1.0, 2.0)),
+                Result(
+                    state=State.OK,
+                    summary="on ezszds8q: offline, target state online; on ezszds9q: offline, target state online",
+                ),
+            ],
+            id="Both of the nodes are offline. Their target state is online, so the state is CRIT.",
+        ),
+    ],
+)
+def test_check_oracle_crs_res(
+    item: str,
+    string_table: StringTable,
+    expected_check_result: Sequence[Result],
+) -> None:
+    assert (
+        list(
+            check_oracle_crs_res(
+                item,
+                _DEFAULT_PARAMETERS_ORACLE_CRS_RES,
+                parse_oracle_crs_res(string_table),
+            )
+        )
+        == expected_check_result
+    )

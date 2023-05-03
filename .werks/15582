@@ -1,0 +1,14 @@
+Title: oracle_crs_res: Added possibility to configure WARN/CRIT levels for the number of nodes that are not in target state
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1683114550
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Added possibility to configure WARN/CRIT levels for the number of nodes that are not in target state.
+The default levels are 1 for WARN and 2 for CRIT.
+Also, the number of nodes that are not in target state are displayed in the summary.

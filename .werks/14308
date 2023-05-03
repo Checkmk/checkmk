@@ -6,7 +6,7 @@ Date: 1682423560
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0b5
+Version: 2.3.0b1
 
 In case a job has just started and did not report any status update or was
 interrupted during startup the `jobstatus.mk` state file could be empty,

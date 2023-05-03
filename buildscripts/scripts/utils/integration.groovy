@@ -23,8 +23,7 @@ def run_make_targets(Map args) {
     // TODO: this should be done by the top level scripts
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker_image_from_alias("IMAGE_TESTING").inside(
-            "--cpus 1.5 \
-            --group-add=${args.DOCKER_GROUP_ID} \
+            "--group-add=${args.DOCKER_GROUP_ID} \
             --ulimit nofile=1024:1024 \
             --env HOME=/home/jenkins \
             ${mount_reference_repo_dir} \

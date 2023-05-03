@@ -236,7 +236,7 @@ def _valuespec_special_agents_kube():
                             ("namespaces", _("Namespaces")),
                             ("nodes", _("Nodes")),
                             ("pods", _("Pods")),
-                            ("pvcs", _("Persistent Volume Claims & Persistent Volumes")),
+                            ("pvcs", _("Persistent Volume Claims")),
                             ("cronjobs", _("CronJobs")),
                             ("cronjobs_pods", _("Pods of CronJobs")),
                         ],

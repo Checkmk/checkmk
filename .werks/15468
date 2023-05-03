@@ -1,0 +1,22 @@
+Title: aws_lambda, aws_sns: Rename Lambda and SNS services
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1683115896
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The werk is incompatible for users that used AWS Lambda and AWS SNS services
+in versions from 2.2.0b1 to 2.2.0b6.
+Affected users have to rediscover services and will lose metric data of the
+renamed services.
+
+The following services have been renamed:
+LI: AWS/Lambda Concurrency REGION NAME -> AWS/Lambda NAME [REGION] Concurrency
+LI: AWS/Lambda Memory REGION NAME -> AWS/Lambda NAME [REGION] Memory
+LI: AWS/Lambda Performance REGION NAME -> AWS/Lambda NAME [REGION] Performance
+LI: AWS/SNS REGION NAME Message Number -> AWS/SNS NAME [REGION] Message Number
+

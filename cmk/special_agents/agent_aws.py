@@ -5338,7 +5338,7 @@ class SNSTopic:
         # SNS Topic name is unique per region so we need to include the region name in the service
         # name to avoid considering 2 topics with the same name in different regions as the same
         # topic
-        return f"{self.region} {self.topic_name}"
+        return f"{self.topic_name} [{self.region}]"
 
 
 class SNSTopicsFetcher:

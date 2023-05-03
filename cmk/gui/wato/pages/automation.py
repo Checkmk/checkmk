@@ -32,13 +32,13 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.session import SuperUserContext
+from cmk.gui.utils.compatibility import make_incompatible_info
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     cmk_version_of_remote_automation_source,
     compatible_with_central_site,
     local_automation_failure,
-    make_incompatible_info,
 )
 
 

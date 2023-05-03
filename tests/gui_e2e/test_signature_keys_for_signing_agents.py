@@ -61,7 +61,7 @@ def send_pem_content(page: PPage, description: str, password: str, content: str)
     page.main_area.get_input("key_p_alias").fill(description)
     page.main_area.get_input("key_p_passphrase").fill(password)
     page.main_area.locator("#select2-key_p_key_file_sel-container").click()
-    page.main_area.get_text("Paste PEM Content").click()
+    page.main_area.get_text("Paste CRT/PEM Contents").click()
     page.main_area.locator("textarea[name='key_p_key_file_1']").fill(content)
 
     page.main_area.get_suggestion("Upload").click()
@@ -78,7 +78,11 @@ def send_pem_file(page: PPage, description: str, password: str, content: str) ->
     page.main_area.get_input("key_p_alias").fill(description)
     page.main_area.get_input("key_p_passphrase").fill(password)
     page.main_area.get_input("key_p_key_file_0").set_input_files(
-        files=[FilePayload(name="mypem", mimeType="text/plain", buffer=content.encode())]
+        files=[
+            FilePayload(
+                name="mypem.pem", mimeType="application/x-x509-ca-cert", buffer=content.encode()
+            )
+        ]
     )
 
     page.main_area.get_suggestion("Upload").click()

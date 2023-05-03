@@ -6673,7 +6673,7 @@ class FileUpload(ValueSpec[FileUploadModel]):
         ):
             raise MKUserError(
                 varprefix,
-                _("Invalid file type expected %s received %s")
+                _("Invalid file type expected %s received '%s'")
                 % (
                     ", ".join(extension for extension in self._allowed_extensions),
                     Path(file_name).suffix,

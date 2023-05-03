@@ -260,22 +260,22 @@ def function_arn_to_item(function_arn: str) -> str:
         The account_id can be omitted, because it stays equal for all lambda functions of the same AWS account.
 
     >>> function_arn_to_item("arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function:OPTIONAL_ALIAS_OR_VERSION")
-    'eu-central-1 my_python_test_function OPTIONAL_ALIAS_OR_VERSION'
+    'my_python_test_function OPTIONAL_ALIAS_OR_VERSION [eu-central-1]'
     """
     splitted = function_arn.split(":")
     return (
-        f"{splitted[3]} {splitted[6]} {splitted[7]}"
+        f"{splitted[6]} {splitted[7]} [{splitted[3]}]"
         if len(splitted) == 8
-        else f"{splitted[3]} {splitted[6]}"
+        else f"{splitted[6]} [{splitted[3]}]"
     )
 
 
 def get_region_from_item(item: str) -> str:
     """
-    >>> get_region_from_item("eu-central-1 my_python_test_function")
+    >>> get_region_from_item("my_python_test_function [eu-central-1]")
     'eu-central-1'
     """
-    return item.split(" ")[0]
+    return item.split(" ")[-1].strip("[]")
 
 
 @dataclass

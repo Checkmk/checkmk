@@ -863,24 +863,24 @@ def test_extract_aws_metrics_by_labels(
 
 
 SECTION_AWS_LAMBDA_SUMMARY: LambdaSummarySection = {
-    "eu-central-1 calling_other_lambda_concurrently": LambdaFunctionConfiguration(
+    "calling_other_lambda_concurrently [eu-central-1]": LambdaFunctionConfiguration(
         Timeout=1.0, MemorySize=128.0, CodeSize=483.0
     ),
-    "eu-central-1 my_python_test_function": LambdaFunctionConfiguration(
+    "my_python_test_function [eu-central-1]": LambdaFunctionConfiguration(
         Timeout=1.0, MemorySize=128.0, CodeSize=483.0
     ),
-    "eu-north-1 myLambdaTestFunction": LambdaFunctionConfiguration(
+    "myLambdaTestFunction [eu-north-1]": LambdaFunctionConfiguration(
         Timeout=1.0, MemorySize=128.0, CodeSize=299.0
     ),
 }
 
 SECTION_AWS_LAMBDA_CLOUDWATCH_INSIGHTS: CloudwatchInsightsSection = {
-    "eu-central-1 calling_other_lambda_concurrently": LambdaInsightMetrics(
+    "calling_other_lambda_concurrently [eu-central-1]": LambdaInsightMetrics(
         max_memory_used_bytes=128000000.0,
         count_cold_starts_in_percent=50.0,
         max_init_duration_seconds=0.33964999999999995,
     ),
-    "eu-central-1 my_python_test_function": LambdaInsightMetrics(
+    "my_python_test_function [eu-central-1]": LambdaInsightMetrics(
         max_memory_used_bytes=52000000.0,
         count_cold_starts_in_percent=50.0,
         max_init_duration_seconds=1.62853,

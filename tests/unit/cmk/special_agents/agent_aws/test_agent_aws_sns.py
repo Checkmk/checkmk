@@ -27,11 +27,11 @@ from .agent_aws_fake_clients import FakeCloudwatchClient, SNSListSubscriptionsIB
 SNSSectionsGetter = Callable[[list[str] | None, OverallTags], tuple[SNSSMS, SNS]]
 
 ALL_TOPICS = {
-    "eu-west-1 TopicName-0",
-    "eu-west-1 TopicName-1",
-    "eu-west-1 TopicName-2",
-    "eu-west-1 TopicName-3.fifo",
-    "eu-west-1 TopicName-4.fifo",
+    "TopicName-0 [eu-west-1]",
+    "TopicName-1 [eu-west-1]",
+    "TopicName-2 [eu-west-1]",
+    "TopicName-3.fifo [eu-west-1]",
+    "TopicName-4.fifo [eu-west-1]",
 }
 
 TAGGING_PAGINATOR_RESULT = {
@@ -159,9 +159,9 @@ sns_params = [
     (
         ["TopicName-1", "TopicName-4.fifo"],
         (None, None),
-        ["eu-west-1 TopicName-1", "eu-west-1 TopicName-4.fifo"],
+        ["TopicName-1 [eu-west-1]", "TopicName-4.fifo [eu-west-1]"],
     ),
-    (None, ([["test-tag-key"]], [["test-tag-value"]]), ["eu-west-1 TopicName-3.fifo"]),
+    (None, ([["test-tag-key"]], [["test-tag-value"]]), ["TopicName-3.fifo [eu-west-1]"]),
     (None, ([["test-tag-key"]], [["wrong-tag-value"]]), []),
     (None, ([["wrong-tag-key"]], [["test-tag-value"]]), []),
     (["NONEXISTINGID"], (None, None), []),

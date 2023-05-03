@@ -50,7 +50,7 @@ else
     mkdir -p "${SHARED_CARGO_FOLDER}"
     CARGO_JENKINS_MOUNT="-v ${SHARED_CARGO_FOLDER}:${REPO_DIR}/shared_cargo_folder"
 
-    # We're using git reference clones, see also jenkins/global-defaults.yml in tribe29_ci.
+    # We're using git reference clones, see also jenkins/global-defaults.yml in checkmk_ci.
     # That's why we need to mount the reference repos.
     GIT_REFERENCE_CLONE_PATH="/home/jenkins/git_reference_clones/check_mk.git"
     REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"

@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from typing import cast, Literal, NamedTuple, NewType, TypedDict
 
 from livestatus import (
+    ConnectedSite,
     LivestatusOutputFormat,
     lqencode,
     MKLivestatusQueryError,
@@ -22,9 +23,19 @@ from livestatus import (
     UnixSocketInfo,
 )
 
+from cmk.utils.licensing.handler import LicenseState
+from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.paths import livestatus_unix_socket
+from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
-from cmk.utils.version import is_managed_edition
+from cmk.utils.version import (
+    __version__,
+    Edition,
+    edition,
+    is_managed_edition,
+    Version,
+    VersionsIncompatible,
+)
 
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -33,6 +44,12 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.logged_in import user as global_user
+from cmk.gui.utils.compatibility import (
+    is_distributed_monitoring_compatible_for_licensing,
+    LicensingCompatibility,
+    LicensingCompatible,
+    make_incompatible_info,
+)
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |
@@ -190,6 +207,76 @@ def _ensure_connected(user: LoggedInUser | None, force_authuser: UserId | None) 
     logger.debug("Site states: %r", site_states_to_log)
 
 
+def _edition_from_livestatus(livestatus_edition: str | None) -> Edition | None:
+    for ed in Edition:
+        if ed.long == livestatus_edition:
+            return ed
+    return None
+
+
+def _get_distributed_monitoring_compatibility(
+    site_id: str,
+    central_version: str,
+    central_edition: Edition,
+    central_license_state: LicenseState,
+    remote_edition: Edition | None,
+) -> LicensingCompatibility | VersionsIncompatible:
+    if site_id == omd_site():
+        return LicensingCompatible()
+
+    if remote_edition is None:
+        if Version.from_str(central_version) < Version.from_str("2.2.0"):
+            return LicensingCompatible()
+        return VersionsIncompatible(
+            _(
+                "Central site is version >= 2.2 while remote site is an older version, please "
+                "update remote sites first"
+            )
+        )
+
+    return is_distributed_monitoring_compatible_for_licensing(
+        central_edition=central_edition,
+        central_license_state=central_license_state,
+        remote_edition=remote_edition,
+    )
+
+
+def _get_distributed_monitoring_connection_from_site_id(site_id: str) -> ConnectedSite | None:
+    for connected_site in g.live.connections:
+        if connected_site.id == site_id:
+            return connected_site
+    return None
+
+
+def _inhibit_incompatible_site_connection(
+    site_id: str,
+    central_version: str,
+    central_edition: Edition,
+    central_license_state: LicenseState,
+    remote_version: str,
+    remote_edition: Edition | None,
+    compatibility: LicensingCompatibility | VersionsIncompatible,
+) -> None:
+    if not (
+        incompatible_connection := _get_distributed_monitoring_connection_from_site_id(site_id)
+    ):
+        return
+
+    g.live.connections.remove(incompatible_connection)
+    g.live.deadsites[site_id] = {
+        "exception": make_incompatible_info(
+            central_version=central_version,
+            central_edition_short=central_edition.short,
+            central_license_state=central_license_state,
+            remote_version=remote_version.removeprefix("Check_MK "),
+            remote_edition_short=remote_edition.short if remote_edition else None,
+            remote_license_state=None,
+            compatibility=compatibility,
+        ),
+        "site": incompatible_connection.config,
+    }
+
+
 def _connect_multiple_sites(user: LoggedInUser) -> None:
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites(user)
     _set_initial_site_states(enabled_sites, disabled_sites)
@@ -211,10 +298,10 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
         "GET status\n"
         "Cache: reload\n"
         "Columns: livestatus_version program_version program_start num_hosts num_services "
-        "core_pid"
+        "core_pid edition"
     ):
         try:
-            site_id, v1, v2, ps, num_hosts, num_services, pid = response
+            site_id, v1, v2, ps, num_hosts, num_services, pid, remote_edition = response
         except ValueError:
             e = MKLivestatusQueryError("Invalid response to status query: %s" % response)
 
@@ -228,18 +315,38 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
             )
             continue
 
-        g.site_status[site_id].update(
-            {
-                "state": "online",
-                "livestatus_version": v1,
-                "program_version": v2,
-                "program_start": ps,
-                "num_hosts": num_hosts,
-                "num_services": num_services,
-                "core": v2.startswith("Check_MK") and "cmc" or "nagios",
-                "core_pid": pid,
-            }
+        central_edition = edition()
+        central_version = __version__
+        remote_edition = _edition_from_livestatus(remote_edition)
+        central_license_state = get_license_state()
+
+        compatibility = _get_distributed_monitoring_compatibility(
+            site_id, central_version, central_edition, central_license_state, remote_edition
         )
+
+        if not isinstance(compatibility, LicensingCompatible):
+            _inhibit_incompatible_site_connection(
+                site_id,
+                central_version,
+                central_edition,
+                central_license_state,
+                v2,
+                remote_edition,
+                compatibility,
+            )
+        else:
+            g.site_status[site_id].update(
+                {
+                    "state": "online",
+                    "livestatus_version": v1,
+                    "program_version": v2,
+                    "program_start": ps,
+                    "num_hosts": num_hosts,
+                    "num_services": num_services,
+                    "core": v2.startswith("Check_MK") and "cmc" or "nagios",
+                    "core_pid": pid,
+                }
+            )
     g.live.set_prepend_site(False)
 
     # TODO(lm): Find a better way to make the Livestatus object trigger the update

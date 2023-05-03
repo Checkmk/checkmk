@@ -50,6 +50,7 @@ from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain, DomainRequest, DomainRequests
+from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
@@ -552,21 +553,37 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 table.cell(_("Details"), css=["details"])
                 html.open_div(id_="site_%s_details" % site_id)
 
-                last_state = self._last_activation_state(site_id)
-
-                if not is_logged_in:
-                    html.write_text(_("Is not logged in.") + " ")
-
-                if not last_state:
-                    html.write_text(_("Has never been activated"))
-                elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
-                    html.write_text(_("Activation needed"))
-                else:
-                    html.javascript(
-                        "cmk.activation.update_site_activation_state(%s);" % json.dumps(last_state)
-                    )
+                self._display_site_activation_status_details(
+                    need_action, is_logged_in, site_id, site_status, status
+                )
 
                 html.close_div()
+
+    def _display_site_activation_status_details(
+        self,
+        need_action: bool,
+        is_logged_in: bool,
+        site_id: SiteId,
+        site_status: SiteStatus,
+        status: str,
+    ) -> None:
+        if status == "dead":
+            html.write_text(str(site_status["exception"]))
+            return
+
+        last_state = self._last_activation_state(site_id)
+
+        if not is_logged_in:
+            html.write_text(_("Is not logged in.") + " ")
+
+        if not last_state:
+            html.write_text(_("Has never been activated"))
+        elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
+            html.write_text(_("Activation needed"))
+        else:
+            html.javascript(
+                "cmk.activation.update_site_activation_state(%s);" % json.dumps(last_state)
+            )
 
     def _can_activate_all(self, site_id: SiteId) -> bool:
         return not self._site_has_foreign_changes(site_id) or user.may("wato.activateforeign")

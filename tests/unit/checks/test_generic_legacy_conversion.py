@@ -1464,6 +1464,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "vutlan_ems_leakage",
         "vutlan_ems_temp",
         "vxvm_objstatus",
+        "wagner_titanus_topsense",
         "wagner_titanus_topsense.info",
         "wagner_titanus_topsense.overall_status",
         "wagner_titanus_topsense.alarm",

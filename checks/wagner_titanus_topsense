@@ -8,78 +8,84 @@ from cmk.base.check_api import any_of, equals, get_age_human_readable
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 
-wagner_titanus_topsense_info = [
-    (
-        ".1.3.6.1.2.1.1",
-        [
-            1,  # sysDescr            0
-            3,  # sysUpTimeInstance   1
-            4,  # sysContact          2
-            5,  # sysName             3
-            6,  # sysLocation         4
-        ],
+check_info["wagner_titanus_topsense"] = {
+    "detect": any_of(
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
+        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
     ),
-    # topsens LSN
-    (
-        ".1.3.6.1.4.1.34187.21501.1.1",
-        [
-            1,  # company                0
-            2,  # model                  1
-            3,  # revision               2
-            1000,  # pswMainAlarmD1      3
-            1001,  # pswPreAlarmD1       4
-            1002,  # pswInfAlarmD1       5
-            1003,  # pswMainAlarmD2      6
-            1004,  # pswPreAlarmD2       7
-            1005,  # pswInfAlarmD2       8
-            1006,  # pswFailureDisplayOn 9
-        ],
-    ),  # off(0), on(1)
-    (
-        ".1.3.6.1.4.1.34187.21501.2.1",
-        [
-            245810000,  # tsBarGraph1String
-            245820000,  # tsBarGraph2String
-            245950000,  # tsD1ChamberValueString
-            246090000,  # tsD2ChamberValueString
-            245960000,  # tsD1AirFlowDeviationString
-            246100000,  # tsD2AirFlowDeviationString
-            245970000,  # tsD1AirTemperatureString
-            246110000,  # tsD2AirTemperatureString
-            24584008,  # tsLSNbusOnline      0
-            # offline(0),online(1)
-        ],
-    ),
-    # topsens non-LSN
-    (
-        ".1.3.6.1.4.1.34187.74195.1.1",
-        [
-            1,  # company                0
-            2,  # model                  1
-            3,  # revision               2
-            1000,  # pswMainAlarmD1      3
-            1001,  # pswPreAlarmD1       4
-            1002,  # pswInfAlarmD1       5
-            1003,  # pswMainAlarmD2      6
-            1004,  # pswPreAlarmD2       7
-            1005,  # pswInfAlarmD2       8
-            1006,  # pswFailureDisplayOn 9
-        ],
-    ),  # off(0), on(1)
-    (
-        ".1.3.6.1.4.1.34187.74195.2.1",
-        [
-            245790000,  # tsBarGraph1String
-            245800000,  # tsBarGraph2String
-            245940000,  # tsD1ChamberValueString
-            246060000,  # tsD2ChamberValueString
-            245950000,  # tsD1AirFlowDeviationString
-            246070000,  # tsD2AirFlowDeviationString
-            245960000,  # tsD1AirTemperatureString
-            246080000,  # tsD2AirTemperatureString
-        ],
-    ),
-]
+    "snmp_info": [
+        (
+            ".1.3.6.1.2.1.1",
+            [
+                1,  # sysDescr            0
+                3,  # sysUpTimeInstance   1
+                4,  # sysContact          2
+                5,  # sysName             3
+                6,  # sysLocation         4
+            ],
+        ),
+        # topsens LSN
+        (
+            ".1.3.6.1.4.1.34187.21501.1.1",
+            [
+                1,  # company                0
+                2,  # model                  1
+                3,  # revision               2
+                1000,  # pswMainAlarmD1      3
+                1001,  # pswPreAlarmD1       4
+                1002,  # pswInfAlarmD1       5
+                1003,  # pswMainAlarmD2      6
+                1004,  # pswPreAlarmD2       7
+                1005,  # pswInfAlarmD2       8
+                1006,  # pswFailureDisplayOn 9
+            ],
+        ),  # off(0), on(1)
+        (
+            ".1.3.6.1.4.1.34187.21501.2.1",
+            [
+                245810000,  # tsBarGraph1String
+                245820000,  # tsBarGraph2String
+                245950000,  # tsD1ChamberValueString
+                246090000,  # tsD2ChamberValueString
+                245960000,  # tsD1AirFlowDeviationString
+                246100000,  # tsD2AirFlowDeviationString
+                245970000,  # tsD1AirTemperatureString
+                246110000,  # tsD2AirTemperatureString
+                24584008,  # tsLSNbusOnline      0
+                # offline(0),online(1)
+            ],
+        ),
+        # topsens non-LSN
+        (
+            ".1.3.6.1.4.1.34187.74195.1.1",
+            [
+                1,  # company                0
+                2,  # model                  1
+                3,  # revision               2
+                1000,  # pswMainAlarmD1      3
+                1001,  # pswPreAlarmD1       4
+                1002,  # pswInfAlarmD1       5
+                1003,  # pswMainAlarmD2      6
+                1004,  # pswPreAlarmD2       7
+                1005,  # pswInfAlarmD2       8
+                1006,  # pswFailureDisplayOn 9
+            ],
+        ),  # off(0), on(1)
+        (
+            ".1.3.6.1.4.1.34187.74195.2.1",
+            [
+                245790000,  # tsBarGraph1String
+                245800000,  # tsBarGraph2String
+                245940000,  # tsD1ChamberValueString
+                246060000,  # tsD2ChamberValueString
+                245950000,  # tsD1AirFlowDeviationString
+                246070000,  # tsD2AirFlowDeviationString
+                245960000,  # tsD1AirTemperatureString
+                246080000,  # tsD2AirTemperatureString
+            ],
+        ),
+    ],
+}
 
 
 def parse_wagner_titanus_topsens(info):
@@ -127,14 +133,9 @@ def check_wagner_titanus_topsense_info(item, _no_params, info):
 
 
 check_info["wagner_titanus_topsense.info"] = {
-    "detect": any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
-    ),
     "check_function": check_wagner_titanus_topsense_info,
     "inventory_function": inventory_wagner_titanus_topsense_info,
     "service_description": "Topsense Info",
-    "snmp_info": wagner_titanus_topsense_info,
 }
 
 # .
@@ -166,14 +167,9 @@ def check_wagner_titanus_topsense_overall_status(item, _no_params, info):
 
 
 check_info["wagner_titanus_topsense.overall_status"] = {
-    "detect": any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
-    ),
     "check_function": check_wagner_titanus_topsense_overall_status,
     "inventory_function": inventory_wagner_titanus_topsense_overall_status,
     "service_description": "Overall Status",
-    "snmp_info": wagner_titanus_topsense_info,
 }
 
 # .
@@ -220,14 +216,9 @@ def check_wagner_titanus_topsense_alarm(item, _no_params, info):
 
 
 check_info["wagner_titanus_topsense.alarm"] = {
-    "detect": any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
-    ),
     "check_function": check_wagner_titanus_topsense_alarm,
     "inventory_function": inventory_wagner_titanus_topsense_alarm,
     "service_description": "Alarm Detector %s",
-    "snmp_info": wagner_titanus_topsense_info,
 }
 
 # .
@@ -266,14 +257,9 @@ def check_wagner_titanus_topsense_smoke(item, _no_params, info):
 
 
 check_info["wagner_titanus_topsense.smoke"] = {
-    "detect": any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
-    ),
     "check_function": check_wagner_titanus_topsense_smoke,
     "inventory_function": inventory_wagner_titanus_topsense_smoke,
     "service_description": "Smoke Detector %s",
-    "snmp_info": wagner_titanus_topsense_info,
 }
 
 # .
@@ -306,14 +292,9 @@ def check_wagner_titanus_topsense_chamber_deviation(item, _no_params, info):
 
 
 check_info["wagner_titanus_topsense.chamber_deviation"] = {
-    "detect": any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
-    ),
     "check_function": check_wagner_titanus_topsense_chamber_deviation,
     "inventory_function": inventory_wagner_titanus_topsense_chamber_deviation,
     "service_description": "Chamber Deviation Detector %s",
-    "snmp_info": wagner_titanus_topsense_info,
 }
 
 # .
@@ -358,15 +339,10 @@ def check_wagner_titanus_topsense_airflow_deviation(item, params, info):
 
 
 check_info["wagner_titanus_topsense.airflow_deviation"] = {
-    "detect": any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
-    ),
     "check_function": check_wagner_titanus_topsense_airflow_deviation,
     "inventory_function": inventory_wagner_titanus_topsense_airflow_deviation,
     "service_description": "Airflow Deviation Detector %s",
     "group": "airflow_deviation",
-    "snmp_info": wagner_titanus_topsense_info,
 }
 
 # .
@@ -404,16 +380,11 @@ def check_wagner_titanus_topsense_temp(item, params, info):
 
 
 check_info["wagner_titanus_topsense.temp"] = {
-    "detect": any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),
-    ),
     "check_function": check_wagner_titanus_topsense_temp,
     "default_levels_variable": "wagner_titanus_topsense_temperature_default_values",
     "inventory_function": inventory_wagner_titanus_topsense_temp,
     "service_description": "Temperature %s",
     "group": "temperature",
-    "snmp_info": wagner_titanus_topsense_info,
 }
 
 # .

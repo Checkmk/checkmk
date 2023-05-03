@@ -6,7 +6,7 @@ Date: 1683017832
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0b6
+Version: 2.2.0b7
 
 When creating a new site or when changing the port configurations of an existing site via <tt>omd
 config</tt>, Checkmk was supposed to check for duplicate port allocations (also across multiple

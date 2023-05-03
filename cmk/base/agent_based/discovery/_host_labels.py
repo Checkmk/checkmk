@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Discovery of HostLabels."""
 from collections.abc import Iterable, Mapping, Sequence
+from typing import TypeVar
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import HostLabel
@@ -137,7 +138,9 @@ def _discover_host_labels_for_source_type(
             "Trying host label discovery with: %s\n"
             % ", ".join(str(r.section_name) for r in parsed_results)
         )
-        for section_name, section_data, _cache_info in parsed_results:
+        for section_name, section_data, _cache_info in _sort_sections_by_label_priority(
+            parsed_results
+        ):
             kwargs = {"section": section_data}
 
             host_label_plugin = host_label_plugins[section_name]
@@ -163,7 +166,12 @@ def _discover_host_labels_for_source_type(
     return host_labels
 
 
-# snmp_info.include sets a couple of host labels for device type but should not
-# overwrite device specific ones. So we put the snmp_info section first.
-def _sort_sections_by_label_priority(sections):
-    return sorted(sections, key=lambda s: (str(s.name) != "snmp_info", s.name))
+_TupleT = TypeVar("_TupleT", bound=tuple[object, ...])
+
+
+def _sort_sections_by_label_priority(sections: Iterable[_TupleT]) -> Sequence[_TupleT]:
+    """
+    `snmp_info`` sets a couple of host labels for device type but should not overwrite device specific ones.
+    We put the snmp_info section first.
+    """
+    return sorted(sections, key=lambda t: (str(t[0]) != "snmp_info", str(t[0])))

@@ -26,11 +26,11 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN_FOR_CLA }}
         with:
           path-to-signatures: 'signatures/version1/cla.json'
-          path-to-document: 'https://github.com/tribe29/checkmk/blob/master/doc/cla/cla.md' # e.g. a CLA or a DCO document
+          path-to-document: 'https://github.com/Checkmk/checkmk/blob/master/doc/cla/cla.md' # e.g. a CLA or a DCO document
           # branch should not be protected
           branch: 'main'
           allowlist: bot* # comma separated list of users who are allowed to submit without a CLA bot approval
-          remote-organization-name: 'tribe29'
+          remote-organization-name: 'Checkmk'
           remote-repository-name: 'cla'
           custom-pr-sign-comment: 'I have read the CLA Document and I hereby sign the CLA or my organization already has a signed CLA.'
 

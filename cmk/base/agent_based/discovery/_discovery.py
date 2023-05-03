@@ -6,6 +6,7 @@
 import itertools
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Literal
 
 import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
@@ -30,9 +31,10 @@ from cmk.checkers.sectionparserutils import check_parsing_errors
 
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
+from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_host_labels, discover_host_labels
-from .autodiscovery import get_host_services, ServicesByTransition
+from .autodiscovery import AutocheckServiceWithNodes, get_host_services, ServicesByTransition
 from .utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = ["execute_check_discovery"]
@@ -132,22 +134,11 @@ def _check_service_lists(
     subresults = []
     need_rediscovery = False
 
-    for transition, t_services, title, severity, service_filter in [
-        (
-            "new",
-            services_by_transition.get("new", []),
-            "unmonitored",
-            params.severity_new_services,
-            service_filters.new,
-        ),
-        (
-            "vanished",
-            services_by_transition.get("vanished", []),
-            "vanished",
-            params.severity_vanished_services,
-            service_filters.vanished,
-        ),
-    ]:
+    for transition, t_services, title, severity, service_filter in _iter_output_services(
+        services_by_transition,
+        params,
+        service_filters,
+    ):
         affected_check_plugin_names: Counter[CheckPluginName] = Counter()
         unfiltered = False
 
@@ -215,6 +206,35 @@ def _check_service_lists(
     if not any(s.summary for s in subresults):
         subresults.insert(0, ActiveCheckResult(0, "All services up to date"))
     return subresults, need_rediscovery
+
+
+def _iter_output_services(
+    services_by_transition: ServicesByTransition,
+    params: DiscoveryCheckParameters,
+    service_filters: _ServiceFilters,
+) -> Iterable[
+    tuple[
+        Literal["new", "vanished"],
+        Sequence[AutocheckServiceWithNodes],
+        str,
+        int,
+        _ServiceFilter,
+    ]
+]:
+    yield (
+        "new",
+        services_by_transition.get("new", []),
+        "unmonitored",
+        params.severity_new_services,
+        service_filters.new,
+    )
+    yield (
+        "vanished",
+        services_by_transition.get("vanished", []),
+        "vanished",
+        params.severity_vanished_services,
+        service_filters.vanished,
+    )
 
 
 def _check_host_labels(

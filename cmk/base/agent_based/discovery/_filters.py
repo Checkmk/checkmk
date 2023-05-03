@@ -9,7 +9,7 @@ from typing import Any, NamedTuple
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ServiceName
 
-_ServiceFilter = Callable[[ServiceName], bool]
+ServiceFilter = Callable[[ServiceName], bool]
 
 _MATCH_EVERYTHING = regex("(.*)")
 
@@ -24,8 +24,8 @@ class _ServiceFilterLists(NamedTuple):
 
 
 class ServiceFilters(NamedTuple):
-    new: _ServiceFilter
-    vanished: _ServiceFilter
+    new: ServiceFilter
+    vanished: ServiceFilter
 
     @classmethod
     def accept_all(cls) -> "ServiceFilters":
@@ -114,7 +114,7 @@ def _get_service_filter_lists(rediscovery_parameters: dict[str, Any]) -> _Servic
 def _get_service_filter_func(
     service_whitelist: list[str] | None,
     service_blacklist: list[str] | None,
-) -> _ServiceFilter:
+) -> ServiceFilter:
     if not service_whitelist and not service_blacklist:
         return _accept_all_services
 

@@ -182,7 +182,7 @@ def test_validate_supersedings_raise_implicit() -> None:
     ):
         section_plugins.validate_section_supersedes(all_supersedes_invalid)
 
-    # add the implicid superseding, then it should be OK:
+    # add the implicit superseding, then it should be OK:
     all_supersedes_valid = all_supersedes_invalid.copy()
     all_supersedes_valid[SectionName("foo")].add(SectionName("gee"))
 

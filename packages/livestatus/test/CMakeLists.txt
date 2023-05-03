@@ -28,6 +28,7 @@ add_executable(
   test_IntColumn.cc
   test_ListColumn.cc
   test_LogEntry.cc
+  test_Mangling.cc
   test_Metric.cc
   test_RegExp.cc
   test_Renderer.cc

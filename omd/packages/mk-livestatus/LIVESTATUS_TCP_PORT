@@ -19,6 +19,7 @@ case "$1" in
 
         if [ "$PORT" != "$2" ]; then
             echo "Livestatus port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
         fi
 
         sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$PORT'/' $OMD_ROOT/etc/mk-livestatus/xinetd.conf

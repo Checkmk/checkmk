@@ -72,6 +72,7 @@ from omdlib.console import ok, show_success
 from omdlib.contexts import AbstractSiteContext, RootContext, SiteContext
 from omdlib.dialog import (
     ask_user_choices,
+    dialog_config_choice_has_error,
     dialog_menu,
     dialog_message,
     dialog_regex,
@@ -1648,6 +1649,10 @@ def config_configure_hook(
         change, new_value = dialog_menu(title, descr, choices, value, "Change", "Cancel")
     elif isinstance(choices, re.Pattern):
         change, new_value = dialog_regex(title, descr, choices, value, "Change", "Cancel")
+    elif isinstance(choices, ConfigChoiceHasError):
+        change, new_value = dialog_config_choice_has_error(
+            title, descr, choices, value, "Change", "Cancel"
+        )
     else:
         raise NotImplementedError()
 

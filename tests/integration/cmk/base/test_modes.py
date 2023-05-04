@@ -578,7 +578,7 @@ def test_check_discovery_host(execute) -> None:  # type: ignore[no-untyped-def]
 def test_check_discovery(execute) -> None:  # type: ignore[no-untyped-def]
     p = execute(["cmk", "--check-discovery", "modes-test-host"])
     assert p.returncode == 0, on_failure(p)
-    assert p.stdout.startswith("All services up to date, All host labels up to date")
+    assert p.stdout.startswith("Services: all up to date, Host labels: all up to date")
     assert p.stderr == ""
 
 

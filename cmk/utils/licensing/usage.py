@@ -98,7 +98,7 @@ def try_update_license_usage(
         if now.dt.timestamp() < _get_next_run_ts(next_run_filepath):
             return
 
-        history = LocalLicenseUsageHistory.parse(load_raw_license_usage_history(report_filepath))
+        history = LocalLicenseUsageHistory.parse(load_raw_license_usage_report(report_filepath))
         history.add_sample(sample)
         save_license_usage_report(
             report_filepath,
@@ -290,7 +290,7 @@ def save_license_usage_report(report_filepath: Path, raw_report: RawLicenseUsage
     )
 
 
-def load_raw_license_usage_history(report_filepath: Path) -> object:
+def load_raw_license_usage_report(report_filepath: Path) -> object:
     return deserialize_dump(
         store.load_bytes_from_file(
             report_filepath,

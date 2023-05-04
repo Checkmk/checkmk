@@ -119,6 +119,7 @@ warn_unreachable = false  # 240 errors in 133 files
 
 [[tool.mypy.overrides]]
 module = [
+    "cmk.cee.bakery.*",
     "cmk.gui.background_job",
     "cmk.gui.backup",
     "cmk.gui.mobile.views",

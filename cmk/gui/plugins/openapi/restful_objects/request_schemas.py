@@ -465,7 +465,7 @@ class CreateFolder(BaseSchema):
      * `attributes` can hold special configuration parameters which control various aspects of
         the monitoring system. Most of these attributes will be inherited by hosts within that
         folder. For more information please have a look at the
-        [Host Administration chapter of the user guide](https://docs.checkmk.com/master/en/wato_hosts.html#Introduction).
+        [Host Administration chapter of the user guide](https://docs.checkmk.com/master/en/wato_hosts.html#intro).
     """
 
     name = fields.String(

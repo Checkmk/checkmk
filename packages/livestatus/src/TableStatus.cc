@@ -312,15 +312,6 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "Whether or not at alert handler rules are configured (0/1)", offsets,
         [](const MonitoringCore &r) { return r.hasEventHandlers(); }));
 
-    addColumn(std::make_unique<StringColumn<MonitoringCore>>(
-        "license_state", "The current license state of the site", offsets,
-        [](const MonitoringCore &r) { return r.license_state(); }));
-    addColumn(std::make_unique<BoolColumn<MonitoringCore>>(
-        "is_trial_expired", "Whether or not expired trial of demo version",
-        offsets, [](const MonitoringCore &r) {
-            return r.isTrialExpired(std::chrono::system_clock::now());
-        }));
-
     // Special stuff for Check_MK
     addColumn(std::make_unique<TimeColumn<MonitoringCore>>(
         "mk_inventory_last",

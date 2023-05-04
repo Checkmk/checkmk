@@ -147,10 +147,6 @@ public:
 
     [[nodiscard]] virtual bool hasEventHandlers() const = 0;
 
-    [[nodiscard]] virtual std::string license_state() const = 0;
-    [[nodiscard]] virtual bool isTrialExpired(
-        std::chrono::system_clock::time_point now) const = 0;
-
     [[nodiscard]] virtual double averageRunnableJobsFetcher() const = 0;
     [[nodiscard]] virtual double averageRunnableJobsChecker() const = 0;
 

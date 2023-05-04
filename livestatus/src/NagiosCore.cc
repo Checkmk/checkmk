@@ -383,13 +383,6 @@ bool NagiosCore::hasEventHandlers() const {
     return g_any_event_handler_enabled;
 }
 
-std::string NagiosCore::license_state() const { return "DUMMY_LICENSE_STATE"; }
-
-bool NagiosCore::isTrialExpired(
-    std::chrono::system_clock::time_point /*now*/) const {
-    return false;
-}
-
 double NagiosCore::averageRunnableJobsFetcher() const { return 0.0; }
 double NagiosCore::averageRunnableJobsChecker() const { return 0.0; }
 

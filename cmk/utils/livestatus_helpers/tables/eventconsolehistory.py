@@ -7,8 +7,8 @@ from cmk.utils.livestatus_helpers.types import Column, Table
 # fmt: off
 
 
-class Eventconsoleevents(Table):
-    __tablename__ = 'eventconsoleevents'
+class Eventconsolehistory(Table):
+    __tablename__ = 'eventconsolehistory'
 
     event_application = Column(
         'event_application',
@@ -184,6 +184,41 @@ class Eventconsoleevents(Table):
         description='The textual description of the event',
     )
     """The textual description of the event"""
+
+    history_addinfo = Column(
+        'history_addinfo',
+        col_type='string',
+        description='Additional information, like email recipient/subject or action ID',
+    )
+    """Additional information, like email recipient/subject or action ID"""
+
+    history_line = Column(
+        'history_line',
+        col_type='int',
+        description='The line number of the event in the history file',
+    )
+    """The line number of the event in the history file"""
+
+    history_time = Column(
+        'history_time',
+        col_type='time',
+        description='Time when the event was written into the history file (Unix timestamp)',
+    )
+    """Time when the event was written into the history file (Unix timestamp)"""
+
+    history_what = Column(
+        'history_what',
+        col_type='string',
+        description='What happened (one of ARCHIVED/AUTODELETE/CANCELLED/CHANGESTATE/COUNTFAILED/COUNTREACHED/DELAYOVER/DELETE/EMAIL/EXPIRED/NEW/NOCOUNT/ORPHANED/SCRIPT/UPDATE)',
+    )
+    """What happened (one of ARCHIVED/AUTODELETE/CANCELLED/CHANGESTATE/COUNTFAILED/COUNTREACHED/DELAYOVER/DELETE/EMAIL/EXPIRED/NEW/NOCOUNT/ORPHANED/SCRIPT/UPDATE)"""
+
+    history_who = Column(
+        'history_who',
+        col_type='string',
+        description='The user who triggered the command',
+    )
+    """The user who triggered the command"""
 
     host_accept_passive_checks = Column(
         'host_accept_passive_checks',

@@ -71,6 +71,7 @@ from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.hosts_and_folders import (
+    BaseFolder,
     check_wato_foldername,
     CREFolder,
     Folder,
@@ -1159,7 +1160,7 @@ class ModeFolder(WatoMode):
                 if subfolder is not None:
                     folder = subfolder
                 else:
-                    name = _create_wato_foldername(parts[0], folder)
+                    name = BaseFolder.find_available_folder_name(parts[0], folder)
                     folder = folder.create_subfolder(name, parts[0], {})
                 parts = parts[1:]
 
@@ -1384,53 +1385,9 @@ class ModeCreateFolder(ABCFolderMode):
             name = request.get_ascii_input_mandatory("name", "").strip()
             check_wato_foldername("name", name)
         else:
-            name = _create_wato_foldername(title)
+            name = BaseFolder.find_available_folder_name(title)
 
         Folder.current().create_subfolder(name, title, attributes)
-
-
-# TODO: Move to Folder()?
-def _create_wato_foldername(title: str, in_folder=None) -> str:  # type:ignore[no-untyped-def]
-    if in_folder is None:
-        in_folder = Folder.current()
-
-    basename = _convert_title_to_filename(title)
-    c = 1
-    name = basename
-    while True:
-        if not in_folder.has_subfolder(name):
-            break
-        c += 1
-        name = "%s-%d" % (basename, c)
-    return name
-
-
-# TODO: Move to Folder()?
-def _convert_title_to_filename(title: str) -> str:
-    """lower(), replace german umlauts then everything except [-a-z0-9_] with '_'
-
-    >>> _convert_title_to_filename("abc")
-    'abc'
-    >>> _convert_title_to_filename("Äbc")
-    'aebc'
-    >>> _convert_title_to_filename("../Äbc")
-    '___aebc'
-    """
-    converted = ""
-    for c in title.lower():
-        if c == "ä":
-            converted += "ae"
-        elif c == "ö":
-            converted += "oe"
-        elif c == "ü":
-            converted += "ue"
-        elif c == "ß":
-            converted += "ss"
-        elif c in "abcdefghijklmnopqrstuvwxyz0123456789-_":
-            converted += c
-        else:
-            converted += "_"
-    return converted
 
 
 @page_registry.register_page("ajax_set_foldertree")

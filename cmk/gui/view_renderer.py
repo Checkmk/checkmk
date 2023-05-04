@@ -211,6 +211,17 @@ class GUIViewRenderer(ABCViewRenderer):
         if display_options.enabled(display_options.R):
             html.open_div(id_="data_container")
 
+        # In multi site setups error messages of single sites do not block the
+        # output and raise now exception. We simply print error messages here.
+        # In case of the web service we show errors only on single site installations.
+        if active_config.show_livestatus_errors and display_options.enabled(display_options.W):
+            for info in sites.live().dead_sites().values():
+                if isinstance(info["site"], dict):
+                    html.show_error(
+                        "<b>%s - %s</b><br>%s"
+                        % (info["site"]["alias"], _("Livestatus error"), info["exception"])
+                    )
+
         missing_single_infos = self.view.missing_single_infos
         if missing_single_infos:
             html.show_warning(
@@ -274,17 +285,6 @@ class GUIViewRenderer(ABCViewRenderer):
         else:
             # Always hide action related context links in this situation
             toggle_page_menu_entries(html, css_class="command", state=False)
-
-        # In multi site setups error messages of single sites do not block the
-        # output and raise now exception. We simply print error messages here.
-        # In case of the web service we show errors only on single site installations.
-        if active_config.show_livestatus_errors and display_options.enabled(display_options.W):
-            for info in sites.live().dead_sites().values():
-                if isinstance(info["site"], dict):
-                    html.show_error(
-                        "<b>%s - %s</b><br>%s"
-                        % (info["site"]["alias"], _("Livestatus error"), info["exception"])
-                    )
 
         if display_options.enabled(display_options.R):
             html.close_div()

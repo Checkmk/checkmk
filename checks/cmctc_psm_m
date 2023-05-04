@@ -76,6 +76,7 @@ def check_cmctc_psm_m(item, no_params, section):
 
 check_info["cmctc_psm_m"] = {
     "detect": DETECT_CMCTC,
+    "parse_function": parse_cmctc_psm_m,
     "check_function": check_cmctc_psm_m,
     "inventory_function": inventory_cmctc_psm_m,
     "service_description": "CMC %s",

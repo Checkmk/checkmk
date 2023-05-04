@@ -14,7 +14,6 @@ from cmk.base.plugins.agent_based.utils.cmctc import DETECT_CMCTC
 
 
 class Sensor(NamedTuple):
-    index_: str
     status: str
     reading: float
     high: float
@@ -93,7 +92,6 @@ def parse_cmctc_lcp(string_table: List[StringTable]) -> Section:
         f"{sensor_spec[0]} - {tree}.{index}"
         if sensor_spec[0]
         else index: Sensor(
-            index_=index,
             status=status,
             reading=float(reading),
             high=float(high),
@@ -217,6 +215,7 @@ check_info["cmctc_lcp"] = {
         )
         for idx in _TREES
     ],
+    "parse_function": parse_cmctc_lcp,
 }
 
 check_info["cmctc_lcp.access"] = {

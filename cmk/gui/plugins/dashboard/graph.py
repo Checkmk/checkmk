@@ -31,6 +31,7 @@ from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     resolve_graph_recipe,
 )
+from cmk.gui.plugins.metrics.utils import MKCombinedGraphLimitExceededError
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import Choices, GraphIdentifier, VisualContext
@@ -203,6 +204,8 @@ class GraphDashlet(Dashlet):
             raise make_mk_missing_data_error()
         except MKUserError as e:
             raise MKGeneralException(_("Failed to calculate a graph recipe. (%s)") % str(e))
+        except MKCombinedGraphLimitExceededError as limit_exceeded_error:
+            raise limit_exceeded_error
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 

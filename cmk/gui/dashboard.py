@@ -102,6 +102,7 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     save_all_dashboards,
 )
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
+from cmk.gui.plugins.metrics.utils import MKCombinedGraphLimitExceededError
 from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import InfoName, VisualContext
@@ -789,7 +790,7 @@ def _render_dashlet_content(
 
 
 def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInput:
-    if isinstance(e, MKMissingDataError):
+    if isinstance(e, (MKMissingDataError, MKCombinedGraphLimitExceededError)):
         return html.render_message(str(e))
 
     if not isinstance(e, MKUserError):

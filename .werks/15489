@@ -1,0 +1,15 @@
+Title: Fix error message if limit for combined graphs is exceeded
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1683194524
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p28
+
+If the object or metric limit of a combined graph was reached, an error like
+"Problem while rendering dashboard element 4 of type combined_graph: Failed to
+calculate a graph recipe." was shown.
+
+You will now only see the information that a limit was reached.

@@ -44,7 +44,7 @@ from cmk.utils.type_defs import ServiceName
 from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import http, MKGeneralException, MKHTTPException, MKUserError
 from cmk.gui.globals import config, g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -152,6 +152,10 @@ class TranslationInfo(TypedDict):
     name: str
     scale: float
     auto_graph: bool
+
+
+class MKCombinedGraphLimitExceededError(MKHTTPException):
+    status = http.HTTPStatus.BAD_REQUEST
 
 
 class AutomaticDict(OrderedDict[str, GraphTemplate]):

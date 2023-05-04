@@ -1,0 +1,14 @@
+Title: Fix KeyError in changelog view
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1686827810
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p4
+
+It was possible, that the changelog view did not list all werks and showed an
+error `KeyError ((<Compatibility.COMPATIBLE: 'yes'>, True))`. This could happen
+for werks that where incompatible but where later on changed to compatible, and
+were acknowledged while being incompatible.

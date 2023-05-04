@@ -14,7 +14,7 @@
 # p3 = the script     .\scripts\cargo_build_core.cmd
 #
 # We assume that CI is building in the workdir\workspavce and there is a junction x
-# This situation is applicable only for tribe29 CI infrastructure
+# This situation is applicable only for Checkmk CI infrastructure
 
 [string]$inp = Get-Location
 [string]$new = $inp.tolower().replace($args[0], $args[1])

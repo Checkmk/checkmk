@@ -148,7 +148,7 @@ def inv_lnx_parse_debian(line: _Line) -> _KVPairs:
 
 def inv_lnx_parse_cma(line: _Line) -> _KVPairs:
     yield "name", "Checkmk Appliance " + line[0]
-    yield "vendor", "tribe29 GmbH"
+    yield "vendor", "Checkmk GmbH"
     yield "version", line[0]
     yield "code_name", None
 

@@ -422,6 +422,7 @@ def _verify_compatibility(response: requests.Response) -> None:
             make_incompatible_info(
                 central_version,
                 central_edition_short,
+                central_license_state,
                 remote_version,
                 remote_edition_short,
                 remote_license_state,

@@ -710,6 +710,8 @@ def compatibility_of(compatible: Compatibility, acknowledged: bool) -> str:
         (Compatibility.COMPATIBLE, False): _("Compatible"),
         (Compatibility.NOT_COMPATIBLE, True): _("Incompatible"),
         (Compatibility.NOT_COMPATIBLE, False): _("Incompatible - TODO"),
+        # compatible and acknowledge should not be possible, but GUI Crawler hit that case:
+        (Compatibility.COMPATIBLE, True): _("Compatible"),
     }
     return compatibilities[(compatible, acknowledged)]
 

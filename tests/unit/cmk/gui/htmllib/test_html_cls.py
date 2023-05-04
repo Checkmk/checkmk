@@ -52,9 +52,9 @@ def test_render_help_visible(request_context, monkeypatch):
 def test_add_manual_link(request_context):
     assert user.language is None
     assert compare_html(
-        html.render_help("[intro_welcome|Welcome]"),
+        html.render_help("[welcome|Welcome]"),
         HTML(
-            '<div style="display:none" class="help"><a href="https://docs.checkmk.com/master/en/intro_welcome.html" target="_blank">Welcome</a></div>'
+            '<div style="display:none" class="help"><a href="https://docs.checkmk.com/master/en/welcome.html" target="_blank">Welcome</a></div>'
         ),
     )
 
@@ -62,9 +62,9 @@ def test_add_manual_link(request_context):
 def test_add_manual_link_localized(request_context, monkeypatch):
     monkeypatch.setattr(user, "language", lambda: "de")
     assert compare_html(
-        html.render_help("[intro_welcome|Welcome]"),
+        html.render_help("[welcome|Welcome]"),
         HTML(
-            '<div style="display:none" class="help"><a href="https://docs.checkmk.com/master/de/intro_welcome.html" target="_blank">Welcome</a></div>'
+            '<div style="display:none" class="help"><a href="https://docs.checkmk.com/master/de/welcome.html" target="_blank">Welcome</a></div>'
         ),
     )
 

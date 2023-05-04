@@ -86,7 +86,7 @@ def _parse_perfentry(entry: str) -> Perfdata:
     """Parse single perfdata entry, syntax is:
         NAME=VALUE[;[[WARN_LOWER:]WARN_UPPER][;[[CRIT_LOWER:]CRIT_UPPER][;[MIN][;MAX]]]]
 
-    see https://docs.checkmk.com/latest/de/localchecks.html
+    see https://docs.checkmk.com/latest/en/localchecks.html
     >>> _parse_perfentry("a=5;3:7;2:8;1;9")
     Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=(3.0, 2.0), boundaries=(1.0, 9.0))
     >>> _parse_perfentry("a=5;7")
@@ -287,7 +287,7 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
                     output=line,
                     reason="Received wrong format of local check output. "
                     "Please read the documentation regarding the correct format: "
-                    "https://docs.checkmk.com/2.0.0/de/localchecks.html",
+                    "https://docs.checkmk.com/latest/en/localchecks.html",
                 )
             )
             continue

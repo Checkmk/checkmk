@@ -40952,10 +40952,6 @@ msgstr "Commentaire persistant"
 msgid "Persistent Volume Claims"
 msgstr "Commentaire persistant"
 
-#, fuzzy
-msgid "Persistent Volume Claims & Persistent Volumes"
-msgstr "Commentaire persistant"
-
 msgid "Persistent comment"
 msgstr "Commentaire persistant"
 
@@ -73598,6 +73594,11 @@ msgstr ""
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
+
+#, fuzzy
+#~| msgid "Persistent comment"
+#~ msgid "Persistent Volume Claims & Persistent Volumes"
+#~ msgstr "Commentaire persistant"
 
 #, fuzzy
 #~| msgid "Application"

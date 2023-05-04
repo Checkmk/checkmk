@@ -41094,10 +41094,6 @@ msgstr "Commento persistente"
 msgid "Persistent Volume Claims"
 msgstr "Commento persistente"
 
-#, fuzzy
-msgid "Persistent Volume Claims & Persistent Volumes"
-msgstr "Commento persistente"
-
 msgid "Persistent comment"
 msgstr "Commento persistente"
 
@@ -73664,6 +73660,11 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~| msgid "Persistent comment"
+#~ msgid "Persistent Volume Claims & Persistent Volumes"
+#~ msgstr "Commento persistente"
 
 #, fuzzy
 #~| msgid "Application"

@@ -40502,10 +40502,6 @@ msgstr "Aanhoudend commentaar"
 msgid "Persistent Volume Claims"
 msgstr "Aanhoudend commentaar"
 
-#, fuzzy
-msgid "Persistent Volume Claims & Persistent Volumes"
-msgstr "Aanhoudend commentaar"
-
 msgid "Persistent comment"
 msgstr "Aanhoudend commentaar"
 
@@ -72717,6 +72713,11 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Persistent comment"
+#~ msgid "Persistent Volume Claims & Persistent Volumes"
+#~ msgstr "Aanhoudend commentaar"
 
 #, fuzzy
 #~| msgid "Application"

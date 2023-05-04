@@ -40808,10 +40808,6 @@ msgstr "Comentario persistente"
 msgid "Persistent Volume Claims"
 msgstr "Comentario persistente"
 
-#, fuzzy
-msgid "Persistent Volume Claims & Persistent Volumes"
-msgstr "Comentario persistente"
-
 msgid "Persistent comment"
 msgstr "Comentario persistente"
 
@@ -73287,6 +73283,11 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~| msgid "Persistent comment"
+#~ msgid "Persistent Volume Claims & Persistent Volumes"
+#~ msgstr "Comentario persistente"
 
 #, fuzzy
 #~| msgid "Application"

@@ -39358,9 +39358,6 @@ msgstr "持続的なボリューム要求名"
 msgid "Persistent Volume Claims"
 msgstr "持続的なボリューム要求"
 
-msgid "Persistent Volume Claims & Persistent Volumes"
-msgstr "持続的なボリュームクレームとボリューム"
-
 msgid "Persistent comment"
 msgstr "持続的なコメント"
 
@@ -70308,6 +70305,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Persistent Volume Claims & Persistent Volumes"
+#~ msgstr "持続的なボリュームクレームとボリューム"
 
 #, fuzzy
 #~| msgid "Application"

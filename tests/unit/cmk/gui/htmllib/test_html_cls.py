@@ -75,11 +75,11 @@ def test_render_help_visible(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_add_manual_link() -> None:
     assert user.language == "en"
     assert compare_html(
-        html.render_help("[intro_welcome|Welcome]"),
+        html.render_help("[welcome|Welcome]"),
         HTML(
             '<div style="display:none;" class="help"><div class="info_icon"><img '
             'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
-            'class="help_text"><a href="https://docs.checkmk.com/master/en/intro_welcome.html" '
+            'class="help_text"><a href="https://docs.checkmk.com/master/en/welcome.html" '
             'target="_blank">Welcome</a></div></div>'
         ),
     )
@@ -89,11 +89,11 @@ def test_add_manual_link() -> None:
 def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(user, "language", lambda: "de")
     assert compare_html(
-        html.render_help("[intro_welcome|Welcome]"),
+        html.render_help("[welcome|Welcome]"),
         HTML(
             '<div style="display:none;" class="help"><div class="info_icon"><img '
             'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
-            'class="help_text"><a href="https://docs.checkmk.com/master/de/intro_welcome.html" '
+            'class="help_text"><a href="https://docs.checkmk.com/master/de/welcome.html" '
             'target="_blank">Welcome</a></div></div>'
         ),
     )

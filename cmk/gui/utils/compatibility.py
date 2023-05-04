@@ -34,34 +34,32 @@ LicensingCompatibility = EditionsIncompatible | LicenseStateIncompatible | Licen
 def make_incompatible_info(
     central_version: str,
     central_edition_short: str,
+    central_license_state: LicenseState | None,
     remote_version: str,
     remote_edition_short: str,
     remote_license_state: LicenseState | None,
     compatibility: (cmk_version.VersionsIncompatible | LicensingCompatibility),
 ) -> str:
     return _("The central (%s) and remote site (%s) are not compatible. Reason: %s") % (
-        _make_central_site_version_info(central_version, central_edition_short),
-        make_remote_site_version_info(remote_version, remote_edition_short, remote_license_state),
+        make_site_version_info(central_version, central_edition_short, central_license_state),
+        make_site_version_info(remote_version, remote_edition_short, remote_license_state),
         compatibility,
     )
 
 
-def _make_central_site_version_info(
-    central_version: str,
-    central_edition_short: str,
+def make_site_version_info(
+    version: str,
+    edition_short: str,
+    license_state: LicenseState | None,
 ) -> str:
-    return _("Version: %s, Edition: %s") % (central_version, central_edition_short)
+    if edition_short == cmk_version.Edition.CRE.short:
+        # No licensing in CRE, information not necessary
+        return _("Version: %s, Edition: %s") % (version, edition_short)
 
-
-def make_remote_site_version_info(
-    remote_version: str,
-    remote_edition_short: str,
-    remote_license_state: LicenseState | None,
-) -> str:
     return _("Version: %s, Edition: %s, License state: %s") % (
-        remote_version,
-        remote_edition_short,
-        remote_license_state.readable if remote_license_state else _("unknown"),
+        version,
+        edition_short,
+        license_state.readable if license_state else _("unknown"),
     )
 
 

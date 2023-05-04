@@ -99,6 +99,7 @@ class ModeAutomationLogin(AjaxPage):
                 make_incompatible_info(
                     central_version,
                     central_edition_short,
+                    central_license_state,
                     remote_version,
                     remote_edition_short,
                     remote_license_state,
@@ -163,6 +164,7 @@ class ModeAutomation(AjaxPage):
                 make_incompatible_info(
                     central_version,
                     central_edition_short,
+                    central_license_state,
                     remote_version,
                     remote_edition_short,
                     remote_license_state,

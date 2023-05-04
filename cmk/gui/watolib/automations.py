@@ -398,6 +398,7 @@ def _verify_compatibility(response: requests.Response) -> None:
     """
     central_version = cmk_version.__version__
     central_edition_short = cmk_version.edition().short
+    central_license_state = get_license_state()
 
     remote_version = response.headers.get("x-checkmk-version", "")
     remote_edition_short = response.headers.get("x-checkmk-edition", "")
@@ -410,6 +411,7 @@ def _verify_compatibility(response: requests.Response) -> None:
         compatibility := compatible_with_central_site(
             central_version,
             central_edition_short,
+            central_license_state,
             remote_version,
             remote_edition_short,
             remote_license_state,
@@ -699,9 +701,17 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         job_interface.send_result_message(_("Finished."))
 
 
+def _edition_from_short(edition_short: str) -> cmk_version.Edition:
+    for ed in cmk_version.Edition:
+        if ed.short == edition_short:
+            return ed
+    raise ValueError(edition_short)
+
+
 def compatible_with_central_site(
     central_version: str,
     central_edition_short: str,
+    central_license_state: LicenseState | None,
     remote_version: str,
     remote_edition_short: str,
     remote_license_state: LicenseState | None,
@@ -719,17 +729,17 @@ def compatible_with_central_site(
 
     C*E != CME is not allowed
 
-    >>> str(c("2.2.0p1", "cce", "2.2.0p1", "cce", LicenseState.FREE))
+    >>> str(c("2.2.0p1", "cce", LicenseState.LICENSED, "2.2.0p1", "cce", LicenseState.FREE))
     'Remote site in license state free is not allowed'
-    >>> str(c("2.0.0p3", "cee", "2.0.0p3", "cme", LicenseState.LICENSED))
+    >>> str(c("2.0.0p3", "cee", LicenseState.LICENSED, "2.0.0p3", "cme", LicenseState.LICENSED))
     'Mix of CME and non-CME is not supported.'
-    >>> str(c("2.0.0p3", "cme", "2.0.0p3", "cee", LicenseState.LICENSED))
+    >>> str(c("2.0.0p3", "cme", LicenseState.LICENSED, "2.0.0p3", "cee", LicenseState.LICENSED))
     'Mix of CME and non-CME is not supported.'
-    >>> str(c("2.0.0p3", "cre", "2.0.0p3", "cme", LicenseState.LICENSED))
+    >>> str(c("2.0.0p3", "cre", LicenseState.LICENSED, "2.0.0p3", "cme", LicenseState.LICENSED))
     'Mix of CME and non-CME is not supported.'
-    >>> str(c("2.0.0p3", "cme", "2.0.0p3", "cre", LicenseState.LICENSED))
+    >>> str(c("2.0.0p3", "cme", LicenseState.LICENSED, "2.0.0p3", "cre", LicenseState.LICENSED))
     'Mix of CME and non-CME is not supported.'
-    >>> isinstance(c("2.0.0p3", "cme", "2.0.0p3", "cme", LicenseState.LICENSED), cmk_version.VersionsCompatible)
+    >>> isinstance(c("2.0.0p3", "cme", LicenseState.LICENSED, "2.0.0p3", "cme", LicenseState.LICENSED), cmk_version.VersionsCompatible)
     True
     """
 
@@ -746,7 +756,10 @@ def compatible_with_central_site(
 
     if not isinstance(
         licensing_compatibility := is_distributed_setup_compatible_for_licensing(
-            central_edition_short, remote_edition_short, remote_license_state
+            central_edition=_edition_from_short(central_edition_short),
+            central_license_state=central_license_state,
+            remote_edition=_edition_from_short(remote_edition_short),
+            remote_license_state=remote_license_state,
         ),
         LicensingCompatible,
     ):

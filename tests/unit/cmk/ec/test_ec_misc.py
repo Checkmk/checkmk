@@ -10,8 +10,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis.strategies import ip_addresses
 
-from cmk.ec.export import match_ip_network
 from cmk.ec.main import allowed_ip, unmap_ipv4_address
+from cmk.ec.rule_matcher import match_ip_network
 
 ACCESS_LIST = [
     ipaddress.ip_network("::ffff:8.8.4.4"),

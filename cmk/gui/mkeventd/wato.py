@@ -63,6 +63,7 @@ else:
 
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
+import cmk.gui.log as log
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -179,7 +180,6 @@ from .defines import syslog_facilities, syslog_priorities
 from .helpers import action_choices, eventd_configuration, service_levels
 from .livestatus import execute_command
 from .permission_section import PermissionSectionEventConsole
-from .rule_matching import event_rule_matches
 
 
 def register(
@@ -277,7 +277,16 @@ def match_event_rule(rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event) -
         site_customer_id = managed.get_customer_id(active_config.sites[event["site"]])
         if rule_customer_id not in (managed.SCOPE_GLOBAL, site_customer_id):
             return ec.MatchFailure(reason=_("Wrong customer"))
-    return event_rule_matches(rule, event)
+
+    time_period = ec.TimePeriods(log.logger)
+    rule_matcher = ec.RuleMatcher(
+        logger=None,
+        omd_site_id=omd_site(),
+        is_active_time_period=time_period.active,
+    )
+    rule = rule.copy()
+    ec.compile_rule(rule)
+    return rule_matcher.event_rule_matches(rule, event)
 
 
 # .

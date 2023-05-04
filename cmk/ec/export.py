@@ -19,7 +19,7 @@ from .config import (
 from .defaults import default_config, default_rule_pack
 from .event import Event
 from .forward import SyslogForwarderUnixSocket, SyslogMessage
-from .main import SyslogFacility, SyslogPriority
+from .main import SyslogFacility, SyslogPriority, TimePeriods
 
 # TODO remove match_ipv4_network when the GUI uses the EC logic.
 from .rule_matcher import (

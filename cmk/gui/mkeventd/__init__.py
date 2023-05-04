@@ -7,10 +7,8 @@ from .config_domain import ConfigDomainEventConsole
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
 from .helpers import action_choices, service_levels
 from .livestatus import execute_command
-from .rule_matching import event_rule_matches
 
 __all__ = [
-    "event_rule_matches",
     "syslog_priorities",
     "syslog_facilities",
     "phase_names",

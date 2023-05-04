@@ -56,12 +56,12 @@ def make_site_version_info(
         # No licensing in CRE, information not necessary
         return _("Version: %s, Edition: %s") % (
             version,
-            edition_short if edition_short else _("unknown"),
+            edition_short.upper() if edition_short else _("unknown"),
         )
 
     return _("Version: %s, Edition: %s, License state: %s") % (
         version,
-        edition_short if edition_short else _("unknown"),
+        edition_short.upper() if edition_short else _("unknown"),
         license_state.readable if license_state else _("unknown"),
     )
 

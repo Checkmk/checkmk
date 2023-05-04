@@ -9,7 +9,7 @@ from re import Pattern
 from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypedDict, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, Labels
+from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, HostLabel, Labels
 from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.tuple_rulesets import (
@@ -157,12 +157,9 @@ class RulesetMatchObject:
         )
 
 
-_TLabel = TypeVar("_TLabel")
-
-
-def merge_cluster_labels(all_node_labels: Sequence[Mapping[str, _TLabel]]) -> Mapping[str, _TLabel]:
+def merge_cluster_labels(all_node_labels: Iterable[Iterable[HostLabel]]) -> Sequence[HostLabel]:
     """A cluster has all its nodes labels. Last node wins."""
-    return {name: label for node_labels in all_node_labels for name, label in node_labels.items()}
+    return list({l.name: l for node_labels in all_node_labels for l in node_labels}.values())
 
 
 class RulesetMatcher:
@@ -899,16 +896,12 @@ class RulesetOptimizer:
         )
 
     def _discovered_labels_of_host(self, hostname: HostName) -> Labels:
-        return (
-            {l.name: l.value for l in DiscoveredHostLabelsStore(hostname).load()}
+        host_labels = (
+            DiscoveredHostLabelsStore(hostname).load()
             if (nodes := self._nodes_of.get(hostname)) is None
-            else merge_cluster_labels(
-                [
-                    {l.name: l.value for l in DiscoveredHostLabelsStore(node).load()}
-                    for node in nodes
-                ]
-            )
+            else merge_cluster_labels([DiscoveredHostLabelsStore(node).load() for node in nodes])
         )
+        return {l.name: l.value for l in host_labels}
 
     @staticmethod
     def _builtin_labels_of_host(hostname: HostName) -> Labels:

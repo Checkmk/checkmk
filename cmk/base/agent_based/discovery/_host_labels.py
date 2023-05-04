@@ -40,10 +40,10 @@ def analyse_cluster_labels(
         kept_labels.update(kept_node_labels)
 
     cluster_labels = QualifiedDiscovery[HostLabel](
-        preexisting=_merge_cluster_labels_sequence(
+        preexisting=merge_cluster_labels(
             nodes_labels for node in node_names if (nodes_labels := existing_host_labels.get(node))
         ),
-        current=_merge_cluster_labels_sequence(
+        current=merge_cluster_labels(
             nodes_labels for node in node_names if (nodes_labels := kept_labels.get(node))
         ),
         key=lambda hl: hl.label,
@@ -51,15 +51,6 @@ def analyse_cluster_labels(
     kept_labels[cluster_name] = list(_iter_kept_labels(cluster_labels))
 
     return cluster_labels, kept_labels
-
-
-def _merge_cluster_labels_sequence(
-    all_node_labels: Iterable[Iterable[HostLabel]],
-) -> Sequence[HostLabel]:
-    # rigorously use HostLabels until serialization in DiscoveredHostLabelsStore and consolidate with _merge_cluster_labels...
-    return list(
-        merge_cluster_labels([{l.name: l for l in labels} for labels in all_node_labels]).values()
-    )
 
 
 def analyse_host_labels(

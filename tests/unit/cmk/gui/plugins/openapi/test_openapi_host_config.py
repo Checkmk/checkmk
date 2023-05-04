@@ -28,7 +28,7 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 
 
 def test_openapi_missing_host(clients: ClientRegistry) -> None:
-    resp = clients.Host.get("foobar", expect_ok=False)
+    resp = clients.HostConfig.get("foobar", expect_ok=False)
     resp.assert_status_code(404)
     assert resp.json == {
         "detail": "These fields have problems: host_name",
@@ -40,27 +40,27 @@ def test_openapi_missing_host(clients: ClientRegistry) -> None:
 
 @pytest.mark.usefixtures("with_host")
 def test_openapi_cluster_host(clients: ClientRegistry) -> None:
-    clients.Host.create(host_name="foobar")
-    clients.Host.create_cluster(host_name="bazfoo", nodes=["foobar"])
-    clients.Host.create(
+    clients.HostConfig.create(host_name="foobar")
+    clients.HostConfig.create_cluster(host_name="bazfoo", nodes=["foobar"])
+    clients.HostConfig.create(
         host_name="foobaz", attributes={"ipv6address": "xxx.myfritz.net"}
     ).assert_status_code(200)
 
-    clients.Host.get("bazfoozle", expect_ok=False).assert_status_code(404)
-    clients.Host.get("bazfoo")
+    clients.HostConfig.get("bazfoozle", expect_ok=False).assert_status_code(404)
+    clients.HostConfig.get("bazfoo")
 
-    clients.Host.edit_property(
+    clients.HostConfig.edit_property(
         "bazfoo", "nodes", {"nodes": ["not_existing"]}, expect_ok=False
     ).assert_status_code(400)
-    clients.Host.edit_property(
+    clients.HostConfig.edit_property(
         "bazfoo", "nodes", {"nodes": ["example.com", "bazfoo"]}, expect_ok=False
     ).assert_status_code(400)
 
-    clients.Host.edit_property("bazfoo", "nodes", {"nodes": ["example.com"]}).assert_status_code(
-        200
-    )
+    clients.HostConfig.edit_property(
+        "bazfoo", "nodes", {"nodes": ["example.com"]}
+    ).assert_status_code(200)
 
-    resp = clients.Host.get("bazfoo")
+    resp = clients.HostConfig.get("bazfoo")
     assert resp.json["extensions"]["cluster_nodes"] == ["example.com"]
 
 
@@ -87,7 +87,7 @@ def test_openapi_add_host_bake_agent_parameter(
     try_bake_agents_for_hosts: MagicMock,
     clients: ClientRegistry,
 ) -> None:
-    clients.Host.create(host_name="foobar", bake_agent=bake_agent)
+    clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent)
 
     if called:
         try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
@@ -96,7 +96,7 @@ def test_openapi_add_host_bake_agent_parameter(
 
 
 def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
-    response = clients.Host.create(
+    response = clients.HostConfig.create(
         host_name="foobar",
         attributes={
             "alias": "ALIAS",
@@ -132,7 +132,7 @@ def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
 def test_openapi_bulk_add_hosts_with_attributes(
     clients: ClientRegistry,
 ) -> None:
-    response = clients.Host.bulk_create(
+    response = clients.HostConfig.bulk_create(
         {
             "host_name": "ding",
             "folder": "/",
@@ -149,7 +149,7 @@ def test_openapi_bulk_add_hosts_with_attributes(
     ).assert_status_code(200)
     assert len(response.json["value"]) == 2
 
-    clients.Host.bulk_edit(
+    clients.HostConfig.bulk_edit(
         {
             "host_name": "ding",
             "update_attributes": {
@@ -164,7 +164,7 @@ def test_openapi_bulk_add_hosts_with_attributes(
     ).assert_status_code(200)
 
     # verify attribute ipaddress is set corretly
-    response = clients.Host.get(host_name="ding")
+    response = clients.HostConfig.get(host_name="ding")
 
     api_attributes = response.json["extensions"]["attributes"]
     assert api_attributes["locked_by"] == {
@@ -189,7 +189,7 @@ def test_openapi_add_cluster_bake_agent_parameter(
     try_bake_agents_for_hosts: MagicMock,
     clients: ClientRegistry,
 ) -> None:
-    clients.Host.create(host_name="foobar", bake_agent=bake_agent).assert_status_code(200)
+    clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent).assert_status_code(200)
 
     if called:
         try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
@@ -197,7 +197,7 @@ def test_openapi_add_cluster_bake_agent_parameter(
         try_bake_agents_for_hosts.assert_not_called()
     try_bake_agents_for_hosts.reset_mock()
 
-    clients.Host.create_cluster(
+    clients.HostConfig.create_cluster(
         host_name="bazfoo", nodes=["foobar"], bake_agent=bake_agent
     ).assert_status_code(200)
 
@@ -260,12 +260,12 @@ def test_openapi_hosts(
     monkeypatch: pytest.MonkeyPatch,
     clients: ClientRegistry,
 ) -> None:
-    resp = clients.Host.create(host_name="foobar").assert_status_code(200)
+    resp = clients.HostConfig.create(host_name="foobar").assert_status_code(200)
 
     assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["created_at"], str)
     assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["updated_at"], str)
 
-    resp = clients.Host.follow_link(resp.json, "self")
+    resp = clients.HostConfig.follow_link(resp.json, "self")
     resp.assert_status_code(200)
 
     attributes = {
@@ -275,7 +275,7 @@ def test_openapi_hosts(
             "community": "blah",
         },
     }
-    resp = clients.Host.follow_link(
+    resp = clients.HostConfig.follow_link(
         resp.json,
         ".../update",
         extra_params={"attributes": attributes},
@@ -285,7 +285,7 @@ def test_openapi_hosts(
     got_attributes = resp.json["extensions"]["attributes"]
     assert list(attributes.items()) <= list(got_attributes.items())
 
-    resp = clients.Host.follow_link(
+    resp = clients.HostConfig.follow_link(
         resp.json,
         ".../update",
         extra_params={"update_attributes": {"alias": "bar"}},
@@ -294,7 +294,7 @@ def test_openapi_hosts(
     resp.assert_status_code(200)
     assert resp.json["extensions"]["attributes"]["alias"] == "bar"
 
-    resp = clients.Host.follow_link(
+    resp = clients.HostConfig.follow_link(
         resp.json,
         ".../update",
         extra_params={"remove_attributes": ["alias"]},
@@ -307,13 +307,13 @@ def test_openapi_hosts(
     assert "alias" not in resp.json["extensions"]["attributes"]
 
     # make sure changes are written to disk:
-    clients.Host.follow_link(resp.json, "self").assert_status_code(200)
+    clients.HostConfig.follow_link(resp.json, "self").assert_status_code(200)
     assert list(resp.json["extensions"]["attributes"].items()) >= list(
         {"ipaddress": "127.0.0.1"}.items()
     )
 
     # also try to update with wrong attribute
-    clients.Host.follow_link(
+    clients.HostConfig.follow_link(
         resp.json,
         ".../update",
         extra_params={"attributes": {"foobaz": "bar"}},
@@ -325,7 +325,7 @@ def test_openapi_hosts(
         "cmk.gui.plugins.openapi.endpoints.host_config.delete_hosts",
         lambda *args, **kwargs: DeleteHostsResult(),
     )
-    clients.Host.follow_link(resp.json, ".../delete").assert_status_code(204)
+    clients.HostConfig.follow_link(resp.json, ".../delete").assert_status_code(204)
 
 
 @pytest.mark.usefixtures("with_host")
@@ -1153,7 +1153,7 @@ def test_openapi_host_with_custom_attributes(
     clients: ClientRegistry,
     custom_host_attribute_basic_topic: None,
 ) -> None:
-    resp = clients.Host.create(
+    resp = clients.HostConfig.create(
         host_name="example.com",
         attributes={
             "ipaddress": "192.168.0.123",
@@ -1164,7 +1164,7 @@ def test_openapi_host_with_custom_attributes(
     assert "foo" in resp.json["extensions"]["attributes"]
 
     # remove custom attribute
-    resp = clients.Host.edit(
+    resp = clients.HostConfig.edit(
         host_name="example.com",
         remove_attributes=["foo"],
     )
@@ -1305,7 +1305,7 @@ def test_openapi_host_with_non_existing_site(
 
 
 def test_openapi_bulk_create_permission_missmatch_regression(clients: ClientRegistry) -> None:
-    clients.Host.bulk_create()
+    clients.HostConfig.bulk_create()
 
 
 def test_openapi_host_config_attributes_as_string_crash_regression(
@@ -1333,7 +1333,7 @@ def test_openapi_host_config_attributes_as_string_crash_regression(
 def test_openapi_host_config_effective_attributes_schema_regression(
     clients: ClientRegistry,
 ) -> None:
-    resp = clients.Host.get("heute", effective_attributes=True)
+    resp = clients.HostConfig.get("heute", effective_attributes=True)
     assert isinstance(
         resp.json["extensions"]["effective_attributes"]["meta_data"]["created_at"], str
     )

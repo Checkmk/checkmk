@@ -513,7 +513,7 @@ class UserClient(RestApiClient):
 
 
 @register_client
-class HostClient(RestApiClient):
+class HostConfigClient(RestApiClient):
     domain: API_DOMAIN = "host_config"
 
     def get(
@@ -1206,7 +1206,7 @@ class ClientRegistry:
     Licensing: LicensingClient
     ActivateChanges: ActivateChangesClient
     User: UserClient
-    Host: HostClient
+    HostConfig: HostConfigClient
     Folder: FolderClient
     AuxTag: AuxTagClient
     TimePeriod: TimePeriodClient

@@ -275,11 +275,11 @@ def test_openapi_host_tag_with_only_one_option(
         content_type="application/json",
     )
 
-    host = clients.Host.get("example.com")
-    clients.Host.edit(
+    host = clients.HostConfig.get("example.com")
+    clients.HostConfig.edit(
         host_name="example.com", attributes={"alias": "foobar", "tag_group_id999": "pod"}
     )
-    host = clients.Host.get(host_name="example.com")
+    host = clients.HostConfig.get(host_name="example.com")
 
     assert host.json["extensions"]["attributes"]["alias"] == "foobar"
     assert host.json["extensions"]["attributes"]["tag_group_id999"] == "pod"
@@ -302,10 +302,10 @@ def test_openapi_host_tag_with_only_one_option(
     # assert error.json["detail"].startswith("These fields have problems")
     # assert error.json["fields"] == {"attributes": {"tag_group_id999": ["Unknown field."]}}
 
-    clients.Host.edit(
+    clients.HostConfig.edit(
         host_name="example.com", attributes={"alias": "foobar", "tag_group_id999": None}
     )
-    host = clients.Host.get("example.com")
+    host = clients.HostConfig.get("example.com")
     assert host.json["extensions"]["attributes"]["tag_group_id999"] is None
 
 
@@ -393,7 +393,7 @@ def test_openapi_delete_dependant_host_tag(
         help_text="Kubernetes Pods",
         tags=[{"ident": "pod", "title": "Pod"}],
     )
-    clients.Host.create(
+    clients.HostConfig.create(
         host_name="example.com",
         attributes={"tag_group_id999": "pod"},
     )

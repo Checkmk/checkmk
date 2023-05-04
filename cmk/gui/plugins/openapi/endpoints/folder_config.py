@@ -51,7 +51,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
-from cmk.gui.watolib import CREFolder
+from cmk.gui.watolib.hosts_and_folders import BaseFolder, CREFolder
 
 from cmk import fields
 
@@ -94,17 +94,18 @@ UPDATE_PERMISSIONS = permissions.AllPerm(
 def create(params):
     """Create a folder"""
     put_body = params["body"]
-    name = put_body["name"]
+    name = put_body.get("name")
     title = put_body["title"]
     parent_folder = put_body["parent"]
     attributes = put_body.get("attributes", {})
 
     if parent_folder.has_subfolder(name):
         raise ProblemException(
-            status=400,
-            title="Path already exists",
-            detail=f"The path '{parent_folder.name()}/{name}' already exists.",
+            detail=f"A folder with name {name!r} already exists.",
         )
+
+    if name is None:
+        name = BaseFolder.find_available_folder_name(title)
 
     folder = parent_folder.create_subfolder(name, title, attributes)
 

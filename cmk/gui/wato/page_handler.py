@@ -73,11 +73,17 @@ def page_handler() -> None:
             )
         )
 
-    # config.current_customer can not be checked with CRE repos
-    if cmk_version.is_managed_edition() and not managed.is_provider(active_config.current_customer):
-        raise MKGeneralException(_("Check_MK can only be configured on the managers central site."))
-
     current_mode = request.get_str_input_mandatory("mode")
+    # Backup has to be accessible for remote sites, otherwise the user has no
+    # chance to configure a backup for remote sites.
+    # config.current_customer can not be checked with CRE repos
+    if (
+        cmk_version.is_managed_edition()
+        and not managed.is_provider(active_config.current_customer)
+        and not current_mode.startswith(("backup", "edit_backup"))
+    ):  # type: ignore[attr-defined]
+        raise MKGeneralException(_("Checkmk can only be configured on the managers central site."))
+
     mode_instance = mode_registry.get(current_mode, ModeNotImplemented)()
     mode_instance.ensure_permissions()
 

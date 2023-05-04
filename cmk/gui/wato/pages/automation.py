@@ -80,6 +80,7 @@ class ModeAutomationLogin(AjaxPage):
             if "x-checkmk-edition" in request.headers
             else request.get_ascii_input_mandatory("_edition_short")
         )
+        central_license_state = get_license_state()
         remote_version = cmk_version.__version__
         remote_edition_short = cmk_version.edition().short
         remote_license_state = get_license_state()
@@ -87,6 +88,7 @@ class ModeAutomationLogin(AjaxPage):
             compatibility := compatible_with_central_site(
                 central_version,
                 central_edition_short,
+                central_license_state,
                 remote_version,
                 remote_edition_short,
                 remote_license_state,
@@ -142,6 +144,7 @@ class ModeAutomation(AjaxPage):
     def _verify_compatibility(self) -> None:
         central_version = request.headers.get("x-checkmk-version", "")
         central_edition_short = request.headers.get("x-checkmk-edition", "")
+        central_license_state = get_license_state()
         remote_version = cmk_version.__version__
         remote_edition_short = cmk_version.edition().short
         remote_license_state = get_license_state()
@@ -149,6 +152,7 @@ class ModeAutomation(AjaxPage):
             compatibility := compatible_with_central_site(
                 central_version,
                 central_edition_short,
+                central_license_state,
                 remote_version,
                 remote_edition_short,
                 remote_license_state,

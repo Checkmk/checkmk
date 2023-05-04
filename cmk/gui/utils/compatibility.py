@@ -66,16 +66,41 @@ def make_remote_site_version_info(
 
 
 def is_distributed_setup_compatible_for_licensing(
-    central_edition_short: str,
-    remote_edition_short: str,
+    central_edition: cmk_version.Edition,
+    central_license_state: LicenseState | None,
+    remote_edition: cmk_version.Edition,
     remote_license_state: LicenseState | None,
 ) -> LicensingCompatibility:
-    if (central_edition_short == "cme") is not (remote_edition_short == "cme"):
-        return EditionsIncompatible("Mix of CME and non-CME is not supported.")
-
     if remote_license_state is LicenseState.FREE:
         return LicenseStateIncompatible(
             "Remote site in license state %s is not allowed" % remote_license_state.readable
         )
 
+    if central_edition in [cmk_version.Edition.CRE, cmk_version.Edition.CEE] and remote_edition in [
+        cmk_version.Edition.CRE,
+        cmk_version.Edition.CEE,
+        cmk_version.Edition.CCE,
+    ]:
+        return LicensingCompatible()
+
+    if central_edition is cmk_version.Edition.CCE:
+        if central_license_state in [LicenseState.UNLICENSED, LicenseState.FREE]:
+            return LicenseStateIncompatible(
+                _("Remote sites are not allowed when central site in license state %s")
+                % central_license_state.readable
+            )
+        if remote_edition is not cmk_version.Edition.CCE:
+            return EditionsIncompatible(_("Only CCE remote sites can be added to CCE central site"))
+        return LicensingCompatible()
+
+    if central_edition is cmk_version.Edition.CME:
+        if remote_edition is cmk_version.Edition.CME:
+            return LicensingCompatible()
+        if remote_edition is cmk_version.Edition.CCE:
+            return EditionsIncompatible(_("Mix of CME and non-CME is not supported."))
+
+    if (central_edition is cmk_version.Edition.CME) is not (
+        remote_edition is cmk_version.Edition.CME
+    ):
+        return EditionsIncompatible(_("Mix of CME and non-CME is not supported."))
     return LicensingCompatible()

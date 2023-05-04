@@ -177,7 +177,7 @@ impl RegistrationEndpointCall for RegistrationCallExisting<'_> {
                     &registration_input.csr,
                     self.host_name,
                 )
-                .context(format!("Error registering exisiting host at {}", site_url))?,
+                .context(format!("Error registering existing host at {}", site_url))?,
         ))
     }
 }

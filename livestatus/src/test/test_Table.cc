@@ -251,12 +251,6 @@ class DummyMonitoringCore : public MonitoringCore {
 
     [[nodiscard]] bool hasEventHandlers() const override { return {}; }
 
-    [[nodiscard]] std::string license_state() const override { return {}; }
-    [[nodiscard]] bool isTrialExpired(
-        std::chrono::system_clock::time_point /*now*/) const override {
-        return {};
-    }
-
     [[nodiscard]] double averageRunnableJobsFetcher() const override {
         return {};
     }
@@ -1048,10 +1042,8 @@ static ColumnDefinitions status_columns() {
         {"influxdb_queue_usage", ColumnType::double_},
         {"influxdb_queue_usage_rate", ColumnType::double_},
         {"interval_length", ColumnType::int_},
-        {"is_trial_expired", ColumnType::int_},
         {"last_command_check", ColumnType::time},
         {"last_log_rotation", ColumnType::time},
-        {"license_state", ColumnType::string},
         {"license_usage_history", ColumnType::blob},
         {"livechecks", ColumnType::double_},
         {"livechecks_rate", ColumnType::double_},

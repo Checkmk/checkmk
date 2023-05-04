@@ -157,6 +157,13 @@ class Status(Table):
     )
     """The process ID of the monitoring core"""
 
+    edition = Column(
+        'edition',
+        col_type='string',
+        description='The edition of the site',
+    )
+    """The edition of the site"""
+
     enable_event_handlers = Column(
         'enable_event_handlers',
         col_type='int',
@@ -338,13 +345,6 @@ class Status(Table):
         description='The default interval length',
     )
     """The default interval length"""
-
-    is_trial_expired = Column(
-        'is_trial_expired',
-        col_type='int',
-        description='Whether or not expired trial of demo version',
-    )
-    """Whether or not expired trial of demo version"""
 
     last_command_check = Column(
         'last_command_check',

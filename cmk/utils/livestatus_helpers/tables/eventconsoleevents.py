@@ -48,9 +48,9 @@ class Eventconsoleevents(Table):
     event_core_host = Column(
         'event_core_host',
         col_type='string',
-        description='The canoncial name of the host for this event as known in the monitoring',
+        description='The canonical name of the host for this event as known in the monitoring',
     )
-    """The canoncial name of the host for this event as known in the monitoring"""
+    """The canonical name of the host for this event as known in the monitoring"""
 
     event_count = Column(
         'event_count',
@@ -118,9 +118,9 @@ class Eventconsoleevents(Table):
     event_match_groups_syslog_application = Column(
         'event_match_groups_syslog_application',
         col_type='list',
-        description='The sylog application match groups',
+        description='The syslog application match groups',
     )
-    """The sylog application match groups"""
+    """The syslog application match groups"""
 
     event_orig_host = Column(
         'event_orig_host',

@@ -270,26 +270,14 @@ class HTMLGenerator(HTMLWriter):
     # Make the browser load specified javascript files. We have some special handling here:
     # a) files which can not be found shall not be loaded
     # b) in OMD environments, add the Checkmk version to the version (prevents update problems)
-    # c) load the minified javascript when not in debug mode
     def javascript_filename_for_browser(self, jsname: str) -> str | None:
-        filename_for_browser = None
-        if active_config.debug:
-            min_parts = ["", "_min"]
-        else:
-            min_parts = ["_min", ""]
-
-        for min_part in min_parts:
-            fname = f"htdocs/js/{jsname}{min_part}.js"
-            try:
-                HTMLGenerator._exists_in_web_dirs(fname)
-            except FileNotFoundError:
-                continue
-
-            filename_for_browser = f"js/{jsname}{min_part}-{cmk_version.__version__}.js"
-            break
-
-        if filename_for_browser is None and current_app.debug:
-            raise RuntimeError(f"{jsname} could not be found.")
+        filename_for_browser = f"js/{jsname}_min-{cmk_version.__version__}.js"
+        try:
+            HTMLGenerator._exists_in_web_dirs(filename_for_browser)
+        except FileNotFoundError:
+            if current_app.debug:
+                raise RuntimeError(f"{jsname} could not be found.")
+            return None
 
         return filename_for_browser
 

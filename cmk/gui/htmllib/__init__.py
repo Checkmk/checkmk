@@ -1128,22 +1128,13 @@ class html(ABCHTMLGenerator):
     # b) in OMD environments, add the Checkmk version to the version (prevents update problems)
     # c) load the minified javascript when not in debug mode
     def javascript_filename_for_browser(self, jsname: str) -> Optional[str]:
-        filename_for_browser = None
+        filename = f"{jsname}_min.js"
         rel_path = "share/check_mk/web/htdocs/js"
-        if config.debug:
-            min_parts = ["", "_min"]
-        else:
-            min_parts = ["_min", ""]
-
-        for min_part in min_parts:
-            fname = f"{jsname}{min_part}.js"
-            if (cmk.utils.paths.omd_root / rel_path / fname).exists() or (
-                cmk.utils.paths.omd_root / "local" / rel_path / fname
-            ).exists():
-                filename_for_browser = f"js/{jsname}{min_part}-{cmk_version.__version__}.js"
-                break
-
-        return filename_for_browser
+        if (cmk.utils.paths.omd_root / rel_path / filename).exists() or (
+            cmk.utils.paths.omd_root / "local" / rel_path / filename
+        ).exists():
+            return f"js/{jsname}_min-{cmk_version.__version__}.js"
+        return None
 
     def _css_filename_for_browser(self, css: str) -> Optional[str]:
         rel_path = f"share/check_mk/web/htdocs/{css}.css"

@@ -8,6 +8,7 @@ import re
 import uuid
 from ast import literal_eval
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
 
@@ -856,3 +857,26 @@ def test_create_folder_with_name_as_empty_string(clients: ClientRegistry) -> Non
     )
     assert r.json["detail"] == "These fields have problems: name"
     assert r.json["fields"]["name"][0] == "string '' is too short. The minimum length is 1."
+
+
+def test_openapi_folder_config_folders_with_duplicate_names_allowed_regression(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Folder.create(folder_name=None, title="a_duplicate", parent="~")
+    assert resp.json["id"] == "~a_duplicate"
+
+    resp = clients.Folder.create(folder_name=None, title="a_duplicate", parent="~")
+    assert resp.json["id"] == "~a_duplicate-2"
+
+    resp = clients.Folder.create(folder_name=None, title="a_duplicate", parent="~")
+    assert resp.json["id"] == "~a_duplicate-3"
+
+    wato_dir = Path(paths.omd_root, paths.check_mk_config_dir, "wato")
+    assert (wato_dir / "a_duplicate").exists()
+    assert (wato_dir / "a_duplicate-2").exists()
+    assert (wato_dir / "a_duplicate-3").exists()
+
+    folders = [folder["id"] for folder in clients.Folder.get_all().json["value"]]
+    assert "~a_duplicate" in folders
+    assert "~a_duplicate-2" in folders
+    assert "~a_duplicate-3" in folders

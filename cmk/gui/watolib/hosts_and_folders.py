@@ -869,6 +869,48 @@ class WithAttributes:
 class BaseFolder:
     """Base class of SearchFolder and Folder. Implements common methods"""
 
+    @staticmethod
+    def _normalize_folder_name(name: str) -> str:
+        """Transform the `name` to a filesystem friendly one.
+
+        >>> BaseFolder._normalize_folder_name("abc")
+        'abc'
+        >>> BaseFolder._normalize_folder_name("Äbc")
+        'aebc'
+        >>> BaseFolder._normalize_folder_name("../Äbc")
+        '___aebc'
+        """
+        converted = ""
+        for c in name.lower():
+            if c == "ä":
+                converted += "ae"
+            elif c == "ö":
+                converted += "oe"
+            elif c == "ü":
+                converted += "ue"
+            elif c == "ß":
+                converted += "ss"
+            elif c in "abcdefghijklmnopqrstuvwxyz0123456789-_":
+                converted += c
+            else:
+                converted += "_"
+        return converted
+
+    @staticmethod
+    def find_available_folder_name(candidate: str, parent: BaseFolder | None = None) -> str:
+        if parent is None:
+            parent = Folder.current()
+
+        basename = BaseFolder._normalize_folder_name(candidate)
+        c = 1
+        name = basename
+        while True:
+            if parent.subfolder(name) is None:
+                break
+            c += 1
+            name = "%s-%d" % (basename, c)
+        return name
+
     def hosts(self):
         raise NotImplementedError()
 

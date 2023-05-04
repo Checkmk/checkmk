@@ -22,7 +22,6 @@ from cmk.utils.type_defs.rest_api_types.site_connection import SiteConfig
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
 
-
 API_DOMAIN = Literal[
     "licensing",
     "activation_run",
@@ -647,23 +646,34 @@ class FolderClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def get_all(self, parent: str | None = None, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            query_params={"parent": parent} if parent is not None else {},
+            expect_ok=expect_ok,
+        )
+
     def create(
         self,
-        folder_name: str,
         title: str,
         parent: str,
+        folder_name: str | None = None,
         attributes: Mapping[str, Any] | None = None,
         expect_ok: bool = True,
     ) -> Response:
+        body = {
+            "title": title,
+            "parent": parent,
+            "attributes": attributes or {},
+        }
+        if folder_name is not None:
+            body["name"] = folder_name
+
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
-            body={
-                "name": folder_name,
-                "title": title,
-                "parent": parent,
-                "attributes": attributes or {},
-            },
+            body=body,
             expect_ok=expect_ok,
         )
 

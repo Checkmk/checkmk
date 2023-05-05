@@ -43,15 +43,15 @@ def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
         _sid, sensorname, *reading_levels_and_more, status_txt = [
             x.strip(" \n\t\x00") for x in line
         ]
-        status = _parse_status_txt(status_txt)
+        status_from_text = _parse_status_txt(status_txt)
         sensorname = sensorname.replace(" ", "_")
 
-        if not status.is_ok and sensorname not in section:
+        if not status_from_text.is_ok and sensorname not in section:
             continue
 
         sensor = section.setdefault(
             sensorname,
-            ipmi_utils.Sensor(status_txt=status.txt, unit=""),
+            ipmi_utils.Sensor(status_txt=status_from_text.txt, unit=""),
         )
 
         match reading_levels_and_more:
@@ -75,13 +75,15 @@ def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
                 sensor.value = _na_float(value)
                 sensor.unit = _na_str(unit)
 
-            case [_type, _status, value, unit]:
+            case [_type, status, value, unit]:
+                sensor.state = ipmi_utils.Sensor.parse_state(status)
                 sensor.value = _na_float(value)
                 sensor.unit = _na_str(unit)
 
-            case [_type, _status, value, unit, _, lower_c, lower_nc, upper_nc, upper_c, _]:
+            case [_type, status, value, unit, _, lower_c, lower_nc, upper_nc, upper_c, _]:
                 sensor.value = _na_float(value)
                 sensor.unit = _na_str(unit)
+                sensor.state = ipmi_utils.Sensor.parse_state(status)
                 sensor.crit_low = _na_float(lower_c)
                 sensor.warn_low = _na_float(lower_nc)
                 sensor.warn_high = _na_float(upper_nc)

@@ -173,6 +173,16 @@ def test_normalize_perf_data(
         ("mem_used", [("mem_used", 1)], "2.1.0b2"),
         ("mem_lnx_shmem", [("mem_lnx_shmem", 1), ("shared", 1048576), ("shmem", 1)], "2.0.0i1"),
         ("mem_lnx_shmem", [("mem_lnx_shmem", 1), ("shmem", 1)], "2.1.0b2"),
+        (
+            "fs_size",
+            [
+                (
+                    "fs_size",
+                    1,  # Bug: should be 1024**2
+                )
+            ],
+            "2.3.0",
+        ),
     ],
 )
 def test_reverse_translation_metric_name(

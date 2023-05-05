@@ -359,6 +359,7 @@ _SECTIONS = [
         "Temp_1": ipmi_utils.Sensor(
             status_txt="OK",
             unit="C",
+            state=State.OK,
             value=23.0,
             crit_low=None,
             warn_low=None,
@@ -475,7 +476,6 @@ def test_discover_ipmi_sensors(
     )
 
 
-@pytest.mark.skip("WIP, to be brought back")
 @pytest.mark.parametrize(
     [
         "item",
@@ -489,7 +489,11 @@ def test_discover_ipmi_sensors(
             {},
             _SECTIONS[2],
             [
-                Result(state=State.OK, summary="Status: OK"),
+                Result(
+                    state=State.OK,
+                    summary="Status: OK",
+                    details="Status: OK (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="21.00 C"),
                 Metric("value", 21.0, levels=(None, 48.0)),
             ],
@@ -506,7 +510,7 @@ def test_discover_ipmi_sensors(
                 Result(
                     state=State.UNKNOWN,
                     summary="Status: Presence detected",
-                    details="Monitoring state of sensor status set by user-configured rules",
+                    details="Status: Presence detected (service state set by user-configured rules)",
                 ),
             ],
         ),
@@ -524,7 +528,11 @@ def test_discover_ipmi_sensors(
             },
             _SECTIONS[1],
             [
-                Result(state=State.OK, summary="Status: OK"),
+                Result(
+                    state=State.OK,
+                    summary="Status: OK",
+                    details="Status: OK (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="3.37 V"),
                 Result(
                     state=State.CRIT, summary="Voltage_AVCC: 3.37 V (warn/crit at 1.00 V/2.00 V)"
@@ -536,7 +544,11 @@ def test_discover_ipmi_sensors(
             {},
             _SECTIONS[2],
             [
-                Result(state=State.WARN, summary="Status: nc"),
+                Result(
+                    state=State.WARN,
+                    summary="Status: nc",
+                    details="Status: nc (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="20.00 C"),
                 Metric("value", 20.0, levels=(None, 42.0)),
             ],

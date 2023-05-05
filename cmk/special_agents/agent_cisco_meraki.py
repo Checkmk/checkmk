@@ -31,6 +31,7 @@ _LOGGER = logging.getLogger("agent_cisco_meraki")
 _BASE_CACHE_FILE_DIR = Path(tmp_dir) / "agents" / "agent_cisco_meraki"
 
 _API_NAME_ORGANISATION_ID: Final = "id"
+_API_NAME_ORGANISATION_NAME: Final = "name"
 _API_NAME_DEVICE_SERIAL: Final = "serial"
 _API_NAME_DEVICE_NAME: Final = "name"
 
@@ -146,7 +147,10 @@ class GetOrganisationsByIDCache(_ABCGetOrganisationsCache):
             except meraki.exceptions.APIError as e:
                 _LOGGER.debug("Get organisation by ID %r: %r", org_id, e)
                 return _Organisation(id_=org_id, name="")
-            return _Organisation(id_=org["id"], name=org["name"])
+            return _Organisation(
+                id_=org[_API_NAME_ORGANISATION_ID],
+                name=org[_API_NAME_ORGANISATION_NAME],
+            )
 
         return [_get_organisation(org_id) for org_id in self._org_ids]
 
@@ -156,8 +160,8 @@ class GetOrganisationsCache(_ABCGetOrganisationsCache):
         try:
             return [
                 _Organisation(
-                    id_=organisation["id"],
-                    name=organisation["name"],
+                    id_=organisation[_API_NAME_ORGANISATION_ID],
+                    name=organisation[_API_NAME_ORGANISATION_NAME],
                 )
                 for organisation in self._dashboard.organizations.getOrganizations()
             ]
@@ -233,9 +237,24 @@ class MerakiOrganisation:
                     )
 
     def _get_licenses_overview(self) -> MerakiAPIData | None:
+        def _update_licenses_overview(
+            licenses_overview: dict[str, object] | None
+        ) -> MerakiAPIData | None:
+            if not licenses_overview:
+                return None
+            licenses_overview.update(
+                {
+                    "organisation_id": self.organisation["id_"],
+                    "organisation_name": self.organisation["name"],
+                }
+            )
+            return licenses_overview
+
         try:
-            return self.config.dashboard.organizations.getOrganizationLicensesOverview(
-                self.organisation_id,
+            return _update_licenses_overview(
+                self.config.dashboard.organizations.getOrganizationLicensesOverview(
+                    self.organisation_id,
+                )
             )
         except meraki.exceptions.APIError as e:
             _LOGGER.debug("Organisation ID: %r: Get license overview: %r", self.organisation_id, e)

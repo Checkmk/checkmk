@@ -216,8 +216,6 @@ def check_ipmi_summarized(
     crit_texts = []
     ok_texts = []
     skipped_texts = []
-    ambient_count = 0
-    ambient_sum = 0.0
 
     for sensor_name, sensor in section.items():
         # Skip datasets which have no valid data (zero value, no unit and state nc)
@@ -249,10 +247,6 @@ def check_ipmi_summarized(
                 sensor_state = State.worst(sensor_state, sensor_result.state)
                 txt = sensor_result.summary
 
-            if "amb" in sensor_name or "Ambient" in sensor_name:
-                ambient_count += 1
-                ambient_sum += sensor.value
-
         if sensor_state is State.WARN:
             warn_texts.append(txt)
         elif sensor_state is State.CRIT:
@@ -261,11 +255,7 @@ def check_ipmi_summarized(
             ok_texts.append(txt)
         states.append(sensor_state)
 
-    if ambient_count > 0:
-        yield Metric(
-            "ambient_temp",
-            ambient_sum / ambient_count,
-        )
+    yield from _average_ambient_temperature(section)
 
     infotexts = ["%d sensors" % len(section)]
     for title, texts, text_state in [
@@ -291,3 +281,12 @@ def check_ipmi_summarized(
         state=State.worst(*states),
         summary=' - '.join(infotexts),
     )
+
+
+def _average_ambient_temperature(section: Section) -> Iterable[Metric]:
+    if values := [
+            sensor.value
+            for sensor_name, sensor in section.items()
+            if sensor.value is not None and ("amb" in sensor_name or "Ambient" in sensor_name)
+    ]:
+        yield Metric("ambient_temp", sum(values) / float(len(values)))

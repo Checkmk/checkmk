@@ -213,10 +213,8 @@ SECTION_IPMI_DISCRETE = ipmi.parse_ipmi(
      [u'Pwr Unit Stat    ', u' 01h ', u' ok ', u' 21.1 ', u''],
      [u'Power Redundancy ', u' 02h ', u' ok ', u' 21.1 ', u' Fully Redundant'],
      [u'BMC Watchdog     ', u' 03h ', u' ok ', u'  7.1 ', u''],
-     [
-         u'PS1 Status       ', u' C8h ', u' ok ', u' 10.1 ',
-         u' Presence detected, Failure detected     <= NOT OK !!'
-     ], [u'PS2 Status       ', u' C9h ', u' ok ', u' 10.2 ', u' Presence detected'],
+     [u'PS1 Status       ', u' C8h ', u' ok ', u' 10.1 ', u' Presence detected, Failure detected'],
+     [u'PS2 Status       ', u' C9h ', u' ok ', u' 10.2 ', u' Presence detected'],
      ["Drive 4          ", " 64h ", " ok  ", "  4.4 ", " Drive Present, Drive Fault"]])
 
 
@@ -360,484 +358,275 @@ def test_regression_discovery(
     discovery_params: ipmi_utils.DiscoveryParams,
     discovery_results: DiscoveryResult,
 ) -> None:
-    assert (list(ipmi.discover_ipmi(
+    assert list(ipmi.discover_ipmi(
         discovery_params,
         SECTION_IPMI,
         SECTION_IPMI_DISCRETE,
-    )) == discovery_results)
+    )) == discovery_results
 
 
-@pytest.mark.parametrize('item, check_results', [
-    ('Summary', [
-        Metric('ambient_temp', 18.5),
-        Result(
-            state=State.CRIT,
-            summary=
-            '147 sensors - 104 OK - 1 WARN: FAN5_SYS (nc) - 2 CRIT: PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!)), Drive_4 (ok (Drive Present, Drive Fault)) - 40 skipped',
-        )
-    ]),
-    ('CMOS_Battery', [Result(state=State.OK, summary='Status: ok')]),
-    ('ROMB_Battery', [Result(state=State.OK, summary='Status: ok')]),
-    ('VCORE', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('1.2V_VDDR', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_1.8V_AUX_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_1.2V_AUX_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('1.2V_LOM_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('8V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('1.2V_AUX_LOM_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('5V_IO_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('5V_CPU_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('3.3V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('1.8V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('1.1V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('Mem1_0.75V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('Mem2_0.75V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('Mem3_0.75V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('Mem4_0.75V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('Mem5_0.75V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('Mem6_0.75V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('Mem7_0.75V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('Mem8_0.75V_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_PLX_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_1.2V_NBSB_PG', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_2.5V_CPU1', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_2.5V_CPU2', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_2.5V_CPU3', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_2.5V_CPU4', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_1.2V_CPU1', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_1.2V_CPU2', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_1.2V_CPU3', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_1.2V_CPU4', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_1.5V_MEM1', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_1.5V_MEM2', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_1.5V_MEM3', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_1.5V_MEM4', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_PSI_MEM1', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_PSI_MEM2', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_PSI_MEM3', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('VR_PSI_MEM4', [
-        Result(state=State.OK,
-               summary='Status: ok (State Deasserted)',
-               details='Status: ok (State Deasserted)')
-    ]),
-    ('Heatsink_Pres', [Result(state=State.OK, summary='Status: ok (Present)')]),
-    ('iDRAC6_Ent_Pres', [Result(state=State.OK, summary='Status: ok (Present)')]),
-    ('USB_Cable_Pres', [Result(state=State.OK, summary='Status: ok (Present)')]),
-    ('Stor_Adapt_Pres', [Result(state=State.OK, summary='Status: ok (Present)')]),
-    ('C_Riser_Pres', [Result(state=State.OK, summary='Status: ok (Present)')]),
-    ('L_Riser_Pres', [Result(state=State.OK, summary='Status: ok (Present)')]),
-    ('Presence', [Result(state=State.OK, summary='Status: ok (Present)')]),
-    ('Status', [
-        Result(state=State.OK,
-               summary='Status: ok (Presence detected)',
-               details='Status: ok (Presence detected)')
-    ]),
-    ('Riser_Config', [Result(state=State.OK, summary='Status: ok (Connected)')]),
-    ('OS_Watchdog', [Result(state=State.OK, summary='Status: ok')]),
-    ('Intrusion', [Result(state=State.OK, summary='Status: ok')]),
-    ('PS_Redundancy', [
-        Result(state=State.OK,
-               summary='Status: ok (Fully Redundant)',
-               details='Status: ok (Fully Redundant)')
-    ]),
-    ('Fan_Redundancy', [
-        Result(state=State.OK,
-               summary='Status: ok (Fully Redundant)',
-               details='Status: ok (Fully Redundant)')
-    ]),
-    ('Power_Optimized', [
-        Result(state=State.OK,
-               summary='Status: ok (OEM Specific)',
-               details='Status: ok (OEM Specific)')
-    ]),
-    ('Drive', [
-        Result(state=State.OK,
-               summary='Status: ok (Drive Present)',
-               details='Status: ok (Drive Present)')
-    ]),
-    ('Cable_SAS_A', [Result(state=State.OK, summary='Status: ok (Connected)')]),
-    ('Cable_SAS_B', [Result(state=State.OK, summary='Status: ok (Connected)')]),
-    ('DKM_Status', [Result(state=State.OK, summary='Status: ok')]),
-    ('VFlash', [Result(state=State.OK, summary='Status: ok')]),
-    ('PS3_Status', [
-        Result(state=State.OK,
-               summary='Status: ok (Presence detected)',
-               details='Status: ok (Presence detected)')
-    ]),
-    ('PS4_Status', [
-        Result(state=State.OK,
-               summary='Status: ok (Presence detected)',
-               details='Status: ok (Presence detected)')
-    ]),
-    ('Pwr_Unit_Stat', [Result(state=State.OK, summary='Status: ok')]),
-    ('Power_Redundancy', [
-        Result(state=State.OK,
-               summary='Status: ok (Fully Redundant)',
-               details='Status: ok (Fully Redundant)')
-    ]),
-    ('BMC_Watchdog', [Result(state=State.OK, summary='Status: ok')]),
-    ('PS1_Status', [
-        Result(state=State.CRIT,
-               summary='Status: ok (Presence detected, Failure detected     <= NOT OK !!)',
-               details='Status: ok (Presence detected, Failure detected     <= NOT OK !!)')
-    ]),
-    ('PS2_Status', [
-        Result(state=State.OK,
-               summary='Status: ok (Presence detected)',
-               details='Status: ok (Presence detected)')
-    ]),
-    ('Ambient', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='18.50 degrees_C'),
-        Metric('Ambient', 18.5, levels=(37.0, 42.0))
-    ]),
-    ('Systemboard', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='28.00 degrees_C'),
-        Metric('Systemboard', 28.0, levels=(75.0, 80.0))
-    ]),
-    ('CPU', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='33.00 degrees_C'),
-        Metric('CPU', 33.0, levels=(95.0, 99.0))
-    ]),
-    ('MEM_A', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='21.00 degrees_C'),
-        Metric('MEM_A', 21.0, levels=(78.0, 82.0))
-    ]),
-    ('MEM_B', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='21.00 degrees_C'),
-        Metric('MEM_B', 21.0, levels=(78.0, 82.0))
-    ]),
-    ('PSU1_Inlet', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='29.00 degrees_C'),
-        Metric('PSU1_Inlet', 29.0, levels=(57.0, 61.0))
-    ]),
-    ('PSU2_Inlet', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='28.00 degrees_C'),
-        Metric('PSU2_Inlet', 28.0, levels=(57.0, 61.0))
-    ]),
-    ('PSU1', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='56.00 degrees_C'),
-        Metric('PSU1', 56.0, levels=(102.0, 107.0))
-    ]),
-    ('PSU2', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='58.00 degrees_C'),
-        Metric('PSU2', 58.0, levels=(102.0, 107.0))
-    ]),
-    ('BATT_3.0V', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='3.27 Volts'),
-        Metric('BATT_3.0V', 3.27, levels=(None, 3.495))
-    ]),
-    ('STBY_3.3V', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='3.35 Volts'),
-        Metric('STBY_3.3V', 3.35, levels=(None, 3.567))
-    ]),
-    ('iRMC_1.8V_STBY', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='1.79 Volts'),
-        Metric('iRMC_1.8V_STBY', 1.79, levels=(None, 1.93))
-    ]),
-    ('iRMC_1.5V_STBY', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='1.50 Volts'),
-        Metric('iRMC_1.5V_STBY', 1.5, levels=(None, 1.61))
-    ]),
-    ('iRMC_1.0V_STBY', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='0.98 Volts'),
-        Metric('iRMC_1.0V_STBY', 0.98, levels=(None, 1.08))
-    ]),
-    ('MAIN_12V', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='12.54 Volts'),
-        Metric('MAIN_12V', 12.54, levels=(None, 12.96))
-    ]),
-    ('MAIN_5V', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='5.21 Volts'),
-        Metric('MAIN_5V', 5.212, levels=(None, 5.4))
-    ]),
-    ('MAIN_3.3V', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='3.33 Volts'),
-        Metric('MAIN_3.3V', 3.333, levels=(None, 3.567))
-    ]),
-    ('MEM_1.35V', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='1.36 Volts'),
-        Metric('MEM_1.35V', 1.36, levels=(None, 1.61))
-    ]),
-    ('PCH_1.05V', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='1.04 Volts'),
-        Metric('PCH_1.05V', 1.04, levels=(None, 1.13))
-    ]),
-    ('MEM_VTT_0.68V', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='0.66 Volts'),
-        Metric('MEM_VTT_0.68V', 0.66, levels=(None, 0.81))
-    ]),
-    ('FAN1_SYS', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='5160.00 RPM'),
-        Metric('FAN1_SYS', 5160.0)
-    ]),
-    ('FAN2_SYS', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='2400.00 RPM'),
-        Metric('FAN2_SYS', 2400.0)
-    ]),
-    ('FAN3_SYS', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='2400.00 RPM'),
-        Metric('FAN3_SYS', 2400.0)
-    ]),
-    ('FAN4_SYS', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='1980.00 RPM'),
-        Metric('FAN4_SYS', 1980.0)
-    ]),
-    ('FAN5_SYS', [
-        Result(state=State.WARN, summary='Status: nc'),
-        Result(state=State.OK, summary='2280.00 RPM'),
-        Metric('FAN5_SYS', 2280.0)
-    ]),
-    ('FAN_PSU1', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='2320.00 RPM'),
-        Metric('FAN_PSU1', 2320.0)
-    ]),
-    ('FAN_PSU2', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='2400.00 RPM'),
-        Metric('FAN_PSU2', 2400.0)
-    ]),
-    ('PSU1_Power', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='18.00 Watts'),
-        Metric('PSU1_Power', 18.0)
-    ]),
-    ('PSU2_Power', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='30.00 Watts'),
-        Metric('PSU2_Power', 30.0)
-    ]),
-    ('Total_Power', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='48.00 Watts'),
-        Metric('Total_Power', 48.0, levels=(None, 498.0))
-    ]),
-    ('Total_Power_Out', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='33.00 Watts'),
-        Metric('Total_Power_Out', 33.0)
-    ]),
-    ('I2C1_error_ratio', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='0.00 %'),
-        Metric('I2C1_error_ratio', 0.0, levels=(10.0, 20.0))
-    ]),
-    ('I2C2_error_ratio', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='0.00 %'),
-        Metric('I2C2_error_ratio', 0.0, levels=(10.0, 20.0))
-    ]),
-    ('I2C3_error_ratio', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='0.00 %'),
-        Metric('I2C3_error_ratio', 0.0, levels=(10.0, 20.0))
-    ]),
-    ('I2C4_error_ratio', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='0.00 %'),
-        Metric('I2C4_error_ratio', 0.0, levels=(10.0, 20.0))
-    ]),
-    ('I2C5_error_ratio', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='0.00 %'),
-        Metric('I2C5_error_ratio', 0.0, levels=(10.0, 20.0))
-    ]),
-    ('I2C6_error_ratio', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='0.00 %'),
-        Metric('I2C6_error_ratio', 0.0, levels=(10.0, 20.0))
-    ]),
-    ('I2C7_error_ratio', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='0.00 %'),
-        Metric('I2C7_error_ratio', 0.0, levels=(10.0, 20.0))
-    ]),
-    ('I2C8_error_ratio', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='0.00 %'),
-        Metric('I2C8_error_ratio', 0.0, levels=(10.0, 20.0))
-    ]),
-    ('SEL_Level', [
-        Result(state=State.OK, summary='Status: ok'),
-        Result(state=State.OK, summary='0.00 %'),
-        Metric('SEL_Level', 0.0, levels=(90.0, None))
-    ]),
-    ('Drive_4', [
-        Result(state=State.CRIT, summary='Status: ok (Drive Present, Drive Fault)'),
-    ]),
-])
+@pytest.mark.parametrize(
+    "item, check_results",
+    [
+        (
+            "Summary",
+            [
+                Metric("ambient_temp", 18.5),
+                Result(state=State.OK, summary="147 sensors in total"),
+                Result(state=State.OK, summary="104 sensors ok"),
+                Result(state=State.OK, notice="CMOS_Battery (ok)"),
+                Result(state=State.OK, notice="ROMB_Battery (ok)"),
+                Result(state=State.OK, notice="VCORE (ok (State Deasserted))"),
+                Result(state=State.OK, notice="1.2V_VDDR (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_1.8V_AUX_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_1.2V_AUX_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="1.2V_LOM_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="8V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="1.2V_AUX_LOM_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="5V_IO_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="5V_CPU_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="3.3V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="1.8V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="1.1V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="Mem1_0.75V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="Mem2_0.75V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="Mem3_0.75V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="Mem4_0.75V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="Mem5_0.75V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="Mem6_0.75V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="Mem7_0.75V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="Mem8_0.75V_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_PLX_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_1.2V_NBSB_PG (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_2.5V_CPU1 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_2.5V_CPU2 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_2.5V_CPU3 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_2.5V_CPU4 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_1.2V_CPU1 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_1.2V_CPU2 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_1.2V_CPU3 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_1.2V_CPU4 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_1.5V_MEM1 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_1.5V_MEM2 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_1.5V_MEM3 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_1.5V_MEM4 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_PSI_MEM1 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_PSI_MEM2 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_PSI_MEM3 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="VR_PSI_MEM4 (ok (State Deasserted))"),
+                Result(state=State.OK, notice="Heatsink_Pres (ok (Present))"),
+                Result(state=State.OK, notice="iDRAC6_Ent_Pres (ok (Present))"),
+                Result(state=State.OK, notice="USB_Cable_Pres (ok (Present))"),
+                Result(state=State.OK, notice="Stor_Adapt_Pres (ok (Present))"),
+                Result(state=State.OK, notice="C_Riser_Pres (ok (Present))"),
+                Result(state=State.OK, notice="L_Riser_Pres (ok (Present))"),
+                Result(state=State.OK, notice="Presence (ok (Present))"),
+                Result(state=State.OK, notice="Status (ok (Presence detected))"),
+                Result(state=State.OK, notice="Riser_Config (ok (Connected))"),
+                Result(state=State.OK, notice="OS_Watchdog (ok)"),
+                Result(state=State.OK, notice="Intrusion (ok)"),
+                Result(state=State.OK, notice="PS_Redundancy (ok (Fully Redundant))"),
+                Result(state=State.OK, notice="Fan_Redundancy (ok (Fully Redundant))"),
+                Result(state=State.OK, notice="Power_Optimized (ok (OEM Specific))"),
+                Result(state=State.OK, notice="Drive (ok (Drive Present))"),
+                Result(state=State.OK, notice="Cable_SAS_A (ok (Connected))"),
+                Result(state=State.OK, notice="Cable_SAS_B (ok (Connected))"),
+                Result(state=State.OK, notice="DKM_Status (ok)"),
+                Result(state=State.OK, notice="VFlash (ok)"),
+                Result(state=State.OK, notice="PS3_Status (ok (Presence detected))"),
+                Result(state=State.OK, notice="PS4_Status (ok (Presence detected))"),
+                Result(state=State.OK, notice="Pwr_Unit_Stat (ok)"),
+                Result(state=State.OK, notice="Power_Redundancy (ok (Fully Redundant))"),
+                Result(state=State.OK, notice="BMC_Watchdog (ok)"),
+                Result(state=State.OK, notice="PS2_Status (ok (Presence detected))"),
+                Result(state=State.OK, notice="Ambient (ok)"),
+                Result(state=State.OK, notice="Systemboard (ok)"),
+                Result(state=State.OK, notice="CPU (ok)"),
+                Result(state=State.OK, notice="MEM_A (ok)"),
+                Result(state=State.OK, notice="MEM_B (ok)"),
+                Result(state=State.OK, notice="PSU1_Inlet (ok)"),
+                Result(state=State.OK, notice="PSU2_Inlet (ok)"),
+                Result(state=State.OK, notice="PSU1 (ok)"),
+                Result(state=State.OK, notice="PSU2 (ok)"),
+                Result(state=State.OK, notice="BATT_3.0V (ok)"),
+                Result(state=State.OK, notice="STBY_3.3V (ok)"),
+                Result(state=State.OK, notice="iRMC_1.8V_STBY (ok)"),
+                Result(state=State.OK, notice="iRMC_1.5V_STBY (ok)"),
+                Result(state=State.OK, notice="iRMC_1.0V_STBY (ok)"),
+                Result(state=State.OK, notice="MAIN_12V (ok)"),
+                Result(state=State.OK, notice="MAIN_5V (ok)"),
+                Result(state=State.OK, notice="MAIN_3.3V (ok)"),
+                Result(state=State.OK, notice="MEM_1.35V (ok)"),
+                Result(state=State.OK, notice="PCH_1.05V (ok)"),
+                Result(state=State.OK, notice="MEM_VTT_0.68V (ok)"),
+                Result(state=State.OK, notice="FAN1_SYS (ok)"),
+                Result(state=State.OK, notice="FAN2_SYS (ok)"),
+                Result(state=State.OK, notice="FAN3_SYS (ok)"),
+                Result(state=State.OK, notice="FAN4_SYS (ok)"),
+                Result(state=State.OK, notice="FAN_PSU1 (ok)"),
+                Result(state=State.OK, notice="FAN_PSU2 (ok)"),
+                Result(state=State.OK, notice="PSU1_Power (ok)"),
+                Result(state=State.OK, notice="PSU2_Power (ok)"),
+                Result(state=State.OK, notice="Total_Power (ok)"),
+                Result(state=State.OK, notice="Total_Power_Out (ok)"),
+                Result(state=State.OK, notice="I2C1_error_ratio (ok)"),
+                Result(state=State.OK, notice="I2C2_error_ratio (ok)"),
+                Result(state=State.OK, notice="I2C3_error_ratio (ok)"),
+                Result(state=State.OK, notice="I2C4_error_ratio (ok)"),
+                Result(state=State.OK, notice="I2C5_error_ratio (ok)"),
+                Result(state=State.OK, notice="I2C6_error_ratio (ok)"),
+                Result(state=State.OK, notice="I2C7_error_ratio (ok)"),
+                Result(state=State.OK, notice="I2C8_error_ratio (ok)"),
+                Result(state=State.OK, notice="SEL_Level (ok)"),
+                Result(state=State.WARN, summary="1 sensors warning"),
+                Result(state=State.WARN, summary="FAN5_SYS (nc)"),
+                Result(state=State.CRIT, summary="2 sensors critical"),
+                Result(
+                    state=State.CRIT,
+                    summary="PS1_Status (ok (Presence detected, Failure detected))",
+                ),
+                Result(state=State.CRIT, summary="Drive_4 (ok (Drive Present, Drive Fault))"),
+                Result(state=State.OK, summary="40 sensors skipped"),
+                Result(state=State.OK, notice="NB_THERMTRIP (ns (Disabled))"),
+                Result(state=State.OK, notice="PFault_Fail_Safe (ns (No Reading))"),
+                Result(state=State.OK, notice="SEL (ns (No Reading))"),
+                Result(state=State.OK, notice="SD1_Status (ns (Disabled))"),
+                Result(state=State.OK, notice="SD2_Status (ns (Disabled))"),
+                Result(state=State.OK, notice="SD_Redundancy (ns (Disabled))"),
+                Result(state=State.OK, notice="ECC_Corr_Err (ns (No Reading))"),
+                Result(state=State.OK, notice="ECC_Uncorr_Err (ns (No Reading))"),
+                Result(state=State.OK, notice="I/O_Channel_Chk (ns (No Reading))"),
+                Result(state=State.OK, notice="PCI_Parity_Err (ns (No Reading))"),
+                Result(state=State.OK, notice="PCI_System_Err (ns (No Reading))"),
+                Result(state=State.OK, notice="SBE_Log_Disabled (ns (No Reading))"),
+                Result(state=State.OK, notice="Logging_Disabled (ns (No Reading))"),
+                Result(state=State.OK, notice="Unknown (ns (No Reading))"),
+                Result(state=State.OK, notice="CPU_Protocol_Err (ns (No Reading))"),
+                Result(state=State.OK, notice="CPU_Bus_PERR (ns (No Reading))"),
+                Result(state=State.OK, notice="CPU_Init_Err (ns (No Reading))"),
+                Result(state=State.OK, notice="CPU_Machine_Chk (ns (No Reading))"),
+                Result(state=State.OK, notice="Memory_Spared (ns (No Reading))"),
+                Result(state=State.OK, notice="Memory_Mirrored (ns (No Reading))"),
+                Result(state=State.OK, notice="Memory_RAID (ns (No Reading))"),
+                Result(state=State.OK, notice="Memory_Added (ns (No Reading))"),
+                Result(state=State.OK, notice="Memory_Removed (ns (No Reading))"),
+                Result(state=State.OK, notice="Memory_Cfg_Err (ns (No Reading))"),
+                Result(state=State.OK, notice="Mem_Redun_Gain (ns (No Reading))"),
+                Result(state=State.OK, notice="PCIE_Fatal_Err (ns (No Reading))"),
+                Result(state=State.OK, notice="Chipset_Err (ns (No Reading))"),
+                Result(state=State.OK, notice="Err_Reg_Pointer (ns (No Reading))"),
+                Result(state=State.OK, notice="Mem_ECC_Warning (ns (No Reading))"),
+                Result(state=State.OK, notice="Mem_CRC_Err (ns (No Reading))"),
+                Result(state=State.OK, notice="USB_Over-current (ns (No Reading))"),
+                Result(state=State.OK, notice="POST_Err (ns (No Reading))"),
+                Result(state=State.OK, notice="Hdwr_version_err (ns (No Reading))"),
+                Result(state=State.OK, notice="Mem_Overtemp (ns (No Reading))"),
+                Result(state=State.OK, notice="Mem_Fatal_SB_CRC (ns (No Reading))"),
+                Result(state=State.OK, notice="Mem_Fatal_NB_CRC (ns (No Reading))"),
+                Result(state=State.OK, notice="OS_Watchdog_Time (ns (No Reading))"),
+                Result(state=State.OK, notice="Non_Fatal_PCI_Er (ns (No Reading))"),
+                Result(state=State.OK, notice="Fatal_IO_Error (ns (No Reading))"),
+                Result(state=State.OK, notice="MSR_Info_Log (ns (No Reading))"),
+            ],
+        ),
+        ("CMOS_Battery", [Result(state=State.OK, summary="Status: ok")]),
+        (
+            "VR_PSI_MEM3",
+            [Result(
+                state=State.OK,
+                summary="Status: ok (State Deasserted)",
+            )],
+        ),
+        (
+            "Drive",
+            [Result(
+                state=State.OK,
+                summary="Status: ok (Drive Present)",
+            )],
+        ),
+        ("Cable_SAS_A", [Result(state=State.OK, summary="Status: ok (Connected)")]),
+        (
+            "Power_Redundancy",
+            [Result(
+                state=State.OK,
+                summary="Status: ok (Fully Redundant)",
+            )],
+        ),
+        (
+            "PS1_Status",
+            [Result(
+                state=State.CRIT,
+                summary="Status: ok (Presence detected, Failure detected)",
+            )],
+        ),
+        (
+            "Ambient",
+            [
+                Result(state=State.OK, summary="Status: ok"),
+                Result(state=State.OK, summary="18.50 degrees_C"),
+                Metric("Ambient", 18.5, levels=(37.0, 42.0)),
+            ],
+        ),
+        (
+            "PSU2",
+            [
+                Result(state=State.OK, summary="Status: ok"),
+                Result(state=State.OK, summary="58.00 degrees_C"),
+                Metric("PSU2", 58.0, levels=(102.0, 107.0)),
+            ],
+        ),
+        (
+            "MEM_1.35V",
+            [
+                Result(state=State.OK, summary="Status: ok"),
+                Result(state=State.OK, summary="1.36 Volts"),
+                Metric("MEM_1.35V", 1.36, levels=(None, 1.61)),
+            ],
+        ),
+        (
+            "FAN1_SYS",
+            [
+                Result(state=State.OK, summary="Status: ok"),
+                Result(state=State.OK, summary="5160.00 RPM"),
+                Metric("FAN1_SYS", 5160.0),
+            ],
+        ),
+        (
+            "Total_Power",
+            [
+                Result(state=State.OK, summary="Status: ok"),
+                Result(state=State.OK, summary="48.00 Watts"),
+                Metric("Total_Power", 48.0, levels=(None, 498.0)),
+            ],
+        ),
+        (
+            "I2C8_error_ratio",
+            [
+                Result(state=State.OK, summary="Status: ok"),
+                Result(state=State.OK, summary="0.00 %"),
+                Metric("I2C8_error_ratio", 0.0, levels=(10.0, 20.0)),
+            ],
+        ),
+        (
+            "SEL_Level",
+            [
+                Result(state=State.OK, summary="Status: ok"),
+                Result(state=State.OK, summary="0.00 %"),
+                Metric("SEL_Level", 0.0, levels=(90.0, None)),
+            ],
+        ),
+        (
+            "Drive_4",
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Status: ok (Drive Present, Drive Fault)",
+                    details="Status: ok (Drive Present, Drive Fault)",
+                )
+            ],
+        ),
+    ],
+)
 def test_regression_check(
     item: str,
     check_results: CheckResult,

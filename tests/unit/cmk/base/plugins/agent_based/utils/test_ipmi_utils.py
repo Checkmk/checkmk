@@ -328,90 +328,171 @@ SECTION = {
 }
 
 
-@pytest.mark.parametrize('params, status_txt_mapping, exp_result', [
-    (
-        {},
-        lambda txt: State.OK,
-        [
-            Metric('ambient_temp', 18.5),
-            Result(state=State.OK, summary='10 sensors OK'),
-        ],
-    ),
-    (
-        {},
-        lambda txt: ('Failure detected' in txt and State.CRIT) or
-        ('State Deasserted' in txt and State.WARN or State.OK),
-        [
-            Metric('ambient_temp', 18.5),
-            Result(
-                state=State.CRIT,
-                summary=
-                '10 sensors - 8 OK - 1 WARN: VCORE (ok (State Deasserted)) - 1 CRIT: PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!))',
-                details=
-                '10 sensors - 8 OK - 1 WARN: VCORE (ok (State Deasserted)) - 1 CRIT: PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!))'
-            )
-        ],
-    ),
-    (
-        ({
-            "ignored_sensors": ["CPU", "VCORE"]
-        }),
-        lambda txt: State.OK,
-        [
-            Metric('ambient_temp', 18.5),
-            Result(state=State.OK,
-                   summary='10 sensors - 8 OK - 2 skipped',
-                   details='10 sensors - 8 OK - 2 skipped'),
-        ],
-    ),
-    (
-        ({
-            "ignored_sensorstates": ["ns", "nr", "na"]
-        }),
-        lambda txt: State.OK,
-        [
-            Metric('ambient_temp', 18.5),
-            Result(state=State.OK,
-                   summary='10 sensors - 9 OK - 1 skipped',
-                   details='10 sensors - 9 OK - 1 skipped'),
-        ],
-    ),
-    (
-        ({
-            "ignored_sensorstates": ["ns", "nr", "na"],
-            'sensor_states': [('ok', 1)],
-        }),
-        lambda txt: State.OK,
-        [
-            Metric('ambient_temp', 18.5),
-            Result(
-                state=State.WARN,
-                summary=
-                '10 sensors - 9 WARN: Ambient (ok), CPU (ok), I2C4_error_ratio (ok), PCH_1.05V (ok), Total_Power (ok), CMOS_Battery (ok), PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!)), Power_Redundancy (ok (Fully Redundant)), VCORE (ok (State Deasserted)) - 1 skipped',
-                details=
-                '10 sensors - 9 WARN: Ambient (ok), CPU (ok), I2C4_error_ratio (ok), PCH_1.05V (ok), Total_Power (ok), CMOS_Battery (ok), PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!)), Power_Redundancy (ok (Fully Redundant)), VCORE (ok (State Deasserted)) - 1 skipped'
-            ),
-        ],
-    ),
-    (
-        ({
-            'numerical_sensor_levels': [('PCH_1.05V', {
-                'upper': (1.0, 4.0),
-            })]
-        }),
-        lambda txt: State.OK,
-        [
-            Metric('ambient_temp', 18.5),
-            Result(
-                state=State.WARN,
-                summary=
-                '10 sensors - 9 OK - 1 WARN: PCH_1.05V: 1.04 Volts (warn/crit at 1.00 Volts/4.00 Volts)',
-                details=
-                '10 sensors - 9 OK - 1 WARN: PCH_1.05V: 1.04 Volts (warn/crit at 1.00 Volts/4.00 Volts)'
-            )
-        ],
-    ),
-])
+@pytest.mark.parametrize(
+    "params, status_txt_mapping, exp_result",
+    [
+        (
+            {},
+            lambda txt: State.OK,
+            [
+                Metric("ambient_temp", 18.5),
+                Result(state=State.OK, summary="10 sensors in total"),
+                Result(state=State.OK, summary="10 sensors ok"),
+                Result(state=State.OK, notice="Ambient (ok)"),
+                Result(state=State.OK, notice="CPU (ok)"),
+                Result(state=State.OK, notice="I2C4_error_ratio (ok)"),
+                Result(state=State.OK, notice="PCH_1.05V (ok)"),
+                Result(state=State.OK, notice="Total_Power (ok)"),
+                Result(state=State.OK, notice="CMOS_Battery (ok)"),
+                Result(state=State.OK, notice="MSR_Info_Log (ns (No Reading))"),
+                Result(
+                    state=State.OK,
+                    notice="PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!))",
+                ),
+                Result(state=State.OK, notice="Power_Redundancy (ok (Fully Redundant))"),
+                Result(state=State.OK, notice="VCORE (ok (State Deasserted))"),
+            ],
+        ),
+        (
+            {},
+            lambda txt: ("Failure detected" in txt and State.CRIT) or
+            ("State Deasserted" in txt and State.WARN or State.OK),
+            [
+                Metric("ambient_temp", 18.5),
+                Result(state=State.OK, summary="10 sensors in total"),
+                Result(state=State.OK, summary="8 sensors ok"),
+                Result(state=State.OK, notice="Ambient (ok)"),
+                Result(state=State.OK, notice="CPU (ok)"),
+                Result(state=State.OK, notice="I2C4_error_ratio (ok)"),
+                Result(state=State.OK, notice="PCH_1.05V (ok)"),
+                Result(state=State.OK, notice="Total_Power (ok)"),
+                Result(state=State.OK, notice="CMOS_Battery (ok)"),
+                Result(state=State.OK, notice="MSR_Info_Log (ns (No Reading))"),
+                Result(state=State.OK, notice="Power_Redundancy (ok (Fully Redundant))"),
+                Result(state=State.WARN, summary="1 sensors warning"),
+                Result(state=State.WARN, summary="VCORE (ok (State Deasserted))"),
+                Result(state=State.CRIT, summary="1 sensors critical"),
+                Result(
+                    state=State.CRIT,
+                    summary="PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!))",
+                ),
+            ],
+        ),
+        (
+            ({
+                "ignored_sensors": ["CPU", "VCORE"]
+            }),
+            lambda txt: State.OK,
+            [
+                Metric("ambient_temp", 18.5),
+                Result(state=State.OK, summary="10 sensors in total"),
+                Result(state=State.OK, summary="8 sensors ok"),
+                Result(state=State.OK, notice="Ambient (ok)"),
+                Result(state=State.OK, notice="I2C4_error_ratio (ok)"),
+                Result(state=State.OK, notice="PCH_1.05V (ok)"),
+                Result(state=State.OK, notice="Total_Power (ok)"),
+                Result(state=State.OK, notice="CMOS_Battery (ok)"),
+                Result(state=State.OK, notice="MSR_Info_Log (ns (No Reading))"),
+                Result(
+                    state=State.OK,
+                    notice="PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!))",
+                ),
+                Result(state=State.OK, notice="Power_Redundancy (ok (Fully Redundant))"),
+                Result(state=State.OK, summary="2 sensors skipped"),
+                Result(state=State.OK, notice="CPU (ok)"),
+                Result(state=State.OK, notice="VCORE (ok (State Deasserted))"),
+            ],
+        ),
+        (
+            ({
+                "ignored_sensorstates": ["ns", "nr", "na"]
+            }),
+            lambda txt: State.OK,
+            [
+                Metric("ambient_temp", 18.5),
+                Result(state=State.OK, summary="10 sensors in total"),
+                Result(state=State.OK, summary="9 sensors ok"),
+                Result(state=State.OK, notice="Ambient (ok)"),
+                Result(state=State.OK, notice="CPU (ok)"),
+                Result(state=State.OK, notice="I2C4_error_ratio (ok)"),
+                Result(state=State.OK, notice="PCH_1.05V (ok)"),
+                Result(state=State.OK, notice="Total_Power (ok)"),
+                Result(state=State.OK, notice="CMOS_Battery (ok)"),
+                Result(
+                    state=State.OK,
+                    notice="PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!))",
+                ),
+                Result(state=State.OK, notice="Power_Redundancy (ok (Fully Redundant))"),
+                Result(state=State.OK, notice="VCORE (ok (State Deasserted))"),
+                Result(state=State.OK, summary="1 sensors skipped"),
+                Result(state=State.OK, notice="MSR_Info_Log (ns (No Reading))"),
+            ],
+        ),
+        (
+            ({
+                "ignored_sensorstates": ["ns", "nr", "na"],
+                "sensor_states": [("ok", 1)],
+            }),
+            lambda txt: State.OK,
+            [
+                Metric("ambient_temp", 18.5),
+                Result(
+                    state=State.OK,
+                    summary="10 sensors in total",
+                ),
+                Result(state=State.WARN, summary="9 sensors warning"),
+                Result(state=State.WARN, summary="Ambient (ok)"),
+                Result(state=State.WARN, summary="CPU (ok)"),
+                Result(state=State.WARN, summary="I2C4_error_ratio (ok)"),
+                Result(state=State.WARN, summary="PCH_1.05V (ok)"),
+                Result(state=State.WARN, summary="Total_Power (ok)"),
+                Result(state=State.WARN, summary="CMOS_Battery (ok)"),
+                Result(
+                    state=State.WARN,
+                    summary="PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!))",
+                ),
+                Result(state=State.WARN, summary="Power_Redundancy (ok (Fully Redundant))"),
+                Result(state=State.WARN, summary="VCORE (ok (State Deasserted))"),
+                Result(state=State.OK, summary="1 sensors skipped"),
+                Result(state=State.OK, notice="MSR_Info_Log (ns (No Reading))"),
+            ],
+        ),
+        (
+            ({
+                "numerical_sensor_levels": [(
+                    "PCH_1.05V",
+                    {
+                        "upper": (1.0, 4.0),
+                    },
+                )]
+            }),
+            lambda txt: State.OK,
+            [
+                Metric("ambient_temp", 18.5),
+                Result(state=State.OK, summary="10 sensors in total"),
+                Result(state=State.OK, summary="9 sensors ok"),
+                Result(state=State.OK, notice="Ambient (ok)"),
+                Result(state=State.OK, notice="CPU (ok)"),
+                Result(state=State.OK, notice="I2C4_error_ratio (ok)"),
+                Result(state=State.OK, notice="Total_Power (ok)"),
+                Result(state=State.OK, notice="CMOS_Battery (ok)"),
+                Result(state=State.OK, notice="MSR_Info_Log (ns (No Reading))"),
+                Result(
+                    state=State.OK,
+                    notice=
+                    "PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!))",  # then why is it ok?
+                ),
+                Result(state=State.OK, notice="Power_Redundancy (ok (Fully Redundant))"),
+                Result(state=State.OK, notice="VCORE (ok (State Deasserted))"),
+                Result(state=State.WARN, summary="1 sensors warning"),
+                Result(
+                    state=State.WARN,
+                    summary="PCH_1.05V: 1.04 Volts (warn/crit at 1.00 Volts/4.00 Volts)",
+                ),
+            ],
+        ),
+    ],
+)
 def test_check_ipmi_summarized(params, status_txt_mapping, exp_result):
     assert list(ipmi.check_ipmi_summarized(
         params,

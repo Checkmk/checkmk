@@ -544,7 +544,7 @@ class Mailbox:
 
 
 def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_ews: bool) -> Args:
-    protocols = {"IMAP", "POP", "EWS"} if allow_ews else {"IMAP", "POP"}
+    protocols = {"IMAP", "POP3", "EWS"} if allow_ews else {"IMAP", "POP3"}
     parser.formatter_class = argparse.RawTextHelpFormatter
     parser.add_argument(
         "--debug",

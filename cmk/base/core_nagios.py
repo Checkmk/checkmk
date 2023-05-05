@@ -78,16 +78,21 @@ class NagiosCore(core_config.MonitoringCore):
     def is_cmc() -> Literal[False]:
         return False
 
-    def create_config(
+    def _create_config(
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        licensing_handler: LicensingHandler,
         hosts_to_update: HostsToUpdate = None,
     ) -> None:
-        self._create_core_config(config_path)
+        self._create_core_config(config_path, licensing_handler)
         self._precompile_hostchecks(config_path)
 
-    def _create_core_config(self, config_path: VersionedConfigPath) -> None:
+    def _create_core_config(
+        self,
+        config_path: VersionedConfigPath,
+        licensing_handler: LicensingHandler,
+    ) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
 
         During create_config() exceptions may be raised which are caused by configuration issues.
@@ -102,7 +107,7 @@ class NagiosCore(core_config.MonitoringCore):
             config_buffer,
             config_path,
             hostnames=None,
-            licensing_handler_type=self._licensing_handler_type,
+            licensing_handler=licensing_handler,
         )
 
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
@@ -144,10 +149,7 @@ class NagiosConfig:
         self._outfile.write(x)
 
 
-def _validate_licensing(
-    licensing_handler_type: type[LicensingHandler], licensing_counter: Counter
-) -> None:
-    licensing_handler = licensing_handler_type.make()
+def _validate_licensing(licensing_handler: LicensingHandler, licensing_counter: Counter) -> None:
     if block_effect := licensing_handler.effect_core(
         licensing_counter["services"], len(config.get_shadow_hosts())
     ).block:
@@ -158,7 +160,7 @@ def create_config(
     outfile: IO[str],
     config_path: VersionedConfigPath,
     hostnames: list[HostName] | None,
-    licensing_handler_type: type[LicensingHandler],
+    licensing_handler: LicensingHandler,
 ) -> None:
     if config.host_notification_periods != []:
         config_warnings.warn(
@@ -197,7 +199,7 @@ def create_config(
             cfg, config_cache, hostname, stored_passwords, licensing_counter
         )
 
-    _validate_licensing(licensing_handler_type, licensing_counter)
+    _validate_licensing(licensing_handler, licensing_counter)
 
     write_notify_host_file(config_path, all_host_labels)
 

@@ -1196,7 +1196,7 @@ def mode_dump_nagios_config(args: list[HostName]) -> None:
         sys.stdout,
         next(VersionedConfigPath.current()),
         args if len(args) else None,
-        get_licensing_handler_type(),
+        get_licensing_handler_type().make(),
     )
 
 

@@ -228,23 +228,15 @@ def _prepare_ipmitool_call(
     ]
 
 
-def parse_data(
-    data: Iterable[str],
+def _filter_output(
+    data: str,
     excludes: Iterable[str],
-) -> None:
-    for line in data:
-        if line.startswith("ID"):
-            continue
-        if excludes:
-            has_excludes = False
-            for exclude in excludes:
-                if exclude in line:
-                    has_excludes = True
-                    break
-            if not has_excludes:
-                sys.stdout.write("%s\n" % line)
-        else:
-            sys.stdout.write("%s\n" % line)
+) -> Iterable[str]:
+    return [
+        f"{line}\n"
+        for line in data.splitlines()
+        if not line.startswith("ID") and not any(e in line for e in excludes)
+    ]
 
 
 def _main(args: Args) -> int:
@@ -287,7 +279,9 @@ def _main(args: Args) -> int:
 
             if completed_process.stderr:
                 errors.append(completed_process.stderr)
-            parse_data(completed_process.stdout.splitlines(), query.excludes)
+
+            sys.stdout.writelines(_filter_output(completed_process.stdout, query.excludes))
+
         except Exception as e:
             errors.append(str(e))
 

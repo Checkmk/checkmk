@@ -1,0 +1,22 @@
+Title: Unix agents: Fix asynchronous plugin execution via xinetd and ssh
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1683297806
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+When triggered via xinetd or ssh, the agents for AIX, FreeBSD, Linux, OpenWRT and Solaris were not
+able to execute asynchronous plugins and local checks in the background. Instead, the agents kept on
+running until the supposedly asynchronous tasks were completed or a timeout or occured. In the
+latter case, the following error message was displayed by the <i>Check_MK</i> services of affected
+hosts:
+
+C+:
+MKTimeout('Fetcher for host ... timed out after 60 seconds')
+C-:
+
+

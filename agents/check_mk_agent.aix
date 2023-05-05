@@ -54,8 +54,7 @@ set_up_process_commandline_arguments() {
         case "${1}" in
             -d | --debug)
                 set -xv
-                # restore stderr
-                exec 2>&9
+                DISABLE_STDERR=false
                 shift
                 ;;
 
@@ -954,8 +953,11 @@ run_partially_asynchronous_sections() {
 }
 
 main_setup() {
-    exec </dev/null 9>&2 2>/dev/null
+    exec </dev/null
     set_up_process_commandline_arguments "$@"
+    if "${DISABLE_STDERR:-true}"; then
+        exec 2>/dev/null
+    fi
     set_up_get_epoch
     set_up_current_shell
     set_variable_defaults

@@ -681,10 +681,6 @@ export abstract class FigureBase<T extends FigureData> {
     }
 }
 
-export interface TitledFigureData extends FigureData {
-    title: string;
-    title_url: string;
-}
 export interface TextFigureData<D = any, P = any> extends FigureData<D, P> {
     title: string;
     title_url: string;

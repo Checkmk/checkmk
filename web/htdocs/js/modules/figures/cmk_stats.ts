@@ -57,6 +57,8 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
     update_data(data) {
         this._title = data.title;
         this._title_url = data.title_url;
+        //This assignment changes the type of our Data so it not FigureData but FigureData.Data
+        //It's difficult to have a workaround for this...
         this._data = data.data;
     }
 

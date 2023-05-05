@@ -64,8 +64,13 @@ def ignore_sensor(
     >>> ignore_sensor("name", "status", {"ignored_sensorstates": ["status"]})
     True
     """
-    return (_check_ignores(sensor_name, ignore_params.get("ignored_sensors", [])) or
-            _check_ignores(status_txt, ignore_params.get("ignored_sensorstates", [])))
+    return _check_ignores(
+        sensor_name,
+        ignore_params.get("ignored_sensors", []),
+    ) or _check_ignores(
+        status_txt,
+        ignore_params.get("ignored_sensorstates", []),
+    )
 
 
 def check_ipmi(
@@ -107,8 +112,8 @@ def _check_numerical_levels(
         if this_sensorname == sensor_name and levels:
             yield from check_levels(
                 val,
-                levels_upper=levels.get('upper', (None, None)),
-                levels_lower=levels.get('lower', (None, None)),
+                levels_upper=levels.get("upper"),
+                levels_lower=levels.get("lower"),
                 render_func=_unit_to_render_func(unit),
                 label=sensor_name,
             )

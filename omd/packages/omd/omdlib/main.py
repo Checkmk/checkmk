@@ -1407,7 +1407,7 @@ def config_change(
 
         changed: list[str] = []
         for key, value in settings:
-            config_set_value(site, config_hooks, key, value, save=False)
+            config_set_value(site, key, value, save=False)
             changed.append(key)
 
         save_site_conf(site)
@@ -1468,7 +1468,7 @@ def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) ->
         sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice.error}\n")
         return []
 
-    config_set_value(site, config_hooks, hook_name, value)
+    config_set_value(site, hook_name, value)
     return [hook_name]
 
 
@@ -1516,9 +1516,7 @@ def _config_set(site: SiteContext, hook_name: str) -> None:
     putenv("CONFIG_" + hook_name, site.conf[hook_name])
 
 
-def config_set_value(
-    site: SiteContext, config_hooks: ConfigHooks, hook_name: str, value: str, save: bool = True
-) -> None:
+def config_set_value(site: SiteContext, hook_name: str, value: str, save: bool = True) -> None:
     site.conf[hook_name] = value
     _config_set(site, hook_name)
 
@@ -1652,7 +1650,7 @@ def config_configure_hook(
         assert_never(choices)
 
     if change:
-        config_set_value(site, config_hooks, hook.name, new_value)
+        config_set_value(site, hook.name, new_value)
         save_site_conf(site)
         config_hooks = load_hook_dependencies(site, config_hooks)
         yield hook_name
@@ -3016,7 +3014,7 @@ def initialize_livestatus_tcp_tls_after_update(site: SiteContext) -> None:
     if "LIVESTATUS_TCP_TLS" in site.read_site_config():
         return  # Is already set in this site
 
-    config_set_value(site, {}, "LIVESTATUS_TCP_TLS", value="off", save=True)
+    config_set_value(site, "LIVESTATUS_TCP_TLS", value="off", save=True)
 
 
 def _create_livestatus_tcp_socket_link(site: SiteContext) -> None:

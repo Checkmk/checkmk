@@ -1,0 +1,15 @@
+Title: check_mail_loop, check_mail: Fix argument parsing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683279471
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+check_mail_loop and check_mail active checks didn't accept "POP3"
+as a fetch protocol argument.
+
+

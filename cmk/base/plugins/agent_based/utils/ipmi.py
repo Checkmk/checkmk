@@ -9,6 +9,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    List,
     Literal,
     Mapping,
     Optional,
@@ -212,6 +213,42 @@ def check_ipmi_summarized(
     section: Section,
     status_txt_mapping: StatusTxtMapping,
 ) -> type_defs.CheckResult:
+    (states, warn_texts, crit_texts, ok_texts,
+     skipped_texts) = _check_individual_sensors(params, section, status_txt_mapping)
+
+    yield from _average_ambient_temperature(section)
+
+    infotexts = ["%d sensors" % len(section)]
+    for title, texts, text_state in [
+        ("OK", ok_texts, State.OK),
+        ("WARN", warn_texts, State.WARN),
+        ("CRIT", crit_texts, State.CRIT),
+        ("skipped", skipped_texts, State.OK),
+    ]:
+        if len(section) == len(texts):
+            infotext = "%d sensors %s" % (len(section), title)
+            if text_state is not State.OK:
+                infotext += ": %s" % ", ".join(texts)
+            yield Result(state=text_state, summary=infotext)
+            return
+
+        if texts:
+            infotext = "%d %s" % (len(texts), title)
+            if text_state is not State.OK:
+                infotext += ": %s" % ", ".join(texts)
+            infotexts.append(infotext)
+
+    yield Result(
+        state=State.worst(*states),
+        summary=" - ".join(infotexts),
+    )
+
+
+def _check_individual_sensors(
+    params: Mapping[str, Any],
+    section: Section,
+    status_txt_mapping: StatusTxtMapping,
+) -> Tuple[List[State], List[str], List[str], List[str], List[str]]:
     user_levels_map = _compile_user_levels_map(params)
 
     states = [State.OK]
@@ -253,32 +290,7 @@ def check_ipmi_summarized(
             ok_texts.append(txt)
         states.append(sensor_state)
 
-    yield from _average_ambient_temperature(section)
-
-    infotexts = ["%d sensors" % len(section)]
-    for title, texts, text_state in [
-        ("OK", ok_texts, State.OK),
-        ("WARN", warn_texts, State.WARN),
-        ("CRIT", crit_texts, State.CRIT),
-        ("skipped", skipped_texts, State.OK),
-    ]:
-        if len(section) == len(texts):
-            infotext = "%d sensors %s" % (len(section), title)
-            if text_state is not State.OK:
-                infotext += ": %s" % ", ".join(texts)
-            yield Result(state=text_state, summary=infotext)
-            return
-
-        if texts:
-            infotext = "%d %s" % (len(texts), title)
-            if text_state is not State.OK:
-                infotext += ": %s" % ", ".join(texts)
-            infotexts.append(infotext)
-
-    yield Result(
-        state=State.worst(*states),
-        summary=' - '.join(infotexts),
-    )
+    return states, warn_texts, crit_texts, ok_texts, skipped_texts
 
 
 def _average_ambient_temperature(section: Section) -> Iterable[Metric]:

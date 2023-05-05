@@ -290,10 +290,10 @@ def test_check_ipmi_detailed(
 ) -> None:
     assert (
         list(
-            ipmi.check_ipmi_detailed(
+            ipmi.check_ipmi(
                 item,
                 params,
-                sensor,
+                {item: sensor},
                 temperature_metrics_only,
                 status_txt_mapping,
             )
@@ -491,9 +491,11 @@ def test_check_ipmi_summarized(
 ) -> None:
     assert (
         list(
-            ipmi.check_ipmi_summarized(
+            ipmi.check_ipmi(
+                "Summary",
                 params,
                 SECTION,
+                False,
                 status_txt_mapping,
             )
         )

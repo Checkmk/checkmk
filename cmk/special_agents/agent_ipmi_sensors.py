@@ -10,11 +10,29 @@ import os
 import subprocess
 import sys
 from argparse import _SubParsersAction
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 from itertools import chain
+from typing import Literal
 
 from cmk.special_agents.utils.agent_common import special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+
+
+@dataclass(frozen=True)
+class Query:
+    section_name: Literal["ipmi", "ipmi_discrete", "ipmi_sensors"]
+    types: tuple[str, ...]
+    excludes: tuple[str, ...]
+
+
+QUERIES_IPMITOOL: Iterable[Query] = (
+    Query("ipmi", types=("sensor", "list"), excludes=("command failed", "discrete")),
+    Query("ipmi_discrete", types=("sdr", "elist", "compact"), excludes=()),
+)
+
+
+QUERIES_FREEIPMI: Iterable[Query] = (Query("ipmi_sensors", types=(), excludes=()),)
 
 
 def _add_freeipmi_args(subparsers: _SubParsersAction) -> None:
@@ -170,22 +188,19 @@ def _freeipmi_additional_args(
 
 def _prepare_freeipmi_call(
     args: Args,
-) -> tuple[Sequence[str], Mapping[str, tuple[Iterable[str], Iterable[str]]]]:
-    return (
-        [
-            "ipmi-sensors",
-            "-h",
-            args.host,
-            "-u",
-            args.user,
-            "-p",
-            args.password,
-            "-l",
-            args.privilege_lvl,
-            *_freeipmi_additional_args(args),
-        ],
-        {"_sensors": ([], [])},
-    )
+) -> Sequence[str]:
+    return [
+        "ipmi-sensors",
+        "-h",
+        args.host,
+        "-u",
+        args.user,
+        "-p",
+        args.password,
+        "-l",
+        args.privilege_lvl,
+        *_freeipmi_additional_args(args),
+    ]
 
 
 def _ipmitool_additional_args(
@@ -198,31 +213,19 @@ def _ipmitool_additional_args(
 
 def _prepare_ipmitool_call(
     args: Args,
-) -> tuple[Sequence[str], Mapping[str, tuple[Iterable[str], Iterable[str]]]]:
-    return (
-        [
-            "ipmitool",
-            "-H",
-            args.host,
-            "-U",
-            args.user,
-            "-P",
-            args.password,
-            "-L",
-            args.privilege_lvl,
-            *_ipmitool_additional_args(args),
-        ],
-        {
-            "": (
-                ["sensor", "list"],
-                ["command failed", "discrete"],
-            ),
-            "_discrete": (
-                ["sdr", "elist", "compact"],
-                [],
-            ),
-        },
-    )
+) -> Sequence[str]:
+    return [
+        "ipmitool",
+        "-H",
+        args.host,
+        "-U",
+        args.user,
+        "-P",
+        args.password,
+        "-L",
+        args.privilege_lvl,
+        *_ipmitool_additional_args(args),
+    ]
 
 
 def parse_data(
@@ -247,25 +250,28 @@ def parse_data(
 def _main(args: Args) -> int:
     os.environ["PATH"] = "/usr/local/sbin:/usr/sbin:/sbin:" + os.environ["PATH"]
 
-    ipmi_cmd, queries = {
-        "freeipmi": _prepare_freeipmi_call,
-        "ipmitool": _prepare_ipmitool_call,
-    }[
-        args.ipmi_cmd
-    ](args)
+    match args.ipmi_cmd:
+        case "freeipmi":
+            ipmi_call = _prepare_freeipmi_call(args)
+            queries = QUERIES_FREEIPMI
+        case "ipmitool":
+            ipmi_call = _prepare_ipmitool_call(args)
+            queries = QUERIES_IPMITOOL
+        case unknown:
+            raise NotImplementedError(f"No such command: {unknown}")
 
     if args.debug:
-        sys.stderr.write("Executing: '%s'\n" % subprocess.list2cmdline(ipmi_cmd))
+        sys.stderr.write("Executing: '%s'\n" % subprocess.list2cmdline(ipmi_call))
 
     errors = []
-    for section, (types, excludes) in queries.items():
-        sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
+    for query in queries:
+        sys.stdout.write(f"<<<{query.section_name}:sep(124)>>>\n")
         try:
             try:
                 completed_process = subprocess.run(
                     [
-                        *ipmi_cmd,
-                        *types,
+                        *ipmi_call,
+                        *query.types,
                     ],
                     close_fds=True,
                     stdin=subprocess.DEVNULL,
@@ -281,7 +287,7 @@ def _main(args: Args) -> int:
 
             if completed_process.stderr:
                 errors.append(completed_process.stderr)
-            parse_data(completed_process.stdout.splitlines(), excludes)
+            parse_data(completed_process.stdout.splitlines(), query.excludes)
         except Exception as e:
             errors.append(str(e))
 

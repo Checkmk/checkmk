@@ -1498,8 +1498,6 @@ def _error_from_config_choice(choices: ConfigHookChoices, value: str) -> Result[
             return Error("Does not match allowed pattern.")
     elif isinstance(choices, ConfigChoiceHasError):
         return choices(value)
-    elif choices is None:
-        raise NotImplementedError()
     else:
         assert_never(choices)
     return OK(None)
@@ -1670,8 +1668,6 @@ def config_configure_hook(
         change, new_value = dialog_config_choice_has_error(
             title, descr, choices, value, "Change", "Cancel"
         )
-    elif choices is None:
-        raise NotImplementedError()
     else:
         assert_never(choices)
 

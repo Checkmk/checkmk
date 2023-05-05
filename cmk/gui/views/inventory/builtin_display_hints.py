@@ -130,6 +130,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "expresscode",
                 "pki_appliance_version",
                 "description",
+                "mac_address",
             ],
         },
         ".hardware.system.product": {"title": _l("Product"), "is_show_more": False},
@@ -141,6 +142,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.system.partition_name": {"title": _l("Partition Name")},
         ".hardware.system.pki_appliance_version": {"title": _l("Version of PKI Appliance")},
         ".hardware.system.description": {"title": _l("Description")},
+        ".hardware.system.mac_address": {"title": _l("MAC Address")},
         # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
         ".hardware.system.serial_number": {"title": _l("Serial Number - LEGACY, don't use")},
         ".hardware.system.model_name": {"title": _l("Model Name - LEGACY, don't use")},
@@ -1536,6 +1538,19 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "is_show_more": False,
         },
         ".software.configuration.snmp_info.name": {"title": _l("System name")},
+        ".software.configuration.organisation.": {
+            "title": _l("Organisation"),
+            "keyorder": [
+                "organisation_id",
+                "organisation_name",
+                "network_id",
+                "address",
+            ],
+        },
+        ".software.configuration.organisation.organisation_id": {"title": _l("Organisation ID")},
+        ".software.configuration.organisation.organisation_name": {"title": _l("Organisation Name")},
+        ".software.configuration.organisation.network_id": {"title": _l("Network ID")},
+        ".software.configuration.organisation.address": {"title": _l("Address")},
         ".software.firmware.": {
             "title": _l("Firmware"),
             "keyorder": [

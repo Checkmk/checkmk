@@ -982,6 +982,8 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                     Warning(logger)
                         << "invalid group authorization mode, allowed are strict and loose";
                 }
+            } else if (left == "log_file") {
+                fl_paths.log_file = right;
             } else if (left == "crash_reports_path") {
                 fl_paths.crash_reports_directory =
                     check_path("crash reports directory", right);
@@ -1002,11 +1004,11 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                     check_path("logwatch directory", right);
             } else if (left == "mkeventd_socket") {
                 fl_paths.event_console_status_socket = right;
+            } else if (left == "state_file_created_file") {
+                fl_paths.state_file_created_file = right;
             } else if (left == "pnp_path") {
                 fl_paths.rrd_multiple_directory =
                     check_path("RRD multiple directory", right);
-            } else if (left == "log_file") {
-                fl_paths.log_file = right;
             } else if (left == "data_encoding") {
                 if (right == "utf8") {
                     fl_data_encoding = Encoding::utf8;
@@ -1020,8 +1022,6 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 }
             } else if (left == "edition") {
                 fl_edition = right;
-            } else if (left == "state_file_created") {
-                fl_paths.state_file_created = right;
             } else if (left == "livecheck") {
                 Warning(logger)
                     << "livecheck has been removed from Livestatus, sorry.";
@@ -1084,22 +1084,22 @@ void writele64(std::ostream &os, uint64_t value) {
 }
 
 std::optional<std::chrono::system_clock::time_point> stateFileCreated(
-    const std::filesystem::path &state_file_created) {
-    std::ifstream ifs{state_file_created, std::ios::binary};
+    const std::filesystem::path &state_file_created_file) {
+    std::ifstream ifs{state_file_created_file, std::ios::binary};
     if (ifs.is_open()) {
         return mk::demangleTimePoint(readle64(ifs));
     }
     if (generic_error{}.code() != std::errc::no_such_file_or_directory) {
         generic_error ge{"cannot open timestamp file \"" +
-                         state_file_created.string() + "\" for reading"};
+                         state_file_created_file.string() + "\" for reading"};
         Critical(fl_logger_nagios) << ge;
         return {};
     }
     fl_state_file_created = std::chrono::system_clock::now();
-    std::ofstream ofs{state_file_created, std::ios::binary};
+    std::ofstream ofs{state_file_created_file, std::ios::binary};
     if (!ofs.is_open()) {
         generic_error ge{"cannot open timestamp file \"" +
-                         state_file_created.string() + "\" for writing"};
+                         state_file_created_file.string() + "\" for writing"};
         Critical(fl_logger_nagios) << ge;
         return {};
     }
@@ -1144,7 +1144,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
     register_callbacks();
 
     if (auto state_file_created =
-            stateFileCreated(fl_paths.state_file_created)) {
+            stateFileCreated(fl_paths.state_file_created_file)) {
         fl_state_file_created = *state_file_created;
     } else {
         return 1;  // TODO(sp): Cleanup, same for returns above.

@@ -47,6 +47,8 @@ def check_mem_usage(params: Mapping[str, Any], section: esx_vsphere.SectionVM) -
         ("private", memory_section.private),
         ("shared", memory_section.shared),
     ]:
+        if value is None:
+            continue
         yield from check_levels(
             value=value,
             levels_upper=params.get(metric_name),

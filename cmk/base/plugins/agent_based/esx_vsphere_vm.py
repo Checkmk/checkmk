@@ -81,23 +81,34 @@ def _parse_esx_power_state(vm_values: Mapping[str, Sequence[str]]) -> str | None
 
 def _parse_esx_memory_section(vm_values: Mapping[str, Sequence[str]]) -> ESXMemory | None:
     """Parse memory specific values from ESX VSphere VM agent output"""
-    memory_mapping = {
+    entries_mandatory = {
         "hostMemoryUsage": "host_usage",
         "guestMemoryUsage": "guest_usage",
         "balloonedMemory": "ballooned",
         "sharedMemory": "shared",
-        "privateMemory": "private",
     }
+    entries_optional = {"privateMemory": "private"}
 
-    memory_values = {}
-    for memory_type in memory_mapping:
+    memory_values: dict[str, float | None] = {}
+    for memory_type, parsed_name in entries_mandatory.items():
         try:
-            value = float(vm_values[f"summary.quickStats.{memory_type}"][0])
+            value_mandatory = float(vm_values[f"summary.quickStats.{memory_type}"][0]) * 1024**2
         except (KeyError, TypeError, ValueError):
             return None
 
-        memory_values[memory_mapping[memory_type]] = value * 1024**2
-    return ESXMemory(**memory_values)
+        memory_values[parsed_name] = value_mandatory
+
+    for memory_type, parsed_name in entries_optional.items():
+        try:
+            value_optional: float | None = (
+                float(vm_values[f"summary.quickStats.{memory_type}"][0]) * 1024**2
+            )
+        except (KeyError, TypeError, ValueError):
+            value_optional = None
+
+        memory_values[parsed_name] = value_optional
+
+    return ESXMemory.parse_obj(memory_values)
 
 
 def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | None:

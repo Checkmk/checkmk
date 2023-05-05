@@ -15,7 +15,7 @@ SubSectionCounter = Mapping[str, list[tuple[CounterValues, str]]]
 SectionCounter = Mapping[str, SubSectionCounter]
 
 
-class ESXMemory(BaseModel):
+class ESXMemory(BaseModel, frozen=True):
     """ESX VSphere VM memory model
     host_usage:
         consumed host memory
@@ -28,14 +28,15 @@ class ESXMemory(BaseModel):
         (must not be set)
     private:
         the portion of memory, in MB, that is granted to this VM from host memory that is shared
-        between VMs.
+        between VMs; only present if the VM data is collected via vCenter, in case the data is
+        collected directly from an esx host, this value will be None
     """
 
     host_usage: float
     guest_usage: float
     ballooned: float
     shared: float
-    private: float
+    private: float | None
 
 
 class ESXCpu(BaseModel):

@@ -1,0 +1,14 @@
+Title: ESX VM monitoring: Fix missing or stale `ESX Memory` service
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683282507
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b7
+
+When monitoring ESX VMs by running the VMware ESX special agent on a standalone ESX host (instead of
+a vCenter), the service mentioned above was not discovered or went stale if already discovered.
+

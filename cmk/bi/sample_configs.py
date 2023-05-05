@@ -160,7 +160,7 @@ bi_sample_config = {
                         },
                         {
                             "action": {
-                                "params": {"arguments": ["$HOSTNAME$", "$1$"]},
+                                "params": {"arguments": ["$HOSTNAME$", "$2$"]},
                                 "rule_id": "filesystem",
                                 "type": "call_a_rule",
                             },
@@ -181,7 +181,7 @@ bi_sample_config = {
                         },
                         {
                             "action": {
-                                "params": {"arguments": ["$HOSTNAME$", "$1$"]},
+                                "params": {"arguments": ["$HOSTNAME$", "$2$"]},
                                 "rule_id": "filesystem",
                                 "type": "call_a_rule",
                             },

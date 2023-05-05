@@ -46,7 +46,7 @@ import traceback
 from collections.abc import Callable, Iterable, Iterator
 from enum import auto, Enum
 from pathlib import Path
-from typing import BinaryIO, cast, Final, IO, Mapping, NamedTuple, NoReturn
+from typing import assert_never, BinaryIO, cast, Final, IO, Literal, Mapping, NamedTuple, NoReturn
 from uuid import uuid4
 
 import psutil  # type: ignore[import]
@@ -1439,7 +1439,7 @@ def validate_config_change_commands(
         if not hook:
             bail_out("Invalid config option: %r" % key)
 
-        error_from_config_choice = _error_from_config_choice(hook["choices"], value)
+        error_from_config_choice = _error_from_config_choice(hook.choices, value)
         if error_from_config_choice.is_error():
             bail_out(f"Invalid value for '{value} for {key}'. {error_from_config_choice.error}\n")
 
@@ -1461,7 +1461,7 @@ def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) ->
         sys.stderr.write("No such variable '%s'\n" % hook_name)
         return []
 
-    error_from_config_choice = _error_from_config_choice(hook["choices"], value)
+    error_from_config_choice = _error_from_config_choice(hook.choices, value)
     if error_from_config_choice.is_error():
         sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice.error}\n")
         return []
@@ -1470,9 +1470,7 @@ def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) ->
     return [hook_name]
 
 
-def _error_from_config_choice(
-    choices: str | bool | ConfigHookChoices, value: str
-) -> Result[None, str]:
+def _error_from_config_choice(choices: ConfigHookChoices, value: str) -> Result[None, str]:
     # Check if value is valid. Choices are either a list of allowed keys or a
     # regular expression
     if isinstance(choices, list):
@@ -1483,8 +1481,10 @@ def _error_from_config_choice(
             return Error("Does not match allowed pattern.")
     elif isinstance(choices, ConfigChoiceHasError):
         return choices(value)
-    else:
+    elif choices is None:
         raise NotImplementedError()
+    else:
+        assert_never(choices)
     return OK(None)
 
 
@@ -1545,12 +1545,12 @@ omd config change        - change multiple at once. Provide newline separated
 
 
 def config_show(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -> None:
-    hook: ConfigHook | None = {}
+    hook: ConfigHook | None
     if len(args) == 0:
         hook_names = sorted(config_hooks.keys())
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
-            if hook["active"] and not hook["deprecated"]:
+            if hook.unstructured["active"] and not hook.unstructured["deprecated"]:
                 sys.stdout.write(f"{hook_name}: {site.conf[hook_name]}\n")
     else:
         output = []
@@ -1581,8 +1581,8 @@ def config_configure(
         menu: dict[str, list[tuple[str, str]]] = {}
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
-            if hook["active"] and not hook["deprecated"]:
-                mp = cast(str, hook.get("menu", "Other"))
+            if hook.unstructured["active"] and not hook.unstructured["deprecated"]:
+                mp = cast(str, hook.unstructured.get("menu", "Other"))
                 entries = menu.get(mp, [])
                 entries.append((hook_name, site.conf[hook_name]))
                 menu[mp] = entries
@@ -1635,15 +1635,15 @@ def config_configure_hook(
         dialog_message("The site has been stopped.")
 
     hook = config_hooks[hook_name]
-    title = cast(str, hook["alias"])
+    title = cast(str, hook.unstructured["alias"])
     descr = (
-        cast(str, hook["description"])
+        cast(str, hook.unstructured["description"])
         .replace("\n\n", "\001")
         .replace("\n", " ")
         .replace("\001", "\n\n")
     )
     value = site.conf[hook_name]
-    choices = hook["choices"]
+    choices = hook.choices
 
     if isinstance(choices, list):
         change, new_value = dialog_menu(title, descr, choices, value, "Change", "Cancel")
@@ -1653,11 +1653,13 @@ def config_configure_hook(
         change, new_value = dialog_config_choice_has_error(
             title, descr, choices, value, "Change", "Cancel"
         )
-    else:
+    elif choices is None:
         raise NotImplementedError()
+    else:
+        assert_never(choices)
 
     if change:
-        config_set_value(site, config_hooks, cast(str, hook["name"]), new_value)
+        config_set_value(site, config_hooks, cast(str, hook.unstructured["name"]), new_value)
         save_site_conf(site)
         config_hooks = load_hook_dependencies(site, config_hooks)
         yield hook_name

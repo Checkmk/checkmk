@@ -50,6 +50,7 @@ from cmk.fetchers import (
     TCPFetcher,
 )
 from cmk.fetchers._agentctl import CompressionType, HeaderV1, Version
+from cmk.fetchers._ipmi import IPMISensor
 from cmk.fetchers.filecache import (
     AgentFileCache,
     FileCache,
@@ -215,6 +216,34 @@ class StubFileCache(FileCache[TRawData]):
         return self.cache
 
 
+class TestIPMISensor:
+    def test_parse_sensor_reading_standard_case(self) -> None:
+        reading = SensorReading(  #
+            ["lower non-critical threshold"], 1, "Hugo", None, "", [42], "hugo-type", None, 0
+        )
+        assert IPMISensor.from_reading(0, reading) == IPMISensor(
+            id=b"0",
+            name=b"Hugo",
+            type=b"hugo-type",
+            value=b"N/A",
+            unit=b"",
+            health=b"lower non-critical threshold",
+        )
+
+    def test_parse_sensor_reading_false_positive(self) -> None:
+        reading = SensorReading(  #
+            ["Present"], 1, "Dingeling", 0.2, b"\xc2\xb0C", [], "FancyDevice", 3.14159265, 1
+        )
+        assert IPMISensor.from_reading(0, reading) == IPMISensor(
+            id=b"0",
+            name=b"Dingeling",
+            type=b"FancyDevice",
+            value=b"3.14",
+            unit=b"C",
+            health=b"Present",
+        )
+
+
 class TestIPMIFetcher:
     @pytest.fixture
     def fetcher(self) -> IPMIFetcher:
@@ -268,32 +297,6 @@ class TestIPMIFetcher:
             raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
         assert isinstance(raw_data.error, MKFetcherError)
-
-    def test_parse_sensor_reading_standard_case(self, fetcher: IPMIFetcher) -> None:
-        reading = SensorReading(  #
-            ["lower non-critical threshold"], 1, "Hugo", None, "", [42], "hugo-type", None, 0
-        )
-        assert fetcher._parse_sensor_reading(0, reading) == [  #
-            b"0",
-            b"Hugo",
-            b"hugo-type",
-            b"N/A",
-            b"",
-            b"lower non-critical threshold",
-        ]
-
-    def test_parse_sensor_reading_false_positive(self, fetcher: IPMIFetcher) -> None:
-        reading = SensorReading(  #
-            ["Present"], 1, "Dingeling", 0.2, b"\xc2\xb0C", [], "FancyDevice", 3.14159265, 1
-        )
-        assert fetcher._parse_sensor_reading(0, reading) == [  #
-            b"0",
-            b"Dingeling",
-            b"FancyDevice",
-            b"3.14",
-            b"C",
-            b"Present",
-        ]
 
 
 class TestPiggybackFetcher:

@@ -8,7 +8,8 @@ from __future__ import annotations
 import copy
 import logging
 from collections.abc import Mapping
-from typing import Any, Final, Iterable, TYPE_CHECKING, TypedDict
+from dataclasses import astuple, dataclass
+from typing import Any, Final, Iterable, Self, TYPE_CHECKING, TypedDict
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -32,6 +33,74 @@ __all__ = ["IPMICredentials", "IPMIFetcher"]
 class IPMICredentials(TypedDict, total=False):
     username: str
     password: str
+
+
+@dataclass(frozen=True)
+class IPMISensor:
+    id: bytes
+    name: bytes
+    type: bytes
+    value: bytes
+    unit: bytes
+    health: bytes
+
+    @classmethod
+    def from_reading(cls, number: int, reading: ipmi_sdr.SensorReading) -> Self:
+        # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
+        #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
+        #  'value': 25.0, 'unavailable': 0}]]
+        return cls(
+            id=b"%d" % number,
+            name=ensure_binary(reading.name),  # pylint: disable= six-ensure-str-bin-call
+            type=ensure_binary(reading.type),  # pylint: disable= six-ensure-str-bin-call
+            value=(b"%0.2f" % reading.value) if reading.value else b"N/A",
+            unit=ensure_binary(reading.units)  # pylint: disable= six-ensure-str-bin-call
+            if reading.units != b"\xc2\xb0C"
+            else b"C",
+            health=cls._parse_health_txt(reading),
+        )
+
+    @classmethod
+    def _parse_health_txt(cls, reading: ipmi_sdr.SensorReading) -> bytes:
+        if reading.health >= ipmi_const.Health.Failed:
+            return b"FAILED"
+        if reading.health >= ipmi_const.Health.Critical:
+            return b"CRITICAL"
+        if reading.health >= ipmi_const.Health.Warning:
+            # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
+            return cls._handle_false_positive_warnings(reading)
+        if reading.health == ipmi_const.Health.Ok:
+            return b"OK"
+        return b"N/A"
+
+    @staticmethod
+    def _handle_false_positive_warnings(reading: ipmi_sdr.SensorReading) -> bytes:
+        """This is a workaround for a pyghmi bug
+        (bug report: https://bugs.launchpad.net/pyghmi/+bug/1790120)
+
+        For some sensors undefined states are looked up, which results in readings of the form
+        {'states': ['Present',
+                    'Unknown state 8 for reading type 111/sensor type 8',
+                    'Unknown state 9 for reading type 111/sensor type 8',
+                    'Unknown state 10 for reading type 111/sensor type 8',
+                    'Unknown state 11 for reading type 111/sensor type 8',
+                    'Unknown state 12 for reading type 111/sensor type 8', ...],
+        'health': 1, 'name': 'PS Status', 'imprecision': None, 'units': '',
+        'state_ids': [552704, 552712, 552713, 552714, 552715, 552716, 552717, 552718],
+        'type': 'Power Supply', 'value': None, 'unavailable': 0}
+
+        The health warning is set, but only due to the lookup errors. We remove the lookup
+        errors, and see whether the remaining states are meaningful.
+        """
+        # just keep all the available info. It should be dealt with in
+        # ipmi_sensors.include (freeipmi_status_txt_mapping),
+        # where it will default to 2(CRIT)
+        return (
+            b", ".join(
+                s.encode("utf-8") for s in reading.states if not s.startswith("Unknown state ")
+            )
+            or b"no state reported"
+        )
 
 
 class IPMIFetcher(Fetcher[AgentRawData]):
@@ -176,11 +245,12 @@ class IPMIFetcher(Fetcher[AgentRawData]):
                 # not installed
                 if "GPU" in reading.name and has_no_gpu:
                     continue
-                sensors.append(self._parse_sensor_reading(sensor.sensor_number, reading))
+                self._logger.debug("Raw reading states of %s: %s", reading.name, reading.states)
+                sensors.append(IPMISensor.from_reading(sensor.sensor_number, reading))
 
         return AgentRawData(
             b"<<<ipmi_sensors:sep(124)>>>\n"
-            + b"".join(self._make_line(sensor) for sensor in sensors)
+            + b"".join(self._make_line(astuple(sensor)) for sensor in sensors)
         )
 
     def _firmware_section(self) -> AgentRawData:
@@ -226,64 +296,3 @@ class IPMIFetcher(Fetcher[AgentRawData]):
             return True
 
         return any("GPU" in line for line in inventory_entries)
-
-    def _parse_sensor_reading(
-        self, number: int, reading: ipmi_sdr.SensorReading
-    ) -> list[AgentRawData]:
-        # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
-        #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
-        #  'value': 25.0, 'unavailable': 0}]]
-        health_txt = b"N/A"
-        if reading.health >= ipmi_const.Health.Failed:
-            health_txt = b"FAILED"
-        elif reading.health >= ipmi_const.Health.Critical:
-            health_txt = b"CRITICAL"
-        elif reading.health >= ipmi_const.Health.Warning:
-            # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
-            health_txt = self._handle_false_positive_warnings(reading)
-        elif reading.health == ipmi_const.Health.Ok:
-            health_txt = b"OK"
-        # ? would that be correct: SensorReading.name:str, SensorReading.type:str, SensorReading.units: bytes/str ?
-        return [
-            AgentRawData(_)
-            for _ in (
-                b"%d" % number,
-                ensure_binary(reading.name),  # pylint: disable= six-ensure-str-bin-call
-                ensure_binary(reading.type),  # pylint: disable= six-ensure-str-bin-call
-                (b"%0.2f" % reading.value) if reading.value else b"N/A",
-                ensure_binary(reading.units)  # pylint: disable= six-ensure-str-bin-call
-                if reading.units != b"\xc2\xb0C"
-                else b"C",
-                health_txt,
-            )
-        ]
-
-    def _handle_false_positive_warnings(self, reading: ipmi_sdr.SensorReading) -> AgentRawData:
-        """This is a workaround for a pyghmi bug
-        (bug report: https://bugs.launchpad.net/pyghmi/+bug/1790120)
-
-        For some sensors undefined states are looked up, which results in readings of the form
-        {'states': ['Present',
-                    'Unknown state 8 for reading type 111/sensor type 8',
-                    'Unknown state 9 for reading type 111/sensor type 8',
-                    'Unknown state 10 for reading type 111/sensor type 8',
-                    'Unknown state 11 for reading type 111/sensor type 8',
-                    'Unknown state 12 for reading type 111/sensor type 8', ...],
-        'health': 1, 'name': 'PS Status', 'imprecision': None, 'units': '',
-        'state_ids': [552704, 552712, 552713, 552714, 552715, 552716, 552717, 552718],
-        'type': 'Power Supply', 'value': None, 'unavailable': 0}
-
-        The health warning is set, but only due to the lookup errors. We remove the lookup
-        errors, and see whether the remaining states are meaningful.
-        """
-        self._logger.debug("Raw reading states of %s: %s", reading.name, reading.states)
-
-        states = [s.encode("utf-8") for s in reading.states if not s.startswith("Unknown state ")]
-
-        if not states:
-            return AgentRawData(b"no state reported")
-
-        # just keep all the available info. It should be dealt with in
-        # ipmi_sensors.include (freeipmi_status_txt_mapping),
-        # where it will default to 2(CRIT)
-        return AgentRawData(b", ".join(states))

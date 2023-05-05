@@ -598,8 +598,10 @@ class Site:
                     self.id,
                 ],
                 check=False,
+                capture_output=True,
+                encoding="utf-8",
             )
-            assert completed_process.returncode == 0
+            assert not completed_process.returncode, completed_process.stderr
             assert os.path.exists("/omd/sites/%s" % self.id)
 
             self._ensure_sample_config_is_present()

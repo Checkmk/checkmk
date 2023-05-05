@@ -79,8 +79,11 @@ def main() {
 
             def stage_info = load_json("${result_dir}/stages.json");
             def allStagesPassed = true;
+            def thisStagePassed = true;
             stage_info.STAGES.each { item ->
-                allStagesPassed = test_gerrit_helper.create_stage(item, issues, time_stage_started) and allStagesPassed;
+                (thisStagePassed, thisIssues) = test_gerrit_helper.create_stage(item, time_stage_started);
+                issues.addAll(thisIssues);
+                allStagesPassed = thisStagePassed && allStagesPassed;
                 time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
             }
             currentBuild.result = allStagesPassed ? "SUCCESS" : "FAILED";
@@ -89,10 +92,13 @@ def main() {
         test_gerrit_helper.desc_add_line("Executed on: ${NODE_NAME} in ${WORKSPACE}");
         stage("Analyse Issues") {
             if (issues) {
-                publishIssues(
-                    issues: issues,
-                    trendChartType: 'TOOLS_ONLY',
-                    qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]);
+                issues.each { item ->
+                    publishIssues(
+                        issues: [item],
+                        trendChartType: 'TOOLS_ONLY',
+                        qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
+                    );
+                }
             }
             dir("${checkout_dir}") {
                 xunit([

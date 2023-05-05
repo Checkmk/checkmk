@@ -231,13 +231,16 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SHELL_FILES
       DIR: 'tests'
       COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
-      RESULT_CHECK_TYPE: "GCC"
+      TEXT_ON_SKIP: 'No Shell files changed'
+      RESULT_CHECK_TYPE: "SHELLCHECK"
       RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"
 
     - NAME: 'Shell Unit'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SHELL_FILES
       DIR: 'tests'
       COMMAND: "make test-unit-shell-docker &> ${RESULTS}/shell-unit.txt"
+      TEXT_ON_SKIP: 'No Shell files changed'
+      RESULT_CHECK_TYPE: "SHELLUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"
 
     - NAME: 'JavaScript Format'
@@ -245,6 +248,7 @@ STAGES:
       DIR: 'tests'
       COMMAND: "make --quiet test-format-js-docker &> ${RESULTS}/js-prettier.txt"
       TEXT_ON_SKIP: 'No JavaScript files changed'
+      RESULT_CHECK_TYPE: "TSJSFORMAT"
       RESULT_CHECK_FILE_PATTERN: "results/js-prettier.txt"
 
     - NAME: 'JS Build'
@@ -252,6 +256,7 @@ STAGES:
       DIR: 'tests'
       COMMAND: 'make test-build-js-docker &> ${RESULTS}/js-build.txt'
       TEXT_ON_SKIP: 'No relevant JS/TS files changed'
+      RESULT_CHECK_TYPE: "TSJSBUILD"
       RESULT_CHECK_FILE_PATTERN: "results/js-build.txt"
 
     - NAME: 'JS Lint'
@@ -266,6 +271,7 @@ STAGES:
       DIR: 'tests'
       COMMAND: 'make test-typescript-types-docker &> ${RESULTS}/js-types.txt'
       TEXT_ON_SKIP: 'No relevant JS/TS files changed'
+      RESULT_CHECK_TYPE: "TSJSTYPES"
       RESULT_CHECK_FILE_PATTERN: "results/js-types.txt"
 
     - NAME: 'CSS Format'
@@ -273,6 +279,7 @@ STAGES:
       DIR: 'tests'
       COMMAND: "make --quiet test-format-css-docker &> ${RESULTS}/css-prettier.txt"
       TEXT_ON_SKIP: 'No CSS files changed'
+      RESULT_CHECK_TYPE: "CSSFORMAT"
       RESULT_CHECK_FILE_PATTERN: "results/css-prettier.txt"
 
     - NAME: 'Bazel Format'
@@ -280,6 +287,7 @@ STAGES:
       DIR: 'tests'
       COMMAND: "make --quiet test-format-bazel-docker &> ${RESULTS}/bazel-prettier.txt"
       TEXT_ON_SKIP: 'No Bazel files changed'
+      RESULT_CHECK_TYPE: "BAZELFORMAT"
       RESULT_CHECK_FILE_PATTERN: "results/bazel-prettier.txt"
 
     - NAME: 'Bazel Lint'
@@ -287,6 +295,7 @@ STAGES:
       DIR: 'tests'
       COMMAND: "make --quiet test-lint-bazel-docker &> ${RESULTS}/bazel-lint.txt"
       TEXT_ON_SKIP: 'No Bazel files changed'
+      RESULT_CHECK_TYPE: "BAZELLINT"
       RESULT_CHECK_FILE_PATTERN: "results/bazel-lint.txt"
 
     - NAME: 'Agent Plugin Unit Tests'

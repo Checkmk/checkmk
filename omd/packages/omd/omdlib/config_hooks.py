@@ -32,6 +32,7 @@ choices - available choices for enumeration hooks
 depends - exits with 1, if this hook misses its dependent hook settings
 """
 
+import dataclasses
 import logging
 import os
 import re
@@ -56,9 +57,16 @@ logger = logging.getLogger("cmk.omd")
 
 ConfigHookChoiceItem = tuple[str, str]
 ConfigHookChoices = Pattern | list[ConfigHookChoiceItem] | ConfigChoiceHasError | None
-ConfigHook = dict[str, str | bool | ConfigHookChoices]
-ConfigHooks = dict[str, ConfigHook]
 ConfigHookResult = tuple[int, str]
+
+
+@dataclasses.dataclass(frozen=True)
+class ConfigHook:
+    choices: ConfigHookChoices
+    unstructured: dict[str, str | bool]
+
+
+ConfigHooks = dict[str, ConfigHook]
 
 
 class IpAddressListHasError(ConfigChoiceHasError):
@@ -105,7 +113,7 @@ def load_config_hooks(site: "SiteContext") -> ConfigHooks:
             if hook_name[0] != ".":
                 hook = _config_load_hook(site, hook_name)
                 # only load configuration hooks
-                if hook.get("choices", None) is not None:
+                if hook.choices is not None:
                     config_hooks[hook_name] = hook
         except MKTerminate:
             raise
@@ -119,7 +127,7 @@ def _config_load_hook(  # pylint: disable=too-many-branches
     site: "SiteContext",
     hook_name: str,
 ) -> ConfigHook:
-    hook: ConfigHook = {
+    unstructured: dict[str, str | bool] = {
         "name": hook_name,
         "deprecated": False,
     }
@@ -133,22 +141,24 @@ def _config_load_hook(  # pylint: disable=too-many-branches
     with Path(site.hook_dir, hook_name).open() as hook_file:
         for line in hook_file:
             if line.startswith("# Alias:"):
-                hook["alias"] = line[8:].strip()
+                unstructured["alias"] = line[8:].strip()
             elif line.startswith("# Menu:"):
-                hook["menu"] = line[7:].strip()
+                unstructured["menu"] = line[7:].strip()
             elif line.startswith("# Deprecated: yes"):
-                hook["deprecated"] = True
+                unstructured["deprecated"] = True
             elif line.startswith("# Description:"):
                 description_active = True
             elif line.startswith("#  ") and description_active:
                 description += line[3:].strip() + "\n"
             else:
                 description_active = False
-    hook["description"] = description
+    unstructured["description"] = description
 
     hook_info = call_hook(site, hook_name, ["choices"])[1]
-    hook["choices"] = _parse_hook_choices(hook_info)
-    return hook
+    return ConfigHook(
+        choices=_parse_hook_choices(hook_info),
+        unstructured=unstructured,
+    )
 
 
 def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
@@ -182,9 +192,9 @@ def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> Co
         hook = config_hooks[hook_name]
         exitcode, _content = call_hook(site, hook_name, ["depends"])
         if exitcode:
-            hook["active"] = False
+            hook.unstructured["active"] = False
         else:
-            hook["active"] = True
+            hook.unstructured["active"] = True
     return config_hooks
 
 

@@ -1,0 +1,12 @@
+Title: cisco_meraki_org_device_info: Move inventory entries below hardware > system
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1683285858
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

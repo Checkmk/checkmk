@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -13,30 +13,29 @@ from .utils.cisco_meraki import load_json, MerakiAPIData
 
 @dataclass(frozen=True)
 class DeviceInfo:
-    name: str
-    network_id: str
+    product: str
     serial: str
     model: str
-    mac: str
+    description: str
+    mac_address: str
     firmware: str
-    address: str
-    product_type: str
-    # extra fields
     organisation_id: str
     organisation_name: str
+    network_id: str
+    address: str
 
     @classmethod
     def parse(cls, row: MerakiAPIData) -> "DeviceInfo":
         return cls(
-            name=str(row["name"]),
-            network_id=str(row["networkId"]),
+            # Some entries may missing in older API versions
+            product=str(row.get("productType", "")),
             serial=str(row["serial"]),
             model=str(row["model"]),
-            mac=str(row["mac"]),
+            description=str(row["name"]),
+            network_id=str(row["networkId"]),
+            mac_address=str(row["mac"]),
             firmware=str(row["firmware"]),
             address=str(row["address"]),
-            # may missing in older API versions
-            product_type=str(row.get("productType", "")),
             organisation_id=str(row["organisation_id"]),
             organisation_name=str(row["organisation_name"]),
         )
@@ -55,8 +54,29 @@ register.agent_section(
 def inventory_device_info(section: DeviceInfo | None) -> InventoryResult:
     if section:
         yield Attributes(
-            path=["software", "applications", "cisco_meraki"],
-            inventory_attributes=asdict(section),
+            path=["hardware", "system"],
+            inventory_attributes={
+                "product": section.product,
+                "serial": section.serial,
+                "model": section.model,
+                "description": section.description,
+                "mac_address": section.mac_address,
+            },
+        )
+        yield Attributes(
+            path=["software", "firmware"],
+            inventory_attributes={
+                "version": section.firmware,
+            },
+        )
+        yield Attributes(
+            path=["software", "configuration", "organisation"],
+            inventory_attributes={
+                "organisation_id": section.organisation_id,
+                "organisation_name": section.organisation_name,
+                "network_id": section.network_id,
+                "address": section.address,
+            },
         )
 
 

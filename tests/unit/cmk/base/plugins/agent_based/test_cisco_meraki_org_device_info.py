@@ -36,20 +36,30 @@ _STRING_TABLE = [
             _STRING_TABLE,
             [
                 Attributes(
-                    path=["software", "applications", "cisco_meraki"],
+                    path=["hardware", "system"],
                     inventory_attributes={
-                        "name": "My AP",
-                        "network_id": "N_24329156",
+                        "product": "",
                         "serial": "Q234-ABCD-5678",
                         "model": "MR34",
-                        "mac": "00:11:22:33:44:55",
-                        "firmware": "wireless-25-14",
-                        "address": "1600 Pennsylvania Ave",
-                        "product_type": "",
+                        "description": "My AP",
+                        "mac_address": "00:11:22:33:44:55",
+                    },
+                ),
+                Attributes(
+                    path=["software", "firmware"],
+                    inventory_attributes={
+                        "version": "wireless-25-14",
+                    },
+                ),
+                Attributes(
+                    path=["software", "configuration", "organisation"],
+                    inventory_attributes={
                         "organisation_id": "123",
                         "organisation_name": "org-name",
+                        "network_id": "N_24329156",
+                        "address": "1600 Pennsylvania Ave",
                     },
-                )
+                ),
             ],
         ),
     ],

@@ -22,7 +22,8 @@ import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import Labels
-from cmk.utils.licensing.handler import LicensingHandler
+from cmk.utils.licensing.handler import LicenseState, LicensingHandler
+from cmk.utils.licensing.helper import get_licensed_state_file_path, write_licensed_state
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import core_helper_config_dir
@@ -63,14 +64,28 @@ class MonitoringCore(abc.ABC):
     def is_cmc() -> bool:
         raise NotImplementedError
 
-    @abc.abstractmethod
     def create_config(
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
         hosts_to_update: HostsToUpdate = None,
     ) -> None:
+        licensing_handler = self._licensing_handler_type.make()
+        self._create_config(config_path, config_cache, licensing_handler, hosts_to_update)
+        self._persist_licensed_state(licensing_handler.state)
+
+    @abc.abstractmethod
+    def _create_config(
+        self,
+        config_path: VersionedConfigPath,
+        config_cache: ConfigCache,
+        licensing_handler: LicensingHandler,
+        hosts_to_update: HostsToUpdate = None,
+    ) -> None:
         raise NotImplementedError
+
+    def _persist_licensed_state(self, license_state: LicenseState) -> None:
+        write_licensed_state(get_licensed_state_file_path(), license_state)
 
 
 ActiveServiceID = tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",

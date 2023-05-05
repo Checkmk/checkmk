@@ -10,6 +10,8 @@ from uuid import UUID
 
 import livestatus
 
+from cmk.utils import paths, store
+from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.paths import log_dir
 
 
@@ -62,3 +64,13 @@ def rot47(input_str: str) -> str:
 def _rot47_char(c: str) -> str:
     ord_c = ord(c)
     return chr(33 + ((ord_c + 14) % 94)) if 33 <= ord_c <= 126 else c
+
+
+def get_licensed_state_file_path() -> Path:
+    return paths.licensing_dir / "licensed_state"
+
+
+def write_licensed_state(path: Path, state: LicenseState) -> None:
+    state_repr = 1 if state is LicenseState.LICENSED else 0
+    with store.locked(path):
+        path.write_text(str(state_repr))

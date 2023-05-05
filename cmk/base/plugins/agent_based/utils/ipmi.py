@@ -39,6 +39,12 @@ IgnoreParams = Mapping[str, Sequence[str]]
 StatusTxtMapping = Callable[[str], State]
 
 
+@dataclass(frozen=True)
+class UserLevels:
+    upper: tuple[float, float] | None
+    lower: tuple[float, float] | None
+
+
 class DiscoveryParams(TypedDict):
     discovery_mode: Union[
         Tuple[Literal["summarize"], IgnoreParams],
@@ -101,23 +107,14 @@ def _unit_to_render_func(unit: str) -> Callable[[float], str]:
     return lambda x: ("%.2f" + unit_suffix) % x
 
 
-def _check_numerical_levels(
-    sensor_name: str,
-    val: float,
-    params: Mapping[str, Any],
-    unit: str,
-) -> Optional[Result]:
-    for this_sensorname, levels in params.get("numerical_sensor_levels", []):
-        if this_sensorname == sensor_name and levels:
-            result, *_ = check_levels(
-                val,
-                levels_upper=levels.get("upper"),
-                levels_lower=levels.get("lower"),
-                render_func=_unit_to_render_func(unit),
-                label=sensor_name,
-            )
-            return result
-    return None
+def _compile_user_levels_map(params: Mapping[str, Any]) -> Mapping[str, UserLevels]:
+    return {
+        sensorname: UserLevels(
+            upper=levels.get("upper"),
+            lower=levels.get("lower"),
+        )
+        for sensorname, levels in reversed(params.get("numerical_sensor_levels", []))
+    }
 
 
 def _sensor_levels_to_check_levels(
@@ -197,15 +194,15 @@ def check_ipmi_detailed(
     if metric:
         yield metric
 
-    if (
-        num_result := _check_numerical_levels(
-            item,
+    user_levels_map = _compile_user_levels_map(params)
+    if levels := user_levels_map.get(item):
+        yield from check_levels(
             sensor.value,
-            params,
-            sensor.unit,
+            levels_upper=levels.upper,
+            levels_lower=levels.lower,
+            render_func=_unit_to_render_func(sensor.unit),
+            label=item,
         )
-    ) is not None:
-        yield num_result
 
 
 def check_ipmi_summarized(  # pylint: disable=too-many-branches
@@ -213,6 +210,8 @@ def check_ipmi_summarized(  # pylint: disable=too-many-branches
     section: Section,
     status_txt_mapping: StatusTxtMapping,
 ) -> type_defs.CheckResult:
+    user_levels_map = _compile_user_levels_map(params)
+
     states = [State.OK]
     warn_texts = []
     crit_texts = []
@@ -234,16 +233,16 @@ def check_ipmi_summarized(  # pylint: disable=too-many-branches
                 sensor_state = State(wato_status)
                 break
 
-        if sensor.value is not None:
-            sensor_result = _check_numerical_levels(
-                sensor_name,
+        if sensor.value is not None and (levels := user_levels_map.get(sensor_name)):
+            (sensor_result,) = check_levels(
                 sensor.value,
-                params,
-                sensor.unit,
+                levels_upper=levels.upper,
+                levels_lower=levels.lower,
+                render_func=_unit_to_render_func(sensor.unit),
+                label=sensor_name,
             )
-            if sensor_result:
-                sensor_state = State.worst(sensor_state, sensor_result.state)
-                txt = sensor_result.summary
+            sensor_state = State.worst(sensor_state, sensor_result.state)
+            txt = sensor_result.summary
 
         if sensor_state is State.WARN:
             warn_texts.append(txt)

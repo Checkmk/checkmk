@@ -79,7 +79,8 @@ def parse_ipmi_sensors(  # pylint: disable=too-many-branches
             sensor.unit = _na_str(unit)
 
         elif len(stripped_line) == 7:
-            _sid, _name, _sensortype, _sensorstatus, reading_str, unit = stripped_line[:-1]
+            _sid, _name, _sensortype, sensorstatus, reading_str, unit = stripped_line[:-1]
+            sensor.state = ipmi_utils.Sensor.parse_state(sensorstatus)
             sensor.value = _na_float(reading_str)
             sensor.unit = _na_str(unit)
 
@@ -88,7 +89,7 @@ def parse_ipmi_sensors(  # pylint: disable=too-many-branches
                 _sid,
                 _name,
                 _stype,
-                _sstate,
+                sensorstatus,
                 reading_str,
                 unit,
                 _lower_nr,
@@ -98,6 +99,7 @@ def parse_ipmi_sensors(  # pylint: disable=too-many-branches
                 upper_c,
                 _upper_nr,
             ) = stripped_line[:-1]
+            sensor.state = ipmi_utils.Sensor.parse_state(sensorstatus)
             sensor.value = _na_float(reading_str)
             sensor.unit = _na_str(unit)
             sensor.crit_low = _na_float(lower_c)

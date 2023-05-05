@@ -28,6 +28,7 @@ from ..agent_based_api.v1 import check_levels, Metric, Result, Service, State, t
 class Sensor:
     status_txt: str
     unit: str
+    state: Optional[State] = None
     value: Optional[float] = None
     crit_low: Optional[float] = None
     warn_low: Optional[float] = None
@@ -43,6 +44,14 @@ class Sensor:
                 "Entity Absent" in self.status_txt,
             )
         )
+
+    @staticmethod
+    def parse_state(dev_state: str) -> Optional[State]:
+        return {
+            "nominal": State.OK,
+            "warning": State.WARN,
+            "critical": State.CRIT,
+        }.get(dev_state.lower())
 
 
 Section = Dict[str, Sensor]
@@ -153,9 +162,9 @@ def _check_status(
     sensor: Sensor,
     status_txt_mapping: StatusTxtMapping,
     user_configured_states: Iterable[Tuple[str, int]],
-    template: str,
+    label: str,
 ) -> Result:
-    summary = template % sensor.status_txt
+    summary = f"{label}: {sensor.status_txt}"
     for status_txt_beginning, mon_state_int in user_configured_states:
         if sensor.status_txt.startswith(status_txt_beginning):
             return Result(
@@ -163,9 +172,17 @@ def _check_status(
                 summary=summary,
                 details=f"{summary} (service state set by user-configured rules)",
             )
+    if sensor.state is not None:
+        return Result(
+            state=sensor.state,
+            summary=summary,
+            details=f"{summary} (service state reported by freeipmi)",
+        )
+
     return Result(
         state=status_txt_mapping(sensor.status_txt),
-        summary=f"{summary} (service state derived from status description)",
+        summary=summary,
+        details=f"{summary} (service state derived from sensor events)",
     )
 
 
@@ -176,7 +193,7 @@ def check_ipmi_detailed(
     temperature_metrics_only: bool,
     status_txt_mapping: StatusTxtMapping,
 ) -> type_defs.CheckResult:
-    yield _check_status(sensor, status_txt_mapping, params.get("sensor_states", []), "Status: %s")
+    yield _check_status(sensor, status_txt_mapping, params.get("sensor_states", []), label="Status")
 
     if sensor.value is None:
         return
@@ -259,12 +276,12 @@ def _check_individual_sensors(
             sensor.value == 0 and sensor.unit == "" and sensor.status_txt.startswith("nc")
         ):
             results["skipped"].append(
-                Result(state=State.OK, summary=f"{sensor_name} {sensor.status_txt}")
+                Result(state=State.OK, notice=f"{sensor_name}: {sensor.status_txt}")
             )
             continue
 
         status_result = _check_status(
-            sensor, status_txt_mapping, params.get("sensor_states", []), f"{sensor_name} (%s)"
+            sensor, status_txt_mapping, params.get("sensor_states", []), label=sensor_name
         )
 
         if sensor.value is not None and (levels := user_levels_map.get(sensor_name)):

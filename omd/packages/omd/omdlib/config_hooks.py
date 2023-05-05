@@ -56,7 +56,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("cmk.omd")
 
 ConfigHookChoiceItem = tuple[str, str]
-ConfigHookChoices = Pattern | list[ConfigHookChoiceItem] | ConfigChoiceHasError | None
+ConfigHookChoices = Pattern | list[ConfigHookChoiceItem] | ConfigChoiceHasError
 ConfigHookResult = tuple[int, str]
 
 
@@ -170,7 +170,7 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
 
     match [choice.strip() for choice in hook_info.split("\n")]:
         case [""]:
-            return None
+            raise MKTerminate("Invalid output of hook: empty output")
         case ["@{IP_ADDRESS_LIST}"]:
             return IpAddressListHasError()
         case [regextext]:
@@ -184,7 +184,6 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
             except ValueError as excep:
                 raise MKTerminate(f"Invalid output of hook: {choices_list}: {excep}") from excep
             return choices
-    return None
 
 
 def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> ConfigHooks:

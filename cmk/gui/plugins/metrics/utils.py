@@ -42,6 +42,9 @@ from cmk.gui.type_defs import (
     LineType,
     MetricDefinition,
     MetricExpression,
+)
+from cmk.gui.type_defs import MetricName as MetricNameType
+from cmk.gui.type_defs import (
     Perfdata,
     PerfometerSpec,
     RenderableRecipe,
@@ -159,7 +162,7 @@ class MetricUnitColor(TypedDict):
 
 class CheckMetricEntry(TypedDict, total=False):
     scale: float
-    name: str
+    name: MetricNameType
     auto_graph: bool
     deprecated: str
 
@@ -237,7 +240,7 @@ class UnitRegistry:
 # in our codebase because we need to stay compatible with custom extensions
 unit_info = UnitRegistry()
 metric_info: dict[_MetricName, MetricInfo] = {}
-check_metrics: dict[str, dict[str, CheckMetricEntry]] = {}
+check_metrics: dict[str, dict[MetricNameType, CheckMetricEntry]] = {}
 perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
@@ -1360,14 +1363,24 @@ def render_color_icon(color: str) -> HTML:
 
 
 @MemoizeCache
-def reverse_translate_metric_name(canonical_name: str) -> list[tuple[str, float]]:
+def reverse_translate_metric_name(
+    canonical_name: MetricNameType,
+) -> list[tuple[MetricNameType, float]]:
     "Return all known perf data names that are translated into canonical_name with corresponding scaling"
     current_version = parse_check_mk_version(cmk_version.__version__)
-    possible_translations = []
+    possible_translations: dict[MetricNameType, float] = {}
 
     for trans in check_metrics.values():
         for metric, options in trans.items():
-            if options.get("name", "") == canonical_name:
+            # Do we rename and/or scale the metric? Otherwise, we don't care about this translation.
+            if not {"name", "scale"}.intersection(set(options)):
+                continue
+
+            if canonical_name == options.get(
+                "name",
+                # there are translations which just scale the metric but do not change its name
+                metric,
+            ):
                 if "deprecated" in options:
                     # From version check used unified metric, and thus deprecates old translation
                     # added a complete stable release, that gives the customer about a year of data
@@ -1378,9 +1391,17 @@ def reverse_translate_metric_name(canonical_name: str) -> list[tuple[str, float]
                     migration_end = current_version
 
                 if migration_end >= current_version:
-                    possible_translations.append((metric, options.get("scale", 1.0)))
+                    # It is possible to have multiple scales for the same metric accross different
+                    # check plugins. Since we don't have the plugin name available here, the first
+                    # scale will win ...
+                    possible_translations.setdefault(
+                        metric,
+                        options.get("scale", 1.0),
+                    )
 
-    return [(canonical_name, 1.0)] + sorted(set(possible_translations))
+    possible_translations.setdefault(canonical_name, 1.0)
+
+    return sorted(possible_translations.items())
 
 
 def metric_choices(check_command: str, perfvars: tuple[_MetricName, ...]) -> Iterator[Choice]:

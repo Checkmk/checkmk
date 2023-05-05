@@ -42,13 +42,11 @@ Section = Mapping[str, LicensesOverview]
 
 
 def parse_licenses_overview(string_table: StringTable) -> Section:
-    def _make_item_name(row: Mapping[str, object]) -> str:
-        # Not sure if the 'name' is always available and/or unique
-        if "name" in row:
-            return f"{row['name']}/{row['id']}"
-        return f"{row['id']}"
-
-    return {_make_item_name(row): LicensesOverview.parse(row) for row in load_json(string_table)}
+    # Not sure if 'organisation_name' is unique: Add 'organisation_id'
+    return {
+        f"{row['organisation_name']}/{row['organisation_id']}": LicensesOverview.parse(row)
+        for row in load_json(string_table)
+    }
 
 
 register.agent_section(
@@ -58,8 +56,8 @@ register.agent_section(
 
 
 def discover_licenses_overview(section: Section) -> DiscoveryResult:
-    for organisation_id in section:
-        yield Service(item=organisation_id)
+    for organisation_name_id in section:
+        yield Service(item=organisation_name_id)
 
 
 def check_licenses_overview(

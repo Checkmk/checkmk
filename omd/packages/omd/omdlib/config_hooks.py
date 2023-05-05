@@ -63,7 +63,11 @@ ConfigHookResult = tuple[int, str]
 @dataclasses.dataclass(frozen=True)
 class ConfigHook:
     choices: ConfigHookChoices
-    unstructured: dict[str, str | bool]
+    name: str
+    description: str
+    alias: str
+    menu: str
+    unstructured: dict[str, bool]
 
 
 ConfigHooks = dict[str, ConfigHook]
@@ -127,23 +131,21 @@ def _config_load_hook(  # pylint: disable=too-many-branches
     site: "SiteContext",
     hook_name: str,
 ) -> ConfigHook:
-    unstructured: dict[str, str | bool] = {
-        "name": hook_name,
-        "deprecated": False,
-    }
+    unstructured = {"deprecated": False}
 
     if not site.hook_dir:
         # IMHO this should be unreachable...
         raise MKTerminate("Site has no version and therefore no hooks")
 
     description = ""
+    menu = "Other"
     description_active = False
     with Path(site.hook_dir, hook_name).open() as hook_file:
         for line in hook_file:
             if line.startswith("# Alias:"):
-                unstructured["alias"] = line[8:].strip()
+                alias = line[8:].strip()
             elif line.startswith("# Menu:"):
-                unstructured["menu"] = line[7:].strip()
+                menu = line[7:].strip()
             elif line.startswith("# Deprecated: yes"):
                 unstructured["deprecated"] = True
             elif line.startswith("# Description:"):
@@ -152,11 +154,14 @@ def _config_load_hook(  # pylint: disable=too-many-branches
                 description += line[3:].strip() + "\n"
             else:
                 description_active = False
-    unstructured["description"] = description
 
     hook_info = call_hook(site, hook_name, ["choices"])[1]
     return ConfigHook(
         choices=_parse_hook_choices(hook_info),
+        name=hook_name,
+        alias=alias,
+        menu=menu,
+        description=description,
         unstructured=unstructured,
     )
 

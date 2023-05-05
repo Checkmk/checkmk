@@ -1597,7 +1597,7 @@ def config_configure(
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
             if hook.unstructured["active"] and not hook.unstructured["deprecated"]:
-                mp = cast(str, hook.unstructured.get("menu", "Other"))
+                mp = hook.menu
                 entries = menu.get(mp, [])
                 entries.append((hook_name, site.conf[hook_name]))
                 menu[mp] = entries
@@ -1650,13 +1650,8 @@ def config_configure_hook(
         dialog_message("The site has been stopped.")
 
     hook = config_hooks[hook_name]
-    title = cast(str, hook.unstructured["alias"])
-    descr = (
-        cast(str, hook.unstructured["description"])
-        .replace("\n\n", "\001")
-        .replace("\n", " ")
-        .replace("\001", "\n\n")
-    )
+    title = hook.alias
+    descr = hook.description.replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
     value = site.conf[hook_name]
     choices = hook.choices
 
@@ -1672,7 +1667,7 @@ def config_configure_hook(
         assert_never(choices)
 
     if change:
-        config_set_value(site, config_hooks, cast(str, hook.unstructured["name"]), new_value)
+        config_set_value(site, config_hooks, hook.name, new_value)
         save_site_conf(site)
         config_hooks = load_hook_dependencies(site, config_hooks)
         yield hook_name

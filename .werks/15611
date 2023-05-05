@@ -1,0 +1,17 @@
+Title: Migrate <tt>Locked by</tt> during site renamings
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1683280552
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.2.0b7
+
+Users which execute <tt>omd mv</tt> or <tt>omd cp</tt> expect Checkmk to not only rename the site,
+but also migrate the existing configurations created by the <tt>Dynamic host management</tt>.
+
+Previously, if a host was created by the DCD, then the host property <tt>Creation / Locking > Locked
+by</tt> would not be migrated.  Instead the site would show <tt>Unknown site (OLD_SITE_ID)</tt> and
+the host would no longer be updated by the DCD. With this Werk, the migration is done automatically
+during the renaming.

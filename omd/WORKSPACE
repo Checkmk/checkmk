@@ -107,3 +107,11 @@ msitools(
     sha256 = "ebbdd9aa714a6a6ada4450aff5e86351cf910d09b24a85645425737602d75df5",
     version_str = "0.94",
 )
+
+load("//packages/Python:Python_http.bzl", "python")
+load("//:bazel_variables.bzl", "PYTHON_SHA256", "PYTHON_VERSION")
+
+python(
+    sha256 = PYTHON_SHA256,
+    version_str = PYTHON_VERSION,
+)

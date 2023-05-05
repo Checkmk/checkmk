@@ -8,7 +8,7 @@ from __future__ import annotations
 import copy
 import logging
 from collections.abc import Mapping
-from typing import Any, Final, TYPE_CHECKING, TypedDict
+from typing import Any, Final, Iterable, TYPE_CHECKING, TypedDict
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -180,7 +180,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
 
         return AgentRawData(
             b"<<<ipmi_sensors:sep(124)>>>\n"
-            + b"".join(b"|".join(sensor) + b"\n" for sensor in sensors)
+            + b"".join(self._make_line(sensor) for sensor in sensors)
         )
 
     def _firmware_section(self) -> AgentRawData:
@@ -195,15 +195,20 @@ class IPMIFetcher(Fetcher[AgentRawData]):
             self._logger.debug("Exception", exc_info=True)
             return AgentRawData(b"")
 
-        output = b"<<<ipmi_firmware:sep(124)>>>\n"
-        for entity_name, attributes in firmware_entries:
-            for attribute_name, value in attributes.items():
-                output += b"|".join(
-                    str(f).encode("utf8") for f in (entity_name, attribute_name, value)
+        return AgentRawData(
+            b"<<<ipmi_firmware:sep(124)>>>\n"
+            + b"".join(
+                self._make_line(
+                    (str(f).encode("utf8") for f in (entity_name, attribute_name, value))
                 )
-                output += b"\n"
+                for entity_name, attributes in firmware_entries
+                for attribute_name, value in attributes.items()
+            )
+        )
 
-        return AgentRawData(output)
+    @staticmethod
+    def _make_line(words: Iterable[bytes]) -> bytes:
+        return b"|".join(words) + b"\n"
 
     def _has_gpu(self) -> bool:
         if self._command is None:

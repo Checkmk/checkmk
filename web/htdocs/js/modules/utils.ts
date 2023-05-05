@@ -595,7 +595,7 @@ function do_reload(url: string) {
         // Removed "w" to reflect original rendering mechanism during reload
         // For example show the "Your query produced more than 1000 results." message
         // in views even during reload.
-        let opts = ["h", "t", "b", "f", "c", "o", "d", "e", "r", "u"];
+        const opts = ["h", "t", "b", "f", "c", "o", "d", "e", "r", "u"];
         let i;
         for (i = 0; i < opts.length; i++) {
             if (display_options.indexOf(opts[i].toUpperCase()) > -1)
@@ -604,13 +604,6 @@ function do_reload(url: string) {
                     opts[i]
                 );
             else display_options += opts[i];
-        }
-
-        // Add optional display_options if not defined in original display_options
-        opts = ["w"];
-        for (i = 0; i < opts.length; i++) {
-            if (display_options.indexOf(opts[i].toUpperCase()) == -1)
-                display_options += opts[i];
         }
 
         const params = {_display_options: display_options} as any;

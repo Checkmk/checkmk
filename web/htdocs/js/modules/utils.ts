@@ -606,13 +606,6 @@ function do_reload(url: string) {
             else display_options += opts[i];
         }
 
-        // Add optional display_options if not defined in original display_options
-        opts = ["w"];
-        for (i = 0; i < opts.length; i++) {
-            if (display_options.indexOf(opts[i].toUpperCase()) == -1)
-                display_options += opts[i];
-        }
-
         var params = {_display_options: display_options} as any;
         var real_display_options = get_url_param("display_options");
         if (real_display_options !== "")

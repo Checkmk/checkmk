@@ -86,13 +86,13 @@ def check_ipmi(
     status_txt_mapping: StatusTxtMapping,
 ) -> type_defs.CheckResult:
     if item in ["Summary", "Summary FreeIPMI"]:
-        yield from check_ipmi_summarized(
+        yield from _check_ipmi_summarized(
             params,
             section,
             status_txt_mapping,
         )
     elif item in section:
-        yield from check_ipmi_detailed(
+        yield from _check_ipmi_detailed(
             item,
             params,
             section[item],
@@ -145,7 +145,7 @@ def _check_status_txt(
     )
 
 
-def check_ipmi_detailed(
+def _check_ipmi_detailed(
     item: str,
     params: Mapping[str, Any],
     sensor: Sensor,
@@ -205,7 +205,7 @@ def check_ipmi_detailed(
         )
 
 
-def check_ipmi_summarized(  # pylint: disable=too-many-branches
+def _check_ipmi_summarized(  # pylint: disable=too-many-branches
     params: Mapping[str, Any],
     section: Section,
     status_txt_mapping: StatusTxtMapping,

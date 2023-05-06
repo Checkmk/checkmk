@@ -292,20 +292,19 @@ def discover_ipmi(
     section_ipmi: Optional[ipmi.Section],
     section_ipmi_discrete: Optional[ipmi.Section],
 ) -> type_defs.DiscoveryResult:
-    section_merged = _merge_sections(section_ipmi, section_ipmi_discrete)
-
     mode, ignore_params = params["discovery_mode"]
+
     if mode == "summarize":
         yield Service(item="Summary")
         return
 
-    ignore_params = {
-        "ignored_sensorstates": ["ns", "nr", "na"],
-        **ignore_params,
-    }
-    for sensor_name, sensor in section_merged.items():
-        if not ipmi.ignore_sensor(sensor_name, sensor.status_txt, ignore_params):
-            yield Service(item=sensor_name)
+    yield from ipmi.discover_individual_sensors(
+        {
+            "ignored_sensorstates": ["ns", "nr", "na"],
+            **ignore_params,
+        },
+        _merge_sections(section_ipmi, section_ipmi_discrete),
+    )
 
 
 def ipmi_status_txt_mapping(status_txt: str) -> State:

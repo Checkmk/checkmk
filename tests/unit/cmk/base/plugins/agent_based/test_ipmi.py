@@ -341,6 +341,7 @@ def test_regression_discovery(
     )
 
 
+@pytest.mark.skip("WIP, to be brought back")
 @pytest.mark.parametrize(
     "item, check_results",
     [

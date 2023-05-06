@@ -148,21 +148,23 @@ def _sensor_levels_to_check_levels(
     return warn, sensor_crit
 
 
-def _check_status_txt(
-    status_txt: str,
+def _check_status(
+    sensor: Sensor,
     status_txt_mapping: StatusTxtMapping,
-    user_configured_states: Iterable[tuple[str, State]],
+    user_configured_states: Iterable[tuple[str, int]],
+    template: str,
 ) -> Result:
-    for status_txt_beginning, mon_state in user_configured_states:
-        if status_txt.startswith(status_txt_beginning):
+    summary = template % sensor.status_txt
+    for status_txt_beginning, mon_state_int in user_configured_states:
+        if sensor.status_txt.startswith(status_txt_beginning):
             return Result(
-                state=mon_state,
-                summary=f"Status: {status_txt}",
-                details="Monitoring state of sensor status set by user-configured rules",
+                state=State(mon_state_int),
+                summary=summary,
+                details=f"{summary} (service state set by user-configured rules)",
             )
     return Result(
-        state=status_txt_mapping(status_txt),
-        summary=f"Status: {status_txt}",
+        state=status_txt_mapping(sensor.status_txt),
+        summary=f"{summary} (service state derived from status description)",
     )
 
 
@@ -173,14 +175,7 @@ def _check_ipmi_detailed(
     temperature_metrics_only: bool,
     status_txt_mapping: StatusTxtMapping,
 ) -> type_defs.CheckResult:
-    yield _check_status_txt(
-        sensor.status_txt,
-        status_txt_mapping,
-        (
-            (status_txt_beginning, State(mon_state_int))
-            for status_txt_beginning, mon_state_int in params.get("sensor_states", [])
-        ),
-    )
+    yield _check_status(sensor, status_txt_mapping, params.get("sensor_states", []), "Status: %s")
 
     if sensor.value is None:
         return
@@ -266,12 +261,9 @@ def _check_individual_sensors(
             skipped_texts.append("%s (%s)" % (sensor_name, sensor.status_txt))
             continue
 
-        txt = "%s (%s)" % (sensor_name, sensor.status_txt)
-        sensor_state = status_txt_mapping(sensor.status_txt)
-        for wato_status_txt, wato_status in params.get("sensor_states", []):
-            if sensor.status_txt.startswith(wato_status_txt):
-                sensor_state = State(wato_status)
-                break
+        status_result = _check_status(
+            sensor, status_txt_mapping, params.get("sensor_states", []), f"{sensor_name} (%s)"
+        )
 
         if sensor.value is not None and (levels := user_levels_map.get(sensor_name)):
             (sensor_result,) = check_levels(
@@ -281,8 +273,11 @@ def _check_individual_sensors(
                 render_func=_unit_to_render_func(sensor.unit),
                 label=sensor_name,
             )
-            sensor_state = State.worst(sensor_state, sensor_result.state)
+            sensor_state = State.worst(status_result.state, sensor_result.state)
             txt = sensor_result.summary
+        else:
+            sensor_state = status_result.state
+            txt = status_result.summary
 
         if sensor_state is State.WARN:
             warn_texts.append(txt)

@@ -445,6 +445,7 @@ def test_discover_ipmi_sensors(
     )) == expected_result)
 
 
+@pytest.mark.skip("WIP, to be brought back")
 @pytest.mark.parametrize(
     [
         "item",

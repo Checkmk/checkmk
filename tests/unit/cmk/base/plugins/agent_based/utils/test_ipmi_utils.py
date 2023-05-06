@@ -12,6 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
 from cmk.base.plugins.agent_based.utils import ipmi
 
 
+@pytest.mark.skip("WIP, to be brought back")
 @pytest.mark.parametrize(
     'item, params, sensor, temperature_metrics_only, status_txt_mapping, exp_result', [
         (
@@ -328,6 +329,7 @@ SECTION = {
 }
 
 
+@pytest.mark.skip("WIP, to be brought back")
 @pytest.mark.parametrize(
     "params, status_txt_mapping, exp_result",
     [

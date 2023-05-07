@@ -1,5 +1,6 @@
 import crossfilter, {Crossfilter} from "crossfilter2";
 import * as d3 from "d3";
+import {FigureBaseDashletSpec} from "figures_types";
 import {CMKAjaxReponse} from "types";
 
 import * as utils from "../utils";
@@ -269,7 +270,10 @@ export interface FigureData<D = any, P = any> {
     plot_definitions: P[];
 }
 
-export abstract class FigureBase<T extends FigureData> {
+export abstract class FigureBase<
+    T extends FigureData,
+    DashletSpec extends FigureBaseDashletSpec = FigureBaseDashletSpec
+> {
     _div_selector: string;
     _div_selection: d3.Selection<HTMLDivElement, unknown, d3.BaseType, unknown>;
     svg: d3.Selection<SVGSVGElement, unknown, d3.BaseType, unknown> | null;
@@ -283,7 +287,7 @@ export abstract class FigureBase<T extends FigureData> {
     _post_render_hooks: ((data?: any) => void)[];
     _post_url: string;
     _post_body: string;
-    _dashlet_spec: any; //TODO: specify this type starting from DashletConfig
+    _dashlet_spec: DashletSpec;
     _data: T;
     _crossfilter: Crossfilter<any>;
     scheduler: Scheduler;
@@ -333,7 +337,7 @@ export abstract class FigureBase<T extends FigureData> {
         // Post url and body for fetching the graph data
         this._post_url = "";
         this._post_body = "";
-        this._dashlet_spec = {};
+        this._dashlet_spec = {} as DashletSpec;
 
         // Current data of this figure
         this._data = this.getEmptyData();
@@ -433,7 +437,7 @@ export abstract class FigureBase<T extends FigureData> {
         return 10;
     }
 
-    set_dashlet_spec(dashlet_spec: any) {
+    set_dashlet_spec(dashlet_spec: DashletSpec) {
         this._dashlet_spec = dashlet_spec;
     }
 
@@ -671,7 +675,6 @@ export abstract class FigureBase<T extends FigureData> {
 
     get_scale_render_function() {
         // Create uniform behaviour with Graph dashlets: Display no unit at y-axis if value is 0
-        //this function might call itself forever!?
         //@ts-ignore
         const f = render_function => v =>
             Math.abs(v) < 10e-16 ? "0" : render_function(v);

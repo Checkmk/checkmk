@@ -233,35 +233,36 @@ def _check_ipmi_summarized(
 
     yield Result(state=State.OK, summary=f"{len(section)} sensors in total")
 
-    for title, state, texts in zip(
-        ("ok", "warning", "critical", "skipped"),
-        (State.OK, State.WARN, State.CRIT, State.OK),
-        _check_individual_sensors(params, section, status_txt_mapping),
-    ):
-        if not texts:
+    for title, results in _check_individual_sensors(params, section, status_txt_mapping).items():
+        if not results:
             continue
-        yield Result(state=state, summary=f"{len(texts)} sensors {title}")
-        yield from (Result(state=state, notice=text) for text in texts)
+        yield Result(state=results[0].state, summary=f"{len(results)} sensors {title}")
+        yield from results
 
 
 def _check_individual_sensors(
     params: Mapping[str, Any],
     section: Section,
     status_txt_mapping: StatusTxtMapping,
-) -> tuple[list[str], list[str], list[str], list[str]]:
+) -> Mapping[Literal["ok", "warning", "critical", "skipped"], Sequence[Result]]:
     user_levels_map = _compile_user_levels_map(params)
 
-    warn_texts = []
-    crit_texts = []
-    ok_texts = []
-    skipped_texts = []
+    # order matters!
+    results: dict[Literal["ok", "warning", "critical", "skipped"], list[Result]] = {
+        "ok": [],
+        "warning": [],
+        "critical": [],
+        "skipped": [],
+    }
 
     for sensor_name, sensor in section.items():
         # Skip datasets which have no valid data (zero value, no unit and state nc)
         if ignore_sensor(sensor_name, sensor.status_txt, params) or (
             sensor.value == 0 and sensor.unit == "" and sensor.status_txt.startswith("nc")
         ):
-            skipped_texts.append("%s (%s)" % (sensor_name, sensor.status_txt))
+            results["skipped"].append(
+                Result(state=State.OK, summary=f"{sensor_name} {sensor.status_txt}")
+            )
             continue
 
         status_result = _check_status(
@@ -276,20 +277,26 @@ def _check_individual_sensors(
                 render_func=_unit_to_render_func(sensor.unit),
                 label=sensor_name,
             )
-            sensor_state = State.worst(status_result.state, sensor_result.state)
-            txt = sensor_result.summary
+            result = Result(
+                state=State.worst(status_result.state, sensor_result.state),
+                notice=sensor_result.summary,
+                details=f"{status_result.details}, {sensor_result.details}",
+            )
         else:
-            sensor_state = status_result.state
-            txt = status_result.summary
+            result = Result(
+                state=status_result.state,
+                notice=status_result.summary,
+                details=status_result.details,
+            )
 
-        if sensor_state is State.WARN:
-            warn_texts.append(txt)
-        elif sensor_state is State.CRIT:
-            crit_texts.append(txt)
+        if result.state is State.OK:
+            results["ok"].append(result)
+        elif result.state is State.WARN:
+            results["warning"].append(result)
         else:
-            ok_texts.append(txt)
+            results["critical"].append(result)
 
-    return ok_texts, warn_texts, crit_texts, skipped_texts
+    return results
 
 
 def _average_ambient_temperature(section: Section) -> Iterable[Metric]:

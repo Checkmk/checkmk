@@ -66,9 +66,7 @@ def main() {
     def edition = (VERSION == "daily") ? EDITION : "enterprise";
     def distros = versioning.configured_or_overridden_distros(edition, OVERRIDE_DISTROS, distro_key);
 
-    def deploy_to_website = (
-        !params.SKIP_DEPLOY_TO_WEBSITE &&
-        (EDITION == "enterprise" && !jenkins_base_folder.startsWith("Testing")));
+    def deploy_to_website = !params.SKIP_DEPLOY_TO_WEBSITE && !jenkins_base_folder.startsWith("Testing");
 
     def agent_list = get_agent_list(EDITION);
 

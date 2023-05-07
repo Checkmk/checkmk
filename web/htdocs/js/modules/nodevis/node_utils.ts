@@ -235,7 +235,8 @@ export class AbstractGUINode implements TypeWithName {
         const spawn_point_x = spawn_reference.x;
         const spawn_point_y = spawn_reference.y;
 
-        this.node.data.target_coords = {x: spawn_point_x, y: spawn_point_y};
+        if (this.node.data.target_coords == null)
+            this.node.data.target_coords = {x: spawn_point_x, y: spawn_point_y};
         selection
             .attr(
                 "transform",

@@ -405,6 +405,15 @@ export class LayoutManagerLayer extends FixLayer {
                 changed_styles = true;
             }
         });
+        this._world.nodes_layer.links_selection
+            .selectAll("g.link_element path")
+            .attr("in_transit", null);
+        this._world.nodes_layer.links_selection
+            .selectAll("g.link_element line")
+            .attr("in_transit", null);
+        this._world.nodes_layer.nodes_selection
+            .selectAll("g.node_element")
+            .attr("in_transit", null);
         if (changed_styles) this.layout_applier.apply_all_layouts();
     }
 }

@@ -1,10 +1,10 @@
-title: HP Procurve Switches: CPU Load
+title: HPE Procurve Switches: CPU Load
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the CPU load on HP Procurve Switches which support the
+ This check monitors the CPU load on HPE Procurve Switches which support the
  STATISTICS-MIB. The check reads the percentage CPU load.
 
  On each switch which supports this MIB one service is being created.

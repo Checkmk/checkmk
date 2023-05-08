@@ -1,20 +1,20 @@
-title: HP Proliant Servers: Physical Drives in Drive Arrays
+title: HPE Proliant Servers: Physical Drives in Drive Arrays
 agents: snmp
 catalog: hw/server/hp
 license: GPLv2
 distribution: check_mk
 description:
  This check connects to the SNMP agent installed on an operating system
- on a HP Proliant server and reads the information from the {CPQIDA-MIB}
+ on a HPE Proliant server and reads the information from the {CPQIDA-MIB}
  MIB.
- The systems SNMP agent is extended by the HP Management Agents which need
+ The systems SNMP agent is extended by the HPE Management Agents which need
  to be installed on the monitored systems.
 
  The check monitors the reported state of the physical drives connected to the
- internal drive arrays of HP Proliant Servers.
+ internal drive arrays of HPE Proliant Servers.
 
  This check has been developed with ProLiant BL460c G1 systems but should work
- on other HP Proliant Servers too.
+ on other HPE Proliant Servers too.
 
 item:
  The index of the controller and index of the drive seperated by a {{/}}

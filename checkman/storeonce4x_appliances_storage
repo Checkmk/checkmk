@@ -4,7 +4,7 @@ catalog: hw/storagehw/hpe
 license: GPLv2
 distribution: check_mk
 description:
- This checks monitors the storage of a HP StoreOnce appliance.
+ This checks monitors the storage of a HPE StoreOnce appliance.
 
 item:
  The appliance's host name.

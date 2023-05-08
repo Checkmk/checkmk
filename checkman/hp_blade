@@ -1,10 +1,10 @@
-title: HP BladeSystem Enclosures: Summary Health State
+title: HPE BladeSystem Enclosures: Summary Health State
 agents: snmp
 catalog: hw/server/hp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the summary health of HP BladeSystem Enclorures.
+ This check monitors the summary health of HPE BladeSystem Enclorures.
  The check uses the state information reported by SNMP. Addionally to the
  reported state the firmware version and the serial number are shown in
  the check output.

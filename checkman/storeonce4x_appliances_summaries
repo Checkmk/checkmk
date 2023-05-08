@@ -4,7 +4,7 @@ catalog: hw/storagehw/hpe
 license: GPLv2
 distribution: check_mk
 description:
- This checks monitors the summaries state of a HP StoreOnce appliance.
+ This checks monitors the summaries state of a HPE StoreOnce appliance.
  The summaries for the following sub systems (if configured) are displayed:
  <li> Cat stores
  <li> NAS Shares

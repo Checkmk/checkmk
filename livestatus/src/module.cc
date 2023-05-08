@@ -26,8 +26,10 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <filesystem>
 #include <functional>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <optional>
@@ -46,10 +48,12 @@
 #include "livestatus/InputBuffer.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Poller.h"
 #include "livestatus/Queue.h"
 #include "livestatus/RegExp.h"
+#include "livestatus/TrialManager.h"
 #include "livestatus/Triggers.h"
 #include "livestatus/User.h"
 #include "livestatus/data_encoding.h"
@@ -451,26 +455,22 @@ void terminate_threads() {
     }
 }
 
-bool open_unix_socket() {
+void open_unix_socket() {
     struct stat st;
     if (stat(fl_paths.livestatus_socket.c_str(), &st) == 0) {
         if (::unlink(fl_paths.livestatus_socket.c_str()) == 0) {
             Debug(fl_logger_nagios)
                 << "removed old socket file " << fl_paths.livestatus_socket;
         } else {
-            const generic_error ge("cannot remove old socket file " +
-                                   fl_paths.livestatus_socket.string());
-            Alert(fl_logger_nagios) << ge;
-            return false;
+            throw generic_error{"cannot remove old socket file \"" +
+                                fl_paths.livestatus_socket.string() + "\""};
         }
     }
 
     g_unix_socket = ::socket(PF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     g_max_fd_ever = g_unix_socket;
     if (g_unix_socket < 0) {
-        const generic_error ge("cannot create UNIX socket");
-        Critical(fl_logger_nagios) << ge;
-        return false;
+        throw generic_error{"cannot create UNIX socket"};
     }
 
     // Bind it to its address. This creates the file with the name
@@ -482,35 +482,31 @@ bool open_unix_socket() {
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
     if (::bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
                sizeof(sockaddr)) < 0) {
-        const generic_error ge("cannot bind UNIX socket to address " +
-                               fl_paths.livestatus_socket.string());
-        Error(fl_logger_nagios) << ge;
+        generic_error ge{"cannot bind UNIX socket to address \"" +
+                         fl_paths.livestatus_socket.string() + "\""};
         ::close(g_unix_socket);
-        return false;
+        throw std::move(ge);
     }
 
     // Make writable group members (fchmod didn't do nothing for me. Don't
     // know why!)
     if (0 != ::chmod(fl_paths.livestatus_socket.c_str(), 0660)) {
-        const generic_error ge(
-            "cannot change file permissions for UNIX socket at " +
-            fl_paths.livestatus_socket.string() + " to 0660");
-        Error(fl_logger_nagios) << ge;
+        generic_error ge{
+            "cannot change file permissions for UNIX socket at \"" +
+            fl_paths.livestatus_socket.string() + "\" to 0660"};
         ::close(g_unix_socket);
-        return false;
+        throw std::move(ge);
     }
 
     if (0 != ::listen(g_unix_socket, 3 /* backlog */)) {
-        const generic_error ge("cannot listen to UNIX socket at " +
-                               fl_paths.livestatus_socket.string());
-        Error(fl_logger_nagios) << ge;
+        generic_error ge{"cannot listen to UNIX socket at \"" +
+                         fl_paths.livestatus_socket.string() + "\""};
         ::close(g_unix_socket);
-        return false;
+        throw std::move(ge);
     }
 
     Informational(fl_logger_nagios)
         << "opened UNIX socket at " << fl_paths.livestatus_socket;
-    return true;
 }
 
 void close_unix_socket() {
@@ -722,6 +718,25 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
     return 0;
 }
 
+namespace {
+void validate_license(MonitoringCore &mc,
+                      std::chrono::system_clock::time_point installed,
+                      bool is_licensed) {
+    size_t num_services{0};
+    mc.all_of_hosts([&num_services](const IHost &hst) {
+        num_services += hst.total_services();
+        return true;
+    });
+    try {
+        TrialManager{installed, is_licensed}.validateServiceCount(
+            std::chrono::system_clock::now(), num_services);
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+}  // namespace
+
 int broker_process(int event_type __attribute__((__unused__)), void *data) {
     auto *ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
@@ -730,6 +745,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
                 new NagiosCore(fl_downtimes, fl_comments, fl_paths, fl_limits,
                                fl_authorization, fl_data_encoding, fl_edition,
                                fl_state_file_created);
+            validate_license(*fl_core, fl_state_file_created, fl_is_licensed);
             fl_client_queue = new ClientQueue_t{};
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
@@ -1088,33 +1104,24 @@ void writele64(std::ostream &os, uint64_t value) {
     os.write(reinterpret_cast<const char *>(&buffer), sizeof(buffer));
 }
 
-std::optional<std::chrono::system_clock::time_point> stateFileCreated(
+std::chrono::system_clock::time_point stateFileCreated(
     const std::filesystem::path &state_file_created_file) {
     std::ifstream ifs{state_file_created_file, std::ios::binary};
     if (ifs.is_open()) {
         return mk::demangleTimePoint(readle64(ifs));
     }
     if (generic_error{}.code() != std::errc::no_such_file_or_directory) {
-        generic_error ge{"cannot open timestamp file \"" +
-                         state_file_created_file.string() + "\" for reading"};
-        Critical(fl_logger_nagios) << ge;
-        return {};
+        throw generic_error{"cannot open timestamp file \"" +
+                            state_file_created_file.string() +
+                            "\" for reading"};
     }
     auto state_file_created_dir = state_file_created_file.parent_path();
-    std::error_code ec;
-    std::filesystem::create_directories(state_file_created_dir, ec);
-    if (ec) {
-        Critical(fl_logger_nagios)
-            << "cannot create directory " << state_file_created_dir << ": "
-            << ec.message();
-        return {};
-    }
+    std::filesystem::create_directories(state_file_created_dir);
     std::ofstream ofs{state_file_created_file, std::ios::binary};
     if (!ofs.is_open()) {
-        generic_error ge{"cannot open timestamp file \"" +
-                         state_file_created_file.string() + "\" for writing"};
-        Critical(fl_logger_nagios) << ge;
-        return {};
+        throw generic_error{"cannot open timestamp file \"" +
+                            state_file_created_file.string() +
+                            "\" for writing"};
     }
     auto state_file_created = std::chrono::system_clock::now();
     writele64(ofs, mk::mangleTimePoint(state_file_created));
@@ -1142,34 +1149,32 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
     livestatus_parse_arguments(fl_logger_nagios, args);
     omd_advertize(fl_logger_nagios);
 
-    if (!open_unix_socket()) {
-        return 1;
-    }
+    try {
+        open_unix_socket();
 
-    if (verify_event_broker_options() == 0) {
-        Critical(fl_logger_nagios)
-            << "bailing out, please fix event_broker_options.";
-        Critical(fl_logger_nagios)
-            << "hint: your event_broker_options are set to "
-            << event_broker_options << ", try setting it to -1.";
-        return 1;
-    }
-    Informational(fl_logger_nagios)
-        << "your event_broker_options are sufficient for livestatus.";
+        if (verify_event_broker_options() == 0) {
+            throw generic_error{
+                EINVAL,
+                "bailing out, please fix event_broker_options. Hint : Your event_broker_options are set to " +
+                    std::to_string(event_broker_options) +
+                    ", try setting it to -1."};
+        }
+        Informational(fl_logger_nagios)
+            << "your event_broker_options are sufficient for livestatus.";
 
-    if (enable_environment_macros == 1) {
-        Notice(fl_logger_nagios)
-            << "environment_macros are enabled, this might decrease the "
-               "overall nagios performance";
-    }
+        if (enable_environment_macros == 1) {
+            Notice(fl_logger_nagios)
+                << "environment_macros are enabled, this might decrease the "
+                   "overall nagios performance";
+        }
 
-    register_callbacks();
+        register_callbacks();
 
-    if (auto state_file_created =
-            stateFileCreated(fl_paths.state_file_created_file)) {
-        fl_state_file_created = *state_file_created;
-    } else {
-        return 1;  // TODO(sp): Cleanup, same for returns above.
+        fl_state_file_created =
+            stateFileCreated(fl_paths.state_file_created_file);
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        exit(EXIT_FAILURE);
     }
     fl_is_licensed = is_licensed(fl_paths.licensed_state_file);
 

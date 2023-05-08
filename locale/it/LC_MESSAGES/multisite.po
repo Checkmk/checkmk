@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: marc.nerreter@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-05-08 06:34+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@checkmk.com>\n"
+"PO-Revision-Date: 2023-05-08 11:11+0000\n"
+"Last-Translator: Marc Nerreter <marc.nerreter@checkmk.com>\n"
 "Language-Team: Italian <https://translate.checkmk.com/projects/checkmk/"
 "software/it/>\n"
 "Language: it\n"
@@ -286,47 +286,50 @@ msgstr "% / min"
 msgid "% / range"
 msgstr "% / gamma"
 
+#, fuzzy
 msgid "% above predicted value"
 msgstr "% sopra il valore previsto"
 
+#, fuzzy
 msgid "% below predicted value"
 msgstr "% al di sotto del valore previsto"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid "% free"
 msgstr "% libero"
 
+#, fuzzy
 msgid "% memory left"
 msgstr "% di memoria rimasta"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid "% of Flash"
 msgstr "% di Flash"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid "% of RAM"
 msgstr "% di RAM"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid "% of maximum active connections"
 msgstr "% delle connessioni attive massime"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid "% of maximum connections"
 msgstr "% delle connessioni massime"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid "% of maximum idle connections"
 msgstr "% delle connessioni inattive massime"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid "% of port speed"
 msgstr "% della velocità della porta"
 
 msgid "% time"
 msgstr "% tempo"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid "% usage"
 msgstr "% di utilizzo"
 
@@ -1023,7 +1026,7 @@ msgstr "10+ cambiamenti"
 msgid "10.0 - 20.0 ms"
 msgstr "10.0 - 20.0 ms"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid "100% is all cores at full load"
 msgstr "100% è tutti i core a pieno carico"
 
@@ -1132,6 +1135,7 @@ msgstr "6 mesi"
 msgid "64bit packaged binary"
 msgstr "binario confezionato a 64bit"
 
+#, fuzzy
 msgid "68% - One standard deviation"
 msgstr "68% - Una deviazione standard"
 
@@ -1150,6 +1154,7 @@ msgstr "8 giorni indietro"
 msgid "86% - 1.5 standard deviations"
 msgstr "86% - 1,5 deviazioni standard"
 
+#, fuzzy
 msgid "95% - Two standard deviations"
 msgstr "95% - Due deviazioni standard"
 
@@ -1395,7 +1400,7 @@ msgstr ""
 "tutti i contesti di esecuzione (interfaccia utente e console)."
 
 msgid "<br><br>"
-msgstr "Traduzione: \"Il mio nome è \"Il mio nome\";"
+msgstr "<br><br>"
 
 #, python-format
 msgid "<br><br><b>Note</b>: this key was created by user <b>%s</b>"
@@ -1501,8 +1506,8 @@ msgstr ""
 "è possibile monitorare un insieme di file come entità e monitorare il "
 "conteggio, la dimensione totale, il file più grande, più piccolo, più "
 "vecchio o più recente. Nota: se si specifica più di una regola di "
-"corrispondenza, tutte le <b> regole di corrispondenza saranno utilizzate per "
-"definire il modello, non solo la prima.</p>"
+"corrispondenza, <b>tutte</b> le regole di corrispondenza saranno utilizzate "
+"per definire il modello, non solo la prima.</p>"
 
 msgid ""
 "<p>Here you can specify a list of filename patterns to be sent by the agent "
@@ -1579,7 +1584,7 @@ msgstr ""
 "Livestatus. Dai un'occhiata a <a href=\"werk.py?werk=7017\">werk #7017</a> "
 "per ulteriori informazioni.</p>"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
@@ -1625,9 +1630,9 @@ msgstr ""
 "processi Apache</a></li></ul></p><p>Una volta verificate le impostazioni, è "
 "possibile confermare il test. Il test non passerà automaticamente a OK, "
 "perché non è in grado di stimare esattamente la memoria necessaria ai "
-"processi Apache;"
+"processi Apache.</p>"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk checker processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1653,10 +1658,10 @@ msgstr ""
 "al 100%, i controlli non saranno eseguiti in tempo, la latenza dei controlli "
 "crescerà e gli stati non saranno aggiornati.</p><p>Azioni possibili:"
 "<ul><li>Verifica se è possibile o meno diminuire i timeout dei controlli</"
-"li><li>Verifica quali controlli / plugin sono <a href=\"view.py?"
-"view_name=service_check_durations\">consumano la maggior parte del tempo del "
-"processo degli helper</a></li><li>Aumentare il <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_checker_helpers\">numero dei checker di "
+"li><li>Verifica quali controlli / plugin sono <a href=\"view.py?view_name="
+"service_check_durations\">consumano la maggior parte del tempo del processo "
+"degli helper</a></li><li>Aumentare il <a href=\"wato."
+"py?mode=edit_configvar&varname=cmc_checker_helpers\">numero dei checker di "
 "Checkmk</a></li></ul></p><p>Ma bisogna stare attenti a non configurare "
 "troppi checker helpers di Checkmk, perché consumano molta memoria. Il tuo "
 "sistema deve essere in grado di gestire la richiesta di memoria per tutti "
@@ -1665,7 +1670,7 @@ msgstr ""
 "picchi di carico quando si hanno molti processi di Checkmk helper "
 "configurati.</p>"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
 "the Checkmk and Checkmk Discovery services of the hosts monitored with "
@@ -1690,10 +1695,10 @@ msgstr ""
 "al 100%, i controlli non saranno eseguiti in tempo, la latenza dei controlli "
 "crescerà e gli stati non saranno aggiornati.</p><p>Azioni possibili:"
 "<ul><li>Verifica se è possibile o meno diminuire i timeout dei controlli</"
-"li><li>Verifica quali controlli / plugin sono <a href=\"view.py?"
-"view_name=service_check_durations\">consumano la maggior parte del tempo del "
-"processo degli helper</a></li><li>Aumentare il <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_checker_helpers\">numero dei checker di "
+"li><li>Verifica quali controlli / plugin sono <a href=\"view.py?view_name="
+"service_check_durations\">consumano la maggior parte del tempo del processo "
+"degli helper</a></li><li>Aumentare il <a href=\"wato."
+"py?mode=edit_configvar&varname=cmc_checker_helpers\">numero dei checker di "
 "Checkmk</a></li></ul></p><p>Ma bisogna stare attenti a non configurare "
 "troppi checker helpers di Checkmk, perché consumano molta memoria. Il tuo "
 "sistema deve essere in grado di gestire la richiesta di memoria per tutti "
@@ -1702,7 +1707,7 @@ msgstr ""
 "picchi di carico quando si hanno molti processi di Checkmk helper "
 "configurati.</p>"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk helper processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1728,10 +1733,10 @@ msgstr ""
 "al 100%, i controlli non saranno eseguiti in tempo, la latenza dei controlli "
 "crescerà e gli stati non saranno aggiornati.</p><p>Azioni possibili:"
 "<ul><li>Verifica se è possibile o meno diminuire i timeout dei controlli</"
-"li><li>Verifica quali controlli / plugin sono <a href=\"view.py?"
-"view_name=service_check_durations\">consumano la maggior parte del tempo del "
-"processo degli helper</a></li><li>Aumentare il <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_checker_helpers\">numero dei checker di "
+"li><li>Verifica quali controlli / plugin sono <a href=\"view.py?view_name="
+"service_check_durations\">consumano la maggior parte del tempo del processo "
+"degli helper</a></li><li>Aumentare il <a href=\"wato."
+"py?mode=edit_configvar&varname=cmc_checker_helpers\">numero dei checker di "
 "Checkmk</a></li></ul></p><p>Ma bisogna stare attenti a non configurare "
 "troppi checker helpers di Checkmk, perché consumano molta memoria. Il tuo "
 "sistema deve essere in grado di gestire la richiesta di memoria per tutti "
@@ -1891,17 +1896,20 @@ msgid ""
 "deleted. Other states will keep the log entries but reclassify the state of "
 "them.</p>"
 msgstr ""
-"<p>Puoi definire uno o più schemi (espressioni regolari) in ogni regola di "
-"schema di logfile. Questi schemi vengono applicati ai file di log "
-"selezionati per riclassificare i messaggi di log corrispondenti. Il primo "
-"pattern che corrisponde a una riga sarà usato per riclassificare un "
-"messaggio. Puoi usare il <a href=\"wato.py?mode=pattern_editor\">Logfile "
-"Pattern Analyzer</a> per testare le regole che hai definito qui. Questo è "
-"particolarmente rilevante per i percorsi dei file di Windows. Per esempio, "
-"per far corrispondere il percorso di Windows \"C:\\Users\\amdin\\Desktop\", "
-"inserisci \"C:\\Users\\admin\\Desktop\".</p><p>Seleziona \"Ignora\" come "
-"stato per far cancellare i log corrispondenti. Gli altri stati manterranno "
-"le voci di log ma ne riclassificheranno lo stato.</p>"
+"<p>È possibile definire uno o più pattern (espressioni regolari) in ogni "
+"regola di pattern del file di registro. Questi schemi vengono applicati ai "
+"file di registro selezionati per riclassificare i messaggi di registro "
+"corrispondenti. Il primo pattern che corrisponde a una riga verrà utilizzato "
+"per riclassificare un messaggio. È possibile utilizzare il <a href=\"wato."
+"py?mode=pattern_editor\">Logfile Pattern Analyzer</a> per verificare le "
+"regole definite qui.</p><p>Nota che per far corrispondere un carattere regex "
+"speciale nei modelli, è necessario utilizzare una barra rovesciata per "
+"sfuggire al suo significato speciale. Questo è particolarmente importante "
+"per i percorsi dei file di Windows. Ad esempio, per trovare una "
+"corrispondenza con il percorso di Windows \"C:\\Users\\amdin\\Desktop\", "
+"immettere \"C:\\Users\\admin\\Desktop\".</p><p>Selezionare \"Ignora\" come "
+"stato per eliminare i registri corrispondenti. Gli altri stati manterranno "
+"le voci di registro ma ne riclassificheranno lo stato.</p>"
 
 msgid ""
 "<p>You have been logged out. Please reload the page to re-authenticate.</p>"
@@ -2276,9 +2284,9 @@ msgstr ""
 "host con il ruleset <i>Livello di servizio degli host</i>, questo livello "
 "viene ereditato da tutti i servizi che non hanno esplicitamente assegnato un "
 "servizio con il ruleset <i>Livello di servizio dei servizi</i>. Assegnare "
-"nessun livello di servizio equivale a definire un livello pari a 0."
-"<br>L'elenco dei livelli di servizio disponibili viene configurato tramite "
-"un'opzione globale.<a href='%s'>a;"
+"nessun livello di servizio equivale a definire un livello pari a "
+"0.<br>L'elenco dei livelli di servizio disponibili viene configurato tramite "
+"un'<a href='%s'>opzione globale.</a>"
 
 msgid "A service or host in this aggregation is in downtime."
 msgstr "Un servizio o un host in questa aggregazione è in downtime."
@@ -4391,6 +4399,12 @@ msgid ""
 "and complete the dialog.<br>If everything is correct, you will receive the "
 "verification response file now containing your subscription details."
 msgstr ""
+"Dopo il download, caricare il rapporto sull'utilizzo della licenza nel "
+"portale clienti di Checkmk.<br>Navigare su 'Subscription' nel portale "
+"clienti e selezionare l'abbonamento attivo. Fare clic su \"Carica\" sotto "
+"\"Carica informazioni sulla licenza\" e completare la finestra di "
+"dialogo.<br>Se tutto è corretto, si riceverà il file di risposta alla "
+"verifica contenente i dettagli dell'abbonamento."
 
 msgid ""
 "After download, upload the verification request to the Checkmk customer "
@@ -4399,6 +4413,12 @@ msgid ""
 "and complete the dialog.<br>If everything is correct, you will receive the "
 "license information response file now containing your subscription details."
 msgstr ""
+"Dopo il download, caricare la richiesta di verifica nel portale clienti di "
+"Checkmk.<br>Viaggiare su \"Abbonamento\" nel portale clienti e selezionare "
+"l'abbonamento attivo. Fare clic su \"Carica\" sotto \"Carica informazioni "
+"sulla licenza\" e completare la finestra di dialogo.<br>Se tutto è corretto, "
+"si riceverà il file di risposta delle informazioni sulla licenza contenente "
+"i dettagli dell'abbonamento."
 
 msgid ""
 "After setting up a new Service in PagerDuty you will receive an Integration "
@@ -9664,6 +9684,8 @@ msgid ""
 "Central site is version >= 2.2 while remote site is an older version, please "
 "update remote sites first"
 msgstr ""
+"Il sito centrale ha una versione >= 2.2 mentre il sito remoto ha una "
+"versione precedente, aggiornare prima i siti remoti"
 
 msgid "Ceph MGRs"
 msgstr "MGR di Ceph"
@@ -10364,9 +10386,8 @@ msgstr "Automazione Checkmk"
 msgid "Checkmk automation %s %s"
 msgstr "Controllare l'automazione %s %s"
 
-#, fuzzy
 msgid "Checkmk can only be configured on the managers central site."
-msgstr "Check_MK può essere configurato solo sul sito centrale dei manager."
+msgstr "Checkmk può essere configurato solo sul sito centrale dei manager."
 
 msgid "Checkmk check helpers"
 msgstr "Aiutanti di controllo Checkmk"
@@ -12680,9 +12701,8 @@ msgstr "Elementi del contenuto"
 msgid "Content of %s"
 msgstr "Contenuto di %s"
 
-#, fuzzy
 msgid "Content of XML file"
-msgstr "Contenuto di %s"
+msgstr "Contenuto di file XML"
 
 #, python-format
 msgid "Content of report %s"
@@ -18065,10 +18085,9 @@ msgid ""
 msgstr ""
 "Ogni istanza EC2 crea un host piggyback.<br><b>Nota:</b>Non tutti i nomi di "
 "host sono pingabili e la modifica del nome piggyback ripristinerà l'host "
-"piggyback.IP - Regione - ID istanza:</b><br>Il nome è composto da "
-"\"{indirizzo IPv4 privato}-{Regione}-{ID istanza}\". Questo identifica in "
-"modo univoco l'istanza EC2. Non è possibile eseguire il ping di questo nome "
-"host."
+"piggyback.IP - Regione - ID istanza:</b><br>Il nome è composto da \"{Private "
+"IPv4 address}-{Region}-{Instance ID}\". Questo identifica in modo univoco "
+"l'istanza EC2. Non è possibile eseguire il ping di questo nome host."
 
 msgid ""
 "Each SNMPv3 device has it's own engine ID. This is normally automatically "
@@ -19186,7 +19205,6 @@ msgstr "Inserire il gruppo"
 msgid "Enter layout mode"
 msgstr "Entrare in modalità layout"
 
-#, fuzzy
 msgid ""
 "Enter the Fully Qualified Domain Name (FQDN) where your Checkmk server is "
 "running including the protocol. Stop after the top level domain (TLD), so "
@@ -19195,10 +19213,13 @@ msgid ""
 "need to be accessible by your identity provider. We only support HTTPS for "
 "this endpoint, which specifies a trusted certificate."
 msgstr ""
-"Si riferisce all'URL del server su cui è in esecuzione Checkmk. Ad esempio: "
-"https://mycheckmkserver.com Non è necessario che sia accessibile dal "
-"provider di identità. Per questo endpoint supportiamo solo HTTPS, che "
-"specifica un certificato attendibile."
+"Inserire il nome di dominio completamente qualificato (FQDN) in cui è in "
+"esecuzione il server Checkmk, compreso il protocollo. Fermarsi dopo il "
+"dominio di primo livello (TLD), quindi non includere il nome del "
+"sito.<br>Corretto: https://mycheckmkserver.com<br>Corretto: "
+"https://mycheckmkserver.com/site/<br>Non è necessario che il server sia "
+"accessibile dal provider di identità. Per questo endpoint è supportato solo "
+"l'HTTPS, che specifica un certificato attendibile."
 
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
@@ -21524,11 +21545,16 @@ msgid ""
 "license usage report. To do this, you must first download your license usage "
 "report."
 msgstr ""
+"Per l'invio offline, è necessario aggiungere i dettagli dell'abbonamento al "
+"rapporto di utilizzo della licenza. A tal fine, è necessario scaricare il "
+"rapporto di utilizzo della licenza."
 
 msgid ""
 "For offline verification, we need to verify your subscription in the "
 "customer portal. To do this, you must first download a verification request."
 msgstr ""
+"Per la verifica offline, è necessario verificare l'abbonamento nel portale "
+"clienti. A tal fine, è necessario scaricare una richiesta di verifica."
 
 msgid ""
 "For running Checkmk based checks the Microcore keeps a pool of specialized "
@@ -22728,20 +22754,21 @@ msgstr ""
 "dall'agente speciale Elasticsearch. Se un indice corrisponde, viene aggiunto "
 "a un gruppo. Il nome del gruppo è determinato dalla parte del nome "
 "dell'indice che corrisponde all'espressione regolare. Ad esempio, si "
-"supponga di avere i seguenti cinque indici:<ul><li>my-index-2022.10</"
-"li><li>my-index-2022.11</li><li>myother-index-2021-01-01</li><li>myother-"
+"supponga di avere i seguenti cinque indici:<ul><li>my-index-2022.10</li><li"
+">my-index-2022.11</li><li>myother-index-2021-01-01</li><li>myother-"
 "index-2021-01-02</li><li>undated-index</li></ul>Utilizzando l'espressione "
-"regolare <tt>([a-z]|-)+[a-z]</tt>, si configurano i seguenti gruppi:"
-"<ul><li>my-index (contiene my-index-2022.10, my-index-2022.11)</li><li>mio-"
-"altro-indice (contiene mio-altro-indice-2021-01-01, mio-altro-"
-"indice-2021-01-02)</li><li>undated-index (contiene undated-index, Lo stesso "
-"raggruppamento potrebbe essere ottenuto utilizzando le due espressioni "
-"regolari <tt>mio-indice</tt> e <tt>mio-altro-indice</tt>, tuttavia un elenco "
-"di questo tipo può essere ingombrante da mantenere nel caso di un numero "
-"elevato di indici. Si noti che gli indici che non corrispondono a nessuna "
-"delle espressioni regolari configurate saranno rilevati come servizi "
-"singoli. Al contrario, qualsiasi indice che faccia parte di almeno un gruppo "
-"non verrà rilevato come servizio singolo."
+"regolare <tt>([a-z]|-)+[a-z]</tt>, si configurano i seguenti gruppi:<ul><li"
+">my-index (contiene my-index-2022.10, my-index-2022.11)</li><li>mio-altro-"
+"indice (contiene mio-altro-indice-2021-01-01, mio-altro-"
+"indice-2021-01-02)</li><li>undated-index (contiene undated-index, quindi di "
+"fatto non raggruppato)</li></ul> Lo stesso raggruppamento potrebbe essere "
+"ottenuto utilizzando le due espressioni regolari<tt>mio-indice</tt> e <tt"
+">mio-altro-indice</tt>, tuttavia un elenco di questo tipo può essere "
+"ingombrante da mantenere nel caso di un numero elevato di indici. Si noti "
+"che gli indici che non corrispondono a nessuna delle espressioni regolari "
+"configurate saranno rilevati come servizi singoli. Al contrario, qualsiasi "
+"indice che faccia parte di almeno un gruppo non verrà rilevato come servizio "
+"singolo."
 
 msgid "Group interface presence"
 msgstr "Presenza dell'interfaccia di gruppo"
@@ -27817,12 +27844,18 @@ msgid ""
 "have downloaded in the customer portal. Click on 'Upload response' to "
 "complete the submission."
 msgstr ""
+"In questo modulo, utilizzare \"Seleziona file\" per selezionare il file di "
+"informazioni sulla licenza scaricato nel portale clienti. Fare clic su "
+"\"Carica risposta\" per completare l'invio."
 
 msgid ""
 "In this form, use 'Select file' to select the license information file you "
 "have downloaded in the customer portal. Click on 'Upload response' to "
 "complete the verification."
 msgstr ""
+"In questo modulo, utilizzare \"Seleziona file\" per selezionare il file di "
+"informazioni sulla licenza scaricato nel portale clienti. Fare clic su "
+"\"Carica risposta\" per completare la verifica."
 
 msgid ""
 "In this interval the event daemon will save its state to disk, so that you "
@@ -34264,7 +34297,7 @@ msgid "Missing variable user_id"
 msgstr "Variabile mancante user_id"
 
 msgid "Mix of CME and non-CME is not allowed."
-msgstr ""
+msgstr "Non è consentita la combinazione di ECM e non ECM."
 
 msgid "Mixed"
 msgstr "Misto"
@@ -37939,6 +37972,7 @@ msgstr "Solo A-Z, a-z, 0-9 e meno (-) sono ammessi."
 
 msgid "Only CCE remote sites can be added to CCE central site"
 msgstr ""
+"Solo i siti remoti di CCE possono essere aggiunti al sito centrale di CCE"
 
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
@@ -38140,9 +38174,8 @@ msgstr "Aprire le notifiche di massa"
 msgid "Open connections load"
 msgstr "Carico di connessioni aperte"
 
-#, fuzzy
 msgid "Open customer portal"
-msgstr "Non usare la porta personalizzata"
+msgstr "Aprire il portale clienti"
 
 msgid "Open file descriptors"
 msgstr "Descrittori di file aperti"
@@ -41366,11 +41399,11 @@ msgstr "Problemi in totale"
 msgid "Problems of host"
 msgstr "Problemi dell'ospite"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Problems with %d datasource detected"
 msgid_plural "Problems with %d datasources detected"
-msgstr[0] "Problemi con la fonte di dati %d rilevata"
-msgstr[1] ""
+msgstr[0] "Rilevati problemi con la fonte di dati %d"
+msgstr[1] "Rilevati problemi con %d fonti di dati"
 
 msgid "Proceed"
 msgstr "Procedere"
@@ -42972,6 +43005,8 @@ msgstr "URL del sito remoto"
 #, python-format
 msgid "Remote sites are not allowed when central site in license state %s"
 msgstr ""
+"I siti remoti non sono consentiti quando il sito centrale è in stato di "
+"licenza %s"
 
 msgid "Remote: Send events to remote syslog host"
 msgstr "Remoto: Invia gli eventi all'host syslog remoto"
@@ -51944,6 +51979,8 @@ msgstr ""
 msgid ""
 "The Checkmk server URL should be the FQDN (see inline help for details)."
 msgstr ""
+"L'URL del server Checkmk deve essere l'FQDN (per i dettagli, vedere la guida "
+"in linea)."
 
 msgid "The Customer has been deleted."
 msgstr "Il cliente è stato cancellato."
@@ -56335,10 +56372,10 @@ msgid ""
 "discards))*100</b> "
 msgstr ""
 "Questi livelli fanno sì che il controllo diventi di avviso o critico ogni "
-"volta che il tasso di scarti percentuali <b> o il tasso di scarti assoluti "
-"<b> dell'interfaccia monitorata raggiunge i limiti indicati. Il tasso di "
-"scarti percentuali è calcolato con la formula <b>(scarti / (unicast + non-"
-"unicast + scarti))*100</b>. "
+"volta che il <b>tasso di scarti percentuali</b> o il <b>tasso di scarti "
+"assoluti</b> dell'interfaccia monitorata raggiunge i limiti indicati. Il "
+"tasso di scarti percentuali è calcolato con la formula <b>(scarti / (unicast "
+"+ non-unicast + scarti))*100</b>. "
 
 msgid ""
 "These levels make the check go warning or critical whenever the "
@@ -57398,19 +57435,16 @@ msgstr ""
 msgid "This is a front matter Template"
 msgstr "Questo è un modello frontale"
 
-#, fuzzy
 msgid ""
 "This is a placeholder for a timeseries graph displaying the historical "
 "development of your license usage. To be able to see this graph, you first "
 "have to configure the subscription start, end and sizing in the subscription "
 "settings"
 msgstr ""
-"Questo è un segnaposto per un grafico a serie temporali che mostra lo "
-"sviluppo storico dell'uso della tua licenza. Per poter vedere questo "
-"grafico, devi prima configurare l'inizio, la fine e il dimensionamento "
-"dell'abbonamento nelle impostazioni dell'abbonamento. In secondo luogo "
-"dovrai aspettare almeno due giorni dopo la creazione di un sito o "
-"l'aggiornamento alla 2.0"
+"Questo è un segnaposto per un grafico temporale che mostra l'andamento "
+"storico dell'utilizzo della licenza. Per poter visualizzare questo grafico, "
+"è necessario configurare l'inizio, la fine e il dimensionamento "
+"dell'abbonamento nelle impostazioni dell'abbonamento"
 
 msgid "This is a regular expression for matching the event's comment."
 msgstr "Questa è un'espressione regolare per abbinare il commento dell'evento."
@@ -60087,7 +60121,7 @@ msgid ""
 msgstr ""
 "Questa impostazione decide quali tipi di messaggi registrare nel registro "
 "del demone di Checkmk Micro Core. La cronologia degli oggetti (avvisi di "
-"servizio, eventi, ecc.) non è <b> influenzata da questa impostazione."
+"servizio, eventi, ecc.) <b>non</b> è influenzata da questa impostazione."
 
 #, python-format
 msgid ""
@@ -62082,7 +62116,6 @@ msgstr "Provate a creare una connessione TCP per"
 msgid "Try out"
 msgstr "Prova"
 
-#, fuzzy
 msgid "Try pattern match"
 msgstr "Prova il pattern match"
 
@@ -63094,9 +63127,8 @@ msgstr "Carica il file MIB"
 msgid "Upload SNMP MIBs"
 msgstr "Caricare le MIB SNMP"
 
-#, fuzzy
 msgid "Upload XML file"
-msgstr "Carica il file MIB"
+msgstr "Carica il file XML"
 
 msgid "Upload agent signature key"
 msgstr "Carica la chiave della firma dell'agente"
@@ -63125,21 +63157,17 @@ msgstr "Caricare o eliminare le icone personalizzate"
 msgid "Upload package"
 msgstr "Carica il pacchetto"
 
-#, fuzzy
 msgid "Upload report in the customer portal"
-msgstr "Caricare o eliminare le icone personalizzate"
+msgstr "Caricare il rapporto nel portale clienti"
 
-#, fuzzy
 msgid "Upload request in the customer portal"
-msgstr "Caricare o eliminare le icone personalizzate"
+msgstr "Caricare il rapporto nel portale clienti"
 
-#, fuzzy
 msgid "Upload response"
-msgstr "Salva la risposta"
+msgstr "Carica la risposta"
 
-#, fuzzy
 msgid "Upload subscription details"
-msgstr "Dettagli dell'abbonamento"
+msgstr "Caricare i dettagli dell'abbonamento"
 
 msgid "Upload verification response"
 msgstr "Caricare la risposta di verifica"
@@ -69946,8 +69974,9 @@ msgid ""
 "(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "
 "you like to search for a single backslash."
 msgstr ""
-"La tua frase di ricerca non è valida. Devi fornire un'espressione regolare "
-"(regex)."
+"L'istruzione di ricerca non è valida. È necessario fornire un'espressione "
+"regolare (regex). Ad esempio, è necessario utilizzare <tt>\\\\</tt> invece "
+"di <tt>\\</tt> se si desidera cercare un singolo backslash."
 
 msgid "Your setting and factory settings are identical."
 msgstr "Le vostre impostazioni e quelle di fabbrica sono identiche."

@@ -74,7 +74,7 @@ def test_cmk_automation(site: Site) -> None:
 def test_cmk_deploy_agent(site: Site) -> None:
     web = CMKWebSession(site)
     response = web.get("/%s/check_mk/deploy_agent.py" % site.id)
-    assert response.text.startswith("ERROR: Missing")
+    assert response.json()["result"].startswith("Missing")
 
 
 def test_cmk_run_cron(site: Site) -> None:

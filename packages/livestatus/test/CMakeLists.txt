@@ -35,7 +35,8 @@ add_executable(
   test_Queue.cc
   test_StringColumn.cc
   test_StringUtil.cc
-  test_TimeColumn.cc)
+  test_TimeColumn.cc
+  test_TrialManager.cc)
 
 target_include_directories(test PUBLIC ../include ${googletest_ext_include})
 target_compile_features(test PRIVATE cxx_std_17)

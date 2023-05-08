@@ -74,6 +74,7 @@ public:
 
     // TODO(sp) Nuke this
     const IHost *ihost(const ::host *handle) const;
+    const IHostGroup *ihostgroup(const ::hostgroup *handle) const;
 
     const IHost *find_host(const std::string &name) override;
     [[nodiscard]] std::unique_ptr<const IHostGroup> find_hostgroup(
@@ -217,6 +218,8 @@ private:
     Store _store;
     std::unordered_map<const ::host *, std::unique_ptr<IHost>>
         ihosts_by_handle_;
+    std::unordered_map<const ::hostgroup *, std::unique_ptr<IHostGroup>>
+        ihostgroups_by_handle_;
     // host is never nullptr
     std::unordered_map<std::string, ::host *> _hosts_by_designation;
     std::unordered_map<const ::contact *, std::unique_ptr<IContact>> icontacts_;

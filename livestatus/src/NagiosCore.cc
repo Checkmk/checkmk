@@ -75,6 +75,10 @@ NagiosCore::NagiosCore(
         _hosts_by_designation[mk::unsafe_tolower(hst->name)] = hst;
     }
 
+    for (const auto *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
+        ihostgroups_by_handle_[hg] = std::make_unique<NebHostGroup>(*hg);
+    }
+
     for (const ::contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
         icontacts_[ctc] = std::make_unique<NebContact>(*ctc);
     }
@@ -88,6 +92,11 @@ NagiosCore::NagiosCore(
 const IHost *NagiosCore::ihost(const ::host *handle) const {
     auto it = ihosts_by_handle_.find(handle);
     return it == ihosts_by_handle_.end() ? nullptr : it->second.get();
+}
+
+const IHostGroup *NagiosCore::ihostgroup(const ::hostgroup *handle) const {
+    auto it = ihostgroups_by_handle_.find(handle);
+    return it == ihostgroups_by_handle_.end() ? nullptr : it->second.get();
 }
 
 const IHost *NagiosCore::find_host(const std::string &name) {
@@ -306,12 +315,9 @@ bool NagiosCore::all_of_contact_groups(
 
 bool NagiosCore::all_of_host_groups(
     const std::function<bool(const IHostGroup &)> &pred) const {
-    for (const auto *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
-        if (!pred(NebHostGroup{*hg})) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(
+        ihostgroups_by_handle_.cbegin(), ihostgroups_by_handle_.cend(),
+        [pred](const auto &entry) { return pred(*entry.second); });
 }
 
 bool NagiosCore::all_of_service_groups(

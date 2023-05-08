@@ -99,6 +99,9 @@ static std::string fl_edition{"free"};
 static std::chrono::system_clock::time_point fl_state_file_created;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static bool fl_is_licensed{false};
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static bool fl_should_terminate;
 
 struct ThreadInfo {
@@ -1006,6 +1009,8 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 fl_paths.event_console_status_socket = right;
             } else if (left == "state_file_created_file") {
                 fl_paths.state_file_created_file = right;
+            } else if (left == "licensed_state_file") {
+                fl_paths.licensed_state_file = right;
             } else if (left == "pnp_path") {
                 fl_paths.rrd_multiple_directory =
                     check_path("RRD multiple directory", right);
@@ -1095,7 +1100,6 @@ std::optional<std::chrono::system_clock::time_point> stateFileCreated(
         Critical(fl_logger_nagios) << ge;
         return {};
     }
-    fl_state_file_created = std::chrono::system_clock::now();
     auto state_file_created_dir = state_file_created_file.parent_path();
     std::error_code ec;
     std::filesystem::create_directories(state_file_created_dir, ec);
@@ -1112,8 +1116,17 @@ std::optional<std::chrono::system_clock::time_point> stateFileCreated(
         Critical(fl_logger_nagios) << ge;
         return {};
     }
-    writele64(ofs, mk::mangleTimePoint(fl_state_file_created));
-    return fl_state_file_created;
+    auto state_file_created = std::chrono::system_clock::now();
+    writele64(ofs, mk::mangleTimePoint(state_file_created));
+    return state_file_created;
+}
+
+bool is_licensed(const std::filesystem::path &licensed_state_file) {
+    char state{'0'};
+    if (std::ifstream ifs{licensed_state_file, std::ios::binary}) {
+        ifs.read(&state, sizeof(state));
+    };
+    return state == '1';
 }
 
 }  // namespace
@@ -1158,6 +1171,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
     } else {
         return 1;  // TODO(sp): Cleanup, same for returns above.
     }
+    fl_is_licensed = is_licensed(fl_paths.licensed_state_file);
 
     /* Unfortunately, we cannot start our socket thread right now.
        Nagios demonizes *after* having loaded the NEB modules. When

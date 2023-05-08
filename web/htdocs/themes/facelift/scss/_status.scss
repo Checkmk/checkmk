@@ -167,6 +167,11 @@ td.count.hstate2 {
 }
 
 /* PENDING / in DOWNTIME */
+.statebullet.statep {
+  color: $font-color-white !important;
+  background-color: $color-state-4-background !important;
+}
+
 .statep,
 .hstatep,
 .stated,

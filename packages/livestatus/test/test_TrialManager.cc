@@ -3,11 +3,11 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+// IWYU pragma: no_include <type_traits>
 #include <chrono>
 #include <ratio>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 
 #include "gtest/gtest.h"
 #include "livestatus/ChronoUtils.h"

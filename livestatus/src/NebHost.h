@@ -45,6 +45,10 @@ public:
             .value_or("");
     }
 
+    [[nodiscard]] int32_t total_services() const override {
+        return host_.total_services;
+    }
+
     bool all_of_services(
         std::function<bool(const IService &)> pred) const override;
 

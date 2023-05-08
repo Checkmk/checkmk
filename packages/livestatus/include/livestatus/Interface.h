@@ -76,6 +76,7 @@ public:
     [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string notificationPeriodName() const = 0;
     [[nodiscard]] virtual std::string servicePeriodName() const = 0;
+    [[nodiscard]] virtual int32_t total_services() const = 0;
     virtual bool all_of_services(
         std::function<bool(const IService &)> pred) const = 0;
     virtual bool all_of_labels(

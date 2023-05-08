@@ -46,7 +46,7 @@ import traceback
 from collections.abc import Callable, Iterable, Iterator
 from enum import auto, Enum
 from pathlib import Path
-from typing import assert_never, BinaryIO, cast, Final, IO, Literal, Mapping, NamedTuple, NoReturn
+from typing import assert_never, BinaryIO, cast, Final, IO, Mapping, NamedTuple, NoReturn
 from uuid import uuid4
 
 import psutil  # type: ignore[import]

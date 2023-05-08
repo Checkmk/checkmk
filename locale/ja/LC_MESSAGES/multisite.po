@@ -4312,6 +4312,22 @@ msgstr ""
 "す。これは手動で行う必要があります(最後に)。"
 
 msgid ""
+"After download, upload the license usage report to the Checkmk customer "
+"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
+"active subscription. Click on 'Upload' under 'Upload License Information' "
+"and complete the dialog.<br>If everything is correct, you will receive the "
+"verification response file now containing your subscription details."
+msgstr ""
+
+msgid ""
+"After download, upload the verification request to the Checkmk customer "
+"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
+"active subscription. Click on 'Upload' under 'Upload License Information' "
+"and complete the dialog.<br>If everything is correct, you will receive the "
+"license information response file now containing your subscription details."
+msgstr ""
+
+msgid ""
 "After setting up a new Service in PagerDuty you will receive an Integration "
 "key associated with that service. Copy that value here."
 msgstr ""
@@ -9459,6 +9475,11 @@ msgstr "セル間隔"
 msgid "Celsius"
 msgstr "摂氏"
 
+msgid ""
+"Central site is version >= 2.2 while remote site is an older version, please "
+"update remote sites first"
+msgstr ""
+
 msgid "Ceph MGRs"
 msgstr "Ceph MGRs"
 
@@ -10025,9 +10046,6 @@ msgstr ""
 "LIVESTATUS_TCP_PORT で設定可能なポートの TCP 経由で到達できるようにするために"
 "使用されます。"
 
-msgid "Check_MK can only be configured on the managers central site."
-msgstr "Checkmkは、マネージャの中央サイトでのみ設定できます。"
-
 #, fuzzy
 msgid ""
 "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux "
@@ -10160,6 +10178,10 @@ msgstr "Checkmkの自動化"
 #, python-format
 msgid "Checkmk automation %s %s"
 msgstr "Checkmkオートメーション %s %s"
+
+#, fuzzy
+msgid "Checkmk can only be configured on the managers central site."
+msgstr "Checkmkは、マネージャの中央サイトでのみ設定できます。"
 
 msgid "Checkmk check helpers"
 msgstr "Checkmkチェックヘルパー"
@@ -12417,6 +12439,10 @@ msgstr "コンテンツ要素"
 
 #, python-format
 msgid "Content of %s"
+msgstr "%s の内容"
+
+#, fuzzy
+msgid "Content of XML file"
 msgstr "%s の内容"
 
 #, python-format
@@ -18862,6 +18888,19 @@ msgstr "グループに入る"
 msgid "Enter layout mode"
 msgstr "レイアウトモードに入る"
 
+#, fuzzy
+msgid ""
+"Enter the Fully Qualified Domain Name (FQDN) where your Checkmk server is "
+"running including the protocol. Stop after the top level domain (TLD), so "
+"don't include your site name.<br>Correct: https://mycheckmkserver."
+"com<br>Incorrect: https://mycheckmkserver.com/site/<br>The server does not "
+"need to be accessible by your identity provider. We only support HTTPS for "
+"this endpoint, which specifies a trusted certificate."
+msgstr ""
+"これは、Checkmk が稼働しているサーバーの URL を指します。例: https://"
+"mycheckmkserver.com IDプロバイダからアクセスできる必要はありません。このエン"
+"ドポイントでは、信頼できる証明書を指定する HTTPS のみをサポートしています。"
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr "終了コードを10桁の小文字の16進値(0x00000000など)で入力します。"
 
@@ -21146,6 +21185,17 @@ msgid ""
 msgstr ""
 "AWSタグを設定する方法については、https://docs.aws.amazon.com/AWSEC2/latest/"
 "UserGuide/Using_Tags.htmlをご覧ください"
+
+msgid ""
+"For offline submission, we need to add the subscription details to your "
+"license usage report. To do this, you must first download your license usage "
+"report."
+msgstr ""
+
+msgid ""
+"For offline verification, we need to verify your subscription in the "
+"customer portal. To do this, you must first download a verification request."
+msgstr ""
 
 msgid ""
 "For running Checkmk based checks the Microcore keeps a pool of specialized "
@@ -27257,6 +27307,18 @@ msgstr ""
 
 msgid "In this folder"
 msgstr "このフォルダ内"
+
+msgid ""
+"In this form, use 'Select file' to select the license information file you "
+"have downloaded in the customer portal. Click on 'Upload response' to "
+"complete the submission."
+msgstr ""
+
+msgid ""
+"In this form, use 'Select file' to select the license information file you "
+"have downloaded in the customer portal. Click on 'Upload response' to "
+"complete the verification."
+msgstr ""
 
 msgid ""
 "In this interval the event daemon will save its state to disk, so that you "
@@ -33679,6 +33741,9 @@ msgstr "変数siteidがありません"
 msgid "Missing variable user_id"
 msgstr "変数user_idがありません"
 
+msgid "Mix of CME and non-CME is not allowed."
+msgstr ""
+
 msgid "Mixed"
 msgstr "混合"
 
@@ -37322,6 +37387,9 @@ msgstr "オンライン認証に成功しました。"
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "A-Z、a-z、0-9およびマイナス(-)のみが許可されます。"
 
+msgid "Only CCE remote sites can be added to CCE central site"
+msgstr ""
+
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
 "with one of the CAs that are listed here. That way it is guaranteed that it "
@@ -37510,6 +37578,10 @@ msgstr "一括通知を開く"
 
 msgid "Open connections load"
 msgstr "オープン接続の負荷"
+
+#, fuzzy
+msgid "Open customer portal"
+msgstr "カスタムポートを使用しないでください"
 
 msgid "Open file descriptors"
 msgstr "ファイル記述子を開く"
@@ -42301,6 +42373,10 @@ msgstr "リモートポート番号"
 
 msgid "Remote site URL"
 msgstr "リモートサイトのURL"
+
+#, python-format
+msgid "Remote sites are not allowed when central site in license state %s"
+msgstr ""
 
 msgid "Remote: Send events to remote syslog host"
 msgstr "リモート:リモートsyslogホストにイベントを送信します"
@@ -51119,6 +51195,10 @@ msgstr ""
 "Checkmk検出は、ホストでチェックするサービスを自動的に検出して構成し、ホストラ"
 "ベルも検出する場合があります。"
 
+msgid ""
+"The Checkmk server URL should be the FQDN (see inline help for details)."
+msgstr ""
+
 msgid "The Customer has been deleted."
 msgstr "カスタマーが削除されました。"
 
@@ -56273,12 +56353,12 @@ msgstr ""
 msgid "This is a front matter Template"
 msgstr "これはフロントマターテンプレートです"
 
+#, fuzzy
 msgid ""
 "This is a placeholder for a timeseries graph displaying the historical "
 "development of your license usage. To be able to see this graph, you first "
 "have to configure the subscription start, end and sizing in the subscription "
-"settings. Secondly you will have to wait for at least two days after "
-"creating a site or updating to 2.0"
+"settings"
 msgstr ""
 "これは、ライセンス使用量の履歴を表示する時系列グラフのプレースホルダです。こ"
 "のグラフを見るには、まず、サブスクリプションの設定で、サブスクリプションの開"
@@ -57385,16 +57465,6 @@ msgstr "この問題は認められています"
 
 msgid "This problem has been acknowledged."
 msgstr "この問題は承認済みです。"
-
-msgid ""
-"This refers to the URL of the server where Checkmk is running. For example: "
-"https://mycheckmkserver.com It does not need to be accessible by your "
-"identity provider. We only support HTTPS for this endpoint, which specifies "
-"a trusted certificate."
-msgstr ""
-"これは、Checkmk が稼働しているサーバーの URL を指します。例: https://"
-"mycheckmkserver.com IDプロバイダからアクセスできる必要はありません。このエン"
-"ドポイントでは、信頼できる証明書を指定する HTTPS のみをサポートしています。"
 
 msgid ""
 "This regex must match the <i>beginning</i> of the complete command line of "
@@ -60712,14 +60782,15 @@ msgstr "信頼できる"
 msgid "Trusted certificate authorities for SSL"
 msgstr "SSL の信頼できる認証局"
 
-msgid "Try Pattern Match"
-msgstr "パターンマッチを試す"
-
 msgid "Try bringing up TCP connection for"
 msgstr "のTCP接続を起動してみてください"
 
 msgid "Try out"
 msgstr "試してみる"
+
+#, fuzzy
+msgid "Try pattern match"
+msgstr "パターンマッチを試す"
 
 msgid "Try to fit text to the available space."
 msgstr "利用可能なスペースにテキストを収めるようにしてください。"
@@ -61718,6 +61789,10 @@ msgstr "MIBファイルをアップロードする"
 msgid "Upload SNMP MIBs"
 msgstr "SNMP MIBをアップロードする"
 
+#, fuzzy
+msgid "Upload XML file"
+msgstr "MIBファイルをアップロードする"
+
 msgid "Upload agent signature key"
 msgstr "エージェントの署名キーをアップロードする"
 
@@ -61736,10 +61811,6 @@ msgstr "アップロードアイコン"
 msgid "Upload key"
 msgstr "キーをアップロード"
 
-#, fuzzy
-msgid "Upload license usage report"
-msgstr "ライセンス使用状況レポートをダウンロードする"
-
 msgid "Upload new:"
 msgstr "新規アップロード:"
 
@@ -61749,6 +61820,22 @@ msgstr "カスタムロゴをアップロードする"
 
 msgid "Upload package"
 msgstr "パッケージをアップロード"
+
+#, fuzzy
+msgid "Upload report in the customer portal"
+msgstr "カスタムロゴをアップロードする"
+
+#, fuzzy
+msgid "Upload request in the customer portal"
+msgstr "カスタムロゴをアップロードする"
+
+#, fuzzy
+msgid "Upload response"
+msgstr "応答を非表示"
+
+#, fuzzy
+msgid "Upload subscription details"
+msgstr "サブスクリプションの詳細"
 
 msgid "Upload verification response"
 msgstr "検証結果をアップロードする"
@@ -66388,12 +66475,6 @@ msgstr "xinetd"
 msgid "XInetd status"
 msgstr "ステータスを追加"
 
-msgid "XML file upload"
-msgstr "XML ファイルアップロード"
-
-msgid "XML text"
-msgstr "XML テキスト"
-
 msgid "XMPP Failed inbound stream establishes"
 msgstr "XMPP失敗したインバウンドストリームが確立します"
 
@@ -70306,6 +70387,17 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#, fuzzy
+#~| msgid "Download license usage report"
+#~ msgid "Upload license usage report"
+#~ msgstr "ライセンス使用状況レポートをダウンロードする"
+
+#~ msgid "XML file upload"
+#~ msgstr "XML ファイルアップロード"
+
+#~ msgid "XML text"
+#~ msgstr "XML テキスト"
+
 #~ msgid "Persistent Volume Claims & Persistent Volumes"
 #~ msgstr "持続的なボリュームクレームとボリューム"
 
@@ -71770,9 +71862,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Start or end of a scheduled downtime "
 #~ msgstr "スケジュールされたダウンタイムの開始または終了 "
-
-#~ msgid "Subscription details"
-#~ msgstr "サブスクリプションの詳細"
 
 #~ msgid "The list of services will never match"
 #~ msgstr "サービスのリストが一致することはありません"

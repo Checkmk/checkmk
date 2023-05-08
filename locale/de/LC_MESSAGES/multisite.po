@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: marc.nerreter@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-05-04 14:14+0000\n"
-"Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
+"PO-Revision-Date: 2023-05-05 06:00+0000\n"
+"Last-Translator: Martin Hirschvogel <martin.hirschvogel@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -4394,6 +4394,22 @@ msgstr ""
 "Agenten neu gebacken werden. Auf allen Hosts, die automatische Updates "
 "durchführen, muss ein solcher gebackener Agent, der das Plugin enthält, "
 "installiert sein. Dies muss einmalig manuell durchgeführt werden."
+
+msgid ""
+"After download, upload the license usage report to the Checkmk customer "
+"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
+"active subscription. Click on 'Upload' under 'Upload License Information' "
+"and complete the dialog.<br>If everything is correct, you will receive the "
+"verification response file now containing your subscription details."
+msgstr ""
+
+msgid ""
+"After download, upload the verification request to the Checkmk customer "
+"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
+"active subscription. Click on 'Upload' under 'Upload License Information' "
+"and complete the dialog.<br>If everything is correct, you will receive the "
+"license information response file now containing your subscription details."
+msgstr ""
 
 msgid ""
 "After setting up a new Service in PagerDuty you will receive an Integration "
@@ -9634,6 +9650,11 @@ msgstr "Zellabstand"
 msgid "Celsius"
 msgstr "Celsius"
 
+msgid ""
+"Central site is version >= 2.2 while remote site is an older version, please "
+"update remote sites first"
+msgstr ""
+
 msgid "Ceph MGRs"
 msgstr "Ceph MGRs"
 
@@ -10196,10 +10217,6 @@ msgstr ""
 "normalerweise auf einem lokalen UNIX-Socket. Diese Optionen ermöglicht es "
 "diesen Socket zusätzlich per TCP über das Netzwerk verfügbar zu machen."
 
-msgid "Check_MK can only be configured on the managers central site."
-msgstr ""
-"Check_MK kann nur von der zentralen Manager-Instanz aus administriert werden."
-
 msgid ""
 "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux "
 "and Unix as used space. Usually, 5% are being reserved for root when a new "
@@ -10329,6 +10346,11 @@ msgstr "Checkmk Automatisierung"
 #, python-format
 msgid "Checkmk automation %s %s"
 msgstr "Checkmk-Automatisierung %s %s"
+
+#, fuzzy
+msgid "Checkmk can only be configured on the managers central site."
+msgstr ""
+"Check_MK kann nur von der zentralen Manager-Instanz aus administriert werden."
 
 msgid "Checkmk check helpers"
 msgstr "Checkmk-Check-Hilfsprozesse"
@@ -12646,6 +12668,10 @@ msgstr "Inhaltselemente"
 
 #, python-format
 msgid "Content of %s"
+msgstr "Inhalt von %s"
+
+#, fuzzy
+msgid "Content of XML file"
 msgstr "Inhalt von %s"
 
 #, python-format
@@ -19156,6 +19182,20 @@ msgstr "Gruppe eingeben"
 msgid "Enter layout mode"
 msgstr "Layout-Modus aufrufen"
 
+#, fuzzy
+msgid ""
+"Enter the Fully Qualified Domain Name (FQDN) where your Checkmk server is "
+"running including the protocol. Stop after the top level domain (TLD), so "
+"don't include your site name.<br>Correct: https://mycheckmkserver."
+"com<br>Incorrect: https://mycheckmkserver.com/site/<br>The server does not "
+"need to be accessible by your identity provider. We only support HTTPS for "
+"this endpoint, which specifies a trusted certificate."
+msgstr ""
+"Dies bezieht sich auf die URL des Servers, auf dem Checkmk ausgeführt wird. "
+"Beispiel: https://mycheckmkserver.com Er muss nicht über Ihren "
+"Identitätsanbieter zugänglich sein. Wir unterstützen nur HTTPS für diesen "
+"Endpunkt, wodurch ein vertrauenswürdiges Zertifikat angegeben wird."
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 "Den Exitcode als 10-stellige, kleingeschriebenen Hexwert eingeben, z.B. "
@@ -21472,6 +21512,17 @@ msgid ""
 msgstr ""
 "Wie man AWS-Tags konfiguriert, erfahren Sie unter https://docs.aws.amazon."
 "com/AWSEC2/latest/UserGuide/Using_Tags.html"
+
+msgid ""
+"For offline submission, we need to add the subscription details to your "
+"license usage report. To do this, you must first download your license usage "
+"report."
+msgstr ""
+
+msgid ""
+"For offline verification, we need to verify your subscription in the "
+"customer portal. To do this, you must first download a verification request."
+msgstr ""
 
 msgid ""
 "For running Checkmk based checks the Microcore keeps a pool of specialized "
@@ -27017,10 +27068,10 @@ msgid ""
 "be converted into names. This usually adds additional execution time. Also "
 "DNS resolution might fail for some addresses."
 msgstr ""
-"Durch diese Option wird <tt>traceroute</tt> <b>nicht</b> mit der Option "
-"<tt>-n</tt> aufgerufen. Somit werden dann alle IP-Adressen in Namen "
-"konvertiert, falls das möglich ist. Dadurch wird die Ausführungszeit des "
-"Checks größer. Auch kann die Namensauflösung für manche Adressen scheitern."
+"Durch diese Option wird <tt>traceroute</tt> <b>nicht</b> mit der Option <tt>-"
+"n</tt> aufgerufen. Somit werden dann alle IP-Adressen in Namen konvertiert, "
+"falls das möglich ist. Dadurch wird die Ausführungszeit des Checks größer. "
+"Auch kann die Namensauflösung für manche Adressen scheitern."
 
 msgid ""
 "If you use this parameter then the check goes warning if the interface is "
@@ -27745,6 +27796,18 @@ msgstr ""
 
 msgid "In this folder"
 msgstr "In diesem Ordner"
+
+msgid ""
+"In this form, use 'Select file' to select the license information file you "
+"have downloaded in the customer portal. Click on 'Upload response' to "
+"complete the submission."
+msgstr ""
+
+msgid ""
+"In this form, use 'Select file' to select the license information file you "
+"have downloaded in the customer portal. Click on 'Upload response' to "
+"complete the verification."
+msgstr ""
 
 msgid ""
 "In this interval the event daemon will save its state to disk, so that you "
@@ -34169,6 +34232,9 @@ msgstr "Variable siteid fehlt"
 msgid "Missing variable user_id"
 msgstr "Variable user_id fehlt"
 
+msgid "Mix of CME and non-CME is not allowed."
+msgstr ""
+
 msgid "Mixed"
 msgstr "Gemischt"
 
@@ -34350,8 +34416,8 @@ msgid ""
 "services (inventory) there is a separate permission (see below)"
 msgstr ""
 "Eigenschaft von vorhandenen Hosts verändern. Bitte beachten: für die "
-"Verwaltung von Services (Inventarisierung) gibt es eine eigene Berechtigung ("
-"siehe unten)"
+"Verwaltung von Services (Inventarisierung) gibt es eine eigene Berechtigung "
+"(siehe unten)"
 
 msgid "Modify: Check VM Status (off: keep default)"
 msgstr "Ändern: VM-Status prüfen (aus: Standard beibehalten)"
@@ -37840,6 +37906,9 @@ msgstr "Online-Prüfung war erfolgreich"
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Nur A-Z, a-z, 0-9 und Minus (-) sind erlaubt."
 
+msgid "Only CCE remote sites can be added to CCE central site"
+msgstr ""
+
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
 "with one of the CAs that are listed here. That way it is guaranteed that it "
@@ -38039,6 +38108,10 @@ msgstr "Offene Sammelalarme"
 
 msgid "Open connections load"
 msgstr "Auslastung offener Verbindungen"
+
+#, fuzzy
+msgid "Open customer portal"
+msgstr "Keinen benutzerdefinierten Port verwenden"
 
 msgid "Open file descriptors"
 msgstr "Offene Dateideskriptoren"
@@ -40548,8 +40621,8 @@ msgstr ""
 
 msgid "Please specify a relative path only using a-z, 0-9, -, _, . and $"
 msgstr ""
-"Bitte geben Sie einen relativen Pfad an, der nur die Zeichen a-z, 0-9, -, _, "
-". und $ verwendet"
+"Bitte geben Sie einen relativen Pfad an, der nur die Zeichen a-z, 0-9, -, "
+"_, . und $ verwendet"
 
 msgid "Please specify a tag ID"
 msgstr "Bitte eine Merkmal-ID angeben"
@@ -42874,6 +42947,10 @@ msgstr "Entfernte Portnummer"
 
 msgid "Remote site URL"
 msgstr "URL der entfernten Instanz"
+
+#, python-format
+msgid "Remote sites are not allowed when central site in license state %s"
+msgstr ""
 
 msgid "Remote: Send events to remote syslog host"
 msgstr "Entfernt: Ereignisse an entfernten Syslog-Host senden"
@@ -48158,8 +48235,8 @@ msgid ""
 "Some devices send texts in non-ASCII characters. Checkmk always assumes "
 "UTF-8 encoding. You can declare other  other encodings here"
 msgstr ""
-"Einige Hosts senden Text mit nicht-ASCII Zeichen. Checkmk erwartet immer UTF-"
-"8 Kodierung. Andere Kodierungen können Sie hier einstellen"
+"Einige Hosts senden Text mit nicht-ASCII Zeichen. Checkmk erwartet immer "
+"UTF-8 Kodierung. Andere Kodierungen können Sie hier einstellen"
 
 msgid ""
 "Some firewalls are not capable of dealing with a few thousand PING packets "
@@ -50165,7 +50242,7 @@ msgid "Status: yellow"
 msgstr "Zustand: gelb"
 
 msgid "Steal"
-msgstr ""
+msgstr "Steal"
 
 msgid "Steelhead connections"
 msgstr "Verbindungen bei Steelheadgeräten"
@@ -51802,6 +51879,10 @@ msgstr ""
 "Die Serviceerkennung von Check_MK findet und konfiguriert automatisch alle "
 "zu überwachenden Services eines Hosts kann auch Host-Labels erkennen."
 
+msgid ""
+"The Checkmk server URL should be the FQDN (see inline help for details)."
+msgstr ""
+
 msgid "The Customer has been deleted."
 msgstr "Der Kunde wurde gelöscht."
 
@@ -52527,10 +52608,10 @@ msgid ""
 "<br><br>Please review and fix the file content or remove the file before you "
 "visit this page again.<br><br>The problematic entry is:<br>%s"
 msgstr ""
-"Das Audit-Log kann aufgrund eines Syntaxfehlers in %s nicht angezeigt "
-"werden.<br><br>Bitte überprüfen und korrigieren Sie den Inhalt der Datei "
-"oder entfernen Sie die Datei, bevor Sie diese Seite erneut "
-"besuchen.<br><br>Der problematische Eintrag lautet:<br>%s"
+"Das Audit-Log kann aufgrund eines Syntaxfehlers in %s nicht angezeigt werden."
+"<br><br>Bitte überprüfen und korrigieren Sie den Inhalt der Datei oder "
+"entfernen Sie die Datei, bevor Sie diese Seite erneut besuchen.<br><br>Der "
+"problematische Eintrag lautet:<br>%s"
 
 msgid ""
 "The availability is computed by processing entries from a data table of "
@@ -57246,12 +57327,12 @@ msgstr ""
 msgid "This is a front matter Template"
 msgstr "Das ist eine Titelei Vorlage"
 
+#, fuzzy
 msgid ""
 "This is a placeholder for a timeseries graph displaying the historical "
 "development of your license usage. To be able to see this graph, you first "
 "have to configure the subscription start, end and sizing in the subscription "
-"settings. Secondly you will have to wait for at least two days after "
-"creating a site or updating to 2.0"
+"settings"
 msgstr ""
 "Dies ist ein Platzhalter für ein Zeitreihen-Diagramm, das die historische "
 "Entwicklung Ihrer Lizenznutzung anzeigt. Um diesen Graphen sehen zu können, "
@@ -58476,17 +58557,6 @@ msgstr "Dieses Problem wurde quittiert"
 
 msgid "This problem has been acknowledged."
 msgstr "Dieses Problem wurde quittiert"
-
-msgid ""
-"This refers to the URL of the server where Checkmk is running. For example: "
-"https://mycheckmkserver.com It does not need to be accessible by your "
-"identity provider. We only support HTTPS for this endpoint, which specifies "
-"a trusted certificate."
-msgstr ""
-"Dies bezieht sich auf die URL des Servers, auf dem Checkmk ausgeführt wird. "
-"Beispiel: https://mycheckmkserver.com Er muss nicht über Ihren "
-"Identitätsanbieter zugänglich sein. Wir unterstützen nur HTTPS für diesen "
-"Endpunkt, wodurch ein vertrauenswürdiges Zertifikat angegeben wird."
 
 msgid ""
 "This regex must match the <i>beginning</i> of the complete command line of "
@@ -61923,14 +61993,15 @@ msgstr "Vertrauenswürdig"
 msgid "Trusted certificate authorities for SSL"
 msgstr "Vertrauenswürdige SSL-Zertifizierungsstellen"
 
-msgid "Try Pattern Match"
-msgstr "Teste Suchmuster"
-
 msgid "Try bringing up TCP connection for"
 msgstr "Versuche TCP Verbindung für"
 
 msgid "Try out"
 msgstr "Testen"
+
+#, fuzzy
+msgid "Try pattern match"
+msgstr "Teste Suchmuster"
 
 msgid "Try to fit text to the available space."
 msgstr "Versuchen Sie, den Text an den verfügbaren Platz anzupassen."
@@ -62940,6 +63011,10 @@ msgstr "MIB-Datei hochladen"
 msgid "Upload SNMP MIBs"
 msgstr "SNMP-MIBs hochladen"
 
+#, fuzzy
+msgid "Upload XML file"
+msgstr "MIB-Datei hochladen"
+
 msgid "Upload agent signature key"
 msgstr "Agenten-Signaturschlüssel hochladen"
 
@@ -62958,9 +63033,6 @@ msgstr "Symbol hochladen"
 msgid "Upload key"
 msgstr "Schlüssel hochladen"
 
-msgid "Upload license usage report"
-msgstr "Lizenznutzungsbericht hochladen"
-
 msgid "Upload new:"
 msgstr "Neues hochladen:"
 
@@ -62969,6 +63041,22 @@ msgstr "Laden Sie benutzerdefinierte Icons hoch oder löschen Sie Icons"
 
 msgid "Upload package"
 msgstr "Paket hochladen"
+
+#, fuzzy
+msgid "Upload report in the customer portal"
+msgstr "Laden Sie benutzerdefinierte Icons hoch oder löschen Sie Icons"
+
+#, fuzzy
+msgid "Upload request in the customer portal"
+msgstr "Laden Sie benutzerdefinierte Icons hoch oder löschen Sie Icons"
+
+#, fuzzy
+msgid "Upload response"
+msgstr "Antwort speichern"
+
+#, fuzzy
+msgid "Upload subscription details"
+msgstr "Subskriptionsdetails hinzufügen"
 
 msgid "Upload verification response"
 msgstr "Verifizierungsantwort hochladen"
@@ -67767,12 +67855,6 @@ msgstr "XInetd"
 msgid "XInetd status"
 msgstr "XInetd-Status"
 
-msgid "XML file upload"
-msgstr "Hochladen der XML-Datei"
-
-msgid "XML text"
-msgstr "XML-Text"
-
 msgid "XMPP Failed inbound stream establishes"
 msgstr "XMPP Fehlschläge bei Aufbau eingehender Streams"
 
@@ -71828,6 +71910,15 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Upload license usage report"
+#~ msgstr "Lizenznutzungsbericht hochladen"
+
+#~ msgid "XML file upload"
+#~ msgstr "Hochladen der XML-Datei"
+
+#~ msgid "XML text"
+#~ msgstr "XML-Text"
 
 #~ msgid "Persistent Volume Claims & Persistent Volumes"
 #~ msgstr "Dauerhafte Volume Claims & Dauerhafte Volumen"
@@ -76419,9 +76510,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 #, fuzzy
 #~ msgid "Download usage report"
 #~ msgstr "Diesen Bericht herunterladen"
-
-#~ msgid "Add subscription details"
-#~ msgstr "Subskriptionsdetails hinzufügen"
 
 #~ msgid ""
 #~ "Set customer portal credentials and subscription details for "

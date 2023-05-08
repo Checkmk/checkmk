@@ -4204,6 +4204,22 @@ msgid ""
 msgstr ""
 
 msgid ""
+"After download, upload the license usage report to the Checkmk customer "
+"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
+"active subscription. Click on 'Upload' under 'Upload License Information' "
+"and complete the dialog.<br>If everything is correct, you will receive the "
+"verification response file now containing your subscription details."
+msgstr ""
+
+msgid ""
+"After download, upload the verification request to the Checkmk customer "
+"portal.<br>Navigate to 'Subscription' in the customer portal and select your "
+"active subscription. Click on 'Upload' under 'Upload License Information' "
+"and complete the dialog.<br>If everything is correct, you will receive the "
+"license information response file now containing your subscription details."
+msgstr ""
+
+msgid ""
 "After setting up a new Service in PagerDuty you will receive an Integration "
 "key associated with that service. Copy that value here."
 msgstr ""
@@ -9302,6 +9318,11 @@ msgstr ""
 msgid "Celsius"
 msgstr ""
 
+msgid ""
+"Central site is version >= 2.2 while remote site is an older version, please "
+"update remote sites first"
+msgstr ""
+
 msgid "Ceph MGRs"
 msgstr ""
 
@@ -9864,9 +9885,6 @@ msgid ""
 "reachable via TCP on a port configurable with LIVESTATUS_TCP_PORT."
 msgstr ""
 
-msgid "Check_MK can only be configured on the managers central site."
-msgstr ""
-
 msgid ""
 "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux "
 "and Unix as used space. Usually, 5% are being reserved for root when a new "
@@ -10011,6 +10029,9 @@ msgstr "foloseste configuratia locala"
 
 #, python-format
 msgid "Checkmk automation %s %s"
+msgstr ""
+
+msgid "Checkmk can only be configured on the managers central site."
 msgstr ""
 
 #, fuzzy
@@ -12217,6 +12238,10 @@ msgstr ""
 #, python-format
 msgid "Content of %s"
 msgstr ""
+
+#, fuzzy
+msgid "Content of XML file"
+msgstr "Parola"
 
 #, python-format
 msgid "Content of report %s"
@@ -18972,6 +18997,15 @@ msgstr "Adaugă group de model"
 msgid "Enter layout mode"
 msgstr "Matrice"
 
+msgid ""
+"Enter the Fully Qualified Domain Name (FQDN) where your Checkmk server is "
+"running including the protocol. Stop after the top level domain (TLD), so "
+"don't include your site name.<br>Correct: https://mycheckmkserver."
+"com<br>Incorrect: https://mycheckmkserver.com/site/<br>The server does not "
+"need to be accessible by your identity provider. We only support HTTPS for "
+"this endpoint, which specifies a trusted certificate."
+msgstr ""
+
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 
@@ -21321,6 +21355,17 @@ msgstr ""
 msgid ""
 "For information on AWS tag configuration, visit https://docs.aws.amazon.com/"
 "AWSEC2/latest/UserGuide/Using_Tags.html"
+msgstr ""
+
+msgid ""
+"For offline submission, we need to add the subscription details to your "
+"license usage report. To do this, you must first download your license usage "
+"report."
+msgstr ""
+
+msgid ""
+"For offline verification, we need to verify your subscription in the "
+"customer portal. To do this, you must first download a verification request."
 msgstr ""
 
 msgid ""
@@ -26708,6 +26753,18 @@ msgstr ""
 #, fuzzy
 msgid "In this folder"
 msgstr "Folder nou"
+
+msgid ""
+"In this form, use 'Select file' to select the license information file you "
+"have downloaded in the customer portal. Click on 'Upload response' to "
+"complete the submission."
+msgstr ""
+
+msgid ""
+"In this form, use 'Select file' to select the license information file you "
+"have downloaded in the customer portal. Click on 'Upload response' to "
+"complete the verification."
+msgstr ""
 
 msgid ""
 "In this interval the event daemon will save its state to disk, so that you "
@@ -33564,6 +33621,9 @@ msgstr ""
 msgid "Missing variable user_id"
 msgstr ""
 
+msgid "Mix of CME and non-CME is not allowed."
+msgstr ""
+
 msgid "Mixed"
 msgstr ""
 
@@ -37453,6 +37513,9 @@ msgstr "Numele Aplicatiei"
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr ""
 
+msgid "Only CCE remote sites can be added to CCE central site"
+msgstr ""
+
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
 "with one of the CAs that are listed here. That way it is guaranteed that it "
@@ -37632,6 +37695,10 @@ msgstr ""
 #, fuzzy
 msgid "Open connections load"
 msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "Open customer portal"
+msgstr "Adaugă Contoar"
 
 #, fuzzy
 msgid "Open file descriptors"
@@ -42512,6 +42579,10 @@ msgstr ""
 #, fuzzy
 msgid "Remote site URL"
 msgstr "Adaugă filtre"
+
+#, python-format
+msgid "Remote sites are not allowed when central site in license state %s"
+msgstr ""
 
 msgid "Remote: Send events to remote syslog host"
 msgstr ""
@@ -51370,6 +51441,10 @@ msgid ""
 "checked on your hosts and may also discover host labels."
 msgstr ""
 
+msgid ""
+"The Checkmk server URL should be the FQDN (see inline help for details)."
+msgstr ""
+
 msgid "The Customer has been deleted."
 msgstr ""
 
@@ -55514,8 +55589,7 @@ msgid ""
 "This is a placeholder for a timeseries graph displaying the historical "
 "development of your license usage. To be able to see this graph, you first "
 "have to configure the subscription start, end and sizing in the subscription "
-"settings. Secondly you will have to wait for at least two days after "
-"creating a site or updating to 2.0"
+"settings"
 msgstr ""
 
 msgid "This is a regular expression for matching the event's comment."
@@ -56347,13 +56421,6 @@ msgid "This problem has been acknowledged"
 msgstr ""
 
 msgid "This problem has been acknowledged."
-msgstr ""
-
-msgid ""
-"This refers to the URL of the server where Checkmk is running. For example: "
-"https://mycheckmkserver.com It does not need to be accessible by your "
-"identity provider. We only support HTTPS for this endpoint, which specifies "
-"a trusted certificate."
 msgstr ""
 
 msgid ""
@@ -59222,14 +59289,15 @@ msgstr ""
 msgid "Trusted certificate authorities for SSL"
 msgstr ""
 
-msgid "Try Pattern Match"
-msgstr ""
-
 msgid "Try bringing up TCP connection for"
 msgstr ""
 
 msgid "Try out"
 msgstr "Testeaza"
+
+#, fuzzy
+msgid "Try pattern match"
+msgstr "Adaugă model/tipar"
 
 msgid "Try to fit text to the available space."
 msgstr ""
@@ -60234,6 +60302,9 @@ msgstr ""
 msgid "Upload SNMP MIBs"
 msgstr "Sterge Elementul"
 
+msgid "Upload XML file"
+msgstr ""
+
 msgid "Upload agent signature key"
 msgstr ""
 
@@ -60252,10 +60323,6 @@ msgstr ""
 msgid "Upload key"
 msgstr ""
 
-#, fuzzy
-msgid "Upload license usage report"
-msgstr "% utilizare"
-
 msgid "Upload new:"
 msgstr ""
 
@@ -60264,6 +60331,21 @@ msgstr ""
 
 msgid "Upload package"
 msgstr ""
+
+#, fuzzy
+msgid "Upload report in the customer portal"
+msgstr "% utilizare"
+
+msgid "Upload request in the customer portal"
+msgstr ""
+
+#, fuzzy
+msgid "Upload response"
+msgstr "Notificari"
+
+#, fuzzy
+msgid "Upload subscription details"
+msgstr "foloseste descrierea"
 
 #, fuzzy
 msgid "Upload verification response"
@@ -64640,13 +64722,6 @@ msgstr "Adaugă comentariu"
 msgid "XInetd status"
 msgstr "Adaugă comentariu"
 
-msgid "XML file upload"
-msgstr ""
-
-#, fuzzy
-msgid "XML text"
-msgstr "Mesajul Text"
-
 msgid "XMPP Failed inbound stream establishes"
 msgstr ""
 
@@ -68292,6 +68367,10 @@ msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "XML text"
+#~ msgstr "Mesajul Text"
+
+#, fuzzy
 #~ msgid "Persistent Volume Claims & Persistent Volumes"
 #~ msgstr "cu comentariu"
 
@@ -69686,10 +69765,6 @@ msgstr ""
 #~ msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
-#~ msgid "Add subscription details"
-#~ msgstr "foloseste descrierea"
-
-#, fuzzy
 #~ msgid "Number of services (excluded)"
 #~ msgstr "Grup nou"
 
@@ -70334,10 +70409,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "New contact group"
 #~ msgstr "Eticheta de grup nou"
-
-#, fuzzy
-#~ msgid "New customer"
-#~ msgstr "Adaugă Contoar"
 
 #, fuzzy
 #~ msgid "New folder"

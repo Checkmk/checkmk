@@ -1351,16 +1351,16 @@ def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegi
         auth_option={"auth_type": "password", "password": "supersecret"},
     )
 
-    clients.Host.create(
+    clients.HostConfig.create(
         host_name="should_be_visible",
         attributes={"contactgroups": {"groups": ["does_not_see_everything"], "use": True}},
     )
-    clients.Host.create(
+    clients.HostConfig.create(
         host_name="should_not_be_invisible",
     )
 
     clients.Host.set_credentials("unable_to_see_all_host", "supersecret")
-    resp = clients.Host.get_all()
+    resp = clients.HostConfig.get_all()
     host_names = [entry["id"] for entry in resp.json["value"]]
     assert "should_be_visible" in host_names
     assert "should_not_be_invisible" not in host_names

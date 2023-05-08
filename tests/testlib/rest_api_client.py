@@ -65,10 +65,17 @@ class Response:
 
 class RestApiException(Exception):
     def __init__(
-        self, url: str, method: str, body: Any, headers: Mapping[str, str], response: Response
+        self,
+        url: str,
+        method: str,
+        body: Any,
+        headers: Mapping[str, str],
+        response: Response,
+        query_params: Mapping[str, Any] | None = None,
     ) -> None:
         super().__init__(url, method, body, headers, response)
         self.url = url
+        self.query_params = query_params
         self.method = method
         self.body = body
         self.headers = headers
@@ -85,6 +92,7 @@ class RestApiException(Exception):
                 "request": {
                     "method": self.method,
                     "url": self.url,
+                    "query_params": self.query_params,
                     "body": self.body,
                     "headers": self.headers,
                 },
@@ -93,7 +101,8 @@ class RestApiException(Exception):
                     "body": formatted_body,
                     "headers": self.response.headers,
                 },
-            }
+            },
+            compact=True,
         )
 
 
@@ -133,7 +142,7 @@ class RequestHandler(abc.ABC):
         self,
         method: HTTPMethod,
         url: str,
-        query_params: Mapping[str, str] | None = None,
+        query_params: Mapping[str, Any] | None = None,
         body: str | None = None,
         headers: Mapping[str, str] | None = None,
     ) -> Response:
@@ -221,7 +230,7 @@ class RestApiClient:
         method: HTTPMethod,
         url: str,
         body: JSON | None = None,
-        query_params: Mapping[str, str] | None = None,
+        query_params: Mapping[str, Any] | None = None,
         headers: Mapping[str, str] | None = None,
         expect_ok: bool = True,
         follow_redirects: bool = True,
@@ -253,7 +262,9 @@ class RestApiClient:
         )
 
         if expect_ok and resp.status_code >= 400:
-            raise RestApiException(url, method, body, default_headers, resp)
+            raise RestApiException(
+                url, method, body, default_headers, resp, query_params=query_params
+            )
         if follow_redirects and 300 <= resp.status_code < 400:
             return self.request(
                 method=method,
@@ -1217,12 +1228,43 @@ class SiteManagementClient(RestApiClient):
         )
 
 
+@register_client
+class HostClient(RestApiClient):
+    domain: Literal["host"] = "host"
+
+    def get(self, host_name: str, columns: Sequence[str], expect_ok: bool = True) -> Response:
+        url = f"/objects/host/{host_name}"
+        if columns:
+            url = f"{url}?{'&'.join(f'columns={c}' for c in columns)}"
+
+        return self.request(
+            "get",
+            url=url,
+            expect_ok=expect_ok,
+        )
+
+    def get_all(
+        self,
+        query: dict[str, Any],
+        columns: Sequence[str] = ("name",),
+        expect_ok: bool = True,
+    ) -> Response:
+        params = {"query": json.dumps(query), "columns": columns}
+        return self.request(
+            "get",
+            url="/domain-types/host/collections/all",
+            query_params=params,
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
     ActivateChanges: ActivateChangesClient
     User: UserClient
     HostConfig: HostConfigClient
+    Host: HostClient
     Folder: FolderClient
     AuxTag: AuxTagClient
     TimePeriod: TimePeriodClient

@@ -104,7 +104,7 @@ PERMISSIONS = permissions.AllPerm(
         permissions.Perm("wato.edit"),
         permissions.Perm("wato.manage_hosts"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
-        permissions.Ignore(
+        permissions.Undocumented(
             permissions.AnyPerm(
                 [
                     permissions.Perm("bi.see_all"),
@@ -121,7 +121,7 @@ BULK_CREATE_PERMISSIONS = permissions.AllPerm(
         permissions.Perm("wato.edit"),
         permissions.Optional(permissions.Perm("wato.manage_hosts")),
         permissions.Optional(permissions.Perm("wato.all_folders")),
-        permissions.Ignore(
+        permissions.Undocumented(
             permissions.AnyPerm(
                 [
                     permissions.Perm("bi.see_all"),

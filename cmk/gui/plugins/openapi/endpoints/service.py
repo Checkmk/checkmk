@@ -42,7 +42,7 @@ from cmk.gui.plugins.openapi.utils import problem, serve_json
 
 from cmk import fields
 
-PERMISSIONS = permissions.Ignore(
+PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
             permissions.Perm("general.see_all"),

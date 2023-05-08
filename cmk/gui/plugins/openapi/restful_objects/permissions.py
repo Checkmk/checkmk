@@ -90,7 +90,7 @@ class Optional(BasePerm):
         return self.perm.iter_perms()
 
 
-class Ignore(Optional):
+class Undocumented(Optional):
     """A permission which shall not be documented, but may occur.
 
     Structurally similar to `Optional` but with a different name."""

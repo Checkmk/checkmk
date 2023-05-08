@@ -1,0 +1,47 @@
+{%- macro changes(grouped_werks) -%}
+{%- for group in grouped_werks %}
+### {{ group.component }}
+{%- for werk in group.werks %}
+* [{{werk.id}}]({{werk.url}}) {{werk.prefix}}{{werk.title}}{{"..." if werk.has_content else ""}}
+{%- if not werk.compatible %}
+  _NOTE: Please refer to the migration notes!_
+{%- endif -%}
+{%- endfor %}
+{% else %}
+_NO CHANGES_
+{%- endfor %}
+{%- endmacro -%}
+[Release] Checkmk {{ release_type }} release {{ version }}
+Dear friends of Checkmk,
+
+the new {{ release_type }} release {{ version }} of Checkmk is ready for download.
+
+This {{release_type}} release ships with {{werks.cre.len}} changes affecting all editions of Checkmk,
+{{ werks.cee.len }} changes for the Enterprise editions, {{ werks.cce.len }} Cloud Edition specific and
+{{ werks.cme.len }} Managed Services Edition specific changes.
+
+
+## Changes in all Checkmk Editions:
+{{ changes(werks.cre.werks) }}
+
+
+## Changes in the Checkmk Enterprise Edition:
+{{ changes(werks.cee.werks) }}
+
+
+## Changes in the Checkmk Cloud Edition:
+{{ changes(werks.cce.werks) }}
+
+
+## Changes in the Checkmk Managed Services Edition:
+{{ changes(werks.cme.werks) }}
+
+
+You can download Checkmk from our download page: https://checkmk.com/download
+
+List of all changes: https://checkmk.com/werks?product=cmk&version={{ version }}
+
+Please mail bug reports and qualified feedback to {{ feedback_mail }}.
+We greatly thank you for using Checkmk and wish you a successful monitoring,
+
+Your Checkmk Team

@@ -13,6 +13,7 @@ from . import (
     write_as_text,
     write_precompiled_werks,
 )
+from .announce import main as main_announce
 from .werk import Edition
 
 
@@ -32,7 +33,7 @@ def main_precompile(args: argparse.Namespace) -> None:
         werk.id: werk
         for werk in werks_list
         if args.filter_by_edition is None
-        # we don't know if we have a WerkV1 or WerkV2, so we test for both:
+        # TODO: Use werk.to_werk().edition == Edition(args.filter_by_edition)
         or werk.edition == args.filter_by_edition or werk.edition == Edition(args.filter_by_edition)
     }
 
@@ -67,6 +68,13 @@ def parse_arguments() -> argparse.Namespace:
         choices=list(x.value for x in Edition),
     )
     parser_precompile.set_defaults(func=main_precompile)
+
+    parser_announce = subparsers.add_parser("announce", help="Output announce text")
+    parser_announce.add_argument("werk_dir", type=path_dir, help=".werk folder in the git root")
+    parser_announce.add_argument("version")
+    parser_announce.add_argument("--format", choices=("txt", "md"), default="txt")
+    parser_announce.add_argument("--feedback-mail", default="feedback@checkmk.com")
+    parser_announce.set_defaults(func=main_announce)
 
     return parser.parse_args()
 

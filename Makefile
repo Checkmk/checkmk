@@ -179,6 +179,20 @@ $(CHECK_MK_RAW_PRECOMPILED_WERKS): $(WERKS)
 $(REPO_PATH)/ChangeLog: $(CHECK_MK_RAW_PRECOMPILED_WERKS)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks changelog ChangeLog .werks/werks
 
+
+$(CHECK_MK_ANNOUNCE_FOLDER):
+	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
+
+$(CHECK_MK_ANNOUNCE_MD): $(CHECK_MK_ANNOUNCE_FOLDER)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=md > $(CHECK_MK_ANNOUNCE_MD)
+
+$(CHECK_MK_ANNOUNCE_TXT): $(CHECK_MK_ANNOUNCE_FOLDER)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=txt > $(CHECK_MK_ANNOUNCE_TXT)
+
+$(CHECK_MK_ANNOUNCE_TAR): $(CHECK_MK_ANNOUNCE_TXT) $(CHECK_MK_ANNOUNCE_MD)
+	tar -czf $(CHECK_MK_ANNOUNCE_TAR) -C $(CHECK_MK_ANNOUNCE_FOLDER) .
+
+
 packages:
 	$(MAKE) -C agents packages
 

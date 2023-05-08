@@ -52,7 +52,7 @@ def create_stage(Map args, time_stage_started) {
 
                 println("Check results: ${args.RESULT_CHECK_TYPE}");
                 if (args.RESULT_CHECK_TYPE) {
-                    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/tests_helper.groovy");
+                    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
                     issues = test_jenkins_helper.analyse_issues(
                         args.RESULT_CHECK_TYPE,
                         args.RESULT_CHECK_FILE_PATTERN,

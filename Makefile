@@ -183,7 +183,7 @@ dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) config.h.in $(SOURCE_BUILT_AGENTS) $(SO
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 $(CHECK_MK_RAW_PRECOMPILED_WERKS): $(WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/precompile-werks.py .werks .werks/werks cre
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks precompile .werks .werks/werks --filter-by-edition cre
 
 $(REPO_PATH)/ChangeLog: $(CHECK_MK_RAW_PRECOMPILED_WERKS)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks changelog ChangeLog .werks/werks

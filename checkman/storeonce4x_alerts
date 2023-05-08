@@ -4,7 +4,7 @@ catalog: hw/storagehw/hpe
 license: GPLv2
 distribution: check_mk
 description:
- This checks shows all not cleared alarms of a HP storeonce system. The service gets CRIT in case
+ This checks shows all not cleared alarms of a HPE storeonce system. The service gets CRIT in case
  a critical alarm is found.
 
 item:

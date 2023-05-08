@@ -1,10 +1,10 @@
-title: HP BladeSystem Enclosures: FANs
+title: HPE BladeSystem Enclosures: FANs
 agents: snmp
 catalog: hw/server/hp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the health of all FANs in HP BladeSysten enclosures.
+ This check monitors the health of all FANs in HPE BladeSysten enclosures.
  The check uses the state reported by SNMP.
 
  Each fan which is present while the Checkmk service discovery will result in an

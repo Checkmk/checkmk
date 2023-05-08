@@ -1,10 +1,10 @@
-title: HP Procurve Switches: Memory Usage
+title: HPE Procurve Switches: Memory Usage
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the memory usage on HP Procurve Switches which support the
+ This check monitors the memory usage on HPE Procurve Switches which support the
  NETSWITCH-MIB. The check uses the total amount of memory and the currently used
  memory values.
 

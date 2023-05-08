@@ -1,10 +1,10 @@
-title: HP BladeSystem Enclosures: Manager Boards
+title: HPE BladeSystem Enclosures: Manager Boards
 agents: snmp
 catalog: hw/server/hp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the health of the manager boards in HP BladeSysten enclosures.
+ This check monitors the health of the manager boards in HPE BladeSysten enclosures.
 
  It uses the state reported by SNMP and prints the role name and serial
  number reported of each manager board.

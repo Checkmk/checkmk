@@ -1,10 +1,10 @@
-title: HP HH3C Switches: Fan Status
+title: HPE HH3C Switches: Fan Status
 agents: SNMP
 catalog: hw/network/hp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the state of fans in HP HH3C switches.
+ This check monitors the state of fans in HPE HH3C switches.
  "not installed" and "unsupported" are treated as UNKNOWN,
  "deactive" as CRIT and "active" is OK.
 

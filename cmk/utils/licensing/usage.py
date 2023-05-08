@@ -79,16 +79,12 @@ def try_update_license_usage(
     site_hash: str,
     do_create_sample: DoCreateSample,
 ) -> None:
-    """Update the license usage history
+    """Update the license usage history.
 
-    If a sample could not be created (due to livestatus errors) then the update process will be
-    skipped. This is important for checking the mtime of the history file during activate changes.
-
-    The history has a max. length of 400 (days)."""
+    The history has a max. length of 400 (days). This process will be skipped if another process
+    already tries to update the history, ie. filepaths are locked."""
     if instance_id is None:
         raise ValueError("No such instance ID")
-
-    sample = do_create_sample(now, instance_id, site_hash)
 
     report_filepath = get_license_usage_report_filepath()
     licensing_dir.mkdir(parents=True, exist_ok=True)
@@ -99,7 +95,7 @@ def try_update_license_usage(
             return
 
         history = LocalLicenseUsageHistory.parse(load_raw_license_usage_report(report_filepath))
-        history.add_sample(sample)
+        history.add_sample(do_create_sample(now, instance_id, site_hash))
         save_license_usage_report(
             report_filepath,
             RawLicenseUsageReport(
@@ -176,7 +172,9 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
 
 
 def _get_from_livestatus(query: str) -> Sequence[Sequence[Any]]:
-    return livestatus.LocalConnection().query(query)
+    connection = livestatus.LocalConnection()
+    connection.set_timeout(5)
+    return connection.query(query)
 
 
 class HostsOrServicesCounter(NamedTuple):
@@ -446,6 +444,7 @@ def get_license_usage_report_validity() -> LicenseUsageReportValidity:
     report_filepath = get_license_usage_report_filepath()
 
     with store.locked(report_filepath):
+        # TODO use len(history)
         if report_filepath.stat().st_size == 0:
             try_update_license_usage(
                 Now.make(),
@@ -455,6 +454,7 @@ def get_license_usage_report_validity() -> LicenseUsageReportValidity:
             )
             return LicenseUsageReportValidity.recent_enough
 
+        # TODO use max. sample time
         age = time.time() - report_filepath.stat().st_mtime
         if age >= 432000:
             # crit if greater than five days: block activate changes

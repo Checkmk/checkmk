@@ -66,6 +66,8 @@ bazel build \
     --execution_log_json_file="${EXECUTION_LOG_FILE_NAME}" \
     --action_env=PATH="$PATH" \
     --action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
+    --host_action_env=PATH="$PATH" \
+    --host_action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
     "${BAZEL_REMOTE_CACHE_ARGUMENT}" \
     ${BAZEL_EXTRA_ARGS} \
     "${TARGET}"

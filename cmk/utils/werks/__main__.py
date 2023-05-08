@@ -26,9 +26,6 @@ def main_changelog(args: argparse.Namespace) -> None:
 
 
 def main_precompile(args: argparse.Namespace) -> None:
-    if not args.werk_dir.exists():
-        raise Exception("Requested werk directory does not exist: %s" % args.werk_dir)
-
     werks_list = load_raw_files(args.werk_dir)
 
     werks = {
@@ -42,6 +39,15 @@ def main_precompile(args: argparse.Namespace) -> None:
     write_precompiled_werks(args.destination, werks)
 
 
+def path_dir(value: str) -> Path:
+    result = Path(value)
+    if not result.exists():
+        raise argparse.ArgumentTypeError(f"File or directory does not exist: {result}")
+    if not result.is_dir():
+        raise argparse.ArgumentTypeError(f"{result} is not a directory")
+    return result
+
+
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
@@ -53,10 +59,12 @@ def parse_arguments() -> argparse.Namespace:
     parser_changelog.set_defaults(func=main_changelog)
 
     parser_precompile = subparsers.add_parser("precompile", help="Collect werk files into json.")
-    parser_precompile.add_argument("werk_dir", type=Path, help=".werk in the git root")
+    parser_precompile.add_argument("werk_dir", type=path_dir, help=".werk folder in the git root")
     parser_precompile.add_argument("destination", type=Path)
     parser_precompile.add_argument(
-        "--filter-by-edition", default=None, help="cee, cre, cce or others"
+        "--filter-by-edition",
+        default=None,
+        choices=list(x.value for x in Edition),
     )
     parser_precompile.set_defaults(func=main_precompile)
 

@@ -64,3 +64,10 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
             yield "old", i
         for i in self.new:
             yield "new", i
+
+    def kept(self) -> Sequence[_DiscoveredItem]:
+        # TODO (mo): Clean this up, the logic is all backwards:
+        # It seems we always keep the vanished ones here.
+        # However: If we do not load the existing ones, nothing will be classified as 'vanished',
+        # and the ones that *are* in fact vanished are dropped silently.
+        return [*self.vanished, *self.present]

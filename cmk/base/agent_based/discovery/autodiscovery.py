@@ -50,7 +50,7 @@ from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import analyse_host_labels, discover_host_labels
+from ._host_labels import discover_host_labels
 from .utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = ["get_host_services"]
@@ -115,20 +115,20 @@ def automation_discovery(
         providers = make_providers(host_sections, section_plugins)
 
         if mode is not DiscoveryMode.REMOVE:
-            host_labels, kept_labels = analyse_host_labels(
-                host_name,
-                discovered_host_labels=discover_host_labels(
+            host_labels = QualifiedDiscovery[HostLabel](
+                preexisting=DiscoveredHostLabelsStore(host_name).load(),
+                current=discover_host_labels(
                     host_name,
                     host_label_plugins,
                     providers=providers,
                     on_error=on_error,
                 ),
-                existing_host_labels=DiscoveredHostLabelsStore(host_name).load(),
+                key=lambda hl: hl.label,
             )
             result.self_new_host_labels = len(host_labels.new)
             result.self_total_host_labels = len(host_labels.present)
 
-            DiscoveredHostLabelsStore(host_name).save(kept_labels[host_name])
+            DiscoveredHostLabelsStore(host_name).save(host_labels.kept())
             if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
                 # Rulesets for service discovery can match based on the hosts labels.
                 config_cache.ruleset_matcher.clear_caches()

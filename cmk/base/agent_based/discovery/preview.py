@@ -48,7 +48,7 @@ from cmk.base.api.agent_based.value_store import load_host_value_store, ValueSto
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
 
-from ._host_labels import analyse_cluster_labels, analyse_host_labels, discover_host_labels
+from ._host_labels import analyse_cluster_labels, discover_host_labels
 from .autodiscovery import _Transition, get_host_services
 from .utils import QualifiedDiscovery
 
@@ -97,8 +97,8 @@ def get_check_preview(
     store_piggybacked_sections(host_sections_no_error)
     providers = make_providers(host_sections_no_error, section_plugins)
 
-    host_labels, kept_labels = (
-        analyse_cluster_labels(
+    if config_cache.is_cluster(host_name):
+        host_labels, kept_labels = analyse_cluster_labels(
             host_name,
             config_cache.nodes_of(host_name) or (),
             discovered_host_labels={
@@ -115,18 +115,18 @@ def get_check_preview(
                 for node_name in config_cache.nodes_of(host_name) or ()
             },
         )
-        if config_cache.is_cluster(host_name)
-        else analyse_host_labels(
-            host_name,
-            discovered_host_labels=discover_host_labels(
+    else:
+        host_labels = QualifiedDiscovery[HostLabel](
+            preexisting=DiscoveredHostLabelsStore(host_name).load(),
+            current=discover_host_labels(
                 host_name,
                 host_label_plugins,
                 providers=providers,
                 on_error=on_error,
             ),
-            existing_host_labels=DiscoveredHostLabelsStore(host_name).load(),
+            key=lambda hl: hl.label,
         )
-    )
+        kept_labels = {host_name: host_labels.kept()}
 
     for result in check_parsing_errors(
         itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())

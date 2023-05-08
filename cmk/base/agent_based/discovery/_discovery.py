@@ -33,7 +33,7 @@ from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
 from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import analyse_cluster_labels, analyse_host_labels, discover_host_labels
+from ._host_labels import analyse_cluster_labels, discover_host_labels
 from .autodiscovery import AutocheckServiceWithNodes, get_host_services, ServicesByTransition
 from .utils import DiscoveryMode, QualifiedDiscovery
 
@@ -66,8 +66,8 @@ def execute_check_discovery(
     store_piggybacked_sections(host_sections_no_error)
     providers = make_providers(host_sections_no_error, section_plugins)
 
-    host_labels, _kept_labels = (
-        analyse_cluster_labels(
+    if config_cache.is_cluster(host_name):
+        host_labels, _kept_labels = analyse_cluster_labels(
             host_name,
             config_cache.nodes_of(host_name) or (),
             discovered_host_labels={
@@ -84,18 +84,18 @@ def execute_check_discovery(
                 for node_name in config_cache.nodes_of(host_name) or ()
             },
         )
-        if config_cache.is_cluster(host_name)
-        else analyse_host_labels(
-            host_name,
-            discovered_host_labels=discover_host_labels(
+
+    else:
+        host_labels = QualifiedDiscovery[HostLabel](
+            preexisting=DiscoveredHostLabelsStore(host_name).load(),
+            current=discover_host_labels(
                 host_name,
                 host_label_plugins,
                 providers=providers,
                 on_error=OnError.RAISE,
             ),
-            existing_host_labels=DiscoveredHostLabelsStore(host_name).load(),
+            key=lambda hl: hl.label,
         )
-    )
 
     services = get_host_services(
         host_name,

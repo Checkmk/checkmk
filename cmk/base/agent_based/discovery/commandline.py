@@ -13,7 +13,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
-from cmk.utils.labels import DiscoveredHostLabelsStore
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.type_defs import HostName, SectionName
 
@@ -39,7 +39,8 @@ import cmk.base.core
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
-from ._host_labels import analyse_host_labels, discover_host_labels
+from ._host_labels import discover_host_labels
+from .utils import QualifiedDiscovery
 
 __all__ = ["commandline_discovery"]
 
@@ -147,17 +148,15 @@ def _commandline_discovery_on_host(
 ) -> None:
     section.section_step("Analyse discovered host labels")
 
-    host_labels, kept_labels = analyse_host_labels(
-        real_host_name,
-        discovered_host_labels=discover_host_labels(
+    host_labels = QualifiedDiscovery[HostLabel](
+        preexisting=DiscoveredHostLabelsStore(real_host_name).load() if load_labels else (),
+        current=discover_host_labels(
             real_host_name, host_label_plugins, providers=providers, on_error=on_error
         ),
-        existing_host_labels=DiscoveredHostLabelsStore(real_host_name).load()
-        if load_labels
-        else (),
+        key=lambda hl: hl.label,
     )
 
-    DiscoveredHostLabelsStore(real_host_name).save(kept_labels[real_host_name])
+    DiscoveredHostLabelsStore(real_host_name).save(host_labels.kept())
     if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
         # Rulesets for service discovery can match based on the hosts labels.
         config_cache.ruleset_matcher.clear_caches()

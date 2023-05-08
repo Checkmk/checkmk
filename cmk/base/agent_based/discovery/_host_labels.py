@@ -18,7 +18,6 @@ from cmk.checkers.sectionparser import Provider, ResolvedResult
 from .utils import QualifiedDiscovery
 
 __all__ = [
-    "analyse_host_labels",
     "analyse_cluster_labels",
     "discover_host_labels",
 ]
@@ -31,14 +30,14 @@ def analyse_cluster_labels(
     discovered_host_labels: Mapping[HostName, Sequence[HostLabel]],
     existing_host_labels: Mapping[HostName, Sequence[HostLabel]],
 ) -> tuple[QualifiedDiscovery[HostLabel], Mapping[HostName, Sequence[HostLabel]]]:
-    kept_labels: dict[HostName, Sequence[HostLabel]] = {}
-    for node_name in node_names:
-        _node_labels, kept_node_labels = analyse_host_labels(
-            node_name,
-            discovered_host_labels=discovered_host_labels.get(node_name, ()),
-            existing_host_labels=existing_host_labels.get(node_name, ()),
-        )
-        kept_labels.update(kept_node_labels)
+    kept_labels = {
+        node_name: QualifiedDiscovery[HostLabel](
+            preexisting=existing_host_labels.get(node_name, ()),
+            current=discovered_host_labels.get(node_name, ()),
+            key=lambda hl: hl.label,
+        ).kept()
+        for node_name in node_names
+    }
 
     cluster_labels = QualifiedDiscovery[HostLabel](
         preexisting=merge_cluster_labels(
@@ -49,32 +48,9 @@ def analyse_cluster_labels(
         ),
         key=lambda hl: hl.label,
     )
-    kept_labels[cluster_name] = list(_iter_kept_labels(cluster_labels))
+    kept_labels[cluster_name] = cluster_labels.kept()
 
     return cluster_labels, kept_labels
-
-
-def analyse_host_labels(
-    host_name: HostName,
-    *,
-    discovered_host_labels: Sequence[HostLabel],
-    existing_host_labels: Sequence[HostLabel],
-) -> tuple[QualifiedDiscovery[HostLabel], Mapping[HostName, Sequence[HostLabel]]]:
-    host_labels = QualifiedDiscovery[HostLabel](
-        preexisting=existing_host_labels,
-        current=discovered_host_labels,
-        key=lambda hl: hl.label,
-    )
-    return host_labels, {host_name: list(_iter_kept_labels(host_labels))}
-
-
-def _iter_kept_labels(host_labels: QualifiedDiscovery[HostLabel]) -> Iterable[HostLabel]:
-    # TODO (mo): Clean this up, the logic is all backwards:
-    # It seems we always keep the vanished ones here.
-    # However: If we do not load the existing ones, no labels will be classified as 'vanished',
-    # and the ones that *are* in fact vanished are dropped silently.
-    yield from host_labels.vanished
-    yield from host_labels.present
 
 
 def discover_host_labels(

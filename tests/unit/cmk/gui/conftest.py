@@ -513,12 +513,12 @@ class WebTestAppRequestHandler(RequestHandler):
         self,
         method: HTTPMethod,
         url: str,
-        query_params: Mapping[str, str] | None = None,
+        query_params: Mapping[str, str | typing.Sequence[str]] | None = None,
         body: str | None = None,
         headers: Mapping[str, str] | None = None,
     ) -> Response:
         if query_params is not None:
-            query_string = "?" + urllib.parse.urlencode(query_params)
+            query_string = "?" + urllib.parse.urlencode(query_params, doseq=True)
         else:
             query_string = ""
         resp = self.app.call_method(

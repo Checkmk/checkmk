@@ -82,6 +82,7 @@ class NagVisMaps(SidebarSnapin):
             "CRITICAL": "state2",
             "DOWN": "state2",
             "UNREACHABLE": "state2",
+            "PENDING": "statep",
         }.get(map_cfg["summary_state"], "state3")
 
     def _sub_state_class(self, map_cfg):
@@ -106,6 +107,10 @@ class NagVisMaps(SidebarSnapin):
 
         if map_cfg["summary_stale"]:
             title += " (Stale)"
+
+        if "summary_output" in map_cfg:
+            # Added in NagVis 1.9.35 (with Checkmk 2.2.0b8)
+            title += f" - {map_cfg['summary_output']}"
 
         return title
 

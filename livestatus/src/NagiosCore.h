@@ -55,6 +55,7 @@ struct NagiosPathConfig {
     std::filesystem::path logwatch_directory;
     std::filesystem::path event_console_status_socket;
     std::filesystem::path state_file_created_file;
+    std::filesystem::path licensed_state_file;
     std::filesystem::path livestatus_socket;
     std::filesystem::path history_file;
     std::filesystem::path history_archive_directory;

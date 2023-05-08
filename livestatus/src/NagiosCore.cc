@@ -84,6 +84,7 @@ NagiosCore::NagiosCore(
         icontactgroups_[cg] = std::make_unique<NebContactGroup>(*cg);
     }
 }
+
 const IHost *NagiosCore::ihost(const ::host *handle) const {
     auto it = ihosts_by_handle_.find(handle);
     return it == ihosts_by_handle_.end() ? nullptr : it->second.get();

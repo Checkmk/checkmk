@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides some bytes-unicode encoding functions"""
+import base64
 import json
 import typing
 from typing import AnyStr
@@ -19,7 +20,8 @@ def ensure_str_with_fallback(value: AnyStr, *, encoding: str, fallback: str) -> 
 
 
 def json_encode(value: typing.Any) -> str:
-    """Encode a value to JSON
+    r"""Encode a value to JSON
+
 
     Examples:
 
@@ -59,6 +61,11 @@ def json_encode(value: typing.Any) -> str:
         >>> json_encode({"a": 1, "b": 2})
         '{"a": 1, "b": 2}'
 
+        We interpret the 'bytes' as binary data and return an object with the base64 encoded data
+        and a description.
+        >>> json_encode(b'abc')
+        '{"value": "YWJj\\n", "value_type": "binary_base64"}'
+
     Args:
         value:
             The value to encode
@@ -74,6 +81,14 @@ def json_encode(value: typing.Any) -> str:
 
         if hasattr(obj, "to_json") and callable(obj.to_json):
             return obj.to_json()
+
+        # Some REST API endpoints need to return binary data in one of their fields
+        # (e.g. a livestatus table that stores a blob).
+        if isinstance(obj, bytes):
+            return {
+                "value": base64.encodebytes(obj).decode("ascii"),
+                "value_type": "binary_base64",
+            }
 
         raise TypeError(f"Object ({obj}) of type '{type(obj).__name__}' is not JSON serializable")
 

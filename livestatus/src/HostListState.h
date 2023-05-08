@@ -16,9 +16,7 @@ class User;
 
 #ifdef CMC
 #include "CmcHostGroup.h"
-class Host;
-template <typename T>
-class ObjectGroup;
+class HostGroup;
 #else
 #include "NebHostGroup.h"
 #include "nagios.h"
@@ -61,7 +59,7 @@ public:
 
 // TODO(sp): Remove.
 #ifdef CMC
-    int32_t operator()(const ObjectGroup<Host> &group, const User &user) const {
+    int32_t operator()(const HostGroup &group, const User &user) const {
         return (*this)(CmcHostGroup{group}, user);
     }
 #else

@@ -17,9 +17,7 @@ class User;
 
 #ifdef CMC
 #include "CmcServiceGroup.h"
-template <typename T>
-class ObjectGroup;
-class Service;
+class ServiceGroup;
 #else
 #include "NebServiceGroup.h"
 #include "nagios.h"
@@ -53,8 +51,7 @@ public:
 
 // TODO(sp): Remove.
 #ifdef CMC
-    int32_t operator()(const ObjectGroup<Service> &group,
-                       const User &user) const {
+    int32_t operator()(const ServiceGroup &group, const User &user) const {
         return (*this)(CmcServiceGroup{group}, user);
     }
 #else

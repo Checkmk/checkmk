@@ -1096,6 +1096,15 @@ std::optional<std::chrono::system_clock::time_point> stateFileCreated(
         return {};
     }
     fl_state_file_created = std::chrono::system_clock::now();
+    auto state_file_created_dir = state_file_created_file.parent_path();
+    std::error_code ec;
+    std::filesystem::create_directories(state_file_created_dir, ec);
+    if (ec) {
+        Critical(fl_logger_nagios)
+            << "cannot create directory " << state_file_created_dir << ": "
+            << ec.message();
+        return {};
+    }
     std::ofstream ofs{state_file_created_file, std::ios::binary};
     if (!ofs.is_open()) {
         generic_error ge{"cannot open timestamp file \"" +

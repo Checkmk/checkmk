@@ -39,7 +39,10 @@ To search for hosts with specific tags set on them:
     {'op': '~', 'left': 'tag_names', 'right': 'windows'}
 
 """
-from cmk.utils.livestatus_helpers.queries import Query
+import ast
+from typing import Generator, Sequence
+
+from cmk.utils.livestatus_helpers.queries import Query, ResultRow
 from cmk.utils.livestatus_helpers.tables import Hosts
 
 from cmk.gui import fields as gui_fields
@@ -107,13 +110,18 @@ def list_hosts(param):
     if sites_to_query:
         live.only_sites = sites_to_query
 
-    q = Query(param["columns"])
+    columns = param["columns"]
+    q = Query(columns)
 
     query_expr = param.get("query")
     if query_expr:
         q = q.filter(query_expr)
 
     result = q.iterate(live)
+
+    # We have to special case the inventory column, as they as dicts stored as bytes in livestatus
+    if contains_an_inventory_colum(columns):
+        result = fixup_inventory_column(result)
 
     return serve_json(
         constructors.collection_object(
@@ -131,3 +139,22 @@ def list_hosts(param):
             ],
         )
     )
+
+
+INVENTORY_COLUMN = "mk_inventory"
+
+
+def contains_an_inventory_colum(columns: Sequence[str]) -> bool:
+    return INVENTORY_COLUMN in columns
+
+
+def fixup_inventory_column(
+    result: Generator[ResultRow, None, None]
+) -> Generator[ResultRow, None, None]:
+    for row in result:
+        if (inventory_data := row.get(INVENTORY_COLUMN)) is not None:
+            copy = dict(row)
+            copy[INVENTORY_COLUMN] = ast.literal_eval(inventory_data.decode("utf-8"))
+            yield ResultRow(copy)
+        else:
+            yield row

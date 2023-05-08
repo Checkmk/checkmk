@@ -2122,13 +2122,22 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "hide": not is_ntop_configured(),
                 "owner": UserId.builtin(),
             },
+            "it_efficiency": {
+                "name": "it_efficiency",
+                "title": _("IT infrastructure efficiency"),
+                "icon_name": "topic_analyze",
+                "description": _("Analyze the utilization of your IT infrastructure data center."),
+                "public": True,
+                "sort_index": 100,
+                "owner": UserId.builtin(),
+            },
             "my_workplace": {
                 "name": "my_workplace",
                 "title": _("Workplace"),
                 "icon_name": "topic_my_workplace",
                 "description": "",
                 "public": True,
-                "sort_index": 100,
+                "sort_index": 105,
                 "owner": UserId.builtin(),
             },
             # Only fallback for items without topic
@@ -2138,7 +2147,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "icon_name": "topic_other",
                 "description": "",
                 "public": True,
-                "sort_index": 105,
+                "sort_index": 110,
                 "owner": UserId.builtin(),
             },
         }

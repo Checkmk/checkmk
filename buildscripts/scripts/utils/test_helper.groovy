@@ -70,6 +70,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
         case "CLANG":
             issues.add(scanForIssues(
                 tool: clang(
+                    parserId: "${result_check_file_pattern}",
                     pattern: "${result_check_file_pattern}"
                 )
             ));
@@ -94,6 +95,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
         case "ESLINT":
             issues.add(scanForIssues(
                 tool: esLint(
+                    parserId: "${result_check_file_pattern}",
                     pattern: "${result_check_file_pattern}"
                 )
             ));
@@ -101,6 +103,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
         case "GCC":
             issues.add(scanForIssues(
                 tool: gcc(
+                    parserId: "${result_check_file_pattern}",
                     pattern: "${result_check_file_pattern}"
                 )
             ));
@@ -108,6 +111,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
         case "JUNIT":
             issues.add(scanForIssues(
                 tool: junitParser(
+                    parserId: "${result_check_file_pattern}",
                     pattern: "${result_check_file_pattern}"
                 )
             ));
@@ -115,6 +119,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
         case "MYPY":
             issues.add(scanForIssues(
                 tool: myPy(
+                    parserId: "${result_check_file_pattern}",
                     pattern: "${result_check_file_pattern}"
                 )
             ));
@@ -122,6 +127,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
         case "PYLINT":
             issues.add(scanForIssues(
                 tool: pyLint(
+                    parserId: "${result_check_file_pattern}",
                     pattern: "${result_check_file_pattern}"
                 )
             ));

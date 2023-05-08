@@ -78,11 +78,9 @@ class TestHosts:
             f"div#popup_trigger_host_action_menu_{host.name} >> div#popup_menu"
         ).wait_for()
 
-        logged_in_page.main_area.locator(
-            f"//*[contains(@href,'delete_host%3D{host.name}')]"
-        ).click()
+        logged_in_page.main_area.get_text("Delete host").click()
+        logged_in_page.main_area.locator_via_xpath("button", "Remove").click()
 
-        logged_in_page.main_area.locator_via_xpath("button", "Delete").click()
         logged_in_page.main_area.get_element_including_texts(
             element_id="changes_info", texts=["1", "change"]
         ).click()

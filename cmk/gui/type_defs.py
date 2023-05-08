@@ -267,7 +267,7 @@ class PainterParameters(TypedDict, total=False):
     # TODO Improve:
     # First step was: make painter's param a typed dict with all obvious keys
     # but some possible keys are still missing
-    aggregation: tuple[str, str]
+    aggregation: Literal["min", "max", "avg"] | tuple[str, str]
     color_choices: list[str]
     column_title: str
     ident: str
@@ -281,6 +281,9 @@ class PainterParameters(TypedDict, total=False):
     column_to_display: str
     columns_to_match: list[tuple[str, str]]
     color_levels: tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
+    # From historic metric painters
+    rrd_consolidation: Literal["average", "min", "max"]
+    time_range: tuple[str, int]
 
 
 def _make_default_painter_parameters() -> PainterParameters:

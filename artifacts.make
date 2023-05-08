@@ -3,6 +3,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 #
 CHECK_MK_RAW_PRECOMPILED_WERKS := $(REPO_PATH)/.werks/werks
+CHECK_MK_ANNOUNCE_TAR := $(REPO_PATH)/announce-$(VERSION).tar.gz
+CHECK_MK_ANNOUNCE_FOLDER := $(REPO_PATH)/announce
+CHECK_MK_ANNOUNCE_MD := $(CHECK_MK_ANNOUNCE_FOLDER)/announce.md
+CHECK_MK_ANNOUNCE_TXT := $(CHECK_MK_ANNOUNCE_FOLDER)/announce.txt
 
 JAVASCRIPT_MINI    := $(foreach jmini,main mobile side zxcvbn,$(REPO_PATH)/web/htdocs/js/$(jmini)_min.js)
 

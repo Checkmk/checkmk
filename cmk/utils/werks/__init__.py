@@ -89,11 +89,13 @@ def write_precompiled_werks(path: Path, werks: dict[int, RawWerkV1 | RawWerkV2])
 
 
 # this function is used from the bauwelt repo. TODO: move script from bauwelt into this repo
+# TODO: use a jinja template for this, and move it to .announce
 def write_as_text(werks: dict[int, Werk], f: IO[str], write_version: bool = True) -> None:
     """Write the given werks to a file object
 
-    This is used for creating a textual hange log for the released versions and the announcement mails.
+    This is used for creating a textual hange log for the released versions.
     """
+    # TODO: reuse code from  .announce and replace with two jinja templates, one for txt, one for markdown
     translator = WerkTranslator()
     werklist = sort_by_version_and_component(werks.values())
     for version, version_group in itertools.groupby(werklist, key=lambda w: w.version):
@@ -117,6 +119,7 @@ def has_content(description: NoWiki | str) -> bool:
 
 
 def write_werk_as_text(f: IO[str], werk: Werk) -> None:
+    # TODO: use jinja templates of .announce
     prefix = ""
     if werk.class_ == Class.FIX:
         prefix = " FIX:"

@@ -39,6 +39,7 @@
 /.tmp*
 /*.wpr
 /*.wpu
+/announce*
 aclocal.m4
 ar-lib
 artefacts/

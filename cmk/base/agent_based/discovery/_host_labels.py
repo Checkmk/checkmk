@@ -34,7 +34,6 @@ def analyse_cluster_labels(
         node_name: QualifiedDiscovery[HostLabel](
             preexisting=existing_host_labels.get(node_name, ()),
             current=discovered_host_labels.get(node_name, ()),
-            key=lambda hl: hl.label,
         ).kept()
         for node_name in node_names
     }
@@ -46,7 +45,6 @@ def analyse_cluster_labels(
         current=merge_cluster_labels(
             nodes_labels for node in node_names if (nodes_labels := kept_labels.get(node))
         ),
-        key=lambda hl: hl.label,
     )
     kept_labels[cluster_name] = cluster_labels.kept()
 

@@ -124,7 +124,6 @@ def get_check_preview(
                 providers=providers,
                 on_error=on_error,
             ),
-            key=lambda hl: hl.label,
         )
         kept_labels = {host_name: host_labels.kept()}
 

@@ -6,8 +6,8 @@
 from __future__ import annotations
 
 import enum
-from collections.abc import Callable, Hashable, Iterable, Sequence
-from typing import Final, Generic, Literal, TypeVar
+from collections.abc import Hashable, Iterable, Sequence
+from typing import Final, Generic, Literal, Protocol, TypeVar
 
 
 class DiscoveryMode(enum.Enum):
@@ -29,7 +29,26 @@ class DiscoveryMode(enum.Enum):
         return cls[value.upper().replace("-", "_")]
 
 
-_DiscoveredItem = TypeVar("_DiscoveredItem")
+class _Discoverable(Protocol):
+    """
+    Required interface for a qualified discovery.
+
+    For discovered things (e.g. host labels, services) we need to decide
+    wether things are new, old, vanished, or *changed*.
+    Currently the "changed" is WIP.
+
+    Anyway: we need a proper distiction between being the same entity and
+    comparing equal.
+    """
+
+    def id(self) -> Hashable:
+        ...
+
+    # tbd: def comperator(self) -> object:
+    #    ...
+
+
+_DiscoveredItem = TypeVar("_DiscoveredItem", bound=_Discoverable)
 
 
 class QualifiedDiscovery(Generic[_DiscoveredItem]):
@@ -40,10 +59,9 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
         *,
         preexisting: Sequence[_DiscoveredItem],
         current: Sequence[_DiscoveredItem],
-        key: Callable[[_DiscoveredItem], Hashable],
     ) -> None:
-        current_dict = {key(v): v for v in current}
-        preexisting_dict = {key(v): v for v in preexisting}
+        current_dict = {v.id(): v for v in current}
+        preexisting_dict = {v.id(): v for v in preexisting}
 
         self.vanished: Final = [v for k, v in preexisting_dict.items() if k not in current_dict]
         self.old: Final = [v for k, v in preexisting_dict.items() if k in current_dict]
@@ -53,7 +71,7 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
     @classmethod
     def empty(cls) -> "QualifiedDiscovery":
         """create an empty instance"""
-        return cls(preexisting=(), current=(), key=repr)
+        return cls(preexisting=(), current=())
 
     def chain_with_qualifier(
         self,

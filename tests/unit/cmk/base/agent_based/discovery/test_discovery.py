@@ -721,7 +721,6 @@ def test__check_host_labels_up_to_date() -> None:
                 HostLabel("that", "unchanged", SectionName("my_section")),
                 HostLabel("anotherone", "thesame", SectionName("labels")),
             ],
-            key=lambda l: l.name,
         ),
         1,
         DiscoveryMode.FIXALL,
@@ -741,19 +740,26 @@ def test__check_host_labels_changed() -> None:
                 HostLabel("that", "yay-new-value", SectionName("my_section")),
                 HostLabel("yetanotherone", "isnew", SectionName("labels")),
             ],
-            key=lambda l: l.name,
         ),
         1,
         DiscoveryMode.FIXALL,
     ) == (
         [
             ActiveCheckResult(
-                1, "New host labels: 1 (labels: 1)", ["New host label: labels: yetanotherone:isnew"]
+                1,
+                "New host labels: 2 (my_section: 1, labels: 1)",
+                [
+                    "New host label: my_section: that:yay-new-value",
+                    "New host label: labels: yetanotherone:isnew",
+                ],
             ),
             ActiveCheckResult(
                 0,
-                "Vanished host labels: 1 (my_section: 1)",
-                ["Vanished host label: my_section: anotherone:vanishes"],
+                "Vanished host labels: 2 (my_section: 2)",
+                [
+                    "Vanished host label: my_section: that:changes",
+                    "Vanished host label: my_section: anotherone:vanishes",
+                ],
             ),
         ],
         True,
@@ -1453,7 +1459,6 @@ def test__perform_host_label_discovery_on_realhost(
             providers=scenario.providers,
             on_error=OnError.RAISE,
         ),
-        key=lambda hl: hl.label,
     )
 
     assert (

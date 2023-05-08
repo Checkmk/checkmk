@@ -123,7 +123,6 @@ def automation_discovery(
                     providers=providers,
                     on_error=on_error,
                 ),
-                key=lambda hl: hl.label,
             )
             result.self_new_host_labels = len(host_labels.new)
             result.self_total_host_labels = len(host_labels.present)

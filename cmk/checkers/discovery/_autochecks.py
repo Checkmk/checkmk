@@ -51,6 +51,10 @@ class AutocheckEntry(NamedTuple):
         )
 
     def id(self) -> ServiceID:
+        """The identity of the service.
+
+        As long as this does not change, we're talking about "the same" service (but it might have changed).
+        """
         return ServiceID(self.check_plugin_name, self.item)
 
     def dump(self) -> Mapping[str, Any]:

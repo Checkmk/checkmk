@@ -94,7 +94,6 @@ def execute_check_discovery(
                 providers=providers,
                 on_error=OnError.RAISE,
             ),
-            key=lambda hl: hl.label,
         )
 
     services = get_host_services(

@@ -109,6 +109,14 @@ class HostLabel(_Label):
             }
         )
 
+    def id(self) -> str:
+        """The identity of the label.
+
+        This is important for discovery.
+        As long as this does not change, we're talking about "the same" label (but it might have changed).
+        """
+        return self.label  # Fairly certain this is wrong. Shouldn't this be 'name'?
+
     # rather use (de)serialize
     def to_dict(self) -> HostLabelValueDict:
         return {

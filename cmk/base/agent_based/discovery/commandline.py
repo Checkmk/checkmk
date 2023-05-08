@@ -153,7 +153,6 @@ def _commandline_discovery_on_host(
         current=discover_host_labels(
             real_host_name, host_label_plugins, providers=providers, on_error=on_error
         ),
-        key=lambda hl: hl.label,
     )
 
     DiscoveredHostLabelsStore(real_host_name).save(host_labels.kept())

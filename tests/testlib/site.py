@@ -362,7 +362,7 @@ class Site:
     def check_output(
         self, cmd: list[str], input: str | None = None  # pylint: disable=redefined-builtin
     ) -> str:
-        """Mimics behavior of of subprocess.check_output
+        """Mimics behavior of subprocess.check_output
 
         Seems to be OK for now but we should find a better abstraction than just
         wrapping self.execute().

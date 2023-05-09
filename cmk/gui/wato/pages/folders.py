@@ -296,7 +296,7 @@ class ModeFolder(WatoMode):
         if user.may("wato.manage_hosts"):
             yield PageMenuEntry(
                 title=_("Remove TLS registration"),
-                icon_name="delete",
+                icon_name={"icon": "tls", "emblem": "remove"},
                 item=make_confirmed_form_submit_link(
                     form_name="hosts",
                     button_name="_remove_tls_registration_from_folder",
@@ -428,7 +428,7 @@ class ModeFolder(WatoMode):
         if user.may("wato.manage_hosts"):
             yield PageMenuEntry(
                 title=_("Remove TLS registration"),
-                icon_name="delete",
+                icon_name={"icon": "tls", "emblem": "remove"},
                 item=make_confirmed_form_submit_link(
                     form_name="hosts",
                     button_name="_remove_tls_registration_from_selection",

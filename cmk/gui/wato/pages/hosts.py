@@ -551,7 +551,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
         if user.may("wato.manage_hosts"):
             yield PageMenuEntry(
                 title=_("Remove TLS registration"),
-                icon_name="delete",
+                icon_name={"icon": "tls", "emblem": "remove"},
                 item=make_simple_link(
                     make_confirm_delete_link(
                         url=makeactionuri(

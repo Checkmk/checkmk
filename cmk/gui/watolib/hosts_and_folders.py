@@ -4030,7 +4030,7 @@ def ajax_popup_host_action_menu() -> None:
                 ]
             ),
         )
-        html.icon("delete")
+        html.icon({"icon": "tls", "emblem": "remove"})
         html.write_text(_("Remove TLS registration"))
         html.close_a()
 

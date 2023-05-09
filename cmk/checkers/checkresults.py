@@ -9,9 +9,7 @@ import dataclasses
 from collections.abc import Sequence
 
 from cmk.utils.check_utils import worst_service_state
-from cmk.utils.type_defs import MetricTuple, state_markers
-
-from ._typedefs import HostKey
+from cmk.utils.type_defs import HostName, MetricTuple, state_markers
 
 __all__ = ["ActiveCheckResult", "ServiceCheckResult"]
 
@@ -35,12 +33,8 @@ class ServiceCheckResult:
         return cls(3, "Check plugin not implemented")
 
     @classmethod
-    def cluster_received_no_data(cls, node_keys: Sequence[HostKey]) -> ServiceCheckResult:
-        node_hint = (
-            f"configured nodes: {', '.join(nk.hostname for nk in node_keys)}"
-            if node_keys
-            else "no nodes configured"
-        )
+    def cluster_received_no_data(cls, nodes: Sequence[HostName]) -> ServiceCheckResult:
+        node_hint = f"configured nodes: {', '.join(nodes)}" if nodes else "no nodes configured"
         return cls(3, f"Clustered service received no monitoring data ({node_hint})")
 
 

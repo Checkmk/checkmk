@@ -5,7 +5,6 @@
 
 from cmk.utils.type_defs import HostName
 
-from cmk.checkers import HostKey, SourceType
 from cmk.checkers.checkresults import ServiceCheckResult
 
 
@@ -18,10 +17,7 @@ def test_cluster_received_no_data_no_nodes() -> None:
 
 def test_cluster_received_no_data() -> None:
     assert ServiceCheckResult.cluster_received_no_data(
-        [
-            HostKey(HostName("node1"), SourceType.HOST),
-            HostKey(HostName("node2"), SourceType.HOST),
-        ]
+        [HostName("node1"), HostName("node2")]
     ) == ServiceCheckResult(
         3,
         "Clustered service received no monitoring data (configured nodes: node1, node2)",

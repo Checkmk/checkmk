@@ -520,7 +520,7 @@ def _get_monitoring_data_kwargs(
                 nodes,
                 sections,
             ),
-            ServiceCheckResult.cluster_received_no_data(nodes),
+            ServiceCheckResult.cluster_received_no_data([nk.hostname for nk in nodes]),
         )
 
     return (

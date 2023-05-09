@@ -1,6 +1,6 @@
 title: HPE Proliant Servers: Storage System Drive Box Groups
 agents: snmp
-catalog: hw/server/hp
+catalog: hw/server/hpe
 license: GPLv2
 distribution: check_mk
 description:

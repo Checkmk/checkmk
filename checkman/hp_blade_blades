@@ -1,6 +1,6 @@
 title: HPE BladeSystem Enclosures: Health of Blades
 agents: snmp
-catalog: hw/server/hp
+catalog: hw/server/hpe
 license: GPLv2
 distribution: check_mk
 description:

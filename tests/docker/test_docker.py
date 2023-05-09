@@ -173,11 +173,11 @@ def _build(request, client, version, prepare_package=True):
     config = attrs["Config"]
 
     assert config["Labels"] == {
-        "org.opencontainers.image.vendor": "tribe29 GmbH",
+        "org.opencontainers.image.vendor": "Checkmk GmbH",
         "org.opencontainers.image.version": version.version,
         "maintainer": "feedback@checkmk.com",
         "org.opencontainers.image.description": "Checkmk is a leading tool for Infrastructure & Application Monitoring",
-        "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+        "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",
         "org.opencontainers.image.title": "Checkmk",
         "org.opencontainers.image.url": "https://checkmk.com/",
     }

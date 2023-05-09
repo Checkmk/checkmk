@@ -175,7 +175,7 @@ def inv_lnx_parse_debian(node, line):
 
 def inv_lnx_parse_cma(node, line):
     node["name"] = "Checkmk Appliance " + line[0]
-    node["vendor"] = "tribe29 GmbH"
+    node["vendor"] = "Checkmk GmbH"
     node["version"] = line[0]
     if "code_name" in node:
         del node["code_name"]

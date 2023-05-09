@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
-#include <memory>
 #include <utility>
 
 #include "Comment.h"
@@ -25,7 +24,6 @@
 #include "NebTimeperiod.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Average.h"
-#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"

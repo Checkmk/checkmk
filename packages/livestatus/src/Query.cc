@@ -10,7 +10,6 @@
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
-#include <memory>
 #include <ratio>
 #include <sstream>
 #include <stdexcept>
@@ -27,7 +26,6 @@
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/Table.h"
-#include "livestatus/User.h"
 #include "livestatus/opids.h"
 #include "livestatus/strutil.h"
 

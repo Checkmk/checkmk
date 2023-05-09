@@ -1021,7 +1021,7 @@ function get_main_graph_container(obj: HTMLElement) {
     let res: HTMLElement | null = obj;
     while (res && !utils.has_class(res, "graph_with_timeranges"))
         res = res.parentNode as HTMLElement | null;
-    return obj.childNodes[1] as HTMLElement;
+    return res!.childNodes[1] as HTMLElement;
 }
 
 function get_graph_graph_node(obj: HTMLElement) {

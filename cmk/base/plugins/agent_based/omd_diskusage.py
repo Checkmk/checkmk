@@ -23,6 +23,11 @@ class Spec:
 
 @dataclass(frozen=True)
 class Directory:
+    spec: Spec
+
+
+@dataclass(frozen=True)
+class DirectoryWithValue(Directory):
     value: int
     spec: Spec
 
@@ -39,6 +44,14 @@ Section = NewType("Section", Mapping[str, Site])
 SPECS: Final = [
     Spec(metric_name="omd_log_size", path="var/log", label="Logs"),
     Spec(metric_name="omd_rrd_size", path="var/check_mk/rrd", label="RRDs"),
+    Spec(metric_name="omd_tmp_size", path="tmp/", label="Tmp"),
+    Spec(metric_name="omd_local_size", path="local/", label="Local"),
+    Spec(metric_name="omd_agents_size", path="var/check_mk/agents/", label="Agents"),
+    Spec(metric_name="omd_history_size", path="var/mkeventd/history/", label="History"),
+    Spec(metric_name="omd_core_size", path="var/check_mk/core/", label="Core"),
+    Spec(
+        metric_name="omd_inventory_size", path="var/check_mk/inventory_archive/", label="Inventory"
+    ),
 ]
 
 
@@ -59,13 +72,19 @@ def sub_section_parser(string_table: StringTable) -> Iterator[tuple[str, Sequenc
         yield name, sub_section
 
 
+def _parse_line(spec: Spec, line: str) -> Directory:
+    if "No such file" in line:
+        return Directory(spec=spec)
+    return DirectoryWithValue(spec=spec, value=int(line.split()[0]))
+
+
 def parse(string_table: StringTable) -> Section:
     sites: dict[str, Site] = {}
     for section_name, lines in sub_section_parser(string_table):
         entries = []
         for line in lines:
             if spec := next((spec for spec in SPECS if spec.path in line), None):
-                entries.append(Directory(spec=spec, value=int(line.split()[0])))
+                entries.append(_parse_line(spec, line))
             else:
                 site = int(line.split()[0])
             sites[section_name.split()[1]] = Site(site, entries)
@@ -90,7 +109,7 @@ def check(item: str, section: Section) -> CheckResult:
     )
     for entry in sorted(site.entries, key=lambda x: x.spec.label):
         yield from check_levels(
-            entry.value,
+            entry.value if isinstance(entry, DirectoryWithValue) else 0,
             metric_name=entry.spec.metric_name,
             label=entry.spec.label,
             render_func=render.bytes,

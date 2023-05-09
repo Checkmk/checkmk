@@ -32,6 +32,42 @@ metric_info["omd_rrd_size"] = {
     "unit": "bytes",
     "color": "21/a",
 }
+metric_info["pnp4nagios"] = {
+    "title": "Size of PNP4Nagios",
+    "unit": "bytes",
+    "color": "21/b",
+}
+metric_info["omd_tmp_size"] = {
+    "title": "Size of Tmp",
+    "unit": "bytes",
+    "color": "22/a",
+}
+metric_info["omd_local_size"] = {
+    "title": "Size of Local",
+    "unit": "bytes",
+    "color": "23/a",
+}
+metric_info["omd_agents_size"] = {
+    "title": "Size of Agents",
+    "unit": "bytes",
+    "color": "24/a",
+}
+metric_info["omd_history_size"] = {
+    "title": "Size of History",
+    "unit": "bytes",
+    "color": "25/a",
+}
+metric_info["omd_core_size"] = {
+    "title": "Size of Core",
+    "unit": "bytes",
+    "color": "26/a",
+}
+metric_info["omd_inventory_size"] = {
+    "title": "Size of Inventory",
+    "unit": "bytes",
+    "color": "26/b",
+}
+
 metric_info["omd_size"] = {
     "title": _l("Total size of site"),
     "unit": "bytes",
@@ -43,6 +79,13 @@ graph_info["omd_fileusage"] = {
     "metrics": [
         ("omd_log_size", "stack"),
         ("omd_rrd_size", "stack"),
+        ("omd_pnp4nagios_size", "stack"),
+        ("omd_tmp_size", "stack"),
+        ("omd_local_size", "stack"),
+        ("omd_agents_size", "stack"),
+        ("omd_history_size", "stack"),
+        ("omd_core_size", "stack"),
+        ("omd_inventory_size", "stack"),
         ("omd_size", "line"),
     ],
 }

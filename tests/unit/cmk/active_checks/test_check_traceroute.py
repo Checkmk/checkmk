@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.active_checks.check_traceroute import check_traceroute
+from cmk.active_checks.check_traceroute import _check_traceroute
 
 
 def test_check_traceroute_empty() -> None:
-    assert check_traceroute([], []) == (
+    assert _check_traceroute([], []) == (
         0,
         "0 hops, missing routers: none, bad routers: none",
         [("hops", 0)],
@@ -27,7 +27,7 @@ _TRACEROUTE_OUTPUT_IPV4 = [
 
 
 def test_check_traceroute_ipv4_no_check() -> None:
-    assert check_traceroute(_TRACEROUTE_OUTPUT_IPV4, []) == (
+    assert _check_traceroute(_TRACEROUTE_OUTPUT_IPV4, []) == (
         0,
         "7 hops, missing routers: none, bad routers: none",
         [("hops", 7)],
@@ -35,7 +35,7 @@ def test_check_traceroute_ipv4_no_check() -> None:
 
 
 def test_check_traceroute_ipv4_check_routers() -> None:
-    assert check_traceroute(
+    assert _check_traceroute(
         _TRACEROUTE_OUTPUT_IPV4,
         [("w", "63.312.142.198"), ("C", "fritz.box"), ("W", "194.45.196.22")],
     ) == (
@@ -46,7 +46,7 @@ def test_check_traceroute_ipv4_check_routers() -> None:
 
 
 def test_check_traceroute_ipv4_no_dns() -> None:
-    assert check_traceroute(
+    assert _check_traceroute(
         [
             "traceroute to google.com (142.250.185.110), 30 hops max, 60 byte packets",
             " 1  192.168.178.1  5.509 ms  5.473 ms  6.893 ms",
@@ -85,7 +85,7 @@ _TRACEROUTE_OUTPUT_IPV6 = [
 
 
 def test_check_traceroute_ipv6_no_check() -> None:
-    assert check_traceroute(_TRACEROUTE_OUTPUT_IPV6, []) == (
+    assert _check_traceroute(_TRACEROUTE_OUTPUT_IPV6, []) == (
         0,
         "5 hops, missing routers: none, bad routers: none",
         [("hops", 5)],
@@ -93,7 +93,7 @@ def test_check_traceroute_ipv6_no_check() -> None:
 
 
 def test_check_traceroute_ipv6_check_routers() -> None:
-    assert check_traceroute(
+    assert _check_traceroute(
         _TRACEROUTE_OUTPUT_IPV6,
         [
             ("c", "fra1.mx204.ae6.de-cix.as48314.net"),
@@ -108,7 +108,7 @@ def test_check_traceroute_ipv6_check_routers() -> None:
 
 
 def test_check_traceroute_ipv6_link_local() -> None:
-    assert check_traceroute(
+    assert _check_traceroute(
         [
             "traceroute to fe80::e936:552e:d8bf:6d67%wlp0s20f3 (fe80::e936:552e:d8bf:6d67%wlp0s20f3), 30 hops max, 80 byte packets",
             " 1  klapp-0060 (fe80::e936:552e:d8bf:6d67%wlp0s20f3)  0.021 ms  0.004 ms  0.003 ms",
@@ -122,7 +122,7 @@ def test_check_traceroute_ipv6_link_local() -> None:
 
 
 def test_check_traceroute_ipv6_no_dns() -> None:
-    assert check_traceroute(
+    assert _check_traceroute(
         [
             "traceroute to google.com (2a00:1450:4001:80e::200e), 30 hops max, 80 byte packets",
             " 1  2001:a61:433:bc01:9a9b:cbff:fe06:2f84  7.510 ms  7.477 ms  7.470 ms",

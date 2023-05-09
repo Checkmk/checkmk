@@ -55,26 +55,13 @@ import sys
 from collections.abc import Iterator, Sequence
 
 
-class MissingValueError(Exception):
-    pass
+def main(argv: Sequence[str] | None = None) -> int:
+    exitcode, info, perf = _check_traceroute_main(argv or sys.argv[1:])
+    _output_check_result(info, perf)
+    return exitcode
 
 
-class ProtocolVersionError(Exception):
-    pass
-
-
-class ExecutionError(Exception):
-    pass
-
-
-def parse_exception(exc):
-    exc = str(exc)
-    if exc[0] == "{":
-        exc = "%d - %s" % list(ast.literal_eval(exc).values())[0]
-    return str(exc)
-
-
-def output_check_result(s, perfdata):
+def _output_check_result(s, perfdata):
     if perfdata:
         perfdata_output_entries = [
             "{}={}".format(p[0], ";".join(map(str, p[1:]))) for p in perfdata
@@ -83,8 +70,123 @@ def output_check_result(s, perfdata):
     sys.stdout.write("%s\n" % s)
 
 
-def option_to_state(c):
-    return {"w": 1, "c": 2}[c.lower()]
+def _check_traceroute_main(args):  # pylint: disable=too-many-branches
+    os.unsetenv("LANG")
+
+    opt_verbose = 0
+    opt_debug = False
+    opt_nodns = False
+    opt_method = None
+    opt_address_family = None
+
+    short_options = "hw:W:c:C:nTI46"
+    long_options = [
+        "verbose",
+        "help",
+        "debug",
+    ]
+
+    route_params = []
+
+    try:
+        opts, args = getopt.getopt(args, short_options, long_options)
+
+        for o, a in opts:
+            if o in ["-h", "--help"]:
+                _usage()
+                sys.exit(0)
+
+        if len(args) < 1:
+            raise _MissingValueError("Please specify the target destination.")
+
+        target_address = args[0]
+
+        # first parse modifers
+        for o, a in opts:
+            if o in ["-v", "--verbose"]:
+                opt_verbose += 1
+            elif o in ["-d", "--debug"]:
+                opt_debug = True
+            elif o in ["-w", "-W", "-c", "-C"]:
+                route_params.append((o[1], a))
+            elif o == "-n":
+                opt_nodns = True
+            elif o in ["-T", "-I"]:
+                opt_method = o
+            elif o in ["-4", "-6"]:
+                if opt_address_family:
+                    raise _ProtocolVersionError("Cannot use both IPv4 and IPv6")
+                _validate_ip_version(target_address, int(o.lstrip("-")))
+                opt_address_family = o
+
+        sto = _execute_traceroute(target_address, opt_nodns, opt_method, opt_address_family)
+        status, output, perfdata = _check_traceroute(sto.splitlines(), route_params)
+        info_text = output.strip() + "\n%s" % sto
+        return status, info_text, perfdata
+
+    except _ExecutionError as e:
+        return 3, str(e), None
+
+    except _MissingValueError as e:
+        return 3, str(e), None
+
+    except _ProtocolVersionError as e:
+        return 3, str(e), None
+
+    except Exception as e:
+        if opt_debug:
+            raise
+        return 2, "Unhandled exception: %s" % _parse_exception(e), None
+
+
+def _usage():
+    sys.stdout.write(
+        """check_traceroute -{c|w|C|W} ROUTE  [-{o|c|w|O|C|W} ROUTE...] TARGET
+
+Check by which routes TARGET is being reached. Each possible route is being
+prefixed with a state option:
+
+ -w Make outcome WARN if that route is present
+ -W Make outcome WARN if that route is missing
+ -c Make outcome CRIT if that route is present
+ -C Make outcome CRIT if that route is missing
+
+Other options:
+
+ -h, --help     show this help and exit
+ --debug        show Python exceptions verbosely
+ -n             disable reverse DNS lookups
+ -I             Use ICMP ECHO for probes
+ -T             Use TCP SYN for probes
+ -4             Use IPv4
+ -6             Use IPv6
+
+"""
+    )
+
+
+class _MissingValueError(Exception):
+    pass
+
+
+class _ProtocolVersionError(Exception):
+    pass
+
+
+def _validate_ip_version(address_arg, ip_version_arg):
+    # ipv6 address can have an appended interface index/name: 'fe80::%{interface}'
+    try:
+        ip_address_version = ipaddress.ip_interface(address_arg.split("%")[0]).ip.version
+    except ValueError:
+        # May be a host or DNS name, don't execute the validation in this case.
+        # check_traceroute will perform the name resolution for us.
+        return
+
+    if not ip_address_version == ip_version_arg:
+        raise _ProtocolVersionError(
+            'IP protocol version "%s" not the same as the IP address version "%s".'
+            % (ip_version_arg, ip_address_version)
+        )
 
 
 def _execute_traceroute(target, nodns, method, address_family):
@@ -103,11 +205,15 @@ def _execute_traceroute(target, nodns, method, address_family):
         check=False,
     )
     if completed_process.returncode:
-        raise ExecutionError("UNKNOWN - " + completed_process.stderr.replace("\n", " "))
+        raise _ExecutionError("UNKNOWN - " + completed_process.stderr.replace("\n", " "))
     return completed_process.stdout
 
 
-def check_traceroute(lines, routes):
+class _ExecutionError(Exception):
+    pass
+
+
+def _check_traceroute(lines, routes):
     # find all visited routers
     routers = {router for line in lines[1:] for router in _extract_routers_from_line(line)}
     hops = len(lines[1:])
@@ -116,7 +222,7 @@ def check_traceroute(lines, routes):
     bad_routers = []
     missing_routers = []
     for option, route in routes:
-        s = option_to_state(option)
+        s = _option_to_state(option)
         if option.islower() and route in routers:
             state = max(state, s)
             bad_routers.append("{}({})".format(route, "!" * s))
@@ -148,118 +254,12 @@ def _extract_routers_from_line(line: str) -> Iterator[str]:
     )
 
 
-def validate_ip_version(address_arg, ip_version_arg):
-    # ipv6 address can have an appended interface index/name: 'fe80::%{interface}'
-    try:
-        ip_address_version = ipaddress.ip_interface(address_arg.split("%")[0]).ip.version
-    except ValueError:
-        # May be a host or DNS name, don't execute the validation in this case.
-        # check_traceroute will perform the name resolution for us.
-        return
-
-    if not ip_address_version == ip_version_arg:
-        raise ProtocolVersionError(
-            'IP protocol version "%s" not the same as the IP address version "%s".'
-            % (ip_version_arg, ip_address_version)
-        )
+def _option_to_state(c):
+    return {"w": 1, "c": 2}[c.lower()]
 
 
-def usage():
-    sys.stdout.write(
-        """check_traceroute -{c|w|C|W} ROUTE  [-{o|c|w|O|C|W} ROUTE...] TARGET
-
-Check by which routes TARGET is being reached. Each possible route is being
-prefixed with a state option:
-
- -w Make outcome WARN if that route is present
- -W Make outcome WARN if that route is missing
- -c Make outcome CRIT if that route is present
- -C Make outcome CRIT if that route is missing
-
-Other options:
-
- -h, --help     show this help and exit
- --debug        show Python exceptions verbosely
- -n             disable reverse DNS lookups
- -I             Use ICMP ECHO for probes
- -T             Use TCP SYN for probes
- -4             Use IPv4
- -6             Use IPv6
-
-"""
-    )
-
-
-def check_traceroute_main(args):  # pylint: disable=too-many-branches
-    os.unsetenv("LANG")
-
-    opt_verbose = 0
-    opt_debug = False
-    opt_nodns = False
-    opt_method = None
-    opt_address_family = None
-
-    short_options = "hw:W:c:C:nTI46"
-    long_options = [
-        "verbose",
-        "help",
-        "debug",
-    ]
-
-    route_params = []
-
-    try:
-        opts, args = getopt.getopt(args, short_options, long_options)
-
-        for o, a in opts:
-            if o in ["-h", "--help"]:
-                usage()
-                sys.exit(0)
-
-        if len(args) < 1:
-            raise MissingValueError("Please specify the target destination.")
-
-        target_address = args[0]
-
-        # first parse modifers
-        for o, a in opts:
-            if o in ["-v", "--verbose"]:
-                opt_verbose += 1
-            elif o in ["-d", "--debug"]:
-                opt_debug = True
-            elif o in ["-w", "-W", "-c", "-C"]:
-                route_params.append((o[1], a))
-            elif o == "-n":
-                opt_nodns = True
-            elif o in ["-T", "-I"]:
-                opt_method = o
-            elif o in ["-4", "-6"]:
-                if opt_address_family:
-                    raise ProtocolVersionError("Cannot use both IPv4 and IPv6")
-                validate_ip_version(target_address, int(o.lstrip("-")))
-                opt_address_family = o
-
-        sto = _execute_traceroute(target_address, opt_nodns, opt_method, opt_address_family)
-        status, output, perfdata = check_traceroute(sto.splitlines(), route_params)
-        info_text = output.strip() + "\n%s" % sto
-        return status, info_text, perfdata
-
-    except ExecutionError as e:
-        return 3, str(e), None
-
-    except MissingValueError as e:
-        return 3, str(e), None
-
-    except ProtocolVersionError as e:
-        return 3, str(e), None
-
-    except Exception as e:
-        if opt_debug:
-            raise
-        return 2, "Unhandled exception: %s" % parse_exception(e), None
-
-
-def main(argv: Sequence[str] | None = None) -> int:
-    exitcode, info, perf = check_traceroute_main(argv or sys.argv[1:])
-    output_check_result(info, perf)
-    return exitcode
+def _parse_exception(exc):
+    exc = str(exc)
+    if exc[0] == "{":
+        exc = "%d - %s" % list(ast.literal_eval(exc).values())[0]
+    return str(exc)

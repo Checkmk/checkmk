@@ -43,7 +43,7 @@ def test_check_traceroute_ipv4_no_check(check_traceroute) -> None:
     )
 
 
-def test_check_traceroute_ipv4_check_routes(check_traceroute) -> None:
+def test_check_traceroute_ipv4_check_routers(check_traceroute) -> None:
     assert check_traceroute.check_traceroute(
         _TRACEROUTE_OUTPUT_IPV4,
         [("w", "63.312.142.198"), ("C", "fritz.box"), ("W", "194.45.196.22")],
@@ -104,7 +104,7 @@ def test_check_traceroute_ipv6_no_check(check_traceroute) -> None:
     )
 
 
-def test_check_traceroute_ipv6_check_routes(check_traceroute) -> None:
+def test_check_traceroute_ipv6_check_routers(check_traceroute) -> None:
     assert check_traceroute.check_traceroute(
         _TRACEROUTE_OUTPUT_IPV6,
         [

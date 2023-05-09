@@ -1059,7 +1059,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
 }
 
 void omd_advertize(Logger *logger) {
-    Notice(logger) << "Livestatus by tribe29 GmbH started with PID "
+    Notice(logger) << "Livestatus by Checkmk GmbH started with PID "
                    << getpid();
     Notice(logger) << "version " << VERSION << " compiled " << BUILD_DATE
                    << " on " << BUILD_HOSTNAME;

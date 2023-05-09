@@ -1,6 +1,6 @@
 # Contributing to Checkmk
 
-Thanks for your interest to contribute to [Checkmk on Github](https://github.com/tribe29/checkmk)!
+Thanks for your interest to contribute to [Checkmk on Github](https://github.com/checkmk/checkmk)!
 
 Here are some ways you can help out:
 
@@ -172,7 +172,7 @@ To avoid that, it is recommended to rebase your own changes often on top of the 
 To be able to do this, you need to prepare your project directory once with this command:
 
 ```console
-$ git remote add upstream https://github.com/tribe29/checkmk.git
+$ git remote add upstream https://github.com/checkmk/checkmk.git
 ```
 
 From now, you can always update your feature branches with this command:
@@ -195,7 +195,7 @@ This article on [how to amend a commit](https://www.burntfen.com/2015-10-30/how-
 
 ## How to execute tests
 
-The public repository of [Checkmk](https://github.com/tribe29/checkmk) is integrated with Travis CI.
+The public repository of [Checkmk](https://github.com/checkmk/checkmk) is integrated with Travis CI.
 Each time a Pull request is submitted, Travis will have a look at the changes.
 
 **⚠ Important:** We only review PRs that are confirmed to be OK by Travis.

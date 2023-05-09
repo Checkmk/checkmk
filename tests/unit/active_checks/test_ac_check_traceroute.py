@@ -54,9 +54,8 @@ def test_check_traceroute_ipv4_check_routers(
         _TRACEROUTE_OUTPUT_IPV4,
         [("w", "63.312.142.198"), ("C", "fritz.box"), ("W", "194.45.196.22")],
     ) == (
-        2,
-        # Bug: fritz.box is present
-        "8 hops, missing routers: fritz.box(!!), bad routers: none",
+        0,
+        "8 hops, missing routers: none, bad routers: none",
         [("hops", 8)],
     )
 
@@ -126,8 +125,7 @@ def test_check_traceroute_ipv6_check_routers(
         ],
     ) == (
         2,
-        # Bug: fra1.mx204.ae6.de-cix.as48314.net should also lead to crit
-        "6 hops, missing routers: none, bad routers: 2001:a60::69:0:2:3(!!)",
+        "6 hops, missing routers: none, bad routers: fra1.mx204.ae6.de-cix.as48314.net(!!), 2001:a60::69:0:2:3(!!)",
         [("hops", 6)],
     )
 

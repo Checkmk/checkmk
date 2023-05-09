@@ -50,6 +50,7 @@ import ast
 import getopt
 import ipaddress
 import os
+import re
 import subprocess
 import sys
 from collections.abc import Iterator
@@ -108,7 +109,7 @@ def _execute_traceroute(target, nodns, method, address_family):
 
 def check_traceroute(lines, routes):
     # find all visited routers
-    routers = {router for line in lines[1:] for router in _parse_line(line)}
+    routers = {router for line in lines[1:] for router in _extract_routers_from_line(line)}
     hops = len(lines[1:])
 
     state = 0
@@ -132,14 +133,19 @@ def check_traceroute(lines, routes):
     return state, info_text, perfdata
 
 
-def _parse_line(line: str) -> Iterator[str]:
-    for part in line.strip().split():
-        try:
-            part = part.lstrip("(").rstrip(",").rstrip(")")
-            ipaddress.ip_interface(part)
-            yield part
-        except ValueError:
-            pass
+def _extract_routers_from_line(line: str) -> Iterator[str]:
+    # drop asterisks, which mean no response from the router at this hop
+    line = line.replace("*", "")
+    # drop round-trip times
+    line = re.sub(r"[0-9]+(\.[0-9]+)? ms", "", line)
+    yield from (
+        part.lstrip("(").rstrip(")")
+        for part in line.strip().split()
+        # drop numbering
+        [1:]
+        # drop additional information such as !X
+        if not part.startswith("!")
+    )
 
 
 def validate_ip_version(address_arg, ip_version_arg):

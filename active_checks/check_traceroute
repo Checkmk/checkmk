@@ -52,6 +52,7 @@ import ipaddress
 import os
 import subprocess
 import sys
+from collections.abc import Iterator
 
 
 class MissingValueError(Exception):
@@ -107,17 +108,8 @@ def _execute_traceroute(target, nodns, method, address_family):
 
 def check_traceroute(lines, routes):
     # find all visited routers
-    routers = set([])
+    routers = {router for line in lines[1:] for router in _parse_line(line)}
     hops = len(lines[1:])
-    for line in lines[1:]:
-        parts = line.strip().split()
-        for part in parts:
-            try:
-                part = part.lstrip("(").rstrip(",").rstrip(")")
-                ipaddress.ip_interface(part)
-                routers.add(part)
-            except ValueError:
-                pass
 
     state = 0
     bad_routers = []
@@ -138,6 +130,16 @@ def check_traceroute(lines, routes):
     )
     perfdata = [("hops", hops)]
     return state, info_text, perfdata
+
+
+def _parse_line(line: str) -> Iterator[str]:
+    for part in line.strip().split():
+        try:
+            part = part.lstrip("(").rstrip(",").rstrip(")")
+            ipaddress.ip_interface(part)
+            yield part
+        except ValueError:
+            pass
 
 
 def validate_ip_version(address_arg, ip_version_arg):

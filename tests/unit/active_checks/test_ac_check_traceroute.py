@@ -47,7 +47,7 @@ def test_check_traceroute_ipv4_no_check(
     )
 
 
-def test_check_traceroute_ipv4_check_routes(
+def test_check_traceroute_ipv4_check_routers(
     check_traceroute: ModuleType,
 ) -> None:
     assert check_traceroute.check_traceroute(
@@ -114,7 +114,7 @@ def test_check_traceroute_ipv6_no_check(
     )
 
 
-def test_check_traceroute_ipv6_check_routes(
+def test_check_traceroute_ipv6_check_routers(
     check_traceroute: ModuleType,
 ) -> None:
     assert check_traceroute.check_traceroute(

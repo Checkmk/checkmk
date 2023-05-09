@@ -1090,9 +1090,14 @@ body.main .popup_menu {
 
   img {
     width: 12px;
-    height: auto;
+    height: 12px;
     margin-right: 3px;
     vertical-align: bottom;
+
+    &.emblem {
+      width: 10px;
+      height: 10px;
+    }
   }
 
   ul {
@@ -1126,6 +1131,10 @@ body.main .popup_menu {
   a:hover {
     text-decoration: underline;
     cursor: pointer;
+  }
+
+  span.emblem {
+    display: initial;
   }
 }
 

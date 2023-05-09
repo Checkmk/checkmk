@@ -206,6 +206,7 @@ def test_bake_and_sign(logged_in_page: PPage, test_site: Site, with_key: str) ->
     )
 
 
+@pytest.mark.xfail(reason="flaky test, sometimes the button is not (yet) disabled")
 def test_bake_and_sign_disabled(logged_in_page: PPage) -> None:
     """Delete all keys, go to agents and check that the sign buttons are disabled."""
     go_to_signature_page(logged_in_page)

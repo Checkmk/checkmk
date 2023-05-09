@@ -74,3 +74,7 @@ def write_licensed_state(path: Path, state: LicenseState) -> None:
     state_repr = 1 if state is LicenseState.LICENSED else 0
     with store.locked(path):
         path.write_text(str(state_repr))
+
+
+def get_state_file_created_path() -> Path:
+    return paths.licensing_dir / "state_file_created"

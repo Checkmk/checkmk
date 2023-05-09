@@ -4,9 +4,28 @@ catalog: app/cmk
 license: GPLv2
 distribution: check_mk
 description:
- Monitors the disk usage of a site. We currently monitor the following directories:
+ Monitors the disk usage of a site. This tool helps experts to detect
+ anomalies. We currently monitor the following directories:
 
- logs, rrd
+ - var/log/ - Logging files. Increasing the logging levels can cause this
+   directory to grow rapidly.
+ - tmp/ - Temporary and runtime files, for example piggyback data and report files. If
+   there is too much data here, it can indicate an issue.
+ - local/ - Customizations such as custom checks, MKPs, notification scripts
+   and many more. Large amounts of data in this directory can slow down
+   activate changes in distributed environments.
+ - var/check_mk/agents/ - Baked agent files and related temporary files.
+ - var/check_mk/core/ - The current monitoring state alongside the full
+   monitoring history. The data here can impact monitoring performance.
+ - var/pnp4nagios/ - PNP graphs stored in an old format, which is no longer
+   used. An increase in disk usage can indicate a problem with the graphing.
+
+ The following directories give insight into the state of the site. There
+ are no direct actions to be taken or consequences for monitoring.
+ - var/check_mk/rrd/ - Modern graphing data.
+ - var/mkeventd/history/ - The Event Console archive, see
+   https://docs.checkmk.com/latest/en/ec.html?lquery=var/mkeventd/history#_location_of_the_archive
+ - var/check_mk/inventory_archive/ - A cache of the HW/SW Inventory data.
 
 item:
  The name of the site.

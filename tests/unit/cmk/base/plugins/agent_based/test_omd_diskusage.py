@@ -25,15 +25,52 @@ TABLE = [
     )
 ]
 
+TABLE_2 = [
+    [l]
+    for l in """[site abcdfg]
+229473382	/omd/sites/abcdfg
+96979	/omd/sites/abcdfg/var/log
+123481264	/omd/sites/abcdfg/var/check_mk/rrd
+4096	/omd/sites/abcdfg/tmp/
+323595	/omd/sites/abcdfg/local/
+43255425	/omd/sites/abcdfg/var/check_mk/agents/
+du: cannot access '/omd/sites/abcdfg/var/mkeventd/history/': No such file or directory
+1648718	/omd/sites/abcdfg/var/check_mk/core/
+du: cannot access '/omd/sites/abcdfg/var/check_mk/inventory_archive/': No such file or directory
+[site beta]
+258890373	/omd/sites/beta
+827498	/omd/sites/beta/var/log
+152635621	/omd/sites/beta/var/check_mk/rrd
+12288	/omd/sites/beta/tmp/
+323595	/omd/sites/beta/local/
+43169326	/omd/sites/beta/var/check_mk/agents/
+4096    /omd/sites/beta/var/mkeventd/history/
+743561	/omd/sites/beta/var/check_mk/core/
+13208	/omd/sites/beta/var/check_mk/inventory_archive/
+""".split(
+        "\n"
+    )
+]
+
 
 @pytest.fixture(name="section")
 def _section() -> Section:
     return parse(TABLE)
 
 
+@pytest.fixture(name="section_v2")
+def _section_v2() -> Section:
+    return parse(TABLE_2)
+
+
 def test_discovery(section: Section) -> None:
     services = list(discovery(section))
     assert services == [Service(item="heute"), Service(item="test")]
+
+
+def test_discovery_v2(section_v2: Section) -> None:
+    services = list(discovery(section_v2))
+    assert services == [Service(item="abcdfg"), Service(item="beta")]
 
 
 @dataclass
@@ -82,6 +119,75 @@ Sites = [
 @pytest.mark.parametrize("site", Sites)
 def test_check(site: SiteTest, section: Section) -> None:
     check_results = list(check(item=site.item, section=section))
+    results = [r for r in check_results if isinstance(r, Result)]
+    metrics = [m for m in check_results if isinstance(m, Metric)]
+    assert metrics == site.expected_metrics
+    assert results == site.expected_results
+
+
+SitesV2 = [
+    pytest.param(
+        SiteTest(
+            item="abcdfg",
+            expected_results=[
+                Result(state=State.OK, summary="Total: 219 MiB"),
+                Result(state=State.OK, summary="Agents: 41.3 MiB"),
+                Result(state=State.OK, summary="Core: 1.57 MiB"),
+                Result(state=State.OK, summary="History: 0 B"),
+                Result(state=State.OK, summary="Inventory: 0 B"),
+                Result(state=State.OK, summary="Local: 316 KiB"),
+                Result(state=State.OK, summary="Logs: 94.7 KiB"),
+                Result(state=State.OK, summary="RRDs: 118 MiB"),
+                Result(state=State.OK, summary="Tmp: 4.00 KiB"),
+            ],
+            expected_metrics=[
+                Metric("omd_size", 229473382.0),
+                Metric("omd_agents_size", 43255425.0),
+                Metric("omd_core_size", 1648718.0),
+                Metric("omd_history_size", 0.0),
+                Metric("omd_inventory_size", 0.0),
+                Metric("omd_local_size", 323595.0),
+                Metric("omd_log_size", 96979.0),
+                Metric("omd_rrd_size", 123481264.0),
+                Metric("omd_tmp_size", 4096.0),
+            ],
+        ),
+        id="abcdfg",
+    ),
+    pytest.param(
+        SiteTest(
+            item="beta",
+            expected_results=[
+                Result(state=State.OK, summary="Total: 247 MiB"),
+                Result(state=State.OK, summary="Agents: 41.2 MiB"),
+                Result(state=State.OK, summary="Core: 726 KiB"),
+                Result(state=State.OK, summary="History: 4.00 KiB"),
+                Result(state=State.OK, summary="Inventory: 12.9 KiB"),
+                Result(state=State.OK, summary="Local: 316 KiB"),
+                Result(state=State.OK, summary="Logs: 808 KiB"),
+                Result(state=State.OK, summary="RRDs: 146 MiB"),
+                Result(state=State.OK, summary="Tmp: 12.0 KiB"),
+            ],
+            expected_metrics=[
+                Metric("omd_size", 258890373.0),
+                Metric("omd_agents_size", 43169326.0),
+                Metric("omd_core_size", 743561.0),
+                Metric("omd_history_size", 4096.0),
+                Metric("omd_inventory_size", 13208.0),
+                Metric("omd_local_size", 323595.0),
+                Metric("omd_log_size", 827498.0),
+                Metric("omd_rrd_size", 152635621.0),
+                Metric("omd_tmp_size", 12288.0),
+            ],
+        ),
+        id="beta",
+    ),
+]
+
+
+@pytest.mark.parametrize("site", SitesV2)
+def test_check_v2(site: SiteTest, section_v2: Section) -> None:
+    check_results = list(check(item=site.item, section=section_v2))
     results = [r for r in check_results if isinstance(r, Result)]
     metrics = [m for m in check_results if isinstance(m, Metric)]
     assert metrics == site.expected_metrics

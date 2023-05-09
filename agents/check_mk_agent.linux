@@ -1092,6 +1092,13 @@ section_omd() {
             du -bs "$sitedir"
             du -bs "$sitedir/var/log"
             du -bs "$sitedir/var/check_mk/rrd"
+            du -bs "$sitedir/var/pnp4nagios/"
+            du -bs "$sitedir/tmp/"
+            du -bs "$sitedir/local/"
+            du -bs "$sitedir/var/check_mk/agents/"
+            du -bs "$sitedir/var/mkeventd/history/"
+            du -bs "$sitedir/var/check_mk/core/"
+            du -bs "$sitedir/var/check_mk/inventory_archive/"
         done
 
         echo '<<<omd_info:sep(59)>>>'

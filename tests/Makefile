@@ -58,7 +58,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 
 BROWSER_ENGINES = "chromium"
 
-.PHONY: clean sync-legacy-checks format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
+.PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker test-format-python test-format-python-docker \
@@ -74,16 +74,6 @@ BROWSER_ENGINES = "chromium"
 
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
-
-sync-legacy-checks: $(patsubst ../checks/%,../cmk/base/legacy_checks/%.py,$(wildcard ../checks/*))
-	@for i in ../cmk/base/legacy_checks/*.py; do \
-	  j=$${i#../cmk/base/legacy_checks/}; \
-	  test "$$j" == __init__.py && continue; \
-	  test -f ../checks/$${j%.py} || rm -fv $$i; \
-	done
-
-../cmk/base/legacy_checks/%.py: ../checks/% ../checks/.header-for-pylint Makefile
-	sed "s,@@ORIG-FILE@@,$(realpath $<)," ../checks/.header-for-pylint $< > $@
 
 help:
 	@echo "format-shell                        - Format shell agents"
@@ -202,12 +192,12 @@ test-docker:
 
 test-format-python: test-format-python-isort test-format-python-black
 
-test-format-python-isort: ../pyproject.toml sync-legacy-checks
+test-format-python-isort: ../pyproject.toml
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
 	xargs -n 1500 $(PIPENV) run isort --settings-path ../pyproject.toml --check-only --diff \
 	exit $${PIPESTATUS[1]}
 
-test-format-python-black: ../pyproject.toml sync-legacy-checks
+test-format-python-black: ../pyproject.toml
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
 	xargs -n 1500 $(BLACK) --check --diff ;\
 	exit $${PIPESTATUS[1]}
@@ -319,10 +309,10 @@ test-code-quality: test-license-headers test-pipfile test-file-content test-werk
 test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality
 
-test-mypy: prepare-protobuf-files sync-legacy-checks
-	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
+test-mypy: prepare-protobuf-files
+	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES))
 
-test-mypy-raw: sync-legacy-checks
+test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
 
 test-mypy-docker:
@@ -334,8 +324,8 @@ test-packaging:
 test-pipenv-deps:
 	$(PIPENV) check
 
-test-pylint: prepare-protobuf-files sync-legacy-checks
-	cd ..; $(PIPENV) run pylint --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
+test-pylint: prepare-protobuf-files
+	cd ..; $(PIPENV) run pylint --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
 
 test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
@@ -354,7 +344,7 @@ test-cycles:
 test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles
 
-test-unit: prepare-protobuf-files sync-legacy-checks
+test-unit: prepare-protobuf-files
 	TZ=$(RANDOM_TZ) $(PYTEST) \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
 		$(PYTEST_UNIT_TEST_OPTS)
@@ -362,7 +352,7 @@ test-unit: prepare-protobuf-files sync-legacy-checks
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
-test-unit-slow: prepare-protobuf-files sync-legacy-checks
+test-unit-slow: prepare-protobuf-files
 	TZ=$(RANDOM_TZ) $(PYTEST) \
 		$(PYTEST_OPTS_UNIT_SLOW_ONLY) \
 		$(PYTEST_UNIT_TEST_OPTS)
@@ -370,7 +360,7 @@ test-unit-slow: prepare-protobuf-files sync-legacy-checks
 test-unit-slow-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit-slow
 
-test-unit-resilience: prepare-protobuf-files sync-legacy-checks
+test-unit-resilience: prepare-protobuf-files
 	TZ=$(RANDOM_TZ) $(PYTEST) \
 		--count=2 \
 		--random-order-bucket=global \
@@ -384,7 +374,7 @@ test-unit-resilience-docker:
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
 
-test-unit-coverage-html: prepare-protobuf-files sync-legacy-checks
+test-unit-coverage-html: prepare-protobuf-files
 	TZ=$(RANDOM_TZ) $(PYTEST) \
 		--cov=cmk \
 		--cov-report=html \

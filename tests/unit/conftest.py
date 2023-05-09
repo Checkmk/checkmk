@@ -255,7 +255,7 @@ class FixRegister:
         config.load_all_agent_based_plugins(
             check_api.get_check_api_context,
             local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
-            checks_dir=str(repo_path() / "checks"),
+            checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
         )
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)

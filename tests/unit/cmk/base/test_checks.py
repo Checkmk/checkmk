@@ -7,10 +7,7 @@ import tests.testlib as testlib
 
 
 def test_check_plugin_header() -> None:
-    for plugin in (testlib.repo_path() / "checks").iterdir():
-        if plugin.name.startswith("."):
-            # .f12
-            continue
+    for plugin in (testlib.repo_path() / "cmk/base/legacy_checks").iterdir():
         with plugin.open() as handle:
             shebang = handle.readline().strip()
 

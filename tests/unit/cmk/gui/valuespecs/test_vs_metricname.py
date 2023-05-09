@@ -19,4 +19,16 @@ class TestValueSpecMetricName:
                 "and underscores and they must start with a letter."
             ),
         )
+        expect_validate_failure(
+            MetricName(),
+            "",
+            match=(
+                "Metric names must only consist of letters, digits "
+                "and underscores and they must start with a letter."
+            ),
+        )
+        expect_validate_failure(
+            MetricName(),
+            None,
+        )
         expect_validate_success(MetricName(), "asd")

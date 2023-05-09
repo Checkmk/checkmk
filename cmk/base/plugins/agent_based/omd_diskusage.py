@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 #
 from dataclasses import dataclass
-from typing import Iterator, Mapping, NewType, Sequence
+from typing import Final, Iterator, LiteralString, Mapping, NewType, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, register, render, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -15,13 +15,31 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 
 @dataclass(frozen=True)
+class Spec:
+    metric_name: LiteralString
+    path: LiteralString
+    label: LiteralString
+
+
+@dataclass(frozen=True)
+class Directory:
+    value: int
+    spec: Spec
+
+
+@dataclass(frozen=True)
 class Site:
     site: int
-    logs: int
-    rrds: int
+    entries: Sequence[Directory]
 
 
 Section = NewType("Section", Mapping[str, Site])
+
+
+SPECS: Final = [
+    Spec(metric_name="omd_log_size", path="var/log", label="Logs"),
+    Spec(metric_name="omd_rrd_size", path="var/check_mk/rrd", label="RRDs"),
+]
 
 
 def sub_section_parser(string_table: StringTable) -> Iterator[tuple[str, Sequence[str]]]:
@@ -44,15 +62,13 @@ def sub_section_parser(string_table: StringTable) -> Iterator[tuple[str, Sequenc
 def parse(string_table: StringTable) -> Section:
     sites: dict[str, Site] = {}
     for section_name, lines in sub_section_parser(string_table):
-        log = rrd = site = 0
+        entries = []
         for line in lines:
-            if "log" in line:
-                log = int(line.split()[0])
-            elif "rrd" in line:
-                rrd = int(line.split()[0])
+            if spec := next((spec for spec in SPECS if spec.path in line), None):
+                entries.append(Directory(spec=spec, value=int(line.split()[0])))
             else:
                 site = int(line.split()[0])
-            sites[section_name.split()[1]] = Site(site, log, rrd)
+            sites[section_name.split()[1]] = Site(site, entries)
     return Section(sites)
 
 
@@ -72,12 +88,13 @@ def check(item: str, section: Section) -> CheckResult:
     yield from check_levels(
         site.site, metric_name="omd_size", label="Total", render_func=render.bytes
     )
-    yield from check_levels(
-        site.logs, metric_name="omd_log_size", label="Logs", render_func=render.bytes
-    )
-    yield from check_levels(
-        site.rrds, metric_name="omd_rrd_size", label="RRDs", render_func=render.bytes
-    )
+    for entry in sorted(site.entries, key=lambda x: x.spec.label):
+        yield from check_levels(
+            entry.value,
+            metric_name=entry.spec.metric_name,
+            label=entry.spec.label,
+            render_func=render.bytes,
+        )
 
 
 register.check_plugin(

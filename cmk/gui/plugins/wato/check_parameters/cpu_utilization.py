@@ -268,6 +268,7 @@ def _parameter_valuespec_cpu_utilization() -> Migrate:
                         ],
                         title=_("Alert on excessive CPU utilization"),
                         help=_(
+                            # xgettext: no-python-format
                             "The CPU utilization sums up the percentages of CPU time that is used "
                             "for user processes and kernel routines over all available cores within "
                             "the last check interval. The possible range is from 0% to 100%"

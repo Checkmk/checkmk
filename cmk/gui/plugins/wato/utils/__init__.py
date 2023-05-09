@@ -825,11 +825,13 @@ def PredictiveLevels(
                                 elements=[
                                     Percentage(
                                         title=_("Warning at"),
+                                        # xgettext: no-python-format
                                         unit=_("% above predicted value"),
                                         default_value=10,
                                     ),
                                     Percentage(
                                         title=_("Critical at"),
+                                        # xgettext: no-python-format
                                         unit=_("% above predicted value"),
                                         default_value=20,
                                     ),
@@ -906,11 +908,13 @@ def PredictiveLevels(
                                 elements=[
                                     Percentage(
                                         title=_("Warning at"),
+                                        # xgettext: no-python-format
                                         unit=_("% below predicted value"),
                                         default_value=10,
                                     ),
                                     Percentage(
                                         title=_("Critical at"),
+                                        # xgettext: no-python-format
                                         unit=_("% below predicted value"),
                                         default_value=20,
                                     ),

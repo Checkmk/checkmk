@@ -475,7 +475,11 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
                 title=_("Summary line"),
                 choices=[
                     (None, _("Do not show a summary line")),
-                    ("sum", _("Display total sum (for % the average)")),
+                    (
+                        "sum",
+                        # xgettext: no-python-format
+                        _("Display total sum (for % the average)"),
+                    ),
                     ("average", _("Display average")),
                 ],
                 default_value="sum",

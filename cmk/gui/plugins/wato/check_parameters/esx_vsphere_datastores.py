@@ -27,6 +27,7 @@ def _parameter_valuespec_esx_vsphere_datastores():
                 Tuple(
                     title=_("Provisioning Levels"),
                     help=_(
+                        # xgettext: no-python-format
                         "A provisioning of more than 100% is called "
                         "over provisioning and can be a useful strategy for saving disk space. But you cannot guarantee "
                         "any longer that every VM can really use all space that it was assigned. Here you can "

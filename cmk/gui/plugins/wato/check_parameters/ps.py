@@ -53,7 +53,11 @@ def process_level_elements():
             # xgettext: no-python-format
             _("100% is all cores at full load"),
         ),
-        (False, _("N * 100% as each core contributes with 100% at full load")),
+        (
+            False,
+            # xgettext: no-python-format
+            _("N * 100% as each core contributes with 100% at full load"),
+        ),
     ]
     return [
         (
@@ -61,6 +65,7 @@ def process_level_elements():
             DropdownChoice[bool](
                 title=_("CPU rescale maximum load"),
                 help=_(
+                    # xgettext: no-python-format
                     "CPU utilization is delivered by the Operating "
                     "System as a per CPU core basis. Thus each core contributes "
                     "with a 100% at full utilization, producing a maximum load "

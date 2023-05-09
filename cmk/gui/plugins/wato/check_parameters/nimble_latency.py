@@ -19,6 +19,7 @@ def _item_spec_nimble_latency():
 def _parameter_valuespec_nimble_latency():
     return Dictionary(
         help=_(
+            # xgettext: no-python-format
             "You can set limits for the latency of read or write I/O operations of Nimble "
             "storage volumes. Note that the operations are shown in terms of number of "
             "operations as a percentage of total read or write I/O operations within various "

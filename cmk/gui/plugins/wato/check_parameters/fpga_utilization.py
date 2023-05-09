@@ -14,6 +14,7 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 def _parameter_valuespec_fpga_utilization():
     return Dictionary(
+        # xgettext: no-python-format
         help=_("Give FPGA utilization levels in percent. The possible range is from 0% to 100%."),
         elements=[
             (

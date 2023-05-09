@@ -32,8 +32,18 @@ def _parameter_valuespec_clr_memory():
                 Tuple(
                     title=_("Percent time spent in garbage collection"),
                     elements=[
-                        Percentage(title=_("Warning at"), label=_("% time"), default_value=10.0),
-                        Percentage(title=_("Critical at"), label=_("% time"), default_value=15.0),
+                        Percentage(
+                            title=_("Warning at"),
+                            # xgettext: no-python-format
+                            label=_("% time"),
+                            default_value=10.0,
+                        ),
+                        Percentage(
+                            title=_("Critical at"),
+                            # xgettext: no-python-format
+                            label=_("% time"),
+                            default_value=15.0,
+                        ),
                     ],
                 ),
             ),

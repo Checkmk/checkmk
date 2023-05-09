@@ -15,8 +15,16 @@ from cmk.gui.valuespec import Percentage, TextInput, Tuple
 def _parameter_valuespec_db2_mem():
     return Tuple(
         elements=[
-            Percentage(title=_("Warning if less than"), unit=_("% memory left")),
-            Percentage(title=_("Critical if less than"), unit=_("% memory left")),
+            Percentage(
+                title=_("Warning if less than"),
+                # xgettext: no-python-format
+                unit=_("% memory left"),
+            ),
+            Percentage(
+                title=_("Critical if less than"),
+                # xgettext: no-python-format
+                unit=_("% memory left"),
+            ),
         ],
     )
 

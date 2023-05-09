@@ -15,6 +15,7 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 def _parameter_valuespec_overall_utilization_multiitem():
     return Dictionary(
         help=_(
+            # xgettext: no-python-format
             "The overall utilization as aggregation of various utilizatons"
             "(cpu, memory, etc.) of components of a device (e.g. rack units"
             "as components of a rack server as device) in the last check interval."

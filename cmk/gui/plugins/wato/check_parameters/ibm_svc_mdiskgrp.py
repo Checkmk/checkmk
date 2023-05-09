@@ -20,6 +20,7 @@ def _parameter_valuespec_ibm_svc_mdiskgrp():
                 "provisioning_levels",
                 Tuple(
                     title=_("Provisioning Levels"),
+                    # xgettext: no-python-format
                     help=_("A provisioning of over 100% means over provisioning."),
                     elements=[
                         Percentage(

@@ -52,7 +52,7 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -61,7 +61,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     return exitcode
 
 
-def _output_check_result(s, perfdata):
+def _output_check_result(s: str, perfdata: Iterable[tuple[str, int]] | None) -> None:
     if perfdata:
         perfdata_output_entries = [
             "{}={}".format(p[0], ";".join(map(str, p[1:]))) for p in perfdata
@@ -70,7 +70,9 @@ def _output_check_result(s, perfdata):
     sys.stdout.write("%s\n" % s)
 
 
-def _check_traceroute_main(args):  # pylint: disable=too-many-branches
+def _check_traceroute_main(  # pylint: disable=too-many-branches
+    argv: Sequence[str],
+) -> tuple[int, str, list[tuple[str, int]] | None]:
     os.unsetenv("LANG")
 
     opt_verbose = 0
@@ -89,7 +91,7 @@ def _check_traceroute_main(args):  # pylint: disable=too-many-branches
     route_params = []
 
     try:
-        opts, args = getopt.getopt(args, short_options, long_options)
+        opts, args = getopt.getopt(list(argv), short_options, long_options)
 
         for o, a in opts:
             if o in ["-h", "--help"]:
@@ -139,7 +141,7 @@ def _check_traceroute_main(args):  # pylint: disable=too-many-branches
         return 2, "Unhandled exception: %s" % _parse_exception(e), None
 
 
-def _usage():
+def _usage() -> None:
     sys.stdout.write(
         """check_traceroute -{c|w|C|W} ROUTE  [-{o|c|w|O|C|W} ROUTE...] TARGET
 
@@ -173,7 +175,7 @@ class _ProtocolVersionError(Exception):
     pass
 
 
-def _validate_ip_version(address_arg, ip_version_arg):
+def _validate_ip_version(address_arg: str, ip_version_arg: int) -> None:
     # ipv6 address can have an appended interface index/name: 'fe80::%{interface}'
     try:
         ip_address_version = ipaddress.ip_interface(address_arg.split("%")[0]).ip.version
@@ -189,7 +191,12 @@ def _validate_ip_version(address_arg, ip_version_arg):
         )
 
 
-def _execute_traceroute(target, nodns, method, address_family):
+def _execute_traceroute(
+    target: str,
+    nodns: bool,
+    method: str | None,
+    address_family: str | None,
+) -> str:
     cmd = ["traceroute"]
     if nodns:
         cmd.append("-n")
@@ -213,7 +220,10 @@ class _ExecutionError(Exception):
     pass
 
 
-def _check_traceroute(lines, routes):
+def _check_traceroute(
+    lines: Sequence[str],
+    routes: Iterable[tuple[str, str]],
+) -> tuple[int, str, list[tuple[str, int]]]:
     # find all visited routers
     routers = {router for line in lines[1:] for router in _extract_routers_from_line(line)}
     hops = len(lines[1:])
@@ -254,12 +264,12 @@ def _extract_routers_from_line(line: str) -> Iterator[str]:
     )
 
 
-def _option_to_state(c):
+def _option_to_state(c: str) -> int:
     return {"w": 1, "c": 2}[c.lower()]
 
 
-def _parse_exception(exc):
-    exc = str(exc)
-    if exc[0] == "{":
-        exc = "%d - %s" % list(ast.literal_eval(exc).values())[0]
-    return str(exc)
+def _parse_exception(exc: Exception) -> str:
+    exc_str = str(exc)
+    if exc_str[0] == "{":
+        exc_str = "%d - %s" % list(ast.literal_eval(exc_str).values())[0]
+    return exc_str

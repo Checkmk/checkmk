@@ -46,6 +46,16 @@ class Sensor:
 
     @staticmethod
     def parse_state(dev_state: str) -> State | None:
+        """Convert the state provided by FreeIPMI to a Checkmk state
+
+        FreeIPMI maps a sensors events ("status_txt" above) to
+        "nominal", "warning" or "critical".
+        This mapping is configurable and well maintained, and hence
+        superior to our computation of the state from the events.
+
+        The agent not always provides this state, so we fall back to
+        our own mapping -- which is known to be insufficient.
+        """
         return {
             "nominal": State.OK,
             "warning": State.WARN,

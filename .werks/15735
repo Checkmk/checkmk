@@ -1,0 +1,17 @@
+Title: <tt>check_traceroute</tt>: Fix checking of routers specified by domain name
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683626032
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p36
+
+The active check <tt>check_traceroute</tt>, configurable via the ruleset <i>Check current routing</i>,
+failed to check routers specified by domain name:
+
+LI: Routers for which the active check was supposed to alert if they are not included in the route were always reported as missing, even if they were included.
+LI: Routers for which the active check was supposed to alert if they are included in the route were always reported as absent, even if they were included.
+

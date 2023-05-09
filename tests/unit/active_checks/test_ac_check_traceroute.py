@@ -48,9 +48,8 @@ def test_check_traceroute_ipv4_check_routers(check_traceroute) -> None:
         _TRACEROUTE_OUTPUT_IPV4,
         [("w", "63.312.142.198"), ("C", "fritz.box"), ("W", "194.45.196.22")],
     ) == (
-        2,
-        # Bug: fritz.box is present
-        "8 hops, missing routers: fritz.box(!!), bad routers: none",
+        0,
+        "8 hops, missing routers: none, bad routers: none",
         [("hops", 8)],
     )
 
@@ -114,9 +113,23 @@ def test_check_traceroute_ipv6_check_routers(check_traceroute) -> None:
         ],
     ) == (
         2,
-        # Bug: fra1.mx204.ae6.de-cix.as48314.net should also lead to crit
-        "6 hops, missing routers: none, bad routers: 2001:a60::69:0:2:3(!!)",
+        "6 hops, missing routers: none, bad routers: fra1.mx204.ae6.de-cix.as48314.net(!!), 2001:a60::69:0:2:3(!!)",
         [("hops", 6)],
+    )
+
+
+def test_check_traceroute_ipv6_link_local(check_traceroute) -> None:
+    assert check_traceroute.check_traceroute(
+        [
+            "traceroute to fe80::e936:552e:d8bf:6d67%wlp0s20f3 (fe80::e936:552e:d8bf:6d67%wlp0s20f3), 30 hops max, 80 byte packets",
+            " 1  klapp-0060 (fe80::e936:552e:d8bf:6d67%wlp0s20f3)  0.021 ms  0.004 ms  0.003 ms",
+            "",
+        ],
+        [("W", "fe80::e936:552e:d8bf:6d67%wlp0s20f3")],
+    ) == (
+        0,
+        "2 hops, missing routers: none, bad routers: none",
+        [("hops", 2)],
     )
 
 

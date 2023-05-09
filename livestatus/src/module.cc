@@ -7,11 +7,8 @@
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define _XOPEN_SOURCE 500
 
-// https://github.com/include-what-you-use/include-what-you-use/issues/166
-// IWYU pragma: no_include <ext/alloc_traits.h>
 #include "config.h"
 
-#include <endian.h>
 #include <pthread.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -35,7 +32,6 @@
 #include <optional>
 #include <sstream>
 #include <string>
-#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -1090,54 +1086,6 @@ void omd_advertize(Logger *logger) {
     }
 }
 
-namespace {
-uint64_t readle64(std::istream &is) {
-    // TODO(sp): Use std::endian + std::byteswap when we have C++23
-    uint64_t buffer{};
-    is.read(reinterpret_cast<char *>(&buffer), sizeof(buffer));
-    return le64toh(buffer);
-}
-
-void writele64(std::ostream &os, uint64_t value) {
-    // TODO(sp): Use std::endian + std::byteswap when we have C++23
-    uint64_t buffer{htole64(value)};
-    os.write(reinterpret_cast<const char *>(&buffer), sizeof(buffer));
-}
-
-std::chrono::system_clock::time_point stateFileCreated(
-    const std::filesystem::path &state_file_created_file) {
-    std::ifstream ifs{state_file_created_file, std::ios::binary};
-    if (ifs.is_open()) {
-        return mk::demangleTimePoint(readle64(ifs));
-    }
-    if (generic_error{}.code() != std::errc::no_such_file_or_directory) {
-        throw generic_error{"cannot open timestamp file \"" +
-                            state_file_created_file.string() +
-                            "\" for reading"};
-    }
-    auto state_file_created_dir = state_file_created_file.parent_path();
-    std::filesystem::create_directories(state_file_created_dir);
-    std::ofstream ofs{state_file_created_file, std::ios::binary};
-    if (!ofs.is_open()) {
-        throw generic_error{"cannot open timestamp file \"" +
-                            state_file_created_file.string() +
-                            "\" for writing"};
-    }
-    auto state_file_created = std::chrono::system_clock::now();
-    writele64(ofs, mk::mangleTimePoint(state_file_created));
-    return state_file_created;
-}
-
-bool is_licensed(const std::filesystem::path &licensed_state_file) {
-    char state{'0'};
-    if (std::ifstream ifs{licensed_state_file, std::ios::binary}) {
-        ifs.read(&state, sizeof(state));
-    };
-    return state == '1';
-}
-
-}  // namespace
-
 // Called from Nagios after we have been loaded.
 extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                               void *handle) {
@@ -1170,13 +1118,13 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 
         register_callbacks();
 
-        fl_state_file_created =
-            stateFileCreated(fl_paths.state_file_created_file);
+        fl_state_file_created = mk::state_file_created(
+            fl_paths.state_file_created_file, std::chrono::system_clock::now());
     } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
-    fl_is_licensed = is_licensed(fl_paths.licensed_state_file);
+    fl_is_licensed = mk::is_licensed(fl_paths.licensed_state_file);
 
     /* Unfortunately, we cannot start our socket thread right now.
        Nagios demonizes *after* having loaded the NEB modules. When

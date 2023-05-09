@@ -88,6 +88,7 @@ set(livestatus_headers
     ${header_location}/TimeAggregator.h
     ${header_location}/TimeColumn.h
     ${header_location}/TimeFilter.h
+    ${header_location}/TrialManager.h
     ${header_location}/Triggers.h
     ${header_location}/User.h)
 set(livestatus_sources
@@ -154,6 +155,7 @@ set(livestatus_sources
     TableStatus.cc
     TableTimeperiods.cc
     TimeFilter.cc
+    TrialManager.cc
     Triggers.cc
     User.cc)
 

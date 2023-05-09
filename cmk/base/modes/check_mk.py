@@ -10,7 +10,7 @@ from collections.abc import Callable, Container, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Final, Literal, overload, Protocol, TypedDict, TypeVar, Union
+from typing import Final, Literal, NamedTuple, overload, Protocol, TypedDict, TypeVar, Union
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -33,7 +33,13 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, OnError
 from cmk.utils.log import console, section
-from cmk.utils.structured_data import load_tree
+from cmk.utils.structured_data import (
+    load_tree,
+    RawIntervalsFromConfig,
+    StructuredDataNode,
+    TreeOrArchiveStore,
+    UpdateResult,
+)
 from cmk.utils.tags import TagID
 from cmk.utils.type_defs import (
     EVERYTHING,
@@ -51,8 +57,17 @@ from cmk.fetchers import FetcherType, get_raw_data
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkers import parse_raw_data, SourceType
+from cmk.checkers import (
+    FetcherFunction,
+    InventoryPlugin,
+    parse_raw_data,
+    ParserFunction,
+    SectionPlugin,
+    SourceType,
+    SummarizerFunction,
+)
 from cmk.checkers.checking import CheckPluginName
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.error_handling import CheckResultErrorHandler
 from cmk.checkers.inventory import HWSWInventoryParameters, InventoryPluginName
 from cmk.checkers.submitters import get_submitter, Submitter
@@ -82,7 +97,6 @@ from cmk.base.agent_based.confcheckers import (
     InventoryPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core, get_licensing_handler_type
@@ -2190,6 +2204,96 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
+def _execute_active_check_inventory(
+    host_name: HostName,
+    *,
+    config_cache: ConfigCache,
+    fetcher: FetcherFunction,
+    parser: ParserFunction,
+    summarizer: SummarizerFunction,
+    section_plugins: Mapping[SectionName, SectionPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
+    parameters: HWSWInventoryParameters,
+    raw_intervals_from_config: RawIntervalsFromConfig,
+) -> ActiveCheckResult:
+    tree_or_archive_store = TreeOrArchiveStore(
+        cmk.utils.paths.inventory_output_dir,
+        cmk.utils.paths.inventory_archive_dir,
+    )
+    old_tree = tree_or_archive_store.load_previous(host_name=host_name)
+
+    if config_cache.is_cluster(host_name):
+        result = inventory.inventorize_cluster(
+            config_cache.nodes_of(host_name) or (),
+            parameters=parameters,
+            old_tree=old_tree,
+        )
+    else:
+        result = inventory.inventorize_host(
+            host_name,
+            fetcher=fetcher,
+            parser=parser,
+            summarizer=summarizer,
+            inventory_parameters=inventory_parameters,
+            section_plugins=section_plugins,
+            inventory_plugins=inventory_plugins,
+            run_plugin_names=EVERYTHING,
+            parameters=parameters,
+            raw_intervals_from_config=raw_intervals_from_config,
+            old_tree=old_tree,
+        )
+
+    if result.no_data_or_files:
+        AutoQueue(cmk.utils.paths.autoinventory_dir).add(host_name)
+
+    if not (result.processing_failed or result.no_data_or_files):
+        save_tree_actions = _get_save_tree_actions(
+            old_tree=old_tree,
+            inventory_tree=result.inventory_tree,
+            update_result=result.update_result,
+        )
+        # The order of archive or save is important:
+        if save_tree_actions.do_archive:
+            tree_or_archive_store.archive(host_name=host_name)
+        if save_tree_actions.do_save:
+            tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree)
+
+    return result.check_result
+
+
+class _SaveTreeActions(NamedTuple):
+    do_archive: bool
+    do_save: bool
+
+
+def _get_save_tree_actions(
+    *,
+    old_tree: StructuredDataNode,
+    inventory_tree: StructuredDataNode,
+    update_result: UpdateResult,
+) -> _SaveTreeActions:
+    if inventory_tree.is_empty():
+        # Archive current inventory tree file if it exists. Important for host inventory icon
+        console.verbose("No inventory tree.\n")
+        return _SaveTreeActions(do_archive=True, do_save=False)
+
+    if old_tree.is_empty():
+        console.verbose("New inventory tree.\n")
+        return _SaveTreeActions(do_archive=False, do_save=True)
+
+    if has_changed := not old_tree.is_equal(inventory_tree):
+        console.verbose("Inventory tree has changed. Add history entry.\n")
+
+    if update_result.save_tree:
+        console.verbose(str(update_result))
+
+    return _SaveTreeActions(
+        do_archive=has_changed,
+        do_save=(has_changed or update_result.save_tree),
+    )
+
+
 def mode_inventory_as_check(
     options: dict,
     hostname: HostName,
@@ -2232,7 +2336,7 @@ def mode_inventory_as_check(
     )
     state, text = (3, "unknown error")
     with error_handler:
-        check_result = execute_active_check_inventory(
+        check_result = _execute_active_check_inventory(
             hostname,
             config_cache=config_cache,
             fetcher=fetcher,
@@ -2382,7 +2486,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
     with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
         for host_name in time_limited(queue.queued_hosts()):
             if host_name in process_hosts:
-                execute_active_check_inventory(
+                _execute_active_check_inventory(
                     host_name,
                     config_cache=config_cache,
                     parser=parser,

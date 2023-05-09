@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._active import execute_active_check_inventory
 from ._inventory import inventorize_cluster, inventorize_host, inventorize_status_data_of_real_host
 
 __all__ = [
-    "execute_active_check_inventory",
     "inventorize_cluster",
     "inventorize_host",
     "inventorize_status_data_of_real_host",

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,12 +10,12 @@ CEE_LICENSE_NAME="Check_MK Enterprise License"
 header ()
 {
   if [ $isCFile = true ]; then
-      echo "Copyright (C) 2019 tribe29 GmbH - License: $licenseName"
+      echo "Copyright (C) 2019 Checkmk GmbH - License: $licenseName"
       echo "This file is part of Checkmk (https://checkmk.com). It is subject to the"
       echo "terms and conditions defined in the file COPYING, which is part of this"
       echo "source code package."
   else
-      echo "Copyright (C) 2019 tribe29 GmbH - License: $licenseName"
+      echo "Copyright (C) 2019 Checkmk GmbH - License: $licenseName"
       echo "This file is part of Checkmk (https://checkmk.com). It is subject to the terms and"
       echo "conditions defined in the file COPYING, which is part of this source code package."
   fi
@@ -98,7 +98,7 @@ headrify ()
   fi
 
   figletline="---------------------------------------------------"
-  up2dateline="Copyright (C) 2019 tribe29 GmbH - License"
+  up2dateline="Copyright (C) 2019 Checkmk GmbH - License"
   endline='.*(Boston, MA 02110-1301 USA.|address provided at www.mathias-kettner.de|source code package.)'
 
   TMP=$(mktemp .headrify.new.XXXXXX)

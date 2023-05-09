@@ -4208,7 +4208,7 @@ msgid ""
 "portal.<br>Navigate to 'Subscription' in the customer portal and select your "
 "active subscription. Click on 'Upload' under 'Upload License Information' "
 "and complete the dialog.<br>If everything is correct, you will receive the "
-"verification response file now containing your subscription details."
+"license information file now containing your subscription details."
 msgstr ""
 
 msgid ""
@@ -4216,7 +4216,7 @@ msgid ""
 "portal.<br>Navigate to 'Subscription' in the customer portal and select your "
 "active subscription. Click on 'Upload' under 'Upload License Information' "
 "and complete the dialog.<br>If everything is correct, you will receive the "
-"license information response file now containing your subscription details."
+"verification response file now containing your subscription details."
 msgstr ""
 
 msgid ""
@@ -26761,7 +26761,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"In this form, use 'Select file' to select the license information file you "
+"In this form, use 'Select file' to select the verification response file you "
 "have downloaded in the customer portal. Click on 'Upload response' to "
 "complete the verification."
 msgstr ""
@@ -60323,6 +60323,10 @@ msgstr ""
 msgid "Upload key"
 msgstr ""
 
+#, fuzzy
+msgid "Upload license information file"
+msgstr "Adaugă informații despre contact"
+
 msgid "Upload new:"
 msgstr ""
 
@@ -60344,11 +60348,7 @@ msgid "Upload response"
 msgstr "Notificari"
 
 #, fuzzy
-msgid "Upload subscription details"
-msgstr "foloseste descrierea"
-
-#, fuzzy
-msgid "Upload verification response"
+msgid "Upload verification response file"
 msgstr "Notificari"
 
 #, python-format
@@ -68365,6 +68365,10 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Upload subscription details"
+#~ msgstr "foloseste descrierea"
 
 #, fuzzy
 #~ msgid "XML text"

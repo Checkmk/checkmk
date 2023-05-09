@@ -4316,7 +4316,7 @@ msgid ""
 "portal.<br>Navigate to 'Subscription' in the customer portal and select your "
 "active subscription. Click on 'Upload' under 'Upload License Information' "
 "and complete the dialog.<br>If everything is correct, you will receive the "
-"verification response file now containing your subscription details."
+"license information file now containing your subscription details."
 msgstr ""
 
 msgid ""
@@ -4324,7 +4324,7 @@ msgid ""
 "portal.<br>Navigate to 'Subscription' in the customer portal and select your "
 "active subscription. Click on 'Upload' under 'Upload License Information' "
 "and complete the dialog.<br>If everything is correct, you will receive the "
-"license information response file now containing your subscription details."
+"verification response file now containing your subscription details."
 msgstr ""
 
 msgid ""
@@ -27315,7 +27315,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"In this form, use 'Select file' to select the license information file you "
+"In this form, use 'Select file' to select the verification response file you "
 "have downloaded in the customer portal. Click on 'Upload response' to "
 "complete the verification."
 msgstr ""
@@ -61811,6 +61811,10 @@ msgstr "アップロードアイコン"
 msgid "Upload key"
 msgstr "キーをアップロード"
 
+#, fuzzy
+msgid "Upload license information file"
+msgstr "タイトルにコンテキスト情報を追加する"
+
 msgid "Upload new:"
 msgstr "新規アップロード:"
 
@@ -61834,10 +61838,7 @@ msgid "Upload response"
 msgstr "応答を非表示"
 
 #, fuzzy
-msgid "Upload subscription details"
-msgstr "サブスクリプションの詳細"
-
-msgid "Upload verification response"
+msgid "Upload verification response file"
 msgstr "検証結果をアップロードする"
 
 #, python-format
@@ -70386,6 +70387,11 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Subscription details"
+#~ msgid "Upload subscription details"
+#~ msgstr "サブスクリプションの詳細"
 
 #, fuzzy
 #~| msgid "Download license usage report"

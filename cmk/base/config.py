@@ -380,8 +380,14 @@ class SpecialAgentConfiguration(Protocol):
 SpecialAgentInfoFunctionResult = (
     str | Sequence[Union[str, int, float, tuple[str, str, str]]] | SpecialAgentConfiguration
 )
+
+# Note: being more specific here makes no sense,
+# as it prevents us from typing the individual
+# parameters as what we actually know them to be.
+_SpecialAgentConfigParams = Any
+
 SpecialAgentInfoFunction = Callable[
-    [Mapping[str, object], str, str | None], SpecialAgentInfoFunctionResult
+    [_SpecialAgentConfigParams, str, str | None], SpecialAgentInfoFunctionResult
 ]
 HostCheckCommand = Union[None, str, tuple[str, int | str]]
 PingLevels = dict[str, Union[int, tuple[float, float]]]

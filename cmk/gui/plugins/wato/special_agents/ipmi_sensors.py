@@ -107,6 +107,7 @@ def _special_agents_ipmi_sensors_vs_freeipmi() -> Dictionary:
                 Checkbox(
                     title=_("Sensor state"),
                     label=_("Enable"),
+                    default_value=True,
                     help=_("Output sensor state"),
                 ),
             ),

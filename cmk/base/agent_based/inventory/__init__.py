@@ -5,12 +5,12 @@
 
 from ._active import execute_active_check_inventory
 from ._autoinventory import inventorize_marked_hosts
-from ._inventory import inventorize_status_data_of_real_host
-from .commandline import commandline_inventory
+from ._inventory import inventorize_cluster, inventorize_host, inventorize_status_data_of_real_host
 
 __all__ = [
-    "commandline_inventory",
     "execute_active_check_inventory",
+    "inventorize_cluster",
+    "inventorize_host",
     "inventorize_status_data_of_real_host",
     "inventorize_marked_hosts",
 ]

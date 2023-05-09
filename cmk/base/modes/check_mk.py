@@ -12,6 +12,7 @@ from functools import partial
 from pathlib import Path
 from typing import Final, Literal, overload, Protocol, TypedDict, TypeVar, Union
 
+import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.paths
@@ -31,7 +32,8 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, OnError
-from cmk.utils.log import console
+from cmk.utils.log import console, section
+from cmk.utils.structured_data import load_tree
 from cmk.utils.tags import TagID
 from cmk.utils.type_defs import (
     EVERYTHING,
@@ -2099,26 +2101,54 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
 
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
+
+    section_plugins = SectionPluginMapper()
+    inventory_plugins = InventoryPluginMapper()
+
     for hostname in hostnames:
         parameters = config_cache.hwsw_inventory_parameters(hostname)
+        raw_intervals_from_config = config_cache.inv_retention_intervals(hostname)
         summarizer = ConfiguredSummarizer(
             config_cache,
             hostname,
             override_non_ok_state=parameters.fail_status,
         )
 
-        inventory.commandline_inventory(
-            hostname,
-            config_cache=config_cache,
-            fetcher=fetcher,
-            parser=parser,
-            summarizer=summarizer,
-            parameters=parameters,
-            raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
-            section_plugins=SectionPluginMapper(),
-            inventory_plugins=InventoryPluginMapper(),
-            run_plugin_names=run_plugin_names,
-        )
+        section.section_begin(hostname)
+        section.section_step("Inventorizing")
+        try:
+            old_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, hostname))
+            if config_cache.is_cluster(hostname):
+                check_result = inventory.inventorize_cluster(
+                    config_cache.nodes_of(hostname) or (),
+                    parameters=parameters,
+                    old_tree=old_tree,
+                ).check_result
+            else:
+                check_result = inventory.inventorize_host(
+                    hostname,
+                    fetcher=fetcher,
+                    parser=parser,
+                    summarizer=summarizer,
+                    inventory_parameters=config_cache.inventory_parameters,
+                    section_plugins=section_plugins,
+                    inventory_plugins=inventory_plugins,
+                    run_plugin_names=run_plugin_names,
+                    parameters=parameters,
+                    raw_intervals_from_config=raw_intervals_from_config,
+                    old_tree=old_tree,
+                ).check_result
+            if check_result.state:
+                section.section_error(check_result.summary)
+            else:
+                section.section_success(check_result.summary)
+
+        except Exception as e:
+            if cmk.utils.debug.enabled():
+                raise
+            section.section_error("%s" % e)
+        finally:
+            cmk.utils.cleanup.cleanup_globals()
 
 
 modes.register(

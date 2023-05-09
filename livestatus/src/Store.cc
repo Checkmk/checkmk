@@ -5,7 +5,6 @@
 
 #include "Store.h"
 
-#include <chrono>
 #include <filesystem>
 #include <memory>
 #include <sstream>
@@ -22,6 +21,10 @@
 #include "livestatus/StringUtils.h"
 #include "livestatus/mk_logwatch.h"
 #include "nagios.h"
+
+#ifndef CMC
+#include <chrono>
+#endif
 
 Store::Store(MonitoringCore *mc)
     : _mc(mc)

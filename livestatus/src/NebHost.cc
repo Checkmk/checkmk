@@ -6,15 +6,13 @@
 #include "NebHost.h"
 
 #include <algorithm>
-#include <string>
 #include <unordered_map>
 #include <utility>
 
 #include "NebContactGroup.h"
 #include "NebHostGroup.h"
 #include "NebService.h"
-#include "livestatus/Interface.h"
-#include "nagios.h"
+
 using namespace std::string_literals;
 
 bool NebHost::all_of_parents(std::function<bool(const IHost &)> pred) const {

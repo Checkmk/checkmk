@@ -5,7 +5,6 @@
 
 #include "livestatus/CommentRenderer.h"
 
-#include "livestatus/Interface.h"
 #include "livestatus/Renderer.h"
 
 void CommentRenderer::output(

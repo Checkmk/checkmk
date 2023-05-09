@@ -11,7 +11,6 @@
 #include <system_error>
 
 #include "livestatus/Interface.h"
-#include "livestatus/Logfile.h"
 #include "livestatus/Logger.h"
 #include "livestatus/MonitoringCore.h"
 

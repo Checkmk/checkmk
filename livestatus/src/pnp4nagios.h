@@ -10,6 +10,7 @@
 
 #include <filesystem>
 #include <string>
+
 int pnpgraph_present(const std::filesystem::path &pnp_path,
                      const std::string &host, const std::string &service);
 

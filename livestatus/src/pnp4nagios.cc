@@ -5,7 +5,6 @@
 
 #include "pnp4nagios.h"
 
-#include <filesystem>
 #include <system_error>
 
 #include "livestatus/PnpUtils.h"

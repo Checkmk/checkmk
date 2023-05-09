@@ -46,7 +46,6 @@
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
-#include "livestatus/Table.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 #include "nagios.h"

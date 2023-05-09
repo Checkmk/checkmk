@@ -82,7 +82,6 @@ def main() {
             def thisStagePassed = true;
             stage_info.STAGES.each { item ->
                 (thisStagePassed, thisIssues) = test_gerrit_helper.create_stage(item, time_stage_started);
-                issues.addAll(thisIssues);
                 allStagesPassed = thisStagePassed && allStagesPassed;
                 time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
             }
@@ -91,15 +90,6 @@ def main() {
     } finally {
         test_gerrit_helper.desc_add_line("Executed on: ${NODE_NAME} in ${WORKSPACE}");
         stage("Analyse Issues") {
-            if (issues) {
-                issues.each { item ->
-                    publishIssues(
-                        issues: [item],
-                        trendChartType: 'TOOLS_ONLY',
-                        qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
-                    );
-                }
-            }
             dir("${checkout_dir}") {
                 xunit([
                     Custom(

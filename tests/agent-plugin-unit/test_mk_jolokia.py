@@ -7,6 +7,7 @@
 # pylint: disable=protected-access,redefined-outer-name
 
 import sys
+from typing import Mapping
 
 import pytest
 
@@ -23,7 +24,7 @@ except ImportError:
 
 
 @pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])
-def test_missing_config_basic(removed) -> None:  # type: ignore[no-untyped-def]
+def test_missing_config_basic(removed: str) -> None:
     config = mk_jolokia.get_default_config_dict()
     config.pop(removed)
     with pytest.raises(ValueError):
@@ -103,7 +104,7 @@ def test_config_legacy_cert_path_to_verify() -> None:
         )
     ],
 )
-def test_jolokia_instance_base_url(config, base_url) -> None:  # type: ignore[no-untyped-def]
+def test_jolokia_instance_base_url(config: Mapping[str, object], base_url: str) -> None:
     joloi = mk_jolokia.JolokiaInstance(config, mk_jolokia.USER_AGENT)
     assert joloi._get_base_url() == base_url
 
@@ -121,7 +122,7 @@ def test_jolokia_yield_configured_instances() -> None:
 
 
 class _MockHttpResponse(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self, http_status, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, http_status: int, **kwargs: object) -> None:
         self.status_code = http_status
         self.headers = {}  # type: Dict
         self.content = b"\x00"
@@ -160,5 +161,5 @@ def test_jolokia_validate_response_skip_instance() -> None:
         },
     ],
 )
-def test_jolokia_validate_response_ok(data) -> None:  # type: ignore[no-untyped-def]
+def test_jolokia_validate_response_ok(data: Mapping[str, int]) -> None:
     assert data == mk_jolokia.validate_response(_MockHttpResponse(200, **data))

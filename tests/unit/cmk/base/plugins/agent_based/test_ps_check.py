@@ -12,6 +12,7 @@ from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
 
+import cmk.base.plugins.agent_based.agent_based_api.v1.type_defs as type_defs
 from cmk.base.plugins.agent_based import ps_check, ps_section
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
@@ -945,7 +946,7 @@ check_results = [
     list(zip(PS_DISCOVERED_ITEMS, check_results)),
     ids=[s.item for s in PS_DISCOVERED_ITEMS],
 )
-def test_check_ps_common(inv_item, reference) -> None:  # type: ignore[no-untyped-def]
+def test_check_ps_common(inv_item: Service, reference: type_defs.CheckResult) -> None:
     parsed: list = []
     for info in generate_inputs():
         _cpu_cores, data = ps_section.parse_ps(info)
@@ -954,14 +955,16 @@ def test_check_ps_common(inv_item, reference) -> None:  # type: ignore[no-untype
     with on_time(1540375342, "CET"):
         factory_defaults = {"levels": (1, 1, 99999, 99999)}
         factory_defaults.update(inv_item.parameters)
-        test_result = list(
+        item = inv_item.item
+        assert item is not None
+        test_result: type_defs.CheckResult = list(
             ps_utils.check_ps_common(
                 label="Processes",
-                item=inv_item.item,
+                item=item,
                 params=factory_defaults,
                 process_lines=parsed,
                 cpu_cores=1,
-                total_ram_map={"": 1024**3} if "include_ram_map" in inv_item.item else {},
+                total_ram_map={"": 1024**3} if "include_ram_map" in item else {},
             )
         )
         assert test_result == reference
@@ -1065,7 +1068,7 @@ cpu_util_data = [
 
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("data", cpu_util_data, ids=[a.name for a in cpu_util_data])
-def test_check_ps_common_cpu(data) -> None:  # type: ignore[no-untyped-def]
+def test_check_ps_common_cpu(data: cpu_config) -> None:
     def time_info(service, agent_info, check_time, cputime, cpu_cores):
         with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
@@ -1135,7 +1138,9 @@ def test_check_ps_common_cpu(data) -> None:  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_ps_common_count(levels, reference) -> None:  # type: ignore[no-untyped-def]
+def test_check_ps_common_count(
+    levels: tuple[int, int, int, int], reference: type_defs.CheckResult
+) -> None:
     _cpu_info, parsed_lines = ps_section.parse_ps(
         splitter("(on,105,30,00:00:{:02}/03:59:39,902) single")
     )
@@ -1147,7 +1152,7 @@ def test_check_ps_common_count(levels, reference) -> None:  # type: ignore[no-un
         "levels": levels,
     }
 
-    output = list(
+    output: type_defs.CheckResult = list(
         ps_utils.check_ps_common(
             label="Processes",
             item="empty",
@@ -1237,7 +1242,7 @@ def test_subset_patterns() -> None:
 
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("cpu_cores", [2, 4, 5])
-def test_cpu_util_single_process_levels(cpu_cores) -> None:  # type: ignore[no-untyped-def]
+def test_cpu_util_single_process_levels(cpu_cores: int) -> None:
     """Test CPU utilization per single process.
     - Check that Number of cores weight is active
     - Check that single process CPU utilization is present only on warn/crit states"""
@@ -1324,7 +1329,7 @@ def test_cpu_util_single_process_levels(cpu_cores) -> None:  # type: ignore[no-u
 
 
 @pytest.mark.usefixtures("initialised_item_state")
-def test_parse_ps_windows(mocker: MockerFixture):  # type: ignore[no-untyped-def]
+def test_parse_ps_windows(mocker: MockerFixture) -> None:
     section_ps = ps_section.parse_ps(
         splitter(
             """(\\LS\0Checkmk,150364,40016,0,2080,1,387119531250,2225698437500,111,2,263652)	CPUSTRES64.EXE""",

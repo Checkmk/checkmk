@@ -114,7 +114,7 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         )
 
         html.open_div(id_="info_title")
-        html.h1(_("Your monitoring machine"))
+        html.h1(_("Your IT monitoring platform"))
         html.a(
             html.render_img(theme.url("images/checkmk_logo.svg")),
             "https://tribe29.com",
@@ -125,12 +125,9 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.div(None, id_="info_underline")
 
         html.open_div(id_="info_intro_text")
-        html.span(_("Open. Effective. Awesome."))
         html.span(
             _(
-                "May we present? Monitoring as it's supposed to be: "
-                "incredibly quick to install, infinetely scalable, highly customizable and "
-                "designed for admins."
+                "Gain a complete view of your entire IT infrastructure: from public cloud providers, to your data centers, across servers, networks, containers, and more. Checkmk enables ITOps and DevOps teams to run your IT at peak performance."
             )
         )
         html.span(

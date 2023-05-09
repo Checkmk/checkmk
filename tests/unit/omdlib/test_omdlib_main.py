@@ -584,6 +584,8 @@ def test_permission_action_all_changed_incl_type_ask_default(
         "etc/check_mk/multisite.d",
         "etc/check_mk/conf.d",
         "etc/check_mk/conf.d/wato",
+        "etc/ssl/private",
+        "etc/ssl/certs",
     ],
 )
 def test_permission_action_all_changed_streamline_standard_directories(relpath: str) -> None:

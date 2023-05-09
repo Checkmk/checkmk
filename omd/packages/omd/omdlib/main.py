@@ -1279,6 +1279,8 @@ def permission_action(
         "etc/check_mk/multisite.d",
         "etc/check_mk/conf.d",
         "etc/check_mk/conf.d/wato",
+        "etc/ssl/private",
+        "etc/ssl/certs",
     ):
         return "default"
 

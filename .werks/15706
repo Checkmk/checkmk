@@ -20,4 +20,6 @@ This change affects these directories:
 <li>etc/check_mk/conf.d/wato</li>
 <li>local/share/nagvis/htdocs/userfiles/images/maps</li>
 <li>local/share/nagvis/htdocs/userfiles/images/shapes</li>
+<li>etc/ssl/private</li>
+<li>etc/ssl/certs</li>
 </ul>

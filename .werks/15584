@@ -1,0 +1,13 @@
+Title: mk_docker: Added podman support
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1683627763
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Added podman support in mk_docker.py.
+This way the plugin ends in case it is being executed on a non docker or podman host.
+

@@ -20,7 +20,7 @@ import cmk.utils.piggyback as piggyback
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
-from cmk.utils.auto_queue import AutoQueue
+from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
@@ -2364,15 +2364,36 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
             override_non_ok_state=config_cache.hwsw_inventory_parameters(host_name).fail_status,
         )
 
-    inventory.inventorize_marked_hosts(
-        config_cache,
-        queue,
-        parser=parser,
-        fetcher=fetcher,
-        summarizer=summarizer,
-        section_plugins=SectionPluginMapper(),
-        inventory_plugins=InventoryPluginMapper(),
+    queue.cleanup(
+        valid_hosts=config_cache.all_configured_hosts(),
+        logger=console.verbose,
     )
+
+    if queue.oldest() is None:
+        console.verbose("Autoinventory: No hosts marked by inventory check\n")
+        return
+
+    console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:\n")
+    process_hosts = EVERYTHING if (up_hosts := get_up_hosts()) is None else up_hosts
+
+    section_plugins = SectionPluginMapper()
+    inventory_plugins = InventoryPluginMapper()
+
+    with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
+        for host_name in time_limited(queue.queued_hosts()):
+            if host_name in process_hosts:
+                execute_active_check_inventory(
+                    host_name,
+                    config_cache=config_cache,
+                    parser=parser,
+                    fetcher=fetcher,
+                    summarizer=summarizer(host_name),
+                    section_plugins=section_plugins,
+                    inventory_plugins=inventory_plugins,
+                    inventory_parameters=config_cache.inventory_parameters,
+                    parameters=config_cache.hwsw_inventory_parameters(host_name),
+                    raw_intervals_from_config=config_cache.inv_retention_intervals(host_name),
+                )
 
 
 modes.register(

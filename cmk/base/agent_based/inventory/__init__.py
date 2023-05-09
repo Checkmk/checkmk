@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._active import execute_active_check_inventory
-from ._autoinventory import inventorize_marked_hosts
 from ._inventory import inventorize_cluster, inventorize_host, inventorize_status_data_of_real_host
 
 __all__ = [
@@ -12,5 +11,4 @@ __all__ = [
     "inventorize_cluster",
     "inventorize_host",
     "inventorize_status_data_of_real_host",
-    "inventorize_marked_hosts",
 ]

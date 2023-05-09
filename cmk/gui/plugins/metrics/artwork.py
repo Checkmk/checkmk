@@ -951,6 +951,7 @@ def compute_graph_t_axis(  # pylint: disable=too-many-branches
         label_distance_at_least = 86400
 
     elif start_time_local.tm_year == end_time_local.tm_year:
+        # xgettext: no-python-format
         labelling = _("%m-%d")
         label_size = 5
     else:

@@ -37,6 +37,7 @@ def _parameter_valuespec_memory() -> Dictionary:
                     default_value=(150.0, 200.0),
                     match=match_dual_level_type,
                     help=_(
+                        # xgettext: no-python-format
                         "The used and free levels for the memory on UNIX systems take into account the "
                         "currently used memory (RAM or Swap) by all processes and sets this in relation "
                         "to the total RAM of the system. This means that the memory usage can exceed 100%. "

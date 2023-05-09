@@ -218,6 +218,7 @@ def _vs_regex_matching(match_obj):
 
 def _note_for_admin_state_options():
     return _(
+        # xgettext: no-python-format
         "Note: The admin state is in general only available for the 64-bit SNMP interface check. "
         "Additionally, you have to specifically configure Checkmk to fetch this information, "
         "otherwise, using this option will have no effect. To make Checkmk fetch the admin status, "

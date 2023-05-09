@@ -34,6 +34,7 @@ def _parameter_valuespec_db_bloat():
                 Tuple(
                     title=_("Table percentage bloat levels"),
                     help=_(
+                        # xgettext: no-python-format
                         "Percentage in respect to the optimal utilization. "
                         "For example if an alarm should raise at 50% wasted space, you need "
                         "to configure 150%"
@@ -59,6 +60,7 @@ def _parameter_valuespec_db_bloat():
                 Tuple(
                     title=_("Index percentage bloat levels"),
                     help=_(
+                        # xgettext: no-python-format
                         "Percentage in respect to the optimal utilization. "
                         "For example if an alarm should raise at 50% wasted space, you need "
                         "to configure 150%"

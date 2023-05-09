@@ -15,6 +15,7 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 def _parameter_valuespec_pci_io_utilization_multiitem():
     return Dictionary(
         help=_(
+            # xgettext: no-python-format
             "The PCI IO utilization of components of a device (e.g. PCI Express card IO"
             "utilization of the rack units as components of a rack server as device)"
             "in the last check interval. The possible range is from 0% to 100%"

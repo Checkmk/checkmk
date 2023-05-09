@@ -242,6 +242,7 @@ def _filesystem_reserved_elements() -> list[DictionaryEntry]:
             DropdownChoice(
                 title=_("Show space reserved for the <tt>root</tt> user"),
                 help=_(
+                    # xgettext: no-python-format
                     "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
                     "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
                     "With this option you can have Checkmk display the current amount of reserved but yet unused "
@@ -260,6 +261,7 @@ def _filesystem_reserved_elements() -> list[DictionaryEntry]:
                     "Exclude space reserved for the <tt>root</tt> user from calculation of used space"
                 ),
                 help=_(
+                    # xgettext: no-python-format
                     "By default Checkmk treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
                     "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
                     "With this option you can have Checkmk exclude the current amount of reserved but yet unused "
@@ -339,7 +341,11 @@ def _filesystem_inodes_elements() -> list[DictionaryEntry]:
                 title=_("Display inode usage in check output..."),
                 choices=[
                     ("onproblem", _("Only in case of a problem")),
-                    ("onlow", _("Only in case of a problem or if inodes are below 50%")),
+                    (
+                        "onlow",
+                        # xgettext: no-python-format
+                        _("Only in case of a problem or if inodes are below 50%"),
+                    ),
                     ("always", _("Always")),
                 ],
                 default_value="onlow",

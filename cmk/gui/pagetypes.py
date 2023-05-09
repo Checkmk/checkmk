@@ -1219,6 +1219,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
                 vs.validate_value(new_page_dict, varprefix)
             except MKUserError as e:
                 user_errors.add(e)
+                new_page_dict = {}
 
             # Take over keys from previous value that are specific to the page type
             # and not edited here.
@@ -1766,6 +1767,8 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
                         Integer(
                             title=_("Sort index"),
                             default_value=99,
+                            minvalue=1,
+                            maxvalue=65535,
                             help=_(
                                 "You can customize the order of the %s by changing "
                                 "this number. Lower numbers will be sorted first. "

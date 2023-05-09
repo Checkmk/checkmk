@@ -22,16 +22,18 @@ from cmk.fetchers import FetcherType
 
 from cmk.checkers import SourceInfo, SourceType
 from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.inventory import HWSWInventoryParameters
-from cmk.checkers.type_defs import NO_SELECTION
-
-import cmk.base.agent_based.inventory._inventory as _inventory
-from cmk.base.agent_based.confcheckers import ConfiguredParser, SectionPluginMapper
-from cmk.base.agent_based.inventory._inventory import (
+from cmk.checkers.inventory import (
+    _check_fetched_data_or_trees,
     _inventorize_real_host,
     _parse_inventory_plugin_item,
+    _tree_nodes_are_equal,
+    HWSWInventoryParameters,
+    inventorize_host,
     ItemsOfInventoryPlugin,
 )
+from cmk.checkers.type_defs import NO_SELECTION
+
+from cmk.base.agent_based.confcheckers import ConfiguredParser, SectionPluginMapper
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
 
@@ -73,7 +75,7 @@ def test__tree_nodes_are_not_equal(
     old_tree: StructuredDataNode,
     inv_tree: StructuredDataNode,
 ) -> None:
-    assert _inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
+    assert _tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
 
 
 @pytest.mark.parametrize(
@@ -84,7 +86,7 @@ def test__tree_nodes_are_not_equal(
     ],
 )
 def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: StructuredDataNode) -> None:
-    assert _inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
+    assert _tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
 
 
 # TODO test cases:
@@ -1227,7 +1229,7 @@ def test_inventorize_host(
         keep_outdated=True,
         logger=logging.getLogger("tests"),
     )
-    check_result = _inventory.inventorize_host(
+    check_result = inventorize_host(
         hostname,
         fetcher=fetcher,
         parser=parser,
@@ -1249,7 +1251,7 @@ def test_inventorize_host(
 
 def test_inventorize_host_with_no_data_nor_files() -> None:
     hostname = HostName("my-host")
-    check_result = _inventory.inventorize_host(
+    check_result = inventorize_host(
         hostname,
         # no data!
         fetcher=lambda *args, **kwargs: [],
@@ -1427,7 +1429,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
 ) -> None:
     assert (
         list(
-            _inventory._check_fetched_data_or_trees(
+            _check_fetched_data_or_trees(
                 parameters=HWSWInventoryParameters.from_raw({}),
                 inventory_tree=inventory_tree,
                 status_data_tree=StructuredDataNode.deserialize({}),

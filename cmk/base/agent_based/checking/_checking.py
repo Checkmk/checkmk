@@ -53,7 +53,11 @@ from cmk.checkers import (
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
-from cmk.checkers.inventory import HWSWInventoryParameters, InventoryPluginName
+from cmk.checkers.inventory import (
+    HWSWInventoryParameters,
+    inventorize_status_data_of_real_host,
+    InventoryPluginName,
+)
 from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,
@@ -71,7 +75,6 @@ from cmk.checkers.submitters import Submittee, Submitter
 
 import cmk.base.core
 import cmk.base.utils
-from cmk.base.agent_based.inventory import inventorize_status_data_of_real_host
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult

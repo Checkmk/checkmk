@@ -57,6 +57,7 @@ from cmk.fetchers import FetcherType, get_raw_data
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
+import cmk.checkers.inventory as inventory
 from cmk.checkers import (
     FetcherFunction,
     InventoryPlugin,
@@ -75,7 +76,6 @@ from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.discovery as discovery
-import cmk.base.agent_based.inventory as inventory
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.core

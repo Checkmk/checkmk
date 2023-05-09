@@ -12,9 +12,10 @@ import cmk.utils.piggyback
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostName, ParsedSectionName, result, SectionName
 
-from cmk.checkers import HostKey, SectionPlugin, SourceInfo, SourceType
-from cmk.checkers.crash_reporting import create_section_crash_dump
-from cmk.checkers.host_sections import HostSections, TRawDataSection
+from ._api import SectionPlugin
+from ._typedefs import HostKey, SourceInfo, SourceType
+from .crash_reporting import create_section_crash_dump
+from .host_sections import HostSections, TRawDataSection
 
 _CacheInfo = tuple[int, int]
 

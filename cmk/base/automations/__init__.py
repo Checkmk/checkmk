@@ -12,6 +12,7 @@ from typing import Any, NoReturn
 
 import cmk.utils.debug
 import cmk.utils.log as log
+import cmk.utils.paths as paths
 from cmk.utils import version as cmk_version
 from cmk.utils.exceptions import MKException, MKTimeout
 from cmk.utils.log import console
@@ -54,6 +55,8 @@ class Automations:
                     log.setup_console_logging()
                     config.load_all_agent_based_plugins(
                         check_api.get_check_api_context,
+                        local_checks_dir=paths.local_checks_dir,
+                        checks_dir=paths.checks_dir,
                     )
 
             if automation.needs_config:

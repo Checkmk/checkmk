@@ -1517,16 +1517,16 @@ def max_cachefile_age(
 
 def load_all_agent_based_plugins(
     get_check_api_context: GetCheckApiContext,
+    *,
+    local_checks_dir: Path,
+    checks_dir: str,
 ) -> list[str]:
     _initialize_data_structures()
 
     errors = agent_based_register.load_all_plugins()
 
     # LEGACY CHECK PLUGINS
-    filelist = get_plugin_paths(
-        str(cmk.utils.paths.local_checks_dir),
-        cmk.utils.paths.checks_dir,
-    )
+    filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
 
     errors.extend(load_checks(get_check_api_context, filelist))
 
@@ -1543,7 +1543,7 @@ def _initialize_data_structures() -> None:
     special_agent_info.clear()
 
 
-def get_plugin_paths(*dirs: str) -> list[str]:
+def _get_plugin_paths(*dirs: str) -> list[str]:
     filelist: list[str] = []
     for directory in dirs:
         filelist += _plugin_pathnames_in_directory(directory)

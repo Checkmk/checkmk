@@ -14,7 +14,7 @@ import pytest
 from fakeredis import FakeRedis
 from pytest import MonkeyPatch
 
-from tests.testlib import is_cloud_repo, is_enterprise_repo, is_managed_repo
+from tests.testlib import is_cloud_repo, is_enterprise_repo, is_managed_repo, repo_path
 
 # Import this fixture to not clutter this file, but it's unused here...
 from tests.testlib.certs import fixture_self_signed  # pylint: disable=unused-import # noqa: F401
@@ -254,6 +254,8 @@ class FixRegister:
 
         config.load_all_agent_based_plugins(
             check_api.get_check_api_context,
+            local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
+            checks_dir=str(repo_path() / "checks"),
         )
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)

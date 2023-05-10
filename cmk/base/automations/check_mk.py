@@ -26,6 +26,7 @@ import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.password_store
+import cmk.utils.paths as paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
@@ -485,6 +486,8 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         if config_cache.is_cluster(hostname):
             config.load_all_agent_based_plugins(
                 check_api.get_check_api_context,
+                local_checks_dir=paths.local_checks_dir,
+                checks_dir=paths.checks_dir,
             )
 
         # Fix data from version <2.0
@@ -883,11 +886,11 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{old};/\1 NOTIFICATION: \2;{new};/
     def rename_host_in_files(
         self, path_pattern: str, old: str, new: str, extended_regex: bool = False
     ) -> bool:
-        paths = glob.glob(path_pattern)
-        if paths:
+        matched_paths = glob.glob(path_pattern)
+        if matched_paths:
             extended = ["-r"] if extended_regex else []
             subprocess.call(
-                ["sed", "-i"] + extended + [f"s@{old}@{new}@"] + paths,
+                ["sed", "-i"] + extended + [f"s@{old}@{new}@"] + matched_paths,
                 stderr=subprocess.DEVNULL,
             )
             return True
@@ -1327,6 +1330,8 @@ class AutomationGetConfiguration(Automation):
         if missing_variables:
             config.load_all_agent_based_plugins(
                 check_api.get_check_api_context,
+                local_checks_dir=paths.local_checks_dir,
+                checks_dir=paths.checks_dir,
             )
             config.load(with_conf_d=False)
 

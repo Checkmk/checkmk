@@ -96,6 +96,8 @@ try:
     if mode_name not in modes.non_checks_options():
         errors = config.load_all_agent_based_plugins(
             check_api.get_check_api_context,
+            local_checks_dir=cmk.utils.paths.local_checks_dir,
+            checks_dir=cmk.utils.paths.checks_dir,
         )
         if sys.stderr.isatty():
             for error_msg in errors:

@@ -251,9 +251,11 @@ class ConfigUpdater:
             self._logger.error("")
 
     def _initialize_base_environment(self) -> None:
-        # Failing to load the config here will result in the loss of *all* services due to (...)
-        # EDIT: This is no longer the case; but we probably need the config for other reasons?
-        base_config.load_all_agent_based_plugins(get_check_api_context)
+        base_config.load_all_agent_based_plugins(
+            get_check_api_context,
+            local_checks_dir=paths.local_checks_dir,
+            checks_dir=paths.checks_dir,
+        )
         # Watch out: always load the plugins before loading the config.
         # The validation step will not be executed otherwise.
         base_config.load()

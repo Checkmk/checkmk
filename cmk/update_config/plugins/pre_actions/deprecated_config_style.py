@@ -5,6 +5,7 @@
 
 from typing import Final
 
+import cmk.utils.paths as paths
 from cmk.utils.redis import disable_redis
 
 import cmk.base.config as base_config
@@ -679,7 +680,11 @@ class PreUpdateDeprecatedConfigurationStyle(PreUpdateAction):
     def __call__(self, conflict_mode: ConflictMode) -> None:
         if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD):
             return
-        base_config.load_all_agent_based_plugins(get_check_api_context)
+        base_config.load_all_agent_based_plugins(
+            get_check_api_context,
+            local_checks_dir=paths.local_checks_dir,
+            checks_dir=paths.checks_dir,
+        )
         base_config.load(changed_vars_handler=self.fail_upon_deprecated_check_config)
 
     @staticmethod

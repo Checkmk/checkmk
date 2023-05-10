@@ -12,6 +12,7 @@ from typing import Callable, Dict, List, Mapping, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.caching import instance_method_lru_cache
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostLabelValueDict, HostName, Labels, LabelSources, ServiceName
@@ -35,6 +36,7 @@ class LabelManager:
         self._service_label_rules = service_label_rules
         self._discovered_labels_of_service = discovered_labels_of_service
 
+    @instance_method_lru_cache(maxsize=None)
     def labels_of_host(self, ruleset_matcher: RulesetMatcher, hostname: HostName) -> Labels:
         """Returns the effective set of host labels from all available sources
 

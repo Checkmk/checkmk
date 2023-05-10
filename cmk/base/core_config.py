@@ -78,8 +78,8 @@ class MonitoringCore(abc.ABC):
         hosts_to_update: HostsToUpdate = None,
     ) -> None:
         licensing_handler = self._licensing_handler_type.make()
-        self._create_config(config_path, config_cache, licensing_handler, hosts_to_update)
         self._persist_licensed_state(licensing_handler.state)
+        self._create_config(config_path, config_cache, licensing_handler, hosts_to_update)
 
     @abc.abstractmethod
     def _create_config(

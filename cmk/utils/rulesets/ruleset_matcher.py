@@ -464,14 +464,20 @@ class RulesetOptimizer:
     def set_all_processed_hosts(self, all_processed_hosts: Iterable[HostName]) -> None:
         self._all_processed_hosts = set(all_processed_hosts)
 
-        nodes_and_clusters: set[HostName] = set()
+        involved_clusters: set[HostName] = set()
+        involved_nodes: set[HostName] = set()
         for hostname in self._all_processed_hosts:
-            nodes_and_clusters.update(self._nodes_of.get(hostname, []))
-            nodes_and_clusters.update(self._clusters_of.get(hostname, []))
+            involved_nodes.update(self._nodes_of.get(hostname, []))
+            involved_clusters.update(self._clusters_of.get(hostname, []))
+
+        # Also add all nodes of used clusters
+        for hostname in involved_clusters:
+            involved_nodes.update(self._nodes_of.get(hostname, []))
+
+        nodes_and_clusters = involved_clusters | involved_nodes
 
         # Only add references to configured hosts
         nodes_and_clusters.intersection_update(self._all_configured_hosts)
-
         self._all_processed_hosts.update(nodes_and_clusters)
 
         # The folder host lookup includes a list of all -processed- hosts within a given

@@ -77,17 +77,7 @@ def check_win_printers(item, params, section):
     if (queue := section.get(item)) is None:
         return
 
-    if not isinstance(params, dict):
-        # Legacy params:
-        if params is None:
-            warn, crit = None, None
-        else:
-            warn, crit = params
-        params = {}
-        params["crit_states"] = [9, 10]
-        params["warn_states"] = [8, 11]
-    else:
-        warn, crit = params.get("levels", (None, None))
+    warn, crit = params.get("levels", (None, None))
 
     state = 0
 

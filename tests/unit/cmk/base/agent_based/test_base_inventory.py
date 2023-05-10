@@ -5,13 +5,10 @@
 
 # pylint: disable=protected-access
 
-import logging
-from collections.abc import Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Literal
 
 import pytest
-
-from tests.testlib.base import Scenario
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode, UpdateResult
@@ -25,10 +22,13 @@ from cmk.utils.type_defs import (
     SectionName,
 )
 
+from cmk.snmplib.type_defs import SNMPRawData
+
 from cmk.fetchers import FetcherType
 
 from cmk.checkers import SectionPlugin, SourceInfo, SourceType
 from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers.host_sections import HostSections
 from cmk.checkers.inventory import (
     _check_fetched_data_or_trees,
     _inventorize_real_host,
@@ -38,9 +38,7 @@ from cmk.checkers.inventory import (
     inventorize_host,
     ItemsOfInventoryPlugin,
 )
-from cmk.checkers.type_defs import NO_SELECTION
 
-from cmk.base.agent_based.confcheckers import ConfiguredParser
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
 
@@ -1188,11 +1186,7 @@ def test_updater_merge_tables_outdated(
         (3, 3),
     ],
 )
-def test_inventorize_host(
-    monkeypatch: pytest.MonkeyPatch,
-    failed_state: int | None,
-    expected: int,
-) -> None:
+def test_inventorize_host(failed_state: int | None, expected: int) -> None:
     def fetcher(
         host_name: HostName, *, ip_address: HostAddress | None
     ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:
@@ -1209,14 +1203,25 @@ def test_inventorize_host(
             ),
         ]
 
+    def parser(
+        fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
+    ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
+        def parse(header: AgentRawData | SNMPRawData) -> Mapping[SectionName, str]:
+            assert isinstance(header, bytes)
+            txt = header.decode()
+            return {SectionName(txt[3:-3]): txt}
+
+        return [
+            (
+                source_info,
+                result.Error(res.error)
+                if res.is_error()
+                else res.map(lambda ok: HostSections(parse(ok))),
+            )
+            for source_info, res in fetched
+        ]
+
     hostname = HostName("my-host")
-    config_cache = Scenario().apply(monkeypatch)
-    parser = ConfiguredParser(
-        config_cache,
-        selected_sections=NO_SELECTION,
-        keep_outdated=True,
-        logger=logging.getLogger("tests"),
-    )
 
     check_result = inventorize_host(
         hostname,

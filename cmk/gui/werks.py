@@ -162,7 +162,7 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         html.h1(_("Your IT monitoring platform"))
         html.a(
             html.render_img(theme.url("images/checkmk_logo.svg")),
-            "https://tribe29.com",
+            "https://checkmk.com",
             target="_blank",
         )
         html.close_div()

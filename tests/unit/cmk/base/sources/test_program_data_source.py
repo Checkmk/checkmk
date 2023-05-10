@@ -34,6 +34,16 @@ fun_args_stdin: Tuple[Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[
         "'list0' 'list1'",
         "stdin_blob",
     ),
+    (
+        SpecialAgentConfiguration(["--hostname", "$HOSTNAME$"], None),
+        "'--hostname' 'testhost'",
+        None,
+    ),
+    (
+        SpecialAgentConfiguration(["--hostname", "<HOST>"], None),
+        "'--hostname' 'testhost'",
+        None,
+    ),
 )  # type: ignore[assignment]
 
 

@@ -109,29 +109,6 @@ class ProgramSource(AgentSource):
             response.extend(["  Program stdin:", stdin])
         return "\n".join(response)
 
-
-class DSProgramSource(ProgramSource):
-    def __init__(
-        self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        *,
-        main_data_source: bool = False,
-        template: str,
-    ) -> None:
-        super().__init__(
-            hostname,
-            ipaddress,
-            id_="agent",
-            main_data_source=main_data_source,
-            cmdline=DSProgramSource._translate(
-                template,
-                hostname,
-                ipaddress,
-            ),
-            stdin=None,
-        )
-
     @staticmethod
     def _translate(
         cmd: str,
@@ -179,6 +156,29 @@ class DSProgramSource(ProgramSource):
 
         macros = core_config.get_host_macros_from_attributes(host_config.hostname, attrs)
         return core_config.replace_macros(cmd, macros)
+
+
+class DSProgramSource(ProgramSource):
+    def __init__(
+        self,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        *,
+        main_data_source: bool = False,
+        template: str,
+    ) -> None:
+        super().__init__(
+            hostname,
+            ipaddress,
+            id_="agent",
+            main_data_source=main_data_source,
+            cmdline=DSProgramSource._translate(
+                template,
+                hostname,
+                ipaddress,
+            ),
+            stdin=None,
+        )
 
 
 class SpecialAgentSource(ProgramSource):
@@ -263,4 +263,5 @@ class SpecialAgentSource(ProgramSource):
         info_func = config.special_agent_info[special_agent_id]
         # TODO: CMK-3812 (see above)
         agent_configuration = info_func(params, hostname, ipaddress)
-        return core_config.active_check_arguments(hostname, None, agent_configuration)
+        args = core_config.active_check_arguments(hostname, None, agent_configuration)
+        return SpecialAgentSource._translate(args, hostname, ipaddress)

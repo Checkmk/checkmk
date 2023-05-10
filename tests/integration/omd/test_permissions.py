@@ -62,7 +62,7 @@ def get_site_file_permission(site: Site) -> list[tuple[int, str]]:
 def test_site_file_permissions(site: Site, mode: Mode, known_files_set: set[str]) -> None:
     offenders: set[str] = set()
     for file_mode, rel_path in get_site_file_permission(site):
-        if not bool(file_mode & mode):
+        if (file_mode & mode) == 0:
             continue
 
         if rel_path in known_files_set:

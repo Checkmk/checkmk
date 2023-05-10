@@ -5,6 +5,7 @@
 
 
 from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
 import pytest
 
@@ -24,7 +25,7 @@ def test_host_labels_ps_no_match_attr() -> None:
             ),
         ],
     )
-    params = [
+    params: Sequence[Mapping[str, Any]] = [
         {
             "default_params": {},
             "descr": "SSH",
@@ -34,7 +35,7 @@ def test_host_labels_ps_no_match_attr() -> None:
         },
         {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == []  # type: ignore[arg-type]
+    assert not list(ps.host_labels_ps(params, section))
 
 
 def test_host_labels_ps_no_match_pattern() -> None:
@@ -47,7 +48,7 @@ def test_host_labels_ps_no_match_pattern() -> None:
             ),
         ],
     )
-    params = [
+    params: Sequence[Mapping[str, Any]] = [
         {
             "default_params": {},
             "descr": "SSH",
@@ -56,7 +57,7 @@ def test_host_labels_ps_no_match_pattern() -> None:
         },
         {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == []  # type: ignore[arg-type]
+    assert not list(ps.host_labels_ps(params, section))
 
 
 def test_host_labels_ps_match() -> None:
@@ -69,7 +70,7 @@ def test_host_labels_ps_match() -> None:
             ),
         ],
     )
-    params = [
+    params: Sequence[Mapping[str, Any]] = [
         {
             "default_params": {},
             "descr": "SSH",
@@ -78,9 +79,7 @@ def test_host_labels_ps_match() -> None:
         },
         {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == [  # type: ignore[arg-type]
-        HostLabel("marco", "polo")
-    ]
+    assert list(ps.host_labels_ps(params, section)) == [HostLabel("marco", "polo")]
 
 
 @pytest.mark.parametrize(

@@ -55,7 +55,7 @@ def test_discover_apc_mod_pdu_modules(check: CheckPlugin, string_table: StringTa
 
 
 def test_discover_apc_mod_pdu_modules_no_items(check: CheckPlugin) -> None:
-    assert list(check.discovery_function([])) == []
+    assert not list(check.discovery_function([]))
 
 
 def test_check_apc_mod_pdu_modules(check: CheckPlugin, string_table: StringTable) -> None:

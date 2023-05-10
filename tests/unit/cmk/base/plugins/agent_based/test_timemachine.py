@@ -33,7 +33,7 @@ def test_discovery_timemachine_discovered_service(fix_register: FixRegister) -> 
 def test_discovery_timemachine_no_discovered_service(fix_register: FixRegister) -> None:
     check = fix_register.check_plugins[CheckPluginName("timemachine")]
     result = check.discovery_function("Unable to locate machine directory for host.")
-    assert list(result) == []
+    assert not list(result)
 
 
 def test_check_timemachine_state_ok(

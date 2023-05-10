@@ -146,4 +146,4 @@ def test_check_vutlan_ems_smoke_item_not_found(fix_register: FixRegister) -> Non
 
     result = check.check_function(item="Banana", section=section)
 
-    assert list(result) == []
+    assert not list(result)

@@ -66,4 +66,4 @@ class TestListChoice:
         assert _get_list_choice().mask(["2"]) == ["2"]
 
     def test_canonical_value(self):
-        assert _get_list_choice().canonical_value() == []
+        assert not _get_list_choice().canonical_value()

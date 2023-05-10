@@ -56,7 +56,7 @@ def test_check_cisco_cpu_multiitem(parsed_section: Section) -> None:
         Metric("util", 7.5, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     ]
 
-    assert list(check_cisco_cpu_multiitem("not_found", params, parsed_section)) == []
+    assert not list(check_cisco_cpu_multiitem("not_found", params, parsed_section))
 
 
 @pytest.mark.parametrize(

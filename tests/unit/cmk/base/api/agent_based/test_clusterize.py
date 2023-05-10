@@ -23,8 +23,8 @@ def _check_function_node(test_results):
 
 
 def test_node_returns_nothing() -> None:
-    assert list(make_node_notice_results("test_node", _check_function_node(()))) == []
-    assert list(make_node_notice_results("test_node", ())) == []
+    assert not list(make_node_notice_results("test_node", _check_function_node(())))
+    assert not list(make_node_notice_results("test_node", ()))
 
 
 def test_node_raises() -> None:
@@ -32,12 +32,12 @@ def test_node_raises() -> None:
         raise IgnoreResultsError()
         yield  # pylint: disable=unreachable
 
-    assert list(make_node_notice_results("test_node", _check_node_raises())) == []
+    assert not list(make_node_notice_results("test_node", _check_node_raises()))
 
 
 def test_node_ignore_results() -> None:
     node_results = _check_function_node((_OK_RESULT, IgnoreResults()))
-    assert list(make_node_notice_results("test_node", node_results)) == []
+    assert not list(make_node_notice_results("test_node", node_results))
 
 
 def test_node_returns_metric() -> None:

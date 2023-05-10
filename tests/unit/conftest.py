@@ -250,7 +250,7 @@ class FixRegister:
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
 
         config._initialize_data_structures()
-        assert config.check_info == {}
+        assert not config.check_info
 
         config.load_all_agent_based_plugins(
             check_api.get_check_api_context,

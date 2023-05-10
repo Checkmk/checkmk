@@ -375,7 +375,7 @@ class RegexFilter:
 
 class InverseRegexFilter(RegexFilter):
     def matches(self, filestat):
-        return not bool(self._regex.match(filestat.regex_matchable_path))
+        return not self._regex.match(filestat.regex_matchable_path)
 
 
 def get_file_filters(config):

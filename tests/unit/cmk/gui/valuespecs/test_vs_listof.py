@@ -23,7 +23,7 @@ class TestListOf:
         expect_validate_failure(get_list_of(), ((1, "1"),))
 
     def test_canonical_value(self) -> None:
-        assert get_list_of().canonical_value() == []
+        assert not get_list_of().canonical_value()
 
     def test_mask(self) -> None:
         assert get_list_of().mask([(1, "pwd")]) == [(1, "******")]

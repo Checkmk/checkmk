@@ -595,7 +595,7 @@ class Ruleset:
         return self.num_rules() == 0
 
     def is_empty_in_folder(self, folder: CREFolder) -> bool:
-        return not bool(self.get_folder_rules(folder))
+        return not self.get_folder_rules(folder)
 
     def num_rules(self) -> int:
         return len(self._rules_by_id)

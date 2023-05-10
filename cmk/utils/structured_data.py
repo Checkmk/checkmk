@@ -956,7 +956,7 @@ class Attributes:
     #   ---common methods-------------------------------------------------------
 
     def is_empty(self) -> bool:
-        return self.pairs == {}
+        return not self.pairs
 
     def is_equal(self, other: object) -> bool:
         if not isinstance(other, Attributes):
@@ -1254,7 +1254,7 @@ class DeltaAttributes:
         )
 
     def is_empty(self) -> bool:
-        return self.pairs == {}
+        return not self.pairs
 
     def serialize(self) -> SDRawDeltaTree:
         return {"Pairs": self.pairs} if self.pairs else {}

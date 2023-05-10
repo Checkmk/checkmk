@@ -196,7 +196,7 @@ def test_gcp_sql_status_no_state_metric_in_available_metrics() -> None:
 
 
 def test_gcp_sql_status_no_agent_data_is_no_result() -> None:
-    assert [] == list(
+    assert not list(
         check_gcp_sql_status(
             item=ITEM,
             params={},

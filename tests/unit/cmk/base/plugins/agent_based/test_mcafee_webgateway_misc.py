@@ -170,4 +170,4 @@ def test_check_invalid_values(fix_register: FixRegister, as_path: Callable[[str]
     )
 
     # Assert
-    assert results == []
+    assert not results

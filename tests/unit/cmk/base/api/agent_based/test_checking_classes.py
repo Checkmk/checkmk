@@ -40,7 +40,11 @@ def test_parameters_features() -> None:
         _ = par0["olaf"]
     assert par1["olaf"] == "schneemann"
 
-    assert list(par0) == list(par0.keys()) == list(par0.values()) == list(par0.items()) == []
+    assert not list(par0)
+    assert not list(par0.keys())
+    assert not list(par0.values())
+    assert not list(par0.items())
+
     assert list(par1) == list(par1.keys()) == ["olaf"]
     assert list(par1.values()) == ["schneemann"]
     assert list(par1.items()) == [("olaf", "schneemann")]

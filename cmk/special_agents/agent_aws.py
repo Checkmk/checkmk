@@ -902,7 +902,7 @@ class AWSSectionLabels(AWSSection):
             "%s: Computed result of Labels section must be of type 'dict'" % self.name
         )
         for pb in computed_content.content:
-            assert bool(pb), "%s: Piggyback hostname is not allowed to be empty" % self.name
+            assert pb, "%s: Piggyback hostname is not allowed to be empty" % self.name
         return [
             AWSSectionResult(piggyback_hostname, rows)
             for piggyback_hostname, rows in computed_content.content.items()

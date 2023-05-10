@@ -30,7 +30,7 @@ _broken_info = [
 )
 def test_oracle_jobs_discovery_error(info: StringTable) -> None:
     check = Check("oracle_jobs")
-    assert list(check.run_discovery(info)) == []
+    assert not list(check.run_discovery(info))
 
 
 @pytest.mark.parametrize(

@@ -212,7 +212,7 @@ def test_parse_and_discovery_function_2(line: list[str], item: str) -> None:
 )
 def test_parse_and_discovery_function_2_no_item(line: list[str]) -> None:
     section = lnx_thermal.parse_lnx_thermal([line])
-    assert list(lnx_thermal.discover_lnx_thermal(section)) == []
+    assert not list(lnx_thermal.discover_lnx_thermal(section))
 
 
 @pytest.mark.usefixtures("initialised_item_state")

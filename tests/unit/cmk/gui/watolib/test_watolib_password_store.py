@@ -53,7 +53,7 @@ def test_join_password_missing_password() -> None:
 def test_join_password_specs_missing_meta_data() -> None:
     meta_data: dict[str, Password] = {}
     passwords = {"asd": "$ecret"}
-    assert join_password_specs(meta_data, passwords) == {}
+    assert not join_password_specs(meta_data, passwords)
 
 
 def test_split_password_specs() -> None:

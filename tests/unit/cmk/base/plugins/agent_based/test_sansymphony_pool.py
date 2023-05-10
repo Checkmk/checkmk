@@ -77,7 +77,7 @@ def test_parse_sansymphony_pool_v2() -> None:
 
 
 def test_discover_sansymphony_pool_no_agent_output() -> None:
-    assert list(discover_sansymphony_pool({})) == []
+    assert not list(discover_sansymphony_pool({}))
 
 
 def test_discover_sansymphony_pool() -> None:
@@ -106,15 +106,12 @@ def test_check_sansymphony_pool_item_not_found() -> None:
             pool_type="Dynamic",
         ),
     }
-    assert (
-        list(
-            check_sansymphony_pool(
-                item="Disk_pool_2",
-                params={**FILESYSTEM_DEFAULT_LEVELS},
-                section=section,
-            )
+    assert not list(
+        check_sansymphony_pool(
+            item="Disk_pool_2",
+            params={**FILESYSTEM_DEFAULT_LEVELS},
+            section=section,
         )
-        == []
     )
 
 

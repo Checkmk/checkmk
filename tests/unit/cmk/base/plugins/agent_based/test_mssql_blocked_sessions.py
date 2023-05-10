@@ -153,7 +153,7 @@ def test_mssql_blocked_sessions_ignore_waittype(fix_register: FixRegister) -> No
 
 
 def test_mssql_blocked_sessions_parsing(fix_register: FixRegister) -> None:
-    assert parse_mssql_blocked_sessions([["ERROR: asd"]]) == {}
+    assert not parse_mssql_blocked_sessions([["ERROR: asd"]])
     assert parse_mssql_blocked_sessions([["No blocking sessions"]]) == {"": []}
     assert parse_mssql_blocked_sessions(
         [

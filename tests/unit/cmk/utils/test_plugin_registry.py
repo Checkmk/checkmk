@@ -27,12 +27,12 @@ def basic_registry():
 
 def test_initialization() -> None:
     registry = PluginRegistry()
-    assert list(registry.items()) == []
+    assert not list(registry.items())
 
 
 def test_decorator_registration() -> None:
     registry = PluginRegistry()
-    assert list(registry.items()) == []
+    assert not list(registry.items())
 
     @registry.register
     class DecoratedPlugin(Plugin):
@@ -43,7 +43,7 @@ def test_decorator_registration() -> None:
 
 def test_method_registration() -> None:
     registry = PluginRegistry()
-    assert list(registry.items()) == []
+    assert not list(registry.items())
 
     class MethodRegisteredPlugin(Plugin):
         pass

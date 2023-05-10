@@ -400,7 +400,7 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     ts.apply(monkeypatch)
 
     config_cache = config.get_config_cache()
-    assert ip_lookup_cache() == {}
+    assert not ip_lookup_cache()
 
     result = ip_lookup.update_dns_cache(
         ip_lookup_configs=(

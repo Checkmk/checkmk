@@ -180,8 +180,8 @@ def test_discover_kube_replicas() -> None:
     )
     assert list(discover_kube_replicas(replicas, strategy, None)) == [Service()]
     assert list(discover_kube_replicas(replicas, None, None)) == [Service()]
-    assert list(discover_kube_replicas(None, strategy, None)) == []
-    assert list(discover_kube_replicas(None, None, None)) == []
+    assert not list(discover_kube_replicas(None, strategy, None))
+    assert not list(discover_kube_replicas(None, None, None))
 
 
 @pytest.mark.usefixtures("initialised_item_state")

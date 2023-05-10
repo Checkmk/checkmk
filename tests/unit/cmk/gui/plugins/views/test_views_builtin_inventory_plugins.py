@@ -83,7 +83,7 @@ def test_missing_table_keyorder() -> None:
     missing_keyorders = [
         path
         for path, hint in inventory_displayhints.items()
-        if path.endswith(":") and path not in ignore_paths and not bool(hint.get("keyorder"))
+        if path.endswith(":") and path not in ignore_paths and not hint.get("keyorder")
     ]
 
     # TODO test second part

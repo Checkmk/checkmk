@@ -182,4 +182,4 @@ def test_tmpfs_mount_no_dump(site_context: SiteContext, monkeypatch: pytest.Monk
     # Ensure that no dump exists and then execute the restore operation
     assert not omdlib.tmpfs._tmpfs_dump_path(site_context).exists()
     restore_tmpfs_dump(site_context)
-    assert list(tmp_dir.iterdir()) == []
+    assert not list(tmp_dir.iterdir())

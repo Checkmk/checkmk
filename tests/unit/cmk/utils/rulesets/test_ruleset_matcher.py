@@ -256,25 +256,19 @@ def test_basic_get_host_ruleset_values(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
     matcher = config_cache.ruleset_matcher
 
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("abc"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert not list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("abc"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == []
     )
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert not list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == []
     )
     assert list(
         matcher.get_host_ruleset_values(
@@ -302,15 +296,12 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> N
     config_cache = ts.apply(monkeypatch)
     matcher = config_cache.ruleset_matcher
 
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert not list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == []
     )
     assert list(
         matcher.get_host_ruleset_values(
@@ -326,15 +317,12 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> N
             is_binary=False,
         )
     ) == ["LEVEL1", "LEVEL2"]
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("lvl1a"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert not list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("lvl1a"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == []
     )
 
 

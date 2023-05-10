@@ -353,7 +353,7 @@ def test_state_load(tmpdir, state_data, state_dict) -> None:  # type: ignore[no-
 
     # In case the file is not created yet, read should not raise
     state = lw.State(file_path).read()
-    assert state._data == {}
+    assert not state._data
 
     with open(file_path, "wb") as f:
         f.write(state_data.encode("utf-8"))

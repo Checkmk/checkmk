@@ -175,4 +175,4 @@ def test_create_apache_hook_world_readable(
 ) -> None:
     apache_config.parent.mkdir(parents=True)
     create_apache_hook(site_context, 0)
-    assert bool(apache_config.stat().st_mode & stat.S_IROTH)
+    assert apache_config.stat().st_mode & stat.S_IROTH

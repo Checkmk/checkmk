@@ -43,12 +43,10 @@ def test_gui_vs_base_render_cache_info(cached_at: float, interval: float) -> Non
     )
 
     for rendered in (cache_info_gui, cache_info_base):
-        assert bool(
-            # At the moment, we can only match the structure of the rendered result and not the
-            # exact values as gui and base are still using different rendering functions for
-            # percent and timespan/age
-            re.match(
-                r"Cache generated *(.*), cache interval: *(.*), elapsed cache lifespan: *(.*)",
-                rendered,
-            )
+        # At the moment, we can only match the structure of the rendered result and not the
+        # exact values as gui and base are still using different rendering functions for
+        # percent and timespan/age
+        assert re.match(
+            r"Cache generated *(.*), cache interval: *(.*), elapsed cache lifespan: *(.*)",
+            rendered,
         )

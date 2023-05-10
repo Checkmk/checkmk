@@ -27,7 +27,7 @@ def test_post_processor_registrations() -> None:
 def test_post_process_rows_not_failing_on_empty_rows(view: View) -> None:
     rows: Rows = []
     post_process_rows(view, [], rows)
-    assert rows == []
+    assert not rows
 
 
 def test_post_process_rows_adds_inventory_data(mock_livestatus: MockLiveStatusConnection) -> None:

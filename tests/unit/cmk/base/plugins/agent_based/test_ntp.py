@@ -23,7 +23,7 @@ def test_check_ntp() -> None:
     section: Section = {
         "42.202.61.100": Peer("-", "42.202.61.100", ".INIT.", 16, _ntp_fmt_time("-"), "0", 0.0, 0.0)
     }
-    assert list(check_ntp("item", {}, section)) == []
+    assert not list(check_ntp("item", {}, section))
 
 
 @pytest.mark.usefixtures("initialised_item_state")

@@ -31,18 +31,15 @@ def test_discover_apc_powerswitch() -> None:
 
 
 def test_discover_apc_powerswitch_no_items() -> None:
-    assert list(discover_apc_powerswitch({})) == []
+    assert not list(discover_apc_powerswitch({}))
 
 
 def test_check_apc_powerswitch_item_not_found() -> None:
-    assert (
-        list(
-            check_apc_powerswitch(
-                item="Not there",
-                section=parse_apc_powerswitch(STRING_TABLE),
-            )
+    assert not list(
+        check_apc_powerswitch(
+            item="Not there",
+            section=parse_apc_powerswitch(STRING_TABLE),
         )
-        == []
     )
 
 

@@ -212,21 +212,18 @@ def test_discover_ups_modulys_battery_temp_is_zero() -> None:
 
 
 def test_discover_ups_modulys_battery_temp_no_services_discovered() -> None:
-    assert list(discover_ups_modulys_battery_temp(None)) == []
+    assert not list(discover_ups_modulys_battery_temp(None))
 
-    assert (
-        list(
-            discover_ups_modulys_battery_temp(
-                UPSBattery(
-                    health=0,
-                    uptime=0,
-                    remaining_time_in_min=10.0,
-                    capacity=100.0,
-                    temperature=None,
-                )
+    assert not list(
+        discover_ups_modulys_battery_temp(
+            UPSBattery(
+                health=0,
+                uptime=0,
+                remaining_time_in_min=10.0,
+                capacity=100.0,
+                temperature=None,
             )
         )
-        == []
     )
 
 

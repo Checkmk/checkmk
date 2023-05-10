@@ -31,7 +31,7 @@ def fixture_fixed_secret(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
 
 
 def test_save() -> None:
-    assert password_store.load() == {}
+    assert not password_store.load()
     password_store.save({"ding": "blablu"})
     assert password_store.load()["ding"] == "blablu"
 
@@ -39,19 +39,19 @@ def test_save() -> None:
 def test_save_for_helpers_no_store() -> None:
     assert not password_store.password_store_path().exists()
 
-    assert password_store.load_for_helpers() == {}
+    assert not password_store.load_for_helpers()
     password_store.save_for_helpers(LATEST_CONFIG)
 
     assert not password_store.password_store_path().exists()
     assert not password_store._helper_password_store_path(LATEST_CONFIG).exists()
-    assert password_store.load_for_helpers() == {}
+    assert not password_store.load_for_helpers()
 
 
 def test_save_for_helpers() -> None:
     assert not password_store.password_store_path().exists()
     password_store.save({"ding": "blablu"})
     assert password_store.password_store_path().exists()
-    assert password_store.load_for_helpers() == {}
+    assert not password_store.load_for_helpers()
 
     password_store.save_for_helpers(LATEST_CONFIG)
     assert password_store.load_for_helpers() == {"ding": "blablu"}

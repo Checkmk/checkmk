@@ -55,4 +55,4 @@ def test_check_cadvisor_diskstat() -> None:
 
 def test_check_cadvisor_diskstat_item_not_found() -> None:
     check_result = list(check_cadvisor_diskstat(item="not_found", params={}, section=SECTION))
-    assert check_result == []
+    assert not check_result

@@ -212,7 +212,7 @@ def test_uuid_link_manager_update_links_no_host_but_ready_or_discoverable(
     if has_link:
         assert len(list(received_outputs_dir.iterdir())) == 1
     else:
-        assert list(received_outputs_dir.iterdir()) == []
+        assert not list(received_outputs_dir.iterdir())
 
 
 def test_uuid_link_manager_unlink_sources() -> None:

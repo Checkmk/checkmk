@@ -224,26 +224,23 @@ def test_discovery_ungrouped_all() -> None:
 
 
 def test_discovery_ungrouped_empty_section() -> None:
-    assert (
-        list(
-            interfaces.discover_interfaces(
-                [
-                    {
-                        "discovery_single": (
-                            True,
-                            {
-                                "item_appearance": "alias",
-                                "pad_portnumbers": True,
-                            },
-                        ),
-                        "matching_conditions": (True, {}),
-                    },
-                    DEFAULT_DISCOVERY_PARAMS,
-                ],
-                [],
-            )
+    assert not list(
+        interfaces.discover_interfaces(
+            [
+                {
+                    "discovery_single": (
+                        True,
+                        {
+                            "item_appearance": "alias",
+                            "pad_portnumbers": True,
+                        },
+                    ),
+                    "matching_conditions": (True, {}),
+                },
+                DEFAULT_DISCOVERY_PARAMS,
+            ],
+            [],
         )
-        == []
     )
 
 
@@ -304,20 +301,17 @@ def test_discovery_ungrouped_one() -> None:
 
 
 def test_discovery_ungrouped_off() -> None:
-    assert (
-        list(
-            interfaces.discover_interfaces(
-                [
-                    {
-                        "matching_conditions": (True, {}),
-                        "discovery_single": (False, {}),
-                    },
-                    DEFAULT_DISCOVERY_PARAMS,
-                ],
-                _create_interfaces_with_counters(0),
-            )
+    assert not list(
+        interfaces.discover_interfaces(
+            [
+                {
+                    "matching_conditions": (True, {}),
+                    "discovery_single": (False, {}),
+                },
+                DEFAULT_DISCOVERY_PARAMS,
+            ],
+            _create_interfaces_with_counters(0),
         )
-        == []
     )
 
 

@@ -49,7 +49,7 @@ def fixture_tmp_package(tmp_path: Path, package_type: str) -> str:
 
 
 def test_load_plugins_with_exceptions(tmp_package: str) -> None:
-    assert list(load_plugins_with_exceptions(f"{tmp_package}.plugins.abc")) == []
+    assert not list(load_plugins_with_exceptions(f"{tmp_package}.plugins.abc"))
     imported = [n for n in sys.modules if n.startswith(tmp_package)]
     assert sorted(imported) == sorted(
         [

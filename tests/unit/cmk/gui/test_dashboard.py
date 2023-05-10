@@ -182,7 +182,7 @@ def test_dashlet_refresh_intervals(
 
 @pytest.mark.usefixtures("request_context")
 def test_dashlet_type_defaults() -> None:
-    assert Dashlet.single_infos() == []
+    assert not Dashlet.single_infos()
     assert Dashlet.is_selectable() is True
     assert Dashlet.is_resizable() is True
     assert Dashlet.is_iframe_dashlet() is False
@@ -203,7 +203,7 @@ def test_dashlet_defaults(dummy_config: DummyDashletConfig) -> None:
     dashlet = DummyDashlet(
         dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=1, dashlet=dummy_config
     )
-    assert dashlet.infos() == []
+    assert not dashlet.infos()
     assert dashlet.dashlet_id == 1
     assert dashlet.dashlet_spec == {"type": "dummy"}
     assert dashlet.dashboard_name == "main"

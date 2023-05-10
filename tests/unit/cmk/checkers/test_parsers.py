@@ -865,9 +865,9 @@ class TestAgentPersistentSectionHandling:
         )
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
-        assert ahs.sections == {}
-        assert ahs.cache_info == {}
-        assert ahs.piggybacked_raw_data == {}
+        assert not ahs.sections
+        assert not ahs.cache_info
+        assert not ahs.piggybacked_raw_data
         assert section_store.load() == {}
 
     def test_update_with_store_and_empty_raw_data(self, logger: logging.Logger) -> None:
@@ -895,7 +895,7 @@ class TestAgentPersistentSectionHandling:
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
         assert ahs.sections == {SectionName("stored"): []}
         assert ahs.cache_info == {SectionName("stored"): (0, 0)}
-        assert ahs.piggybacked_raw_data == {}
+        assert not ahs.piggybacked_raw_data
         assert section_store.load() == PersistedSections[AgentRawDataSection](
             {
                 SectionName("stored"): (0, 0, []),
@@ -922,8 +922,8 @@ class TestAgentPersistentSectionHandling:
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
         assert ahs.sections == {SectionName("fresh"): []}
-        assert ahs.cache_info == {}
-        assert ahs.piggybacked_raw_data == {}
+        assert not ahs.cache_info
+        assert not ahs.piggybacked_raw_data
         assert section_store.load() == {}
 
     def test_update_with_store_and_non_persisting_raw_data(self, logger: logging.Logger) -> None:
@@ -954,7 +954,7 @@ class TestAgentPersistentSectionHandling:
             SectionName("stored"): [],
         }
         assert ahs.cache_info == {SectionName("stored"): (0, 0)}
-        assert ahs.piggybacked_raw_data == {}
+        assert not ahs.piggybacked_raw_data
         assert section_store.load() == PersistedSections[AgentRawDataSection](
             {
                 SectionName("stored"): (0, 0, []),
@@ -995,7 +995,7 @@ class TestAgentPersistentSectionHandling:
             SectionName("stored"): (0, 0),
             SectionName("fresh"): (1000, -990),
         }
-        assert ahs.piggybacked_raw_data == {}
+        assert not ahs.piggybacked_raw_data
         assert section_store.load() == PersistedSections[AgentRawDataSection](
             {
                 SectionName("stored"): (0, 0, [["canned", "section"]]),
@@ -1027,8 +1027,8 @@ class TestAgentPersistentSectionHandling:
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
         assert ahs.sections == {SectionName("section"): [["newest"]]}
-        assert ahs.cache_info == {}
-        assert ahs.piggybacked_raw_data == {}
+        assert not ahs.cache_info
+        assert not ahs.piggybacked_raw_data
         assert section_store.load() == PersistedSections[AgentRawDataSection](
             {
                 SectionName("section"): (0, 0, [["oldest"]]),
@@ -1063,8 +1063,8 @@ class TestAgentPersistentSectionHandling:
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
         assert ahs.sections == {SectionName("another_section"): []}
-        assert ahs.cache_info == {}
-        assert ahs.piggybacked_raw_data == {}
+        assert not ahs.cache_info
+        assert not ahs.piggybacked_raw_data
         assert section_store.load() == {}
 
     def test_keep_outdated_true(
@@ -1099,7 +1099,7 @@ class TestAgentPersistentSectionHandling:
             SectionName("section"): [],
         }
         assert ahs.cache_info == {SectionName("section"): (500, 100)}
-        assert ahs.piggybacked_raw_data == {}
+        assert not ahs.piggybacked_raw_data
         assert section_store.load() == PersistedSections[AgentRawDataSection](
             {
                 SectionName("section"): (500, 600, []),

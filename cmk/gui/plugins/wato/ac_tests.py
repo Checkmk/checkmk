@@ -1252,7 +1252,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
 
     def execute(self) -> Iterator[ACResult]:
         rules = self._get_rules()
-        if not bool(rules):
+        if not rules:
             yield ACResultOK(
                 _("No ruleset <b>State in case of restricted address mismatch</b> is configured")
             )

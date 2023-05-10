@@ -37,7 +37,7 @@ def test_discovery_present(section_present: hp_proliant_power.Section) -> None:
 
 def test_discovery_absent(section_absent: hp_proliant_power.Section) -> None:
     services = list(hp_proliant_power.discover_hp_proliant_power(section_absent))
-    assert services == []
+    assert not services
 
 
 def test_check_present(section_present: hp_proliant_power.Section) -> None:

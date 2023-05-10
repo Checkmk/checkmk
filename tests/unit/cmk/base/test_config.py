@@ -1587,7 +1587,7 @@ def test_snmp_check_interval(
 
 
 def test_http_proxies() -> None:
-    assert config.http_proxies == {}
+    assert not config.http_proxies
 
 
 @pytest.fixture(name="service_list")
@@ -1670,7 +1670,7 @@ def test_resolve_service_dependencies_cyclic(
 
 
 def test_service_depends_on_unknown_host() -> None:
-    assert config.service_depends_on(HostName("test-host"), "svc") == []
+    assert not config.service_depends_on(HostName("test-host"), "svc")
 
 
 def test_service_depends_on(monkeypatch: MonkeyPatch) -> None:
@@ -1687,7 +1687,7 @@ def test_service_depends_on(monkeypatch: MonkeyPatch) -> None:
     )
     ts.apply(monkeypatch)
 
-    assert config.service_depends_on(test_host, "svc2") == []
+    assert not config.service_depends_on(test_host, "svc2")
     assert config.service_depends_on(test_host, "svc1") == ["dep1"]
     assert config.service_depends_on(test_host, "svc1-abc") == ["dep1", "dep2-abc"]
 

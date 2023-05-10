@@ -42,7 +42,7 @@ def test_flash(user_id: UserId) -> None:
         with request_context(app), login.TransactionIdContext(user_id):
             assert session is not None
             assert session.session_info.flashes == []
-            assert get_flashed_messages() == []
+            assert not get_flashed_messages()
 
             # Get the flashed messages removes the messages from the session
             # and subsequent calls to get_flashed_messages return the messages
@@ -56,7 +56,7 @@ def test_flash(user_id: UserId) -> None:
         with request_context(app), login.TransactionIdContext(user_id):
             assert session is not None
             assert session.session_info.flashes == []
-            assert get_flashed_messages() == []
+            assert not get_flashed_messages()
 
 
 def test_flash_escape_html_in_str(user_id: UserId) -> None:

@@ -158,12 +158,12 @@ def create_config(
     hostnames: list[HostName] | None,
     licensing_handler: LicensingHandler,
 ) -> None:
-    if config.host_notification_periods != []:
+    if config.host_notification_periods:
         config_warnings.warn(
             "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
         )
 
-    if config.service_notification_periods != []:
+    if config.service_notification_periods:
         config_warnings.warn(
             "service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead."
         )

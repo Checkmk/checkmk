@@ -24,13 +24,10 @@ from cmk.base.plugins.agent_based.utils.multipath import Group
 
 
 def test_parse_diskstat_minimum() -> None:
-    assert (
-        diskstat.parse_diskstat(
-            [
-                ["12341241243"],
-            ]
-        )
-        == {}
+    assert not diskstat.parse_diskstat(
+        [
+            ["12341241243"],
+        ]
     )
 
 
@@ -1213,12 +1210,9 @@ def test_diskstat_convert_info() -> None:
 
     section_diskstat_reference = section_diskstat.copy()
 
-    assert (
-        diskstat.diskstat_convert_info(
-            {},
-            section_multipath,
-        )
-        == {}
+    assert not diskstat.diskstat_convert_info(
+        {},
+        section_multipath,
     )
 
     assert (

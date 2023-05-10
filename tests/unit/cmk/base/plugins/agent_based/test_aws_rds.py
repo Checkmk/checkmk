@@ -3134,7 +3134,7 @@ def test_check_aws_rds_disk_io_item_not_foung() -> None:
             section=SECTION,
         )
     )
-    assert check_result == []
+    assert not check_result
 
 
 @pytest.mark.parametrize(
@@ -3217,15 +3217,12 @@ def test_check_aws_rds(
 
 
 def test_check_aws_rds_item_not_found() -> None:
-    assert (
-        list(
-            check_aws_rds(
-                item="disk",
-                params={},
-                section={},
-            )
+    assert not list(
+        check_aws_rds(
+            item="disk",
+            params={},
+            section={},
         )
-        == []
     )
 
 
@@ -3252,14 +3249,11 @@ def test_aws_rds_agent_jobs_discovery(
 
 
 def test_check_aws_rds_agent_jobs_item_not_found() -> None:
-    assert (
-        list(
-            check_aws_rds_agent_jobs(
-                item="disk",
-                section={},
-            )
+    assert not list(
+        check_aws_rds_agent_jobs(
+            item="disk",
+            section={},
         )
-        == []
     )
 
 
@@ -3328,15 +3322,12 @@ def test_aws_rds_cpu_credits_discovery(
 
 
 def test_check_aws_rds_cpu_credits_item_not_found() -> None:
-    assert (
-        list(
-            check_aws_rds_cpu_credits(
-                item="disk",
-                params={},
-                section={},
-            )
+    assert not list(
+        check_aws_rds_cpu_credits(
+            item="disk",
+            params={},
+            section={},
         )
-        == []
     )
 
 
@@ -3456,15 +3447,12 @@ def test_aws_rds_bin_log_usage_discovery(
 
 
 def test_check_aws_rds_bin_log_usage_item_not_found() -> None:
-    assert (
-        list(
-            check_aws_rds_bin_log_usage(
-                item="disk",
-                params={},
-                section={},
-            )
+    assert not list(
+        check_aws_rds_bin_log_usage(
+            item="disk",
+            params={},
+            section={},
         )
-        == []
     )
 
 
@@ -3583,15 +3571,12 @@ def test_aws_rds_transaction_logs_usage_discovery(
 
 
 def test_check_aws_rds_transaction_logs_usage_item_not_found() -> None:
-    assert (
-        list(
-            check_aws_rds_transaction_logs_usage(
-                item="disk",
-                params={},
-                section={},
-            )
+    assert not list(
+        check_aws_rds_transaction_logs_usage(
+            item="disk",
+            params={},
+            section={},
         )
-        == []
     )
 
 
@@ -3729,15 +3714,12 @@ def test_aws_rds_replication_slot_usage_discovery(
 
 
 def test_check_aws_rds_replication_slot_usage_item_not_found() -> None:
-    assert (
-        list(
-            check_aws_rds_replication_slot_usage(
-                item="disk",
-                params={},
-                section={},
-            )
+    assert not list(
+        check_aws_rds_replication_slot_usage(
+            item="disk",
+            params={},
+            section={},
         )
-        == []
     )
 
 
@@ -3858,15 +3840,12 @@ def test_aws_rds_connections_discovery(
 
 
 def test_check_aws_rds_connections_item_not_found() -> None:
-    assert (
-        list(
-            check_aws_rds_connections(
-                item="disk",
-                params={},
-                section={},
-            )
+    assert not list(
+        check_aws_rds_connections(
+            item="disk",
+            params={},
+            section={},
         )
-        == []
     )
 
 
@@ -3940,15 +3919,12 @@ def test_aws_rds_replica_lag_discovery(
 
 
 def test_check_aws_rds_replica_lag_item_not_found() -> None:
-    assert (
-        list(
-            check_aws_rds_replica_lag(
-                item="disk",
-                params={},
-                section={},
-            )
+    assert not list(
+        check_aws_rds_replica_lag(
+            item="disk",
+            params={},
+            section={},
         )
-        == []
     )
 
 

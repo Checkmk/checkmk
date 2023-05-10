@@ -142,7 +142,7 @@ def test_parse_scaleio_section_not_found() -> None:
             ["NAME", "pool01"],
         ]
     )
-    assert parse_result == {}
+    assert not parse_result
 
 
 @pytest.mark.parametrize(
@@ -212,25 +212,19 @@ def test_check_scaleio_storage_pool() -> None:
 
 
 def test_check_scaleio_storage_pool_totalrw_rebalancerw_item_not_found() -> None:
-    assert (
-        list(
-            check_scaleio_storage_pool_totalrw(
-                item="item_not_found",
-                params=FILESYSTEM_DEFAULT_PARAMS,
-                section=SECTION,
-            )
+    assert not list(
+        check_scaleio_storage_pool_totalrw(
+            item="item_not_found",
+            params=FILESYSTEM_DEFAULT_PARAMS,
+            section=SECTION,
         )
-        == []
     )
-    assert (
-        list(
-            check_scaleio_storage_pool_rebalancerw(
-                item="item_not_found",
-                params=FILESYSTEM_DEFAULT_PARAMS,
-                section=SECTION,
-            )
+    assert not list(
+        check_scaleio_storage_pool_rebalancerw(
+            item="item_not_found",
+            params=FILESYSTEM_DEFAULT_PARAMS,
+            section=SECTION,
         )
-        == []
     )
 
 

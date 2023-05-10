@@ -280,7 +280,7 @@ def _parse_status(source: Iterator[Sequence[str]]) -> Mapping[str, UnitStatus]:
     entry: list[Sequence[str]] = []
     for line in source:
         if _is_new_entry(line):
-            if entry != [] and _is_service_entry(entry):
+            if entry and _is_service_entry(entry):
                 status = UnitStatus.from_entry(entry)
                 unit_status[status.name] = status
             entry = [

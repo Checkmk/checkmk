@@ -45,7 +45,7 @@ def test_discover_hp_proliant_raid_no_snmp_data(
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,
 ) -> None:
-    assert list(check_plugin.discovery_function({})) == []
+    assert not list(check_plugin.discovery_function({}))
 
 
 def test_discover_hp_proliant_raid_aa(  # type: ignore[no-untyped-def]
@@ -71,15 +71,12 @@ def test_check_hp_proliant_raid_item_not_found(  # type: ignore[no-untyped-def]
     section_plugin: SNMPSectionPlugin,
     string_table,
 ) -> None:
-    assert (
-        list(
-            check_plugin.check_function(
-                item="!111elf",
-                params={},
-                section=section_plugin.parse_function(string_table),
-            )
+    assert not list(
+        check_plugin.check_function(
+            item="!111elf",
+            params={},
+            section=section_plugin.parse_function(string_table),
         )
-        == []
     )
 
 

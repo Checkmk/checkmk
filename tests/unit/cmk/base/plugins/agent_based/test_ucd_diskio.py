@@ -44,23 +44,20 @@ def test_discover_ucd_diskio(
 
 
 def test_discover_ucd_diskio_with_empty_section() -> None:
-    assert list(discover_ucd_diskio({})) == []
+    assert not list(discover_ucd_diskio({}))
 
 
 def test_check_ucd_diskio_item_not_found(
     string_table: list[StringTable],
 ) -> None:
-    assert (
-        list(
-            _check_ucd_diskio(
-                item="not_found",
-                params={},
-                section=parse_ucd_diskio(string_table),
-                value_store={},
-                this_time=0.0,
-            )
+    assert not list(
+        _check_ucd_diskio(
+            item="not_found",
+            params={},
+            section=parse_ucd_diskio(string_table),
+            value_store={},
+            this_time=0.0,
         )
-        == []
     )
 
 

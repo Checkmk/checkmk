@@ -105,16 +105,13 @@ def test_check_netapp_api_vf_stats_traffic() -> None:
     now = 0.0
     value_store: dict[str, Any] = {}
     # initialize counters
-    assert (
-        list(
-            netapp_api_vf_stats._check_netapp_api_vf_stats_traffic(
-                "vfiler0",
-                SECTION_NETAPP_API_VF_STATS,
-                now=now,
-                value_store=value_store,
-            )
+    assert not list(
+        netapp_api_vf_stats._check_netapp_api_vf_stats_traffic(
+            "vfiler0",
+            SECTION_NETAPP_API_VF_STATS,
+            now=now,
+            value_store=value_store,
         )
-        == []
     )
     assert list(
         netapp_api_vf_stats._check_netapp_api_vf_stats_traffic(

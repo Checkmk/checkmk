@@ -150,16 +150,13 @@ def test_chrony_negative_sync_time() -> None:
 
 
 def test_chrony_section_is_none() -> None:
-    assert (
-        list(
-            chrony.check_chrony(
-                {
-                    "ntp_levels": (10, 200.0, 500.0),
-                    "alert_delay": (1800, 3600),
-                },
-                None,
-                None,
-            )
+    assert not list(
+        chrony.check_chrony(
+            {
+                "ntp_levels": (10, 200.0, 500.0),
+                "alert_delay": (1800, 3600),
+            },
+            None,
+            None,
         )
-        == []
     )

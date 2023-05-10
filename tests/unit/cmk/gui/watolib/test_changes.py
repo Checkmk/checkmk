@@ -81,7 +81,7 @@ class TestAuditLogStore:
 
     def test_read_not_existing(self, store: AuditLogStore) -> None:
         assert not store.exists()
-        assert list(store.read()) == []
+        assert not list(store.read())
 
     def test_clear_not_existing(self, store: AuditLogStore) -> None:
         assert not store.exists()
@@ -112,7 +112,7 @@ class TestAuditLogStore:
         assert list(store.read()) == [entry]
 
         store.clear()
-        assert list(store.read()) == []
+        assert not list(store.read())
 
         archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))
         assert archive_path.exists()
@@ -125,7 +125,7 @@ class TestAuditLogStore:
             assert list(store.read()) == [entry]
 
             store.clear()
-            assert list(store.read()) == []
+            assert not list(store.read())
 
             for archive_num in range(n + 1):
                 archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))
@@ -162,7 +162,7 @@ class TestSiteChanges:
 
     def test_read_not_existing(self, store: SiteChanges) -> None:
         assert not store.exists()
-        assert list(store.read()) == []
+        assert not list(store.read())
 
     def test_clear_not_existing(self, store: SiteChanges) -> None:
         assert not store.exists()
@@ -187,7 +187,7 @@ class TestSiteChanges:
         assert list(store.read()) == [entry]
 
         store.clear()
-        assert list(store.read()) == []
+        assert not list(store.read())
 
     @pytest.mark.parametrize(
         "old_type,ref_type",

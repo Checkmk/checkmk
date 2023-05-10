@@ -12,7 +12,7 @@ from .utils import expect_validate_failure, expect_validate_success, request_var
 
 class TestListOfStrings:
     def test_canonical_value(self) -> None:
-        assert vs.ListOfStrings().canonical_value() == []
+        assert not vs.ListOfStrings().canonical_value()
 
     def test_validate(self) -> None:
         expect_validate_success(vs.ListOfStrings(), ["1", "2"])

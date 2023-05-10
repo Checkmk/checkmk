@@ -125,9 +125,6 @@ disable=
     duplicate-code,
     R0801,
     #---------------------------------------------------------------------------
-    # Useful, but quite a few findings.
-    use-implicit-booleaness-not-comparison,
-    #---------------------------------------------------------------------------
     # A stylistic thing only, many findings, but all fixes are mechanical.
     consider-using-from-import,
     #---------------------------------------------------------------------------

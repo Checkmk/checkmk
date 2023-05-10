@@ -179,7 +179,7 @@ def test_discover_inputs_and_filters(  # type: ignore[no-untyped-def]
     if result is not None:
         assert len(items) == len(result)
     else:
-        assert items == []
+        assert not items
 
 
 def test_discover_decorator_key_match() -> None:

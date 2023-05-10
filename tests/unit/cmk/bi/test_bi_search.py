@@ -14,7 +14,7 @@ def test_empty_search(bi_searcher) -> None:  # type: ignore[no-untyped-def]
     search = BIEmptySearch(schema_config)
     results = search.execute({}, bi_searcher)
     assert len(results) == 1
-    assert results[0] == {}
+    assert not results[0]
 
 
 @pytest.mark.parametrize(

@@ -59,7 +59,7 @@ def test_get_updated_host_label_files(discovered_host_labels_dir: Path) -> None:
     assert get_updated_host_label_files(newer_than=time_1) == [
         ("host2.mk", time_2, "{'äbc': {'value': 'xyz', 'plugin_name': 'plugin_1'}}\n"),
     ]
-    assert get_updated_host_label_files(newer_than=time_2) == []
+    assert not get_updated_host_label_files(newer_than=time_2)
 
 
 def test_get_host_labels_entry_of_host(discovered_host_labels_dir: Path) -> None:

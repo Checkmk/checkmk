@@ -365,7 +365,6 @@ def test_regression_discovery(
     )) == discovery_results
 
 
-@pytest.mark.skip("WIP, to be brought back")
 @pytest.mark.parametrize(
     "item, check_results",
     [
@@ -375,195 +374,829 @@ def test_regression_discovery(
                 Metric("ambient_temp", 18.5),
                 Result(state=State.OK, summary="147 sensors in total"),
                 Result(state=State.OK, summary="104 sensors ok"),
-                Result(state=State.OK, notice="CMOS_Battery (ok)"),
-                Result(state=State.OK, notice="ROMB_Battery (ok)"),
-                Result(state=State.OK, notice="VCORE (ok (State Deasserted))"),
-                Result(state=State.OK, notice="1.2V_VDDR (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_1.8V_AUX_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_1.2V_AUX_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="1.2V_LOM_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="8V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="1.2V_AUX_LOM_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="5V_IO_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="5V_CPU_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="3.3V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="1.8V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="1.1V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="Mem1_0.75V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="Mem2_0.75V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="Mem3_0.75V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="Mem4_0.75V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="Mem5_0.75V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="Mem6_0.75V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="Mem7_0.75V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="Mem8_0.75V_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_PLX_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_1.2V_NBSB_PG (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_2.5V_CPU1 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_2.5V_CPU2 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_2.5V_CPU3 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_2.5V_CPU4 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_1.2V_CPU1 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_1.2V_CPU2 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_1.2V_CPU3 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_1.2V_CPU4 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_1.5V_MEM1 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_1.5V_MEM2 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_1.5V_MEM3 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_1.5V_MEM4 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_PSI_MEM1 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_PSI_MEM2 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_PSI_MEM3 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="VR_PSI_MEM4 (ok (State Deasserted))"),
-                Result(state=State.OK, notice="Heatsink_Pres (ok (Present))"),
-                Result(state=State.OK, notice="iDRAC6_Ent_Pres (ok (Present))"),
-                Result(state=State.OK, notice="USB_Cable_Pres (ok (Present))"),
-                Result(state=State.OK, notice="Stor_Adapt_Pres (ok (Present))"),
-                Result(state=State.OK, notice="C_Riser_Pres (ok (Present))"),
-                Result(state=State.OK, notice="L_Riser_Pres (ok (Present))"),
-                Result(state=State.OK, notice="Presence (ok (Present))"),
-                Result(state=State.OK, notice="Status (ok (Presence detected))"),
-                Result(state=State.OK, notice="Riser_Config (ok (Connected))"),
-                Result(state=State.OK, notice="OS_Watchdog (ok)"),
-                Result(state=State.OK, notice="Intrusion (ok)"),
-                Result(state=State.OK, notice="PS_Redundancy (ok (Fully Redundant))"),
-                Result(state=State.OK, notice="Fan_Redundancy (ok (Fully Redundant))"),
-                Result(state=State.OK, notice="Power_Optimized (ok (OEM Specific))"),
-                Result(state=State.OK, notice="Drive (ok (Drive Present))"),
-                Result(state=State.OK, notice="Cable_SAS_A (ok (Connected))"),
-                Result(state=State.OK, notice="Cable_SAS_B (ok (Connected))"),
-                Result(state=State.OK, notice="DKM_Status (ok)"),
-                Result(state=State.OK, notice="VFlash (ok)"),
-                Result(state=State.OK, notice="PS3_Status (ok (Presence detected))"),
-                Result(state=State.OK, notice="PS4_Status (ok (Presence detected))"),
-                Result(state=State.OK, notice="Pwr_Unit_Stat (ok)"),
-                Result(state=State.OK, notice="Power_Redundancy (ok (Fully Redundant))"),
-                Result(state=State.OK, notice="BMC_Watchdog (ok)"),
-                Result(state=State.OK, notice="PS2_Status (ok (Presence detected))"),
-                Result(state=State.OK, notice="Ambient (ok)"),
-                Result(state=State.OK, notice="Systemboard (ok)"),
-                Result(state=State.OK, notice="CPU (ok)"),
-                Result(state=State.OK, notice="MEM_A (ok)"),
-                Result(state=State.OK, notice="MEM_B (ok)"),
-                Result(state=State.OK, notice="PSU1_Inlet (ok)"),
-                Result(state=State.OK, notice="PSU2_Inlet (ok)"),
-                Result(state=State.OK, notice="PSU1 (ok)"),
-                Result(state=State.OK, notice="PSU2 (ok)"),
-                Result(state=State.OK, notice="BATT_3.0V (ok)"),
-                Result(state=State.OK, notice="STBY_3.3V (ok)"),
-                Result(state=State.OK, notice="iRMC_1.8V_STBY (ok)"),
-                Result(state=State.OK, notice="iRMC_1.5V_STBY (ok)"),
-                Result(state=State.OK, notice="iRMC_1.0V_STBY (ok)"),
-                Result(state=State.OK, notice="MAIN_12V (ok)"),
-                Result(state=State.OK, notice="MAIN_5V (ok)"),
-                Result(state=State.OK, notice="MAIN_3.3V (ok)"),
-                Result(state=State.OK, notice="MEM_1.35V (ok)"),
-                Result(state=State.OK, notice="PCH_1.05V (ok)"),
-                Result(state=State.OK, notice="MEM_VTT_0.68V (ok)"),
-                Result(state=State.OK, notice="FAN1_SYS (ok)"),
-                Result(state=State.OK, notice="FAN2_SYS (ok)"),
-                Result(state=State.OK, notice="FAN3_SYS (ok)"),
-                Result(state=State.OK, notice="FAN4_SYS (ok)"),
-                Result(state=State.OK, notice="FAN_PSU1 (ok)"),
-                Result(state=State.OK, notice="FAN_PSU2 (ok)"),
-                Result(state=State.OK, notice="PSU1_Power (ok)"),
-                Result(state=State.OK, notice="PSU2_Power (ok)"),
-                Result(state=State.OK, notice="Total_Power (ok)"),
-                Result(state=State.OK, notice="Total_Power_Out (ok)"),
-                Result(state=State.OK, notice="I2C1_error_ratio (ok)"),
-                Result(state=State.OK, notice="I2C2_error_ratio (ok)"),
-                Result(state=State.OK, notice="I2C3_error_ratio (ok)"),
-                Result(state=State.OK, notice="I2C4_error_ratio (ok)"),
-                Result(state=State.OK, notice="I2C5_error_ratio (ok)"),
-                Result(state=State.OK, notice="I2C6_error_ratio (ok)"),
-                Result(state=State.OK, notice="I2C7_error_ratio (ok)"),
-                Result(state=State.OK, notice="I2C8_error_ratio (ok)"),
-                Result(state=State.OK, notice="SEL_Level (ok)"),
+                Result(
+                    state=State.OK,
+                    notice="CMOS_Battery: ok",
+                    details="CMOS_Battery: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="ROMB_Battery: ok",
+                    details="ROMB_Battery: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VCORE: ok (State Deasserted)",
+                    details=
+                    "VCORE: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="1.2V_VDDR: ok (State Deasserted)",
+                    details=
+                    "1.2V_VDDR: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_1.8V_AUX_PG: ok (State Deasserted)",
+                    details=
+                    "VR_1.8V_AUX_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_1.2V_AUX_PG: ok (State Deasserted)",
+                    details=
+                    "VR_1.2V_AUX_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="1.2V_LOM_PG: ok (State Deasserted)",
+                    details=
+                    "1.2V_LOM_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="8V_PG: ok (State Deasserted)",
+                    details=
+                    "8V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="1.2V_AUX_LOM_PG: ok (State Deasserted)",
+                    details=
+                    "1.2V_AUX_LOM_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="5V_IO_PG: ok (State Deasserted)",
+                    details=
+                    "5V_IO_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="5V_CPU_PG: ok (State Deasserted)",
+                    details=
+                    "5V_CPU_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="3.3V_PG: ok (State Deasserted)",
+                    details=
+                    "3.3V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="1.8V_PG: ok (State Deasserted)",
+                    details=
+                    "1.8V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="1.1V_PG: ok (State Deasserted)",
+                    details=
+                    "1.1V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem1_0.75V_PG: ok (State Deasserted)",
+                    details=
+                    "Mem1_0.75V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem2_0.75V_PG: ok (State Deasserted)",
+                    details=
+                    "Mem2_0.75V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem3_0.75V_PG: ok (State Deasserted)",
+                    details=
+                    "Mem3_0.75V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem4_0.75V_PG: ok (State Deasserted)",
+                    details=
+                    "Mem4_0.75V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem5_0.75V_PG: ok (State Deasserted)",
+                    details=
+                    "Mem5_0.75V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem6_0.75V_PG: ok (State Deasserted)",
+                    details=
+                    "Mem6_0.75V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem7_0.75V_PG: ok (State Deasserted)",
+                    details=
+                    "Mem7_0.75V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem8_0.75V_PG: ok (State Deasserted)",
+                    details=
+                    "Mem8_0.75V_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_PLX_PG: ok (State Deasserted)",
+                    details=
+                    "VR_PLX_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_1.2V_NBSB_PG: ok (State Deasserted)",
+                    details=
+                    "VR_1.2V_NBSB_PG: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_2.5V_CPU1: ok (State Deasserted)",
+                    details=
+                    "VR_2.5V_CPU1: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_2.5V_CPU2: ok (State Deasserted)",
+                    details=
+                    "VR_2.5V_CPU2: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_2.5V_CPU3: ok (State Deasserted)",
+                    details=
+                    "VR_2.5V_CPU3: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_2.5V_CPU4: ok (State Deasserted)",
+                    details=
+                    "VR_2.5V_CPU4: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_1.2V_CPU1: ok (State Deasserted)",
+                    details=
+                    "VR_1.2V_CPU1: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_1.2V_CPU2: ok (State Deasserted)",
+                    details=
+                    "VR_1.2V_CPU2: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_1.2V_CPU3: ok (State Deasserted)",
+                    details=
+                    "VR_1.2V_CPU3: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_1.2V_CPU4: ok (State Deasserted)",
+                    details=
+                    "VR_1.2V_CPU4: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_1.5V_MEM1: ok (State Deasserted)",
+                    details=
+                    "VR_1.5V_MEM1: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_1.5V_MEM2: ok (State Deasserted)",
+                    details=
+                    "VR_1.5V_MEM2: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_1.5V_MEM3: ok (State Deasserted)",
+                    details=
+                    "VR_1.5V_MEM3: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_1.5V_MEM4: ok (State Deasserted)",
+                    details=
+                    "VR_1.5V_MEM4: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_PSI_MEM1: ok (State Deasserted)",
+                    details=
+                    "VR_PSI_MEM1: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_PSI_MEM2: ok (State Deasserted)",
+                    details=
+                    "VR_PSI_MEM2: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_PSI_MEM3: ok (State Deasserted)",
+                    details=
+                    "VR_PSI_MEM3: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VR_PSI_MEM4: ok (State Deasserted)",
+                    details=
+                    "VR_PSI_MEM4: ok (State Deasserted) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Heatsink_Pres: ok (Present)",
+                    details="Heatsink_Pres: ok (Present) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="iDRAC6_Ent_Pres: ok (Present)",
+                    details=
+                    "iDRAC6_Ent_Pres: ok (Present) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="USB_Cable_Pres: ok (Present)",
+                    details=
+                    "USB_Cable_Pres: ok (Present) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Stor_Adapt_Pres: ok (Present)",
+                    details=
+                    "Stor_Adapt_Pres: ok (Present) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="C_Riser_Pres: ok (Present)",
+                    details="C_Riser_Pres: ok (Present) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="L_Riser_Pres: ok (Present)",
+                    details="L_Riser_Pres: ok (Present) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Presence: ok (Present)",
+                    details="Presence: ok (Present) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Status: ok (Presence detected)",
+                    details=
+                    "Status: ok (Presence detected) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Riser_Config: ok (Connected)",
+                    details=
+                    "Riser_Config: ok (Connected) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="OS_Watchdog: ok",
+                    details="OS_Watchdog: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Intrusion: ok",
+                    details="Intrusion: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PS_Redundancy: ok (Fully Redundant)",
+                    details=
+                    "PS_Redundancy: ok (Fully Redundant) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Fan_Redundancy: ok (Fully Redundant)",
+                    details=
+                    "Fan_Redundancy: ok (Fully Redundant) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Power_Optimized: ok (OEM Specific)",
+                    details=
+                    "Power_Optimized: ok (OEM Specific) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Drive: ok (Drive Present)",
+                    details="Drive: ok (Drive Present) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Cable_SAS_A: ok (Connected)",
+                    details="Cable_SAS_A: ok (Connected) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Cable_SAS_B: ok (Connected)",
+                    details="Cable_SAS_B: ok (Connected) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="DKM_Status: ok",
+                    details="DKM_Status: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VFlash: ok",
+                    details="VFlash: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PS3_Status: ok (Presence detected)",
+                    details=
+                    "PS3_Status: ok (Presence detected) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PS4_Status: ok (Presence detected)",
+                    details=
+                    "PS4_Status: ok (Presence detected) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Pwr_Unit_Stat: ok",
+                    details="Pwr_Unit_Stat: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Power_Redundancy: ok (Fully Redundant)",
+                    details=
+                    "Power_Redundancy: ok (Fully Redundant) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="BMC_Watchdog: ok",
+                    details="BMC_Watchdog: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PS2_Status: ok (Presence detected)",
+                    details=
+                    "PS2_Status: ok (Presence detected) (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Ambient: ok",
+                    details="Ambient: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Systemboard: ok",
+                    details="Systemboard: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="CPU: ok",
+                    details="CPU: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="MEM_A: ok",
+                    details="MEM_A: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="MEM_B: ok",
+                    details="MEM_B: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PSU1_Inlet: ok",
+                    details="PSU1_Inlet: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PSU2_Inlet: ok",
+                    details="PSU2_Inlet: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PSU1: ok",
+                    details="PSU1: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PSU2: ok",
+                    details="PSU2: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="BATT_3.0V: ok",
+                    details="BATT_3.0V: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="STBY_3.3V: ok",
+                    details="STBY_3.3V: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="iRMC_1.8V_STBY: ok",
+                    details="iRMC_1.8V_STBY: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="iRMC_1.5V_STBY: ok",
+                    details="iRMC_1.5V_STBY: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="iRMC_1.0V_STBY: ok",
+                    details="iRMC_1.0V_STBY: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="MAIN_12V: ok",
+                    details="MAIN_12V: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="MAIN_5V: ok",
+                    details="MAIN_5V: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="MAIN_3.3V: ok",
+                    details="MAIN_3.3V: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="MEM_1.35V: ok",
+                    details="MEM_1.35V: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PCH_1.05V: ok",
+                    details="PCH_1.05V: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="MEM_VTT_0.68V: ok",
+                    details="MEM_VTT_0.68V: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="FAN1_SYS: ok",
+                    details="FAN1_SYS: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="FAN2_SYS: ok",
+                    details="FAN2_SYS: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="FAN3_SYS: ok",
+                    details="FAN3_SYS: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="FAN4_SYS: ok",
+                    details="FAN4_SYS: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="FAN_PSU1: ok",
+                    details="FAN_PSU1: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="FAN_PSU2: ok",
+                    details="FAN_PSU2: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PSU1_Power: ok",
+                    details="PSU1_Power: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PSU2_Power: ok",
+                    details="PSU2_Power: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Total_Power: ok",
+                    details="Total_Power: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Total_Power_Out: ok",
+                    details="Total_Power_Out: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="I2C1_error_ratio: ok",
+                    details="I2C1_error_ratio: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="I2C2_error_ratio: ok",
+                    details="I2C2_error_ratio: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="I2C3_error_ratio: ok",
+                    details="I2C3_error_ratio: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="I2C4_error_ratio: ok",
+                    details="I2C4_error_ratio: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="I2C5_error_ratio: ok",
+                    details="I2C5_error_ratio: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="I2C6_error_ratio: ok",
+                    details="I2C6_error_ratio: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="I2C7_error_ratio: ok",
+                    details="I2C7_error_ratio: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="I2C8_error_ratio: ok",
+                    details="I2C8_error_ratio: ok (service state derived from sensor events)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="SEL_Level: ok",
+                    details="SEL_Level: ok (service state derived from sensor events)",
+                ),
                 Result(state=State.WARN, summary="1 sensors warning"),
-                Result(state=State.WARN, summary="FAN5_SYS (nc)"),
+                Result(
+                    state=State.WARN,
+                    notice="FAN5_SYS: nc",
+                    details="FAN5_SYS: nc (service state derived from sensor events)",
+                ),
                 Result(state=State.CRIT, summary="2 sensors critical"),
                 Result(
                     state=State.CRIT,
-                    summary="PS1_Status (ok (Presence detected, Failure detected))",
+                    notice="PS1_Status: ok (Presence detected, Failure detected)",
+                    details=
+                    "PS1_Status: ok (Presence detected, Failure detected) (service state derived from sensor events)",
                 ),
-                Result(state=State.CRIT, summary="Drive_4 (ok (Drive Present, Drive Fault))"),
+                Result(
+                    state=State.CRIT,
+                    notice="Drive_4: ok (Drive Present, Drive Fault)",
+                    details=
+                    "Drive_4: ok (Drive Present, Drive Fault) (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="40 sensors skipped"),
-                Result(state=State.OK, notice="NB_THERMTRIP (ns (Disabled))"),
-                Result(state=State.OK, notice="PFault_Fail_Safe (ns (No Reading))"),
-                Result(state=State.OK, notice="SEL (ns (No Reading))"),
-                Result(state=State.OK, notice="SD1_Status (ns (Disabled))"),
-                Result(state=State.OK, notice="SD2_Status (ns (Disabled))"),
-                Result(state=State.OK, notice="SD_Redundancy (ns (Disabled))"),
-                Result(state=State.OK, notice="ECC_Corr_Err (ns (No Reading))"),
-                Result(state=State.OK, notice="ECC_Uncorr_Err (ns (No Reading))"),
-                Result(state=State.OK, notice="I/O_Channel_Chk (ns (No Reading))"),
-                Result(state=State.OK, notice="PCI_Parity_Err (ns (No Reading))"),
-                Result(state=State.OK, notice="PCI_System_Err (ns (No Reading))"),
-                Result(state=State.OK, notice="SBE_Log_Disabled (ns (No Reading))"),
-                Result(state=State.OK, notice="Logging_Disabled (ns (No Reading))"),
-                Result(state=State.OK, notice="Unknown (ns (No Reading))"),
-                Result(state=State.OK, notice="CPU_Protocol_Err (ns (No Reading))"),
-                Result(state=State.OK, notice="CPU_Bus_PERR (ns (No Reading))"),
-                Result(state=State.OK, notice="CPU_Init_Err (ns (No Reading))"),
-                Result(state=State.OK, notice="CPU_Machine_Chk (ns (No Reading))"),
-                Result(state=State.OK, notice="Memory_Spared (ns (No Reading))"),
-                Result(state=State.OK, notice="Memory_Mirrored (ns (No Reading))"),
-                Result(state=State.OK, notice="Memory_RAID (ns (No Reading))"),
-                Result(state=State.OK, notice="Memory_Added (ns (No Reading))"),
-                Result(state=State.OK, notice="Memory_Removed (ns (No Reading))"),
-                Result(state=State.OK, notice="Memory_Cfg_Err (ns (No Reading))"),
-                Result(state=State.OK, notice="Mem_Redun_Gain (ns (No Reading))"),
-                Result(state=State.OK, notice="PCIE_Fatal_Err (ns (No Reading))"),
-                Result(state=State.OK, notice="Chipset_Err (ns (No Reading))"),
-                Result(state=State.OK, notice="Err_Reg_Pointer (ns (No Reading))"),
-                Result(state=State.OK, notice="Mem_ECC_Warning (ns (No Reading))"),
-                Result(state=State.OK, notice="Mem_CRC_Err (ns (No Reading))"),
-                Result(state=State.OK, notice="USB_Over-current (ns (No Reading))"),
-                Result(state=State.OK, notice="POST_Err (ns (No Reading))"),
-                Result(state=State.OK, notice="Hdwr_version_err (ns (No Reading))"),
-                Result(state=State.OK, notice="Mem_Overtemp (ns (No Reading))"),
-                Result(state=State.OK, notice="Mem_Fatal_SB_CRC (ns (No Reading))"),
-                Result(state=State.OK, notice="Mem_Fatal_NB_CRC (ns (No Reading))"),
-                Result(state=State.OK, notice="OS_Watchdog_Time (ns (No Reading))"),
-                Result(state=State.OK, notice="Non_Fatal_PCI_Er (ns (No Reading))"),
-                Result(state=State.OK, notice="Fatal_IO_Error (ns (No Reading))"),
-                Result(state=State.OK, notice="MSR_Info_Log (ns (No Reading))"),
+                Result(
+                    state=State.OK,
+                    notice="NB_THERMTRIP: ns (Disabled)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PFault_Fail_Safe: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="SEL: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="SD1_Status: ns (Disabled)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="SD2_Status: ns (Disabled)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="SD_Redundancy: ns (Disabled)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="ECC_Corr_Err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="ECC_Uncorr_Err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="I/O_Channel_Chk: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PCI_Parity_Err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PCI_System_Err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="SBE_Log_Disabled: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Logging_Disabled: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Unknown: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="CPU_Protocol_Err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="CPU_Bus_PERR: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="CPU_Init_Err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="CPU_Machine_Chk: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Memory_Spared: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Memory_Mirrored: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Memory_RAID: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Memory_Added: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Memory_Removed: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Memory_Cfg_Err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem_Redun_Gain: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="PCIE_Fatal_Err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Chipset_Err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Err_Reg_Pointer: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem_ECC_Warning: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem_CRC_Err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="USB_Over-current: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="POST_Err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Hdwr_version_err: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem_Overtemp: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem_Fatal_SB_CRC: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Mem_Fatal_NB_CRC: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="OS_Watchdog_Time: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Non_Fatal_PCI_Er: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Fatal_IO_Error: ns (No Reading)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="MSR_Info_Log: ns (No Reading)",
+                ),
             ],
         ),
-        ("CMOS_Battery", [Result(state=State.OK, summary="Status: ok")]),
+        (
+            "CMOS_Battery",
+            [
+                Result(
+                    state=State.OK,
+                    summary="Status: ok",
+                    details="Status: ok (service state derived from sensor events)",
+                )
+            ],
+        ),
         (
             "VR_PSI_MEM3",
-            [Result(
-                state=State.OK,
-                summary="Status: ok (State Deasserted)",
-            )],
+            [
+                Result(
+                    state=State.OK,
+                    summary="Status: ok (State Deasserted)",
+                    details=
+                    "Status: ok (State Deasserted) (service state derived from sensor events)",
+                )
+            ],
         ),
         (
             "Drive",
-            [Result(
-                state=State.OK,
-                summary="Status: ok (Drive Present)",
-            )],
+            [
+                Result(
+                    state=State.OK,
+                    summary="Status: ok (Drive Present)",
+                    details="Status: ok (Drive Present) (service state derived from sensor events)",
+                )
+            ],
         ),
-        ("Cable_SAS_A", [Result(state=State.OK, summary="Status: ok (Connected)")]),
+        (
+            "Cable_SAS_A",
+            [
+                Result(
+                    state=State.OK,
+                    summary="Status: ok (Connected)",
+                    details="Status: ok (Connected) (service state derived from sensor events)",
+                )
+            ],
+        ),
         (
             "Power_Redundancy",
-            [Result(
-                state=State.OK,
-                summary="Status: ok (Fully Redundant)",
-            )],
+            [
+                Result(
+                    state=State.OK,
+                    summary="Status: ok (Fully Redundant)",
+                    details=
+                    "Status: ok (Fully Redundant) (service state derived from sensor events)",
+                )
+            ],
         ),
         (
             "PS1_Status",
-            [Result(
-                state=State.CRIT,
-                summary="Status: ok (Presence detected, Failure detected)",
-            )],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Status: ok (Presence detected, Failure detected)",
+                    details=
+                    "Status: ok (Presence detected, Failure detected) (service state derived from sensor events)",
+                )
+            ],
         ),
         (
             "Ambient",
             [
-                Result(state=State.OK, summary="Status: ok"),
+                Result(
+                    state=State.OK,
+                    summary="Status: ok",
+                    details="Status: ok (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="18.50 degrees_C"),
                 Metric("Ambient", 18.5, levels=(37.0, 42.0)),
             ],
@@ -571,7 +1204,11 @@ def test_regression_discovery(
         (
             "PSU2",
             [
-                Result(state=State.OK, summary="Status: ok"),
+                Result(
+                    state=State.OK,
+                    summary="Status: ok",
+                    details="Status: ok (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="58.00 degrees_C"),
                 Metric("PSU2", 58.0, levels=(102.0, 107.0)),
             ],
@@ -579,7 +1216,11 @@ def test_regression_discovery(
         (
             "MEM_1.35V",
             [
-                Result(state=State.OK, summary="Status: ok"),
+                Result(
+                    state=State.OK,
+                    summary="Status: ok",
+                    details="Status: ok (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="1.36 Volts"),
                 Metric("MEM_1.35V", 1.36, levels=(None, 1.61)),
             ],
@@ -587,7 +1228,11 @@ def test_regression_discovery(
         (
             "FAN1_SYS",
             [
-                Result(state=State.OK, summary="Status: ok"),
+                Result(
+                    state=State.OK,
+                    summary="Status: ok",
+                    details="Status: ok (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="5160.00 RPM"),
                 Metric("FAN1_SYS", 5160.0),
             ],
@@ -595,7 +1240,11 @@ def test_regression_discovery(
         (
             "Total_Power",
             [
-                Result(state=State.OK, summary="Status: ok"),
+                Result(
+                    state=State.OK,
+                    summary="Status: ok",
+                    details="Status: ok (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="48.00 Watts"),
                 Metric("Total_Power", 48.0, levels=(None, 498.0)),
             ],
@@ -603,7 +1252,11 @@ def test_regression_discovery(
         (
             "I2C8_error_ratio",
             [
-                Result(state=State.OK, summary="Status: ok"),
+                Result(
+                    state=State.OK,
+                    summary="Status: ok",
+                    details="Status: ok (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="0.00 %"),
                 Metric("I2C8_error_ratio", 0.0, levels=(10.0, 20.0)),
             ],
@@ -611,7 +1264,11 @@ def test_regression_discovery(
         (
             "SEL_Level",
             [
-                Result(state=State.OK, summary="Status: ok"),
+                Result(
+                    state=State.OK,
+                    summary="Status: ok",
+                    details="Status: ok (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="0.00 %"),
                 Metric("SEL_Level", 0.0, levels=(90.0, None)),
             ],
@@ -622,7 +1279,8 @@ def test_regression_discovery(
                 Result(
                     state=State.CRIT,
                     summary="Status: ok (Drive Present, Drive Fault)",
-                    details="Status: ok (Drive Present, Drive Fault)",
+                    details=
+                    "Status: ok (Drive Present, Drive Fault) (service state derived from sensor events)",
                 )
             ],
         ),

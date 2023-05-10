@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0b7
+Version: 2.2.0b8
 
 check_mail_loop and check_mail active checks didn't accept "POP3"
 as a fetch protocol argument.

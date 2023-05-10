@@ -43,8 +43,8 @@ def parse_win_printers(info):
 
 @discover
 def inventory_win_printers(printer_name, printer_attrs):
-    # Do not discovery offline printers
-    return printer_attrs.error != "9"
+    # Do not discover offline printers
+    return printer_attrs.error != 9
 
 
 @get_parsed_item_data

@@ -8,6 +8,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
 from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypedDict, TypeVar
 
+from cmk.utils.caching import instance_method_lru_cache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, HostLabel, Labels
 from cmk.utils.parameters import boil_down_parameters
@@ -865,6 +866,7 @@ class RulesetOptimizer:
             self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
             self._host_grouped_ref[hostname] = group_ref
 
+    @instance_method_lru_cache(maxsize=None)
     def labels_of_host(self, hostname: HostName) -> Labels:
         """Returns the effective set of host labels from all available sources
 
@@ -882,6 +884,7 @@ class RulesetOptimizer:
         labels.update(self._builtin_labels_of_host(hostname))
         return labels
 
+    @instance_method_lru_cache(maxsize=None)
     def label_sources_of_host(self, hostname: HostName) -> LabelSources:
         """Returns the effective set of host label keys with their source
         identifier instead of the value Order and merging logic is equal to

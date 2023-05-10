@@ -47,9 +47,9 @@ def check(item, params, info):
 
 check_info["test_check_1"] = {
     "check_function"          : check,
-    "inventory_function"      : inventory,
-    "service_description"     : "Testcheck 1",
-#    "default_levels_variable" : "test_check_1_default_levels"
+    "discovery_function"      : inventory,
+    "service_name"            : "Testcheck 1",
+#    "default_levels_variable": "test_check_1_default_levels"
 }
 """,
     )
@@ -107,8 +107,8 @@ def check(item, params, info):
 
 check_info["test_check_2"] = {
     "check_function"      : check,
-    "inventory_function"  : inventory,
-    "service_description" : "Testcheck 2",
+    "discovery_function"  : inventory,
+    "service_name"        : "Testcheck 2",
 }
 """,
     )
@@ -159,9 +159,9 @@ def check(item, params, info):
 
 check_info["test_check_3"] = {
     "check_function"          : check,
-    "inventory_function"      : inventory,
-    "service_description"     : "Testcheck 3",
-    "group"                   : "asd",
+    "discovery_function"      : inventory,
+    "service_name"            : "Testcheck 3",
+    "check_ruleset_name"      : "asd",
     "default_levels_variable" : "test_check_3_default_levels",
 }
 """,

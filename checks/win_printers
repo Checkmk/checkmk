@@ -10,11 +10,10 @@
 # WH1_BC_O3_UPS                         0                   3                   0
 
 
-# mypy: disable-error-code="var-annotated"
-
 from collections.abc import Iterable, Mapping
 from typing import Any, Final, NamedTuple
 
+from cmk.base.check_api import check_levels
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
@@ -79,36 +78,24 @@ def discover_win_printers(section: Section) -> Iterable[tuple[str, dict]]:
 
 def check_win_printers(
     item: str, params: Mapping[str, Any], section: Section
-) -> Iterable[tuple[int, str]]:
+) -> Iterable[tuple[int, str, list] | tuple[int, str]]:
     if (queue := section.get(item)) is None:
         return
 
-    warn, crit = params.get("levels", (None, None))
-
-    state = 0
-
-    error_text = ""
-    if queue.error in params["crit_states"]:
-        state = 2
-        error_text = "Error State: %s(!!)" % _ERROR_MAP[queue.error]
-    elif queue.error in params["warn_states"]:
-        state = 1
-        error_text = "Error State: %s(!)" % _ERROR_MAP[queue.error]
-
-    queue_label = ""
-    if crit is not None and queue.jobs >= crit:
-        state = 2
-        queue_label = "(!!)"
-    elif warn is not None and queue.jobs >= warn:
-        state = max(1, state)
-        queue_label = "(!)"
-
-    yield state, "%s jobs current%s, State: %s, %s" % (
+    yield check_levels(
         queue.jobs,
-        queue_label,
-        _STATUS_MAP[queue.status],
-        error_text,
+        None,
+        params.get("levels"),
+        human_readable_func=str,
+        infoname="Current jobs",
     )
+
+    yield 0, f"State: {_STATUS_MAP[queue.status]}"
+
+    if queue.error in params["crit_states"]:
+        yield 2, f"Error state: {_ERROR_MAP[queue.error]}"
+    elif queue.error in params["warn_states"]:
+        yield 1, f"Error state: {_ERROR_MAP[queue.error]}"
 
 
 check_info["win_printers"] = {

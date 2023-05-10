@@ -1239,12 +1239,15 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
             if not user_errors:
                 instances.add_page(new_page)
                 self._type.save_user_instances(instances, owner_id)
-                if mode == "create":
-                    redirect_url = new_page.after_create_url() or back_url
+                if request.var("save_and_view"):
+                    redirect_url = new_page.after_create_url() or makeuri_contextless(
+                        request,
+                        [("name", new_page.name())],
+                        filename="%s.py" % self._type.type_name(),
+                    )
                 else:
                     redirect_url = back_url
-
-                flash(_("Your changes haven been saved."))
+                    flash(_("Your changes have been saved."))
 
                 # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
                 # can we simply move it there?

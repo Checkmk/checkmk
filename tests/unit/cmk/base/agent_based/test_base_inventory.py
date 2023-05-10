@@ -58,35 +58,20 @@ def test_item_collisions(item: Attributes | TableRow, known_class_name: str) -> 
         )
 
 
-_TREE_WITH_OTHER = StructuredDataNode()
-_TREE_WITH_OTHER.setdefault_node(("other",))
-_TREE_WITH_EDGE = StructuredDataNode()
-_TREE_WITH_EDGE.setdefault_node(("edge",))
+@pytest.mark.parametrize("edge", ["edge", "other"])
+def test_tree_nodes_equality(edge: str) -> None:
+    def make_tree(*nodes: str) -> StructuredDataNode:
+        tree = StructuredDataNode()
+        tree.setdefault_node(nodes)
+        return tree
 
+    tree = make_tree("edge")
+    other = make_tree("other")
 
-@pytest.mark.parametrize(
-    "old_tree, inv_tree",
-    [
-        (_TREE_WITH_EDGE, _TREE_WITH_OTHER),
-        (_TREE_WITH_OTHER, _TREE_WITH_EDGE),
-    ],
-)
-def test__tree_nodes_are_not_equal(
-    old_tree: StructuredDataNode,
-    inv_tree: StructuredDataNode,
-) -> None:
-    assert _tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
-
-
-@pytest.mark.parametrize(
-    "old_tree, inv_tree",
-    [
-        (_TREE_WITH_OTHER, _TREE_WITH_OTHER),
-        (_TREE_WITH_EDGE, _TREE_WITH_EDGE),
-    ],
-)
-def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: StructuredDataNode) -> None:
-    assert _tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
+    assert _tree_nodes_are_equal(tree, other, edge) is False
+    assert _tree_nodes_are_equal(other, tree, edge) is False
+    assert _tree_nodes_are_equal(tree, tree, edge) is True
+    assert _tree_nodes_are_equal(other, other, edge) is True
 
 
 # TODO test cases:

@@ -15,7 +15,7 @@
 import collections
 from typing import Final
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["win_printer_default_levels"] = {
@@ -73,8 +73,10 @@ def inventory_win_printers(printer_name, printer_attrs):
     return printer_attrs.error != 9
 
 
-@get_parsed_item_data
-def check_win_printers(item, params, data):
+def check_win_printers(item, params, section):
+    if (queue := section.get(item)) is None:
+        return
+
     if not isinstance(params, dict):
         # Legacy params:
         if params is None:
@@ -88,30 +90,27 @@ def check_win_printers(item, params, data):
         warn, crit = params.get("levels", (None, None))
 
     state = 0
-    current_jobs = data.jobs
-    status = data.status
-    error = data.error
 
     error_text = ""
-    if error in params["crit_states"]:
+    if queue.error in params["crit_states"]:
         state = 2
-        error_text = "Error State: %s(!!)" % _ERROR_MAP[error]
-    elif error in params["warn_states"]:
+        error_text = "Error State: %s(!!)" % _ERROR_MAP[queue.error]
+    elif queue.error in params["warn_states"]:
         state = 1
-        error_text = "Error State: %s(!)" % _ERROR_MAP[error]
+        error_text = "Error State: %s(!)" % _ERROR_MAP[queue.error]
 
     queue_label = ""
-    if crit is not None and current_jobs >= crit:
+    if crit is not None and queue.jobs >= crit:
         state = 2
         queue_label = "(!!)"
-    elif warn is not None and current_jobs >= warn:
+    elif warn is not None and queue.jobs >= warn:
         state = max(1, state)
         queue_label = "(!)"
 
-    return state, "%s jobs current%s, State: %s, %s" % (
-        current_jobs,
+    yield state, "%s jobs current%s, State: %s, %s" % (
+        queue.jobs,
         queue_label,
-        _STATUS_MAP[status],
+        _STATUS_MAP[queue.status],
         error_text,
     )
 

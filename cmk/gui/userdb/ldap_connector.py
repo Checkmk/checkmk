@@ -300,8 +300,10 @@ class LDAPUserConnector(UserConnector):
     def id(self):
         return self._config["id"]
 
-    def connect_server(self, server):
+    def connect_server(self, server: str) -> tuple[ldap.ldapobject.ReconnectLDAPObject, str | None]:
+        """Connects to an LDAP server using the provided server uri"""
         try:
+            # Set up debug logging if enabled
             if self._logger.isEnabledFor(logging.DEBUG):
                 os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
                 ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
@@ -311,6 +313,7 @@ class LDAPUserConnector(UserConnector):
                 trace_level = 0
                 trace_file = None
 
+            # Format the LDAP URI and create the connection object
             uri = self._format_ldap_uri(server)
             conn = ldap.ldapobject.ReconnectLDAPObject(
                 uri, trace_level=trace_level, trace_file=trace_file
@@ -353,20 +356,12 @@ class LDAPUserConnector(UserConnector):
             self._clear_nearest_dc_cache()
             return None, "%s" % e
 
-    def _format_ldap_uri(self, server):
-        if self.use_ssl():
-            uri = "ldaps://"
-        else:
-            uri = "ldap://"
-
-        if "port" in self._config:
-            port_spec = ":%d" % self._config["port"]
-        else:
-            port_spec = ""
-
+    def _format_ldap_uri(self, server: str) -> str:
+        uri = "ldaps://" if self.use_ssl() else "ldap://"
+        port_spec = ":%d" % self._config["port"] if "port" in self._config else ""
         return uri + server + port_spec
 
-    def connect(self, enforce_new=False, enforce_server=None):
+    def connect(self, enforce_new: bool = False, enforce_server: str | None = None) -> None:
         if not enforce_new and self._ldap_obj and self._config == self._ldap_obj_config:
             self._logger.info("LDAP CONNECT - Using existing connecting")
             return  # Use existing connections (if connection settings have not changed)
@@ -398,7 +393,8 @@ class LDAPUserConnector(UserConnector):
                 if ldap_obj:
                     self._ldap_obj = ldap_obj
                 else:
-                    errors.append(error_msg)
+                    if error_msg is not None:  # it should be, though
+                        errors.append(error_msg)
                     continue  # In case of an error, try the (optional) fallback servers
 
             # Got no connection to any server
@@ -527,7 +523,7 @@ class LDAPUserConnector(UserConnector):
 
         return servers
 
-    def _uses_discover_nearest_server(self):
+    def _uses_discover_nearest_server(self) -> bool:
         # 'directory_type': ('ad', {'connect_to': ('discover', {'domain': 'corp.de'})}),
         return self._config["directory_type"][1]["connect_to"][0] == "discover"
 
@@ -1260,7 +1256,7 @@ class LDAPUserConnector(UserConnector):
     def do_sync(  # pylint: disable=too-many-branches
         self,
         *,
-        add_to_changelog: bool,
+        add_to_changelog: bool,  # unused
         only_username: UserId | None,
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, datetime], None],

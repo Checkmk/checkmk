@@ -425,6 +425,7 @@ modes.register(
 def mode_dump_agent(hostname: HostName) -> None:
     try:
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
         host_config = config_cache.get_host_config(hostname)
 
         if host_config.is_cluster:
@@ -496,6 +497,7 @@ def mode_dump_hosts(hostlist: List[HostName]) -> None:
     if not hostlist:
         hostlist = sorted(config_cache.all_active_hosts())
 
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostlist))
     for hostname in hostlist:
         cmk.base.dump_host.dump_host(hostname)
 
@@ -1509,6 +1511,8 @@ modes.register(
 
 
 def mode_check_discovery(hostname: HostName) -> int:
+    config_cache = config.get_config_cache()
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     return discovery.active_check_discovery(hostname, ipaddress=None)
 
 
@@ -1680,10 +1684,14 @@ _DiscoveryOptions = TypedDict(
 def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
     hostnames = modes.parse_hostname_list(args)
     cmk.core_helpers.cache.FileCacheFactory.maybe = True
+
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
         cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
+    else:
+        config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.commandline_discovery(
@@ -1786,6 +1794,8 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
 
     # handle adhoc-check
     hostname = HostName(args[0])
+    config_cache = config.get_config_cache()
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     ipaddress: Optional[HostAddress] = None
     if len(args) == 2:
         ipaddress = args[1]
@@ -1876,6 +1886,7 @@ def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
 
     if args:
         hostnames = modes.parse_hostname_list(args, with_clusters=True)
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
         console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
     else:
         # No hosts specified: do all hosts and force caching
@@ -1935,6 +1946,8 @@ modes.register(
 
 
 def mode_inventory_as_check(options: Dict, hostname: HostName) -> int:
+    config_cache = config.get_config_cache()
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     return inventory.active_check_inventory(hostname, options)
 
 

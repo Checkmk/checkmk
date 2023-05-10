@@ -253,8 +253,11 @@ class AutomationTryDiscovery(Automation):
 
         with _simulation_mode(use_simulation_mode):
             try:
+                host_name = HostName(args[0])
+                config_cache = config.get_config_cache()
+                config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
                 return discovery.get_check_preview(
-                    host_name=HostName(args[0]),
+                    host_name=host_name,
                     max_cachefile_age=config.max_cachefile_age(),
                     use_cached_snmp_data=use_cached_snmp_data,
                     on_error=on_error,
@@ -706,6 +709,7 @@ class AutomationGetServicesLabels(Automation):
     def execute(self, args: List[str]) -> automation_results.GetServicesLabelsResult:
         hostname, services = HostName(args[0]), args[1:]
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
 
         return automation_results.GetServicesLabelsResult(
             {service: config_cache.labels_of_service(hostname, service) for service in services}
@@ -725,6 +729,7 @@ class AutomationAnalyseServices(Automation):
         servicedesc = args[1]
 
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
         host_config = config_cache.get_host_config(hostname)
         host_attrs = core_config.get_host_attributes(hostname, config_cache)
 
@@ -875,6 +880,7 @@ class AutomationAnalyseHost(Automation):
     def execute(self, args: List[str]) -> automation_results.AnalyseHostResult:
         host_name = HostName(args[0])
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         return automation_results.AnalyseHostResult(
             config_cache.get_host_config(host_name).labels,
             config_cache.get_host_config(host_name).label_sources,
@@ -1259,6 +1265,7 @@ class AutomationDiagHost(Automation):
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
         host_config = config_cache.get_host_config(hostname)
 
         # In 1.5 the tcp connect timeout has been added. The automation may
@@ -1562,6 +1569,7 @@ class AutomationActiveCheck(Automation):
         item = raw_item
 
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
         host_config = config_cache.get_host_config(hostname)
         with redirect_stdout(open(os.devnull, "w")):
             host_attrs = core_config.get_host_attributes(hostname, config_cache)

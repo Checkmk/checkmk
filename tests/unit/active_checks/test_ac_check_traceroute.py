@@ -31,15 +31,14 @@ _TRACEROUTE_OUTPUT_IPV4 = [
     " 5  fra1.cc.as48314.net (194.45.196.22)  37.880 ms  37.873 ms  44.554 ms",
     " 6  * * *",
     " 7  * * *",
-    "",
 ]
 
 
 def test_check_traceroute_ipv4_no_check(check_traceroute) -> None:
     assert check_traceroute.check_traceroute(_TRACEROUTE_OUTPUT_IPV4, []) == (
         0,
-        "8 hops, missing routers: none, bad routers: none",
-        [("hops", 8)],
+        "7 hops, missing routers: none, bad routers: none",
+        [("hops", 7)],
     )
 
 
@@ -49,8 +48,8 @@ def test_check_traceroute_ipv4_check_routers(check_traceroute) -> None:
         [("w", "63.312.142.198"), ("C", "fritz.box"), ("W", "194.45.196.22")],
     ) == (
         0,
-        "8 hops, missing routers: none, bad routers: none",
-        [("hops", 8)],
+        "7 hops, missing routers: none, bad routers: none",
+        [("hops", 7)],
     )
 
 
@@ -71,7 +70,6 @@ def test_check_traceroute_ipv4_no_dns(check_traceroute) -> None:
             "11  108.170.251.193  15.111 ms 108.170.252.65  16.871 ms  16.848 ms",
             "12  142.250.226.149  13.880 ms  13.841 ms 142.250.236.31  16.692 ms",
             "13  142.250.185.110  17.907 ms  16.612 ms  16.571 ms",
-            "",
         ],
         [
             ("C", "62.245.142.198"),
@@ -79,8 +77,8 @@ def test_check_traceroute_ipv4_no_dns(check_traceroute) -> None:
         ],
     ) == (
         0,
-        "14 hops, missing routers: none, bad routers: none",
-        [("hops", 14)],
+        "13 hops, missing routers: none, bad routers: none",
+        [("hops", 13)],
     )
 
 
@@ -91,15 +89,14 @@ _TRACEROUTE_OUTPUT_IPV6 = [
     " 3  2001:a60::69:0:2:3 (2001:a60::69:0:2:3)  21.008 ms  20.982 ms  20.958 ms",
     " 4  fra1.mx204.ae6.de-cix.as48314.net (2001:7f8::bcba:0:2)  23.155 ms  23.129 ms  23.103 ms",
     " 5  fra1.cc1.as48314.net (2a0a:51c1:0:4002::51)  231.003 ms !X  37.416 ms !X  230.950 ms !X",
-    "",
 ]
 
 
 def test_check_traceroute_ipv6_no_check(check_traceroute) -> None:
     assert check_traceroute.check_traceroute(_TRACEROUTE_OUTPUT_IPV6, []) == (
         0,
-        "6 hops, missing routers: none, bad routers: none",
-        [("hops", 6)],
+        "5 hops, missing routers: none, bad routers: none",
+        [("hops", 5)],
     )
 
 
@@ -113,8 +110,8 @@ def test_check_traceroute_ipv6_check_routers(check_traceroute) -> None:
         ],
     ) == (
         2,
-        "6 hops, missing routers: none, bad routers: fra1.mx204.ae6.de-cix.as48314.net(!!), 2001:a60::69:0:2:3(!!)",
-        [("hops", 6)],
+        "5 hops, missing routers: none, bad routers: fra1.mx204.ae6.de-cix.as48314.net(!!), 2001:a60::69:0:2:3(!!)",
+        [("hops", 5)],
     )
 
 
@@ -123,13 +120,12 @@ def test_check_traceroute_ipv6_link_local(check_traceroute) -> None:
         [
             "traceroute to fe80::e936:552e:d8bf:6d67%wlp0s20f3 (fe80::e936:552e:d8bf:6d67%wlp0s20f3), 30 hops max, 80 byte packets",
             " 1  klapp-0060 (fe80::e936:552e:d8bf:6d67%wlp0s20f3)  0.021 ms  0.004 ms  0.003 ms",
-            "",
         ],
         [("W", "fe80::e936:552e:d8bf:6d67%wlp0s20f3")],
     ) == (
         0,
-        "2 hops, missing routers: none, bad routers: none",
-        [("hops", 2)],
+        "1 hop, missing routers: none, bad routers: none",
+        [("hops", 1)],
     )
 
 
@@ -150,7 +146,6 @@ def test_check_traceroute_ipv6_no_dns(check_traceroute) -> None:
             "11  2001:4860:0:1::10d7  14.481 ms  14.476 ms  13.694 ms",
             "12  2001:4860:0:1::10d9  13.647 ms 2001:4860:0:1::10d7  14.743 ms 2001:4860:0:1::10d9  13.441 ms",
             "13  2a00:1450:4001:80e::200e  14.469 ms  15.243 ms  12.842 ms",
-            "",
         ],
         [
             ("W", "2a00:1450:8018::1"),
@@ -158,6 +153,6 @@ def test_check_traceroute_ipv6_no_dns(check_traceroute) -> None:
         ],
     ) == (
         1,
-        "14 hops, missing routers: none, bad routers: 2001:4860::9:4001:31f2(!)",
-        [("hops", 14)],
+        "13 hops, missing routers: none, bad routers: 2001:4860::9:4001:31f2(!)",
+        [("hops", 13)],
     )

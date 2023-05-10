@@ -1,0 +1,14 @@
+Title: <tt>check_traceroute</tt>: Report correct number of hops
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683714747
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p36
+
+The active check <tt>check_traceroute</tt>, configurable via the ruleset <i>Check current routing</i>,
+always reported one hop too many when outputting the number of hops. This affected both the textual
+result and the recorded metric.

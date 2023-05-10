@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import abc
 import json
 import operator
 import os
@@ -724,106 +723,6 @@ class _WATOInfoStorageManager:
             storage.write(store_file, data)
 
 
-class WithUniqueIdentifier(abc.ABC):
-    """Provides methods for giving Hosts and Folders unique identifiers."""
-
-    def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]
-        self._id: None | str = None
-        super().__init__(*args, **kw)
-
-    def id(self) -> str:
-        """The unique identifier of this particular instance.
-
-        Returns:
-            The id.
-        """
-        # TODO: Improve the API + the typing, this is horrible...
-        if self._id is None:
-            raise ValueError("unique identifier not set")
-        return self._id
-
-    @classmethod
-    def _by_id(cls, identifier: str) -> CREFolder:
-        """Return the Folder instance of this particular identifier.
-
-        WARNING: This is very slow, don't use it in client code.
-
-        Args:
-            identifier (str): The unique key.
-
-        Returns:
-            The Folder-instance
-        """
-        folders = cls._mapped_by_id()
-        if identifier not in folders:
-            raise MKUserError(None, _("Folder %s not found.") % (identifier,))
-        return folders[identifier]
-
-    @classmethod
-    def wato_info_storage_manager(cls) -> _WATOInfoStorageManager:
-        if "wato_info_storage_manager" not in g:
-            g.wato_info_storage_manager = _WATOInfoStorageManager()
-        return g.wato_info_storage_manager
-
-    def persist_instance(self) -> None:
-        """Save the current state of the instance to a file."""
-        if self._id is None:
-            self._id = self._get_identifier()
-
-        data = self._get_instance_data()
-        data["attributes"] = update_metadata(data["attributes"])
-        data["__id"] = self._id
-        store.makedirs(os.path.dirname(self._store_file_name()))
-        self.wato_info_storage_manager().write(Path(self._store_file_name()), data)
-        self._instance_saved_postprocess()
-
-    def load_instance(self) -> None:
-        """Load the data of this instance and return it.
-
-        The internal state of the object will not be changed.
-
-        Returns:
-            The loaded data.
-        """
-        data = self.wato_info_storage_manager().read(Path(self._store_file_name()))
-
-        unique_id = data.get("__id")
-        if self._id is None:
-            self._id = unique_id
-        self._set_instance_data(data)
-
-    @abc.abstractmethod
-    def _set_instance_data(self, wato_info: WATOFolderInfo) -> None:
-        """Hook method which is called by 'load_instance'.
-
-        This method should assign to the instance the information just loaded from the file."""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _get_identifier(self) -> str:
-        """The unique identifier of this object."""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _get_instance_data(self) -> WATOFolderInfo:
-        """The data to persist to the file."""
-        raise NotImplementedError()
-
-    def _instance_saved_postprocess(self) -> None:
-        """Additional actions after saving the data."""
-        return
-
-    @abc.abstractmethod
-    def _store_file_name(self) -> str:
-        """The filename to which to persist this object."""
-        raise NotImplementedError()
-
-    @classmethod
-    def _mapped_by_id(cls) -> dict[str, Any]:
-        """Give out a mapping from unique identifiers to class instances."""
-        raise NotImplementedError()
-
-
 class WithAttributes:
     """Mixin containing attribute management methods.
 
@@ -1167,7 +1066,7 @@ def _generate_domain_settings(
     return {ident: generate_hosts_to_update_settings(hostnames)}
 
 
-class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolder):
+class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     """This class represents a Setup folder that contains other folders and hosts."""
 
     # .--------------------------------------------------------------------.
@@ -1288,6 +1187,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         super().__init__()
         self._name = name
         self._parent = parent_folder
+        self._id: str | None = None
 
         self._path_existing_folder = folder_path
         self._loaded_subfolders: dict[PathWithoutSlash, CREFolder] | None = None
@@ -1576,16 +1476,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         Folder.invalidate_caches()
         self.load_instance()
 
-    def _get_identifier(self):
-        return uuid.uuid4().hex
-
-    def _get_instance_data(self) -> WATOFolderInfo:
-        return self.get_wato_info()
-
-    def _instance_saved_postprocess(self) -> None:
-        if may_use_redis():
-            get_wato_redis_client().save_folder_info(self)
-
     def get_wato_info(self) -> WATOFolderInfo:
         return {
             "title": self._title,
@@ -1652,6 +1542,68 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if self._hosts is not None:
             for host in self._hosts.values():
                 host.drop_caches()
+
+    def id(self) -> str:
+        """The unique identifier of this particular instance.
+
+        Returns:
+            The id.
+        """
+        # TODO: Improve the API + the typing, this is horrible...
+        if self._id is None:
+            raise ValueError("unique identifier not set")
+        return self._id
+
+    @classmethod
+    def _by_id(cls, identifier: str) -> CREFolder:
+        """Return the Folder instance of this particular identifier.
+
+        WARNING: This is very slow, don't use it in client code.
+
+        Args:
+            identifier (str): The unique key.
+
+        Returns:
+            The Folder-instance
+        """
+        folders = cls._mapped_by_id()
+        if identifier not in folders:
+            raise MKUserError(None, _("Folder %s not found.") % (identifier,))
+        return folders[identifier]
+
+    @classmethod
+    def wato_info_storage_manager(cls) -> _WATOInfoStorageManager:
+        if "wato_info_storage_manager" not in g:
+            g.wato_info_storage_manager = _WATOInfoStorageManager()
+        return g.wato_info_storage_manager
+
+    def persist_instance(self) -> None:
+        """Save the current state of the instance to a file."""
+        if self._id is None:
+            self._id = uuid.uuid4().hex
+
+        data = self.get_wato_info()
+        data["attributes"] = update_metadata(data["attributes"])
+        data["__id"] = self._id
+        store.makedirs(os.path.dirname(self.wato_info_path()))
+        self.wato_info_storage_manager().write(Path(self.wato_info_path()), data)
+        if may_use_redis():
+            get_wato_redis_client().save_folder_info(self)
+
+    def load_instance(self) -> None:
+        """Load the data of this instance and return it.
+
+        The internal state of the object will not be changed.
+
+        Returns:
+            The loaded data.
+        """
+        data = self.wato_info_storage_manager().read(Path(self.wato_info_path()))
+
+        unique_id = data.get("__id")
+        if self._id is None:
+            self._id = unique_id
+        self._set_instance_data(data)
 
     # .-----------------------------------------------------------------------.
     # | ELEMENT ACCESS                                                        |
@@ -2802,29 +2754,21 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 lock_message = "<ul>" + li_elements + "</ul>"
             html.show_message(lock_message)
 
-    def _store_file_name(self):
-        return self.wato_info_path()
-
     @classmethod
-    def _mapped_by_id(cls) -> dict[str, type[CREFolder]]:
+    def _mapped_by_id(cls) -> dict[str, CREFolder]:
         """Map all reachable folders via their uuid.uuid4() id.
 
         This will essentially flatten all Folders into one dictionary, yet uniquely identifiable via
         their respective ids.
-
-        Returns:
-            A dictionary of uuid4 keys (hex encoded, byte-string) to Folder instances. It's
-            hex-encoded because the repr() output of a string is smaller than the repr() output of the
-            same byte-sequence (due to escaping characters).
         """
 
-        def _update_mapping(_folder, _mapping):
+        def _update_mapping(_folder: CREFolder, _mapping: dict[str, CREFolder]) -> None:
             if not _folder.is_root():
                 _mapping[_folder.id()] = _folder
             for _sub_folder in _folder.subfolders():
                 _update_mapping(_sub_folder, _mapping)
 
-        mapping: dict[str, type[CREFolder]] = SetOnceDict()
+        mapping: dict[str, CREFolder] = SetOnceDict()
         _update_mapping(Folder.root_folder(), mapping)
         return mapping
 

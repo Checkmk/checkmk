@@ -61,7 +61,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
     }
 
     update_gui() {
-        if (!this._data || !this._data.total) return;
+        if (!this._data || this._data.total.count == 0) return;
 
         this.resize();
         const parts = this._data.parts;

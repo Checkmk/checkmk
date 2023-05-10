@@ -45,14 +45,15 @@
 #  5  66.249.94.88 (66.249.94.88)  24.481 ms  24.498 ms  24.271 ms
 #  6  209.85.240.99 (209.85.240.99)  27.628 ms  21.605 ms  21.943 ms
 
+import argparse
 import ast
-import getopt
-import ipaddress
+import enum
 import os
 import re
 import subprocess
 import sys
 from collections.abc import Iterable, Iterator, Sequence
+from typing import assert_never
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -70,141 +71,153 @@ def _output_check_result(s: str, perfdata: Iterable[tuple[str, int]] | None) -> 
     sys.stdout.write("%s\n" % s)
 
 
-def _check_traceroute_main(  # pylint: disable=too-many-branches
+def _check_traceroute_main(
     argv: Sequence[str],
 ) -> tuple[int, str, list[tuple[str, int]] | None]:
     os.unsetenv("LANG")
 
-    opt_verbose = 0
-    opt_debug = False
-    opt_nodns = False
-    opt_method = None
-    opt_address_family = None
-
-    short_options = "hw:W:c:C:nTI46"
-    long_options = [
-        "verbose",
-        "help",
-        "debug",
-    ]
-
-    route_params = []
+    args = _parse_arguments(argv)
 
     try:
-        opts, args = getopt.getopt(list(argv), short_options, long_options)
-
-        for o, a in opts:
-            if o in ["-h", "--help"]:
-                _usage()
-                sys.exit(0)
-
-        if len(args) < 1:
-            raise _MissingValueError("Please specify the target destination.")
-
-        target_address = args[0]
-
-        # first parse modifers
-        for o, a in opts:
-            if o in ["-v", "--verbose"]:
-                opt_verbose += 1
-            elif o in ["-d", "--debug"]:
-                opt_debug = True
-            elif o in ["-w", "-W", "-c", "-C"]:
-                route_params.append((o[1], a))
-            elif o == "-n":
-                opt_nodns = True
-            elif o in ["-T", "-I"]:
-                opt_method = o
-            elif o in ["-4", "-6"]:
-                if opt_address_family:
-                    raise _ProtocolVersionError("Cannot use both IPv4 and IPv6")
-                _validate_ip_version(target_address, int(o.lstrip("-")))
-                opt_address_family = o
-
-        sto = _execute_traceroute(target_address, opt_nodns, opt_method, opt_address_family)
-        status, output, perfdata = _check_traceroute(sto.splitlines(), route_params)
+        sto = _execute_traceroute(
+            args.target,
+            args.use_dns,
+            args.probe_method,
+            args.ip_address_family,
+        )
+        status, output, perfdata = _check_traceroute(
+            sto.splitlines(),
+            routers_missing_warn=args.routers_missing_warn,
+            routers_missing_crit=args.routers_missing_crit,
+            routers_found_warn=args.routers_found_warn,
+            routers_found_crit=args.routers_found_crit,
+        )
         info_text = output.strip() + "\n%s" % sto
         return status, info_text, perfdata
 
     except _ExecutionError as e:
         return 3, str(e), None
 
-    except _MissingValueError as e:
-        return 3, str(e), None
-
-    except _ProtocolVersionError as e:
-        return 3, str(e), None
-
     except Exception as e:
-        if opt_debug:
+        if args.debug:
             raise
         return 2, "Unhandled exception: %s" % _parse_exception(e), None
 
 
-def _usage() -> None:
-    sys.stdout.write(
-        """check_traceroute -{c|w|C|W} ROUTE  [-{o|c|w|O|C|W} ROUTE...] TARGET
-
-Check by which routes TARGET is being reached. Each possible route is being
-prefixed with a state option:
-
- -w Make outcome WARN if that route is present
- -W Make outcome WARN if that route is missing
- -c Make outcome CRIT if that route is present
- -C Make outcome CRIT if that route is missing
-
-Other options:
-
- -h, --help     show this help and exit
- --debug        show Python exceptions verbosely
- -n             disable reverse DNS lookups
- -I             Use ICMP ECHO for probes
- -T             Use TCP SYN for probes
- -4             Use IPv4
- -6             Use IPv6
-
-"""
+def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Check the route to a network host using the traceroute command.",
     )
+    parser.add_argument(
+        "target",
+        type=str,
+        metavar="TARGET",
+        help="Can be specified either as an IP address or as a domain name.",
+    )
+    parser.add_argument(
+        "--routers_missing_warn",
+        type=str,
+        nargs="*",
+        metavar="ROUTER1 ROUTER2 ...",
+        help="Report WARNING if any of these routers is not used.",
+        default=[],
+    )
+    parser.add_argument(
+        "--routers_missing_crit",
+        type=str,
+        nargs="*",
+        metavar="ROUTER1 ROUTER2 ...",
+        help="Report CRITICAL if any of these routers is not used.",
+        default=[],
+    )
+    parser.add_argument(
+        "--routers_found_warn",
+        type=str,
+        nargs="*",
+        metavar="ROUTER1 ROUTER2 ...",
+        help="Report WARNING if any of these routers is used.",
+        default=[],
+    )
+    parser.add_argument(
+        "--routers_found_crit",
+        type=str,
+        nargs="*",
+        metavar="ROUTER1 ROUTER2 ...",
+        help="Report CRITICAL if any of these routers is used.",
+        default=[],
+    )
+    parser.add_argument(
+        "--ip_address_family",
+        type=_IPAddressFamily,
+        choices=_IPAddressFamily,
+        default=_IPAddressFamily.AUTO,
+        metavar="IP-ADDRESS-FAMILY",
+        help="Explicitly force IPv4 or IPv6 traceouting. By default, the program will choose the "
+        "appropriate protocol automatically.",
+    )
+    parser.add_argument(
+        "--probe_method",
+        type=_ProbeMethod,
+        choices=_ProbeMethod,
+        default=_ProbeMethod.UDP,
+        metavar="PROBE-METHOD",
+        help="Method used for tracerouting. By default, UDP datagrams are used.",
+    )
+    parser.add_argument(
+        "--use_dns",
+        action="store_true",
+        help="Use DNS to convert hostnames to IP addresses.",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Debug mode: let Python exceptions come through.",
+    )
+    return parser.parse_args(argv)
 
 
-class _MissingValueError(Exception):
-    pass
+class _IPAddressFamily(enum.Enum):
+    AUTO = "auto"
+    v4 = "ipv4"
+    v6 = "ipv6"
 
 
-class _ProtocolVersionError(Exception):
-    pass
-
-
-def _validate_ip_version(address_arg: str, ip_version_arg: int) -> None:
-    # ipv6 address can have an appended interface index/name: 'fe80::%{interface}'
-    try:
-        ip_address_version = ipaddress.ip_interface(address_arg.split("%")[0]).ip.version
-    except ValueError:
-        # May be a host or DNS name, don't execute the validation in this case.
-        # check_traceroute will perform the name resolution for us.
-        return
-
-    if not ip_address_version == ip_version_arg:
-        raise _ProtocolVersionError(
-            'IP protocol version "%s" not the same as the IP address version "%s".'
-            % (ip_version_arg, ip_address_version)
-        )
+class _ProbeMethod(enum.Enum):
+    UDP = "udp"
+    ICMP = "icmp"
+    TCP = "tcp"
 
 
 def _execute_traceroute(
     target: str,
-    nodns: bool,
-    method: str | None,
-    address_family: str | None,
+    use_dns: bool,
+    method: _ProbeMethod,
+    address_family: _IPAddressFamily,
 ) -> str:
-    cmd = ["traceroute"]
-    if nodns:
+    cmd = ["traceroute", target]
+    if not use_dns:
         cmd.append("-n")
-    if method:
-        cmd.append(method)
-    if address_family:
-        cmd.append(address_family)
-    cmd.append(target)
+
+    match method:
+        case _ProbeMethod.UDP:
+            pass
+        case _ProbeMethod.ICMP:
+            cmd.append("-I")
+        case _ProbeMethod.TCP:
+            cmd.append("-T")
+        case _:
+            assert_never(method)
+
+    match address_family:
+        case _IPAddressFamily.AUTO:
+            pass
+        case _IPAddressFamily.v4:
+            cmd.append("-4")
+        case _IPAddressFamily.v6:
+            cmd.append("-6")
+        case _:
+            assert_never(address_family)
+
     completed_process = subprocess.run(
         cmd,
         capture_output=True,
@@ -222,31 +235,42 @@ class _ExecutionError(Exception):
 
 def _check_traceroute(
     lines: Sequence[str],
-    routes: Iterable[tuple[str, str]],
+    *,
+    routers_missing_warn: Iterable[str] = (),
+    routers_missing_crit: Iterable[str] = (),
+    routers_found_warn: Iterable[str] = (),
+    routers_found_crit: Iterable[str] = (),
 ) -> tuple[int, str, list[tuple[str, int]]]:
-    # find all visited routers
     routers = {router for line in lines[1:] for router in _extract_routers_from_line(line)}
-    hops = len(lines[1:])
+    n_hops = len(lines[1:])
 
-    state = 0
-    bad_routers = []
-    missing_routers = []
-    for option, route in routes:
-        s = _option_to_state(option)
-        if option.islower() and route in routers:
-            state = max(state, s)
-            bad_routers.append("{}({})".format(route, "!" * s))
-        elif option.isupper() and route not in routers:
-            state = max(state, s)
-            missing_routers.append("{}({})".format(route, "!" * s))
+    missing_routers_warn = [
+        _mark_warning(router) for router in sorted(set(routers_missing_warn) - routers)
+    ]
+    missing_routers_crit = [
+        _mark_critical(router) for router in sorted(set(routers_missing_crit) - routers)
+    ]
+    found_routers_warn = [
+        _mark_warning(router) for router in sorted(set(routers_found_warn) & routers)
+    ]
+    found_routers_crit = [
+        _mark_critical(router) for router in sorted(set(routers_found_crit) & routers)
+    ]
 
-    info_text = f"%d hop{'' if hops == 1 else 's'}, missing routers: %s, bad routers: %s" % (
-        hops,
-        missing_routers and ", ".join(missing_routers) or "none",
-        bad_routers and ", ".join(bad_routers) or "none",
+    return (
+        2
+        if any(missing_routers_crit + found_routers_crit)
+        else 1
+        if any(missing_routers_warn + found_routers_warn)
+        else 0,
+        f"%d hop{'' if n_hops == 1 else 's'}, missing routers: %s, bad routers: %s"
+        % (
+            n_hops,
+            ", ".join(missing_routers_crit + missing_routers_warn) or "none",
+            ", ".join(found_routers_crit + found_routers_warn) or "none",
+        ),
+        [("hops", n_hops)],
     )
-    perfdata = [("hops", hops)]
-    return state, info_text, perfdata
 
 
 def _extract_routers_from_line(line: str) -> Iterator[str]:
@@ -264,8 +288,12 @@ def _extract_routers_from_line(line: str) -> Iterator[str]:
     )
 
 
-def _option_to_state(c: str) -> int:
-    return {"w": 1, "c": 2}[c.lower()]
+def _mark_warning(router: str) -> str:
+    return f"{router}(!)"
+
+
+def _mark_critical(router: str) -> str:
+    return f"{router}(!!)"
 
 
 def _parse_exception(exc: Exception) -> str:

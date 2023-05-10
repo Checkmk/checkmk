@@ -9,62 +9,81 @@ import pytest
 
 from tests.testlib import ActiveCheck
 
-pytestmark = pytest.mark.checks
-
 
 @pytest.mark.parametrize(
     "params,expected_args",
     [
         (
             {
-                "dns": False,
-                "routers": [],
-                "method": "",
-                "address_family": "ipv4",
-            },
-            ["-n", "-4", "$HOSTADDRESS$"],
-        ),
-        (
-            {
                 "dns": True,
-                "routers": [],
-                "method": "",
-                "address_family": "ipv4",
-            },
-            ["-4", "$HOSTADDRESS$"],
-        ),
-        (
-            {
-                "dns": True,
-                "routers": [("127.0.0.1", "WARN")],
+                "routers": [("127.0.0.1", "W")],
                 "method": "icmp",
                 "address_family": "ipv4",
             },
-            ["-I", "-WARN", "127.0.0.1", "-4", "$HOSTADDRESS$"],
+            [
+                "$HOSTADDRESS$",
+                "--use_dns",
+                "--probe_method=icmp",
+                "--ip_address_family=ipv4",
+                "--routers_missing_warn",
+                "127.0.0.1",
+                "--routers_missing_crit",
+                "--routers_found_warn",
+                "--routers_found_crit",
+            ],
         ),
         (
             {
                 "dns": False,
-                "routers": [],
-                "method": "",
+                "routers": [
+                    ("router1", "W"),
+                    ("router2", "C"),
+                    ("1.2.3.4", "c"),
+                    ("1.2.3.5", "w"),
+                ],
+                "method": None,
                 "address_family": "ipv4",
             },
-            ["-n", "-4", "$HOSTADDRESS$"],
+            [
+                "$HOSTADDRESS$",
+                "--probe_method=udp",
+                "--ip_address_family=ipv4",
+                "--routers_missing_warn",
+                "router1",
+                "--routers_missing_crit",
+                "router2",
+                "--routers_found_warn",
+                "1.2.3.5",
+                "--routers_found_crit",
+                "1.2.3.4",
+            ],
         ),
         (
             {
-                "dns": False,
-                "routers": [],
-                "method": "",
+                "dns": True,
+                "routers": [
+                    ("router1", "W"),
+                    ("192.168.1.1", "W"),
+                ],
+                "method": None,
                 "address_family": "ipv6",
             },
-            ["-n", "-6", "$HOSTADDRESS$"],
+            [
+                "$HOSTADDRESS$",
+                "--use_dns",
+                "--probe_method=udp",
+                "--ip_address_family=ipv6",
+                "--routers_missing_warn",
+                "router1",
+                "192.168.1.1",
+                "--routers_missing_crit",
+                "--routers_found_warn",
+                "--routers_found_crit",
+            ],
         ),
     ],
 )
 def test_check_traceroute_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
-    """Tests if all required arguments are present."""
-    active_check = ActiveCheck("check_traceroute")
-    assert active_check.run_argument_function(params) == expected_args
+    assert ActiveCheck("check_traceroute").run_argument_function(params) == expected_args

@@ -7,7 +7,7 @@ from cmk.active_checks.check_traceroute import _check_traceroute
 
 
 def test_check_traceroute_empty() -> None:
-    assert _check_traceroute([], []) == (
+    assert _check_traceroute([]) == (
         0,
         "0 hops, missing routers: none, bad routers: none",
         [("hops", 0)],
@@ -27,7 +27,7 @@ _TRACEROUTE_OUTPUT_IPV4 = [
 
 
 def test_check_traceroute_ipv4_no_check() -> None:
-    assert _check_traceroute(_TRACEROUTE_OUTPUT_IPV4, []) == (
+    assert _check_traceroute(_TRACEROUTE_OUTPUT_IPV4) == (
         0,
         "7 hops, missing routers: none, bad routers: none",
         [("hops", 7)],
@@ -37,7 +37,9 @@ def test_check_traceroute_ipv4_no_check() -> None:
 def test_check_traceroute_ipv4_check_routers() -> None:
     assert _check_traceroute(
         _TRACEROUTE_OUTPUT_IPV4,
-        [("w", "63.312.142.198"), ("C", "fritz.box"), ("W", "194.45.196.22")],
+        routers_missing_warn=["194.45.196.22"],
+        routers_missing_crit=["fritz.box"],
+        routers_found_warn=["63.312.142.198"],
     ) == (
         0,
         "7 hops, missing routers: none, bad routers: none",
@@ -63,10 +65,8 @@ def test_check_traceroute_ipv4_no_dns() -> None:
             "12  142.250.226.149  13.880 ms  13.841 ms 142.250.236.31  16.692 ms",
             "13  142.250.185.110  17.907 ms  16.612 ms  16.571 ms",
         ],
-        [
-            ("C", "62.245.142.198"),
-            ("c", "1.2.3.4"),
-        ],
+        routers_missing_crit=["62.245.142.198"],
+        routers_found_crit=["1.2.3.4"],
     ) == (
         0,
         "13 hops, missing routers: none, bad routers: none",
@@ -85,7 +85,7 @@ _TRACEROUTE_OUTPUT_IPV6 = [
 
 
 def test_check_traceroute_ipv6_no_check() -> None:
-    assert _check_traceroute(_TRACEROUTE_OUTPUT_IPV6, []) == (
+    assert _check_traceroute(_TRACEROUTE_OUTPUT_IPV6) == (
         0,
         "5 hops, missing routers: none, bad routers: none",
         [("hops", 5)],
@@ -95,14 +95,11 @@ def test_check_traceroute_ipv6_no_check() -> None:
 def test_check_traceroute_ipv6_check_routers() -> None:
     assert _check_traceroute(
         _TRACEROUTE_OUTPUT_IPV6,
-        [
-            ("c", "fra1.mx204.ae6.de-cix.as48314.net"),
-            ("c", "2001:a60::69:0:2:3"),
-            ("W", "2001:a61:433:bc01:9a9b:cbff:fe06:2f84"),
-        ],
+        routers_missing_warn=["2001:a61:433:bc01:9a9b:cbff:fe06:2f84"],
+        routers_found_crit=["fra1.mx204.ae6.de-cix.as48314.net", "2001:a60::69:0:2:3"],
     ) == (
         2,
-        "5 hops, missing routers: none, bad routers: fra1.mx204.ae6.de-cix.as48314.net(!!), 2001:a60::69:0:2:3(!!)",
+        "5 hops, missing routers: none, bad routers: 2001:a60::69:0:2:3(!!), fra1.mx204.ae6.de-cix.as48314.net(!!)",
         [("hops", 5)],
     )
 
@@ -113,7 +110,7 @@ def test_check_traceroute_ipv6_link_local() -> None:
             "traceroute to fe80::e936:552e:d8bf:6d67%wlp0s20f3 (fe80::e936:552e:d8bf:6d67%wlp0s20f3), 30 hops max, 80 byte packets",
             " 1  klapp-0060 (fe80::e936:552e:d8bf:6d67%wlp0s20f3)  0.021 ms  0.004 ms  0.003 ms",
         ],
-        [("W", "fe80::e936:552e:d8bf:6d67%wlp0s20f3")],
+        routers_missing_warn=["fe80::e936:552e:d8bf:6d67%wlp0s20f3"],
     ) == (
         0,
         "1 hop, missing routers: none, bad routers: none",
@@ -139,10 +136,8 @@ def test_check_traceroute_ipv6_no_dns() -> None:
             "12  2001:4860:0:1::10d9  13.647 ms 2001:4860:0:1::10d7  14.743 ms 2001:4860:0:1::10d9  13.441 ms",
             "13  2a00:1450:4001:80e::200e  14.469 ms  15.243 ms  12.842 ms",
         ],
-        [
-            ("W", "2a00:1450:8018::1"),
-            ("w", "2001:4860::9:4001:31f2"),
-        ],
+        routers_missing_warn=["2a00:1450:8018::1"],
+        routers_found_warn=["2001:4860::9:4001:31f2"],
     ) == (
         1,
         "13 hops, missing routers: none, bad routers: 2001:4860::9:4001:31f2(!)",

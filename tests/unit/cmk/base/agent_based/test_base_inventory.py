@@ -13,7 +13,6 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-import cmk.utils.debug
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode, UpdateResult
 from cmk.utils.type_defs import AgentRawData, EVERYTHING, HostAddress, HostName, result
@@ -46,10 +45,6 @@ from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
     ],
 )
 def test_item_collisions(item: Attributes | TableRow, known_class_name: str) -> None:
-    # For some reason, the callee raises instead of returning the exception if
-    # it runs in debug mode.  So let us explicitly disable that here.
-    cmk.utils.debug.disable()
-
     with pytest.raises(TypeError) as e:
         _parse_inventory_plugin_item(item, known_class_name)
 

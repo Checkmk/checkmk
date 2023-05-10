@@ -63,6 +63,7 @@ test_types = [
     "code_quality",
     "update",
     "openapi",
+    "plugins_integration",
 ]
 
 

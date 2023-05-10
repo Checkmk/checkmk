@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from tests.testlib.site import Site
+
+from .conftest import (
+    cleanup_folders,
+    create_folders,
+    create_wato_hosts,
+    create_wato_rules,
+    inject_agent_output,
+    LOGGER,
+    run_as_site_user,
+)
+
+
+def test_plugin(test_site: Site) -> None:
+    host_name = "test_agent_plugin_injected"
+
+    cleanup_folders(test_site.id)
+    create_folders(test_site.id)
+    create_wato_hosts(test_site.id)
+    create_wato_rules(test_site.id)
+    inject_agent_output(test_site.id)
+
+    LOGGER.info("Running update-config...")
+    assert run_as_site_user(test_site.id, ["cmk-update-config"]).returncode == 0
+
+    LOGGER.info("Running service discovery...")
+    assert run_as_site_user(test_site.id, ["cmk", "$DEBUG", "-vII"]).returncode == 0
+
+    LOGGER.info("Reloading core...")
+    assert run_as_site_user(test_site.id, ["cmk", "-O"]).returncode == 0
+
+    # perform assertion over raw data
+    cat_stdout = run_as_site_user(
+        test_site.id, ["cat", f"$OMD_ROOT/var/check_mk/agent_output/{host_name}"]
+    ).stdout
+    discovery_stdout = run_as_site_user(test_site.id, ["cmk", "-d", host_name]).stdout
+    assert discovery_stdout == cat_stdout

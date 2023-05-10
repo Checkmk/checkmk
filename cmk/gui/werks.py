@@ -93,7 +93,7 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
         html.h1(_("Everything") + html.render_br() + _("monitored"))
         html.a(
             html.render_img(html.theme_url("images/checkmk_logo.svg")),
-            "https://tribe29.com",
+            "https://checkmk.com",
             target="_blank",
         )
         html.close_div()

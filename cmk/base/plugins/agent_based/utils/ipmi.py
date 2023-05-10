@@ -19,7 +19,7 @@ from typing import (
     Union,
 )
 
-from ..agent_based_api.v1 import check_levels, Metric, Result, State, type_defs
+from ..agent_based_api.v1 import check_levels, Metric, Result, Service, State, type_defs
 
 # TODO: Cleanup the whole status text mapping in utils/ipmi.py, ipmi_sensors.include, ipmi.py
 
@@ -33,6 +33,14 @@ class Sensor:
     warn_low: Optional[float] = None
     warn_high: Optional[float] = None
     crit_high: Optional[float] = None
+
+    @property
+    def is_present(self) -> bool:
+        return not any((
+            "Device Removed" in self.status_txt,
+            "Device Absent" in self.status_txt,
+            "Entity Absent" in self.status_txt,
+        ))
 
 
 Section = Dict[str, Sensor]
@@ -49,6 +57,16 @@ class UserLevels:
 class DiscoveryParams(TypedDict):
     discovery_mode: Union[Tuple[Literal["summarize"], IgnoreParams], Tuple[Literal["single"],
                                                                            IgnoreParams],]
+
+
+def discover_individual_sensors(
+    ignore_params: IgnoreParams,
+    section: Section,
+) -> type_defs.DiscoveryResult:
+    yield from (
+        Service(item=sensor_name)
+        for sensor_name, sensor in section.items()
+        if sensor.is_present and not ignore_sensor(sensor_name, sensor.status_txt, ignore_params))
 
 
 def _check_ignores(

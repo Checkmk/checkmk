@@ -83,12 +83,10 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         return &r.rawData<IDowntime>()->host();
     }),
                            LockComments::yes, LockDowntimes::no);
-    TableServices::addColumns(this, "service_", offsets.add([](Row r) {
-        const auto *svc = r.rawData<IDowntime>()->service();
-        return svc == nullptr ? nullptr : svc->handle();
-    }),
-                              TableServices::AddHosts::no, LockComments::yes,
-                              LockDowntimes::no);
+    TableServices::addColumns(
+        this, "service_",
+        offsets.add([](Row r) { return r.rawData<IDowntime>()->service(); }),
+        TableServices::AddHosts::no, LockComments::yes, LockDowntimes::no);
 }
 
 std::string TableDowntimes::name() const { return "downtimes"; }

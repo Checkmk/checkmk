@@ -84,6 +84,8 @@ public:
         const std::string &designation) override;
     bool all_of_hosts(
         const std::function<bool(const IHost &)> &pred) const override;
+    bool all_of_services(
+        const std::function<bool(const IService &)> &pred) const override;
 
     const IService *find_service(
         const std::string &host_name,
@@ -195,7 +197,10 @@ public:
     size_t numQueuedAlerts() const override;
     size_t numCachedLogMessages() override;
     [[nodiscard]] bool isPnpGraphPresent(const IHost &h) const override;
+    [[nodiscard]] bool isPnpGraphPresent(const IService &s) const override;
     std::vector<std::string> metrics(const IHost &h,
+                                     Logger *logger) const override;
+    std::vector<std::string> metrics(const IService &s,
                                      Logger *logger) const override;
 
     MetricLocation metricLocation(const std::string &host_name,

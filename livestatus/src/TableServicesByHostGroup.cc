@@ -16,21 +16,20 @@
 
 namespace {
 struct ServiceAndGroup {
-    const IService &svc;
-    const IHostGroup &group;
+    const IService *svc;
+    const IHostGroup *group;
 };
 }  // namespace
 
 TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
     : Table(mc) {
     const ColumnOffsets offsets{};
-    TableServices::addColumns(this, "", offsets.add([](Row r) {
-        return r.rawData<ServiceAndGroup>()->svc.handle();
-    }),
-                              TableServices::AddHosts::yes, LockComments::yes,
-                              LockDowntimes::yes);
+    TableServices::addColumns(
+        this, "",
+        offsets.add([](Row r) { return r.rawData<ServiceAndGroup>()->svc; }),
+        TableServices::AddHosts::yes, LockComments::yes, LockDowntimes::yes);
     TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
-        return &r.rawData<ServiceAndGroup>()->group;
+        return r.rawData<ServiceAndGroup>()->group;
     }));
 }
 
@@ -45,7 +44,7 @@ void TableServicesByHostGroup::answerQuery(Query &query, const User &user) {
         return hg.all([&hg, &user, &query](const IHost &host) {
             return host.all_of_services(
                 [&hg, &user, &query](const IService &svc) {
-                    ServiceAndGroup sag = {.svc{svc}, .group{hg}};
+                    ServiceAndGroup sag = {&svc, &hg};
                     return !user.is_authorized_for_service(svc) ||
                            query.processDataset(Row{&sag});
                 });

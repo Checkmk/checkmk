@@ -184,8 +184,7 @@ void TableStateHistory::addColumns(Table *table, const std::string &prefix,
         LockComments::yes, LockDowntimes::yes);
     TableServices::addColumns(
         table, prefix + "current_service_", offsets.add([](Row r) {
-            const auto &s = r.rawData<HostServiceState>()->_service;
-            return s != nullptr ? s->handle() : nullptr;
+            return r.rawData<HostServiceState>()->_service;
         }),
         TableServices::AddHosts::no, LockComments::yes, LockDowntimes::yes);
 }

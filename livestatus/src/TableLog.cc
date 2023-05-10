@@ -16,7 +16,6 @@
 #include "TableServices.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
-#include "livestatus/Interface.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
@@ -26,6 +25,9 @@
 #include "livestatus/TableContacts.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
+class IContact;
+class IHost;
+class IService;
 
 namespace {
 
@@ -121,12 +123,10 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         return r.rawData<LogRow>()->hst;
     }),
                            LockComments::yes, LockDowntimes::yes);
-    TableServices::addColumns(this, "current_service_", offsets.add([](Row r) {
-        const auto &s = r.rawData<LogRow>()->svc;
-        return s != nullptr ? s->handle() : nullptr;
-    }),
-                              TableServices::AddHosts::no, LockComments::yes,
-                              LockDowntimes::yes);
+    TableServices::addColumns(
+        this, "current_service_",
+        offsets.add([](Row r) { return r.rawData<LogRow>()->svc; }),
+        TableServices::AddHosts::no, LockComments::yes, LockDowntimes::yes);
     TableContacts::addColumns(this, "current_contact_", offsets.add([](Row r) {
         return r.rawData<LogRow>()->ctc;
     }));

@@ -20,6 +20,9 @@ public:
     [[nodiscard]] const void *handle() const override {
         return &service_group_;
     }
+    [[nodiscard]] std::string name() const override {
+        return service_group_.group_name;
+    }
 
     bool all(const std::function<bool(const IService &)> &pred) const override {
         for (const auto *member = service_group_.members; member != nullptr;

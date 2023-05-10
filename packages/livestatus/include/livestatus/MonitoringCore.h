@@ -49,6 +49,8 @@ public:
         const std::string &designation) = 0;
     virtual bool all_of_hosts(
         const std::function<bool(const IHost &)> &pred) const = 0;
+    virtual bool all_of_services(
+        const std::function<bool(const IService &)> &pred) const = 0;
 
     [[nodiscard]] virtual const IService *find_service(
         const std::string &host_name,
@@ -155,6 +157,8 @@ public:
     stateFileCreatedTime() const = 0;
     [[nodiscard]] virtual std::vector<std::string> metrics(
         const IHost &, Logger *logger) const = 0;
+    [[nodiscard]] virtual std::vector<std::string> metrics(
+        const IService &, Logger *logger) const = 0;
 
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;
@@ -172,6 +176,7 @@ public:
     [[nodiscard]] virtual size_t numCachedLogMessages() = 0;
 
     [[nodiscard]] virtual bool isPnpGraphPresent(const IHost &) const = 0;
+    [[nodiscard]] virtual bool isPnpGraphPresent(const IService &s) const = 0;
 
     [[nodiscard]] virtual MetricLocation metricLocation(
         const std::string &host_name, const std::string &service_description,

@@ -27,11 +27,10 @@ struct service_and_group {
 
 TableServicesByGroup::TableServicesByGroup(MonitoringCore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
-    TableServices::addColumns(this, "", offsets.add([](Row r) {
-        return r.rawData<service_and_group>()->svc->handle();
-    }),
-                              TableServices::AddHosts::yes, LockComments::yes,
-                              LockDowntimes::yes);
+    TableServices::addColumns(
+        this, "",
+        offsets.add([](Row r) { return r.rawData<service_and_group>()->svc; }),
+        TableServices::AddHosts::yes, LockComments::yes, LockDowntimes::yes);
     TableServiceGroups::addColumns(
         this, "servicegroup_", offsets.add([](Row r) {
             return r.rawData<service_and_group>()->group->handle();

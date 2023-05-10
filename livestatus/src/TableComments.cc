@@ -69,12 +69,10 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
         return &r.rawData<IComment>()->host();
     }),
                            LockComments::no, LockDowntimes::yes);
-    TableServices::addColumns(this, "service_", offsets.add([](Row r) {
-        const auto *svc = r.rawData<IComment>()->service();
-        return svc == nullptr ? nullptr : svc->handle();
-    }),
-                              TableServices::AddHosts::no, LockComments::no,
-                              LockDowntimes::yes);
+    TableServices::addColumns(
+        this, "service_",
+        offsets.add([](Row r) { return r.rawData<IComment>()->service(); }),
+        TableServices::AddHosts::no, LockComments::no, LockDowntimes::yes);
 }
 
 std::string TableComments::name() const { return "comments"; }

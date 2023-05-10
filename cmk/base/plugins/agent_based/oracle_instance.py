@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import Mapping, Optional, Sequence, Union
+from typing import Final, Mapping, Optional, Sequence, Union
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -38,17 +38,79 @@ class Instance:
     force_logging: Optional[str] = None
     name: Optional[str] = None
     db_creation_time: Optional[str] = None
-    pluggable: Optional[str] = None
+    pluggable: str = "FALSE"
+    con_id: Optional[str] = None
     pname: Optional[str] = None
     popenmode: Optional[str] = None
     prestricted: Optional[str] = None
     ptotal_size: Optional[str] = None
     pup_seconds: Optional[str] = None
     old_agent: bool = False
-    pdb: bool = False
+
+    @property
+    def pdb(self) -> bool:
+        # possible multitenant entry?
+        # every pdb has a con_id != 0
+        return self.pluggable == "TRUE" and self.con_id != "0"
 
 
 Section = Mapping[str, Union[InvalidData, GeneralError, Instance]]
+
+
+_OUTPUT_HEADERS: Final[Mapping[int, Sequence[str]]] = {
+    6: ("sid", "version", "openmode", "logins"),  # rest is ignored
+    11: (
+        "sid",
+        "version",
+        "openmode",
+        "logins",
+        "archiver",
+        "up_seconds",
+        "_dbid",
+        "log_mode",
+        "database_role",
+        "force_logging",
+        "name",
+    ),
+    12: (
+        "sid",
+        "version",
+        "openmode",
+        "logins",
+        "archiver",
+        "up_seconds",
+        "_dbid",
+        "log_mode",
+        "database_role",
+        "force_logging",
+        "name",
+        "db_creation_time",
+    ),
+    22: (
+        "sid",
+        "version",
+        "openmode",
+        "logins",
+        "archiver",
+        "up_seconds",
+        "_dbid",
+        "log_mode",
+        "database_role",
+        "force_logging",
+        "name",
+        "db_creation_time",
+        "pluggable",
+        "con_id",
+        "pname",
+        "_pdbid",
+        "popenmode",
+        "prestricted",
+        "ptotal_size",
+        "_prerecovery_status",
+        "pup_seconds",
+        "_pblock_size",
+    ),
+}
 
 
 def _parse_agent_line(line: Sequence[str]) -> Union[InvalidData, GeneralError, Instance]:
@@ -62,53 +124,17 @@ def _parse_agent_line(line: Sequence[str]) -> Union[InvalidData, GeneralError, I
             err=general_error,
         )
 
-    # lines can have different length
-    if (line_len := len(line)) not in [6, 11, 12, 22]:
+    length = len(line)
+    try:
+        header = _OUTPUT_HEADERS[length]
+    except KeyError:
         return InvalidData(sid=sid)
 
-    def getcolumn(column_index: int, default: Optional[str] = None) -> Optional[str]:
-        return default if column_index >= line_len else line[column_index]
+    raw = ((k, v) for k, v in zip(header, line) if not k.startswith("_"))
+    instance = Instance(**dict(raw), old_agent=length == 6)
 
-    # assign columns
-    instance = Instance(sid)
-    instance.version = getcolumn(1)
-    instance.openmode = getcolumn(2)
-    instance.logins = getcolumn(3)
-    instance.archiver = getcolumn(4) if line_len > 6 else None
-    instance.up_seconds = getcolumn(5) if line_len > 6 else None
-    # line_len > 6
-    # 6: dbid
-    instance.log_mode = getcolumn(7)
-    instance.database_role = getcolumn(8)
-    instance.force_logging = getcolumn(9)
-    instance.name = getcolumn(10)
-    # line_len > 11
-    instance.db_creation_time = getcolumn(11)
-    # line_len > 12
-    instance.pluggable = getcolumn(12, "FALSE")
-    con_id = getcolumn(13)
-    instance.pname = getcolumn(14)
-    # 15: pdbid
-    instance.popenmode = getcolumn(16)
-    instance.prestricted = getcolumn(17)
-    instance.ptotal_size = getcolumn(18)
-    # 19: precovery_status
-    instance.pup_seconds = getcolumn(20)
-    # 21: pblock_size
-
-    # Detect old oracle agent plugin output
-    instance.old_agent = line_len == 6
-
-    # possible multitenant entry?
-    # every pdb has a con_id != 0
-    if line_len > 12 and instance.pluggable == "TRUE" and con_id != "0":
-        instance.pdb = True
-
-        if str(instance.prestricted).lower() == "no":
-            instance.logins = "RESTRICTED"
-        else:
-            instance.logins = "ALLOWED"
-
+    if instance.pdb:
+        instance.logins = "RESTRICTED" if str(instance.prestricted).lower() == "no" else "ALLOWED"
         instance.openmode = instance.popenmode
         instance.up_seconds = instance.pup_seconds
 

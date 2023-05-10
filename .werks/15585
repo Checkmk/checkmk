@@ -1,0 +1,12 @@
+Title: Added monitoring for Extreme VSP Switches
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1683737232
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Added check plugins for monitoring the temperature, cpu utilization, fan state and speed, and power supply information of Extreme VSP Switches.
+More information can be found in the check plugins catalog.

@@ -15,11 +15,19 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode, UpdateResult
-from cmk.utils.type_defs import AgentRawData, EVERYTHING, HostAddress, HostName, result
+from cmk.utils.type_defs import (
+    AgentRawData,
+    EVERYTHING,
+    HostAddress,
+    HostName,
+    ParsedSectionName,
+    result,
+    SectionName,
+)
 
 from cmk.fetchers import FetcherType
 
-from cmk.checkers import SourceInfo, SourceType
+from cmk.checkers import SectionPlugin, SourceInfo, SourceType
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.inventory import (
     _check_fetched_data_or_trees,
@@ -32,7 +40,7 @@ from cmk.checkers.inventory import (
 )
 from cmk.checkers.type_defs import NO_SELECTION
 
-from cmk.base.agent_based.confcheckers import ConfiguredParser, SectionPluginMapper
+from cmk.base.agent_based.confcheckers import ConfiguredParser
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
 
@@ -1209,13 +1217,20 @@ def test_inventorize_host(
         keep_outdated=True,
         logger=logging.getLogger("tests"),
     )
+
     check_result = inventorize_host(
         hostname,
         fetcher=fetcher,
         parser=parser,
         summarizer=lambda *args, **kwargs: [],
         inventory_parameters=lambda *args, **kw: {},
-        section_plugins=SectionPluginMapper(),
+        section_plugins={
+            SectionName("data"): SectionPlugin(
+                supersedes=set(),
+                parse_function=lambda *args, **kw: object,
+                parsed_section_name=ParsedSectionName("data"),
+            )
+        },
         inventory_plugins={},
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw(

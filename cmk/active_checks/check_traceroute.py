@@ -45,6 +45,8 @@
 #  5  66.249.94.88 (66.249.94.88)  24.481 ms  24.498 ms  24.271 ms
 #  6  209.85.240.99 (209.85.240.99)  27.628 ms  21.605 ms  21.943 ms
 
+from __future__ import annotations
+
 import argparse
 import enum
 import os
@@ -52,13 +54,51 @@ import re
 import subprocess
 import sys
 from collections.abc import Iterable, Iterator, Sequence
-from typing import assert_never
+from dataclasses import dataclass
+from typing import assert_never, Protocol
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    exitcode, info, perf = _check_traceroute_main(argv or sys.argv[1:])
+def main(
+    argv: Sequence[str] | None = None,
+    routetracer: RoutetracerProto | None = None,
+) -> int:
+    exitcode, info, perf = _check_traceroute_main(
+        argv or sys.argv[1:],
+        routetracer or _TracerouteRoutertrace(),
+    )
     _output_check_result(info, perf)
     return exitcode
+
+
+class RoutetracerProto(Protocol):
+    def __call__(
+        self,
+        target: str,
+        *,
+        use_dns: bool,
+        probe_method: ProbeMethod,
+        ip_address_family: IPAddressFamily,
+    ) -> Route:
+        ...
+
+
+class ProbeMethod(enum.Enum):
+    UDP = "udp"
+    ICMP = "icmp"
+    TCP = "tcp"
+
+
+class IPAddressFamily(enum.Enum):
+    AUTO = "auto"
+    v4 = "ipv4"
+    v6 = "ipv6"
+
+
+@dataclass(frozen=True)
+class Route:
+    routers: set[str]
+    n_hops: int
+    human_readable_route: str
 
 
 def _output_check_result(s: str, perfdata: Iterable[tuple[str, int]] | None) -> None:
@@ -72,27 +112,23 @@ def _output_check_result(s: str, perfdata: Iterable[tuple[str, int]] | None) -> 
 
 def _check_traceroute_main(
     argv: Sequence[str],
+    routetracer: RoutetracerProto,
 ) -> tuple[int, str, list[tuple[str, int]] | None]:
-    os.unsetenv("LANG")
-
     args = _parse_arguments(argv)
 
     try:
-        sto = _execute_traceroute(
-            args.target,
-            args.use_dns,
-            args.probe_method,
-            args.ip_address_family,
-        )
-        status, output, perfdata = _check_traceroute(
-            sto.splitlines(),
+        return _check_route(
+            routetracer(
+                args.target,
+                use_dns=args.use_dns,
+                probe_method=args.probe_method,
+                ip_address_family=args.ip_address_family,
+            ),
             routers_missing_warn=args.routers_missing_warn,
             routers_missing_crit=args.routers_missing_crit,
             routers_found_warn=args.routers_found_warn,
             routers_found_crit=args.routers_found_crit,
         )
-        info_text = output.strip() + "\n%s" % sto
-        return status, info_text, perfdata
 
     except _RoutetracingError as e:
         return 3, str(e), None
@@ -147,18 +183,18 @@ def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--ip_address_family",
-        type=_IPAddressFamily,
-        choices=_IPAddressFamily,
-        default=_IPAddressFamily.AUTO,
+        type=IPAddressFamily,
+        choices=IPAddressFamily,
+        default=IPAddressFamily.AUTO,
         metavar="IP-ADDRESS-FAMILY",
         help="Explicitly force IPv4 or IPv6 traceouting. By default, the program will choose the "
         "appropriate protocol automatically.",
     )
     parser.add_argument(
         "--probe_method",
-        type=_ProbeMethod,
-        choices=_ProbeMethod,
-        default=_ProbeMethod.UDP,
+        type=ProbeMethod,
+        choices=ProbeMethod,
+        default=ProbeMethod.UDP,
         metavar="PROBE-METHOD",
         help="Method used for tracerouting. By default, UDP datagrams are used.",
     )
@@ -175,85 +211,29 @@ def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-class _IPAddressFamily(enum.Enum):
-    AUTO = "auto"
-    v4 = "ipv4"
-    v6 = "ipv6"
-
-
-class _ProbeMethod(enum.Enum):
-    UDP = "udp"
-    ICMP = "icmp"
-    TCP = "tcp"
-
-
-def _execute_traceroute(
-    target: str,
-    use_dns: bool,
-    method: _ProbeMethod,
-    address_family: _IPAddressFamily,
-) -> str:
-    cmd = ["traceroute", target]
-    if not use_dns:
-        cmd.append("-n")
-
-    match method:
-        case _ProbeMethod.UDP:
-            pass
-        case _ProbeMethod.ICMP:
-            cmd.append("-I")
-        case _ProbeMethod.TCP:
-            cmd.append("-T")
-        case _:
-            assert_never(method)
-
-    match address_family:
-        case _IPAddressFamily.AUTO:
-            pass
-        case _IPAddressFamily.v4:
-            cmd.append("-4")
-        case _IPAddressFamily.v6:
-            cmd.append("-6")
-        case _:
-            assert_never(address_family)
-
-    completed_process = subprocess.run(
-        cmd,
-        capture_output=True,
-        encoding="utf8",
-        check=False,
-    )
-    if completed_process.returncode:
-        raise _RoutetracingError(f"traceroute command failed: {completed_process.stderr}")
-    return completed_process.stdout
-
-
 class _RoutetracingError(Exception):
     pass
 
 
-def _check_traceroute(
-    lines: Sequence[str],
+def _check_route(
+    route: Route,
     *,
     routers_missing_warn: Iterable[str] = (),
     routers_missing_crit: Iterable[str] = (),
     routers_found_warn: Iterable[str] = (),
     routers_found_crit: Iterable[str] = (),
 ) -> tuple[int, str, list[tuple[str, int]]]:
-    routers = {router for line in lines[1:] for router in _extract_routers_from_line(line)}
-    n_hops = len(lines[1:])
-
     missing_routers_warn = [
-        _mark_warning(router) for router in sorted(set(routers_missing_warn) - routers)
+        _mark_warning(router) for router in sorted(set(routers_missing_warn) - route.routers)
     ]
     missing_routers_crit = [
-        _mark_critical(router) for router in sorted(set(routers_missing_crit) - routers)
+        _mark_critical(router) for router in sorted(set(routers_missing_crit) - route.routers)
     ]
     found_routers_warn = [
-        _mark_warning(router) for router in sorted(set(routers_found_warn) & routers)
+        _mark_warning(router) for router in sorted(set(routers_found_warn) & route.routers)
     ]
     found_routers_crit = [
-        _mark_critical(router) for router in sorted(set(routers_found_crit) & routers)
+        _mark_critical(router) for router in sorted(set(routers_found_crit) & route.routers)
     ]
 
     return (
@@ -262,28 +242,14 @@ def _check_traceroute(
         else 1
         if any(missing_routers_warn + found_routers_warn)
         else 0,
-        f"%d hop{'' if n_hops == 1 else 's'}, missing routers: %s, bad routers: %s"
+        f"%d hop{'' if route.n_hops == 1 else 's'}, missing routers: %s, bad routers: %s\n%s"
         % (
-            n_hops,
+            route.n_hops,
             ", ".join(missing_routers_crit + missing_routers_warn) or "none",
             ", ".join(found_routers_crit + found_routers_warn) or "none",
+            route.human_readable_route,
         ),
-        [("hops", n_hops)],
-    )
-
-
-def _extract_routers_from_line(line: str) -> Iterator[str]:
-    # drop asterisks, which mean no response from the router at this hop
-    line = line.replace("*", "")
-    # drop round-trip times
-    line = re.sub(r"[0-9]+(\.[0-9]+)? ms", "", line)
-    yield from (
-        part.lstrip("(").rstrip(")")
-        for part in line.strip().split()
-        # drop numbering
-        [1:]
-        # drop additional information such as !X
-        if not part.startswith("!")
+        [("hops", route.n_hops)],
     )
 
 
@@ -293,3 +259,92 @@ def _mark_warning(router: str) -> str:
 
 def _mark_critical(router: str) -> str:
     return f"{router}(!!)"
+
+
+class _TracerouteRoutertrace:
+    def __call__(
+        self,
+        target: str,
+        *,
+        use_dns: bool,
+        probe_method: ProbeMethod,
+        ip_address_family: IPAddressFamily,
+    ) -> Route:
+        traceroute_stdout = self._execute_traceroute(
+            target,
+            use_dns=use_dns,
+            probe_method=probe_method,
+            ip_address_family=ip_address_family,
+        )
+        router_lines = traceroute_stdout.splitlines()[1:]
+        return Route(
+            {router for line in router_lines for router in self._extract_routers_from_line(line)},
+            len(router_lines),
+            traceroute_stdout,
+        )
+
+    @staticmethod
+    def _execute_traceroute(
+        target: str,
+        *,
+        use_dns: bool,
+        probe_method: ProbeMethod,
+        ip_address_family: IPAddressFamily,
+    ) -> str:
+        cmd = ["traceroute", target]
+        if not use_dns:
+            cmd.append("-n")
+
+        match probe_method:
+            case ProbeMethod.UDP:
+                pass
+            case ProbeMethod.ICMP:
+                cmd.append("-I")
+            case ProbeMethod.TCP:
+                cmd.append("-T")
+            case _:
+                assert_never(probe_method)
+
+        match ip_address_family:
+            case IPAddressFamily.AUTO:
+                pass
+            case IPAddressFamily.v4:
+                cmd.append("-4")
+            case IPAddressFamily.v6:
+                cmd.append("-6")
+            case _:
+                assert_never(ip_address_family)
+
+        completed_process = subprocess.run(
+            cmd,
+            capture_output=True,
+            encoding="utf8",
+            check=False,
+            env={k: v for k, v in os.environ.items() if k != "LANG"},
+        )
+        if completed_process.returncode:
+            raise _RoutetracingError(f"traceroute command failed: {completed_process.stderr}")
+        return completed_process.stdout
+
+    @staticmethod
+    def _extract_routers_from_line(line: str) -> Iterator[str]:
+        """
+        >>> list(_TracerouteRoutertrace._extract_routers_from_line('10  209.85.252.215  16.133 ms 108.170.238.61  12.731 ms 209.85.252.215  15.088 ms'))
+        ['209.85.252.215', '108.170.238.61', '209.85.252.215']
+        >>> list(_TracerouteRoutertrace._extract_routers_from_line(' 5  fra1.cc1.as48314.net (2a0a:51c1:0:4002::51)  231.003 ms !X  37.416 ms !X  230.950 ms !X 2001:4860:0:1::10d9  13.441 ms *'))
+        ['fra1.cc1.as48314.net', '2a0a:51c1:0:4002::51', '2001:4860:0:1::10d9']
+        >>> list(_TracerouteRoutertrace._extract_routers_from_line(' 7  * * *'))
+        []
+        """
+        # drop asterisks, which mean no response from the router at this hop
+        line = line.replace("*", "")
+        # drop round-trip times
+        line = re.sub(r"[0-9]+(\.[0-9]+)? ms", "", line)
+        yield from (
+            part.lstrip("(").rstrip(")")
+            for part in line.strip().split()
+            # drop numbering
+            [1:]
+            # drop additional information such as !X
+            if not part.startswith("!")
+        )

@@ -1,0 +1,14 @@
+Title: oracle_instance: Report host of each instance
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1683746837
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The agent plugins for Oracle database monitoring (Windows and Unix) now report the host name of the host running each instance.
+It is reported both in the service output and in the status data of the <b>ha</b>rdware/<b>s</b>oftware <b>i</b>nventory.
+To get this information, users must upgrade their agent plugins.
+

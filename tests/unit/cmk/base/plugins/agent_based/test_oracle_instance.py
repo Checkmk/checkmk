@@ -22,7 +22,7 @@ from cmk.base.plugins.agent_based.oracle_instance import (
 from .utils_inventory import sort_inventory_result
 
 
-def test_parse_oracle_instance() -> None:
+def test_parse_oracle_instance_db_without_host_12() -> None:
     assert parse_oracle_instance(
         [
             [
@@ -39,53 +39,8 @@ def test_parse_oracle_instance() -> None:
                 "XE",
                 "290520181207",
             ],
-            [
-                "IC731",
-                "12.1.0.2.0",
-                "OPEN",
-                "ALLOWED",
-                "STARTED",
-                "2144847",
-                "3190399742",
-                "ARCHIVELOG",
-                "PRIMARY",
-                "YES",
-                "IC73",
-                "130920150251",
-            ],
-            ["I442", "FAILURE"],
-            [
-                "+ASM",
-                "FAILURE",
-                "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
-            ],
         ]
     ) == {
-        "+ASM": GeneralError(
-            "+ASM",
-            "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
-        ),
-        "I442": InvalidData("I442"),
-        "IC731": Instance(
-            archiver="STARTED",
-            database_role="PRIMARY",
-            db_creation_time="130920150251",
-            force_logging="YES",
-            log_mode="ARCHIVELOG",
-            logins="ALLOWED",
-            name="IC73",
-            old_agent=False,
-            openmode="OPEN",
-            pluggable="FALSE",
-            pname=None,
-            popenmode=None,
-            prestricted=None,
-            ptotal_size=None,
-            pup_seconds=None,
-            sid="IC731",
-            up_seconds="2144847",
-            version="12.1.0.2.0",
-        ),
         "XE": Instance(
             archiver="STOPPED",
             database_role="PRIMARY",
@@ -106,6 +61,77 @@ def test_parse_oracle_instance() -> None:
             up_seconds="1212537",
             version="11.2.0.2.0",
         ),
+    }
+
+
+def test_parse_oracle_instance_db_with_host_13() -> None:
+    assert parse_oracle_instance(
+        [
+            [
+                "IC731",
+                "12.1.0.2.0",
+                "OPEN",
+                "ALLOWED",
+                "STARTED",
+                "2144847",
+                "3190399742",
+                "ARCHIVELOG",
+                "PRIMARY",
+                "YES",
+                "IC73",
+                "130920150251",
+                "my-oracle-server",
+            ],
+        ]
+    ) == {
+        "IC731": Instance(
+            archiver="STARTED",
+            database_role="PRIMARY",
+            db_creation_time="130920150251",
+            force_logging="YES",
+            log_mode="ARCHIVELOG",
+            logins="ALLOWED",
+            name="IC73",
+            old_agent=False,
+            openmode="OPEN",
+            pluggable="FALSE",
+            pname=None,
+            popenmode=None,
+            prestricted=None,
+            ptotal_size=None,
+            pup_seconds=None,
+            sid="IC731",
+            up_seconds="2144847",
+            version="12.1.0.2.0",
+            host_name="my-oracle-server",
+        )
+    }
+
+
+def test_parse_oracle_instance_error() -> None:
+    assert parse_oracle_instance(
+        [
+            [
+                "+ASM",
+                "FAILURE",
+                "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
+            ],
+        ]
+    ) == {
+        "+ASM": GeneralError(
+            "+ASM",
+            "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
+        ),
+    }
+
+
+def test_parse_oracle_instance_invalid() -> None:
+    assert parse_oracle_instance(
+        [
+            ["I442", "FAILURE"],
+        ]
+    ) == {
+        "I442": InvalidData("I442"),
     }
 
 

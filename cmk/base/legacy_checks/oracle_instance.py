@@ -109,6 +109,9 @@ def check_oracle_instance(item, params, section):  # pylint: disable=too-many-br
     if not item_data.pdb:
         infotext += ", Role %s, Version %s" % (item_data.database_role, item_data.version)
 
+    if item_data.host_name:
+        infotext += f", Running on: {item_data.host_name}"
+
     # ASM has no login and archivelog check
     if item_data.database_role != "ASM":
         # logins are only possible when the database is open

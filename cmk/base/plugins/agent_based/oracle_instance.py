@@ -45,6 +45,7 @@ class Instance:
     prestricted: Optional[str] = None
     ptotal_size: Optional[str] = None
     pup_seconds: Optional[str] = None
+    host_name: Optional[str] = None
     old_agent: bool = False
 
     @property
@@ -57,9 +58,9 @@ class Instance:
 Section = Mapping[str, Union[InvalidData, GeneralError, Instance]]
 
 
-_OUTPUT_HEADERS: Final[Mapping[int, Sequence[str]]] = {
-    6: ("sid", "version", "openmode", "logins"),  # rest is ignored
-    11: (
+_OUTPUT_HEADERS: Final[Mapping[tuple[int, bool], Sequence[str]]] = {
+    (6, False): ("sid", "version", "openmode", "logins"),  # rest is ignored
+    (11, True): (
         "sid",
         "version",
         "openmode",
@@ -72,7 +73,21 @@ _OUTPUT_HEADERS: Final[Mapping[int, Sequence[str]]] = {
         "force_logging",
         "name",
     ),
-    12: (
+    (12, True): (
+        "sid",
+        "version",
+        "openmode",
+        "logins",
+        "archiver",
+        "up_seconds",
+        "_dbid",
+        "log_mode",
+        "database_role",
+        "force_logging",
+        "name",
+        "host_name",
+    ),
+    (12, False): (
         "sid",
         "version",
         "openmode",
@@ -86,7 +101,22 @@ _OUTPUT_HEADERS: Final[Mapping[int, Sequence[str]]] = {
         "name",
         "db_creation_time",
     ),
-    22: (
+    (13, False): (
+        "sid",
+        "version",
+        "openmode",
+        "logins",
+        "archiver",
+        "up_seconds",
+        "_dbid",
+        "log_mode",
+        "database_role",
+        "force_logging",
+        "name",
+        "db_creation_time",
+        "host_name",
+    ),
+    (22, False): (
         "sid",
         "version",
         "openmode",
@@ -110,6 +140,31 @@ _OUTPUT_HEADERS: Final[Mapping[int, Sequence[str]]] = {
         "pup_seconds",
         "_pblock_size",
     ),
+    (23, False): (
+        "sid",
+        "version",
+        "openmode",
+        "logins",
+        "archiver",
+        "up_seconds",
+        "_dbid",
+        "log_mode",
+        "database_role",
+        "force_logging",
+        "name",
+        "db_creation_time",
+        "pluggable",
+        "con_id",
+        "pname",
+        "_pdbid",
+        "popenmode",
+        "prestricted",
+        "ptotal_size",
+        "_prerecovery_status",
+        "pup_seconds",
+        "_pblock_size",
+        "host_name",
+    ),
 }
 
 
@@ -125,8 +180,10 @@ def _parse_agent_line(line: Sequence[str]) -> Union[InvalidData, GeneralError, I
         )
 
     length = len(line)
+    is_asm = length in (11, 12) and line[8] == "ASM"
+
     try:
-        header = _OUTPUT_HEADERS[length]
+        header = _OUTPUT_HEADERS[(length, is_asm)]
     except KeyError:
         return InvalidData(sid=sid)
 
@@ -222,9 +279,11 @@ def inventory_oracle_instance(section: Section) -> InventoryResult:
             continue
 
         try:
-            status_columns = {"db_uptime": int(item_data.up_seconds)}  # type: ignore[arg-type]
+            status_columns: dict[str, Union[str, int]] = {"db_uptime": int(item_data.up_seconds)}  # type: ignore[arg-type]
         except (TypeError, ValueError):
             status_columns = {}
+        if item_data.host_name:
+            status_columns["host"] = item_data.host_name
 
         yield TableRow(
             path=path,

@@ -171,6 +171,7 @@ STAGES:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
       COMMAND: "make test-unit-docker"
       TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
 
     - NAME: 'Python License Headers Test'
@@ -181,6 +182,7 @@ STAGES:
         PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
       COMMAND: "make test-license-headers-docker"
       TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-license-headers-junit.xml"
 
     - NAME: 'Python Pipfile Test'
@@ -190,6 +192,7 @@ STAGES:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-pipfile-junit.xml --color=no"
       COMMAND: "make test-pipfile-docker"
       TEXT_ON_SKIP: 'Pipfile and Pipfile.lock files not changed'
+      RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-pipfile-junit.xml"
 
     - NAME: 'Python File Content Test'
@@ -200,6 +203,7 @@ STAGES:
         CHANGED_FILES_REL: "${CHANGED_FILES_REL}"
       COMMAND: "make test-file-content-docker"
       TEXT_ON_SKIP: 'No files changed'
+      RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-file-content-junit.xml"
 
     - NAME: 'Python Werks Test'
@@ -209,6 +213,7 @@ STAGES:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-werks-junit.xml --color=no"
       COMMAND: "make test-werks-docker"
       TEXT_ON_SKIP: 'No Werk files changed'
+      RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-werks-junit.xml"
 
     - NAME: 'Python Linting'

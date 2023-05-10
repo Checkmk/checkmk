@@ -21,9 +21,9 @@ parsed = parse_oracle_instance(
             "ALLOWED",
             "STARTED",
             "6735",
-            "1297771692",
-            "ARCHIVELOG",
-            "PRIMARY",
+            "0",
+            "NO",
+            "ASM",
             "NO",
             "TUX2",
         ],
@@ -69,8 +69,8 @@ checks = {
             {"primarynotopen": 2, "noforcelogging": 1, "logins": 2, "noarchivelog": 1},
             [
                 (
-                    1,
-                    "Database Name TUX2, Status OPEN, Role PRIMARY, Version 12.1.0.1.0, Logins allowed, Log Mode archivelog, Force Logging no(!)",
+                    0,
+                    "Database Name TUX2, Status OPEN, Role ASM, Version 12.1.0.1.0",
                     [],
                 )
             ],

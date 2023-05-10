@@ -229,7 +229,7 @@ def _handle_fetcher_options(
 _FETCHER_OPTIONS: Final = [
     Option(
         long_option="cache",
-        short_help="Read info from data source cache files when existant, even when it "
+        short_help="Read info from data source cache files when existent, even when it "
         "is outdated. Only contact the data sources when the cache file "
         "is absent",
     ),
@@ -2024,7 +2024,7 @@ def register_mode_check(
                 "the option '-n', the results will not be sent to the core and the "
                 "counters of the check will not be stored.",
                 "You can use '-v' to see the results of the checks. Add '-p' to "
-                "also see the performance data of the checks."
+                "also see the performance data of the checks. "
                 "Can be restricted to certain check types. Write '--checks df -I' if "
                 "you just want to look for new filesystems. Use 'check_mk -L' for a "
                 "list of all check types. Use 'tcp' for all TCP based checks and "
@@ -2172,7 +2172,7 @@ modes.register(
         argument=True,
         argument_descr="HOST1 HOST2...",
         argument_optional=True,
-        short_help="Do a HW/SW-Inventory on some ar all hosts",
+        short_help="Do a HW/SW-Inventory on some or all hosts",
         long_help=[
             "Does a HW/SW-Inventory for all, one or several "
             "hosts. If you add the option -f, --force then persisted sections "

@@ -30,7 +30,7 @@ from cmk.utils.licensing.export import (
     RawLicenseUsageSample,
 )
 from cmk.utils.licensing.helper import (
-    get_instance_id_filepath,
+    get_instance_id_file_path,
     hash_site_id,
     load_instance_id,
     rot47,
@@ -82,29 +82,29 @@ def try_update_license_usage(
     """Update the license usage history.
 
     The history has a max. length of 400 (days). This process will be skipped if another process
-    already tries to update the history, ie. filepaths are locked."""
+    already tries to update the history, ie. file_paths are locked."""
     if instance_id is None:
         raise ValueError("No such instance ID")
 
-    report_filepath = get_license_usage_report_filepath()
+    report_file_path = get_license_usage_report_file_path()
     licensing_dir.mkdir(parents=True, exist_ok=True)
-    next_run_filepath = licensing_dir / "next_run"
+    next_run_file_path = licensing_dir / "next_run"
 
-    with store.locked(next_run_filepath), store.locked(report_filepath):
-        if now.dt.timestamp() < _get_next_run_ts(next_run_filepath):
+    with store.locked(next_run_file_path), store.locked(report_file_path):
+        if now.dt.timestamp() < _get_next_run_ts(next_run_file_path):
             return
 
-        history = LocalLicenseUsageHistory.parse(load_raw_license_usage_report(report_filepath))
+        history = LocalLicenseUsageHistory.parse(load_raw_license_usage_report(report_file_path))
         history.add_sample(do_create_sample(now, instance_id, site_hash))
         save_license_usage_report(
-            report_filepath,
+            report_file_path,
             RawLicenseUsageReport(
                 VERSION=LicenseUsageReportVersion,
                 history=history.for_report(),
             ),
         )
 
-        store.save_text_to_file(next_run_filepath, rot47(str(_create_next_run_ts(now))))
+        store.save_text_to_file(next_run_file_path, rot47(str(_create_next_run_ts(now))))
 
 
 def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSample:
@@ -265,8 +265,8 @@ def _get_cloud_counter() -> HostsOrServicesCloudCounter:
     )
 
 
-def _get_next_run_ts(next_run_filepath: Path) -> int:
-    return int(rot47(store.load_text_from_file(next_run_filepath, default="_")))
+def _get_next_run_ts(file_path: Path) -> int:
+    return int(rot47(store.load_text_from_file(file_path, default="_")))
 
 
 def _create_next_run_ts(now: Now) -> int:
@@ -277,24 +277,16 @@ def _create_next_run_ts(now: Now) -> int:
     return random.randrange(int(start.timestamp()), int(end.timestamp()), 600)
 
 
-def get_license_usage_report_filepath() -> Path:
+def get_license_usage_report_file_path() -> Path:
     return licensing_dir / "history.json"
 
 
-def save_license_usage_report(report_filepath: Path, raw_report: RawLicenseUsageReport) -> None:
-    store.save_bytes_to_file(
-        report_filepath,
-        _serialize_dump(raw_report),
-    )
+def save_license_usage_report(file_path: Path, raw_report: RawLicenseUsageReport) -> None:
+    store.save_bytes_to_file(file_path, _serialize_dump(raw_report))
 
 
-def load_raw_license_usage_report(report_filepath: Path) -> object:
-    return deserialize_dump(
-        store.load_bytes_from_file(
-            report_filepath,
-            default=b"{}",
-        )
-    )
+def load_raw_license_usage_report(file_path: Path) -> object:
+    return deserialize_dump(store.load_bytes_from_file(file_path, default=b"{}"))
 
 
 # .
@@ -378,27 +370,27 @@ class LocalLicenseUsageHistory:
 #   '----------------------------------------------------------------------'
 
 
-def _get_extensions_filepath() -> Path:
+def _get_extensions_file_path() -> Path:
     return licensing_dir / "extensions.json"
 
 
 def save_extensions(extensions: LicenseUsageExtensions) -> None:
     licensing_dir.mkdir(parents=True, exist_ok=True)
-    extensions_filepath = _get_extensions_filepath()
+    extensions_file_path = _get_extensions_file_path()
 
-    with store.locked(extensions_filepath):
+    with store.locked(extensions_file_path):
         store.save_bytes_to_file(
-            extensions_filepath,
+            extensions_file_path,
             _serialize_dump(extensions.for_report()),
         )
 
 
 def _load_extensions() -> LicenseUsageExtensions:
-    extensions_filepath = _get_extensions_filepath()
-    with store.locked(extensions_filepath):
+    extensions_file_path = _get_extensions_file_path()
+    with store.locked(extensions_file_path):
         raw_extensions = deserialize_dump(
             store.load_bytes_from_file(
-                extensions_filepath,
+                extensions_file_path,
                 default=b"{}",
             )
         )
@@ -441,21 +433,21 @@ class LicenseUsageReportValidity(Enum):
 
 
 def get_license_usage_report_validity() -> LicenseUsageReportValidity:
-    report_filepath = get_license_usage_report_filepath()
+    report_file_path = get_license_usage_report_file_path()
 
-    with store.locked(report_filepath):
+    with store.locked(report_file_path):
         # TODO use len(history)
-        if report_filepath.stat().st_size == 0:
+        if report_file_path.stat().st_size == 0:
             try_update_license_usage(
                 Now.make(),
-                load_instance_id(get_instance_id_filepath(omd_root)),
+                load_instance_id(get_instance_id_file_path(omd_root)),
                 hash_site_id(omd_site()),
                 create_sample,
             )
             return LicenseUsageReportValidity.recent_enough
 
         # TODO use max. sample time
-        age = time.time() - report_filepath.stat().st_mtime
+        age = time.time() - report_file_path.stat().st_mtime
         if age >= 432000:
             # crit if greater than five days: block activate changes
             return LicenseUsageReportValidity.older_than_five_days

@@ -22,7 +22,7 @@ from cmk.utils.licensing.usage import (
     _load_extensions,
     _serialize_dump,
     CLOUD_SERVICE_PREFIXES,
-    get_license_usage_report_filepath,
+    get_license_usage_report_file_path,
     HostsOrServicesCloudCounter,
     LicenseUsageReportVersion,
     load_raw_license_usage_report,
@@ -66,7 +66,7 @@ def test_try_update_license_usage() -> None:
     assert (
         len(
             LocalLicenseUsageHistory.parse(
-                load_raw_license_usage_report(get_license_usage_report_filepath())
+                load_raw_license_usage_report(get_license_usage_report_file_path())
             )
         )
         == 1
@@ -91,7 +91,7 @@ def test_try_update_license_usage_livestatus_socket_error() -> None:
     assert (
         len(
             LocalLicenseUsageHistory.parse(
-                load_raw_license_usage_report(get_license_usage_report_filepath())
+                load_raw_license_usage_report(get_license_usage_report_file_path())
             )
         )
         == 0
@@ -116,7 +116,7 @@ def test_try_update_license_usage_livestatus_not_found_error() -> None:
     assert (
         len(
             LocalLicenseUsageHistory.parse(
-                load_raw_license_usage_report(get_license_usage_report_filepath())
+                load_raw_license_usage_report(get_license_usage_report_file_path())
             )
         )
         == 0
@@ -154,7 +154,7 @@ def test_try_update_license_usage_next_run_ts_not_reached() -> None:
     assert (
         len(
             LocalLicenseUsageHistory.parse(
-                load_raw_license_usage_report(get_license_usage_report_filepath())
+                load_raw_license_usage_report(get_license_usage_report_file_path())
             )
         )
         == 0

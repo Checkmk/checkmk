@@ -31,19 +31,19 @@ def init_logging() -> logging.Logger:
     return logger
 
 
-def get_instance_id_filepath(omd_root: Path) -> Path:
+def get_instance_id_file_path(omd_root: Path) -> Path:
     return omd_root / "etc/omd/instance_id"
 
 
-def save_instance_id(*, filepath: Path, instance_id: UUID) -> None:
-    filepath.parent.mkdir(parents=True, exist_ok=True)
-    with filepath.open("w", encoding="utf-8") as fp:
+def save_instance_id(*, file_path: Path, instance_id: UUID) -> None:
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with file_path.open("w", encoding="utf-8") as fp:
         fp.write(str(instance_id))
 
 
-def load_instance_id(filepath: Path) -> UUID | None:
+def load_instance_id(file_path: Path) -> UUID | None:
     try:
-        with filepath.open("r", encoding="utf-8") as fp:
+        with file_path.open("r", encoding="utf-8") as fp:
             return UUID(fp.read())
     except (FileNotFoundError, ValueError):
         return None
@@ -70,11 +70,11 @@ def get_licensed_state_file_path() -> Path:
     return paths.licensing_dir / "licensed_state"
 
 
-def write_licensed_state(path: Path, state: LicenseState) -> None:
+def write_licensed_state(file_path: Path, state: LicenseState) -> None:
     state_repr = 1 if state is LicenseState.LICENSED else 0
-    with store.locked(path):
-        path.write_text(str(state_repr))
+    with store.locked(file_path):
+        file_path.write_text(str(state_repr))
 
 
-def get_state_file_created_path() -> Path:
+def get_state_file_created_file_path() -> Path:
     return paths.licensing_dir / "state_file_created"

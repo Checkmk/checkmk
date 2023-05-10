@@ -6,7 +6,7 @@ Date: 1683280552
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.2.0b7
+Version: 2.2.0b8
 
 Users which execute <tt>omd mv</tt> or <tt>omd cp</tt> expect Checkmk to not only rename the site,
 but also migrate the existing configurations created by the <tt>Dynamic host management</tt>.

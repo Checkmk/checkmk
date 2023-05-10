@@ -46,7 +46,6 @@
 #  6  209.85.240.99 (209.85.240.99)  27.628 ms  21.605 ms  21.943 ms
 
 import argparse
-import ast
 import enum
 import os
 import re
@@ -95,13 +94,13 @@ def _check_traceroute_main(
         info_text = output.strip() + "\n%s" % sto
         return status, info_text, perfdata
 
-    except _ExecutionError as e:
+    except _RoutetracingError as e:
         return 3, str(e), None
 
     except Exception as e:
         if args.debug:
             raise
-        return 2, "Unhandled exception: %s" % _parse_exception(e), None
+        return 2, f"Unhandled exception: {e}", None
 
 
 def _parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -225,11 +224,11 @@ def _execute_traceroute(
         check=False,
     )
     if completed_process.returncode:
-        raise _ExecutionError("UNKNOWN - " + completed_process.stderr.replace("\n", " "))
+        raise _RoutetracingError(f"traceroute command failed: {completed_process.stderr}")
     return completed_process.stdout
 
 
-class _ExecutionError(Exception):
+class _RoutetracingError(Exception):
     pass
 
 
@@ -294,10 +293,3 @@ def _mark_warning(router: str) -> str:
 
 def _mark_critical(router: str) -> str:
     return f"{router}(!!)"
-
-
-def _parse_exception(exc: Exception) -> str:
-    exc_str = str(exc)
-    if exc_str[0] == "{":
-        exc_str = "%d - %s" % list(ast.literal_eval(exc_str).values())[0]
-    return exc_str

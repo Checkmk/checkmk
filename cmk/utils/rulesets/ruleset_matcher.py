@@ -475,8 +475,6 @@ class RulesetOptimizer:
         return self._all_processed_hosts
 
     def set_all_processed_hosts(self, all_processed_hosts: Iterable[HostName]) -> None:
-        self._all_processed_hosts = set(all_processed_hosts)
-
         involved_clusters: set[HostName] = set()
         involved_nodes: set[HostName] = set()
         for hostname in self._all_processed_hosts:
@@ -487,7 +485,7 @@ class RulesetOptimizer:
         for hostname in involved_clusters:
             involved_nodes.update(self._nodes_of.get(hostname, []))
 
-        nodes_and_clusters = involved_clusters | involved_nodes
+        nodes_and_clusters = involved_clusters | involved_nodes | all_processed_hosts
 
         # Only add references to configured hosts
         nodes_and_clusters.intersection_update(self._all_configured_hosts)

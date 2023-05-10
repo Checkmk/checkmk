@@ -1,0 +1,35 @@
+Title: Improved performance for some automation and command line calls
+Class: feature
+Compatible: compat
+Component: config
+Date: 1683722523
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Commands requiring rule evaluation generally considered all hosts instead of focusing only on the individual hosts in question.
+Depending on your configuration, the following commands might run faster now, since they no longer evaluate thousands of irrelevant hosts.
+
+GUI
+<ul>
+<li>Service discovery</li>
+<li>Service discovery, waiting for active check result</li>
+<li>Computing service labels (internal mechanism)</li>
+<li>Effective parameters of host/service</li>
+<li>Host Diagnose via setup</li>
+</ul>
+
+Command Line
+<ul>
+<li>cmk -d {hostname}</li>
+<li>cmk -D {hostname}</li>
+<li>cmk --check-discovery {hostname}</li>
+<li>cmk -I {hostname}</li>
+<li>cmk {hostname} (standard checking)</li>
+<li>cmk -i {hostname}</li>
+<li>cmk --inventory-as-check {hostname} (command used by generic check helpers)</li>
+</ul>
+
+

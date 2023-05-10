@@ -37,7 +37,6 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
     shout("configure");

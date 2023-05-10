@@ -37,7 +37,6 @@ from cmk.checkers import (
     CheckPlugin,
     DiscoveryPlugin,
     HostLabelDiscoveryPlugin,
-    InventoryPlugin,
     parse_raw_data,
     SectionPlugin,
     Source,
@@ -46,7 +45,7 @@ from cmk.checkers import (
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
-from cmk.checkers.inventory import InventoryPluginName
+from cmk.checkers.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 

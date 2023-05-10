@@ -60,7 +60,6 @@ from cmk.fetchers.filecache import FileCacheOptions
 import cmk.checkers.inventory as inventory
 from cmk.checkers import (
     FetcherFunction,
-    InventoryPlugin,
     parse_raw_data,
     ParserFunction,
     SectionPlugin,
@@ -70,7 +69,7 @@ from cmk.checkers import (
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.error_handling import CheckResultErrorHandler
-from cmk.checkers.inventory import HWSWInventoryParameters, InventoryPluginName
+from cmk.checkers.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
 from cmk.checkers.submitters import get_submitter, Submitter
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection

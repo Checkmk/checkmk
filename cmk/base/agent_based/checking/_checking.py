@@ -41,7 +41,6 @@ from cmk.checkers import (
     CheckPlugin,
     crash_reporting,
     HostKey,
-    InventoryPlugin,
     Parameters,
     ParserFunction,
     plugin_contexts,
@@ -56,6 +55,7 @@ from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.inventory import (
     HWSWInventoryParameters,
     inventorize_status_data_of_real_host,
+    InventoryPlugin,
     InventoryPluginName,
 )
 from cmk.checkers.sectionparser import (

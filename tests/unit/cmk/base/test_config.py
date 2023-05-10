@@ -29,10 +29,10 @@ from cmk.snmplib.type_defs import SNMPBackendEnum
 
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
-from cmk.checkers import InventoryPlugin
 from cmk.checkers.check_table import ConfiguredService, ServiceID
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckEntry
+from cmk.checkers.inventory import InventoryPlugin
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

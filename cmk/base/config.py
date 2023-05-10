@@ -125,14 +125,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers import (
-    AgentParser,
-    CheckPlugin,
-    DiscoveryPlugin,
-    InventoryPlugin,
-    Parameters,
-    SourceType,
-)
+from cmk.checkers import AgentParser, CheckPlugin, DiscoveryPlugin, Parameters, SourceType
 from cmk.checkers.check_table import (
     ConfiguredService,
     FilterMode,
@@ -142,7 +135,7 @@ from cmk.checkers.check_table import (
 )
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckServiceWithNodes
-from cmk.checkers.inventory import HWSWInventoryParameters
+from cmk.checkers.inventory import HWSWInventoryParameters, InventoryPlugin
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 import cmk.base._autochecks as autochecks

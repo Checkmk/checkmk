@@ -11,7 +11,7 @@ import time
 from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Protocol
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -26,16 +26,15 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     UpdateResult,
 )
-from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName, ValidatedString
-
-from ._api import (
-    FetcherFunction,
-    InventoryPlugin,
-    ParserFunction,
-    PInventoryResult,
-    SectionPlugin,
-    SummarizerFunction,
+from cmk.utils.type_defs import (
+    HostName,
+    ParsedSectionName,
+    RuleSetName,
+    SectionName,
+    ValidatedString,
 )
+
+from ._api import FetcherFunction, ParserFunction, SectionPlugin, SummarizerFunction
 from ._typedefs import HostKey, SourceType
 from .checkresults import ActiveCheckResult
 from .host_sections import HostSections
@@ -54,6 +53,8 @@ __all__ = [
     "inventorize_cluster",
     "inventorize_host",
     "inventorize_status_data_of_real_host",
+    "InventoryPlugin",
+    "PInventoryResult",
 ]
 
 
@@ -61,6 +62,25 @@ class InventoryPluginName(ValidatedString):
     @classmethod
     def exceptions(cls) -> Container[str]:
         return super().exceptions()
+
+
+class PInventoryResult(Protocol):
+    @property
+    def path(self) -> Sequence[str]:
+        ...
+
+    def populate_inventory_tree(self, tree: StructuredDataNode) -> None:
+        ...
+
+    def populate_status_data_tree(self, tree: StructuredDataNode) -> None:
+        ...
+
+
+@dataclass(frozen=True)
+class InventoryPlugin:
+    sections: Sequence[ParsedSectionName]
+    function: Callable[..., Iterable[PInventoryResult]]
+    ruleset_name: RuleSetName | None
 
 
 @dataclass(frozen=True)

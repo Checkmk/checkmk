@@ -36,7 +36,12 @@ from cmk.checkers import (
 )
 from cmk.checkers.check_table import ServiceID
 from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
+from cmk.checkers.discovery import (
+    AutocheckEntry,
+    AutocheckServiceWithNodes,
+    DiscoveryMode,
+    QualifiedDiscovery,
+)
 from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,
@@ -51,7 +56,6 @@ from cmk.base.config import ConfigCache
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import discover_host_labels
-from .utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = ["get_host_services"]
 

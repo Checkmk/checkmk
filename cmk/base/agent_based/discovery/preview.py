@@ -33,6 +33,7 @@ from cmk.checkers import (
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
+from cmk.checkers.discovery import QualifiedDiscovery
 from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,
@@ -50,7 +51,6 @@ from cmk.base.core_config import get_active_check_descriptions
 
 from ._host_labels import analyse_cluster_labels, discover_host_labels
 from .autodiscovery import _Transition, get_host_services
-from .utils import QualifiedDiscovery
 
 __all__ = ["CheckPreview", "get_check_preview"]
 

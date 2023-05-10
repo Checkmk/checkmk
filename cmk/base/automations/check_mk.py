@@ -95,7 +95,7 @@ from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
 from cmk.checkers import parse_raw_data, plugin_contexts, SourceType
 from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
+from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes, DiscoveryMode
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION
 
@@ -184,7 +184,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 "Need two arguments: new|remove|fixall|refresh|only-host-labels HOSTNAME"
             )
 
-        mode = discovery.DiscoveryMode.from_str(args[0])
+        mode = DiscoveryMode.from_str(args[0])
         hostnames = [HostName(h) for h in islice(args, 1, None)]
 
         config_cache = config.get_config_cache()

@@ -13,9 +13,8 @@ from cmk.utils.rulesets.ruleset_matcher import merge_cluster_labels
 from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.checkers import HostKey, HostLabelDiscoveryPlugin, SourceType
+from cmk.checkers.discovery import QualifiedDiscovery
 from cmk.checkers.sectionparser import Provider, ResolvedResult
-
-from .utils import QualifiedDiscovery
 
 __all__ = [
     "analyse_cluster_labels",

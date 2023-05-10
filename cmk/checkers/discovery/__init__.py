@@ -4,9 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._autochecks import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
+from ._utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = [
     "AutocheckServiceWithNodes",
     "AutocheckEntry",
     "AutochecksStore",
+    "DiscoveryMode",
+    "QualifiedDiscovery",
 ]

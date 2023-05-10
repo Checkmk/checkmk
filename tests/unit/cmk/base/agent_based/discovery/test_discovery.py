@@ -35,7 +35,13 @@ from cmk.checkers import HostKey, SectionPlugin, SourceType
 from cmk.checkers.check_table import ServiceID
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
+from cmk.checkers.discovery import (
+    AutocheckEntry,
+    AutocheckServiceWithNodes,
+    AutochecksStore,
+    DiscoveryMode,
+    QualifiedDiscovery,
+)
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.sectionparser import (
     ParsedSectionName,
@@ -68,7 +74,6 @@ from cmk.base.agent_based.discovery.autodiscovery import (
     ServicesByTransition,
     ServicesTable,
 )
-from cmk.base.agent_based.discovery.utils import DiscoveryMode, QualifiedDiscovery
 from cmk.base.api.agent_based.type_defs import SectionPlugin as SectionPluginAPI
 from cmk.base.config import ConfigCache
 

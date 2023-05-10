@@ -26,7 +26,7 @@ from cmk.checkers import (
     SectionPlugin,
 )
 from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import AutochecksStore
+from cmk.checkers.discovery import AutochecksStore, QualifiedDiscovery
 from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,
@@ -40,7 +40,6 @@ from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
 from ._host_labels import discover_host_labels
-from .utils import QualifiedDiscovery
 
 __all__ = ["commandline_discovery"]
 

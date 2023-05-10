@@ -16,13 +16,11 @@ from cmk.utils.type_defs import HostName, ParsedSectionName
 from cmk.checkers import DiscoveryPlugin, HostKey, plugin_contexts, SourceType
 from cmk.checkers.check_table import ServiceID
 from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
+from cmk.checkers.discovery import AutocheckEntry, AutochecksStore, QualifiedDiscovery
 from cmk.checkers.sectionparser import Provider
 from cmk.checkers.sectionparserutils import get_section_kwargs
 
 from cmk.base.config import ConfigCache
-
-from .utils import QualifiedDiscovery
 
 
 def analyse_discovered_services(

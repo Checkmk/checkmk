@@ -9,6 +9,8 @@ import enum
 from collections.abc import Hashable, Iterable, Sequence
 from typing import Final, Generic, Literal, Protocol, TypeVar
 
+__all__ = ["DiscoveryMode", "QualifiedDiscovery"]
+
 
 class DiscoveryMode(enum.Enum):
     # NOTE: the values 0-3 are used in WATO rules and must not be changed!

@@ -26,6 +26,7 @@ from cmk.checkers import (
 )
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers.discovery import DiscoveryMode, QualifiedDiscovery
 from cmk.checkers.sectionparser import filter_out_errors, make_providers, store_piggybacked_sections
 from cmk.checkers.sectionparserutils import check_parsing_errors
 
@@ -35,7 +36,6 @@ from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_cluster_labels, discover_host_labels
 from .autodiscovery import AutocheckServiceWithNodes, get_host_services, ServicesByTransition
-from .utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = ["execute_check_discovery"]
 

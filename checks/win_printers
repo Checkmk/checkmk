@@ -13,6 +13,7 @@
 # mypy: disable-error-code="var-annotated"
 
 import collections
+from typing import Final
 
 from cmk.base.check_api import discover, get_parsed_item_data
 from cmk.base.config import check_info, factory_settings
@@ -25,6 +26,31 @@ factory_settings["win_printer_default_levels"] = {
 WinPrinter = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "WinPrinter", ["jobs", "status", "error"]
 )
+
+_STATUS_MAP: Final = {
+    1: "Other",
+    2: "Unkown",
+    3: "Idle",
+    4: "Printing",
+    5: "Warming Up",
+    6: "Stopped Printing",
+    7: "Offline",
+}
+
+_ERROR_MAP: Final = {
+    0: "Unkown",
+    1: "Other",
+    2: "No Error",
+    3: "Low Paper",
+    4: "No Paper",
+    5: "Low Toner",
+    6: "No Toner",
+    7: "Door Open",
+    8: "Jammed",
+    9: "Offline",
+    10: "Service Requested",
+    11: "Output Bin Full",
+}
 
 
 def parse_win_printers(info):
@@ -49,30 +75,6 @@ def inventory_win_printers(printer_name, printer_attrs):
 
 @get_parsed_item_data
 def check_win_printers(item, params, data):
-    status_map = {
-        1: "Other",
-        2: "Unkown",
-        3: "Idle",
-        4: "Printing",
-        5: "Warming Up",
-        6: "Stopped Printing",
-        7: "Offline",
-    }
-    error_map = {
-        0: "Unkown",
-        1: "Other",
-        2: "No Error",
-        3: "Low Paper",
-        4: "No Paper",
-        5: "Low Toner",
-        6: "No Toner",
-        7: "Door Open",
-        8: "Jammed",
-        9: "Offline",
-        10: "Service Requested",
-        11: "Output Bin Full",
-    }
-
     if not isinstance(params, dict):
         # Legacy params:
         if params is None:
@@ -93,10 +95,10 @@ def check_win_printers(item, params, data):
     error_text = ""
     if error in params["crit_states"]:
         state = 2
-        error_text = "Error State: %s(!!)" % error_map[error]
+        error_text = "Error State: %s(!!)" % _ERROR_MAP[error]
     elif error in params["warn_states"]:
         state = 1
-        error_text = "Error State: %s(!)" % error_map[error]
+        error_text = "Error State: %s(!)" % _ERROR_MAP[error]
 
     queue_label = ""
     if crit is not None and current_jobs >= crit:
@@ -109,7 +111,7 @@ def check_win_printers(item, params, data):
     return state, "%s jobs current%s, State: %s, %s" % (
         current_jobs,
         queue_label,
-        status_map[status],
+        _STATUS_MAP[status],
         error_text,
     )
 

@@ -35,7 +35,7 @@ void TrialManager::validateServiceCount(
 
 bool TrialManager::isTrialExpired(
     std::chrono::system_clock::time_point now) const {
-    return now > installed_ + trialPeriod();
+    return now > state_file_created_ + trialPeriod();
 }
 
 std::string TrialManager::state(
@@ -93,4 +93,11 @@ bool is_licensed(const std::filesystem::path &licensed_state_file) {
     return state == '1';
 }
 
+TrialManager validate_license(
+    std::chrono::system_clock::time_point state_file_created, bool is_licensed,
+    std::chrono::system_clock::time_point now, size_t num_services) {
+    TrialManager trial_manager{state_file_created, is_licensed};
+    trial_manager.validateServiceCount(now, num_services);
+    return trial_manager;
+}
 }  // namespace mk

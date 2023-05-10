@@ -14,13 +14,13 @@
 #include "livestatus/ChronoUtils.h"
 
 class TrialManager {
-    const std::chrono::system_clock::time_point installed_;
+    const std::chrono::system_clock::time_point state_file_created_;
     const bool is_licensed_;
 
 public:
-    TrialManager(std::chrono::system_clock::time_point installed,
+    TrialManager(std::chrono::system_clock::time_point state_file_created,
                  bool is_licensed)
-        : installed_{installed}, is_licensed_{is_licensed} {}
+        : state_file_created_{state_file_created}, is_licensed_{is_licensed} {}
 
     constexpr static auto trialPeriod() { return mk::days{30}; }
 
@@ -43,6 +43,10 @@ std::chrono::system_clock::time_point state_file_created(
     std::chrono::system_clock::time_point default_creation_time);
 
 bool is_licensed(const std::filesystem::path &licensed_state_file);
+
+TrialManager validate_license(
+    std::chrono::system_clock::time_point state_file_created, bool is_licensed,
+    std::chrono::system_clock::time_point now, size_t num_services);
 }  // namespace mk
 
 #endif  // TrialManager_h

@@ -44,7 +44,6 @@
 #include "livestatus/InputBuffer.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Poller.h"
 #include "livestatus/Queue.h"
@@ -94,12 +93,6 @@ static NagiosPathConfig fl_paths;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static std::string fl_edition{"free"};
-
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-static std::chrono::system_clock::time_point fl_state_file_created;
-
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-static bool fl_is_licensed{false};
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static bool fl_should_terminate;
@@ -714,36 +707,33 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
     return 0;
 }
 
-namespace {
-void validate_license(MonitoringCore &mc,
-                      std::chrono::system_clock::time_point installed,
-                      bool is_licensed) {
-    size_t num_services{0};
-    mc.all_of_hosts([&num_services](const IHost &hst) {
-        num_services += hst.total_services();
-        return true;
-    });
-    try {
-        TrialManager{installed, is_licensed}.validateServiceCount(
-            std::chrono::system_clock::now(), num_services);
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        exit(EXIT_FAILURE);
-    }
-}
-}  // namespace
-
 int broker_process(int event_type __attribute__((__unused__)), void *data) {
     auto *ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
-            fl_core =
-                new NagiosCore(fl_downtimes, fl_comments, fl_paths, fl_limits,
-                               fl_authorization, fl_data_encoding, fl_edition,
-                               fl_state_file_created);
-            validate_license(*fl_core, fl_state_file_created, fl_is_licensed);
-            fl_client_queue = new ClientQueue_t{};
-            g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
+            try {
+                auto now = std::chrono::system_clock::now();
+                auto state_file_created = mk::state_file_created(
+                    fl_paths.state_file_created_file, now);
+                auto is_licensed =
+                    mk::is_licensed(fl_paths.licensed_state_file);
+                fl_core = new NagiosCore(fl_downtimes, fl_comments, fl_paths,
+                                         fl_limits, fl_authorization,
+                                         fl_data_encoding, fl_edition,
+                                         state_file_created);
+                size_t num_services{0};
+                fl_core->all_of_hosts([&num_services](const IHost &hst) {
+                    num_services += hst.total_services();
+                    return true;
+                });
+                mk::validate_license(state_file_created, is_licensed, now,
+                                     num_services);
+                fl_client_queue = new ClientQueue_t{};
+                g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
+            } catch (const std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                exit(EXIT_FAILURE);
+            }
             break;
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
             g_timeperiods_cache->update(from_timeval(ps->timestamp));
@@ -1117,14 +1107,10 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
         }
 
         register_callbacks();
-
-        fl_state_file_created = mk::state_file_created(
-            fl_paths.state_file_created_file, std::chrono::system_clock::now());
     } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
-    fl_is_licensed = mk::is_licensed(fl_paths.licensed_state_file);
 
     /* Unfortunately, we cannot start our socket thread right now.
        Nagios demonizes *after* having loaded the NEB modules. When

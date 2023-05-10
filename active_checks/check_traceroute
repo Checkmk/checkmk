@@ -123,7 +123,7 @@ def check_traceroute(lines, routes):
             state = max(state, s)
             missing_routers.append("%s(%s)" % (route, "!" * s))
 
-    info_text = "%d hops, missing routers: %s, bad routers: %s" % (
+    info_text = f"%d hop{'' if hops == 1 else 's'}, missing routers: %s, bad routers: %s" % (
         hops,
         missing_routers and ", ".join(missing_routers) or "none",
         bad_routers and ", ".join(bad_routers) or "none",
@@ -243,7 +243,7 @@ def main(args=None):  # pylint: disable=too-many-branches
                 sys.exit(0)
 
         sto = _execute_traceroute(target_address, opt_nodns, opt_method, opt_address_family)
-        status, output, perfdata = check_traceroute(sto.split("\n"), route_params)
+        status, output, perfdata = check_traceroute(sto.splitlines(), route_params)
         info_text = output.strip() + "\n%s" % sto
         return status, info_text, perfdata
 

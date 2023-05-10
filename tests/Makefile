@@ -22,6 +22,7 @@ PYTEST_UNIT_TEST_OPTS = \
     ../cmk/utils \
     ../agent-receiver \
     ../omd/packages/omd \
+	../cmk/active_checks \
     unit
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"

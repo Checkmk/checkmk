@@ -280,6 +280,7 @@ _COMPONENTS = (
     (Component("cmk.cee.liveproxy"), _is_default_allowed_import),
     (Component("cmk.cee.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.post_rename_site"), _allow_default_plus_gui_and_base),
+    (Component("cmk.active_checks"), _is_default_allowed_import),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {
@@ -402,6 +403,11 @@ class CMKModuleLayerChecker(BaseChecker):
 
         if component == Component("cmk.special_agents") and importing_path.startswith(
             "agents/special/"
+        ):
+            return True
+
+        if component == Component("cmk.active_checks") and importing_path.startswith(
+            "active_checks/"
         ):
             return True
 

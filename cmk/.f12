@@ -48,6 +48,7 @@ sudo rsync \
 # Transform required packages to namespace package
 sudo rm -f \
     "$ROOT/lib/python3/cmk/__init__.py" \
+    "$ROOT/lib/python3/cmk/active_checks/__init__.py" \
     "$ROOT/lib/python3/cmk/special_agents/__init__.py" \
     "$ROOT/lib/python3/cmk/base/__init__.py" \
     "$ROOT/lib/python3/cmk/base/check_legacy_includes/__init__.py" \

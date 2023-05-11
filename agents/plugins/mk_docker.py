@@ -50,7 +50,7 @@ def which(prg):
 
 # The "import docker" checks below result in agent sections being created. This
 # is a way to end the plugin in case it is being executed on a non docker or podman host
-if os.path.isfile("/var/lib/docker") and os.path.isfile("/var/run/docker") and which("docker"):
+if os.path.isdir("/var/lib/docker") and os.path.isdir("/var/run/docker") and which("docker"):
     DEFAULT_CFG_SECTION = {
         "base_url": "unix://var/run/docker.sock",
         "skip_sections": "",

@@ -175,3 +175,9 @@ include \
     $(REPO_PATH)/enterprise/enterprise.make \
     $(REPO_PATH)/cloud/cloud.make
 endif
+ifeq ($(EDITION),saas)
+include \
+    $(REPO_PATH)/enterprise/enterprise.make \
+    $(REPO_PATH)/cloud/cloud.make \
+    $(REPO_PATH)/saas/saas.make
+endif

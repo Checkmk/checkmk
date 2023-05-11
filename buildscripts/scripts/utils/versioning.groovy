@@ -188,14 +188,17 @@ def delete_non_cre_files() {
         "enterprise",
         "managed",
         "cloud",
+        "saas",
         "check_mk_enterprise",
         "check_mk_managed",
         "cee",
         "cme",
         "cce",
+        "cse",
         "cee.py",
         "cme.py",
         "cce.py",
+        "cse.py",
     ]
     find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ")
     // Do not remove files in .git, .venv, .mypy_cache directories

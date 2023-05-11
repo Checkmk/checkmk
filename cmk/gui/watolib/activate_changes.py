@@ -2700,7 +2700,7 @@ def get_restapi_response_for_activation_id(
 def _raise_for_license_block() -> None:
     if block_effect := get_licensing_user_effect(
         licensing_settings_link=makeuri_contextless(
-            _request, [("mode", "edit_licensing_settings")], filename="wato.py"
+            _request, [("mode", "licensing")], filename="wato.py"
         ),
     ).block:
         raise MKLicensingError(block_effect.message)

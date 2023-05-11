@@ -36,6 +36,8 @@ factory_settings["oracle_instance_defaults"] = {
     "noforcelogging": 1,
     "noarchivelog": 1,
     "primarynotopen": 2,
+    "archivelog": 0,
+    "forcelogging": 0,
 }
 
 
@@ -46,8 +48,8 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
         return 2, "Database or necessary processes not running or login failed", []
 
     def state_marker(state, infotext, param, column, data):
-        value = params.get(param)
-        if value is not None and column.lower() == data.lower():
+        value = params[param]
+        if column.lower() == data.lower():
             state = max(state, value)
             if value == 1:
                 infotext += "(!)"

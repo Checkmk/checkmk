@@ -325,6 +325,8 @@ def test_check_oracle_instance(
                     "noforcelogging": 1,
                     "noarchivelog": 1,
                     "primarynotopen": 2,
+                    "archivelog": 0,
+                    "forcelogging": 0,
                 },
                 section=parse_oracle_instance([agent_line]),
             )

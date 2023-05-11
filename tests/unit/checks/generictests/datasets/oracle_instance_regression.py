@@ -55,7 +55,7 @@ checks = {
     "": [
         (
             "+ASM",
-            {"primarynotopen": 2, "noforcelogging": 1, "logins": 2, "noarchivelog": 1},
+            {"primarynotopen": 2, "noforcelogging": 1, "logins": 2, "noarchivelog": 1, "archivelog": 0, "forcelogging": 0},
             [
                 (
                     2,
@@ -66,7 +66,7 @@ checks = {
         ),
         (
             "TUX2",
-            {"primarynotopen": 2, "noforcelogging": 1, "logins": 2, "noarchivelog": 1},
+            {"primarynotopen": 2, "noforcelogging": 1, "logins": 2, "noarchivelog": 1, "archivelog": 0, "forcelogging": 0},
             [
                 (
                     0,
@@ -77,7 +77,7 @@ checks = {
         ),
         (
             "TUX5",
-            {"primarynotopen": 2, "noforcelogging": 1, "logins": 2, "noarchivelog": 1},
+            {"primarynotopen": 2, "noforcelogging": 1, "logins": 2, "noarchivelog": 1, "archivelog": 0, "forcelogging": 0},
             [
                 (
                     2,

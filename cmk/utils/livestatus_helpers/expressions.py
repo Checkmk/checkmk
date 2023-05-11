@@ -80,7 +80,12 @@ class UnaryExpression(abc.ABC):
     """Base class of all concrete single parts of BinaryExpression."""
 
     def __init__(self, value: str) -> None:
+        # The value is used in the __repr__, if we don't set it before raising
+        # the exception we get a new exception when the __repr__ is called,
+        # e.g. by the crash reporting
         self.value = value
+        if "\n" in value:
+            raise ValueError("Illegal newline character in query")
 
     def op(self, operator: str, other: UnaryExpression | Primitives) -> BinaryExpression:
         other_expr: UnaryExpression
@@ -229,8 +234,9 @@ class LiteralExpression(ScalarExpression):
       We make sure not to accidentally send query terminating newlines.
 
         >>> LiteralExpression("blah\\n\\n").render()
-        [('', 'blah')]
-
+        Traceback (most recent call last):
+            ...
+        ValueError: Illegal newline character in query
     """
 
     def disparity(self, other: Primitives, ignore_case: bool = False) -> BinaryExpression:

@@ -361,7 +361,7 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type: ig
 
         >>> tree_to_expr({'op': 'and', \
                           'expr': [{'op': '=', 'left': 'hosts.name', 'right': 'example.com'}, \
-                          {'op': '=', 'left': 'hosts.state', 'right': 0}]})
+                          {'op': '=', 'left': 'hosts.state', 'right': '0'}]})
         And(Filter(name = example.com), Filter(state = 0))
 
         >>> tree_to_expr({'op': 'or', \

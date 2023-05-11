@@ -100,20 +100,20 @@ def show_service(params: Mapping[str, Any]) -> Response:
     service_description = params["service_description"]
     host_name = params["host_name"]
     live = sites.live()
-    q = Query(
-        [
-            Services.description,
-            Services.host_name,
-            Services.state_type,
-            Services.state,
-            Services.last_check,
-        ],
-        filter_expr=And(
-            Services.host_name.op("=", params["host_name"]),
-            Services.description.op("=", service_description),
-        ),
-    )
     try:
+        q = Query(
+            [
+                Services.description,
+                Services.host_name,
+                Services.state_type,
+                Services.state,
+                Services.last_check,
+            ],
+            filter_expr=And(
+                Services.host_name.op("=", params["host_name"]),
+                Services.description.op("=", service_description),
+            ),
+        )
         service = q.fetchone(live)
     except ValueError:
         return problem(

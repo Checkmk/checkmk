@@ -75,6 +75,9 @@ bool TimeperiodsCache::inTimeperiod(const std::string &tpname) const {
 }
 
 bool TimeperiodsCache::inTimeperiod(const timeperiod *tp) const {
+    if (tp == nullptr) {
+        return true;  // unknown timeperiod is assumed to be 24X7
+    }
     const std::lock_guard<std::mutex> lg(_mutex);
     auto it = _cache.find(tp);
     if (it == _cache.end()) {

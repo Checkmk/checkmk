@@ -19,8 +19,7 @@
 
 import datetime
 import time
-from collections.abc import Mapping
-from typing import Any
+from typing import TypedDict
 
 from cmk.base.check_api import check_levels, discover, get_bytes_human_readable, MKCounterWrapped
 from cmk.base.config import check_info, factory_settings
@@ -41,21 +40,30 @@ factory_settings["oracle_instance_defaults"] = {
 }
 
 
+class _Params(TypedDict, total=True):
+    logins: int
+    noforcelogging: int
+    noarchivelog: int
+    primarynotopen: int
+    archivelog: int
+    forcelogging: int
+
+
+def _merge_states(state: int, infotext: str, value: int, column: str, data: str) -> tuple[int, str]:
+    if column.lower() == data.lower():
+        state = max(state, value)
+        if value == 1:
+            infotext += "(!)"
+        elif value == 2:
+            infotext += "(!!)"
+    return state, infotext
+
+
 def check_oracle_instance(  # pylint: disable=too-many-branches
-    item: str, params: Mapping[str, Any], section: Section
+    item: str, params: _Params, section: Section
 ) -> tuple[int, str, list]:
     if not (item_data := section.get(item)):
         return 2, "Database or necessary processes not running or login failed", []
-
-    def state_marker(state, infotext, param, column, data):
-        value = params[param]
-        if column.lower() == data.lower():
-            state = max(state, value)
-            if value == 1:
-                infotext += "(!)"
-            elif value == 2:
-                infotext += "(!!)"
-        return state, infotext
 
     if isinstance(
         item_data,
@@ -78,7 +86,9 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
             item_data.version,
             item_data.logins.lower(),
         )
-        state, infotext = state_marker(state, infotext, "logins", item_data.logins, "RESTRICTED")
+        state, infotext = _merge_states(
+            state, infotext, params["logins"], item_data.logins, "RESTRICTED"
+        )
         return state, infotext, []
 
     if item_data.pdb:
@@ -118,19 +128,19 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
         # logins are only possible when the database is open
         if item_data.openmode == "OPEN":
             infotext += ", Logins %s" % (item_data.logins.lower())
-            state, infotext = state_marker(
-                state, infotext, "logins", item_data.logins, "RESTRICTED"
+            state, infotext = _merge_states(
+                state, infotext, params["logins"], item_data.logins, "RESTRICTED"
             )
 
         # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
         if item_data.name != "_MGMTDB" and item_data.sid != "-MGMTDB" and not item_data.pdb:
             assert item_data.log_mode is not None
             infotext += ", Log Mode %s" % (item_data.log_mode.lower())
-            state, infotext = state_marker(
-                state, infotext, "archivelog", item_data.log_mode, "ARCHIVELOG"
+            state, infotext = _merge_states(
+                state, infotext, params["archivelog"], item_data.log_mode, "ARCHIVELOG"
             )
-            state, infotext = state_marker(
-                state, infotext, "noarchivelog", item_data.log_mode, "NOARCHIVELOG"
+            state, infotext = _merge_states(
+                state, infotext, params["noarchivelog"], item_data.log_mode, "NOARCHIVELOG"
             )
 
             # archivelog is only valid in non pdb
@@ -143,11 +153,11 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
 
                 assert item_data.force_logging is not None
                 infotext += ", Force Logging %s" % (item_data.force_logging.lower())
-                state, infotext = state_marker(
-                    state, infotext, "forcelogging", item_data.force_logging, "YES"
+                state, infotext = _merge_states(
+                    state, infotext, params["forcelogging"], item_data.force_logging, "YES"
                 )
-                state, infotext = state_marker(
-                    state, infotext, "noforcelogging", item_data.force_logging, "NO"
+                state, infotext = _merge_states(
+                    state, infotext, params["noforcelogging"], item_data.force_logging, "NO"
                 )
 
     perfdata = []

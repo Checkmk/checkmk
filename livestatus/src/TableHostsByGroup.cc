@@ -8,11 +8,13 @@
 #include "TableHostGroups.h"
 #include "TableHosts.h"
 #include "livestatus/Column.h"
-#include "livestatus/Interface.h"
 #include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
+
+class IHost;
+class IHostGroup;
 
 namespace {
 struct host_and_group {

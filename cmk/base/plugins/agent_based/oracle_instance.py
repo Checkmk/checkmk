@@ -6,6 +6,8 @@
 import dataclasses
 from typing import Final, Mapping, Optional, Sequence, Union
 
+from pydantic import BaseModel
+
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
@@ -25,14 +27,13 @@ class GeneralError:
     err: str
 
 
-@dataclasses.dataclass
-class Instance:
+class Instance(BaseModel):
     sid: str
     version: str
     openmode: str
     logins: str
     archiver: Optional[str] = None
-    up_seconds: Optional[str] = None
+    up_seconds: Optional[int] = None
     log_mode: Optional[str] = None
     database_role: Optional[str] = None
     force_logging: Optional[str] = None
@@ -43,8 +44,8 @@ class Instance:
     pname: Optional[str] = None
     popenmode: Optional[str] = None
     prestricted: Optional[str] = None
-    ptotal_size: Optional[str] = None
-    pup_seconds: Optional[str] = None
+    ptotal_size: Optional[int] = None
+    pup_seconds: Optional[int] = None
     host_name: Optional[str] = None
     old_agent: bool = False
 
@@ -188,7 +189,7 @@ def _parse_agent_line(line: Sequence[str]) -> Union[InvalidData, GeneralError, I
         return InvalidData(sid=sid)
 
     raw = ((k, v) for k, v in zip(header, line) if not k.startswith("_"))
-    instance = Instance(**dict(raw), old_agent=length == 6)
+    instance = Instance.parse_obj(dict(raw, old_agent=length == 6))
 
     if instance.pdb:
         assert instance.popenmode is not None
@@ -279,13 +280,6 @@ def inventory_oracle_instance(section: Section) -> InventoryResult:
             )
             continue
 
-        try:
-            status_columns: dict[str, Union[str, int]] = {"db_uptime": int(item_data.up_seconds)}  # type: ignore[arg-type]
-        except (TypeError, ValueError):
-            status_columns = {}
-        if item_data.host_name:
-            status_columns["host"] = item_data.host_name
-
         yield TableRow(
             path=path,
             key_columns={"sid": item_data.sid},
@@ -297,7 +291,10 @@ def inventory_oracle_instance(section: Section) -> InventoryResult:
                 "logins": item_data.logins,
                 "db_creation_time": _parse_raw_db_creation_time(item_data.db_creation_time),
             },
-            status_columns=status_columns,
+            status_columns={
+                "db_uptime": item_data.up_seconds,
+                "host": item_data.host_name,
+            },
         )
 
 

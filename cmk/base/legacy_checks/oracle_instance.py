@@ -159,10 +159,9 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
 
     perfdata = []
 
-    if item_data.pdb:
-        assert item_data.ptotal_size is not None
-        infotext += ", PDB Size %s" % get_bytes_human_readable(int(item_data.ptotal_size))
-        perfdata.append(("fs_size", int(item_data.ptotal_size)))
+    if item_data.pdb and item_data.ptotal_size is not None:
+        infotext += ", PDB Size %s" % get_bytes_human_readable(item_data.ptotal_size)
+        perfdata.append(("fs_size", item_data.ptotal_size))
 
     yield state, infotext, perfdata
 
@@ -203,16 +202,14 @@ def check_oracle_instance_uptime(
     if data.up_seconds is None:
         return
 
-    up_seconds = int(data.up_seconds)
-
     levels = params.get("max", (None, None)) + params.get("min", (None, None))
     yield check_levels(
-        up_seconds,
+        data.up_seconds,
         "uptime",
         levels,
         human_readable_func=lambda x: datetime.timedelta(seconds=int(x)),
         infoname="Up since %s, uptime"
-        % time.strftime("%F %T", time.localtime(time.time() - up_seconds)),
+        % time.strftime("%F %T", time.localtime(time.time() - data.up_seconds)),
     )
 
 

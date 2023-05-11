@@ -1,0 +1,12 @@
+Title: Windows agent plugin hyperv_vms_guestinfos uses UTF-8
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683800811
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b8
+
+
+

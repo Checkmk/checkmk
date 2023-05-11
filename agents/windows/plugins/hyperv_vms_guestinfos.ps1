@@ -19,6 +19,7 @@ $CMK_VERSION = "2.2.0b8"
 
 $OutputFile = "c:\scripts\VM-State.txt" # Path and filename for file output
 $WriteFileOutput = $false
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 
 # DO NOT CHANGE ANYTHING BELOW THIS LINE!

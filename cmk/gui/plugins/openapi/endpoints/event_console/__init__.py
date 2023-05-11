@@ -61,7 +61,7 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, perm
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 
-IGNORE_PERMISSIONS = permissions.Ignore(
+IGNORE_PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
             permissions.Perm("mkeventd.seeall"),

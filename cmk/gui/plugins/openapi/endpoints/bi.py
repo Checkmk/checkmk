@@ -92,7 +92,7 @@ class BIRuleEndpointSchema(BIRuleSchema):
 RO_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.bi_rules"),
-        permissions.Ignore(
+        permissions.Undocumented(
             permissions.AnyPerm(
                 [
                     permissions.Perm("bi.see_all"),

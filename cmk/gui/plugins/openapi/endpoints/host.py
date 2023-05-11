@@ -82,7 +82,7 @@ class HostParameters(BaseSchema):
     columns = gui_fields.column_field(Hosts, mandatory=[Hosts.name], example=["name"])
 
 
-PERMISSIONS = permissions.Ignore(
+PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
             permissions.Perm("general.see_all"),

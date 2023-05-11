@@ -51,7 +51,7 @@ ACTIVATION_ID = {
 }
 
 # NOTE: These are not needed for the activation of changes, but are asked for different queries
-RO_PERMISSIONS = permissions.Ignore(
+RO_PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
             permissions.Perm("general.see_all"),

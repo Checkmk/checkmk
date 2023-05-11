@@ -93,7 +93,7 @@ DOWNTIME_TYPE = {
     )
 }
 
-PERMISSIONS = permissions.Ignore(
+PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
             permissions.Perm("general.see_all"),

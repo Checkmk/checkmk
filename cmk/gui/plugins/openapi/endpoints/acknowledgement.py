@@ -50,7 +50,7 @@ SERVICE_DESCRIPTION = {
 RW_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("action.acknowledge"),
-        permissions.Ignore(
+        permissions.Undocumented(
             permissions.AnyPerm(
                 [
                     permissions.Perm("general.see_all"),

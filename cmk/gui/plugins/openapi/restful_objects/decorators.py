@@ -1552,7 +1552,7 @@ def _permission_descriptions(
 
         >>> _permission_descriptions(
         ...     permissions.AllPerm([permissions.Perm("wato.edit_folders"),
-        ...                          permissions.Ignore(permissions.Perm("wato.edit"))]),
+        ...                          permissions.Undocumented(permissions.Perm("wato.edit"))]),
         ...     {'wato.edit_folders': 'Allowed to cook the books.'},
         ... )
         'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
@@ -1591,7 +1591,7 @@ def _permission_descriptions(
     _description: list[str] = ["This endpoint requires the following permissions: "]
 
     def _count_perms(_perms):
-        return len([p for p in _perms if not isinstance(p, permissions.Ignore)])
+        return len([p for p in _perms if not isinstance(p, permissions.Undocumented)])
 
     def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: list[str]) -> None:
         # We indent by two spaces, as is required by markdown.
@@ -1619,7 +1619,7 @@ def _permission_descriptions(
         elif isinstance(permission, permissions.Optional):
             desc_list.append(f"{prefix} * Optionally:")
             _add_desc(permission.perm, indent + 1, desc_list)
-        elif isinstance(permission, permissions.Ignore):
+        elif isinstance(permission, permissions.Undocumented):
             # Don't render
             pass
         else:

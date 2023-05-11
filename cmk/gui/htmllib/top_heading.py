@@ -88,7 +88,7 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
     if (
         header_effect := get_licensing_user_effect(
             licensing_settings_link=makeuri_contextless(
-                _request, [("mode", "edit_licensing_settings")], filename="wato.py"
+                _request, [("mode", "licensing")], filename="wato.py"
             )
         ).header
     ) and (set(header_effect.roles).intersection(user.role_ids)):

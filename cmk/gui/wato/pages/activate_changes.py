@@ -189,7 +189,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             )
             block_effect = get_licensing_user_effect(
                 licensing_settings_link=makeuri_contextless(
-                    request, [("mode", "edit_licensing_settings")], filename="wato.py"
+                    request, [("mode", "licensing")], filename="wato.py"
                 ),
             )
             return block_effect.block is None and license_usage_report_valid
@@ -424,7 +424,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         if block_effect := get_licensing_user_effect(
             licensing_settings_link=makeuri_contextless(
-                request, [("mode", "edit_licensing_settings")], filename="wato.py"
+                request, [("mode", "licensing")], filename="wato.py"
             ),
         ).block:
             errors.append(block_effect.message)

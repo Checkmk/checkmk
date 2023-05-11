@@ -710,7 +710,7 @@ class DiscoveryPageRenderer:
             _(
                 "No services found. "
                 "If you expect this host to have (vanished) services, it probably means that one "
-                "of the confured data sources is not operating as expected. "
+                "of the configured data sources is not operating as expected. "
                 "Take a look at the <i>Check_MK</i> service to see what is wrong."
             )
         )

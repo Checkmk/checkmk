@@ -65,16 +65,10 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
     if not (item_data := section.get(item)):
         return 2, "Database or necessary processes not running or login failed", []
 
-    if isinstance(
-        item_data,
-        GeneralError,
-    ):
+    if isinstance(item_data, GeneralError):
         return 2, item_data.err, []
 
-    if isinstance(
-        item_data,
-        InvalidData,
-    ):
+    if isinstance(item_data, InvalidData):
         return 2, "Database not running, login failed or unvalid data from agent", []
 
     state = 0

@@ -2703,7 +2703,7 @@ def _raise_for_license_block() -> None:
             _request, [("mode", "licensing")], filename="wato.py"
         ),
     ).block:
-        raise MKLicensingError(block_effect.message)
+        raise MKLicensingError(block_effect.message_raw)
 
 
 def activate_changes_start(

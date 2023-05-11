@@ -427,7 +427,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 request, [("mode", "licensing")], filename="wato.py"
             ),
         ).block:
-            errors.append(block_effect.message)
+            errors.append(block_effect.message_html)
 
         if is_cloud_edition():
             # TODO move to CCE handler to avoid is_cloud_edition check

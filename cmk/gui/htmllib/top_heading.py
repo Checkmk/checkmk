@@ -92,7 +92,7 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
             )
         ).header
     ) and (set(header_effect.roles).intersection(user.role_ids)):
-        writer.show_warning(header_effect.message)
+        writer.show_warning(header_effect.message_html)
 
 
 def _make_default_page_state(

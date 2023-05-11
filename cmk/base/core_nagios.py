@@ -153,7 +153,7 @@ def _validate_licensing(licensing_handler: LicensingHandler, licensing_counter: 
     if block_effect := licensing_handler.effect_core(
         licensing_counter["services"], len(config.get_shadow_hosts())
     ).block:
-        raise MKGeneralException(block_effect.message)
+        raise MKGeneralException(block_effect.message_raw)
 
 
 def create_config(

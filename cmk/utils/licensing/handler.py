@@ -49,12 +49,29 @@ class EmailNotification:
 @dataclass
 class HeaderNotification:
     roles: Sequence[str]
-    message: str
+    subject: str
+    message_lines: Sequence[str]
+
+    @property
+    def message_html(self) -> str:
+        message = "<br><br>".join(self.message_lines)
+        return f"<b>{self.subject}</b><br><br>{message}"
 
 
 @dataclass
 class ActivationBlock:
-    message: str
+    subject: str
+    message_lines: Sequence[str]
+
+    @property
+    def message_raw(self) -> str:
+        message = "\n".join(self.message_lines)
+        return f"{self.subject}\n{message}"
+
+    @property
+    def message_html(self) -> str:
+        message = "<br><br>".join(self.message_lines)
+        return f"<b>{self.subject}</b><br><br>{message}"
 
 
 @dataclass

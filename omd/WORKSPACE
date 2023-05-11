@@ -107,3 +107,10 @@ msitools(
     sha256 = "ebbdd9aa714a6a6ada4450aff5e86351cf910d09b24a85645425737602d75df5",
     version_str = "0.94",
 )
+
+load("//packages/snap7:snap7_http.bzl", "snap7")
+
+snap7(
+    sha256 = "fe137737b432d95553ebe5d5f956f0574c6a80c0aeab7a5262fb36b535df3cf4",
+    version_str = "1.4.2",
+)

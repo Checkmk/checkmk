@@ -1,0 +1,26 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "make")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = [
+            "bazel-*",
+            "Makefile",
+        ],
+    ),
+)
+
+make(
+    name = "snap7",
+    args = [
+        "-j4",
+        "-C build/unix -f x86_64_linux.mk",
+        "LibInstall=$INSTALLDIR",
+    ],
+    lib_source = ":all_srcs",
+    out_lib_dir = "",
+    out_shared_libs = [
+        "libsnap7.so",
+    ],
+)

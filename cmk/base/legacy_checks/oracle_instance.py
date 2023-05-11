@@ -19,6 +19,7 @@
 
 import datetime
 import time
+from collections.abc import Iterable
 from typing import TypedDict
 
 from cmk.base.check_api import check_levels, discover, get_bytes_human_readable, MKCounterWrapped
@@ -61,15 +62,18 @@ def _merge_states(state: int, infotext: str, value: int, column: str, data: str)
 
 def check_oracle_instance(  # pylint: disable=too-many-branches
     item: str, params: _Params, section: Section
-) -> tuple[int, str, list]:
+) -> Iterable[tuple[int, str, list]]:
     if not (item_data := section.get(item)):
-        return 2, "Database or necessary processes not running or login failed", []
+        yield 2, "Database or necessary processes not running or login failed", []
+        return
 
     if isinstance(item_data, GeneralError):
-        return 2, item_data.err, []
+        yield 2, item_data.err, []
+        return
 
     if isinstance(item_data, InvalidData):
-        return 2, "Database not running, login failed or unvalid data from agent", []
+        yield 2, "Database not running, login failed or unvalid data from agent", []
+        return
 
     state = 0
 
@@ -83,7 +87,8 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
         state, infotext = _merge_states(
             state, infotext, params["logins"], item_data.logins, "RESTRICTED"
         )
-        return state, infotext, []
+        yield state, infotext, []
+        return
 
     if item_data.pdb:
         infotext = "PDB Name %s.%s, Status %s" % (
@@ -160,7 +165,7 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
         infotext += ", PDB Size %s" % get_bytes_human_readable(int(item_data.ptotal_size))
         perfdata.append(("fs_size", int(item_data.ptotal_size)))
 
-    return state, infotext, perfdata
+    yield state, infotext, perfdata
 
 
 check_info["oracle_instance"] = {

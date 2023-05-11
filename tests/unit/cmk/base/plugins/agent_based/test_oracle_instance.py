@@ -144,7 +144,7 @@ def test_discover_oracle_instance(fix_register: FixRegister) -> None:
                     sid="b",
                     err="something went wrong",
                 ),
-                "c": Instance(sid="c"),
+                "c": Instance(sid="c", version="", openmode="", logins=""),
             },
         )
     ) == [

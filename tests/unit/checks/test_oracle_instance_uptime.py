@@ -30,7 +30,7 @@ def test_discover_oracle_instance_uptime(fix_register: FixRegister) -> None:
     assert list(
         fix_register.check_plugins[CheckPluginName("oracle_instance_uptime")].discovery_function(
             {
-                "a": Instance(sid="a"),
+                "a": Instance(sid="a", version="", openmode="", logins=""),
                 "b": GeneralError(
                     sid="b",
                     err="whatever",

@@ -28,9 +28,9 @@ class GeneralError:
 @dataclasses.dataclass
 class Instance:
     sid: str
-    version: Optional[str] = None
-    openmode: Optional[str] = None
-    logins: Optional[str] = None
+    version: str
+    openmode: str
+    logins: str
     archiver: Optional[str] = None
     up_seconds: Optional[str] = None
     log_mode: Optional[str] = None
@@ -191,6 +191,7 @@ def _parse_agent_line(line: Sequence[str]) -> Union[InvalidData, GeneralError, I
     instance = Instance(**dict(raw), old_agent=length == 6)
 
     if instance.pdb:
+        assert instance.popenmode is not None
         instance.logins = "RESTRICTED" if str(instance.prestricted).lower() == "no" else "ALLOWED"
         instance.openmode = instance.popenmode
         instance.up_seconds = instance.pup_seconds

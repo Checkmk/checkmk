@@ -19,10 +19,17 @@
 
 import datetime
 import time
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.base.check_api import check_levels, discover, get_bytes_human_readable, MKCounterWrapped
 from cmk.base.config import check_info, factory_settings
-from cmk.base.plugins.agent_based.oracle_instance import GeneralError, Instance, InvalidData
+from cmk.base.plugins.agent_based.oracle_instance import (
+    GeneralError,
+    Instance,
+    InvalidData,
+    Section,
+)
 
 factory_settings["oracle_instance_defaults"] = {
     "logins": 2,
@@ -32,19 +39,11 @@ factory_settings["oracle_instance_defaults"] = {
 }
 
 
-def _transform_oracle_instance_params(p):
-    if "ignore_noarchivelog" in p:
-        if p["ignore_noarchivelog"]:
-            p["noarchivelog"] = 0
-        del p["ignore_noarchivelog"]
-    return p
-
-
-def check_oracle_instance(item, params, section):  # pylint: disable=too-many-branches
+def check_oracle_instance(  # pylint: disable=too-many-branches
+    item: str, params: Mapping[str, Any], section: Section
+) -> tuple[int, str, list]:
     if not (item_data := section.get(item)):
-        return 2, "Database or necessary processes not running or login failed"
-
-    params = _transform_oracle_instance_params(params)
+        return 2, "Database or necessary processes not running or login failed", []
 
     def state_marker(state, infotext, param, column, data):
         value = params.get(param)
@@ -60,13 +59,13 @@ def check_oracle_instance(item, params, section):  # pylint: disable=too-many-br
         item_data,
         GeneralError,
     ):
-        return 2, item_data.err
+        return 2, item_data.err, []
 
     if isinstance(
         item_data,
         InvalidData,
     ):
-        return 2, "Database not running, login failed or unvalid data from agent"
+        return 2, "Database not running, login failed or unvalid data from agent", []
 
     state = 0
 
@@ -78,7 +77,7 @@ def check_oracle_instance(item, params, section):  # pylint: disable=too-many-br
             item_data.logins.lower(),
         )
         state, infotext = state_marker(state, infotext, "logins", item_data.logins, "RESTRICTED")
-        return state, infotext
+        return state, infotext, []
 
     if item_data.pdb:
         infotext = "PDB Name %s.%s, Status %s" % (
@@ -98,7 +97,7 @@ def check_oracle_instance(item, params, section):  # pylint: disable=too-many-br
         "READ ONLY",
         "READ WRITE",
     ):
-        state = params.get("primarynotopen")
+        state = int(params["primarynotopen"])
         if state == 1:
             infotext += "(!)"
         elif state == 2:
@@ -123,6 +122,7 @@ def check_oracle_instance(item, params, section):  # pylint: disable=too-many-br
 
         # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
         if item_data.name != "_MGMTDB" and item_data.sid != "-MGMTDB" and not item_data.pdb:
+            assert item_data.log_mode is not None
             infotext += ", Log Mode %s" % (item_data.log_mode.lower())
             state, infotext = state_marker(
                 state, infotext, "archivelog", item_data.log_mode, "ARCHIVELOG"
@@ -135,9 +135,11 @@ def check_oracle_instance(item, params, section):  # pylint: disable=too-many-br
             # force logging is only usable when archivelog is enabled
             if item_data.log_mode == "ARCHIVELOG":
                 if item_data.archiver != "STARTED":
+                    assert item_data.archiver is not None
                     infotext += ". Archiver %s(!!)" % (item_data.archiver.lower())
                     state = 2
 
+                assert item_data.force_logging is not None
                 infotext += ", Force Logging %s" % (item_data.force_logging.lower())
                 state, infotext = state_marker(
                     state, infotext, "forcelogging", item_data.force_logging, "YES"

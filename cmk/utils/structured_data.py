@@ -153,6 +153,93 @@ class UpdateResult:
         return "\n".join(lines) + "\n"
 
 
+#   .--merge trees---------------------------------------------------------.
+#   |                                       _                              |
+#   |       _ __ ___   ___ _ __ __ _  ___  | |_ _ __ ___  ___  ___         |
+#   |      | '_ ` _ \ / _ \ '__/ _` |/ _ \ | __| '__/ _ \/ _ \/ __|        |
+#   |      | | | | | |  __/ | | (_| |  __/ | |_| | |  __/  __/\__ \        |
+#   |      |_| |_| |_|\___|_|  \__, |\___|  \__|_|  \___|\___||___/        |
+#   |                          |___/                                       |
+#   '----------------------------------------------------------------------'
+
+
+def _merge_attributes(attributes_lhs: Attributes, attributes_rhs: Attributes) -> Attributes:
+    attributes = Attributes(
+        path=attributes_lhs.path,
+        retentions={**attributes_lhs.retentions, **attributes_rhs.retentions},
+    )
+    attributes.add_pairs(attributes_lhs.pairs)
+    attributes.add_pairs(attributes_rhs.pairs)
+    return attributes
+
+
+def _merge_tables(table_lhs: Table, table_rhs: Table) -> Table:
+    if table_lhs.key_columns == table_rhs.key_columns:
+        table = Table(
+            path=table_lhs.path,
+            key_columns=table_lhs.key_columns,
+            retentions={**table_lhs.retentions, **table_rhs.retentions},
+        )
+
+        compared_keys = _compare_dict_keys(
+            old_dict=table_rhs.rows_by_ident, new_dict=table_lhs.rows_by_ident
+        )
+
+        for key in compared_keys.only_old:
+            table.add_row(key, table_rhs.rows_by_ident[key])
+
+        for key in compared_keys.both:
+            table.add_row(key, {**table_lhs.rows_by_ident[key], **table_rhs.rows_by_ident[key]})
+
+        for key in compared_keys.only_new:
+            table.add_row(key, table_lhs.rows_by_ident[key])
+
+        return table
+
+    # Legacy tables
+    table = Table(
+        path=table_lhs.path,
+        key_columns=sorted(set(table_lhs.key_columns).intersection(table_rhs.key_columns)),
+        retentions={**table_lhs.retentions, **table_rhs.retentions},
+    )
+
+    # Re-calculates row identifiers
+    table.add_rows(list(table_lhs.rows_by_ident.values()))
+    table.add_rows(list(table_rhs.rows_by_ident.values()))
+
+    return table
+
+
+def _merge_nodes(node_lhs: StructuredDataNode, node_rhs: StructuredDataNode) -> StructuredDataNode:
+    node = StructuredDataNode(name=node_lhs.name, path=node_lhs.path)
+    node.add_attributes(_merge_attributes(node_lhs.attributes, node_rhs.attributes))
+    node.add_table(_merge_tables(node_lhs.table, node_rhs.table))
+
+    compared_keys = _compare_dict_keys(
+        old_dict=node_rhs.nodes_by_name, new_dict=node_lhs.nodes_by_name
+    )
+
+    for key in compared_keys.only_old:
+        node.add_node(node_rhs.nodes_by_name[key])
+
+    for key in compared_keys.both:
+        node.add_node(
+            _merge_nodes(node_lhs=node_lhs.nodes_by_name[key], node_rhs=node_rhs.nodes_by_name[key])
+        )
+
+    for key in compared_keys.only_new:
+        node.add_node(node_lhs.nodes_by_name[key])
+
+    return node
+
+
+def merge_trees(tree_lhs: object, tree_rhs: object) -> StructuredDataNode:
+    if not (isinstance(tree_lhs, StructuredDataNode) and isinstance(tree_rhs, StructuredDataNode)):
+        raise TypeError(f"Cannot merge {type(tree_lhs)} and {type(tree_rhs)}")
+    return _merge_nodes(tree_lhs, tree_rhs)
+
+
+# .
 #   .--IO------------------------------------------------------------------.
 #   |                              ___ ___                                 |
 #   |                             |_ _/ _ \                                |
@@ -341,6 +428,10 @@ class StructuredDataNode:
     def nodes(self) -> Iterator[StructuredDataNode]:
         yield from self._nodes.values()
 
+    @property
+    def nodes_by_name(self) -> Mapping[SDNodeName, StructuredDataNode]:
+        return self._nodes
+
     #   ---common methods-------------------------------------------------------
 
     def is_empty(self) -> bool:
@@ -376,28 +467,6 @@ class StructuredDataNode:
             ]
             + [node.count_entries() for node in self._nodes.values()]
         )
-
-    def merge_with(self, other: object) -> StructuredDataNode:
-        if not isinstance(other, StructuredDataNode):
-            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
-
-        node = StructuredDataNode(name=self.name, path=self.path)
-
-        node.add_attributes(self.attributes.merge_with(other.attributes))
-        node.add_table(self.table.merge_with(other.table))
-
-        compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
-
-        for key in compared_keys.only_old:
-            node.add_node(other._nodes[key])
-
-        for key in compared_keys.both:
-            node.add_node(self._nodes[key].merge_with(other._nodes[key]))
-
-        for key in compared_keys.only_new:
-            node.add_node(self._nodes[key])
-
-        return node
 
     #   ---node methods---------------------------------------------------------
 
@@ -651,6 +720,10 @@ class Table:
     def rows(self) -> list[SDRow]:
         return list(self._rows.values())
 
+    @property
+    def rows_by_ident(self) -> Mapping[SDRowIdent, SDRow]:
+        return self._rows
+
     #   ---common methods-------------------------------------------------------
 
     def is_empty(self) -> bool:
@@ -671,53 +744,6 @@ class Table:
 
     def count_entries(self) -> int:
         return sum(map(len, self._rows.values()))
-
-    def merge_with(self, other: object) -> Table:
-        if not isinstance(other, Table):
-            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
-
-        if self.key_columns == other.key_columns:
-            return self._merge_with(other)
-        return self._merge_with_legacy(other)
-
-    def _merge_with(self, other: Table) -> Table:
-        table = Table(
-            path=self.path,
-            key_columns=self.key_columns,
-            retentions={
-                **self.retentions,
-                **other.retentions,
-            },
-        )
-
-        compared_keys = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
-
-        for key in compared_keys.only_old:
-            table.add_row(key, other._rows[key])
-
-        for key in compared_keys.both:
-            table.add_row(key, {**self._rows[key], **other._rows[key]})
-
-        for key in compared_keys.only_new:
-            table.add_row(key, self._rows[key])
-
-        return table
-
-    def _merge_with_legacy(self, other: Table) -> Table:
-        table = Table(
-            path=self.path,
-            key_columns=sorted(set(self.key_columns).intersection(other.key_columns)),
-            retentions={
-                **self.retentions,
-                **other.retentions,
-            },
-        )
-
-        # Re-calculates row identifiers
-        table.add_rows(list(self._rows.values()))
-        table.add_rows(list(other._rows.values()))
-
-        return table
 
     #   ---table methods--------------------------------------------------------
 
@@ -966,22 +992,6 @@ class Attributes:
 
     def count_entries(self) -> int:
         return len(self.pairs)
-
-    def merge_with(self, other: object) -> Attributes:
-        if not isinstance(other, Attributes):
-            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
-
-        attributes = Attributes(
-            path=self.path,
-            retentions={
-                **self.retentions,
-                **other.retentions,
-            },
-        )
-        attributes.add_pairs(self.pairs)
-        attributes.add_pairs(other.pairs)
-
-        return attributes
 
     #   ---attributes methods---------------------------------------------------
 
@@ -1322,7 +1332,7 @@ class ComparedDictKeys(NamedTuple):
     only_new: set
 
 
-def _compare_dict_keys(*, old_dict: dict, new_dict: dict) -> ComparedDictKeys:
+def _compare_dict_keys(*, old_dict: Mapping, new_dict: Mapping) -> ComparedDictKeys:
     """
     Returns the set relationships of the keys between two dictionaries:
     - relative complement of new_dict in old_dict

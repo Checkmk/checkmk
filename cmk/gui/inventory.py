@@ -29,6 +29,7 @@ from cmk.utils.structured_data import (
     DeltaStructuredDataNode,
     load_tree,
     make_filter,
+    merge_trees,
     SDKey,
     SDPath,
     StructuredDataNode,
@@ -532,7 +533,7 @@ def _merge_inventory_and_status_data_tree(
     if status_data_tree is None:
         return inventory_tree
 
-    return inventory_tree.merge_with(status_data_tree)
+    return merge_trees(inventory_tree, status_data_tree)
 
 
 def _filter_tree(struct_tree: StructuredDataNode | None) -> StructuredDataNode | None:

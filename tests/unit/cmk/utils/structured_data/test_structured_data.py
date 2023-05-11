@@ -17,6 +17,7 @@ from cmk.utils.structured_data import (
     Attributes,
     DeltaStructuredDataNode,
     make_filter,
+    merge_trees,
     parse_visible_raw_path,
     RetentionIntervals,
     SDKeys,
@@ -915,13 +916,14 @@ def test_real_get_children(tree_name: HostName, len_children: int) -> None:
         ),
     ],
 )
-def test_real_merge_with_get_children(
+def test_merge_trees_1(
     tree_name: HostName, edges: Sequence[str], sub_children: Sequence[tuple[str, Sequence[str]]]
 ) -> None:
     tree_store = _get_tree_store()
 
-    tree = tree_store.load(host_name=HostName("tree_old_addresses")).merge_with(
-        tree_store.load(host_name=tree_name)
+    tree = merge_trees(
+        tree_store.load(host_name=HostName("tree_old_addresses")),
+        tree_store.load(host_name=tree_name),
     )
 
     assert id(tree) == id(tree)
@@ -935,11 +937,11 @@ def test_real_merge_with_get_children(
         assert m(path) is not None
 
 
-def test_real_merge_with_table() -> None:
+def test_merge_trees_2() -> None:
     tree_store = _get_tree_store()
     tree_inv = tree_store.load(host_name=HostName("tree_inv"))
     tree_status = tree_store.load(host_name=HostName("tree_status"))
-    tree = tree_inv.merge_with(tree_status)
+    tree = merge_trees(tree_inv, tree_status)
     assert "foobar" in tree.serialize()["Nodes"]
     table = tree.get_table(("foobar",))
     assert table is not None

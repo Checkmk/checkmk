@@ -302,9 +302,11 @@ msgstr "%/分"
 msgid "% / range"
 msgstr "% / レンジ"
 
+#, no-python-format
 msgid "% above predicted value"
 msgstr "% 予測値を上回る"
 
+#, no-python-format
 msgid "% below predicted value"
 msgstr "%予測値を下回る"
 
@@ -312,6 +314,7 @@ msgstr "%予測値を下回る"
 msgid "% free"
 msgstr "% フリー"
 
+#, no-python-format
 msgid "% memory left"
 msgstr "% 残りのメモリ"
 
@@ -339,6 +342,7 @@ msgstr "% 最大アイドル接続"
 msgid "% of port speed"
 msgstr "ポート速度の%"
 
+#, no-python-format
 msgid "% time"
 msgstr "時間"
 
@@ -379,6 +383,7 @@ msgstr "%H:%M"
 msgid "%H:%M:%S"
 msgstr "%H:%M:%S"
 
+#, no-python-format
 msgid "%Y-%m-%d"
 msgstr "%Y-%m-%d"
 
@@ -512,6 +517,7 @@ msgid "%d unacknowledged incompatible werk"
 msgid_plural "%d unacknowledged incompatible werks"
 msgstr[0] "%d互換性のないwerksを開く"
 
+#, no-python-format
 msgid "%m-%d"
 msgstr "%m-%d"
 
@@ -811,6 +817,11 @@ msgstr "\"情報\"状態"
 
 msgid "'Major' state"
 msgstr "\"メジャー\"状態"
+
+msgid ""
+"'Minimum required Checkmk version' should not be greater than the 'Valid "
+"until Checkmk version'!"
+msgstr ""
 
 msgid "'Minor' state"
 msgstr "マイナー' 状態"
@@ -1143,6 +1154,7 @@ msgstr "6ヶ月"
 msgid "64bit packaged binary"
 msgstr "64ビットパッケージバイナリ"
 
+#, no-python-format
 msgid "68% - One standard deviation"
 msgstr "68% - 1つの標準偏差"
 
@@ -1158,9 +1170,11 @@ msgstr "7セグメントディスプレイuid"
 msgid "8 days back"
 msgstr "8日前"
 
+#, no-python-format
 msgid "86% - 1.5 standard deviations"
 msgstr "86% - 1.5 標準偏差"
 
+#, no-python-format
 msgid "95% - Two standard deviations"
 msgstr "95% - 2つの標準偏差"
 
@@ -2147,6 +2161,7 @@ msgstr ""
 msgid "A place where you can put graphs that you currently work with"
 msgstr "現在使用しているグラフを配置できる場所"
 
+#, no-python-format
 msgid ""
 "A provisioning of more than 100% is called over provisioning and can be a "
 "useful strategy for saving disk space. But you cannot guarantee any longer "
@@ -2160,6 +2175,7 @@ msgstr ""
 "ここで、最大プロビジョニングのレベルを設定できます。150%の警告レベルは、プロ"
 "ビジョニングを50%超えると警告します。"
 
+#, no-python-format
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "100%を超えるプロビジョニングは、過剰なプロビジョニングを意味します。"
 
@@ -5846,6 +5862,9 @@ msgstr "パターンを分析する"
 msgid "Analyze ruleset with this notification"
 msgstr "この通知でルールセットを分析する"
 
+msgid "Analyze the utilization of your IT infrastructure data center."
+msgstr ""
+
 msgid "Analyze this line"
 msgstr "この行を分析する"
 
@@ -6682,8 +6701,8 @@ msgstr "自動ページリロード"
 msgid "Automatic page reload in %d seconds."
 msgstr "%d 秒での自動ページリロード。"
 
-#, python-format
-msgid "Automatic renewal: %s"
+#, fuzzy
+msgid "Automatic renewal"
 msgstr "自動更新：%s"
 
 msgid "Automatic takeover"
@@ -8166,7 +8185,7 @@ msgid ""
 "information via SNMPv3."
 msgstr ""
 
-#, fuzzy
+#, fuzzy, no-python-format
 msgid ""
 "By default Checkmk treats space that is reserved for the <tt>root</tt> user "
 "on Linux and Unix as used space. Usually, 5% are being reserved for root "
@@ -8926,6 +8945,7 @@ msgstr "アプライアンスのCPU使用率"
 msgid "CPU utilization for simple devices"
 msgstr "単純なデバイスのCPU使用率"
 
+#, no-python-format
 msgid ""
 "CPU utilization is delivered by the Operating System as a per CPU core "
 "basis. Thus each core contributes with a 100% at full utilization, producing "
@@ -10046,7 +10066,7 @@ msgstr ""
 "LIVESTATUS_TCP_PORT で設定可能なポートの TCP 経由で到達できるようにするために"
 "使用されます。"
 
-#, fuzzy
+#, fuzzy, no-python-format
 msgid ""
 "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux "
 "and Unix as used space. Usually, 5% are being reserved for root when a new "
@@ -10221,8 +10241,8 @@ msgstr ""
 "ルセット「Disable bulk walks on SNMPv2c/v3 」を使用して、バルクウォークを無効"
 "にしてみるとよいでしょう。"
 
-#, fuzzy, python-format
-msgid "Checkmk edition: %s"
+#, fuzzy
+msgid "Checkmk edition"
 msgstr ""
 "Checkmk例外:%s\n"
 "%s"
@@ -10538,6 +10558,13 @@ msgstr "テーブルカラムを選択する"
 #, fuzzy
 msgid "Choose target user connector"
 msgstr "Checkmkエージェントバージョン"
+
+#, fuzzy
+msgid ""
+"Choose the Checkmk state in case any of the forwarded logfiles cannot be read"
+msgstr ""
+"プローブ状態がOKでない場合（プローブ状態のメトリックが0）のCheckmk状態を選択"
+"します。"
 
 msgid ""
 "Choose the Checkmk state in case of probe state not OK (probe state metric "
@@ -11739,6 +11766,7 @@ msgstr "サービスディスカバリを使用せずに強制チェックを構
 msgid "Configure grouping of interfaces"
 msgstr "インターフェイスのグループ化を構成します"
 
+#, no-python-format
 msgid ""
 "Configure levels for averaged CPU utilization depending on number of cluster "
 "nodes. The CPU utilization sums up the percentages of CPU time that is used "
@@ -16601,6 +16629,7 @@ msgstr ""
 msgid "Display time left in check output"
 msgstr "チェック出力の残り時間を表示"
 
+#, no-python-format
 msgid "Display total sum (for % the average)"
 msgstr "合計を表示する（%平均の場合）"
 
@@ -21867,6 +21896,13 @@ msgstr "GUIデザイン"
 msgid "GUI extensions"
 msgstr "GUI拡張機能"
 
+msgid ""
+"Gain a complete view of your entire IT infrastructure: from public cloud "
+"providers, to your data centers, across servers, networks, containers, and "
+"more. Checkmk enables ITOps and DevOps teams to run your IT at peak "
+"performance."
+msgstr ""
+
 msgid "Gamelan"
 msgstr "ガムラン"
 
@@ -21999,6 +22035,7 @@ msgstr "リモート監査ログを取得"
 msgid "GiB"
 msgstr "GiB"
 
+#, no-python-format
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
 "100%."
@@ -25200,6 +25237,10 @@ msgstr "IPv6のみ"
 msgid "ISC DHCP-Daemon (Linux)"
 msgstr "ISC DHCP-デーモン(Linux)"
 
+#, fuzzy
+msgid "IT infrastructure efficiency"
+msgstr "ルールの効率"
+
 msgid "Icon"
 msgstr "アイコン"
 
@@ -27584,8 +27625,8 @@ msgstr "無効なルール"
 msgid "Infections"
 msgstr "感染"
 
-#, python-format
-msgid "Infinite use of Checkmk up to version %s"
+#, fuzzy
+msgid "Infinite use of Checkmk up to version"
 msgstr "最低限必要なCheckmkバージョン %s"
 
 msgid "InfluxDB Connection"
@@ -28294,6 +28335,10 @@ msgstr "無効なレポート要素タイプ '%s'"
 msgid "Invalid request: %r"
 msgstr "無効なリクエスト: %r"
 
+#, fuzzy
+msgid "Invalid response"
+msgstr "無効なID"
+
 #, python-format
 msgid "Invalid response from event daemon: <pre>%s</pre>"
 msgstr "イベントデーモンからの無効な応答: <pre>%s </pre>"
@@ -28309,6 +28354,10 @@ msgstr "無効なルール <tt>%s</tt>"
 #, python-format
 msgid "Invalid sidebar element %s"
 msgstr "無効なサイドバー要素%s"
+
+#, fuzzy
+msgid "Invalid signature"
+msgstr "無効なサイト"
 
 #, fuzzy
 msgid "Invalid signature of response"
@@ -29391,13 +29440,6 @@ msgstr "最後にわかった詳細"
 msgid "Last known summary"
 msgstr "最後に知られている要約"
 
-#, fuzzy
-msgid "Last license usage submission"
-msgstr "最終ライセンス確認"
-
-msgid "Last license verification"
-msgstr "最終ライセンス確認"
-
 msgid "Last log"
 msgstr "最終ログ"
 
@@ -29440,6 +29482,10 @@ msgstr "サービス状態経過日数"
 #, python-format
 msgid "Last successful sync %d seconds ago."
 msgstr "最後に同期が行われたのは%d 秒前です。"
+
+#, fuzzy
+msgid "Last successful verification"
+msgstr "最終ライセンス確認"
 
 msgid "Last synchronization result"
 msgstr "最後の同期結果"
@@ -30203,12 +30249,12 @@ msgstr "ライセンス契約"
 msgid "License details"
 msgstr "ライセンス詳細"
 
-#, fuzzy, python-format
-msgid "License end: %s"
+#, fuzzy
+msgid "License end"
 msgstr "ライセンス"
 
-#, fuzzy, python-format
-msgid "License start: %s"
+#, fuzzy
+msgid "License start"
 msgstr "ライセンスの状態"
 
 msgid "License state"
@@ -30227,8 +30273,8 @@ msgstr "ライセンス検証"
 msgid "Licensed"
 msgstr "ライセンス"
 
-#, fuzzy, python-format
-msgid "Licensed services: %s"
+#, fuzzy
+msgid "Licensed services"
 msgstr "無効なサービス"
 
 #, fuzzy
@@ -31576,6 +31622,10 @@ msgstr "警告レベルを下げる"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "最低: 通知なし、バッジ番号を更新"
+
+#, fuzzy
+msgid "MAC Address"
+msgstr "Macアドレス"
 
 msgid "MAC address"
 msgstr "Macアドレス"
@@ -32967,13 +33017,6 @@ msgid "May see all sites"
 msgstr "すべてのサイトが表示される場合があります"
 
 msgid ""
-"May we present? Monitoring as it's supposed to be: incredibly quick to "
-"install, infinetely scalable, highly customizable and designed for admins."
-msgstr ""
-"ご紹介します。モニタリングは、非常に迅速なインストール、無限のスケーラビリ"
-"ティ、高度なカスタマイズ性、管理者のための設計など、理想的です。"
-
-msgid ""
 "Maybe the provided user (provided via bind credentials) has not enough "
 "permissions or the credentials are wrong."
 msgstr ""
@@ -33012,6 +33055,27 @@ msgstr "最後のいくつかのメッセージのキュー内の平均時間。
 
 msgid "Mean time in queue for the last medium number of messages."
 msgstr "最後の中程度の数のメッセージのキュー内の平均時間。"
+
+msgid "Measure the CPU and Memory efficiency of your Linux servers\n"
+msgstr ""
+
+msgid "Measure the CPU and Memory efficiency of your Nutanix servers\n"
+msgstr ""
+
+msgid "Measure the CPU and Memory efficiency of your VMware ESXi servers\n"
+msgstr ""
+
+msgid "Measure the CPU and Memory efficiency of your Windows servers\n"
+msgstr ""
+
+msgid "Measure the Filesystem efficiency of your Linux servers\n"
+msgstr ""
+
+msgid "Measure the Filesystem efficiency of your VMware ESXi servers\n"
+msgstr ""
+
+msgid "Measure the Filesystem efficiency of your Windows servers\n"
+msgstr ""
 
 msgid "Measurement unit"
 msgstr "測定単位"
@@ -33588,11 +33652,6 @@ msgstr "最小読み取り待機時間"
 msgid "Minimum required Checkmk version"
 msgstr "最低限必要なCheckmkバージョン"
 
-msgid ""
-"Minimum required Checkmk version should not be greater than the latest "
-"allowed one!"
-msgstr ""
-
 #, python-format
 msgid "Minimum required Checkmk version: %s"
 msgstr "最低限必要なCheckmkバージョン: %s"
@@ -33807,14 +33866,6 @@ msgstr "SSL証明書の検証"
 #, fuzzy
 msgid "Mode: Offline verification"
 msgstr "SSL証明書の検証"
-
-#, fuzzy
-msgid "Mode: Submit license usage offline"
-msgstr "ライセンス使用状況レポートの送信..."
-
-#, fuzzy
-msgid "Mode: Submit license usage online"
-msgstr "ライセンス使用状況レポートの送信..."
 
 msgid "Model"
 msgstr "モデル"
@@ -34517,6 +34568,7 @@ msgstr "MySQL スレーブ"
 msgid "MySQL database sizes"
 msgstr "MySQLデータベースのサイズ"
 
+#, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
 msgstr "N * 100%（各コアが100%フルロードで稼働しているため）"
 
@@ -35311,6 +35363,9 @@ msgstr "エージェントラベルはありません。"
 msgid "No agent registration requests processed"
 msgstr "エージェント登録リクエストは処理なし"
 
+msgid "No appropriate request ID"
+msgstr ""
+
 msgid "No authentication, no privacy"
 msgstr "認証なし、プライバシーなし"
 
@@ -36016,6 +36071,7 @@ msgstr ""
 "注意:レポートで制限も設定した場合、ここで設定した制限がその制限に置き換わりま"
 "す。"
 
+#, no-python-format
 msgid ""
 "Note: The admin state is in general only available for the 64-bit SNMP "
 "interface check. Additionally, you have to specifically configure Checkmk to "
@@ -37474,6 +37530,7 @@ msgstr "ステータスがOKでない場合のみ"
 msgid "Only in case of a problem"
 msgstr "問題が発生した場合のみ"
 
+#, no-python-format
 msgid "Only in case of a problem or if inodes are below 50%"
 msgstr "問題が発生した場合、またはiノードが50%未満の場合のみ"
 
@@ -37632,9 +37689,6 @@ msgstr "このサイトのローカルWebユーザーインターフェイスを
 msgid "Open this table for filtering / sorting"
 msgstr "この表を開いてフィルタリング/ソートする"
 
-msgid "Open. Effective. Awesome."
-msgstr "Open. Effective. Awesome."
-
 msgid "Open/close this element"
 msgstr "この要素を開く/閉じる"
 
@@ -37692,10 +37746,6 @@ msgstr "発見する運用ポートの状態"
 
 msgid "Operational state"
 msgstr "動作状態"
-
-#, fuzzy, python-format
-msgid "Operational state: %s"
-msgstr "運用状態 %s"
 
 msgid "Operational states"
 msgstr "運用状態"
@@ -37830,10 +37880,6 @@ msgstr "オプション"
 msgid "Options for report emails"
 msgstr "レポートメールのオプション"
 
-#, python-format
-msgid "Options: %s"
-msgstr "オプション: %s"
-
 msgid "Oracle"
 msgstr "オラクル"
 
@@ -37913,6 +37959,18 @@ msgstr "Oracleテーブルスペース"
 
 msgid "Order"
 msgstr "注文"
+
+#, fuzzy
+msgid "Organisation"
+msgstr "組織"
+
+#, fuzzy
+msgid "Organisation ID"
+msgstr "組織"
+
+#, fuzzy
+msgid "Organisation Name"
+msgstr "組織名"
 
 msgid "Organisation device statuses"
 msgstr "組織のデバイス状態"
@@ -39091,6 +39149,7 @@ msgstr "パーセンテージ無料"
 msgid "Percentage free space"
 msgstr "空き容量の割合"
 
+#, no-python-format
 msgid ""
 "Percentage in respect to the optimal utilization. For example if an alarm "
 "should raise at 50% wasted space, you need to configure 150%"
@@ -41785,6 +41844,10 @@ msgstr "リアルタイムチェック"
 msgid "Reason: %s"
 msgstr "理由:%s"
 
+#, fuzzy
+msgid "Reasons"
+msgstr "理由:%s"
+
 msgid "Receipt"
 msgstr "受理"
 
@@ -43061,8 +43124,8 @@ msgstr "再スケジュールチェック"
 msgid "Reschedule host and service checks"
 msgstr "アクティブなチェックを再スケジュールする"
 
-#, fuzzy, python-format
-msgid "Reseller: %s"
+#, fuzzy
+msgid "Reseller"
 msgstr "結果 %s"
 
 msgid "Reserved DB instances"
@@ -47017,10 +47080,6 @@ msgstr "サイニングエージェントのための署名キー"
 msgid "Signature keys the agent will accept"
 msgstr "エージェントが受け入れる署名キー"
 
-#, fuzzy
-msgid "Signature verification failed"
-msgstr "ユーザー通知"
-
 msgid ""
 "Signatures are required for cryptographically signing your agents. That "
 "makes sure that the nobody can inject faked agents. Sigantures are mandatory "
@@ -47463,6 +47522,7 @@ msgstr "スラブ(さまざまな小さなキャッシュ)"
 msgid "Slave usage bytes across all pools"
 msgstr "すべてのプールにわたるスレーブ使用バイト"
 
+#, no-python-format
 msgid ""
 "Slight gradient in the colors of the colored areas in the graphs. 0% turns "
 "off the gradient, 100% makes it the strongest possible."
@@ -48870,6 +48930,10 @@ msgstr "\"メンテナンス\"サービスが見つかった場合の状態"
 msgid "State if LGETTIME and LGETDATE are available but not set"
 msgstr "LGETTIMEとLGETDATEが使用可能であるが、設定されていない場合の状態"
 
+#, fuzzy
+msgid "State if a logfile cannot be read"
+msgstr "haローカル状態が無効な場合の状態"
+
 msgid "State if agent deployment is disabled for host"
 msgstr "ホストのエージェントデプロイが無効な場合の状態"
 
@@ -49900,10 +49964,6 @@ msgid "Succeeded provionings"
 msgstr "後継のプロビジョニング"
 
 msgid "Success"
-msgstr "成功"
-
-#, fuzzy
-msgid "Successful"
 msgstr "成功"
 
 msgid "Successfully changed password."
@@ -51031,6 +51091,7 @@ msgstr ""
 "CPUの数で乗算されるため、\"CPUごと\"に警告する値に基づいてレベルを構成する必"
 "要があります。"
 
+#, no-python-format
 msgid ""
 "The CPU utilization sums up the percentages of CPU time that is used for "
 "user processes and kernel routines over all available cores within the last "
@@ -51493,6 +51554,7 @@ msgstr ""
 msgid "The Number of the power Phase."
 msgstr "電力フェーズの数。"
 
+#, no-python-format
 msgid ""
 "The PCI IO utilization of components of a device (e.g. PCI Express card "
 "IOutilization of the rack units as components of a rack server as device)in "
@@ -53405,6 +53467,7 @@ msgstr ""
 "このホストの1つの特定モジュールのメモリレベル。これは、プラガブルカードなど、"
 "いくつかの異なるメモリ領域を持つホストに関連しています"
 
+#, no-python-format
 msgid ""
 "The memory utilization of components of a device (e.g. memory utilizationof "
 "the rack units as components of a rack server as device) in the lastcheck "
@@ -53852,6 +53915,7 @@ msgstr "組織のID"
 msgid "The original aspect of the image will be ignored."
 msgstr "画像の元の側面は無視されます。"
 
+#, no-python-format
 msgid ""
 "The overall utilization as aggregation of various utilizatons(cpu, memory, "
 "etc.) of components of a device (e.g. rack unitsas components of a rack "
@@ -54940,6 +55004,7 @@ msgstr "この属性に格納される情報のタイプ。"
 msgid "The type of the timestamp must be int or float, but is %s"
 msgstr "タイムスタンプのタイプはintまたはfloatである必要がありますが、%sです"
 
+#, no-python-format
 msgid ""
 "The used and free levels for the memory on UNIX systems take into account "
 "the currently used memory (RAM or Swap) by all processes and sets this in "
@@ -63981,26 +64046,6 @@ msgstr "認証に失敗しました（ライセンスサーバー）"
 msgid "Verification failed: %s"
 msgstr "検証失敗: %s"
 
-#, fuzzy
-msgid "Verification mode"
-msgstr "ユーザー通知"
-
-#, fuzzy
-msgid "Verification response does not match request"
-msgstr "このパッケージはインストールできません: %s"
-
-#, fuzzy
-msgid "Verification result"
-msgstr "登録完了"
-
-#, fuzzy
-msgid "Verification state"
-msgstr "ユーザー通知"
-
-#, fuzzy
-msgid "Verification time"
-msgstr "ユーザー通知"
-
 msgid "Verify certificates"
 msgstr "証明書を確認する"
 
@@ -67174,6 +67219,7 @@ msgstr ""
 "ジョブ名を定義することにより、明示的なジョブを設定できます。ジョブ名は、MSDB"
 "データベースのテーブル\"dbo.sysjobs\"の\"name\"列にあります。"
 
+#, no-python-format
 msgid ""
 "You can set limits for the latency of read or write I/O operations of Nimble "
 "storage volumes. Note that the operations are shown in terms of number of "
@@ -68168,6 +68214,10 @@ msgid ""
 "to fit within the free license service limit of %d."
 msgstr ""
 
+#, fuzzy
+msgid "Your IT monitoring platform"
+msgstr "お使いのモニター"
+
 msgid "Your WebAuthn credential is already in use"
 msgstr "WebAuthn認証はすでに使用されています"
 
@@ -68185,7 +68235,8 @@ msgstr "セントラルサイトは、このリモートサイトと互換性が
 msgid "Your changes have been saved nevertheless."
 msgstr "それでも、変更は保存されています。"
 
-msgid "Your changes haven been saved."
+#, fuzzy
+msgid "Your changes have been saved."
 msgstr "変更は保存されていません。"
 
 #, python-format
@@ -68256,9 +68307,6 @@ msgstr[0] "ロゴをアップロードしました。"
 
 msgid "Your modifications affect some objects"
 msgstr "変更は一部のオブジェクトに影響します"
-
-msgid "Your monitoring machine"
-msgstr "お使いのモニター"
 
 msgid "Your old password is wrong."
 msgstr "古いパスワードが間違っています。"
@@ -70387,6 +70435,80 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Last license verification"
+#~ msgid "Last license usage submission"
+#~ msgstr "最終ライセンス確認"
+
+#, fuzzy, python-format
+#~| msgid "License state"
+#~ msgid "License start: %s"
+#~ msgstr "ライセンスの状態"
+
+#, fuzzy
+#~| msgid "Submitting license usage report..."
+#~ msgid "Mode: Submit license usage offline"
+#~ msgstr "ライセンス使用状況レポートの送信..."
+
+#, fuzzy
+#~| msgid "Submitting license usage report..."
+#~ msgid "Mode: Submit license usage online"
+#~ msgstr "ライセンス使用状況レポートの送信..."
+
+#, fuzzy, python-format
+#~| msgid "Operational states"
+#~ msgid "Operational state: %s"
+#~ msgstr "運用状態 %s"
+
+#, python-format
+#~ msgid "Options: %s"
+#~ msgstr "オプション: %s"
+
+#, fuzzy
+#~| msgid "User notification"
+#~ msgid "Signature verification failed"
+#~ msgstr "ユーザー通知"
+
+#, fuzzy
+#~| msgid "success"
+#~ msgid "Successful"
+#~ msgstr "成功"
+
+#, fuzzy
+#~| msgid "User notification"
+#~ msgid "Verification mode"
+#~ msgstr "ユーザー通知"
+
+#, fuzzy
+#~| msgid "This package cannot be installed: %s"
+#~ msgid "Verification response does not match request"
+#~ msgstr "このパッケージはインストールできません: %s"
+
+#, fuzzy
+#~| msgid "Registration successful"
+#~ msgid "Verification result"
+#~ msgstr "登録完了"
+
+#, fuzzy
+#~| msgid "User notification"
+#~ msgid "Verification state"
+#~ msgstr "ユーザー通知"
+
+#, fuzzy
+#~| msgid "User notification"
+#~ msgid "Verification time"
+#~ msgstr "ユーザー通知"
+
+#~ msgid ""
+#~ "May we present? Monitoring as it's supposed to be: incredibly quick to "
+#~ "install, infinetely scalable, highly customizable and designed for admins."
+#~ msgstr ""
+#~ "ご紹介します。モニタリングは、非常に迅速なインストール、無限のスケーラビリ"
+#~ "ティ、高度なカスタマイズ性、管理者のための設計など、理想的です。"
+
+#~ msgid "Open. Effective. Awesome."
+#~ msgstr "Open. Effective. Awesome."
 
 #, fuzzy
 #~| msgid "Subscription details"

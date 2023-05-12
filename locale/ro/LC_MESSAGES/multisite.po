@@ -293,9 +293,11 @@ msgstr ""
 msgid "% / range"
 msgstr "% / gamă"
 
+#, no-python-format
 msgid "% above predicted value"
 msgstr "% peste valoarea prezisâ"
 
+#, no-python-format
 msgid "% below predicted value"
 msgstr "% sub valoarea prezisă"
 
@@ -303,6 +305,7 @@ msgstr "% sub valoarea prezisă"
 msgid "% free"
 msgstr "% liber"
 
+#, no-python-format
 msgid "% memory left"
 msgstr "% memorie liberă"
 
@@ -330,6 +333,7 @@ msgstr "Numarul maxim de conexiuni"
 msgid "% of port speed"
 msgstr "% din viteza portului"
 
+#, no-python-format
 msgid "% time"
 msgstr ""
 
@@ -370,6 +374,7 @@ msgstr ""
 msgid "%H:%M:%S"
 msgstr ""
 
+#, no-python-format
 msgid "%Y-%m-%d"
 msgstr ""
 
@@ -505,6 +510,7 @@ msgstr[0] ""
 msgstr[1] "Confirmă Problemele"
 msgstr[2] "Confirmă Problemele"
 
+#, no-python-format
 msgid "%m-%d"
 msgstr ""
 
@@ -800,6 +806,11 @@ msgstr "Conexiuni Active"
 #, fuzzy
 msgid "'Major' state"
 msgstr " pe siteul de monitorizare: "
+
+msgid ""
+"'Minimum required Checkmk version' should not be greater than the 'Valid "
+"until Checkmk version'!"
+msgstr ""
 
 #, fuzzy
 msgid "'Minor' state"
@@ -1156,6 +1167,7 @@ msgstr "2 ore"
 msgid "64bit packaged binary"
 msgstr ""
 
+#, no-python-format
 msgid "68% - One standard deviation"
 msgstr ""
 
@@ -1171,9 +1183,11 @@ msgstr ""
 msgid "8 days back"
 msgstr ""
 
+#, no-python-format
 msgid "86% - 1.5 standard deviations"
 msgstr ""
 
+#, no-python-format
 msgid "95% - Two standard deviations"
 msgstr ""
 
@@ -1878,6 +1892,7 @@ msgstr ""
 msgid "A place where you can put graphs that you currently work with"
 msgstr ""
 
+#, no-python-format
 msgid ""
 "A provisioning of more than 100% is called over provisioning and can be a "
 "useful strategy for saving disk space. But you cannot guarantee any longer "
@@ -1886,6 +1901,7 @@ msgid ""
 "at 50% over provisioning."
 msgstr ""
 
+#, no-python-format
 msgid "A provisioning of over 100% means over provisioning."
 msgstr ""
 
@@ -5755,6 +5771,9 @@ msgstr "Adaugă model/tipar"
 msgid "Analyze ruleset with this notification"
 msgstr ""
 
+msgid "Analyze the utilization of your IT infrastructure data center."
+msgstr ""
+
 msgid "Analyze this line"
 msgstr ""
 
@@ -6584,8 +6603,8 @@ msgstr ""
 msgid "Automatic page reload in %d seconds."
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Automatic renewal: %s"
+#, fuzzy
+msgid "Automatic renewal"
 msgstr "doua nivele"
 
 msgid "Automatic takeover"
@@ -8139,6 +8158,7 @@ msgid ""
 "information via SNMPv3."
 msgstr ""
 
+#, no-python-format
 msgid ""
 "By default Checkmk treats space that is reserved for the <tt>root</tt> user "
 "on Linux and Unix as used space. Usually, 5% are being reserved for root "
@@ -8784,6 +8804,7 @@ msgstr ""
 msgid "CPU utilization for simple devices"
 msgstr "Dezactiveaza Notificarile"
 
+#, no-python-format
 msgid ""
 "CPU utilization is delivered by the Operating System as a per CPU core "
 "basis. Thus each core contributes with a 100% at full utilization, producing "
@@ -9885,6 +9906,7 @@ msgid ""
 "reachable via TCP on a port configurable with LIVESTATUS_TCP_PORT."
 msgstr ""
 
+#, no-python-format
 msgid ""
 "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux "
 "and Unix as used space. Usually, 5% are being reserved for root when a new "
@@ -10067,8 +10089,8 @@ msgid ""
 "disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Checkmk edition: %s"
+#, fuzzy
+msgid "Checkmk edition"
 msgstr "Perioada de timp Noua"
 
 #, fuzzy
@@ -10348,6 +10370,10 @@ msgstr "Tagul Aplicatiei in syslog"
 #, fuzzy
 msgid "Choose target user connector"
 msgstr "Perioada de timp Noua"
+
+msgid ""
+"Choose the Checkmk state in case any of the forwarded logfiles cannot be read"
+msgstr ""
 
 msgid ""
 "Choose the Checkmk state in case of probe state not OK (probe state metric "
@@ -11573,6 +11599,7 @@ msgstr ""
 msgid "Configure grouping of interfaces"
 msgstr "Notificari"
 
+#, no-python-format
 msgid ""
 "Configure levels for averaged CPU utilization depending on number of cluster "
 "nodes. The CPU utilization sums up the percentages of CPU time that is used "
@@ -16669,6 +16696,7 @@ msgstr ""
 msgid "Display time left in check output"
 msgstr ""
 
+#, no-python-format
 msgid "Display total sum (for % the average)"
 msgstr ""
 
@@ -22061,6 +22089,13 @@ msgstr "Atribute personalizate"
 msgid "GUI extensions"
 msgstr "Dezactiveaza Notificarile"
 
+msgid ""
+"Gain a complete view of your entire IT infrastructure: from public cloud "
+"providers, to your data centers, across servers, networks, containers, and "
+"more. Checkmk enables ITOps and DevOps teams to run your IT at peak "
+"performance."
+msgstr ""
+
 msgid "Gamelan"
 msgstr ""
 
@@ -22200,6 +22235,7 @@ msgstr ""
 msgid "GiB"
 msgstr ""
 
+#, no-python-format
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
 "100%."
@@ -25246,6 +25282,9 @@ msgstr ""
 msgid "ISC DHCP-Daemon (Linux)"
 msgstr ""
 
+msgid "IT infrastructure efficiency"
+msgstr ""
+
 msgid "Icon"
 msgstr ""
 
@@ -27026,8 +27065,8 @@ msgstr "Reguli neaplicate"
 msgid "Infections"
 msgstr "Conexiuni Active"
 
-#, fuzzy, python-format
-msgid "Infinite use of Checkmk up to version %s"
+#, fuzzy
+msgid "Infinite use of Checkmk up to version"
 msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
@@ -27768,6 +27807,10 @@ msgstr ""
 msgid "Invalid request: %r"
 msgstr " Parametrul este: %r"
 
+#, fuzzy
+msgid "Invalid response"
+msgstr "Nume tablespace"
+
 #, python-format
 msgid "Invalid response from event daemon: <pre>%s</pre>"
 msgstr ""
@@ -27783,6 +27826,10 @@ msgstr ""
 #, python-format
 msgid "Invalid sidebar element %s"
 msgstr ""
+
+#, fuzzy
+msgid "Invalid signature"
+msgstr "Notificari"
 
 #, fuzzy
 msgid "Invalid signature of response"
@@ -28899,14 +28946,6 @@ msgid "Last known summary"
 msgstr ""
 
 #, fuzzy
-msgid "Last license usage submission"
-msgstr "Activare Configurare"
-
-#, fuzzy
-msgid "Last license verification"
-msgstr "Activare Configurare"
-
-#, fuzzy
 msgid "Last log"
 msgstr "Descarca"
 
@@ -28950,6 +28989,10 @@ msgstr "Activare schimbări"
 #, python-format
 msgid "Last successful sync %d seconds ago."
 msgstr ""
+
+#, fuzzy
+msgid "Last successful verification"
+msgstr "Activare Configurare"
 
 #, fuzzy
 msgid "Last synchronization result"
@@ -29834,12 +29877,12 @@ msgstr "% utilizare"
 msgid "License details"
 msgstr "Stare adiministrativă"
 
-#, fuzzy, python-format
-msgid "License end: %s"
+#, fuzzy
+msgid "License end"
 msgstr "Stare adiministrativă"
 
-#, fuzzy, python-format
-msgid "License start: %s"
+#, fuzzy
+msgid "License start"
 msgstr "Stare adiministrativă"
 
 #, fuzzy
@@ -29862,8 +29905,8 @@ msgstr "Activare Configurare"
 msgid "Licensed"
 msgstr "Stare adiministrativă"
 
-#, fuzzy, python-format
-msgid "Licensed services: %s"
+#, fuzzy
+msgid "Licensed services"
 msgstr "servicii"
 
 #, fuzzy
@@ -31291,6 +31334,10 @@ msgstr "Vechimea maxima"
 
 msgid "Lowest: No notification, update badge number"
 msgstr ""
+
+#, fuzzy
+msgid "MAC Address"
+msgstr "Adresă"
 
 #, fuzzy
 msgid "MAC address"
@@ -32794,11 +32841,6 @@ msgid "May see all sites"
 msgstr ""
 
 msgid ""
-"May we present? Monitoring as it's supposed to be: incredibly quick to "
-"install, infinetely scalable, highly customizable and designed for admins."
-msgstr ""
-
-msgid ""
 "Maybe the provided user (provided via bind credentials) has not enough "
 "permissions or the credentials are wrong."
 msgstr ""
@@ -32834,6 +32876,27 @@ msgstr ""
 #, fuzzy
 msgid "Mean time in queue for the last medium number of messages."
 msgstr "Numarul maxim de mesaje"
+
+msgid "Measure the CPU and Memory efficiency of your Linux servers\n"
+msgstr ""
+
+msgid "Measure the CPU and Memory efficiency of your Nutanix servers\n"
+msgstr ""
+
+msgid "Measure the CPU and Memory efficiency of your VMware ESXi servers\n"
+msgstr ""
+
+msgid "Measure the CPU and Memory efficiency of your Windows servers\n"
+msgstr ""
+
+msgid "Measure the Filesystem efficiency of your Linux servers\n"
+msgstr ""
+
+msgid "Measure the Filesystem efficiency of your VMware ESXi servers\n"
+msgstr ""
+
+msgid "Measure the Filesystem efficiency of your Windows servers\n"
+msgstr ""
 
 msgid "Measurement unit"
 msgstr ""
@@ -33460,11 +33523,6 @@ msgstr "Perioada de timp Noua"
 msgid "Minimum required Checkmk version"
 msgstr "Numarul maxim de conexiuni"
 
-msgid ""
-"Minimum required Checkmk version should not be greater than the latest "
-"allowed one!"
-msgstr ""
-
 #, fuzzy, python-format
 msgid "Minimum required Checkmk version: %s"
 msgstr "Numarul maxim de conexiuni"
@@ -33693,14 +33751,6 @@ msgstr "Activare Configurare"
 #, fuzzy
 msgid "Mode: Offline verification"
 msgstr "Activare Configurare"
-
-#, fuzzy
-msgid "Mode: Submit license usage offline"
-msgstr "% utilizare"
-
-#, fuzzy
-msgid "Mode: Submit license usage online"
-msgstr "% utilizare"
 
 #, fuzzy
 msgid "Model"
@@ -34469,6 +34519,7 @@ msgstr ""
 msgid "MySQL database sizes"
 msgstr "Nume tablespace"
 
+#, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
 msgstr ""
 
@@ -35329,6 +35380,9 @@ msgstr ""
 msgid "No agent registration requests processed"
 msgstr ""
 
+msgid "No appropriate request ID"
+msgstr ""
+
 msgid "No authentication, no privacy"
 msgstr ""
 
@@ -36016,6 +36070,7 @@ msgid ""
 "replace that one."
 msgstr ""
 
+#, no-python-format
 msgid ""
 "Note: The admin state is in general only available for the 64-bit SNMP "
 "interface check. Additionally, you have to specifically configure Checkmk to "
@@ -37589,6 +37644,7 @@ msgstr ""
 msgid "Only in case of a problem"
 msgstr ""
 
+#, no-python-format
 msgid "Only in case of a problem or if inodes are below 50%"
 msgstr ""
 
@@ -37756,9 +37812,6 @@ msgstr ""
 msgid "Open this table for filtering / sorting"
 msgstr ""
 
-msgid "Open. Effective. Awesome."
-msgstr ""
-
 #, fuzzy
 msgid "Open/close this element"
 msgstr "Adaungă un nou element"
@@ -37824,10 +37877,6 @@ msgstr "Starea porturilor pentru inventariere"
 
 msgid "Operational state"
 msgstr ""
-
-#, fuzzy, python-format
-msgid "Operational state: %s"
-msgstr "Starea porturilor pentru inventariere"
 
 #, fuzzy
 msgid "Operational states"
@@ -37945,10 +37994,6 @@ msgstr ""
 msgid "Options for report emails"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Options: %s"
-msgstr "Grup nou"
-
 msgid "Oracle"
 msgstr ""
 
@@ -38035,6 +38080,18 @@ msgstr "Nume tablespace"
 
 msgid "Order"
 msgstr ""
+
+#, fuzzy
+msgid "Organisation"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
+msgid "Organisation ID"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
+msgid "Organisation Name"
+msgstr "Numele Aplicatiei"
 
 #, fuzzy
 msgid "Organisation device statuses"
@@ -39226,6 +39283,7 @@ msgstr ""
 msgid "Percentage free space"
 msgstr ""
 
+#, no-python-format
 msgid ""
 "Percentage in respect to the optimal utilization. For example if an alarm "
 "should raise at 50% wasted space, you need to configure 150%"
@@ -41982,6 +42040,9 @@ msgstr "Verificări active"
 msgid "Reason: %s"
 msgstr ""
 
+msgid "Reasons"
+msgstr ""
+
 msgid "Receipt"
 msgstr ""
 
@@ -43290,8 +43351,8 @@ msgstr "<b>reprogramează o verificare imediată"
 msgid "Reschedule host and service checks"
 msgstr "<b>reprogramează o verificare imediată"
 
-#, fuzzy, python-format
-msgid "Reseller: %s"
+#, fuzzy
+msgid "Reseller"
 msgstr "(altul: %s)"
 
 #, fuzzy
@@ -47416,10 +47477,6 @@ msgstr "Acces la Agenți"
 msgid "Signature keys the agent will accept"
 msgstr ""
 
-#, fuzzy
-msgid "Signature verification failed"
-msgstr "trimite notificare"
-
 msgid ""
 "Signatures are required for cryptographically signing your agents. That "
 "makes sure that the nobody can inject faked agents. Sigantures are mandatory "
@@ -47860,6 +47917,7 @@ msgstr ""
 msgid "Slave usage bytes across all pools"
 msgstr ""
 
+#, no-python-format
 msgid ""
 "Slight gradient in the colors of the colored areas in the graphs. 0% turns "
 "off the gradient, 100% makes it the strongest possible."
@@ -49068,6 +49126,9 @@ msgstr ""
 msgid "State if LGETTIME and LGETDATE are available but not set"
 msgstr ""
 
+msgid "State if a logfile cannot be read"
+msgstr ""
+
 #, fuzzy
 msgid "State if agent deployment is disabled for host"
 msgstr "Notificari"
@@ -50156,10 +50217,6 @@ msgstr ""
 
 msgid "Success"
 msgstr ""
-
-#, fuzzy
-msgid "Successful"
-msgstr "Punct de Acces"
 
 #, fuzzy
 msgid "Successfully changed password."
@@ -51337,6 +51394,7 @@ msgid ""
 "configure the levels based on the value you want to be warned \"per CPU\"."
 msgstr ""
 
+#, no-python-format
 msgid ""
 "The CPU utilization sums up the percentages of CPU time that is used for "
 "user processes and kernel routines over all available cores within the last "
@@ -51673,6 +51731,7 @@ msgstr ""
 msgid "The Number of the power Phase."
 msgstr ""
 
+#, no-python-format
 msgid ""
 "The PCI IO utilization of components of a device (e.g. PCI Express card "
 "IOutilization of the rack units as components of a rack server as device)in "
@@ -53221,6 +53280,7 @@ msgid ""
 "hosts that have several distinct memory areas, e.g. pluggable cards"
 msgstr ""
 
+#, no-python-format
 msgid ""
 "The memory utilization of components of a device (e.g. memory utilizationof "
 "the rack units as components of a rack server as device) in the lastcheck "
@@ -53581,6 +53641,7 @@ msgstr "Numele Aplicatiei"
 msgid "The original aspect of the image will be ignored."
 msgstr ""
 
+#, no-python-format
 msgid ""
 "The overall utilization as aggregation of various utilizatons(cpu, memory, "
 "etc.) of components of a device (e.g. rack unitsas components of a rack "
@@ -54471,6 +54532,7 @@ msgstr ""
 msgid "The type of the timestamp must be int or float, but is %s"
 msgstr ""
 
+#, no-python-format
 msgid ""
 "The used and free levels for the memory on UNIX systems take into account "
 "the currently used memory (RAM or Swap) by all processes and sets this in "
@@ -62579,26 +62641,6 @@ msgid "Verification failed: %s"
 msgstr "trimite notificare"
 
 #, fuzzy
-msgid "Verification mode"
-msgstr "trimite notificare"
-
-#, fuzzy
-msgid "Verification response does not match request"
-msgstr "Un utilizator cu id-ul \"%s\" nu există."
-
-#, fuzzy
-msgid "Verification result"
-msgstr "Numele Aplicatiei"
-
-#, fuzzy
-msgid "Verification state"
-msgstr "trimite notificare"
-
-#, fuzzy
-msgid "Verification time"
-msgstr "trimite notificare"
-
-#, fuzzy
 msgid "Verify certificates"
 msgstr " pe siteul de monitorizare: "
 
@@ -65252,6 +65294,7 @@ msgid ""
 "database."
 msgstr ""
 
+#, no-python-format
 msgid ""
 "You can set limits for the latency of read or write I/O operations of Nimble "
 "storage volumes. Note that the operations are shown in terms of number of "
@@ -66038,6 +66081,10 @@ msgid ""
 "to fit within the free license service limit of %d."
 msgstr ""
 
+#, fuzzy
+msgid "Your IT monitoring platform"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Your WebAuthn credential is already in use"
 msgstr ""
 
@@ -66055,7 +66102,7 @@ msgstr ""
 msgid "Your changes have been saved nevertheless."
 msgstr ""
 
-msgid "Your changes haven been saved."
+msgid "Your changes have been saved."
 msgstr ""
 
 #, python-format
@@ -66114,10 +66161,6 @@ msgstr[2] ""
 
 msgid "Your modifications affect some objects"
 msgstr ""
-
-#, fuzzy
-msgid "Your monitoring machine"
-msgstr " pe siteul de monitorizare: "
 
 msgid "Your old password is wrong."
 msgstr ""
@@ -68365,6 +68408,58 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Last license usage submission"
+#~ msgstr "Activare Configurare"
+
+#, fuzzy, python-format
+#~ msgid "License start: %s"
+#~ msgstr "Stare adiministrativă"
+
+#, fuzzy
+#~ msgid "Mode: Submit license usage offline"
+#~ msgstr "% utilizare"
+
+#, fuzzy
+#~ msgid "Mode: Submit license usage online"
+#~ msgstr "% utilizare"
+
+#, fuzzy, python-format
+#~ msgid "Operational state: %s"
+#~ msgstr "Starea porturilor pentru inventariere"
+
+#, fuzzy, python-format
+#~ msgid "Options: %s"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Signature verification failed"
+#~ msgstr "trimite notificare"
+
+#, fuzzy
+#~ msgid "Successful"
+#~ msgstr "Punct de Acces"
+
+#, fuzzy
+#~ msgid "Verification mode"
+#~ msgstr "trimite notificare"
+
+#, fuzzy
+#~ msgid "Verification response does not match request"
+#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
+#, fuzzy
+#~ msgid "Verification result"
+#~ msgstr "Numele Aplicatiei"
+
+#, fuzzy
+#~ msgid "Verification state"
+#~ msgstr "trimite notificare"
+
+#, fuzzy
+#~ msgid "Verification time"
+#~ msgstr "trimite notificare"
 
 #, fuzzy
 #~ msgid "Upload subscription details"

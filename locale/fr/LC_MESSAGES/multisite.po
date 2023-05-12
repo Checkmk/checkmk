@@ -287,9 +287,11 @@ msgstr "% / min"
 msgid "% / range"
 msgstr "% / gamme"
 
+#, no-python-format
 msgid "% above predicted value"
 msgstr "% au-dessus de la valeur prédite"
 
+#, no-python-format
 msgid "% below predicted value"
 msgstr "% sous la valeur prédite"
 
@@ -297,6 +299,7 @@ msgstr "% sous la valeur prédite"
 msgid "% free"
 msgstr "% libre"
 
+#, no-python-format
 msgid "% memory left"
 msgstr "% de mémoire restante"
 
@@ -324,6 +327,7 @@ msgstr "% du nombre maximum de connexions au repos"
 msgid "% of port speed"
 msgstr "% de la vitesse du port"
 
+#, no-python-format
 msgid "% time"
 msgstr "% de temps"
 
@@ -364,6 +368,7 @@ msgstr "%H:%M"
 msgid "%H:%M:%S"
 msgstr "%H:%M:%S"
 
+#, no-python-format
 msgid "%Y-%m-%d"
 msgstr "%Y-%m-%d"
 
@@ -499,6 +504,7 @@ msgid_plural "%d unacknowledged incompatible werks"
 msgstr[0] "%d werk incompatible non reconnu"
 msgstr[1] "%d werks incompatibles non reconnus"
 
+#, no-python-format
 msgid "%m-%d"
 msgstr "%m-%d"
 
@@ -806,6 +812,14 @@ msgstr "État \"Info\""
 
 msgid "'Major' state"
 msgstr "État \"majeur\""
+
+#, fuzzy
+msgid ""
+"'Minimum required Checkmk version' should not be greater than the 'Valid "
+"until Checkmk version'!"
+msgstr ""
+"La version minimale requise de Checkmk ne doit pas être supérieure à la "
+"dernière version autorisée !"
 
 msgid "'Minor' state"
 msgstr "État \"mineur\""
@@ -1140,6 +1154,7 @@ msgstr "6 mois"
 msgid "64bit packaged binary"
 msgstr "Binaire conditionné 64 bits"
 
+#, no-python-format
 msgid "68% - One standard deviation"
 msgstr "68% - Un écart-type"
 
@@ -1155,9 +1170,11 @@ msgstr "Affichage 7-segment uid"
 msgid "8 days back"
 msgstr "8 jours en arrière"
 
+#, no-python-format
 msgid "86% - 1.5 standard deviations"
 msgstr "86% - 1,5 écart-type"
 
+#, no-python-format
 msgid "95% - Two standard deviations"
 msgstr "95% - Deux écarts types"
 
@@ -2222,6 +2239,7 @@ msgstr ""
 "Un endroit où vous pouvez mettre les graphiques avec lesquels vous "
 "travaillez actuellement"
 
+#, no-python-format
 msgid ""
 "A provisioning of more than 100% is called over provisioning and can be a "
 "useful strategy for saving disk space. But you cannot guarantee any longer "
@@ -2236,6 +2254,7 @@ msgstr ""
 "provisionnement maximal. Un niveau d'avertissement de 150% préviendra en cas "
 "de surdimensionnement de 50%."
 
+#, no-python-format
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "Un provisionnement supérieur à 100 % signifie un surdimensionnement."
 
@@ -6042,6 +6061,9 @@ msgstr "Analyser les modèles"
 msgid "Analyze ruleset with this notification"
 msgstr "Analyser le jeu de règles avec cette notification"
 
+msgid "Analyze the utilization of your IT infrastructure data center."
+msgstr ""
+
 msgid "Analyze this line"
 msgstr "Analysez cette ligne"
 
@@ -6890,8 +6912,8 @@ msgstr "Rechargement automatique des pages"
 msgid "Automatic page reload in %d seconds."
 msgstr "Rechargement automatique de la page dans %d secondes."
 
-#, python-format
-msgid "Automatic renewal: %s"
+#, fuzzy
+msgid "Automatic renewal"
 msgstr "Renouvellement automatique : %s"
 
 msgid "Automatic takeover"
@@ -8414,6 +8436,7 @@ msgstr ""
 "fonction des hôtes et des sections SNMP, les contextes SNMPv3 que Checkmk "
 "doit demander lorsqu'il obtient des informations via SNMPv3."
 
+#, no-python-format
 msgid ""
 "By default Checkmk treats space that is reserved for the <tt>root</tt> user "
 "on Linux and Unix as used space. Usually, 5% are being reserved for root "
@@ -9198,6 +9221,7 @@ msgstr "Utilisation du CPU pour les appareils"
 msgid "CPU utilization for simple devices"
 msgstr "Utilisation du CPU pour les dispositifs simples"
 
+#, no-python-format
 msgid ""
 "CPU utilization is delivered by the Operating System as a per CPU core "
 "basis. Thus each core contributes with a 100% at full utilization, producing "
@@ -10341,6 +10365,7 @@ msgstr ""
 "pour le rendre joignable via TCP sur un port configurable avec "
 "LIVESTATUS_TCP_PORT."
 
+#, no-python-format
 msgid ""
 "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux "
 "and Unix as used space. Usually, 5% are being reserved for root when a new "
@@ -10514,8 +10539,8 @@ msgstr ""
 "être bogués. Dans ce cas, vous pouvez essayer de désactiver la marche en "
 "vrac à l'aide du jeu de règles \"Disable bulk walks on SNMPv2c/v3\" ;."
 
-#, python-format
-msgid "Checkmk edition: %s"
+#, fuzzy
+msgid "Checkmk edition"
 msgstr "Edition Checkmk : %s"
 
 msgid "Checkmk extension packages (MKPs)"
@@ -10845,6 +10870,13 @@ msgstr "Choisir les colonnes du tableau"
 
 msgid "Choose target user connector"
 msgstr "Choisir le connecteur utilisateur cible"
+
+#, fuzzy
+msgid ""
+"Choose the Checkmk state in case any of the forwarded logfiles cannot be read"
+msgstr ""
+"Choisissez l'état Checkmk si l'état de la sonde n'est pas OK (la métrique de "
+"l'état de la sonde est 0)."
 
 msgid ""
 "Choose the Checkmk state in case of probe state not OK (probe state metric "
@@ -12079,7 +12111,7 @@ msgstr ""
 msgid "Configure grouping of interfaces"
 msgstr "Configurer le regroupement des interfaces"
 
-#, fuzzy
+#, fuzzy, no-python-format
 msgid ""
 "Configure levels for averaged CPU utilization depending on number of cluster "
 "nodes. The CPU utilization sums up the percentages of CPU time that is used "
@@ -17054,6 +17086,7 @@ msgstr ""
 msgid "Display time left in check output"
 msgstr "Affichage du temps restant en sortie de contrôle"
 
+#, no-python-format
 msgid "Display total sum (for % the average)"
 msgstr "Afficher la somme totale (pour % la moyenne)"
 
@@ -22440,6 +22473,13 @@ msgstr "Conception de l'interface utilisateur graphique"
 msgid "GUI extensions"
 msgstr "Extensions de l'interface graphique"
 
+msgid ""
+"Gain a complete view of your entire IT infrastructure: from public cloud "
+"providers, to your data centers, across servers, networks, containers, and "
+"more. Checkmk enables ITOps and DevOps teams to run your IT at peak "
+"performance."
+msgstr ""
+
 msgid "Gamelan"
 msgstr "Gamelan"
 
@@ -22571,6 +22611,7 @@ msgstr "Obtenir les journaux d'audit à distance"
 msgid "GiB"
 msgstr "GiB"
 
+#, no-python-format
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
 "100%."
@@ -25838,6 +25879,10 @@ msgstr "IPv6 uniquement"
 msgid "ISC DHCP-Daemon (Linux)"
 msgstr "ISC DHCP-Daemon (Linux)"
 
+#, fuzzy
+msgid "IT infrastructure efficiency"
+msgstr "Efficacité de la règle"
+
 msgid "Icon"
 msgstr "Icône"
 
@@ -28387,8 +28432,8 @@ msgstr "Règles inefficaces"
 msgid "Infections"
 msgstr "Infections"
 
-#, python-format
-msgid "Infinite use of Checkmk up to version %s"
+#, fuzzy
+msgid "Infinite use of Checkmk up to version"
 msgstr "Utilisation infinie de Checkmk jusqu'à la version %s"
 
 msgid "InfluxDB Connection"
@@ -29116,6 +29161,10 @@ msgstr "Type d'élément de rapport non valide '%s'."
 msgid "Invalid request: %r"
 msgstr "Demande non valide : %r"
 
+#, fuzzy
+msgid "Invalid response"
+msgstr "Rapport invalide"
+
 #, python-format
 msgid "Invalid response from event daemon: <pre>%s</pre>"
 msgstr "Réponse non valide du démon d'événements : <pre>%s</pre>"
@@ -29133,6 +29182,10 @@ msgstr "Règle non valide <tt>%s</tt>."
 #, python-format
 msgid "Invalid sidebar element %s"
 msgstr "Élément de barre latérale non valide %s"
+
+#, fuzzy
+msgid "Invalid signature"
+msgstr "Site non valide"
 
 msgid "Invalid signature of response"
 msgstr "Signature invalide de la réponse"
@@ -30223,12 +30276,6 @@ msgstr "Dernières coordonnées connues"
 msgid "Last known summary"
 msgstr "Dernier résumé connu"
 
-msgid "Last license usage submission"
-msgstr "Dernière soumission d'utilisation de licence"
-
-msgid "Last license verification"
-msgstr "Dernière vérification de la licence"
-
 msgid "Last log"
 msgstr "Dernier journal"
 
@@ -30268,6 +30315,10 @@ msgstr "Dernier changement d'état du service"
 #, python-format
 msgid "Last successful sync %d seconds ago."
 msgstr "Dernière synchronisation réussie il y a %d secondes."
+
+#, fuzzy
+msgid "Last successful verification"
+msgstr "Dernière vérification de la licence"
 
 msgid "Last synchronization result"
 msgstr "Résultat de la dernière synchronisation"
@@ -31042,13 +31093,13 @@ msgstr "Contrat de licence"
 msgid "License details"
 msgstr "Détails de la licence"
 
-#, python-format
-msgid "License end: %s"
+#, fuzzy
+msgid "License end"
 msgstr "Fin de la licence : %s"
 
-#, python-format
-msgid "License start: %s"
-msgstr "Début de la licence : %s"
+#, fuzzy
+msgid "License start"
+msgstr "État de la licence"
 
 msgid "License state"
 msgstr "État de la licence"
@@ -31065,8 +31116,8 @@ msgstr "Vérification de la licence"
 msgid "Licensed"
 msgstr "Licencié"
 
-#, python-format
-msgid "Licensed services: %s"
+#, fuzzy
+msgid "Licensed services"
 msgstr "Services agréés : %s"
 
 msgid "Licenses"
@@ -32415,6 +32466,10 @@ msgstr "Niveau d'alerte inférieur"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Plus bas : Pas de notification, mise à jour du numéro de badge"
+
+#, fuzzy
+msgid "MAC Address"
+msgstr "Adresse MAC"
 
 msgid "MAC address"
 msgstr "Adresse MAC"
@@ -33823,14 +33878,6 @@ msgid "May see all sites"
 msgstr "Peut voir tous les sites"
 
 msgid ""
-"May we present? Monitoring as it's supposed to be: incredibly quick to "
-"install, infinetely scalable, highly customizable and designed for admins."
-msgstr ""
-"Pouvons-nous vous présenter ? La surveillance telle qu'elle est censée "
-"être : incroyablement rapide à installer, infiniment évolutive, hautement "
-"personnalisable et conçue pour les administrateurs."
-
-msgid ""
 "Maybe the provided user (provided via bind credentials) has not enough "
 "permissions or the credentials are wrong."
 msgstr ""
@@ -33872,6 +33919,27 @@ msgstr "Temps moyen dans la file d'attente pour les derniers messages."
 msgid "Mean time in queue for the last medium number of messages."
 msgstr ""
 "Temps moyen dans la file d'attente pour le dernier nombre moyen de messages."
+
+msgid "Measure the CPU and Memory efficiency of your Linux servers\n"
+msgstr ""
+
+msgid "Measure the CPU and Memory efficiency of your Nutanix servers\n"
+msgstr ""
+
+msgid "Measure the CPU and Memory efficiency of your VMware ESXi servers\n"
+msgstr ""
+
+msgid "Measure the CPU and Memory efficiency of your Windows servers\n"
+msgstr ""
+
+msgid "Measure the Filesystem efficiency of your Linux servers\n"
+msgstr ""
+
+msgid "Measure the Filesystem efficiency of your VMware ESXi servers\n"
+msgstr ""
+
+msgid "Measure the Filesystem efficiency of your Windows servers\n"
+msgstr ""
 
 msgid "Measurement unit"
 msgstr "Unité de mesure"
@@ -34448,13 +34516,6 @@ msgstr "Temps d'attente minimum pour la lecture"
 msgid "Minimum required Checkmk version"
 msgstr "Version minimale requise de Checkmk"
 
-msgid ""
-"Minimum required Checkmk version should not be greater than the latest "
-"allowed one!"
-msgstr ""
-"La version minimale requise de Checkmk ne doit pas être supérieure à la "
-"dernière version autorisée !"
-
 #, python-format
 msgid "Minimum required Checkmk version: %s"
 msgstr "Version minimale requise de Checkmk : %s"
@@ -34665,12 +34726,6 @@ msgstr "Mode : Vérification manuelle en ligne"
 
 msgid "Mode: Offline verification"
 msgstr "Mode : Vérification hors ligne"
-
-msgid "Mode: Submit license usage offline"
-msgstr "Mode : Soumettre l'utilisation de la licence hors ligne"
-
-msgid "Mode: Submit license usage online"
-msgstr "Mode : Soumettre l'utilisation de la licence en ligne"
 
 msgid "Model"
 msgstr "Modèle"
@@ -35389,6 +35444,7 @@ msgstr "Esclave MySQL"
 msgid "MySQL database sizes"
 msgstr "Taille des bases de données MySQL"
 
+#, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
 msgstr "N * 100% car chaque noyau contribue à 100% à pleine charge"
 
@@ -36190,6 +36246,9 @@ msgstr "Aucune étiquette d'agent n'est présente."
 msgid "No agent registration requests processed"
 msgstr "Aucune demande d'enregistrement d'agent n'a été traitée"
 
+msgid "No appropriate request ID"
+msgstr ""
+
 msgid "No authentication, no privacy"
 msgstr "Pas d'authentification, pas de vie privée"
 
@@ -36912,6 +36971,7 @@ msgstr ""
 "Remarque : si vous avez également défini une limite dans le rapport, la "
 "limite définie ici remplacera cette dernière."
 
+#, no-python-format
 msgid ""
 "Note: The admin state is in general only available for the 64-bit SNMP "
 "interface check. Additionally, you have to specifically configure Checkmk to "
@@ -38388,6 +38448,7 @@ msgstr "Seulement si le statut est non-OK"
 msgid "Only in case of a problem"
 msgstr "Seulement en cas de problème"
 
+#, no-python-format
 msgid "Only in case of a problem or if inodes are below 50%"
 msgstr "Seulement en cas de problème ou si les inodes sont inférieurs à 50%."
 
@@ -38559,9 +38620,6 @@ msgstr "Ouvrez l'interface utilisateur web locale de ce site"
 msgid "Open this table for filtering / sorting"
 msgstr "Ouvrez ce tableau pour filtrer / trier"
 
-msgid "Open. Effective. Awesome."
-msgstr "Ouvert. Efficace. Génial."
-
 msgid "Open/close this element"
 msgstr "Ouvrir/fermer cet élément"
 
@@ -38618,10 +38676,6 @@ msgstr "États opérationnels des ports à découvrir"
 
 msgid "Operational state"
 msgstr "État opérationnel"
-
-#, python-format
-msgid "Operational state: %s"
-msgstr "État opérationnel : %s"
 
 msgid "Operational states"
 msgstr "États opérationnels"
@@ -38759,10 +38813,6 @@ msgstr "Options"
 msgid "Options for report emails"
 msgstr "Options pour les e-mails de rapport"
 
-#, python-format
-msgid "Options: %s"
-msgstr "Options : %s"
-
 msgid "Oracle"
 msgstr "Oracle"
 
@@ -38840,6 +38890,18 @@ msgstr "Tablespaces Oracle"
 
 msgid "Order"
 msgstr "Commandez"
+
+#, fuzzy
+msgid "Organisation"
+msgstr "Organisations"
+
+#, fuzzy
+msgid "Organisation ID"
+msgstr "Organisations"
+
+#, fuzzy
+msgid "Organisation Name"
+msgstr "Nom de l'organisation"
 
 msgid "Organisation device statuses"
 msgstr "État des appareils de l'organisation"
@@ -40040,6 +40102,7 @@ msgstr "Pourcentage libre"
 msgid "Percentage free space"
 msgstr "Pourcentage d'espace libre"
 
+#, no-python-format
 msgid ""
 "Percentage in respect to the optimal utilization. For example if an alarm "
 "should raise at 50% wasted space, you need to configure 150%"
@@ -42783,6 +42846,10 @@ msgstr "Contrôles en temps réel"
 msgid "Reason: %s"
 msgstr "Motif : %s"
 
+#, fuzzy
+msgid "Reasons"
+msgstr "Motif : %s"
+
 msgid "Receipt"
 msgstr "Reçu"
 
@@ -44090,8 +44157,8 @@ msgstr "Reprogrammer les chèques"
 msgid "Reschedule host and service checks"
 msgstr "Reprogrammer les contrôles des hôtes et des services"
 
-#, python-format
-msgid "Reseller: %s"
+#, fuzzy
+msgid "Reseller"
 msgstr "Revendeur : %s"
 
 msgid "Reserved DB instances"
@@ -48116,9 +48183,6 @@ msgstr "Clés de signature pour les agents signataires"
 msgid "Signature keys the agent will accept"
 msgstr "Clés de signature que l'agent acceptera"
 
-msgid "Signature verification failed"
-msgstr "La vérification de la signature a échoué"
-
 msgid ""
 "Signatures are required for cryptographically signing your agents. That "
 "makes sure that the nobody can inject faked agents. Sigantures are mandatory "
@@ -48569,6 +48633,7 @@ msgstr "Dalle (diverses petites caches)"
 msgid "Slave usage bytes across all pools"
 msgstr "Octets d'utilisation des esclaves dans tous les pools"
 
+#, no-python-format
 msgid ""
 "Slight gradient in the colors of the colored areas in the graphs. 0% turns "
 "off the gradient, 100% makes it the strongest possible."
@@ -50055,6 +50120,10 @@ msgstr "Indiquer si des services de \"maintenance\" ont été trouvés"
 msgid "State if LGETTIME and LGETDATE are available but not set"
 msgstr "Indique si LGETTIME et LGETDATE sont disponibles mais non définis."
 
+#, fuzzy
+msgid "State if a logfile cannot be read"
+msgstr "Indiquer si l'État local est désactivé"
+
 msgid "State if agent deployment is disabled for host"
 msgstr "État si le déploiement de l'agent est désactivé pour l'hôte"
 
@@ -51104,9 +51173,6 @@ msgstr "Les provocations réussies"
 
 msgid "Success"
 msgstr "Succès"
-
-msgid "Successful"
-msgstr "Réussite"
 
 msgid "Successfully changed password."
 msgstr "Le mot de passe a été changé avec succès."
@@ -52283,6 +52349,7 @@ msgstr ""
 "sont multipliés par le nombre de CPU, vous devez donc configurer les niveaux "
 "en fonction de la valeur que vous souhaitez voir avertie \"par CPU\"."
 
+#, no-python-format
 msgid ""
 "The CPU utilization sums up the percentages of CPU time that is used for "
 "user processes and kernel routines over all available cores within the last "
@@ -52772,6 +52839,7 @@ msgstr ""
 msgid "The Number of the power Phase."
 msgstr "Le numéro de la phase de puissance."
 
+#, no-python-format
 msgid ""
 "The PCI IO utilization of components of a device (e.g. PCI Express card "
 "IOutilization of the rack units as components of a rack server as device)in "
@@ -54840,6 +54908,7 @@ msgstr ""
 "important pour les hôtes qui ont plusieurs zones de mémoire distinctes, par "
 "exemple les cartes enfichables."
 
+#, no-python-format
 msgid ""
 "The memory utilization of components of a device (e.g. memory utilizationof "
 "the rack units as components of a rack server as device) in the lastcheck "
@@ -55317,6 +55386,7 @@ msgstr "L'identifiant de l'organisation"
 msgid "The original aspect of the image will be ignored."
 msgstr "L'aspect original de l'image sera ignoré."
 
+#, no-python-format
 msgid ""
 "The overall utilization as aggregation of various utilizatons(cpu, memory, "
 "etc.) of components of a device (e.g. rack unitsas components of a rack "
@@ -56482,6 +56552,7 @@ msgstr "Le type d'information à stocker dans cet attribut."
 msgid "The type of the timestamp must be int or float, but is %s"
 msgstr "Le type de l'horodatage doit être int ou float, mais est %s"
 
+#, no-python-format
 msgid ""
 "The used and free levels for the memory on UNIX systems take into account "
 "the currently used memory (RAM or Swap) by all processes and sets this in "
@@ -66029,21 +66100,6 @@ msgstr "Échec de la vérification (serveur de licences)"
 msgid "Verification failed: %s"
 msgstr "La vérification a échoué : %s"
 
-msgid "Verification mode"
-msgstr "Mode de vérification"
-
-msgid "Verification response does not match request"
-msgstr "La réponse de vérification ne correspond pas à la demande"
-
-msgid "Verification result"
-msgstr "Résultat de la vérification"
-
-msgid "Verification state"
-msgstr "État de vérification"
-
-msgid "Verification time"
-msgstr "Temps de vérification"
-
 msgid "Verify certificates"
 msgstr "Vérifier les certificats"
 
@@ -69427,6 +69483,7 @@ msgstr ""
 "des tâches se trouvent dans la colonne \"name\" de la table \"dbo.sysjobs\" "
 "de la base de données MSDB."
 
+#, no-python-format
 msgid ""
 "You can set limits for the latency of read or write I/O operations of Nimble "
 "storage volumes. Note that the operations are shown in terms of number of "
@@ -70533,6 +70590,10 @@ msgstr ""
 "services actuels pour respecter la limite de services de la licence gratuite "
 "de %d."
 
+#, fuzzy
+msgid "Your IT monitoring platform"
+msgstr "Votre machine de surveillance"
+
 msgid "Your WebAuthn credential is already in use"
 msgstr "Votre identifiant WebAuthn est déjà utilisé."
 
@@ -70554,7 +70615,8 @@ msgstr "Votre site central est incompatible avec ce site distant."
 msgid "Your changes have been saved nevertheless."
 msgstr "Vos modifications ont néanmoins été enregistrées."
 
-msgid "Your changes haven been saved."
+#, fuzzy
+msgid "Your changes have been saved."
 msgstr "Vos modifications ont été enregistrées."
 
 #, python-format
@@ -70633,9 +70695,6 @@ msgstr[1] ""
 
 msgid "Your modifications affect some objects"
 msgstr "Vos modifications affectent certains objets"
-
-msgid "Your monitoring machine"
-msgstr "Votre machine de surveillance"
 
 msgid "Your old password is wrong."
 msgstr "Votre ancien mot de passe est incorrect."
@@ -72779,6 +72838,59 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "Last license usage submission"
+#~ msgstr "Dernière soumission d'utilisation de licence"
+
+#, python-format
+#~ msgid "License start: %s"
+#~ msgstr "Début de la licence : %s"
+
+#~ msgid "Mode: Submit license usage offline"
+#~ msgstr "Mode : Soumettre l'utilisation de la licence hors ligne"
+
+#~ msgid "Mode: Submit license usage online"
+#~ msgstr "Mode : Soumettre l'utilisation de la licence en ligne"
+
+#, python-format
+#~ msgid "Operational state: %s"
+#~ msgstr "État opérationnel : %s"
+
+#, python-format
+#~ msgid "Options: %s"
+#~ msgstr "Options : %s"
+
+#~ msgid "Signature verification failed"
+#~ msgstr "La vérification de la signature a échoué"
+
+#~ msgid "Successful"
+#~ msgstr "Réussite"
+
+#~ msgid "Verification mode"
+#~ msgstr "Mode de vérification"
+
+#~ msgid "Verification response does not match request"
+#~ msgstr "La réponse de vérification ne correspond pas à la demande"
+
+#~ msgid "Verification result"
+#~ msgstr "Résultat de la vérification"
+
+#~ msgid "Verification state"
+#~ msgstr "État de vérification"
+
+#~ msgid "Verification time"
+#~ msgstr "Temps de vérification"
+
+#~ msgid ""
+#~ "May we present? Monitoring as it's supposed to be: incredibly quick to "
+#~ "install, infinetely scalable, highly customizable and designed for admins."
+#~ msgstr ""
+#~ "Pouvons-nous vous présenter ? La surveillance telle qu'elle est censée "
+#~ "être : incroyablement rapide à installer, infiniment évolutive, hautement "
+#~ "personnalisable et conçue pour les administrateurs."
+
+#~ msgid "Open. Effective. Awesome."
+#~ msgstr "Ouvert. Efficace. Génial."
 
 #~ msgid "Upload subscription details"
 #~ msgstr "Télécharger les détails de l'abonnement"

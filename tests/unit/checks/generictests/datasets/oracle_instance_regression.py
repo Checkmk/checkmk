@@ -6,7 +6,7 @@
 # fmt: off
 # mypy: disable-error-code=var-annotated
 
-from cmk.base.plugins.agent_based.oracle_instance import parse_oracle_instance
+from cmk.base.plugins.agent_based.oracle_instance_section import parse_oracle_instance
 
 checkname = "oracle_instance"
 

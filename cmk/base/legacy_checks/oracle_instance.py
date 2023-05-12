@@ -21,7 +21,7 @@ from typing import TypedDict
 from cmk.base.check_api import check_levels, discover, get_bytes_human_readable, MKCounterWrapped
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.oracle_instance import (
+from cmk.base.plugins.agent_based.utils.oracle_instance import (
     GeneralError,
     Instance,
     InvalidData,

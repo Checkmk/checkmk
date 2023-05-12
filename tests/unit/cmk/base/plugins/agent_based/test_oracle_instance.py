@@ -11,13 +11,9 @@ from cmk.checkers.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, InventoryResult
-from cmk.base.plugins.agent_based.oracle_instance import (
-    GeneralError,
-    Instance,
-    InvalidData,
-    inventory_oracle_instance,
-    parse_oracle_instance,
-)
+from cmk.base.plugins.agent_based.oracle_instance_inventory import inventory_oracle_instance
+from cmk.base.plugins.agent_based.oracle_instance_section import parse_oracle_instance
+from cmk.base.plugins.agent_based.utils.oracle_instance import GeneralError, Instance, InvalidData
 
 from .utils_inventory import sort_inventory_result
 

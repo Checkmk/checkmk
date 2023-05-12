@@ -61,12 +61,12 @@ checks = {
     "cpu": [
         (
             "Rack unit 1",
-            {"upper_levels": (90.0, 95.0)},
+            {"levels": (90.0, 95.0)},
             [(0, "Total CPU: 0%", [("util", 0.0, 90.0, 95.0, 0, 100)])],
         ),
         (
             "Rack unit 2",
-            {"upper_levels": (90.0, 95.0)},
+            {"levels": (90.0, 95.0)},
             [
                 (
                     1,

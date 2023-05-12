@@ -8,7 +8,7 @@ import string
 from collections.abc import Callable, Iterable, Mapping
 from typing import get_args, NamedTuple, NoReturn, Union
 
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import MutableTree
 from cmk.utils.type_defs import ParsedSectionName, RuleSetName
 
 from cmk.checkers.inventory import InventoryPluginName
@@ -105,19 +105,13 @@ class Attributes(
             status_attributes=status_attributes,
         )
 
-    def populate_inventory_tree(self, tree: StructuredDataNode) -> None:
-        if not self.inventory_attributes:
-            return
+    def populate_inventory_tree(self, mutable_tree: MutableTree) -> None:
+        if self.inventory_attributes:
+            mutable_tree.add_pairs(path=self.path, pairs=self.inventory_attributes)
 
-        node = tree.setdefault_node(tuple(self.path))
-        node.attributes.add_pairs(self.inventory_attributes)
-
-    def populate_status_data_tree(self, tree: StructuredDataNode) -> None:
-        if not self.status_attributes:
-            return
-
-        node = tree.setdefault_node(tuple(self.path))
-        node.attributes.add_pairs(self.status_attributes)
+    def populate_status_data_tree(self, mutable_tree: MutableTree) -> None:
+        if self.status_attributes:
+            mutable_tree.add_pairs(path=self.path, pairs=self.status_attributes)
 
 
 class TableRow(
@@ -181,19 +175,21 @@ class TableRow(
             status_columns=status_columns,
         )
 
-    def populate_inventory_tree(self, tree: StructuredDataNode) -> None:
+    def populate_inventory_tree(self, mutable_tree: MutableTree) -> None:
         # No guard: always set key columns.
-        node = tree.setdefault_node(tuple(self.path))
-        node.table.add_key_columns(sorted(self.key_columns))
-        node.table.add_rows([{**self.key_columns, **self.inventory_columns}])
+        mutable_tree.add_rows(
+            path=self.path,
+            key_columns=list(self.key_columns),
+            rows=[{**self.key_columns, **self.inventory_columns}],
+        )
 
-    def populate_status_data_tree(self, tree: StructuredDataNode) -> None:
-        if not self.status_columns:
-            return
-
-        node = tree.setdefault_node(tuple(self.path))
-        node.table.add_key_columns(sorted(self.key_columns))
-        node.table.add_rows([{**self.key_columns, **self.status_columns}])
+    def populate_status_data_tree(self, mutable_tree: MutableTree) -> None:
+        if self.status_columns:
+            mutable_tree.add_rows(
+                path=self.path,
+                key_columns=list(self.key_columns),
+                rows=[{**self.key_columns, **self.status_columns}],
+            )
 
 
 InventoryResult = Iterable[Union[Attributes, TableRow]]

@@ -418,8 +418,8 @@ def test__compare_attributes(
     ],
 )
 def test__compare_tables(
-    old_table_data: Iterable[dict[str, str | int]],
-    new_table_data: Iterable[dict[str, str | int]],
+    old_table_data: Sequence[Mapping[str, str | int]],
+    new_table_data: Sequence[Mapping[str, str | int]],
     result: tuple[int, int, int],
 ) -> None:
     old_table = Table(key_columns=["id"])

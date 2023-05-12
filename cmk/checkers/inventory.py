@@ -19,6 +19,7 @@ import cmk.utils.tty as tty
 from cmk.utils.log import console, section
 from cmk.utils.structured_data import (
     make_filter_from_choice,
+    MutableTree,
     parse_visible_raw_path,
     RawIntervalsFromConfig,
     RetentionIntervals,
@@ -69,10 +70,10 @@ class PInventoryResult(Protocol):
     def path(self) -> Sequence[str]:
         ...
 
-    def populate_inventory_tree(self, tree: StructuredDataNode) -> None:
+    def populate_inventory_tree(self, mutable_tree: MutableTree) -> None:
         ...
 
-    def populate_status_data_tree(self, tree: StructuredDataNode) -> None:
+    def populate_status_data_tree(self, mutable_tree: MutableTree) -> None:
         ...
 
 
@@ -136,7 +137,7 @@ def inventorize_host(
 
     providers = make_providers(host_sections_no_error, section_plugins)
 
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=int(time.time()),
         items_of_inventory_plugins=list(
             _collect_inventory_plugin_items(
@@ -170,8 +171,8 @@ def inventorize_host(
             *itertools.chain(
                 _check_fetched_data_or_trees(
                     parameters=parameters,
-                    inventory_tree=trees.inventory,
-                    status_data_tree=trees.status_data,
+                    inventory_tree=mutable_trees.inventory.tree,
+                    status_data_tree=mutable_trees.status_data.tree,
                     old_tree=old_tree,
                     processing_failed=processing_failed,
                     no_data_or_files=no_data_or_files,
@@ -180,7 +181,7 @@ def inventorize_host(
                 check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
             )
         ),
-        inventory_tree=trees.inventory,
+        inventory_tree=mutable_trees.inventory.tree,
         update_result=update_result,
     )
 
@@ -209,18 +210,17 @@ def inventorize_cluster(
 
 
 def _inventorize_cluster(*, nodes: Sequence[HostName]) -> StructuredDataNode:
-    inventory_tree = StructuredDataNode()
-
-    _add_cluster_property_to(inventory_tree=inventory_tree, is_cluster=True)
-
-    if nodes:
-        node = inventory_tree.setdefault_node(
-            ("software", "applications", "check_mk", "cluster", "nodes")
-        )
-        node.table.add_key_columns(["name"])
-        node.table.add_rows([{"name": node_name} for node_name in nodes])
-
-    return inventory_tree
+    mutable_tree = MutableTree(StructuredDataNode())
+    mutable_tree.add_pairs(
+        path=["software", "applications", "check_mk", "cluster"],
+        pairs={"is_cluster": True},
+    )
+    mutable_tree.add_rows(
+        path=["software", "applications", "check_mk", "cluster", "nodes"],
+        key_columns=["name"],
+        rows=[{"name": name} for name in nodes],
+    )
+    return mutable_tree.tree
 
 
 def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]) -> bool:
@@ -247,10 +247,10 @@ def _inventorize_real_host(
     items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
     raw_intervals_from_config: RawIntervalsFromConfig,
     old_tree: StructuredDataNode,
-) -> tuple[InventoryTrees, UpdateResult]:
+) -> tuple[MutableTrees, UpdateResult]:
     section.section_step("Create inventory or status data tree")
 
-    trees = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins)
+    mutable_trees = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins)
 
     section.section_step("May update inventory tree")
 
@@ -258,14 +258,17 @@ def _inventorize_real_host(
         now=now,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=raw_intervals_from_config,
-        inventory_tree=trees.inventory,
+        inventory_tree=mutable_trees.inventory.tree,
         previous_tree=old_tree,
     )
 
-    if not trees.inventory.is_empty():
-        _add_cluster_property_to(inventory_tree=trees.inventory, is_cluster=False)
+    if not mutable_trees.inventory.tree.is_empty():
+        mutable_trees.inventory.add_pairs(
+            path=["software", "applications", "check_mk", "cluster"],
+            pairs={"is_cluster": False},
+        )
 
-    return trees, update_result
+    return mutable_trees, update_result
 
 
 def inventorize_status_data_of_real_host(
@@ -284,7 +287,7 @@ def inventorize_status_data_of_real_host(
             inventory_plugins=inventory_plugins,
             run_plugin_names=run_plugin_names,
         )
-    ).status_data
+    ).status_data.tree
 
 
 @dataclass(frozen=True)
@@ -382,26 +385,21 @@ def _parse_inventory_plugin_item(
 
 
 @dataclass(frozen=True)
-class InventoryTrees:
-    inventory: StructuredDataNode
-    status_data: StructuredDataNode
+class MutableTrees:
+    inventory: MutableTree
+    status_data: MutableTree
 
 
 def _create_trees_from_inventory_plugin_items(
     items_of_inventory_plugins: Iterable[ItemsOfInventoryPlugin],
-) -> InventoryTrees:
-    inventory_tree = StructuredDataNode()
-    status_data_tree = StructuredDataNode()
-
+) -> MutableTrees:
+    mutable_inv_tree = MutableTree(StructuredDataNode())
+    mutable_sta_tree = MutableTree(StructuredDataNode())
     for items_of_inventory_plugin in items_of_inventory_plugins:
         for item in items_of_inventory_plugin.items:
-            item.populate_inventory_tree(inventory_tree)
-            item.populate_status_data_tree(status_data_tree)
-
-    return InventoryTrees(
-        inventory=inventory_tree,
-        status_data=status_data_tree,
-    )
+            item.populate_inventory_tree(mutable_inv_tree)
+            item.populate_status_data_tree(mutable_sta_tree)
+    return MutableTrees(mutable_inv_tree, mutable_sta_tree)
 
 
 # Data for the HW/SW Inventory has a validity period (live data or persisted).
@@ -496,11 +494,6 @@ def _may_update(
             )
 
     return UpdateResult.from_results(results)
-
-
-def _add_cluster_property_to(*, inventory_tree: StructuredDataNode, is_cluster: bool) -> None:
-    node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
-    node.attributes.add_pairs({"is_cluster": is_cluster})
 
 
 def _check_fetched_data_or_trees(

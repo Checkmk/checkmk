@@ -104,7 +104,7 @@ def test_tree_nodes_equality(edge: str) -> None:
 
 
 def test__inventorize_real_host_only_items() -> None:
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=0,
         items_of_inventory_plugins=[
             ItemsOfInventoryPlugin(
@@ -154,7 +154,7 @@ def test__inventorize_real_host_only_items() -> None:
         old_tree=StructuredDataNode(),
     )
 
-    assert trees.inventory.serialize() == {
+    assert mutable_trees.inventory.tree.serialize() == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -253,7 +253,7 @@ def test__inventorize_real_host_only_intervals(
     table_choices: Literal["all"] | tuple[str, list[str]],
     table_expected_retentions: dict[str, tuple[int, int, int]],
 ) -> None:
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=10,
         items_of_inventory_plugins=[
             ItemsOfInventoryPlugin(
@@ -337,7 +337,7 @@ def test__inventorize_real_host_only_intervals(
     else:
         table_retentions = {}
 
-    assert trees.inventory.serialize() == {
+    assert mutable_trees.inventory.tree.serialize() == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -436,7 +436,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     table_choices: Literal["all"] | tuple[str, list[str]],
     table_expected_retentions: dict[str, tuple[int, int, int]],
 ) -> None:
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=10,
         items_of_inventory_plugins=[
             ItemsOfInventoryPlugin(
@@ -520,7 +520,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     else:
         table_retentions = {}
 
-    assert trees.inventory.serialize() == {
+    assert mutable_trees.inventory.tree.serialize() == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -714,15 +714,15 @@ def test__inventorize_real_host_no_items(
     previous_node: StructuredDataNode,
     expected_inv_tree: StructuredDataNode,
 ) -> None:
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=10,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=raw_intervals,
         old_tree=previous_node,
     )
 
-    assert trees.inventory.is_empty()
-    assert trees.status_data.is_empty()
+    assert mutable_trees.inventory.tree.is_empty()
+    assert mutable_trees.status_data.tree.is_empty()
 
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
@@ -747,7 +747,7 @@ def test_updater_merge_previous_attributes(
         previous_table_retentions={},
         raw_cache_info=(-1, -2),
     )
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=-1,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=[
@@ -759,7 +759,6 @@ def test_updater_merge_previous_attributes(
         ],
         old_tree=previous_tree,
     )
-    inv_tree = trees.inventory
 
     previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
     assert previous_node is not None
@@ -771,7 +770,7 @@ def test_updater_merge_previous_attributes(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
+    inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-attrs"))
     assert inv_node is not None
     assert inv_node.attributes.retentions == expected_retentions
 
@@ -792,7 +791,7 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
         previous_table_retentions={},
         raw_cache_info=(-1, -2),
     )
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=1000,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=[
@@ -804,9 +803,7 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
         ],
         old_tree=previous_tree,
     )
-    inv_tree = trees.inventory
-
-    assert inv_tree.is_empty()
+    assert mutable_trees.inventory.tree.is_empty()
 
     previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
     assert isinstance(previous_node, StructuredDataNode)
@@ -814,7 +811,7 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
+    inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-attrs"))
     assert inv_node is not None
     assert inv_node.attributes.retentions == {}
 
@@ -844,7 +841,7 @@ def test_updater_merge_previous_tables(
         },
         raw_cache_info=(-1, -2),
     )
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=-1,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=[
@@ -856,7 +853,6 @@ def test_updater_merge_previous_tables(
         ],
         old_tree=previous_tree,
     )
-    inv_tree = trees.inventory
 
     previous_node = previous_tree.get_node(("path-to", "node-with-table"))
     assert isinstance(previous_node, StructuredDataNode)
@@ -868,7 +864,7 @@ def test_updater_merge_previous_tables(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
+    inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-table"))
     assert inv_node is not None
     assert inv_node.table.retentions == expected_retentions
 
@@ -893,7 +889,7 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
         },
         raw_cache_info=(-1, -2),
     )
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=1000,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=[
@@ -905,9 +901,7 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
         ],
         old_tree=previous_tree,
     )
-    inv_tree = trees.inventory
-
-    assert inv_tree.is_empty()
+    assert mutable_trees.inventory.tree.is_empty()
 
     previous_node = previous_tree.get_node(("path-to", "node-with-table"))
     assert isinstance(previous_node, StructuredDataNode)
@@ -915,7 +909,7 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
+    inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-table"))
     assert inv_node is not None
     assert inv_node.table.retentions == {}
 
@@ -946,7 +940,7 @@ def test_updater_merge_attributes(
         previous_table_retentions={},
         raw_cache_info=(4, 5),
     )
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=-1,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=[
@@ -958,12 +952,11 @@ def test_updater_merge_attributes(
         ],
         old_tree=previous_tree,
     )
-    inv_tree = trees.inventory
 
     previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
     assert previous_node is not None
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
+    inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-attrs"))
     assert inv_node is not None
 
     if expected_retentions:
@@ -1005,7 +998,7 @@ def test_updater_merge_attributes_outdated(
         previous_table_retentions={},
         raw_cache_info=(4, 5),
     )
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=1000,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=[
@@ -1017,12 +1010,11 @@ def test_updater_merge_attributes_outdated(
         ],
         old_tree=previous_tree,
     )
-    inv_tree = trees.inventory
 
     previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
     assert previous_node is not None
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
+    inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-attrs"))
     assert inv_node is not None
 
     if expected_retentions:
@@ -1077,7 +1069,7 @@ def test_updater_merge_tables(
         },
         raw_cache_info=(4, 5),
     )
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=-1,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=[
@@ -1089,12 +1081,11 @@ def test_updater_merge_tables(
         ],
         old_tree=previous_tree,
     )
-    inv_tree = trees.inventory
 
     previous_node = previous_tree.get_node(("path-to", "node-with-table"))
     assert previous_node is not None
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
+    inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-table"))
     assert inv_node is not None
 
     if expected_retentions:
@@ -1146,7 +1137,7 @@ def test_updater_merge_tables_outdated(
         },
         raw_cache_info=(4, 5),
     )
-    trees, update_result = _inventorize_real_host(
+    mutable_trees, update_result = _inventorize_real_host(
         now=1000,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=[
@@ -1158,12 +1149,11 @@ def test_updater_merge_tables_outdated(
         ],
         old_tree=previous_tree,
     )
-    inv_tree = trees.inventory
 
     previous_node = previous_tree.get_node(("path-to", "node-with-table"))
     assert previous_node is not None
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
+    inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-table"))
     assert inv_node is not None
 
     if expected_retentions:

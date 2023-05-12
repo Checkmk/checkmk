@@ -16,7 +16,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal, NamedTuple, TypedDict
+from typing import Any, Final, Literal, NamedTuple, TypedDict
 
 from cmk.utils import store
 from cmk.utils.type_defs import HostName
@@ -153,6 +153,47 @@ class UpdateResult:
         return "\n".join(lines) + "\n"
 
 
+#   .--add pairs or rows---------------------------------------------------.
+#   |                 _     _               _                              |
+#   |        __ _  __| | __| |  _ __   __ _(_)_ __ ___    ___  _ __        |
+#   |       / _` |/ _` |/ _` | | '_ \ / _` | | '__/ __|  / _ \| '__|       |
+#   |      | (_| | (_| | (_| | | |_) | (_| | | |  \__ \ | (_) | |          |
+#   |       \__,_|\__,_|\__,_| | .__/ \__,_|_|_|  |___/  \___/|_|          |
+#   |                          |_|                                         |
+#   |                                                                      |
+#   |                        _ __ _____      _____                         |
+#   |                       | '__/ _ \ \ /\ / / __|                        |
+#   |                       | | | (_) \ V  V /\__ \                        |
+#   |                       |_|  \___/ \_/\_/ |___/                        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class MutableTree:
+    def __init__(self, tree: StructuredDataNode) -> None:
+        self.tree: Final = tree
+
+    def add_pairs(
+        self,
+        *,
+        path: list[str],
+        pairs: Mapping[str, int | float | str | None],
+    ) -> None:
+        self.tree.setdefault_node(tuple(path)).attributes.add_pairs(pairs)
+
+    def add_rows(
+        self,
+        *,
+        path: list[str],
+        key_columns: list[str],
+        rows: Sequence[Mapping[str, int | float | str | None]],
+    ) -> None:
+        node = self.tree.setdefault_node(tuple(path))
+        node.table.add_key_columns(sorted(key_columns))
+        node.table.add_rows(rows)
+
+
+# .
 #   .--filter tree---------------------------------------------------------.
 #   |               __ _ _ _              _                                |
 #   |              / _(_) | |_ ___ _ __  | |_ _ __ ___  ___                |
@@ -885,14 +926,14 @@ class Table:
 
     #   ---table methods--------------------------------------------------------
 
-    def add_rows(self, rows: Iterable[SDRow]) -> None:
+    def add_rows(self, rows: Sequence[Mapping[str, int | float | str | None]]) -> None:
         for row in rows:
             self.add_row(self._make_row_ident(row), row)
 
-    def _make_row_ident(self, row: SDRow) -> SDRowIdent:
+    def _make_row_ident(self, row: Mapping[str, int | float | str | None]) -> SDRowIdent:
         return tuple(row[k] for k in self.key_columns if k in row)
 
-    def add_row(self, ident: SDRowIdent, row: SDRow) -> None:
+    def add_row(self, ident: SDRowIdent, row: Mapping[str, int | float | str | None]) -> None:
         if not self.key_columns:
             raise ValueError("Cannot add row due to missing key_columns")
 

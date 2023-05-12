@@ -1,0 +1,23 @@
+Title: Drop unsupported distros
+Class: fix
+Compatible: incomp
+Component: omd
+Date: 1683890179
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b8
+
+This change may affect you in case you've been using Checkmk with the following distros:
+
+<ul>
+<li>Ubuntu 16.04</li>
+<li>Ubuntu 18.04</li>
+<li>SLES 12 SP3</li>
+<li>SLES 12 SP4</li>
+<li>SLES 15</li>
+</ul>
+
+Checkmk will now not be built anymore for those distros.
+

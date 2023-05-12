@@ -1,0 +1,17 @@
+Title: <tt>fortisandbox_disk_usage</tt>: Fix <tt>KeyError: 'disk_used'</tt>
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683879479
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p28
+
+The above mentioned check plugin always crashed with
+
+C+:
+KeyError: 'disk_used'
+C-:
+

@@ -100,7 +100,7 @@ Execute = Callable[[list[str]], CommandOutput]
 
 
 @pytest.fixture(name="execute")
-def execute_fixture(site: Site) -> Execute:
+def execute_fixture(test_cfg: None, site: Site) -> Execute:
     def _execute(command: list[str]) -> CommandOutput:
         p = site.execute(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=None)
         stdout, stderr = p.communicate()

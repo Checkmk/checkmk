@@ -1,15 +1,16 @@
-Title: heartbeat_crm_resources: Check promotable clone resources
+Title: 'effective_attributes' now uses the same format as 'attributes' in 'show host' and 'show all hosts' endpoints
 Class: fix
 Compatible: compat
-Component: checks
-Date: 1683717678
+Component: rest-api
+Date: 1684143815
 Edition: cre
 Knowledge: doc
 Level: 1
 Version: 2.3.0b1
 
-Promotable clone sets weren't parsed correctly, which caused no resources
-to be found in the heartbeat_crm_resources check.
-Now, the parsing is fixed and the service show masters and slaves of the
-promotable clone set.
+The 'effective_attributes' field that can optionally be requested in the 'show host' and 'show all hosts'
+endpoints now uses the same format as the 'attributes' field.
+This Werk completes Werk 13978 and also fixes a bug that was introduced with it.
+After Werk 13978, all attributes except for 'meta_data' were omitted from the output in 'effective_attributes'.
+The is no longer the case.
 

@@ -7,7 +7,6 @@ import datetime as dt
 import logging
 from typing import Any
 
-import marshmallow
 from marshmallow import fields as _fields
 from marshmallow import post_load, Schema
 from marshmallow_oneofschema import OneOfSchema
@@ -17,10 +16,9 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.fields import MetaData
 from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.definitions import ensure_string
-from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.fields.utils import attr_openapi_schema, BaseSchema
 
 from cmk import fields
 from cmk.fields import base
@@ -308,21 +306,6 @@ class DomainObject(Linkable):
     )
 
 
-class HostExtensionEffectiveAttributes(BaseSchema):
-    class Meta:
-        unknown = marshmallow.INCLUDE
-
-    meta_data = fields.Nested(
-        MetaData,
-        description="Read only access to configured metadata.",
-        example={
-            "created_at": "2023-02-17T12:57:45.166352+00:00",
-            "updated_at": "2023-02-17T12:57:45.212448+00:00",
-            "created_by": "cmkadmin",
-        },
-    )
-
-
 class HostExtensions(BaseSchema):
     folder = gui_fields.FolderField(
         description="The folder, in which this host resides.",
@@ -335,9 +318,9 @@ class HostExtensions(BaseSchema):
         example={"ipaddress": "192.168.0.123"},
     )
     effective_attributes = fields.Nested(
-        HostExtensionEffectiveAttributes,
-        description="All attributes of this host and all parent folders. Format may change!",
-        allow_none=True,
+        attr_openapi_schema("host", "view")(),
+        required=False,
+        description="All attributes of this host and all parent folders.",
         example={"tag_snmp_ds": None},
     )
     is_cluster = fields.Boolean(

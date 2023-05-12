@@ -216,6 +216,49 @@ div#datasources_container {
   }
 }
 
+div#activation_state_message_container {
+  display: grid;
+  position: relative;
+  margin-bottom: $spacing;
+  padding: 12px 16px;
+  background-color: $headline-color;
+
+  div.activation_state {
+    position: absolute;
+    width: 25px;
+    height: 100%;
+
+    span {
+      display: flex;
+      height: 100%;
+      border-radius: $border-radius-left;
+      justify-content: center;
+      align-items: center;
+
+      img {
+        width: 14px;
+      }
+    }
+  }
+
+  div.activation_state_message {
+    h2 {
+      margin: 0 25px 10px;
+    }
+
+    div {
+      margin: 5px 25px;
+      span {
+        display: block;
+        margin-bottom: $spacing;
+      }
+      span:last-child {
+        margin-bottom: 0px;
+      }
+    }
+  }
+}
+
 div#fixall_container {
   background-color: $headline-color;
   border-radius: 2px;

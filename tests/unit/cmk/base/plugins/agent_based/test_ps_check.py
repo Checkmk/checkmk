@@ -769,7 +769,7 @@ def test_cpu_util_single_process_levels(cpu_cores):
 
 def test_parse_ps_windows(mocker: MockerFixture):
     section_ps = ps_section.parse_ps(splitter(
-        """(\\LS\0tribe29,150364,40016,0,2080,1,387119531250,2225698437500,111,2,263652)	CPUSTRES64.EXE""",
+        """(\\LS\0checkmk,150364,40016,0,2080,1,387119531250,2225698437500,111,2,263652)	CPUSTRES64.EXE""",
         "\t",
     ))
 

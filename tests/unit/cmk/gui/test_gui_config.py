@@ -1098,7 +1098,7 @@ MONITORING_USER_CACHED_PROFILE = {
     'authorized_sites': ['heute', 'heute_slave_1'],
     'contactgroups': ['all'],
     'disable_notifications': {},
-    'email': u'test_user@tribe29.com',
+    'email': u'test_user@checkmk.com',
     'fallback_contact': False,
     'force_authuser': False,
     'locked': False,
@@ -1152,7 +1152,7 @@ def fixture_monitoring_user(tmp_path, mocker):
 def test_monitoring_user(monitoring_user):
     assert monitoring_user.id == 'test'
     assert monitoring_user.alias == 'Test user'
-    assert monitoring_user.email == 'test_user@tribe29.com'
+    assert monitoring_user.email == 'test_user@checkmk.com'
     assert monitoring_user.confdir.endswith('/config_dir/test')
 
     assert monitoring_user.role_ids == ['user']

@@ -134,7 +134,7 @@ def _create_and_destroy_user(automation=False, role="user"):
                 'alias': u'Test user',
                 'contactgroups': ['all'],
                 'disable_notifications': {},
-                'email': u'test_user_%s@tribe29.com' % username,
+                'email': u'test_user_%s@checkmk.com' % username,
                 'fallback_contact': False,
                 'force_authuser': False,
                 'locked': False,

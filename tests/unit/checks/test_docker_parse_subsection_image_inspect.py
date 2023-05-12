@@ -88,11 +88,11 @@ regex = re.compile
             '                "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",'
         ],
         [
-            '                "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",'
+            '                "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",'
         ],
         ['                "org.opencontainers.image.title": "Checkmk",'],
         ['                "org.opencontainers.image.url": "https://checkmk.com/",'],
-        ['                "org.opencontainers.image.vendor": "tribe29 GmbH",'],
+        ['                "org.opencontainers.image.vendor": "Checkmk GmbH",'],
         ['                "org.opencontainers.image.version": "1.5.0p5"'],
         ['            }'],
         ['        },'],
@@ -144,11 +144,11 @@ regex = re.compile
             '                "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",'
         ],
         [
-            '                "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",'
+            '                "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",'
         ],
         ['                "org.opencontainers.image.title": "Checkmk",'],
         ['                "org.opencontainers.image.url": "https://checkmk.com/",'],
-        ['                "org.opencontainers.image.vendor": "tribe29 GmbH",'],
+        ['                "org.opencontainers.image.vendor": "Checkmk GmbH",'],
         ['                "org.opencontainers.image.version": "1.5.0p5"'],
         ['            }'],
         ['        },'],
@@ -267,11 +267,11 @@ regex = re.compile
             '                "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",'
         ],
         [
-            '                "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",'
+            '                "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",'
         ],
         ['                "org.opencontainers.image.title": "Checkmk",'],
         ['                "org.opencontainers.image.url": "https://checkmk.com/",'],
-        ['                "org.opencontainers.image.vendor": "tribe29 GmbH",'],
+        ['                "org.opencontainers.image.vendor": "Checkmk GmbH",'],
         ['                "org.opencontainers.image.version": "1.5.0p3"'],
         ['            }'],
         ['        },'],
@@ -323,11 +323,11 @@ regex = re.compile
             '                "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",'
         ],
         [
-            '                "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",'
+            '                "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",'
         ],
         ['                "org.opencontainers.image.title": "Checkmk",'],
         ['                "org.opencontainers.image.url": "https://checkmk.com/",'],
-        ['                "org.opencontainers.image.vendor": "tribe29 GmbH",'],
+        ['                "org.opencontainers.image.vendor": "Checkmk GmbH",'],
         ['                "org.opencontainers.image.version": "1.5.0p3"'],
         ['            }'],
         ['        },'],
@@ -424,10 +424,10 @@ regex = re.compile
                 "Labels": {
                     "maintainer": "feedback@checkmk.com",
                     "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-                    "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+                    "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",
                     "org.opencontainers.image.title": "Checkmk",
                     "org.opencontainers.image.url": "https://checkmk.com/",
-                    "org.opencontainers.image.vendor": "tribe29 GmbH",
+                    "org.opencontainers.image.vendor": "Checkmk GmbH",
                     "org.opencontainers.image.version": "1.5.0p5"
                 }
             },
@@ -466,10 +466,10 @@ regex = re.compile
                 "Labels": {
                     "maintainer": "feedback@checkmk.com",
                     "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-                    "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+                    "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",
                     "org.opencontainers.image.title": "Checkmk",
                     "org.opencontainers.image.url": "https://checkmk.com/",
-                    "org.opencontainers.image.vendor": "tribe29 GmbH",
+                    "org.opencontainers.image.vendor": "Checkmk GmbH",
                     "org.opencontainers.image.version": "1.5.0p5"
                 }
             },
@@ -542,10 +542,10 @@ regex = re.compile
                 "Labels": {
                     "maintainer": "feedback@checkmk.com",
                     "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-                    "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+                    "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",
                     "org.opencontainers.image.title": "Checkmk",
                     "org.opencontainers.image.url": "https://checkmk.com/",
-                    "org.opencontainers.image.vendor": "tribe29 GmbH",
+                    "org.opencontainers.image.vendor": "Checkmk GmbH",
                     "org.opencontainers.image.version": "1.5.0p3"
                 }
             },
@@ -584,10 +584,10 @@ regex = re.compile
                 "Labels": {
                     "maintainer": "feedback@checkmk.com",
                     "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-                    "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+                    "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",
                     "org.opencontainers.image.title": "Checkmk",
                     "org.opencontainers.image.url": "https://checkmk.com/",
-                    "org.opencontainers.image.vendor": "tribe29 GmbH",
+                    "org.opencontainers.image.vendor": "Checkmk GmbH",
                     "org.opencontainers.image.version": "1.5.0p3"
                 }
             },

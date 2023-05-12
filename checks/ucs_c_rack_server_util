@@ -98,14 +98,14 @@ check_info["ucs_c_rack_server_util"] = {
 ##############################
 
 factory_settings["ucs_c_rack_server_util_cpu_default_levels"] = {
-    "upper_levels": (90.0, 95.0),
+    "levels": (90.0, 95.0),
 }
 
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_util_cpu(item, params, data):
     # None values passed to check_levels(value, ...) are handled by Checkmk internals appropriatelly.
-    return check_cpu_util(data["cpuUtilization"], params["upper_levels"])
+    return check_cpu_util(data["cpuUtilization"], params)
 
 
 check_info["ucs_c_rack_server_util.cpu"] = {

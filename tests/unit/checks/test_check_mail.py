@@ -50,7 +50,7 @@ pytestmark = pytest.mark.checks
                 "forward": {
                     "facility": 2,
                     "application": None,
-                    "host": "me.too@tribe29.com",
+                    "host": "me.too@checkmk.com",
                     "cleanup": True,
                 },
             },
@@ -62,7 +62,7 @@ pytestmark = pytest.mark.checks
                 "--fetch-password=p4ssw0rd",
                 "--forward-ec",
                 "--forward-facility=2",
-                "--forward-host=me.too@tribe29.com",
+                "--forward-host=me.too@checkmk.com",
                 "--cleanup=delete",
             ],
         ),

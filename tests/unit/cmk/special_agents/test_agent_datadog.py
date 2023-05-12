@@ -388,7 +388,7 @@ class TestLogsQuerier:
         pytest.param(["Number:attributes.number"], " Number=42", id="numerical"),
         pytest.param(
             ["object:attributes.object"],
-            " object=[1, 2, 3, cmk: [4, 5, 6], tribe29]",
+            " object=[1, 2, 3, cmk: [4, 5, 6], Checkmk]",
             id="composite object",
         ),
     ],
@@ -403,7 +403,7 @@ def test_log_to_syslog_message(raw_translator: Sequence[str], message_text: str)
                     attributes={
                         "test": {"baz": "fun"},
                         "number": 42,
-                        "object": [1, 2, 3, {"cmk": [4, 5, 6]}, "tribe29"],
+                        "object": [1, 2, 3, {"cmk": [4, 5, 6]}, "Checkmk"],
                     },
                     host="cmk",
                     service="app",

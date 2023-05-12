@@ -447,7 +447,7 @@ def test_update_and_acknowledge_by_id(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 1"
     )
     mock_livestatus.expect_query(
-        "COMMAND [...] EC_UPDATE;1;test123-...;1;comment_changed;tribe29", match_type="ellipsis"
+        "COMMAND [...] EC_UPDATE;1;test123-...;1;comment_changed;Checkmk", match_type="ellipsis"
     )
 
     with mock_livestatus:
@@ -456,7 +456,7 @@ def test_update_and_acknowledge_by_id(
             params=json.dumps(
                 {
                     "change_comment": "comment_changed",
-                    "change_contact": "tribe29",
+                    "change_contact": "Checkmk",
                 }
             ),
         )
@@ -472,7 +472,7 @@ def test_update_and_acknowledge_withdrawal_by_id(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 4"
     )
     mock_livestatus.expect_query(
-        "COMMAND [...] EC_UPDATE;4;test123-...;0;comment_changed;tribe29", match_type="ellipsis"
+        "COMMAND [...] EC_UPDATE;4;test123-...;0;comment_changed;Checkmk", match_type="ellipsis"
     )
 
     with mock_livestatus:
@@ -481,7 +481,7 @@ def test_update_and_acknowledge_withdrawal_by_id(
             params=json.dumps(
                 {
                     "change_comment": "comment_changed",
-                    "change_contact": "tribe29",
+                    "change_contact": "Checkmk",
                     "phase": "open",
                 }
             ),

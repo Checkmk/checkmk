@@ -1,7 +1,7 @@
 :: Check for installation of the MSI in artefacts
 :: Location of the
 ::
-:: 2021 (c) tribe29
+:: 2021 (c) Checkmk GmbH
 
 @echo off
 if "%1" == "" powershell Write-Host "Usage: is_installed.cmd path\to\msi" -Foreground Red && exit /b 5

@@ -1,0 +1,21 @@
+Title: <tt>docker_node_info</tt>: Fix sporadic UNKN if host is monitored by multiple sites
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683876448
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p36
+
+In case a Docker host with installed Docker agent plugin (<tt>mk_docker</tt>) was monitored by
+multiple Checkmk sites, the <i>Docker node info</i> service might have sporadically reported UNKN
+with the following error message:
+
+C+:
+Plugin exception in section_node_disk_usage: [Errno 2] No such file or directory: '/var/lib/check_mk_agent/mk_docker_df.tmp....' -> '/var/lib/check_mk_agent/mk_docker_df.spool'
+C-:
+
+To benefit from this werk, users have to re-deploy the Docker agent plugin on affected hosts.
+

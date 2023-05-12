@@ -14,7 +14,6 @@
 # ERROR:$
 # ORA-28002: the password will expire within 1 days$
 
-
 import time
 from collections.abc import Iterable
 from typing import TypedDict
@@ -61,16 +60,11 @@ def _merge_states(state: int, infotext: str, value: int, column: str, data: str)
 def check_oracle_instance(  # pylint: disable=too-many-branches
     item: str, params: _Params, section: Section
 ) -> Iterable[tuple[int, str, list]]:
-    if not (item_data := section.get(item)):
+    if isinstance((item_data := section.get(item)), (GeneralError, InvalidData)):
+        yield 2, item_data.error, []
+        return
+    if item_data is None:
         yield 2, "Database or necessary processes not running or login failed", []
-        return
-
-    if isinstance(item_data, GeneralError):
-        yield 2, item_data.err, []
-        return
-
-    if isinstance(item_data, InvalidData):
-        yield 2, "Database not running, login failed or unvalid data from agent", []
         return
 
     state = 0

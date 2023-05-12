@@ -131,7 +131,7 @@ def test_parse_oracle_instance_invalid() -> None:
             ["I442", "FAILURE"],
         ]
     ) == {
-        "I442": InvalidData("I442"),
+        "I442": InvalidData("I442", error="Invalid data from agent"),
     }
 
 
@@ -139,11 +139,8 @@ def test_discover_oracle_instance(fix_register: FixRegister) -> None:
     assert list(
         fix_register.check_plugins[CheckPluginName("oracle_instance")].discovery_function(
             {
-                "a": InvalidData(sid="a"),
-                "b": GeneralError(
-                    sid="b",
-                    err="something went wrong",
-                ),
+                "a": InvalidData("a", "This is an error"),
+                "b": GeneralError("b", "something went wrong"),
                 "c": Instance(sid="c", version="", openmode="", logins=""),
             },
         )

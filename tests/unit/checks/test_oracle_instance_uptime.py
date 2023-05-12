@@ -32,11 +32,8 @@ def test_discover_oracle_instance_uptime(fix_register: FixRegister) -> None:
             {
                 "a": Instance(sid="a", version="", openmode="", logins="", up_seconds=1234),
                 "b": Instance(sid="a", version="", openmode="", logins=""),
-                "c": GeneralError(
-                    sid="b",
-                    err="whatever",
-                ),
-                "d": InvalidData(sid="c"),
+                "c": GeneralError("b", "whatever"),
+                "d": InvalidData("c", "This is an error"),
             },
         )
     ) == [

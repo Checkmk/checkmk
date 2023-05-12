@@ -19,12 +19,21 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 @dataclasses.dataclass(frozen=True)
 class InvalidData:
     sid: str
+    error: str
+
+    @property
+    def item_name(self) -> str:
+        return self.sid
 
 
 @dataclasses.dataclass(frozen=True)
 class GeneralError:
     sid: str
-    err: str
+    error: str
+
+    @property
+    def item_name(self) -> str:
+        return self.sid
 
 
 class Instance(BaseModel):
@@ -54,6 +63,11 @@ class Instance(BaseModel):
         # possible multitenant entry?
         # every pdb has a con_id != 0
         return self.pluggable == "TRUE" and self.con_id != "0"
+
+    @property
+    def item_name(self) -> str:
+        # Multitenant use DB_NAME.PDB_NAME as Service
+        return f"{self.sid}.{self.pname}" if self.pdb else self.sid
 
 
 Section = Mapping[str, Union[InvalidData, GeneralError, Instance]]
@@ -177,7 +191,7 @@ def _parse_agent_line(line: Sequence[str]) -> Union[InvalidData, GeneralError, I
     if general_error := " ".join(line[2:]) if line[1] == "FAILURE" else None:
         return GeneralError(
             sid=sid,
-            err=general_error,
+            error=general_error,
         )
 
     length = len(line)
@@ -186,7 +200,7 @@ def _parse_agent_line(line: Sequence[str]) -> Union[InvalidData, GeneralError, I
     try:
         header = _OUTPUT_HEADERS[(length, is_asm)]
     except KeyError:
-        return InvalidData(sid=sid)
+        return InvalidData(sid=sid, error="Invalid data from agent")
 
     raw = ((k, v) for k, v in zip(header, line) if not k.startswith("_"))
     instance = Instance.parse_obj(dict(raw, old_agent=length == 6))
@@ -201,35 +215,18 @@ def _parse_agent_line(line: Sequence[str]) -> Union[InvalidData, GeneralError, I
 
 
 def parse_oracle_instance(string_table: StringTable) -> Section:
-    parsed = {}
-
-    for line in string_table:
-        if not line:
-            continue
-
-        # Skip ORA- error messages from broken old oracle agent
-        # <<<oracle_instance:sep(124)>>>
-        # ORA-99999 tnsping failed for +ASM1
-        if line[0].startswith("ORA-") and line[0][4].isdigit() and len(line[0]) < 16:
-            continue
-
-        item_data = _parse_agent_line(line)
-
-        item_name = item_data.sid
-
-        # Multitenant use DB_NAME.PDB_NAME as Service
+    return {
+        data.item_name: data
+        for line in string_table
         if (
-            isinstance(
-                item_data,
-                Instance,
-            )
-            and item_data.pdb
-        ):
-            item_name = "%s.%s" % (item_data.sid, item_data.pname)
-
-        parsed[item_name] = item_data
-
-    return parsed
+            line
+            # Skip ORA- error messages from broken old oracle agent
+            # <<<oracle_instance:sep(124)>>>
+            # ORA-99999 tnsping failed for +ASM1
+            and not (line[0].startswith("ORA-") and line[0][4].isdigit() and len(line[0]) < 16)
+            and (data := _parse_agent_line(line))
+        )
+    }
 
 
 register.agent_section(

@@ -489,7 +489,7 @@ class RulesetOptimizer:
 
         # Only add references to configured hosts
         nodes_and_clusters.intersection_update(self._all_configured_hosts)
-        self._all_processed_hosts.update(nodes_and_clusters)
+        self._all_processed_hosts = nodes_and_clusters
 
         # The folder host lookup includes a list of all -processed- hosts within a given
         # folder. Any update with set_all_processed hosts invalidates this cache, because

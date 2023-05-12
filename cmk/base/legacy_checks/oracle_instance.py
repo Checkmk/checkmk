@@ -178,13 +178,13 @@ check_info["oracle_instance"] = {
 }
 
 
-def discover_oracle_instance_uptime(parsed):
+def discover_oracle_instance_uptime(section: Section) -> Iterable[tuple[str, dict]]:
     yield from (
         (
             item,
             {},
         )
-        for item, data in parsed.items()
+        for item, data in section.items()
         if isinstance(
             data,
             Instance,
@@ -192,8 +192,15 @@ def discover_oracle_instance_uptime(parsed):
     )
 
 
-def check_oracle_instance_uptime(item, params, parsed):
-    item_data = parsed.get(item)
+class _UptimeMultiItemParams(TypedDict, total=False):
+    max: tuple[float, float]
+    min: tuple[float, float]
+
+
+def check_oracle_instance_uptime(
+    item: str, params: _UptimeMultiItemParams, section: Section
+) -> tuple[int, str, list]:
+    item_data = section.get(item)
     if item_data is None or not isinstance(
         item_data,
         Instance,
@@ -203,11 +210,11 @@ def check_oracle_instance_uptime(item, params, parsed):
 
     up_seconds = max(0, int(item_data.up_seconds))
 
-    params = params.get("max", (None, None)) + params.get("min", (None, None))
+    levels = params.get("max", (None, None)) + params.get("min", (None, None))
     return check_levels(
         up_seconds,
         "uptime",
-        params,
+        levels,
         human_readable_func=lambda x: datetime.timedelta(seconds=int(x)),
         infoname="Up since %s, uptime"
         % time.strftime("%F %T", time.localtime(time.time() - up_seconds)),

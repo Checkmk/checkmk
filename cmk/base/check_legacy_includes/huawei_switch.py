@@ -5,23 +5,6 @@
 
 from typing import NamedTuple
 
-from cmk.base.check_api import OID_END
-
-
-def huawei_entity_specific_snmp_info(snmp_info):
-    """
-    Used for the 'snmp_info' of a check to retrieve values that are indexed by a
-    entPhyisicalIndex. See parse_huawei_physical_entity_values() for a detailed description.
-    """
-    return [
-        (
-            ".1.3.6.1.2.1.47.1.1.1.1",
-            [OID_END, "7"],
-        ),  # retrieve list of [entPhysicalIndex, entPhysicalName]
-        snmp_info,
-    ]
-
-
 huawei_mpu_board_name_start = "mpu board"
 
 

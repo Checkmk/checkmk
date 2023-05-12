@@ -551,13 +551,11 @@ def _render_header_icon() -> None:
         if config.has_custom_logo():
             html.img(html.detect_icon_path(icon_name="logo", prefix="mk-"), class_="custom")
         else:
-            #html.img(html.detect_icon_path(icon_name="icon_min", prefix="tribe29_"))
             html.icon("checkmk_logo_min")
     else:
         if config.has_custom_logo():
             html.img(html.detect_icon_path(icon_name="logo", prefix="mk-"))
         else:
-            #html.img(html.detect_icon_path(icon_name="icon", prefix="tribe29_"))
             html.icon("checkmk_logo")
 
 

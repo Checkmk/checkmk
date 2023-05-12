@@ -14,7 +14,7 @@ def check_mail_arguments(params):
     ...         'server': 'imap.gmx.com',
     ...         'ssl': (True, None),
     ...         'auth': ('me@gmx.de', ('password', 'p4ssw0rd'))}),
-    ...     'forward': {'facility': 2, 'application': None, 'host': 'me.too@tribe29.com',
+    ...     'forward': {'facility': 2, 'application': None, 'host': 'me.too@checkmk.com',
     ...     'cleanup': True}}):
     ...   print(a)
     --fetch-protocol=IMAP
@@ -24,7 +24,7 @@ def check_mail_arguments(params):
     --fetch-password=p4ssw0rd
     --forward-ec
     --forward-facility=2
-    --forward-host=me.too@tribe29.com
+    --forward-host=me.too@checkmk.com
     --cleanup=delete
     """
 

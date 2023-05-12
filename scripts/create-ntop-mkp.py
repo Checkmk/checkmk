@@ -32,7 +32,7 @@ NTOP_PACKAGE_INFO: packaging.PackageInfo = {
     "version.packaged": cmk_version.__version__,
     "version.min_required": cmk_version.__version__,
     "version.usable_until": None,
-    "author": "tribe29 GmbH",
+    "author": "Checkmk GmbH",
     "download_url": "https://checkmk.com/",
     "files": {
         "web": [ntop_file.replace(ENTERPRISE_PREFIX, "") for ntop_file in MKP_ABLE_NTOP_FILES]

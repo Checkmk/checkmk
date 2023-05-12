@@ -88,8 +88,8 @@ LABEL \
     org.opencontainers.image.title="Checkmk" \
     org.opencontainers.image.version="${CMK_VERSION}" \
     org.opencontainers.image.description="Checkmk is a leading tool for Infrastructure & Application Monitoring" \
-    org.opencontainers.image.vendor="tribe29 GmbH" \
-    org.opencontainers.image.source="https://github.com/tribe29/checkmk" \
+    org.opencontainers.image.vendor="Checkmk GmbH" \
+    org.opencontainers.image.source="https://github.com/checkmk/checkmk" \
     org.opencontainers.image.url="https://checkmk.com/"
 
 # Ports:

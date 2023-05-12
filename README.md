@@ -38,7 +38,7 @@ It is highly recommended to use the prebuilt Checkmk packages we
 [provide](https://checkmk.com/download.php). But if you really want to
 build your own packages, you either need to download the source packages from
 our website or check out the [Git
-repository](https://github.com/tribe29/checkmk).
+repository](https://github.com/checkmk/checkmk).
 
 To prepare your system for building, you need to execute this command:
 

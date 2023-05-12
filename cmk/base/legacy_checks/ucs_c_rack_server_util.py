@@ -3,56 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import check_levels, get_parsed_item_data, get_percent_human_readable
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info, factory_settings
-
-# exemplary output of special agent agent_ucs_bladecenter (separator is <TAB> and means tabulator):
-#
-# <<<ucs_c_rack_server_util:sep(9)>>>
-# serverUtilization<TAB>dn sys/rack-unit-1/utilization<TAB>overallUtilization 0<TAB>cpuUtilization 0<TAB>memoryUtilization 0<TAB>ioUtilization 0
-# serverUtilization<TAB>dn sys/rack-unit-2/utilization<TAB>overallUtilization 90<TAB>cpuUtilization 90<TAB>memoryUtilization 90<TAB>ioUtilization 90
-#
-# The format of the XML API v2.0 raw output provided via the agent is not documented.
-# The description about the meaning of the XML attributes is described in the corresponding
-# section of the GUI Configuration Guide. The units of overallUtilization, cpuUtilization,
-# memoryUtilization and ioUtilization are percentages.
-# https://www.cisco.com/c/en/us/td/docs/unified_computing/ucs/c/sw/gui/config/guide/3_1/b_Cisco_UCS_C-series_GUI_Configuration_Guide_31/b_Cisco_UCS_C-series_GUI_Configuration_Guide_31_chapter_0101.pdf
-
-
-def parse_ucs_c_rack_server_util(info):
-    """
-    Returns dict with indexed racks mapped to keys and utilization values mapped to dicts.
-    """
-    parsed = {}
-    # The element count of info lines is under our control (agent output) and
-    # ensured to have expected length. It is ensured that elements contain a
-    # string. Handles invalid values provided by the XML API which cannot be
-    # casted by setting corresponding values to None.
-    for _, dn, overall_util, measured_cpu_util, memory_util, pci_io_util in info:
-        rack = (
-            dn.replace("dn ", "")
-            .replace("sys/", "")
-            .replace("rack-unit-", "Rack unit ")
-            .replace("/utilization", "")
-        )
-
-        for ds_key, ds in (
-            ("overallUtilization", overall_util),
-            ("cpuUtilization", measured_cpu_util),
-            ("memoryUtilization", memory_util),
-            ("ioUtilization", pci_io_util),
-        ):
-            try:
-                value = float(ds.replace(ds_key + " ", ""))
-            except ValueError:
-                continue
-            parsed.setdefault(rack, {})[ds_key] = value
-
-    return parsed
 
 
 def inventory_ucs_c_rack_server_util(parsed):
@@ -75,8 +30,10 @@ factory_settings["ucs_c_rack_server_util_overall_default_levels"] = {
 @get_parsed_item_data
 def check_ucs_c_rack_server_util(item, params, data):
     # None values passed to check_levels(value, ...) are handled by Checkmk internals appropriatelly.
+    if (overall_util := data.overall) is None:
+        return
     yield check_levels(
-        data["overallUtilization"],
+        overall_util,
         "overall_util",
         params["upper_levels"],
         human_readable_func=get_percent_human_readable,
@@ -84,7 +41,6 @@ def check_ucs_c_rack_server_util(item, params, data):
 
 
 check_info["ucs_c_rack_server_util"] = {
-    "parse_function": parse_ucs_c_rack_server_util,
     "discovery_function": inventory_ucs_c_rack_server_util,
     "check_function": check_ucs_c_rack_server_util,
     "check_ruleset_name": "overall_utilization_multiitem",
@@ -103,8 +59,9 @@ factory_settings["ucs_c_rack_server_util_cpu_default_levels"] = {
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_util_cpu(item, params, data):
-    # None values passed to check_levels(value, ...) are handled by Checkmk internals appropriatelly.
-    return check_cpu_util(data["cpuUtilization"], params)
+    if (cpu_util := data.cpu) is None:
+        return None
+    return check_cpu_util(cpu_util, params)
 
 
 check_info["ucs_c_rack_server_util.cpu"] = {
@@ -126,8 +83,10 @@ factory_settings["ucs_c_rack_server_util_pci_io_default_levels"] = {
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_util_pci_io(item, params, data):
+    if (io_util := data.io) is None:
+        return
     yield check_levels(
-        data["ioUtilization"],
+        io_util,
         "pci_io_util",
         params["upper_levels"],
         human_readable_func=get_percent_human_readable,
@@ -153,8 +112,10 @@ factory_settings["ucs_c_rack_server_util_mem_default_levels"] = {
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_util_mem(item, params, data):
+    if (memory_util := data.memory) is None:
+        return
     yield check_levels(
-        data["memoryUtilization"],
+        memory_util,
         "memory_util",
         params["upper_levels"],
         human_readable_func=get_percent_human_readable,

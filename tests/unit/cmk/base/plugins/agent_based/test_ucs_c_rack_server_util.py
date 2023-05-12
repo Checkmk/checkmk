@@ -7,17 +7,19 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import SectionName
-
 from cmk.checkers.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.ucs_c_rack_server_util import (
+    parse_ucs_c_rack_server_util,
+    Section,
+)
 
 
 @pytest.fixture(name="section", scope="module")
-def fixture_section(fix_register: FixRegister) -> object:
-    return fix_register.agent_sections[SectionName("ucs_c_rack_server_util")].parse_function(
+def fixture_section() -> Section:
+    return parse_ucs_c_rack_server_util(
         [
             [
                 "serverUtilization",
@@ -45,7 +47,7 @@ def fixture_section(fix_register: FixRegister) -> object:
 )
 def test_discover_ucs_c_rack_server_util(
     fix_register: FixRegister,
-    section: object,
+    section: Section,
     plugin_name_suffix: str,
 ) -> None:
     assert list(
@@ -83,7 +85,7 @@ def test_discover_ucs_c_rack_server_util(
 )
 def test_check_ucs_c_rack_server_util(
     fix_register: FixRegister,
-    section: object,
+    section: Section,
     item: str,
     expected_result: CheckResult,
 ) -> None:
@@ -122,7 +124,7 @@ def test_check_ucs_c_rack_server_util(
 )
 def test_check_ucs_c_rack_server_util_cpu(
     fix_register: FixRegister,
-    section: object,
+    section: Section,
     item: str,
     expected_result: CheckResult,
 ) -> None:
@@ -163,7 +165,7 @@ def test_check_ucs_c_rack_server_util_cpu(
 )
 def test_check_ucs_c_rack_server_util_pci_io(
     fix_register: FixRegister,
-    section: object,
+    section: Section,
     item: str,
     expected_result: CheckResult,
 ) -> None:
@@ -204,7 +206,7 @@ def test_check_ucs_c_rack_server_util_pci_io(
 )
 def test_check_ucs_c_rack_server_util_mem(
     fix_register: FixRegister,
-    section: object,
+    section: Section,
     item: str,
     expected_result: CheckResult,
 ) -> None:

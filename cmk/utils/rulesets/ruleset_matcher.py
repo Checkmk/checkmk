@@ -473,7 +473,7 @@ class RulesetOptimizer:
         for hostname in involved_clusters:
             involved_nodes.update(self._nodes_of.get(hostname, []))
 
-        nodes_and_clusters = involved_clusters | involved_nodes | all_processed_hosts
+        nodes_and_clusters = involved_clusters | involved_nodes | set(all_processed_hosts)
 
         # Only add references to configured hosts
         nodes_and_clusters.intersection_update(self._all_configured_hosts)

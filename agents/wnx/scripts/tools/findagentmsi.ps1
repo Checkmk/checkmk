@@ -1,6 +1,6 @@
 # Powershell file to find installed msi of the Windows agent 2.0
 #
-# 2021 (c) tribe29
+# 2021 (c) Checkmk GmbH
 # 
 
 $msiUtilSignature = @'

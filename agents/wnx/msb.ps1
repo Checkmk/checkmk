@@ -3,7 +3,7 @@
 #
 # TODO: make output visible after job starting
 # TODO: make diagnostic better
-# 2019 (c) tribe29
+# 2019 (c) Checkmk GmbH
 # 
 
 $make_exe = $Env:make_exe

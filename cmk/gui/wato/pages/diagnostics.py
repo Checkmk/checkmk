@@ -57,7 +57,6 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
-    DropdownChoice,
     DualListChoice,
     FixedValue,
     ValueSpec,
@@ -157,9 +156,11 @@ class ModeDiagnostics(WatoMode):
             "<br>".join([" - %s: %s" % (f, d) for (f, d) in get_checkmk_file_description()]),
             elements=[
                 ("site",
-                 DropdownChoice(
+                 FixedValue(
+                     value=True,
                      title=_("Site"),
-                     choices=config.get_activation_site_choices(),
+                     totext=config.omd_site(),
+                     help=_("Collect diagnostics data from the local site."),
                  )),
                 ("general",
                  FixedValue(True,

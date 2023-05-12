@@ -1,0 +1,18 @@
+Title: Support Diagnostics: Collect dump only from local site
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1682580865
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p36
+
+Previously, it was possible to select a remote site in the Support Diagnostics UI, where the data was then copied from.
+This worked in cases where the amount of data to be transferred was rather small. In other cases, it crashed regularly, or ran into timeouts, 
+because the transfer took too long.
+
+Now, the Support Diagnostics can only be collected from the local site. To collect data from a remote site, 
+you have to enable the configuration via Setup on this site and log in locally.
+

@@ -211,7 +211,7 @@ MONITORING_USER_CACHED_PROFILE = {
     "authorized_sites": ["heute", "heute_slave_1"],
     "contactgroups": ["all"],
     "disable_notifications": {},
-    "email": "test_user@tribe29.com",
+    "email": "test_user@checkmk.com",
     "fallback_contact": False,
     "force_authuser": False,
     "locked": False,
@@ -261,7 +261,7 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
 def test_monitoring_user(monitoring_user: LoggedInUser) -> None:
     assert monitoring_user.id == "test"
     assert monitoring_user.alias == "Test user"
-    assert monitoring_user.email == "test_user_test@tribe29.com"
+    assert monitoring_user.email == "test_user_test@checkmk.com"
     assert monitoring_user.confdir
     assert monitoring_user.confdir.endswith("/web/test")
 

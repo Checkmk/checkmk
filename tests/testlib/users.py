@@ -40,7 +40,7 @@ def _mk_user_obj(
         username: {
             "attributes": {
                 "alias": "Test user",
-                "email": "test_user_%s@tribe29.com" % username,
+                "email": "test_user_%s@checkmk.com" % username,
                 "password": precomputed_hashes[password],
                 "notification_method": "email",
                 "roles": [role],
@@ -89,7 +89,7 @@ def create_and_destroy_user(
                     "alias": "Test user",
                     "contactgroups": ["all"],
                     "disable_notifications": {},
-                    "email": "test_user_%s@tribe29.com" % user_id,
+                    "email": "test_user_%s@checkmk.com" % user_id,
                     "fallback_contact": False,
                     "force_authuser": False,
                     "locked": False,

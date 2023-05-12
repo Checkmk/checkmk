@@ -4653,7 +4653,7 @@ def main() -> None:  # pylint: disable=too-many-branches
     # if a site name has been specified or not
 
     # Give a short description for the command when the user specifies --help:
-    if len(args) and args[0] in ["-h", "--help"]:
+    if args and args[0] in ["-h", "--help"]:
         sys.stdout.write("%s\n\n" % command.description)
     args, command_options = _parse_command_options(args, command.options)
 

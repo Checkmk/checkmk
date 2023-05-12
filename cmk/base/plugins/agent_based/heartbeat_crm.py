@@ -427,7 +427,7 @@ def check_heartbeat_crm_resources(
     if (resources := section.resources.resources.get(item)) is None:
         return
 
-    if not len(resources):
+    if not resources:
         yield Result(state=State.OK, summary="No resources found")
 
     for resource in resources:

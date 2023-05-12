@@ -49,12 +49,6 @@ disable=
     protected-access,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
-    # a few violations (about 220 in roughly 40 modules), so we postpone fixing
-    # this. Note that due to our arcane use of types, we need to be very careful
-    # when fixing these warnings!
-    len-as-condition,
-    #---------------------------------------------------------------------------
-    # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we
     # probably want to use "include-naming-hint=yes" in the BASIC section.
     invalid-name,

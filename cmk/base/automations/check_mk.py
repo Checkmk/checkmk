@@ -251,8 +251,12 @@ class AutomationDiscoveryPreview(Automation):
     def execute(self, args: list[str]) -> ServiceDiscoveryPreviewResult:
         prevent_fetching, args = _extract_directive("@nofetch", args)
         raise_errors, args = _extract_directive("@raiseerrors", args)
+
+        host_name = HostName(args[0])
+        config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         return _get_discovery_preview(
-            HostName(args[0]), not prevent_fetching, OnError.RAISE if raise_errors else OnError.WARN
+            host_name, not prevent_fetching, OnError.RAISE if raise_errors else OnError.WARN
         )
 
 
@@ -811,11 +815,12 @@ class AutomationGetServicesLabels(Automation):
     needs_checks = True
 
     def execute(self, args: list[str]) -> GetServicesLabelsResult:
-        hostname, services = HostName(args[0]), args[1:]
+        host_name, services = HostName(args[0]), args[1:]
         ruleset_matcher = config.get_config_cache().ruleset_matcher
-
+        config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         return GetServicesLabelsResult(
-            {service: ruleset_matcher.labels_of_service(hostname, service) for service in services}
+            {service: ruleset_matcher.labels_of_service(host_name, service) for service in services}
         )
 
 
@@ -828,22 +833,23 @@ class AutomationAnalyseServices(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: list[str]) -> AnalyseServiceResult:
-        hostname = HostName(args[0])
+        host_name = HostName(args[0])
         servicedesc = args[1]
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         return (
             AnalyseServiceResult(
                 service_info=service_info,
-                labels=config_cache.ruleset_matcher.labels_of_service(hostname, servicedesc),
+                labels=config_cache.ruleset_matcher.labels_of_service(host_name, servicedesc),
                 label_sources=config_cache.ruleset_matcher.label_sources_of_service(
-                    hostname, servicedesc
+                    host_name, servicedesc
                 ),
             )
             if (
                 service_info := self._get_service_info(
                     config_cache=config_cache,
-                    host_name=hostname,
-                    host_attrs=config_cache.get_host_attributes(hostname),
+                    host_name=host_name,
+                    host_attrs=config_cache.get_host_attributes(host_name),
                     servicedesc=servicedesc,
                 )
             )
@@ -981,6 +987,7 @@ class AutomationAnalyseHost(Automation):
     def execute(self, args: list[str]) -> AnalyseHostResult:
         host_name = HostName(args[0])
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         return AnalyseHostResult(
             config_cache.labels(host_name),
             config_cache.label_sources(host_name),
@@ -1356,11 +1363,12 @@ class AutomationDiagHost(Automation):
         self,
         args: list[str],
     ) -> DiagHostResult:
-        hostname = HostName(args[0])
+        host_name = HostName(args[0])
         test, ipaddress, snmp_community = args[1:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
         # In 1.5 the tcp connect timeout has been added. The automation may
         # be called from a remote site with an older version. For this reason
@@ -1393,24 +1401,24 @@ class AutomationDiagHost(Automation):
 
         if not ipaddress:
             try:
-                resolved_address = config.lookup_ip_address(config_cache, hostname)
+                resolved_address = config.lookup_ip_address(config_cache, host_name)
             except Exception:
-                raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
+                raise MKGeneralException("Cannot resolve hostname %s into IP address" % host_name)
 
             if resolved_address is None:
-                raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
+                raise MKGeneralException("Cannot resolve hostname %s into IP address" % host_name)
 
             ipaddress = resolved_address
 
         try:
             if test == "ping":
-                return DiagHostResult(*self._execute_ping(config_cache, hostname, ipaddress))
+                return DiagHostResult(*self._execute_ping(config_cache, host_name, ipaddress))
 
             if test == "agent":
                 return DiagHostResult(
                     *self._execute_agent(
                         config_cache,
-                        hostname,
+                        host_name,
                         ipaddress,
                         agent_port=agent_port,
                         cmd=cmd,
@@ -1420,7 +1428,7 @@ class AutomationDiagHost(Automation):
                 )
 
             if test == "traceroute":
-                return DiagHostResult(*self._execute_traceroute(config_cache, hostname, ipaddress))
+                return DiagHostResult(*self._execute_traceroute(config_cache, host_name, ipaddress))
 
             if test.startswith("snmp"):
                 if config.simulation_mode:
@@ -1430,8 +1438,8 @@ class AutomationDiagHost(Automation):
                 return DiagHostResult(
                     *self._execute_snmp(
                         test,
-                        config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST),
-                        hostname,
+                        config_cache.make_snmp_config(host_name, ipaddress, SourceType.HOST),
+                        host_name,
                         ipaddress,
                         snmp_community,
                         snmp_timeout,
@@ -1691,19 +1699,20 @@ class AutomationActiveCheck(Automation):
     needs_checks = True
 
     def execute(self, args: list[str]) -> ActiveCheckResult:
-        hostname = HostName(args[0])
+        host_name = HostName(args[0])
         plugin, item = args[1:]
 
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         with redirect_stdout(open(os.devnull, "w")):
-            host_attrs = config_cache.get_host_attributes(hostname)
+            host_attrs = config_cache.get_host_attributes(host_name)
 
         if plugin == "custom":
-            for entry in config_cache.custom_checks(hostname):
+            for entry in config_cache.custom_checks(host_name):
                 if entry["service_description"] != item:
                     continue
 
-                command_line = self._replace_core_macros(hostname, entry.get("command_line", ""))
+                command_line = self._replace_core_macros(host_name, entry.get("command_line", ""))
                 if command_line:
                     cmd = core_config.autodetect_plugin(command_line)
                     return ActiveCheckResult(*self._execute_check_plugin(cmd))
@@ -1724,17 +1733,17 @@ class AutomationActiveCheck(Automation):
         # Set host name for host_name()-function (part of the Check API)
         # (used e.g. by check_http)
         stored_passwords = cmk.utils.password_store.load()
-        with plugin_contexts.current_host(hostname):
-            for params in dict(config_cache.active_checks(hostname)).get(plugin, []):
+        with plugin_contexts.current_host(host_name):
+            for params in dict(config_cache.active_checks(host_name)).get(plugin, []):
 
                 for description, command_args in core_config.iter_active_check_services(
-                    plugin, act_info, hostname, host_attrs, params, stored_passwords
+                    plugin, act_info, host_name, host_attrs, params, stored_passwords
                 ):
                     if description != item:
                         continue
 
                     command_line = self._replace_core_macros(
-                        hostname, act_info["command_line"].replace("$ARG1$", command_args)
+                        host_name, act_info["command_line"].replace("$ARG1$", command_args)
                     )
                     cmd = core_config.autodetect_plugin(command_line)
                     return ActiveCheckResult(*self._execute_check_plugin(cmd))

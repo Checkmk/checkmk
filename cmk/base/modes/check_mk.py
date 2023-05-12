@@ -440,6 +440,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
     file_cache_options = _handle_fetcher_options(options)
     try:
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
         if config_cache.is_cluster(hostname):
             raise MKBailOut("Can not be used with cluster hosts")
 
@@ -546,6 +547,7 @@ def mode_dump_hosts(hostlist: list[HostName]) -> None:
     if not hostlist:
         hostlist = sorted(config_cache.all_active_hosts())
 
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostlist))
     for hostname in hostlist:
         cmk.base.dump_host.dump_host(hostname)
 
@@ -1579,6 +1581,7 @@ def mode_check_discovery(
     file_cache_options = _handle_fetcher_options(options)
     discovery_file_cache_max_age = None if file_cache_options.use_outdated else 0
     config_cache = config.get_config_cache()
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     fetcher = ConfiguredFetcher(
         config_cache,
         file_cache_options=file_cache_options,
@@ -1830,10 +1833,13 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
 
     file_cache_options = _handle_fetcher_options(options, defaults=file_cache_options)
     hostnames = modes.parse_hostname_list(args)
+    config_cache = config.get_config_cache()
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
         file_cache_options = file_cache_options._replace(use_outdated=True)
+    else:
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
 
     on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
@@ -1977,6 +1983,7 @@ def mode_check(
         ipaddress = args[1]
 
     config_cache = config.get_config_cache()
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     fetcher = ConfiguredFetcher(
         config_cache,
@@ -2135,6 +2142,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
 
     if args:
         hostnames = modes.parse_hostname_list(args, with_clusters=True)
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
         console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
     else:
         # No hosts specified: do all hosts and force caching
@@ -2231,6 +2239,7 @@ def mode_inventory_as_check(
     keepalive: bool,
 ) -> ServiceState:
     config_cache = config.get_config_cache()
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     file_cache_options = _handle_fetcher_options(options)
     parameters = HWSWInventoryParameters.from_raw(options)
 

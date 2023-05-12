@@ -16,6 +16,7 @@ from tests.testlib import cmk_path
 from cmk.utils.structured_data import (
     Attributes,
     DeltaStructuredDataNode,
+    filter_tree,
     make_filter,
     merge_trees,
     parse_visible_raw_path,
@@ -461,23 +462,23 @@ def test_table_row_keys_compare_with(
     assert {k for r in delta_table.rows for k in r} == expected_keys
 
 
-def test_filtering_node_no_paths() -> None:
+def test_filter_tree_no_paths() -> None:
     filled_root = _create_filled_tree()
-    assert filled_root.get_filtered_node([]).is_empty()
+    assert filter_tree(filled_root, []).is_empty()
 
 
-def test_filtering_node_wrong_node() -> None:
-    filled_root = _create_filled_tree()
-    filters = _make_filters([(["path", "to", "nta", "ta"], None)])
-    filtered = filled_root.get_filtered_node(filters)
-    assert filtered.get_node(["path", "to", "nta", "na"]) is None
-    assert filtered.get_node(["path", "to", "nta", "nt"]) is None
-
-
-def test_filtering_node_paths_no_keys() -> None:
+def test_filter_tree_wrong_node() -> None:
     filled_root = _create_filled_tree()
     filters = _make_filters([(["path", "to", "nta", "ta"], None)])
-    filtered_node = filled_root.get_filtered_node(filters).get_node(["path", "to", "nta", "ta"])
+    filtered = filter_tree(filled_root, filters)
+    assert filtered.get_node(("path", "to", "nta", "na")) is None
+    assert filtered.get_node(("path", "to", "nta", "nt")) is None
+
+
+def test_filter_tree_paths_no_keys() -> None:
+    filled_root = _create_filled_tree()
+    filters = _make_filters([(["path", "to", "nta", "ta"], None)])
+    filtered_node = filter_tree(filled_root, filters).get_node(("path", "to", "nta", "ta"))
     assert filtered_node is not None
 
     assert not filtered_node.attributes.is_empty()
@@ -494,10 +495,10 @@ def test_filtering_node_paths_no_keys() -> None:
     ]
 
 
-def test_filtering_node_paths_and_keys() -> None:
+def test_filter_tree_paths_and_keys() -> None:
     filled_root = _create_filled_tree()
     filters = _make_filters([(["path", "to", "nta", "ta"], ["ta1"])])
-    filtered_node = filled_root.get_filtered_node(filters).get_node(["path", "to", "nta", "ta"])
+    filtered_node = filter_tree(filled_root, filters).get_node(("path", "to", "nta", "ta"))
     assert filtered_node is not None
 
     assert not filtered_node.attributes.is_empty()
@@ -522,7 +523,7 @@ def test_filtering_node_paths_and_keys() -> None:
     ]
 
 
-def test_filtering_node_mixed() -> None:
+def test_filter_tree_mixed() -> None:
     filled_root = _create_filled_tree()
     another_node1 = filled_root.setdefault_node(["path", "to", "another", "node1"])
     another_node1.attributes.add_pairs({"ak11": "Another value 11", "ak12": "Another value 12"})
@@ -548,18 +549,18 @@ def test_filtering_node_mixed() -> None:
             (["path", "to", "nta", "ta"], ["ta0"]),
         ]
     )
-    filtered_node = filled_root.get_filtered_node(filters)
+    filtered_node = filter_tree(filled_root, filters)
 
     # TODO 'serialize' only contains 8 entries because:
     # At the moment it's not possible to display attributes and table
     # below same node.
     assert filtered_node.count_entries() == 9
 
-    assert filtered_node.get_node(["path", "to", "nta", "nt"]) is None
-    assert filtered_node.get_node(["path", "to", "nta", "na"]) is None
+    assert filtered_node.get_node(("path", "to", "nta", "nt")) is None
+    assert filtered_node.get_node(("path", "to", "nta", "na")) is None
 
-    assert filtered_node.get_node(["path", "to", "another", "node1"]) is not None
-    assert filtered_node.get_node(["path", "to", "another", "node2"]) is not None
+    assert filtered_node.get_node(("path", "to", "another", "node1")) is not None
+    assert filtered_node.get_node(("path", "to", "another", "node2")) is not None
 
 
 # Tests with real host data
@@ -962,12 +963,12 @@ def test_merge_trees_2() -> None:
         ),
     ],
 )
-def test_real_filtered_tree(
+def test_filter_tree(
     paths: Sequence[tuple[Sequence[str], None]],
     unavail: Sequence[tuple[str, str]],
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
-    filtered = tree.get_filtered_node(_make_filters(paths))
+    filtered = filter_tree(tree, _make_filters(paths))
     assert id(tree) != id(filtered)
     assert not tree.is_equal(filtered)
     for path in unavail:
@@ -1036,13 +1037,13 @@ def test_real_filtered_tree(
         ),
     ],
 )
-def test_real_filtered_tree_networking(
+def test_filter_tree_networking(
     paths: Sequence[tuple[Sequence[str], Sequence[str]]],
     amount_if_entries: int,
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
     the_paths = list(paths)
-    filtered = tree.get_filtered_node(_make_filters(paths))
+    filtered = filter_tree(tree, _make_filters(paths))
     assert the_paths == paths
     assert filtered.get_node(("networking",)) is not None
     assert filtered.get_node(("hardware",)) is None

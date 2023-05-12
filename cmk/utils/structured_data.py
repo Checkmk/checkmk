@@ -153,6 +153,57 @@ class UpdateResult:
         return "\n".join(lines) + "\n"
 
 
+#   .--filter tree---------------------------------------------------------.
+#   |               __ _ _ _              _                                |
+#   |              / _(_) | |_ ___ _ __  | |_ _ __ ___  ___                |
+#   |             | |_| | | __/ _ \ '__| | __| '__/ _ \/ _ \               |
+#   |             |  _| | | ||  __/ |    | |_| | |  __/  __/               |
+#   |             |_| |_|_|\__\___|_|     \__|_|  \___|\___|               |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def _filter_attributes(attributes: Attributes, filter_func: SDFilterFunc) -> Attributes:
+    filtered = Attributes(path=attributes.path, retentions=attributes.retentions)
+    filtered.add_pairs(_get_filtered_dict(attributes.pairs, filter_func))
+    return filtered
+
+
+def _filter_table(table: Table, filter_func: SDFilterFunc) -> Table:
+    filtered = Table(path=table.path, key_columns=table.key_columns, retentions=table.retentions)
+    for ident, row in table.rows_by_ident.items():
+        filtered.add_row(ident, _get_filtered_dict(row, filter_func))
+    return filtered
+
+
+def _filter_node(node: StructuredDataNode, filters: Sequence[SDFilter]) -> StructuredDataNode:
+    filtered = StructuredDataNode(name=node.name, path=node.path)
+
+    for f in filters:
+        # First check if node exists
+        if (child := node.get_node(f.path)) is None:
+            continue
+
+        filtered_node = filtered.setdefault_node(f.path)
+
+        filtered_node.add_attributes(_filter_attributes(child.attributes, f.filter_attributes))
+        filtered_node.add_table(_filter_table(child.table, f.filter_columns))
+
+        for name, sub_node in child.nodes_by_name.items():
+            # From GUI::permitted_paths: We always get a list of strs.
+            if f.filter_nodes(str(name)):
+                filtered_node.add_node(sub_node)
+
+    return filtered
+
+
+def filter_tree(tree: object, filters: Sequence[SDFilter]) -> StructuredDataNode:
+    if not isinstance(tree, StructuredDataNode):
+        raise TypeError(f"Cannot filter {type(tree)}")
+    return _filter_node(tree, filters)
+
+
+# .
 #   .--merge trees---------------------------------------------------------.
 #   |                                       _                              |
 #   |       _ __ ___   ___ _ __ __ _  ___  | |_ _ __ ___  ___  ___         |
@@ -665,31 +716,6 @@ class StructuredDataNode:
             _nodes=delta_nodes,
         )
 
-    #   ---filtering------------------------------------------------------------
-
-    def get_filtered_node(self, filters: list[SDFilter]) -> StructuredDataNode:
-        filtered = StructuredDataNode(name=self.name, path=self.path)
-
-        for f in filters:
-            # First check if node exists
-            node = self.get_node(f.path)
-            if node is None:
-                continue
-
-            filtered_node = filtered.setdefault_node(f.path)
-
-            filtered_node.add_attributes(
-                node.attributes.get_filtered_attributes(f.filter_attributes)
-            )
-            filtered_node.add_table(node.table.get_filtered_table(f.filter_columns))
-
-            for name, sub_node in node._nodes.items():
-                # From GUI::permitted_paths: We always get a list of strs.
-                if f.filter_nodes(str(name)):
-                    filtered_node.add_node(sub_node)
-
-        return filtered
-
 
 # TODO Table: {IDENT: Attributes}?
 
@@ -956,14 +982,6 @@ class Table:
             rows=delta_rows,
         )
 
-    #   ---filtering------------------------------------------------------------
-
-    def get_filtered_table(self, filter_func: SDFilterFunc) -> Table:
-        table = Table(path=self.path, key_columns=self.key_columns, retentions=self.retentions)
-        for ident, row in self._rows.items():
-            table.add_row(ident, _get_filtered_dict(row, filter_func))
-        return table
-
 
 class Attributes:
     def __init__(
@@ -1094,13 +1112,6 @@ class Attributes:
                 keep_identical=False,
             ).result_dict,
         )
-
-    #   ---filtering------------------------------------------------------------
-
-    def get_filtered_attributes(self, filter_func: SDFilterFunc) -> Attributes:
-        attributes = Attributes(path=self.path, retentions=self.retentions)
-        attributes.add_pairs(_get_filtered_dict(self.pairs, filter_func))
-        return attributes
 
 
 # .

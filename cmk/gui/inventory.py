@@ -27,6 +27,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.structured_data import (
     DeltaStructuredDataNode,
+    filter_tree,
     load_tree,
     make_filter,
     merge_trees,
@@ -541,9 +542,7 @@ def _filter_tree(struct_tree: StructuredDataNode | None) -> StructuredDataNode |
         return None
 
     if permitted_paths := _get_permitted_inventory_paths():
-        return struct_tree.get_filtered_node(
-            [make_filter(entry) for entry in permitted_paths if entry]
-        )
+        return filter_tree(struct_tree, [make_filter(entry) for entry in permitted_paths if entry])
 
     return struct_tree
 
@@ -678,14 +677,15 @@ def inventory_of_host(host_name: HostName, api_request):  # type: ignore[no-unty
         return {}
 
     if "paths" in api_request:
-        merged_tree = merged_tree.get_filtered_node(
+        merged_tree = filter_tree(
+            merged_tree,
             [
                 make_filter(
                     (inventory_path.path, [inventory_path.key] if inventory_path.key else None)
                 )
                 for raw_path in api_request["paths"]
                 for inventory_path in (InventoryPath.parse(raw_path),)
-            ]
+            ],
         )
 
     assert merged_tree is not None

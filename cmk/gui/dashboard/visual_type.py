@@ -104,6 +104,7 @@ class VisualTypeDashboards(VisualType):
                 context = {}
                 parameters = {
                     "custom_graph": specification[1],
+                    "single_infos": [],
                 }
             elif specification[0] == "combined":
                 add_type = "combined_graph"

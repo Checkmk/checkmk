@@ -4,18 +4,13 @@
         "DISTROS": [
             "debian-10",
             "debian-11",
-            "ubuntu-16.04",
-            "ubuntu-18.04",
             "ubuntu-20.04",
             "ubuntu-22.04",
             "ubuntu-22.10",
             "centos-7",
             "centos-8",
             "almalinux-9",
-            "sles-12sp3",
-            "sles-12sp4",
             "sles-12sp5",
-            "sles-15",
             "sles-15sp1",
             "sles-15sp2",
             "sles-15sp3",
@@ -50,8 +45,7 @@
             "ubuntu-20.04",
             "ubuntu-22.04",
             "ubuntu-22.10",
-            "debian-10",
-            "sles-12sp3"
+            "debian-10"
         ]
     }
 }

@@ -148,11 +148,12 @@ iframe#robotmk_error {
   img {
     width: 48px;
     height: auto;
-    padding: 0 12px;
+    padding: 0;
   }
 
   .min & img {
     width: 45px;
+    padding: 0 12px;
 
     &.custom {
       width: 35px;

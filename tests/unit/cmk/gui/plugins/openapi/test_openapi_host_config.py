@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import json
-from collections.abc import Sequence
-from typing import Iterator
+from collections.abc import Iterator, Sequence
+from typing import Tuple
 from unittest.mock import MagicMock
 
 import pytest
+from freezegun import freeze_time
 from pytest_mock import MockerFixture
 
 from tests.testlib.rest_api_client import ClientRegistry
@@ -1388,3 +1389,51 @@ def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegi
     host_names = [entry["id"] for entry in resp.json["value"]]
     assert "should_be_visible" in host_names
     assert "should_not_be_invisible" not in host_names
+
+
+@freeze_time("1998-02-09")
+def test_openapi_effective_attributes_are_transformed_on_their_way_out_regression(
+    clients: ClientRegistry, with_admin: Tuple[str, str]
+) -> None:
+    """We take 'meta_data' as the example attributes, it's a CheckmkTuple type that is stored as a
+    tuple in the .mk files, but read and written as a dict in the REST API."""
+
+    username, password = with_admin
+    # We can't use the 'with_host' fixture, because time won't be frozen when it's created.
+    clients.HostConfig.set_credentials(username, password)
+
+    clients.HostConfig.create("test_host")
+
+    resp_with_effective_attributes = clients.HostConfig.get(
+        host_name="test_host", effective_attributes=True
+    )
+    resp_without_effective_attributes = clients.HostConfig.get(host_name="test_host")
+    assert resp_with_effective_attributes.json["extensions"]["effective_attributes"][
+        "meta_data"
+    ] == {
+        "created_at": "1998-02-09T00:00:00+00:00",
+        "updated_at": "1998-02-09T00:00:00+00:00",
+        "created_by": username,
+    }  # should not be the tuple stored in the .mk files, but a nice, readable dict
+    assert (
+        resp_with_effective_attributes.json["extensions"]["effective_attributes"]["meta_data"]
+        == resp_without_effective_attributes.json["extensions"]["attributes"]["meta_data"]
+    )
+
+    resp_with_effective_attributes = clients.HostConfig.get_all(effective_attributes=True)
+    resp_without_effective_attributes = clients.HostConfig.get_all()
+    assert resp_with_effective_attributes.json["value"][0]["extensions"]["effective_attributes"][
+        "meta_data"
+    ] == {
+        "created_at": "1998-02-09T00:00:00+00:00",
+        "updated_at": "1998-02-09T00:00:00+00:00",
+        "created_by": username,
+    }  # should not be the tuple stored in the .mk files, but a nice, readable dict
+    assert (
+        resp_with_effective_attributes.json["value"][0]["extensions"]["effective_attributes"][
+            "meta_data"
+        ]
+        == resp_without_effective_attributes.json["value"][0]["extensions"]["attributes"][
+            "meta_data"
+        ]
+    )

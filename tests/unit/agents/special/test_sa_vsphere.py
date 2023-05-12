@@ -5,7 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -63,8 +63,10 @@ DEFAULT_AGRS = {
         (["-s", "I like listening to Folk music"], {"secret": "I like listening to Folk music"}),
     ],
 )
-def test_parse_arguments(argv, expected_non_default_args) -> None:  # type: ignore[no-untyped-def]
-    args = agent_vsphere.parse_arguments(argv + ["test_host"])
+def test_parse_arguments(
+    argv: Sequence[str], expected_non_default_args: Mapping[str, object]
+) -> None:
+    args = agent_vsphere.parse_arguments([*argv, "test_host"])
     for attr in DEFAULT_AGRS:
         expected = expected_non_default_args.get(attr, DEFAULT_AGRS[attr])
         actual = getattr(args, attr)

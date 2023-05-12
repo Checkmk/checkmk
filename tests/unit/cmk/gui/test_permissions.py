@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 import cmk.utils.version as cmk_version
@@ -668,7 +670,7 @@ def test_registered_permissions() -> None:
         assert isinstance(perm.defaults, list)
 
 
-def test_declare_permission_section(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_declare_permission_section(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )
@@ -682,7 +684,7 @@ def test_declare_permission_section(monkeypatch) -> None:  # type: ignore[no-unt
     assert section.do_sort is False
 
 
-def test_declare_permission(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_declare_permission(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )
@@ -710,7 +712,7 @@ def test_declare_permission(monkeypatch) -> None:  # type: ignore[no-untyped-def
         (False, ["sec1.Z", "sec1.z", "sec1.A", "sec1.b", "sec1.a", "sec1.1", "sec1.g"]),
     ],
 )
-def test_permission_sorting(do_sort, result) -> None:  # type: ignore[no-untyped-def]
+def test_permission_sorting(do_sort: bool, result: Sequence[str]) -> None:
     sections = permissions.PermissionSectionRegistry()
     perms = permissions.PermissionRegistry()
 

@@ -3,11 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
+
+from tests.unit.conftest import FixRegister
 
 from cmk.checkers.checking import CheckPluginName
 
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.mssql_instance import (
     inventory_mssql_instance,
     parse_mssql_instance,
@@ -135,8 +145,8 @@ _AGENT_OUTPUT_2 = [
         ),
     ],
 )
-def test_discover_mssql_instance(  # type: ignore[no-untyped-def]
-    fix_register, string_table, expected_result
+def test_discover_mssql_instance(
+    fix_register: FixRegister, string_table: StringTable, expected_result: DiscoveryResult
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("mssql_instance")]
     section = parse_mssql_instance(string_table)
@@ -269,10 +279,10 @@ def test_discover_mssql_instance(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_mssql_instance(  # type: ignore[no-untyped-def]
-    fix_register, string_table, item, expected_result
+def test_check_mssql_instance(
+    fix_register: FixRegister, string_table: StringTable, item: str, expected_result: CheckResult
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("mssql_instance")]
+    check_plugin: CheckPlugin = fix_register.check_plugins[CheckPluginName("mssql_instance")]
     section = parse_mssql_instance(string_table)
     assert (
         list(check_plugin.check_function(item=item, params={}, section=section)) == expected_result
@@ -349,8 +359,8 @@ def test_check_mssql_instance(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_mssql_instance(  # type: ignore[no-untyped-def]
-    string_table, expected_result
+def test_inventory_mssql_instance(
+    string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
         inventory_mssql_instance(parse_mssql_instance(string_table))

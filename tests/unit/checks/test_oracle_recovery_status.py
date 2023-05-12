@@ -35,12 +35,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
         )
     ],
 )
-def test_check_oracle_recovery_status(  # type: ignore[no-untyped-def]
+def test_check_oracle_recovery_status(
     fix_register: FixRegister,
     item: str,
     info: list[list[str]],
     expected_result: Sequence[tuple[str, Mapping]],
-):
+) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_recovery_status")]
     result = list(check_plugin.check_function(item=item, params={}, section=info))
     assert result == expected_result

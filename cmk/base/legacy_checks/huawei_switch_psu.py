@@ -3,11 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping
+from typing import List
 
-from cmk.base.check_api import discover, get_parsed_item_data
-from cmk.base.check_legacy_includes.huawei_switch import parse_huawei_physical_entity_values
+from cmk.base.check_legacy_includes.huawei_switch import (
+    parse_huawei_physical_entity_values,
+    Section,
+)
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
 
 huawei_switch_hw_oper_state_map = {
@@ -18,27 +23,32 @@ huawei_switch_hw_oper_state_map = {
 }
 
 
-def parse_huawei_switch_psu(info):
-    return parse_huawei_physical_entity_values(info, "power card")
+def parse_huawei_switch_psu(string_table: List[StringTable]) -> Section:
+    return parse_huawei_physical_entity_values(string_table, "power card")
 
 
-@get_parsed_item_data
-def check_huawei_switch_psu(item, params, item_data):
-    if item_data.value is None:
-        return None
+def discover_huawei_switch_psu(section: Section) -> Iterable[tuple[str, dict]]:
+    yield from ((item, {}) for item in section)
+
+
+def check_huawei_switch_psu(
+    item: str, params: Mapping, section: Section
+) -> Iterable[tuple[int, str]]:
+    if (item_data := section.get(item)) is None or item_data.value is None:
+        return
 
     # Only 'enabled' is OK, everything else is considered CRIT
     status = 0 if item_data.value == "3" else 2
     status_text = huawei_switch_hw_oper_state_map.get(
         item_data.value, "unknown (%s)" % item_data.value
     )
-    return status, "State: %s" % status_text
+    yield status, "State: %s" % status_text
 
 
 check_info["huawei_switch_psu"] = {
     "detect": DETECT_HUAWEI_SWITCH,
     "parse_function": parse_huawei_switch_psu,
-    "discovery_function": discover(),
+    "discovery_function": discover_huawei_switch_psu,
     "check_function": check_huawei_switch_psu,
     "service_name": "Powersupply %s",
     "fetch": [

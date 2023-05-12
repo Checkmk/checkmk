@@ -3,11 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import discover, get_parsed_item_data
-from cmk.base.check_legacy_includes.huawei_switch import parse_huawei_physical_entity_values
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from collections.abc import Iterable
+from typing import List
+
+from cmk.base.check_legacy_includes.huawei_switch import (
+    parse_huawei_physical_entity_values,
+    Section,
+)
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
 
 factory_settings["huawei_switch_temp_default_levels"] = {
@@ -15,23 +21,30 @@ factory_settings["huawei_switch_temp_default_levels"] = {
 }
 
 
-def parse_huawei_switch_temp(info):
-    return parse_huawei_physical_entity_values(info)
+def parse_huawei_switch_temp(string_table: List[StringTable]) -> Section:
+    return parse_huawei_physical_entity_values(string_table)
 
 
-@get_parsed_item_data
-def check_huawei_switch_temp(item, params, item_data):
+def discover_huawei_switch_temp(section: Section) -> Iterable[tuple[str, dict]]:
+    yield from ((item, {}) for item in section)
+
+
+def check_huawei_switch_temp(
+    item: str, params: TempParamType, section: Section
+) -> Iterable[tuple[int, str, list]]:
+    if (item_data := section.get(item)) is None or item_data.value is None:
+        return
     try:
         temp = float(item_data.value)
     except TypeError:
-        return None
-    return check_temperature(temp, params, "huawei_switch_temp_%s" % item_data.stack_member)
+        return
+    yield check_temperature(temp, params, "huawei_switch_temp_%s" % item_data.stack_member)
 
 
 check_info["huawei_switch_temp"] = {
     "detect": DETECT_HUAWEI_SWITCH,
     "parse_function": parse_huawei_switch_temp,
-    "discovery_function": discover(),
+    "discovery_function": discover_huawei_switch_temp,
     "check_function": check_huawei_switch_temp,
     "service_name": "Temperature %s",
     "fetch": [

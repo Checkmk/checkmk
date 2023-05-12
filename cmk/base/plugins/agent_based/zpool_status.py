@@ -86,7 +86,9 @@ def parse_zpool_status(  # pylint: disable=too-many-branches
             continue
 
         elif start_pool is True:
-            if line[1] != "ONLINE":
+            if len(line) == 1:
+                continue
+            elif line[1] != "ONLINE":
                 error_pools[line[0]] = tuple(line[1:])
             elif saveint(line[4]) != 0:
                 warning_pools[line[0]] = tuple(line[1:])

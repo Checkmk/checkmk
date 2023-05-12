@@ -21,7 +21,7 @@ class Section:
 def parse_fortisandbox_disk(string_table: StringTable) -> Optional[Section]:
     """
     >>> parse_fortisandbox_disk([["1000", "2000"]])
-    {'used': 1000, 'cap': 2000}
+    Section(used=1000, cap=2000)
     """
     return (
         Section(

@@ -119,9 +119,6 @@ class RulesetMatcher:
 
         self._service_match_cache: Dict = {}
 
-    def __hash__(self):
-        return id(self)
-
     def is_matching_host_ruleset(self, match_object: RulesetMatchObject, ruleset: Ruleset) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 

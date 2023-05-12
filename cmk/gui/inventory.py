@@ -26,6 +26,7 @@ import cmk.utils.regex
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.structured_data import (
+    compare_trees,
     DeltaStructuredDataNode,
     filter_tree,
     load_tree,
@@ -459,7 +460,7 @@ class _CachedDeltaTreeLoader:
         previous_tree: StructuredDataNode,
         current_tree: StructuredDataNode,
     ) -> HistoryEntry | None:
-        delta_tree = current_tree.compare_with(previous_tree)
+        delta_tree = compare_trees(current_tree, previous_tree)
         delta_result = delta_tree.count_entries()
         new = delta_result["new"]
         changed = delta_result["changed"]

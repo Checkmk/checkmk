@@ -14,7 +14,10 @@ import pytest
 from tests.testlib import cmk_path
 
 from cmk.utils.structured_data import (
+    _compare_attributes,
+    _compare_tables,
     Attributes,
+    compare_trees,
     DeltaStructuredDataNode,
     filter_tree,
     make_filter,
@@ -273,9 +276,9 @@ def test_add_node() -> None:
     assert root.count_entries() == 18
 
 
-def test_compare_with_self() -> None:
+def test_compare_trees_self_1() -> None:
     empty_root = _create_empty_tree()
-    delta_tree0 = empty_root.compare_with(empty_root)
+    delta_tree0 = compare_trees(empty_root, empty_root)
     delta_result0 = delta_tree0.count_entries()
     assert delta_result0["new"] == 0
     assert delta_result0["changed"] == 0
@@ -283,7 +286,7 @@ def test_compare_with_self() -> None:
     assert delta_tree0.is_empty()
 
     filled_root = _create_filled_tree()
-    delta_tree1 = filled_root.compare_with(filled_root)
+    delta_tree1 = compare_trees(filled_root, filled_root)
     delta_result1 = delta_tree1.count_entries()
     assert delta_result1["new"] == 0
     assert delta_result1["changed"] == 0
@@ -291,18 +294,18 @@ def test_compare_with_self() -> None:
     assert delta_tree1.is_empty()
 
 
-def test_compare_with() -> None:
+def test_compare_trees_1() -> None:
     # Results must be symmetric
     empty_root = _create_empty_tree()
     filled_root = _create_filled_tree()
 
-    delta_tree0 = empty_root.compare_with(filled_root)
+    delta_tree0 = compare_trees(empty_root, filled_root)
     delta_result0 = delta_tree0.count_entries()
     assert delta_result0["new"] == 0
     assert delta_result0["changed"] == 0
     assert delta_result0["removed"] == 12
 
-    delta_tree1 = filled_root.compare_with(empty_root)
+    delta_tree1 = compare_trees(filled_root, empty_root)
     delta_result1 = delta_tree1.count_entries()
     assert delta_result1["new"] == 12
     assert delta_result1["changed"] == 0
@@ -346,7 +349,7 @@ def test_compare_with() -> None:
         ),
     ],
 )
-def test_attributes_compare_with(
+def test__compare_attributes(
     old_attributes_data: Mapping[str, str],
     new_attributes_data: Mapping[str, str],
     result: tuple[int, int, int],
@@ -357,7 +360,7 @@ def test_attributes_compare_with(
     new_attributes = Attributes()
     new_attributes.add_pairs(new_attributes_data)
 
-    delta_result = new_attributes.compare_with(old_attributes).count_entries()
+    delta_result = _compare_attributes(new_attributes, old_attributes).count_entries()
     assert (
         delta_result["new"],
         delta_result["changed"],
@@ -414,7 +417,7 @@ def test_attributes_compare_with(
         ),
     ],
 )
-def test_table_compare_with(
+def test__compare_tables(
     old_table_data: Iterable[dict[str, str | int]],
     new_table_data: Iterable[dict[str, str | int]],
     result: tuple[int, int, int],
@@ -424,7 +427,7 @@ def test_table_compare_with(
     new_table = Table(key_columns=["id"])
     new_table.add_rows(new_table_data)
 
-    delta_table = new_table.compare_with(old_table)
+    delta_table = _compare_tables(new_table, old_table)
     if any(result):
         assert not delta_table.is_empty()
     else:
@@ -448,7 +451,7 @@ def test_table_compare_with(
         ({"id": "id1", "val": "val"}, {"id": "id2", "val": "val"}, {"id", "val"}),
     ],
 )
-def test_table_row_keys_compare_with(
+def test__compare_tables_row_keys(
     old_row: dict[str, str],
     new_row: dict[str, str],
     expected_keys: set[str],
@@ -458,7 +461,7 @@ def test_table_row_keys_compare_with(
     new_table = Table(key_columns=["id"])
     new_table.add_rows([new_row])
 
-    delta_table = new_table.compare_with(old_table)
+    delta_table = _compare_tables(new_table, old_table)
     assert {k for r in delta_table.rows for k in r} == expected_keys
 
 
@@ -758,9 +761,9 @@ def test_real_count_entries(tree_name: HostName, result: int) -> None:
         HostName("tree_new_heute"),
     ],
 )
-def test_real_compare_with_self(tree_name: HostName) -> None:
+def test_compare_trees_self_2(tree_name: HostName) -> None:
     tree = _get_tree_store().load(host_name=tree_name)
-    delta_result = tree.compare_with(tree).count_entries()
+    delta_result = compare_trees(tree, tree).count_entries()
     assert (
         delta_result["new"],
         delta_result["changed"],
@@ -803,13 +806,13 @@ def test_real_compare_with_self(tree_name: HostName) -> None:
         ),
     ],
 )
-def test_real_compare_with(
+def test_compare_trees_2(
     tree_name_old: HostName, tree_name_new: HostName, result: tuple[int, int, int]
 ) -> None:
     tree_store = _get_tree_store()
     tree_old = tree_store.load(host_name=tree_name_old)
     tree_new = tree_store.load(host_name=tree_name_new)
-    delta_result = tree_new.compare_with(tree_old).count_entries()
+    delta_result = compare_trees(tree_new, tree_old).count_entries()
     assert (
         delta_result["new"],
         delta_result["changed"],
@@ -1097,7 +1100,7 @@ def test_delta_structured_data_tree_serialization(
 
     old_tree = tree_store.load(host_name=tree_name_old)
     new_tree = tree_store.load(host_name=tree_name_new)
-    delta_tree = old_tree.compare_with(new_tree)
+    delta_tree = compare_trees(old_tree, new_tree)
 
     delta_raw_tree = delta_tree.serialize()
     assert isinstance(delta_raw_tree, dict)

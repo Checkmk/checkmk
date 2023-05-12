@@ -23,6 +23,7 @@ from typing import (
 )
 
 import cmk.utils.render
+import cmk.utils.version as cmk_version
 from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.labels import HostLabelValueDict
@@ -242,7 +243,9 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                 new_check_table.append(tuple(tmp_entry))
             fixed_data = (data[0], data[1], new_check_table, data[3])
             return PythonPrinter().pformat(fixed_data)
-        return execute_discovery_job(api_request).serialize()
+        return execute_discovery_job(api_request).serialize(
+            for_cmk_version=cmk_version.parse_check_mk_version(version)
+        )
 
 
 @page_registry.register_page("ajax_service_discovery")
@@ -337,7 +340,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "pending_changes_info": get_pending_changes_info(),
             "pending_changes_tooltip": get_pending_changes_tooltip(),
             "discovery_options": discovery_options._asdict(),
-            "discovery_result": discovery_result.serialize(),
+            "discovery_result": discovery_result.serialize(
+                for_cmk_version=cmk_version.parse_check_mk_version(cmk_version.__version__),
+            ),
         }
 
     def _perform_discovery_action(

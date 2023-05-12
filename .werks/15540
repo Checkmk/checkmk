@@ -1,0 +1,21 @@
+Title: Fix discovery for distributed setups with a remote 2.1.0p27 site
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683902484
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p28
+
+This fixes a regression in Checkmk 2.1.0p27.
+
+Affected are all distributed setups with remote sites running Checkmk version 2.1.0p27 and a central site older than that.
+In these setups the service discovery page was broken for all hosts on those remote sites.
+
+The displayed error message was "<i>() takes 8 positional arguments but 9 where given</i>".
+
+The bulk discovery is not affected.
+
+Affected users can either upgrade their entire distributed environment to 2.1.0p27, or upgrade the remote sites from p27 to p28.
+

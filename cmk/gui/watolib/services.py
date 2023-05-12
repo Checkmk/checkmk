@@ -38,6 +38,7 @@ from cmk.utils.type_defs import (
     Item,
     SetAutochecksTable,
 )
+from cmk.utils.version import parse_check_mk_version
 
 from cmk.automations.results import CheckPreviewEntry, TryDiscoveryResult
 
@@ -135,7 +136,10 @@ class DiscoveryResult(NamedTuple):
     changed_labels: Mapping[str, HostLabelValueDict]
     host_labels_by_host: Mapping[HostName, Mapping[str, HostLabelValueDict]]
 
-    def serialize(self) -> str:
+    def serialize(self, for_cmk_version: Optional[int]) -> str:
+        data_length = (
+            7 if for_cmk_version and for_cmk_version < parse_check_mk_version("2.1.0p27") else 8
+        )
         return repr(
             (
                 self.job_status,
@@ -146,7 +150,7 @@ class DiscoveryResult(NamedTuple):
                 self.vanished_labels,
                 self.changed_labels,
                 self.host_labels_by_host,
-            )
+            )[:data_length]
         )
 
     @classmethod

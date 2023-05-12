@@ -5,6 +5,7 @@
 
 from tests.testlib.site import Site
 
+from .checks import compare_check_output
 from .conftest import (
     cleanup_folders,
     create_folders,
@@ -39,4 +40,6 @@ def test_plugin(test_site: Site) -> None:
         test_site.id, ["cat", f"$OMD_ROOT/var/check_mk/agent_output/{host_name}"]
     ).stdout
     discovery_stdout = run_as_site_user(test_site.id, ["cmk", "-d", host_name]).stdout
+
     assert discovery_stdout == cat_stdout
+    assert compare_check_output(test_site), "Check output mismatch!"

@@ -4,18 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_ISILON
 
-emc_isilon_info = [
-    (
-        ".1.3.6.1.4.1.12124.1.1",
-        [1, 2, 5, 6],  # clusterName  # clusterHealth  # configuredNodes
-    ),  # onlineNodes
-    (".1.3.6.1.4.1.12124.2.1", [1, 2]),  # nodeName  # nodeHealth
-]
+check_info["emc_isilon"] = {
+    "detect": DETECT_ISILON,
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.12124.1.1",
+            oids=["1", "2", "5", "6"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.12124.2.1",
+            oids=["1", "2"],
+        ),
+    ],
+}
 
 
 #   .--ClusterHealth------------------------------------------------------.
@@ -39,20 +44,9 @@ def check_emc_isilon_clusterhealth(item, _no_params, info):
 
 
 check_info["emc_isilon.clusterhealth"] = {
-    "detect": DETECT_ISILON,
     "check_function": check_emc_isilon_clusterhealth,
     "discovery_function": inventory_emc_isilon_clusterhealth,
     "service_name": "Cluster Health",
-    "fetch": [
-        SNMPTree(
-            base=".1.3.6.1.4.1.12124.1.1",
-            oids=["1", "2", "5", "6"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.12124.2.1",
-            oids=["1", "2"],
-        ),
-    ],
 }
 
 # .
@@ -78,20 +72,9 @@ def check_emc_isilon_nodehealth(item, _no_params, info):
 
 
 check_info["emc_isilon.nodehealth"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "check_function": check_emc_isilon_nodehealth,
     "discovery_function": inventory_emc_isilon_nodehealth,
     "service_name": "Node Health",
-    "fetch": [
-        SNMPTree(
-            base=".1.3.6.1.4.1.12124.1.1",
-            oids=["1", "2", "5", "6"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.12124.2.1",
-            oids=["1", "2"],
-        ),
-    ],
 }
 
 # .
@@ -112,20 +95,9 @@ def check_emc_isilon_nodes(item, _no_params, info):
 
 
 check_info["emc_isilon.nodes"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "check_function": check_emc_isilon_nodes,
     "discovery_function": inventory_emc_isilon_nodes,
     "service_name": "Nodes",
-    "fetch": [
-        SNMPTree(
-            base=".1.3.6.1.4.1.12124.1.1",
-            oids=["1", "2", "5", "6"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.12124.2.1",
-            oids=["1", "2"],
-        ),
-    ],
 }
 
 # .
@@ -141,20 +113,9 @@ def check_emc_isilon_names(item, _no_params, info):
 
 
 check_info["emc_isilon.names"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "isilon"),
     "check_function": check_emc_isilon_names,
     "discovery_function": inventory_emc_isilon_names,
     "service_name": "Isilon Info",
-    "fetch": [
-        SNMPTree(
-            base=".1.3.6.1.4.1.12124.1.1",
-            oids=["1", "2", "5", "6"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.12124.2.1",
-            oids=["1", "2"],
-        ),
-    ],
 }
 
 # .

@@ -355,6 +355,7 @@ def test_section_parse_function_does_something(fix_register: FixRegister) -> Non
         "msexch_dag",
         "netctr",
         "netif",
+        "netscaler_health",
         "nvidia",
         "siemens_plc",
         "vms_system",

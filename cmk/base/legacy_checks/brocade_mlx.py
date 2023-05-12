@@ -8,7 +8,7 @@
 
 import re
 
-from cmk.base.check_api import OID_END, saveint
+from cmk.base.check_api import saveint
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -27,12 +27,19 @@ brocade_mlx_states = {
     11: (0, "Blocked for full height card"),
 }
 
-brocade_mlx_info = [
-    (".1.3.6.1.4.1.1991.1.1.2.2.1.1", [1, 2, 12, 24, 25]),
-    # id, descr, overall status, MemoryTotal, MemoryAvailable
-    (".1.3.6.1.4.1.1991.1.1.2.11.1.1.5", [OID_END, ""]),
-    # Rest of OId starting with module ID, CpuUtilPercent
-]
+check_info["brocade_mlx"] = {
+    "detect": DETECT_MLX,
+    "fetch": [
+        SNMPTree(
+            base=".1.3.6.1.4.1.1991.1.1.2.2.1.1",
+            oids=["1", "2", "12", "24", "25"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.1991.1.1.2.11.1.1",
+            oids=[OIDEnd(), "5"],
+        ),
+    ],
+}
 
 
 def brocade_mlx_get_state(state):
@@ -73,20 +80,9 @@ def check_brocade_mlx_module(item, _no_params, info):
 
 
 check_info["brocade_mlx.module_status"] = {
-    "detect": DETECT_MLX,
     "check_function": check_brocade_mlx_module,
     "discovery_function": inventory_brocade_mlx_module,
     "service_name": "Status Module %s",
-    "fetch": [
-        SNMPTree(
-            base=".1.3.6.1.4.1.1991.1.1.2.2.1.1",
-            oids=["1", "2", "12", "24", "25"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.1991.1.1.2.11.1.1",
-            oids=[OIDEnd(), "5"],
-        ),
-    ],
 }
 
 # .
@@ -171,20 +167,9 @@ def check_brocade_mlx_module_mem(item, params, info):
 
 
 check_info["brocade_mlx.module_mem"] = {
-    "detect": DETECT_MLX,
     "check_function": check_brocade_mlx_module_mem,
     "discovery_function": inventory_brocade_mlx_module_mem,
     "service_name": "Memory Module %s",
-    "fetch": [
-        SNMPTree(
-            base=".1.3.6.1.4.1.1991.1.1.2.2.1.1",
-            oids=["1", "2", "12", "24", "25"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.1991.1.1.2.11.1.1",
-            oids=[OIDEnd(), "5"],
-        ),
-    ],
     "check_ruleset_name": "memory_multiitem",
 }
 
@@ -271,19 +256,8 @@ def check_brocade_mlx_module_cpu(item, params, info):
 
 
 check_info["brocade_mlx.module_cpu"] = {
-    "detect": DETECT_MLX,
     "check_function": check_brocade_mlx_module_cpu,
     "discovery_function": inventory_brocade_mlx_module_cpu,
     "service_name": "CPU utilization Module %s",
-    "fetch": [
-        SNMPTree(
-            base=".1.3.6.1.4.1.1991.1.1.2.2.1.1",
-            oids=["1", "2", "12", "24", "25"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.1991.1.1.2.11.1.1",
-            oids=[OIDEnd(), "5"],
-        ),
-    ],
     "check_ruleset_name": "cpu_utilization_multiitem",
 }

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import regex, startswith
+from cmk.base.check_api import regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -33,13 +33,14 @@ from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
 # .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.25.7 9900
 
 
-netscaler_health_info = (
-    ".1.3.6.1.4.1.5951.4.1.1.41.7.1",
-    [  # nsSysHealthTable
-        1,  # sysHealthname
-        2,  # sysHealthvalue
-    ],
-)
+check_info["netscaler_health.fan"] = {
+    "detect": SNMP_DETECT,
+    "fetch": SNMPTree(
+        base=".1.3.6.1.4.1.5951.4.1.1.41.7.1",
+        oids=["1", "2"],
+    ),
+}
+
 # .
 #   .--fan-----------------------------------------------------------------.
 #   |                            __                                        |
@@ -70,14 +71,9 @@ def check_netscaler_health_fan(item, params, info):
 
 
 check_info["netscaler_health.fan"] = {
-    "detect": SNMP_DETECT,
     "discovery_function": inventory_netscaler_health_fan,
     "check_function": check_netscaler_health_fan,
     "service_name": "FAN %s",
-    "fetch": SNMPTree(
-        base=".1.3.6.1.4.1.5951.4.1.1.41.7.1",
-        oids=["1", "2"],
-    ),
     "default_levels_variable": "netscaler_health_fan_default_levels",
     "check_ruleset_name": "hw_fans",
 }
@@ -111,15 +107,10 @@ def check_netscaler_health_temp(item, params, info):
 
 
 check_info["netscaler_health.temp"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5951.1"),
     "check_function": check_netscaler_health_temp,
     "discovery_function": inventory_netscaler_health_temp,
     "service_name": "Temperature %s",
     "check_ruleset_name": "temperature",
-    "fetch": SNMPTree(
-        base=".1.3.6.1.4.1.5951.4.1.1.41.7.1",
-        oids=["1", "2"],
-    ),
     "default_levels_variable": "netscaler_health_temp_default_levels",
 }
 
@@ -160,12 +151,7 @@ def check_netscaler_health_psu(item, _no_params, info):
 
 
 check_info["netscaler_health.psu"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5951.1"),
     "check_function": check_netscaler_health_psu,
     "discovery_function": inventory_netscaler_health_psu,
     "service_name": "Power Supply %s",
-    "fetch": SNMPTree(
-        base=".1.3.6.1.4.1.5951.4.1.1.41.7.1",
-        oids=["1", "2"],
-    ),
 }

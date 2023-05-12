@@ -54,5 +54,7 @@ function error(response: BackGroundJobStart) {
 function finish(response: BackGroundJobStart) {
     if (response.job_state == "exception" || response.job_state == "stopped") {
         async_progress.show_error(response.message!);
+    } else {
+        utils.reload_whole_page();
     }
 }

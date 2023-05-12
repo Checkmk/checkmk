@@ -151,12 +151,19 @@ class ModeBackgroundJobDetails(WatoMode):
         return request.get_url_input("back_url", deflt="")
 
     def page(self) -> None:
-        html.div(html.render_message(_("Loading...")), id_="async_progress_msg")
-        html.div("", id_="status_container")
-        html.javascript(
-            "cmk.background_job.start('ajax_background_job_details.py', %s)"
-            % json.dumps(request.get_ascii_input_mandatory("job_id"))
-        )
+        job = BackgroundJob(job_id := request.get_ascii_input_mandatory("job_id"))
+        if job.is_active():
+            html.div(html.render_message(_("Loading...")), id_="async_progress_msg")
+            html.div("", id_="status_container")
+            html.javascript(
+                "cmk.background_job.start('ajax_background_job_details.py', %s)"
+                % json.dumps(job_id)
+            )
+        else:
+            job_snapshot: BackgroundStatusSnapshot | None = _get_job_snaphot(job)
+            if job_snapshot is not None:
+                job_manager = gui_background_job.GUIBackgroundJobManager()
+                job_manager.show_job_details_from_snapshot(job_snapshot)
 
 
 @page_registry.register_page("ajax_background_job_details")
@@ -184,11 +191,8 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
             html.show_message(_("Background job info is not available"))
             return None
 
-        try:
-            job_snapshot = job.get_status_snapshot()
-        except Exception:
-            html.show_message(_("Background job info is not available"))
-            logger.error(traceback.format_exc())
+        job_snapshot: BackgroundStatusSnapshot | None = _get_job_snaphot(job)
+        if job_snapshot is None:
             return None
 
         job_manager = gui_background_job.GUIBackgroundJobManager()
@@ -203,3 +207,13 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
             if job_details_page.back_url():
                 raise redirect(job_details_page.back_url())
             raise redirect(mode_url("background_jobs_overview"))
+
+
+def _get_job_snaphot(job: BackgroundJob) -> BackgroundStatusSnapshot | None:
+    try:
+        job_snapshot = job.get_status_snapshot()
+    except Exception:
+        html.show_message(_("Background job info is not available"))
+        logger.error(traceback.format_exc())
+        return None
+    return job_snapshot

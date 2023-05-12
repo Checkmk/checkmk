@@ -255,7 +255,12 @@ class ParallelDfCall:
     def _write_df_result(self, data):
         with self._my_tmp_file.open("wb") as file_:
             file_.write(json.dumps(data).encode("utf-8"))
-        self._my_tmp_file.rename(self._spool_file)
+        try:
+            self._my_tmp_file.rename(self._spool_file)
+        except OSError:
+            # CMK-12642: It can happen that two df calls succeed almost at the same time. Then, one
+            # process attempts to move while the other one already deleted all temp files.
+            pass
 
     def _read_df_result(self):
         """read from the spool file

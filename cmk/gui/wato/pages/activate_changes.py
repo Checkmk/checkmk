@@ -6,10 +6,11 @@
 remote sites in distributed Setup."""
 
 import ast
+import enum
 import json
 import os
 import tarfile
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Iterator, Sequence
 from dataclasses import asdict
 from typing import NamedTuple
 
@@ -64,6 +65,37 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+
+
+class ActivationState(enum.Enum):
+    WARNING = 1  # same int values as for Check results to be able to reuse CSS mappings
+    ERROR = 2
+
+
+def _show_activation_state_messages(
+    title: str, messages: Sequence[str], state: ActivationState
+) -> None:
+    html.open_div(id="activation_state_message_container")
+
+    html.open_div(class_="activation_state state%s" % state.value)
+    html.open_span()
+    match state:
+        case ActivationState.WARNING:
+            html.icon("host_svc_problems_dark")
+        case ActivationState.ERROR:
+            html.icon("host_svc_problems")
+    html.close_span()
+    html.close_div()  # activation_state
+
+    html.open_div(class_="activation_state_message")
+    html.h2(title)
+    html.open_div()
+    for msg in messages:
+        html.span(msg)
+    html.close_div()
+    html.close_div()  # activation_state_message
+
+    html.close_div()  # activation_state_message_container
 
 
 @mode_registry.register
@@ -447,13 +479,13 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                         " will be blocked."
                     )
                 )
-
         if errors:
-            error__msg = _("Activation not possible because of the following licensing issues:<br>")
-            html.show_error(error__msg + "<br>".join(errors))
+            error_title = _("Activation not possible because of the following licensing issues:")
+            _show_activation_state_messages(error_title, errors, ActivationState.ERROR)
+
             return
         if warnings:
-            html.show_warning("<br>".join(warnings))
+            _show_activation_state_messages("", warnings, ActivationState.WARNING)
 
     def _activation_status(self):
         with table_element(

@@ -70,8 +70,8 @@ class ActivationBlock:
 
     @property
     def message_html(self) -> str:
-        message = "<br><br>".join(self.message_lines)
-        return f"<b>{self.subject}</b><br><br>{message}"
+        message = "<br>".join(self.message_lines)
+        return f"<b>{self.subject}</b><br>{message}"
 
 
 @dataclass

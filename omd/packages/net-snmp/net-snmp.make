@@ -2,7 +2,7 @@ NET_SNMP := net-snmp
 NET_SNMP_VERS := 5.9.1
 NET_SNMP_DIR := $(NET_SNMP)-$(NET_SNMP_VERS)
 # Increase this to enforce a recreation of the build cache
-NET_SNMP_BUILD_ID := 32
+NET_SNMP_BUILD_ID := 33
 # The cached package contains the python major/minor version, so include this in the cache name in order to trigger
 # a rebuild on a python version change.
 NET_SNMP_BUILD_ID := $(NET_SNMP_BUILD_ID)-python$(PYTHON_MAJOR_DOT_MINOR)
@@ -28,6 +28,7 @@ $(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON_CACHE_PKG_PROCESS) $(PERL_MODUL
         && export CFLAGS="-I$(PACKAGE_PYTHON_INCLUDE_PATH) $$CFLAGS" \
         && ./configure \
 	    --enable-ipv6 \
+	    --enable-blumenthal-aes \
 	    --disable-agent \
 	    --disable-snmptrapd-subagent \
 	    --with-mibdirs="\$$HOME/local/share/snmp/mibs:\$$HOME/share/snmp/mibs:/usr/share/snmp/mibs" \

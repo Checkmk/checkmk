@@ -310,6 +310,8 @@ def test_auth_proto_unknown() -> None:
     [
         ("DES", "DES"),
         ("AES", "AES"),
+        ("AES-256", "AES-256"),
+        ("AES-192", "AES-192"),
     ],
 )
 def test_priv_proto(proto: str, result: str) -> None:
@@ -322,8 +324,6 @@ def test_priv_proto(proto: str, result: str) -> None:
         "",
         "unknown",
         "3DES-EDE",
-        "AES-192",
-        "AES-256",
         "AES-192-Blumenthal",
         "AES-256-Blumenthal",
     ],

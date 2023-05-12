@@ -323,8 +323,6 @@ def _auth_proto_for(proto_name: str) -> str:
 
 
 def _priv_proto_for(proto_name: str) -> str:
-    if proto_name == "DES":
-        return "DES"
-    if proto_name == "AES":
-        return "AES"
+    if proto_name in ("DES", "AES", "AES-256", "AES-192"):
+        return proto_name
     raise MKGeneralException("Invalid SNMP priv protocol: %s" % proto_name)

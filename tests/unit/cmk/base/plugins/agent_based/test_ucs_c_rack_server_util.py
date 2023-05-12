@@ -5,13 +5,14 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.ucs_c_rack_server_util import (
+    check_ucs_c_rack_server_util,
+    check_ucs_c_rack_server_util_cpu_,
+    check_ucs_c_rack_server_util_mem,
+    check_ucs_c_rack_server_util_pci_io,
+    discover_ucs_c_rack_server_util,
     parse_ucs_c_rack_server_util,
     Section,
 )
@@ -41,22 +42,8 @@ def fixture_section() -> Section:
     )
 
 
-@pytest.mark.parametrize(
-    "plugin_name_suffix",
-    ["", "cpu", "pci_io", "mem"],
-)
-def test_discover_ucs_c_rack_server_util(
-    fix_register: FixRegister,
-    section: Section,
-    plugin_name_suffix: str,
-) -> None:
-    assert list(
-        fix_register.check_plugins[
-            CheckPluginName(
-                f"ucs_c_rack_server_util{'_' + plugin_name_suffix if plugin_name_suffix else ''}"
-            )
-        ].discovery_function(section)
-    ) == [
+def test_discover_ucs_c_rack_server_util(section: Section) -> None:
+    assert list(discover_ucs_c_rack_server_util(section)) == [
         Service(item="Rack unit 1"),
         Service(item="Rack unit 2"),
     ]
@@ -84,14 +71,13 @@ def test_discover_ucs_c_rack_server_util(
     ],
 )
 def test_check_ucs_c_rack_server_util(
-    fix_register: FixRegister,
     section: Section,
     item: str,
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            fix_register.check_plugins[CheckPluginName("ucs_c_rack_server_util")].check_function(
+            check_ucs_c_rack_server_util(
                 item=item,
                 params={"upper_levels": (90.0, 95.0)},
                 section=section,
@@ -108,7 +94,7 @@ def test_check_ucs_c_rack_server_util(
             "Rack unit 1",
             [
                 Result(state=State.OK, summary="Total CPU: 0%"),
-                Metric("util", 0.0, levels=(90.0, 95.0), boundaries=(0.0, 100.0)),
+                Metric("util", 0.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
             ],
             id="ok",
         ),
@@ -116,26 +102,25 @@ def test_check_ucs_c_rack_server_util(
             "Rack unit 2",
             [
                 Result(state=State.WARN, summary="Total CPU: 92.00% (warn/crit at 90.00%/95.00%)"),
-                Metric("util", 92.0, levels=(90.0, 95.0), boundaries=(0.0, 100.0)),
+                Metric("util", 92.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
             ],
             id="warn",
         ),
     ],
 )
 def test_check_ucs_c_rack_server_util_cpu(
-    fix_register: FixRegister,
     section: Section,
     item: str,
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            fix_register.check_plugins[
-                CheckPluginName("ucs_c_rack_server_util_cpu")
-            ].check_function(
+            check_ucs_c_rack_server_util_cpu_(
                 item=item,
                 params={"levels": (90.0, 95.0)},
                 section=section,
+                value_store={},
+                timestamp=0,
             )
         )
         == expected_result
@@ -164,16 +149,13 @@ def test_check_ucs_c_rack_server_util_cpu(
     ],
 )
 def test_check_ucs_c_rack_server_util_pci_io(
-    fix_register: FixRegister,
     section: Section,
     item: str,
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            fix_register.check_plugins[
-                CheckPluginName("ucs_c_rack_server_util_pci_io")
-            ].check_function(
+            check_ucs_c_rack_server_util_pci_io(
                 item=item,
                 params={"upper_levels": (90.0, 95.0)},
                 section=section,
@@ -205,16 +187,13 @@ def test_check_ucs_c_rack_server_util_pci_io(
     ],
 )
 def test_check_ucs_c_rack_server_util_mem(
-    fix_register: FixRegister,
     section: Section,
     item: str,
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            fix_register.check_plugins[
-                CheckPluginName("ucs_c_rack_server_util_mem")
-            ].check_function(
+            check_ucs_c_rack_server_util_mem(
                 item=item,
                 params={"upper_levels": (90.0, 95.0)},
                 section=section,

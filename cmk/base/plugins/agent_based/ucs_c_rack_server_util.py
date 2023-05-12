@@ -15,11 +15,14 @@
 # memoryUtilization and ioUtilization are percentages.
 # https://www.cisco.com/c/en/us/td/docs/unified_computing/ucs/c/sw/gui/config/guide/3_1/b_Cisco_UCS_C-series_GUI_Configuration_Guide_31/b_Cisco_UCS_C-series_GUI_Configuration_Guide_31_chapter_0101.pdf
 
-from collections.abc import Mapping
+import time
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
+from typing import Any
 
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import check_levels, get_value_store, register, render, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.cpu_util import check_cpu_util
 
 
 @dataclass(frozen=True)
@@ -67,4 +70,136 @@ def parse_ucs_c_rack_server_util(string_table: StringTable) -> Section:
 register.agent_section(
     name="ucs_c_rack_server_util",
     parse_function=parse_ucs_c_rack_server_util,
+)
+
+
+def discover_ucs_c_rack_server_util(section: Section) -> DiscoveryResult:
+    yield from (Service(item=rack_name) for rack_name in section)
+
+
+def check_ucs_c_rack_server_util(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
+    if not (rack_utils := section.get(item)):
+        return
+    if (overall_util := rack_utils.overall) is None:
+        return
+    yield from check_levels(
+        overall_util,
+        levels_upper=params["upper_levels"],
+        metric_name="overall_util",
+        render_func=render.percent,
+    )
+
+
+register.check_plugin(
+    name="ucs_c_rack_server_util",
+    service_name="Overall Utilization %s",
+    discovery_function=discover_ucs_c_rack_server_util,
+    check_function=check_ucs_c_rack_server_util,
+    check_ruleset_name="overall_utilization_multiitem",
+    check_default_parameters={"upper_levels": (90.0, 95.0)},
+)
+
+
+def check_ucs_c_rack_server_util_cpu_(
+    *,
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+    value_store: MutableMapping[str, Any],
+    timestamp: float,
+) -> CheckResult:
+    if not (rack_utils := section.get(item)):
+        return
+    if (cpu_util := rack_utils.cpu) is None:
+        return
+    yield from check_cpu_util(
+        util=cpu_util,
+        params=params,
+        value_store=value_store,
+        this_time=timestamp,
+    )
+
+
+def check_ucs_c_rack_server_util_cpu(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
+    yield from check_ucs_c_rack_server_util_cpu_(
+        item=item,
+        params=params,
+        section=section,
+        value_store=get_value_store(),
+        timestamp=time.time(),
+    )
+
+
+register.check_plugin(
+    name="ucs_c_rack_server_util_cpu",
+    sections=["ucs_c_rack_server_util"],
+    service_name="CPU Utilization %s",
+    discovery_function=discover_ucs_c_rack_server_util,
+    check_function=check_ucs_c_rack_server_util_cpu,
+    check_ruleset_name="cpu_utilization_multiitem",
+    check_default_parameters={"levels": (90.0, 95.0)},
+)
+
+
+def check_ucs_c_rack_server_util_pci_io(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
+    if not (rack_utils := section.get(item)):
+        return
+    if (io_util := rack_utils.io) is None:
+        return
+    yield from check_levels(
+        io_util,
+        levels_upper=params["upper_levels"],
+        metric_name="pci_io_util",
+        render_func=render.percent,
+    )
+
+
+register.check_plugin(
+    name="ucs_c_rack_server_util_pci_io",
+    sections=["ucs_c_rack_server_util"],
+    service_name="PCI IO Utilization %s",
+    discovery_function=discover_ucs_c_rack_server_util,
+    check_function=check_ucs_c_rack_server_util_pci_io,
+    check_ruleset_name="pci_io_utilization_multiitem",
+    check_default_parameters={"upper_levels": (90.0, 95.0)},
+)
+
+
+def check_ucs_c_rack_server_util_mem(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
+    if not (rack_utils := section.get(item)):
+        return
+    if (memory_util := rack_utils.memory) is None:
+        return
+    yield from check_levels(
+        memory_util,
+        levels_upper=params["upper_levels"],
+        metric_name="memory_util",
+        render_func=render.percent,
+    )
+
+
+register.check_plugin(
+    name="ucs_c_rack_server_util_mem",
+    sections=["ucs_c_rack_server_util"],
+    service_name="Memory Utilization %s",
+    discovery_function=discover_ucs_c_rack_server_util,
+    check_function=check_ucs_c_rack_server_util_mem,
+    check_ruleset_name="memory_utilization_multiitem",
+    check_default_parameters={"upper_levels": (90.0, 95.0)},
 )

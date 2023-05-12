@@ -8,12 +8,11 @@
 
 #include <chrono>
 #include <cstddef>
-#include <memory>
 #include <string>
 #include <vector>
+class IHost;
+class IService;
 class HostServiceState;
-
-#include <livestatus/Interface.h>
 
 using HostServices = std::vector<HostServiceState *>;
 
@@ -71,7 +70,7 @@ public:
     // maybe "": -> no period known, we assume "always"
     std::string _service_period;
     const IHost *_host;
-    std::unique_ptr<const IService> _service;
+    const IService *_service;
     std::string _host_name;            // Fallback if host no longer exists
     std::string _service_description;  // Fallback if service no longer exists
 

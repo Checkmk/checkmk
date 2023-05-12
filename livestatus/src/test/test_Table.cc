@@ -81,7 +81,7 @@ class DummyMonitoringCore : public MonitoringCore {
         const std::function<bool(const IHost &)> & /*pred*/) const override {
         return true;
     }
-    std::unique_ptr<const IService> find_service(
+    const IService *find_service(
         const std::string & /*host_name*/,
         const std::string & /*service_description*/) override {
         return {};

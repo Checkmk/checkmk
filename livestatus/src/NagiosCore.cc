@@ -135,13 +135,13 @@ const IService *NagiosCore::iservice(const ::service *handle) const {
     return it == iservices_by_handle_.end() ? nullptr : it->second.get();
 }
 
-std::unique_ptr<const IService> NagiosCore::find_service(
+const IService *NagiosCore::find_service(
     const std::string &host_name, const std::string &service_description) {
     // Older Nagios headers are not const-correct... :-P
-    const auto *svc =
+    const auto *handle =
         ::find_service(const_cast<char *>(host_name.c_str()),
                        const_cast<char *>(service_description.c_str()));
-    return svc == nullptr ? nullptr : std::make_unique<NebService>(*svc);
+    return handle == nullptr ? nullptr : iservice(handle);
 }
 
 const IContactGroup *NagiosCore::find_contactgroup(const std::string &name) {

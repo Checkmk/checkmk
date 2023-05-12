@@ -50,7 +50,7 @@ public:
     virtual bool all_of_hosts(
         const std::function<bool(const IHost &)> &pred) const = 0;
 
-    virtual std::unique_ptr<const IService> find_service(
+    [[nodiscard]] virtual const IService *find_service(
         const std::string &host_name,
         const std::string &service_description) = 0;
     virtual const IContactGroup *find_contactgroup(const std::string &name) = 0;

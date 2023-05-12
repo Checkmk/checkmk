@@ -85,7 +85,7 @@ public:
     bool all_of_hosts(
         const std::function<bool(const IHost &)> &pred) const override;
 
-    std::unique_ptr<const IService> find_service(
+    const IService *find_service(
         const std::string &host_name,
         const std::string &service_description) override;
     const IContactGroup *find_contactgroup(const std::string &name) override;

@@ -41,7 +41,7 @@ public:
 
     const LogEntry *entry;
     const IHost *hst;
-    std::unique_ptr<const IService> svc;
+    const IService *svc;
     const IContact *ctc;
     Command command;
 };
@@ -123,7 +123,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
                            LockComments::yes, LockDowntimes::yes);
     TableServices::addColumns(this, "current_service_", offsets.add([](Row r) {
         const auto &s = r.rawData<LogRow>()->svc;
-        return s ? s->handle() : nullptr;
+        return s != nullptr ? s->handle() : nullptr;
     }),
                               TableServices::AddHosts::no, LockComments::yes,
                               LockDowntimes::yes);
@@ -158,8 +158,8 @@ void TableLog::answerQuery(Query &query, const User &user) {
         // If we have an AuthUser, suppress entries for messages with hosts
         // that do not exist anymore, otherwise use the common authorization
         // logic.
-        return user.is_authorized_for_object(
-            lr.hst, lr.svc ? lr.svc.get() : nullptr, rowWithoutHost(lr));
+        return user.is_authorized_for_object(lr.hst, lr.svc,
+                                             rowWithoutHost(lr));
     };
 
     auto process = [is_authorized, core = core(),

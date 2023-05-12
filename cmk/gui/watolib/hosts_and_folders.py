@@ -2816,7 +2816,11 @@ def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupS
     return convert_cgroups_from_tuple(v)
 
 
-class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
+# TODO: We do not implement 13 abstract methods from the super classes, but we nevertheless
+# instantiate SearchFolder below in current_search_folder() and pretend that it is a CREFolder! This
+# is totally broken, the class hierarchy and/or the code below needs some serious overhaul.
+# Nevertheless, we suppress the warnings for this chaos to activate pylint's warning.
+class SearchFolder(WithPermissions, WithAttributes, BaseFolder):  # pylint: disable=abstract-method
     """A virtual folder representing the result of a search."""
 
     @staticmethod

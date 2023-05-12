@@ -2943,7 +2943,14 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
                 [g_class() for g_class in config_variable_group_registry.values()],
                 key=lambda grp: grp.sort_index(),
             )
-            if isinstance(g, ConfigVariableGroupEventConsole)
+            if isinstance(
+                g,
+                (
+                    ConfigVariableGroupEventConsoleGeneric,
+                    ConfigVariableGroupEventConsoleLogging,
+                    ConfigVariableGroupEventConsoleSNMP,
+                ),
+            )
         ]
 
     def title(self) -> str:
@@ -3014,11 +3021,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         self._show_configuration_variables()
 
 
-class ConfigVariableGroupEventConsole(ConfigVariableGroup):
-    pass
-
-
-class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
+class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroup):
     def title(self) -> str:
         return _("Event Console: Generic")
 
@@ -3026,7 +3029,7 @@ class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
         return 18
 
 
-class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
+class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroup):
     def title(self) -> str:
         return _("Event Console: Logging & diagnose")
 
@@ -3034,7 +3037,7 @@ class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
         return 19
 
 
-class ConfigVariableGroupEventConsoleSNMP(ConfigVariableGroupEventConsole):
+class ConfigVariableGroupEventConsoleSNMP(ConfigVariableGroup):
     def title(self) -> str:
         return _("Event Console: SNMP traps")
 

@@ -534,6 +534,12 @@ class FolderRulesets(RulesetCollection):
     def save(self) -> None:
         self._save_folder(self._folder)
 
+    def save_folder(self, folder: CREFolder) -> None:
+        # TODO: Figure out what is the right thing to do here. Note that we actually instantiate
+        # FolderRulesets, and there is no other subclass providing this. Probably a broken class
+        # hierarchy?
+        raise NotImplementedError()
+
 
 class FilteredRulesetCollection:
     def __init__(self, rulesets: Mapping[RulesetName, Ruleset]) -> None:

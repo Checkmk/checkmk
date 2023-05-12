@@ -14,7 +14,7 @@ import multiprocessing
 import queue
 import time
 import traceback
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 from typing import Any
 
 from livestatus import SiteId
@@ -72,6 +72,12 @@ class ACTestConnectivity(ACTest):
     def is_relevant(self) -> bool:
         # This test is always irrelevant :)
         return False
+
+    # TODO: Figure out what is the right thing to do here. Note that we actually instantiate
+    # ACTestConnectivity, and there is no other subclass providing this. Probably a broken class
+    # hierarchy?
+    def execute(self) -> Iterator[ACResult]:
+        raise NotImplementedError()
 
 
 @mode_registry.register

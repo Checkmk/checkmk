@@ -21,6 +21,9 @@ def test_match_item_generator_settings(
     monkeypatch: MonkeyPatch,
 ) -> None:
     class SomeConfigVariable(ConfigVariable):
+        def group(self) -> type[ConfigVariableGroup]:
+            raise NotImplementedError()  # Hmmm...
+
         def ident(self) -> str:
             return "ident"
 

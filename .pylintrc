@@ -28,11 +28,6 @@ disable=
     # Use local suppressions or (even better) refactor the code.
     import-outside-toplevel,
     #---------------------------------------------------------------------------
-    # We should really enable this, there could be some real exceptions waiting
-    # to be thrown. But some work is needed first to sprinkle abc annotations
-    # through our code and fix a few obscure places.
-    abstract-method,
-    #---------------------------------------------------------------------------
     # Enabling this would be very desirable, it vastly improves readability and
     # it might even be necessary for tools like mypy. Fixing this involves some
     # amount of relatively easy work, especially if we want to avoid code

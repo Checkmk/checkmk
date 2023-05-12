@@ -5,6 +5,7 @@
 
 import datetime
 import time
+import uuid
 
 import freezegun
 import pytest
@@ -14,6 +15,48 @@ from tests.testlib import on_time
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.watolib.hosts_and_folders import Folder
+
+
+def test_new_empty_folder(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(uuid, "uuid4", lambda: uuid.UUID("a8098c1a-f86e-11da-bd1a-00112444be1e"))
+    with on_time("2018-01-10 02:00:00", "CET"):
+        folder = Folder(
+            name="bla",
+            title="Bla",
+            attributes={},
+        )
+    assert folder.name() == "bla"
+    assert folder.id() == "a8098c1af86e11dabd1a00112444be1e"
+    assert folder.title() == "Bla"
+    assert folder.attributes() == {
+        "meta_data": {
+            "created_at": 1515549600.0,
+            "created_by": None,
+            "updated_at": 1515549600.0,
+        }
+    }
+
+
+def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(uuid, "uuid4", lambda: uuid.UUID("c6bda767ae5c47038f73d8906fb91bb4"))
+
+    with on_time("2018-01-10 02:00:00", "CET"):
+        folder1 = Folder(name="folder1", parent_folder=Folder.root_folder())
+        folder1.persist_instance()
+        Folder.invalidate_caches()
+
+    # TODO: Why do we have to set the name here?
+    folder = Folder(name="bla", folder_path="/folder1")
+    assert folder.name() == "bla"
+    assert folder.id() == "c6bda767ae5c47038f73d8906fb91bb4"
+    assert folder.title() == "folder1"
+    assert folder.attributes() == {
+        "meta_data": {
+            "created_at": 1515549600.0,
+            "created_by": None,
+            "updated_at": 1515549600.0,
+        }
+    }
 
 
 @pytest.mark.parametrize(

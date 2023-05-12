@@ -1194,7 +1194,6 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         super().__init__()
         self._name = name
         self._parent = parent_folder
-        self._id: str | None = None
 
         self._path_existing_folder = folder_path
         self._loaded_subfolders: dict[PathWithoutSlash, CREFolder] | None = None
@@ -1219,6 +1218,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             self.load_instance()
         else:
             # New folder
+            self._id = uuid.uuid4().hex
             self._hosts = {}
             self._num_hosts = 0
             self._title = title or self._fallback_title()
@@ -1586,9 +1586,6 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
     def persist_instance(self) -> None:
         """Save the current state of the instance to a file."""
-        if self._id is None:
-            self._id = uuid.uuid4().hex
-
         data = self.get_wato_info()
         data["attributes"] = update_metadata(data["attributes"])
         data["__id"] = self._id
@@ -1607,9 +1604,11 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         """
         data = self.wato_info_storage_manager().read(Path(self.wato_info_path()))
 
-        unique_id = data.get("__id")
-        if self._id is None:
-            self._id = unique_id
+        if "__id" in data:
+            self._id = data["__id"]
+        else:
+            # Cleanup this compatibility code by adding a cmk-update-config action
+            self._id = uuid.uuid4().hex
         self._set_instance_data(data)
 
     # .-----------------------------------------------------------------------.

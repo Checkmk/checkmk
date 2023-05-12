@@ -15,8 +15,6 @@
 # ORA-28002: the password will expire within 1 days$
 
 
-# mypy: disable-error-code="arg-type"
-
 import datetime
 import time
 from collections.abc import Iterable
@@ -162,6 +160,7 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
     perfdata = []
 
     if item_data.pdb:
+        assert item_data.ptotal_size is not None
         infotext += ", PDB Size %s" % get_bytes_human_readable(int(item_data.ptotal_size))
         perfdata.append(("fs_size", int(item_data.ptotal_size)))
 
@@ -185,10 +184,7 @@ def discover_oracle_instance_uptime(section: Section) -> Iterable[tuple[str, dic
             {},
         )
         for item, data in section.items()
-        if isinstance(
-            data,
-            Instance,
-        )
+        if isinstance(data, Instance) and data.up_seconds is not None
     )
 
 
@@ -199,19 +195,18 @@ class _UptimeMultiItemParams(TypedDict, total=False):
 
 def check_oracle_instance_uptime(
     item: str, params: _UptimeMultiItemParams, section: Section
-) -> tuple[int, str, list]:
-    item_data = section.get(item)
-    if item_data is None or not isinstance(
-        item_data,
-        Instance,
-    ):
+) -> Iterable[tuple[int, str, list]]:
+    if not isinstance((data := section.get(item)), Instance):
         # Error is already shown in main check
         raise MKCounterWrapped("Login into database failed")
 
-    up_seconds = max(0, int(item_data.up_seconds))
+    if data.up_seconds is None:
+        return
+
+    up_seconds = int(data.up_seconds)
 
     levels = params.get("max", (None, None)) + params.get("min", (None, None))
-    return check_levels(
+    yield check_levels(
         up_seconds,
         "uptime",
         levels,

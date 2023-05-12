@@ -58,6 +58,10 @@ table.hostmatrix {
     width: 50%;
     padding: 0;
 
+    div.statebullet {
+      margin-bottom: 2px;
+    }
+
     a.link {
       padding: 2px 2px 2px $spacing-half;
     }

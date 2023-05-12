@@ -161,6 +161,20 @@ def _create_auth_list():
             "--v3-priv-key=A_long_privKey",
             "--v3-priv-proto=DES",
         ],
+        [
+            "--v3-user=authPrivUser",
+            "--v3-auth-key=A_long_authKey",
+            "--v3-auth-proto=SHA512",
+            "--v3-priv-key=A_long_privKey",
+            "--v3-priv-proto=AES256",
+        ],
+        [
+            "--v3-user=authPrivUser",
+            "--v3-auth-key=A_long_authKey",
+            "--v3-auth-proto=SHA512",
+            "--v3-priv-key=A_long_privKey",
+            "--v3-priv-proto=AES192",
+        ],
     ]
 
 

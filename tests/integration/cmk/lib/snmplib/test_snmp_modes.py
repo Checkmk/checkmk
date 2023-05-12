@@ -61,7 +61,10 @@ def test_get_single_oid_snmpv3(site: Site, backend_type: SNMPBackendEnum) -> Non
 
 
 @pytest.mark.usefixtures("snmpsim")
-def test_get_single_oid_snmpv3_higher_encryption(site: Site, backend_type: SNMPBackendEnum) -> None:
+@pytest.mark.parametrize("priv_proto, port", [("DES", 1341), ("AES-256", 1342), ("AES-192", 1343)])
+def test_get_single_oid_snmpv3_higher_encryption(
+    site: Site, backend_type: SNMPBackendEnum, priv_proto: str, port: int
+) -> None:
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
@@ -71,13 +74,13 @@ def test_get_single_oid_snmpv3_higher_encryption(site: Site, backend_type: SNMPB
             "SHA-512",
             "authPrivUser",
             "A_long_authKey",
-            "DES",
+            priv_proto,
             "A_long_privKey",
         ),
         # TODO: Reorganize snmp tests: at the moment we create *all* snmpsimd processes at setup
         #  but with different ports. Those different processes are then used in test_snmp_modes.py and
         #  backend_snmp.py...
-        port=1341,
+        port=port,
     )
 
     result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)

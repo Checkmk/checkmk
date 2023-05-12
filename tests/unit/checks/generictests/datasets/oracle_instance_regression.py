@@ -92,9 +92,10 @@ checks = {
             "TUX2",
             {"max": (6000, 10000)},
             [
+                (0, "Up since Jan 29 2020 23:07:45", []),
                 (
                     1,
-                    "Up since 2020-01-29 23:07:45, uptime: 1:52:15 (warn/crit at 1:40:00/2:46:40)",
+                    "Uptime: 1 hour 52 minutes (warn/crit at 1 hour 40 minutes/2 hours 46 minutes)",
                     [("uptime", 6735, 6000, 10000, None, None)],
                 )
             ],
@@ -103,9 +104,10 @@ checks = {
             "TUX5",
             {},
             [
+                (0, "Up since Jan 29 2020 01:58:37", []),
                 (
                     0,
-                    "Up since 2020-01-29 01:58:37, uptime: 23:01:23",
+                    "Uptime: 23 hours 1 minute",
                     [("uptime", 82883, None, None, None, None)],
                 )
             ],

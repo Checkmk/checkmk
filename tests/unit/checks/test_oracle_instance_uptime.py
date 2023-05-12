@@ -70,10 +70,8 @@ def test_check_oracle_instance_uptime_normal(fix_register: FixRegister) -> None:
                 ),
             )
         ) == [
-            Result(
-                state=State.OK,
-                summary="Up since 2022-01-03 13:10:19, uptime: 24 days, 19:47:27",
-            ),
+            Result(state=State.OK, summary="Up since Jan 03 2022 13:10:19"),
+            Result(state=State.OK, summary="Uptime: 24 days 19 hours"),
             Metric(
                 "uptime",
                 2144847.0,

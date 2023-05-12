@@ -15,13 +15,13 @@
 # ORA-28002: the password will expire within 1 days$
 
 
-import datetime
 import time
 from collections.abc import Iterable
 from typing import TypedDict
 
 from cmk.base.check_api import check_levels, discover, get_bytes_human_readable, MKCounterWrapped
 from cmk.base.config import check_info, factory_settings
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.oracle_instance import (
     GeneralError,
     Instance,
@@ -202,14 +202,14 @@ def check_oracle_instance_uptime(
     if data.up_seconds is None:
         return
 
-    levels = params.get("max", (None, None)) + params.get("min", (None, None))
+    yield 0, f"Up since {render.datetime(time.time() - data.up_seconds)}", []
+
     yield check_levels(
         data.up_seconds,
         "uptime",
-        levels,
-        human_readable_func=lambda x: datetime.timedelta(seconds=int(x)),
-        infoname="Up since %s, uptime"
-        % time.strftime("%F %T", time.localtime(time.time() - data.up_seconds)),
+        params.get("max", (None, None)) + params.get("min", (None, None)),
+        human_readable_func=render.timespan,
+        infoname="Uptime",
     )
 
 

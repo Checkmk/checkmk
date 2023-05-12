@@ -41,7 +41,7 @@ def check_fortisandbox_disk(
         value_store=get_value_store(),
         mountpoint=item,
         filesystem_size=section["cap"],
-        free_space=section["cap"] - section["disk_used"],
+        free_space=section["cap"] - section["used"],
         reserved_space=0,
         inodes_total=None,
         inodes_avail=None,

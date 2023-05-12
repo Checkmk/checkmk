@@ -19,5 +19,5 @@ As of Checkmk version 2.1 plugins in that folder will generate a warning on the 
 
 If you maintian such plugins, please migrate them to the new API before upgrading to Checkmk 2.2.
 New plugins live in <tt>lib/check_mk/base/plugins/agent_based/</tt>.
-You can find an example for a migration on github <a href="https://github.com/tribe29/checkmk/commit/0264b6acdef677ff7ae323a696ddbe17d41116fc">here</a> and <a href="https://github.com/tribe29/checkmk/commit/e926cc58adb8297030fb03d61c7854a96311e7fb">here</a>.
+You can find an example for a migration on github <a href="https://github.com/Checkmk/checkmk/commit/0264b6acdef677ff7ae323a696ddbe17d41116fc">here</a> and <a href="https://github.com/Checkmk/checkmk/commit/e926cc58adb8297030fb03d61c7854a96311e7fb">here</a>.
 Also refer to the APIs documentation found in your site (Help -> Check plugin API reference).

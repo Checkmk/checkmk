@@ -85,8 +85,8 @@ just to signal that real build script was not called -->
     this code is disabled, because bakery/msi-update is not able to upgrade versions correctly 
     -->
         <MajorUpgrade AllowDowngrades="yes" />
-        <Icon Id="tribe29.ico" SourceFile="tribe29.ico" />
-        <Property Id="ARPPRODUCTICON" Value="tribe29.ico" />
+        <Icon Id="checkmk.ico" SourceFile="checkmk.ico" />
+        <Property Id="ARPPRODUCTICON" Value="checkmk.ico" />
         <Property Id="INSTALLEDSERVICEDESCRIPTION">
             <RegistrySearch Id="InstalledServiceDescription"
                             Root="HKLM"

@@ -8,8 +8,8 @@ Knowledge: undoc
 Level: 1
 Version: 2.2.0b1
 
-This werk only affects users of non-tribe29 local customizations (single files and MKPs from non-
-tribe29 sources such as the Checkmk exchange).
+This werk only affects users of non-Checkmk local customizations (single files and MKPs from non-
+Checkmk sources such as the Checkmk exchange).
 
 Two monolithic files under <tt>cmk/gui/plugins/wato/</tt> have been split up into multiple smaller
 files:
@@ -21,5 +21,5 @@ Hence, any customization containing imports from any of the two dissolved files 
 adjusted. The new import paths are probably
 <tt>cmk.gui.plugins.wato.datasource_programs/active_checks.common</tt>.
 
-Note that this only affects non-tribe29 customizations because as of the writing of this werk, any
-customization produced by tribe29 will be obsolete with Checkmk 2.2.
+Note that this only affects non-Checkmk customizations because as of the writing of this werk, any
+customization produced by Checkmk will be obsolete with Checkmk 2.2.

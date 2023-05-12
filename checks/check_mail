@@ -15,7 +15,7 @@ def check_mail_arguments(params):  # pylint: disable=too-many-branches
     ...       'server': 'imap.gmx.de',
     ...       'auth': ('basic', ('me@gmx.de', ('password', 'p4ssw0rd'))),
     ...       'connection': {'disable_tls': True, 'tcp_port': 123}}),
-    ...     'forward': {'facility': 2, 'application': None, 'host': 'me.too@tribe29.com',
+    ...     'forward': {'facility': 2, 'application': None, 'host': 'me.too@checkmk.com',
     ...     'cleanup': True}}):
     ...   print(a)
     --fetch-protocol=IMAP
@@ -25,7 +25,7 @@ def check_mail_arguments(params):  # pylint: disable=too-many-branches
     --fetch-password=p4ssw0rd
     --forward-ec
     --forward-facility=2
-    --forward-host=me.too@tribe29.com
+    --forward-host=me.too@checkmk.com
     --cleanup=delete
     """
     try:

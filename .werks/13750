@@ -10,4 +10,4 @@ Version: 2.2.0b1
 
 The Support Diagnostics dumps now contain, if selected, the core history, config and state files,
 as well as cmcdump files.
-Having this information, the tribe29 support team is able to reproduce cmc core issues in your environment.
+Having this information, the Checkmk support team is able to reproduce cmc core issues in your environment.

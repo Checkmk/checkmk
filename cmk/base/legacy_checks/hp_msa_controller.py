@@ -70,4 +70,5 @@ check_info["hp_msa_controller"] = {
     "check_function": check_hp_msa_controller_cpu,
     "service_name": "CPU Utilization %s",
     "check_ruleset_name": "cpu_utilization_multiitem",
+    "default_levels_variable": "hp_msa_controller",
 }

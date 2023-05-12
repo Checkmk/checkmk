@@ -58,6 +58,14 @@ def test_subcheck_snmp_info_consistent(fix_plugin_legacy: FixPluginLegacy) -> No
             assert detect == ref_info[section_name_of(name)].setdefault("detect", detect)
 
 
+def test_no_unused_or_undefined_factory_settings(fix_plugin_legacy: FixPluginLegacy) -> None:
+    assert set(fix_plugin_legacy.factory_settings) == {
+        v
+        for c in fix_plugin_legacy.check_info.values()
+        if (v := c.get("default_levels_variable")) is not None
+    }
+
+
 def test_all_checks_migrated(fix_plugin_legacy: FixPluginLegacy, fix_register: FixRegister) -> None:
     migrated = {str(name) for name in fix_register.check_plugins}
     # we don't expect pure section declarations anymore

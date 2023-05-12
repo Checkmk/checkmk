@@ -288,16 +288,9 @@ class FixPluginLegacy:
 
         assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 
-        self._check_info = copy.deepcopy(config.check_info)
-        self._active_check_info = copy.deepcopy(config.active_check_info)
-
-    @property
-    def check_info(self):
-        return self._check_info
-
-    @property
-    def active_check_info(self):
-        return self._active_check_info
+        self.check_info = copy.deepcopy(config.check_info)
+        self.active_check_info = copy.deepcopy(config.active_check_info)
+        self.factory_settings = copy.deepcopy(config.factory_settings)
 
 
 @pytest.fixture(scope="session", name="fix_register")

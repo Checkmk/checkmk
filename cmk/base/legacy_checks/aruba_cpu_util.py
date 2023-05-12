@@ -46,4 +46,5 @@ check_info["aruba_cpu_util"] = {
         oids=["2", "3"],
     ),
     "check_ruleset_name": "cpu_utilization_multiitem",
+    "default_levels_variable": "aruba_cpu_util_default_levels",
 }

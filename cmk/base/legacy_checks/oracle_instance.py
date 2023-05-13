@@ -18,7 +18,7 @@ import time
 from collections.abc import Iterable
 from typing import TypedDict
 
-from cmk.base.check_api import check_levels, discover, get_bytes_human_readable, MKCounterWrapped
+from cmk.base.check_api import check_levels, discover, MKCounterWrapped
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.oracle_instance import (
@@ -142,13 +142,16 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
                     state, infotext, params["noforcelogging"], instance.force_logging, "NO"
                 )
 
-    perfdata = []
+    yield state, infotext, []
 
     if instance.pdb and instance.ptotal_size is not None:
-        infotext += ", PDB Size %s" % get_bytes_human_readable(instance.ptotal_size)
-        perfdata.append(("fs_size", instance.ptotal_size))
-
-    yield state, infotext, perfdata
+        yield check_levels(
+            instance.ptotal_size,
+            "fs_size",
+            None,
+            human_readable_func=render.bytes,
+            infoname="PDB size",
+        )
 
 
 check_info["oracle_instance"] = {

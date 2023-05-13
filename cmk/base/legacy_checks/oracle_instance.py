@@ -60,42 +60,42 @@ def _merge_states(state: int, infotext: str, value: int, column: str, data: str)
 def check_oracle_instance(  # pylint: disable=too-many-branches
     item: str, params: _Params, section: Section
 ) -> Iterable[tuple[int, str, list]]:
-    if isinstance((item_data := section.get(item)), (GeneralError, InvalidData)):
-        yield 2, item_data.error, []
+    if isinstance((instance := section.get(item)), (GeneralError, InvalidData)):
+        yield 2, instance.error, []
         return
-    if item_data is None:
+    if instance is None:
         yield 2, "Database or necessary processes not running or login failed", []
         return
 
     state = 0
 
     # Handle old oracle agent plugin output
-    if item_data.old_agent:
+    if instance.old_agent:
         infotext = "Status %s, Version %s, Logins %s" % (
-            item_data.openmode,
-            item_data.version,
-            item_data.logins.lower(),
+            instance.openmode,
+            instance.version,
+            instance.logins.lower(),
         )
         state, infotext = _merge_states(
-            state, infotext, params["logins"], item_data.logins, "RESTRICTED"
+            state, infotext, params["logins"], instance.logins, "RESTRICTED"
         )
         yield state, infotext, []
         return
 
-    if item_data.pdb:
+    if instance.pdb:
         infotext = "PDB Name %s.%s, Status %s" % (
-            item_data.name,
-            item_data.pname,
-            item_data.popenmode,
+            instance.name,
+            instance.pname,
+            instance.popenmode,
         )
     else:
-        if item_data.pluggable.lower() == "true":
-            infotext = "CDB Name %s, Status %s" % (item_data.name, item_data.openmode)
+        if instance.pluggable.lower() == "true":
+            infotext = "CDB Name %s, Status %s" % (instance.name, instance.openmode)
         else:
-            infotext = "Database Name %s, Status %s" % (item_data.name, item_data.openmode)
+            infotext = "Database Name %s, Status %s" % (instance.name, instance.openmode)
 
     # Check state for PRIMARY Database. Normaly there are always OPEN
-    if item_data.database_role == "PRIMARY" and item_data.openmode not in (
+    if instance.database_role == "PRIMARY" and instance.openmode not in (
         "OPEN",
         "READ ONLY",
         "READ WRITE",
@@ -108,54 +108,54 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
         elif state == 0:
             infotext += " (allowed by rule)"
 
-    if not item_data.pdb:
-        infotext += ", Role %s, Version %s" % (item_data.database_role, item_data.version)
+    if not instance.pdb:
+        infotext += ", Role %s, Version %s" % (instance.database_role, instance.version)
 
-    if item_data.host_name:
-        infotext += f", Running on: {item_data.host_name}"
+    if instance.host_name:
+        infotext += f", Running on: {instance.host_name}"
 
     # ASM has no login and archivelog check
-    if item_data.database_role != "ASM":
+    if instance.database_role != "ASM":
         # logins are only possible when the database is open
-        if item_data.openmode == "OPEN":
-            infotext += ", Logins %s" % (item_data.logins.lower())
+        if instance.openmode == "OPEN":
+            infotext += ", Logins %s" % (instance.logins.lower())
             state, infotext = _merge_states(
-                state, infotext, params["logins"], item_data.logins, "RESTRICTED"
+                state, infotext, params["logins"], instance.logins, "RESTRICTED"
             )
 
         # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
-        if item_data.name != "_MGMTDB" and item_data.sid != "-MGMTDB" and not item_data.pdb:
-            assert item_data.log_mode is not None
-            infotext += ", Log Mode %s" % (item_data.log_mode.lower())
+        if instance.name != "_MGMTDB" and instance.sid != "-MGMTDB" and not instance.pdb:
+            assert instance.log_mode is not None
+            infotext += ", Log Mode %s" % (instance.log_mode.lower())
             state, infotext = _merge_states(
-                state, infotext, params["archivelog"], item_data.log_mode, "ARCHIVELOG"
+                state, infotext, params["archivelog"], instance.log_mode, "ARCHIVELOG"
             )
             state, infotext = _merge_states(
-                state, infotext, params["noarchivelog"], item_data.log_mode, "NOARCHIVELOG"
+                state, infotext, params["noarchivelog"], instance.log_mode, "NOARCHIVELOG"
             )
 
             # archivelog is only valid in non pdb
             # force logging is only usable when archivelog is enabled
-            if item_data.log_mode == "ARCHIVELOG":
-                if item_data.archiver != "STARTED":
-                    assert item_data.archiver is not None
-                    infotext += ". Archiver %s(!!)" % (item_data.archiver.lower())
+            if instance.log_mode == "ARCHIVELOG":
+                if instance.archiver != "STARTED":
+                    assert instance.archiver is not None
+                    infotext += ". Archiver %s(!!)" % (instance.archiver.lower())
                     state = 2
 
-                assert item_data.force_logging is not None
-                infotext += ", Force Logging %s" % (item_data.force_logging.lower())
+                assert instance.force_logging is not None
+                infotext += ", Force Logging %s" % (instance.force_logging.lower())
                 state, infotext = _merge_states(
-                    state, infotext, params["forcelogging"], item_data.force_logging, "YES"
+                    state, infotext, params["forcelogging"], instance.force_logging, "YES"
                 )
                 state, infotext = _merge_states(
-                    state, infotext, params["noforcelogging"], item_data.force_logging, "NO"
+                    state, infotext, params["noforcelogging"], instance.force_logging, "NO"
                 )
 
     perfdata = []
 
-    if item_data.pdb and item_data.ptotal_size is not None:
-        infotext += ", PDB Size %s" % get_bytes_human_readable(item_data.ptotal_size)
-        perfdata.append(("fs_size", item_data.ptotal_size))
+    if instance.pdb and instance.ptotal_size is not None:
+        infotext += ", PDB Size %s" % get_bytes_human_readable(instance.ptotal_size)
+        perfdata.append(("fs_size", instance.ptotal_size))
 
     yield state, infotext, perfdata
 

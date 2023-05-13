@@ -156,7 +156,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/bin
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/python3
-	tar -C $(REPO_PATH) -c \
+	tar -c -C $(REPO_PATH) \
 	    $(CHECK_MK_TAROPTS) \
 	    $(EDITION_EXCLUDE) \
 	    cmk | tar -x -C $(CHECK_MK_INSTALL_DIR)/lib/python3

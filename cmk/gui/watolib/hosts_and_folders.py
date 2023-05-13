@@ -1481,7 +1481,6 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def save(self) -> None:
         self.persist_instance()
         Folder.invalidate_caches()
-        self.load_instance()
 
     def get_wato_info(self) -> WATOFolderInfo:
         return {
@@ -1587,8 +1586,8 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
     def persist_instance(self) -> None:
         """Save the current state of the instance to a file."""
+        self._attributes = update_metadata(self._attributes)
         data = self.get_wato_info()
-        data["attributes"] = update_metadata(data["attributes"])
         store.makedirs(os.path.dirname(self.wato_info_path()))
         self.wato_info_storage_manager().write(Path(self.wato_info_path()), data)
         if may_use_redis():

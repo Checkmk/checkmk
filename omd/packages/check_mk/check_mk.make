@@ -68,7 +68,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
 	install -m 644 $(REPO_PATH)/cmk/base/legacy_checks/[!__init__.py]* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
-	find (CHECK_MK_INSTALL_DIR)/share/check_mk/checks -type f | sed -e 'p;s/.py$//' | xargs -n2 mv
+	find $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks -type f | sed -e 'p;s/.py$//' | xargs -n2 mv
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
 	install -m 755 $(REPO_PATH)/notifications/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications

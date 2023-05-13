@@ -1462,7 +1462,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             }
         return {}
 
-    def _set_instance_data(self, wato_info: WATOFolderInfo) -> None:
+    def deserialize(self, wato_info: WATOFolderInfo) -> None:
         self._title = wato_info.get("title", self._fallback_title())
         self._attributes = dict(wato_info.get("attributes", {}))
         # Can either be set to True or a string (which will be used as host lock message)
@@ -1482,7 +1482,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         self.persist_instance()
         Folder.invalidate_caches()
 
-    def get_wato_info(self) -> WATOFolderInfo:
+    def serialize(self) -> WATOFolderInfo:
         return {
             "__id": self._id,
             "title": self._title,
@@ -1587,9 +1587,8 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def persist_instance(self) -> None:
         """Save the current state of the instance to a file."""
         self._attributes = update_metadata(self._attributes)
-        data = self.get_wato_info()
         store.makedirs(os.path.dirname(self.wato_info_path()))
-        self.wato_info_storage_manager().write(Path(self.wato_info_path()), data)
+        self.wato_info_storage_manager().write(Path(self.wato_info_path()), self.serialize())
         if may_use_redis():
             get_wato_redis_client().save_folder_info(self)
 
@@ -1608,7 +1607,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         else:
             # Cleanup this compatibility code by adding a cmk-update-config action
             self._id = uuid.uuid4().hex
-        self._set_instance_data(data)
+        self.deserialize(data)
 
     # .-----------------------------------------------------------------------.
     # | ELEMENT ACCESS                                                        |

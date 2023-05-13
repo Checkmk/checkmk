@@ -82,18 +82,9 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
         yield state, infotext, []
         return
 
-    if instance.pdb:
-        infotext = "PDB Name %s.%s, Status %s" % (
-            instance.name,
-            instance.pname,
-            instance.popenmode,
-        )
-    else:
-        if instance.pluggable.lower() == "true":
-            infotext = "CDB Name %s, Status %s" % (instance.name, instance.openmode)
-        else:
-            infotext = "Database Name %s, Status %s" % (instance.name, instance.openmode)
+    infotext = f"{instance.type} Name {instance.display_name}"
 
+    infotext += f", Status {instance.openmode}"
     # Check state for PRIMARY Database. Normaly there are always OPEN
     if instance.database_role == "PRIMARY" and instance.openmode not in (
         "OPEN",

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import Mapping, Optional, Union
+from typing import Literal, Mapping, Optional, Union
 
 from pydantic import BaseModel
 
@@ -61,6 +61,18 @@ class Instance(BaseModel):
     def item_name(self) -> str:
         # Multitenant use DB_NAME.PDB_NAME as Service
         return f"{self.sid}.{self.pname}" if self.pdb else self.sid
+
+    @property
+    def type(self) -> Literal["PDB", "CDB", "Database"]:
+        if self.pdb:
+            return "PDB"
+        if self.pluggable.lower() == "true":
+            return "CDB"
+        return "Database"
+
+    @property
+    def display_name(self) -> str:
+        return f"{self.name}.{self.pname}" if self.pdb else str(self.name)
 
 
 Section = Mapping[str, Union[InvalidData, GeneralError, Instance]]

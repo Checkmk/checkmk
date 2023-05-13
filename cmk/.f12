@@ -41,6 +41,7 @@ echo "Copy files..."
 sudo rsync \
     --exclude="*.pyc" \
     --exclude="flycheck*" \
+    --exclude="base/legacy_checks" \
     -aR \
     "${PYTHON3_PATHS[@]}" \
     "$ROOT"/lib/python3/cmk/

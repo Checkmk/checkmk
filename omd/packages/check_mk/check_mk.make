@@ -161,6 +161,9 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    $(EDITION_EXCLUDE) \
 	    cmk | tar -x -C $(CHECK_MK_INSTALL_DIR)/lib/python3
 
+        # legacy checks have been moved to checks/ in a dedicated step above.
+        rm -rf $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/legacy_checks
+
 	# cmk needs to be a namespace package (CMK-3979)
 	rm -f \
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/__init__.py \

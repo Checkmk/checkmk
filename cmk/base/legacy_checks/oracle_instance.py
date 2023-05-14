@@ -15,8 +15,8 @@
 # ORA-28002: the password will expire within 1 days$
 
 import time
-from collections.abc import Iterable
-from typing import TypedDict
+from collections.abc import Iterable, Mapping
+from typing import Literal, TypedDict
 
 from cmk.base.check_api import check_levels, discover, MKCounterWrapped
 from cmk.base.config import check_info, factory_settings
@@ -47,102 +47,83 @@ class _Params(TypedDict, total=True):
     forcelogging: int
 
 
-def _merge_states(state: int, infotext: str, value: int, column: str, data: str) -> tuple[int, str]:
-    if column.lower() == data.lower():
-        state = max(state, value)
-        if value == 1:
-            infotext += "(!)"
-        elif value == 2:
-            infotext += "(!!)"
-    return state, infotext
+_ParamsKey = Literal["logins", "noforcelogging", "noarchivelog", "forcelogging", "archivelog"]
+
+_LOGINS_MAP: Mapping[str, _ParamsKey] = {
+    "RESTRICTED": "logins",
+}
+
+_ARCHIVELOG_MAP: Mapping[str, _ParamsKey] = {
+    "ARCHIVELOG": "archivelog",
+    "NOARCHIVELOG": "noarchivelog",
+}
+
+_FORCELOGGING_MAP: Mapping[str, _ParamsKey] = {
+    "YES": "forcelogging",
+    "NO": "noforcelogging",
+}
 
 
 def check_oracle_instance(  # pylint: disable=too-many-branches
     item: str, params: _Params, section: Section
-) -> Iterable[tuple[int, str, list]]:
+) -> Iterable[tuple[int, str, list] | tuple[int, str]]:
     if isinstance((instance := section.get(item)), (GeneralError, InvalidData)):
-        yield 2, instance.error, []
+        yield 2, instance.error
         return
     if instance is None:
-        yield 2, "Database or necessary processes not running or login failed", []
+        yield 2, "Database or necessary processes not running or login failed"
         return
-
-    state = 0
 
     # Handle old oracle agent plugin output
     if instance.old_agent:
-        infotext = "Status %s, Version %s, Logins %s" % (
-            instance.openmode,
-            instance.version,
-            instance.logins.lower(),
-        )
-        state, infotext = _merge_states(
-            state, infotext, params["logins"], instance.logins, "RESTRICTED"
-        )
-        yield state, infotext, []
+        yield 0, f"Status {instance.openmode}"
+        yield 0, f"Version {instance.version}"
+        yield _asses_property("Logins", instance.logins, params, _LOGINS_MAP)
         return
 
-    infotext = f"{instance.type} Name {instance.display_name}"
+    yield 0, f"{instance.type} Name {instance.display_name}"
 
-    infotext += f", Status {instance.openmode}"
+    status_state = 0
     # Check state for PRIMARY Database. Normaly there are always OPEN
     if instance.database_role == "PRIMARY" and instance.openmode not in (
         "OPEN",
         "READ ONLY",
         "READ WRITE",
     ):
-        state = int(params["primarynotopen"])
-        if state == 1:
-            infotext += "(!)"
-        elif state == 2:
-            infotext += "(!!)"
-        elif state == 0:
-            infotext += " (allowed by rule)"
+        status_state = params["primarynotopen"]
+        yield status_state, f"Status {instance.openmode} {' (allowed by rule)' if status_state == 0 else ''}"
+    else:
+        yield 0, f"Status {instance.openmode}"
 
     if not instance.pdb:
-        infotext += ", Role %s, Version %s" % (instance.database_role, instance.version)
+        yield 0, f"Role {instance.database_role}"
+        yield 0, f"Version {instance.version}"
 
     if instance.host_name:
-        infotext += f", Running on: {instance.host_name}"
+        yield 0, f"Running on: {instance.host_name}"
 
     # ASM has no login and archivelog check
     if instance.database_role != "ASM":
         # logins are only possible when the database is open
         if instance.openmode == "OPEN":
-            infotext += ", Logins %s" % (instance.logins.lower())
-            state, infotext = _merge_states(
-                state, infotext, params["logins"], instance.logins, "RESTRICTED"
-            )
+            yield _asses_property("Logins", instance.logins, params, _LOGINS_MAP)
 
         # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
         if instance.name != "_MGMTDB" and instance.sid != "-MGMTDB" and not instance.pdb:
             assert instance.log_mode is not None
-            infotext += ", Log Mode %s" % (instance.log_mode.lower())
-            state, infotext = _merge_states(
-                state, infotext, params["archivelog"], instance.log_mode, "ARCHIVELOG"
-            )
-            state, infotext = _merge_states(
-                state, infotext, params["noarchivelog"], instance.log_mode, "NOARCHIVELOG"
-            )
+            yield _asses_property("Log Mode", instance.log_mode, params, _ARCHIVELOG_MAP)
 
             # archivelog is only valid in non pdb
             # force logging is only usable when archivelog is enabled
             if instance.log_mode == "ARCHIVELOG":
                 if instance.archiver != "STARTED":
                     assert instance.archiver is not None
-                    infotext += ". Archiver %s(!!)" % (instance.archiver.lower())
-                    state = 2
+                    yield 2, f"Archiver {instance.archiver.lower()}"
 
                 assert instance.force_logging is not None
-                infotext += ", Force Logging %s" % (instance.force_logging.lower())
-                state, infotext = _merge_states(
-                    state, infotext, params["forcelogging"], instance.force_logging, "YES"
+                yield _asses_property(
+                    "Force Logging", instance.force_logging, params, _FORCELOGGING_MAP
                 )
-                state, infotext = _merge_states(
-                    state, infotext, params["noforcelogging"], instance.force_logging, "NO"
-                )
-
-    yield state, infotext, []
 
     if instance.pdb and instance.ptotal_size is not None:
         yield check_levels(
@@ -152,6 +133,15 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
             human_readable_func=render.bytes,
             infoname="PDB size",
         )
+
+
+def _asses_property(
+    label: str, value: str, params: _Params, key_map: Mapping[str, _ParamsKey]
+) -> tuple[int, str]:
+    return (
+        0 if (key := key_map.get(value.upper())) is None else params[key],
+        f"{label} {value.lower()}",
+    )
 
 
 check_info["oracle_instance"] = {

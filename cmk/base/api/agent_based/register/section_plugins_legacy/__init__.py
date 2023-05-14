@@ -5,13 +5,12 @@
 """Helper to register a new-style section based on config.check_info
 """
 from collections.abc import Callable
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,
 )
-from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,

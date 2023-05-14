@@ -1150,8 +1150,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "oracle_diva_csm.archive",
         "oracle_diva_csm.objects",
         "oracle_diva_csm.tapes",
-        "oracle_instance",
-        "oracle_instance.uptime",
         "oracle_jobs",
         "oracle_locks",
         "oracle_logswitches",

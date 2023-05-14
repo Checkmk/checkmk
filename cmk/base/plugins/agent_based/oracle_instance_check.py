@@ -18,24 +18,17 @@ import time
 from collections.abc import Iterable, Mapping
 from typing import Literal, TypedDict
 
-from cmk.base.check_api import check_levels, discover, MKCounterWrapped
-from cmk.base.config import check_info, factory_settings
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.utils.oracle_instance import (
-    GeneralError,
-    Instance,
-    InvalidData,
-    Section,
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResultsError,
+    register,
+    render,
+    Result,
+    Service,
+    State,
 )
-
-factory_settings["oracle_instance_defaults"] = {
-    "logins": 2,
-    "noforcelogging": 1,
-    "noarchivelog": 1,
-    "primarynotopen": 2,
-    "archivelog": 0,
-    "forcelogging": 0,
-}
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.oracle_instance import GeneralError, Instance, InvalidData, Section
 
 
 class _Params(TypedDict, total=True):
@@ -64,68 +57,74 @@ _FORCELOGGING_MAP: Mapping[str, _ParamsKey] = {
 }
 
 
-def check_oracle_instance(  # pylint: disable=too-many-branches
-    item: str, params: _Params, section: Section
-) -> Iterable[tuple[int, str, list] | tuple[int, str]]:
+def discover_oracle_instance(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_oracle_instance(item: str, params: _Params, section: Section) -> CheckResult:
     if isinstance((instance := section.get(item)), (GeneralError, InvalidData)):
-        yield 2, instance.error
+        yield Result(state=State.CRIT, summary=instance.error)
         return
     if instance is None:
-        yield 2, "Database or necessary processes not running or login failed"
+        yield Result(
+            state=State.CRIT, summary="Database or necessary processes not running or login failed"
+        )
         return
 
     # Handle old oracle agent plugin output
     if instance.old_agent:
-        yield 0, f"Status {instance.openmode}"
-        yield 0, f"Version {instance.version}"
+        yield Result(state=State.OK, summary=f"Status {instance.openmode}")
+        yield Result(state=State.OK, summary=f"Version {instance.version}")
         yield _asses_property("Logins", instance.logins, params, _LOGINS_MAP)
         return
 
-    yield 0, f"{instance.type} Name {instance.display_name}"
+    yield Result(state=State.OK, summary=f"{instance.type} Name {instance.display_name}")
 
-    status_state = 0
+    status_state = State.OK
     # Check state for PRIMARY Database. Normaly there are always OPEN
     if instance.database_role == "PRIMARY" and instance.openmode not in (
         "OPEN",
         "READ ONLY",
         "READ WRITE",
     ):
-        status_state = params["primarynotopen"]
-        yield status_state, f"Status {instance.openmode} {' (allowed by rule)' if status_state == 0 else ''}"
+        status_state = State(params["primarynotopen"])
+        yield Result(
+            state=status_state,
+            summary=f"Status {instance.openmode}{' (allowed by rule)' if status_state is State.OK else ''}",
+        )
     else:
-        yield 0, f"Status {instance.openmode}"
+        yield Result(state=State.OK, summary=f"Status {instance.openmode}")
 
     if not instance.pdb:
-        yield 0, f"Role {instance.database_role}"
-        yield 0, f"Version {instance.version}"
+        yield Result(state=State.OK, summary=f"Role {instance.database_role}")
+        yield Result(state=State.OK, summary=f"Version {instance.version}")
 
     if instance.host_name:
-        yield 0, f"Running on: {instance.host_name}"
+        yield Result(state=State.OK, summary=f"Running on: {instance.host_name}")
 
     # ASM has no login and archivelog check
     if instance.database_role != "ASM":
         yield from _check_archive_log(instance, params)
 
     if instance.pdb and instance.ptotal_size is not None:
-        yield check_levels(
+        yield from check_levels(
             instance.ptotal_size,
-            "fs_size",
-            None,
-            human_readable_func=render.bytes,
-            infoname="PDB size",
+            metric_name="fs_size",
+            render_func=render.bytes,
+            label="PDB size",
         )
 
 
 def _asses_property(
     label: str, value: str, params: _Params, key_map: Mapping[str, _ParamsKey]
-) -> tuple[int, str]:
-    return (
-        0 if (key := key_map.get(value.upper())) is None else params[key],
-        f"{label} {value.lower()}",
+) -> Result:
+    return Result(
+        state=State.OK if (key := key_map.get(value.upper())) is None else State(params[key]),
+        summary=f"{label} {value.lower()}",
     )
 
 
-def _check_archive_log(instance: Instance, params: _Params) -> Iterable[tuple[int, str]]:
+def _check_archive_log(instance: Instance, params: _Params) -> Iterable[Result]:
     # logins are only possible when the database is open
     if instance.openmode == "OPEN":
         yield _asses_property("Logins", instance.logins, params, _LOGINS_MAP)
@@ -144,28 +143,32 @@ def _check_archive_log(instance: Instance, params: _Params) -> Iterable[tuple[in
 
     if instance.archiver != "STARTED":
         assert instance.archiver is not None
-        yield 2, f"Archiver {instance.archiver.lower()}"
+        yield Result(state=State.CRIT, summary=f"Archiver {instance.archiver.lower()}")
 
     assert instance.force_logging is not None
     yield _asses_property("Force Logging", instance.force_logging, params, _FORCELOGGING_MAP)
 
 
-check_info["oracle_instance"] = {
-    # section is already migrated!
-    "check_function": check_oracle_instance,
-    "discovery_function": discover(),
-    "service_name": "ORA %s Instance",
-    "default_levels_variable": "oracle_instance_defaults",
-    "check_ruleset_name": "oracle_instance",
-}
+register.check_plugin(
+    name="oracle_instance",
+    service_name="ORA %s Instance",
+    discovery_function=discover_oracle_instance,
+    check_function=check_oracle_instance,
+    check_ruleset_name="oracle_instance",
+    check_default_parameters={
+        "logins": 2,
+        "noforcelogging": 1,
+        "noarchivelog": 1,
+        "primarynotopen": 2,
+        "archivelog": 0,
+        "forcelogging": 0,
+    },
+)
 
 
-def discover_oracle_instance_uptime(section: Section) -> Iterable[tuple[str, dict]]:
+def discover_oracle_instance_uptime(section: Section) -> DiscoveryResult:
     yield from (
-        (
-            item,
-            {},
-        )
+        Service(item=item)
         for item, data in section.items()
         if isinstance(data, Instance) and data.up_seconds is not None
     )
@@ -178,28 +181,34 @@ class _UptimeMultiItemParams(TypedDict, total=False):
 
 def check_oracle_instance_uptime(
     item: str, params: _UptimeMultiItemParams, section: Section
-) -> Iterable[tuple[int, str, list]]:
+) -> CheckResult:
     if not isinstance((data := section.get(item)), Instance):
         # Error is already shown in main check
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     if data.up_seconds is None:
         return
 
-    yield 0, f"Up since {render.datetime(time.time() - data.up_seconds)}", []
+    yield Result(
+        state=State.OK, summary=f"Up since {render.datetime(time.time() - data.up_seconds)}"
+    )
 
-    yield check_levels(
+    yield from check_levels(
         data.up_seconds,
-        "uptime",
-        params.get("max", (None, None)) + params.get("min", (None, None)),
-        human_readable_func=render.timespan,
-        infoname="Uptime",
+        levels_lower=params.get("min"),
+        levels_upper=params.get("max"),
+        metric_name="uptime",
+        render_func=render.timespan,
+        label="Uptime",
     )
 
 
-check_info["oracle_instance.uptime"] = {
-    "check_function": check_oracle_instance_uptime,
-    "discovery_function": discover_oracle_instance_uptime,
-    "service_name": "ORA %s Uptime",
-    "check_ruleset_name": "uptime_multiitem",
-}
+register.check_plugin(
+    name="oracle_instance_uptime",
+    sections=["oracle_instance"],
+    service_name="ORA %s Uptime",
+    discovery_function=discover_oracle_instance_uptime,
+    check_function=check_oracle_instance_uptime,
+    check_ruleset_name="uptime_multiitem",
+    check_default_parameters={},
+)

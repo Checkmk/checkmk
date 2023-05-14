@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -37,14 +38,14 @@ def check_netscaler_mem(_no_item, params, info):
     )
 
 
-check_info["netscaler_mem"] = {
-    "detect": SNMP_DETECT,
-    "check_function": check_netscaler_mem,
-    "discovery_function": inventory_netscaler_mem,
-    "service_name": "Memory",
-    "check_ruleset_name": "netscaler_mem",
-    "fetch": SNMPTree(
+check_info["netscaler_mem"] = LegacyCheckDefinition(
+    detect=SNMP_DETECT,
+    check_function=check_netscaler_mem,
+    discovery_function=inventory_netscaler_mem,
+    service_name="Memory",
+    check_ruleset_name="netscaler_mem",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.41",
         oids=["2", "4"],
     ),
-}
+)

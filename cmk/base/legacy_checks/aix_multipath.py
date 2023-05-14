@@ -13,6 +13,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -58,8 +59,8 @@ def check_aix_multipath(item, params, info):
     return (state, ", ".join(message))
 
 
-check_info["aix_multipath"] = {
-    "check_function": check_aix_multipath,
-    "discovery_function": inventory_aix_multipath,
-    "service_name": "Multipath %s",
-}
+check_info["aix_multipath"] = LegacyCheckDefinition(
+    check_function=check_aix_multipath,
+    discovery_function=inventory_aix_multipath,
+    service_name="Multipath %s",
+)

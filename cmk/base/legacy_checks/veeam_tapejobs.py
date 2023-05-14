@@ -12,6 +12,7 @@ from cmk.base.check_api import (
     get_item_state,
     get_parsed_item_data,
     get_timestamp_human_readable,
+    LegacyCheckDefinition,
     set_item_state,
 )
 from cmk.base.config import check_info
@@ -77,10 +78,10 @@ def check_veeam_tapejobs(item, params, data):
     )
 
 
-check_info["veeam_tapejobs"] = {
-    "parse_function": parse_veeam_tapejobs,
-    "discovery_function": inventory_veeam_tapejobs,
-    "check_function": check_veeam_tapejobs,
-    "service_name": "VEEAM Tape Job %s",
-    "check_ruleset_name": "veeam_tapejobs",
-}
+check_info["veeam_tapejobs"] = LegacyCheckDefinition(
+    parse_function=parse_veeam_tapejobs,
+    discovery_function=inventory_veeam_tapejobs,
+    check_function=check_veeam_tapejobs,
+    service_name="VEEAM Tape Job %s",
+    check_ruleset_name="veeam_tapejobs",
+)

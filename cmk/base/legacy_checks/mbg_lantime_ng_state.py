@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mbg_lantime import (
     check_mbg_lantime_state_common,
     MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
@@ -34,15 +35,15 @@ def check_mbg_lantime_ng_state(_no_item, params, info):
     return check_mbg_lantime_state_common(states, _no_item, params, newinfo)
 
 
-check_info["mbg_lantime_ng_state"] = {
-    "detect": DETECT_MBG_LANTIME_NG,
-    "check_function": check_mbg_lantime_ng_state,
-    "discovery_function": inventory_mbg_lantime_ng_state,
-    "service_name": "LANTIME State",
-    "default_levels_variable": "mbg_lantime_state_default_levels",
-    "check_ruleset_name": "mbg_lantime_state",
-    "fetch": SNMPTree(
+check_info["mbg_lantime_ng_state"] = LegacyCheckDefinition(
+    detect=DETECT_MBG_LANTIME_NG,
+    check_function=check_mbg_lantime_ng_state,
+    discovery_function=inventory_mbg_lantime_ng_state,
+    service_name="LANTIME State",
+    default_levels_variable="mbg_lantime_state_default_levels",
+    check_ruleset_name="mbg_lantime_state",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.2",
         oids=["1", "2", "3", "4"],
     ),
-}
+)

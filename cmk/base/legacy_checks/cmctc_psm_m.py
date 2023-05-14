@@ -6,6 +6,7 @@
 from collections.abc import Mapping
 from typing import List, NamedTuple
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -76,13 +77,13 @@ def check_cmctc_psm_m(item, _no_params, section):
     )
 
 
-check_info["cmctc_psm_m"] = {
-    "detect": DETECT_CMCTC,
-    "parse_function": parse_cmctc_psm_m,
-    "check_function": check_cmctc_psm_m,
-    "discovery_function": inventory_cmctc_psm_m,
-    "service_name": "CMC %s",
-    "fetch": [
+check_info["cmctc_psm_m"] = LegacyCheckDefinition(
+    detect=DETECT_CMCTC,
+    parse_function=parse_cmctc_psm_m,
+    check_function=check_cmctc_psm_m,
+    discovery_function=inventory_cmctc_psm_m,
+    service_name="CMC %s",
+    fetch=[
         SNMPTree(
             # Base to all IO units
             base=f".1.3.6.1.4.1.2606.4.2.{idx}.5.2.1",
@@ -101,4 +102,4 @@ check_info["cmctc_psm_m"] = {
         )
         for idx in _SUBTREES
     ],
-}
+)

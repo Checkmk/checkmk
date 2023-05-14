@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.infoblox import DETECT_INFOBLOX
@@ -51,13 +52,13 @@ def check_infoblox_replication_status(item, _no_params, info):
     return None
 
 
-check_info["infoblox_replication_status"] = {
-    "detect": DETECT_INFOBLOX,
-    "discovery_function": inventory_infoblox_replication_status,
-    "check_function": check_infoblox_replication_status,
-    "service_name": "Replication %s",
-    "fetch": SNMPTree(
+check_info["infoblox_replication_status"] = LegacyCheckDefinition(
+    detect=DETECT_INFOBLOX,
+    discovery_function=inventory_infoblox_replication_status,
+    check_function=check_infoblox_replication_status,
+    service_name="Replication %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.7779.3.1.1.2.1.2.1",
         oids=["1", "2", "3", "4", "5", "6"],
     ),
-}
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 linux_nic_check = "lnx_if"
@@ -104,8 +104,8 @@ def check_netctr_combined(nic, params, info):
     return (3, "NIC is not present")
 
 
-check_info["netctr.combined"] = {
-    "check_function": check_netctr_combined,
-    "discovery_function": inventory_netctr_combined,
-    "service_name": "NIC %s counters",
-}
+check_info["netctr.combined"] = LegacyCheckDefinition(
+    check_function=check_netctr_combined,
+    discovery_function=inventory_netctr_combined,
+    service_name="NIC %s counters",
+)

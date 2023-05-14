@@ -6,7 +6,7 @@
 
 import re
 
-from cmk.base.check_api import savefloat
+from cmk.base.check_api import LegacyCheckDefinition, savefloat
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_CHASSIS
@@ -42,13 +42,13 @@ def check_dell_chassis_powersupplies(item, _no_params, info):
     return 3, "unknown power supply"
 
 
-check_info["dell_chassis_powersupplies"] = {
-    "detect": DETECT_CHASSIS,
-    "check_function": check_dell_chassis_powersupplies,
-    "discovery_function": inventory_dell_chassis_powersupplies,
-    "service_name": "Power Supply %s",
-    "fetch": SNMPTree(
+check_info["dell_chassis_powersupplies"] = LegacyCheckDefinition(
+    detect=DETECT_CHASSIS,
+    check_function=check_dell_chassis_powersupplies,
+    discovery_function=inventory_dell_chassis_powersupplies,
+    service_name="Power Supply %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2.4.2.1",
         oids=[OIDEnd(), "5", "6", "7"],
     ),
-}
+)

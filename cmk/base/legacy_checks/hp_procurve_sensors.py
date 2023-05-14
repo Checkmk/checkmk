@@ -45,7 +45,7 @@
 # GENERAL MAPS:
 
 
-from cmk.base.check_api import any_of, contains
+from cmk.base.check_api import any_of, contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -94,16 +94,16 @@ def check_hp_procurve_sensors(item, _not_used, info):
     return (3, "item not found in snmp data")
 
 
-check_info["hp_procurve_sensors"] = {
-    "detect": any_of(
+check_info["hp_procurve_sensors"] = LegacyCheckDefinition(
+    detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),
     ),
-    "check_function": check_hp_procurve_sensors,
-    "discovery_function": inventory_hp_procurve_sensors,
-    "service_name": "Sensor %s",
-    "fetch": SNMPTree(
+    check_function=check_hp_procurve_sensors,
+    discovery_function=inventory_hp_procurve_sensors,
+    service_name="Sensor %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.14.11.1.2.6.1",
         oids=["1", "2", "4", "7"],
     ),
-}
+)

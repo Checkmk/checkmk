@@ -9,6 +9,7 @@
 # Status can be "local", "foreign", "all" or "none"
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -42,10 +43,10 @@ def check_heartbeat_rscstatus(_no_item, params, heartbeat_rsc_status):
         yield 2, "Current state: %s (Expected: %s)" % (heartbeat_rsc_status, expected_state)
 
 
-check_info["heartbeat_rscstatus"] = {
-    "parse_function": parse_heartbeat_rscstatus,
-    "check_function": check_heartbeat_rscstatus,
-    "discovery_function": inventory_heartbeat_rscstatus,
-    "service_name": "Heartbeat Ressource Status",
-    "check_ruleset_name": "heartbeat_rscstatus",
-}
+check_info["heartbeat_rscstatus"] = LegacyCheckDefinition(
+    parse_function=parse_heartbeat_rscstatus,
+    check_function=check_heartbeat_rscstatus,
+    discovery_function=inventory_heartbeat_rscstatus,
+    service_name="Heartbeat Ressource Status",
+    check_ruleset_name="heartbeat_rscstatus",
+)

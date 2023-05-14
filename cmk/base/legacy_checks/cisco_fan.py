@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.cisco import DETECT_CISCO
@@ -36,13 +37,13 @@ def check_cisco_fan(item, params, info):
             yield state, "Status: %s" % state_readable
 
 
-check_info["cisco_fan"] = {
-    "detect": DETECT_CISCO,
-    "check_function": check_cisco_fan,
-    "discovery_function": inventory_cisco_fan,
-    "service_name": "FAN %s",
-    "fetch": SNMPTree(
+check_info["cisco_fan"] = LegacyCheckDefinition(
+    detect=DETECT_CISCO,
+    check_function=check_cisco_fan,
+    discovery_function=inventory_cisco_fan,
+    service_name="FAN %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.13.1.4.1",
         oids=["2", "3", OIDEnd()],
     ),
-}
+)

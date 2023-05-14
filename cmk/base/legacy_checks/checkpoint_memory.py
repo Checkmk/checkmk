@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -43,15 +44,15 @@ def check_checkpoint_memory(item, params, info):
     )
 
 
-check_info["checkpoint_memory"] = {
-    "detect": DETECT,
-    "discovery_function": inventory_checkpoint_memory,
-    "check_function": check_checkpoint_memory,
-    "service_name": "Memory",
-    "fetch": SNMPTree(
+check_info["checkpoint_memory"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=inventory_checkpoint_memory,
+    check_function=check_checkpoint_memory,
+    service_name="Memory",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.4",
         oids=["3", "4"],
     ),
-    "default_levels_variable": "checkpoint_memory_default_levels",
-    "check_ruleset_name": "memory_simple",
-}
+    default_levels_variable="checkpoint_memory_default_levels",
+    check_ruleset_name="memory_simple",
+)

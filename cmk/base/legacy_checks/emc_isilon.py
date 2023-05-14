@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_ISILON
 
-check_info["emc_isilon"] = {
-    "detect": DETECT_ISILON,
-    "fetch": [
+check_info["emc_isilon"] = LegacyCheckDefinition(
+    detect=DETECT_ISILON,
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.12124.1.1",
             oids=["1", "2", "5", "6"],
@@ -20,7 +21,7 @@ check_info["emc_isilon"] = {
             oids=["1", "2"],
         ),
     ],
-}
+)
 
 
 #   .--ClusterHealth------------------------------------------------------.
@@ -43,11 +44,11 @@ def check_emc_isilon_clusterhealth(item, _no_params, info):
     return rc, "ClusterHealth reports status %s" % statusmap[status]
 
 
-check_info["emc_isilon.clusterhealth"] = {
-    "check_function": check_emc_isilon_clusterhealth,
-    "discovery_function": inventory_emc_isilon_clusterhealth,
-    "service_name": "Cluster Health",
-}
+check_info["emc_isilon.clusterhealth"] = LegacyCheckDefinition(
+    check_function=check_emc_isilon_clusterhealth,
+    discovery_function=inventory_emc_isilon_clusterhealth,
+    service_name="Cluster Health",
+)
 
 # .
 #   .--NodeHealth------------------------------------------------------.
@@ -71,11 +72,11 @@ def check_emc_isilon_nodehealth(item, _no_params, info):
     return rc, "nodeHealth for %s reports status %s" % (nodename, statusmap[status])
 
 
-check_info["emc_isilon.nodehealth"] = {
-    "check_function": check_emc_isilon_nodehealth,
-    "discovery_function": inventory_emc_isilon_nodehealth,
-    "service_name": "Node Health",
-}
+check_info["emc_isilon.nodehealth"] = LegacyCheckDefinition(
+    check_function=check_emc_isilon_nodehealth,
+    discovery_function=inventory_emc_isilon_nodehealth,
+    service_name="Node Health",
+)
 
 # .
 #   .--Nodes------------------------------------------------------.
@@ -94,11 +95,11 @@ def check_emc_isilon_nodes(item, _no_params, info):
     return rc, "Configured Nodes: %s / Online Nodes: %s" % (configured_nodes, online_nodes)
 
 
-check_info["emc_isilon.nodes"] = {
-    "check_function": check_emc_isilon_nodes,
-    "discovery_function": inventory_emc_isilon_nodes,
-    "service_name": "Nodes",
-}
+check_info["emc_isilon.nodes"] = LegacyCheckDefinition(
+    check_function=check_emc_isilon_nodes,
+    discovery_function=inventory_emc_isilon_nodes,
+    service_name="Nodes",
+)
 
 # .
 #   .--Cluster- and Node Name-------------------------------------------.
@@ -112,10 +113,10 @@ def check_emc_isilon_names(item, _no_params, info):
     return 0, "Cluster Name is %s, Node Name is %s" % (info[0][0][0], info[1][0][0])
 
 
-check_info["emc_isilon.names"] = {
-    "check_function": check_emc_isilon_names,
-    "discovery_function": inventory_emc_isilon_names,
-    "service_name": "Isilon Info",
-}
+check_info["emc_isilon.names"] = LegacyCheckDefinition(
+    check_function=check_emc_isilon_names,
+    discovery_function=inventory_emc_isilon_names,
+    service_name="Isilon Info",
+)
 
 # .

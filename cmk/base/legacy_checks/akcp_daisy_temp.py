@@ -6,7 +6,7 @@
 
 from itertools import chain
 
-from cmk.base.check_api import all_of, any_of, equals, exists, not_exists
+from cmk.base.check_api import all_of, any_of, equals, exists, LegacyCheckDefinition, not_exists
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -30,8 +30,8 @@ def check_akcp_daisy_temp(item, params, info):
     return None
 
 
-check_info["akcp_daisy_temp"] = {
-    "detect": all_of(
+check_info["akcp_daisy_temp"] = LegacyCheckDefinition(
+    detect=all_of(
         any_of(
             equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1.2.2.1.1"),
             equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1"),
@@ -39,10 +39,10 @@ check_info["akcp_daisy_temp"] = {
         not_exists(".1.3.6.1.4.1.3854.2.*"),
         exists(".1.3.6.1.4.1.3854.1.2.2.1.19.*"),
     ),
-    "check_function": check_akcp_daisy_temp,
-    "discovery_function": inventory_akcp_daisy_temp,
-    "service_name": "Temperature %s",
-    "fetch": [
+    check_function=check_akcp_daisy_temp,
+    discovery_function=inventory_akcp_daisy_temp,
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3854.1.2.2.1.19.33.1.2.1",
             oids=[OIDEnd(), "1", "2", "14"],
@@ -76,6 +76,6 @@ check_info["akcp_daisy_temp"] = {
             oids=[OIDEnd(), "1", "2", "14"],
         ),
     ],
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "akcp_daisy_temp_defaultlevels",
-}
+    check_ruleset_name="temperature",
+    default_levels_variable="akcp_daisy_temp_defaultlevels",
+)

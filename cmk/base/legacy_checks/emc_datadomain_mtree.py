@@ -4,7 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_bytes_human_readable, get_parsed_item_data
+from cmk.base.check_api import (
+    discover,
+    get_bytes_human_readable,
+    get_parsed_item_data,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
@@ -49,16 +54,16 @@ def check_emc_datadomain_mtree(_item, params, mtree_data):
     )
 
 
-check_info["emc_datadomain_mtree"] = {
-    "detect": DETECT_DATADOMAIN,
-    "parse_function": parse_emc_datadomain_mtree,
-    "check_function": check_emc_datadomain_mtree,
-    "discovery_function": discover(),
-    "service_name": "MTree %s",
-    "fetch": SNMPTree(
+check_info["emc_datadomain_mtree"] = LegacyCheckDefinition(
+    detect=DETECT_DATADOMAIN,
+    parse_function=parse_emc_datadomain_mtree,
+    check_function=check_emc_datadomain_mtree,
+    discovery_function=discover(),
+    service_name="MTree %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.15.2.1.1",
         oids=["2", "3", "4"],
     ),
-    "check_ruleset_name": "emc_datadomain_mtree",
-    "default_levels_variable": "emc_datadomain_mtree_default_levels",
-}
+    check_ruleset_name="emc_datadomain_mtree",
+    default_levels_variable="emc_datadomain_mtree_default_levels",
+)

@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="arg-type"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_total,
     parse_wmi_table,
@@ -24,9 +25,9 @@ def check_msexch_autodiscovery(_no_item, params, parsed):
     )
 
 
-check_info["msexch_autodiscovery"] = {
-    "discovery_function": discover_msexch_autodiscovery,
-    "check_function": check_msexch_autodiscovery,
-    "parse_function": parse_wmi_table,
-    "service_name": "Exchange Autodiscovery",
-}
+check_info["msexch_autodiscovery"] = LegacyCheckDefinition(
+    discovery_function=discover_msexch_autodiscovery,
+    check_function=check_msexch_autodiscovery,
+    parse_function=parse_wmi_table,
+    service_name="Exchange Autodiscovery",
+)

@@ -21,7 +21,7 @@
 
 # mypy: disable-error-code="var-annotated,index"
 
-from cmk.base.check_api import discover_single, startswith
+from cmk.base.check_api import discover_single, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -96,13 +96,13 @@ def check_silverpeak(_item, _params, parsed):
         )
 
 
-check_info["silverpeak_VX6000"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.23867"),
-    "parse_function": parse_silverpeak,
-    "discovery_function": discover_single,
-    "check_function": check_silverpeak,
-    "service_name": "Alarms",
-    "fetch": [
+check_info["silverpeak_VX6000"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.23867"),
+    parse_function=parse_silverpeak,
+    discovery_function=discover_single,
+    check_function=check_silverpeak,
+    service_name="Alarms",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.23867.3.1.1.1",
             oids=["4"],
@@ -112,4 +112,4 @@ check_info["silverpeak_VX6000"] = {
             oids=["3", "5", "6"],
         ),
     ],
-}
+)

@@ -6,7 +6,7 @@
 
 import json
 
-from cmk.base.check_api import discover_single
+from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
 
@@ -35,9 +35,9 @@ def check_cadvisor_df(item, _params, parsed):
     )
 
 
-check_info["cadvisor_df"] = {
-    "parse_function": parse_cadvisor_df,
-    "discovery_function": discover_single,
-    "check_function": check_cadvisor_df,
-    "service_name": "Filesystem",
-}
+check_info["cadvisor_df"] = LegacyCheckDefinition(
+    parse_function=parse_cadvisor_df,
+    discovery_function=discover_single,
+    check_function=check_cadvisor_df,
+    service_name="Filesystem",
+)

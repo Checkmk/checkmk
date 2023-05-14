@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ispro import ispro_sensors_alarm_states
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -39,14 +40,14 @@ def check_ispro_sensors_temp(item, params, info):
     return None
 
 
-check_info["ispro_sensors_temp"] = {
-    "detect": DETECT_ISPRO_SENSORS,
-    "discovery_function": inventory_ispro_sensors_temp,
-    "check_function": check_ispro_sensors_temp,
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["ispro_sensors_temp"] = LegacyCheckDefinition(
+    detect=DETECT_ISPRO_SENSORS,
+    discovery_function=inventory_ispro_sensors_temp,
+    check_function=check_ispro_sensors_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.19011.1.3.2.1.3",
         oids=["1.1.1.2", "1.1.1.3", "1.1.1.4", "2.2.1.3", "2.2.1.4", "2.2.1.5", "2.2.1.6"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

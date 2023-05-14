@@ -13,6 +13,7 @@
 # [[['Rack PDU Card', '4.840.0', '535055G103T2010JUN240295']], [['1', '1', '.1.3.6.1.4.1.476.1.42.4.8.2.2', 'Emerson Network Power', '1']]]
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.lgp import DETECT_LGP
@@ -47,12 +48,12 @@ def check_lgp_info(item, params, info):
     return None
 
 
-check_info["lgp_info"] = {
-    "detect": DETECT_LGP,
-    "check_function": check_lgp_info,
-    "discovery_function": inventory_lgp_info,
-    "service_name": "Liebert Info",
-    "fetch": [
+check_info["lgp_info"] = LegacyCheckDefinition(
+    detect=DETECT_LGP,
+    check_function=check_lgp_info,
+    discovery_function=inventory_lgp_info,
+    service_name="Liebert Info",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.476.1.42.2.1",
             oids=["2.0", "3.0", "4.0"],
@@ -62,4 +63,4 @@ check_info["lgp_info"] = {
             oids=["2", "3", "6"],
         ),
     ],
-}
+)

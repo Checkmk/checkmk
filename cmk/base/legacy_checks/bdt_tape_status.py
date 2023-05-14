@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -37,13 +37,13 @@ def check_bdt_tape_status(_no_item, _no_params, info):
     return state, status
 
 
-check_info["bdt_tape_status"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20884.10893.2.101"),
-    "discovery_function": inventory_bdt_tape_status,
-    "check_function": check_bdt_tape_status,
-    "service_name": "Tape Library Status",
-    "fetch": SNMPTree(
+check_info["bdt_tape_status"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20884.10893.2.101"),
+    discovery_function=inventory_bdt_tape_status,
+    check_function=check_bdt_tape_status,
+    service_name="Tape Library Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.20884.10893.2.101.2",
         oids=["1"],
     ),
-}
+)

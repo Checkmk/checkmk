@@ -6,7 +6,12 @@
 
 import re
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, MKCounterWrapped
+from cmk.base.check_api import (
+    check_levels,
+    get_percent_human_readable,
+    LegacyCheckDefinition,
+    MKCounterWrapped,
+)
 from cmk.base.check_legacy_includes.aws import (
     aws_get_counts_rate_human_readable,
     inventory_aws_generic_single,
@@ -66,12 +71,12 @@ def check_aws_wafv2_web_acl(item, params, parsed):
         )
 
 
-check_info["aws_wafv2_web_acl"] = {
-    "parse_function": parse_aws_wafv2_web_acl,
-    "discovery_function": lambda p: inventory_aws_generic_single(
+check_info["aws_wafv2_web_acl"] = LegacyCheckDefinition(
+    parse_function=parse_aws_wafv2_web_acl,
+    discovery_function=lambda p: inventory_aws_generic_single(
         p, ["AllowedRequests", "BlockedRequests"], requirement=any
     ),
-    "check_function": check_aws_wafv2_web_acl,
-    "service_name": "AWS/WAFV2 Web ACL Requests",
-    "check_ruleset_name": "aws_wafv2_web_acl",
-}
+    check_function=check_aws_wafv2_web_acl,
+    service_name="AWS/WAFV2 Web ACL Requests",
+    check_ruleset_name="aws_wafv2_web_acl",
+)

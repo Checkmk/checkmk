@@ -18,6 +18,7 @@
 
 # mypy: disable-error-code="var-annotated,assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -62,11 +63,11 @@ def check_citrix_state_controller(_no_item, _no_params, parsed):
     return 0, "Machine powered off" if parsed["controller"] == "" else parsed["controller"]
 
 
-check_info["citrix_state.controller"] = {
-    "discovery_function": inventory_citrix_state_controller,
-    "check_function": check_citrix_state_controller,
-    "service_name": "Citrix Controller",
-}
+check_info["citrix_state.controller"] = LegacyCheckDefinition(
+    discovery_function=inventory_citrix_state_controller,
+    check_function=check_citrix_state_controller,
+    service_name="Citrix Controller",
+)
 
 # .
 #   .--Hosting Server------------------------------------------------------.
@@ -89,11 +90,11 @@ def check_citrix_state_hosting_server(_no_item, _no_params, parsed):
     return 0, parsed["hosting_server"]
 
 
-check_info["citrix_state.hosting_server"] = {
-    "discovery_function": inventory_citrix_state_hosting_server,
-    "check_function": check_citrix_state_hosting_server,
-    "service_name": "Citrix Hosting Server",
-}
+check_info["citrix_state.hosting_server"] = LegacyCheckDefinition(
+    discovery_function=inventory_citrix_state_hosting_server,
+    check_function=check_citrix_state_hosting_server,
+    service_name="Citrix Hosting Server",
+)
 
 # .
 #   .--State---------------------------------------------------------------.
@@ -155,10 +156,10 @@ def check_citrix_state(_no_item, params, parsed):
             yield map_states[state_key][state], "%s: %s" % (state_type, state)
 
 
-check_info["citrix_state"] = {
-    "parse_function": parse_citrix_state,
-    "discovery_function": inventory_citrix_state,
-    "check_function": check_citrix_state,
-    "service_name": "Citrix Instance State",
-    "check_ruleset_name": "citrix_state",
-}
+check_info["citrix_state"] = LegacyCheckDefinition(
+    parse_function=parse_citrix_state,
+    discovery_function=inventory_citrix_state,
+    check_function=check_citrix_state,
+    service_name="Citrix Instance State",
+    check_ruleset_name="citrix_state",
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -31,14 +31,14 @@ def check_hp_procurve_temp(item, params, info):
     return None
 
 
-check_info["hp_procurve_temp"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11.2.3.7.11"),
-    "discovery_function": inventory_hp_procurve_temp,
-    "check_function": check_hp_procurve_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "fetch": SNMPTree(
+check_info["hp_procurve_temp"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11.2.3.7.11"),
+    discovery_function=inventory_hp_procurve_temp,
+    check_function=check_hp_procurve_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.14.11.1.2.8.1.1",
         oids=["2", "3"],
     ),
-}
+)

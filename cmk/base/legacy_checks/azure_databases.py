@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_bytes_human_readable
+from cmk.base.check_api import discover, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
     discover_azure_by_metrics,
@@ -38,13 +38,13 @@ def check_azure_databases_storage(_item, params, resource):
         yield state, text, perf
 
 
-check_info["azure_databases.storage"] = {
-    "discovery_function": discover_azure_by_metrics("average_storage_percent"),
-    "check_function": check_azure_databases_storage,
-    "service_name": "DB %s Storage",
-    "default_levels_variable": "azure_databases_default_levels",
-    "check_ruleset_name": "azure_databases",
-}
+check_info["azure_databases.storage"] = LegacyCheckDefinition(
+    discovery_function=discover_azure_by_metrics("average_storage_percent"),
+    check_function=check_azure_databases_storage,
+    service_name="DB %s Storage",
+    default_levels_variable="azure_databases_default_levels",
+    check_ruleset_name="azure_databases",
+)
 
 
 @get_data_or_go_stale
@@ -56,13 +56,13 @@ def check_azure_databases_deadlock(_item, params, resource):
         yield mcheck
 
 
-check_info["azure_databases.deadlock"] = {
-    "discovery_function": discover_azure_by_metrics("average_deadlock"),
-    "check_function": check_azure_databases_deadlock,
-    "service_name": "DB %s Deadlocks",
-    "default_levels_variable": "azure_databases_default_levels",
-    "check_ruleset_name": "azure_databases",
-}
+check_info["azure_databases.deadlock"] = LegacyCheckDefinition(
+    discovery_function=discover_azure_by_metrics("average_deadlock"),
+    check_function=check_azure_databases_deadlock,
+    service_name="DB %s Deadlocks",
+    default_levels_variable="azure_databases_default_levels",
+    check_ruleset_name="azure_databases",
+)
 
 
 @get_data_or_go_stale
@@ -78,13 +78,13 @@ def check_azure_databases_cpu(_item, params, resource):
             yield y
 
 
-check_info["azure_databases.cpu"] = {
-    "discovery_function": discover_azure_by_metrics("average_cpu_percent"),
-    "check_function": check_azure_databases_cpu,
-    "service_name": "DB %s CPU",
-    "default_levels_variable": "azure_databases_default_levels",
-    "check_ruleset_name": "azure_databases",
-}
+check_info["azure_databases.cpu"] = LegacyCheckDefinition(
+    discovery_function=discover_azure_by_metrics("average_cpu_percent"),
+    check_function=check_azure_databases_cpu,
+    service_name="DB %s CPU",
+    default_levels_variable="azure_databases_default_levels",
+    check_ruleset_name="azure_databases",
+)
 
 
 @get_data_or_go_stale
@@ -102,13 +102,13 @@ def check_azure_databases_dtu(_item, params, resource):
         yield mcheck
 
 
-check_info["azure_databases.dtu"] = {
-    "discovery_function": discover_azure_by_metrics("average_dtu_consumption_percent"),
-    "check_function": check_azure_databases_dtu,
-    "service_name": "DB %s DTU",
-    "default_levels_variable": "azure_databases_default_levels",
-    "check_ruleset_name": "azure_databases",
-}
+check_info["azure_databases.dtu"] = LegacyCheckDefinition(
+    discovery_function=discover_azure_by_metrics("average_dtu_consumption_percent"),
+    check_function=check_azure_databases_dtu,
+    service_name="DB %s DTU",
+    default_levels_variable="azure_databases_default_levels",
+    check_ruleset_name="azure_databases",
+)
 
 _AZURE_CONNECTIONS_METRICS = (
     # metric key                      cmk key,                   display                       use_rate
@@ -126,15 +126,15 @@ def check_azure_databases_connections(_item, params, resource):
             yield mcheck
 
 
-check_info["azure_databases.connections"] = {
-    "discovery_function": discover_azure_by_metrics(
+check_info["azure_databases.connections"] = LegacyCheckDefinition(
+    discovery_function=discover_azure_by_metrics(
         "average_connection_successful", "average_connection_failed"
     ),
-    "check_function": check_azure_databases_connections,
-    "service_name": "DB %s Connections",
-    "default_levels_variable": "azure_databases_default_levels",
-    "check_ruleset_name": "azure_databases",
-}
+    check_function=check_azure_databases_connections,
+    service_name="DB %s Connections",
+    default_levels_variable="azure_databases_default_levels",
+    check_ruleset_name="azure_databases",
+)
 
 
 @get_data_or_go_stale
@@ -143,11 +143,11 @@ def check_azure_databases(_item, _no_params, resource):
         yield 0, "%s: %s" % (k, v)
 
 
-check_info["azure_databases"] = {
-    "parse_function": parse_resources,
-    "discovery_function": discover(),
-    "check_function": check_azure_databases,
-    "service_name": "DB %s",
-    "default_levels_variable": "azure_databases_default_levels",
-    "check_ruleset_name": "azure_databases",
-}
+check_info["azure_databases"] = LegacyCheckDefinition(
+    parse_function=parse_resources,
+    discovery_function=discover(),
+    check_function=check_azure_databases,
+    service_name="DB %s",
+    default_levels_variable="azure_databases_default_levels",
+    check_ruleset_name="azure_databases",
+)

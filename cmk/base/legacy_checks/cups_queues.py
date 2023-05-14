@@ -30,6 +30,7 @@
 
 import time
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["cups_queues_default_levels"] = {
@@ -123,11 +124,11 @@ def check_cups_queues(item, params, parsed):
         yield 3, "Queue not found"
 
 
-check_info["cups_queues"] = {
-    "parse_function": parse_cups_queues,
-    "discovery_function": inventory_cups_queues,
-    "check_function": check_cups_queues,
-    "service_name": "CUPS Queue %s",
-    "default_levels_variable": "cups_queues_default_levels",
-    "check_ruleset_name": "cups_queues",
-}
+check_info["cups_queues"] = LegacyCheckDefinition(
+    parse_function=parse_cups_queues,
+    discovery_function=inventory_cups_queues,
+    check_function=check_cups_queues,
+    service_name="CUPS Queue %s",
+    default_levels_variable="cups_queues_default_levels",
+    check_ruleset_name="cups_queues",
+)

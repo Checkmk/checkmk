@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover_single
+from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import parse_aws
 from cmk.base.config import check_info
 
@@ -31,9 +31,9 @@ def check_aws_ec2_summary(item, params, parsed):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-check_info["aws_ec2_summary"] = {
-    "parse_function": parse_aws,
-    "discovery_function": discover_single,
-    "check_function": check_aws_ec2_summary,
-    "service_name": "AWS/EC2 Summary",
-}
+check_info["aws_ec2_summary"] = LegacyCheckDefinition(
+    parse_function=parse_aws,
+    discovery_function=discover_single,
+    check_function=check_aws_ec2_summary,
+    service_name="AWS/EC2 Summary",
+)

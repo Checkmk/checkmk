@@ -9,7 +9,12 @@
 import time
 from calendar import timegm
 
-from cmk.base.check_api import check_levels, get_age_human_readable, get_parsed_item_data
+from cmk.base.check_api import (
+    check_levels,
+    get_age_human_readable,
+    get_parsed_item_data,
+    LegacyCheckDefinition,
+)
 from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR, json
 from cmk.base.config import check_info
 
@@ -72,12 +77,12 @@ def check_azure_users(item, _no_params, data):
         )
 
 
-check_info["azure_ad"] = {
-    "parse_function": parse_azure_ad,
-    "discovery_function": discover_ad_users,
-    "check_function": check_azure_users,
-    "service_name": "AD Users",
-}
+check_info["azure_ad"] = LegacyCheckDefinition(
+    parse_function=parse_azure_ad,
+    discovery_function=discover_ad_users,
+    check_function=check_azure_users,
+    service_name="AD Users",
+)
 
 # .
 #   .--sync----------------------------------------------------------------.
@@ -126,10 +131,10 @@ def check_azure_sync(item, params, data):
     )
 
 
-check_info["azure_ad.sync"] = {
-    "parse_function": parse_azure_ad,
-    "discovery_function": discover_sync,
-    "check_function": check_azure_sync,
-    "service_name": "AD Sync %s",
-    "check_ruleset_name": "azure_ad",
-}
+check_info["azure_ad.sync"] = LegacyCheckDefinition(
+    parse_function=parse_azure_ad,
+    discovery_function=discover_sync,
+    check_function=check_azure_sync,
+    service_name="AD Sync %s",
+    check_ruleset_name="azure_ad",
+)

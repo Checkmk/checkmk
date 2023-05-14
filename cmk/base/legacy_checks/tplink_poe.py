@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.poe import check_poe_data, PoeStatus, PoeValues
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -86,13 +86,13 @@ def check_tplink_poe(item, params, poe_data):
     return check_poe_data(params, poe_data)
 
 
-check_info["tplink_poe"] = {
-    "detect": DETECT_TPLINK,
-    "parse_function": parse_tplink_poe,
-    "check_function": check_tplink_poe,
-    "discovery_function": inventory_tplink_poe,
-    "service_name": "POE%s consumption",
-    "fetch": [
+check_info["tplink_poe"] = LegacyCheckDefinition(
+    detect=DETECT_TPLINK,
+    parse_function=parse_tplink_poe,
+    check_function=check_tplink_poe,
+    discovery_function=inventory_tplink_poe,
+    service_name="POE%s consumption",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
             oids=["1"],
@@ -102,4 +102,4 @@ check_info["tplink_poe"] = {
             oids=["1", "2", "4", "7", "11"],
         ),
     ],
-}
+)

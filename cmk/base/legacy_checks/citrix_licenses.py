@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.license import license_check_levels
 from cmk.base.config import check_info
 
@@ -48,10 +48,10 @@ def check_citrix_licenses(item, params, data):
     return license_check_levels(have, used, params)
 
 
-check_info["citrix_licenses"] = {
-    "parse_function": parse_citrix_licenses,
-    "check_function": check_citrix_licenses,
-    "discovery_function": inventory_citrix_licenses,
-    "service_name": "Citrix Licenses %s",
-    "check_ruleset_name": "citrix_licenses",
-}
+check_info["citrix_licenses"] = LegacyCheckDefinition(
+    parse_function=parse_citrix_licenses,
+    check_function=check_citrix_licenses,
+    discovery_function=inventory_citrix_licenses,
+    service_name="Citrix Licenses %s",
+    check_ruleset_name="citrix_licenses",
+)

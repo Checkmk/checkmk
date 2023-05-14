@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.stormshield import DETECT_STORMSHIELD
@@ -57,13 +58,13 @@ def check_stormshield_disk(item, params, parsed):
             yield status, infotext
 
 
-check_info["stormshield_disk"] = {
-    "detect": DETECT_STORMSHIELD,
-    "parse_function": parse_stormshield_disk,
-    "discovery_function": inventory_stormshield_disk,
-    "check_function": check_stormshield_disk,
-    "service_name": "Disk %s",
-    "fetch": [
+check_info["stormshield_disk"] = LegacyCheckDefinition(
+    detect=DETECT_STORMSHIELD,
+    parse_function=parse_stormshield_disk,
+    discovery_function=inventory_stormshield_disk,
+    check_function=check_stormshield_disk,
+    service_name="Disk %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.11256.1.11.11.1",
             oids=[OIDEnd(), "1", "2", "3", "4", "5", "6"],
@@ -73,4 +74,4 @@ check_info["stormshield_disk"] = {
             oids=[OIDEnd(), "1", "2", "3", "4", "5", "6"],
         ),
     ],
-}
+)

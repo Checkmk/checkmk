@@ -21,7 +21,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -55,9 +55,9 @@ def check_postgres_instances(item, _no_params, parsed):
     )
 
 
-check_info["postgres_instances"] = {
-    "parse_function": parse_postgres_instances,
-    "discovery_function": discover(),
-    "check_function": check_postgres_instances,
-    "service_name": "PostgreSQL Instance %s",
-}
+check_info["postgres_instances"] = LegacyCheckDefinition(
+    parse_function=parse_postgres_instances,
+    discovery_function=discover(),
+    check_function=check_postgres_instances,
+    service_name="PostgreSQL Instance %s",
+)

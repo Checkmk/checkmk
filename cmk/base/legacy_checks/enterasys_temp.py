@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -31,15 +32,15 @@ def check_enterasys_temp(item, params, info):
     return check_temperature(temp, params, "enterasys_temp_%s" % item, dev_unit="f")
 
 
-check_info["enterasys_temp"] = {
-    "detect": DETECT_ENTERASYS,
-    "check_function": check_enterasys_temp,
-    "discovery_function": inventory_enterasys_temp,
-    "default_levels_variable": "enterasys_temp_default_levels",
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["enterasys_temp"] = LegacyCheckDefinition(
+    detect=DETECT_ENTERASYS,
+    check_function=check_enterasys_temp,
+    discovery_function=inventory_enterasys_temp,
+    default_levels_variable="enterasys_temp_default_levels",
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.52.4.1.1.8.1",
         oids=["1"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

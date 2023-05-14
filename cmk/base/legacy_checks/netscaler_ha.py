@@ -10,6 +10,7 @@
 # .1.3.6.1.4.1.5951.4.1.1.23.24.0  3
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
@@ -83,13 +84,13 @@ def check_netscaler_ha(_no_item, _no_params, info):
     return None
 
 
-check_info["netscaler_ha"] = {
-    "detect": SNMP_DETECT,
-    "check_function": check_netscaler_ha,
-    "discovery_function": inventory_netscaler_ha,
-    "service_name": "HA Node Status",
-    "fetch": SNMPTree(
+check_info["netscaler_ha"] = LegacyCheckDefinition(
+    detect=SNMP_DETECT,
+    check_function=check_netscaler_ha,
+    discovery_function=inventory_netscaler_ha,
+    service_name="HA Node Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.23",
         oids=["3", "23", "24"],
     ),
-}
+)

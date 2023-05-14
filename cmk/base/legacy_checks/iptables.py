@@ -37,7 +37,12 @@
 import difflib
 import hashlib
 
-from cmk.base.check_api import get_item_state, MKCounterWrapped, set_item_state
+from cmk.base.check_api import (
+    get_item_state,
+    LegacyCheckDefinition,
+    MKCounterWrapped,
+    set_item_state,
+)
 from cmk.base.config import check_info
 
 
@@ -83,9 +88,9 @@ def check_iptables(_no_item, params, parsed):
     return 2, "\r\n".join(["changes in filters table detected", diff_output])
 
 
-check_info["iptables"] = {
-    "parse_function": parse_iptables,
-    "check_function": check_iptables,
-    "discovery_function": inventory_iptables,
-    "service_name": "Iptables",
-}
+check_info["iptables"] = LegacyCheckDefinition(
+    parse_function=parse_iptables,
+    check_function=check_iptables,
+    discovery_function=inventory_iptables,
+    service_name="Iptables",
+)

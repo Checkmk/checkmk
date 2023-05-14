@@ -16,6 +16,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -55,8 +56,8 @@ def check_esx_vsphere_vm_mounted_devices(item, params, section):
     return 0, "HA functionality guaranteed"
 
 
-check_info["esx_vsphere_vm.mounted_devices"] = {
-    "discovery_function": inventory_esx_vsphere_vm_mounted_devices,
-    "check_function": check_esx_vsphere_vm_mounted_devices,
-    "service_name": "ESX Mounted Devices",
-}
+check_info["esx_vsphere_vm.mounted_devices"] = LegacyCheckDefinition(
+    discovery_function=inventory_esx_vsphere_vm_mounted_devices,
+    check_function=check_esx_vsphere_vm_mounted_devices,
+    service_name="ESX Mounted Devices",
+)

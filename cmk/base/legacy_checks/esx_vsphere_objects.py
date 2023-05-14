@@ -23,6 +23,7 @@
 
 import collections
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 vsphere_object_names = {
@@ -100,14 +101,14 @@ def check_esx_vsphere_objects(item, params, parsed):
             yield 0, "defined on [%s]" % obj.hostsystem
 
 
-check_info["esx_vsphere_objects"] = {
-    "parse_function": parse_esx_vsphere_objects,
-    "discovery_function": inventory_esx_vsphere_objects,
-    "check_function": check_esx_vsphere_objects,
-    "service_name": "%s",
-    "check_ruleset_name": "esx_vsphere_objects",
-    "default_levels_variable": "esx_vsphere_objects_default_levels",
-}
+check_info["esx_vsphere_objects"] = LegacyCheckDefinition(
+    parse_function=parse_esx_vsphere_objects,
+    discovery_function=inventory_esx_vsphere_objects,
+    check_function=check_esx_vsphere_objects,
+    service_name="%s",
+    check_ruleset_name="esx_vsphere_objects",
+    default_levels_variable="esx_vsphere_objects_default_levels",
+)
 
 
 def inventory_esx_vsphere_objects_count(parsed):
@@ -139,9 +140,9 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
             )
 
 
-check_info["esx_vsphere_objects.count"] = {
-    "discovery_function": inventory_esx_vsphere_objects_count,
-    "check_function": check_esx_vsphere_objects_count,
-    "service_name": "Object count",
-    "check_ruleset_name": "esx_vsphere_objects_count",
-}
+check_info["esx_vsphere_objects.count"] = LegacyCheckDefinition(
+    discovery_function=inventory_esx_vsphere_objects_count,
+    check_function=check_esx_vsphere_objects_count,
+    service_name="Object count",
+    check_ruleset_name="esx_vsphere_objects_count",
+)

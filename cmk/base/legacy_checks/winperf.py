@@ -6,7 +6,13 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, get_rate, MKCounterWrapped
+from cmk.base.check_api import (
+    check_levels,
+    get_percent_human_readable,
+    get_rate,
+    LegacyCheckDefinition,
+    MKCounterWrapped,
+)
 from cmk.base.config import check_info
 
 
@@ -108,14 +114,14 @@ def check_win_diskstat(item, params, info):
     )
 
 
-check_info["winperf.cpuusage"] = {
-    "check_function": check_win_cpuusage,
-    "discovery_function": inventory_win_cpuusage,
-    "service_name": "CPU Usage",
-}
+check_info["winperf.cpuusage"] = LegacyCheckDefinition(
+    check_function=check_win_cpuusage,
+    discovery_function=inventory_win_cpuusage,
+    service_name="CPU Usage",
+)
 
-check_info["winperf.diskstat"] = {
-    "check_function": check_win_diskstat,
-    "discovery_function": inventory_win_diskstat,
-    "service_name": "Disk IO",
-}
+check_info["winperf.diskstat"] = LegacyCheckDefinition(
+    check_function=check_win_diskstat,
+    discovery_function=inventory_win_diskstat,
+    service_name="Disk IO",
+)

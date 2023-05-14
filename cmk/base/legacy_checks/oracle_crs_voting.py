@@ -9,7 +9,7 @@
 # 1. ONLINE   0a6884c063904f50bf7ef4516b728a2d (/dev/oracleasm/disks/DATA1) [DATA1]
 
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info
 
 
@@ -45,8 +45,8 @@ def check_oracle_crs_voting(_no_item, _no_params, info):
     return state, infotext
 
 
-check_info["oracle_crs_voting"] = {
-    "check_function": check_oracle_crs_voting,
-    "discovery_function": inventory_oracle_crs_voting,
-    "service_name": "ORA-GI Voting",
-}
+check_info["oracle_crs_voting"] = LegacyCheckDefinition(
+    check_function=check_oracle_crs_voting,
+    discovery_function=inventory_oracle_crs_voting,
+    service_name="ORA-GI Voting",
+)

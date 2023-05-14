@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, equals, saveint, startswith
+from cmk.base.check_api import any_of, equals, LegacyCheckDefinition, saveint, startswith
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -50,23 +50,23 @@ def check_brocade_fan(item, params, info):
     return None
 
 
-check_info["brocade.fan"] = {
-    "detect": any_of(
+check_info["brocade.fan"] = LegacyCheckDefinition(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.24.1.1588.2.1.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.2.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.3.3.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1916.2.306"),
     ),
-    "check_function": check_brocade_fan,
-    "discovery_function": inventory_brocade_fan,
-    "service_name": "FAN %s",
-    "check_ruleset_name": "hw_fans",
-    "fetch": SNMPTree(
+    check_function=check_brocade_fan,
+    discovery_function=inventory_brocade_fan,
+    service_name="FAN %s",
+    check_ruleset_name="hw_fans",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.1588.2.1.1.1.1.22.1",
         oids=["3", "4", "5"],
     ),
-}
+)
 
 
 def inventory_brocade_power(info):
@@ -86,22 +86,22 @@ def check_brocade_power(item, _no_params, info):
     return 3, "Supply not found"
 
 
-check_info["brocade.power"] = {
-    "detect": any_of(
+check_info["brocade.power"] = LegacyCheckDefinition(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.24.1.1588.2.1.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.2.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.3.3.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1916.2.306"),
     ),
-    "check_function": check_brocade_power,
-    "discovery_function": inventory_brocade_power,
-    "service_name": "Power supply %s",
-    "fetch": SNMPTree(
+    check_function=check_brocade_power,
+    discovery_function=inventory_brocade_power,
+    service_name="Power supply %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.1588.2.1.1.1.1.22.1",
         oids=["3", "4", "5"],
     ),
-}
+)
 
 factory_settings["brocade_temp_default_levels"] = {"levels": (55.0, 60.0)}
 
@@ -119,21 +119,21 @@ def check_brocade_temp(item, params, info):
     return None
 
 
-check_info["brocade.temp"] = {
-    "detect": any_of(
+check_info["brocade.temp"] = LegacyCheckDefinition(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.24.1.1588.2.1.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.2.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.3.3.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1916.2.306"),
     ),
-    "check_function": check_brocade_temp,
-    "discovery_function": inventory_brocade_temp,
-    "service_name": "Temperature Ambient %s",
-    "check_ruleset_name": "temperature",
-    "fetch": SNMPTree(
+    check_function=check_brocade_temp,
+    discovery_function=inventory_brocade_temp,
+    service_name="Temperature Ambient %s",
+    check_ruleset_name="temperature",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.1588.2.1.1.1.1.22.1",
         oids=["3", "4", "5"],
     ),
-    "default_levels_variable": "brocade_temp_default_levels",
-}
+    default_levels_variable="brocade_temp_default_levels",
+)

@@ -31,7 +31,7 @@
 # QS1|DBADMIN|DATENEXPORT-FUR|COMPLETED|0|3|FALSE|22-AUG-14 01.11.00.000000 AM EUROPE/BERLIN|-|
 
 
-from cmk.base.check_api import get_age_human_readable, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["oracle_jobs_defaults"] = {
@@ -264,10 +264,10 @@ def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
     return (state, ", ".join(output), perfdata)
 
 
-check_info["oracle_jobs"] = {
-    "service_name": "ORA %s Job",
-    "check_ruleset_name": "oracle_jobs",
-    "check_function": check_oracle_jobs,
-    "discovery_function": inventory_oracle_jobs,
-    "default_levels_variable": "oracle_jobs_defaults",
-}
+check_info["oracle_jobs"] = LegacyCheckDefinition(
+    service_name="ORA %s Job",
+    check_ruleset_name="oracle_jobs",
+    check_function=check_oracle_jobs,
+    discovery_function=inventory_oracle_jobs,
+    default_levels_variable="oracle_jobs_defaults",
+)

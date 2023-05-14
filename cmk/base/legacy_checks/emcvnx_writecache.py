@@ -8,6 +8,7 @@
 # SPB Write Cache State               Enabled
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -32,8 +33,8 @@ def check_emcvnx_writecache(item, params, info):
     return None
 
 
-check_info["emcvnx_writecache"] = {
-    "discovery_function": inventory_emcvnx_writecache,
-    "check_function": check_emcvnx_writecache,
-    "service_name": "Write Cache State %s",
-}
+check_info["emcvnx_writecache"] = LegacyCheckDefinition(
+    discovery_function=inventory_emcvnx_writecache,
+    check_function=check_emcvnx_writecache,
+    service_name="Write Cache State %s",
+)

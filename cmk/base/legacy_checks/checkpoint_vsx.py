@@ -14,6 +14,7 @@ from cmk.base.check_api import (
     get_parsed_item_data,
     get_percent_human_readable,
     get_rate,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
@@ -133,13 +134,13 @@ def check_checkpoint_vsx(item, _no_params, parsed):
         yield 0, "%s: %s" % (infotext, value)
 
 
-check_info["checkpoint_vsx"] = {
-    "detect": DETECT_NEVER,
-    "parse_function": parse_checkpoint_vsx,
-    "discovery_function": discover(lambda k, values: "vs_name" in values),
-    "check_function": check_checkpoint_vsx,
-    "service_name": "VS %s Info",
-    "fetch": [
+check_info["checkpoint_vsx"] = LegacyCheckDefinition(
+    detect=DETECT_NEVER,
+    parse_function=parse_checkpoint_vsx,
+    discovery_function=discover(lambda k, values: "vs_name" in values),
+    check_function=check_checkpoint_vsx,
+    service_name="VS %s Info",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.1.16.22.1.1",
             oids=["1", "3", "4", "5", "6", "7", "8", "9"],
@@ -149,7 +150,7 @@ check_info["checkpoint_vsx"] = {
             oids=["2", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
         ),
     ],
-}
+)
 # .
 #   .--connections---------------------------------------------------------.
 #   |                                        _   _                         |
@@ -197,13 +198,13 @@ def check_checkpoint_vsx_connections(item, params, parsed):
         )
 
 
-check_info["checkpoint_vsx.connections"] = {
-    "discovery_function": discover(lambda k, values: "conn_num" in values),
-    "check_function": check_checkpoint_vsx_connections,
-    "service_name": "VS %s Connections",
-    "default_levels_variable": "checkpoint_vsx_default_levels",
-    "check_ruleset_name": "checkpoint_vsx_connections",
-}
+check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
+    discovery_function=discover(lambda k, values: "conn_num" in values),
+    check_function=check_checkpoint_vsx_connections,
+    service_name="VS %s Connections",
+    default_levels_variable="checkpoint_vsx_default_levels",
+    check_ruleset_name="checkpoint_vsx_connections",
+)
 # .
 #   .--packets-------------------------------------------------------------.
 #   |                                   _        _                         |
@@ -246,12 +247,12 @@ def check_checkpoint_vsx_packets(item, params, parsed):
         )
 
 
-check_info["checkpoint_vsx.packets"] = {
-    "discovery_function": discover(lambda k, values: "packets" in values),
-    "check_function": check_checkpoint_vsx_packets,
-    "service_name": "VS %s Packets",
-    "check_ruleset_name": "checkpoint_vsx_packets",
-}
+check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
+    discovery_function=discover(lambda k, values: "packets" in values),
+    check_function=check_checkpoint_vsx_packets,
+    service_name="VS %s Packets",
+    check_ruleset_name="checkpoint_vsx_packets",
+)
 # .
 #   .--traffic-------------------------------------------------------------.
 #   |                    _              __  __ _                           |
@@ -291,12 +292,12 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
         )
 
 
-check_info["checkpoint_vsx.traffic"] = {
-    "discovery_function": discover(lambda k, values: "bytes_accepted" in values),
-    "check_function": check_checkpoint_vsx_traffic,
-    "service_name": "VS %s Traffic",
-    "check_ruleset_name": "checkpoint_vsx_traffic",
-}
+check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
+    discovery_function=discover(lambda k, values: "bytes_accepted" in values),
+    check_function=check_checkpoint_vsx_traffic,
+    service_name="VS %s Traffic",
+    check_ruleset_name="checkpoint_vsx_traffic",
+)
 # .
 #   .--status--------------------------------------------------------------.
 #   |                         _        _                                   |
@@ -345,10 +346,10 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
         yield state, infotext
 
 
-check_info["checkpoint_vsx.status"] = {
-    "discovery_function": discover(lambda k, values: "vs_ha_status" in values),
-    "check_function": check_checkpoint_vsx_status,
-    "service_name": "VS %s Status",
-    "check_ruleset_name": "checkpoint_vsx_traffic_status",
-}
+check_info["checkpoint_vsx.status"] = LegacyCheckDefinition(
+    discovery_function=discover(lambda k, values: "vs_ha_status" in values),
+    check_function=check_checkpoint_vsx_status,
+    service_name="VS %s Status",
+    check_ruleset_name="checkpoint_vsx_traffic_status",
+)
 # .

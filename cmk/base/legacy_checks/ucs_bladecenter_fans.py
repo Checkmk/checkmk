@@ -7,6 +7,7 @@
 # mypy: disable-error-code="var-annotated"
 
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
 from cmk.base.config import check_info, factory_settings
 
@@ -80,12 +81,12 @@ def check_ucs_bladecenter_fans(item, _no_params, parsed):
             )
 
 
-check_info["ucs_bladecenter_fans"] = {
-    "parse_function": parse_ucs_bladecenter_fans,
-    "discovery_function": inventory_ucs_bladecenter_fans,
-    "check_function": check_ucs_bladecenter_fans,
-    "service_name": "Fans %s",
-}
+check_info["ucs_bladecenter_fans"] = LegacyCheckDefinition(
+    parse_function=parse_ucs_bladecenter_fans,
+    discovery_function=inventory_ucs_bladecenter_fans,
+    check_function=check_ucs_bladecenter_fans,
+    service_name="Fans %s",
+)
 
 # .
 #   .--Temperature---------------------------------------------------------.
@@ -124,10 +125,10 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
     return check_temperature_list(sensor_list, params, "ucs_bladecenter_fans_%s" % item)
 
 
-check_info["ucs_bladecenter_fans.temp"] = {
-    "discovery_function": inventory_ucs_bladecenter_fans_temp,
-    "check_function": check_ucs_bladecenter_fans_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "ucs_bladecenter_fans_temp_default_levels",
-}
+check_info["ucs_bladecenter_fans.temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_ucs_bladecenter_fans_temp,
+    check_function=check_ucs_bladecenter_fans_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="ucs_bladecenter_fans_temp_default_levels",
+)

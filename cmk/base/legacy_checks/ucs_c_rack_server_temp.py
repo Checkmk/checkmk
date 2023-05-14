@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
@@ -77,10 +77,10 @@ def check_ucs_c_rack_server_temp(item, params, temperature):
     )
 
 
-check_info["ucs_c_rack_server_temp"] = {
-    "parse_function": parse_ucs_c_rack_server_temp,
-    "discovery_function": discover(),
-    "check_function": check_ucs_c_rack_server_temp,
-    "check_ruleset_name": "temperature",
-    "service_name": "Temperature %s",
-}
+check_info["ucs_c_rack_server_temp"] = LegacyCheckDefinition(
+    parse_function=parse_ucs_c_rack_server_temp,
+    discovery_function=discover(),
+    check_function=check_ucs_c_rack_server_temp,
+    check_ruleset_name="temperature",
+    service_name="Temperature %s",
+)

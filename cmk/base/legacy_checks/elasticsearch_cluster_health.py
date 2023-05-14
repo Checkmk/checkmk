@@ -23,7 +23,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, get_percent_human_readable
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 cluster_info = {
@@ -113,13 +113,13 @@ def check_elasticsearch_cluster_health(_no_item, params, parsed):
             )
 
 
-check_info["elasticsearch_cluster_health"] = {
-    "parse_function": parse_elasticsearch_cluster_health,
-    "check_function": check_elasticsearch_cluster_health,
-    "discovery_function": inventory_elasticsearch_cluster_health,
-    "service_name": "Elasticsearch Cluster Health",
-    "check_ruleset_name": "elasticsearch_cluster_health",
-}
+check_info["elasticsearch_cluster_health"] = LegacyCheckDefinition(
+    parse_function=parse_elasticsearch_cluster_health,
+    check_function=check_elasticsearch_cluster_health,
+    discovery_function=inventory_elasticsearch_cluster_health,
+    service_name="Elasticsearch Cluster Health",
+    check_ruleset_name="elasticsearch_cluster_health",
+)
 
 factory_settings["elasticsearch_cluster_shards"] = {
     "active_shards_percent_as_number": (100.0, 50.0)
@@ -161,14 +161,14 @@ def check_elasticsearch_cluster_health_shards(_no_item, params, parsed):
             )
 
 
-check_info["elasticsearch_cluster_health.shards"] = {
-    "parse_function": parse_elasticsearch_cluster_health,
-    "check_function": check_elasticsearch_cluster_health_shards,
-    "discovery_function": inventory_elasticsearch_cluster_health,
-    "default_levels_variable": "elasticsearch_cluster_shards",
-    "service_name": "Elasticsearch Cluster Shards",
-    "check_ruleset_name": "elasticsearch_cluster_shards",
-}
+check_info["elasticsearch_cluster_health.shards"] = LegacyCheckDefinition(
+    parse_function=parse_elasticsearch_cluster_health,
+    check_function=check_elasticsearch_cluster_health_shards,
+    discovery_function=inventory_elasticsearch_cluster_health,
+    default_levels_variable="elasticsearch_cluster_shards",
+    service_name="Elasticsearch Cluster Shards",
+    check_ruleset_name="elasticsearch_cluster_shards",
+)
 
 
 def check_elasticsearch_cluster_health_tasks(_no_item, params, parsed):
@@ -190,10 +190,10 @@ def check_elasticsearch_cluster_health_tasks(_no_item, params, parsed):
             yield check_levels(value, task, (warn, crit, None, None), infoname=infotext)
 
 
-check_info["elasticsearch_cluster_health.tasks"] = {
-    "parse_function": parse_elasticsearch_cluster_health,
-    "check_function": check_elasticsearch_cluster_health_tasks,
-    "discovery_function": inventory_elasticsearch_cluster_health,
-    "service_name": "Elasticsearch Cluster Tasks",
-    "check_ruleset_name": "elasticsearch_cluster_tasks",
-}
+check_info["elasticsearch_cluster_health.tasks"] = LegacyCheckDefinition(
+    parse_function=parse_elasticsearch_cluster_health,
+    check_function=check_elasticsearch_cluster_health_tasks,
+    discovery_function=inventory_elasticsearch_cluster_health,
+    service_name="Elasticsearch Cluster Tasks",
+    check_ruleset_name="elasticsearch_cluster_tasks",
+)

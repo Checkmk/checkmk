@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -29,15 +30,15 @@ def check_dell_compellent_folder(item, params, info):
             yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
-check_info["dell_compellent_folder"] = {
-    "detect": DETECT_DELL_COMPELLENT,
-    "discovery_function": inventory_dell_compellent_folder,
-    "check_function": check_dell_compellent_folder,
-    "service_name": "Folder %s",
-    "fetch": SNMPTree(
+check_info["dell_compellent_folder"] = LegacyCheckDefinition(
+    detect=DETECT_DELL_COMPELLENT,
+    discovery_function=inventory_dell_compellent_folder,
+    check_function=check_dell_compellent_folder,
+    service_name="Folder %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.11000.2000.500.1.2.32.1",
         oids=["2", "5", "6"],
     ),
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)

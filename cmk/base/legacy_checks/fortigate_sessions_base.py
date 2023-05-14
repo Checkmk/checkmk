@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, contains, exists
+from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fortigate_sessions import fortigate_sessions
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -20,18 +20,18 @@ def check_fortigate_sessions_base(item, params, info):
     return fortigate_sessions(int(info[0][0]), params)
 
 
-check_info["fortigate_sessions_base"] = {
-    "detect": all_of(
+check_info["fortigate_sessions_base"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
         exists(".1.3.6.1.4.1.12356.101.4.1.8.0"),
     ),
-    "discovery_function": inventory_fortigate_sessions_base,
-    "check_function": check_fortigate_sessions_base,
-    "check_ruleset_name": "fortigate_sessions",
-    "service_name": "Sessions",
+    discovery_function=inventory_fortigate_sessions_base,
+    check_function=check_fortigate_sessions_base,
+    check_ruleset_name="fortigate_sessions",
+    service_name="Sessions",
     # uses mib FORTINET-FORTIGATE-MIB
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.4.1",
         oids=["8"],
     ),
-}
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 sansymphony_alerts_default_values = (1, 2)
@@ -30,9 +31,9 @@ def check_sansymphony_alerts(_no_item, params, info):
     return state, infotxt, perfdata
 
 
-check_info["sansymphony_alerts"] = {
-    "check_function": check_sansymphony_alerts,
-    "discovery_function": inventory_sansymphony_alerts,
-    "service_name": "sansymphony Alerts",
-    "check_ruleset_name": "sansymphony_alerts",
-}
+check_info["sansymphony_alerts"] = LegacyCheckDefinition(
+    check_function=check_sansymphony_alerts,
+    discovery_function=inventory_sansymphony_alerts,
+    service_name="sansymphony Alerts",
+    check_ruleset_name="sansymphony_alerts",
+)

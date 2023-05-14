@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="arg-type"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_total,
     parse_wmi_table,
@@ -55,11 +56,11 @@ def check_msexch_rpcclientaccess(_no_item, params, parsed):
     )
 
 
-check_info["msexch_rpcclientaccess"] = {
-    "discovery_function": discover_msexch_rpcclientaccess,
-    "check_function": check_msexch_rpcclientaccess,
-    "parse_function": parse_wmi_table,
-    "service_name": "Exchange RPC Client Access",
-    "check_ruleset_name": "msx_rpcclientaccess",
-    "default_levels_variable": "msexch_rpcclientaccess_defaultlevels",
-}
+check_info["msexch_rpcclientaccess"] = LegacyCheckDefinition(
+    discovery_function=discover_msexch_rpcclientaccess,
+    check_function=check_msexch_rpcclientaccess,
+    parse_function=parse_wmi_table,
+    service_name="Exchange RPC Client Access",
+    check_ruleset_name="msx_rpcclientaccess",
+    default_levels_variable="msexch_rpcclientaccess_defaultlevels",
+)

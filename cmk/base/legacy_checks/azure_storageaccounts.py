@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import discover
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
     discover_azure_by_metrics,
@@ -53,14 +53,14 @@ def check_azure_storageaccounts(_item, params, resource):
         yield 0, "%s: %s" % kv_pair
 
 
-check_info["azure_storageaccounts"] = {
-    "parse_function": parse_resources,
-    "discovery_function": discover(),
-    "check_function": check_azure_storageaccounts,
-    "service_name": "Storage %s account",
-    "default_levels_variable": "levels_azure_storageaccounts",
-    "check_ruleset_name": "azure_storageaccounts",
-}
+check_info["azure_storageaccounts"] = LegacyCheckDefinition(
+    parse_function=parse_resources,
+    discovery_function=discover(),
+    check_function=check_azure_storageaccounts,
+    service_name="Storage %s account",
+    default_levels_variable="levels_azure_storageaccounts",
+    check_ruleset_name="azure_storageaccounts",
+)
 
 
 @get_data_or_go_stale
@@ -74,15 +74,15 @@ def check_azure_storageaccounts_flow(_item, params, resource):
             yield mcheck
 
 
-check_info["azure_storageaccounts.flow"] = {
-    "discovery_function": discover_azure_by_metrics(
+check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
+    discovery_function=discover_azure_by_metrics(
         "total_Ingress", "total_Egress", "total_Transactions"
     ),
-    "check_function": check_azure_storageaccounts_flow,
-    "service_name": "Storage %s flow",
-    "default_levels_variable": "levels_azure_storageaccounts",
-    "check_ruleset_name": "azure_storageaccounts",
-}
+    check_function=check_azure_storageaccounts_flow,
+    service_name="Storage %s flow",
+    default_levels_variable="levels_azure_storageaccounts",
+    check_ruleset_name="azure_storageaccounts",
+)
 
 
 @get_data_or_go_stale
@@ -98,12 +98,12 @@ def check_azure_storageaccounts_performance(_item, params, resource):
             yield mcheck
 
 
-check_info["azure_storageaccounts.performance"] = {
-    "discovery_function": discover_azure_by_metrics(
+check_info["azure_storageaccounts.performance"] = LegacyCheckDefinition(
+    discovery_function=discover_azure_by_metrics(
         "average_SuccessServerLatency", "average_SuccessE2ELatency", "average_Availability"
     ),
-    "check_function": check_azure_storageaccounts_performance,
-    "service_name": "Storage %s performance",
-    "default_levels_variable": "levels_azure_storageaccounts",
-    "check_ruleset_name": "azure_storageaccounts",
-}
+    check_function=check_azure_storageaccounts_performance,
+    service_name="Storage %s performance",
+    default_levels_variable="levels_azure_storageaccounts",
+    check_ruleset_name="azure_storageaccounts",
+)

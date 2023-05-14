@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.liebert import parse_liebert_wrapper
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -32,15 +32,15 @@ def check_liebert_reheating(_no_item, params, parsed):
         yield check_levels(value, "filehandler_perc", params["levels"], unit=unit)
 
 
-check_info["liebert_reheating"] = {
-    "detect": DETECT_LIEBERT,
-    "parse_function": parse_liebert_wrapper,
-    "discovery_function": inventory_liebert_reheating,
-    "check_function": check_liebert_reheating,
-    "service_name": "Reheating Utilization",
-    "fetch": SNMPTree(
+check_info["liebert_reheating"] = LegacyCheckDefinition(
+    detect=DETECT_LIEBERT,
+    parse_function=parse_liebert_wrapper,
+    discovery_function=inventory_liebert_reheating,
+    check_function=check_liebert_reheating,
+    service_name="Reheating Utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=["10.1.2.1.5080", "20.1.2.1.5080", "30.1.2.1.5080"],
     ),
-    "default_levels_variable": "liebert_reheating_default_levels",
-}
+    default_levels_variable="liebert_reheating_default_levels",
+)

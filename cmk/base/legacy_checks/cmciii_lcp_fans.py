@@ -6,6 +6,7 @@
 
 import re
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.cmciii import DETECT_CMCIII_LCP
@@ -60,12 +61,12 @@ def check_cmciii_lcp_fans(item, params, info):
     return None
 
 
-check_info["cmciii_lcp_fans"] = {
-    "detect": DETECT_CMCIII_LCP,
-    "check_function": check_cmciii_lcp_fans,
-    "discovery_function": inventory_cmciii_lcp_fans,
-    "service_name": "LCP Fanunit FAN %s",
-    "fetch": SNMPTree(
+check_info["cmciii_lcp_fans"] = LegacyCheckDefinition(
+    detect=DETECT_CMCIII_LCP,
+    check_function=check_cmciii_lcp_fans,
+    discovery_function=inventory_cmciii_lcp_fans,
+    service_name="LCP Fanunit FAN %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.7.4.2.2.1.10.2",
         oids=[
             "34",
@@ -94,4 +95,4 @@ check_info["cmciii_lcp_fans"] = {
             "57",
         ],
     ),
-}
+)

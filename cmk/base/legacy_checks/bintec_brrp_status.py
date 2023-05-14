@@ -6,7 +6,7 @@
 
 import re
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -44,13 +44,13 @@ def check_bintec_brrp_status(item, _no_params, info):
     return 3, "Status for %s not found" % item
 
 
-check_info["bintec_brrp_status"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
-    "check_function": check_bintec_brrp_status,
-    "discovery_function": inventory_bintec_brrp_status,
-    "service_name": "BRRP Status %s",
-    "fetch": SNMPTree(
+check_info["bintec_brrp_status"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
+    check_function=check_bintec_brrp_status,
+    discovery_function=inventory_bintec_brrp_status,
+    service_name="BRRP Status %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.272.4.40.1.1",
         oids=[OIDEnd(), "4"],
     ),
-}
+)

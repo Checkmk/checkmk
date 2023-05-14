@@ -33,6 +33,7 @@
 
 import datetime
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.apc import DETECT
@@ -108,18 +109,18 @@ def inventory_apc_test(info):
     return []
 
 
-check_info["apc_symmetra_test"] = {
-    "detect": DETECT,
-    "discovery_function": inventory_apc_test,
-    "check_function": check_apc_test,
-    "service_name": "Self Test",
-    "check_ruleset_name": "ups_test",
-    "fetch": SNMPTree(
+check_info["apc_symmetra_test"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=inventory_apc_test,
+    check_function=check_apc_test,
+    service_name="Self Test",
+    check_ruleset_name="ups_test",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.1.7.2",
         oids=["3", "4"],
     ),
-    "default_levels_variable": "apc_test_levels",
-}
+    default_levels_variable="apc_test_levels",
+)
 
 factory_settings["apc_test_levels"] = {
     "levels_elapsed_time": None,

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.quanta import parse_quanta
 from cmk.base.config import check_info
@@ -50,18 +50,18 @@ def check_quanta_fan(item, params, entry):
     yield check_fan(entry.value, levels)
 
 
-check_info["quanta_fan"] = {
-    "detect": DETECT_QUANTA,
-    "discovery_function": discover(),
-    "parse_function": parse_quanta,
-    "check_function": check_quanta_fan,
-    "service_name": "Fan %s",
-    "check_ruleset_name": "hw_fans",
+check_info["quanta_fan"] = LegacyCheckDefinition(
+    detect=DETECT_QUANTA,
+    discovery_function=discover(),
+    parse_function=parse_quanta,
+    check_function=check_quanta_fan,
+    service_name="Fan %s",
+    check_ruleset_name="hw_fans",
     # these is no good oid identifier for quanta devices, thats why the first oid is used here
-    "fetch": [
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7244.1.2.1.3.3.1",
             oids=["1", "2", "3", "4", "6", "7", "8", "9"],
         )
     ],
-}
+)

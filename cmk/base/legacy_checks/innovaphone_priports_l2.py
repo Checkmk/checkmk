@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import equals, saveint
+from cmk.base.check_api import equals, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -51,13 +51,13 @@ def check_innovaphone_priports_l2(item, params, info):
     return 3, "Output not found"
 
 
-check_info["innovaphone_priports_l2"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6666"),
-    "check_function": check_innovaphone_priports_l2,
-    "discovery_function": inventory_innovaphone_priports_l2,
-    "service_name": "Port L2 %s",
-    "fetch": SNMPTree(
+check_info["innovaphone_priports_l2"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6666"),
+    check_function=check_innovaphone_priports_l2,
+    discovery_function=inventory_innovaphone_priports_l2,
+    service_name="Port L2 %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.6666.1.1.1",
         oids=["1", "2", "3"],
     ),
-}
+)

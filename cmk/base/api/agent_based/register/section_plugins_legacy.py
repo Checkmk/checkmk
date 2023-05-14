@@ -19,7 +19,7 @@ from cmk.base.api.agent_based.type_defs import (
     StringTable,
 )
 
-from .utils_legacy import CheckInfoElement
+from .utils_legacy import LegacyCheckDefinition
 
 
 def get_section_name(check_plugin_name: str) -> str:
@@ -75,7 +75,7 @@ def _create_snmp_parse_function(
 
 def create_agent_section_plugin_from_legacy(
     check_plugin_name: str,
-    check_info_element: CheckInfoElement,
+    check_info_element: LegacyCheckDefinition,
     *,
     validate_creation_kwargs: bool,
 ) -> AgentSectionPlugin:
@@ -98,7 +98,7 @@ def create_agent_section_plugin_from_legacy(
 
 def create_snmp_section_plugin_from_legacy(
     check_plugin_name: str,
-    check_info_element: CheckInfoElement,
+    check_info_element: LegacyCheckDefinition,
     *,
     validate_creation_kwargs: bool,
 ) -> SNMPSectionPlugin:

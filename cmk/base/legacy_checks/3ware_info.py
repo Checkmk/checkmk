@@ -23,6 +23,7 @@
 # This version of the check currently only handles output of the first type
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -43,8 +44,8 @@ def check_3ware_info(item, _no_params, info):
     return (0, infotext)
 
 
-check_info["3ware_info"] = {
-    "check_function": check_3ware_info,
-    "discovery_function": inventory_3ware_info,
-    "service_name": "RAID 3ware controller %s",
-}
+check_info["3ware_info"] = LegacyCheckDefinition(
+    check_function=check_3ware_info,
+    discovery_function=inventory_3ware_info,
+    service_name="RAID 3ware controller %s",
+)

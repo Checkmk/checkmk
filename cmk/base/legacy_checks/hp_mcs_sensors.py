@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -60,18 +60,18 @@ def check_hp_mcs_sensors(item, params, parsed):
     return None
 
 
-check_info["hp_mcs_sensors"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.167"),
-    "parse_function": parse_hp_mcs_sensors,
-    "discovery_function": inventory_hp_mcs_sensors,
-    "check_function": check_hp_mcs_sensors,
-    "service_name": "Sensor %s",
-    "fetch": SNMPTree(
+check_info["hp_mcs_sensors"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.167"),
+    parse_function=parse_hp_mcs_sensors,
+    discovery_function=inventory_hp_mcs_sensors,
+    check_function=check_hp_mcs_sensors,
+    service_name="Sensor %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.167.2.4.5.2.1",
         oids=["1", "2", "3", "4", "5", "6", "7"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)
 
 factory_settings["hp_mcs_sensors_fan_default_levels"] = {
     "lower": (1000, 500),
@@ -91,10 +91,10 @@ def check_hp_mcs_sensors_fan(item, params, parsed):
     return None
 
 
-check_info["hp_mcs_sensors.fan"] = {
-    "discovery_function": inventory_hp_mcs_sensors_fan,
-    "check_function": check_hp_mcs_sensors_fan,
-    "service_name": "Sensor %s",
-    "check_ruleset_name": "hw_fans",
-    "default_levels_variable": "hp_mcs_sensors_fan_default_levels",
-}
+check_info["hp_mcs_sensors.fan"] = LegacyCheckDefinition(
+    discovery_function=inventory_hp_mcs_sensors_fan,
+    check_function=check_hp_mcs_sensors_fan,
+    service_name="Sensor %s",
+    check_ruleset_name="hw_fans",
+    default_levels_variable="hp_mcs_sensors_fan_default_levels",
+)

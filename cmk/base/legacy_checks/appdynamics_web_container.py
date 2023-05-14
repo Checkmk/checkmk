@@ -12,7 +12,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -84,9 +84,9 @@ def check_appdynamics_web_container(item, params, info):  # pylint: disable=too-
                 yield 0, "Requests: %.2f/sec" % request_rate, perfdata
 
 
-check_info["appdynamics_web_container"] = {
-    "discovery_function": inventory_appdynamics_web_container,
-    "check_function": check_appdynamics_web_container,
-    "service_name": "AppDynamics Web Container %s",
-    "check_ruleset_name": "jvm_threads",
-}
+check_info["appdynamics_web_container"] = LegacyCheckDefinition(
+    discovery_function=inventory_appdynamics_web_container,
+    check_function=check_appdynamics_web_container,
+    service_name="AppDynamics Web Container %s",
+    check_ruleset_name="jvm_threads",
+)

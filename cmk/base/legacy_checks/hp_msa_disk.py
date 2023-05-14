@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.hp_msa import (
     check_hp_msa_health,
     inventory_hp_msa_health,
@@ -152,12 +153,12 @@ from cmk.base.config import check_info, factory_settings
 #   |                           main check                                 |
 #   '----------------------------------------------------------------------'
 
-check_info["hp_msa_disk"] = {
-    "parse_function": parse_hp_msa,
-    "discovery_function": inventory_hp_msa_health,
-    "check_function": check_hp_msa_health,
-    "service_name": "Disk Health %s",
-}
+check_info["hp_msa_disk"] = LegacyCheckDefinition(
+    parse_function=parse_hp_msa,
+    discovery_function=inventory_hp_msa_health,
+    check_function=check_hp_msa_health,
+    service_name="Disk Health %s",
+)
 
 
 # .
@@ -187,12 +188,12 @@ def check_hp_msa_disk_temp(item, params, parsed):
     return check_temperature_list(disks, params, "hp_msa_disk_temp_%s" % item)
 
 
-check_info["hp_msa_disk.temp"] = {
-    "discovery_function": inventory_hp_msa_disk_temp,
-    "check_function": check_hp_msa_disk_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "hp_msa_disk_temp_default_levels",
-}
+check_info["hp_msa_disk.temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_hp_msa_disk_temp,
+    check_function=check_hp_msa_disk_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="hp_msa_disk_temp_default_levels",
+)
 
 # .

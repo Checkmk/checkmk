@@ -8,7 +8,7 @@
 
 import collections
 
-from cmk.base.check_api import MKCounterWrapped, regex
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped, regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -163,14 +163,14 @@ def _check_openhardwaremonitor_wmistatus(data):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-check_info["openhardwaremonitor"] = {
-    "discovery_function": lambda parsed: inventory_openhardwaremonitor("Clock", parsed),
-    "check_function": lambda item, params, parsed: check_openhardwaremonitor(
+check_info["openhardwaremonitor"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_openhardwaremonitor("Clock", parsed),
+    check_function=lambda item, params, parsed: check_openhardwaremonitor(
         "Clock", item, params, parsed
     ),
-    "parse_function": parse_openhardwaremonitor,
-    "service_name": "Clock %s",
-}
+    parse_function=parse_openhardwaremonitor,
+    service_name="Clock %s",
+)
 
 # .
 #   .--temp----------------------------------------------------------------.
@@ -201,13 +201,13 @@ def check_openhardwaremonitor_temperature(item, params, parsed):
     return None
 
 
-check_info["openhardwaremonitor.temperature"] = {
-    "discovery_function": lambda parsed: inventory_openhardwaremonitor("Temperature", parsed),
-    "check_function": check_openhardwaremonitor_temperature,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "openhardwaremonitor_temperature_default_levels",
-}
+check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_openhardwaremonitor("Temperature", parsed),
+    check_function=check_openhardwaremonitor_temperature,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="openhardwaremonitor_temperature_default_levels",
+)
 
 # .
 #   .--power---------------------------------------------------------------.
@@ -219,13 +219,13 @@ check_info["openhardwaremonitor.temperature"] = {
 #   |                   |_|                                                |
 #   '----------------------------------------------------------------------'
 
-check_info["openhardwaremonitor.power"] = {
-    "discovery_function": lambda parsed: inventory_openhardwaremonitor("Power", parsed),
-    "check_function": lambda item, params, parsed: check_openhardwaremonitor(
+check_info["openhardwaremonitor.power"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_openhardwaremonitor("Power", parsed),
+    check_function=lambda item, params, parsed: check_openhardwaremonitor(
         "Power", item, params, parsed
     ),
-    "service_name": "Power %s",
-}
+    service_name="Power %s",
+)
 
 # .
 #   .--fan-----------------------------------------------------------------.
@@ -251,13 +251,13 @@ def check_openhardwaremonitor_fan(item, params, parsed):
     return None
 
 
-check_info["openhardwaremonitor.fan"] = {
-    "discovery_function": lambda parsed: inventory_openhardwaremonitor("Fan", parsed),
-    "check_function": check_openhardwaremonitor_fan,
-    "service_name": "Fan %s",
-    "default_levels_variable": "openhardwaremonitor_fan_default_levels",
-    "check_ruleset_name": "hw_fans",
-}
+check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_openhardwaremonitor("Fan", parsed),
+    check_function=check_openhardwaremonitor_fan,
+    service_name="Fan %s",
+    default_levels_variable="openhardwaremonitor_fan_default_levels",
+    check_ruleset_name="hw_fans",
+)
 
 # .
 #   .--smart---------------------------------------------------------------.
@@ -316,10 +316,10 @@ def check_openhardwaremonitor_smart(item, params, parsed):
 # the smart check is different from the others as it has one item per device and
 # combines different sensors per item (but not all, i.e. hdd temperature is still
 # reported as a temperature item)
-check_info["openhardwaremonitor.smart"] = {
-    "discovery_function": inventory_openhardwaremonitor_smart,
-    "check_function": check_openhardwaremonitor_smart,
-    "service_name": "SMART %s Stats",
-    "default_levels_variable": "openhardwaremonitor_smart_default_levels",
-    "check_ruleset_name": "openhardwaremonitor_smart",
-}
+check_info["openhardwaremonitor.smart"] = LegacyCheckDefinition(
+    discovery_function=inventory_openhardwaremonitor_smart,
+    check_function=check_openhardwaremonitor_smart,
+    service_name="SMART %s Stats",
+    default_levels_variable="openhardwaremonitor_smart_default_levels",
+    check_ruleset_name="openhardwaremonitor_smart",
+)

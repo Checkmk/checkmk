@@ -21,6 +21,7 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_parsed_item_data,
     get_timestamp_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
 
@@ -62,10 +63,10 @@ def check_netapp_api_systemtime(item, params, entry):
     )
 
 
-check_info["netapp_api_systemtime"] = {
-    "parse_function": parse_netapp_api_systemtime,
-    "discovery_function": discover(),
-    "check_function": check_netapp_api_systemtime,
-    "service_name": "Systemtime %s",
-    "check_ruleset_name": "netapp_systemtime",
-}
+check_info["netapp_api_systemtime"] = LegacyCheckDefinition(
+    parse_function=parse_netapp_api_systemtime,
+    discovery_function=discover(),
+    check_function=check_netapp_api_systemtime,
+    service_name="Systemtime %s",
+    check_ruleset_name="netapp_systemtime",
+)

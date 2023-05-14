@@ -10,7 +10,7 @@
 # TCPIP$FTP - - - 1
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
 
@@ -38,8 +38,8 @@ def check_vms_users(item, params, info):
     return (0, "No interactive users", perfdata)
 
 
-check_info["vms_users"] = {
-    "check_function": check_vms_users,
-    "discovery_function": inventory_vms_users,
-    "service_name": "VMS Users",
-}
+check_info["vms_users"] = LegacyCheckDefinition(
+    check_function=check_vms_users,
+    discovery_function=inventory_vms_users,
+    service_name="VMS Users",
+)

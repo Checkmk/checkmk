@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="list-item"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info, factory_settings
 
@@ -62,12 +63,12 @@ def check_ddn_s2a_stats_readhits(item, params, parsed):
     return status, infotext, perfdata
 
 
-check_info["ddn_s2a_stats.readhits"] = {
-    "discovery_function": inventory_ddn_s2a_stats_readhits,
-    "check_function": check_ddn_s2a_stats_readhits,
-    "service_name": "DDN S2A Read Hits %s",
-    "check_ruleset_name": "read_hits",
-}
+check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
+    discovery_function=inventory_ddn_s2a_stats_readhits,
+    check_function=check_ddn_s2a_stats_readhits,
+    service_name="DDN S2A Read Hits %s",
+    check_ruleset_name="read_hits",
+)
 
 # .
 #   .--I/O transactions----------------------------------------------------.
@@ -133,13 +134,13 @@ def check_ddn_s2a_stats_io(item, params, parsed):
     yield check_io_levels(total_ios_s, params.get("total"), "Total: %.2f 1/s")
 
 
-check_info["ddn_s2a_stats.io"] = {
-    "default_levels_variable": "ddn_s2a_stats_io_default_levels",
-    "discovery_function": inventory_ddn_s2a_stats_io,
-    "check_function": check_ddn_s2a_stats_io,
-    "service_name": "DDN S2A IO %s",
-    "check_ruleset_name": "storage_iops",
-}
+check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
+    default_levels_variable="ddn_s2a_stats_io_default_levels",
+    discovery_function=inventory_ddn_s2a_stats_io,
+    check_function=check_ddn_s2a_stats_io,
+    service_name="DDN S2A IO %s",
+    check_ruleset_name="storage_iops",
+)
 
 # .
 #   .--Data rate-----------------------------------------------------------.
@@ -207,11 +208,11 @@ def check_ddn_s2a_stats(item, params, parsed):
     yield check_datarate_levels(total, total_mb_s, params.get("total"), "Total: %.2f MB/s")
 
 
-check_info["ddn_s2a_stats"] = {
-    "default_levels_variable": "ddn_s2a_stats_default_levels",
-    "parse_function": parse_ddn_s2a_stats,
-    "discovery_function": inventory_ddn_s2a_stats,
-    "check_function": check_ddn_s2a_stats,
-    "service_name": "DDN S2A Data Rate %s",
-    "check_ruleset_name": "storage_throughput",
-}
+check_info["ddn_s2a_stats"] = LegacyCheckDefinition(
+    default_levels_variable="ddn_s2a_stats_default_levels",
+    parse_function=parse_ddn_s2a_stats,
+    discovery_function=inventory_ddn_s2a_stats,
+    check_function=check_ddn_s2a_stats,
+    service_name="DDN S2A Data Rate %s",
+    check_ruleset_name="storage_throughput",
+)

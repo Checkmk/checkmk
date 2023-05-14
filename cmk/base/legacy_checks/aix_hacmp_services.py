@@ -67,7 +67,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -107,9 +107,9 @@ def check_aix_hacmp_services(item, _no_params, data):
         yield state, "Subsystem: %s, Status: %s" % (subsytem_name, status)
 
 
-check_info["aix_hacmp_services"] = {
-    "parse_function": parse_aix_hacmp_services,
-    "discovery_function": discover(),
-    "check_function": check_aix_hacmp_services,
-    "service_name": "HACMP Service %s",
-}
+check_info["aix_hacmp_services"] = LegacyCheckDefinition(
+    parse_function=parse_aix_hacmp_services,
+    discovery_function=discover(),
+    check_function=check_aix_hacmp_services,
+    service_name="HACMP Service %s",
+)

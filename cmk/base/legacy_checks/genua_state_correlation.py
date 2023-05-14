@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
@@ -73,12 +74,12 @@ def check_genua_state(item, _no_params, info):
     return (state, output)
 
 
-check_info["genua_state_correlation"] = {
-    "detect": DETECT_GENUA,
-    "discovery_function": inventory_genua_state,
-    "check_function": check_genua_state,
-    "service_name": "Carp Correlation",
-    "fetch": [
+check_info["genua_state_correlation"] = LegacyCheckDefinition(
+    detect=DETECT_GENUA,
+    discovery_function=inventory_genua_state,
+    check_function=check_genua_state,
+    service_name="Carp Correlation",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3717.2.1.2.1",
             oids=["1", "2", "3", "4", "7"],
@@ -88,4 +89,4 @@ check_info["genua_state_correlation"] = {
             oids=["1", "2", "3", "4", "7"],
         ),
     ],
-}
+)

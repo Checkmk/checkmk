@@ -6,6 +6,7 @@
 
 from typing import Iterable
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ups_out_voltage import check_ups_out_voltage
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -20,14 +21,14 @@ def discover_ups_out_voltage(info: list[list[str]]) -> Iterable[tuple[str, tuple
     )
 
 
-check_info["ups_out_voltage"] = {
-    "detect": DETECT_UPS_GENERIC,
-    "discovery_function": discover_ups_out_voltage,
-    "check_function": check_ups_out_voltage,
-    "service_name": "OUT voltage phase %s",
-    "check_ruleset_name": "evolt",
-    "fetch": SNMPTree(
+check_info["ups_out_voltage"] = LegacyCheckDefinition(
+    detect=DETECT_UPS_GENERIC,
+    discovery_function=discover_ups_out_voltage,
+    check_function=check_ups_out_voltage,
+    service_name="OUT voltage phase %s",
+    check_ruleset_name="evolt",
+    fetch=SNMPTree(
         base=".1.3.6.1.2.1.33.1.4.4.1",
         oids=[OIDEnd(), "2"],
     ),
-}
+)

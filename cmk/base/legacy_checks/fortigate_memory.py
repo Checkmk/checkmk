@@ -4,7 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, check_levels, contains, exists, get_percent_human_readable
+from cmk.base.check_api import (
+    all_of,
+    check_levels,
+    contains,
+    exists,
+    get_percent_human_readable,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -56,17 +63,15 @@ def check_fortigate_memory(item, params, current_reading):
     )
 
 
-check_info["fortigate_memory"] = {
-    "detect": all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "fortigate"), exists(".1.3.6.1.4.1.12356.1.9.0")
-    ),
-    "parse_function": parse_fortigate_memory,
-    "check_function": check_fortigate_memory,
-    "discovery_function": inventory_fortigate_memory,
-    "service_name": "Memory",
-    "check_ruleset_name": "memory",
-    "fetch": SNMPTree(
+check_info["fortigate_memory"] = LegacyCheckDefinition(
+    detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "fortigate"), exists(".1.3.6.1.4.1.12356.1.9.0")),
+    parse_function=parse_fortigate_memory,
+    check_function=check_fortigate_memory,
+    discovery_function=inventory_fortigate_memory,
+    service_name="Memory",
+    check_ruleset_name="memory",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.1",
         oids=["9"],
     ),
-}
+)

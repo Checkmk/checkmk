@@ -28,7 +28,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 sylo_default_levels = (70, 5, 25)
@@ -103,8 +103,8 @@ def check_sylo(item, params, info):
     return (3, "Invalid hint file contents: %s" % info)
 
 
-check_info["sylo"] = {
-    "check_function": check_sylo,
-    "discovery_function": inventory_sylo,
-    "service_name": "Sylo",
-}
+check_info["sylo"] = LegacyCheckDefinition(
+    check_function=check_sylo,
+    discovery_function=inventory_sylo,
+    service_name="Sylo",
+)

@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated,assignment"
 
-from cmk.base.check_api import savefloat, saveint, startswith
+from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint, startswith
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -143,19 +143,19 @@ def check_security_master(item, _no_params, parsed):
     return status, msg
 
 
-check_info["security_master"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.35491"),
-    "parse_function": parse_security_master,
-    "check_function": check_security_master,
-    "discovery_function": lambda parsed: inventory_security_master_sensors(parsed, "smoke"),
-    "service_name": "Sensor %s",
-    "fetch": [
+check_info["security_master"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.35491"),
+    parse_function=parse_security_master,
+    check_function=check_security_master,
+    discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "smoke"),
+    service_name="Sensor %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.35491.30",
             oids=[OIDEnd(), "3"],
         )
     ],
-}
+)
 
 #   .--humidity------------------------------------------------------------.
 #   |              _                     _     _ _ _                       |
@@ -182,12 +182,12 @@ def check_security_master_humidity(item, params, parsed):
     return check_humidity(sensor["value"], params)
 
 
-check_info["security_master.humidity"] = {
-    "discovery_function": lambda parsed: inventory_security_master_sensors(parsed, "humidity"),
-    "check_function": check_security_master_humidity,
-    "service_name": "Sensor %s",
-    "check_ruleset_name": "humidity",
-}
+check_info["security_master.humidity"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "humidity"),
+    check_function=check_security_master_humidity,
+    service_name="Sensor %s",
+    check_ruleset_name="humidity",
+)
 
 #   .--temp----------------------------------------------------------------.
 #   |                       _                                              |
@@ -224,10 +224,10 @@ def check_security_master_temperature(item, params, parsed):
     )
 
 
-check_info["security_master.temp"] = {
-    "discovery_function": lambda parsed: inventory_security_master_sensors(parsed, "temp"),
-    "check_function": check_security_master_temperature,
-    "service_name": "Sensor %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "security_master_temp_default_levels",
-}
+check_info["security_master.temp"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "temp"),
+    check_function=check_security_master_temperature,
+    service_name="Sensor %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="security_master_temp_default_levels",
+)

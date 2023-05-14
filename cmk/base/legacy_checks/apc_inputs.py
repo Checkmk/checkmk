@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.apc import DETECT
@@ -47,13 +48,13 @@ def check_apc_inputs(item, params, info):
     return None
 
 
-check_info["apc_inputs"] = {
-    "detect": DETECT,
-    "discovery_function": inventory_apc_inputs,
-    "check_function": check_apc_inputs,
-    "service_name": "Input %s",
-    "fetch": SNMPTree(
+check_info["apc_inputs"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=inventory_apc_inputs,
+    check_function=check_apc_inputs,
+    service_name="Input %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.25.2.2.1",
         oids=["3", "4", "5", "6"],
     ),
-}
+)

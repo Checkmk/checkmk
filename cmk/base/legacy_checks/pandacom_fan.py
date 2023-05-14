@@ -15,6 +15,7 @@
 # .1.3.6.1.4.1.3652.3.2.3.1.2.10 3 --> SPEEDCARRIER-MIB::nmFanGroupStatus.10
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.pandacom import DETECT_PANDACOM
@@ -41,13 +42,13 @@ def check_pandacom_fan(item, params, info):
     return None
 
 
-check_info["pandacom_fan"] = {
-    "detect": DETECT_PANDACOM,
-    "discovery_function": inventory_pandacom_fan,
-    "check_function": check_pandacom_fan,
-    "service_name": "Fan %s",
-    "fetch": SNMPTree(
+check_info["pandacom_fan"] = LegacyCheckDefinition(
+    detect=DETECT_PANDACOM,
+    discovery_function=inventory_pandacom_fan,
+    check_function=check_pandacom_fan,
+    service_name="Fan %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3652.3.2.3.1",
         oids=["1", "2"],
     ),
-}
+)

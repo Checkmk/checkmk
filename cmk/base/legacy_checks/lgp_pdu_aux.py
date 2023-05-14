@@ -37,7 +37,7 @@
 
 # mypy: disable-error-code="operator"
 
-from cmk.base.check_api import savefloat, saveint
+from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.lgp import DETECT_LGP
@@ -169,13 +169,13 @@ def check_lgp_pdu_aux(item, params, info):
     return (3, "Could not find given PDU.")
 
 
-check_info["lgp_pdu_aux"] = {
-    "detect": DETECT_LGP,
-    "check_function": check_lgp_pdu_aux,
-    "discovery_function": inventory_lgp_pdu_aux,
-    "service_name": "Liebert PDU AUX %s",
-    "fetch": SNMPTree(
+check_info["lgp_pdu_aux"] = LegacyCheckDefinition(
+    detect=DETECT_LGP,
+    check_function=check_lgp_pdu_aux,
+    discovery_function=inventory_lgp_pdu_aux,
+    service_name="Liebert PDU AUX %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.8.60.15",
         oids=[OIDEnd(), "1"],
     ),
-}
+)

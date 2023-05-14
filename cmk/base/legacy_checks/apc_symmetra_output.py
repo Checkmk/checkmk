@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -37,16 +37,16 @@ def parse_apc_symmetra_output(info):
     return data
 
 
-check_info["apc_symmetra_output"] = {
-    "detect": DETECT,
-    "parse_function": parse_apc_symmetra_output,
-    "discovery_function": discover(),
-    "check_function": check_elphase,
-    "service_name": "Phase %s",
-    "fetch": SNMPTree(
+check_info["apc_symmetra_output"] = LegacyCheckDefinition(
+    detect=DETECT,
+    parse_function=parse_apc_symmetra_output,
+    discovery_function=discover(),
+    check_function=check_elphase,
+    service_name="Phase %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.1.4.2",
         oids=["1", "4", "3"],
     ),
-    "default_levels_variable": "apc_symmetra_output_default_levels",
-    "check_ruleset_name": "ups_outphase",
-}
+    default_levels_variable="apc_symmetra_output_default_levels",
+    check_ruleset_name="ups_outphase",
+)

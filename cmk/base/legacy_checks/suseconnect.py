@@ -53,7 +53,7 @@ import time
 ##.
 from typing import Iterable
 
-from cmk.base.check_api import get_age_human_readable
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.suseconnect import get_data, Section
 
@@ -116,11 +116,11 @@ def check_suseconnect(_no_item, params, section: Section):
         yield 2, "Expired since: %s" % get_age_human_readable(-1.0 * expiration_time)
 
 
-check_info["suseconnect"] = {
-    "service_name": "SLES license",
+check_info["suseconnect"] = LegacyCheckDefinition(
+    service_name="SLES license",
     # section is migrated already!
-    "discovery_function": inventory_suseconnect,
-    "check_function": check_suseconnect,
-    "check_ruleset_name": "sles_license",
-    "default_levels_variable": "sles_license_default_levels",
-}
+    discovery_function=inventory_suseconnect,
+    check_function=check_suseconnect,
+    check_ruleset_name="sles_license",
+    default_levels_variable="sles_license_default_levels",
+)

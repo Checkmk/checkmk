@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, contains, exists
+from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -30,19 +30,19 @@ def check_cisco_nexus_cpu(_no_item, params, info):
 # tplink_cpu, hr_cpu, cisco_nexus_cpu, bintec_cpu, winperf_processor,
 # lxc_container_cpu, docker_container_cpu.
 # Migration via cmk/update_config.py!
-check_info["cisco_nexus_cpu"] = {
-    "detect": all_of(
+check_info["cisco_nexus_cpu"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"),
         contains(".1.3.6.1.2.1.1.1.0", "nx-os"),
         exists(".1.3.6.1.4.1.9.9.305.1.1.1.0"),
     ),
-    "discovery_function": inventory_cisco_nexus_cpu,
-    "check_function": check_cisco_nexus_cpu,
-    "service_name": "CPU utilization",
-    "fetch": SNMPTree(
+    discovery_function=inventory_cisco_nexus_cpu,
+    check_function=check_cisco_nexus_cpu,
+    service_name="CPU utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.305.1.1.1",
         oids=["0"],
     ),
-    "check_ruleset_name": "cpu_utilization_os",
-    "default_levels_variable": "cisco_nexus_cpu_default_levels",
-}
+    check_ruleset_name="cpu_utilization_os",
+    default_levels_variable="cisco_nexus_cpu_default_levels",
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, contains, exists, saveint
+from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -89,15 +89,15 @@ def check_cisco_secure(_item, _params, parsed):
         yield 0, "No port security violation"
 
 
-check_info["cisco_secure"] = {
-    "detect": all_of(
+check_info["cisco_secure"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.315.1.2.1.1.1.*")
     ),
-    "parse_function": parse_cisco_secure,
-    "check_function": check_cisco_secure,
-    "discovery_function": inventory_cisco_secure,
-    "service_name": "Port Security",
-    "fetch": [
+    parse_function=parse_cisco_secure,
+    check_function=check_cisco_secure,
+    discovery_function=inventory_cisco_secure,
+    service_name="Port Security",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
             oids=[OIDEnd(), "2", "8"],
@@ -107,4 +107,4 @@ check_info["cisco_secure"] = {
             oids=[OIDEnd(), "1", "2", "9", "10"],
         ),
     ],
-}
+)

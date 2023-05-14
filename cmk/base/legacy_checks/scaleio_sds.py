@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.scaleio import (
     convert_scaleio_space,
@@ -73,14 +74,14 @@ def check_scaleio_sds(item, params, parsed):
     yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
-check_info["scaleio_sds"] = {
-    "parse_function": lambda info: parse_scaleio(info, "SDS"),
-    "discovery_function": inventory_scaleio_sds,
-    "check_function": check_scaleio_sds,
-    "service_name": "ScaleIO SDS capacity %s",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["scaleio_sds"] = LegacyCheckDefinition(
+    parse_function=lambda info: parse_scaleio(info, "SDS"),
+    discovery_function=inventory_scaleio_sds,
+    check_function=check_scaleio_sds,
+    service_name="ScaleIO SDS capacity %s",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)
 
 
 def inventory_scaleio_sds_status(parsed):
@@ -113,9 +114,9 @@ def check_scaleio_sds_status(item, params, parsed):
         yield 2, "Membership state: %s" % status_member
 
 
-check_info["scaleio_sds.status"] = {
-    "parse_function": lambda info: parse_scaleio(info, "SDS"),
-    "discovery_function": inventory_scaleio_sds_status,
-    "check_function": check_scaleio_sds_status,
-    "service_name": "ScaleIO SDS status %s",
-}
+check_info["scaleio_sds.status"] = LegacyCheckDefinition(
+    parse_function=lambda info: parse_scaleio(info, "SDS"),
+    discovery_function=inventory_scaleio_sds_status,
+    check_function=check_scaleio_sds_status,
+    service_name="ScaleIO SDS status %s",
+)

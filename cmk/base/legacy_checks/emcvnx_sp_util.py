@@ -14,7 +14,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 emcvnx_sp_util_default_levels = (50.0, 60.0)
@@ -64,10 +64,10 @@ def check_emcvnx_sp_util(item, params, parsed):
     return state, infotext, [("storage_processor_util", sp_util, warn, crit, 0, 100.0)]
 
 
-check_info["emcvnx_sp_util"] = {
-    "parse_function": parse_emcvnx_sp_util,
-    "discovery_function": inventory_emcvnx_sp_util,
-    "check_function": check_emcvnx_sp_util,
-    "service_name": "Storage Processor Utilization",
-    "check_ruleset_name": "sp_util",
-}
+check_info["emcvnx_sp_util"] = LegacyCheckDefinition(
+    parse_function=parse_emcvnx_sp_util,
+    discovery_function=inventory_emcvnx_sp_util,
+    check_function=check_emcvnx_sp_util,
+    service_name="Storage Processor Utilization",
+    check_ruleset_name="sp_util",
+)

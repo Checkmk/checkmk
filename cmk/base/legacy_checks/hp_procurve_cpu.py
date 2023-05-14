@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, contains
+from cmk.base.check_api import any_of, contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -29,17 +29,17 @@ def check_hp_procurve_cpu(item, params, info):
     return None
 
 
-check_info["hp_procurve_cpu"] = {
-    "detect": any_of(
+check_info["hp_procurve_cpu"] = LegacyCheckDefinition(
+    detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),
     ),
-    "check_function": check_hp_procurve_cpu,
-    "discovery_function": inventory_hp_procurve_cpu,
-    "service_name": "CPU utilization",
-    "check_ruleset_name": "cpu_utilization",
-    "fetch": SNMPTree(
+    check_function=check_hp_procurve_cpu,
+    discovery_function=inventory_hp_procurve_cpu,
+    service_name="CPU utilization",
+    check_ruleset_name="cpu_utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.14.11.5.1.9.6",
         oids=["1"],
     ),
-}
+)

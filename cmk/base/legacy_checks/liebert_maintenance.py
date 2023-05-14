@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.liebert import parse_liebert_without_unit_wrapper
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -49,15 +49,15 @@ def check_liebert_maintenance(_no_item, params, parsed):
     yield check_levels(time_left_seconds, None, levels, human_readable_func=get_age_human_readable)
 
 
-check_info["liebert_maintenance"] = {
-    "detect": DETECT_LIEBERT,
-    "parse_function": lambda info: parse_liebert_without_unit_wrapper(info, int),
-    "discovery_function": inventory_liebert_maintenance,
-    "check_function": check_liebert_maintenance,
-    "service_name": "Maintenance",
-    "fetch": SNMPTree(
+check_info["liebert_maintenance"] = LegacyCheckDefinition(
+    detect=DETECT_LIEBERT,
+    parse_function=lambda info: parse_liebert_without_unit_wrapper(info, int),
+    discovery_function=inventory_liebert_maintenance,
+    check_function=check_liebert_maintenance,
+    service_name="Maintenance",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=["10.1.2.1.4868", "20.1.2.1.4868", "10.1.2.1.4869", "20.1.2.1.4869"],
     ),
-    "default_levels_variable": "liebert_maintenance_default_levels",
-}
+    default_levels_variable="liebert_maintenance_default_levels",
+)

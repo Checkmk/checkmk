@@ -12,6 +12,7 @@ from cmk.base.check_api import (
     get_parsed_item_data,
     get_percent_human_readable,
     get_rate,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
@@ -46,10 +47,10 @@ def check_couchbase_nodes_cache(item, params, data):
     )
 
 
-check_info["couchbase_nodes_cache"] = {
-    "parse_function": parse_couchbase_lines,
-    "discovery_function": discover(lambda k, v: "get_hits" in v and "ep_bg_fetched" in v),
-    "check_function": check_couchbase_nodes_cache,
-    "service_name": "Couchbase %s Cache",
-    "check_ruleset_name": "couchbase_cache",
-}
+check_info["couchbase_nodes_cache"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_lines,
+    discovery_function=discover(lambda k, v: "get_hits" in v and "ep_bg_fetched" in v),
+    check_function=check_couchbase_nodes_cache,
+    service_name="Couchbase %s Cache",
+    check_ruleset_name="couchbase_cache",
+)

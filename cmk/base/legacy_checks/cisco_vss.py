@@ -48,7 +48,7 @@
 # cvsDualActiveDetectionNotifEnable.0    .1.5.1.0 2
 
 
-from cmk.base.check_api import all_of, any_of, contains, exists
+from cmk.base.check_api import all_of, any_of, contains, exists, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -99,8 +99,8 @@ def check_cisco_vss(item, params, info):
         yield state, "%s/%s ports operational" % (op_portcount, conf_portcount)
 
 
-check_info["cisco_vss"] = {
-    "detect": all_of(
+check_info["cisco_vss"] = LegacyCheckDefinition(
+    detect=all_of(
         any_of(
             contains(".1.3.6.1.2.1.1.1.0", "Catalyst 45"),
             contains(".1.3.6.1.2.1.1.1.0", "Catalyst 65"),
@@ -108,10 +108,10 @@ check_info["cisco_vss"] = {
         ),
         exists(".1.3.6.1.4.1.9.9.388.1.1.1.0"),
     ),
-    "check_function": check_cisco_vss,
-    "discovery_function": inventory_cisco_vss,
-    "service_name": "VSS Status",
-    "fetch": [
+    check_function=check_cisco_vss,
+    discovery_function=inventory_cisco_vss,
+    service_name="VSS Status",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.388.1.2.2.1",
             oids=["1", "2"],
@@ -121,4 +121,4 @@ check_info["cisco_vss"] = {
             oids=["2", "3", "5", "6"],
         ),
     ],
-}
+)

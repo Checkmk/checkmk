@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -78,8 +78,8 @@ def check_wmic_process(item, params, info):
     return (state, ", ".join(messages), perfdata)
 
 
-check_info["wmic_process"] = {
-    "check_function": check_wmic_process,
-    "service_name": "Process %s",
-    "check_ruleset_name": "wmic_process",
-}
+check_info["wmic_process"] = LegacyCheckDefinition(
+    check_function=check_wmic_process,
+    service_name="Process %s",
+    check_ruleset_name="wmic_process",
+)

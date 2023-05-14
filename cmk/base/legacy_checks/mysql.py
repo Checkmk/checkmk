@@ -14,6 +14,7 @@ from cmk.base.check_api import (
     get_parsed_item_data,
     get_percent_human_readable,
     get_rate,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.diskstat import check_diskstat_line
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
@@ -64,12 +65,12 @@ def check_mysql_version(_no_item, _no_params, data):
         yield 0, "Version: %s" % version
 
 
-check_info["mysql"] = {
-    "parse_function": parse_mysql,
-    "discovery_function": discover(lambda k, values: "version" in values),
-    "check_function": check_mysql_version,
-    "service_name": "MySQL Version %s",
-}
+check_info["mysql"] = LegacyCheckDefinition(
+    parse_function=parse_mysql,
+    discovery_function=discover(lambda k, values: "version" in values),
+    check_function=check_mysql_version,
+    service_name="MySQL Version %s",
+)
 
 # .
 #   .--Sessions------------------------------------------------------------.
@@ -115,12 +116,12 @@ def check_mysql_sessions(_no_item, params, data):
         yield status, infotext, [(perfvar, value, warn, crit)]
 
 
-check_info["mysql.sessions"] = {
-    "discovery_function": discover(lambda k, values: len(values) > 200),
-    "check_function": check_mysql_sessions,
-    "service_name": "MySQL Sessions %s",
-    "check_ruleset_name": "mysql_sessions",
-}
+check_info["mysql.sessions"] = LegacyCheckDefinition(
+    discovery_function=discover(lambda k, values: len(values) > 200),
+    check_function=check_mysql_sessions,
+    service_name="MySQL Sessions %s",
+    check_ruleset_name="mysql_sessions",
+)
 
 # .
 #   .--InnoDB-IO-----------------------------------------------------------.
@@ -142,12 +143,12 @@ def check_mysql_iostat(item, params, data):
     return check_diskstat_line(time.time(), "innodb_io" + item, params, line)
 
 
-check_info["mysql.innodb_io"] = {
-    "discovery_function": discover(lambda k, values: "Innodb_data_read" in values),
-    "check_function": check_mysql_iostat,
-    "service_name": "MySQL InnoDB IO %s",
-    "check_ruleset_name": "mysql_innodb_io",
-}
+check_info["mysql.innodb_io"] = LegacyCheckDefinition(
+    discovery_function=discover(lambda k, values: "Innodb_data_read" in values),
+    check_function=check_mysql_iostat,
+    service_name="MySQL InnoDB IO %s",
+    check_ruleset_name="mysql_innodb_io",
+)
 
 # .
 #   .--Connections---------------------------------------------------------.
@@ -226,12 +227,12 @@ def mysql_connections(instance, values):
     )
 
 
-check_info["mysql.connections"] = {
-    "discovery_function": mysql_connections,
-    "check_function": check_mysql_connections,
-    "service_name": "MySQL Connections %s",
-    "check_ruleset_name": "mysql_connections",
-}
+check_info["mysql.connections"] = LegacyCheckDefinition(
+    discovery_function=mysql_connections,
+    check_function=check_mysql_connections,
+    service_name="MySQL Connections %s",
+    check_ruleset_name="mysql_connections",
+)
 
 # .
 #   .--Galera Sync Status--------------------------------------------------.
@@ -274,11 +275,11 @@ def check_mysql_galerasync(item, _no_params, data):
     return state, "WSREP local state comment: %s" % wsrep_local_state_comment
 
 
-check_info["mysql.galerasync"] = {
-    "discovery_function": inventory_mysql_galerasync,
-    "check_function": check_mysql_galerasync,
-    "service_name": "MySQL Galera Sync %s",
-}
+check_info["mysql.galerasync"] = LegacyCheckDefinition(
+    discovery_function=inventory_mysql_galerasync,
+    check_function=check_mysql_galerasync,
+    service_name="MySQL Galera Sync %s",
+)
 
 # .
 #   .--Galera Donor--------------------------------------------------------.
@@ -314,12 +315,12 @@ def check_mysql_galeradonor(item, params, data):
     return state, infotext
 
 
-check_info["mysql.galeradonor"] = {
-    "discovery_function": inventory_mysql_galeradonor,
-    "check_function": check_mysql_galeradonor,
-    "service_name": "MySQL Galera Donor %s",
-    "default_levels_variable": "MYSQL_GALERA_DEFAULT_PARAMETERS",
-}
+check_info["mysql.galeradonor"] = LegacyCheckDefinition(
+    discovery_function=inventory_mysql_galeradonor,
+    check_function=check_mysql_galeradonor,
+    service_name="MySQL Galera Donor %s",
+    default_levels_variable="MYSQL_GALERA_DEFAULT_PARAMETERS",
+)
 
 # .
 #   .--Galera Startup------------------------------------------------------.
@@ -349,11 +350,11 @@ def check_mysql_galerastartup(item, _no_params, data):
     return 0, "WSREP cluster address: %s" % wsrep_cluster_address
 
 
-check_info["mysql.galerastartup"] = {
-    "discovery_function": inventory_mysql_galerastartup,
-    "check_function": check_mysql_galerastartup,
-    "service_name": "MySQL Galera Startup %s",
-}
+check_info["mysql.galerastartup"] = LegacyCheckDefinition(
+    discovery_function=inventory_mysql_galerastartup,
+    check_function=check_mysql_galerastartup,
+    service_name="MySQL Galera Startup %s",
+)
 
 # .
 #   .--Galera Cluster Size-------------------------------------------------.
@@ -395,12 +396,12 @@ def check_mysql_galerasize(item, params, data):
     return state, infotext
 
 
-check_info["mysql.galerasize"] = {
-    "discovery_function": inventory_mysql_galerasize,
-    "check_function": check_mysql_galerasize,
-    "service_name": "MySQL Galera Size %s",
-    "default_levels_variable": "MYSQL_GALERA_DEFAULT_PARAMETERS",
-}
+check_info["mysql.galerasize"] = LegacyCheckDefinition(
+    discovery_function=inventory_mysql_galerasize,
+    check_function=check_mysql_galerasize,
+    service_name="MySQL Galera Size %s",
+    default_levels_variable="MYSQL_GALERA_DEFAULT_PARAMETERS",
+)
 
 # .
 #   .--Galera Status-------------------------------------------------------.
@@ -432,8 +433,8 @@ def check_mysql_galerastatus(item, _no_params, data):
     return state, "WSREP cluster status: %s" % wsrep_cluster_status
 
 
-check_info["mysql.galerastatus"] = {
-    "discovery_function": inventory_mysql_galerastatus,
-    "check_function": check_mysql_galerastatus,
-    "service_name": "MySQL Galera Status %s",
-}
+check_info["mysql.galerastatus"] = LegacyCheckDefinition(
+    discovery_function=inventory_mysql_galerastatus,
+    check_function=check_mysql_galerastatus,
+    service_name="MySQL Galera Status %s",
+)

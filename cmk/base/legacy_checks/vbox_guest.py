@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -43,9 +44,9 @@ def inventory_vbox_guest(info):
     return []
 
 
-check_info["vbox_guest"] = {
-    "check_function": check_vbox_guest,
-    "discovery_function": inventory_vbox_guest,
-    "service_name": "VBox Guest Additions",
-    "check_ruleset_name": "vm_state",
-}
+check_info["vbox_guest"] = LegacyCheckDefinition(
+    check_function=check_vbox_guest,
+    discovery_function=inventory_vbox_guest,
+    service_name="VBox Guest Additions",
+    check_ruleset_name="vm_state",
+)

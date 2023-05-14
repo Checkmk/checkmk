@@ -37,6 +37,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -81,9 +82,9 @@ def check_aix_hacmp_nodes(item, _no_params, parsed):
     return None
 
 
-check_info["aix_hacmp_nodes"] = {
-    "parse_function": parse_aix_hacmp_nodes,
-    "discovery_function": inventory_aix_hacmp_nodes,
-    "check_function": check_aix_hacmp_nodes,
-    "service_name": "HACMP Node %s",
-}
+check_info["aix_hacmp_nodes"] = LegacyCheckDefinition(
+    parse_function=parse_aix_hacmp_nodes,
+    discovery_function=inventory_aix_hacmp_nodes,
+    check_function=check_aix_hacmp_nodes,
+    service_name="HACMP Node %s",
+)

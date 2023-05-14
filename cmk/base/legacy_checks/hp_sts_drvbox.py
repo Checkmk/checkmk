@@ -8,7 +8,7 @@
 
 # mypy: disable-error-code="index"
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -117,13 +117,13 @@ def check_hp_sts_drvbox(item, _no_params, info):
     return (3, "Controller not found in snmp data")
 
 
-check_info["hp_sts_drvbox"] = {
-    "detect": contains(".1.3.6.1.4.1.232.2.2.4.2.0", "proliant"),
-    "check_function": check_hp_sts_drvbox,
-    "discovery_function": inventory_hp_sts_drvbox,
-    "service_name": "Drive Box %s",
-    "fetch": SNMPTree(
+check_info["hp_sts_drvbox"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.4.1.232.2.2.4.2.0", "proliant"),
+    check_function=check_hp_sts_drvbox,
+    discovery_function=inventory_hp_sts_drvbox,
+    service_name="Drive Box %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.8.2.1.1",
         oids=["1", "2", "3", "4", "7", "8", "9", "10", "11", "17", "23"],
     ),
-}
+)

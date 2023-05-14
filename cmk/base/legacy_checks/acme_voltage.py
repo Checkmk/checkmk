@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.acme import acme_environment_states
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
@@ -69,14 +70,14 @@ def check_acme_voltage(item, params, info):
     return None
 
 
-check_info["acme_voltage"] = {
-    "detect": DETECT_ACME,
-    "discovery_function": inventory_acme_voltage,
-    "check_function": check_acme_voltage,
-    "service_name": "Voltage %s",
-    "fetch": SNMPTree(
+check_info["acme_voltage"] = LegacyCheckDefinition(
+    detect=DETECT_ACME,
+    discovery_function=inventory_acme_voltage,
+    check_function=check_acme_voltage,
+    service_name="Voltage %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.3.1.2.1.1",
         oids=["3", "4", "5"],
     ),
-    "check_ruleset_name": "el_inphase",
-}
+    check_ruleset_name="el_inphase",
+)

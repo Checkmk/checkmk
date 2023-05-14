@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -22,13 +23,13 @@ def check_f5_bigip_apm(item, _no_params, info):
     return 0, "Connections: %s" % count, perfdata
 
 
-check_info["f5_bigip_apm"] = {
-    "detect": DETECT,
-    "discovery_function": inventory_f5_bigip_apm,
-    "check_function": check_f5_bigip_apm,
-    "service_name": "SSL/VPN Connections",
-    "fetch": SNMPTree(
+check_info["f5_bigip_apm"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=inventory_f5_bigip_apm,
+    check_function=check_f5_bigip_apm,
+    service_name="SSL/VPN Connections",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.6.1.5.3",
         oids=["0"],
     ),
-}
+)

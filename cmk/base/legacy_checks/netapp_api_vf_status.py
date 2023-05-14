@@ -11,6 +11,7 @@
 # cdefs1v  running
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -27,8 +28,8 @@ def check_netapp_api_vf_status(item, _no_params, info):
     return state, "State is %s" % filer_states[item]
 
 
-check_info["netapp_api_vf_status"] = {
-    "check_function": check_netapp_api_vf_status,
-    "discovery_function": inventory_netapp_api_vf_status,
-    "service_name": "vFiler Status %s",
-}
+check_info["netapp_api_vf_status"] = LegacyCheckDefinition(
+    check_function=check_netapp_api_vf_status,
+    discovery_function=inventory_netapp_api_vf_status,
+    service_name="vFiler Status %s",
+)

@@ -8,6 +8,7 @@
 
 import re
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info, factory_settings
 
@@ -286,11 +287,11 @@ def check_libelle_business_shadow_info(_no_item, _no_params, info):
     return 0, message
 
 
-check_info["libelle_business_shadow.info"] = {
-    "check_function": check_libelle_business_shadow_info,
-    "discovery_function": inventory_libelle_business_shadow_info,
-    "service_name": "Libelle Business Shadow Info",
-}
+check_info["libelle_business_shadow.info"] = LegacyCheckDefinition(
+    check_function=check_libelle_business_shadow_info,
+    discovery_function=inventory_libelle_business_shadow_info,
+    service_name="Libelle Business Shadow Info",
+)
 
 # .
 #   .--status--------------------------------------------------------------.
@@ -324,11 +325,11 @@ def check_libelle_business_shadow_status(_no_item, _no_params, info):
     return status, message
 
 
-check_info["libelle_business_shadow.status"] = {
-    "check_function": check_libelle_business_shadow_status,
-    "discovery_function": inventory_libelle_business_shadow_status,
-    "service_name": "Libelle Business Shadow Status",
-}
+check_info["libelle_business_shadow.status"] = LegacyCheckDefinition(
+    check_function=check_libelle_business_shadow_status,
+    discovery_function=inventory_libelle_business_shadow_status,
+    service_name="Libelle Business Shadow Status",
+)
 
 # .
 #   .--process-------------------------------------------------------------.
@@ -365,11 +366,11 @@ def check_libelle_business_shadow_process(_no_item, _no_params, info):
     return status, message
 
 
-check_info["libelle_business_shadow.process"] = {
-    "check_function": check_libelle_business_shadow_process,
-    "discovery_function": inventory_libelle_business_shadow_process,
-    "service_name": "Libelle Business Shadow Process",
-}
+check_info["libelle_business_shadow.process"] = LegacyCheckDefinition(
+    check_function=check_libelle_business_shadow_process,
+    discovery_function=inventory_libelle_business_shadow_process,
+    service_name="Libelle Business Shadow Process",
+)
 
 # .
 #   .--archive dir---------------------------------------------------------.
@@ -400,12 +401,12 @@ def check_libelle_business_shadow_archive_dir(item, params, info):
     return df_check_filesystem_list(item, params, fslist)
 
 
-check_info["libelle_business_shadow.archive_dir"] = {
-    "check_function": check_libelle_business_shadow_archive_dir,
-    "discovery_function": inventory_libelle_business_shadow_archive_dir,
-    "service_name": "Libelle Business Shadow %s",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["libelle_business_shadow.archive_dir"] = LegacyCheckDefinition(
+    check_function=check_libelle_business_shadow_archive_dir,
+    discovery_function=inventory_libelle_business_shadow_archive_dir,
+    service_name="Libelle Business Shadow %s",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)
 
 # .

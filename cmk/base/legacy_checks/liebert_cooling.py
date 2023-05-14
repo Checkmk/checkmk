@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data
+from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.liebert import parse_liebert_wrapper
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -28,16 +28,16 @@ def check_liebert_cooling(_item, params, data):
     )
 
 
-check_info["liebert_cooling"] = {
-    "detect": DETECT_LIEBERT,
-    "parse_function": parse_liebert_wrapper,
-    "discovery_function": discover(),
-    "check_function": check_liebert_cooling,
-    "service_name": "%s",
-    "fetch": SNMPTree(
+check_info["liebert_cooling"] = LegacyCheckDefinition(
+    detect=DETECT_LIEBERT,
+    parse_function=parse_liebert_wrapper,
+    discovery_function=discover(),
+    check_function=check_liebert_cooling,
+    service_name="%s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=["10.1.2.1.5078", "20.1.2.1.5078", "30.1.2.1.5078"],
     ),
-    "default_levels_variable": "liebert_cooling_default_levels",
-    "check_ruleset_name": "liebert_cooling",
-}
+    default_levels_variable="liebert_cooling_default_levels",
+    check_ruleset_name="liebert_cooling",
+)

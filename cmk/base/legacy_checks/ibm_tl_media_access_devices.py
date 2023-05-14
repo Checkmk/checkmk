@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.ibm_tape_library import (
     ibm_tape_library_get_device_state,
     ibm_tape_library_parse_device_name,
@@ -75,13 +75,13 @@ def check_ibm_tl_media_access_devices(item, params, parsed):
         yield 0, "Type: %s, Needs cleaning: %s" % (data["type"], data["clean"])
 
 
-check_info["ibm_tl_media_access_devices"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
-    "parse_function": parse_ibm_tl_media_access_devices,
-    "discovery_function": inventory_ibm_tl_media_access_devices,
-    "check_function": check_ibm_tl_media_access_devices,
-    "service_name": "Media access device %s",
-    "fetch": [
+check_info["ibm_tl_media_access_devices"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
+    parse_function=parse_ibm_tl_media_access_devices,
+    discovery_function=inventory_ibm_tl_media_access_devices,
+    check_function=check_ibm_tl_media_access_devices,
+    service_name="Media access device %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.14851.3.1.6.2.1",
             oids=["2", "3", "6"],
@@ -91,4 +91,4 @@ check_info["ibm_tl_media_access_devices"] = {
             oids=["3", "6", "4"],
         ),
     ],
-}
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -21,14 +22,14 @@ def check_knuerr_rms_humidity(_no_item, params, info):
     return check_humidity(float(reading) / 10, params)
 
 
-check_info["knuerr_rms_humidity"] = {
-    "detect": DETECT_KNUERR,
-    "check_function": check_knuerr_rms_humidity,
-    "discovery_function": inventory_knuerr_rms_humidity,
-    "service_name": "Humidity",
-    "fetch": SNMPTree(
+check_info["knuerr_rms_humidity"] = LegacyCheckDefinition(
+    detect=DETECT_KNUERR,
+    check_function=check_knuerr_rms_humidity,
+    discovery_function=inventory_knuerr_rms_humidity,
+    service_name="Humidity",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3711.15.1.1.1.2",
         oids=["2", "4"],
     ),
-    "check_ruleset_name": "single_humidity",
-}
+    check_ruleset_name="single_humidity",
+)

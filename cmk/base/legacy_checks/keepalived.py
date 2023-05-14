@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, contains, exists
+from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -57,15 +57,13 @@ def check_keepalived(item, params, info):
     yield int(status), infotext
 
 
-check_info["keepalived"] = {
-    "detect": all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.9586.100.5.1.1.0")
-    ),
-    "discovery_function": inventory_keepalived,
-    "default_levels_variable": "keepalived_default_levels",
-    "check_function": check_keepalived,
-    "service_name": "VRRP Instance %s",
-    "fetch": [
+check_info["keepalived"] = LegacyCheckDefinition(
+    detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.9586.100.5.1.1.0")),
+    discovery_function=inventory_keepalived,
+    default_levels_variable="keepalived_default_levels",
+    check_function=check_keepalived,
+    service_name="VRRP Instance %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9586.100.5.2.3.1",
             oids=["2", "4"],
@@ -75,5 +73,5 @@ check_info["keepalived"] = {
             oids=["3"],
         ),
     ],
-    "check_ruleset_name": "keepalived",
-}
+    check_ruleset_name="keepalived",
+)

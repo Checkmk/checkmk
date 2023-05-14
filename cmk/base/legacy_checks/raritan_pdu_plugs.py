@@ -4,7 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, any_of, get_parsed_item_data, startswith
+from cmk.base.check_api import (
+    all_of,
+    any_of,
+    get_parsed_item_data,
+    LegacyCheckDefinition,
+    startswith,
+)
 from cmk.base.check_legacy_includes.raritan import raritan_map_state
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -39,21 +45,21 @@ def check_raritan_pdu_plugs(_no_item, params, data):
         yield 2, "Expected: %s" % required_state
 
 
-check_info["raritan_pdu_plugs"] = {
-    "detect": all_of(
+check_info["raritan_pdu_plugs"] = LegacyCheckDefinition(
+    detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6"),
         any_of(
             startswith(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1", "PX2-2"),
             startswith(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1", "PX3"),
         ),
     ),
-    "discovery_function": inventory_raritan_pdu_plugs,
-    "parse_function": parse_raritan_pdu_plugs,
-    "check_function": check_raritan_pdu_plugs,
-    "service_name": "Plug %s",
-    "check_ruleset_name": "plugs",
-    "fetch": SNMPTree(
+    discovery_function=inventory_raritan_pdu_plugs,
+    parse_function=parse_raritan_pdu_plugs,
+    check_function=check_raritan_pdu_plugs,
+    service_name="Plug %s",
+    check_ruleset_name="plugs",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.6",
         oids=["3.5.3.1.2", "3.5.3.1.3", "4.1.2.1.3"],
     ),
-}
+)

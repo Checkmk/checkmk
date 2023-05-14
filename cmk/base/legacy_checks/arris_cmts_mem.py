@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import equals, get_parsed_item_data
+from cmk.base.check_api import equals, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -49,16 +49,16 @@ def check_arris_cmts_mem(item, params, data):
     )
 
 
-check_info["arris_cmts_mem"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
-    "parse_function": parse_arris_cmts_mem,
-    "discovery_function": inventory_arris_cmts_mem,
-    "check_function": check_arris_cmts_mem,
-    "service_name": "Memory Module %s",
-    "fetch": SNMPTree(
+check_info["arris_cmts_mem"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
+    parse_function=parse_arris_cmts_mem,
+    discovery_function=inventory_arris_cmts_mem,
+    check_function=check_arris_cmts_mem,
+    service_name="Memory Module %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.4998.1.1.5.3.2.1.1",
         oids=[OIDEnd(), "2", "3"],
     ),
-    "check_ruleset_name": "memory_multiitem",
-    "default_levels_variable": "arris_cmts_mem",
-}
+    check_ruleset_name="memory_multiitem",
+    default_levels_variable="arris_cmts_mem",
+)

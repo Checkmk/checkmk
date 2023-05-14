@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.ups_in_voltage import check_ups_in_voltage
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -26,14 +26,14 @@ def check_socomec_ups_in_voltage(item, params, info):
     return check_ups_in_voltage(item, params, conv_info)
 
 
-check_info["ups_socomec_in_voltage"] = {
-    "detect": DETECT_SOCOMEC,
-    "discovery_function": inventory_socomec_ups_in_voltage,
-    "check_function": check_socomec_ups_in_voltage,
-    "service_name": "IN voltage phase %s",
-    "check_ruleset_name": "evolt",
-    "fetch": SNMPTree(
+check_info["ups_socomec_in_voltage"] = LegacyCheckDefinition(
+    detect=DETECT_SOCOMEC,
+    discovery_function=inventory_socomec_ups_in_voltage,
+    check_function=check_socomec_ups_in_voltage,
+    service_name="IN voltage phase %s",
+    check_ruleset_name="evolt",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.3.3.1",
         oids=["1", "2"],
     ),
-}
+)

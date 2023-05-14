@@ -11,7 +11,7 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 SplunkLicenseUsage = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
@@ -66,11 +66,11 @@ def check_splunk_license_usage(item, params, parsed):
         )
 
 
-check_info["splunk_license_usage"] = {
-    "parse_function": parse_splunk_license_usage,
-    "check_function": check_splunk_license_usage,
-    "discovery_function": inventory_splunk_license_usage,
-    "service_name": "Splunk License Usage",
-    "check_ruleset_name": "splunk_license_usage",
-    "default_levels_variable": "splunk_license_usage_default_levels",
-}
+check_info["splunk_license_usage"] = LegacyCheckDefinition(
+    parse_function=parse_splunk_license_usage,
+    check_function=check_splunk_license_usage,
+    discovery_function=inventory_splunk_license_usage,
+    service_name="Splunk License Usage",
+    check_ruleset_name="splunk_license_usage",
+    default_levels_variable="splunk_license_usage_default_levels",
+)

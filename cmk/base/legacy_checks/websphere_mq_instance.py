@@ -37,6 +37,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -127,13 +128,13 @@ def check_websphere_mq_instance(item, params, parsed):
     return None
 
 
-check_info["websphere_mq_instance"] = {
-    "parse_function": parse_websphere_mq_instance,
-    "discovery_function": inventory_websphere_mq_instance,
-    "check_function": check_websphere_mq_instance,
-    "service_name": "MQ Instance %s",
-    "check_ruleset_name": "websphere_mq_instance",
-}
+check_info["websphere_mq_instance"] = LegacyCheckDefinition(
+    parse_function=parse_websphere_mq_instance,
+    discovery_function=inventory_websphere_mq_instance,
+    check_function=check_websphere_mq_instance,
+    service_name="MQ Instance %s",
+    check_ruleset_name="websphere_mq_instance",
+)
 
 # .
 #   .--manager-------------------------------------------------------------.
@@ -200,9 +201,9 @@ def check_websphere_mq_manager(item, params, parsed):  # pylint: disable=too-man
                 yield 0, "%s: %s" % (title, what)
 
 
-check_info["websphere_mq_instance.manager"] = {
-    "discovery_function": inventory_websphere_mq_manager,
-    "check_function": check_websphere_mq_manager,
-    "service_name": "MQ Manager %s",
-    "check_ruleset_name": "websphere_mq_manager",
-}
+check_info["websphere_mq_instance.manager"] = LegacyCheckDefinition(
+    discovery_function=inventory_websphere_mq_manager,
+    check_function=check_websphere_mq_manager,
+    service_name="MQ Manager %s",
+    check_ruleset_name="websphere_mq_manager",
+)

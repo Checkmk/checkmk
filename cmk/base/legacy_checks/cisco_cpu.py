@@ -15,6 +15,7 @@ from cmk.base.check_api import (
     contains,
     exists,
     get_percent_human_readable,
+    LegacyCheckDefinition,
     not_contains,
     not_exists,
 )
@@ -51,8 +52,8 @@ def check_cisco_cpu(item, params, info):
     )
 
 
-check_info["cisco_cpu"] = {
-    "detect": all_of(
+check_info["cisco_cpu"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"),
         any_of(
             not_contains(".1.3.6.1.2.1.1.1.0", "nx-os"), not_exists(".1.3.6.1.4.1.9.9.305.1.1.1.0")
@@ -62,13 +63,13 @@ check_info["cisco_cpu"] = {
             exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"), exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.5.1")
         ),
     ),
-    "check_function": check_cisco_cpu,
-    "discovery_function": inventory_cisco_cpu,
-    "service_name": "CPU utilization",
-    "check_ruleset_name": "cpu_utilization",
-    "fetch": SNMPTree(
+    check_function=check_cisco_cpu,
+    discovery_function=inventory_cisco_cpu,
+    service_name="CPU utilization",
+    check_ruleset_name="cpu_utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.109.1.1.1.1",
         oids=["5", "8"],
     ),
-    "default_levels_variable": "cisco_cpu_default_levels",
-}
+    default_levels_variable="cisco_cpu_default_levels",
+)

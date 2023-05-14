@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
 
@@ -20,8 +20,8 @@ def check_mailman_lists(item, params, info):
     return (3, "List could not be found in agent output")
 
 
-check_info["mailman_lists"] = {
-    "check_function": check_mailman_lists,
-    "discovery_function": inventory_mailman_lists,
-    "service_name": "Mailinglist %s",
-}
+check_info["mailman_lists"] = LegacyCheckDefinition(
+    check_function=check_mailman_lists,
+    discovery_function=inventory_mailman_lists,
+    service_name="Mailinglist %s",
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -19,8 +20,8 @@ def check_tsm_paths(item, _no_params, info):
     return 0, " %d paths OK" % count_pathes
 
 
-check_info["tsm_paths"] = {
-    "check_function": check_tsm_paths,
-    "discovery_function": inventory_tsm_paths,
-    "service_name": "TSM Paths",
-}
+check_info["tsm_paths"] = LegacyCheckDefinition(
+    check_function=check_tsm_paths,
+    discovery_function=inventory_tsm_paths,
+    service_name="TSM Paths",
+)

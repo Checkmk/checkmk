@@ -10,7 +10,7 @@
 # ORACLE_SID serial# machine process osuser program last_call_el sql_id
 
 
-from cmk.base.check_api import get_age_human_readable, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["oracle_longactivesessions_defaults"] = {
@@ -81,10 +81,10 @@ def check_oracle_longactivesessions(item, params, info):
     raise MKCounterWrapped("no info from database. Check ORA %s Instance" % item)
 
 
-check_info["oracle_longactivesessions"] = {
-    "check_function": check_oracle_longactivesessions,
-    "discovery_function": inventory_oracle_longactivesessions,
-    "service_name": "ORA %s Long Active Sessions",
-    "default_levels_variable": "oracle_longactivesessions_defaults",
-    "check_ruleset_name": "oracle_longactivesessions",
-}
+check_info["oracle_longactivesessions"] = LegacyCheckDefinition(
+    check_function=check_oracle_longactivesessions,
+    discovery_function=inventory_oracle_longactivesessions,
+    service_name="ORA %s Long Active Sessions",
+    default_levels_variable="oracle_longactivesessions_defaults",
+    check_ruleset_name="oracle_longactivesessions",
+)

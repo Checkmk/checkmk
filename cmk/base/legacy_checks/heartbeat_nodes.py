@@ -13,6 +13,7 @@
 # swi03 ping swi03 up
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -51,8 +52,8 @@ def check_heartbeat_nodes(item, params, info):
     return (3, "Node is not present anymore")
 
 
-check_info["heartbeat_nodes"] = {
-    "check_function": check_heartbeat_nodes,
-    "discovery_function": inventory_heartbeat_nodes,
-    "service_name": "Heartbeat Node %s",
-}
+check_info["heartbeat_nodes"] = LegacyCheckDefinition(
+    check_function=check_heartbeat_nodes,
+    discovery_function=inventory_heartbeat_nodes,
+    service_name="Heartbeat Node %s",
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
@@ -48,14 +49,14 @@ def check_ifoperstatus(item, targetstate, info):
 
 # Never inventorize automatically. let if/if64 be the default
 
-check_info["ifoperstatus"] = {
+check_info["ifoperstatus"] = LegacyCheckDefinition(
     # Never inventorize automatically. let if/if64 be the default
-    "detect": DETECT_NEVER,
-    "check_function": check_ifoperstatus,
-    "discovery_function": inventory_ifoperstatus,
-    "service_name": "Interface %s",
-    "fetch": SNMPTree(
+    detect=DETECT_NEVER,
+    check_function=check_ifoperstatus,
+    discovery_function=inventory_ifoperstatus,
+    service_name="Interface %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         oids=["2", "3", "8"],
     ),
-}
+)

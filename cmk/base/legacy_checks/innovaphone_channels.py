@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.innovaphone import check_innovaphone
 from cmk.base.config import check_info
 
@@ -30,9 +31,9 @@ def check_innovaphone_channels(item, params, info):
     return 3, "No Channel information found"
 
 
-check_info["innovaphone_channels"] = {
-    "check_function": check_innovaphone_channels,
-    "discovery_function": inventory_innovaphone_channels,
-    "service_name": "Channel %s",
-    "check_ruleset_name": "hw_single_channelserature",
-}
+check_info["innovaphone_channels"] = LegacyCheckDefinition(
+    check_function=check_innovaphone_channels,
+    discovery_function=inventory_innovaphone_channels,
+    service_name="Channel %s",
+    check_ruleset_name="hw_single_channelserature",
+)

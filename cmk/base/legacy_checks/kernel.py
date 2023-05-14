@@ -7,7 +7,7 @@
 # mypy: disable-error-code="arg-type"
 
 import cmk.base.plugins.agent_based.kernel
-from cmk.base.check_api import check_levels, get_rate
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 #   .--kernel--Counters----------------------------------------------------.
@@ -53,12 +53,12 @@ def check_kernel(item, params, parsed):
 
 
 # This check is deprecated. Please have a look at werk #8969.
-check_info["kernel"] = {
+check_info["kernel"] = LegacyCheckDefinition(
     # section is already migrated!
-    "check_function": check_kernel,
-    "service_name": "Kernel %s",
-    "check_ruleset_name": "vm_counter",
-}
+    check_function=check_kernel,
+    service_name="Kernel %s",
+    check_ruleset_name="vm_counter",
+)
 
 # .
 #   .--kernel.performance--Counters----------------------------------------.
@@ -115,9 +115,9 @@ def check_kernel_performance(_no_item, params, parsed):
         )
 
 
-check_info["kernel.performance"] = {
-    "discovery_function": inventory_kernel_performance,
-    "check_function": check_kernel_performance,
-    "service_name": "Kernel Performance",
-    "check_ruleset_name": "kernel_performance",
-}
+check_info["kernel.performance"] = LegacyCheckDefinition(
+    discovery_function=inventory_kernel_performance,
+    check_function=check_kernel_performance,
+    service_name="Kernel Performance",
+    check_ruleset_name="kernel_performance",
+)

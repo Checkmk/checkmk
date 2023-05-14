@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import savefloat
+from cmk.base.check_api import LegacyCheckDefinition, savefloat
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_TRPZ
@@ -49,15 +49,15 @@ def check_juniper_trpz_cpu_util(_no_item, params, info):
     return state, message, perf
 
 
-check_info["juniper_trpz_cpu_util"] = {
-    "detect": DETECT_JUNIPER_TRPZ,
-    "check_function": check_juniper_trpz_cpu_util,
-    "discovery_function": inventory_juniper_trpz_cpu_util,
-    "check_ruleset_name": "cpu_utilization",
-    "service_name": "CPU utilization",
-    "fetch": SNMPTree(
+check_info["juniper_trpz_cpu_util"] = LegacyCheckDefinition(
+    detect=DETECT_JUNIPER_TRPZ,
+    check_function=check_juniper_trpz_cpu_util,
+    discovery_function=inventory_juniper_trpz_cpu_util,
+    check_ruleset_name="cpu_utilization",
+    service_name="CPU utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1.11",
         oids=["1", "2", "3"],
     ),
-    "default_levels_variable": "juniper_trpz_cpu_util_default_levels",
-}
+    default_levels_variable="juniper_trpz_cpu_util_default_levels",
+)

@@ -8,7 +8,7 @@
 # ( # Name Disks TotalCap  FreeCap DiskChannels State )
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
 
@@ -52,8 +52,8 @@ def check_arc_raid_status(item, params, info):
     return 3, "Array not found"
 
 
-check_info["arc_raid_status"] = {
-    "check_function": check_arc_raid_status,
-    "discovery_function": inventory_arc_raid_status,
-    "service_name": "Raid Array #%s",
-}
+check_info["arc_raid_status"] = LegacyCheckDefinition(
+    check_function=check_arc_raid_status,
+    discovery_function=inventory_arc_raid_status,
+    service_name="Raid Array #%s",
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, contains
+from cmk.base.check_api import all_of, contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -62,15 +62,15 @@ def check_quantum_libsmall_status(_no_item, _no_params, parsed):
         yield state, "%s: %s" % (dev_type, state_readable)
 
 
-check_info["quantum_libsmall_status"] = {
-    "detect": all_of(
+check_info["quantum_libsmall_status"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "linux"), contains(".1.3.6.1.2.1.1.6.0", "library")
     ),
-    "parse_function": parse_quantum_libsmall_status,
-    "check_function": check_quantum_libsmall_status,
-    "discovery_function": inventory_quantum_libsmall_status,
-    "service_name": "Tape library status",
-    "fetch": [
+    parse_function=parse_quantum_libsmall_status,
+    check_function=check_quantum_libsmall_status,
+    discovery_function=inventory_quantum_libsmall_status,
+    service_name="Tape library status",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3697.1.10.10.1.15",
             oids=[OIDEnd(), "10"],
@@ -80,4 +80,4 @@ check_info["quantum_libsmall_status"] = {
             oids=[OIDEnd(), "12"],
         ),
     ],
-}
+)

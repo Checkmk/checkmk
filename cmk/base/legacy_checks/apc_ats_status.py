@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains, saveint
+from cmk.base.check_api import contains, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -69,13 +69,13 @@ def check_apc_ats_status(_no_item, source, info):
     return state, ", ".join(messages)
 
 
-check_info["apc_ats_status"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.11"),
-    "check_function": check_apc_ats_status,
-    "discovery_function": inventory_apc_ats_status,
-    "service_name": "ATS Status",
-    "fetch": SNMPTree(
+check_info["apc_ats_status"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.11"),
+    check_function=check_apc_ats_status,
+    discovery_function=inventory_apc_ats_status,
+    service_name="ATS Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.8.5.1",
         oids=["1.0", "2.0", "3.0", "4.0", "5.0", "6.0"],
     ),
-}
+)

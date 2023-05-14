@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info
 
 
@@ -22,8 +22,8 @@ def check_oracle_crs_version(_no_item, _no_params, info):
     raise MKCounterWrapped("No version details found. Maybe the cssd is not running")
 
 
-check_info["oracle_crs_version"] = {
-    "check_function": check_oracle_crs_version,
-    "discovery_function": inventory_oracle_crs_version,
-    "service_name": "ORA-GI Version",
-}
+check_info["oracle_crs_version"] = LegacyCheckDefinition(
+    check_function=check_oracle_crs_version,
+    discovery_function=inventory_oracle_crs_version,
+    service_name="ORA-GI Version",
+)

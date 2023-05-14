@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.viprinet import DETECT_VIPRINET
@@ -20,13 +21,13 @@ def check_viprinet_power(_no_item, params, info):
     return (3, "Invalid power status")
 
 
-check_info["viprinet_power"] = {
-    "detect": DETECT_VIPRINET,
-    "check_function": check_viprinet_power,
-    "discovery_function": lambda info: len(info) > 0 and [(None, None)] or [],
-    "service_name": "Power-Supply",
-    "fetch": SNMPTree(
+check_info["viprinet_power"] = LegacyCheckDefinition(
+    detect=DETECT_VIPRINET,
+    check_function=check_viprinet_power,
+    discovery_function=lambda info: len(info) > 0 and [(None, None)] or [],
+    service_name="Power-Supply",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.35424.1.2",
         oids=["5"],
     ),
-}
+)

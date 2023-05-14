@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_total,
     parse_wmi_table,
@@ -26,9 +27,9 @@ def check_msexch_availability(item, params, parsed):
     )
 
 
-check_info["msexch_availability"] = {
-    "discovery_function": discover_msexch_availability,
-    "check_function": check_msexch_availability,
-    "parse_function": parse_wmi_table,
-    "service_name": "Exchange Availability Service",
-}
+check_info["msexch_availability"] = LegacyCheckDefinition(
+    discovery_function=discover_msexch_availability,
+    check_function=check_msexch_availability,
+    parse_function=parse_wmi_table,
+    service_name="Exchange Availability Service",
+)

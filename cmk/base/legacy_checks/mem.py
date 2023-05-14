@@ -14,6 +14,7 @@ from cmk.base.check_api import (
     get_average,
     get_bytes_human_readable,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.mem import check_memory_dict, check_memory_element
 from cmk.base.config import check_info, factory_settings
@@ -148,13 +149,13 @@ def camelcase_to_underscored(name):
     return result
 
 
-check_info["mem.linux"] = {
-    "discovery_function": inventory_mem_linux,
-    "check_function": check_mem_linux,
-    "service_name": "Memory",
-    "default_levels_variable": "mem_linux_default_levels",
-    "check_ruleset_name": "memory_linux",
-}
+check_info["mem.linux"] = LegacyCheckDefinition(
+    discovery_function=inventory_mem_linux,
+    check_function=check_mem_linux,
+    service_name="Memory",
+    default_levels_variable="mem_linux_default_levels",
+    check_ruleset_name="memory_linux",
+)
 
 # .
 #   .--mem.used------------------------------------------------------------.
@@ -353,13 +354,13 @@ def check_mem_windows(_no_item, params, section):
         yield state, infotext, perfdata
 
 
-check_info["mem.win"] = {
-    "check_function": check_mem_windows,
-    "discovery_function": inventory_mem_win,
-    "service_name": "Memory",
-    "check_ruleset_name": "memory_pagefile_win",
-    "default_levels_variable": "memory_win_default_levels",
-}
+check_info["mem.win"] = LegacyCheckDefinition(
+    check_function=check_mem_windows,
+    discovery_function=inventory_mem_win,
+    service_name="Memory",
+    check_ruleset_name="memory_pagefile_win",
+    default_levels_variable="memory_win_default_levels",
+)
 
 # .
 #   .--mem.vmalloc---------------------------------------------------------.
@@ -433,8 +434,8 @@ def check_mem_vmalloc(_item, params, section):
     return (state, ("total %.1f MB, " % total_mb) + ", ".join(infotxts), perfdata)
 
 
-check_info["mem.vmalloc"] = {
-    "discovery_function": inventory_mem_vmalloc,
-    "check_function": check_mem_vmalloc,
-    "service_name": "Vmalloc address space",
-}
+check_info["mem.vmalloc"] = LegacyCheckDefinition(
+    discovery_function=inventory_mem_vmalloc,
+    check_function=check_mem_vmalloc,
+    service_name="Vmalloc address space",
+)

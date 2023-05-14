@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains, saveint
+from cmk.base.check_api import contains, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -39,14 +39,14 @@ def check_mikrotik_signal(item, params, info):
     return 3, "Network not found"
 
 
-check_info["mikrotik_signal"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14988.1"),
-    "check_ruleset_name": "signal_quality",
-    "check_function": check_mikrotik_signal,
-    "discovery_function": inventory_mikrotik_signal,
-    "service_name": "Signal %s",
-    "fetch": SNMPTree(
+check_info["mikrotik_signal"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14988.1"),
+    check_ruleset_name="signal_quality",
+    check_function=check_mikrotik_signal,
+    discovery_function=inventory_mikrotik_signal,
+    service_name="Signal %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.14988.1.1.1.1.1",
         oids=["5.2", "4.2", "8.2"],
     ),
-}
+)

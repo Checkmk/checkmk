@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.perle import perle_check_alarms
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -33,11 +34,11 @@ def check_perle_chassis(_no_item, _no_params, section):
     yield perle_check_alarms(section.alarms)
 
 
-check_info["perle_chassis"] = {
-    "discovery_function": inventory_perle_chassis,
-    "check_function": check_perle_chassis,
-    "service_name": "Chassis status",
-}
+check_info["perle_chassis"] = LegacyCheckDefinition(
+    discovery_function=inventory_perle_chassis,
+    check_function=check_perle_chassis,
+    service_name="Chassis status",
+)
 
 
 def inventory_perle_chassis_temp(info):
@@ -48,9 +49,9 @@ def check_perle_chassis_temp(item, params, section):
     return check_temperature(section.temp, params, "perle_chassis_temp")
 
 
-check_info["perle_chassis.temp"] = {
-    "discovery_function": inventory_perle_chassis_temp,
-    "check_function": check_perle_chassis_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-}
+check_info["perle_chassis.temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_perle_chassis_temp,
+    check_function=check_perle_chassis_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+)

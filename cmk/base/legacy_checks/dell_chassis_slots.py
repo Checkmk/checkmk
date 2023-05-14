@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_CHASSIS
@@ -41,13 +41,13 @@ def check_dell_chassis_slots(item, _no_params, info):
     return 3, "unknown slot"
 
 
-check_info["dell_chassis_slots"] = {
-    "detect": DETECT_CHASSIS,
-    "check_function": check_dell_chassis_slots,
-    "discovery_function": inventory_dell_chassis_slots,
-    "service_name": "Slot %s",
-    "fetch": SNMPTree(
+check_info["dell_chassis_slots"] = LegacyCheckDefinition(
+    detect=DETECT_CHASSIS,
+    check_function=check_dell_chassis_slots,
+    discovery_function=inventory_dell_chassis_slots,
+    service_name="Slot %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2.5.1.1",
         oids=["2", "3", "4", "5"],
     ),
-}
+)

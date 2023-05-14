@@ -20,6 +20,7 @@
 # ERROR: Failed to gather SQL server instances
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -46,10 +47,10 @@ def check_mssql_instance(item, params, parsed):
         yield 0, "Clustered as %s" % instance["cluster_name"]
 
 
-check_info["mssql_instance"] = {
+check_info["mssql_instance"] = LegacyCheckDefinition(
     # section is already migrated!
-    "check_function": check_mssql_instance,
-    "discovery_function": inventory_mssql_instance,
-    "service_name": "MSSQL %s Instance",
-    "check_ruleset_name": "mssql_instance",
-}
+    check_function=check_mssql_instance,
+    discovery_function=inventory_mssql_instance,
+    service_name="MSSQL %s Instance",
+    check_ruleset_name="mssql_instance",
+)

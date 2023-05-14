@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import discover_single, startswith
+from cmk.base.check_api import discover_single, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -76,13 +76,13 @@ def check_hepta(item, params, parsed):
     )
 
 
-check_info["hepta"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12527"),
-    "parse_function": parse_hepta,
-    "discovery_function": discover_single,
-    "check_function": check_hepta,
-    "service_name": "HPF Info",
-    "fetch": [
+check_info["hepta"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12527"),
+    parse_function=parse_hepta,
+    discovery_function=discover_single,
+    check_function=check_hepta,
+    service_name="HPF Info",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.12527.29",
             oids=["1.1.0", "1.3.0", "1.4.0", "1.5.0", "1.6.0", "2.1.2.0", "3.1.0", "3.5.0"],
@@ -92,7 +92,7 @@ check_info["hepta"] = {
             oids=["1.1.0", "1.3.0", "1.4.0", "1.5.0", "1.6.0", "2.1.2.0", "3.1.0", "3.5.0"],
         ),
     ],
-}
+)
 
 # .
 #   .--SyncModuleTimeSyncState---------------------------------------------.
@@ -130,12 +130,12 @@ def check_hepta_time_sync(item, params, parsed):
         yield (3, "No data available")
 
 
-check_info["hepta.syncmoduletimesyncstate"] = {
-    "parse_function": parse_hepta,
-    "discovery_function": inventory_hepta_time_sync,
-    "check_function": check_hepta_time_sync,
-    "service_name": "%s",
-}
+check_info["hepta.syncmoduletimesyncstate"] = LegacyCheckDefinition(
+    parse_function=parse_hepta,
+    discovery_function=inventory_hepta_time_sync,
+    check_function=check_hepta_time_sync,
+    service_name="%s",
+)
 
 
 # .
@@ -170,12 +170,12 @@ def check_hepta_ntpsysstratum(item, params, parsed):
         yield (1, "Stratum is using secondary reference(via NTP)")
 
 
-check_info["hepta.ntpsysstratum"] = {
-    "parse_function": parse_hepta,
-    "discovery_function": inventory_hepta_ntpsysstratum,
-    "check_function": check_hepta_ntpsysstratum,
-    "service_name": "%s",
-}
+check_info["hepta.ntpsysstratum"] = LegacyCheckDefinition(
+    parse_function=parse_hepta,
+    discovery_function=inventory_hepta_ntpsysstratum,
+    check_function=check_hepta_ntpsysstratum,
+    service_name="%s",
+)
 
 
 # .
@@ -203,9 +203,9 @@ def check_hepta_syncmoduletimelocal(item, params, parsed):
     yield (0, "Module Time: %s " % parsed["syncmoduletimelocal"])
 
 
-check_info["hepta.syncmoduletimelocal"] = {
-    "parse_function": parse_hepta,
-    "discovery_function": inventory_hepta_syncmoduletimelocal,
-    "check_function": check_hepta_syncmoduletimelocal,
-    "service_name": "%s",
-}
+check_info["hepta.syncmoduletimelocal"] = LegacyCheckDefinition(
+    parse_function=parse_hepta,
+    discovery_function=inventory_hepta_syncmoduletimelocal,
+    check_function=check_hepta_syncmoduletimelocal,
+    service_name="%s",
+)

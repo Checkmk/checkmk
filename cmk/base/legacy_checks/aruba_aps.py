@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -23,13 +23,13 @@ def check_aruba_aps(_no_item, _params, info):
     return 0, "Connected: %s" % connected_aps, [("connections", connected_aps)]
 
 
-check_info["aruba_aps"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14823"),
-    "discovery_function": inventory_aruba_aps,
-    "check_function": check_aruba_aps,
-    "service_name": "Access Points",
-    "fetch": SNMPTree(
+check_info["aruba_aps"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14823"),
+    discovery_function=inventory_aruba_aps,
+    check_function=check_aruba_aps,
+    service_name="Access Points",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.14823.2.2.1.1.3",
         oids=["1"],
     ),
-}
+)

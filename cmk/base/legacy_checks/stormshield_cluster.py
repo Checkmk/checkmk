@@ -6,7 +6,7 @@
 # Older versions replay an empty string if the state is Unknown / Error state
 
 
-from cmk.base.check_api import all_of, any_of, equals, exists, startswith
+from cmk.base.check_api import all_of, any_of, equals, exists, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -50,19 +50,19 @@ def check_stormshield_cluster(item, params, info):
         yield status, "Faulty: %s" % faulty_links
 
 
-check_info["stormshield_cluster"] = {
-    "detect": all_of(
+check_info["stormshield_cluster"] = LegacyCheckDefinition(
+    detect=all_of(
         any_of(
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.8"),
             equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11256.2.0"),
         ),
         exists(".1.3.6.1.4.1.11256.1.11.*"),
     ),
-    "discovery_function": inventory_stormshield_cluster,
-    "check_function": check_stormshield_cluster,
-    "service_name": "HA Status",
-    "fetch": SNMPTree(
+    discovery_function=inventory_stormshield_cluster,
+    check_function=check_stormshield_cluster,
+    service_name="HA Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.11",
         oids=["1", "2", "3", "5", "6", "8"],
     ),
-}
+)

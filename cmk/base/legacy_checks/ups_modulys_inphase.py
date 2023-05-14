@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -37,16 +37,16 @@ def parse_ups_modulys_inphase(info):
     return parsed
 
 
-check_info["ups_modulys_inphase"] = {
-    "detect": DETECT_UPS_MODULYS,
-    "parse_function": parse_ups_modulys_inphase,
-    "discovery_function": discover(),
-    "check_function": check_elphase,
-    "service_name": "Input %s",
-    "default_levels_variable": "ups_modulys_inphase_default_levels",
-    "check_ruleset_name": "el_inphase",
-    "fetch": SNMPTree(
+check_info["ups_modulys_inphase"] = LegacyCheckDefinition(
+    detect=DETECT_UPS_MODULYS,
+    parse_function=parse_ups_modulys_inphase,
+    discovery_function=discover(),
+    check_function=check_elphase,
+    service_name="Input %s",
+    default_levels_variable="ups_modulys_inphase_default_levels",
+    check_ruleset_name="el_inphase",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2254.2.4.4",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
     ),
-}
+)

@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -52,13 +53,13 @@ def check_fireeye_raid(_no_item, _no_params, parsed):
         yield state, "%s: %s" % (text, state_readable)
 
 
-check_info["fireeye_raid"] = {
-    "detect": DETECT,
-    "parse_function": parse_fireeye_raid,
-    "discovery_function": lambda parsed: inventory_fireeye_generic(parsed.get("raid", []), False),
-    "check_function": check_fireeye_raid,
-    "service_name": "RAID status",
-    "fetch": [
+check_info["fireeye_raid"] = LegacyCheckDefinition(
+    detect=DETECT,
+    parse_function=parse_fireeye_raid,
+    discovery_function=lambda parsed: inventory_fireeye_generic(parsed.get("raid", []), False),
+    check_function=check_fireeye_raid,
+    service_name="RAID status",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.25597.11.2.1",
             oids=["1", "2"],
@@ -68,7 +69,7 @@ check_info["fireeye_raid"] = {
             oids=["2", "3", "4"],
         ),
     ],
-}
+)
 
 # .
 #   .--disks---------------------------------------------------------------.
@@ -90,8 +91,8 @@ def check_fireeye_raid_disks(item, _no_params, parsed):
                 yield state, "%s: %s" % (text, state_readable)
 
 
-check_info["fireeye_raid.disks"] = {
-    "discovery_function": lambda parsed: inventory_fireeye_generic(parsed.get("disks", []), True),
-    "check_function": check_fireeye_raid_disks,
-    "service_name": "Disk status %s",
-}
+check_info["fireeye_raid.disks"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_fireeye_generic(parsed.get("disks", []), True),
+    check_function=check_fireeye_raid_disks,
+    service_name="Disk status %s",
+)

@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT, get_conn_rate_params
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -83,15 +83,15 @@ def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branch
             yield check_levels(val, perfkey, params_values, infoname=title)
 
 
-check_info["f5_bigip_conns"] = {
-    "detect": DETECT,
-    "check_function": check_f5_bigip_conns,
-    "discovery_function": inventory_f5_bigip_conns,
-    "service_name": "Open Connections",
-    "fetch": SNMPTree(
+check_info["f5_bigip_conns"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_f5_bigip_conns,
+    discovery_function=inventory_f5_bigip_conns,
+    service_name="Open Connections",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.1.2",
         oids=["1.8", "9.2", "9.6", "9.9", "1.56"],
     ),
-    "check_ruleset_name": "f5_connections",
-    "default_levels_variable": "f5_bigip_conns_default_levels",
-}
+    check_ruleset_name="f5_connections",
+    default_levels_variable="f5_bigip_conns_default_levels",
+)

@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="arg-type"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_instances,
     inventory_wmi_table_total,
@@ -167,8 +168,8 @@ def check_skype(_no_item, params, parsed):
         )
 
 
-check_info["skype"] = {
-    "discovery_function": lambda table: inventory_wmi_table_total(
+check_info["skype"] = LegacyCheckDefinition(
+    discovery_function=lambda table: inventory_wmi_table_total(
         table,
         required_tables=[
             "LS:WEB - Address Book Web Query",
@@ -178,12 +179,12 @@ check_info["skype"] = {
             "ASP.NET Apps v4.0.30319",
         ],
     ),
-    "check_function": check_skype,
-    "parse_function": lambda info: parse_wmi_table(info, key="instance"),
-    "service_name": "Skype Web Components",
-    "check_ruleset_name": "skype",
-    "default_levels_variable": "skype_defaultlevels",
-}
+    check_function=check_skype,
+    parse_function=lambda info: parse_wmi_table(info, key="instance"),
+    service_name="Skype Web Components",
+    check_ruleset_name="skype",
+    default_levels_variable="skype_defaultlevels",
+)
 
 
 def check_skype_mcu(_no_item, _no_params, parsed):
@@ -221,8 +222,8 @@ def check_skype_mcu(_no_item, _no_params, parsed):
     )
 
 
-check_info["skype.mcu"] = {
-    "discovery_function": lambda parsed: inventory_wmi_table_total(
+check_info["skype.mcu"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[
             "LS:DATAMCU - MCU Health And Performance",
@@ -231,9 +232,9 @@ check_info["skype.mcu"] = {
             "LS:ImMcu - MCU Health And Performance",
         ],
     ),
-    "check_function": check_skype_mcu,
-    "service_name": "Skype MCU Health",
-}
+    check_function=check_skype_mcu,
+    service_name="Skype MCU Health",
+)
 
 
 def check_skype_conferencing(_no_item, params, parsed):
@@ -269,20 +270,20 @@ def check_skype_conferencing(_no_item, params, parsed):
     )
 
 
-check_info["skype.conferencing"] = {
-    "discovery_function": lambda table: inventory_wmi_table_total(
+check_info["skype.conferencing"] = LegacyCheckDefinition(
+    discovery_function=lambda table: inventory_wmi_table_total(
         table,
         required_tables=[
             "LS:CAA - Operations",
             "LS:USrv - Conference Mcu Allocator",
         ],
     ),
-    "check_function": check_skype_conferencing,
-    "parse_function": lambda info: parse_wmi_table(info, key="instance"),
-    "service_name": "Skype Conferencing",
-    "check_ruleset_name": "skype_conferencing",
-    "default_levels_variable": "skype_conferencing_defaultlevels",
-}
+    check_function=check_skype_conferencing,
+    parse_function=lambda info: parse_wmi_table(info, key="instance"),
+    service_name="Skype Conferencing",
+    check_ruleset_name="skype_conferencing",
+    default_levels_variable="skype_conferencing_defaultlevels",
+)
 
 
 def discover_skype_sip_stack(parsed):
@@ -433,13 +434,13 @@ def check_skype_sip_stack(_no_item, params, parsed):
         )
 
 
-check_info["skype.sip_stack"] = {
-    "discovery_function": discover_skype_sip_stack,
-    "check_function": check_skype_sip_stack,
-    "service_name": "Skype SIP Stack",
-    "check_ruleset_name": "skype_sip",
-    "default_levels_variable": "skype_sip_defaultlevels",
-}
+check_info["skype.sip_stack"] = LegacyCheckDefinition(
+    discovery_function=discover_skype_sip_stack,
+    check_function=check_skype_sip_stack,
+    service_name="Skype SIP Stack",
+    check_ruleset_name="skype_sip",
+    default_levels_variable="skype_sip_defaultlevels",
+)
 
 
 def check_skype_mediation_server(_no_item, params, parsed):
@@ -485,8 +486,8 @@ def check_skype_mediation_server(_no_item, params, parsed):
     )
 
 
-check_info["skype.mediation_server"] = {
-    "discovery_function": lambda parsed: inventory_wmi_table_total(
+check_info["skype.mediation_server"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[
             "LS:MediationServer - Health Indices",
@@ -495,11 +496,11 @@ check_info["skype.mediation_server"] = {
             "LS:MediationServer - Media Relay",
         ],
     ),
-    "check_function": check_skype_mediation_server,
-    "service_name": "Skype Mediation Server",
-    "check_ruleset_name": "skype_mediation_server",
-    "default_levels_variable": "skype_mediation_server_defaultlevels",
-}
+    check_function=check_skype_mediation_server,
+    service_name="Skype Mediation Server",
+    check_ruleset_name="skype_mediation_server",
+    default_levels_variable="skype_mediation_server_defaultlevels",
+)
 
 
 def check_skype_edge_auth(_no_item, params, parsed):
@@ -514,15 +515,15 @@ def check_skype_edge_auth(_no_item, params, parsed):
     )
 
 
-check_info["skype.edge_auth"] = {
-    "discovery_function": lambda parsed: inventory_wmi_table_total(
+check_info["skype.edge_auth"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed, required_tables=["LS:A/V Auth - Requests"]
     ),
-    "check_function": check_skype_edge_auth,
-    "service_name": "Skype Edge Authentification",
-    "check_ruleset_name": "skype_edgeauth",
-    "default_levels_variable": "skype_edgeauth_defaultlevels",
-}
+    check_function=check_skype_edge_auth,
+    service_name="Skype Edge Authentification",
+    check_ruleset_name="skype_edgeauth",
+    default_levels_variable="skype_edgeauth_defaultlevels",
+)
 
 
 def check_skype_av_edge(item, params, parsed):
@@ -587,15 +588,15 @@ def check_skype_av_edge(item, params, parsed):
     )
 
 
-check_info["skype.edge"] = {
-    "discovery_function": lambda parsed: inventory_wmi_table_instances(
+check_info["skype.edge"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_wmi_table_instances(
         parsed, required_tables=["LS:A/V Edge - TCP Counters", "LS:A/V Edge - UDP Counters"]
     ),
-    "check_function": check_skype_av_edge,
-    "service_name": "Skype AV Edge %s",
-    "check_ruleset_name": "skype_edge",
-    "default_levels_variable": "skype_edge_defaultlevels",
-}
+    check_function=check_skype_av_edge,
+    service_name="Skype AV Edge %s",
+    check_ruleset_name="skype_edge",
+    default_levels_variable="skype_edge_defaultlevels",
+)
 
 
 def check_skype_data_proxy(item, params, parsed):
@@ -618,15 +619,15 @@ def check_skype_data_proxy(item, params, parsed):
         yield 2, "System is throttling"
 
 
-check_info["skype.data_proxy"] = {
-    "discovery_function": lambda parsed: inventory_wmi_table_instances(
+check_info["skype.data_proxy"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_wmi_table_instances(
         parsed, required_tables=["LS:DATAPROXY - Server Connections"]
     ),
-    "check_function": check_skype_data_proxy,
-    "service_name": "Skype Data Proxy %s",
-    "check_ruleset_name": "skype_proxy",
-    "default_levels_variable": "skype_proxy_defaultlevels",
-}
+    check_function=check_skype_data_proxy,
+    service_name="Skype Data Proxy %s",
+    check_ruleset_name="skype_proxy",
+    default_levels_variable="skype_proxy_defaultlevels",
+)
 
 
 def check_skype_xmpp_proxy(_no_item, params, parsed):
@@ -651,15 +652,15 @@ def check_skype_xmpp_proxy(_no_item, params, parsed):
     )
 
 
-check_info["skype.xmpp_proxy"] = {
-    "discovery_function": lambda parsed: inventory_wmi_table_total(
+check_info["skype.xmpp_proxy"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed, required_tables=["LS:XmppFederationProxy - Streams"]
     ),
-    "check_function": check_skype_xmpp_proxy,
-    "service_name": "Skype XMPP Proxy",
-    "check_ruleset_name": "skype_xmpp",
-    "default_levels_variable": "skype_xmpp_defaultlevels",
-}
+    check_function=check_skype_xmpp_proxy,
+    service_name="Skype XMPP Proxy",
+    check_ruleset_name="skype_xmpp",
+    default_levels_variable="skype_xmpp_defaultlevels",
+)
 
 
 def check_skype_mobile(_no_item, params, parsed):
@@ -694,16 +695,16 @@ def check_skype_mobile(_no_item, params, parsed):
     )
 
 
-check_info["skype.mobile"] = {
-    "discovery_function": lambda parsed: inventory_wmi_table_total(
+check_info["skype.mobile"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[
             "LS:WEB - UCWA",
             "LS:WEB - Throttling and Authentication",
         ],
     ),
-    "check_function": check_skype_mobile,
-    "service_name": "Skype Mobile Sessions",
-    "check_ruleset_name": "skype_mobile",
-    "default_levels_variable": "skype_mobile_defaultlevels",
-}
+    check_function=check_skype_mobile,
+    service_name="Skype Mobile Sessions",
+    check_ruleset_name="skype_mobile",
+    default_levels_variable="skype_mobile_defaultlevels",
+)

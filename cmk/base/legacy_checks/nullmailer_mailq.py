@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.nullmailer_mailq import (
     check_nullmailer_mailq,
     NULLMAILER_MAILQ_DEFAULT_LEVELS,
@@ -30,11 +31,11 @@ def inventory_nullmailer_mailq(parsed):
         yield "", {}
 
 
-check_info["nullmailer_mailq"] = {
-    "parse_function": parse_nullmailer_mailq,
-    "check_function": check_nullmailer_mailq,
-    "discovery_function": inventory_nullmailer_mailq,
-    "service_name": "Nullmailer Queue %s",
-    "default_levels_variable": "nullmailer_mailq_default_levels",
-    "check_ruleset_name": "mail_queue_length",
-}
+check_info["nullmailer_mailq"] = LegacyCheckDefinition(
+    parse_function=parse_nullmailer_mailq,
+    check_function=check_nullmailer_mailq,
+    discovery_function=inventory_nullmailer_mailq,
+    service_name="Nullmailer Queue %s",
+    default_levels_variable="nullmailer_mailq_default_levels",
+    check_ruleset_name="mail_queue_length",
+)

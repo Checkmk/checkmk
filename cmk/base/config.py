@@ -149,7 +149,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_agent_section_plugin_from_legacy,
     create_snmp_section_plugin_from_legacy,
 )
-from cmk.base.api.agent_based.register.utils_legacy import CheckInfoElement
+from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
@@ -1643,7 +1643,7 @@ NEGATE = tuple_rulesets.NEGATE
 
 # The following data structures will be filled by the checks
 # all known checks
-check_info: dict[str, CheckInfoElement] = {}
+check_info: dict[str, LegacyCheckDefinition] = {}
 # Lookup for legacy names
 legacy_check_plugin_names: dict[CheckPluginName, str] = {}
 # optional functions for parameter precompilation

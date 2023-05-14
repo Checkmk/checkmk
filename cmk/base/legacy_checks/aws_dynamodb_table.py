@@ -8,6 +8,7 @@ from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
     get_percent_human_readable,
+    LegacyCheckDefinition,
     MKCounterWrapped,
 )
 from cmk.base.check_legacy_includes.aws import (
@@ -52,9 +53,9 @@ def parse_aws_dynamodb_table(info):
         return {}
 
 
-check_info["aws_dynamodb_table"] = {
-    "parse_function": parse_aws_dynamodb_table,
-}
+check_info["aws_dynamodb_table"] = LegacyCheckDefinition(
+    parse_function=parse_aws_dynamodb_table,
+)
 
 
 def _capacity_metric_id_to_name_and_unit(metric_id):
@@ -179,29 +180,27 @@ def check_aws_dynamodb_latency(item, params, parsed):
         raise MKCounterWrapped("Currently no data from AWS")
 
 
-check_info["aws_dynamodb_table.read_capacity"] = {
-    "discovery_function": lambda p: inventory_aws_generic_single(
-        p, ["Sum_ConsumedReadCapacityUnits"]
-    ),
-    "check_function": check_aws_dynamodb_read_capacity,
-    "service_name": "AWS/DynamoDB Read Capacity",
-    "check_ruleset_name": "aws_dynamodb_capacity",
-    "default_levels_variable": "aws_dynamodb_capacity_defaults",
-}
+check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic_single(p, ["Sum_ConsumedReadCapacityUnits"]),
+    check_function=check_aws_dynamodb_read_capacity,
+    service_name="AWS/DynamoDB Read Capacity",
+    check_ruleset_name="aws_dynamodb_capacity",
+    default_levels_variable="aws_dynamodb_capacity_defaults",
+)
 
-check_info["aws_dynamodb_table.write_capacity"] = {
-    "discovery_function": lambda p: inventory_aws_generic_single(
+check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic_single(
         p, ["Sum_ConsumedWriteCapacityUnits"]
     ),
-    "check_function": check_aws_dynamodb_write_capacity,
-    "service_name": "AWS/DynamoDB Write Capacity",
-    "check_ruleset_name": "aws_dynamodb_capacity",
-    "default_levels_variable": "aws_dynamodb_capacity_defaults",
-}
+    check_function=check_aws_dynamodb_write_capacity,
+    service_name="AWS/DynamoDB Write Capacity",
+    check_ruleset_name="aws_dynamodb_capacity",
+    default_levels_variable="aws_dynamodb_capacity_defaults",
+)
 
-check_info["aws_dynamodb_table.latency"] = {
-    "discovery_function": inventory_aws_dynamodb_latency,
-    "check_function": check_aws_dynamodb_latency,
-    "service_name": "AWS/DynamoDB Latency",
-    "check_ruleset_name": "aws_dynamodb_latency",
-}
+check_info["aws_dynamodb_table.latency"] = LegacyCheckDefinition(
+    discovery_function=inventory_aws_dynamodb_latency,
+    check_function=check_aws_dynamodb_latency,
+    service_name="AWS/DynamoDB Latency",
+    check_ruleset_name="aws_dynamodb_latency",
+)

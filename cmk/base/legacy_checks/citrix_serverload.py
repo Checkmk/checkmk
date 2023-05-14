@@ -7,6 +7,7 @@
 # 100
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 citrix_serverload_default_levels = (8500, 9500)
@@ -35,9 +36,9 @@ def check_citrix_serverload(_no_item, params, info):
     yield state, "Current Citrix Load is: %.2f%%" % (load / 100.0), [("perf", load, warn, crit)]
 
 
-check_info["citrix_serverload"] = {
-    "check_ruleset_name": "citrix_load",
-    "check_function": check_citrix_serverload,
-    "discovery_function": inventory_citrix_serverload,
-    "service_name": "Citrix Serverload",
-}
+check_info["citrix_serverload"] = LegacyCheckDefinition(
+    check_ruleset_name="citrix_load",
+    check_function=check_citrix_serverload,
+    discovery_function=inventory_citrix_serverload,
+    service_name="Citrix Serverload",
+)

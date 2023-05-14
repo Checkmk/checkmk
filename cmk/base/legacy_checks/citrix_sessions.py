@@ -11,6 +11,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 citrix_sessions_default_levels = {
@@ -54,9 +55,9 @@ def check_citrix_sessions(_no_item, params, info):
         yield state, infotext, [(what, value, warn, crit)]
 
 
-check_info["citrix_sessions"] = {
-    "check_ruleset_name": "citrix_sessions",
-    "check_function": check_citrix_sessions,
-    "discovery_function": inventory_citrix_sessions,
-    "service_name": "Citrix Sessions",
-}
+check_info["citrix_sessions"] = LegacyCheckDefinition(
+    check_ruleset_name="citrix_sessions",
+    check_function=check_citrix_sessions,
+    discovery_function=inventory_citrix_sessions,
+    service_name="Citrix Sessions",
+)

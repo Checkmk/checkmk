@@ -5,7 +5,7 @@
 
 
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
-from cmk.base.check_api import discover
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -22,16 +22,16 @@ def check_pulse_secure_temp(item, params, parsed):
     return check_temperature(parsed[item], params, "pulse_secure_ive_temperature")
 
 
-check_info["pulse_secure_temp"] = {
-    "detect": pulse_secure.DETECT_PULSE_SECURE,
-    "parse_function": lambda info: pulse_secure.parse_pulse_secure(info, "IVE"),
-    "discovery_function": discover(),
-    "check_function": check_pulse_secure_temp,
-    "service_name": "Pulse Secure %s Temperature",
-    "fetch": SNMPTree(
+check_info["pulse_secure_temp"] = LegacyCheckDefinition(
+    detect=pulse_secure.DETECT_PULSE_SECURE,
+    parse_function=lambda info: pulse_secure.parse_pulse_secure(info, "IVE"),
+    discovery_function=discover(),
+    check_function=check_pulse_secure_temp,
+    service_name="Pulse Secure %s Temperature",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",
         oids=["42"],
     ),
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "pulse_secure_temp_def_levels",
-}
+    check_ruleset_name="temperature",
+    default_levels_variable="pulse_secure_temp_def_levels",
+)

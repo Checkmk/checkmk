@@ -7,7 +7,7 @@
 # 5
 
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -28,9 +28,9 @@ def check_splunk_alerts(_no_item, params, info):
     )
 
 
-check_info["splunk_alerts"] = {
-    "check_function": check_splunk_alerts,
-    "discovery_function": inventory_splunk_alerts,
-    "service_name": "Splunk Alerts",
-    "check_ruleset_name": "splunk_alerts",
-}
+check_info["splunk_alerts"] = LegacyCheckDefinition(
+    check_function=check_splunk_alerts,
+    discovery_function=inventory_splunk_alerts,
+    service_name="Splunk Alerts",
+    check_ruleset_name="splunk_alerts",
+)

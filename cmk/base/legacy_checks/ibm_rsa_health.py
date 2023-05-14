@@ -16,7 +16,7 @@
 #   normal(255)
 
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -47,13 +47,13 @@ def check_ibm_rsa_health(_no_item, _no_params, info):
     return 3, infotext
 
 
-check_info["ibm_rsa_health"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "Remote Supervisor Adapter"),
-    "check_function": check_ibm_rsa_health,
-    "discovery_function": inventory_ibm_rsa_health,
-    "service_name": "System health",
-    "fetch": SNMPTree(
+check_info["ibm_rsa_health"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.1.0", "Remote Supervisor Adapter"),
+    check_function=check_ibm_rsa_health,
+    discovery_function=inventory_ibm_rsa_health,
+    service_name="System health",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.1.2",
         oids=["7"],
     ),
-}
+)

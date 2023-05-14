@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_elb_summary_generic, parse_aws
 from cmk.base.config import check_info
 
@@ -31,12 +32,12 @@ def check_aws_elbv2_summary_application(item, params, parsed):
     return check_aws_elb_summary_generic(item, params, application_lbs)
 
 
-check_info["aws_elbv2_summary"] = {
-    "parse_function": parse_aws_elbv2_summary,
-    "discovery_function": inventory_aws_elbv2_summary_application,
-    "check_function": check_aws_elbv2_summary_application,
-    "service_name": "AWS/ApplicationELB Summary",
-}
+check_info["aws_elbv2_summary"] = LegacyCheckDefinition(
+    parse_function=parse_aws_elbv2_summary,
+    discovery_function=inventory_aws_elbv2_summary_application,
+    check_function=check_aws_elbv2_summary_application,
+    service_name="AWS/ApplicationELB Summary",
+)
 
 
 def inventory_aws_elbv2_summary_network(parsed):
@@ -51,8 +52,8 @@ def check_aws_elbv2_summary_network(item, params, parsed):
     return check_aws_elb_summary_generic(item, params, network_lbs)
 
 
-check_info["aws_elbv2_summary.network"] = {
-    "discovery_function": inventory_aws_elbv2_summary_network,
-    "check_function": check_aws_elbv2_summary_network,
-    "service_name": "AWS/NetworkELB Summary",
-}
+check_info["aws_elbv2_summary.network"] = LegacyCheckDefinition(
+    discovery_function=inventory_aws_elbv2_summary_network,
+    check_function=check_aws_elbv2_summary_network,
+    service_name="AWS/NetworkELB Summary",
+)

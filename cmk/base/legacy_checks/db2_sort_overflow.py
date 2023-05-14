@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.config import check_info, factory_settings
 
@@ -43,11 +43,11 @@ def check_db2_sort_overflow(item, params, parsed):
     yield 0, "Total sorts: %d" % total, [("sort_overflow", overflow_perc, warn, crit, 0, 100)]
 
 
-check_info["db2_sort_overflow"] = {
-    "parse_function": parse_db2_dbs,
-    "service_name": "DB2 Sort Overflow %s",
-    "check_function": check_db2_sort_overflow,
-    "discovery_function": inventory_db2_sort_overflow,
-    "check_ruleset_name": "db2_sortoverflow",
-    "default_levels_variable": "db2_sort_overflow_default_levels",
-}
+check_info["db2_sort_overflow"] = LegacyCheckDefinition(
+    parse_function=parse_db2_dbs,
+    service_name="DB2 Sort Overflow %s",
+    check_function=check_db2_sort_overflow,
+    discovery_function=inventory_db2_sort_overflow,
+    check_ruleset_name="db2_sortoverflow",
+    default_levels_variable="db2_sort_overflow_default_levels",
+)

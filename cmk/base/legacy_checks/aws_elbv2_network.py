@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, MKCounterWrapped
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.aws import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
@@ -67,13 +67,13 @@ def check_aws_elbv2_network_lcu(item, params, parsed):
     )
 
 
-check_info["aws_elbv2_network"] = {
-    "parse_function": parse_aws_elbv2_network,
-    "discovery_function": lambda p: inventory_aws_generic_single(p, ["ConsumedLCUs"]),
-    "check_function": check_aws_elbv2_network_lcu,
-    "service_name": "AWS/NetworkELB LCUs",
-    "check_ruleset_name": "aws_elbv2_lcu",
-}
+check_info["aws_elbv2_network"] = LegacyCheckDefinition(
+    parse_function=parse_aws_elbv2_network,
+    discovery_function=lambda p: inventory_aws_generic_single(p, ["ConsumedLCUs"]),
+    check_function=check_aws_elbv2_network_lcu,
+    service_name="AWS/NetworkELB LCUs",
+    check_ruleset_name="aws_elbv2_lcu",
+)
 
 # .
 #   .--connections---------------------------------------------------------.
@@ -115,14 +115,14 @@ def check_aws_elbv2_network_connections(item, params, parsed):
     )
 
 
-check_info["aws_elbv2_network.connections"] = {
-    "parse_function": parse_aws_elbv2_network,
-    "discovery_function": lambda p: inventory_aws_generic_single(
+check_info["aws_elbv2_network.connections"] = LegacyCheckDefinition(
+    parse_function=parse_aws_elbv2_network,
+    discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_connection_types, requirement=any
     ),
-    "check_function": check_aws_elbv2_network_connections,
-    "service_name": "AWS/NetworkELB Connections",
-}
+    check_function=check_aws_elbv2_network_connections,
+    service_name="AWS/NetworkELB Connections",
+)
 
 # .
 #   .--Healthy hosts-------------------------------------------------------.
@@ -216,13 +216,13 @@ def check_aws_elbv2_network_tls_handshakes(item, params, parsed):
     )
 
 
-check_info["aws_elbv2_network.tls_handshakes"] = {
-    "discovery_function": lambda p: inventory_aws_generic_single(
+check_info["aws_elbv2_network.tls_handshakes"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_tls_types, requirement=any
     ),
-    "check_function": check_aws_elbv2_network_tls_handshakes,
-    "service_name": "AWS/NetworkELB TLS Handshakes",
-}
+    check_function=check_aws_elbv2_network_tls_handshakes,
+    service_name="AWS/NetworkELB TLS Handshakes",
+)
 
 # .
 #   .--RST packets---------------------------------------------------------.
@@ -262,13 +262,13 @@ def check_aws_elbv2_network_rst_packets(item, params, parsed):
     )
 
 
-check_info["aws_elbv2_network.rst_packets"] = {
-    "discovery_function": lambda p: inventory_aws_generic_single(
+check_info["aws_elbv2_network.rst_packets"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_rst_packets_types, requirement=any
     ),
-    "check_function": check_aws_elbv2_network_rst_packets,
-    "service_name": "AWS/NetworkELB Reset Packets",
-}
+    check_function=check_aws_elbv2_network_rst_packets,
+    service_name="AWS/NetworkELB Reset Packets",
+)
 
 # .
 #   .--statistics----------------------------------------------------------.
@@ -306,10 +306,10 @@ def check_aws_elbv2_network_statistics(item, params, parsed):
     )
 
 
-check_info["aws_elbv2_network.statistics"] = {
-    "discovery_function": lambda p: inventory_aws_generic_single(
+check_info["aws_elbv2_network.statistics"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_statistics_metric_names, requirement=any
     ),
-    "check_function": check_aws_elbv2_network_statistics,
-    "service_name": "AWS/NetworkELB Statistics",
-}
+    check_function=check_aws_elbv2_network_statistics,
+    service_name="AWS/NetworkELB Statistics",
+)

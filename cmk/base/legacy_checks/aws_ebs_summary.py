@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover_single, get_parsed_item_data
+from cmk.base.check_api import discover_single, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
 
@@ -63,12 +63,12 @@ def check_aws_ebs_summary(item, params, parsed):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-check_info["aws_ebs_summary"] = {
-    "parse_function": parse_aws_summary,
-    "discovery_function": discover_single,
-    "check_function": check_aws_ebs_summary,
-    "service_name": "AWS/EBS Summary",
-}
+check_info["aws_ebs_summary"] = LegacyCheckDefinition(
+    parse_function=parse_aws_summary,
+    discovery_function=discover_single,
+    check_function=check_aws_ebs_summary,
+    service_name="AWS/EBS Summary",
+)
 
 # .
 #   .--health--------------------------------------------------------------.
@@ -90,8 +90,8 @@ def check_aws_ebs_summary_health(item, params, ebs_data):
         yield 0, "%s: %s" % (row["Name"], row["Status"])
 
 
-check_info["aws_ebs_summary.health"] = {
-    "discovery_function": lambda p: inventory_aws_generic(p, ["VolumeStatus"]),
-    "check_function": check_aws_ebs_summary_health,
-    "service_name": "AWS/EBS Health %s",
-}
+check_info["aws_ebs_summary.health"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic(p, ["VolumeStatus"]),
+    check_function=check_aws_ebs_summary_health,
+    service_name="AWS/EBS Health %s",
+)

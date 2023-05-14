@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.bvip import DETECT_BVIP
@@ -23,13 +24,13 @@ def check_bvip_video_alerts(item, _no_params, info):
     return None
 
 
-check_info["bvip_video_alerts"] = {
-    "detect": DETECT_BVIP,
-    "check_function": check_bvip_video_alerts,
-    "discovery_function": inventory_bvip_video_alerts,
-    "service_name": "Video Alerts",
-    "fetch": SNMPTree(
+check_info["bvip_video_alerts"] = LegacyCheckDefinition(
+    detect=DETECT_BVIP,
+    check_function=check_bvip_video_alerts,
+    discovery_function=inventory_bvip_video_alerts,
+    service_name="Video Alerts",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1",
         oids=["1.1.3.1", "3.1.1"],
     ),
-}
+)

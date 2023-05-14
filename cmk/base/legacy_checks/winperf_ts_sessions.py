@@ -16,6 +16,7 @@
 # 6 Number of inactive Terminal Services sessions.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -53,9 +54,9 @@ def check_winperf_ts_sessions(_unused, params, info):
     return state, ", ".join(state_txt), perfdata
 
 
-check_info["winperf_ts_sessions"] = {
-    "check_function": check_winperf_ts_sessions,
-    "discovery_function": inventory_winperf_ts_sessions,
-    "service_name": "Sessions",
-    "check_ruleset_name": "winperf_ts_sessions",
-}
+check_info["winperf_ts_sessions"] = LegacyCheckDefinition(
+    check_function=check_winperf_ts_sessions,
+    discovery_function=inventory_winperf_ts_sessions,
+    service_name="Sessions",
+    check_ruleset_name="winperf_ts_sessions",
+)

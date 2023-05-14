@@ -7,6 +7,7 @@
 # db2taddm DB2v10.1.0.4,s140509(IP23577)
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -29,8 +30,8 @@ def check_db2_version(item, _no_params, info):
     return 2, "Instance is down"
 
 
-check_info["db2_version"] = {
-    "service_name": "DB2 Instance %s",
-    "check_function": check_db2_version,
-    "discovery_function": inventory_db2_version,
-}
+check_info["db2_version"] = LegacyCheckDefinition(
+    service_name="DB2 Instance %s",
+    check_function=check_db2_version,
+    discovery_function=inventory_db2_version,
+)

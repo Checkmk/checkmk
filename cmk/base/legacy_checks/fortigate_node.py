@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, contains, not_equals
+from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, not_equals
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.fortigate_sessions import fortigate_sessions
 from cmk.base.config import check_info
@@ -90,16 +90,16 @@ def check_fortigate_cluster(_no_item, _no_params, parsed):
     return None
 
 
-check_info["fortigate_node"] = {
-    "detect": all_of(
+check_info["fortigate_node"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
         not_equals(".1.3.6.1.4.1.12356.101.13.1.1.0", "1"),
     ),
-    "parse_function": parse_fortigate_node,
-    "discovery_function": inventory_fortigate_cluster,
-    "check_function": check_fortigate_cluster,
-    "service_name": "Cluster Info",
-    "fetch": [
+    parse_function=parse_fortigate_node,
+    discovery_function=inventory_fortigate_cluster,
+    check_function=check_fortigate_cluster,
+    service_name="Cluster Info",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.12356.101.13.1",
             oids=["1", "7"],
@@ -109,7 +109,7 @@ check_info["fortigate_node"] = {
             oids=["11", "3", "4", "6", OIDEnd()],
         ),
     ],
-}
+)
 
 # .
 #   .--CPU-----------------------------------------------------------------.
@@ -135,11 +135,11 @@ def check_fortigate_node_cpu(item, params, parsed):
     return None
 
 
-check_info["fortigate_node.cpu"] = {
-    "discovery_function": inventory_fortigate_node_cpu,
-    "check_function": check_fortigate_node_cpu,
-    "service_name": "CPU utilization %s",
-}
+check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
+    discovery_function=inventory_fortigate_node_cpu,
+    check_function=check_fortigate_node_cpu,
+    service_name="CPU utilization %s",
+)
 
 # .
 #   .--Sessions------------------------------------------------------------.
@@ -167,9 +167,9 @@ def check_fortigate_node_ses(item, params, parsed):
     return None
 
 
-check_info["fortigate_node.sessions"] = {
-    "discovery_function": inventory_fortigate_node_ses,
-    "check_function": check_fortigate_node_ses,
-    "service_name": "Sessions %s",
-    "check_ruleset_name": "fortigate_node_sessions",
-}
+check_info["fortigate_node.sessions"] = LegacyCheckDefinition(
+    discovery_function=inventory_fortigate_node_ses,
+    check_function=check_fortigate_node_ses,
+    service_name="Sessions %s",
+    check_ruleset_name="fortigate_node_sessions",
+)

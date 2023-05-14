@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.perle import DETECT_PERLE
@@ -39,14 +40,14 @@ def check_perle_modules_mgt(item, _no_params, info):
                 yield state, "%s: %s" % (title, state_readable)
 
 
-check_info["perle_modules_mgt"] = {
-    "detect": DETECT_PERLE,
-    "discovery_function": inventory_perle_modules_mgt,
-    "check_function": check_perle_modules_mgt,
-    "service_name": "Chassis slot %s MGT",
+check_info["perle_modules_mgt"] = LegacyCheckDefinition(
+    detect=DETECT_PERLE,
+    discovery_function=inventory_perle_modules_mgt,
+    check_function=check_perle_modules_mgt,
+    service_name="Chassis slot %s MGT",
     # If you change snmp info please adapt the related inventory plugin
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.1966.21.1.1.1.1.4.5",
         oids=["1.1.2", "1.1.3", "1.1.4", "3.1.3", "3.1.4"],
     ),
-}
+)

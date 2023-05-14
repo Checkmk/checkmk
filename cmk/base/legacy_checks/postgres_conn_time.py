@@ -14,7 +14,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info
 
 
@@ -45,9 +45,9 @@ def check_postgres_conn_time(item, _no_params, parsed):
     raise MKCounterWrapped("Login into database failed")
 
 
-check_info["postgres_conn_time"] = {
-    "parse_function": parse_postgres_conn_time,
-    "discovery_function": inventory_postgres_conn_time,
-    "check_function": check_postgres_conn_time,
-    "service_name": "PostgreSQL Connection Time %s",
-}
+check_info["postgres_conn_time"] = LegacyCheckDefinition(
+    parse_function=parse_postgres_conn_time,
+    discovery_function=inventory_postgres_conn_time,
+    check_function=check_postgres_conn_time,
+    service_name="PostgreSQL Connection Time %s",
+)

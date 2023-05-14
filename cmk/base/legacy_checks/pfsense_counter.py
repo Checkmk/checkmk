@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import contains, get_average, get_rate
+from cmk.base.check_api import contains, get_average, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -92,16 +92,16 @@ def check_pfsense_counter(_no_item, params, parsed):
         yield status, infotext, perfdata
 
 
-check_info["pfsense_counter"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
-    "default_levels_variable": "pfsense_counter_default_levels",
-    "parse_function": parse_pfsense_counter,
-    "discovery_function": inventory_pfsense_counter,
-    "check_function": check_pfsense_counter,
-    "service_name": "pfSense Firewall Packet Rates",
-    "fetch": SNMPTree(
+check_info["pfsense_counter"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
+    default_levels_variable="pfsense_counter_default_levels",
+    parse_function=parse_pfsense_counter,
+    discovery_function=inventory_pfsense_counter,
+    check_function=check_pfsense_counter,
+    service_name="pfSense Firewall Packet Rates",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12325.1.200.1",
         oids=[OIDEnd(), "2"],
     ),
-    "check_ruleset_name": "pfsense_counter",
-}
+    check_ruleset_name="pfsense_counter",
+)

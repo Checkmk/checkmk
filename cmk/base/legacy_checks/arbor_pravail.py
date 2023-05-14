@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.arbor import (
     ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
     check_arbor_disk_usage,
@@ -47,37 +47,37 @@ def parse_pravail(info):
     }
 
 
-check_info["arbor_pravail"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.1.0", "Pravail"),
-    "check_function": check_arbor_memory,
-    "discovery_function": inventory_arbor_memory,
-    "parse_function": parse_pravail,
-    "service_name": "Memory",
-    "check_ruleset_name": "memory_arbor",
-    "default_levels_variable": "arbor_memory_default_levels",
-    "fetch": SNMPTree(
+check_info["arbor_pravail"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.1.0", "Pravail"),
+    check_function=check_arbor_memory,
+    discovery_function=inventory_arbor_memory,
+    parse_function=parse_pravail,
+    service_name="Memory",
+    check_ruleset_name="memory_arbor",
+    default_levels_variable="arbor_memory_default_levels",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9694.1.6.2",
         oids=["6.0", "7.0", "8.0", "1.0", "39.0"],
     ),
-}
+)
 
-check_info["arbor_pravail.disk_usage"] = {
-    "check_function": check_arbor_disk_usage,
-    "discovery_function": inventory_arbor_disk_usage,
-    "service_name": "Disk Usage %s",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["arbor_pravail.disk_usage"] = LegacyCheckDefinition(
+    check_function=check_arbor_disk_usage,
+    discovery_function=inventory_arbor_disk_usage,
+    service_name="Disk Usage %s",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)
 
-check_info["arbor_pravail.host_fault"] = {
-    "check_function": check_arbor_host_fault,
-    "discovery_function": inventory_arbor_host_fault,
-    "service_name": "Host Fault",
-}
+check_info["arbor_pravail.host_fault"] = LegacyCheckDefinition(
+    check_function=check_arbor_host_fault,
+    discovery_function=inventory_arbor_host_fault,
+    service_name="Host Fault",
+)
 
-check_info["arbor_pravail.drop_rate"] = {
-    "check_function": check_arbor_drop_rate,
-    "discovery_function": inventory_arbor_drop_rate,
-    "service_name": "%s drop rate",
-    "check_ruleset_name": "generic_rate",
-}
+check_info["arbor_pravail.drop_rate"] = LegacyCheckDefinition(
+    check_function=check_arbor_drop_rate,
+    discovery_function=inventory_arbor_drop_rate,
+    service_name="%s drop rate",
+    check_ruleset_name="generic_rate",
+)

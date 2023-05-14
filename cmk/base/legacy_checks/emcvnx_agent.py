@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.emcvnx import preparse_emcvnx_info
 from cmk.base.config import check_info
 
@@ -31,9 +32,9 @@ def check_emcvnx_agent(item, _no_params, parsed):
         yield 0, "%s: %s" % (key, value)
 
 
-check_info["emcvnx_agent"] = {
-    "parse_function": parse_emcvnx_agent,
-    "discovery_function": inventory_emcvnx_agent,
-    "check_function": check_emcvnx_agent,
-    "service_name": "EMC VNX Agent",
-}
+check_info["emcvnx_agent"] = LegacyCheckDefinition(
+    parse_function=parse_emcvnx_agent,
+    discovery_function=inventory_emcvnx_agent,
+    check_function=check_emcvnx_agent,
+    service_name="EMC VNX Agent",
+)

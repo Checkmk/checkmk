@@ -10,6 +10,7 @@ import cmk.base.plugins.agent_based.utils.db
 from cmk.base.check_api import (
     get_bytes_human_readable,
     get_percent_human_readable,
+    LegacyCheckDefinition,
     MKCounterWrapped,
 )
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
@@ -110,11 +111,11 @@ def check_db2_tablespaces(item, params, parsed):
     yield 0, "Type: %s" % tbsp_type
 
 
-check_info["db2_tablespaces"] = {
-    "parse_function": parse_db2_dbs,
-    "service_name": "DB2 Tablespace %s",
-    "check_function": check_db2_tablespaces,
-    "discovery_function": inventory_db2_tablespaces,
-    "check_ruleset_name": "db2_tablespaces",
-    "default_levels_variable": "db2_tablespaces_default_levels",
-}
+check_info["db2_tablespaces"] = LegacyCheckDefinition(
+    parse_function=parse_db2_dbs,
+    service_name="DB2 Tablespace %s",
+    check_function=check_db2_tablespaces,
+    discovery_function=inventory_db2_tablespaces,
+    check_ruleset_name="db2_tablespaces",
+    default_levels_variable="db2_tablespaces_default_levels",
+)

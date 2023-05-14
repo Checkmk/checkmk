@@ -9,6 +9,7 @@ from cmk.base.check_api import (
     discover,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.huawei_switch import parse_huawei_physical_entity_values
 from cmk.base.config import check_info, factory_settings
@@ -39,13 +40,13 @@ def check_huawei_switch_mem(item, params, item_data):
     )
 
 
-check_info["huawei_switch_mem"] = {
-    "detect": DETECT_HUAWEI_SWITCH,
-    "parse_function": parse_huawei_switch_mem,
-    "discovery_function": discover(),
-    "check_function": check_huawei_switch_mem,
-    "service_name": "Memory %s",
-    "fetch": [
+check_info["huawei_switch_mem"] = LegacyCheckDefinition(
+    detect=DETECT_HUAWEI_SWITCH,
+    parse_function=parse_huawei_switch_mem,
+    discovery_function=discover(),
+    check_function=check_huawei_switch_mem,
+    service_name="Memory %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
             oids=[OIDEnd(), "7"],
@@ -55,6 +56,6 @@ check_info["huawei_switch_mem"] = {
             oids=[OIDEnd(), "7"],
         ),
     ],
-    "check_ruleset_name": "memory_percentage_used_multiitem",
-    "default_levels_variable": "huawei_switch_mem_default_levels",
-}
+    check_ruleset_name="memory_percentage_used_multiitem",
+    default_levels_variable="huawei_switch_mem_default_levels",
+)

@@ -6,7 +6,7 @@
 
 from typing import Dict
 
-from cmk.base.check_api import discover_single, get_bytes_human_readable
+from cmk.base.check_api import discover_single, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions, parse_aws
 from cmk.base.config import check_info
 
@@ -45,9 +45,9 @@ def check_aws_dynamodb_summary(item, params, parsed):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-check_info["aws_dynamodb_summary"] = {
-    "parse_function": parse_aws,
-    "discovery_function": discover_single,
-    "check_function": check_aws_dynamodb_summary,
-    "service_name": "AWS/DynamoDB Summary",
-}
+check_info["aws_dynamodb_summary"] = LegacyCheckDefinition(
+    parse_function=parse_aws,
+    discovery_function=discover_single,
+    check_function=check_aws_dynamodb_summary,
+    service_name="AWS/DynamoDB Summary",
+)

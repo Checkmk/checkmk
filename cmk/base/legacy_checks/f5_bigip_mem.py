@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -61,19 +61,19 @@ def check_f5_bigip_mem(_item, params, parsed):
     )
 
 
-check_info["f5_bigip_mem"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375"),
-    "parse_function": parse_f5_bigip_mem,
-    "discovery_function": discover_f5_bigip_mem,
-    "check_function": check_f5_bigip_mem,
-    "service_name": "Memory",
-    "fetch": SNMPTree(
+check_info["f5_bigip_mem"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375"),
+    parse_function=parse_f5_bigip_mem,
+    discovery_function=discover_f5_bigip_mem,
+    check_function=check_f5_bigip_mem,
+    service_name="Memory",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1",
         oids=["7.1.1", "7.1.2", "1.2.1.143", "1.2.1.144"],
     ),
-    "default_levels_variable": "f5_bigip_mem_default_levels",
-    "check_ruleset_name": "memory_simple",
-}
+    default_levels_variable="f5_bigip_mem_default_levels",
+    check_ruleset_name="memory_simple",
+)
 
 
 def discover_f5_bigip_mem_tmm(parsed):
@@ -95,10 +95,10 @@ def check_f5_bigip_mem_tmm(_item, params, parsed):
     )
 
 
-check_info["f5_bigip_mem.tmm"] = {
-    "discovery_function": discover_f5_bigip_mem_tmm,
-    "check_function": check_f5_bigip_mem_tmm,
-    "service_name": "Memory",
-    "default_levels_variable": "f5_bigip_mem_default_levels",
-    "check_ruleset_name": "memory_simple",
-}
+check_info["f5_bigip_mem.tmm"] = LegacyCheckDefinition(
+    discovery_function=discover_f5_bigip_mem_tmm,
+    check_function=check_f5_bigip_mem_tmm,
+    service_name="Memory",
+    default_levels_variable="f5_bigip_mem_default_levels",
+    check_ruleset_name="memory_simple",
+)

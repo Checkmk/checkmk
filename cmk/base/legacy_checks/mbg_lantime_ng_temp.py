@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -24,15 +25,15 @@ def check_mbg_lantime_ng_temp(item, params, info):
     return check_temperature(float(info[0][0]), params, "mbg_lantime_ng_temp_%s" % item)
 
 
-check_info["mbg_lantime_ng_temp"] = {
-    "detect": DETECT_MBG_LANTIME_NG,
-    "check_function": check_mbg_lantime_ng_temp,
-    "discovery_function": inventory_mbg_lantime_ng_temp,
-    "service_name": "Temperature %s",
-    "default_levels_variable": "mbg_lantime_ng_temp_default_levels",
-    "check_ruleset_name": "temperature",
-    "fetch": SNMPTree(
+check_info["mbg_lantime_ng_temp"] = LegacyCheckDefinition(
+    detect=DETECT_MBG_LANTIME_NG,
+    check_function=check_mbg_lantime_ng_temp,
+    discovery_function=inventory_mbg_lantime_ng_temp,
+    service_name="Temperature %s",
+    default_levels_variable="mbg_lantime_ng_temp_default_levels",
+    check_ruleset_name="temperature",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.2",
         oids=["1"],
     ),
-}
+)

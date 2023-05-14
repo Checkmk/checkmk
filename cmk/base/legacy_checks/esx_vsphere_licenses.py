@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.license import license_check_levels
 from cmk.base.config import check_info
 
@@ -43,10 +44,10 @@ def check_esx_vsphere_licenses(item, params, parsed):
     return status, infotext, perfdata
 
 
-check_info["esx_vsphere_licenses"] = {
-    "parse_function": parse_esx_vsphere_licenses,
-    "discovery_function": inventory_esx_vsphere_licenses,
-    "check_function": check_esx_vsphere_licenses,
-    "service_name": "License %s",
-    "check_ruleset_name": "esx_licenses",
-}
+check_info["esx_vsphere_licenses"] = LegacyCheckDefinition(
+    parse_function=parse_esx_vsphere_licenses,
+    discovery_function=inventory_esx_vsphere_licenses,
+    check_function=check_esx_vsphere_licenses,
+    service_name="License %s",
+    check_ruleset_name="esx_licenses",
+)

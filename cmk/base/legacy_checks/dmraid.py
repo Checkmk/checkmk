@@ -14,6 +14,7 @@
 # /dev/sdb: isw, "isw_ebdabbedfh", GROUP, ok, 976773166 sectors, data@ 0 Model: WDC WD5002ABYS-5
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -54,14 +55,14 @@ def check_dmraid_ldisks(item, _no_params, info):
     return (3, "incomplete data from agent")
 
 
-check_info["dmraid.ldisks"] = {
-    "check_function": check_dmraid_ldisks,
-    "discovery_function": inventory_dmraid_ldisks,
-    "service_name": "RAID LDisk %s",
-}
+check_info["dmraid.ldisks"] = LegacyCheckDefinition(
+    check_function=check_dmraid_ldisks,
+    discovery_function=inventory_dmraid_ldisks,
+    service_name="RAID LDisk %s",
+)
 
-check_info["dmraid.pdisks"] = {
-    "check_function": check_dmraid_pdisks,
-    "discovery_function": inventory_dmraid_pdisks,
-    "service_name": "RAID PDisk %s",
-}
+check_info["dmraid.pdisks"] = LegacyCheckDefinition(
+    check_function=check_dmraid_pdisks,
+    discovery_function=inventory_dmraid_pdisks,
+    service_name="RAID PDisk %s",
+)

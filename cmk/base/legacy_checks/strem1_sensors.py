@@ -6,7 +6,7 @@
 # Author: Lars Michelsen <lm@mathias-kettner.de>, 2011-03-21
 
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -61,11 +61,11 @@ def check_strem1_sensors(item, params, info):
     return (3, "Sensor not found")
 
 
-check_info["strem1_sensors"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "Sensatronics EM1"),
-    "check_function": check_strem1_sensors,
-    "discovery_function": inventory_strem1_sensors,
-    "service_name": "Sensor - %s",
+check_info["strem1_sensors"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.1.0", "Sensatronics EM1"),
+    check_function=check_strem1_sensors,
+    discovery_function=inventory_strem1_sensors,
+    service_name="Sensor - %s",
     # 1,  # SENSATRONICS-EM1::group1Name
     # 2,  # SENSATRONICS-EM1::group1TempName
     # 3,  # SENSATRONICS-EM1::group1TempDataStr
@@ -76,7 +76,7 @@ check_info["strem1_sensors"] = {
     # 8,  # group1WetName
     # 9,  # group1WetDataStr
     # 10, # group1WetDataInt
-    "fetch": [
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.16174.1.1.3.2.3",
             oids=["1"],
@@ -86,4 +86,4 @@ check_info["strem1_sensors"] = {
             oids=["1", "2", "3", "4"],
         ),
     ],
-}
+)

@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -65,23 +66,23 @@ def check_avaya_88xx(item, params, parsed):
     return None
 
 
-check_info["avaya_88xx"] = {
-    "detect": DETECT_AVAYA,
-    "parse_function": parse_avaya_88xx,
-    "check_function": check_avaya_88xx,
-    "discovery_function": inventory_avaya_88xx,
-    "service_name": "Temperature Fan %s",
-    "default_levels_variable": "avaya_88xx_default_levels",
-    "check_ruleset_name": "temperature",
+check_info["avaya_88xx"] = LegacyCheckDefinition(
+    detect=DETECT_AVAYA,
+    parse_function=parse_avaya_88xx,
+    check_function=check_avaya_88xx,
+    discovery_function=inventory_avaya_88xx,
+    service_name="Temperature Fan %s",
+    default_levels_variable="avaya_88xx_default_levels",
+    check_ruleset_name="temperature",
     # RAPID-CITY MIB
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2272.1.4.7.1.1",
         oids=["2", "3"],
     ),
-}
+)
 
-check_info["avaya_88xx.fan"] = {
-    "check_function": check_avaya_88xx_fan,
-    "discovery_function": inventory_avaya_88xx_fan,
-    "service_name": "Fan %s Status",
-}
+check_info["avaya_88xx.fan"] = LegacyCheckDefinition(
+    check_function=check_avaya_88xx_fan,
+    discovery_function=inventory_avaya_88xx_fan,
+    service_name="Fan %s Status",
+)

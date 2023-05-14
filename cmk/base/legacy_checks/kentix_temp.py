@@ -6,6 +6,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Final, List, NamedTuple
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -59,13 +60,13 @@ def check_kentix_temp(
     )
 
 
-check_info["kentix_temp"] = {
-    "detect": DETECT_KENTIX,
-    "parse_function": parse_kentix_temp,
-    "check_function": check_kentix_temp,
-    "discovery_function": inventory_kentix_temp,
-    "service_name": "Temperature %s",
-    "fetch": [
+check_info["kentix_temp"] = LegacyCheckDefinition(
+    detect=DETECT_KENTIX,
+    parse_function=parse_kentix_temp,
+    check_function=check_kentix_temp,
+    discovery_function=inventory_kentix_temp,
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.37954.2.1.1",
             oids=["1", "2", "3"],
@@ -75,5 +76,5 @@ check_info["kentix_temp"] = {
             oids=["1", "2", "3"],
         ),
     ],
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

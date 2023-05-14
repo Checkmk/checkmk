@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -77,20 +78,20 @@ def check_kentix_amp_sensors_temperature(item, params, parsed):
     return None
 
 
-check_info["kentix_amp_sensors"] = {
-    "detect": DETECT_KENTIX,
-    "parse_function": parse_kentix_amp_sensors,
-    "discovery_function": lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
-    "check_function": check_kentix_amp_sensors_temperature,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "fetch": [
+check_info["kentix_amp_sensors"] = LegacyCheckDefinition(
+    detect=DETECT_KENTIX,
+    parse_function=parse_kentix_amp_sensors,
+    discovery_function=lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
+    check_function=check_kentix_amp_sensors_temperature,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.37954.1",
             oids=["2"],
         )
     ],
-}
+)
 
 # .
 #   .--humidity------------------------------------------------------------.
@@ -109,12 +110,12 @@ def check_kentix_amp_sensors_humidity(item, params, parsed):
     return None
 
 
-check_info["kentix_amp_sensors.humidity"] = {
-    "discovery_function": lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
-    "check_function": check_kentix_amp_sensors_humidity,
-    "service_name": "Humidity %s",
-    "check_ruleset_name": "humidity",
-}
+check_info["kentix_amp_sensors.humidity"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
+    check_function=check_kentix_amp_sensors_humidity,
+    service_name="Humidity %s",
+    check_ruleset_name="humidity",
+)
 
 # .
 #   .--smoke---------------------------------------------------------------.
@@ -155,14 +156,14 @@ def check_kentix_amp_sensors_smoke(item, params, parsed):
         yield status, infotext, perfdata
 
 
-check_info["kentix_amp_sensors.smoke"] = {
-    "discovery_function": lambda parsed: inventory_kentix_amp_sensors(
+check_info["kentix_amp_sensors.smoke"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_kentix_amp_sensors(
         parsed, kentix_amp_sensors_smoke_default_levels
     ),
-    "check_function": check_kentix_amp_sensors_smoke,
-    "service_name": "Smoke Detector %s",
-    "check_ruleset_name": "smoke",
-}
+    check_function=check_kentix_amp_sensors_smoke,
+    service_name="Smoke Detector %s",
+    check_ruleset_name="smoke",
+)
 
 # .
 #   .--leakage-------------------------------------------------------------.
@@ -183,10 +184,10 @@ def check_kentix_amp_sensors_leakage(item, params, parsed):
     return None
 
 
-check_info["kentix_amp_sensors.leakage"] = {
-    "discovery_function": lambda i: inventory_kentix_amp_sensors(i, None),
-    "check_function": check_kentix_amp_sensors_leakage,
-    "service_name": "Leakage %s",
-}
+check_info["kentix_amp_sensors.leakage"] = LegacyCheckDefinition(
+    discovery_function=lambda i: inventory_kentix_amp_sensors(i, None),
+    check_function=check_kentix_amp_sensors_leakage,
+    service_name="Leakage %s",
+)
 
 # .

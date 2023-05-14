@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils import postgres
 
@@ -71,10 +71,10 @@ def check_postgres_locks(item, params, parsed):
             yield 1, "too high (Levels at %d/%d)" % (warn, crit)
 
 
-check_info["postgres_locks"] = {
-    "parse_function": postgres.parse_dbs,
-    "check_function": check_postgres_locks,
-    "discovery_function": inventory_postgres_locks,
-    "service_name": "PostgreSQL Locks %s",
-    "check_ruleset_name": "postgres_locks",
-}
+check_info["postgres_locks"] = LegacyCheckDefinition(
+    parse_function=postgres.parse_dbs,
+    check_function=check_postgres_locks,
+    discovery_function=inventory_postgres_locks,
+    service_name="PostgreSQL Locks %s",
+    check_ruleset_name="postgres_locks",
+)

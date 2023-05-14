@@ -4,7 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, contains, get_bytes_human_readable, startswith
+from cmk.base.check_api import (
+    any_of,
+    contains,
+    get_bytes_human_readable,
+    LegacyCheckDefinition,
+    startswith,
+)
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -82,15 +88,15 @@ def check_dell_eql_storage(item, _no_params, info):
             ), perfdata
 
 
-check_info["dell_eql_storage"] = {
-    "detect": any_of(
+check_info["dell_eql_storage"] = LegacyCheckDefinition(
+    detect=any_of(
         contains(".1.3.6.1.2.1.1.1.0", "EQL-SUP"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12740.17"),
     ),
-    "check_function": check_dell_eql_storage,
-    "discovery_function": inventory_dell_eql_storage,
-    "service_name": "Storage %s",
-    "fetch": SNMPTree(
+    check_function=check_dell_eql_storage,
+    discovery_function=inventory_dell_eql_storage,
+    service_name="Storage %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12740.2.1",
         oids=[
             "1.1.9.1",
@@ -103,4 +109,4 @@ check_info["dell_eql_storage"] = {
             "10.1.2.1",
         ],
     ),
-}
+)

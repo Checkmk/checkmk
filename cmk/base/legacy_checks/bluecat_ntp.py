@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -57,15 +57,15 @@ def check_bluecat_ntp(item, params, info):
     yield state, "Stratum: %s" % stratum
 
 
-check_info["bluecat_ntp"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315"),
-    "check_function": check_bluecat_ntp,
-    "discovery_function": inventory_bluecat_ntp,
-    "service_name": "NTP",
-    "default_levels_variable": "bluecat_ntp",
-    "check_ruleset_name": "bluecat_ntp",
-    "fetch": SNMPTree(
+check_info["bluecat_ntp"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315"),
+    check_function=check_bluecat_ntp,
+    discovery_function=inventory_bluecat_ntp,
+    service_name="NTP",
+    default_levels_variable="bluecat_ntp",
+    check_ruleset_name="bluecat_ntp",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.4.2",
         oids=["1.1", "2.1", "2.2"],
     ),
-}
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.steelhead import DETECT_STEELHEAD
@@ -21,13 +22,13 @@ def check_steelhead_status(item, params, info):
     return (2, "Status is %s and %s" % (health, status))
 
 
-check_info["steelhead_status"] = {
-    "detect": DETECT_STEELHEAD,
-    "check_function": check_steelhead_status,
-    "discovery_function": inventory_steelhead_status,
-    "service_name": "Status",
-    "fetch": SNMPTree(
+check_info["steelhead_status"] = LegacyCheckDefinition(
+    detect=DETECT_STEELHEAD,
+    check_function=check_steelhead_status,
+    discovery_function=inventory_steelhead_status,
+    service_name="Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.17163.1.1.2",
         oids=["2", "3"],
     ),
-}
+)

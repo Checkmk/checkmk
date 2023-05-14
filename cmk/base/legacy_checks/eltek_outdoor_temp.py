@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -78,14 +79,14 @@ def check_eltek_outdoor_temp(item, params, info):
     return None
 
 
-check_info["eltek_outdoor_temp"] = {
-    "detect": DETECT_ELTEK,
-    "discovery_function": inventory_eltek_outdoor_temp,
-    "check_function": check_eltek_outdoor_temp,
-    "service_name": "Temperature Outdoor %s",
-    "fetch": SNMPTree(
+check_info["eltek_outdoor_temp"] = LegacyCheckDefinition(
+    detect=DETECT_ELTEK,
+    discovery_function=inventory_eltek_outdoor_temp,
+    check_function=check_eltek_outdoor_temp,
+    service_name="Temperature Outdoor %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12148.9.1.17.3.1",
         oids=["1", "2", "3"],
     ),
-    "default_levels_variable": "eltek_outdoor_temp_default_variables",
-}
+    default_levels_variable="eltek_outdoor_temp_default_variables",
+)

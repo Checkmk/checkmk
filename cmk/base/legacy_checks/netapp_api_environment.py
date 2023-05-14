@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-from cmk.base.check_api import check_levels, get_parsed_item_data
+from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import maybefloat, netapp_api_parse_lines
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -138,62 +138,62 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
     )
 
 
-check_info["netapp_api_environment"] = {
-    "check_function": check_netapp_api_environment_discrete,
-    "discovery_function": discover_api_environment(
+check_info["netapp_api_environment"] = LegacyCheckDefinition(
+    check_function=check_netapp_api_environment_discrete,
+    discovery_function=discover_api_environment(
         lambda v: v["sensor-name"].startswith("PSU") and v["sensor-name"].endswith(" FAULT")
     ),
-    "parse_function": _parse_netapp_api_environment,
-    "service_name": "PSU Controller %s",
-    "check_ruleset_name": "hw_psu",
-}
+    parse_function=_parse_netapp_api_environment,
+    service_name="PSU Controller %s",
+    check_ruleset_name="hw_psu",
+)
 
 
 def _is_fan(_sensor_name) -> bool:
     return _sensor_name is not None and "fan" in _sensor_name.lower()
 
 
-check_info["netapp_api_environment.fan_faults"] = {
-    "check_function": check_netapp_api_environment_discrete,
-    "discovery_function": discover_api_environment(
+check_info["netapp_api_environment.fan_faults"] = LegacyCheckDefinition(
+    check_function=check_netapp_api_environment_discrete,
+    discovery_function=discover_api_environment(
         lambda v: _is_fan(v.get("sensor-name")) and v["sensor-name"].endswith(" Fault")
     ),
-    "parse_function": _parse_netapp_api_environment,
-    "service_name": "Fan Controller %s",
-    "check_ruleset_name": "hw_fans",
-}
+    parse_function=_parse_netapp_api_environment,
+    service_name="Fan Controller %s",
+    check_ruleset_name="hw_fans",
+)
 
-check_info["netapp_api_environment.temperature"] = {
-    "check_function": check_netapp_api_environment_threshold,
-    "discovery_function": discover_api_environment(lambda v: v.get("sensor-type") == "thermal"),
-    "parse_function": _parse_netapp_api_environment,
-    "service_name": "System Temperature %s",
-    "check_ruleset_name": "temperature",
-}
+check_info["netapp_api_environment.temperature"] = LegacyCheckDefinition(
+    check_function=check_netapp_api_environment_threshold,
+    discovery_function=discover_api_environment(lambda v: v.get("sensor-type") == "thermal"),
+    parse_function=_parse_netapp_api_environment,
+    service_name="System Temperature %s",
+    check_ruleset_name="temperature",
+)
 
-check_info["netapp_api_environment.fans"] = {
-    "check_function": check_netapp_api_environment_threshold,
-    "discovery_function": discover_api_environment(lambda v: v.get("sensor-type") == "fan"),
-    "parse_function": _parse_netapp_api_environment,
-    "service_name": "System Fans %s",
-    "check_ruleset_name": "hw_fans",
-}
+check_info["netapp_api_environment.fans"] = LegacyCheckDefinition(
+    check_function=check_netapp_api_environment_threshold,
+    discovery_function=discover_api_environment(lambda v: v.get("sensor-type") == "fan"),
+    parse_function=_parse_netapp_api_environment,
+    service_name="System Fans %s",
+    check_ruleset_name="hw_fans",
+)
 
-check_info["netapp_api_environment.voltage"] = {
-    "check_function": check_netapp_api_environment_threshold,
-    "discovery_function": discover_api_environment(
+check_info["netapp_api_environment.voltage"] = LegacyCheckDefinition(
+    check_function=check_netapp_api_environment_threshold,
+    discovery_function=discover_api_environment(
         lambda v: v.get("sensor-type") == "voltage" and v.get("value-units")
     ),
-    "parse_function": _parse_netapp_api_environment,
-    "service_name": "System Voltage %s",
-    "check_ruleset_name": "voltage",
-}
+    parse_function=_parse_netapp_api_environment,
+    service_name="System Voltage %s",
+    check_ruleset_name="voltage",
+)
 
-check_info["netapp_api_environment.current"] = {
-    "check_function": check_netapp_api_environment_threshold,
-    "discovery_function": discover_api_environment(
+check_info["netapp_api_environment.current"] = LegacyCheckDefinition(
+    check_function=check_netapp_api_environment_threshold,
+    discovery_function=discover_api_environment(
         lambda v: v.get("sensor-type") == "current" and v.get("value-units")
     ),
-    "parse_function": _parse_netapp_api_environment,
-    "service_name": "System Currents %s",
-}
+    parse_function=_parse_netapp_api_environment,
+    service_name="System Currents %s",
+)

@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -29,8 +29,8 @@ def check_mongodb_counters(item, _no_params, parsed):
         yield 0, "%s: %.2f/s" % (what.title(), what_rate), [("%s_ops" % what, what_rate)]
 
 
-check_info["mongodb_counters"] = {
-    "discovery_function": inventory_mongodb_counters,
-    "check_function": check_mongodb_counters,
-    "service_name": "MongoDB Counters %s",
-}
+check_info["mongodb_counters"] = LegacyCheckDefinition(
+    discovery_function=inventory_mongodb_counters,
+    check_function=check_mongodb_counters,
+    service_name="MongoDB Counters %s",
+)

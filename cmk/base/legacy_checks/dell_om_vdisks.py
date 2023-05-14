@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.dell_om import parse_omreport, status_translate_omreport
 from cmk.base.config import check_info
 
@@ -49,9 +50,9 @@ def check_dell_om_vdisks(item, params, parsed):
     return None
 
 
-check_info["dell_om_vdisks"] = {
-    "check_function": check_dell_om_vdisks,
-    "discovery_function": inventory_dell_om_vdisks,
-    "parse_function": parse_omreport,
-    "service_name": "Virtual Disk %s",
-}
+check_info["dell_om_vdisks"] = LegacyCheckDefinition(
+    check_function=check_dell_om_vdisks,
+    discovery_function=inventory_dell_om_vdisks,
+    parse_function=parse_omreport,
+    service_name="Virtual Disk %s",
+)

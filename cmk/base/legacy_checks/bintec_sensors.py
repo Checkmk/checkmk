@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -41,18 +41,18 @@ def check_bintec_sensors_fan(item, params, info):
     return None
 
 
-check_info["bintec_sensors.fan"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
-    "check_function": check_bintec_sensors_fan,
-    "discovery_function": inventory_bintec_sensors_fan,
-    "service_name": "%s",
-    "fetch": SNMPTree(
+check_info["bintec_sensors.fan"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
+    check_function=check_bintec_sensors_fan,
+    discovery_function=inventory_bintec_sensors_fan,
+    service_name="%s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.272.4.17.7.1.1.1",
         oids=["2", "3", "4", "5", "7"],
     ),
-    "default_levels_variable": "bintec_sensors_fan_default_levels",
-    "check_ruleset_name": "hw_fans",
-}
+    default_levels_variable="bintec_sensors_fan_default_levels",
+    check_ruleset_name="hw_fans",
+)
 
 # .
 #   .--temp----------------------------------------------------------------.
@@ -81,18 +81,18 @@ def check_bintec_sensors_temp(item, params, info):
     return 3, "Sensor not found in SNMP data"
 
 
-check_info["bintec_sensors.temp"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
-    "check_function": check_bintec_sensors_temp,
-    "discovery_function": inventory_bintec_sensors_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "fetch": SNMPTree(
+check_info["bintec_sensors.temp"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
+    check_function=check_bintec_sensors_temp,
+    discovery_function=inventory_bintec_sensors_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.272.4.17.7.1.1.1",
         oids=["2", "3", "4", "5", "7"],
     ),
-    "default_levels_variable": "bintec_sensors_temp_default_levels",
-}
+    default_levels_variable="bintec_sensors_temp_default_levels",
+)
 
 # .
 #   .--voltage-------------------------------------------------------------.
@@ -126,15 +126,15 @@ def check_bintec_sensors_voltage(item, _no_params, info):
     return 3, "Sensor %s not found" % item
 
 
-check_info["bintec_sensors.voltage"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
-    "check_function": check_bintec_sensors_voltage,
-    "discovery_function": inventory_bintec_sensors_voltage,
-    "service_name": "Voltage %s",
-    "fetch": SNMPTree(
+check_info["bintec_sensors.voltage"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
+    check_function=check_bintec_sensors_voltage,
+    discovery_function=inventory_bintec_sensors_voltage,
+    service_name="Voltage %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.272.4.17.7.1.1.1",
         oids=["2", "3", "4", "5", "7"],
     ),
-}
+)
 
 # .

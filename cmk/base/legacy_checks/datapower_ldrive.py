@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.datapower import DETECT
@@ -47,13 +48,13 @@ def check_datapower_ldrive(item, _no_params, info):
     return None
 
 
-check_info["datapower_ldrive"] = {
-    "detect": DETECT,
-    "discovery_function": inventory_datapower_ldrive,
-    "check_function": check_datapower_ldrive,
-    "service_name": "Logical Drive %s",
-    "fetch": SNMPTree(
+check_info["datapower_ldrive"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=inventory_datapower_ldrive,
+    check_function=check_datapower_ldrive,
+    service_name="Logical Drive %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.259.1",
         oids=["1", "2", "4", "5", "6"],
     ),
-}
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -42,16 +43,16 @@ def check_brocade_mlx_temp(item, params, parsed):
     return None
 
 
-check_info["brocade_mlx_temp"] = {
-    "detect": DETECT_MLX,
-    "parse_function": parse_brocade_mlx_temp,
-    "check_function": check_brocade_mlx_temp,
-    "discovery_function": inventory_brocade_mlx_temp,
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["brocade_mlx_temp"] = LegacyCheckDefinition(
+    detect=DETECT_MLX,
+    parse_function=parse_brocade_mlx_temp,
+    check_function=check_brocade_mlx_temp,
+    discovery_function=inventory_brocade_mlx_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.1991.1.1.2.13.1.1",
         oids=["3", "4"],
     ),
-    "default_levels_variable": "brocade_mlx_temperature_default_levels",
-    "check_ruleset_name": "temperature",
-}
+    default_levels_variable="brocade_mlx_temperature_default_levels",
+    check_ruleset_name="temperature",
+)

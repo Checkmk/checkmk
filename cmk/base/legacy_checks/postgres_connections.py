@@ -4,7 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, MKCounterWrapped
+from cmk.base.check_api import (
+    check_levels,
+    get_percent_human_readable,
+    LegacyCheckDefinition,
+    MKCounterWrapped,
+)
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.utils import postgres
 
@@ -126,11 +131,11 @@ def check_postgres_connections(item, params, parsed):
         )
 
 
-check_info["postgres_connections"] = {
-    "parse_function": postgres.parse_dbs,
-    "check_function": check_postgres_connections,
-    "discovery_function": inventory_postgres_connections,
-    "service_name": "PostgreSQL Connections %s",
-    "check_ruleset_name": "db_connections",
-    "default_levels_variable": "postgres_connections_default_levels",
-}
+check_info["postgres_connections"] = LegacyCheckDefinition(
+    parse_function=postgres.parse_dbs,
+    check_function=check_postgres_connections,
+    discovery_function=inventory_postgres_connections,
+    service_name="PostgreSQL Connections %s",
+    check_ruleset_name="db_connections",
+    default_levels_variable="postgres_connections_default_levels",
+)

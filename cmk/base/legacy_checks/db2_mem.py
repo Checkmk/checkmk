@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, MKCounterWrapped
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info
 
 db2_mem_default_levels = (10.0, 5.0)
@@ -65,9 +65,9 @@ def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
     return state, message, perf
 
 
-check_info["db2_mem"] = {
-    "check_function": check_db2_mem,
-    "discovery_function": inventory_db2_mem,
-    "service_name": "Memory %s",
-    "check_ruleset_name": "db2_mem",
-}
+check_info["db2_mem"] = LegacyCheckDefinition(
+    check_function=check_db2_mem,
+    discovery_function=inventory_db2_mem,
+    service_name="Memory %s",
+    check_ruleset_name="db2_mem",
+)

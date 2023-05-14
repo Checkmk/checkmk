@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -41,9 +42,9 @@ def check_bi_aggregation_connection(_no_item, _no_params, parsed):
         yield 0, "No connection problems"
 
 
-check_info["bi_aggregation_connection"] = {
-    "parse_function": parse_bi_aggregation_connection,
-    "discovery_function": discover_bi_aggregation_connection,
-    "check_function": check_bi_aggregation_connection,
-    "service_name": "BI Datasource Connection",
-}
+check_info["bi_aggregation_connection"] = LegacyCheckDefinition(
+    parse_function=parse_bi_aggregation_connection,
+    discovery_function=discover_bi_aggregation_connection,
+    check_function=check_bi_aggregation_connection,
+    service_name="BI Datasource Connection",
+)

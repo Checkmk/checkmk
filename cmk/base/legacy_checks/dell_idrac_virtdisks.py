@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="index"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_IDRAC_POWEREDGE
@@ -66,13 +67,13 @@ def check_dell_idrac_virtdisks(item, _no_params, info):
             yield 0, "Remaining redundancy: %s physical disk(s)" % redundancy
 
 
-check_info["dell_idrac_virtdisks"] = {
-    "detect": DETECT_IDRAC_POWEREDGE,
-    "check_function": check_dell_idrac_virtdisks,
-    "discovery_function": inventory_dell_idrac_virtdisks,
-    "service_name": "Virtual Disk %s",
-    "fetch": SNMPTree(
+check_info["dell_idrac_virtdisks"] = LegacyCheckDefinition(
+    detect=DETECT_IDRAC_POWEREDGE,
+    check_function=check_dell_idrac_virtdisks,
+    discovery_function=inventory_dell_idrac_virtdisks,
+    service_name="Virtual Disk %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1",
         oids=["2", "4", "13", "20", "34"],
     ),
-}
+)

@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.bluecat import DETECT_BLUECAT
@@ -24,13 +24,13 @@ def check_bluecat_dns_queries(item, _no_params, info):
         yield 0, "%s: %s" % (name, rate), [(name, rate)]
 
 
-check_info["bluecat_dns_queries"] = {
-    "detect": DETECT_BLUECAT,
-    "check_function": check_bluecat_dns_queries,
-    "discovery_function": inventory_bluecat_dns_queries,
-    "service_name": "DNS Queries",
-    "fetch": SNMPTree(
+check_info["bluecat_dns_queries"] = LegacyCheckDefinition(
+    detect=DETECT_BLUECAT,
+    check_function=check_bluecat_dns_queries,
+    discovery_function=inventory_bluecat_dns_queries,
+    service_name="DNS Queries",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.2.2.2.1",
         oids=["1", "2", "3", "4", "5", "6"],
     ),
-}
+)

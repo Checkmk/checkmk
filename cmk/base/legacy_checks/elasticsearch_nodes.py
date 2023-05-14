@@ -25,6 +25,7 @@ from cmk.base.check_api import (
     get_bytes_human_readable,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info, factory_settings
 
@@ -74,11 +75,11 @@ def check_elasticsearch_nodes(item, params, item_data):
         )
 
 
-check_info["elasticsearch_nodes"] = {
-    "parse_function": parse_elasticsearch_nodes,
-    "check_function": check_elasticsearch_nodes,
-    "discovery_function": discover(),
-    "default_levels_variable": "elasticsearch_nodes",
-    "service_name": "Elasticsearch Node %s",
-    "check_ruleset_name": "elasticsearch_nodes",
-}
+check_info["elasticsearch_nodes"] = LegacyCheckDefinition(
+    parse_function=parse_elasticsearch_nodes,
+    check_function=check_elasticsearch_nodes,
+    discovery_function=discover(),
+    default_levels_variable="elasticsearch_nodes",
+    service_name="Elasticsearch Node %s",
+    check_ruleset_name="elasticsearch_nodes",
+)

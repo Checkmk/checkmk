@@ -8,7 +8,13 @@
 
 import time
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, get_rate
+from cmk.base.check_api import (
+    check_levels,
+    discover,
+    get_parsed_item_data,
+    get_rate,
+    LegacyCheckDefinition,
+)
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
@@ -70,13 +76,13 @@ def check_jolokia_jvm_threading(item, params, instance_data):
         )
 
 
-check_info["jolokia_jvm_threading"] = {
-    "parse_function": parse_jolokia_jvm_threading,
-    "discovery_function": discover_jolokia_jvm_threading,
-    "check_function": check_jolokia_jvm_threading,
-    "service_name": "JVM %s Threading",
-    "check_ruleset_name": "jvm_threading",
-}
+check_info["jolokia_jvm_threading"] = LegacyCheckDefinition(
+    parse_function=parse_jolokia_jvm_threading,
+    discovery_function=discover_jolokia_jvm_threading,
+    check_function=check_jolokia_jvm_threading,
+    service_name="JVM %s Threading",
+    check_ruleset_name="jvm_threading",
+)
 
 
 def discover_jolokia_jvm_threading_pool(parsed):
@@ -118,10 +124,10 @@ def check_jolokia_jvm_threading_pool(item, params, parsed):
         )
 
 
-check_info["jolokia_jvm_threading.pool"] = {
-    "discovery_function": discover_jolokia_jvm_threading_pool,
-    "check_function": check_jolokia_jvm_threading_pool,
-    "default_levels_variable": "jolokia_jvm_threading.pool",
-    "service_name": "JVM %s",
-    "check_ruleset_name": "jvm_tp",
-}
+check_info["jolokia_jvm_threading.pool"] = LegacyCheckDefinition(
+    discovery_function=discover_jolokia_jvm_threading_pool,
+    check_function=check_jolokia_jvm_threading_pool,
+    default_levels_variable="jolokia_jvm_threading.pool",
+    service_name="JVM %s",
+    check_ruleset_name="jvm_tp",
+)

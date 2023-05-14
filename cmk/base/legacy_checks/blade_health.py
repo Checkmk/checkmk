@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.blade import DETECT_BLADE
@@ -36,13 +37,13 @@ def check_blade_health(_no_item, _no_params, info):
     return (3, "Undefined state code %s%s" % (state, descr))
 
 
-check_info["blade_health"] = {
-    "detect": DETECT_BLADE,
-    "check_function": check_blade_health,
-    "discovery_function": inventory_blade_health,
-    "service_name": "Summary health state",
-    "fetch": SNMPTree(
+check_info["blade_health"] = LegacyCheckDefinition(
+    detect=DETECT_BLADE,
+    check_function=check_blade_health,
+    discovery_function=inventory_blade_health,
+    service_name="Summary health state",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.2.2.7",
         oids=["1.0", "2.1.3.1"],
     ),
-}
+)

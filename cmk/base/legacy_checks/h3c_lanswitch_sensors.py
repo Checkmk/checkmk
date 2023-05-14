@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -40,13 +40,13 @@ def check_h3c_lanswitch_sensors(
             yield 1, "Sensor % status is %s" % (item, status)
 
 
-check_info["h3c_lanswitch_sensors"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "3com s"),
-    "parse_function": parse_h3c_lanswitch_sensors,
-    "discovery_function": inventory_h3c_lanswitch_sensors,
-    "check_function": check_h3c_lanswitch_sensors,
-    "service_name": "%s",
-    "fetch": [
+check_info["h3c_lanswitch_sensors"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.1.0", "3com s"),
+    parse_function=parse_h3c_lanswitch_sensors,
+    discovery_function=inventory_h3c_lanswitch_sensors,
+    check_function=check_h3c_lanswitch_sensors,
+    service_name="%s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.43.45.1.2.23.1.9.1.1.1",
             oids=[OIDEnd(), "2"],
@@ -56,7 +56,7 @@ check_info["h3c_lanswitch_sensors"] = {
             oids=[OIDEnd(), "2"],
         ),
     ],
-}
+)
 
 
 def h3c_lanswitch_genitem(device_class: str, id_: str) -> str:

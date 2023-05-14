@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.oracle import (
     oracle_handle_ora_errors,
     oracle_handle_ora_errors_discovery,
@@ -32,8 +33,8 @@ def check_oracle_version(item, _no_params, info):
     return (3, "no version information, database might be stopped")
 
 
-check_info["oracle_version"] = {
-    "check_function": check_oracle_version,
-    "discovery_function": inventory_oracle_version,
-    "service_name": "ORA Version %s",
-}
+check_info["oracle_version"] = LegacyCheckDefinition(
+    check_function=check_oracle_version,
+    discovery_function=inventory_oracle_version,
+    service_name="ORA Version %s",
+)

@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import any_of, get_rate, startswith
+from cmk.base.check_api import any_of, get_rate, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, render, SNMPTree
 
@@ -216,8 +216,8 @@ def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-bra
     return 3, "Port %s not found" % item
 
 
-check_info["qlogic_fcport"] = {
-    "detect": any_of(
+check_info["qlogic_fcport"] = LegacyCheckDefinition(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1663.1.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.8"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.9"),
@@ -225,10 +225,10 @@ check_info["qlogic_fcport"] = {
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.12"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.14"),
     ),
-    "check_function": check_qlogic_fcport,
-    "discovery_function": inventory_qlogic_fcport,
-    "service_name": "FC Port %s",
-    "fetch": SNMPTree(
+    check_function=check_qlogic_fcport,
+    discovery_function=inventory_qlogic_fcport,
+    service_name="FC Port %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.2.1.75.1",
         oids=[
             OIDEnd(),
@@ -259,5 +259,5 @@ check_info["qlogic_fcport"] = {
             "4.3.1.5",
         ],
     ),
-    "check_ruleset_name": "qlogic_fcport",
-}
+    check_ruleset_name="qlogic_fcport",
+)

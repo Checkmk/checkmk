@@ -21,7 +21,7 @@
 
 # mypy: disable-error-code="operator"
 
-from cmk.base.check_api import all_of, contains, startswith
+from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -91,16 +91,16 @@ def check_netapp_cluster(item, _no_params, info):
     return (3, "Got unhandled information")
 
 
-check_info["netapp_cluster"] = {
-    "detect": all_of(
+check_info["netapp_cluster"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "netapp release"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.789"),
     ),
-    "check_function": check_netapp_cluster,
-    "discovery_function": inventory_netapp_cluster,
-    "service_name": "metrocluster_w_%s",
-    "fetch": SNMPTree(
+    check_function=check_netapp_cluster,
+    discovery_function=inventory_netapp_cluster,
+    service_name="metrocluster_w_%s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.789.1.2.3",
         oids=["1", "2", "3", "4", "6", "8"],
     ),
-}
+)

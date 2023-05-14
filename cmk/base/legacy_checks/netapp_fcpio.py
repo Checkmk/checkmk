@@ -12,6 +12,7 @@ from cmk.base.check_api import (
     exists,
     get_bytes_human_readable,
     get_rate,
+    LegacyCheckDefinition,
     startswith,
 )
 from cmk.base.config import check_info, factory_settings
@@ -43,17 +44,17 @@ def check_netapp_fcpio(item, params, info):
     )
 
 
-check_info["netapp_fcpio"] = {
-    "detect": all_of(
+check_info["netapp_fcpio"] = LegacyCheckDefinition(
+    detect=all_of(
         startswith(".1.3.6.1.2.1.1.1.0", "NetApp Release"), exists(".1.3.6.1.4.1.789.1.17.20.0")
     ),
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.789.1.17",
         oids=["20", "21"],
     ),
-    "check_function": check_netapp_fcpio,
-    "discovery_function": lambda info: [(None, {})],
-    "service_name": "FCP I/O",
-    "check_ruleset_name": "netapp_fcportio",
-    "default_levels_variable": "netapp_fcpio_default_levels",
-}
+    check_function=check_netapp_fcpio,
+    discovery_function=lambda info: [(None, {})],
+    service_name="FCP I/O",
+    check_ruleset_name="netapp_fcportio",
+    default_levels_variable="netapp_fcpio_default_levels",
+)

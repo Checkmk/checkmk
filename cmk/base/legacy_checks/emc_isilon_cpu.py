@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_ISILON
@@ -48,14 +48,14 @@ def check_emc_isilon_cpu_utilization(item, params, info):
         )
 
 
-check_info["emc_isilon_cpu"] = {
-    "detect": DETECT_ISILON,
-    "check_function": check_emc_isilon_cpu_utilization,
-    "discovery_function": inventory_emc_isilon_cpu_utilization,
-    "service_name": "Node CPU utilization",
-    "fetch": SNMPTree(
+check_info["emc_isilon_cpu"] = LegacyCheckDefinition(
+    detect=DETECT_ISILON,
+    check_function=check_emc_isilon_cpu_utilization,
+    discovery_function=inventory_emc_isilon_cpu_utilization,
+    service_name="Node CPU utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12124.2.2.3",
         oids=["1", "2", "3", "4"],
     ),
-    "check_ruleset_name": "cpu_utilization",
-}
+    check_ruleset_name="cpu_utilization",
+)

@@ -32,7 +32,7 @@
 #   '----------------------------------------------------------------------'
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -74,14 +74,14 @@ def check_oracle_diva_csm_status(name, idx, item, params, info):
     return None
 
 
-check_info["oracle_diva_csm"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
-    "check_function": lambda item, params, info: check_oracle_diva_csm_status(
+check_info["oracle_diva_csm"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
+    check_function=lambda item, params, info: check_oracle_diva_csm_status(
         "Library", 0, item, params, info
     ),
-    "discovery_function": lambda info: inventory_oracle_diva_csm_status("Library", 0, info),
-    "service_name": "DIVA Status %s",
-    "fetch": [
+    discovery_function=lambda info: inventory_oracle_diva_csm_status("Library", 0, info),
+    service_name="DIVA Status %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.110901.1.2.1.1.1",
             oids=["1", "2"],
@@ -107,31 +107,31 @@ check_info["oracle_diva_csm"] = {
             oids=["3"],
         ),
     ],
-}
+)
 
-check_info["oracle_diva_csm.drive"] = {
-    "check_function": lambda item, params, info: check_oracle_diva_csm_status(
+check_info["oracle_diva_csm.drive"] = LegacyCheckDefinition(
+    check_function=lambda item, params, info: check_oracle_diva_csm_status(
         "Drive", 1, item, params, info
     ),
-    "discovery_function": lambda info: inventory_oracle_diva_csm_status("Drive", 1, info),
-    "service_name": "DIVA Status %s",
-}
+    discovery_function=lambda info: inventory_oracle_diva_csm_status("Drive", 1, info),
+    service_name="DIVA Status %s",
+)
 
-check_info["oracle_diva_csm.actor"] = {
-    "check_function": lambda item, params, info: check_oracle_diva_csm_status(
+check_info["oracle_diva_csm.actor"] = LegacyCheckDefinition(
+    check_function=lambda item, params, info: check_oracle_diva_csm_status(
         "Actor", 2, item, params, info
     ),
-    "discovery_function": lambda info: inventory_oracle_diva_csm_status("Actor", 2, info),
-    "service_name": "DIVA Status %s",
-}
+    discovery_function=lambda info: inventory_oracle_diva_csm_status("Actor", 2, info),
+    service_name="DIVA Status %s",
+)
 
-check_info["oracle_diva_csm.archive"] = {
-    "check_function": lambda item, params, info: check_oracle_diva_csm_status(
+check_info["oracle_diva_csm.archive"] = LegacyCheckDefinition(
+    check_function=lambda item, params, info: check_oracle_diva_csm_status(
         "Manager", 3, item, params, info
     ),
-    "discovery_function": lambda info: inventory_oracle_diva_csm_status("Manager", 3, info),
-    "service_name": "DIVA Status %s",
-}
+    discovery_function=lambda info: inventory_oracle_diva_csm_status("Manager", 3, info),
+    service_name="DIVA Status %s",
+)
 
 # .
 #   .--Managed Objects-----------------------------------------------------.
@@ -184,11 +184,11 @@ def check_oracle_diva_csm_objects(item, params, info):
     return None
 
 
-check_info["oracle_diva_csm.objects"] = {
-    "check_function": check_oracle_diva_csm_objects,
-    "discovery_function": inventory_oracle_diva_csm_objects,
-    "service_name": "DIVA Managed Objects",
-}
+check_info["oracle_diva_csm.objects"] = LegacyCheckDefinition(
+    check_function=check_oracle_diva_csm_objects,
+    discovery_function=inventory_oracle_diva_csm_objects,
+    service_name="DIVA Managed Objects",
+)
 
 # .
 #   .--Tapes---------------------------------------------------------------.
@@ -222,9 +222,9 @@ def check_oracle_diva_csm_tapes(item, params, info):
     return None
 
 
-check_info["oracle_diva_csm.tapes"] = {
-    "check_function": check_oracle_diva_csm_tapes,
-    "discovery_function": inventory_oracle_diva_csm_tapes,
-    "check_ruleset_name": "blank_tapes",
-    "service_name": "DIVA Blank Tapes",
-}
+check_info["oracle_diva_csm.tapes"] = LegacyCheckDefinition(
+    check_function=check_oracle_diva_csm_tapes,
+    discovery_function=inventory_oracle_diva_csm_tapes,
+    check_ruleset_name="blank_tapes",
+    service_name="DIVA Blank Tapes",
+)

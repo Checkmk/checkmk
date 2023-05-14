@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.casa import DETECT_CASA
@@ -27,13 +28,13 @@ def check_casa_power(item, _no_params, info):
     }.get(info[unit_nr][0])
 
 
-check_info["casa_power"] = {
-    "detect": DETECT_CASA,
-    "check_function": check_casa_power,
-    "discovery_function": inventory_casa_power,
-    "service_name": "Power %s",
-    "fetch": SNMPTree(
+check_info["casa_power"] = LegacyCheckDefinition(
+    detect=DETECT_CASA,
+    check_function=check_casa_power,
+    discovery_function=inventory_casa_power,
+    service_name="Power %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.20858.10.33.1.5.1",
         oids=["4"],
     ),
-}
+)

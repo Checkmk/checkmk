@@ -12,6 +12,7 @@
 # v testgroup oravol-L02 ACTIVE ENABLED
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -57,8 +58,8 @@ def check_vxvm_objstatus(item, params, info):
     return (2, "Group not found")
 
 
-check_info["vxvm_objstatus"] = {
-    "check_function": check_vxvm_objstatus,
-    "discovery_function": inventory_vxvm_objstatus,
-    "service_name": "VXVM objstatus %s",
-}
+check_info["vxvm_objstatus"] = LegacyCheckDefinition(
+    check_function=check_vxvm_objstatus,
+    discovery_function=inventory_vxvm_objstatus,
+    service_name="VXVM objstatus %s",
+)

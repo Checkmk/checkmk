@@ -6,7 +6,7 @@
 
 from itertools import cycle
 
-from cmk.base.check_api import contains, discover
+from cmk.base.check_api import contains, discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -50,15 +50,15 @@ def parse_apc_sts_inputs(info):
     }
 
 
-check_info["apc_sts_inputs"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.2.2"),
-    "parse_function": parse_apc_sts_inputs,
-    "discovery_function": discover(),
-    "check_function": check_elphase,
-    "service_name": "Input %s",
-    "default_levels_variable": "apc_sts_inputs_default_levels",
-    "check_ruleset_name": "el_inphase",
-    "fetch": [
+check_info["apc_sts_inputs"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.2.2"),
+    parse_function=parse_apc_sts_inputs,
+    discovery_function=discover(),
+    check_function=check_elphase,
+    service_name="Input %s",
+    default_levels_variable="apc_sts_inputs_default_levels",
+    check_ruleset_name="el_inphase",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.705.2.3.2.1",
             oids=["2", "3", "4"],
@@ -68,4 +68,4 @@ check_info["apc_sts_inputs"] = {
             oids=["2", "3", "4"],
         ),
     ],
-}
+)

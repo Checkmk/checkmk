@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 from cmk.base.config import check_info
 
@@ -40,9 +41,9 @@ def check_statgrab_cpu(_no_item, params, info):
     return check_cpu_util_unix(values, params)
 
 
-check_info["statgrab_cpu"] = {
-    "check_function": check_statgrab_cpu,
-    "discovery_function": inventory_statgrab_cpu,
-    "service_name": "CPU utilization",
-    "check_ruleset_name": "cpu_iowait",
-}
+check_info["statgrab_cpu"] = LegacyCheckDefinition(
+    check_function=check_statgrab_cpu,
+    discovery_function=inventory_statgrab_cpu,
+    service_name="CPU utilization",
+    check_ruleset_name="cpu_iowait",
+)

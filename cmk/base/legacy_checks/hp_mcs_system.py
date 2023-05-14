@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, SNMPTree
 
@@ -29,13 +29,13 @@ def check_hp_mcs_system(item, _no_params, info):
     yield 0, "Serial: %s" % serial
 
 
-check_info["hp_mcs_system"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.167"),
-    "discovery_function": inventory_hp_mcs_system,
-    "check_function": check_hp_mcs_system,
-    "service_name": "%s",
-    "fetch": SNMPTree(
+check_info["hp_mcs_system"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.167"),
+    discovery_function=inventory_hp_mcs_system,
+    check_function=check_hp_mcs_system,
+    service_name="%s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.232",
         oids=["2.2.4.2", OIDBytes("11.2.10.1"), "11.2.10.3"],
     ),
-}
+)

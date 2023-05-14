@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import get_bytes_human_readable, saveint
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
 
@@ -100,9 +100,9 @@ def check_plesk_backups(item, params, info):  # pylint: disable=too-many-branche
     return (3, "Domain not found")
 
 
-check_info["plesk_backups"] = {
-    "check_function": check_plesk_backups,
-    "discovery_function": inventory_plesk_backups,
-    "service_name": "Plesk Backup %s",
-    "check_ruleset_name": "plesk_backups",
-}
+check_info["plesk_backups"] = LegacyCheckDefinition(
+    check_function=check_plesk_backups,
+    discovery_function=inventory_plesk_backups,
+    service_name="Plesk Backup %s",
+    check_ruleset_name="plesk_backups",
+)

@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.acme import DETECT_ACME
@@ -61,15 +61,15 @@ def check_acme_certificates(item, params, info):
             yield 0, "Start: %s, Issuer: %s" % (start, issuer)
 
 
-check_info["acme_certificates"] = {
-    "detect": DETECT_ACME,
-    "discovery_function": inventory_acme_certificates,
-    "check_function": check_acme_certificates,
-    "service_name": "Certificate %s",
-    "fetch": SNMPTree(
+check_info["acme_certificates"] = LegacyCheckDefinition(
+    detect=DETECT_ACME,
+    discovery_function=inventory_acme_certificates,
+    check_function=check_acme_certificates,
+    service_name="Certificate %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.9.1.10.1",
         oids=["3", "5", "6", "7"],
     ),
-    "default_levels_variable": "acme_certificates_default_levels",
-    "check_ruleset_name": "acme_certificates",
-}
+    default_levels_variable="acme_certificates_default_levels",
+    check_ruleset_name="acme_certificates",
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains, saveint
+from cmk.base.check_api import contains, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -29,13 +29,13 @@ def check_zebra_printer_status(item, params, info):
     return 3, "Unknown printer status"
 
 
-check_info["zebra_printer_status"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "zebra"),
-    "check_function": check_zebra_printer_status,
-    "discovery_function": inventory_zebra_printer_status,
-    "service_name": "Zebra Printer Status",
-    "fetch": SNMPTree(
+check_info["zebra_printer_status"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.1.0", "zebra"),
+    check_function=check_zebra_printer_status,
+    discovery_function=inventory_zebra_printer_status,
+    service_name="Zebra Printer Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.2.1.25.3.5.1.1",
         oids=["1"],
     ),
-}
+)

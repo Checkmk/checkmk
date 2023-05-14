@@ -11,6 +11,7 @@ from cmk.base.check_api import (
     discover_single,
     get_bytes_human_readable,
     get_parsed_item_data,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
@@ -81,15 +82,13 @@ def check_aws_s3_objects(item, params, metrics):
         yield 0, "[Tags] %s" % ", ".join(tag_infos)
 
 
-check_info["aws_s3"] = {
-    "parse_function": parse_aws_s3,
-    "discovery_function": lambda p: inventory_aws_generic(
-        p, ["BucketSizeBytes", "NumberOfObjects"]
-    ),
-    "check_function": check_aws_s3_objects,
-    "service_name": "AWS/S3 Objects %s",
-    "check_ruleset_name": "aws_s3_buckets_objects",
-}
+check_info["aws_s3"] = LegacyCheckDefinition(
+    parse_function=parse_aws_s3,
+    discovery_function=lambda p: inventory_aws_generic(p, ["BucketSizeBytes", "NumberOfObjects"]),
+    check_function=check_aws_s3_objects,
+    service_name="AWS/S3 Objects %s",
+    check_ruleset_name="aws_s3_buckets_objects",
+)
 
 # .
 #   .--summary-------------------------------------------------------------.
@@ -127,9 +126,9 @@ def check_aws_s3_summary(item, params, parsed):
         ), [("aws_largest_bucket_size", largest_bucket_size)]
 
 
-check_info["aws_s3.summary"] = {
-    "discovery_function": discover_single,
-    "check_function": check_aws_s3_summary,
-    "service_name": "AWS/S3 Summary",
-    "check_ruleset_name": "aws_s3_buckets",
-}
+check_info["aws_s3.summary"] = LegacyCheckDefinition(
+    discovery_function=discover_single,
+    check_function=check_aws_s3_summary,
+    service_name="AWS/S3 Summary",
+    check_ruleset_name="aws_s3_buckets",
+)

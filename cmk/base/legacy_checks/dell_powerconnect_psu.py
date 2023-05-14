@@ -32,7 +32,7 @@
 # GENERAL MAPS:
 
 
-from cmk.base.check_api import any_of, contains
+from cmk.base.check_api import any_of, contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -93,15 +93,15 @@ def check_dell_powerconnect_psu(item, _not_used, info):
     return (3, "item not found in snmp data")
 
 
-check_info["dell_powerconnect_psu"] = {
-    "detect": any_of(
+check_info["dell_powerconnect_psu"] = LegacyCheckDefinition(
+    detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6027.1.3.22"),
     ),
-    "check_function": check_dell_powerconnect_psu,
-    "discovery_function": inventory_dell_powerconnect_psu,
-    "service_name": "Sensor %s",
-    "fetch": [
+    check_function=check_dell_powerconnect_psu,
+    discovery_function=inventory_dell_powerconnect_psu,
+    service_name="Sensor %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.674.10895.3000.1.2.100.1",
             oids=["0"],
@@ -111,4 +111,4 @@ check_info["dell_powerconnect_psu"] = {
             oids=["1", "2", "3", "4"],
         ),
     ],
-}
+)

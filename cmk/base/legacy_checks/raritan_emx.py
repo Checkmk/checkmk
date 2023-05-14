@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, equals
+from cmk.base.check_api import any_of, equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.raritan import (
     check_raritan_sensors_binary,
     raritan_map_state,
@@ -101,18 +101,18 @@ def check_raritan_emx_temp(item, params, parsed):
     return None
 
 
-check_info["raritan_emx"] = {
-    "detect": any_of(equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.8")),
-    "parse_function": parse_raritan_emx,
-    "discovery_function": inventory_raritan_emx_temp,
-    "check_function": check_raritan_emx_temp,
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["raritan_emx"] = LegacyCheckDefinition(
+    detect=any_of(equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.8")),
+    parse_function=parse_raritan_emx,
+    discovery_function=inventory_raritan_emx_temp,
+    check_function=check_raritan_emx_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.9",
         oids=["1.4.1.1.1", "1.4.1.1.4", "1.4.1.1.2", "2.1.1.3", "1.4.1.1.5", "2.1.1.2"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)
 
 # .
 #   .--fan-----------------------------------------------------------------.
@@ -134,11 +134,11 @@ def check_raritan_emx_fan(item, _no_params, parsed):
     return None
 
 
-check_info["raritan_emx.fan"] = {
-    "discovery_function": lambda parsed: inventory_raritan_emx(parsed, "fanspeed"),
-    "check_function": check_raritan_emx_fan,
-    "service_name": "Fan %s",
-}
+check_info["raritan_emx.fan"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_raritan_emx(parsed, "fanspeed"),
+    check_function=check_raritan_emx_fan,
+    service_name="Fan %s",
+)
 
 # .
 #   .--binary--------------------------------------------------------------.
@@ -150,8 +150,8 @@ check_info["raritan_emx.fan"] = {
 #   |                                            |___/                     |
 #   '----------------------------------------------------------------------'
 
-check_info["raritan_emx.binary"] = {
-    "discovery_function": lambda parsed: inventory_raritan_emx(parsed, "binary"),
-    "check_function": check_raritan_sensors_binary,
-    "service_name": "Door %s",
-}
+check_info["raritan_emx.binary"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_raritan_emx(parsed, "binary"),
+    check_function=check_raritan_sensors_binary,
+    service_name="Door %s",
+)

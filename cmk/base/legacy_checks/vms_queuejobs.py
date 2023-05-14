@@ -11,6 +11,7 @@
 
 # mypy: disable-error-code="assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -47,8 +48,8 @@ def check_vms_queuejobs(_no_item, params, info):
     return 0, infotext
 
 
-check_info["vms_queuejobs"] = {
-    "check_function": check_vms_queuejobs,
-    "discovery_function": inventory_vms_queuejobs,
-    "service_name": "Queue Jobs",
-}
+check_info["vms_queuejobs"] = LegacyCheckDefinition(
+    check_function=check_vms_queuejobs,
+    discovery_function=inventory_vms_queuejobs,
+    service_name="Queue Jobs",
+)

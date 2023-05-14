@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
@@ -120,12 +121,12 @@ def check_genua_carp(item, _no_params, info):  # pylint: disable=too-many-branch
     return (state, output)
 
 
-check_info["genua_carp"] = {
-    "detect": DETECT_GENUA,
-    "discovery_function": inventory_genua_carp,
-    "check_function": check_genua_carp,
-    "service_name": "Carp Interface %s",
-    "fetch": [
+check_info["genua_carp"] = LegacyCheckDefinition(
+    detect=DETECT_GENUA,
+    discovery_function=inventory_genua_carp,
+    check_function=check_genua_carp,
+    service_name="Carp Interface %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3137.2.1.2.1",
             oids=["2", "4", "7"],
@@ -135,4 +136,4 @@ check_info["genua_carp"] = {
             oids=["2", "4", "7"],
         ),
     ],
-}
+)

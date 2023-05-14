@@ -17,6 +17,7 @@
 # .1.3.6.1.4.1.3652.3.2.1.12.0 0 --> SPEEDCARRIER-MIB::nmPSU3Status.0
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.pandacom import DETECT_PANDACOM
@@ -70,14 +71,14 @@ def check_pandacom_psu(item, _no_params, parsed):
     return None
 
 
-check_info["pandacom_psu"] = {
-    "detect": DETECT_PANDACOM,
-    "parse_function": parse_pandacom_psu,
-    "discovery_function": inventory_pandacom_psu,
-    "check_function": check_pandacom_psu,
-    "service_name": "Power Supply %s",
-    "fetch": SNMPTree(
+check_info["pandacom_psu"] = LegacyCheckDefinition(
+    detect=DETECT_PANDACOM,
+    parse_function=parse_pandacom_psu,
+    discovery_function=inventory_pandacom_psu,
+    check_function=check_pandacom_psu,
+    service_name="Power Supply %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3652.3.2",
         oids=["1"],
     ),
-}
+)

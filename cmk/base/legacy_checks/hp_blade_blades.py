@@ -22,7 +22,7 @@
 # '.1.3.6.1.4.1.232.22.2.4.1.1.1.25' => 'cpqRackServerBladePowered',
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.hp import DETECT_HP_BLADE
@@ -74,13 +74,13 @@ def check_hp_blade_blades(item, params, info):
     return (3, "item not found in snmp data")
 
 
-check_info["hp_blade_blades"] = {
-    "detect": DETECT_HP_BLADE,
-    "check_function": check_hp_blade_blades,
-    "discovery_function": inventory_hp_blade_blades,
-    "service_name": "Blade %s",
-    "fetch": SNMPTree(
+check_info["hp_blade_blades"] = LegacyCheckDefinition(
+    detect=DETECT_HP_BLADE,
+    check_function=check_hp_blade_blades,
+    discovery_function=inventory_hp_blade_blades,
+    service_name="Blade %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.4.1.1.1",
         oids=["3", "12", "21", "17", "4", "16"],
     ),
-}
+)

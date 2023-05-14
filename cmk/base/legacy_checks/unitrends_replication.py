@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -32,8 +33,8 @@ def check_unitrends_replication(item, _no_params, info):
     return 2, "Errors from the last 24 hours: " + "/ ".join(messages)
 
 
-check_info["unitrends_replication"] = {
-    "check_function": check_unitrends_replication,
-    "discovery_function": inventory_unitrends_replication,
-    "service_name": "Replicaion %s",
-}
+check_info["unitrends_replication"] = LegacyCheckDefinition(
+    check_function=check_unitrends_replication,
+    discovery_function=inventory_unitrends_replication,
+    service_name="Replicaion %s",
+)

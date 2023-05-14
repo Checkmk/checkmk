@@ -10,7 +10,7 @@
 # BBSA-WIFI-LSN-Hald-F2-1|24|Cleared|True|57 Days, 3 Hrs 24 Mins 22 Secs
 
 
-from cmk.base.check_api import get_age_human_readable
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["hivemanger_devices"] = {
@@ -97,10 +97,10 @@ def check_hivemanager_devices(item, params, info):  # pylint: disable=too-many-b
             )
 
 
-check_info["hivemanager_devices"] = {
-    "check_function": check_hivemanager_devices,
-    "discovery_function": inventory_hivemanager_devices,
-    "service_name": "Client %s",
-    "default_levels_variable": "hivemanger_devices",
-    "check_ruleset_name": "hivemanager_devices",
-}
+check_info["hivemanager_devices"] = LegacyCheckDefinition(
+    check_function=check_hivemanager_devices,
+    discovery_function=inventory_hivemanager_devices,
+    service_name="Client %s",
+    default_levels_variable="hivemanger_devices",
+    check_ruleset_name="hivemanager_devices",
+)

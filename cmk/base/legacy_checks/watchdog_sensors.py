@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import any_of, startswith
+from cmk.base.check_api import any_of, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -133,16 +133,16 @@ def check_watchdog_sensors(item, params, parsed):
         yield 0, "Location: %s" % descr
 
 
-check_info["watchdog_sensors"] = {
-    "detect": any_of(
+check_info["watchdog_sensors"] = LegacyCheckDefinition(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21239.5.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21239.42.1"),
     ),
-    "parse_function": parse_watchdog_sensors,
-    "discovery_function": inventory_watchdog_sensors,
-    "check_function": check_watchdog_sensors,
-    "service_name": "%s",
-    "fetch": [
+    parse_function=parse_watchdog_sensors,
+    discovery_function=inventory_watchdog_sensors,
+    check_function=check_watchdog_sensors,
+    service_name="%s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.21239.5.1.1",
             oids=["2", "7"],
@@ -152,7 +152,7 @@ check_info["watchdog_sensors"] = {
             oids=[OIDEnd(), "3", "4", "5", "6", "7", "8"],
         ),
     ],
-}
+)
 
 # .
 #   .--temp----------------------------------------------------------------.
@@ -187,12 +187,12 @@ def check_watchdog_sensors_temp(item, params, parsed):
     )
 
 
-check_info["watchdog_sensors.temp"] = {
-    "discovery_function": inventory_watchdog_sensors_temp,
-    "check_function": check_watchdog_sensors_temp,
-    "service_name": "%s ",
-    "check_ruleset_name": "temperature",
-}
+check_info["watchdog_sensors.temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_watchdog_sensors_temp,
+    check_function=check_watchdog_sensors_temp,
+    service_name="%s ",
+    check_ruleset_name="temperature",
+)
 
 # .
 #   .--humidity------------------------------------------------------------.
@@ -239,13 +239,13 @@ def check_watchdog_sensors_humidity(item, params, parsed):
         yield 1, "warn/crit below %s/%s" % (warn, crit)
 
 
-check_info["watchdog_sensors.humidity"] = {
-    "discovery_function": inventory_watchdog_sensors_humidity,
-    "check_function": check_watchdog_sensors_humidity,
-    "service_name": "%s",
-    "check_ruleset_name": "humidity",
-    "default_levels_variable": "watchdog_sensors_humidity_default_levels",
-}
+check_info["watchdog_sensors.humidity"] = LegacyCheckDefinition(
+    discovery_function=inventory_watchdog_sensors_humidity,
+    check_function=check_watchdog_sensors_humidity,
+    service_name="%s",
+    check_ruleset_name="humidity",
+    default_levels_variable="watchdog_sensors_humidity_default_levels",
+)
 
 # .
 #   .--dew-----------------------------------------------------------------.
@@ -278,9 +278,9 @@ def check_watchdog_sensors_dew(item, params, parsed):
     yield check_temperature(dew, params, "check_watchdog_sensors.%s" % item)
 
 
-check_info["watchdog_sensors.dew"] = {
-    "discovery_function": inventory_watchdog_sensors_dew,
-    "check_function": check_watchdog_sensors_dew,
-    "service_name": "%s",
-    "check_ruleset_name": "temperature",
-}
+check_info["watchdog_sensors.dew"] = LegacyCheckDefinition(
+    discovery_function=inventory_watchdog_sensors_dew,
+    check_function=check_watchdog_sensors_dew,
+    service_name="%s",
+    check_ruleset_name="temperature",
+)

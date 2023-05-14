@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -67,16 +67,16 @@ def check_dell_powerconnect_temp(_no_item, params, parsed):
     )
 
 
-check_info["dell_powerconnect_temp"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
-    "parse_function": parse_dell_powerconnect_temp,
-    "check_function": check_dell_powerconnect_temp,
-    "discovery_function": inventory_dell_powerconnect_temp,
-    "service_name": "Temperature %s",
-    "default_levels_variable": "dell_powerconnect_temp_default_values",
-    "fetch": SNMPTree(
+check_info["dell_powerconnect_temp"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
+    parse_function=parse_dell_powerconnect_temp,
+    check_function=check_dell_powerconnect_temp,
+    discovery_function=inventory_dell_powerconnect_temp,
+    service_name="Temperature %s",
+    default_levels_variable="dell_powerconnect_temp_default_values",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.89.53.15.1",
         oids=["9", "10"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

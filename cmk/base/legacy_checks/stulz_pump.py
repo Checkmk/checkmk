@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.stulz import DETECT_STULZ
@@ -36,12 +37,12 @@ def check_stulz_pump(item, _no_params, info):
     return 3, "Pump %s not found" % item
 
 
-check_info["stulz_pump"] = {
-    "detect": DETECT_STULZ,
-    "check_function": check_stulz_pump,
-    "discovery_function": inventory_stulz_pump,
-    "service_name": "Pump %s",
-    "fetch": [
+check_info["stulz_pump"] = LegacyCheckDefinition(
+    detect=DETECT_STULZ,
+    check_function=check_stulz_pump,
+    discovery_function=inventory_stulz_pump,
+    service_name="Pump %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.29462.10.2.1.1.2.1.4.1.1.5802",
             oids=[OIDEnd(), "2"],
@@ -51,4 +52,4 @@ check_info["stulz_pump"] = {
             oids=["2"],
         ),
     ],
-}
+)

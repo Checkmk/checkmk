@@ -25,6 +25,7 @@
 
 # mypy: disable-error-code="var-annotated,assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -126,10 +127,10 @@ def check_oracle_sql(item, params, parsed):
         yield 0, "\n%s" % "\n".join(data["long"])
 
 
-check_info["oracle_sql"] = {
-    "parse_function": parse_oracle_sql,
-    "discovery_function": inventory_oracle_sql,
-    "check_function": check_oracle_sql,
-    "service_name": "ORA %s",
-    "check_ruleset_name": "oracle_sql",
-}
+check_info["oracle_sql"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_sql,
+    discovery_function=inventory_oracle_sql,
+    check_function=check_oracle_sql,
+    service_name="ORA %s",
+    check_ruleset_name="oracle_sql",
+)

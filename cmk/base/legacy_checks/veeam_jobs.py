@@ -15,6 +15,7 @@
 # BACKUP_R43-Pool2_HXWH44 Backup  Stopped Failed  27.10.2013 02:37:45     27.10.2013 02:45:35
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -61,8 +62,8 @@ def check_veeam_jobs(item, _no_params, info):
         )
 
 
-check_info["veeam_jobs"] = {
-    "check_function": check_veeam_jobs,
-    "discovery_function": inventory_veeam_jobs,
-    "service_name": "VEEAM Job %s",
-}
+check_info["veeam_jobs"] = LegacyCheckDefinition(
+    check_function=check_veeam_jobs,
+    discovery_function=inventory_veeam_jobs,
+    service_name="VEEAM Job %s",
+)

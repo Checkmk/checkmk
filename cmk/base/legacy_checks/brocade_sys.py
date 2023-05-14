@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.base.check_api import any_of, equals, startswith
+from cmk.base.check_api import any_of, equals, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -57,12 +57,12 @@ def check_brocade_sys_mem(item, params, parsed):
     return status, infotext, perfdata
 
 
-check_info["brocade_sys.mem"] = {
-    "discovery_function": inventory_brocade_sys_mem,
-    "check_function": check_brocade_sys_mem,
-    "service_name": "Memory",
-    "check_ruleset_name": "memory_relative",
-}
+check_info["brocade_sys.mem"] = LegacyCheckDefinition(
+    discovery_function=inventory_brocade_sys_mem,
+    check_function=check_brocade_sys_mem,
+    service_name="Memory",
+    check_ruleset_name="memory_relative",
+)
 
 # .
 #   .--CPU-----------------------------------------------------------------.
@@ -83,18 +83,18 @@ def check_brocade_sys(item, params, parsed):
     return check_cpu_util(parsed["cpu_util"], params)
 
 
-check_info["brocade_sys"] = {
-    "detect": any_of(
+check_info["brocade_sys"] = LegacyCheckDefinition(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1916.2.306"),
     ),
-    "parse_function": parse_brocade_sys,
-    "discovery_function": inventory_brocade_sys,
-    "check_function": check_brocade_sys,
-    "service_name": "CPU utilization",
-    "fetch": SNMPTree(
+    parse_function=parse_brocade_sys,
+    discovery_function=inventory_brocade_sys,
+    check_function=check_brocade_sys,
+    service_name="CPU utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.1588.2.1.1.1.26",
         oids=["1", "6"],
     ),
-    "check_ruleset_name": "cpu_utilization",
-}
+    check_ruleset_name="cpu_utilization",
+)

@@ -50,7 +50,7 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.base.check_api import all_of, any_of, contains, equals, exists
+from cmk.base.check_api import all_of, any_of, contains, equals, exists, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -65,15 +65,15 @@ def check_supermicro_health(_no_item, _no_params, info):
     return int(info[1][0][0]), info[1][0][1]
 
 
-check_info["supermicro"] = {
-    "detect": any_of(
+check_info["supermicro"] = LegacyCheckDefinition(
+    detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
         all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.10876.2.1.1.1.1.2.1")),
     ),
-    "check_function": check_supermicro_health,
-    "discovery_function": inventory_supermicro_health,
-    "service_name": "Overall Hardware Health",
-    "fetch": [
+    check_function=check_supermicro_health,
+    discovery_function=inventory_supermicro_health,
+    service_name="Overall Hardware Health",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.10876.2.1.1.1.1",
             oids=["2", "3", "4", "5", "6", "11", "12"],
@@ -87,7 +87,7 @@ check_info["supermicro"] = {
             oids=["1", "2", "4"],
         ),
     ],
-}
+)
 
 # .
 #   .--Sensors-------------------------------------------------------------.
@@ -166,11 +166,11 @@ def check_supermicro_sensors(item, _no_params, info):
             )
 
 
-check_info["supermicro.sensors"] = {
-    "check_function": check_supermicro_sensors,
-    "discovery_function": inventory_supermicro_sensors,
-    "service_name": "Sensor %s",
-}
+check_info["supermicro.sensors"] = LegacyCheckDefinition(
+    check_function=check_supermicro_sensors,
+    discovery_function=inventory_supermicro_sensors,
+    service_name="Sensor %s",
+)
 
 # .
 #   .--SMART---------------------------------------------------------------.
@@ -204,8 +204,8 @@ def check_supermicro_smart(item, _no_params, info):
     return None
 
 
-check_info["supermicro.smart"] = {
-    "check_function": check_supermicro_smart,
-    "discovery_function": inventory_supermicro_smart,
-    "service_name": "SMART Health %s",
-}
+check_info["supermicro.smart"] = LegacyCheckDefinition(
+    check_function=check_supermicro_smart,
+    discovery_function=inventory_supermicro_smart,
+    service_name="SMART Health %s",
+)

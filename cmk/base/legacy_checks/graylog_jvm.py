@@ -4,7 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover_single, get_bytes_human_readable
+from cmk.base.check_api import (
+    check_levels,
+    discover_single,
+    get_bytes_human_readable,
+    LegacyCheckDefinition,
+)
 from cmk.base.check_legacy_includes.graylog import parse_graylog_agent_data
 from cmk.base.config import check_info
 
@@ -39,10 +44,10 @@ def check_graylog_jvm(_no_item, params, parsed):
         yield 3, "No heap space data available"
 
 
-check_info["graylog_jvm"] = {
-    "parse_function": parse_graylog_agent_data,
-    "check_function": check_graylog_jvm,
-    "discovery_function": discover_single,
-    "service_name": "Graylog JVM",
-    "check_ruleset_name": "graylog_jvm",
-}
+check_info["graylog_jvm"] = LegacyCheckDefinition(
+    parse_function=parse_graylog_agent_data,
+    check_function=check_graylog_jvm,
+    discovery_function=discover_single,
+    service_name="Graylog JVM",
+    check_ruleset_name="graylog_jvm",
+)

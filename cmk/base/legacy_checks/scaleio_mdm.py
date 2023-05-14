@@ -24,6 +24,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -130,9 +131,9 @@ def check_scaleio_mdm(_no_item, _no_params, parsed):
         yield state, infotext
 
 
-check_info["scaleio_mdm"] = {
-    "parse_function": parse_scaleio_mdm,
-    "discovery_function": inventory_scaleio_mdm,
-    "check_function": check_scaleio_mdm,
-    "service_name": "ScaleIO cluster status",
-}
+check_info["scaleio_mdm"] = LegacyCheckDefinition(
+    parse_function=parse_scaleio_mdm,
+    discovery_function=inventory_scaleio_mdm,
+    check_function=check_scaleio_mdm,
+    service_name="ScaleIO cluster status",
+)

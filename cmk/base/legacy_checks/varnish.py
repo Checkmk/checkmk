@@ -8,7 +8,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, get_rate
+from cmk.base.check_api import (
+    check_levels,
+    get_percent_human_readable,
+    get_rate,
+    LegacyCheckDefinition,
+)
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info, factory_settings
 
@@ -397,12 +402,12 @@ def check_varnish_uptime(_no_item, _no_params, parsed):
     return None
 
 
-check_info["varnish"] = {
-    "parse_function": parse_varnish,
-    "discovery_function": inventory_varnish_uptime,
-    "check_function": check_varnish_uptime,
-    "service_name": "Varnish Uptime",
-}
+check_info["varnish"] = LegacyCheckDefinition(
+    parse_function=parse_varnish,
+    discovery_function=inventory_varnish_uptime,
+    check_function=check_varnish_uptime,
+    service_name="Varnish Uptime",
+)
 # .
 #   .--cache---------------------------------------------------------------.
 #   |                                     _                                |
@@ -412,9 +417,9 @@ check_info["varnish"] = {
 #   |                      \___\__,_|\___|_| |_|\___|                      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-check_info["varnish.cache"] = {
-    "discovery_function": lambda parsed: inventory_varnish(parsed, ["cache_miss"]),
-    "check_function": lambda item, params, parsed: check_varnish_stats(
+check_info["varnish.cache"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_varnish(parsed, ["cache_miss"]),
+    check_function=lambda item, params, parsed: check_varnish_stats(
         item,
         params,
         parsed,
@@ -424,9 +429,9 @@ check_info["varnish.cache"] = {
             "cache_hitpass",
         ],
     ),
-    "service_name": "Varnish Cache",
-    "check_ruleset_name": "varnish_cache",
-}
+    service_name="Varnish Cache",
+    check_ruleset_name="varnish_cache",
+)
 # .
 #   .--client--------------------------------------------------------------.
 #   |                            _ _            _                          |
@@ -436,9 +441,9 @@ check_info["varnish.cache"] = {
 #   |                       \___|_|_|\___|_| |_|\__|                       |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-check_info["varnish.client"] = {
-    "discovery_function": lambda parsed: inventory_varnish(parsed, ["client_req"]),
-    "check_function": lambda item, params, parsed: check_varnish_stats(
+check_info["varnish.client"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_varnish(parsed, ["client_req"]),
+    check_function=lambda item, params, parsed: check_varnish_stats(
         item,
         params,
         parsed,
@@ -449,9 +454,9 @@ check_info["varnish.client"] = {
             "client_drop_late",
         ],
     ),
-    "service_name": "Varnish Client",
-    "check_ruleset_name": "varnish_client",
-}
+    service_name="Varnish Client",
+    check_ruleset_name="varnish_client",
+)
 # .
 #   .--backend-------------------------------------------------------------.
 #   |                _                _                  _                 |
@@ -461,11 +466,11 @@ check_info["varnish.client"] = {
 #   |               |_.__/ \__,_|\___|_|\_\___|_| |_|\__,_|                |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-check_info["varnish.backend"] = {
-    "discovery_function": lambda parsed: inventory_varnish(
+check_info["varnish.backend"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_varnish(
         parsed, ["backend_fail", "backend_unhealthy", "backend_busy"]
     ),
-    "check_function": lambda item, params, parsed: check_varnish_stats(
+    check_function=lambda item, params, parsed: check_varnish_stats(
         item,
         params,
         parsed,
@@ -481,9 +486,9 @@ check_info["varnish.backend"] = {
             "backend_reuse",
         ],
     ),
-    "service_name": "Varnish Backend",
-    "check_ruleset_name": "varnish_backend",
-}
+    service_name="Varnish Backend",
+    check_ruleset_name="varnish_backend",
+)
 # .
 #   .--fetch---------------------------------------------------------------.
 #   |                        __      _       _                             |
@@ -493,8 +498,8 @@ check_info["varnish.backend"] = {
 #   |                      |_|  \___|\__\___|_| |_|                        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-check_info["varnish.fetch"] = {
-    "discovery_function": lambda parsed: inventory_varnish(
+check_info["varnish.fetch"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_varnish(
         parsed,
         [
             "fetch_1xx",
@@ -506,7 +511,7 @@ check_info["varnish.fetch"] = {
             "fetch_zero",
         ],
     ),
-    "check_function": lambda item, params, parsed: check_varnish_stats(
+    check_function=lambda item, params, parsed: check_varnish_stats(
         item,
         params,
         parsed,
@@ -525,9 +530,9 @@ check_info["varnish.fetch"] = {
             "fetch_204",
         ],
     ),
-    "service_name": "Varnish Fetch",
-    "check_ruleset_name": "varnish_fetch",
-}
+    service_name="Varnish Fetch",
+    check_ruleset_name="varnish_fetch",
+)
 # .
 #   .--ESI-----------------------------------------------------------------.
 #   |                           _____ ____ ___                             |
@@ -538,9 +543,9 @@ check_info["varnish.fetch"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 factory_settings["varnish_esi_default_levels"] = {"errors": (1.0, 2.0)}
-check_info["varnish.esi"] = {
-    "discovery_function": lambda parsed: inventory_varnish(parsed, ["esi_errors"]),
-    "check_function": lambda item, params, parsed: check_varnish_stats(
+check_info["varnish.esi"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_varnish(parsed, ["esi_errors"]),
+    check_function=lambda item, params, parsed: check_varnish_stats(
         item,
         params,
         parsed,
@@ -549,10 +554,10 @@ check_info["varnish.esi"] = {
             "esi_warnings",
         ],
     ),
-    "service_name": "Varnish ESI",
-    "default_levels_variable": "varnish_esi_default_levels",
-    "check_ruleset_name": "varnish_esi",
-}
+    service_name="Varnish ESI",
+    default_levels_variable="varnish_esi_default_levels",
+    check_ruleset_name="varnish_esi",
+)
 # .
 #   .--objects-------------------------------------------------------------.
 #   |                         _     _           _                          |
@@ -562,9 +567,9 @@ check_info["varnish.esi"] = {
 #   |                   \___/|_.__// |\___|\___|\__|___/                   |
 #   |                            |__/                                      |
 #   '----------------------------------------------------------------------'
-check_info["varnish.objects"] = {
-    "discovery_function": lambda parsed: inventory_varnish(parsed, ["n_expired", "n_lru_nuked"]),
-    "check_function": lambda item, params, parsed: check_varnish_stats(
+check_info["varnish.objects"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_varnish(parsed, ["n_expired", "n_lru_nuked"]),
+    check_function=lambda item, params, parsed: check_varnish_stats(
         item,
         params,
         parsed,
@@ -574,9 +579,9 @@ check_info["varnish.objects"] = {
             "n_lru_moved",
         ],
     ),
-    "service_name": "Varnish Objects",
-    "check_ruleset_name": "varnish_objects",
-}
+    service_name="Varnish Objects",
+    check_ruleset_name="varnish_objects",
+)
 # .
 #   .--worker--------------------------------------------------------------.
 #   |                                     _                                |
@@ -586,11 +591,9 @@ check_info["varnish.objects"] = {
 #   |                   \_/\_/ \___/|_|  |_|\_\___|_|                      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-check_info["varnish.worker"] = {
-    "discovery_function": lambda parsed: inventory_varnish(
-        parsed, ["n_wrk_failed", "n_wrk_queued"]
-    ),
-    "check_function": lambda item, params, parsed: check_varnish_stats(
+check_info["varnish.worker"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_varnish(parsed, ["n_wrk_failed", "n_wrk_queued"]),
+    check_function=lambda item, params, parsed: check_varnish_stats(
         item,
         params,
         parsed,
@@ -604,9 +607,9 @@ check_info["varnish.worker"] = {
             "n_wrk_max",
         ],
     ),
-    "service_name": "Varnish Worker",
-    "check_ruleset_name": "varnish_worker",
-}
+    service_name="Varnish Worker",
+    check_ruleset_name="varnish_worker",
+)
 # .
 #   .--cache hit ratio-----------------------------------------------------.
 #   |                  _            _     _ _               _   _          |
@@ -617,15 +620,15 @@ check_info["varnish.worker"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 factory_settings["varnish_cache_hit_ratio_default_levels"] = {"levels_lower": (70.0, 60.0)}
-check_info["varnish.cache_hit_ratio"] = {
-    "discovery_function": lambda parsed: inventory_varnish(parsed, ["cache_miss", "cache_hit"]),
-    "check_function": lambda item, params, parsed: check_varnish_ratio(
+check_info["varnish.cache_hit_ratio"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_varnish(parsed, ["cache_miss", "cache_hit"]),
+    check_function=lambda item, params, parsed: check_varnish_ratio(
         item, params, parsed, ("cache_hit", "cache_miss", "cache_hit_ratio")
     ),
-    "default_levels_variable": "varnish_cache_hit_ratio_default_levels",
-    "service_name": "Varnish Cache Hit Ratio",
-    "check_ruleset_name": "varnish_cache_hit_ratio",
-}
+    default_levels_variable="varnish_cache_hit_ratio_default_levels",
+    service_name="Varnish Cache Hit Ratio",
+    check_ruleset_name="varnish_cache_hit_ratio",
+)
 # .
 #   .--backend success ratio-----------------------------------------------.
 #   |                _                _                  _                 |
@@ -642,17 +645,15 @@ check_info["varnish.cache_hit_ratio"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 factory_settings["varnish_backend_success_ratio_default_levels"] = {"levels_lower": (70.0, 60.0)}
-check_info["varnish.backend_success_ratio"] = {
-    "discovery_function": lambda parsed: inventory_varnish(
-        parsed, ["backend_fail", "backend_conn"]
-    ),
-    "check_function": lambda item, params, parsed: check_varnish_ratio(
+check_info["varnish.backend_success_ratio"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_varnish(parsed, ["backend_fail", "backend_conn"]),
+    check_function=lambda item, params, parsed: check_varnish_ratio(
         item, params, parsed, ("backend_conn", "backend_fail", "varnish_backend_success_ratio")
     ),
-    "default_levels_variable": "varnish_backend_success_ratio_default_levels",
-    "service_name": "Varnish Backend Success Ratio",
-    "check_ruleset_name": "varnish_backend_success_ratio",
-}
+    default_levels_variable="varnish_backend_success_ratio_default_levels",
+    service_name="Varnish Backend Success Ratio",
+    check_ruleset_name="varnish_backend_success_ratio",
+)
 # .
 #   .--worker thread ratio-------------------------------------------------.
 #   |                     _               _   _                        _   |
@@ -685,10 +686,10 @@ def check_varnish_worker_thread_ratio(_no_item, params, parsed):
     )
 
 
-check_info["varnish.worker_thread_ratio"] = {
-    "discovery_function": lambda parsed: inventory_varnish(parsed, ["n_wrk", "n_wrk_create"]),
-    "check_function": check_varnish_worker_thread_ratio,
-    "service_name": "Varnish Worker Thread Ratio",
-    "default_levels_variable": "varnish_worker_thread_ratio_default_levels",
-    "check_ruleset_name": "varnish_worker_thread_ratio",
-}
+check_info["varnish.worker_thread_ratio"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_varnish(parsed, ["n_wrk", "n_wrk_create"]),
+    check_function=check_varnish_worker_thread_ratio,
+    service_name="Varnish Worker Thread Ratio",
+    default_levels_variable="varnish_worker_thread_ratio_default_levels",
+    check_ruleset_name="varnish_worker_thread_ratio",
+)

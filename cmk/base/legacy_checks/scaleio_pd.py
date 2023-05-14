@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.scaleio import (
     convert_scaleio_space,
@@ -44,14 +45,14 @@ def check_scaleio_pd(item, params, parsed):
     yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
-check_info["scaleio_pd"] = {
-    "parse_function": lambda info: parse_scaleio(info, "PROTECTION_DOMAIN"),
-    "discovery_function": inventory_scaleio_pd,
-    "check_function": check_scaleio_pd,
-    "service_name": "ScaleIO PD capacity %s",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["scaleio_pd"] = LegacyCheckDefinition(
+    parse_function=lambda info: parse_scaleio(info, "PROTECTION_DOMAIN"),
+    discovery_function=inventory_scaleio_pd,
+    check_function=check_scaleio_pd,
+    service_name="ScaleIO PD capacity %s",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)
 
 
 def inventory_scaleio_pd_status(parsed):
@@ -71,8 +72,8 @@ def check_scaleio_pd_status(item, _no_params, parsed):
     yield state, "Name: %s, State: %s" % (name, status)
 
 
-check_info["scaleio_pd.status"] = {
-    "discovery_function": inventory_scaleio_pd_status,
-    "check_function": check_scaleio_pd_status,
-    "service_name": "ScaleIO PD status %s",
-}
+check_info["scaleio_pd.status"] = LegacyCheckDefinition(
+    discovery_function=inventory_scaleio_pd_status,
+    check_function=check_scaleio_pd_status,
+    service_name="ScaleIO PD status %s",
+)

@@ -4,15 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element, MEMORY_DEFAULT_LEVELS
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
-check_info["couchbase_nodes_stats"] = {
-    "parse_function": parse_couchbase_lines,
-}
+check_info["couchbase_nodes_stats"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_lines,
+)
 
 
 @get_parsed_item_data
@@ -23,12 +23,12 @@ def check_couchbase_nodes_cpu_util(_item, params, data):
         return None
 
 
-check_info["couchbase_nodes_stats.cpu_util"] = {
-    "discovery_function": discover(),
-    "check_function": check_couchbase_nodes_cpu_util,
-    "service_name": "Couchbase %s CPU utilization",
-    "check_ruleset_name": "cpu_utilization_multiitem",
-}
+check_info["couchbase_nodes_stats.cpu_util"] = LegacyCheckDefinition(
+    discovery_function=discover(),
+    check_function=check_couchbase_nodes_cpu_util,
+    service_name="Couchbase %s CPU utilization",
+    check_ruleset_name="cpu_utilization_multiitem",
+)
 
 factory_settings["memory_default_levels"] = MEMORY_DEFAULT_LEVELS
 
@@ -64,10 +64,10 @@ def check_couchbase_nodes_mem(_item, params, data):
     return None
 
 
-check_info["couchbase_nodes_stats.mem"] = {
-    "discovery_function": discover(),
-    "check_function": check_couchbase_nodes_mem,
-    "service_name": "Couchbase %s Memory",
-    "check_ruleset_name": "memory_multiitem",
-    "default_levels_variable": "memory_default_levels",
-}
+check_info["couchbase_nodes_stats.mem"] = LegacyCheckDefinition(
+    discovery_function=discover(),
+    check_function=check_couchbase_nodes_mem,
+    service_name="Couchbase %s Memory",
+    check_ruleset_name="memory_multiitem",
+    default_levels_variable="memory_default_levels",
+)

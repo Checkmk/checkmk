@@ -36,7 +36,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate, MKCounterWrapped, startswith
+from cmk.base.check_api import get_rate, LegacyCheckDefinition, MKCounterWrapped, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -72,17 +72,17 @@ def check_hpux_snmp_cpu(item, _no_params, info):
     return (0, ", ".join(infos), perfdata)
 
 
-check_info["hpux_snmp_cs"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.1.0", "HP-UX"),
-    "fetch": SNMPTree(
+check_info["hpux_snmp_cs"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.1.0", "HP-UX"),
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.3.1",
         oids=[OIDEnd(), "1"],
     ),
-}
+)
 
 
-check_info["hpux_snmp_cs.cpu"] = {
-    "check_function": check_hpux_snmp_cpu,
-    "service_name": "CPU utilization",
-    "discovery_function": inventory_hpux_snmp_cpu,
-}
+check_info["hpux_snmp_cs.cpu"] = LegacyCheckDefinition(
+    check_function=check_hpux_snmp_cpu,
+    service_name="CPU utilization",
+    discovery_function=inventory_hpux_snmp_cpu,
+)

@@ -44,7 +44,7 @@
 
 import json
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data
+from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -119,10 +119,10 @@ def check_rabbitmq_vhosts(item, params, parsed):
         )
 
 
-check_info["rabbitmq_vhosts"] = {
-    "parse_function": parse_rabbitmq_vhosts,
-    "check_function": check_rabbitmq_vhosts,
-    "discovery_function": discover(),
-    "service_name": "RabbitMQ Vhost %s",
-    "check_ruleset_name": "rabbitmq_vhosts",
-}
+check_info["rabbitmq_vhosts"] = LegacyCheckDefinition(
+    parse_function=parse_rabbitmq_vhosts,
+    check_function=check_rabbitmq_vhosts,
+    discovery_function=discover(),
+    service_name="RabbitMQ Vhost %s",
+    check_ruleset_name="rabbitmq_vhosts",
+)

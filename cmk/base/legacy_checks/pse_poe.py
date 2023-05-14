@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import exists, get_parsed_item_data
+from cmk.base.check_api import exists, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.poe import check_poe_data, PoeValues
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -50,15 +50,15 @@ def check_pse_poe(item, params, poe_data):
     return check_poe_data(params, poe_data)
 
 
-check_info["pse_poe"] = {
-    "detect": exists(".1.3.6.1.2.1.105.1.3.1.1.*"),
-    "default_levels_variable": "pse_poe_default_levels",
-    "parse_function": parse_pse_poe,
-    "check_function": check_pse_poe,
-    "discovery_function": inventory_pse_poe,
-    "service_name": "POE%s consumption ",
-    "fetch": SNMPTree(
+check_info["pse_poe"] = LegacyCheckDefinition(
+    detect=exists(".1.3.6.1.2.1.105.1.3.1.1.*"),
+    default_levels_variable="pse_poe_default_levels",
+    parse_function=parse_pse_poe,
+    check_function=check_pse_poe,
+    discovery_function=inventory_pse_poe,
+    service_name="POE%s consumption ",
+    fetch=SNMPTree(
         base=".1.3.6.1.2.1.105.1.3.1.1",
         oids=[OIDEnd(), "2", "3", "4"],
     ),
-}
+)

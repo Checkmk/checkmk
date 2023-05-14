@@ -8,6 +8,7 @@
 
 from typing import NamedTuple
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -43,14 +44,14 @@ def check_cisco_ucs_raid(_no_item, _no_params, section):
     yield 0, f"Serial number: {section.serial}"
 
 
-check_info["cisco_ucs_raid"] = {
-    "detect": DETECT,
-    "parse_function": parse_cisco_ucs_raid,
-    "check_function": check_cisco_ucs_raid,
-    "discovery_function": discover_cisco_ucs_raid,
-    "service_name": "RAID Controller",
-    "fetch": SNMPTree(
+check_info["cisco_ucs_raid"] = LegacyCheckDefinition(
+    detect=DETECT,
+    parse_function=parse_cisco_ucs_raid,
+    check_function=check_cisco_ucs_raid,
+    discovery_function=discover_cisco_ucs_raid,
+    service_name="RAID Controller",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.45.1.1",
         oids=["5", "7", "14", "17"],
     ),
-}
+)

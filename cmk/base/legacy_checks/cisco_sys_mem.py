@@ -7,7 +7,12 @@
 #
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, startswith
+from cmk.base.check_api import (
+    check_levels,
+    get_percent_human_readable,
+    LegacyCheckDefinition,
+    startswith,
+)
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -34,14 +39,14 @@ def check_cisco_sys_mem(_no_item, params, info):
     return None
 
 
-check_info["cisco_sys_mem"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.1.0", "Cisco NX-OS"),
-    "check_function": check_cisco_sys_mem,
-    "discovery_function": inventory_cisco_sys_mem,
-    "service_name": "Supervisor Mem Used",
-    "check_ruleset_name": "cisco_supervisor_mem",  # seperate group since only percentage
-    "fetch": SNMPTree(
+check_info["cisco_sys_mem"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.1.0", "Cisco NX-OS"),
+    check_function=check_cisco_sys_mem,
+    discovery_function=inventory_cisco_sys_mem,
+    service_name="Supervisor Mem Used",
+    check_ruleset_name="cisco_supervisor_mem",  # seperate group since only percentage
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.305.1.1.2",
         oids=["0"],
     ),
-}
+)

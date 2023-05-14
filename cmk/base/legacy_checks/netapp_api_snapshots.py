@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_bytes_human_readable
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info, factory_settings
 
@@ -70,13 +70,13 @@ def check_netapp_api_snapshots(item, params, parsed):
     ), [("bytes", snapshot_total, 0, 0, 0, reserved_bytes)]
 
 
-check_info["netapp_api_snapshots"] = {
-    "parse_function": lambda info: netapp_api_parse_lines(
+check_info["netapp_api_snapshots"] = LegacyCheckDefinition(
+    parse_function=lambda info: netapp_api_parse_lines(
         info, custom_keys=["volume_snapshot"], as_dict_list=True
     ),
-    "check_function": check_netapp_api_snapshots,
-    "discovery_function": inventory_netapp_api_snapshots,
-    "default_levels_variable": "netapp_api_snapshots_default_levels",
-    "service_name": "Snapshots Volume %s",
-    "check_ruleset_name": "netapp_snapshots",
-}
+    check_function=check_netapp_api_snapshots,
+    discovery_function=inventory_netapp_api_snapshots,
+    default_levels_variable="netapp_api_snapshots_default_levels",
+    service_name="Snapshots Volume %s",
+    check_ruleset_name="netapp_snapshots",
+)

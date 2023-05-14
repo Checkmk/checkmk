@@ -13,7 +13,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Any, Final, NamedTuple
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
@@ -98,11 +98,11 @@ def check_win_printers(
         yield 1, f"Error state: {_ERROR_MAP[queue.error]}"
 
 
-check_info["win_printers"] = {
-    "parse_function": parse_win_printers,
-    "check_function": check_win_printers,
-    "check_ruleset_name": "windows_printer_queues",
-    "discovery_function": discover_win_printers,
-    "service_name": "Printer %s",
-    "default_levels_variable": "win_printer_default_levels",
-}
+check_info["win_printers"] = LegacyCheckDefinition(
+    parse_function=parse_win_printers,
+    check_function=check_win_printers,
+    check_ruleset_name="windows_printer_queues",
+    discovery_function=discover_win_printers,
+    service_name="Printer %s",
+    default_levels_variable="win_printer_default_levels",
+)

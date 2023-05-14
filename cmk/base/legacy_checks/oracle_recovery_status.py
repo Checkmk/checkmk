@@ -23,7 +23,7 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_age_human_readable, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info
 
 
@@ -203,9 +203,9 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
     raise MKCounterWrapped("Login into database failed")
 
 
-check_info["oracle_recovery_status"] = {
-    "check_function": check_oracle_recovery_status,
-    "discovery_function": inventory_oracle_recovery_status,
-    "service_name": "ORA %s Recovery Status",
-    "check_ruleset_name": "oracle_recovery_status",
-}
+check_info["oracle_recovery_status"] = LegacyCheckDefinition(
+    check_function=check_oracle_recovery_status,
+    discovery_function=inventory_oracle_recovery_status,
+    service_name="ORA %s Recovery Status",
+    check_ruleset_name="oracle_recovery_status",
+)

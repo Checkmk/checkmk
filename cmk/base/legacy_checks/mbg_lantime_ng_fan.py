@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
@@ -62,14 +62,14 @@ def check_mbg_lantime_ng_fan(item, _no_params, parsed):
     yield fan_error["state"], "Errors: %s" % fan_error["name"]
 
 
-check_info["mbg_lantime_ng_fan"] = {
-    "detect": DETECT_MBG_LANTIME_NG,
-    "check_function": check_mbg_lantime_ng_fan,
-    "parse_function": parse_mbg_lantime_ng_fan,
-    "discovery_function": discover(lambda k, value: value["status"]["name"] != "not available"),
-    "service_name": "Fan %s",
-    "fetch": SNMPTree(
+check_info["mbg_lantime_ng_fan"] = LegacyCheckDefinition(
+    detect=DETECT_MBG_LANTIME_NG,
+    check_function=check_mbg_lantime_ng_fan,
+    parse_function=parse_mbg_lantime_ng_fan,
+    discovery_function=discover(lambda k, value: value["status"]["name"] != "not available"),
+    service_name="Fan %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.1.2.1",
         oids=["1", "2", "3"],
     ),
-}
+)

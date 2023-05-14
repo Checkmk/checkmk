@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -37,14 +37,14 @@ def check_avaya_45xx_fan(item, params, info):
     return None
 
 
-check_info["avaya_45xx_fan"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.45.3"),
-    "check_function": check_avaya_45xx_fan,
-    "discovery_function": inventory_avaya_45xx_fan,
-    "service_name": "Fan Chassis %s",
+check_info["avaya_45xx_fan"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.45.3"),
+    check_function=check_avaya_45xx_fan,
+    discovery_function=inventory_avaya_45xx_fan,
+    service_name="Fan Chassis %s",
     # S5-CHASSIS-MIB
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.45.1.6.3.3.1.1.10",
         oids=["6"],
     ),
-}
+)

@@ -40,6 +40,7 @@
 # State                         = STANDBY
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 hpux_multipath_pathstates = {
@@ -111,9 +112,9 @@ def check_hpux_multipath(item, params, info):
     return (0, "%s: %s" % (disk, hpux_multipath_format_pathstatus(pathcounts)))
 
 
-check_info["hpux_multipath"] = {
-    "check_function": check_hpux_multipath,
-    "discovery_function": inventory_hpux_multipath,
-    "service_name": "Multipath %s",
-    "check_ruleset_name": "hpux_multipath",
-}
+check_info["hpux_multipath"] = LegacyCheckDefinition(
+    check_function=check_hpux_multipath,
+    discovery_function=inventory_hpux_multipath,
+    service_name="Multipath %s",
+    check_ruleset_name="hpux_multipath",
+)

@@ -37,6 +37,7 @@
 #         Mar 16 10:13:33.248: Active to RelinquishingActive
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -67,12 +68,12 @@ def check_acme_sbc(_no_item, _no_params, parsed):
     return state, "Health at %d %% (State: %s)" % (health, dev_state)
 
 
-check_info["acme_sbc"] = {
-    "check_function": check_acme_sbc,
-    "discovery_function": inventory_acme_sbc,
-    "service_name": "Status",
-    "parse_function": acme_sbc_parse_function,
-}
+check_info["acme_sbc"] = LegacyCheckDefinition(
+    check_function=check_acme_sbc,
+    discovery_function=inventory_acme_sbc,
+    service_name="Status",
+    parse_function=acme_sbc_parse_function,
+)
 
 
 def inventory_acme_sbc_settings(parsed):
@@ -88,8 +89,8 @@ def check_acme_sbc_settings(_no_item, params, parsed):
             yield 2, "%s changed from %s to %s" % (setting, value, current_settings[setting])
 
 
-check_info["acme_sbc.settings"] = {
-    "check_function": check_acme_sbc_settings,
-    "discovery_function": inventory_acme_sbc_settings,
-    "service_name": "Settings",
-}
+check_info["acme_sbc.settings"] = LegacyCheckDefinition(
+    check_function=check_acme_sbc_settings,
+    discovery_function=inventory_acme_sbc_settings,
+    service_name="Settings",
+)

@@ -73,6 +73,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -134,9 +135,9 @@ def check_emcvnx_mirrorview(item, params, parsed):
         yield state, "Faulted: %s" % state_readable_faulted
 
 
-check_info["emcvnx_mirrorview"] = {
-    "parse_function": parse_emcvnx_mirrorview,
-    "discovery_function": inventory_emcvnx_mirrorview,
-    "check_function": check_emcvnx_mirrorview,
-    "service_name": "Mirror view %s",
-}
+check_info["emcvnx_mirrorview"] = LegacyCheckDefinition(
+    parse_function=parse_emcvnx_mirrorview,
+    discovery_function=inventory_emcvnx_mirrorview,
+    check_function=check_emcvnx_mirrorview,
+    service_name="Mirror view %s",
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -22,15 +23,15 @@ def check_datapower_cpu(_no_item, params, info):
     return check_cpu_util(util, params)
 
 
-check_info["datapower_cpu"] = {
-    "detect": DETECT,
-    "discovery_function": inventory_datapower_cpu,
-    "check_function": check_datapower_cpu,
-    "service_name": "CPU Utilization",
-    "fetch": SNMPTree(
+check_info["datapower_cpu"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=inventory_datapower_cpu,
+    check_function=check_datapower_cpu,
+    service_name="CPU Utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.14",
         oids=["2"],
     ),
-    "check_ruleset_name": "cpu_utilization",
-    "default_levels_variable": "datapower_cpu_default_levels",
-}
+    check_ruleset_name="cpu_utilization",
+    default_levels_variable="datapower_cpu_default_levels",
+)

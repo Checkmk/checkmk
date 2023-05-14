@@ -10,7 +10,7 @@
 # equipmentPsu<TAB>dn sys/rack-unit-1/psu-2 <TAB>id 2<TAB>model blabla<TAB>operability inoperable<TAB>voltage ok
 
 
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -102,12 +102,12 @@ def check_ucs_c_rack_server_psu(item, _no_params, data):
     yield status, "Status: %s" % status_readable
 
 
-check_info["ucs_c_rack_server_psu"] = {
-    "parse_function": parse_ucs_c_rack_server_psu,
-    "discovery_function": inventory_ucs_c_rack_server_psu,
-    "check_function": check_ucs_c_rack_server_psu,
-    "service_name": "Output Power %s",
-}
+check_info["ucs_c_rack_server_psu"] = LegacyCheckDefinition(
+    parse_function=parse_ucs_c_rack_server_psu,
+    discovery_function=inventory_ucs_c_rack_server_psu,
+    check_function=check_ucs_c_rack_server_psu,
+    service_name="Output Power %s",
+)
 
 #################################
 # ucs_c_rack_server_psu.voltage #
@@ -138,8 +138,8 @@ def check_ucs_c_rack_server_psu_voltage(item, _no_params, data):
     yield status, "Status: %s" % status_readable
 
 
-check_info["ucs_c_rack_server_psu.voltage"] = {
-    "discovery_function": inventory_ucs_c_rack_server_psu_voltage,
-    "check_function": check_ucs_c_rack_server_psu_voltage,
-    "service_name": "Output Voltage %s",
-}
+check_info["ucs_c_rack_server_psu.voltage"] = LegacyCheckDefinition(
+    discovery_function=inventory_ucs_c_rack_server_psu_voltage,
+    check_function=check_ucs_c_rack_server_psu_voltage,
+    service_name="Output Voltage %s",
+)

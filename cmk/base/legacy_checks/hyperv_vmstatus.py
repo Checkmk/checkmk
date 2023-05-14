@@ -9,7 +9,7 @@
 # Replica_Health None
 
 
-from cmk.base.check_api import discover_single
+from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -26,9 +26,9 @@ def check_hyperv_vmstatus(_no_item, _no_params, parsed):
     return state, "Integration Service State: %s" % int_state
 
 
-check_info["hyperv_vmstatus"] = {
-    "parse_function": parse_hyperv_vmstatus,
-    "check_function": check_hyperv_vmstatus,
-    "discovery_function": discover_single,
-    "service_name": "HyperV Status",
-}
+check_info["hyperv_vmstatus"] = LegacyCheckDefinition(
+    parse_function=parse_hyperv_vmstatus,
+    check_function=check_hyperv_vmstatus,
+    discovery_function=discover_single,
+    service_name="HyperV Status",
+)

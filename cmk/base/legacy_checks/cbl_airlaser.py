@@ -9,7 +9,7 @@
 # Migrate to factory settings?
 
 
-from cmk.base.check_api import all_of, contains, exists, saveint
+from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -170,13 +170,11 @@ def check_cbl_airlaser_status(item, _no_params, info):
     return (3, "Unknown data from agent")
 
 
-check_info["cbl_airlaser"] = {
+check_info["cbl_airlaser"] = LegacyCheckDefinition(
     # .1.3.6.1.2.1.1.1.0 = "AirLaser IP1000"  < matches airlaser
     # .1.3.6.1.4.1.2800.2.1.1.0 3             < Version of management agent ( exists )
-    "detect": all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "airlaser"), exists(".1.3.6.1.4.1.2800.2.1.1.0")
-    ),
-    "fetch": [
+    detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "airlaser"), exists(".1.3.6.1.4.1.2800.2.1.1.0")),
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2800.2.1",
             oids=["3"],
@@ -202,16 +200,16 @@ check_info["cbl_airlaser"] = {
             oids=["5"],
         ),
     ],
-}
+)
 
-check_info["cbl_airlaser.status"] = {
-    "check_function": check_cbl_airlaser_status,
-    "discovery_function": inventory_cbl_airlaser,
-    "service_name": "CBL Airlaser Status",
-}
+check_info["cbl_airlaser.status"] = LegacyCheckDefinition(
+    check_function=check_cbl_airlaser_status,
+    discovery_function=inventory_cbl_airlaser,
+    service_name="CBL Airlaser Status",
+)
 
-check_info["cbl_airlaser.hardware"] = {
-    "check_function": check_cbl_airlaser_hw,
-    "discovery_function": inventory_cbl_airlaser,
-    "service_name": "CBL Airlaser Hardware",
-}
+check_info["cbl_airlaser.hardware"] = LegacyCheckDefinition(
+    check_function=check_cbl_airlaser_hw,
+    discovery_function=inventory_cbl_airlaser,
+    service_name="CBL Airlaser Hardware",
+)

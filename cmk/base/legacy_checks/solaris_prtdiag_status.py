@@ -8,6 +8,7 @@
 # 0
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -32,8 +33,8 @@ def check_solaris_prtdiag_status(_no_item, _no_params, info):
     )
 
 
-check_info["solaris_prtdiag_status"] = {
-    "discovery_function": inventory_solaris_prtdiag_status,
-    "check_function": check_solaris_prtdiag_status,
-    "service_name": "Hardware Overall State",
-}
+check_info["solaris_prtdiag_status"] = LegacyCheckDefinition(
+    discovery_function=inventory_solaris_prtdiag_status,
+    check_function=check_solaris_prtdiag_status,
+    service_name="Hardware Overall State",
+)

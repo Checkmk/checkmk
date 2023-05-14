@@ -17,7 +17,7 @@
 # .1.3.6.1.4.1.367.3.2.1.2.24.1.1.5.1 30
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -103,16 +103,16 @@ def check_printer_supply_ricoh(item, params, parsed):
             return state, infotext, perfdata
 
 
-check_info["printer_supply_ricoh"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.367.1.1"),
-    "parse_function": parse_printer_supply_ricoh,
-    "discovery_function": inventory_printer_supply_ricoh,
-    "check_function": check_printer_supply_ricoh,
-    "service_name": "Supply %s",
-    "check_ruleset_name": "printer_supply",
-    "fetch": SNMPTree(
+check_info["printer_supply_ricoh"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.367.1.1"),
+    parse_function=parse_printer_supply_ricoh,
+    discovery_function=inventory_printer_supply_ricoh,
+    check_function=check_printer_supply_ricoh,
+    service_name="Supply %s",
+    check_ruleset_name="printer_supply",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.367.3.2.1.2.24.1.1",
         oids=["2", "5"],
     ),
-    "default_levels_variable": "printer_supply_ricoh_default_levels",
-}
+    default_levels_variable="printer_supply_ricoh_default_levels",
+)

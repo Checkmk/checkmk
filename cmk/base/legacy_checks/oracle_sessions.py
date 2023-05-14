@@ -11,7 +11,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["oracle_sessions_default_levels"] = {
@@ -83,11 +83,11 @@ def check_oracle_sessions(item, params, parsed):
     raise MKCounterWrapped("Login into database failed")
 
 
-check_info["oracle_sessions"] = {
-    "parse_function": parse_oracle_sessions,
-    "discovery_function": inventory_oracle_sessions,
-    "check_function": check_oracle_sessions,
-    "service_name": "ORA %s Sessions",
-    "check_ruleset_name": "oracle_sessions",
-    "default_levels_variable": "oracle_sessions_default_levels",
-}
+check_info["oracle_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_sessions,
+    discovery_function=inventory_oracle_sessions,
+    check_function=check_oracle_sessions,
+    service_name="ORA %s Sessions",
+    check_ruleset_name="oracle_sessions",
+    default_levels_variable="oracle_sessions_default_levels",
+)

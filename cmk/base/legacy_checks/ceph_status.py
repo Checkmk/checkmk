@@ -13,6 +13,7 @@ from cmk.base.check_api import (
     get_average,
     get_percent_human_readable,
     get_rate,
+    LegacyCheckDefinition,
     state_markers,
 )
 from cmk.base.config import check_info, factory_settings
@@ -98,13 +99,13 @@ def check_ceph_status(_no_item, params, parsed):
     yield ceph_check_epoch("ceph_status", parsed["election_epoch"], params)
 
 
-check_info["ceph_status"] = {
-    "parse_function": parse_ceph_status,
-    "discovery_function": inventory_ceph_status,
-    "check_function": check_ceph_status,
-    "service_name": "Ceph Status",
-    "default_levels_variable": "ceph_status_default_levels",
-}
+check_info["ceph_status"] = LegacyCheckDefinition(
+    parse_function=parse_ceph_status,
+    discovery_function=inventory_ceph_status,
+    check_function=check_ceph_status,
+    service_name="Ceph Status",
+    default_levels_variable="ceph_status_default_levels",
+)
 
 # .
 #   .--osds----------------------------------------------------------------.
@@ -169,13 +170,13 @@ def check_ceph_status_osds(_no_item, params, parsed):
         yield state, infotext
 
 
-check_info["ceph_status.osds"] = {
-    "discovery_function": inventory_ceph_status_osds,
-    "check_function": check_ceph_status_osds,
-    "service_name": "Ceph OSDs",
-    "default_levels_variable": "ceph_osds_default_levels",
-    "check_ruleset_name": "ceph_osds",
-}
+check_info["ceph_status.osds"] = LegacyCheckDefinition(
+    discovery_function=inventory_ceph_status_osds,
+    check_function=check_ceph_status_osds,
+    service_name="Ceph OSDs",
+    default_levels_variable="ceph_osds_default_levels",
+    check_ruleset_name="ceph_osds",
+)
 
 # .
 #   .--pgs-----------------------------------------------------------------.
@@ -241,11 +242,11 @@ def check_ceph_status_pgs(_no_item, params, parsed):
     return max(states), "%s, %s" % (pgs_info, ", ".join(infotexts))
 
 
-check_info["ceph_status.pgs"] = {
-    "discovery_function": inventory_ceph_status_pgs,
-    "check_function": check_ceph_status_pgs,
-    "service_name": "Ceph PGs",
-}
+check_info["ceph_status.pgs"] = LegacyCheckDefinition(
+    discovery_function=inventory_ceph_status_pgs,
+    check_function=check_ceph_status_pgs,
+    service_name="Ceph PGs",
+)
 
 # .
 #   .--mgrs----------------------------------------------------------------.
@@ -276,10 +277,10 @@ def check_ceph_status_mgrs(_no_item, params, parsed):
     yield ceph_check_epoch("ceph_mgrs", epoch, params)
 
 
-check_info["ceph_status.mgrs"] = {
-    "discovery_function": inventory_ceph_status_mgrs,
-    "check_function": check_ceph_status_mgrs,
-    "service_name": "Ceph MGRs",
-    "default_levels_variable": "ceph_mgrs_default_levels",
-    "check_ruleset_name": "ceph_mgrs",
-}
+check_info["ceph_status.mgrs"] = LegacyCheckDefinition(
+    discovery_function=inventory_ceph_status_mgrs,
+    check_function=check_ceph_status_mgrs,
+    service_name="Ceph MGRs",
+    default_levels_variable="ceph_mgrs_default_levels",
+    check_ruleset_name="ceph_mgrs",
+)

@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
@@ -45,16 +46,16 @@ def check_ups_in_freq(item, params, parsed):
     return state, infotext, [("in_freq", freq, warn, crit, 30, 70)]
 
 
-check_info["ups_in_freq"] = {
-    "detect": DETECT_UPS_GENERIC,
-    "parse_function": parse_ups_in_freq,
-    "discovery_function": discover_ups_in_freq,
-    "check_function": check_ups_in_freq,
-    "service_name": "IN frequency phase %s",
-    "check_ruleset_name": "efreq",
-    "fetch": SNMPTree(
+check_info["ups_in_freq"] = LegacyCheckDefinition(
+    detect=DETECT_UPS_GENERIC,
+    parse_function=parse_ups_in_freq,
+    discovery_function=discover_ups_in_freq,
+    check_function=check_ups_in_freq,
+    service_name="IN frequency phase %s",
+    check_ruleset_name="efreq",
+    fetch=SNMPTree(
         base=".1.3.6.1.2.1.33.1.3.3.1",
         oids=[OIDEnd(), "2"],
     ),
-    "default_levels_variable": "ups_in_freq_default_levels",
-}
+    default_levels_variable="ups_in_freq_default_levels",
+)

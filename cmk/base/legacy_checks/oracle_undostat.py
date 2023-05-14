@@ -9,7 +9,12 @@
 # TUX2 160 0 1081 300 0
 
 
-from cmk.base.check_api import check_levels, get_age_human_readable, MKCounterWrapped
+from cmk.base.check_api import (
+    check_levels,
+    get_age_human_readable,
+    LegacyCheckDefinition,
+    MKCounterWrapped,
+)
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["oracle_undostat_defaults"] = {
@@ -64,11 +69,11 @@ def check_oracle_undostat(item, params, parsed):
     ]
 
 
-check_info["oracle_undostat"] = {
-    "parse_function": parse_oracle_undostat,
-    "check_function": check_oracle_undostat,
-    "discovery_function": discover_oracle_undostat,
-    "service_name": "ORA %s Undo Retention",
-    "default_levels_variable": "oracle_undostat_defaults",
-    "check_ruleset_name": "oracle_undostat",
-}
+check_info["oracle_undostat"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_undostat,
+    check_function=check_oracle_undostat,
+    discovery_function=discover_oracle_undostat,
+    service_name="ORA %s Undo Retention",
+    default_levels_variable="oracle_undostat_defaults",
+    check_ruleset_name="oracle_undostat",
+)

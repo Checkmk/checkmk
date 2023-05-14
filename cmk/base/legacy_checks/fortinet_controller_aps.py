@@ -17,7 +17,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import contains, get_timestamp_human_readable
+from cmk.base.check_api import contains, get_timestamp_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -115,13 +115,13 @@ def check_fortinet_controller_aps(item, params, parsed):
         yield 0, "Located at %s" % location
 
 
-check_info["fortinet_controller_aps"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.15983"),
-    "parse_function": parse_fortinet_controller_aps,
-    "discovery_function": inventory_fortinet_controller_aps,
-    "check_function": check_fortinet_controller_aps,
-    "service_name": "AP %s",
-    "fetch": [
+check_info["fortinet_controller_aps"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.15983"),
+    parse_function=parse_fortinet_controller_aps,
+    discovery_function=inventory_fortinet_controller_aps,
+    check_function=check_fortinet_controller_aps,
+    service_name="AP %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.15983.1.1.4.2.1.1",
             oids=["2", "4", "8", "17", "26", "27"],
@@ -131,4 +131,4 @@ check_info["fortinet_controller_aps"] = {
             oids=["5", "9"],
         ),
     ],
-}
+)

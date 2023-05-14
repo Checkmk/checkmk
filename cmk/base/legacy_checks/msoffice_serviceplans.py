@@ -15,6 +15,7 @@
 # msonline:WINDOWS_STORE WINDOWS_STORE PendingActivation
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -49,9 +50,9 @@ def check_msoffice_serviceplans(item, params, info):
         yield 0, "Pending Services: %s" % ", ".join(pending_list)
 
 
-check_info["msoffice_serviceplans"] = {
-    "discovery_function": inventory_msoffice_serviceplans,
-    "check_function": check_msoffice_serviceplans,
-    "service_name": "MS Office Serviceplans %s",
-    "check_ruleset_name": "msoffice_serviceplans",
-}
+check_info["msoffice_serviceplans"] = LegacyCheckDefinition(
+    discovery_function=inventory_msoffice_serviceplans,
+    check_function=check_msoffice_serviceplans,
+    service_name="MS Office Serviceplans %s",
+    check_ruleset_name="msoffice_serviceplans",
+)

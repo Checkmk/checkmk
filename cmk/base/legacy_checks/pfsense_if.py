@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.firewall_if import check_firewall_if
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -27,16 +27,16 @@ def inventory_pfsense_if(parsed):
         yield item, {}
 
 
-check_info["pfsense_if"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
-    "parse_function": parse_pfsense_if,
-    "discovery_function": inventory_pfsense_if,
-    "default_levels_variable": "pfsense_if_default_levels",
-    "check_function": check_firewall_if,
-    "service_name": "Firewall Interface %s",
-    "fetch": SNMPTree(
+check_info["pfsense_if"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
+    parse_function=parse_pfsense_if,
+    discovery_function=inventory_pfsense_if,
+    default_levels_variable="pfsense_if_default_levels",
+    check_function=check_firewall_if,
+    service_name="Firewall Interface %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12325.1.200.1.8.2.1",
         oids=["2", "12"],
     ),
-    "check_ruleset_name": "firewall_if",
-}
+    check_ruleset_name="firewall_if",
+)

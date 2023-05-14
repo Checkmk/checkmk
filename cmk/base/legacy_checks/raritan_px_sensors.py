@@ -41,7 +41,7 @@
 # .1.3.6.1.4.1.13742.4.3.3.1.34.13 550 --> PDU-MIB::externalSensorUpperWarningThreshold.13
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.raritan import (
     check_raritan_sensors,
     check_raritan_sensors_binary,
@@ -114,18 +114,18 @@ def parse_raritan_px_sensors(info):
 #   |                              main check                              |
 #   '----------------------------------------------------------------------'
 
-check_info["raritan_px_sensors"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.4"),
-    "parse_function": parse_raritan_px_sensors,
-    "discovery_function": lambda parsed: inventory_raritan_sensors_temp(parsed, "temp"),
-    "check_function": check_raritan_sensors_temp,
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["raritan_px_sensors"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.4"),
+    parse_function=parse_raritan_px_sensors,
+    discovery_function=lambda parsed: inventory_raritan_sensors_temp(parsed, "temp"),
+    check_function=check_raritan_sensors_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.4.3.3.1",
         oids=["1", "4", "2", "40", "16", "17", "41", "31", "32", "33", "34"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)
 
 # .
 #   .--humidity------------------------------------------------------------.
@@ -137,11 +137,11 @@ check_info["raritan_px_sensors"] = {
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-check_info["raritan_px_sensors.humidity"] = {
-    "discovery_function": lambda parsed: inventory_raritan_sensors(parsed, "humidity"),
-    "check_function": check_raritan_sensors,
-    "service_name": "Humidity %s",
-}
+check_info["raritan_px_sensors.humidity"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "humidity"),
+    check_function=check_raritan_sensors,
+    service_name="Humidity %s",
+)
 
 # .
 #   .--binary--------------------------------------------------------------.
@@ -153,8 +153,8 @@ check_info["raritan_px_sensors.humidity"] = {
 #   |                                            |___/                     |
 #   '----------------------------------------------------------------------'
 
-check_info["raritan_px_sensors.binary"] = {
-    "discovery_function": lambda parsed: inventory_raritan_sensors(parsed, "binary"),
-    "check_function": check_raritan_sensors_binary,
-    "service_name": "Contact %s",
-}
+check_info["raritan_px_sensors.binary"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "binary"),
+    check_function=check_raritan_sensors_binary,
+    service_name="Contact %s",
+)

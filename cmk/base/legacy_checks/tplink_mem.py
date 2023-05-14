@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import check_levels, get_percent_human_readable
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.tplink import DETECT_TPLINK
@@ -40,14 +40,14 @@ def check_tplink_mem(_no_item, params, info):
     )
 
 
-check_info["tplink_mem"] = {
-    "detect": DETECT_TPLINK,
-    "check_function": check_tplink_mem,
-    "discovery_function": inventory_tplink_mem,
-    "service_name": "Memory",
-    "fetch": SNMPTree(
+check_info["tplink_mem"] = LegacyCheckDefinition(
+    detect=DETECT_TPLINK,
+    check_function=check_tplink_mem,
+    discovery_function=inventory_tplink_mem,
+    service_name="Memory",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11863.6.4.1.2.1.1",
         oids=["2"],
     ),
-    "check_ruleset_name": "memory_percentage_used",
-}
+    check_ruleset_name="memory_percentage_used",
+)

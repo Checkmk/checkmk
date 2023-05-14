@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, contains, saveint
+from cmk.base.check_api import any_of, contains, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -39,16 +39,16 @@ def check_blade_powerfan(item, params, info):
     return (3, "Device %s not found in SNMP data" % item)
 
 
-check_info["blade_powerfan"] = {
-    "detect": any_of(
+check_info["blade_powerfan"] = LegacyCheckDefinition(
+    detect=any_of(
         contains(".1.3.6.1.2.1.1.1.0", "BladeCenter Management Module"),
         contains(".1.3.6.1.2.1.1.1.0", "BladeCenter Advanced Management Module"),
     ),
-    "check_function": check_blade_powerfan,
-    "discovery_function": inventory_blade_powerfan,
-    "service_name": "Power Module Cooling Device %s",
-    "fetch": SNMPTree(
+    check_function=check_blade_powerfan,
+    discovery_function=inventory_blade_powerfan,
+    service_name="Power Module Cooling Device %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.2.2.6.1.1",
         oids=["1", "2", "3", "4", "5", "6", "7"],
     ),
-}
+)

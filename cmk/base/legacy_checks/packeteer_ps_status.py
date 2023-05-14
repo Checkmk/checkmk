@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -23,13 +23,13 @@ def check_packeteer_ps_status(_no_item, _no_params, info):
             yield 2, "Power Supply %d not okay" % nr
 
 
-check_info["packeteer_ps_status"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2334"),
-    "discovery_function": inventory_packeteer_ps_status,
-    "check_function": check_packeteer_ps_status,
-    "service_name": "Power Supply Status",
-    "fetch": SNMPTree(
+check_info["packeteer_ps_status"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2334"),
+    discovery_function=inventory_packeteer_ps_status,
+    check_function=check_packeteer_ps_status,
+    service_name="Power Supply Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2334.2.1.5",
         oids=["8", "10"],
     ),
-}
+)

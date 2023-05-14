@@ -13,6 +13,7 @@
 # 0.00 0.00 15.00
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -31,11 +32,11 @@ def check_vms_system_ios(_no_item, _no_params, info):
     )
 
 
-check_info["vms_system.ios"] = {
-    "check_function": check_vms_system_ios,
-    "discovery_function": inventory_vms_system,
-    "service_name": "IOs",
-}
+check_info["vms_system.ios"] = LegacyCheckDefinition(
+    check_function=check_vms_system_ios,
+    discovery_function=inventory_vms_system,
+    service_name="IOs",
+)
 
 
 def check_vms_system_procs(_no_item, params, info):
@@ -53,9 +54,9 @@ def check_vms_system_procs(_no_item, params, info):
     return (0, "%d processes" % (procs,), perfdata)
 
 
-check_info["vms_system.procs"] = {
-    "check_function": check_vms_system_procs,
-    "discovery_function": inventory_vms_system,
-    "service_name": "Number of processes",
-    "check_ruleset_name": "vms_procs",
-}
+check_info["vms_system.procs"] = LegacyCheckDefinition(
+    check_function=check_vms_system_procs,
+    discovery_function=inventory_vms_system,
+    service_name="Number of processes",
+    check_ruleset_name="vms_procs",
+)

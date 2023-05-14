@@ -64,7 +64,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate, saveint
+from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
 
@@ -114,9 +114,9 @@ def check_emcvnx_hba(item, _no_params, parsed):
     )
 
 
-check_info["emcvnx_hba"] = {
-    "parse_function": parse_emcvnx_hba,
-    "discovery_function": inventory_emcvnx_hba,
-    "check_function": check_emcvnx_hba,
-    "service_name": "HBA %s",
-}
+check_info["emcvnx_hba"] = LegacyCheckDefinition(
+    parse_function=parse_emcvnx_hba,
+    discovery_function=inventory_emcvnx_hba,
+    check_function=check_emcvnx_hba,
+    service_name="HBA %s",
+)

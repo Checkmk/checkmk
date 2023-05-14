@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, saveint
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_OPENMANAGE
@@ -102,14 +102,14 @@ def check_dell_om_disks(item, _no_params, info):
     return 3, "Device not found in SNMP tree"
 
 
-check_info["dell_om_disks"] = {
-    "detect": DETECT_OPENMANAGE,
-    "check_function": check_dell_om_disks,
-    "discovery_function": inventory_dell_om_disks,
-    "service_name": "Physical Disk %s",
+check_info["dell_om_disks"] = LegacyCheckDefinition(
+    detect=DETECT_OPENMANAGE,
+    check_function=check_dell_om_disks,
+    discovery_function=inventory_dell_om_disks,
+    service_name="Physical Disk %s",
     # There is no other way to find out that openmanage is present.
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10893.1.20.130.4.1",
         oids=["2", "4", "6", "9", "10", "15", "11", "21", "22", "31", "35"],
     ),
-}
+)

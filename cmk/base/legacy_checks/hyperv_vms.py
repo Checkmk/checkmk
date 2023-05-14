@@ -48,7 +48,7 @@
 # these default values were suggested by Aldi Sued
 
 
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["hyperv_vms_default_levels"] = {
@@ -156,11 +156,11 @@ def check_hyperv_vms(_item, params, vm):
     yield service_state, message
 
 
-check_info["hyperv_vms"] = {
-    "parse_function": parse_hyperv_vms,
-    "check_function": check_hyperv_vms,
-    "discovery_function": inventory_hyperv_vms,
-    "service_name": "VM %s",
-    "check_ruleset_name": "hyperv_vms",
-    "default_levels_variable": "hyperv_vms_default_levels",
-}
+check_info["hyperv_vms"] = LegacyCheckDefinition(
+    parse_function=parse_hyperv_vms,
+    check_function=check_hyperv_vms,
+    discovery_function=inventory_hyperv_vms,
+    service_name="VM %s",
+    check_ruleset_name="hyperv_vms",
+    default_levels_variable="hyperv_vms_default_levels",
+)

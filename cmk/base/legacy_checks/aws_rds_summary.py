@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover_single, get_parsed_item_data
+from cmk.base.check_api import discover_single, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions, inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.aws import aws_rds_service_item
@@ -44,12 +44,12 @@ def check_aws_rds_summary(item, params, parsed):
     yield 0, ", ".join(class_infos)
 
 
-check_info["aws_rds_summary"] = {
-    "parse_function": parse_aws_rds_summary,
-    "discovery_function": discover_single,
-    "check_function": check_aws_rds_summary,
-    "service_name": "AWS/RDS Summary",
-}
+check_info["aws_rds_summary"] = LegacyCheckDefinition(
+    parse_function=parse_aws_rds_summary,
+    discovery_function=discover_single,
+    check_function=check_aws_rds_summary,
+    service_name="AWS/RDS Summary",
+)
 
 # .
 #   .--DB status-----------------------------------------------------------.
@@ -85,8 +85,8 @@ def check_aws_rds_summary_db(item, params, data):
         yield 0, "Availability zone: %s (%s)" % (AWSRegions[region], zone_info)
 
 
-check_info["aws_rds_summary.db_status"] = {
-    "discovery_function": lambda p: inventory_aws_generic(p, ["DBInstanceStatus"]),
-    "check_function": check_aws_rds_summary_db,
-    "service_name": "AWS/RDS %s Info",
-}
+check_info["aws_rds_summary.db_status"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic(p, ["DBInstanceStatus"]),
+    check_function=check_aws_rds_summary_db,
+    service_name="AWS/RDS %s Info",
+)

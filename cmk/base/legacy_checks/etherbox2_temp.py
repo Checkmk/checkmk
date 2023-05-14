@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, contains, equals
+from cmk.base.check_api import all_of, contains, equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -61,15 +61,15 @@ def check_etherbox2_temp(item, params, parsed):
     return None
 
 
-check_info["etherbox2_temp"] = {
-    "detect": all_of(
+check_info["etherbox2_temp"] = LegacyCheckDefinition(
+    detect=all_of(
         equals(".1.3.6.1.2.1.1.1.0", ""), contains(".1.3.6.1.4.1.14848.2.1.1.1.0", "Version 1.2")
     ),
-    "parse_function": parse_etherbox2_temp,
-    "discovery_function": inventory_etherbox2_temp,
-    "check_function": check_etherbox2_temp,
-    "service_name": "Temperature %s",
-    "fetch": [
+    parse_function=parse_etherbox2_temp,
+    discovery_function=inventory_etherbox2_temp,
+    check_function=check_etherbox2_temp,
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.14848.2.1.7.1",
             oids=["2"],
@@ -79,6 +79,6 @@ check_info["etherbox2_temp"] = {
             oids=[OIDEnd(), "2"],
         ),
     ],
-    "default_levels_variable": "etherbox2_temp_default_levels",
-    "check_ruleset_name": "temperature",
-}
+    default_levels_variable="etherbox2_temp_default_levels",
+    check_ruleset_name="temperature",
+)

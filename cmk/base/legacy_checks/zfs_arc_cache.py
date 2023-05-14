@@ -231,7 +231,7 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_bytes_human_readable
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -306,12 +306,12 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
         ]
 
 
-check_info["zfs_arc_cache"] = {
-    "parse_function": parse_zfs_arc_cache,
-    "check_function": check_zfs_arc_cache,
-    "discovery_function": inventory_zfs_arc_cache,
-    "service_name": "ZFS arc cache",
-}
+check_info["zfs_arc_cache"] = LegacyCheckDefinition(
+    parse_function=parse_zfs_arc_cache,
+    check_function=check_zfs_arc_cache,
+    discovery_function=inventory_zfs_arc_cache,
+    service_name="ZFS arc cache",
+)
 
 # .
 #   .--L2 cache------------------------------------------------------------.
@@ -359,8 +359,8 @@ def check_zfs_arc_cache_l2(_no_item, _no_params, parsed):
     return status, message, perfdata
 
 
-check_info["zfs_arc_cache.l2"] = {
-    "check_function": check_zfs_arc_cache_l2,
-    "discovery_function": inventory_zfs_arc_cache_l2,
-    "service_name": "ZFS arc cache L2",
-}
+check_info["zfs_arc_cache.l2"] = LegacyCheckDefinition(
+    check_function=check_zfs_arc_cache_l2,
+    discovery_function=inventory_zfs_arc_cache_l2,
+    service_name="ZFS arc cache L2",
+)

@@ -6,7 +6,7 @@
 # "0=Off, 1=On in DI/DO mode or N=Count in DO counter mode"
 
 
-from cmk.base.check_api import all_of, startswith
+from cmk.base.check_api import all_of, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -29,20 +29,20 @@ def check_iologik_register(item, params, info):
     return (3, "Register not found")
 
 
-check_info["moxa_iologik_register"] = {
-    "detect": all_of(
+check_info["moxa_iologik_register"] = LegacyCheckDefinition(
+    detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8691."),
         startswith(".1.3.6.1.4.1.8691.10.2242.2.0", "E2242-T"),
     ),
-    "check_function": check_iologik_register,
-    "discovery_function": inventory_iologik_register,
-    "service_name": "Moxa Register",
-    "check_ruleset_name": "iologik_register",
-    "fetch": SNMPTree(
+    check_function=check_iologik_register,
+    discovery_function=inventory_iologik_register,
+    service_name="Moxa Register",
+    check_ruleset_name="iologik_register",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.8691.10.2242.10.4.1.1",
         oids=["1", "2", "3"],
     ),
-}
+)
 
 # DIOEntry
 # dioIndex Integer32 (0..11)         "The channel dio index."

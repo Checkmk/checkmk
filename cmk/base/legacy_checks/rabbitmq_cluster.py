@@ -44,7 +44,7 @@
 
 import json
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -125,12 +125,12 @@ def check_rabbitmq_cluster(_no_item, params, parsed):
         yield 0, "%s: %s" % (info_key.replace("_", " ").capitalize(), info_value)
 
 
-check_info["rabbitmq_cluster"] = {
-    "parse_function": parse_rabbitmq_cluster,
-    "check_function": check_rabbitmq_cluster,
-    "discovery_function": inventory_rabbitmq_cluster,
-    "service_name": "RabbitMQ Cluster",
-}
+check_info["rabbitmq_cluster"] = LegacyCheckDefinition(
+    parse_function=parse_rabbitmq_cluster,
+    check_function=check_rabbitmq_cluster,
+    discovery_function=inventory_rabbitmq_cluster,
+    service_name="RabbitMQ Cluster",
+)
 
 
 def inventory_rabbitmq_cluster_messages(parsed):
@@ -161,12 +161,12 @@ def check_rabbitmq_cluster_messages(_no_item, params, parsed):
         yield _handle_output(params, value, key, infotext, hr_func)
 
 
-check_info["rabbitmq_cluster.messages"] = {
-    "check_function": check_rabbitmq_cluster_messages,
-    "discovery_function": inventory_rabbitmq_cluster_messages,
-    "service_name": "RabbitMQ Cluster Messages",
-    "check_ruleset_name": "rabbitmq_cluster_messages",
-}
+check_info["rabbitmq_cluster.messages"] = LegacyCheckDefinition(
+    check_function=check_rabbitmq_cluster_messages,
+    discovery_function=inventory_rabbitmq_cluster_messages,
+    service_name="RabbitMQ Cluster Messages",
+    check_ruleset_name="rabbitmq_cluster_messages",
+)
 
 
 def inventory_rabbitmq_cluster_stats(parsed):
@@ -211,9 +211,9 @@ def _handle_output(params, value, key, infotext, hr_func):
     )
 
 
-check_info["rabbitmq_cluster.stats"] = {
-    "check_function": check_rabbitmq_cluster_stats,
-    "discovery_function": inventory_rabbitmq_cluster_stats,
-    "service_name": "RabbitMQ Cluster Stats",
-    "check_ruleset_name": "rabbitmq_cluster_stats",
-}
+check_info["rabbitmq_cluster.stats"] = LegacyCheckDefinition(
+    check_function=check_rabbitmq_cluster_stats,
+    discovery_function=inventory_rabbitmq_cluster_stats,
+    service_name="RabbitMQ Cluster Stats",
+    check_ruleset_name="rabbitmq_cluster_stats",
+)

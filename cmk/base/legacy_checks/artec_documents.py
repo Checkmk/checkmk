@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import all_of, contains, equals, get_rate
+from cmk.base.check_api import all_of, contains, equals, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -32,17 +32,17 @@ def check_artec_documents(_no_item, _no_params, info):
             yield 0, "%s: %d (%.2f/s)" % (name, documents, rate)
 
 
-check_info["artec_documents"] = {
-    "detect": all_of(
+check_info["artec_documents"] = LegacyCheckDefinition(
+    detect=all_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         contains(".1.3.6.1.2.1.1.1.0", "version"),
         contains(".1.3.6.1.2.1.1.1.0", "serial"),
     ),
-    "discovery_function": inventory_artec_documents,
-    "check_function": check_artec_documents,
-    "service_name": "Documents",
-    "fetch": SNMPTree(
+    discovery_function=inventory_artec_documents,
+    check_function=check_artec_documents,
+    service_name="Documents",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.31560.0.0.3.1",
         oids=["3", "1"],
     ),
-}
+)

@@ -16,6 +16,7 @@
 # Index_processor Disk_space green
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["splunk_health_default_levels"] = {
@@ -74,11 +75,11 @@ def check_splunk_health(_no_item, params, parsed):
     yield 0, "\n%s" % long_output
 
 
-check_info["splunk_health"] = {
-    "parse_function": parse_splunk_health,
-    "check_function": check_splunk_health,
-    "discovery_function": inventory_splunk_health,
-    "service_name": "Splunk Health",
-    "check_ruleset_name": "splunk_health",
-    "default_levels_variable": "splunk_health_default_levels",
-}
+check_info["splunk_health"] = LegacyCheckDefinition(
+    parse_function=parse_splunk_health,
+    check_function=check_splunk_health,
+    discovery_function=inventory_splunk_health,
+    service_name="Splunk Health",
+    check_ruleset_name="splunk_health",
+    default_levels_variable="splunk_health_default_levels",
+)

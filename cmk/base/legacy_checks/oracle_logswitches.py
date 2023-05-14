@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.oracle import (
     oracle_handle_ora_errors,
     oracle_handle_ora_errors_discovery,
@@ -63,10 +63,10 @@ def check_oracle_logswitches(item, params, info):
     raise MKCounterWrapped("Login into database failed")
 
 
-check_info["oracle_logswitches"] = {
-    "check_function": check_oracle_logswitches,
-    "discovery_function": inventory_oracle_logswitches,
-    "service_name": "ORA %s Logswitches",
-    "check_ruleset_name": "oracle_logswitches",
-    "default_levels_variable": "oracle_logswitches_default_levels",
-}
+check_info["oracle_logswitches"] = LegacyCheckDefinition(
+    check_function=check_oracle_logswitches,
+    discovery_function=inventory_oracle_logswitches,
+    service_name="ORA %s Logswitches",
+    check_ruleset_name="oracle_logswitches",
+    default_levels_variable="oracle_logswitches_default_levels",
+)

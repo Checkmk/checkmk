@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -40,16 +41,16 @@ def check_cisco_ucs_temp_env(item, params, info):
             yield check_temperature(int(temp), params, "cisco_ucs_temp_env_%s" % name)
 
 
-check_info["cisco_ucs_temp_env"] = {
-    "detect": DETECT,
-    "parse_function": parse_cisco_ucs_temp_env,
-    "discovery_function": inventory_cisco_ucs_temp_env,
-    "check_function": check_cisco_ucs_temp_env,
-    "default_levels_variable": "cisco_ucs_temp_env_default_levels",
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["cisco_ucs_temp_env"] = LegacyCheckDefinition(
+    detect=DETECT,
+    parse_function=parse_cisco_ucs_temp_env,
+    discovery_function=inventory_cisco_ucs_temp_env,
+    check_function=check_cisco_ucs_temp_env,
+    default_levels_variable="cisco_ucs_temp_env_default_levels",
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.9.44.1",
         oids=["4", "8", "13", "21"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

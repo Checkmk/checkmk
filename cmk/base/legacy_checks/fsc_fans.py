@@ -6,7 +6,15 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import all_of, any_of, exists, get_parsed_item_data, not_exists, startswith
+from cmk.base.check_api import (
+    all_of,
+    any_of,
+    exists,
+    get_parsed_item_data,
+    LegacyCheckDefinition,
+    not_exists,
+    startswith,
+)
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -38,8 +46,8 @@ def check_fsc_fans(item, params, data):
     return check_fan(data, params)
 
 
-check_info["fsc_fans"] = {
-    "detect": all_of(
+check_info["fsc_fans"] = LegacyCheckDefinition(
+    detect=all_of(
         all_of(
             any_of(
                 startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.231"),
@@ -50,14 +58,14 @@ check_info["fsc_fans"] = {
         ),
         not_exists(".1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.3.*"),
     ),
-    "parse_function": parse_fsc_fans,
-    "discovery_function": inventory_fsc_fans,
-    "check_function": check_fsc_fans,
-    "service_name": "FSC %s",
-    "fetch": SNMPTree(
+    parse_function=parse_fsc_fans,
+    discovery_function=inventory_fsc_fans,
+    check_function=check_fsc_fans,
+    service_name="FSC %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.5.2.2.1",
         oids=["16", "8"],
     ),
-    "check_ruleset_name": "hw_fans",
-    "default_levels_variable": "fsc_fans_default_levels",
-}
+    check_ruleset_name="hw_fans",
+    default_levels_variable="fsc_fans_default_levels",
+)

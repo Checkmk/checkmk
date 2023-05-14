@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 
@@ -56,11 +57,11 @@ def check_smart_temp(item, params, section):
     return check_temperature(temperature, params, "smart_%s" % item)
 
 
-check_info["smart.temp"] = {
+check_info["smart.temp"] = LegacyCheckDefinition(
     # section defined in new API!
-    "check_function": check_smart_temp,
-    "discovery_function": inventory_smart_temp,
-    "service_name": "Temperature SMART %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "smart_temp_default_levels",
-}
+    check_function=check_smart_temp,
+    discovery_function=inventory_smart_temp,
+    service_name="Temperature SMART %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="smart_temp_default_levels",
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.hwg import (
     check_hwg_humidity,
     HWG_HUMIDITY_DEFAULTLEVELS,
@@ -17,16 +17,16 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 factory_settings["hwg_humidity_defaultlevels"] = HWG_HUMIDITY_DEFAULTLEVELS
 
 
-check_info["hwg_humidity"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "hwg"),
-    "parse_function": parse_hwg,
-    "check_function": check_hwg_humidity,
-    "discovery_function": inventory_hwg_humidity,
-    "service_name": "Humidity %s",
-    "fetch": SNMPTree(
+check_info["hwg_humidity"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.1.0", "hwg"),
+    parse_function=parse_hwg,
+    check_function=check_hwg_humidity,
+    discovery_function=inventory_hwg_humidity,
+    service_name="Humidity %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.4.1.3.1",
         oids=["1", "2", "3", "4", "7"],
     ),
-    "check_ruleset_name": "humidity",
-    "default_levels_variable": "hwg_humidity_defaultlevels",
-}
+    check_ruleset_name="humidity",
+    default_levels_variable="hwg_humidity_defaultlevels",
+)

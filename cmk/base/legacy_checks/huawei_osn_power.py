@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_OSN
@@ -38,14 +39,14 @@ def check_huawei_osn_power(item, params, info):
                 yield state, "(warn/crit at %s/%s W)" % (warn, crit)
 
 
-check_info["huawei_osn_power"] = {
-    "detect": DETECT_HUAWEI_OSN,
-    "discovery_function": inventory_huawei_osn_power,
-    "check_function": check_huawei_osn_power,
-    "service_name": "Unit %s (Power)",
-    "fetch": SNMPTree(
+check_info["huawei_osn_power"] = LegacyCheckDefinition(
+    detect=DETECT_HUAWEI_OSN,
+    discovery_function=inventory_huawei_osn_power,
+    check_function=check_huawei_osn_power,
+    service_name="Unit %s (Power)",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.2.25.4.70.20.20.10.1",
         oids=["1", "2"],
     ),
-    "default_levels_variable": "huawei_osn_power_default_levels",
-}
+    default_levels_variable="huawei_osn_power_default_levels",
+)

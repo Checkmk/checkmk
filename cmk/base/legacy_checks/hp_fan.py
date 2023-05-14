@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, any_of, contains
+from cmk.base.check_api import all_of, any_of, contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -33,19 +33,19 @@ def check_hp_fan(item, _no_params, parsed):
     return statemap[parsed[item]]
 
 
-check_info["hp_fan"] = {
-    "detect": all_of(
+check_info["hp_fan"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "hp"),
         any_of(
             contains(".1.3.6.1.2.1.1.1.0", "5406rzl2"), contains(".1.3.6.1.2.1.1.1.0", "5412rzl2")
         ),
     ),
-    "parse_function": parse_hp_fan,
-    "discovery_function": inventory_hp_fan,
-    "check_function": check_hp_fan,
-    "service_name": "Fan %s",
-    "fetch": SNMPTree(
+    parse_function=parse_hp_fan,
+    discovery_function=inventory_hp_fan,
+    check_function=check_hp_fan,
+    service_name="Fan %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.14.11.5.1.54.2.1.1",
         oids=[OIDEnd(), "2", "4"],
     ),
-}
+)

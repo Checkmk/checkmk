@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, startswith
+from cmk.base.check_api import any_of, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -17,18 +17,18 @@ qlogic_sanbox_status_map = [
     "failed",  # 5
 ]
 
-check_info["qlogic_sanbox"] = {
+check_info["qlogic_sanbox"] = LegacyCheckDefinition(
     # .1.3.6.1.4.1.3873.1.14 Qlogic-Switch
     # .1.3.6.1.4.1.3873.1.8  Qlogic-4Gb SAN Switch Module for IBM BladeCenter
-    "detect": any_of(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.14"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.8"),
     ),
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.3.94.1.8.1",
         oids=["3", "4", "6", "7", "8", OIDEnd()],
     ),
-}
+)
 
 #   .--temp----------------------------------------------------------------.
 #   |                       _                                              |
@@ -101,11 +101,11 @@ def check_qlogic_sanbox_temp(item, _no_params, info):
     return 3, "No sensor %s found" % item
 
 
-check_info["qlogic_sanbox.temp"] = {
-    "check_function": check_qlogic_sanbox_temp,
-    "discovery_function": inventory_qlogic_sanbox_temp,
-    "service_name": "Temperature Sensor %s",
-}
+check_info["qlogic_sanbox.temp"] = LegacyCheckDefinition(
+    check_function=check_qlogic_sanbox_temp,
+    discovery_function=inventory_qlogic_sanbox_temp,
+    service_name="Temperature Sensor %s",
+)
 
 # .
 #   .--power supplies------------------------------------------------------.
@@ -165,8 +165,8 @@ def check_qlogic_sanbox_psu(item, _no_params, info):
     return 3, "No sensor %s found" % item
 
 
-check_info["qlogic_sanbox.psu"] = {
-    "check_function": check_qlogic_sanbox_psu,
-    "discovery_function": inventory_qlogic_sanbox_psu,
-    "service_name": "PSU %s",
-}
+check_info["qlogic_sanbox.psu"] = LegacyCheckDefinition(
+    check_function=check_qlogic_sanbox_psu,
+    discovery_function=inventory_qlogic_sanbox_psu,
+    service_name="PSU %s",
+)

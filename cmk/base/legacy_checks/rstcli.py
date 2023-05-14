@@ -46,7 +46,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data, MKGeneralException
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition, MKGeneralException
 from cmk.base.config import check_info
 
 
@@ -140,12 +140,12 @@ def check_rstcli(_item, _no_params, volume):
     )
 
 
-check_info["rstcli"] = {
-    "check_function": check_rstcli,
-    "discovery_function": inventory_rstcli,
-    "parse_function": parse_rstcli,
-    "service_name": "RAID Volume %s",
-}
+check_info["rstcli"] = LegacyCheckDefinition(
+    check_function=check_rstcli,
+    discovery_function=inventory_rstcli,
+    parse_function=parse_rstcli,
+    service_name="RAID Volume %s",
+)
 
 
 def inventory_rstcli_pdisks(parsed):
@@ -172,8 +172,8 @@ def check_rstcli_pdisks(item, _no_params, parsed):
     return None
 
 
-check_info["rstcli.pdisks"] = {
-    "check_function": check_rstcli_pdisks,
-    "discovery_function": inventory_rstcli_pdisks,
-    "service_name": "RAID Disk %s",
-}
+check_info["rstcli.pdisks"] = LegacyCheckDefinition(
+    check_function=check_rstcli_pdisks,
+    discovery_function=inventory_rstcli_pdisks,
+    service_name="RAID Disk %s",
+)

@@ -11,6 +11,7 @@
 # owncloud-test|18762|Incremental|Successful
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -55,8 +56,8 @@ def check_unitrends_backup(item, _no_params, info):
     return 3, "Schedule not found in Agent Output"
 
 
-check_info["unitrends_backup"] = {
-    "check_function": check_unitrends_backup,
-    "discovery_function": inventory_unitrends_backup,
-    "service_name": "Schedule %s",
-}
+check_info["unitrends_backup"] = LegacyCheckDefinition(
+    check_function=check_unitrends_backup,
+    discovery_function=inventory_unitrends_backup,
+    service_name="Schedule %s",
+)

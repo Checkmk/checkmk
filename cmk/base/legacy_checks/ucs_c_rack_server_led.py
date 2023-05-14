@@ -6,7 +6,7 @@
 
 from typing import Iterable
 
-from cmk.base.check_api import discover
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["ucs_c_rack_server_led_default_levels"] = {
@@ -32,10 +32,10 @@ def check_ucs_c_rack_server_led(
         yield state, "%s: %s" % (k, v)
 
 
-check_info["ucs_c_rack_server_led"] = {
-    "discovery_function": discover(),
-    "check_function": check_ucs_c_rack_server_led,
-    "service_name": "LED %s",
-    "check_ruleset_name": "ucs_c_rack_server_led",
-    "default_levels_variable": "ucs_c_rack_server_led_default_levels",
-}
+check_info["ucs_c_rack_server_led"] = LegacyCheckDefinition(
+    discovery_function=discover(),
+    check_function=check_ucs_c_rack_server_led,
+    service_name="LED %s",
+    check_ruleset_name="ucs_c_rack_server_led",
+    default_levels_variable="ucs_c_rack_server_led_default_levels",
+)

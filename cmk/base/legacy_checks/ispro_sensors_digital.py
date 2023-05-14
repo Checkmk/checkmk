@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ispro import DETECT_ISPRO_SENSORS
@@ -47,13 +48,13 @@ def check_ispro_sensors_digital(item, params, info):
     return None
 
 
-check_info["ispro_sensors_digital"] = {
-    "detect": DETECT_ISPRO_SENSORS,
-    "discovery_function": inventory_ispro_sensors_digital,
-    "check_function": check_ispro_sensors_digital,
-    "service_name": "Digital in %s",
-    "fetch": SNMPTree(
+check_info["ispro_sensors_digital"] = LegacyCheckDefinition(
+    detect=DETECT_ISPRO_SENSORS,
+    discovery_function=inventory_ispro_sensors_digital,
+    check_function=check_ispro_sensors_digital,
+    service_name="Digital in %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.19011.1.3.2.1.3",
         oids=["1.3.1.2", "1.3.1.4", "2.4.1.3"],
     ),
-}
+)

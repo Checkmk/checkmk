@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -104,13 +105,13 @@ def check_netgear_temp(item, params, parsed):
         )
 
 
-check_info["netgear_temp"] = {
-    "detect": DETECT_NETGEAR,
-    "parse_function": parse_netgear_temp,
-    "discovery_function": inventory_netgear_temp,
-    "check_function": check_netgear_temp,
-    "service_name": "Temperature %s",
-    "fetch": [
+check_info["netgear_temp"] = LegacyCheckDefinition(
+    detect=DETECT_NETGEAR,
+    parse_function=parse_netgear_temp,
+    discovery_function=inventory_netgear_temp,
+    check_function=check_netgear_temp,
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.4526.10.1.1.1",
             oids=["13"],
@@ -120,5 +121,5 @@ check_info["netgear_temp"] = {
             oids=[OIDEnd(), "2", "3", "4", "5"],
         ),
     ],
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

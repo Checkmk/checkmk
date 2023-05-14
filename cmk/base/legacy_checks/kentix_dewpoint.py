@@ -5,6 +5,7 @@
 
 from collections.abc import Iterable, Mapping
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -35,15 +36,15 @@ def check_kentix_dewpoint(item: str, params: TempParamType, section: Section) ->
     yield check_temperature(reading, params, "kentix_temp_%s" % item)
 
 
-check_info["kentix_dewpoint"] = {
-    "detect": DETECT_KENTIX,
-    "parse_function": parse_kentix_dewpoint,
-    "discovery_function": inventory_kentix_dewpoint,
-    "check_function": check_kentix_dewpoint,
-    "service_name": "Dewpoint %s",
-    "fetch": SNMPTree(
+check_info["kentix_dewpoint"] = LegacyCheckDefinition(
+    detect=DETECT_KENTIX,
+    parse_function=parse_kentix_dewpoint,
+    discovery_function=inventory_kentix_dewpoint,
+    check_function=check_kentix_dewpoint,
+    service_name="Dewpoint %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.37954",
         oids=["2.1.3.1", "3.1.2.1"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

@@ -6,7 +6,13 @@
 
 import time
 
-from cmk.base.check_api import any_of, equals, get_percent_human_readable, get_rate
+from cmk.base.check_api import (
+    any_of,
+    equals,
+    get_percent_human_readable,
+    get_rate,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -165,19 +171,19 @@ def check_docsis_channels_upstream(item, params, parsed):
                 yield state, infotext, [("codewords_" + what, ratio, warn / 100.0, crit / 100.0)]
 
 
-check_info["docsis_channels_upstream"] = {
-    "detect": any_of(
+check_info["docsis_channels_upstream"] = LegacyCheckDefinition(
+    detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.900.2.0.0.0.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.827"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20858.2.600"),
     ),
-    "parse_function": parse_docsis_channels_upstream,
-    "discovery_function": inventory_docsis_channels_upstream,
-    "check_function": check_docsis_channels_upstream,
-    "service_name": "Upstream Channel %s",
-    "fetch": [
+    parse_function=parse_docsis_channels_upstream,
+    discovery_function=inventory_docsis_channels_upstream,
+    check_function=check_docsis_channels_upstream,
+    service_name="Upstream Channel %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.10.127.1.1.2.1",
             oids=[OIDEnd(), "1", "2"],
@@ -191,6 +197,6 @@ check_info["docsis_channels_upstream"] = {
             oids=[OIDEnd(), "3", "4", "5", "7"],
         ),
     ],
-    "default_levels_variable": "docsis_channels_upstream_default_levels",
-    "check_ruleset_name": "docsis_channels_upstream",
-}
+    default_levels_variable="docsis_channels_upstream_default_levels",
+    check_ruleset_name="docsis_channels_upstream",
+)

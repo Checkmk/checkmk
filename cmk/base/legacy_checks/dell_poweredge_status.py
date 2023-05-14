@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.dell_poweredge import (
     check_dell_poweredge_status,
     inventory_dell_poweredge_status,
@@ -12,12 +13,12 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_IDRAC_POWEREDGE
 
-check_info["dell_poweredge_status"] = {
-    "detect": DETECT_IDRAC_POWEREDGE,
-    "check_function": check_dell_poweredge_status,
-    "discovery_function": inventory_dell_poweredge_status,
-    "service_name": "PowerEdge Health",
-    "fetch": SNMPTree(
+check_info["dell_poweredge_status"] = LegacyCheckDefinition(
+    detect=DETECT_IDRAC_POWEREDGE,
+    check_function=check_dell_poweredge_status,
+    discovery_function=inventory_dell_poweredge_status,
+    service_name="PowerEdge Health",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5",
         oids=[
             "1.1.6.0",
@@ -29,4 +30,4 @@ check_info["dell_poweredge_status"] = {
             "4.300.10.1.49.1",
         ],
     ),
-}
+)

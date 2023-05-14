@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info
 
@@ -39,9 +39,9 @@ def check_netapp_api_protocol(item, _no_params, parsed):
                 ]
 
 
-check_info["netapp_api_protocol"] = {
-    "parse_function": netapp_api_parse_lines,
-    "check_function": check_netapp_api_protocol,
-    "discovery_function": inventory_netapp_api_protocol,
-    "service_name": "Protocol %s",
-}
+check_info["netapp_api_protocol"] = LegacyCheckDefinition(
+    parse_function=netapp_api_parse_lines,
+    check_function=check_netapp_api_protocol,
+    discovery_function=inventory_netapp_api_protocol,
+    service_name="Protocol %s",
+)

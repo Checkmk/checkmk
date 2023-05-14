@@ -8,6 +8,7 @@
 # address 10.1.2.4
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -23,8 +24,8 @@ def check_mongodb_instance(_no_item, _no_params, info):
             yield 0, f"{status.title()}: {messg}"
 
 
-check_info["mongodb_instance"] = {
-    "check_function": check_mongodb_instance,
-    "discovery_function": inventory_mongodb_instance,
-    "service_name": "MongoDB Instance",
-}
+check_info["mongodb_instance"] = LegacyCheckDefinition(
+    check_function=check_mongodb_instance,
+    discovery_function=inventory_mongodb_instance,
+    service_name="MongoDB Instance",
+)

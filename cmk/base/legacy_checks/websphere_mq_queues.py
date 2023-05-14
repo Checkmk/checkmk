@@ -42,6 +42,7 @@ from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
     get_percent_human_readable,
+    LegacyCheckDefinition,
     MKCounterWrapped,
 )
 from cmk.base.config import check_info
@@ -155,10 +156,10 @@ def check_websphere_mq_queues(item, params, parsed):
             yield 0, "Messages processed"
 
 
-check_info["websphere_mq_queues"] = {
-    "parse_function": parse_websphere_mq_queues,
-    "discovery_function": inventory_websphere_mq_queues,
-    "check_function": check_websphere_mq_queues,
-    "service_name": "MQ Queue %s",
-    "check_ruleset_name": "websphere_mq",
-}
+check_info["websphere_mq_queues"] = LegacyCheckDefinition(
+    parse_function=parse_websphere_mq_queues,
+    discovery_function=inventory_websphere_mq_queues,
+    check_function=check_websphere_mq_queues,
+    service_name="MQ Queue %s",
+    check_ruleset_name="websphere_mq",
+)

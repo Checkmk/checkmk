@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State
 from cmk.base.plugins.agent_based.utils.megaraid import check_state
@@ -107,9 +108,9 @@ def check_megaraid_bbu(item, _no_params, section):
         yield 0, "All states as expected"
 
 
-check_info["megaraid_bbu"] = {
-    "parse_function": megaraid_bbu_parse,
-    "check_function": check_megaraid_bbu,
-    "discovery_function": discover_megaraid_bbu,
-    "service_name": "RAID BBU %s",
-}
+check_info["megaraid_bbu"] = LegacyCheckDefinition(
+    parse_function=megaraid_bbu_parse,
+    check_function=check_megaraid_bbu,
+    discovery_function=discover_megaraid_bbu,
+    service_name="RAID BBU %s",
+)

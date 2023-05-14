@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data
+from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -94,13 +94,13 @@ def check_ibm_svc_enclosure(item, params, data):
         yield state, infotext
 
 
-check_info["ibm_svc_enclosure"] = {
-    "parse_function": parse_ibm_svc_enclosure,
-    "check_function": check_ibm_svc_enclosure,
-    "discovery_function": discover(),
-    "service_name": "Enclosure %s",
-    "check_ruleset_name": "ibm_svc_enclosure",
-}
+check_info["ibm_svc_enclosure"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_svc_enclosure,
+    check_function=check_ibm_svc_enclosure,
+    discovery_function=discover(),
+    service_name="Enclosure %s",
+    check_ruleset_name="ibm_svc_enclosure",
+)
 
 #   .--helper--------------------------------------------------------------.
 #   |                    _          _                                      |

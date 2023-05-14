@@ -8,7 +8,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 MAP_RPO_STATES = {
@@ -42,10 +42,10 @@ def check_zerto_vpg_rpo(_item, _params, data):
     yield state, "VPG Status: %s" % vpg_info
 
 
-check_info["zerto_vpg_rpo"] = {
-    "parse_function": parse_zerto_vpg,
-    "discovery_function": discover(),
-    "check_function": check_zerto_vpg_rpo,
-    "service_name": "Zerto VPG RPO %s",
-    "check_ruleset_name": "zerto_vpg_rpo",
-}
+check_info["zerto_vpg_rpo"] = LegacyCheckDefinition(
+    parse_function=parse_zerto_vpg,
+    discovery_function=discover(),
+    check_function=check_zerto_vpg_rpo,
+    service_name="Zerto VPG RPO %s",
+    check_ruleset_name="zerto_vpg_rpo",
+)

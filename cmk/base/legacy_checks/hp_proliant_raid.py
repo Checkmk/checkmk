@@ -8,7 +8,11 @@
 
 import typing
 
-from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
+from cmk.base.check_api import (
+    get_bytes_human_readable,
+    get_percent_human_readable,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.hp_proliant import DETECT
@@ -86,14 +90,14 @@ def check_hp_proliant_raid(item, _no_params, parsed):
     yield 0, f"Rebuild: {get_percent_human_readable(raid_stats.rebuild_percent)}"
 
 
-check_info["hp_proliant_raid"] = {
-    "detect": DETECT,
-    "parse_function": parse_hp_proliant_raid,
-    "check_function": check_hp_proliant_raid,
-    "discovery_function": inventory_hp_proliant_raid,
-    "service_name": "Logical Device %s",
-    "fetch": SNMPTree(
+check_info["hp_proliant_raid"] = LegacyCheckDefinition(
+    detect=DETECT,
+    parse_function=parse_hp_proliant_raid,
+    check_function=check_hp_proliant_raid,
+    discovery_function=inventory_hp_proliant_raid,
+    service_name="Logical Device %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.3.2.3.1.1",
         oids=["2", "14", "4", "9", "12"],
     ),
-}
+)

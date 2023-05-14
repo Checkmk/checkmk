@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_parsed_item_data
+from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.hp_msa import (
     check_hp_msa_health,
     inventory_hp_msa_health,
@@ -57,12 +57,12 @@ from cmk.base.config import check_info, factory_settings
 #   |                            main check                                |
 #   '----------------------------------------------------------------------'
 
-check_info["hp_msa_psu"] = {
-    "parse_function": parse_hp_msa,
-    "discovery_function": inventory_hp_msa_health,
-    "check_function": check_hp_msa_health,
-    "service_name": "Power Supply Health %s",
-}
+check_info["hp_msa_psu"] = LegacyCheckDefinition(
+    parse_function=parse_hp_msa,
+    discovery_function=inventory_hp_msa_health,
+    check_function=check_hp_msa_health,
+    service_name="Power Supply Health %s",
+)
 
 # .
 #   .--voltage-------------------------------------------------------------.
@@ -110,13 +110,13 @@ def check_hp_msa_psu(_item, params, data):
         yield check_levels(psu_voltage, None, levels, unit="V", infoname=psu_type_readable)
 
 
-check_info["hp_msa_psu.sensor"] = {
-    "discovery_function": inventory_hp_msa_psu,
-    "check_function": check_hp_msa_psu,
-    "service_name": "Power Supply Voltage %s",
-    "default_levels_variable": "hp_msa_psu_default_levels",
-    "check_ruleset_name": "hp_msa_psu_voltage",
-}
+check_info["hp_msa_psu.sensor"] = LegacyCheckDefinition(
+    discovery_function=inventory_hp_msa_psu,
+    check_function=check_hp_msa_psu,
+    service_name="Power Supply Voltage %s",
+    default_levels_variable="hp_msa_psu_default_levels",
+    check_ruleset_name="hp_msa_psu_voltage",
+)
 
 # .
 #   .--temperature---------------------------------------------------------.
@@ -138,10 +138,10 @@ def check_hp_msa_psu_temp(item, params, data):
     return check_temperature(float(data["dctemp"]), params, "hp_msa_psu_temp_%s" % item)
 
 
-check_info["hp_msa_psu.temp"] = {
-    "discovery_function": inventory_hp_msa_psu,
-    "check_function": check_hp_msa_psu_temp,
-    "service_name": "Temperature Power Supply %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "hp_msa_psu_temp_default_levels",
-}
+check_info["hp_msa_psu.temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_hp_msa_psu,
+    check_function=check_hp_msa_psu_temp,
+    service_name="Temperature Power Supply %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="hp_msa_psu_temp_default_levels",
+)

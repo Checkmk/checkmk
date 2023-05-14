@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -34,17 +34,17 @@ def check_ups_socomec_outphase(item, params, parsed):
     return check_elphase(item, params, parsed)
 
 
-check_info["ups_socomec_outphase"] = {
-    "detect": DETECT_SOCOMEC,
-    "parse_function": parse_ups_socomec_outphase,
-    "discovery_function": discover(),
-    "check_function": check_ups_socomec_outphase,
-    "default_levels_variable": "socomec_outphase_default_levels",
-    "service_name": "Output %s",
-    "check_ruleset_name": "ups_outphase",
+check_info["ups_socomec_outphase"] = LegacyCheckDefinition(
+    detect=DETECT_SOCOMEC,
+    parse_function=parse_ups_socomec_outphase,
+    discovery_function=discover(),
+    check_function=check_ups_socomec_outphase,
+    default_levels_variable="socomec_outphase_default_levels",
+    service_name="Output %s",
+    check_ruleset_name="ups_outphase",
     # Phase Index, Voltage/dV, Current/dA, Load/%
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.4.4.1",
         oids=["1", "2", "3", "4"],
     ),
-}
+)

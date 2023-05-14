@@ -75,6 +75,7 @@
 # total_drive_raw_capacity:0
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -92,8 +93,8 @@ def check_ibm_svc_system(item, _no_params, info):
     return 0, message
 
 
-check_info["ibm_svc_system"] = {
-    "check_function": check_ibm_svc_system,
-    "discovery_function": inventory_ibm_svc_system,
-    "service_name": "Info",
-}
+check_info["ibm_svc_system"] = LegacyCheckDefinition(
+    check_function=check_ibm_svc_system,
+    discovery_function=inventory_ibm_svc_system,
+    service_name="Info",
+)

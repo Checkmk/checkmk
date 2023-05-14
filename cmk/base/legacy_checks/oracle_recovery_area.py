@@ -12,7 +12,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import get_bytes_human_readable, MKCounterWrapped
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["oracle_recovery_area_defaults"] = {
@@ -65,10 +65,10 @@ def check_oracle_recovery_area(item, params, info):
     raise MKCounterWrapped("Login into database failed")
 
 
-check_info["oracle_recovery_area"] = {
-    "check_function": check_oracle_recovery_area,
-    "discovery_function": inventory_oracle_recovery_area,
-    "service_name": "ORA %s Recovery Area",
-    "default_levels_variable": "oracle_recovery_area_defaults",
-    "check_ruleset_name": "oracle_recovery_area",
-}
+check_info["oracle_recovery_area"] = LegacyCheckDefinition(
+    check_function=check_oracle_recovery_area,
+    discovery_function=inventory_oracle_recovery_area,
+    service_name="ORA %s Recovery Area",
+    default_levels_variable="oracle_recovery_area_defaults",
+    check_ruleset_name="oracle_recovery_area",
+)

@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
@@ -42,14 +43,14 @@ def check_hitachi_hnas_drives(_no_item, params, info):
         yield status_map[int(status) - 1][1], infotext
 
 
-check_info["hitachi_hnas_drives"] = {
-    "detect": DETECT,
-    "check_function": check_hitachi_hnas_drives,
-    "discovery_function": inventory_hitachi_hnas_drives,
-    "parse_function": parse_hitachi_hnas_drives,
-    "service_name": "System Drives",
-    "fetch": SNMPTree(
+check_info["hitachi_hnas_drives"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_hitachi_hnas_drives,
+    discovery_function=inventory_hitachi_hnas_drives,
+    parse_function=parse_hitachi_hnas_drives,
+    service_name="System Drives",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.1.3.4.2.1",
         oids=["4"],
     ),
-}
+)

@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -137,37 +137,37 @@ def check_tinkerforge_motion(item, params, parsed):
         return 0, "No motion detected", [("motion", reading)]
 
 
-check_info["tinkerforge"] = {
-    "discovery_function": lambda parsed: inventory_tinkerforge("master", parsed),
-    "check_function": check_tinkerforge_master,
-    "parse_function": parse_tinkerforge,
-    "service_name": "Master %s",
-}
+check_info["tinkerforge"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_tinkerforge("master", parsed),
+    check_function=check_tinkerforge_master,
+    parse_function=parse_tinkerforge,
+    service_name="Master %s",
+)
 
-check_info["tinkerforge.temperature"] = {
-    "discovery_function": lambda parsed: inventory_tinkerforge("temperature", parsed),
-    "check_function": check_tinkerforge_temperature,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-}
+check_info["tinkerforge.temperature"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_tinkerforge("temperature", parsed),
+    check_function=check_tinkerforge_temperature,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+)
 
-check_info["tinkerforge.ambient"] = {
-    "discovery_function": lambda parsed: inventory_tinkerforge("ambient", parsed),
-    "check_function": check_tinkerforge_ambient,
-    "check_ruleset_name": "brightness",
-    "service_name": "Ambient Light %s",
-}
+check_info["tinkerforge.ambient"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_tinkerforge("ambient", parsed),
+    check_function=check_tinkerforge_ambient,
+    check_ruleset_name="brightness",
+    service_name="Ambient Light %s",
+)
 
-check_info["tinkerforge.humidity"] = {
-    "discovery_function": lambda parsed: inventory_tinkerforge("humidity", parsed),
-    "check_function": check_tinkerforge_humidity,
-    "check_ruleset_name": "humidity",
-    "service_name": "Humidity %s",
-}
+check_info["tinkerforge.humidity"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_tinkerforge("humidity", parsed),
+    check_function=check_tinkerforge_humidity,
+    check_ruleset_name="humidity",
+    service_name="Humidity %s",
+)
 
-check_info["tinkerforge.motion"] = {
-    "discovery_function": lambda parsed: inventory_tinkerforge("motion", parsed),
-    "check_function": check_tinkerforge_motion,
-    "check_ruleset_name": "motion",
-    "service_name": "Motion Detector %s",
-}
+check_info["tinkerforge.motion"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_tinkerforge("motion", parsed),
+    check_function=check_tinkerforge_motion,
+    check_ruleset_name="motion",
+    service_name="Motion Detector %s",
+)

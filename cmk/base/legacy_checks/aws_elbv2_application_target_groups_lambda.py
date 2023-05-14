@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, MKCounterWrapped
+from cmk.base.check_api import discover, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.aws import (
     aws_get_parsed_item_data,
     check_aws_error_rate,
@@ -42,10 +42,10 @@ def check_aws_application_elb_target_groups_lambda(item, params, data):
         yield result
 
 
-check_info["aws_elbv2_application_target_groups_lambda"] = {
-    "parse_function": parse_aws_elbv2_target_groups_lambda,
-    "discovery_function": discover(lambda k, v: "RequestCount" in v),
-    "check_function": check_aws_application_elb_target_groups_lambda,
-    "service_name": "AWS/ApplicationELB Lambda %s",
-    "check_ruleset_name": "aws_elbv2_target_errors",
-}
+check_info["aws_elbv2_application_target_groups_lambda"] = LegacyCheckDefinition(
+    parse_function=parse_aws_elbv2_target_groups_lambda,
+    discovery_function=discover(lambda k, v: "RequestCount" in v),
+    check_function=check_aws_application_elb_target_groups_lambda,
+    service_name="AWS/ApplicationELB Lambda %s",
+    check_ruleset_name="aws_elbv2_target_errors",
+)

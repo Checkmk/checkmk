@@ -14,6 +14,7 @@
 # Power Supply 2 Power Supply 2 0: Power Supply AC lost - Assert;;0;power;0;;red;Red;Sensor is operating under critical conditions
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -54,9 +55,9 @@ def check_esx_vsphere_sensors(_no_item, params, info):
     yield 0, "\n".join(mulitline)
 
 
-check_info["esx_vsphere_sensors"] = {
-    "discovery_function": inventory_esx_vsphere_sensors,
-    "check_function": check_esx_vsphere_sensors,
-    "service_name": "Hardware Sensors",
-    "check_ruleset_name": "hostsystem_sensors",
-}
+check_info["esx_vsphere_sensors"] = LegacyCheckDefinition(
+    discovery_function=inventory_esx_vsphere_sensors,
+    check_function=check_esx_vsphere_sensors,
+    service_name="Hardware Sensors",
+    check_ruleset_name="hostsystem_sensors",
+)

@@ -6,7 +6,12 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, get_parsed_item_data, get_percent_human_readable
+from cmk.base.check_api import (
+    check_levels,
+    get_parsed_item_data,
+    get_percent_human_readable,
+    LegacyCheckDefinition,
+)
 from cmk.base.check_legacy_includes.huawei_switch import huawei_item_dict_from_entities
 from cmk.base.config import check_info
 
@@ -51,15 +56,15 @@ def check_huawei_switch_fan(item, params, item_data):
     )
 
 
-check_info["huawei_switch_fan"] = {
-    "detect": DETECT_HUAWEI_SWITCH,
-    "parse_function": parse_huawei_switch_fan,
-    "discovery_function": inventory_huawei_switch_fan,
-    "check_function": check_huawei_switch_fan,
-    "service_name": "Fan %s",
-    "fetch": SNMPTree(
+check_info["huawei_switch_fan"] = LegacyCheckDefinition(
+    detect=DETECT_HUAWEI_SWITCH,
+    parse_function=parse_huawei_switch_fan,
+    discovery_function=inventory_huawei_switch_fan,
+    check_function=check_huawei_switch_fan,
+    service_name="Fan %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.5.25.31.1.1.10.1",
         oids=[OIDEnd(), "5", "6"],
     ),
-    "check_ruleset_name": "hw_fans_perc",
-}
+    check_ruleset_name="hw_fans_perc",
+)

@@ -109,6 +109,7 @@
 #   +----------------------------------------------------------------------+
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -144,11 +145,11 @@ def check_msexch_dag_dbcopy(item, params, info):
     return None
 
 
-check_info["msexch_dag.dbcopy"] = {
-    "discovery_function": inventory_msexch_dag_dbcopy,
-    "check_function": check_msexch_dag_dbcopy,
-    "service_name": "Exchange DAG DBCopy for %s",
-}
+check_info["msexch_dag.dbcopy"] = LegacyCheckDefinition(
+    discovery_function=inventory_msexch_dag_dbcopy,
+    check_function=check_msexch_dag_dbcopy,
+    service_name="Exchange DAG DBCopy for %s",
+)
 
 # .
 #   .--contentindex--------------------------------------------------------.
@@ -183,11 +184,11 @@ def check_msexch_dag_contentindex(item, _no_params, info):
     return None
 
 
-check_info["msexch_dag.contentindex"] = {
-    "discovery_function": inventory_msexch_dag_contentindex,
-    "check_function": check_msexch_dag_contentindex,
-    "service_name": "Exchange DAG ContentIndex of %s",
-}
+check_info["msexch_dag.contentindex"] = LegacyCheckDefinition(
+    discovery_function=inventory_msexch_dag_contentindex,
+    check_function=check_msexch_dag_contentindex,
+    service_name="Exchange DAG ContentIndex of %s",
+)
 
 # .
 #   .--copyqueue-----------------------------------------------------------.
@@ -231,9 +232,9 @@ def check_msexch_dag_copyqueue(item, params, info):
     return None
 
 
-check_info["msexch_dag.copyqueue"] = {
-    "discovery_function": inventory_msexch_dag_copyqueue,
-    "check_function": check_msexch_dag_copyqueue,
-    "service_name": "Exchange DAG CopyQueue of %s",
-    "check_ruleset_name": "msexch_copyqueue",
-}
+check_info["msexch_dag.copyqueue"] = LegacyCheckDefinition(
+    discovery_function=inventory_msexch_dag_copyqueue,
+    check_function=check_msexch_dag_copyqueue,
+    service_name="Exchange DAG CopyQueue of %s",
+    check_ruleset_name="msexch_copyqueue",
+)

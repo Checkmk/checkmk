@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import all_of, any_of, exists, startswith
+from cmk.base.check_api import all_of, any_of, exists, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -30,25 +30,25 @@ def check_fast_lta_silent_cubes_status(item, params, info):
     return df_check_filesystem_list(item, params, fslist)
 
 
-check_info["fast_lta_silent_cubes"] = {
-    "detect": all_of(
+check_info["fast_lta_silent_cubes"] = LegacyCheckDefinition(
+    detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         any_of(
             exists(".1.3.6.1.4.1.27417.3.2"),
             exists(".1.3.6.1.4.1.27417.3.2.0"),
         ),
     ),
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.27417.3",
         oids=["2", "3"],
     ),
-}
+)
 
 
-check_info["fast_lta_silent_cubes.capacity"] = {
-    "check_function": check_fast_lta_silent_cubes_status,
-    "discovery_function": inventory_fast_lta_silent_cubes_status,
-    "service_name": "Fast LTA SC Capacity %s",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["fast_lta_silent_cubes.capacity"] = LegacyCheckDefinition(
+    check_function=check_fast_lta_silent_cubes_status,
+    discovery_function=inventory_fast_lta_silent_cubes_status,
+    service_name="Fast LTA SC Capacity %s",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)

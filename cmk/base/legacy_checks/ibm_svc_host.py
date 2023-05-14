@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover_single
+from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -101,10 +101,10 @@ def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branch
             yield state, "%s %s" % (value, ident), [(ident, value, warn, crit)]
 
 
-check_info["ibm_svc_host"] = {
-    "parse_function": parse_ibm_svc_host,
-    "check_function": check_ibm_svc_host,
-    "discovery_function": discover_single,
-    "service_name": "Hosts",
-    "check_ruleset_name": "ibm_svc_host",
-}
+check_info["ibm_svc_host"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_svc_host,
+    check_function=check_ibm_svc_host,
+    discovery_function=discover_single,
+    service_name="Hosts",
+    check_ruleset_name="ibm_svc_host",
+)

@@ -9,7 +9,7 @@
 import re
 
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 sap_hana_connect_state_map = {
@@ -65,9 +65,9 @@ def check_sap_hana_connect(item, params, parsed):
     yield state, message
 
 
-check_info["sap_hana_connect"] = {
-    "parse_function": parse_sap_hana_connect,
-    "discovery_function": discover(),
-    "check_function": check_sap_hana_connect,
-    "service_name": "SAP HANA CONNECT %s",
-}
+check_info["sap_hana_connect"] = LegacyCheckDefinition(
+    parse_function=parse_sap_hana_connect,
+    discovery_function=discover(),
+    check_function=check_sap_hana_connect,
+    service_name="SAP HANA CONNECT %s",
+)

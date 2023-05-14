@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_CHASSIS
@@ -31,13 +32,13 @@ def check_dell_chassis_fans(_no_item, _no_params, info):
     return state, infotext
 
 
-check_info["dell_chassis_fans"] = {
-    "detect": DETECT_CHASSIS,
-    "check_function": check_dell_chassis_fans,
-    "discovery_function": inventory_dell_chassis_fans,
-    "service_name": "Overall Fan Status",
-    "fetch": SNMPTree(
+check_info["dell_chassis_fans"] = LegacyCheckDefinition(
+    detect=DETECT_CHASSIS,
+    check_function=check_dell_chassis_fans,
+    discovery_function=inventory_dell_chassis_fans,
+    service_name="Overall Fan Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2.3.1",
         oids=["6"],
     ),
-}
+)

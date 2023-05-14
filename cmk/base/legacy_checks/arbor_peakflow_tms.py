@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.arbor import (
     ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
     check_arbor_disk_usage,
@@ -46,15 +46,15 @@ def parse_peakflow_tms(info):
     }
 
 
-check_info["arbor_peakflow_tms"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.1.0", "Peakflow"),
-    "check_function": check_arbor_memory,
-    "discovery_function": inventory_arbor_memory,
-    "parse_function": parse_peakflow_tms,
-    "service_name": "Memory",
-    "check_ruleset_name": "memory_arbor",
-    "default_levels_variable": "arbor_memory_default_levels",
-    "fetch": [
+check_info["arbor_peakflow_tms"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.1.0", "Peakflow"),
+    check_function=check_arbor_memory,
+    discovery_function=inventory_arbor_memory,
+    parse_function=parse_peakflow_tms,
+    service_name="Memory",
+    check_ruleset_name="memory_arbor",
+    default_levels_variable="arbor_memory_default_levels",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9694.1.5.2",
             oids=["6.0", "7.0", "8.0", "1.0"],
@@ -64,21 +64,21 @@ check_info["arbor_peakflow_tms"] = {
             oids=["1.2.0", "2.1.0"],
         ),
     ],
-}
+)
 
-check_info["arbor_peakflow_tms.disk_usage"] = {
-    "check_function": check_arbor_disk_usage,
-    "discovery_function": inventory_arbor_disk_usage,
-    "service_name": "Disk Usage %s",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["arbor_peakflow_tms.disk_usage"] = LegacyCheckDefinition(
+    check_function=check_arbor_disk_usage,
+    discovery_function=inventory_arbor_disk_usage,
+    service_name="Disk Usage %s",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)
 
-check_info["arbor_peakflow_tms.host_fault"] = {
-    "check_function": check_arbor_host_fault,
-    "discovery_function": inventory_arbor_host_fault,
-    "service_name": "Host Fault",
-}
+check_info["arbor_peakflow_tms.host_fault"] = LegacyCheckDefinition(
+    check_function=check_arbor_host_fault,
+    discovery_function=inventory_arbor_host_fault,
+    service_name="Host Fault",
+)
 
 
 def inventory_peakflow_tms_updates(parsed):
@@ -92,8 +92,8 @@ def check_peakflow_tms_updates(item, _no_params, parsed):
     return None
 
 
-check_info["arbor_peakflow_tms.updates"] = {
-    "check_function": check_peakflow_tms_updates,
-    "discovery_function": inventory_peakflow_tms_updates,
-    "service_name": "Config Update %s",
-}
+check_info["arbor_peakflow_tms.updates"] = LegacyCheckDefinition(
+    check_function=check_peakflow_tms_updates,
+    discovery_function=inventory_peakflow_tms_updates,
+    service_name="Config Update %s",
+)

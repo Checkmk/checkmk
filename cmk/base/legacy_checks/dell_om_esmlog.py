@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_OPENMANAGE
@@ -30,14 +31,14 @@ def check_dell_om_esmlog(_no_item, _no_params, info):
     return state, message
 
 
-check_info["dell_om_esmlog"] = {
-    "detect": DETECT_OPENMANAGE,
-    "check_function": check_dell_om_esmlog,
-    "discovery_function": inventory_dell_om_esmlog,
-    "service_name": "ESM Log",
+check_info["dell_om_esmlog"] = LegacyCheckDefinition(
+    detect=DETECT_OPENMANAGE,
+    check_function=check_dell_om_esmlog,
+    discovery_function=inventory_dell_om_esmlog,
+    service_name="ESM Log",
     # There is no other way to find out that openmanage is present.
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.1.200.10.1.41",
         oids=["1"],
     ),
-}
+)

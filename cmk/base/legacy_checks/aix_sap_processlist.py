@@ -37,7 +37,7 @@
 import re
 import time
 
-from cmk.base.check_api import get_age_human_readable
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -104,9 +104,9 @@ def check_aix_sap_processlist(item, _no_params, parsed):
     return None
 
 
-check_info["aix_sap_processlist"] = {
-    "parse_function": parse_aix_sap_processlist,
-    "discovery_function": inventory_aix_sap_processlist,
-    "check_function": check_aix_sap_processlist,
-    "service_name": "SAP Process %s",
-}
+check_info["aix_sap_processlist"] = LegacyCheckDefinition(
+    parse_function=parse_aix_sap_processlist,
+    discovery_function=inventory_aix_sap_processlist,
+    check_function=check_aix_sap_processlist,
+    service_name="SAP Process %s",
+)

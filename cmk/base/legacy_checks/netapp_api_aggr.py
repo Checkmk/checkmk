@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info, factory_settings
@@ -37,11 +37,11 @@ def check_netapp_api_aggr(item, params, aggr):
     return df_check_filesystem_list(item, params, [(item, size_total, size_avail, 0)])
 
 
-check_info["netapp_api_aggr"] = {
-    "check_function": check_netapp_api_aggr,
-    "parse_function": netapp_api_parse_lines,
-    "discovery_function": inventory_netapp_api_aggr,
-    "service_name": "Aggregation %s",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["netapp_api_aggr"] = LegacyCheckDefinition(
+    check_function=check_netapp_api_aggr,
+    parse_function=netapp_api_parse_lines,
+    discovery_function=inventory_netapp_api_aggr,
+    service_name="Aggregation %s",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)

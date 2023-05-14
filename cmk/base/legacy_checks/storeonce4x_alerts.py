@@ -6,7 +6,7 @@
 
 import json
 
-from cmk.base.check_api import discover_single
+from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 STATUS_MAP = {"CRITICAL": 2, "WARNING": 1, "OK": 0, "UNKNOWN": 3, "DISABLED": 3}
@@ -45,9 +45,9 @@ def check_storeonce4x_alerts(_item, _param, parsed):
     )
 
 
-check_info["storeonce4x_alerts"] = {
-    "parse_function": parse_storeonce4x_alerts,
-    "discovery_function": discover_single,
-    "check_function": check_storeonce4x_alerts,
-    "service_name": "Alerts",
-}
+check_info["storeonce4x_alerts"] = LegacyCheckDefinition(
+    parse_function=parse_storeonce4x_alerts,
+    discovery_function=discover_single,
+    check_function=check_storeonce4x_alerts,
+    service_name="Alerts",
+)

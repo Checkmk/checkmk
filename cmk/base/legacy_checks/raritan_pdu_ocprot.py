@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, contains, get_parsed_item_data
+from cmk.base.check_api import check_levels, contains, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -75,14 +75,14 @@ def check_raritan_pdu_ocprot(item, params, data):
         yield check_levels(data["current"], "current", params, unit="A", infoname="Current")
 
 
-check_info["raritan_pdu_ocprot"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", "13742"),
-    "parse_function": parse_raritan_pdu_ocprot,
-    "discovery_function": discover_raritan_pdu_ocprot,
-    "check_function": check_raritan_pdu_ocprot,
-    "service_name": "Overcurrent Protector %s",
-    "check_ruleset_name": "ocprot_current",
-    "fetch": [
+check_info["raritan_pdu_ocprot"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", "13742"),
+    parse_function=parse_raritan_pdu_ocprot,
+    discovery_function=discover_raritan_pdu_ocprot,
+    check_function=check_raritan_pdu_ocprot,
+    service_name="Overcurrent Protector %s",
+    check_ruleset_name="ocprot_current",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.13742.6.5.3.3.1",
             oids=[OIDEnd(), "3", "4"],
@@ -92,4 +92,4 @@ check_info["raritan_pdu_ocprot"] = {
             oids=["7"],
         ),
     ],
-}
+)

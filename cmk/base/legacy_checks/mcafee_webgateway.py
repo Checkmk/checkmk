@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels, contains, get_rate
+from cmk.base.check_api import check_levels, contains, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mcafee_gateway import inventory_mcafee_gateway_generic
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -42,15 +42,15 @@ def check_mcafee_webgateway(_no_item, params, parsed):
         )
 
 
-check_info["mcafee_webgateway"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "mcafee web gateway"),
-    "parse_function": parse_mcaffee_webgateway,
-    "discovery_function": inventory_mcafee_gateway_generic,
-    "check_function": check_mcafee_webgateway,
-    "service_name": "Web gateway statistics",
-    "fetch": SNMPTree(
+check_info["mcafee_webgateway"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.1.0", "mcafee web gateway"),
+    parse_function=parse_mcaffee_webgateway,
+    discovery_function=inventory_mcafee_gateway_generic,
+    check_function=check_mcafee_webgateway,
+    service_name="Web gateway statistics",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.1230.2.7.2.1",
         oids=["2", "5"],
     ),
-    "check_ruleset_name": "mcafee_web_gateway",
-}
+    check_ruleset_name="mcafee_web_gateway",
+)

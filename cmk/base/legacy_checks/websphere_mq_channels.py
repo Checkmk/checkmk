@@ -17,7 +17,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_percent_human_readable
+from cmk.base.check_api import get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["websphere_mq_channels_default_levels"] = {
@@ -110,11 +110,11 @@ def check_websphere_mq_channels(item, params, parsed):
             yield state, infotext
 
 
-check_info["websphere_mq_channels"] = {
-    "parse_function": parse_websphere_mq_channels,
-    "check_function": check_websphere_mq_channels,
-    "discovery_function": inventory_websphere_mq_channels,
-    "service_name": "MQ Channel %s",
-    "default_levels_variable": "websphere_mq_channels_default_levels",
-    "check_ruleset_name": "websphere_mq_channels",
-}
+check_info["websphere_mq_channels"] = LegacyCheckDefinition(
+    parse_function=parse_websphere_mq_channels,
+    check_function=check_websphere_mq_channels,
+    discovery_function=inventory_websphere_mq_channels,
+    service_name="MQ Channel %s",
+    default_levels_variable="websphere_mq_channels_default_levels",
+    check_ruleset_name="websphere_mq_channels",
+)

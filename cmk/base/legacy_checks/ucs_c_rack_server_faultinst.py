@@ -9,6 +9,7 @@ from collections.abc import Iterable
 from typing import Dict, List, Tuple
 
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -51,8 +52,8 @@ def check_ucs_c_rack_server_faultinst(
         start_str = ""
 
 
-check_info["ucs_c_rack_server_faultinst"] = {
-    "discovery_function": lambda p: [(None, {})],
-    "check_function": check_ucs_c_rack_server_faultinst,
-    "service_name": "Fault Instances Rack",
-}
+check_info["ucs_c_rack_server_faultinst"] = LegacyCheckDefinition(
+    discovery_function=lambda p: [(None, {})],
+    check_function=check_ucs_c_rack_server_faultinst,
+    service_name="Fault Instances Rack",
+)

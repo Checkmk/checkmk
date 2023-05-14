@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -46,12 +46,12 @@ def check_adva_fsp_temp(item, params, info):
     return None
 
 
-check_info["adva_fsp_temp"] = {
-    "detect": equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
-    "discovery_function": inventory_adva_fsp_temp,
-    "check_function": check_adva_fsp_temp,
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["adva_fsp_temp"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
+    discovery_function=inventory_adva_fsp_temp,
+    check_function=check_adva_fsp_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2544",
         oids=[
             "1.11.2.4.2.1.1.1",
@@ -61,6 +61,6 @@ check_info["adva_fsp_temp"] = {
             "2.5.5.2.1.5",
         ],
     ),
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "adva_fsp_temp_default_levels",
-}
+    check_ruleset_name="temperature",
+    default_levels_variable="adva_fsp_temp_default_levels",
+)

@@ -113,6 +113,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -235,10 +236,10 @@ def check_md(item, _no_params, parsed):  # pylint: disable=too-many-branches
         yield 1, "%s %s" % (header, ", ".join(infotexts))
 
 
-check_info["md"] = {
-    "parse_function": parse_md,
-    "discovery_function": inventory_md,
-    "check_function": check_md,
-    "service_name": "MD Softraid %s",
-    "check_ruleset_name": "raid",
-}
+check_info["md"] = LegacyCheckDefinition(
+    parse_function=parse_md,
+    discovery_function=inventory_md,
+    check_function=check_md,
+    service_name="MD Softraid %s",
+    check_ruleset_name="raid",
+)

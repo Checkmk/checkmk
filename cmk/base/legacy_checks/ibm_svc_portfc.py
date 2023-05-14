@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -92,9 +92,9 @@ def check_ibm_svc_portfc(item, _no_params, data):
     return state, infotext
 
 
-check_info["ibm_svc_portfc"] = {
-    "parse_function": parse_ibm_svc_portfc,
-    "check_function": check_ibm_svc_portfc,
-    "discovery_function": inventory_ibm_svc_portfc,
-    "service_name": "FC %s",
-}
+check_info["ibm_svc_portfc"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_svc_portfc,
+    check_function=check_ibm_svc_portfc,
+    discovery_function=inventory_ibm_svc_portfc,
+    service_name="FC %s",
+)

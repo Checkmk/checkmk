@@ -8,7 +8,7 @@
 
 import re
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -27,9 +27,9 @@ brocade_mlx_states = {
     11: (0, "Blocked for full height card"),
 }
 
-check_info["brocade_mlx"] = {
-    "detect": DETECT_MLX,
-    "fetch": [
+check_info["brocade_mlx"] = LegacyCheckDefinition(
+    detect=DETECT_MLX,
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1991.1.1.2.2.1.1",
             oids=["1", "2", "12", "24", "25"],
@@ -39,7 +39,7 @@ check_info["brocade_mlx"] = {
             oids=[OIDEnd(), "5"],
         ),
     ],
-}
+)
 
 
 def brocade_mlx_get_state(state):
@@ -79,11 +79,11 @@ def check_brocade_mlx_module(item, _no_params, info):
     return 3, "Module not found"
 
 
-check_info["brocade_mlx.module_status"] = {
-    "check_function": check_brocade_mlx_module,
-    "discovery_function": inventory_brocade_mlx_module,
-    "service_name": "Status Module %s",
-}
+check_info["brocade_mlx.module_status"] = LegacyCheckDefinition(
+    check_function=check_brocade_mlx_module,
+    discovery_function=inventory_brocade_mlx_module,
+    service_name="Status Module %s",
+)
 
 # .
 #   .--Memory--------------------------------------------------------------.
@@ -166,12 +166,12 @@ def check_brocade_mlx_module_mem(item, params, info):
         return None
 
 
-check_info["brocade_mlx.module_mem"] = {
-    "check_function": check_brocade_mlx_module_mem,
-    "discovery_function": inventory_brocade_mlx_module_mem,
-    "service_name": "Memory Module %s",
-    "check_ruleset_name": "memory_multiitem",
-}
+check_info["brocade_mlx.module_mem"] = LegacyCheckDefinition(
+    check_function=check_brocade_mlx_module_mem,
+    discovery_function=inventory_brocade_mlx_module_mem,
+    service_name="Memory Module %s",
+    check_ruleset_name="memory_multiitem",
+)
 
 # .
 #   .--CPU-----------------------------------------------------------------.
@@ -255,9 +255,9 @@ def check_brocade_mlx_module_cpu(item, params, info):
     return 3, "Module not found"
 
 
-check_info["brocade_mlx.module_cpu"] = {
-    "check_function": check_brocade_mlx_module_cpu,
-    "discovery_function": inventory_brocade_mlx_module_cpu,
-    "service_name": "CPU utilization Module %s",
-    "check_ruleset_name": "cpu_utilization_multiitem",
-}
+check_info["brocade_mlx.module_cpu"] = LegacyCheckDefinition(
+    check_function=check_brocade_mlx_module_cpu,
+    discovery_function=inventory_brocade_mlx_module_cpu,
+    service_name="CPU utilization Module %s",
+    check_ruleset_name="cpu_utilization_multiitem",
+)

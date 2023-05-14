@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
@@ -113,13 +114,13 @@ def check_ra32e_sensors(item, params, parsed):
     return check_temperature(temperature, params, unique_name)
 
 
-check_info["ra32e_sensors"] = {
-    "detect": DETECT_RA32E,
-    "parse_function": parse_ra32e_sensors,
-    "discovery_function": lambda x: inventory_ra32e_sensors(x, "temperature"),
-    "check_function": check_ra32e_sensors,
-    "service_name": "Temperature %s",
-    "fetch": [
+check_info["ra32e_sensors"] = LegacyCheckDefinition(
+    detect=DETECT_RA32E,
+    parse_function=parse_ra32e_sensors,
+    discovery_function=lambda x: inventory_ra32e_sensors(x, "temperature"),
+    check_function=check_ra32e_sensors,
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.20916.1.8.1.1",
             oids=["1.2", "2.1", "4.2"],
@@ -149,9 +150,9 @@ check_info["ra32e_sensors"] = {
             for table in _SENSOR_TABLES
         ),
     ],
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "ra32e_temp_defaultlevels",
-}
+    check_ruleset_name="temperature",
+    default_levels_variable="ra32e_temp_defaultlevels",
+)
 
 # .
 #   .--Humidity------------------------------------------------------------.
@@ -176,13 +177,13 @@ def check_ra32e_humidity_sensors(item, params, parsed):
     return check_humidity(humidity, params)
 
 
-check_info["ra32e_sensors.humidity"] = {
-    "discovery_function": lambda x: inventory_ra32e_sensors(x, "humidity"),
-    "check_function": check_ra32e_humidity_sensors,
-    "service_name": "Humidity %s",
-    "check_ruleset_name": "humidity",
-    "default_levels_variable": "ra32e_sensors_humidity_defaultlevels",
-}
+check_info["ra32e_sensors.humidity"] = LegacyCheckDefinition(
+    discovery_function=lambda x: inventory_ra32e_sensors(x, "humidity"),
+    check_function=check_ra32e_humidity_sensors,
+    service_name="Humidity %s",
+    check_ruleset_name="humidity",
+    default_levels_variable="ra32e_sensors_humidity_defaultlevels",
+)
 
 # .
 #   .--Voltage-------------------------------------------------------------.
@@ -203,13 +204,13 @@ def check_ra32e_sensors_voltage(item, params, parsed):
     return next(check_elphase(item, params, parsed["voltage"]))
 
 
-check_info["ra32e_sensors.voltage"] = {
-    "discovery_function": lambda x: inventory_ra32e_sensors(x, "voltage"),
-    "check_function": check_ra32e_sensors_voltage,
-    "service_name": "Voltage %s",
-    "check_ruleset_name": "ups_outphase",
-    "default_levels_variable": "ra32e_sensors_voltage_defaultlevels",
-}
+check_info["ra32e_sensors.voltage"] = LegacyCheckDefinition(
+    discovery_function=lambda x: inventory_ra32e_sensors(x, "voltage"),
+    check_function=check_ra32e_sensors_voltage,
+    service_name="Voltage %s",
+    check_ruleset_name="ups_outphase",
+    default_levels_variable="ra32e_sensors_voltage_defaultlevels",
+)
 
 # .
 #   .--Power---------------------------------------------------------------.
@@ -226,9 +227,9 @@ def check_ra32e_power_sensors(item, params, parsed):
     return next(check_elphase(item, params, parsed["power"]))
 
 
-check_info["ra32e_sensors.power"] = {
-    "discovery_function": lambda x: inventory_ra32e_sensors(x, "power"),
-    "check_function": check_ra32e_power_sensors,
-    "service_name": "Power State %s",
-    "check_ruleset_name": "ups_outphase",
-}
+check_info["ra32e_sensors.power"] = LegacyCheckDefinition(
+    discovery_function=lambda x: inventory_ra32e_sensors(x, "power"),
+    check_function=check_ra32e_power_sensors,
+    service_name="Power State %s",
+    check_ruleset_name="ups_outphase",
+)

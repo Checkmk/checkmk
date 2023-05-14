@@ -6,7 +6,7 @@
 from collections.abc import Iterable
 from typing import List
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -52,13 +52,13 @@ def check_genua_fan(item, params, info):
         yield check_fan(rpm, params)
 
 
-check_info["genua_fan"] = {
-    "detect": DETECT_GENUA,
-    "discovery_function": inventory_genua_fan,
-    "check_function": check_genua_fan,
-    "check_ruleset_name": "hw_fans",
-    "service_name": "FAN %s",
-    "fetch": [
+check_info["genua_fan"] = LegacyCheckDefinition(
+    detect=DETECT_GENUA,
+    discovery_function=inventory_genua_fan,
+    check_function=check_genua_fan,
+    check_ruleset_name="hw_fans",
+    service_name="FAN %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3717.2.1.1.1.1",
             oids=["2", "3", "4"],
@@ -68,5 +68,5 @@ check_info["genua_fan"] = {
             oids=["2", "3", "4"],
         ),
     ],
-    "default_levels_variable": "genua_fan_default_levels",
-}
+    default_levels_variable="genua_fan_default_levels",
+)

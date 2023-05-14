@@ -17,7 +17,12 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import check_levels, discover_single, get_bytes_human_readable
+from cmk.base.check_api import (
+    check_levels,
+    discover_single,
+    get_bytes_human_readable,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info
 
 
@@ -54,10 +59,10 @@ def check_mongodb_mem(_no_item, params, parsed):
             yield 1, textfmt % virt_mapped_factor
 
 
-check_info["mongodb_mem"] = {
-    "parse_function": parse_mongodb_mem,
-    "discovery_function": discover_single,
-    "check_function": check_mongodb_mem,
-    "service_name": "Memory used MongoDB",
-    "check_ruleset_name": "mongodb_mem",
-}
+check_info["mongodb_mem"] = LegacyCheckDefinition(
+    parse_function=parse_mongodb_mem,
+    discovery_function=discover_single,
+    check_function=check_mongodb_mem,
+    service_name="Memory used MongoDB",
+    check_ruleset_name="mongodb_mem",
+)

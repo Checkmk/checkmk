@@ -55,7 +55,7 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info
 
 
@@ -228,12 +228,12 @@ def check_mknotifyd(item, _no_params, parsed):
     return
 
 
-check_info["mknotifyd"] = {
-    "parse_function": parse_mknotifyd,
-    "discovery_function": inventory_mknotifyd,
-    "check_function": check_mknotifyd,
-    "service_name": "OMD %s Notification Spooler",
-}
+check_info["mknotifyd"] = LegacyCheckDefinition(
+    parse_function=parse_mknotifyd,
+    discovery_function=inventory_mknotifyd,
+    check_function=check_mknotifyd,
+    service_name="OMD %s Notification Spooler",
+)
 
 #   .--Connections---------------------------------------------------------.
 #   |        ____                            _   _                         |
@@ -290,8 +290,8 @@ def check_mknotifyd_connection(item, _no_params, parsed):
                 yield 0, "%d Notifications %s" % (num, what.lower())
 
 
-check_info["mknotifyd.connection"] = {
-    "discovery_function": inventory_mknotifyd_connection,
-    "check_function": check_mknotifyd_connection,
-    "service_name": "OMD %s Notify Connection",
-}
+check_info["mknotifyd.connection"] = LegacyCheckDefinition(
+    discovery_function=inventory_mknotifyd_connection,
+    check_function=check_mknotifyd_connection,
+    service_name="OMD %s Notify Connection",
+)

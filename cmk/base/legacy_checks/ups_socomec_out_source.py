@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ups_socomec import DETECT_SOCOMEC
@@ -45,13 +46,13 @@ def check_ups_socomec_out_source(_no_item, _no_params, info):
     return ups_socomec_source_states[int(info[0][0])]
 
 
-check_info["ups_socomec_out_source"] = {
-    "detect": DETECT_SOCOMEC,
-    "discovery_function": inventory_ups_socomec_out_source,
-    "check_function": check_ups_socomec_out_source,
-    "service_name": "Output Source",
-    "fetch": SNMPTree(
+check_info["ups_socomec_out_source"] = LegacyCheckDefinition(
+    detect=DETECT_SOCOMEC,
+    discovery_function=inventory_ups_socomec_out_source,
+    check_function=check_ups_socomec_out_source,
+    service_name="Output Source",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.4",
         oids=["1"],
     ),
-}
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover_single
+from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -23,14 +23,14 @@ def check_fortisandbox_cpu_util(_no_item, params, info):
     return check_cpu_util(util, params)
 
 
-check_info["fortisandbox_cpu_util"] = {
-    "detect": DETECT_FORTISANDBOX,
-    "discovery_function": discover_single,
-    "check_function": check_fortisandbox_cpu_util,
-    "service_name": "CPU utilization",
-    "fetch": SNMPTree(
+check_info["fortisandbox_cpu_util"] = LegacyCheckDefinition(
+    detect=DETECT_FORTISANDBOX,
+    discovery_function=discover_single,
+    check_function=check_fortisandbox_cpu_util,
+    service_name="CPU utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.118.3.1",
         oids=["3"],
     ),
-    "check_ruleset_name": "cpu_utilization",
-}
+    check_ruleset_name="cpu_utilization",
+)

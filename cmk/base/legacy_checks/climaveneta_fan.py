@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -25,15 +25,15 @@ def check_climaveneta_fan(item, params, info):
     return check_fan(rpm, params)
 
 
-check_info["climaveneta_fan"] = {
-    "detect": equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
-    "check_function": check_climaveneta_fan,
-    "discovery_function": inventory_climaveneta_fan,
-    "service_name": "Fan %s",
-    "fetch": SNMPTree(
+check_info["climaveneta_fan"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
+    check_function=check_climaveneta_fan,
+    discovery_function=inventory_climaveneta_fan,
+    service_name="Fan %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9839.2.1.2",
         oids=["42", "43"],
     ),
-    "default_levels_variable": "climaveneta_fan_default_levels",
-    "check_ruleset_name": "hw_fans",
-}
+    default_levels_variable="climaveneta_fan_default_levels",
+    check_ruleset_name="hw_fans",
+)

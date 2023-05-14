@@ -12,6 +12,7 @@ from cmk.base.check_api import (
     discover_single,
     get_bytes_human_readable,
     get_timestamp_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.graylog import parse_graylog_agent_data
 from cmk.base.config import check_info
@@ -58,10 +59,10 @@ def check_graylog_cluster_traffic(_no_item, params, parsed):
         yield 0, "Last updated: %s" % get_timestamp_human_readable(local_timestamp)
 
 
-check_info["graylog_cluster_traffic"] = {
-    "parse_function": parse_graylog_agent_data,
-    "check_function": check_graylog_cluster_traffic,
-    "discovery_function": discover_single,
-    "service_name": "Graylog Cluster Traffic",
-    "check_ruleset_name": "graylog_cluster_traffic",
-}
+check_info["graylog_cluster_traffic"] = LegacyCheckDefinition(
+    parse_function=parse_graylog_agent_data,
+    check_function=check_graylog_cluster_traffic,
+    discovery_function=discover_single,
+    service_name="Graylog Cluster Traffic",
+    check_ruleset_name="graylog_cluster_traffic",
+)

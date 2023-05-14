@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.alcatel import ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -52,15 +52,15 @@ def check_alcatel_aos7_temp(item, params, data):
     yield check_temperature(data, params, "alcatel_temp_aos7%s" % item)
 
 
-check_info["alcatel_temp_aos7"] = {
-    "detect": DETECT_ALCATEL_AOS7,
-    "parse_function": parse_alcatel_aos7_temp,
-    "discovery_function": discover(),
-    "check_function": check_alcatel_aos7_temp,
-    "service_name": "Temperature Board %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "alcatel_temp_aos7",
-    "fetch": SNMPTree(
+check_info["alcatel_temp_aos7"] = LegacyCheckDefinition(
+    detect=DETECT_ALCATEL_AOS7,
+    parse_function=parse_alcatel_aos7_temp,
+    discovery_function=discover(),
+    check_function=check_alcatel_aos7_temp,
+    service_name="Temperature Board %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="alcatel_temp_aos7",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.801.1.1.1.3.1.1.3.1",
         oids=[
             "8",
@@ -81,4 +81,4 @@ check_info["alcatel_temp_aos7"] = {
             "23",
         ],
     ),
-}
+)

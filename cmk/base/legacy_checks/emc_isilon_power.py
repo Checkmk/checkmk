@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_ISILON
@@ -49,14 +50,14 @@ def check_emc_isilon_power(item, params, info):
     return None
 
 
-check_info["emc_isilon_power"] = {
-    "detect": DETECT_ISILON,
-    "check_function": check_emc_isilon_power,
-    "discovery_function": inventory_emc_isilon_power,
-    "service_name": "Voltage %s",
-    "fetch": SNMPTree(
+check_info["emc_isilon_power"] = LegacyCheckDefinition(
+    detect=DETECT_ISILON,
+    check_function=check_emc_isilon_power,
+    discovery_function=inventory_emc_isilon_power,
+    service_name="Voltage %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12124.2.55.1",
         oids=["3", "4"],
     ),
-    "check_ruleset_name": "evolt",
-}
+    check_ruleset_name="evolt",
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -67,16 +68,16 @@ def check_ucd_mem(item, params, parsed):
 
 
 # This check plugin uses the migrated section in cmk/base/plugins/agent_based/ucd_mem.py!
-check_info["ucd_mem"] = {
-    "detect": ucd_hr_detection.USE_UCD_MEM,
-    "parse_function": parse_ucd_mem,
-    "discovery_function": inventory_ucd_mem,
-    "check_function": check_ucd_mem,
-    "service_name": "Memory",
-    "fetch": SNMPTree(
+check_info["ucd_mem"] = LegacyCheckDefinition(
+    detect=ucd_hr_detection.USE_UCD_MEM,
+    parse_function=parse_ucd_mem,
+    discovery_function=inventory_ucd_mem,
+    check_function=check_ucd_mem,
+    service_name="Memory",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2021.4",
         oids=["5", "6", "3", "4", "11", "12", "13", "14", "15", "100", "2", "101"],
     ),
-    "default_levels_variable": "ucd_mem_default_levels",
-    "check_ruleset_name": "memory_simple",
-}
+    default_levels_variable="ucd_mem_default_levels",
+    check_ruleset_name="memory_simple",
+)

@@ -12,6 +12,7 @@
 # currentQueue writers 5
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -37,9 +38,9 @@ def check_mongodb_locks(_no_item, params, info):
         ]
 
 
-check_info["mongodb_locks"] = {
-    "discovery_function": inventory_mongodb_locks,
-    "check_function": check_mongodb_locks,
-    "service_name": "MongoDB Locks",
-    "check_ruleset_name": "mongodb_locks",
-}
+check_info["mongodb_locks"] = LegacyCheckDefinition(
+    discovery_function=inventory_mongodb_locks,
+    check_function=check_mongodb_locks,
+    service_name="MongoDB Locks",
+    check_ruleset_name="mongodb_locks",
+)

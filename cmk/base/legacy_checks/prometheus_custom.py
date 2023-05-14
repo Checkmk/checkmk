@@ -11,6 +11,7 @@ from cmk.base.check_api import (
     discover,
     get_item_state,
     get_parsed_item_data,
+    LegacyCheckDefinition,
     set_item_state,
 )
 from cmk.base.config import check_info
@@ -139,10 +140,10 @@ def check_prometheus_custom(item, params, data):
         )
 
 
-check_info["prometheus_custom"] = {
-    "parse_function": parse_prometheus_custom,
-    "check_function": check_prometheus_custom,
-    "discovery_function": discover(),
-    "service_name": "%s",
-    "check_ruleset_name": "prometheus_custom",
-}
+check_info["prometheus_custom"] = LegacyCheckDefinition(
+    parse_function=parse_prometheus_custom,
+    check_function=check_prometheus_custom,
+    discovery_function=discover(),
+    service_name="%s",
+    check_ruleset_name="prometheus_custom",
+)

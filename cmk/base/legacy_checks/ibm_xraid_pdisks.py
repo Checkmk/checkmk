@@ -9,7 +9,7 @@
 # shift and gives false info for "slot_id"
 
 
-from cmk.base.check_api import all_of, any_of, equals, exists
+from cmk.base.check_api import all_of, any_of, equals, exists, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -46,22 +46,22 @@ def check_ibm_xraid_pdisks(item, _no_params, info):
     return (2, "disk is missing")  #  + " [%s]" % data[item][4])
 
 
-check_info["ibm_xraid_pdisks"] = {
-    "detect": all_of(
+check_info["ibm_xraid_pdisks"] = LegacyCheckDefinition(
+    detect=all_of(
         any_of(
             equals(".1.3.6.1.2.1.1.1.0", "software: windows"), equals(".1.3.6.1.2.1.1.1.0", "linux")
         ),
         exists(".1.3.6.1.4.1.795.14.1.100.1.0"),
     ),
-    "check_function": check_ibm_xraid_pdisks,
-    "service_name": "RAID PDisk %s",
-    "discovery_function": inventory_ibm_xraid_pdisks,
+    check_function=check_ibm_xraid_pdisks,
+    service_name="RAID PDisk %s",
+    discovery_function=inventory_ibm_xraid_pdisks,
     # there is no information about the ext mib in the right place
     # (at least on windows)
     # this means the check has to fetch a specific oid. Limit this
     # effect to relevant systems to lessen useless scanning.
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.795.14.1",
         oids=["503.1.1.4", "400.1.1.1", "400.1.1.5", "400.1.1.11", "400.1.1.12"],
     ),
-}
+)

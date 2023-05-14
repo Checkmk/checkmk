@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mcafee_gateway import DETECT_EMAIL_GATEWAY
@@ -81,13 +82,13 @@ def check_mcafee_emailgateway_entities(item, params, parsed):
     return None
 
 
-check_info["mcafee_emailgateway_entities"] = {
-    "detect": DETECT_EMAIL_GATEWAY,
-    "parse_function": parse_mcafee_emailgateway_entities,
-    "discovery_function": inventory_mcafee_emailgateway_entities,
-    "check_function": check_mcafee_emailgateway_entities,
-    "service_name": "Entity %s",
-    "fetch": [
+check_info["mcafee_emailgateway_entities"] = LegacyCheckDefinition(
+    detect=DETECT_EMAIL_GATEWAY,
+    parse_function=parse_mcafee_emailgateway_entities,
+    discovery_function=inventory_mcafee_emailgateway_entities,
+    check_function=check_mcafee_emailgateway_entities,
+    service_name="Entity %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1230.2.4.1.2.3.2",
             oids=["1", "2", "3", "4", "5", "6", "7", "8"],
@@ -123,4 +124,4 @@ check_info["mcafee_emailgateway_entities"] = {
             oids=["1", "2", "3", "4", "5", "6"],
         ),
     ],
-}
+)

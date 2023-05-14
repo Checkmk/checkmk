@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -49,12 +49,12 @@ def check_atto_fibrebridge_chassis_temp(item, params, parsed):
     )
 
 
-check_info["atto_fibrebridge_chassis.temp"] = {
-    "discovery_function": inventory_atto_fibrebridge_chassis_temp,
-    "check_function": check_atto_fibrebridge_chassis_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-}
+check_info["atto_fibrebridge_chassis.temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_atto_fibrebridge_chassis_temp,
+    check_function=check_atto_fibrebridge_chassis_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+)
 
 # .
 #   .--Throughput Status - Main Check--------------------------------------.
@@ -80,14 +80,14 @@ def check_atto_fibrebridge_chassis(_no_item, _no_params, parsed):
     return None
 
 
-check_info["atto_fibrebridge_chassis"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
-    "parse_function": parse_atto_fibrebridge_chassis,
-    "discovery_function": inventory_atto_fibrebridge_chassis,
-    "check_function": check_atto_fibrebridge_chassis,
-    "service_name": "Throughput Status",
-    "fetch": SNMPTree(
+check_info["atto_fibrebridge_chassis"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
+    parse_function=parse_atto_fibrebridge_chassis,
+    discovery_function=inventory_atto_fibrebridge_chassis,
+    check_function=check_atto_fibrebridge_chassis,
+    service_name="Throughput Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.4547.2.3.2",
         oids=["4", "5", "8", "11"],
     ),
-}
+)

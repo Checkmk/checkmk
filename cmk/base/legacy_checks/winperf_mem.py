@@ -40,7 +40,7 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -76,9 +76,9 @@ def check_winperf_mem(_unused, params, info):
     yield state, "Pages/s: %d" % pages_per_sec, [("mem_pages_rate", pages_per_sec)]
 
 
-check_info["winperf_mem"] = {
-    "check_function": check_winperf_mem,
-    "discovery_function": inventory_winperf_mem,
-    "service_name": "Memory Pages",
-    "check_ruleset_name": "mem_pages",
-}
+check_info["winperf_mem"] = LegacyCheckDefinition(
+    check_function=check_winperf_mem,
+    discovery_function=inventory_winperf_mem,
+    service_name="Memory Pages",
+    check_ruleset_name="mem_pages",
+)

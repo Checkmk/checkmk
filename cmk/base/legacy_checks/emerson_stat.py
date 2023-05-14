@@ -34,7 +34,7 @@
 
 # mypy: disable-error-code="operator"
 
-from cmk.base.check_api import saveint, startswith
+from cmk.base.check_api import LegacyCheckDefinition, saveint, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -75,13 +75,13 @@ def check_emerson_stat(item, params, info):
     return (3, "Status not found in SNMP output")
 
 
-check_info["emerson_stat"] = {
-    "detect": startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
-    "discovery_function": inventory_emerson_stat,
-    "check_function": check_emerson_stat,
-    "service_name": "Status",
-    "fetch": SNMPTree(
+check_info["emerson_stat"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
+    discovery_function=inventory_emerson_stat,
+    check_function=check_emerson_stat,
+    service_name="Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.6302.2.1.2.1",
         oids=["0"],
     ),
-}
+)

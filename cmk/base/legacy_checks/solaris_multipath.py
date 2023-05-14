@@ -14,6 +14,7 @@
 # and we check agains that later.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -66,9 +67,9 @@ def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-bra
     return None
 
 
-check_info["solaris_multipath"] = {
-    "discovery_function": inventory_solaris_multipath,
-    "check_function": check_solaris_multipath,
-    "service_name": "Multipath %s",
-    "check_ruleset_name": "multipath",
-}
+check_info["solaris_multipath"] = LegacyCheckDefinition(
+    discovery_function=inventory_solaris_multipath,
+    check_function=check_solaris_multipath,
+    service_name="Multipath %s",
+    check_ruleset_name="multipath",
+)

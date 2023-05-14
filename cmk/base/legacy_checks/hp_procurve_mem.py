@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, contains
+from cmk.base.check_api import any_of, contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -47,18 +47,18 @@ def check_hp_procurve_mem(item, params, info):
     )
 
 
-check_info["hp_procurve_mem"] = {
-    "detect": any_of(
+check_info["hp_procurve_mem"] = LegacyCheckDefinition(
+    detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),
     ),
-    "check_function": check_hp_procurve_mem,
-    "discovery_function": inventory_hp_procurve_mem,
-    "service_name": "Memory",
-    "check_ruleset_name": "memory_simple",
-    "default_levels_variable": "hp_procurve_mem_default_levels",
-    "fetch": SNMPTree(
+    check_function=check_hp_procurve_mem,
+    discovery_function=inventory_hp_procurve_mem,
+    service_name="Memory",
+    check_ruleset_name="memory_simple",
+    default_levels_variable="hp_procurve_mem_default_levels",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.14.11.5.1.1.2.1.1.1",
         oids=["5", "7"],
     ),
-}
+)

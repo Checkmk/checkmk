@@ -25,6 +25,7 @@
 #
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -52,8 +53,8 @@ def check_msexch_replhealth(item, _no_params, info):
     return None
 
 
-check_info["msexch_replhealth"] = {
-    "discovery_function": inventory_msexch_replhealth,
-    "check_function": check_msexch_replhealth,
-    "service_name": "Exchange Replication Health %s",
-}
+check_info["msexch_replhealth"] = LegacyCheckDefinition(
+    discovery_function=inventory_msexch_replhealth,
+    check_function=check_msexch_replhealth,
+    service_name="Exchange Replication Health %s",
+)

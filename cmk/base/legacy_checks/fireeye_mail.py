@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_average, get_rate
+from cmk.base.check_api import check_levels, get_average, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -62,13 +62,13 @@ def check_fireeye_mail(_no_item, params, info):
         yield fireeye_counter_generic(int(mail_info[index]), mail_type, average)
 
 
-check_info["fireeye_mail"] = {
-    "detect": DETECT,
-    "discovery_function": lambda info: inventory_fireeye_generic(info, False, True),
-    "check_function": check_fireeye_mail,
-    "service_name": "Received Mail Rates",
-    "check_ruleset_name": "fireeye_mail",
-    "fetch": SNMPTree(
+check_info["fireeye_mail"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
+    check_function=check_fireeye_mail,
+    service_name="Received Mail Rates",
+    check_ruleset_name="fireeye_mail",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",
         oids=[
             "1",
@@ -89,7 +89,7 @@ check_info["fireeye_mail"] = {
             "52",
         ],
     ),
-}
+)
 
 #   .--attachment----------------------------------------------------------.
 #   |                                                                      |
@@ -122,12 +122,12 @@ def check_fireeye_attachment(_no_item, params, info):
         yield fireeye_counter_generic(int(mail_info[index]), attachment_type, average)
 
 
-check_info["fireeye_mail.attachment"] = {
-    "discovery_function": lambda info: inventory_fireeye_generic(info, False, True),
-    "check_function": check_fireeye_attachment,
-    "service_name": "Mails Containing Attachment",
-    "check_ruleset_name": "fireeye_mail",
-}
+check_info["fireeye_mail.attachment"] = LegacyCheckDefinition(
+    discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
+    check_function=check_fireeye_attachment,
+    service_name="Mails Containing Attachment",
+    check_ruleset_name="fireeye_mail",
+)
 
 #   .--url-----------------------------------------------------------------.
 #   |                                                                      |
@@ -157,12 +157,12 @@ def check_fireeye_url(_no_item, params, info):
         yield fireeye_counter_generic(int(mail_info[index]), url_type, average)
 
 
-check_info["fireeye_mail.url"] = {
-    "discovery_function": lambda info: inventory_fireeye_generic(info, False, True),
-    "check_function": check_fireeye_url,
-    "service_name": "Mails Containing URL",
-    "check_ruleset_name": "fireeye_mail",
-}
+check_info["fireeye_mail.url"] = LegacyCheckDefinition(
+    discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
+    check_function=check_fireeye_url,
+    service_name="Mails Containing URL",
+    check_ruleset_name="fireeye_mail",
+)
 
 #   .--statistics----------------------------------------------------------.
 #   |                                                                      |
@@ -214,12 +214,12 @@ def check_fireeye_mail_statistics(_no_item, params, info):
             yield 0, "%s: %.2f per minute" % (mail_containing, rate * 60), perfdata
 
 
-check_info["fireeye_mail.statistics"] = {
-    "discovery_function": lambda info: inventory_fireeye_generic(info, False, True),
-    "check_function": check_fireeye_mail_statistics,
-    "service_name": "Mail Processing Statistics",
-    "check_ruleset_name": "fireeye_mail",
-}
+check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
+    discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
+    check_function=check_fireeye_mail_statistics,
+    service_name="Mail Processing Statistics",
+    check_ruleset_name="fireeye_mail",
+)
 
 #   .--received------------------------------------------------------------.
 #   |                                                                      |
@@ -247,9 +247,9 @@ def check_fireeye_mail_received(_no_item, params, info):
     yield check_levels(rate, "mail_received_rate", params.get("rate"), unit="/s", infoname="Rate")
 
 
-check_info["fireeye_mail.received"] = {
-    "discovery_function": lambda info: inventory_fireeye_generic(info, False, True),
-    "check_function": check_fireeye_mail_received,
-    "service_name": "Mails Received",
-    "default_levels_variable": "received_levels",
-}
+check_info["fireeye_mail.received"] = LegacyCheckDefinition(
+    discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
+    check_function=check_fireeye_mail_received,
+    service_name="Mails Received",
+    default_levels_variable="received_levels",
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
@@ -25,13 +26,13 @@ def check_checkpoint_svn_status(item, params, info):
     return None
 
 
-check_info["checkpoint_svn_status"] = {
-    "detect": DETECT,
-    "check_function": check_checkpoint_svn_status,
-    "discovery_function": inventory_checkpoint_svn_status,
-    "service_name": "SVN Status",
-    "fetch": SNMPTree(
+check_info["checkpoint_svn_status"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_checkpoint_svn_status,
+    discovery_function=inventory_checkpoint_svn_status,
+    service_name="SVN Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6",
         oids=["2", "3", "101", "103"],
     ),
-}
+)

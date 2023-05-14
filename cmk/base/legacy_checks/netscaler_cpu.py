@@ -11,6 +11,7 @@
 # .1.3.6.1.4.1.5951.4.1.1.41.6.1.2.12.80.97.99.107.101.116.32.67.80.85.32.48  0
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
@@ -44,15 +45,15 @@ def check_netscaler_cpu(item, params, info):
     return None
 
 
-check_info["netscaler_cpu"] = {
-    "detect": SNMP_DETECT,
-    "check_function": check_netscaler_cpu,
-    "discovery_function": inventory_netscaler_cpu,
-    "default_levels_variable": "netscaler_cpu_default_levels",
-    "service_name": "CPU Utilization %s",
-    "check_ruleset_name": "cpu_utilization_multiitem",
-    "fetch": SNMPTree(
+check_info["netscaler_cpu"] = LegacyCheckDefinition(
+    detect=SNMP_DETECT,
+    check_function=check_netscaler_cpu,
+    discovery_function=inventory_netscaler_cpu,
+    default_levels_variable="netscaler_cpu_default_levels",
+    service_name="CPU Utilization %s",
+    check_ruleset_name="cpu_utilization_multiitem",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.41.6.1",
         oids=["1", "2"],
     ),
-}
+)

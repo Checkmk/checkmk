@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -67,14 +67,14 @@ def check_atto_fibrebridge_sas(item, _no_params, parsed):
         yield 0, "PHY%d operational state: %s" % (phy_index, port_info["state_phy_%d" % phy_index])
 
 
-check_info["atto_fibrebridge_sas"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
-    "parse_function": parse_atto_fibrebridge_sas,
-    "discovery_function": inventory_atto_fibrebridge_sas,
-    "check_function": check_atto_fibrebridge_sas,
-    "service_name": "SAS Port %s",
-    "fetch": SNMPTree(
+check_info["atto_fibrebridge_sas"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
+    parse_function=parse_atto_fibrebridge_sas,
+    discovery_function=inventory_atto_fibrebridge_sas,
+    check_function=check_atto_fibrebridge_sas,
+    service_name="SAS Port %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.4547.2.3.3.3.1",
         oids=["2", "3", "4", "5", "6", "7", "8"],
     ),
-}
+)

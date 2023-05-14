@@ -9,6 +9,7 @@
 # { normal(1), warning(2), minor(3), major(4), critical(5) }
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.sni_octopuse import DETECT_SNI_OCTOPUSE
@@ -39,15 +40,15 @@ def check_octopus_status(_no_item, _no_params_info, info):
     return (state, msg)
 
 
-check_info["sni_octopuse_status"] = {
-    "detect": DETECT_SNI_OCTOPUSE,
-    "check_function": check_octopus_status,
-    "discovery_function": inventory_octopus_status,
-    "service_name": "Global status",
-    "fetch": [
+check_info["sni_octopuse_status"] = LegacyCheckDefinition(
+    detect=DETECT_SNI_OCTOPUSE,
+    check_function=check_octopus_status,
+    discovery_function=inventory_octopus_status,
+    service_name="Global status",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.231.7.2.9.1.1",
             oids=["0"],
         )
     ],
-}
+)

@@ -8,7 +8,13 @@
 
 import time
 
-from cmk.base.check_api import get_bytes_human_readable, get_rate, MKCounterWrapped, RAISE
+from cmk.base.check_api import (
+    get_bytes_human_readable,
+    get_rate,
+    LegacyCheckDefinition,
+    MKCounterWrapped,
+    RAISE,
+)
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
@@ -218,11 +224,11 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
                 yield (0, f"{protoname} {perftext}: -")
 
 
-check_info["netapp_api_vs_traffic"] = {
-    "parse_function": lambda info: netapp_api_parse_lines(
+check_info["netapp_api_vs_traffic"] = LegacyCheckDefinition(
+    parse_function=lambda info: netapp_api_parse_lines(
         info, custom_keys=["protocol", "instance_name"]
     ),
-    "discovery_function": inventory_netapp_api_vs_traffic,
-    "check_function": check_netapp_api_vs_traffic,
-    "service_name": "Traffic vServer %s",
-}
+    discovery_function=inventory_netapp_api_vs_traffic,
+    check_function=check_netapp_api_vs_traffic,
+    service_name="Traffic vServer %s",
+)

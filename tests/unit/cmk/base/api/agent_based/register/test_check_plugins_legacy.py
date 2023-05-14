@@ -16,14 +16,14 @@ from cmk.checkers.checking import CheckPluginName
 import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
 from cmk.base.api.agent_based.checking_classes import Metric, Result
-from cmk.base.api.agent_based.register.utils_legacy import CheckInfoElement
+from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 
 
 def dummy_generator(section):  # pylint: disable=unused-argument
     yield from ()
 
 
-MINIMAL_CHECK_INFO: CheckInfoElement = {
+MINIMAL_CHECK_INFO: LegacyCheckDefinition = {
     "service_name": "Norris Device",
     "discovery_function": dummy_generator,
     "check_function": dummy_generator,

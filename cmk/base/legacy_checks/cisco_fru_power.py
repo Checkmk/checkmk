@@ -48,7 +48,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import all_of, contains, not_exists
+from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, not_exists
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDCached, OIDEnd, SNMPTree
 
@@ -107,15 +107,15 @@ def check_cisco_fru_power(item, _no_params, parsed):
     return None
 
 
-check_info["cisco_fru_power"] = {
-    "detect": all_of(
+check_info["cisco_fru_power"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), not_exists(".1.3.6.1.4.1.9.9.13.1.5.1.*")
     ),
-    "parse_function": parse_cisco_fru_power,
-    "discovery_function": inventory_cisco_fru_power,
-    "check_function": check_cisco_fru_power,
-    "service_name": "FRU Power %s",
-    "fetch": [
+    parse_function=parse_cisco_fru_power,
+    discovery_function=inventory_cisco_fru_power,
+    check_function=check_cisco_fru_power,
+    service_name="FRU Power %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.117.1.1.2.1",
             oids=[OIDEnd(), "2", "3"],
@@ -125,4 +125,4 @@ check_info["cisco_fru_power"] = {
             oids=[OIDEnd(), OIDCached("7")],
         ),
     ],
-}
+)

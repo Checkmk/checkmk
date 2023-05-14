@@ -15,7 +15,7 @@
 
 import collections
 
-from cmk.base.check_api import get_percent_human_readable
+from cmk.base.check_api import get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 VMStatAIX = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
@@ -56,8 +56,8 @@ def check_vmstat_aix(item, params, parsed):
     )
 
 
-check_info["vmstat_aix"] = {
-    "parse_function": parse_vmstat_aix,
-    "check_function": check_vmstat_aix,
-    "service_name": "vmstat %s",
-}
+check_info["vmstat_aix"] = LegacyCheckDefinition(
+    parse_function=parse_vmstat_aix,
+    check_function=check_vmstat_aix,
+    service_name="vmstat %s",
+)

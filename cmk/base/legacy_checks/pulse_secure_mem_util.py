@@ -5,7 +5,12 @@
 
 
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
-from cmk.base.check_api import check_levels, discover_single, get_percent_human_readable
+from cmk.base.check_api import (
+    check_levels,
+    discover_single,
+    get_percent_human_readable,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -35,19 +40,19 @@ def check_pulse_secure_mem(item, params, parsed):
             )
 
 
-check_info["pulse_secure_mem_util"] = {
-    "detect": pulse_secure.DETECT_PULSE_SECURE,
-    "parse_function": lambda info: pulse_secure.parse_pulse_secure(
+check_info["pulse_secure_mem_util"] = LegacyCheckDefinition(
+    detect=pulse_secure.DETECT_PULSE_SECURE,
+    parse_function=lambda info: pulse_secure.parse_pulse_secure(
         info,
         *METRICS_INFO_NAMES_PULSE_SECURE_MEM[0],
     ),
-    "discovery_function": discover_single,
-    "check_function": check_pulse_secure_mem,
-    "service_name": "Pulse Secure IVE memory utilization",
-    "fetch": SNMPTree(
+    discovery_function=discover_single,
+    check_function=check_pulse_secure_mem,
+    service_name="Pulse Secure IVE memory utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",
         oids=["11", "24"],
     ),
-    "check_ruleset_name": "pulse_secure_mem_util",
-    "default_levels_variable": "pulse_secure_mem_util_def_levels",
-}
+    check_ruleset_name="pulse_secure_mem_util",
+    default_levels_variable="pulse_secure_mem_util_def_levels",
+)

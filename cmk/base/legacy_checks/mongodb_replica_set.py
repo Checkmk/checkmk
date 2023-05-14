@@ -20,6 +20,7 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_item_state,
     get_timestamp_human_readable,
+    LegacyCheckDefinition,
     set_item_state,
 )
 from cmk.base.config import check_info, factory_settings
@@ -197,14 +198,14 @@ def _calculate_replication_lag(start_operation_time, secondary_operation_time):
     return (start_operation_time - secondary_operation_time) / 1000.0
 
 
-check_info["mongodb_replica_set"] = {
-    "default_levels_variable": "mongodb_replica_set_levels",
-    "parse_function": parse_mongodb_replica_set,
-    "discovery_function": discover_single,
-    "check_function": check_mongodb_replica_set_lag,
-    "service_name": "MongoDB Replication Lag",
-    "check_ruleset_name": "mongodb_replica_set",
-}
+check_info["mongodb_replica_set"] = LegacyCheckDefinition(
+    default_levels_variable="mongodb_replica_set_levels",
+    parse_function=parse_mongodb_replica_set,
+    discovery_function=discover_single,
+    check_function=check_mongodb_replica_set_lag,
+    service_name="MongoDB Replication Lag",
+    check_ruleset_name="mongodb_replica_set",
+)
 
 #   .--primary election----------------------------------------------------.
 #   |                          _                                           |
@@ -290,12 +291,12 @@ def _get_primary_election_time(primary):
     return primary.get("electionTime", {}).get("$timestamp", {}).get("t", None)
 
 
-check_info["mongodb_replica_set.election"] = {
-    "discovery_function": discover_single,
-    "check_function": check_mongodb_primary_election,
-    "service_name": "MongoDB Replica Set Primary Election",
-    "check_ruleset_name": "mongodb_replica_set",
-}
+check_info["mongodb_replica_set.election"] = LegacyCheckDefinition(
+    discovery_function=discover_single,
+    check_function=check_mongodb_primary_election,
+    service_name="MongoDB Replica Set Primary Election",
+    check_ruleset_name="mongodb_replica_set",
+)
 
 
 def _get_primary(member_list):

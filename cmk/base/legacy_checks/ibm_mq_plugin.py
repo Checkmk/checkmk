@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_mq import ibm_mq_check_version
 from cmk.base.config import check_info
 
@@ -48,10 +49,10 @@ def check_ibm_mq_plugin(_no_item, params, parsed):
     yield check_tool("runmqsc", parsed)
 
 
-check_info["ibm_mq_plugin"] = {
-    "parse_function": parse_ibm_mq_plugin,
-    "check_function": check_ibm_mq_plugin,
-    "discovery_function": inventory_ibm_mq_plugin,
-    "service_name": "IBM MQ Plugin",
-    "check_ruleset_name": "ibm_mq_plugin",
-}
+check_info["ibm_mq_plugin"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_mq_plugin,
+    check_function=check_ibm_mq_plugin,
+    discovery_function=inventory_ibm_mq_plugin,
+    service_name="IBM MQ Plugin",
+    check_ruleset_name="ibm_mq_plugin",
+)

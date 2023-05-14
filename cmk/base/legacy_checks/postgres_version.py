@@ -22,7 +22,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data, MKCounterWrapped
+from cmk.base.check_api import (
+    discover,
+    get_parsed_item_data,
+    LegacyCheckDefinition,
+    MKCounterWrapped,
+)
 from cmk.base.config import check_info
 
 
@@ -44,9 +49,9 @@ def check_postgres_version(_no_item, _no_params, data):
     yield 0, data
 
 
-check_info["postgres_version"] = {
-    "parse_function": parse_postgres_version,
-    "discovery_function": discover(),
-    "check_function": check_postgres_version,
-    "service_name": "PostgreSQL Version %s",
-}
+check_info["postgres_version"] = LegacyCheckDefinition(
+    parse_function=parse_postgres_version,
+    discovery_function=discover(),
+    check_function=check_postgres_version,
+    service_name="PostgreSQL Version %s",
+)

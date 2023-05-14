@@ -21,6 +21,7 @@
 # inventory
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -62,9 +63,9 @@ def check_3ware_units(item, _no_params, info):
 
 # declare the check to Checkmk
 
-check_info["3ware_units"] = {
-    "check_function": check_3ware_units,
-    "discovery_function": inventory_3ware_units,
-    "service_name": "RAID 3ware unit %s",
-    "check_ruleset_name": "raid",
-}
+check_info["3ware_units"] = LegacyCheckDefinition(
+    check_function=check_3ware_units,
+    discovery_function=inventory_3ware_units,
+    service_name="RAID 3ware unit %s",
+    check_ruleset_name="raid",
+)

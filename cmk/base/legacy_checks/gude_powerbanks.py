@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import any_of, startswith
+from cmk.base.check_api import any_of, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -79,16 +79,16 @@ def inventory_gude_powerbanks(parsed):
 
 _TABLES = (19, 38)
 
-check_info["gude_powerbanks"] = {
-    "detect": any_of(
+check_info["gude_powerbanks"] = LegacyCheckDefinition(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),
     ),
-    "parse_function": parse_gude_powerbanks,
-    "discovery_function": inventory_gude_powerbanks,
-    "check_function": check_elphase,
-    "service_name": "Powerbank %s",
-    "fetch": [
+    parse_function=parse_gude_powerbanks,
+    discovery_function=inventory_gude_powerbanks,
+    check_function=check_elphase,
+    service_name="Powerbank %s",
+    fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.28507.{table}.1.3.1.2.1",
             oids=[OIDEnd(), "3"],
@@ -102,6 +102,6 @@ check_info["gude_powerbanks"] = {
         )
         for table in _TABLES
     ],
-    "default_levels_variable": "gude_powerbank_default_levels",
-    "check_ruleset_name": "el_inphase",
-}
+    default_levels_variable="gude_powerbank_default_levels",
+    check_ruleset_name="el_inphase",
+)

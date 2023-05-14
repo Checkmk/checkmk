@@ -50,7 +50,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import all_of, contains, not_exists
+from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, not_exists
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDCached, OIDEnd, SNMPTree
 
@@ -98,15 +98,15 @@ def check_cisco_fantray(item, _no_params, parsed):
     return None
 
 
-check_info["cisco_fantray"] = {
-    "detect": all_of(
+check_info["cisco_fantray"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), not_exists(".1.3.6.1.4.1.9.9.13.1.4.1.2.*")
     ),
-    "parse_function": parse_cisco_fantray,
-    "discovery_function": inventory_cisco_fantray,
-    "check_function": check_cisco_fantray,
-    "service_name": "Fan %s",
-    "fetch": [
+    parse_function=parse_cisco_fantray,
+    discovery_function=inventory_cisco_fantray,
+    check_function=check_cisco_fantray,
+    service_name="Fan %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.117.1.4.1.1",
             oids=[OIDEnd(), "1"],
@@ -116,4 +116,4 @@ check_info["cisco_fantray"] = {
             oids=[OIDEnd(), OIDCached("7")],
         ),
     ],
-}
+)

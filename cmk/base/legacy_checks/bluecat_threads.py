@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -31,14 +31,14 @@ def check_bluecat_threads(item, params, info):
     return 0, "%d threads" % (nthreads,), perfdata
 
 
-check_info["bluecat_threads"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315.100.200"),
-    "check_function": check_bluecat_threads,
-    "discovery_function": inventory_bluecat_threads,
-    "service_name": "Number of threads",
-    "check_ruleset_name": "threads",
-    "fetch": SNMPTree(
+check_info["bluecat_threads"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315.100.200"),
+    check_function=check_bluecat_threads,
+    discovery_function=inventory_bluecat_threads,
+    service_name="Number of threads",
+    check_ruleset_name="threads",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.100.200.1.1.2",
         oids=["1"],
     ),
-}
+)

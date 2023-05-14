@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes import dell_compellent
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -55,13 +55,13 @@ def check_dell_compellent_disks(_item, _no_params, data):
         yield health_state, "Health: %s, Reason: %s" % (health_state_readable, health_message)
 
 
-check_info["dell_compellent_disks"] = {
-    "detect": DETECT_DELL_COMPELLENT,
-    "parse_function": parse_dell_compellent_disks,
-    "discovery_function": discover(),
-    "check_function": check_dell_compellent_disks,
-    "service_name": "Disk %s",
-    "fetch": [
+check_info["dell_compellent_disks"] = LegacyCheckDefinition(
+    detect=DETECT_DELL_COMPELLENT,
+    parse_function=parse_dell_compellent_disks,
+    discovery_function=discover(),
+    check_function=check_dell_compellent_disks,
+    service_name="Disk %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.674.11000.2000.500.1.2.14.1",
             oids=["2", "3", "4", "5", "6", "11"],
@@ -71,4 +71,4 @@ check_info["dell_compellent_disks"] = {
             oids=["2", "3"],
         ),
     ],
-}
+)

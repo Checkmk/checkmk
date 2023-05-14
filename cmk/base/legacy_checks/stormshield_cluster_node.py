@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, any_of, equals, exists, startswith
+from cmk.base.check_api import all_of, any_of, equals, exists, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -83,21 +83,21 @@ def check_stormshield_cluster_node(item, params, info):
             yield 0, infotext
 
 
-check_info["stormshield_cluster_node"] = {
-    "detect": all_of(
+check_info["stormshield_cluster_node"] = LegacyCheckDefinition(
+    detect=all_of(
         any_of(
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.8"),
             equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11256.2.0"),
         ),
         exists(".1.3.6.1.4.1.11256.1.11.*"),
     ),
-    "discovery_function": inventory_stormshield_cluster_node,
-    "check_function": check_stormshield_cluster_node,
-    "default_levels_variable": "stormshield_cluster_node",
-    "service_name": "HA Member %s",
-    "fetch": SNMPTree(
+    discovery_function=inventory_stormshield_cluster_node,
+    check_function=check_stormshield_cluster_node,
+    default_levels_variable="stormshield_cluster_node",
+    service_name="HA Member %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.11.7.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
-    "check_ruleset_name": "stormshield_quality",
-}
+    check_ruleset_name="stormshield_quality",
+)

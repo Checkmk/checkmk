@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, startswith
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -54,14 +54,14 @@ def check_poseidon_inputs(item, params, data):
     yield 0, "Values %s" % input_values.get(data.get("input_value", 3), "unknown")
 
 
-check_info["poseidon_inputs"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21796.3"),
-    "parse_function": parse_poseidon_inputs,
-    "check_function": check_poseidon_inputs,
-    "discovery_function": discover(),
-    "service_name": "%s",
-    "fetch": SNMPTree(
+check_info["poseidon_inputs"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21796.3"),
+    parse_function=parse_poseidon_inputs,
+    check_function=check_poseidon_inputs,
+    discovery_function=discover(),
+    service_name="%s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.3.3.1.1",
         oids=["2", "3", "4", "5"],
     ),
-}
+)

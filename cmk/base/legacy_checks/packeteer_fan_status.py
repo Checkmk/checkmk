@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -26,13 +26,13 @@ def check_packeteer_fan_status(item, _no_params, info):
     return None
 
 
-check_info["packeteer_fan_status"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2334"),
-    "discovery_function": inventory_packeteer_fan_status,
-    "check_function": check_packeteer_fan_status,
-    "service_name": "Fan Status",
-    "fetch": SNMPTree(
+check_info["packeteer_fan_status"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2334"),
+    discovery_function=inventory_packeteer_fan_status,
+    check_function=check_packeteer_fan_status,
+    service_name="Fan Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2334.2.1.5",
         oids=["12", "14", "22", "24"],
     ),
-}
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -32,14 +33,14 @@ def check_ibm_imm_temp(item, params, info):
     return None
 
 
-check_info["ibm_imm_temp"] = {
-    "detect": DETECT_IBM_IMM,
-    "check_function": check_ibm_imm_temp,
-    "discovery_function": inventory_ibm_imm_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "fetch": SNMPTree(
+check_info["ibm_imm_temp"] = LegacyCheckDefinition(
+    detect=DETECT_IBM_IMM,
+    check_function=check_ibm_imm_temp,
+    discovery_function=inventory_ibm_imm_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.3.1.1.2.1",
         oids=["2", "3", "6", "7", "9", "10"],
     ),
-}
+)

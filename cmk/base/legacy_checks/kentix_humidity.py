@@ -6,6 +6,7 @@
 from collections.abc import Iterable, Mapping
 from typing import NamedTuple
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
@@ -60,13 +61,13 @@ _OIDS = [
 ]
 
 
-check_info["kentix_humidity"] = {
-    "detect": DETECT_KENTIX,
-    "parse_function": parse_kentix_humidity,
-    "check_function": check_kentix_humidity,
-    "discovery_function": inventory_kentix_humidity,
-    "service_name": "Humidity",
-    "fetch": [
+check_info["kentix_humidity"] = LegacyCheckDefinition(
+    detect=DETECT_KENTIX,
+    parse_function=parse_kentix_humidity,
+    check_function=check_kentix_humidity,
+    discovery_function=inventory_kentix_humidity,
+    service_name="Humidity",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.37954.2.1.2",
             oids=["1", "2", "3", "5"],
@@ -76,4 +77,4 @@ check_info["kentix_humidity"] = {
             oids=["1", "2", "3", "5"],
         ),
     ],
-}
+)

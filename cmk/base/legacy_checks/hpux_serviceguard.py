@@ -21,6 +21,7 @@
 # package:SDBP|summary=degraded
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -50,8 +51,8 @@ def check_hpux_serviceguard(item, _no_params, info):
     return (3, "No such item found")
 
 
-check_info["hpux_serviceguard"] = {
-    "check_function": check_hpux_serviceguard,
-    "discovery_function": inventory_hpux_serviceguard,
-    "service_name": "Serviceguard %s",
-}
+check_info["hpux_serviceguard"] = LegacyCheckDefinition(
+    check_function=check_hpux_serviceguard,
+    discovery_function=inventory_hpux_serviceguard,
+    service_name="Serviceguard %s",
+)

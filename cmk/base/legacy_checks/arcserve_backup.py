@@ -58,7 +58,7 @@
 
 # mypy: disable-error-code="var-annotated,assignment"
 
-from cmk.base.check_api import get_bytes_human_readable
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -154,8 +154,8 @@ def check_arcserve_backup(item, _no_params, info):  # pylint: disable=too-many-b
     return status, message, perfdata
 
 
-check_info["arcserve_backup"] = {
-    "check_function": check_arcserve_backup,
-    "discovery_function": inventory_arcserve_backup,
-    "service_name": "Arcserve Backup %s",
-}
+check_info["arcserve_backup"] = LegacyCheckDefinition(
+    check_function=check_arcserve_backup,
+    discovery_function=inventory_arcserve_backup,
+    service_name="Arcserve Backup %s",
+)

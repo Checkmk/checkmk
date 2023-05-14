@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.acme import DETECT_ACME
@@ -59,15 +60,15 @@ def check_acme_sbc_snmp(_no_item, params, info):
         yield 0, score_msg
 
 
-check_info["acme_sbc_snmp"] = {
-    "detect": DETECT_ACME,
-    "discovery_function": inventory_acme_sbc_snmp,
-    "check_function": check_acme_sbc_snmp,
-    "service_name": "ACME SBC health",
-    "fetch": SNMPTree(
+check_info["acme_sbc_snmp"] = LegacyCheckDefinition(
+    detect=DETECT_ACME,
+    discovery_function=inventory_acme_sbc_snmp,
+    check_function=check_acme_sbc_snmp,
+    service_name="ACME SBC health",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.2.1.1",
         oids=["3", "4"],
     ),
-    "check_ruleset_name": "acme_sbc_snmp",
-    "default_levels_variable": "acme_sbc_snmp_default_levels",
-}
+    check_ruleset_name="acme_sbc_snmp",
+    default_levels_variable="acme_sbc_snmp_default_levels",
+)

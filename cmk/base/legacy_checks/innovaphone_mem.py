@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.innovaphone import check_innovaphone
 from cmk.base.config import check_info
 
@@ -18,9 +19,9 @@ def check_innovaphone_mem(_no_item, params, info):
     return check_innovaphone(params, info)
 
 
-check_info["innovaphone_mem"] = {
-    "check_function": check_innovaphone_mem,
-    "discovery_function": inventory_innovaphone_mem,
-    "service_name": "Memory",
-    "check_ruleset_name": "innovaphone_mem",
-}
+check_info["innovaphone_mem"] = LegacyCheckDefinition(
+    check_function=check_innovaphone_mem,
+    discovery_function=inventory_innovaphone_mem,
+    service_name="Memory",
+    check_ruleset_name="innovaphone_mem",
+)

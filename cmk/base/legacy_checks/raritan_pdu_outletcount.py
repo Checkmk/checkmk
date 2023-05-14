@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, any_of, check_levels, startswith
+from cmk.base.check_api import all_of, any_of, check_levels, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -23,20 +23,20 @@ def check_raritan_pdu_outletcount(item, params, info):
         pass
 
 
-check_info["raritan_pdu_outletcount"] = {
-    "detect": all_of(
+check_info["raritan_pdu_outletcount"] = LegacyCheckDefinition(
+    detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6"),
         any_of(
             startswith(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1", "PX2-2"),
             startswith(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1", "PX3"),
         ),
     ),
-    "discovery_function": inventory_raritan_pdu_outletcount,
-    "check_function": check_raritan_pdu_outletcount,
-    "service_name": "Outlet Count",
-    "check_ruleset_name": "plug_count",
-    "fetch": SNMPTree(
+    discovery_function=inventory_raritan_pdu_outletcount,
+    check_function=check_raritan_pdu_outletcount,
+    service_name="Outlet Count",
+    check_ruleset_name="plug_count",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.6.3.2.2.1.4",
         oids=["1"],
     ),
-}
+)

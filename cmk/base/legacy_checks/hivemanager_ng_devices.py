@@ -15,6 +15,7 @@
 # osVersion::6.5.8.1|ip::10.8.95.100|hostName::Host-9|lastUpdated::2017-11-07T22:50:20.425Z|activeClients::9|connected::True|serialId::12345678912345
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["hivemanger_ng_devices"] = {
@@ -73,11 +74,11 @@ def check_hivemanager_ng_devices(item, params, parsed):
         yield 0, "%s: %s" % (text, device[key])
 
 
-check_info["hivemanager_ng_devices"] = {
-    "parse_function": parse_hivemanager_ng_devices,
-    "check_function": check_hivemanager_ng_devices,
-    "discovery_function": inventory_hivemanager_ng_devices,
-    "service_name": "Client %s",
-    "default_levels_variable": "hivemanger_ng_devices",
-    "check_ruleset_name": "hivemanager_ng_devices",
-}
+check_info["hivemanager_ng_devices"] = LegacyCheckDefinition(
+    parse_function=parse_hivemanager_ng_devices,
+    check_function=check_hivemanager_ng_devices,
+    discovery_function=inventory_hivemanager_ng_devices,
+    service_name="Client %s",
+    default_levels_variable="hivemanger_ng_devices",
+    check_ruleset_name="hivemanager_ng_devices",
+)

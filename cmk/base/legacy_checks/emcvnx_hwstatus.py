@@ -61,6 +61,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -125,8 +126,8 @@ def check_emcvnx_hwstatus(item, _no_params, info):
         return 3, "Enclosure %s not found in agent output" % item
 
 
-check_info["emcvnx_hwstatus"] = {
-    "discovery_function": inventory_emcvnx_hwstatus,
-    "check_function": check_emcvnx_hwstatus,
-    "service_name": "Enclosure %s",  # Example for Item: "0/1 Power A"
-}
+check_info["emcvnx_hwstatus"] = LegacyCheckDefinition(
+    discovery_function=inventory_emcvnx_hwstatus,
+    check_function=check_emcvnx_hwstatus,
+    service_name="Enclosure %s",  # Example for Item: "0/1 Power A"
+)

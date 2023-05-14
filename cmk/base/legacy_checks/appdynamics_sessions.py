@@ -11,7 +11,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -67,9 +67,9 @@ def check_appdynamics_sessions(item, params, info):
             yield 0, "Maximum active: %d" % max_active
 
 
-check_info["appdynamics_sessions"] = {
-    "discovery_function": inventory_appdynamics_sessions,
-    "check_function": check_appdynamics_sessions,
-    "service_name": "AppDynamics Sessions %s",
-    "check_ruleset_name": "jvm_sessions",
-}
+check_info["appdynamics_sessions"] = LegacyCheckDefinition(
+    discovery_function=inventory_appdynamics_sessions,
+    check_function=check_appdynamics_sessions,
+    service_name="AppDynamics Sessions %s",
+    check_ruleset_name="jvm_sessions",
+)

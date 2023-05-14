@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_mq import ibm_mq_check_version
 from cmk.base.config import check_info
 
@@ -109,10 +109,10 @@ def check_ibm_mq_managers(item, params, data):  # pylint: disable=too-many-branc
         yield 2, "Unknown STANDBY state (%s)" % standby
 
 
-check_info["ibm_mq_managers"] = {
+check_info["ibm_mq_managers"] = LegacyCheckDefinition(
     # section is already migrated!
-    "check_function": check_ibm_mq_managers,
-    "discovery_function": inventory_ibm_mq_managers,
-    "service_name": "IBM MQ Manager %s",
-    "check_ruleset_name": "ibm_mq_managers",
-}
+    check_function=check_ibm_mq_managers,
+    discovery_function=inventory_ibm_mq_managers,
+    service_name="IBM MQ Manager %s",
+    check_ruleset_name="ibm_mq_managers",
+)

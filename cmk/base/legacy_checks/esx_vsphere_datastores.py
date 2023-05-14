@@ -12,6 +12,7 @@ from cmk.base.check_api import (
     get_bytes_human_readable,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info, factory_settings
@@ -100,13 +101,13 @@ def check_esx_vsphere_datastores(item, params, data):
         yield 0, "", [("overprovisioned", prov_bytes / mib)]  # fixed: true-division
 
 
-check_info["esx_vsphere_datastores"] = {
-    "parse_function": parse_esx_vsphere_datastores,
-    "discovery_function": discover(),
-    "check_function": check_esx_vsphere_datastores,
-    "service_name": "Filesystem %s",
-    "check_ruleset_name": "esx_vsphere_datastores",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["esx_vsphere_datastores"] = LegacyCheckDefinition(
+    parse_function=parse_esx_vsphere_datastores,
+    discovery_function=discover(),
+    check_function=check_esx_vsphere_datastores,
+    service_name="Filesystem %s",
+    check_ruleset_name="esx_vsphere_datastores",
+    default_levels_variable="filesystem_default_levels",
+)
 
 # .

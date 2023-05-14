@@ -14,7 +14,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import get_age_human_readable, regex
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, regex
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["windows_license_default_levels"] = {
@@ -88,11 +88,11 @@ def check_win_license(_item, params, parsed):
     yield time_state, time_message
 
 
-check_info["win_license"] = {
-    "service_name": "Windows License",
-    "parse_function": parse_win_license,
-    "discovery_function": inventory_win_license,
-    "check_function": check_win_license,
-    "check_ruleset_name": "win_license",
-    "default_levels_variable": "windows_license_default_levels",
-}
+check_info["win_license"] = LegacyCheckDefinition(
+    service_name="Windows License",
+    parse_function=parse_win_license,
+    discovery_function=inventory_win_license,
+    check_function=check_win_license,
+    check_ruleset_name="win_license",
+    default_levels_variable="windows_license_default_levels",
+)

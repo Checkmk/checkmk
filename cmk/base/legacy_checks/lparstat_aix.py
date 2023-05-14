@@ -8,7 +8,7 @@
 
 from typing import Iterable
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 from cmk.base.check_legacy_includes.transforms import transform_cpu_iowait
 from cmk.base.config import check_info
@@ -36,12 +36,12 @@ def check_lparstat(_no_item, _no_params, section: Section):
         yield 0, "%s: %s%s" % (name.title(), value, uom), [(name, value)]
 
 
-check_info["lparstat_aix"] = {
+check_info["lparstat_aix"] = LegacyCheckDefinition(
     # section migrated already!
-    "check_function": check_lparstat,
-    "discovery_function": inventory_lparstat,
-    "service_name": "lparstat",
-}
+    check_function=check_lparstat,
+    discovery_function=inventory_lparstat,
+    service_name="lparstat",
+)
 
 
 def inventory_lparstat_aix_cpu(section: Section):
@@ -88,10 +88,10 @@ def check_lparstat_aix_cpu(_no_item, params, section: Section):
     )
 
 
-check_info["lparstat_aix.cpu_util"] = {
+check_info["lparstat_aix.cpu_util"] = LegacyCheckDefinition(
     # section migrated already!
-    "check_function": check_lparstat_aix_cpu,
-    "discovery_function": inventory_lparstat_aix_cpu,
-    "service_name": "CPU utilization",
-    "check_ruleset_name": "cpu_iowait",
-}
+    check_function=check_lparstat_aix_cpu,
+    discovery_function=inventory_lparstat_aix_cpu,
+    service_name="CPU utilization",
+    check_ruleset_name="cpu_iowait",
+)

@@ -10,6 +10,7 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_parsed_item_data,
     get_timestamp_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.redis import parse_redis_info
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
@@ -115,13 +116,13 @@ def check_redis_info(item, params, item_data):
         yield 0, "Port: %s" % port_data
 
 
-check_info["redis_info"] = {
-    "parse_function": parse_redis_info,
-    "check_function": check_redis_info,
-    "discovery_function": discover(),
-    "service_name": "Redis %s Server Info",
-    "check_ruleset_name": "redis_info",
-}
+check_info["redis_info"] = LegacyCheckDefinition(
+    parse_function=parse_redis_info,
+    check_function=check_redis_info,
+    discovery_function=discover(),
+    service_name="Redis %s Server Info",
+    check_ruleset_name="redis_info",
+)
 # .
 #   .--Persistence---------------------------------------------------------.
 #   |           ____               _     _                                 |
@@ -215,13 +216,13 @@ def check_redis_info_persistence(item, params, item_data):
         )
 
 
-check_info["redis_info.persistence"] = {
-    "check_function": check_redis_info_persistence,
-    "discovery_function": discover(lambda k, values: "Persistence" in values),
-    "service_name": "Redis %s Persistence",
-    "check_ruleset_name": "redis_info_persistence",
-    "default_levels_variable": "redis_info_persistence_default_levels",
-}
+check_info["redis_info.persistence"] = LegacyCheckDefinition(
+    check_function=check_redis_info_persistence,
+    discovery_function=discover(lambda k, values: "Persistence" in values),
+    service_name="Redis %s Persistence",
+    check_ruleset_name="redis_info_persistence",
+    default_levels_variable="redis_info_persistence_default_levels",
+)
 # .
 #   .--Clients-------------------------------------------------------------.
 #   |                     ____ _ _            _                            |
@@ -275,10 +276,10 @@ def check_redis_info_clients(item, params, item_data):
         )
 
 
-check_info["redis_info.clients"] = {
-    "check_function": check_redis_info_clients,
-    "discovery_function": discover(lambda k, values: "Clients" in values),
-    "service_name": "Redis %s Clients",
-    "check_ruleset_name": "redis_info_clients",
-}
+check_info["redis_info.clients"] = LegacyCheckDefinition(
+    check_function=check_redis_info_clients,
+    discovery_function=discover(lambda k, values: "Clients" in values),
+    service_name="Redis %s Clients",
+    check_ruleset_name="redis_info_clients",
+)
 # .

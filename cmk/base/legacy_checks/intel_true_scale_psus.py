@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -84,15 +85,15 @@ def check_intel_true_scale_psus(item, params, parsed):
             yield res
 
 
-check_info["intel_true_scale_psus"] = {
-    "detect": DETECT_INTEL_TRUE_SCALE,
-    "parse_function": parse_intel_true_scale_psus,
-    "discovery_function": inventory_intel_true_scale_psus,
-    "check_function": check_intel_true_scale_psus,
-    "service_name": "Power supply %s",
-    "fetch": SNMPTree(
+check_info["intel_true_scale_psus"] = LegacyCheckDefinition(
+    detect=DETECT_INTEL_TRUE_SCALE,
+    parse_function=parse_intel_true_scale_psus,
+    discovery_function=inventory_intel_true_scale_psus,
+    check_function=check_intel_true_scale_psus,
+    service_name="Power supply %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.10222.2.1.4.7.1",
         oids=["2", "3", "4", "5", "6"],
     ),
-    "check_ruleset_name": "el_inphase",
-}
+    check_ruleset_name="el_inphase",
+)

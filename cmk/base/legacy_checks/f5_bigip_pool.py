@@ -8,6 +8,7 @@
 
 import re
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -95,14 +96,14 @@ def check_f5_bigip_pool(item, params, parsed):
     return state, message
 
 
-check_info["f5_bigip_pool"] = {
-    "detect": DETECT,
-    "parse_function": parse_f5_bigip_pool,
-    "check_function": check_f5_bigip_pool,
-    "check_ruleset_name": "f5_pools",
-    "discovery_function": inventory_f5_bigip_pool,
-    "service_name": "Load Balancing Pool %s",
-    "fetch": [
+check_info["f5_bigip_pool"] = LegacyCheckDefinition(
+    detect=DETECT,
+    parse_function=parse_f5_bigip_pool,
+    check_function=check_f5_bigip_pool,
+    check_ruleset_name="f5_pools",
+    discovery_function=inventory_f5_bigip_pool,
+    service_name="Load Balancing Pool %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3375.2.2.5.1.2.1",
             oids=["1", "8", "23"],
@@ -112,4 +113,4 @@ check_info["f5_bigip_pool"] = {
             oids=["1", "4", "10", "11", "13", "19"],
         ),
     ],
-}
+)

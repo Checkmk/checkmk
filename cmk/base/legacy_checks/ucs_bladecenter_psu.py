@@ -7,7 +7,7 @@
 # mypy: disable-error-code="var-annotated"
 
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
-from cmk.base.check_api import check_levels, get_parsed_item_data
+from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
 from cmk.base.config import check_info, factory_settings
@@ -92,14 +92,14 @@ def check_ucs_bladecenter_psu(item, params, psu):
         yield 0, "Assuming 'Power Save Mode'"
 
 
-check_info["ucs_bladecenter_psu"] = {
-    "parse_function": ucs_bladecenter_psu_parse,
-    "discovery_function": inventory_ucs_bladecenter_psu,
-    "check_function": check_ucs_bladecenter_psu,
-    "service_name": "Voltage %s",
-    "check_ruleset_name": "ucs_bladecenter_chassis_voltage",
-    "default_levels_variable": "ucs_bladecenter_psu_default_levels",
-}
+check_info["ucs_bladecenter_psu"] = LegacyCheckDefinition(
+    parse_function=ucs_bladecenter_psu_parse,
+    discovery_function=inventory_ucs_bladecenter_psu,
+    check_function=check_ucs_bladecenter_psu,
+    service_name="Voltage %s",
+    check_ruleset_name="ucs_bladecenter_chassis_voltage",
+    default_levels_variable="ucs_bladecenter_psu_default_levels",
+)
 
 # .
 #   .--Power Supply--------------------------------------------------------.
@@ -132,12 +132,12 @@ def check_ucs_bladecenter_psu_switch_power(item, params, psu):
     return check_elphase(item, params, {item: psu_new})
 
 
-check_info["ucs_bladecenter_psu.switch_power"] = {
-    "discovery_function": inventory_ucs_bladecenter_psu_switch_power,
-    "check_function": check_ucs_bladecenter_psu_switch_power,
-    "service_name": "Power Supply %s",
-    "check_ruleset_name": "el_inphase",
-}
+check_info["ucs_bladecenter_psu.switch_power"] = LegacyCheckDefinition(
+    discovery_function=inventory_ucs_bladecenter_psu_switch_power,
+    check_function=check_ucs_bladecenter_psu_switch_power,
+    service_name="Power Supply %s",
+    check_ruleset_name="el_inphase",
+)
 
 # .
 #   .--Temperature---------------------------------------------------------.
@@ -175,10 +175,10 @@ def check_ucs_bladecenter_psu_chassis_temp(item, params, parsed):
     return check_temperature_list(sensor_list, params, "ucs_bladecenter_psu_chassis_temp_%s" % item)
 
 
-check_info["ucs_bladecenter_psu.chassis_temp"] = {
-    "discovery_function": inventory_ucs_bladecenter_psu_chassis_temp,
-    "check_function": check_ucs_bladecenter_psu_chassis_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "ucs_bladecenter_psu_chassis_temp_default_levels",
-}
+check_info["ucs_bladecenter_psu.chassis_temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_ucs_bladecenter_psu_chassis_temp,
+    check_function=check_ucs_bladecenter_psu_chassis_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="ucs_bladecenter_psu_chassis_temp_default_levels",
+)

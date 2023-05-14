@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, equals
+from cmk.base.check_api import any_of, equals, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -58,24 +58,24 @@ def check_docsis_channels_downstream(item, params, info):
 
 
 # This Check is a subcheck because there is also a upstream version possible
-check_info["docsis_channels_downstream"] = {
-    "detect": any_of(
+check_info["docsis_channels_downstream"] = LegacyCheckDefinition(
+    detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.900.2.0.0.0.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.827"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20858.2.600"),
     ),
-    "check_function": check_docsis_channels_downstream,
-    "discovery_function": inventory_docsis_channels_downstream,
-    "service_name": "Downstream Channel %s",
-    "fetch": SNMPTree(
+    check_function=check_docsis_channels_downstream,
+    discovery_function=inventory_docsis_channels_downstream,
+    service_name="Downstream Channel %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.2.1.10.127.1.1.1.1",
         oids=["1", "2", "6"],
     ),
-    "check_ruleset_name": "docsis_channels_downstream",
-    "default_levels_variable": "docsis_channels_downstream",
-}
+    check_ruleset_name="docsis_channels_downstream",
+    default_levels_variable="docsis_channels_downstream",
+)
 
 # Information for future extensions of the check:
 # docsIfDownChannelId             1.3.6.1.2.1.10.127.1.1.1.1.1

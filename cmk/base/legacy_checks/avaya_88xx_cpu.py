@@ -6,6 +6,7 @@
 
 import time
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -24,15 +25,15 @@ def check_avaya_88xx_cpu(_no_item, params, info):
     return check_cpu_util(int(info[0][0]), params, time.time())
 
 
-check_info["avaya_88xx_cpu"] = {
-    "detect": DETECT_AVAYA,
-    "check_function": check_avaya_88xx_cpu,
-    "discovery_function": inventory_avaya_88xx_cpu,
-    "service_name": "CPU utilization",
-    "default_levels_variable": "avaya_88xx_cpu_default_levels",
-    "check_ruleset_name": "cpu_utilization",
-    "fetch": SNMPTree(
+check_info["avaya_88xx_cpu"] = LegacyCheckDefinition(
+    detect=DETECT_AVAYA,
+    check_function=check_avaya_88xx_cpu,
+    discovery_function=inventory_avaya_88xx_cpu,
+    service_name="CPU utilization",
+    default_levels_variable="avaya_88xx_cpu_default_levels",
+    check_ruleset_name="cpu_utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2272.1.1",
         oids=["20"],
     ),
-}
+)

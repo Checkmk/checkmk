@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.blade import DETECT_BLADE_BX
@@ -33,13 +34,13 @@ def check_blade_bx_powermod(item, _no_param, info):
     return state, "%s Status is %s" % (product_name, state_readable)
 
 
-check_info["blade_bx_powermod"] = {
-    "detect": DETECT_BLADE_BX,
-    "discovery_function": inventory_blade_bx_powermod,
-    "check_function": check_blade_bx_powermod,
-    "service_name": "Power Module %s",
-    "fetch": SNMPTree(
+check_info["blade_bx_powermod"] = LegacyCheckDefinition(
+    detect=DETECT_BLADE_BX,
+    discovery_function=inventory_blade_bx_powermod,
+    check_function=check_blade_bx_powermod,
+    service_name="Power Module %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.7244.1.1.1.3.2.4.1",
         oids=["1", "2", "4"],
     ),
-}
+)

@@ -11,6 +11,7 @@
 
 import json
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 MAP_INSTANCE_STATE = {
@@ -58,9 +59,9 @@ def check_jenkins_instance(_no_item, _no_params, parsed):
         yield state, "%s: %s" % (infotext, MAP_INSTANCE_STATE[parsed_data])
 
 
-check_info["jenkins_instance"] = {
-    "parse_function": parse_jenkins_instance,
-    "check_function": check_jenkins_instance,
-    "discovery_function": inventory_jenkins_instance,
-    "service_name": "Jenkins Instance",
-}
+check_info["jenkins_instance"] = LegacyCheckDefinition(
+    parse_function=parse_jenkins_instance,
+    check_function=check_jenkins_instance,
+    discovery_function=inventory_jenkins_instance,
+    service_name="Jenkins Instance",
+)

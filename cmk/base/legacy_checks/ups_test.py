@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_age_human_readable
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import parse_snmp_uptime
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -122,13 +122,13 @@ def check_ups_test(_no_item, params, info):
     )
 
 
-check_info["ups_test"] = {
-    "detect": DETECT_UPS_GENERIC,
-    "discovery_function": discover_ups_test,
-    "check_function": check_ups_test,
-    "service_name": "Self Test",
-    "check_ruleset_name": "ups_test",
-    "fetch": [
+check_info["ups_test"] = LegacyCheckDefinition(
+    detect=DETECT_UPS_GENERIC,
+    discovery_function=discover_ups_test,
+    check_function=check_ups_test,
+    service_name="Self Test",
+    check_ruleset_name="ups_test",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.1.3",
             oids=["0"],
@@ -138,8 +138,8 @@ check_info["ups_test"] = {
             oids=["3", "5", "4"],
         ),
     ],
-    "default_levels_variable": "ups_test_default_levels",
-}
+    default_levels_variable="ups_test_default_levels",
+)
 
 factory_settings["ups_test_default_levels"] = {
     "levels_elapsed_time": None,

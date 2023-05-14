@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -89,15 +89,15 @@ def check_ucd_cpu_util(item, params, parsed):
     yield 0, "", perfdata
 
 
-check_info["ucd_cpu_util"] = {
-    "detect": ucd_hr_detection.PREFER_HR_ELSE_UCD,
-    "parse_function": parse_ucd_cpu_util,
-    "discovery_function": inventory_ucd_cpu_util,
-    "check_function": check_ucd_cpu_util,
-    "service_name": "CPU utilization",
-    "fetch": SNMPTree(
+check_info["ucd_cpu_util"] = LegacyCheckDefinition(
+    detect=ucd_hr_detection.PREFER_HR_ELSE_UCD,
+    parse_function=parse_ucd_cpu_util,
+    discovery_function=inventory_ucd_cpu_util,
+    check_function=check_ucd_cpu_util,
+    service_name="CPU utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2021.11",
         oids=["2", "50", "51", "52", "53", "54", "56", "57", "58", "61"],
     ),
-    "check_ruleset_name": "cpu_iowait",
-}
+    check_ruleset_name="cpu_iowait",
+)

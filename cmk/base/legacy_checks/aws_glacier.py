@@ -9,6 +9,7 @@ from cmk.base.check_api import (
     discover_single,
     get_bytes_human_readable,
     get_parsed_item_data,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.aws import parse_aws
 from cmk.base.config import check_info
@@ -66,13 +67,13 @@ def check_aws_glacier_archives(item, params, parsed):
         yield 0, "[Tags]: %s" % ", ".join(tag_infos)
 
 
-check_info["aws_glacier"] = {
-    "parse_function": parse_aws_glacier,
-    "discovery_function": inventory_aws_glacier,
-    "check_function": check_aws_glacier_archives,
-    "service_name": "AWS/Glacier Vault: %s",
-    "check_ruleset_name": "aws_glacier_vault_archives",
-}
+check_info["aws_glacier"] = LegacyCheckDefinition(
+    parse_function=parse_aws_glacier,
+    discovery_function=inventory_aws_glacier,
+    check_function=check_aws_glacier_archives,
+    service_name="AWS/Glacier Vault: %s",
+    check_ruleset_name="aws_glacier_vault_archives",
+)
 
 # .
 #   .--Glacier summary-----------------------------------------------------.
@@ -114,9 +115,9 @@ def check_aws_glacier_summary(item, params, parsed):
         ), [("aws_glacier_largest_vault_size", largest_vault_size)]
 
 
-check_info["aws_glacier.summary"] = {
-    "discovery_function": discover_single,
-    "check_function": check_aws_glacier_summary,
-    "service_name": "AWS/Glacier Summary",
-    "check_ruleset_name": "aws_glacier_vaults",
-}
+check_info["aws_glacier.summary"] = LegacyCheckDefinition(
+    discovery_function=discover_single,
+    check_function=check_aws_glacier_summary,
+    service_name="AWS/Glacier Summary",
+    check_ruleset_name="aws_glacier_vaults",
+)

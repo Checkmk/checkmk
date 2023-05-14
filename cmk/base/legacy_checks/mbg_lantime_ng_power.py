@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
@@ -27,13 +28,13 @@ def check_mbg_lantime_ng_power(item, _no_params, info):
     return None
 
 
-check_info["mbg_lantime_ng_power"] = {
-    "detect": DETECT_MBG_LANTIME_NG,
-    "check_function": check_mbg_lantime_ng_power,
-    "discovery_function": inventory_mbg_lantime_ng_power,
-    "service_name": "Power Supply %s",
-    "fetch": SNMPTree(
+check_info["mbg_lantime_ng_power"] = LegacyCheckDefinition(
+    detect=DETECT_MBG_LANTIME_NG,
+    check_function=check_mbg_lantime_ng_power,
+    discovery_function=inventory_mbg_lantime_ng_power,
+    service_name="Power Supply %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.0.2.1",
         oids=["1", "2"],
     ),
-}
+)

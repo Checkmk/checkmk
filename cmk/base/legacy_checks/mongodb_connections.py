@@ -13,7 +13,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, get_rate
+from cmk.base.check_api import (
+    check_levels,
+    get_percent_human_readable,
+    get_rate,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["mongodb_connections_default_levels"] = {
@@ -71,10 +76,10 @@ def _is_int(key_list, info_dict) -> bool:
     return True
 
 
-check_info["mongodb_connections"] = {
-    "service_name": "MongoDB %s",
-    "check_function": check_mongodb_connections,
-    "discovery_function": inventory_mongodb_connections,
-    "default_levels_variable": "mongodb_connections_default_levels",
-    "check_ruleset_name": "db_connections_mongodb",
-}
+check_info["mongodb_connections"] = LegacyCheckDefinition(
+    service_name="MongoDB %s",
+    check_function=check_mongodb_connections,
+    discovery_function=inventory_mongodb_connections,
+    default_levels_variable="mongodb_connections_default_levels",
+    check_ruleset_name="db_connections_mongodb",
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -26,15 +27,15 @@ def check_bvip_temp(item, params, info):
     return None
 
 
-check_info["bvip_temp"] = {
-    "detect": DETECT_BVIP,
-    "check_function": check_bvip_temp,
-    "discovery_function": inventory_bvip_temp,
-    "default_levels_variable": "bvip_temp_default_levels",
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["bvip_temp"] = LegacyCheckDefinition(
+    detect=DETECT_BVIP,
+    check_function=check_bvip_temp,
+    discovery_function=inventory_bvip_temp,
+    default_levels_variable="bvip_temp_default_levels",
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1.7.1",
         oids=[OIDEnd(), "1"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

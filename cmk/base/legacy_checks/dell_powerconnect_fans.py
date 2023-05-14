@@ -29,7 +29,7 @@
 # GENERAL MAPS:
 
 
-from cmk.base.check_api import any_of, contains
+from cmk.base.check_api import any_of, contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -74,16 +74,16 @@ def check_dell_powerconnect_fans(item, _not_used, info):
 
 # Auto-detection of fan related details.
 
-check_info["dell_powerconnect_fans"] = {
-    "detect": any_of(
+check_info["dell_powerconnect_fans"] = LegacyCheckDefinition(
+    detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6027.1.3.22"),
     ),
-    "check_function": check_dell_powerconnect_fans,
-    "discovery_function": inventory_dell_powerconnect_fans,
-    "service_name": "Sensor %s",
-    "fetch": SNMPTree(
+    check_function=check_dell_powerconnect_fans,
+    discovery_function=inventory_dell_powerconnect_fans,
+    service_name="Sensor %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10895.3000.1.2.110.7.1.1",
         oids=["1", "2", "3"],
     ),
-}
+)

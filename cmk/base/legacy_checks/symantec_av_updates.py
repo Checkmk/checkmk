@@ -15,7 +15,7 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 symantec_av_updates_default_levels = (259200, 345600)
@@ -47,9 +47,9 @@ def check_symantec_av_updates(_no_item, params, info):
     return 0, message
 
 
-check_info["symantec_av_updates"] = {
-    "check_function": check_symantec_av_updates,
-    "check_ruleset_name": "antivir_update_age",
-    "discovery_function": inventory_symantec_av_updates,
-    "service_name": "AV Update Status",
-}
+check_info["symantec_av_updates"] = LegacyCheckDefinition(
+    check_function=check_symantec_av_updates,
+    check_ruleset_name="antivir_update_age",
+    discovery_function=inventory_symantec_av_updates,
+    service_name="AV Update Status",
+)

@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mcafee_gateway import inventory_mcafee_gateway_generic
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -56,14 +56,14 @@ def check_mcafee_emailgateway_bridge(item, params, info):
         yield state, infotext, [tuple(perfdata)]
 
 
-check_info["mcafee_emailgateway_bridge"] = {
-    "detect": DETECT_EMAIL_GATEWAY,
-    "discovery_function": inventory_mcafee_gateway_generic,
-    "check_function": check_mcafee_emailgateway_bridge,
-    "service_name": "Bridge",
-    "fetch": SNMPTree(
+check_info["mcafee_emailgateway_bridge"] = LegacyCheckDefinition(
+    detect=DETECT_EMAIL_GATEWAY,
+    discovery_function=inventory_mcafee_gateway_generic,
+    check_function=check_mcafee_emailgateway_bridge,
+    service_name="Bridge",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.1230.2.4.1.2.2.1",
         oids=["1", "2", "3", "4", "5"],
     ),
-    "check_ruleset_name": "mcafee_emailgateway_bridge",
-}
+    check_ruleset_name="mcafee_emailgateway_bridge",
+)

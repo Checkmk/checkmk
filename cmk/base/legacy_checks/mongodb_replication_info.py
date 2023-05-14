@@ -21,6 +21,7 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_bytes_human_readable,
     get_timestamp_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
 
@@ -135,10 +136,10 @@ def _get_as_int(data, key):
         return 0
 
 
-check_info["mongodb_replication_info"] = {
-    "parse_function": parse_mongodb_replication_info,
-    "discovery_function": discover_single,
-    "check_function": check_mongodb_replication_info,
-    "service_name": "MongoDB Replication Info",
-    "check_ruleset_name": "mongodb_replication_info",
-}
+check_info["mongodb_replication_info"] = LegacyCheckDefinition(
+    parse_function=parse_mongodb_replication_info,
+    discovery_function=discover_single,
+    check_function=check_mongodb_replication_info,
+    service_name="MongoDB Replication Info",
+    check_ruleset_name="mongodb_replication_info",
+)

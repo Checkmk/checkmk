@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import contains, get_parsed_item_data
+from cmk.base.check_api import contains, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -37,16 +37,16 @@ def check_seh_ports(item, params, data):
         yield 1, "Status during discovery: %s" % (params.get("status_at_discovery") or "unknown")
 
 
-check_info["seh_ports"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1229.1.1"),
-    "parse_function": parse_seh_ports,
-    "discovery_function": inventory_seh_ports,
-    "check_function": check_seh_ports,
-    "service_name": "Port %s",
-    "fetch": [
+check_info["seh_ports"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1229.1.1"),
+    parse_function=parse_seh_ports,
+    discovery_function=inventory_seh_ports,
+    check_function=check_seh_ports,
+    service_name="Port %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1229.2.50.2.1",
             oids=[OIDEnd(), "10", "26", "27"],
         )
     ],
-}
+)

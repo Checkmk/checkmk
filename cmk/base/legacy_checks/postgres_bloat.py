@@ -9,6 +9,7 @@
 from cmk.base.check_api import (
     get_bytes_human_readable,
     get_percent_human_readable,
+    LegacyCheckDefinition,
     MKCounterWrapped,
 )
 from cmk.base.config import check_info, factory_settings
@@ -154,11 +155,11 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
         )
 
 
-check_info["postgres_bloat"] = {
-    "parse_function": postgres.parse_dbs,
-    "check_function": check_postgres_bloat,
-    "discovery_function": inventory_postgres_bloat,
-    "service_name": "PostgreSQL Bloat %s",
-    "check_ruleset_name": "db_bloat",
-    "default_levels_variable": "postgres_bloat_default_levels",
-}
+check_info["postgres_bloat"] = LegacyCheckDefinition(
+    parse_function=postgres.parse_dbs,
+    check_function=check_postgres_bloat,
+    discovery_function=inventory_postgres_bloat,
+    service_name="PostgreSQL Bloat %s",
+    check_ruleset_name="db_bloat",
+    default_levels_variable="postgres_bloat_default_levels",
+)

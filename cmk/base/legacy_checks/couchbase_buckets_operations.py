@@ -8,7 +8,7 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data
+from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
@@ -86,18 +86,18 @@ def check_couchbase_buckets_operations(_item, params, data):
         )
 
 
-check_info["couchbase_buckets_operations"] = {
-    "parse_function": parse_couchbase_buckets_operations,
-    "discovery_function": discover(lambda k, v: k is not None and "ops" in v),
-    "check_function": check_couchbase_buckets_operations,
-    "service_name": "Couchbase Bucket %s Operations",
-    "check_ruleset_name": "couchbase_ops",
-}
+check_info["couchbase_buckets_operations"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_buckets_operations,
+    discovery_function=discover(lambda k, v: k is not None and "ops" in v),
+    check_function=check_couchbase_buckets_operations,
+    service_name="Couchbase Bucket %s Operations",
+    check_ruleset_name="couchbase_ops",
+)
 
-check_info["couchbase_buckets_operations.total"] = {
-    "parse_function": parse_couchbase_buckets_operations,
-    "discovery_function": discover(lambda k, v: k is None and "ops" in v),
-    "check_function": check_couchbase_buckets_operations,
-    "service_name": "Couchbase Bucket Operations",
-    "check_ruleset_name": "couchbase_ops_buckets",
-}
+check_info["couchbase_buckets_operations.total"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_buckets_operations,
+    discovery_function=discover(lambda k, v: k is None and "ops" in v),
+    check_function=check_couchbase_buckets_operations,
+    service_name="Couchbase Bucket Operations",
+    check_ruleset_name="couchbase_ops_buckets",
+)

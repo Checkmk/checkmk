@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.bluecat import DETECT_BLUECAT
@@ -44,15 +45,15 @@ def check_bluecat_ha(item, params, info):
     yield state, "State is %s" % oper_states[oper_state]
 
 
-check_info["bluecat_ha"] = {
-    "detect": DETECT_BLUECAT,
-    "check_function": check_bluecat_ha,
-    "discovery_function": inventory_bluecat_ha,
-    "service_name": "HA State",
-    "default_levels_variable": "bluecat_ha",
-    "check_ruleset_name": "bluecat_ha",
-    "fetch": SNMPTree(
+check_info["bluecat_ha"] = LegacyCheckDefinition(
+    detect=DETECT_BLUECAT,
+    check_function=check_bluecat_ha,
+    discovery_function=inventory_bluecat_ha,
+    service_name="HA State",
+    default_levels_variable="bluecat_ha",
+    check_ruleset_name="bluecat_ha",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.5.2.1",
         oids=["1"],
     ),
-}
+)

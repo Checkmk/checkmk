@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -48,14 +49,14 @@ def check_casa_cpu_temp(item, params, parsed):
     return None
 
 
-check_info["casa_cpu_temp"] = {
-    "detect": DETECT_CASA,
-    "check_function": check_casa_cpu_temp,
-    "discovery_function": inventory_casa_cpu_temp,
-    "parse_function": parse_casa_info_temp,
-    "service_name": "Temperature CPU %s",
-    "check_ruleset_name": "temperature",
-    "fetch": [
+check_info["casa_cpu_temp"] = LegacyCheckDefinition(
+    detect=DETECT_CASA,
+    check_function=check_casa_cpu_temp,
+    discovery_function=inventory_casa_cpu_temp,
+    parse_function=parse_casa_info_temp,
+    service_name="Temperature CPU %s",
+    check_ruleset_name="temperature",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
             oids=[OIDEnd(), "2"],
@@ -73,4 +74,4 @@ check_info["casa_cpu_temp"] = {
             oids=[OIDEnd(), "6"],
         ),
     ],
-}
+)

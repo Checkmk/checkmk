@@ -50,7 +50,7 @@
 # otherwise modify the inventory.
 
 
-from cmk.base.check_api import all_of, contains, exists
+from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -107,15 +107,13 @@ def check_cisco_hsrp(item, params, info):
     return 3, "HSRP Group not found in Agent output"
 
 
-check_info["cisco_hsrp"] = {
-    "detect": all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.106.1.1.1.0")
-    ),
-    "discovery_function": inventory_cisco_hsrp,
-    "check_function": check_cisco_hsrp,
-    "service_name": "HSRP Group %s",
-    "fetch": SNMPTree(
+check_info["cisco_hsrp"] = LegacyCheckDefinition(
+    detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.106.1.1.1.0")),
+    discovery_function=inventory_cisco_hsrp,
+    check_function=check_cisco_hsrp,
+    service_name="HSRP Group %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.106.1.2.1.1",
         oids=[OIDEnd(), "11", "13", "14", "15", "16"],
     ),
-}
+)

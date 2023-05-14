@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_instances,
     parse_wmi_table,
@@ -18,11 +19,11 @@ def check_wmi_webservices(item, params, parsed):
     )
 
 
-check_info["wmi_webservices"] = {
-    "discovery_function": lambda p: inventory_wmi_table_instances(  # pylint: disable=unnecessary-lambda
+check_info["wmi_webservices"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_wmi_table_instances(  # pylint: disable=unnecessary-lambda
         p
     ),
-    "check_function": check_wmi_webservices,
-    "parse_function": parse_wmi_table,
-    "service_name": "Web Service %s",
-}
+    check_function=check_wmi_webservices,
+    parse_function=parse_wmi_table,
+    service_name="Web Service %s",
+)

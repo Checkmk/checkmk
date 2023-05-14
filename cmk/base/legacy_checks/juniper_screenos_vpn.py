@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_SCREENOS
@@ -24,13 +25,13 @@ def check_juniper_screenos_vpn(item, params, info):
     return (2, "VPN name not found in SNMP data")
 
 
-check_info["juniper_screenos_vpn"] = {
-    "detect": DETECT_JUNIPER_SCREENOS,
-    "check_function": check_juniper_screenos_vpn,
-    "discovery_function": inventory_juniper_screenos_vpn,
-    "service_name": "VPN %s",
-    "fetch": SNMPTree(
+check_info["juniper_screenos_vpn"] = LegacyCheckDefinition(
+    detect=DETECT_JUNIPER_SCREENOS,
+    check_function=check_juniper_screenos_vpn,
+    discovery_function=inventory_juniper_screenos_vpn,
+    service_name="VPN %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3224.4.1.1.1",
         oids=["4", "23"],
     ),
-}
+)

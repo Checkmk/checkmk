@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_TRPZ
@@ -34,13 +34,13 @@ def check_juniper_trpz_power(item, _no_params, info):
     return None
 
 
-check_info["juniper_trpz_power"] = {
-    "detect": DETECT_JUNIPER_TRPZ,
-    "check_function": check_juniper_trpz_power,
-    "discovery_function": inventory_juniper_trpz_power,
-    "service_name": "PSU %s",
-    "fetch": SNMPTree(
+check_info["juniper_trpz_power"] = LegacyCheckDefinition(
+    detect=DETECT_JUNIPER_TRPZ,
+    check_function=check_juniper_trpz_power,
+    discovery_function=inventory_juniper_trpz_power,
+    service_name="PSU %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1.13.1.2.1",
         oids=["3", "2"],
     ),
-}
+)

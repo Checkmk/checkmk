@@ -6,6 +6,7 @@
 from collections.abc import Iterable
 from typing import List
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.huawei_switch import (
     parse_huawei_physical_entity_values,
     Section,
@@ -41,13 +42,13 @@ def check_huawei_switch_temp(
     yield check_temperature(temp, params, "huawei_switch_temp_%s" % item_data.stack_member)
 
 
-check_info["huawei_switch_temp"] = {
-    "detect": DETECT_HUAWEI_SWITCH,
-    "parse_function": parse_huawei_switch_temp,
-    "discovery_function": discover_huawei_switch_temp,
-    "check_function": check_huawei_switch_temp,
-    "service_name": "Temperature %s",
-    "fetch": [
+check_info["huawei_switch_temp"] = LegacyCheckDefinition(
+    detect=DETECT_HUAWEI_SWITCH,
+    parse_function=parse_huawei_switch_temp,
+    discovery_function=discover_huawei_switch_temp,
+    check_function=check_huawei_switch_temp,
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
             oids=[OIDEnd(), "7"],
@@ -57,6 +58,6 @@ check_info["huawei_switch_temp"] = {
             oids=[OIDEnd(), "11"],
         ),
     ],
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "huawei_switch_temp_default_levels",
-}
+    check_ruleset_name="temperature",
+    default_levels_variable="huawei_switch_temp_default_levels",
+)

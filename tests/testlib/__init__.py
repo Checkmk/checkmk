@@ -49,7 +49,7 @@ from cmk.utils.type_defs import HostName
 
 from cmk.checkers.checking import CheckPluginName
 
-from cmk.base.api.agent_based.register.utils_legacy import CheckInfoElement
+from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -347,7 +347,7 @@ class Check(BaseCheck):
         super().__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
-        self.info: CheckInfoElement = config.check_info[self.name]
+        self.info: LegacyCheckDefinition = config.check_info[self.name]
         self._migrated_plugin = register.get_check_plugin(
             CheckPluginName(self.name.replace(".", "_"))
         )

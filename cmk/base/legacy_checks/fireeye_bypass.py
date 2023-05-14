@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
@@ -26,13 +27,13 @@ def check_fireeye_bypass(_no_item, params, info):
         yield 2, " (was %d before)" % expected_value
 
 
-check_info["fireeye_bypass"] = {
-    "detect": DETECT,
-    "discovery_function": inventory_bypass,
-    "check_function": check_fireeye_bypass,
-    "service_name": "Bypass Mail Rate",
-    "fetch": SNMPTree(
+check_info["fireeye_bypass"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=inventory_bypass,
+    check_function=check_fireeye_bypass,
+    service_name="Bypass Mail Rate",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",
         oids=["41"],
     ),
-}
+)

@@ -138,6 +138,7 @@
 
 # mypy: disable-error-code="attr-defined"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -193,9 +194,9 @@ def check_solaris_fmadm(_no_item, params, parsed):
         yield 0, "Problems: %s" % ", ".join(problems)
 
 
-check_info["solaris_fmadm"] = {
-    "parse_function": parse_solaris_fmadm,
-    "discovery_function": inventory_solaris_fmadm,
-    "check_function": check_solaris_fmadm,
-    "service_name": "FMD Status",
-}
+check_info["solaris_fmadm"] = LegacyCheckDefinition(
+    parse_function=parse_solaris_fmadm,
+    discovery_function=inventory_solaris_fmadm,
+    check_function=check_solaris_fmadm,
+    service_name="FMD Status",
+)

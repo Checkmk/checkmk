@@ -10,6 +10,7 @@
 # upsBatteryVoltage             1.3.6.1.4.1.4555.1.1.1.1.2.5
 # upsBatteryTemperature         1.3.6.1.4.1.4555.1.1.1.1.2.6
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ups_socomec import DETECT_SOCOMEC
@@ -72,15 +73,15 @@ def check_ups_socomec_capacity(item, params, info):
         yield 0, "On battery for %d min" % time_on_bat
 
 
-check_info["ups_socomec_capacity"] = {
-    "detect": DETECT_SOCOMEC,
-    "check_function": check_ups_socomec_capacity,
-    "discovery_function": inventory_ups_socomec_capacity,
-    "default_levels_variable": "ups_capacity_default_levels",
-    "service_name": "Battery capacity",
-    "check_ruleset_name": "ups_capacity",
-    "fetch": SNMPTree(
+check_info["ups_socomec_capacity"] = LegacyCheckDefinition(
+    detect=DETECT_SOCOMEC,
+    check_function=check_ups_socomec_capacity,
+    discovery_function=inventory_ups_socomec_capacity,
+    default_levels_variable="ups_capacity_default_levels",
+    service_name="Battery capacity",
+    check_ruleset_name="ups_capacity",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.2",
         oids=["2", "3", "4"],
     ),
-}
+)

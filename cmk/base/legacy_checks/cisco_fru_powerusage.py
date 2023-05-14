@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -75,13 +76,13 @@ def inventory_cisco_fru_powerusage(parsed):
             yield what, {}
 
 
-check_info["cisco_fru_powerusage"] = {
-    "detect": DETECT_CISCO,
-    "parse_function": parse_cisco_fru_powerusage,
-    "discovery_function": inventory_cisco_fru_powerusage,
-    "check_function": check_elphase,
-    "service_name": "FRU power usage %s",
-    "fetch": [
+check_info["cisco_fru_powerusage"] = LegacyCheckDefinition(
+    detect=DETECT_CISCO,
+    parse_function=parse_cisco_fru_powerusage,
+    discovery_function=inventory_cisco_fru_powerusage,
+    check_function=check_elphase,
+    service_name="FRU power usage %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.117.1.1.1.1",
             oids=[OIDEnd(), "2"],
@@ -91,5 +92,5 @@ check_info["cisco_fru_powerusage"] = {
             oids=[OIDEnd(), "1", "2", "3", "4"],
         ),
     ],
-    "check_ruleset_name": "el_inphase",
-}
+    check_ruleset_name="el_inphase",
+)

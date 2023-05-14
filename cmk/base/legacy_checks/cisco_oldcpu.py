@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, exists, startswith
+from cmk.base.check_api import all_of, exists, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -23,19 +23,19 @@ def check_cisco_oldcpu(_no_item, params, info):
     return check_cpu_util(float(info[0][0]), params)
 
 
-check_info["cisco_oldcpu"] = {
-    "detect": all_of(
+check_info["cisco_oldcpu"] = LegacyCheckDefinition(
+    detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1745"),
         exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.2.*"),
         exists(".1.3.6.1.4.1.9.2.1.57.0"),
     ),
-    "discovery_function": inventory_cisco_oldcpu,
-    "check_function": check_cisco_oldcpu,
-    "service_name": "CPU utilization",
-    "fetch": SNMPTree(
+    discovery_function=inventory_cisco_oldcpu,
+    check_function=check_cisco_oldcpu,
+    service_name="CPU utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.2.1",
         oids=["57"],
     ),
-    "check_ruleset_name": "cpu_utilization",
-    "default_levels_variable": "cisco_oldcpu_default_levels",
-}
+    check_ruleset_name="cpu_utilization",
+    default_levels_variable="cisco_oldcpu_default_levels",
+)

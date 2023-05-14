@@ -16,7 +16,7 @@
 
 import time
 
-from cmk.base.check_api import get_relative_date_human_readable
+from cmk.base.check_api import get_relative_date_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 ad_replication_default_params = (15, 20)
@@ -169,9 +169,9 @@ def check_ad_replication(item, params, info):
     return
 
 
-check_info["ad_replication"] = {
-    "check_function": check_ad_replication,
-    "discovery_function": inventory_ad_replication,
-    "service_name": "AD Replication %s",
-    "check_ruleset_name": "ad_replication",
-}
+check_info["ad_replication"] = LegacyCheckDefinition(
+    check_function=check_ad_replication,
+    discovery_function=inventory_ad_replication,
+    service_name="AD Replication %s",
+    check_ruleset_name="ad_replication",
+)

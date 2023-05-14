@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -19,8 +20,8 @@ def check_plesk_domains(_no_item, _no_params, info):
     return (0, "%s" % ",<br>".join([i[0] for i in info]))
 
 
-check_info["plesk_domains"] = {
-    "check_function": check_plesk_domains,
-    "discovery_function": inventory_plesk_domains,
-    "service_name": "Plesk Domains",
-}
+check_info["plesk_domains"] = LegacyCheckDefinition(
+    check_function=check_plesk_domains,
+    discovery_function=inventory_plesk_domains,
+    service_name="Plesk Domains",
+)

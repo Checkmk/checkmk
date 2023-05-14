@@ -6,6 +6,7 @@
 # .1.3.6.1.4.1.12148.9.2.2.0 1 --> ELTEK-DISTRIBUTED-MIB::systemOperationalStatus.0
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.eltek import DETECT_ELTEK
@@ -26,13 +27,13 @@ def check_eltek_systemstatus(_no_item, _no_params, info):
     return state, "Operational status: %s" % state_readable
 
 
-check_info["eltek_systemstatus"] = {
-    "detect": DETECT_ELTEK,
-    "discovery_function": inventory_eltek_systemstatus,
-    "check_function": check_eltek_systemstatus,
-    "service_name": "System Status",
-    "fetch": SNMPTree(
+check_info["eltek_systemstatus"] = LegacyCheckDefinition(
+    detect=DETECT_ELTEK,
+    discovery_function=inventory_eltek_systemstatus,
+    check_function=check_eltek_systemstatus,
+    service_name="System Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12148.9.2",
         oids=["2"],
     ),
-}
+)

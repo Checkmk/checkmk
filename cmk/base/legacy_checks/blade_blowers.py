@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.blade import DETECT_BLADE
@@ -85,13 +86,13 @@ def check_blade_blowers(item, _no_params, info):
     return (2, output, perfdata)
 
 
-check_info["blade_blowers"] = {
-    "detect": DETECT_BLADE,
-    "check_function": check_blade_blowers,
-    "discovery_function": inventory_blade_blowers,
-    "service_name": "Blower %s",
-    "fetch": SNMPTree(
+check_info["blade_blowers"] = LegacyCheckDefinition(
+    detect=DETECT_BLADE,
+    check_function=check_blade_blowers,
+    discovery_function=inventory_blade_blowers,
+    service_name="Blower %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.2.2",
         oids=["3"],
     ),
-}
+)

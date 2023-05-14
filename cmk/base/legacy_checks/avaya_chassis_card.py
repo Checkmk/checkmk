@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.avaya import DETECT_AVAYA
@@ -30,13 +31,13 @@ def check_avaya_chassis_card(item, _no_params, info):
     return None
 
 
-check_info["avaya_chassis_card"] = {
-    "detect": DETECT_AVAYA,
-    "check_function": check_avaya_chassis_card,
-    "discovery_function": inventory_avaya_chassis_card,
-    "service_name": "Card %s",
-    "fetch": SNMPTree(
+check_info["avaya_chassis_card"] = LegacyCheckDefinition(
+    detect=DETECT_AVAYA,
+    check_function=check_avaya_chassis_card,
+    discovery_function=inventory_avaya_chassis_card,
+    service_name="Card %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2272.1.4.9.1.1",
         oids=["1", "6"],
     ),
-}
+)

@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -33,15 +33,15 @@ def check_nimble_volumes(item, params, info):
             yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
-check_info["nimble_volumes"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
-    "discovery_function": inventory_nimble_volumes,
-    "check_function": check_nimble_volumes,
-    "service_name": "Volume %s",
-    "fetch": SNMPTree(
+check_info["nimble_volumes"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
+    discovery_function=inventory_nimble_volumes,
+    check_function=check_nimble_volumes,
+    service_name="Volume %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.37447.1.2.1",
         oids=["2", "3", "4", "6", "10"],
     ),
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)

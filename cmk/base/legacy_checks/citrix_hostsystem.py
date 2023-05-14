@@ -16,6 +16,7 @@
 
 # mypy: disable-error-code="attr-defined"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -54,11 +55,11 @@ def check_citrix_hostsystem_vms(_no_item, _no_params, parsed):
     return 0, "%d VMs running: %s" % (len(vmlist), ", ".join(vmlist))
 
 
-check_info["citrix_hostsystem.vms"] = {
-    "discovery_function": inventory_citrix_hostsystem_vms,
-    "check_function": check_citrix_hostsystem_vms,
-    "service_name": "Citrix VMs",
-}
+check_info["citrix_hostsystem.vms"] = LegacyCheckDefinition(
+    discovery_function=inventory_citrix_hostsystem_vms,
+    check_function=check_citrix_hostsystem_vms,
+    service_name="Citrix VMs",
+)
 
 # .
 #   .--Host Info-----------------------------------------------------------.
@@ -81,9 +82,9 @@ def check_citrix_hostsystem(_no_item, _no_params, parsed):
     return 0, "Citrix Pool Name: %s" % parsed["pool"]
 
 
-check_info["citrix_hostsystem"] = {
-    "parse_function": parse_citrix_hostsystem,
-    "discovery_function": inventory_citrix_hostsystem,
-    "check_function": check_citrix_hostsystem,
-    "service_name": "Citrix Host Info",
-}
+check_info["citrix_hostsystem"] = LegacyCheckDefinition(
+    parse_function=parse_citrix_hostsystem,
+    discovery_function=inventory_citrix_hostsystem,
+    check_function=check_citrix_hostsystem,
+    service_name="Citrix Host Info",
+)

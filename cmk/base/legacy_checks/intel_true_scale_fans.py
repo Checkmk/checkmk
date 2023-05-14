@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.intel import DETECT_INTEL_TRUE_SCALE
@@ -75,13 +76,13 @@ def check_intel_true_scale_fans(item, _no_params, info):
                 yield state, "%s status: %s" % (what_descr, state_readable)
 
 
-check_info["intel_true_scale_fans"] = {
-    "detect": DETECT_INTEL_TRUE_SCALE,
-    "discovery_function": inventory_intel_true_scale_fans,
-    "check_function": check_intel_true_scale_fans,
-    "service_name": "Fan %s",
-    "fetch": SNMPTree(
+check_info["intel_true_scale_fans"] = LegacyCheckDefinition(
+    detect=DETECT_INTEL_TRUE_SCALE,
+    discovery_function=inventory_intel_true_scale_fans,
+    check_function=check_intel_true_scale_fans,
+    service_name="Fan %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.10222.2.1.6.5.1",
         oids=["2", "3", "4"],
     ),
-}
+)

@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info, factory_settings
 
@@ -78,11 +78,11 @@ def check_ibm_svc_mdisk(item, params, data):
     yield params.get("%s_mode" % mdisk_mode, 1), "Mode: %s" % mdisk_mode
 
 
-check_info["ibm_svc_mdisk"] = {
-    "parse_function": parse_ibm_svc_mdisk,
-    "check_function": check_ibm_svc_mdisk,
-    "discovery_function": inventory_ibm_svc_mdisk,
-    "service_name": "MDisk %s",
-    "check_ruleset_name": "ibm_svc_mdisk",
-    "default_levels_variable": "ibm_svc_mdisk_default_levels",
-}
+check_info["ibm_svc_mdisk"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_svc_mdisk,
+    check_function=check_ibm_svc_mdisk,
+    discovery_function=inventory_ibm_svc_mdisk,
+    service_name="MDisk %s",
+    check_ruleset_name="ibm_svc_mdisk",
+    default_levels_variable="ibm_svc_mdisk_default_levels",
+)

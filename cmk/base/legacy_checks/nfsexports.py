@@ -10,6 +10,7 @@
 # [['/mirrored/data/recording', '172.0.0.0/255.0.0.0']]
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -44,8 +45,8 @@ def check_nfsexports(item, _no_params, info):
     return 2, "export not found in export list"
 
 
-check_info["nfsexports"] = {
-    "check_function": check_nfsexports,
-    "discovery_function": inventory_nfsexports,
-    "service_name": "NFS export %s",
-}
+check_info["nfsexports"] = LegacyCheckDefinition(
+    check_function=check_nfsexports,
+    discovery_function=inventory_nfsexports,
+    service_name="NFS export %s",
+)

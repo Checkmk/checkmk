@@ -91,7 +91,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import all_of, contains, exists
+from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDCached, OIDEnd, SNMPTree
 
@@ -163,14 +163,12 @@ def check_cisco_temp_sensor(item, params, info):
     return None
 
 
-check_info["cisco_temp_sensor"] = {
-    "detect": all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.91.1.1.1.1.*")
-    ),
-    "check_function": check_cisco_temp_sensor,
-    "discovery_function": inventory_cisco_temp_sensor,
-    "service_name": "Temperature %s",
-    "fetch": [
+check_info["cisco_temp_sensor"] = LegacyCheckDefinition(
+    detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.91.1.1.1.1.*")),
+    check_function=check_cisco_temp_sensor,
+    discovery_function=inventory_cisco_temp_sensor,
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
             oids=[OIDEnd(), OIDCached("2")],
@@ -184,4 +182,4 @@ check_info["cisco_temp_sensor"] = {
             oids=[OIDEnd(), "4"],
         ),
     ],
-}
+)

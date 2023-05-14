@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, exists, startswith
+from cmk.base.check_api import all_of, exists, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -17,17 +17,17 @@ def check_netapp_cpu(item, params, info):
     return check_cpu_util(util, params)
 
 
-check_info["netapp_cpu"] = {
-    "detect": all_of(
+check_info["netapp_cpu"] = LegacyCheckDefinition(
+    detect=all_of(
         startswith(".1.3.6.1.2.1.1.1.0", "NetApp Release"), exists(".1.3.6.1.4.1.789.1.2.1.3.0")
     ),
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.789.1.2.1",
         oids=["3"],
     ),
-    "service_name": "CPU utilization",
-    "discovery_function": lambda info: [(None, {})],
-    "check_function": check_netapp_cpu,
-    "default_levels_variable": "netapp_cpu_default_levels",
-    "check_ruleset_name": "cpu_utilization",
-}
+    service_name="CPU utilization",
+    discovery_function=lambda info: [(None, {})],
+    check_function=check_netapp_cpu,
+    default_levels_variable="netapp_cpu_default_levels",
+    check_ruleset_name="cpu_utilization",
+)

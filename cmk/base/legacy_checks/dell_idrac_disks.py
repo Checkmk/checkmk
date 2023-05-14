@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_IDRAC_POWEREDGE
@@ -101,13 +101,13 @@ def check_dell_idrac_disks(item, _no_params, info):
                 yield state, "%s" % (state_readable)
 
 
-check_info["dell_idrac_disks"] = {
-    "detect": DETECT_IDRAC_POWEREDGE,
-    "check_function": check_dell_idrac_disks,
-    "discovery_function": inventory_dell_idrac_disks,
-    "service_name": "Disk %s",
-    "fetch": SNMPTree(
+check_info["dell_idrac_disks"] = LegacyCheckDefinition(
+    detect=DETECT_IDRAC_POWEREDGE,
+    check_function=check_dell_idrac_disks,
+    discovery_function=inventory_dell_idrac_disks,
+    service_name="Disk %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1",
         oids=["2", "4", "11", "22", "24", "31", "50", "55"],
     ),
-}
+)

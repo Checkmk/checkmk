@@ -8,7 +8,7 @@
 # .1.3.6.1.4.1.232.2.2.2.1.0  "GB8851CPPH
 
 
-from cmk.base.check_api import all_of, any_of, contains, exists
+from cmk.base.check_api import all_of, any_of, contains, exists, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -34,8 +34,8 @@ def check_proliant_general(_no_item, _no_params, info):
     return state, "Status: %s, Firmware: %s, S/N: %s" % (state_readable, firmware, serial_number)
 
 
-check_info["hp_proliant"] = {
-    "detect": any_of(
+check_info["hp_proliant"] = LegacyCheckDefinition(
+    detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", "8072.3.2.10"),
         contains(".1.3.6.1.2.1.1.2.0", "232.9.4.10"),
         all_of(
@@ -43,11 +43,11 @@ check_info["hp_proliant"] = {
             exists(".1.3.6.1.4.1.232.11.1.3.0"),
         ),
     ),
-    "discovery_function": inventory_proliant_general,
-    "check_function": check_proliant_general,
-    "service_name": "General Status",
-    "fetch": SNMPTree(
+    discovery_function=inventory_proliant_general,
+    check_function=check_proliant_general,
+    service_name="General Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.232",
         oids=["11.1.3.0", "11.2.14.1.1.5.0", "2.2.2.1.0"],
     ),
-}
+)

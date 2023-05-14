@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate, saveint, state_markers
+from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint, state_markers
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
@@ -183,11 +183,11 @@ def check_emcvnx_disks(item, params, parsed):
     return nagstate, message, perfdata
 
 
-check_info["emcvnx_disks"] = {
-    "parse_function": parse_emcvnx_disks,
-    "discovery_function": inventory_emcvnx_disks,
-    "check_function": check_emcvnx_disks,
-    "service_name": "Enclosure %s",
-    "check_ruleset_name": "emcvnx_disks",
-    "default_levels_variable": "emcvnx_disks_default_levels",
-}
+check_info["emcvnx_disks"] = LegacyCheckDefinition(
+    parse_function=parse_emcvnx_disks,
+    discovery_function=inventory_emcvnx_disks,
+    check_function=check_emcvnx_disks,
+    service_name="Enclosure %s",
+    check_ruleset_name="emcvnx_disks",
+    default_levels_variable="emcvnx_disks_default_levels",
+)

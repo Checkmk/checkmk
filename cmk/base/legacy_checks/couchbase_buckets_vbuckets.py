@@ -10,6 +10,7 @@ from cmk.base.check_api import (
     get_bytes_human_readable,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
@@ -71,18 +72,18 @@ def check_couchbase_buckets_vbuckets_replica(_item, params, data):
         )
 
 
-check_info["couchbase_buckets_vbuckets"] = {
-    "parse_function": parse_couchbase_lines,
-    "discovery_function": discover(lambda _k, v: "vb_active_resident_items_ratio" in v),
-    "check_function": check_couchbase_buckets_vbuckets,
-    "service_name": "Couchbase Bucket %s active vBuckets",
-    "check_ruleset_name": "couchbase_vbuckets",
-}
+check_info["couchbase_buckets_vbuckets"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_lines,
+    discovery_function=discover(lambda _k, v: "vb_active_resident_items_ratio" in v),
+    check_function=check_couchbase_buckets_vbuckets,
+    service_name="Couchbase Bucket %s active vBuckets",
+    check_ruleset_name="couchbase_vbuckets",
+)
 
-check_info["couchbase_buckets_vbuckets.replica"] = {
-    "parse_function": parse_couchbase_lines,
-    "discovery_function": discover(lambda _k, v: "vb_active_resident_items_ratio" in v),
-    "check_function": check_couchbase_buckets_vbuckets_replica,
-    "service_name": "Couchbase Bucket %s replica vBuckets",
-    "check_ruleset_name": "couchbase_vbuckets",
-}
+check_info["couchbase_buckets_vbuckets.replica"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_lines,
+    discovery_function=discover(lambda _k, v: "vb_active_resident_items_ratio" in v),
+    check_function=check_couchbase_buckets_vbuckets_replica,
+    service_name="Couchbase Bucket %s replica vBuckets",
+    check_ruleset_name="couchbase_vbuckets",
+)

@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -123,13 +124,13 @@ def check_netgear_fans(item, params, parsed):
     yield state, "Status: %s" % state_readable
 
 
-check_info["netgear_fans"] = {
-    "detect": DETECT_NETGEAR,
-    "parse_function": parse_netgear_fans,
-    "discovery_function": inventory_netgear_fans,
-    "check_function": check_netgear_fans,
-    "service_name": "Fan %s",
-    "fetch": [
+check_info["netgear_fans"] = LegacyCheckDefinition(
+    detect=DETECT_NETGEAR,
+    parse_function=parse_netgear_fans,
+    discovery_function=inventory_netgear_fans,
+    check_function=check_netgear_fans,
+    service_name="Fan %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.4526.10.1.1.1",
             oids=["13"],
@@ -139,6 +140,6 @@ check_info["netgear_fans"] = {
             oids=[OIDEnd(), "3", "4"],
         ),
     ],
-    "default_levels_variable": "netgear_fans_default_levels",
-    "check_ruleset_name": "hw_fans",
-}
+    default_levels_variable="netgear_fans_default_levels",
+    check_ruleset_name="hw_fans",
+)

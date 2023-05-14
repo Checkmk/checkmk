@@ -18,6 +18,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -57,9 +58,9 @@ def check_postfix_mailq_status(item, params, parsed):
             yield 0, "PID: %s" % pid
 
 
-check_info["postfix_mailq_status"] = {
-    "parse_function": parse_postfix_mailq_status,
-    "discovery_function": inventory_postfix_mailq_status,
-    "check_function": check_postfix_mailq_status,
-    "service_name": "Postfix status %s",
-}
+check_info["postfix_mailq_status"] = LegacyCheckDefinition(
+    parse_function=parse_postfix_mailq_status,
+    discovery_function=inventory_postfix_mailq_status,
+    check_function=check_postfix_mailq_status,
+    service_name="Postfix status %s",
+)

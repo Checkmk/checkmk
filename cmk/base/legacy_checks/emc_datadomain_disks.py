@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
@@ -49,12 +50,12 @@ def check_emc_datadomain_disks(item, _no_params, info):
             )
 
 
-check_info["emc_datadomain_disks"] = {
-    "detect": DETECT_DATADOMAIN,
-    "check_function": check_emc_datadomain_disks,
-    "discovery_function": inventory_emc_datadomain_disks,
-    "service_name": "Hard Disk %s",
-    "fetch": [
+check_info["emc_datadomain_disks"] = LegacyCheckDefinition(
+    detect=DETECT_DATADOMAIN,
+    check_function=check_emc_datadomain_disks,
+    discovery_function=inventory_emc_datadomain_disks,
+    service_name="Hard Disk %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.19746.1.6.1.1.1",
             oids=["1", "2", "4", "5", "6", "7", "8", OIDEnd()],
@@ -64,4 +65,4 @@ check_info["emc_datadomain_disks"] = {
             oids=["6"],
         ),
     ],
-}
+)

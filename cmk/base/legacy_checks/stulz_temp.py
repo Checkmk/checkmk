@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -78,16 +79,16 @@ def check_stulz_temp(item, params, parsed):
     return None
 
 
-check_info["stulz_temp"] = {
-    "detect": DETECT_STULZ,
-    "parse_function": parse_stulz_temp,
-    "discovery_function": inventory_stulz_temp,
-    "check_function": check_stulz_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "fetch": SNMPTree(
+check_info["stulz_temp"] = LegacyCheckDefinition(
+    detect=DETECT_STULZ,
+    parse_function=parse_stulz_temp,
+    discovery_function=inventory_stulz_temp,
+    check_function=check_stulz_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1",
         oids=[OIDEnd(), "1"],
     ),
-    "default_levels_variable": "stulz_temp_default_levels",
-}
+    default_levels_variable="stulz_temp_default_levels",
+)

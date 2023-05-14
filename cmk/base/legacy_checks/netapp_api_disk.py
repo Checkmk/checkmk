@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.filerdisks import (
     check_filer_disks,
     FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
@@ -30,11 +31,11 @@ def check_netapp_api_disk_summary(_no_item, params, section):
     )
 
 
-check_info["netapp_api_disk.summary"] = {
+check_info["netapp_api_disk.summary"] = LegacyCheckDefinition(
     # section is already migrated!
-    "check_function": check_netapp_api_disk_summary,
-    "discovery_function": inventory_netapp_api_disk_summary,
-    "service_name": "NetApp Disks Summary",
-    "check_ruleset_name": "netapp_disks",
-    "default_levels_variable": "filer_disks_default_levels",
-}
+    check_function=check_netapp_api_disk_summary,
+    discovery_function=inventory_netapp_api_disk_summary,
+    service_name="NetApp Disks Summary",
+    check_ruleset_name="netapp_disks",
+    default_levels_variable="filer_disks_default_levels",
+)

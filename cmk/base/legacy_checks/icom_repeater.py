@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="list-item,assignment"
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -125,12 +125,12 @@ def check_icom_repeater_ps_volt(_no_item, params, parsed):
     return status, infotext, perfdata
 
 
-check_info["icom_repeater.ps_volt"] = {
-    "discovery_function": inventory_icom_repeater_ps_volt,
-    "check_function": check_icom_repeater_ps_volt,
-    "service_name": "Power Supply Voltage",
-    "check_ruleset_name": "ps_voltage",
-}
+check_info["icom_repeater.ps_volt"] = LegacyCheckDefinition(
+    discovery_function=inventory_icom_repeater_ps_volt,
+    check_function=check_icom_repeater_ps_volt,
+    service_name="Power Supply Voltage",
+    check_ruleset_name="ps_voltage",
+)
 
 # .
 #   .--PLL Voltage---------------------------------------------------------.
@@ -187,12 +187,12 @@ def check_icom_repeater_pll_volt(item, params, parsed):
     return status, infotext, perfdata
 
 
-check_info["icom_repeater.pll_volt"] = {
-    "discovery_function": inventory_icom_repeater_pll_volt,
-    "check_function": check_icom_repeater_pll_volt,
-    "service_name": "%s PLL Lock Voltage",
-    "check_ruleset_name": "pll_lock_voltage",
-}
+check_info["icom_repeater.pll_volt"] = LegacyCheckDefinition(
+    discovery_function=inventory_icom_repeater_pll_volt,
+    check_function=check_icom_repeater_pll_volt,
+    service_name="%s PLL Lock Voltage",
+    check_ruleset_name="pll_lock_voltage",
+)
 
 # .
 #   .--Temperature---------------------------------------------------------.
@@ -228,13 +228,13 @@ def check_icom_repeater_temp(_no_item, params, parsed):
     )
 
 
-check_info["icom_repeater.temp"] = {
-    "discovery_function": inventory_icom_repeater_temp,
-    "default_levels_variable": "icom_repeater_temp_default_levels",
-    "check_function": check_icom_repeater_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-}
+check_info["icom_repeater.temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_icom_repeater_temp,
+    default_levels_variable="icom_repeater_temp_default_levels",
+    check_function=check_icom_repeater_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+)
 
 # .
 #   .--Repeater Info-------------------------------------------------------.
@@ -267,14 +267,14 @@ def check_icom_repeater(_no_item, _no_params, parsed):
         yield 3, "Repeater operation status unknown"
 
 
-check_info["icom_repeater"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "fr5000"),
-    "parse_function": parse_icom_repeater,
-    "discovery_function": inventory_icom_repeater,
-    "check_function": check_icom_repeater,
-    "service_name": "Repeater Info",
-    "fetch": SNMPTree(
+check_info["icom_repeater"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.1.0", "fr5000"),
+    parse_function=parse_icom_repeater,
+    discovery_function=inventory_icom_repeater,
+    check_function=check_icom_repeater,
+    service_name="Repeater Info",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2021.8.1",
         oids=["1", "2", "101"],
     ),
-}
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -68,15 +68,15 @@ def check_raritan_px_outlets(item, params, parsed):
         yield from check_elphase(item, params, parsed)
 
 
-check_info["raritan_px_outlets"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.4"),
-    "parse_function": parse_raritan_px_outlets,
-    "discovery_function": inventory_raritan_px_outlets,
-    "check_function": check_raritan_px_outlets,
-    "service_name": "Outlet %s",
-    "fetch": SNMPTree(
+check_info["raritan_px_outlets"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.4"),
+    parse_function=parse_raritan_px_outlets,
+    discovery_function=inventory_raritan_px_outlets,
+    check_function=check_raritan_px_outlets,
+    service_name="Outlet %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.4.1.2.2.1",
         oids=["1", "2", "3", "4", "6", "7", "8", "31"],
     ),
-    "check_ruleset_name": "el_inphase",
-}
+    check_ruleset_name="el_inphase",
+)

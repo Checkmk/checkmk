@@ -52,6 +52,7 @@
 # .1.3.6.1.4.1.2636.3.1.15.1.8.9.1.0.0 6 --> JUNIPER-MIB::jnxFruState.9.1.0.0
 # .1.3.6.1.4.1.2636.3.1.15.1.8.9.2.0.0 6 --> JUNIPER-MIB::jnxFruState.9.2.0.0
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER
@@ -116,18 +117,18 @@ def check_juniper_fru(item, _no_params, parsed):
     return None
 
 
-check_info["juniper_fru"] = {
-    "detect": DETECT_JUNIPER,
-    "parse_function": parse_juniper_fru,
-    "discovery_function": lambda info: inventory_juniper_fru(info, ("7", "18")),
-    "check_function": check_juniper_fru,
-    "service_name": "Power Supply FRU %s",
+check_info["juniper_fru"] = LegacyCheckDefinition(
+    detect=DETECT_JUNIPER,
+    parse_function=parse_juniper_fru,
+    discovery_function=lambda info: inventory_juniper_fru(info, ("7", "18")),
+    check_function=check_juniper_fru,
+    service_name="Power Supply FRU %s",
     # Use utils.juniper.DETECT when migrating
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.3.1.15.1",
         oids=["5", "6", "8"],
     ),
-}
+)
 
 # .
 #   .--fan-----------------------------------------------------------------.
@@ -139,8 +140,8 @@ check_info["juniper_fru"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-check_info["juniper_fru.fan"] = {
-    "discovery_function": lambda info: inventory_juniper_fru(info, ("13",)),
-    "check_function": check_juniper_fru,
-    "service_name": "Fan FRU %s",
-}
+check_info["juniper_fru.fan"] = LegacyCheckDefinition(
+    discovery_function=lambda info: inventory_juniper_fru(info, ("13",)),
+    check_function=check_juniper_fru,
+    service_name="Fan FRU %s",
+)

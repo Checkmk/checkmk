@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.juniper_mem import juniper_mem_default_levels
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -39,15 +40,15 @@ def check_juniper_mem(item, params, info):
     return None
 
 
-check_info["juniper_mem"] = {
-    "detect": DETECT_JUNIPER,
-    "discovery_function": inventory_juniper_mem,
-    "check_function": check_juniper_mem,
-    "service_name": "Memory %s",
+check_info["juniper_mem"] = LegacyCheckDefinition(
+    detect=DETECT_JUNIPER,
+    discovery_function=inventory_juniper_mem,
+    check_function=check_juniper_mem,
+    service_name="Memory %s",
     # Use utils.juniper.DETECT when migrating
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.3.1.13.1",
         oids=["5.9", "11.9"],
     ),
-    "check_ruleset_name": "juniper_mem_modules",
-}
+    check_ruleset_name="juniper_mem_modules",
+)

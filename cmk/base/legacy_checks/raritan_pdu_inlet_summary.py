@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import discover
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.raritan import raritan_map_state, raritan_map_type
 from cmk.base.config import check_info
@@ -28,15 +28,15 @@ def parse_raritan_pdu_inlet_summary(info):
     return {"Summary": summary}
 
 
-check_info["raritan_pdu_inlet_summary"] = {
-    "detect": DETECT_RARITAN,
-    "parse_function": parse_raritan_pdu_inlet_summary,
-    "discovery_function": discover(),
-    "check_function": check_elphase,
-    "service_name": "Input %s",
-    "check_ruleset_name": "el_inphase",
-    "fetch": SNMPTree(
+check_info["raritan_pdu_inlet_summary"] = LegacyCheckDefinition(
+    detect=DETECT_RARITAN,
+    parse_function=parse_raritan_pdu_inlet_summary,
+    discovery_function=discover(),
+    check_function=check_elphase,
+    service_name="Input %s",
+    check_ruleset_name="el_inphase",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.6",
         oids=[OIDEnd(), "3.3.4.1.7.1.1", "5.2.3.1.2.1.1", "5.2.3.1.3.1.1", "5.2.3.1.4.1.1"],
     ),
-}
+)

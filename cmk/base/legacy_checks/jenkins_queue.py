@@ -19,6 +19,7 @@ from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
     get_timestamp_human_readable,
+    LegacyCheckDefinition,
     state_markers,
 )
 from cmk.base.config import check_info, factory_settings
@@ -154,11 +155,11 @@ def check_jenkins_queue(_no_item, params, parsed):
             yield 0, "\n%s" % line
 
 
-check_info["jenkins_queue"] = {
-    "parse_function": parse_jenkins_queue,
-    "check_function": check_jenkins_queue,
-    "discovery_function": inventory_jenkins_queue,
-    "default_levels_variable": "jenkins_queue_default_levels",
-    "service_name": "Jenkins Queue",
-    "check_ruleset_name": "jenkins_queue",
-}
+check_info["jenkins_queue"] = LegacyCheckDefinition(
+    parse_function=parse_jenkins_queue,
+    check_function=check_jenkins_queue,
+    discovery_function=inventory_jenkins_queue,
+    default_levels_variable="jenkins_queue_default_levels",
+    service_name="Jenkins Queue",
+    check_ruleset_name="jenkins_queue",
+)

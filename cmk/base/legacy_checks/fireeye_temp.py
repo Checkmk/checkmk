@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import check_fireeye_states
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -40,14 +41,14 @@ def check_fireeye_temp(item, params, info):
     )
 
 
-check_info["fireeye_temp"] = {
-    "detect": DETECT,
-    "discovery_function": inventory_fireeye_temp,
-    "check_function": check_fireeye_temp,
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["fireeye_temp"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=inventory_fireeye_temp,
+    check_function=check_fireeye_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.1.1",
         oids=["4", "5", "6"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

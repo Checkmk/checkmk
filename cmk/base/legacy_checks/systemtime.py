@@ -8,7 +8,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, discover_single, get_age_human_readable
+from cmk.base.check_api import (
+    check_levels,
+    discover_single,
+    get_age_human_readable,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["systemtime_default_levels"] = {"levels": (30, 60)}
@@ -38,10 +43,10 @@ def check_systemtime(item, params, parsed):
     )
 
 
-check_info["systemtime"] = {
-    "check_function": check_systemtime,
-    "discovery_function": discover_single,
-    "service_name": "System Time",
-    "check_ruleset_name": "systemtime",
-    "default_levels_variable": "systemtime_default_levels",
-}
+check_info["systemtime"] = LegacyCheckDefinition(
+    check_function=check_systemtime,
+    discovery_function=discover_single,
+    service_name="System Time",
+    check_ruleset_name="systemtime",
+    default_levels_variable="systemtime_default_levels",
+)

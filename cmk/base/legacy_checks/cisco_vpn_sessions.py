@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data
+from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -33,9 +33,9 @@ def check_cisco_vpn_sessions(item, params, data):
     yield 0, "Cumulative count: %s" % data["cumulative_sessions"]
 
 
-check_info["cisco_vpn_sessions"] = {
-    "discovery_function": discover(),
-    "check_function": check_cisco_vpn_sessions,
-    "service_name": "VPN Sessions %s",
-    "check_ruleset_name": "cisco_vpn_sessions",
-}
+check_info["cisco_vpn_sessions"] = LegacyCheckDefinition(
+    discovery_function=discover(),
+    check_function=check_cisco_vpn_sessions,
+    service_name="VPN Sessions %s",
+    check_ruleset_name="cisco_vpn_sessions",
+)

@@ -8,7 +8,7 @@
 
 from dataclasses import dataclass
 
-from cmk.base.check_api import state_markers
+from cmk.base.check_api import LegacyCheckDefinition, state_markers
 from cmk.base.config import check_info
 
 # .
@@ -49,11 +49,11 @@ def check_esx_vsphere_hostsystem_state(_no_item, _no_params, parsed):
     yield state, "Power state: " + powerState
 
 
-check_info["esx_vsphere_hostsystem.state"] = {
-    "discovery_function": inventory_esx_vsphere_hostsystem_state,
-    "check_function": check_esx_vsphere_hostsystem_state,
-    "service_name": "Overall state",
-}
+check_info["esx_vsphere_hostsystem.state"] = LegacyCheckDefinition(
+    discovery_function=inventory_esx_vsphere_hostsystem_state,
+    check_function=check_esx_vsphere_hostsystem_state,
+    service_name="Overall state",
+)
 
 # .
 #   .--Maintenance---------------------------------------------------------.
@@ -90,12 +90,12 @@ def check_esx_vsphere_hostsystem_maintenance(_no_item, params, parsed):
     return state, "System not in Maintenance mode"
 
 
-check_info["esx_vsphere_hostsystem.maintenance"] = {
-    "discovery_function": inventory_esx_vsphere_hostsystem_maintenance,
-    "check_function": check_esx_vsphere_hostsystem_maintenance,
-    "service_name": "Maintenance Mode",
-    "check_ruleset_name": "esx_hostystem_maintenance",
-}
+check_info["esx_vsphere_hostsystem.maintenance"] = LegacyCheckDefinition(
+    discovery_function=inventory_esx_vsphere_hostsystem_maintenance,
+    check_function=check_esx_vsphere_hostsystem_maintenance,
+    service_name="Maintenance Mode",
+    check_ruleset_name="esx_hostystem_maintenance",
+)
 
 # .
 #   .--Multipath-----------------------------------------------------------.
@@ -215,9 +215,9 @@ def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
     return state, message
 
 
-check_info["esx_vsphere_hostsystem.multipath"] = {
-    "discovery_function": inventory_esx_vsphere_hostsystem_multipath,
-    "check_function": check_esx_vsphere_hostsystem_multipath,
-    "service_name": "Multipath %s",
-    "check_ruleset_name": "multipath_count",
-}
+check_info["esx_vsphere_hostsystem.multipath"] = LegacyCheckDefinition(
+    discovery_function=inventory_esx_vsphere_hostsystem_multipath,
+    check_function=check_esx_vsphere_hostsystem_multipath,
+    service_name="Multipath %s",
+    check_ruleset_name="multipath_count",
+)

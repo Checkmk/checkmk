@@ -61,6 +61,9 @@ from cmk.base.api.agent_based import render as _render
 from cmk.base.api.agent_based.checking_classes import (  # noqa: F401 # pylint: disable=unused-import
     IgnoreResultsError as MKCounterWrapped,
 )
+from cmk.base.api.agent_based.register.utils_legacy import (  # noqa: F401 # pylint: disable=unused-import
+    LegacyCheckDefinition,
+)
 from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
 from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
 from cmk.base.api.agent_based.utils import (  # noqa: F401 # pylint: disable=unused-import

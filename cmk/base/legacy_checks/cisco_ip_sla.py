@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated,operator"
 
-from cmk.base.check_api import all_of, contains, exists, get_parsed_item_data
+from cmk.base.check_api import all_of, contains, exists, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, OIDEnd, SNMPTree
 
@@ -168,19 +168,19 @@ def check_cisco_ip_sla(_item, params, data):
         yield state, infotext, perfdata
 
 
-check_info["cisco_ip_sla"] = {
-    "detect": all_of(
+check_info["cisco_ip_sla"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"),
         contains(".1.3.6.1.2.1.1.1.0", "ios"),
         exists(".1.3.6.1.4.1.9.9.42.1.2.2.1.37.*"),
     ),
-    "parse_function": parse_cisco_ip_sla,
-    "discovery_function": inventory_cisco_ip_sla,
-    "check_function": check_cisco_ip_sla,
-    "service_name": "Cisco IP SLA %s",
-    "check_ruleset_name": "cisco_ip_sla",
-    "default_levels_variable": "cisco_ip_sla_default_levels",
-    "fetch": [
+    parse_function=parse_cisco_ip_sla,
+    discovery_function=inventory_cisco_ip_sla,
+    check_function=check_cisco_ip_sla,
+    service_name="Cisco IP SLA %s",
+    check_ruleset_name="cisco_ip_sla",
+    default_levels_variable="cisco_ip_sla_default_levels",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.42.1.2.2.1",
             oids=[OIDEnd(), OIDBytes("2"), OIDBytes("6"), "37"],
@@ -198,4 +198,4 @@ check_info["cisco_ip_sla"] = {
             oids=[OIDEnd(), "1", "2"],
         ),
     ],
-}
+)

@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -44,15 +45,15 @@ def check_hr_cpu(_no_item, params, info):
 # tplink_cpu, hr_cpu, cisco_nexus_cpu, bintec_cpu, winperf_processor,
 # lxc_container_cpu, docker_container_cpu.
 # Migration via cmk/update_config.py!
-check_info["hr_cpu"] = {
-    "detect": ucd_hr_detection.HR,
-    "discovery_function": inventory_hr_cpu,
-    "check_function": check_hr_cpu,
-    "service_name": "CPU utilization",
-    "fetch": SNMPTree(
+check_info["hr_cpu"] = LegacyCheckDefinition(
+    detect=ucd_hr_detection.HR,
+    discovery_function=inventory_hr_cpu,
+    check_function=check_hr_cpu,
+    service_name="CPU utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.2.1.25.3.3.1",
         oids=["2"],
     ),
-    "check_ruleset_name": "cpu_utilization_os",
-    "default_levels_variable": "hr_cpu_default_levels",
-}
+    check_ruleset_name="cpu_utilization_os",
+    default_levels_variable="hr_cpu_default_levels",
+)

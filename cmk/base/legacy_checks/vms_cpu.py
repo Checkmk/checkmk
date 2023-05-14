@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import check_levels, get_percent_human_readable
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.transforms import transform_cpu_iowait
 from cmk.base.config import check_info
@@ -67,10 +67,10 @@ def check_vms_cpu(_no_item, params, parsed):
     )
 
 
-check_info["vms_cpu"] = {
-    "parse_function": parse_vms_cpu,
-    "check_function": check_vms_cpu,
-    "discovery_function": inventory_vms_cpu,
-    "service_name": "CPU utilization",
-    "check_ruleset_name": "cpu_iowait",
-}
+check_info["vms_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_vms_cpu,
+    check_function=check_vms_cpu,
+    discovery_function=inventory_vms_cpu,
+    service_name="CPU utilization",
+    check_ruleset_name="cpu_iowait",
+)

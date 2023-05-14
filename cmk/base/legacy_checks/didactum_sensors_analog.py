@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.didactum import (
     check_didactum_sensors_humidity,
     check_didactum_sensors_temp,
@@ -59,18 +60,18 @@ def inventory_didactum_sensors_analog_temp(parsed):
     return inventory_didactum_sensors(parsed, "temperature")
 
 
-check_info["didactum_sensors_analog"] = {
-    "detect": DETECT_DIDACTUM,
-    "parse_function": parse_didactum_sensors,
-    "discovery_function": inventory_didactum_sensors_analog_temp,
-    "check_function": check_didactum_sensors_temp,
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["didactum_sensors_analog"] = LegacyCheckDefinition(
+    detect=DETECT_DIDACTUM,
+    parse_function=parse_didactum_sensors,
+    discovery_function=inventory_didactum_sensors_analog_temp,
+    check_function=check_didactum_sensors_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.46501.5.2.1",
         oids=["4", "5", "6", "7", "10", "11", "12", "13"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)
 
 # .
 #   .--humidity------------------------------------------------------------.
@@ -87,12 +88,12 @@ def inventory_didactum_sensors_analog_humid(parsed):
     return inventory_didactum_sensors(parsed, "humidity")
 
 
-check_info["didactum_sensors_analog.humidity"] = {
-    "discovery_function": inventory_didactum_sensors_analog_humid,
-    "check_function": check_didactum_sensors_humidity,
-    "service_name": "Humidity %s",
-    "check_ruleset_name": "humidity",
-}
+check_info["didactum_sensors_analog.humidity"] = LegacyCheckDefinition(
+    discovery_function=inventory_didactum_sensors_analog_humid,
+    check_function=check_didactum_sensors_humidity,
+    service_name="Humidity %s",
+    check_ruleset_name="humidity",
+)
 
 # .
 #   .--voltage-------------------------------------------------------------.
@@ -109,9 +110,9 @@ def inventory_didactum_sensors_analog_volt(parsed):
     return inventory_didactum_sensors(parsed, "voltage")
 
 
-check_info["didactum_sensors_analog.voltage"] = {
-    "discovery_function": inventory_didactum_sensors_analog_volt,
-    "check_function": check_didactum_sensors_voltage,
-    "service_name": "Phase %s",
-    "check_ruleset_name": "el_inphase",
-}
+check_info["didactum_sensors_analog.voltage"] = LegacyCheckDefinition(
+    discovery_function=inventory_didactum_sensors_analog_volt,
+    check_function=check_didactum_sensors_voltage,
+    service_name="Phase %s",
+    check_ruleset_name="el_inphase",
+)

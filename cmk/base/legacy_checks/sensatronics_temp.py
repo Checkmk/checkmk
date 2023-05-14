@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import any_of, equals
+from cmk.base.check_api import any_of, equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -42,14 +42,14 @@ def check_sensatronics_temp(
     yield check_temperature(reading, params, "sensatronics_temp_%s" % item)
 
 
-check_info["sensatronics_temp"] = {
-    "detect": any_of(equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.16174.1.1.1")),
-    "parse_function": parse_sensatronics_temp,
-    "check_function": check_sensatronics_temp,
-    "discovery_function": inventory_sensatronics_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "fetch": [
+check_info["sensatronics_temp"] = LegacyCheckDefinition(
+    detect=any_of(equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.16174.1.1.1")),
+    parse_function=parse_sensatronics_temp,
+    check_function=check_sensatronics_temp,
+    discovery_function=inventory_sensatronics_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.16174.1.1.1.3.{table}",
             oids=[
@@ -59,5 +59,5 @@ check_info["sensatronics_temp"] = {
         )
         for table in _TABLES
     ],
-    "default_levels_variable": "sensatronics_temp_default_levels",
-}
+    default_levels_variable="sensatronics_temp_default_levels",
+)

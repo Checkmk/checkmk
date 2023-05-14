@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 """Zorp FW - connections
 This check displays individual connections returned by
   zorpctl szig -r zorp.stats.active_connections
@@ -9,7 +10,7 @@ It sums up all connections and checks against configurable maximum values.
 """
 
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["zorp_connections"] = {
@@ -47,11 +48,11 @@ def check_zorp_connections(item, params, parsed):
     )
 
 
-check_info["zorp_connections"] = {  # mypy: ignore
-    "parse_function": parse_zorp_connections,
-    "discovery_function": lambda parsed: [(None, {})],
-    "check_function": check_zorp_connections,
-    "service_name": "Zorp Connections",
-    "default_levels_variable": "zorp_connections",
-    "check_ruleset_name": "zorp_connections",
-}
+check_info["zorp_connections"] = LegacyCheckDefinition(  # mypy: ignore
+    parse_function=parse_zorp_connections,
+    discovery_function=lambda parsed: [(None, {})],
+    check_function=check_zorp_connections,
+    service_name="Zorp Connections",
+    default_levels_variable="zorp_connections",
+    check_ruleset_name="zorp_connections",
+)

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -69,13 +70,13 @@ def check_blade_bays(item, params, parsed):
     yield 0, "Max. power: %s W, Type: %s, ID: %s" % (data["power_max"], data["type"], data["id"])
 
 
-check_info["blade_bays"] = {
-    "detect": DETECT_BLADE,
-    "parse_function": parse_blade_bays,
-    "discovery_function": inventory_blade_bays,
-    "check_function": check_blade_bays,
-    "service_name": "BAY %s",
-    "fetch": [
+check_info["blade_bays"] = LegacyCheckDefinition(
+    detect=DETECT_BLADE,
+    parse_function=parse_blade_bays,
+    discovery_function=inventory_blade_bays,
+    check_function=check_blade_bays,
+    service_name="BAY %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2.3.51.2.2.10.2.1.1",
             oids=[OIDEnd(), "5", "6", "2", "1", "7", "8"],
@@ -85,4 +86,4 @@ check_info["blade_bays"] = {
             oids=[OIDEnd(), "5", "6", "2", "1", "7", "8"],
         ),
     ],
-}
+)

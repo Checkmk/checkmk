@@ -14,7 +14,7 @@ from ..section_classes import SNMPDetectSpecification
 _DiscoveredParameters = Mapping | tuple | str | None
 
 
-class CheckInfoElement(TypedDict):
+class LegacyCheckDefinition(TypedDict):
     detect: NotRequired[SNMPDetectSpecification]
     fetch: NotRequired[list[SNMPTree] | SNMPTree]
     check_function: NotRequired[Callable]

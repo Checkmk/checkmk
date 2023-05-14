@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data
+from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
@@ -23,10 +23,10 @@ def check_couchbase_buckets_cache(_item, params, data):
         )
 
 
-check_info["couchbase_buckets_cache"] = {
-    "parse_function": parse_couchbase_lines,
-    "discovery_function": discover(lambda k, v: "ep_cache_miss_rate" in v),
-    "check_function": check_couchbase_buckets_cache,
-    "service_name": "Couchbase Bucket %s Cache",
-    "check_ruleset_name": "couchbase_cache",
-}
+check_info["couchbase_buckets_cache"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_lines,
+    discovery_function=discover(lambda k, v: "ep_cache_miss_rate" in v),
+    check_function=check_couchbase_buckets_cache,
+    service_name="Couchbase Bucket %s Cache",
+    check_ruleset_name="couchbase_cache",
+)

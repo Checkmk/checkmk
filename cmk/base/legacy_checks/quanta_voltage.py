@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data
+from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.quanta import parse_quanta
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -50,18 +50,18 @@ def check_quanta_voltage(item, params, entry):
     )
 
 
-check_info["quanta_voltage"] = {
-    "detect": DETECT_QUANTA,
-    "discovery_function": discover(),
-    "parse_function": parse_quanta,
-    "check_function": check_quanta_voltage,
-    "service_name": "Voltage %s",
-    "check_ruleset_name": "voltage",
+check_info["quanta_voltage"] = LegacyCheckDefinition(
+    detect=DETECT_QUANTA,
+    discovery_function=discover(),
+    parse_function=parse_quanta,
+    check_function=check_quanta_voltage,
+    service_name="Voltage %s",
+    check_ruleset_name="voltage",
     # these is no good oid identifier for quanta devices, thats why the first oid is used here
-    "fetch": [
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7244.1.2.1.3.5.1",
             oids=["1", "2", "3", "4", "6", "7", "8", "9"],
         )
     ],
-}
+)

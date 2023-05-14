@@ -29,7 +29,7 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["saprouter_cert_default_levels"] = {
@@ -106,11 +106,11 @@ def check_saprouter_cert(_no_item, params, parsed):
     return None
 
 
-check_info["saprouter_cert"] = {
-    "parse_function": parse_saprouter_cert,
-    "discovery_function": inventory_saprouter_cert,
-    "check_function": check_saprouter_cert,
-    "service_name": "SAP router certificate",
-    "default_levels_variable": "saprouter_cert_default_levels",
-    "check_ruleset_name": "saprouter_cert_age",
-}
+check_info["saprouter_cert"] = LegacyCheckDefinition(
+    parse_function=parse_saprouter_cert,
+    discovery_function=inventory_saprouter_cert,
+    check_function=check_saprouter_cert,
+    service_name="SAP router certificate",
+    default_levels_variable="saprouter_cert_default_levels",
+    check_ruleset_name="saprouter_cert_age",
+)

@@ -8,6 +8,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["informix_sessions_default_levels"] = {"levels": (50, 60)}
@@ -46,11 +47,11 @@ def check_informix_sessions(item, params, parsed):
     return None
 
 
-check_info["informix_sessions"] = {
-    "parse_function": parse_informix_sessions,
-    "discovery_function": inventory_informix_sessions,
-    "check_function": check_informix_sessions,
-    "service_name": "Informix Sessions %s",
-    "check_ruleset_name": "informix_sessions",
-    "default_levels_variable": "informix_sessions_default_levels",
-}
+check_info["informix_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_informix_sessions,
+    discovery_function=inventory_informix_sessions,
+    check_function=check_informix_sessions,
+    service_name="Informix Sessions %s",
+    check_ruleset_name="informix_sessions",
+    default_levels_variable="informix_sessions_default_levels",
+)

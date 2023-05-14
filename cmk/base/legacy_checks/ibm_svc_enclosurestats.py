@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -71,13 +72,13 @@ def check_ibm_svc_enclosurestats_temp(item, params, info):
     return check_temperature(data["temp_c"], params, "ibm_svc_enclosurestats_%s" % item)
 
 
-check_info["ibm_svc_enclosurestats.temp"] = {
-    "check_function": check_ibm_svc_enclosurestats_temp,
-    "discovery_function": inventory_ibm_svc_enclosurestats_temp,
-    "service_name": "Temperature Enclosure %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "ibm_svc_enclosurestats_temperature_default_levels",
-}
+check_info["ibm_svc_enclosurestats.temp"] = LegacyCheckDefinition(
+    check_function=check_ibm_svc_enclosurestats_temp,
+    discovery_function=inventory_ibm_svc_enclosurestats_temp,
+    service_name="Temperature Enclosure %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="ibm_svc_enclosurestats_temperature_default_levels",
+)
 
 # .
 #   .--power---------------------------------------------------------------.
@@ -105,8 +106,8 @@ def check_ibm_svc_enclosurestats_power(item, _no_params, info):
     return 0, "%s Watt" % stat_current, [("power", stat_current)]
 
 
-check_info["ibm_svc_enclosurestats.power"] = {
-    "check_function": check_ibm_svc_enclosurestats_power,
-    "discovery_function": inventory_ibm_svc_enclosurestats_power,
-    "service_name": "Power Enclosure %s",
-}
+check_info["ibm_svc_enclosurestats.power"] = LegacyCheckDefinition(
+    check_function=check_ibm_svc_enclosurestats_power,
+    discovery_function=inventory_ibm_svc_enclosurestats_power,
+    service_name="Power Enclosure %s",
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.didactum import (
     inventory_didactum_sensors,
     parse_didactum_sensors,
@@ -47,14 +48,14 @@ def check_didactum_sensors_discrete_dry(item, params, parsed):
     return data["state"], "Status: %s" % data["state_readable"]
 
 
-check_info["didactum_sensors_discrete"] = {
-    "detect": DETECT_DIDACTUM,
-    "parse_function": parse_didactum_sensors,
-    "discovery_function": inventory_didactum_sensors_discrete_dry,
-    "check_function": check_didactum_sensors_discrete_dry,
-    "service_name": "Discrete sensor %s",
-    "fetch": SNMPTree(
+check_info["didactum_sensors_discrete"] = LegacyCheckDefinition(
+    detect=DETECT_DIDACTUM,
+    parse_function=parse_didactum_sensors,
+    discovery_function=inventory_didactum_sensors_discrete_dry,
+    check_function=check_didactum_sensors_discrete_dry,
+    service_name="Discrete sensor %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.46501.5.1.1",
         oids=["4", "5", "6"],
     ),
-}
+)

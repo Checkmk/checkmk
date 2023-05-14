@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -52,14 +53,14 @@ def check_hitachi_hnas_temp(item, params, info):
     return 3, "No sensor found", []
 
 
-check_info["hitachi_hnas_temp"] = {
-    "detect": DETECT,
-    "check_function": check_hitachi_hnas_temp,
-    "discovery_function": inventory_hitachi_hnas_temp,
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["hitachi_hnas_temp"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_hitachi_hnas_temp,
+    discovery_function=inventory_hitachi_hnas_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.1.2.1.9.1",
         oids=["1", "2", "3", "4"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

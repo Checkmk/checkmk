@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -49,14 +49,14 @@ def inventory_blade_bx_temp(info):
             yield line[2], None
 
 
-check_info["blade_bx_temp"] = {
-    "detect": DETECT_BLADE_BX,
-    "check_function": check_blade_bx_temp,
-    "discovery_function": inventory_blade_bx_temp,
-    "service_name": "Temperature Blade %s",
-    "fetch": SNMPTree(
+check_info["blade_bx_temp"] = LegacyCheckDefinition(
+    detect=DETECT_BLADE_BX,
+    check_function=check_blade_bx_temp,
+    discovery_function=inventory_blade_bx_temp,
+    service_name="Temperature Blade %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.7244.1.1.1.3.4.1.1",
         oids=["1", "2", "3", "4", "5", "6", "7"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

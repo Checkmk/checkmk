@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.config import check_info
 
@@ -87,9 +87,9 @@ def check_db2_bp_hitratios(item, _no_params, parsed):
             break
 
 
-check_info["db2_bp_hitratios"] = {
-    "parse_function": parse_db2_bp_hitratios,
-    "service_name": "DB2 BP-Hitratios %s",
-    "check_function": check_db2_bp_hitratios,
-    "discovery_function": inventory_db2_bp_hitratios,
-}
+check_info["db2_bp_hitratios"] = LegacyCheckDefinition(
+    parse_function=parse_db2_bp_hitratios,
+    service_name="DB2 BP-Hitratios %s",
+    check_function=check_db2_bp_hitratios,
+    discovery_function=inventory_db2_bp_hitratios,
+)

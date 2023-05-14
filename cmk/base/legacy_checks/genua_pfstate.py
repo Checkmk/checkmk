@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
@@ -81,13 +81,13 @@ def check_genua_pfstate(item, params, info):
     return (state, infotext, perfdata)
 
 
-check_info["genua_pfstate"] = {
-    "detect": DETECT_GENUA,
-    "discovery_function": inventory_genua_pfstate,
-    "check_function": check_genua_pfstate,
-    "service_name": "Paketfilter Status",
-    "check_ruleset_name": "pf_used_states",
-    "fetch": [
+check_info["genua_pfstate"] = LegacyCheckDefinition(
+    detect=DETECT_GENUA,
+    discovery_function=inventory_genua_pfstate,
+    check_function=check_genua_pfstate,
+    service_name="Paketfilter Status",
+    check_ruleset_name="pf_used_states",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3717.2.1.1.6",
             oids=["1", "2", "3"],
@@ -97,4 +97,4 @@ check_info["genua_pfstate"] = {
             oids=["1", "2", "3"],
         ),
     ],
-}
+)

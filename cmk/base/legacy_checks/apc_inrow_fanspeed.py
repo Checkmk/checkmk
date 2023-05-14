@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import savefloat
+from cmk.base.check_api import LegacyCheckDefinition, savefloat
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.apc import DETECT
@@ -21,13 +21,13 @@ def check_apc_inrow_fanspeed(_no_item, _no_params, info):
     return 0, "Current: %.2f%%" % value, [("fanspeed", value)]
 
 
-check_info["apc_inrow_fanspeed"] = {
-    "detect": DETECT,
-    "check_function": check_apc_inrow_fanspeed,
-    "discovery_function": inventory_apc_inrow_fanspeed,
-    "service_name": "Fanspeed",
-    "fetch": SNMPTree(
+check_info["apc_inrow_fanspeed"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_apc_inrow_fanspeed,
+    discovery_function=inventory_apc_inrow_fanspeed,
+    service_name="Fanspeed",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
         oids=["16"],
     ),
-}
+)

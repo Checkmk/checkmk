@@ -9,6 +9,7 @@
 # (yes, thats all)
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -54,9 +55,9 @@ def check_windows_multipath(item, params, info):
             yield 1, "(warn at %d)" % num_paths
 
 
-check_info["windows_multipath"] = {
-    "discovery_function": inventory_windows_multipath,
-    "check_function": check_windows_multipath,
-    "service_name": "Multipath",
-    "check_ruleset_name": "windows_multipath",
-}
+check_info["windows_multipath"] = LegacyCheckDefinition(
+    discovery_function=inventory_windows_multipath,
+    check_function=check_windows_multipath,
+    service_name="Multipath",
+    check_ruleset_name="windows_multipath",
+)

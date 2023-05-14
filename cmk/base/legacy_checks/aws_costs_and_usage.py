@@ -8,7 +8,7 @@
 
 import collections
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import parse_aws
 from cmk.base.config import check_info
 
@@ -72,13 +72,13 @@ def check_aws_costs_and_usage_summary(item, params, parsed):
         )
 
 
-check_info["aws_costs_and_usage"] = {
-    "parse_function": parse_aws_costs_and_usage,
-    "discovery_function": inventory_aws_costs_and_usage_summary,
-    "check_function": check_aws_costs_and_usage_summary,
-    "service_name": "AWS/CE %s",
-    "check_ruleset_name": "aws_costs_and_usage",
-}
+check_info["aws_costs_and_usage"] = LegacyCheckDefinition(
+    parse_function=parse_aws_costs_and_usage,
+    discovery_function=inventory_aws_costs_and_usage_summary,
+    check_function=check_aws_costs_and_usage_summary,
+    service_name="AWS/CE %s",
+    check_ruleset_name="aws_costs_and_usage",
+)
 
 # .
 #   .--per service---------------------------------------------------------.
@@ -116,9 +116,9 @@ def check_aws_costs_and_usage_per_service(item, params, parsed):
         )
 
 
-check_info["aws_costs_and_usage.per_service"] = {
-    "discovery_function": inventory_aws_costs_and_usage_per_service,
-    "check_function": check_aws_costs_and_usage_per_service,
-    "service_name": "AWS/CE %s",
-    "check_ruleset_name": "aws_costs_and_usage",
-}
+check_info["aws_costs_and_usage.per_service"] = LegacyCheckDefinition(
+    discovery_function=inventory_aws_costs_and_usage_per_service,
+    check_function=check_aws_costs_and_usage_per_service,
+    service_name="AWS/CE %s",
+    check_ruleset_name="aws_costs_and_usage",
+)

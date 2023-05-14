@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import savefloat
+from cmk.base.check_api import LegacyCheckDefinition, savefloat
 from cmk.base.config import check_info
 
 innovaphone_licenses_default_levels = (90.0, 95.0)
@@ -32,8 +32,8 @@ def check_innovaphone_licenses(_no_item, params, info):
     return 0, message, perf
 
 
-check_info["innovaphone_licenses"] = {
-    "check_function": check_innovaphone_licenses,
-    "discovery_function": inventory_innovaphone_licenses,
-    "service_name": "Licenses",
-}
+check_info["innovaphone_licenses"] = LegacyCheckDefinition(
+    check_function=check_innovaphone_licenses,
+    discovery_function=inventory_innovaphone_licenses,
+    service_name="Licenses",
+)

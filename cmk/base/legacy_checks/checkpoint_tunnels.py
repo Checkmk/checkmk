@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
@@ -40,15 +41,15 @@ def check_checkpoint_tunnels(item, params, info):
     return None
 
 
-check_info["checkpoint_tunnels"] = {
-    "detect": DETECT,
-    "check_function": check_checkpoint_tunnels,
-    "discovery_function": inventory_checkpoint_tunnels,
-    "check_ruleset_name": "checkpoint_tunnels",
-    "default_levels_variable": "checkpoint_tunnels_default_levels",
-    "service_name": "Tunnel %s",
-    "fetch": SNMPTree(
+check_info["checkpoint_tunnels"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_checkpoint_tunnels,
+    discovery_function=inventory_checkpoint_tunnels,
+    check_ruleset_name="checkpoint_tunnels",
+    default_levels_variable="checkpoint_tunnels_default_levels",
+    service_name="Tunnel %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.500.9002.1",
         oids=["2", "3"],
     ),
-}
+)

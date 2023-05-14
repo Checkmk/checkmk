@@ -15,7 +15,13 @@
 
 import time
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, get_rate
+from cmk.base.check_api import (
+    check_levels,
+    discover,
+    get_parsed_item_data,
+    get_rate,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info
 
 
@@ -88,10 +94,10 @@ def check_nginx_status(item, params, data):
     yield 0, "Handled: %0.2f/s" % computed_values["handled_per_sec"], [("handled", data["handled"])]
 
 
-check_info["nginx_status"] = {
-    "parse_function": parse_nginx_status,
-    "check_function": check_nginx_status,
-    "discovery_function": discover(),
-    "service_name": "Nginx %s Status",
-    "check_ruleset_name": "nginx_status",
-}
+check_info["nginx_status"] = LegacyCheckDefinition(
+    parse_function=parse_nginx_status,
+    check_function=check_nginx_status,
+    discovery_function=discover(),
+    service_name="Nginx %s Status",
+    check_ruleset_name="nginx_status",
+)

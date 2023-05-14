@@ -12,7 +12,7 @@
 
 import collections
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 JobCount = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
@@ -71,10 +71,10 @@ def check_splunk_jobs(_no_item, params, parsed):
         yield 0, "\n%s" % data.output
 
 
-check_info["splunk_jobs"] = {
-    "parse_function": parse_splunk_jobs,
-    "check_function": check_splunk_jobs,
-    "discovery_function": inventory_splunk_jobs,
-    "service_name": "Splunk Jobs",
-    "check_ruleset_name": "splunk_jobs",
-}
+check_info["splunk_jobs"] = LegacyCheckDefinition(
+    parse_function=parse_splunk_jobs,
+    check_function=check_splunk_jobs,
+    discovery_function=inventory_splunk_jobs,
+    service_name="Splunk Jobs",
+    check_ruleset_name="splunk_jobs",
+)

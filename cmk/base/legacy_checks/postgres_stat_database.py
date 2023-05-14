@@ -13,7 +13,13 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, get_rate, MKCounterWrapped
+from cmk.base.check_api import (
+    check_levels,
+    get_bytes_human_readable,
+    get_rate,
+    LegacyCheckDefinition,
+    MKCounterWrapped,
+)
 from cmk.base.config import check_info
 
 
@@ -88,13 +94,13 @@ def check_postgres_stat_database(item, params, parsed):
     return (status, ", ".join(infos), perfdata)
 
 
-check_info["postgres_stat_database"] = {
-    "parse_function": parse_postgres_stat_database,
-    "discovery_function": inventory_postgres_stat_database,
-    "check_function": check_postgres_stat_database,
-    "service_name": "PostgreSQL DB %s Statistics",
-    "check_ruleset_name": "postgres_stat_database",
-}
+check_info["postgres_stat_database"] = LegacyCheckDefinition(
+    parse_function=parse_postgres_stat_database,
+    discovery_function=inventory_postgres_stat_database,
+    check_function=check_postgres_stat_database,
+    service_name="PostgreSQL DB %s Statistics",
+    check_ruleset_name="postgres_stat_database",
+)
 
 
 def check_postgres_stat_database_size(item, params, parsed):
@@ -120,9 +126,9 @@ def check_postgres_stat_database_size(item, params, parsed):
     )
 
 
-check_info["postgres_stat_database.size"] = {
-    "check_function": check_postgres_stat_database_size,
-    "discovery_function": inventory_postgres_stat_database,
-    "service_name": "PostgreSQL DB %s Size",
-    "check_ruleset_name": "postgres_stat_database",
-}
+check_info["postgres_stat_database.size"] = LegacyCheckDefinition(
+    check_function=check_postgres_stat_database_size,
+    discovery_function=inventory_postgres_stat_database,
+    service_name="PostgreSQL DB %s Size",
+    check_ruleset_name="postgres_stat_database",
+)

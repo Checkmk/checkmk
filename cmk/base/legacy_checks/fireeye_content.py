@@ -7,7 +7,12 @@
 import collections
 import time
 
-from cmk.base.check_api import check_levels, discover_single, get_age_human_readable
+from cmk.base.check_api import (
+    check_levels,
+    discover_single,
+    get_age_human_readable,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
@@ -59,15 +64,15 @@ def check_fireeye_content(_no_item, params, parsed):
     yield 0, "Security version: %s" % parsed.version
 
 
-check_info["fireeye_content"] = {
-    "detect": DETECT,
-    "parse_function": parse_fireeye_content,
-    "discovery_function": discover_single,
-    "check_function": check_fireeye_content,
-    "service_name": "Security content",
-    "fetch": SNMPTree(
+check_info["fireeye_content"] = LegacyCheckDefinition(
+    detect=DETECT,
+    parse_function=parse_fireeye_content,
+    discovery_function=discover_single,
+    check_function=check_fireeye_content,
+    service_name="Security content",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1",
         oids=["5", "6", "7"],
     ),
-    "check_ruleset_name": "fireeye_content",
-}
+    check_ruleset_name="fireeye_content",
+)

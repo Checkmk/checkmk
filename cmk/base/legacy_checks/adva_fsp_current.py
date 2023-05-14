@@ -10,7 +10,7 @@
 # .1.3.6.1.4.1.2544.2.5.5.1.1.5.101318912  "MOD-1-1"
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -46,12 +46,12 @@ def check_adva_fsp_current(item, _no_params, info):
     return None
 
 
-check_info["adva_fsp_current"] = {
-    "detect": equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
-    "discovery_function": inventory_adva_fsp_current,
-    "check_function": check_adva_fsp_current,
-    "service_name": "Power Supply %s",
-    "fetch": SNMPTree(
+check_info["adva_fsp_current"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
+    discovery_function=inventory_adva_fsp_current,
+    check_function=check_adva_fsp_current,
+    service_name="Power Supply %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2544",
         oids=[
             "1.11.2.4.2.2.1.1",
@@ -61,4 +61,4 @@ check_info["adva_fsp_current"] = {
             "2.5.5.2.1.5",
         ],
     ),
-}
+)

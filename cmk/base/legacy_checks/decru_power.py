@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.decru import DETECT_DECRU
@@ -23,13 +24,13 @@ def check_decru_power(item, params, info):
     return (3, "power supply not found")
 
 
-check_info["decru_power"] = {
-    "detect": DETECT_DECRU,
-    "check_function": check_decru_power,
-    "discovery_function": inventory_decru_power,
-    "service_name": "POWER %s",
-    "fetch": SNMPTree(
+check_info["decru_power"] = LegacyCheckDefinition(
+    detect=DETECT_DECRU,
+    check_function=check_decru_power,
+    discovery_function=inventory_decru_power,
+    service_name="POWER %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12962.1.2.6.1",
         oids=["2", "3"],
     ),
-}
+)

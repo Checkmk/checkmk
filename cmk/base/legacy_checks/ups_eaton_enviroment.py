@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, equals, saveint
+from cmk.base.check_api import any_of, equals, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -57,19 +57,19 @@ def check_ups_eaton_enviroment(item, params, info):
     return (state, ", ".join(messages), perfdata)
 
 
-check_info["ups_eaton_enviroment"] = {
-    "detect": any_of(
+check_info["ups_eaton_enviroment"] = LegacyCheckDefinition(
+    detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1.2"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1"),
     ),
-    "default_levels_variable": "ups_eaton_enviroment_default",
-    "discovery_function": inventory_ups_eaton_enviroment,
-    "check_function": check_ups_eaton_enviroment,
-    "service_name": "Enviroment",
-    "check_ruleset_name": "eaton_enviroment",
-    "fetch": SNMPTree(
+    default_levels_variable="ups_eaton_enviroment_default",
+    discovery_function=inventory_ups_eaton_enviroment,
+    check_function=check_ups_eaton_enviroment,
+    service_name="Enviroment",
+    check_ruleset_name="eaton_enviroment",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.534.1.6",
         oids=["1", "5", "6"],
     ),
-}
+)

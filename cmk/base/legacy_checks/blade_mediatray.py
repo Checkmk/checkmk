@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.blade import DETECT_BLADE
@@ -26,13 +27,13 @@ def check_blade_mediatray(_no_item, _no_params, info):
     return (0, "media tray present and communicating")
 
 
-check_info["blade_mediatray"] = {
-    "detect": DETECT_BLADE,
-    "check_function": check_blade_mediatray,
-    "discovery_function": inventory_blade_mediatray,
-    "service_name": "Media tray",
-    "fetch": SNMPTree(
+check_info["blade_mediatray"] = LegacyCheckDefinition(
+    detect=DETECT_BLADE,
+    check_function=check_blade_mediatray,
+    discovery_function=inventory_blade_mediatray,
+    service_name="Media tray",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.2.2.5.2",
         oids=["74", "75"],
     ),
-}
+)

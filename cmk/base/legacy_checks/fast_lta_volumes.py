@@ -6,7 +6,15 @@
 
 # mypy: disable-error-code="var-annotated,assignment"
 
-from cmk.base.check_api import all_of, any_of, discover, exists, get_parsed_item_data, startswith
+from cmk.base.check_api import (
+    all_of,
+    any_of,
+    discover,
+    exists,
+    get_parsed_item_data,
+    LegacyCheckDefinition,
+    startswith,
+)
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -32,19 +40,19 @@ def check_fast_lta_volumes(item, params, data):
     yield df_check_filesystem_list(item, params, data)
 
 
-check_info["fast_lta_volumes"] = {
-    "detect": all_of(
+check_info["fast_lta_volumes"] = LegacyCheckDefinition(
+    detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         any_of(exists(".1.3.6.1.4.1.27417.5.1.1.2"), exists(".1.3.6.1.4.1.27417.5.1.1.2.0")),
     ),
-    "parse_function": parse_fast_lta_volumes,
-    "check_function": check_fast_lta_volumes,
-    "discovery_function": discover(),
-    "service_name": "Fast LTA Volume %s",
-    "check_ruleset_name": "filesystem",
-    "fetch": SNMPTree(
+    parse_function=parse_fast_lta_volumes,
+    check_function=check_fast_lta_volumes,
+    discovery_function=discover(),
+    service_name="Fast LTA Volume %s",
+    check_ruleset_name="filesystem",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.27417.5.1.1",
         oids=["2", "9", "11"],
     ),
-    "default_levels_variable": "filesystem_default_levels",
-}
+    default_levels_variable="filesystem_default_levels",
+)

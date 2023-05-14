@@ -14,6 +14,7 @@
 # new-partner-sysid       0
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -81,8 +82,8 @@ def check_netapp_api_cluster(item, params, info):
         yield 0, "Cluster Status OK"
 
 
-check_info["netapp_api_cluster"] = {
-    "check_function": check_netapp_api_cluster,
-    "discovery_function": inventory_netapp_api_cluster,
-    "service_name": "Cluster with %s",
-}
+check_info["netapp_api_cluster"] = LegacyCheckDefinition(
+    check_function=check_netapp_api_cluster,
+    discovery_function=inventory_netapp_api_cluster,
+    service_name="Cluster with %s",
+)

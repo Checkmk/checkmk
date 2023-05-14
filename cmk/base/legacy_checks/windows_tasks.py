@@ -23,6 +23,7 @@
 
 # mypy: disable-error-code="var-annotated,assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 
@@ -211,11 +212,11 @@ factory_settings["windows_tasks"] = {
 }
 
 
-check_info["windows_tasks"] = {
-    "parse_function": parse_windows_tasks,
-    "check_function": check_windows_tasks,
-    "discovery_function": inventory_windows_tasks,
-    "service_name": "Task %s",
-    "check_ruleset_name": "windows_tasks",
-    "default_levels_variable": "windows_tasks",
-}
+check_info["windows_tasks"] = LegacyCheckDefinition(
+    parse_function=parse_windows_tasks,
+    check_function=check_windows_tasks,
+    discovery_function=inventory_windows_tasks,
+    service_name="Task %s",
+    check_ruleset_name="windows_tasks",
+    default_levels_variable="windows_tasks",
+)

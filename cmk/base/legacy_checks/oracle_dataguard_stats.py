@@ -8,7 +8,12 @@
 
 from typing import Optional
 
-from cmk.base.check_api import check_levels, get_age_human_readable, MKCounterWrapped
+from cmk.base.check_api import (
+    check_levels,
+    get_age_human_readable,
+    LegacyCheckDefinition,
+    MKCounterWrapped,
+)
 from cmk.base.config import check_info, factory_settings
 
 # <<<oracle_dataguard_stats:sep(124)>>>
@@ -159,11 +164,11 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
         yield 0, "old plugin data found, recovery active?"
 
 
-check_info["oracle_dataguard_stats"] = {
+check_info["oracle_dataguard_stats"] = LegacyCheckDefinition(
     # section is already migrated!
-    "check_function": check_oracle_dataguard_stats,
-    "discovery_function": inventory_oracle_dataguard_stats,
-    "service_name": "ORA %s Dataguard-Stats",
-    "default_levels_variable": "oracle_dataguard_stats",
-    "check_ruleset_name": "oracle_dataguard_stats",
-}
+    check_function=check_oracle_dataguard_stats,
+    discovery_function=inventory_oracle_dataguard_stats,
+    service_name="ORA %s Dataguard-Stats",
+    default_levels_variable="oracle_dataguard_stats",
+    check_ruleset_name="oracle_dataguard_stats",
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_mq import is_ibm_mq_service_vanished
 from cmk.base.config import check_info
 
@@ -74,10 +75,10 @@ def check_ibm_mq_channels(item, params, parsed):
     yield check_state, infotext, []
 
 
-check_info["ibm_mq_channels"] = {
+check_info["ibm_mq_channels"] = LegacyCheckDefinition(
     # section is already migrated!
-    "check_function": check_ibm_mq_channels,
-    "discovery_function": inventory_ibm_mq_channels,
-    "service_name": "IBM MQ Channel %s",
-    "check_ruleset_name": "ibm_mq_channels",
-}
+    check_function=check_ibm_mq_channels,
+    discovery_function=inventory_ibm_mq_channels,
+    service_name="IBM MQ Channel %s",
+    check_ruleset_name="ibm_mq_channels",
+)

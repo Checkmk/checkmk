@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate, regex, SKIP
+from cmk.base.check_api import get_rate, LegacyCheckDefinition, regex, SKIP
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
@@ -102,8 +102,8 @@ def check_omd_apache(item, _no_params, parsed):
 
 
 # This check uses the section defined in cmk/base/plugins/agent_based/omd_apache.py!
-check_info["omd_apache"] = {
-    "discovery_function": inventory_omd_apache,
-    "check_function": check_omd_apache,
-    "service_name": "OMD %s apache",
-}
+check_info["omd_apache"] = LegacyCheckDefinition(
+    discovery_function=inventory_omd_apache,
+    check_function=check_omd_apache,
+    service_name="OMD %s apache",
+)

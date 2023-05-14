@@ -6,7 +6,7 @@
 
 from typing import Mapping
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -152,13 +152,13 @@ def check_sophos(item: str, _no_params: object, info: list[list[str]]) -> tuple[
     return None
 
 
-check_info["sophos"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
-    "discovery_function": inventory_sophos,
-    "check_function": check_sophos,
-    "service_name": "%s",
-    "fetch": SNMPTree(
+check_info["sophos"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
+    discovery_function=inventory_sophos,
+    check_function=check_sophos,
+    service_name="%s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2604",
         oids=[OIDEnd(), "3"],
     ),
-}
+)

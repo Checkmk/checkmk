@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, equals, saveint
+from cmk.base.check_api import any_of, equals, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -78,8 +78,8 @@ def check_aironet_clients(item, params, info):
     return (0, infotxt, perfdata)
 
 
-check_info["aironet_clients"] = {
-    "detect": any_of(
+check_info["aironet_clients"] = LegacyCheckDefinition(
+    detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.525"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.618"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.685"),
@@ -91,11 +91,11 @@ check_info["aironet_clients"] = {
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1661"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2240"),
     ),
-    "check_function": check_aironet_clients,
-    "discovery_function": inventory_aironet_clients,
-    "service_name": "Average client signal %s",
-    "fetch": SNMPTree(
+    check_function=check_aironet_clients,
+    discovery_function=inventory_aironet_clients,
+    service_name="Average client signal %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.273.1.3.1.1",
         oids=["3", "4"],
     ),
-}
+)

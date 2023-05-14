@@ -41,7 +41,7 @@
 # .1.3.6.1.4.1.9.9.500.1.3.2.1.7.3001.1 "Port 2"
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -71,13 +71,13 @@ def check_cisco_stackpower(item, params, info):
             yield map_status[port_link_status]
 
 
-check_info["cisco_stackpower"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.516"),
-    "discovery_function": inventory_cisco_stackpower,
-    "check_function": check_cisco_stackpower,
-    "service_name": "Stackpower Interface %s",
-    "fetch": SNMPTree(
+check_info["cisco_stackpower"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.516"),
+    discovery_function=inventory_cisco_stackpower,
+    check_function=check_cisco_stackpower,
+    service_name="Stackpower Interface %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.500.1.3.2.1",
         oids=[OIDEnd(), "2", "5", "7"],
     ),
-}
+)

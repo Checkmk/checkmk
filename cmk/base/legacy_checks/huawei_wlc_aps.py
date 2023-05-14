@@ -11,6 +11,7 @@ from cmk.base.check_api import (
     contains,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -96,10 +97,10 @@ def parse_huawei_wlc_aps(info):
     return parsed
 
 
-check_info["huawei_wlc_aps"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
-    "parse_function": parse_huawei_wlc_aps,
-    "fetch": [
+check_info["huawei_wlc_aps"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
+    parse_function=parse_huawei_wlc_aps,
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2011.6.139.13.3.3.1",
             oids=["6", "40", "41", "43", "44"],
@@ -109,7 +110,7 @@ check_info["huawei_wlc_aps"] = {
             oids=["3", "6", "25", "40"],
         ),
     ],
-}
+)
 
 
 def discovery_huawei_wlc_aps_status(parsed):
@@ -155,13 +156,13 @@ def check_huawei_wlc_aps_status(item, params, data):
         )
 
 
-check_info["huawei_wlc_aps.status"] = {
-    "parse_function": parse_huawei_wlc_aps,
-    "discovery_function": discovery_huawei_wlc_aps_status,
-    "check_function": check_huawei_wlc_aps_status,
-    "service_name": "AP %s Status",
-    "default_levels_variable": "huawei_channel_default",
-}
+check_info["huawei_wlc_aps.status"] = LegacyCheckDefinition(
+    parse_function=parse_huawei_wlc_aps,
+    discovery_function=discovery_huawei_wlc_aps_status,
+    check_function=check_huawei_wlc_aps_status,
+    service_name="AP %s Status",
+    default_levels_variable="huawei_channel_default",
+)
 
 
 def discovery_huawei_wlc_aps_cpu(parsed):
@@ -179,13 +180,13 @@ def check_huawei_wlc_aps_cpu(item, params, data):
     )
 
 
-check_info["huawei_wlc_aps.cpu"] = {
-    "parse_function": parse_huawei_wlc_aps,
-    "check_function": check_huawei_wlc_aps_cpu,
-    "discovery_function": discovery_huawei_wlc_aps_cpu,
-    "service_name": "AP %s CPU",
-    "default_levels_variable": "huawei_cpu_default",
-}
+check_info["huawei_wlc_aps.cpu"] = LegacyCheckDefinition(
+    parse_function=parse_huawei_wlc_aps,
+    check_function=check_huawei_wlc_aps_cpu,
+    discovery_function=discovery_huawei_wlc_aps_cpu,
+    service_name="AP %s CPU",
+    default_levels_variable="huawei_cpu_default",
+)
 
 
 def discovery_huawei_wlc_aps_mem(parsed):
@@ -207,13 +208,13 @@ def check_huawei_wlc_aps_mem(item, params, data):
     )
 
 
-check_info["huawei_wlc_aps.mem"] = {
-    "parse_function": parse_huawei_wlc_aps,
-    "check_function": check_huawei_wlc_aps_mem,
-    "discovery_function": discovery_huawei_wlc_aps_mem,
-    "service_name": "AP %s Memory",
-    "default_levels_variable": "huawei_mem_default",
-}
+check_info["huawei_wlc_aps.mem"] = LegacyCheckDefinition(
+    parse_function=parse_huawei_wlc_aps,
+    check_function=check_huawei_wlc_aps_mem,
+    discovery_function=discovery_huawei_wlc_aps_mem,
+    service_name="AP %s Memory",
+    default_levels_variable="huawei_mem_default",
+)
 
 
 def discovery_huawei_wlc_aps_temp(parsed):
@@ -233,9 +234,9 @@ def check_huawei_wlc_aps_temp(item, params, data):
         yield 0, "%s" % temp
 
 
-check_info["huawei_wlc_aps.temp"] = {
-    "parse_function": parse_huawei_wlc_aps,
-    "check_function": check_huawei_wlc_aps_temp,
-    "discovery_function": discovery_huawei_wlc_aps_temp,
-    "service_name": "AP %s Temperature",
-}
+check_info["huawei_wlc_aps.temp"] = LegacyCheckDefinition(
+    parse_function=parse_huawei_wlc_aps,
+    check_function=check_huawei_wlc_aps_temp,
+    discovery_function=discovery_huawei_wlc_aps_temp,
+    service_name="AP %s Temperature",
+)

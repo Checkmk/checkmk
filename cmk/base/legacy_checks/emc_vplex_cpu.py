@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -24,14 +25,14 @@ def check_emc_vplex_cpu(item, params, info):
     return None
 
 
-check_info["emc_vplex_cpu"] = {
-    "detect": DETECT_VPLEX,
-    "check_function": check_emc_vplex_cpu,
-    "discovery_function": inventory_emc_vplex_cpu,
-    "service_name": "CPU Utilization %s",
-    "fetch": SNMPTree(
+check_info["emc_vplex_cpu"] = LegacyCheckDefinition(
+    detect=DETECT_VPLEX,
+    check_function=check_emc_vplex_cpu,
+    discovery_function=inventory_emc_vplex_cpu,
+    service_name="CPU Utilization %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.1139.21.2.2",
         oids=["1.1.3", "3.1.1"],
     ),
-    "check_ruleset_name": "cpu_utilization_multiitem",
-}
+    check_ruleset_name="cpu_utilization_multiitem",
+)

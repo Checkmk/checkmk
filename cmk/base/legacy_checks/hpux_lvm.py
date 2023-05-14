@@ -21,6 +21,7 @@
 # pv_name=/dev/disk/disk10:pv_status=available:total_pe=4375:free_pe=1559:autoswitch=On:proactive_polling=On
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -49,8 +50,8 @@ def check_hpux_lvm(item, params, info):
     return (3, "no such volume found")
 
 
-check_info["hpux_lvm"] = {
-    "check_function": check_hpux_lvm,
-    "discovery_function": inventory_hpux_lvm,
-    "service_name": "Logical Volume %s",
-}
+check_info["hpux_lvm"] = LegacyCheckDefinition(
+    check_function=check_hpux_lvm,
+    discovery_function=inventory_hpux_lvm,
+    service_name="Logical Volume %s",
+)

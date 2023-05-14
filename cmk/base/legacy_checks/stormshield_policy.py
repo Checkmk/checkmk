@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.stormshield import DETECT_STORMSHIELD
@@ -32,14 +33,14 @@ def check_stormshield_policy(item, params, info):
                 pass
 
 
-check_info["stormshield_policy"] = {
-    "detect": DETECT_STORMSHIELD,
-    "discovery_function": inventory_stormshield_policy,
-    "check_function": check_stormshield_policy,
-    "service_name": "Policy %s",
-    "fetch": SNMPTree(
+check_info["stormshield_policy"] = LegacyCheckDefinition(
+    detect=DETECT_STORMSHIELD,
+    discovery_function=inventory_stormshield_policy,
+    check_function=check_stormshield_policy,
+    service_name="Policy %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.8.1.1",
         oids=["2", "3", "5"],
     ),
-    "check_ruleset_name": "stormshield",
-}
+    check_ruleset_name="stormshield",
+)

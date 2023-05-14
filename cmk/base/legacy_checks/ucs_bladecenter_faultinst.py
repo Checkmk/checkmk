@@ -7,6 +7,7 @@
 # mypy: disable-error-code="var-annotated,assignment"
 
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 # <<<ucs_bladecenter_faultinst:sep(9)>>>
@@ -46,10 +47,10 @@ def check_ucs_bladecenter_faultinst(_item, params, parsed):
         yield sev_state, "%d %s Instances%s" % (len(instances), sev.upper(), extra_info)
 
 
-check_info["ucs_bladecenter_faultinst"] = {
-    "parse_function": ucs_bladecenter.generic_parse,
-    "discovery_function": inventory_ucs_bladecenter_faultinst,
-    "check_function": check_ucs_bladecenter_faultinst,
-    "service_name": "Fault Instances Blade",
-    "check_ruleset_name": "ucs_bladecenter_faultinst",
-}
+check_info["ucs_bladecenter_faultinst"] = LegacyCheckDefinition(
+    parse_function=ucs_bladecenter.generic_parse,
+    discovery_function=inventory_ucs_bladecenter_faultinst,
+    check_function=check_ucs_bladecenter_faultinst,
+    service_name="Fault Instances Blade",
+    check_ruleset_name="ucs_bladecenter_faultinst",
+)

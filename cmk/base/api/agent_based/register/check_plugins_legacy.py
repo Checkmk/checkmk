@@ -28,12 +28,12 @@ from cmk.base.api.agent_based.checking_classes import (
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
-from .utils_legacy import CheckInfoElement
+from .utils_legacy import LegacyCheckDefinition
 
 
 def _create_discovery_function(
     check_name: str,
-    check_info_element: CheckInfoElement,
+    check_info_element: LegacyCheckDefinition,
     check_context: dict[str, object],
 ) -> Callable:
     """Create an API compliant discovery function"""
@@ -120,7 +120,7 @@ def _normalize_check_function_return_value(subresults: object) -> list:
     raise TypeError(f"expected None, Tuple or Iterable, got {subresults=}")
 
 
-def _create_check_function(name: str, check_info_element: CheckInfoElement) -> Callable:
+def _create_check_function(name: str, check_info_element: LegacyCheckDefinition) -> Callable:
     """Create an API compliant check function"""
     service_descr = check_info_element["service_name"]
     if not isinstance(service_descr, str):
@@ -276,7 +276,7 @@ def _create_signature_check_function(
 
 
 def _create_wrapped_parameters(
-    check_info_element: CheckInfoElement,
+    check_info_element: LegacyCheckDefinition,
     factory_settings: dict[str, dict],
 ) -> ParametersTypeAlias:
     """compute default parameters and wrap them in a dictionary"""
@@ -291,7 +291,7 @@ def _create_wrapped_parameters(
 
 def create_check_plugin_from_legacy(
     check_plugin_name: str,
-    check_info_element: CheckInfoElement,
+    check_info_element: LegacyCheckDefinition,
     factory_settings: dict[str, dict],
     check_context: dict[str, object],
     *,
@@ -301,8 +301,8 @@ def create_check_plugin_from_legacy(
     # We know what we can and have to deal with.
     if (
         unexpected_keys := set(check_info_element)
-        - CheckInfoElement.__optional_keys__
-        - CheckInfoElement.__required_keys__
+        - LegacyCheckDefinition.__optional_keys__
+        - LegacyCheckDefinition.__required_keys__
     ):
         raise ValueError(
             f"Unexpected key(s) in check_info[{check_plugin_name!r}]: {unexpected_keys!r}"

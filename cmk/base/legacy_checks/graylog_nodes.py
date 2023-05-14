@@ -31,7 +31,7 @@
 
 import json
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 
@@ -156,11 +156,11 @@ def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branc
                 yield state, "\n%s" % line
 
 
-check_info["graylog_nodes"] = {
-    "parse_function": parse_graylog_nodes,
-    "check_function": check_graylog_nodes,
-    "discovery_function": inventory_graylog_nodes,
-    "default_levels_variable": "graylog_nodes_default_levels",
-    "service_name": "Graylog Node %s",
-    "check_ruleset_name": "graylog_nodes",
-}
+check_info["graylog_nodes"] = LegacyCheckDefinition(
+    parse_function=parse_graylog_nodes,
+    check_function=check_graylog_nodes,
+    discovery_function=inventory_graylog_nodes,
+    default_levels_variable="graylog_nodes_default_levels",
+    service_name="Graylog Node %s",
+    check_ruleset_name="graylog_nodes",
+)

@@ -19,7 +19,7 @@
 # if it is not plugged into a port).
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -47,13 +47,13 @@ def check_apc_netbotz_other_sensors(_no_item, _no_params, info):
         yield 0, "%d sensors are OK" % count_ok_sensors
 
 
-check_info["apc_netbotz_other_sensors"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
-    "discovery_function": inventory_apc_netbotz_other_sensors,
-    "check_function": check_apc_netbotz_other_sensors,
-    "service_name": "Numeric sensors summary",
-    "fetch": SNMPTree(
+check_info["apc_netbotz_other_sensors"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
+    discovery_function=inventory_apc_netbotz_other_sensors,
+    check_function=check_apc_netbotz_other_sensors,
+    service_name="Numeric sensors summary",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.5528.100.4.2.10.1",
         oids=["4", "3", "7"],
     ),
-}
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, startswith
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -45,15 +45,15 @@ def check_arista_temp(item, params, value):
     return check_temperature(value, params, "temp")
 
 
-check_info["arista_temp"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.1.0", "arista networks"),
-    "parse_function": parse_arista_temp,
-    "check_function": check_arista_temp,
-    "discovery_function": discover(),
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["arista_temp"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.1.0", "arista networks"),
+    parse_function=parse_arista_temp,
+    check_function=check_arista_temp,
+    discovery_function=discover(),
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.2.1",
         oids=["47.1.1.1.1.2", "99.1.1.1.3", "99.1.1.1.4"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

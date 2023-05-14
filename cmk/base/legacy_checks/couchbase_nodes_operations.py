@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="index"
 
-from cmk.base.check_api import check_levels, discover
+from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -34,17 +34,17 @@ def check_couchbase_nodes_operations(item, params, parsed):
     return check_levels(parsed[item], "op_s", params.get("ops"), unit="/s")
 
 
-check_info["couchbase_nodes_operations"] = {
-    "parse_function": parse_couchbase_nodes_operations,
-    "discovery_function": discover(lambda k, _v: k is not None),
-    "check_function": check_couchbase_nodes_operations,
-    "service_name": "Couchbase %s Operations",
-    "check_ruleset_name": "couchbase_ops",
-}
+check_info["couchbase_nodes_operations"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_nodes_operations,
+    discovery_function=discover(lambda k, _v: k is not None),
+    check_function=check_couchbase_nodes_operations,
+    service_name="Couchbase %s Operations",
+    check_ruleset_name="couchbase_ops",
+)
 
-check_info["couchbase_nodes_operations.total"] = {
-    "discovery_function": discover(lambda k, _v: k is None),
-    "check_function": check_couchbase_nodes_operations,
-    "service_name": "Couchbase Total Operations",
-    "check_ruleset_name": "couchbase_ops_nodes",
-}
+check_info["couchbase_nodes_operations.total"] = LegacyCheckDefinition(
+    discovery_function=discover(lambda k, _v: k is None),
+    check_function=check_couchbase_nodes_operations,
+    service_name="Couchbase Total Operations",
+    check_ruleset_name="couchbase_ops_nodes",
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.infoblox import (
     check_infoblox_statistics,
     inventory_infoblox_statistics,
@@ -44,13 +45,13 @@ def check_infoblox_dhcp_stats(_no_item, _no_params, info):
     )
 
 
-check_info["infoblox_dhcp_stats"] = {
-    "detect": DETECT_INFOBLOX,
-    "discovery_function": inventory_infoblox_statistics,
-    "check_function": check_infoblox_dhcp_stats,
-    "service_name": "DHCP statistics",
-    "fetch": SNMPTree(
+check_info["infoblox_dhcp_stats"] = LegacyCheckDefinition(
+    detect=DETECT_INFOBLOX,
+    discovery_function=inventory_infoblox_statistics,
+    check_function=check_infoblox_dhcp_stats,
+    service_name="DHCP statistics",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.7779.3.1.1.4.1.3",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
     ),
-}
+)

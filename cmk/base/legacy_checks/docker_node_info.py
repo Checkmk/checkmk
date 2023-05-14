@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover_single
+from cmk.base.check_api import check_levels, discover_single, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -21,12 +21,12 @@ def check_docker_node_info(_no_item, _no_params, parsed):
             yield state, parsed[key]
 
 
-check_info["docker_node_info"] = {
+check_info["docker_node_info"] = LegacyCheckDefinition(
     # section is already migrated!
-    "discovery_function": discover_docker_node_info,
-    "check_function": check_docker_node_info,
-    "service_name": "Docker node info",
-}
+    discovery_function=discover_docker_node_info,
+    check_function=check_docker_node_info,
+    service_name="Docker node info",
+)
 
 
 def check_docker_node_containers(_no_item, params, parsed):
@@ -52,10 +52,10 @@ def check_docker_node_containers(_no_item, params, parsed):
         )
 
 
-check_info["docker_node_info.containers"] = {
+check_info["docker_node_info.containers"] = LegacyCheckDefinition(
     # section is already migrated!
-    "discovery_function": discover_single,
-    "check_function": check_docker_node_containers,
-    "service_name": "Docker containers",
-    "check_ruleset_name": "docker_node_containers",
-}
+    discovery_function=discover_single,
+    check_function=check_docker_node_containers,
+    service_name="Docker containers",
+    check_ruleset_name="docker_node_containers",
+)

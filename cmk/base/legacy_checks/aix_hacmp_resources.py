@@ -16,7 +16,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["aix_hacmp_resources"] = {
@@ -68,11 +68,11 @@ def check_aix_hacmp_resources(item, params, data):
     return state, ", ".join(infotext)
 
 
-check_info["aix_hacmp_resources"] = {
-    "default_levels_variable": "aix_hacmp_resources",
-    "parse_function": parse_aix_hacmp_resources,
-    "discovery_function": inventory_aix_hacmp_resources,
-    "check_function": check_aix_hacmp_resources,
-    "service_name": "HACMP RG %s",
-    "check_ruleset_name": "hacmp_resources",
-}
+check_info["aix_hacmp_resources"] = LegacyCheckDefinition(
+    default_levels_variable="aix_hacmp_resources",
+    parse_function=parse_aix_hacmp_resources,
+    discovery_function=inventory_aix_hacmp_resources,
+    check_function=check_aix_hacmp_resources,
+    service_name="HACMP RG %s",
+    check_ruleset_name="hacmp_resources",
+)

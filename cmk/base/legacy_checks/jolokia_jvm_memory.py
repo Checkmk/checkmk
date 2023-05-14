@@ -12,6 +12,7 @@ from cmk.base.check_api import (
     get_bytes_human_readable,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
@@ -106,14 +107,14 @@ def check_jolokia_jvm_memory(_item, params, instance_data):
             yield subresult
 
 
-check_info["jolokia_jvm_memory"] = {
-    "parse_function": parse_jolokia_jvm_memory,
-    "discovery_function": discover_jolokia_jvm_memory,
-    "check_function": check_jolokia_jvm_memory,
-    "service_name": "JVM %s Memory",
-    "default_levels_variable": "jolokia_jvm_memory",
-    "check_ruleset_name": "jvm_memory",
-}
+check_info["jolokia_jvm_memory"] = LegacyCheckDefinition(
+    parse_function=parse_jolokia_jvm_memory,
+    discovery_function=discover_jolokia_jvm_memory,
+    check_function=check_jolokia_jvm_memory,
+    service_name="JVM %s Memory",
+    default_levels_variable="jolokia_jvm_memory",
+    check_ruleset_name="jvm_memory",
+)
 
 # .
 #   .--Memory Pools--------------------------------------------------------.
@@ -164,10 +165,10 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
         yield 0, "Committed: %s" % get_bytes_human_readable(committed)
 
 
-check_info["jolokia_jvm_memory.pools"] = {
-    "discovery_function": discover_jolokia_jvm_memory_pools,
-    "check_function": check_jolokia_jvm_memory_pools,
-    "service_name": "JVM %s",
-    "default_levels_variable": "jolokia_jvm_memory_pools",
-    "check_ruleset_name": "jvm_memory_pools",
-}
+check_info["jolokia_jvm_memory.pools"] = LegacyCheckDefinition(
+    discovery_function=discover_jolokia_jvm_memory_pools,
+    check_function=check_jolokia_jvm_memory_pools,
+    service_name="JVM %s",
+    default_levels_variable="jolokia_jvm_memory_pools",
+    check_ruleset_name="jvm_memory_pools",
+)

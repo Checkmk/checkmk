@@ -42,6 +42,7 @@ from cmk.base.check_api import (
     discover,
     get_bytes_human_readable,
     get_parsed_item_data,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
 
@@ -135,10 +136,10 @@ def check_rabbitmq_queues(item, params, parsed):
         )
 
 
-check_info["rabbitmq_queues"] = {
-    "parse_function": parse_rabbitmq_queues,
-    "check_function": check_rabbitmq_queues,
-    "discovery_function": discover(),
-    "service_name": "RabbitMQ Queue %s",
-    "check_ruleset_name": "rabbitmq_queues",
-}
+check_info["rabbitmq_queues"] = LegacyCheckDefinition(
+    parse_function=parse_rabbitmq_queues,
+    check_function=check_rabbitmq_queues,
+    discovery_function=discover(),
+    service_name="RabbitMQ Queue %s",
+    check_ruleset_name="rabbitmq_queues",
+)

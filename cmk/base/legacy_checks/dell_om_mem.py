@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_OPENMANAGE
@@ -52,14 +52,14 @@ def check_dell_om_mem(item, _no_params, info):
             yield 0, "Size: %s" % get_bytes_human_readable(int(size) * 1024)
 
 
-check_info["dell_om_mem"] = {
-    "detect": DETECT_OPENMANAGE,
-    "check_function": check_dell_om_mem,
-    "discovery_function": inventory_dell_om_mem,
-    "service_name": "Memory Module %s",
+check_info["dell_om_mem"] = LegacyCheckDefinition(
+    detect=DETECT_OPENMANAGE,
+    check_function=check_dell_om_mem,
+    discovery_function=inventory_dell_om_mem,
+    service_name="Memory Module %s",
     # There is no other way to find out that openmanage is present.
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.1.1100.50.1",
         oids=["8.1", "5.1", "14.1", "20.1"],
     ),
-}
+)

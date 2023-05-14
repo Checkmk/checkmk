@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -40,8 +41,8 @@ def check_datapower_fan(item, _no_params, section):
     )
 
 
-check_info["datapower_fan"] = {
-    "discovery_function": inventory_datapower_fan,
-    "check_function": check_datapower_fan,
-    "service_name": "Fan %s",
-}
+check_info["datapower_fan"] = LegacyCheckDefinition(
+    discovery_function=inventory_datapower_fan,
+    check_function=check_datapower_fan,
+    service_name="Fan %s",
+)

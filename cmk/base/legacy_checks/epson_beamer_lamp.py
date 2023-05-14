@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -34,14 +34,14 @@ def check_epson_beamer_lamp(_no_item, params, info):
     return status, infotext
 
 
-check_info["epson_beamer_lamp"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", "1248"),
-    "discovery_function": inventory_epson_beamer_lamp,
-    "check_function": check_epson_beamer_lamp,
-    "service_name": "Beamer Lamp",
-    "fetch": SNMPTree(
+check_info["epson_beamer_lamp"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", "1248"),
+    discovery_function=inventory_epson_beamer_lamp,
+    check_function=check_epson_beamer_lamp,
+    service_name="Beamer Lamp",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.1248.4.1.1.1.1",
         oids=["0"],
     ),
-    "check_ruleset_name": "lamp_operation_time",
-}
+    check_ruleset_name="lamp_operation_time",
+)

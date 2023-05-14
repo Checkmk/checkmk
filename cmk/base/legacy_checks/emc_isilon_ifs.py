@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="no-untyped-def,assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.utils.df import FSBlock
@@ -21,11 +22,11 @@ def check_emc_isilon_ifs(item, params, section: FSBlock):
     return df_check_filesystem_list("ifs", params, [section])
 
 
-check_info["emc_isilon_ifs"] = {
+check_info["emc_isilon_ifs"] = LegacyCheckDefinition(
     # section already migrated
-    "check_function": check_emc_isilon_ifs,
-    "discovery_function": inventory_emc_isilon_ifs,
-    "service_name": "Filesystem %s",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+    check_function=check_emc_isilon_ifs,
+    discovery_function=inventory_emc_isilon_ifs,
+    service_name="Filesystem %s",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)

@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import any_of, check_levels, equals
+from cmk.base.check_api import any_of, check_levels, equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -103,19 +103,19 @@ def inventory_janitza_umg_inphase(parsed):
 
 factory_settings["janitza_umg_inphase_default_levels"] = {}
 
-check_info["janitza_umg"] = {
-    "detect": any_of(
+check_info["janitza_umg"] = LegacyCheckDefinition(
+    detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.8.6"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.10.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.10.4"),
     ),
-    "parse_function": parse_janitza_umg_inphase,
-    "discovery_function": inventory_janitza_umg_inphase,
-    "check_function": check_elphase,
-    "service_name": "Input %s",
-    "default_levels_variable": "janitza_umg_inphase_default_levels",
-    "check_ruleset_name": "el_inphase",
-    "fetch": [
+    parse_function=parse_janitza_umg_inphase,
+    discovery_function=inventory_janitza_umg_inphase,
+    check_function=check_elphase,
+    service_name="Input %s",
+    default_levels_variable="janitza_umg_inphase_default_levels",
+    check_ruleset_name="el_inphase",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.1.2",
             oids=["0"],
@@ -153,7 +153,7 @@ check_info["janitza_umg"] = {
             oids=["8"],
         ),
     ],
-}
+)
 
 
 def inventory_janitza_umg_freq(parsed):
@@ -178,13 +178,13 @@ def check_janitza_umg_freq(item, params, parsed):
 factory_settings["janitza_umg_freq_default_levels"] = {"levels_lower": (0, 0)}
 
 
-check_info["janitza_umg.freq"] = {
-    "discovery_function": inventory_janitza_umg_freq,
-    "check_function": check_janitza_umg_freq,
-    "service_name": "Frequency %s",
-    "default_levels_variable": "janitza_umg_freq_default_levels",
-    "check_ruleset_name": "efreq",
-}
+check_info["janitza_umg.freq"] = LegacyCheckDefinition(
+    discovery_function=inventory_janitza_umg_freq,
+    check_function=check_janitza_umg_freq,
+    service_name="Frequency %s",
+    default_levels_variable="janitza_umg_freq_default_levels",
+    check_ruleset_name="efreq",
+)
 
 
 def inventory_janitza_umg_temp(parsed):
@@ -207,10 +207,10 @@ def check_janitza_umg_temp(item, params, parsed):
 factory_settings["janitza_umg_temp_default_levels"] = {}
 
 
-check_info["janitza_umg.temp"] = {
-    "discovery_function": inventory_janitza_umg_temp,
-    "check_function": check_janitza_umg_temp,
-    "service_name": "Temperature External %s",
-    "default_levels_variable": "janitza_umg_temp_default_levels",
-    "check_ruleset_name": "temperature",
-}
+check_info["janitza_umg.temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_janitza_umg_temp,
+    check_function=check_janitza_umg_temp,
+    service_name="Temperature External %s",
+    default_levels_variable="janitza_umg_temp_default_levels",
+    check_ruleset_name="temperature",
+)

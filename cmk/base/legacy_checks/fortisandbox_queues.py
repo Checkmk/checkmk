@@ -19,6 +19,7 @@
 # .1.3.6.1.4.1.12356.118.5.1.11.0 0
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTISANDBOX
@@ -64,15 +65,15 @@ def check_fortisandbox_queues(item, params, parsed):
     return None
 
 
-check_info["fortisandbox_queues"] = {
-    "detect": DETECT_FORTISANDBOX,
-    "parse_function": parse_fortisandbox_queues,
-    "discovery_function": inventory_fortisandbox_queues,
-    "check_function": check_fortisandbox_queues,
-    "service_name": "Pending %s files",
-    "fetch": SNMPTree(
+check_info["fortisandbox_queues"] = LegacyCheckDefinition(
+    detect=DETECT_FORTISANDBOX,
+    parse_function=parse_fortisandbox_queues,
+    discovery_function=inventory_fortisandbox_queues,
+    check_function=check_fortisandbox_queues,
+    service_name="Pending %s files",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.118.5.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
-    "check_ruleset_name": "fortisandbox_queues",
-}
+    check_ruleset_name="fortisandbox_queues",
+)

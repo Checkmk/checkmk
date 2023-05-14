@@ -13,6 +13,7 @@ from cmk.base.check_api import (
     contains,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -34,14 +35,14 @@ def parse_huawei_wlc_devs(info):
     return parsed
 
 
-check_info["huawei_wlc_devs"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
-    "parse_function": parse_huawei_wlc_devs,
-    "fetch": SNMPTree(
+check_info["huawei_wlc_devs"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
+    parse_function=parse_huawei_wlc_devs,
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.5.25.31.1.1",
         oids=["2.1.13", "1.1.5", "1.1.7"],
     ),
-}
+)
 
 
 def discovery_huawei_wlc_devs_mem(parsed):
@@ -64,13 +65,13 @@ def check_huawei_wlc_devs_mem(item, params, data):
     )
 
 
-check_info["huawei_wlc_devs.mem"] = {
-    "discovery_function": discovery_huawei_wlc_devs_mem,
-    "parse_function": parse_huawei_wlc_devs,
-    "check_function": check_huawei_wlc_devs_mem,
-    "service_name": "Device %s Memory",
-    "default_levels_variable": "huawei_mem_default",
-}
+check_info["huawei_wlc_devs.mem"] = LegacyCheckDefinition(
+    discovery_function=discovery_huawei_wlc_devs_mem,
+    parse_function=parse_huawei_wlc_devs,
+    check_function=check_huawei_wlc_devs_mem,
+    service_name="Device %s Memory",
+    default_levels_variable="huawei_mem_default",
+)
 
 
 def discovery_huawei_wlc_devs_cpu(parsed):
@@ -89,10 +90,10 @@ def check_huawei_wlc_devs_cpu(item, params, data):
     )
 
 
-check_info["huawei_wlc_devs.cpu"] = {
-    "parse_function": parse_huawei_wlc_devs,
-    "discovery_function": discovery_huawei_wlc_devs_cpu,
-    "check_function": check_huawei_wlc_devs_cpu,
-    "service_name": "Device %s CPU",
-    "default_levels_variable": "huawei_cpu_default",
-}
+check_info["huawei_wlc_devs.cpu"] = LegacyCheckDefinition(
+    parse_function=parse_huawei_wlc_devs,
+    discovery_function=discovery_huawei_wlc_devs_cpu,
+    check_function=check_huawei_wlc_devs_cpu,
+    service_name="Device %s CPU",
+    default_levels_variable="huawei_cpu_default",
+)

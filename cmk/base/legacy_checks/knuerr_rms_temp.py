@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -22,15 +23,15 @@ def check_knuerr_rms_temp(_no_item, params, info):
     return check_temperature(float(info[0][0]) / 10, params, "knuerr_rms_temp")
 
 
-check_info["knuerr_rms_temp"] = {
-    "detect": DETECT_KNUERR,
-    "default_levels_variable": "knuerr_rms_temp_default_levels",
-    "check_function": check_knuerr_rms_temp,
-    "discovery_function": inventory_knuerr_rms_temp,
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["knuerr_rms_temp"] = LegacyCheckDefinition(
+    detect=DETECT_KNUERR,
+    default_levels_variable="knuerr_rms_temp_default_levels",
+    check_function=check_knuerr_rms_temp,
+    discovery_function=inventory_knuerr_rms_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3711.15.1.1.1.1",
         oids=["4"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

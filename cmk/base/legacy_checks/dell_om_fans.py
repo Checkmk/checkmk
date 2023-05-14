@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -68,14 +69,14 @@ def check_dell_om_fans(item, params, info):
             yield check_fan(int(value), constructed_params)
 
 
-check_info["dell_om_fans"] = {
-    "detect": DETECT_OPENMANAGE,
-    "check_function": check_dell_om_fans,
-    "discovery_function": inventory_dell_om_fans,
-    "service_name": "Fan %s",
-    "fetch": SNMPTree(
+check_info["dell_om_fans"] = LegacyCheckDefinition(
+    detect=DETECT_OPENMANAGE,
+    check_function=check_dell_om_fans,
+    discovery_function=inventory_dell_om_fans,
+    service_name="Fan %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.1.700.12.1",
         oids=["2", "5", "6", "8", "10", "11", "12", "13"],
     ),
-    "check_ruleset_name": "hw_fans",
-}
+    check_ruleset_name="hw_fans",
+)

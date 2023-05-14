@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
@@ -77,14 +78,14 @@ def check_f5_bigip_fans(item, params, parsed):
 
 # Get ID and Speed from the CPU and chassis fan tables
 
-check_info["f5_bigip_fans"] = {
-    "detect": DETECT,
-    "check_function": check_f5_bigip_fans,
-    "discovery_function": inventory_f5_bigip_fans,
-    "parse_function": parse_f5_bigip_fans,
-    "service_name": "FAN %s",
-    "check_ruleset_name": "hw_fans",
-    "fetch": [
+check_info["f5_bigip_fans"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_f5_bigip_fans,
+    discovery_function=inventory_f5_bigip_fans,
+    parse_function=parse_f5_bigip_fans,
+    service_name="FAN %s",
+    check_ruleset_name="hw_fans",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3375.2.1.3.2.1.2.1",
             oids=["1", "2", "3"],
@@ -94,4 +95,4 @@ check_info["f5_bigip_fans"] = {
             oids=["4", "3"],
         ),
     ],
-}
+)

@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover_single
+from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 AWSNoExceptionsText = "No exceptions"
@@ -28,9 +28,9 @@ def check_aws_exceptions(item, params, parsed):
             yield 0, "%s %s" % (title, AWSNoExceptionsText)
 
 
-check_info["aws_exceptions"] = {
-    "parse_function": parse_aws_exceptions,
-    "discovery_function": discover_single,
-    "check_function": check_aws_exceptions,
-    "service_name": "AWS Exceptions",
-}
+check_info["aws_exceptions"] = LegacyCheckDefinition(
+    parse_function=parse_aws_exceptions,
+    discovery_function=discover_single,
+    check_function=check_aws_exceptions,
+    service_name="AWS Exceptions",
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.tplink import DETECT_TPLINK
@@ -22,14 +22,14 @@ def check_tplink_poe_summary(_no_item, params, info):
     return check_levels(watt, "power", params.get("levels", (None, None)), unit="Watt")
 
 
-check_info["tplink_poe_summary"] = {
-    "detect": DETECT_TPLINK,
-    "check_function": check_tplink_poe_summary,
-    "discovery_function": inventory_tplink_poe_summary,
-    "service_name": "POE Power",
-    "fetch": SNMPTree(
+check_info["tplink_poe_summary"] = LegacyCheckDefinition(
+    detect=DETECT_TPLINK,
+    check_function=check_tplink_poe_summary,
+    discovery_function=inventory_tplink_poe_summary,
+    service_name="POE Power",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11863.6.56.1.1.1",
         oids=["3"],
     ),
-    "check_ruleset_name": "epower_single",
-}
+    check_ruleset_name="epower_single",
+)

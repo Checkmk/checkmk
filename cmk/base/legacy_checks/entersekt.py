@@ -16,7 +16,7 @@
 #   '----------------------------------------------------------------------'
 
 
-from cmk.base.check_api import all_of, contains, exists
+from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -38,16 +38,16 @@ def check_entersekt_status(item, params, info):
     yield int(status), infotext
 
 
-check_info["entersekt"] = {
-    "detect": all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.38235.2.3.1.0")),
-    "discovery_function": inventory_entersekt,
-    "check_function": check_entersekt_status,
-    "service_name": "Entersekt Server Status",
-    "fetch": SNMPTree(
+check_info["entersekt"] = LegacyCheckDefinition(
+    detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.38235.2.3.1.0")),
+    discovery_function=inventory_entersekt,
+    check_function=check_entersekt_status,
+    service_name="Entersekt Server Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.38235.2",
         oids=["3.1.0", "3.4.0", "3.8.0", "3.9.0", "17.1.0"],
     ),
-}
+)
 
 
 # .
@@ -92,12 +92,12 @@ def check_entersekt_emrerrors(item, params, info):
     yield int(status), infotext, perfdata
 
 
-check_info["entersekt.emrerrors"] = {
-    "discovery_function": inventory_entersekt_emrerrors,
-    "check_function": check_entersekt_emrerrors,
-    "service_name": "Entersekt http EMR Errors",
-    "check_ruleset_name": "entersekt_emrerrors",
-}
+check_info["entersekt.emrerrors"] = LegacyCheckDefinition(
+    discovery_function=inventory_entersekt_emrerrors,
+    check_function=check_entersekt_emrerrors,
+    service_name="Entersekt http EMR Errors",
+    check_ruleset_name="entersekt_emrerrors",
+)
 
 # .
 #   .--sgHttp EcertErrors--------------------------------------------------.
@@ -143,12 +143,12 @@ def check_entersekt_ecerterrors(item, params, info):
     yield int(status), infotext, perfdata
 
 
-check_info["entersekt.ecerterrors"] = {
-    "discovery_function": inventory_entersekt_ecerterrors,
-    "check_function": check_entersekt_ecerterrors,
-    "service_name": "Entersekt http Ecert Errors",
-    "check_ruleset_name": "entersekt_ecerterrors",
-}
+check_info["entersekt.ecerterrors"] = LegacyCheckDefinition(
+    discovery_function=inventory_entersekt_ecerterrors,
+    check_function=check_entersekt_ecerterrors,
+    service_name="Entersekt http Ecert Errors",
+    check_ruleset_name="entersekt_ecerterrors",
+)
 
 
 # .
@@ -193,12 +193,12 @@ def check_entersekt_soaperrors(item, params, info):
     yield int(status), infotext, perfdata
 
 
-check_info["entersekt.soaperrors"] = {
-    "discovery_function": inventory_entersekt_soaperrors,
-    "check_function": check_entersekt_soaperrors,
-    "service_name": "Entersekt Soap Service Errors",
-    "check_ruleset_name": "entersekt_soaperrors",
-}
+check_info["entersekt.soaperrors"] = LegacyCheckDefinition(
+    discovery_function=inventory_entersekt_soaperrors,
+    check_function=check_entersekt_soaperrors,
+    service_name="Entersekt Soap Service Errors",
+    check_ruleset_name="entersekt_soaperrors",
+)
 
 # .
 #   .--sgConsoleDaysToNextCertExpiry---------------------------------------.
@@ -256,9 +256,9 @@ def check_entersekt_certexpiry(item, params, info):
     yield int(status), infotext, perfdata
 
 
-check_info["entersekt.certexpiry"] = {
-    "discovery_function": inventory_entersekt_certexpiry,
-    "check_function": check_entersekt_certexpiry,
-    "service_name": "Entersekt Certificate Expiration",
-    "check_ruleset_name": "entersekt_certexpiry",
-}
+check_info["entersekt.certexpiry"] = LegacyCheckDefinition(
+    discovery_function=inventory_entersekt_certexpiry,
+    check_function=check_entersekt_certexpiry,
+    service_name="Entersekt Certificate Expiration",
+    check_ruleset_name="entersekt_certexpiry",
+)

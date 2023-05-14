@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_bytes_human_readable, savefloat
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, savefloat
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_TRPZ
@@ -45,14 +45,14 @@ def check_juniper_trpz_flash(_no_item, params, info):
     return 0, message, perf
 
 
-check_info["juniper_trpz_flash"] = {
-    "detect": DETECT_JUNIPER_TRPZ,
-    "check_function": check_juniper_trpz_flash,
-    "discovery_function": inventory_juniper_trpz_flash,
-    "service_name": "Flash",
-    "fetch": SNMPTree(
+check_info["juniper_trpz_flash"] = LegacyCheckDefinition(
+    detect=DETECT_JUNIPER_TRPZ,
+    check_function=check_juniper_trpz_flash,
+    discovery_function=inventory_juniper_trpz_flash,
+    service_name="Flash",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1",
         oids=["3", "4"],
     ),
-    "check_ruleset_name": "general_flash_usage",
-}
+    check_ruleset_name="general_flash_usage",
+)

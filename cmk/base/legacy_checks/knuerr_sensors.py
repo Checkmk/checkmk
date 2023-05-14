@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.knuerr import DETECT_KNUERR
@@ -24,13 +25,13 @@ def check_knuerr_sensors(item, _no_params, info):
     return 3, "Sensor no longer found"
 
 
-check_info["knuerr_sensors"] = {
-    "detect": DETECT_KNUERR,
-    "check_function": check_knuerr_sensors,
-    "discovery_function": inventory_knuerr_sensors,
-    "service_name": "Sensor %s",
-    "fetch": SNMPTree(
+check_info["knuerr_sensors"] = LegacyCheckDefinition(
+    detect=DETECT_KNUERR,
+    check_function=check_knuerr_sensors,
+    discovery_function=inventory_knuerr_sensors,
+    service_name="Sensor %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3711.15.1.1.2",
         oids=["1", "5"],
     ),
-}
+)

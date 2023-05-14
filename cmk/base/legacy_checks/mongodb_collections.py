@@ -11,7 +11,12 @@
 
 import json
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, get_timestamp_human_readable
+from cmk.base.check_api import (
+    check_levels,
+    get_bytes_human_readable,
+    get_timestamp_human_readable,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.utils.mongodb import parse_date
 
@@ -215,11 +220,11 @@ def _mongodb_collections_get_as_int(data, key):
         return "n/a"
 
 
-check_info["mongodb_collections"] = {
-    "default_levels_variable": "mongodb_collections_levels",
-    "parse_function": parse_mongodb_collections,
-    "discovery_function": inventory_mongodb_collections,
-    "check_function": check_mongodb_collections,
-    "service_name": "MongoDB Collection: %s",
-    "check_ruleset_name": "mongodb_collections",
-}
+check_info["mongodb_collections"] = LegacyCheckDefinition(
+    default_levels_variable="mongodb_collections_levels",
+    parse_function=parse_mongodb_collections,
+    discovery_function=inventory_mongodb_collections,
+    check_function=check_mongodb_collections,
+    service_name="MongoDB Collection: %s",
+    check_ruleset_name="mongodb_collections",
+)

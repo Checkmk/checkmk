@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.casa import DETECT_CASA
@@ -33,12 +34,12 @@ def check_casa_fan(item, _no_params, info):
     return (3, "Fan %s not found in snmp output" % item)
 
 
-check_info["casa_fan"] = {
-    "detect": DETECT_CASA,
-    "check_function": check_casa_fan,
-    "discovery_function": inventory_casa_fan,
-    "service_name": "Fan %s",
-    "fetch": [
+check_info["casa_fan"] = LegacyCheckDefinition(
+    detect=DETECT_CASA,
+    check_function=check_casa_fan,
+    discovery_function=inventory_casa_fan,
+    service_name="Fan %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.20858.10.31.1.1.1",
             oids=[OIDEnd(), "2"],
@@ -48,4 +49,4 @@ check_info["casa_fan"] = {
             oids=[OIDEnd(), "4"],
         ),
     ],
-}
+)

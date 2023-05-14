@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 
@@ -38,21 +39,21 @@ def check_nvidia_temp(item, params, info):
     return None
 
 
-check_info["nvidia.temp"] = {
-    "check_function": check_nvidia_temp,
-    "discovery_function": lambda info: inventory_nvidia_temp(False, info),
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "nvidia_temp_default_levels",
-}
+check_info["nvidia.temp"] = LegacyCheckDefinition(
+    check_function=check_nvidia_temp,
+    discovery_function=lambda info: inventory_nvidia_temp(False, info),
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="nvidia_temp_default_levels",
+)
 
-check_info["nvidia.temp_core"] = {
-    "check_function": check_nvidia_temp,
-    "discovery_function": lambda info: inventory_nvidia_temp(True, info),
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "nvidia_temp_core_default_levels",
-}
+check_info["nvidia.temp_core"] = LegacyCheckDefinition(
+    check_function=check_nvidia_temp,
+    discovery_function=lambda info: inventory_nvidia_temp(True, info),
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="nvidia_temp_core_default_levels",
+)
 
 
 def inventory_nvidia_errors(info):
@@ -72,9 +73,9 @@ def check_nvidia_errors(_no_item, _no_params, info):
     return (3, "incomplete output from agent")
 
 
-check_info["nvidia.errors"] = {
-    "check_function": check_nvidia_errors,
-    "discovery_function": inventory_nvidia_errors,
-    "service_name": "NVIDIA GPU Errors",
-    "check_ruleset_name": "hw_errors",
-}
+check_info["nvidia.errors"] = LegacyCheckDefinition(
+    check_function=check_nvidia_errors,
+    discovery_function=inventory_nvidia_errors,
+    service_name="NVIDIA GPU Errors",
+    check_ruleset_name="hw_errors",
+)

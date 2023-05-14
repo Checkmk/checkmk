@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netstat import check_netstat_generic
 from cmk.base.config import check_info
 
@@ -65,9 +66,9 @@ def parse_netstat(info):
     return connections
 
 
-check_info["netstat"] = {
-    "parse_function": parse_netstat,
-    "check_function": check_netstat_generic,
-    "service_name": "TCP Connection %s",
-    "check_ruleset_name": "tcp_connections",
-}
+check_info["netstat"] = LegacyCheckDefinition(
+    parse_function=parse_netstat,
+    check_function=check_netstat_generic,
+    service_name="TCP Connection %s",
+    check_ruleset_name="tcp_connections",
+)

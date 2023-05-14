@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 
@@ -22,13 +23,13 @@ def check_perle_psmu_powersupplies(item, params, parsed):
             yield res
 
 
-check_info["perle_psmu"] = {
+check_info["perle_psmu"] = LegacyCheckDefinition(
     # section is already migrated!
-    "discovery_function": lambda info: inventory_perle_psmu(info, "psustate"),
-    "check_function": check_perle_psmu_powersupplies,
-    "service_name": "Power supply %s",
-    "check_ruleset_name": "el_inphase",
-}
+    discovery_function=lambda info: inventory_perle_psmu(info, "psustate"),
+    check_function=check_perle_psmu_powersupplies,
+    service_name="Power supply %s",
+    check_ruleset_name="el_inphase",
+)
 
 
 def check_perle_psmu_fans(item, _no_params, parsed):
@@ -38,8 +39,8 @@ def check_perle_psmu_fans(item, _no_params, parsed):
     return None
 
 
-check_info["perle_psmu.fan"] = {
-    "discovery_function": lambda info: inventory_perle_psmu(info, "fanstate"),
-    "check_function": check_perle_psmu_fans,
-    "service_name": "Fan %s",
-}
+check_info["perle_psmu.fan"] = LegacyCheckDefinition(
+    discovery_function=lambda info: inventory_perle_psmu(info, "fanstate"),
+    check_function=check_perle_psmu_fans,
+    service_name="Fan %s",
+)

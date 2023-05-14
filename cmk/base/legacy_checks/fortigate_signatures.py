@@ -10,7 +10,7 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, regex
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, regex
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
@@ -75,16 +75,16 @@ def check_fortigate_signatures(_no_item, params, parsed):
         yield state, infotext
 
 
-check_info["fortigate_signatures"] = {
-    "detect": DETECT_FORTIGATE,
-    "parse_function": parse_fortigate_signatures,
-    "discovery_function": inventory_fortigate_signatures,
-    "check_function": check_fortigate_signatures,
-    "service_name": "Signatures",
-    "fetch": SNMPTree(
+check_info["fortigate_signatures"] = LegacyCheckDefinition(
+    detect=DETECT_FORTIGATE,
+    parse_function=parse_fortigate_signatures,
+    discovery_function=inventory_fortigate_signatures,
+    check_function=check_fortigate_signatures,
+    service_name="Signatures",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.4.2",
         oids=["1", "2", "3", "4"],
     ),
-    "default_levels_variable": "fortigate_signature_default_levels",
-    "check_ruleset_name": "fortinet_signatures",
-}
+    default_levels_variable="fortigate_signature_default_levels",
+    check_ruleset_name="fortinet_signatures",
+)

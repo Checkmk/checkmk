@@ -12,7 +12,7 @@
 #  ['IMAP',  '1', '48']]
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -45,13 +45,13 @@ def check_cpsecure_sessions(item, params, info):
     return 3, "service not found"
 
 
-check_info["cpsecure_sessions"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.26546.1.1.2"),
-    "check_function": check_cpsecure_sessions,
-    "discovery_function": inventory_cpsecure_sessions,
-    "service_name": "Number of %s sessions",
-    "fetch": SNMPTree(
+check_info["cpsecure_sessions"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.26546.1.1.2"),
+    check_function=check_cpsecure_sessions,
+    discovery_function=inventory_cpsecure_sessions,
+    service_name="Number of %s sessions",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.26546.3.1.2.1.1.1",
         oids=["1", "2", "3"],
     ),
-}
+)

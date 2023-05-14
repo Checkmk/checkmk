@@ -5,6 +5,7 @@
 
 from collections.abc import Iterable
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -107,15 +108,15 @@ def check_cmciii_lcp_water(item, params, parsed):
     yield status, "Temperature: " + info_text, perf_data
 
 
-check_info["cmciii_lcp_water"] = {
-    "detect": DETECT_CMCIII_LCP,
-    "parse_function": parse_cmciii_lcp_water,
-    "check_function": check_cmciii_lcp_water,
-    "discovery_function": inventory_cmciii_lcp_water,
-    "service_name": "Temperature Water LCP %s",
-    "fetch": SNMPTree(
+check_info["cmciii_lcp_water"] = LegacyCheckDefinition(
+    detect=DETECT_CMCIII_LCP,
+    parse_function=parse_cmciii_lcp_water,
+    check_function=check_cmciii_lcp_water,
+    discovery_function=inventory_cmciii_lcp_water,
+    service_name="Temperature Water LCP %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.7.4.2.2.1.10",
         oids=["2"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

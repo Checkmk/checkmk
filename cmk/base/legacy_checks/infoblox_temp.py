@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -82,13 +83,13 @@ def check_infoblox_temp(item, params, parsed):
     )
 
 
-check_info["infoblox_temp"] = {
-    "detect": DETECT_INFOBLOX,
-    "parse_function": parse_infoblox_temp,
-    "discovery_function": inventory_infoblox_temp,
-    "check_function": check_infoblox_temp,
-    "service_name": "Temperature %s",
-    "fetch": [
+check_info["infoblox_temp"] = LegacyCheckDefinition(
+    detect=DETECT_INFOBLOX,
+    parse_function=parse_infoblox_temp,
+    discovery_function=inventory_infoblox_temp,
+    check_function=check_infoblox_temp,
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2",
             oids=[OIDEnd(), "39", "40", "41"],
@@ -98,6 +99,6 @@ check_info["infoblox_temp"] = {
             oids=[OIDEnd(), "39", "40", "41"],
         ),
     ],
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "infoblox_temp_default_levels",
-}
+    check_ruleset_name="temperature",
+    default_levels_variable="infoblox_temp_default_levels",
+)

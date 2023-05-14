@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info, factory_settings
 
@@ -26,10 +27,10 @@ def check_lvm_vgs(item, params, info):
     return df_check_filesystem_list(item, params, vglist)
 
 
-check_info["lvm_vgs"] = {
-    "check_function": check_lvm_vgs,
-    "discovery_function": inventory_lvm_vgs,
-    "service_name": "LVM VG %s",
-    "check_ruleset_name": "volume_groups",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["lvm_vgs"] = LegacyCheckDefinition(
+    check_function=check_lvm_vgs,
+    discovery_function=inventory_lvm_vgs,
+    service_name="LVM VG %s",
+    check_ruleset_name="volume_groups",
+    default_levels_variable="filesystem_default_levels",
+)

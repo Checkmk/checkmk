@@ -10,6 +10,7 @@
 
 # Suggested by customer
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.barracuda import DETECT_BARRACUDA
@@ -48,18 +49,18 @@ def check_barracuda_mailqueues(_no_item, params, info):
         yield 0, "Daily sent: %s" % daily_sent
 
 
-check_info["barracuda_mailqueues"] = {
-    "detect": DETECT_BARRACUDA,
-    "discovery_function": inventory_barracuda_mailqueues,
-    "check_function": check_barracuda_mailqueues,
-    "service_name": "Mail Queue %s",
+check_info["barracuda_mailqueues"] = LegacyCheckDefinition(
+    detect=DETECT_BARRACUDA,
+    discovery_function=inventory_barracuda_mailqueues,
+    check_function=check_barracuda_mailqueues,
+    service_name="Mail Queue %s",
     # The barracuda spam firewall does not response or returns a timeout error
     # executing 'snmpwalk' on whole tables. But we can workaround here specifying
     # all needed OIDs. Then we can use 'snmpget' and 'snmpwalk' on these single OIDs.
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.20632.2",
         oids=["2", "3", "4", "60"],
     ),
-    "default_levels_variable": "barracuda_mailq_default_levels",
-    "check_ruleset_name": "mail_queue_length",
-}
+    default_levels_variable="barracuda_mailq_default_levels",
+    check_ruleset_name="mail_queue_length",
+)

@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.aws import parse_aws
 from cmk.base.config import check_info
 
@@ -86,12 +86,12 @@ def check_aws_application_elb_target_groups(item, params, parsed):
     return check_aws_elbv2_target_groups(item, params, application_target_groups)
 
 
-check_info["aws_elbv2_target_groups"] = {
-    "parse_function": parse_aws_elbv2_target_groups,
-    "discovery_function": inventory_aws_application_elb_target_groups,
-    "check_function": check_aws_application_elb_target_groups,
-    "service_name": "AWS/ApplicationELB Target Groups",
-}
+check_info["aws_elbv2_target_groups"] = LegacyCheckDefinition(
+    parse_function=parse_aws_elbv2_target_groups,
+    discovery_function=inventory_aws_application_elb_target_groups,
+    check_function=check_aws_application_elb_target_groups,
+    service_name="AWS/ApplicationELB Target Groups",
+)
 
 
 def inventory_aws_network_elb_target_groups(parsed):
@@ -106,8 +106,8 @@ def check_aws_network_elb_target_groups(item, params, parsed):
     return check_aws_elbv2_target_groups(item, params, network_target_groups)
 
 
-check_info["aws_elbv2_target_groups.network"] = {
-    "discovery_function": inventory_aws_network_elb_target_groups,
-    "check_function": check_aws_network_elb_target_groups,
-    "service_name": "AWS/NetworkELB Target Groups",
-}
+check_info["aws_elbv2_target_groups.network"] = LegacyCheckDefinition(
+    discovery_function=inventory_aws_network_elb_target_groups,
+    check_function=check_aws_network_elb_target_groups,
+    service_name="AWS/NetworkELB Target Groups",
+)

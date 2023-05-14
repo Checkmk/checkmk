@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -31,16 +31,16 @@ def check_qqnap_hdd_temp(item, params, data):
     yield check_temperature(reading=data, unique_name=item, params=params)
 
 
-check_info["qnap_hdd_temp"] = {
-    "detect": DETECT_QNAP,
-    "discovery_function": discover(),
-    "parse_function": parse_qnap_hdd_temp,
-    "check_function": check_qqnap_hdd_temp,
-    "service_name": "QNAP %s Temperature",
-    "fetch": SNMPTree(
+check_info["qnap_hdd_temp"] = LegacyCheckDefinition(
+    detect=DETECT_QNAP,
+    discovery_function=discover(),
+    parse_function=parse_qnap_hdd_temp,
+    check_function=check_qqnap_hdd_temp,
+    service_name="QNAP %s Temperature",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.24681.1.2.11.1",
         oids=["2", "3"],
     ),
-    "default_levels_variable": "qnap_hdd_temp_default_levels",
-    "check_ruleset_name": "temperature",
-}
+    default_levels_variable="qnap_hdd_temp_default_levels",
+    check_ruleset_name="temperature",
+)

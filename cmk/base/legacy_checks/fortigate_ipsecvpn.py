@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
@@ -71,15 +72,15 @@ def check_fortigate_ipsecvpn(item, params, info):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-check_info["fortigate_ipsecvpn"] = {
-    "detect": DETECT_FORTIGATE,
-    "discovery_function": inventory_fortigate_ipsecvpn,
-    "check_function": check_fortigate_ipsecvpn,
-    "service_name": "VPN IPSec Tunnels",
-    "fetch": SNMPTree(
+check_info["fortigate_ipsecvpn"] = LegacyCheckDefinition(
+    detect=DETECT_FORTIGATE,
+    discovery_function=inventory_fortigate_ipsecvpn,
+    check_function=check_fortigate_ipsecvpn,
+    service_name="VPN IPSec Tunnels",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.12.2.2.1",
         oids=["3", "20"],
     ),
-    "default_levels_variable": "fortigate_ipsecvpn_default_levels",
-    "check_ruleset_name": "ipsecvpn",
-}
+    default_levels_variable="fortigate_ipsecvpn_default_levels",
+    check_ruleset_name="ipsecvpn",
+)

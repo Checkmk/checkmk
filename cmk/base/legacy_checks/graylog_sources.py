@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.check_api import check_levels, discover, get_age_human_readable
+from cmk.base.check_api import check_levels, discover, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.graylog import handle_graylog_messages
 from cmk.base.config import check_info, factory_settings
 
@@ -91,11 +91,11 @@ def check_graylog_sources(item: str, params: Mapping[str, Any], section: SourceI
 
 factory_settings["graylog_sources_default_levels"] = {}
 
-check_info["graylog_sources"] = {
-    "parse_function": parse_graylog_sources,
-    "check_function": check_graylog_sources,
-    "discovery_function": discover(),
-    "default_levels_variable": "graylog_sources_default_levels",
-    "service_name": "Graylog Source %s",
-    "check_ruleset_name": "graylog_sources",
-}
+check_info["graylog_sources"] = LegacyCheckDefinition(
+    parse_function=parse_graylog_sources,
+    check_function=check_graylog_sources,
+    discovery_function=discover(),
+    default_levels_variable="graylog_sources_default_levels",
+    service_name="Graylog Source %s",
+    check_ruleset_name="graylog_sources",
+)

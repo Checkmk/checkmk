@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -39,15 +39,15 @@ def check_emerson_temp(item, params, info):
     return check_temperature(temp, params, "emerson_temp_%s" % item)
 
 
-check_info["emerson_temp"] = {
-    "detect": startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
-    "discovery_function": inventory_emerson_temp,
-    "check_function": check_emerson_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "fetch": SNMPTree(
+check_info["emerson_temp"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
+    discovery_function=inventory_emerson_temp,
+    check_function=check_emerson_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.6302.2.1.2",
         oids=["7"],
     ),
-    "default_levels_variable": "emerson_temp_default",
-}
+    default_levels_variable="emerson_temp_default",
+)

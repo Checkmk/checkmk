@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.blade import DETECT_BLADE_BX
@@ -83,15 +84,15 @@ def check_blade_bx_powerfan(item, params, info):  # pylint: disable=too-many-bra
     return None
 
 
-check_info["blade_bx_powerfan"] = {
-    "detect": DETECT_BLADE_BX,
-    "check_function": check_blade_bx_powerfan,
-    "discovery_function": inventory_blade_bx_powerfan,
-    "service_name": "Blade Cooling %s",
-    "check_ruleset_name": "hw_fans_perc",
-    "default_levels_variable": "blade_bx_powerfan_default_levels",
-    "fetch": SNMPTree(
+check_info["blade_bx_powerfan"] = LegacyCheckDefinition(
+    detect=DETECT_BLADE_BX,
+    check_function=check_blade_bx_powerfan,
+    discovery_function=inventory_blade_bx_powerfan,
+    service_name="Blade Cooling %s",
+    check_ruleset_name="hw_fans_perc",
+    default_levels_variable="blade_bx_powerfan_default_levels",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.7244.1.1.1.3.3.1.1",
         oids=["2", "3", "4", "5", "6", "7"],
     ),
-}
+)

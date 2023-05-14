@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
@@ -39,14 +40,14 @@ def check_hitachi_hnas_fpga(item, params, info):
     return 3, "No utilization found for FPGA %s" % item
 
 
-check_info["hitachi_hnas_fpga"] = {
-    "detect": DETECT,
-    "check_function": check_hitachi_hnas_fpga,
-    "discovery_function": inventory_hitachi_hnas_fpga,
-    "service_name": "FPGA %s",
-    "fetch": SNMPTree(
+check_info["hitachi_hnas_fpga"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_hitachi_hnas_fpga,
+    discovery_function=inventory_hitachi_hnas_fpga,
+    service_name="FPGA %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.6.1.4.1",
         oids=["1", "2", "3", "4"],
     ),
-    "check_ruleset_name": "fpga_utilization",
-}
+    check_ruleset_name="fpga_utilization",
+)

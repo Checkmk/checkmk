@@ -6,7 +6,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable, get_bytes_human_readable
+from cmk.base.check_api import (
+    check_levels,
+    get_age_human_readable,
+    get_bytes_human_readable,
+    LegacyCheckDefinition,
+)
 from cmk.base.check_legacy_includes.graylog import (
     handle_iso_utc_to_localtimestamp,
     parse_graylog_agent_data,
@@ -114,11 +119,11 @@ def _handle_readable_output(value):
     return str(value).replace("False", "no").replace("True", "yes")
 
 
-check_info["graylog_license"] = {
-    "parse_function": parse_graylog_agent_data,
-    "check_function": check_graylog_license,
-    "discovery_function": inventory_graylog_license,
-    "default_levels_variable": "graylog_license_default_levels",
-    "service_name": "Graylog License",
-    "check_ruleset_name": "graylog_license",
-}
+check_info["graylog_license"] = LegacyCheckDefinition(
+    parse_function=parse_graylog_agent_data,
+    check_function=check_graylog_license,
+    discovery_function=inventory_graylog_license,
+    default_levels_variable="graylog_license_default_levels",
+    service_name="Graylog License",
+    check_ruleset_name="graylog_license",
+)

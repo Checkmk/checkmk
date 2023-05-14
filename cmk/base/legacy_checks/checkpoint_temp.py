@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.checkpoint import checkpoint_sensorstatus_to_nagios
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -42,15 +43,15 @@ def check_checkpoint_temp(item, params, info):
     return None
 
 
-check_info["checkpoint_temp"] = {
-    "detect": DETECT,
-    "check_function": check_checkpoint_temp,
-    "discovery_function": inventory_checkpoint_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "fetch": SNMPTree(
+check_info["checkpoint_temp"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_checkpoint_temp,
+    discovery_function=inventory_checkpoint_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.8.1.1",
         oids=["2", "3", "4", "6"],
     ),
-    "default_levels_variable": "checkpoint_temp_default_levels",
-}
+    default_levels_variable="checkpoint_temp_default_levels",
+)

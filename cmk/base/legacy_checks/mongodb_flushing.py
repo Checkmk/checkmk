@@ -11,7 +11,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable, get_average
+from cmk.base.check_api import (
+    check_levels,
+    get_age_human_readable,
+    get_average,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info
 
 
@@ -75,9 +80,9 @@ def _get_missing_keys(key_list, info_dict):
     return " and ".join(sorted(missing_keys))
 
 
-check_info["mongodb_flushing"] = {
-    "discovery_function": inventory_mongodb_flushing,
-    "check_function": check_mongodb_flushing,
-    "service_name": "MongoDB Flushing",
-    "check_ruleset_name": "mongodb_flushing",
-}
+check_info["mongodb_flushing"] = LegacyCheckDefinition(
+    discovery_function=inventory_mongodb_flushing,
+    check_function=check_mongodb_flushing,
+    service_name="MongoDB Flushing",
+    check_ruleset_name="mongodb_flushing",
+)

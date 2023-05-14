@@ -11,7 +11,7 @@
 
 import json
 
-from cmk.base.check_api import discover_single, get_bytes_human_readable
+from cmk.base.check_api import discover_single, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["mongodb_cluster_levels"] = {"levels_number_jumbo": (1, 2)}
@@ -75,13 +75,13 @@ def check_mongodb_cluster_databases(item, _params, databases_dict):
     yield 0, "Primary: %s" % database.get("primary")
 
 
-check_info["mongodb_cluster"] = {
-    "parse_function": parse_mongodb_cluster,
-    "discovery_function": inventory_mongodb_cluster_databases,
-    "check_function": check_mongodb_cluster_databases,
-    "service_name": "MongoDB Database: %s",
-    "check_ruleset_name": "mongodb_cluster",
-}
+check_info["mongodb_cluster"] = LegacyCheckDefinition(
+    parse_function=parse_mongodb_cluster,
+    discovery_function=inventory_mongodb_cluster_databases,
+    check_function=check_mongodb_cluster_databases,
+    service_name="MongoDB Database: %s",
+    check_ruleset_name="mongodb_cluster",
+)
 
 #   .--shards--------------------------------------------------------------.
 #   |                        _                   _                         |
@@ -477,13 +477,13 @@ def _mongodb_cluster_split_namespace(namespace):
     raise ValueError("error parsing namespace %s" % namespace)
 
 
-check_info["mongodb_cluster.collections"] = {
-    "default_levels_variable": "mongodb_cluster_levels",
-    "discovery_function": inventory_mongodb_cluster_shards,
-    "check_function": check_mongodb_cluster_shards,
-    "service_name": "MongoDB Cluster: %s",
-    "check_ruleset_name": "mongodb_cluster",
-}
+check_info["mongodb_cluster.collections"] = LegacyCheckDefinition(
+    default_levels_variable="mongodb_cluster_levels",
+    discovery_function=inventory_mongodb_cluster_shards,
+    check_function=check_mongodb_cluster_shards,
+    service_name="MongoDB Cluster: %s",
+    check_ruleset_name="mongodb_cluster",
+)
 
 #   .--balancer------------------------------------------------------------.
 #   |               _           _                                          |
@@ -506,8 +506,8 @@ def check_mongodb_cluster_balancer(_item, _params, databases_dict):
         yield 2, "Balancer: disabled"
 
 
-check_info["mongodb_cluster.balancer"] = {
-    "discovery_function": discover_single,
-    "check_function": check_mongodb_cluster_balancer,
-    "service_name": "MongoDB Balancer",
-}
+check_info["mongodb_cluster.balancer"] = LegacyCheckDefinition(
+    discovery_function=discover_single,
+    check_function=check_mongodb_cluster_balancer,
+    service_name="MongoDB Balancer",
+)

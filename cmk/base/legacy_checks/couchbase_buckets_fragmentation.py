@@ -9,6 +9,7 @@ from cmk.base.check_api import (
     discover,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
@@ -37,10 +38,10 @@ def check_couchbase_buckets_fragmentation(_item, params, data):
         )
 
 
-check_info["couchbase_buckets_fragmentation"] = {
-    "parse_function": parse_couchbase_lines,
-    "discovery_function": discover(lambda _k, v: "couch_docs_fragmentation" in v),
-    "check_function": check_couchbase_buckets_fragmentation,
-    "service_name": "Couchbase Bucket %s Fragmentation",
-    "check_ruleset_name": "couchbase_fragmentation",
-}
+check_info["couchbase_buckets_fragmentation"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_lines,
+    discovery_function=discover(lambda _k, v: "couch_docs_fragmentation" in v),
+    check_function=check_couchbase_buckets_fragmentation,
+    service_name="Couchbase Bucket %s Fragmentation",
+    check_ruleset_name="couchbase_fragmentation",
+)

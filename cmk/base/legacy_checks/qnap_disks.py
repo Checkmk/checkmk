@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.qnap import DETECT_QNAP
@@ -35,13 +36,13 @@ def check_qnap_disks(item, _no_params, info):
             yield 0, "Model: %s, Temperature: %s, Size: %s" % (model, temp, size)
 
 
-check_info["qnap_disks"] = {
-    "detect": DETECT_QNAP,
-    "check_function": check_qnap_disks,
-    "discovery_function": inventory_qnap_disks,
-    "service_name": "Disk %s",
-    "fetch": SNMPTree(
+check_info["qnap_disks"] = LegacyCheckDefinition(
+    detect=DETECT_QNAP,
+    check_function=check_qnap_disks,
+    discovery_function=inventory_qnap_disks,
+    service_name="Disk %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.24681.1.2.11.1",
         oids=["2", "3", "4", "5", "6", "7"],
     ),
-}
+)

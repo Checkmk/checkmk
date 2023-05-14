@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.stormshield import DETECT_STORMSHIELD
@@ -40,13 +40,13 @@ def check_stormshield_packets(item, _no_params, info):
             yield 0, infotext, perfdata
 
 
-check_info["stormshield_packets"] = {
-    "detect": DETECT_STORMSHIELD,
-    "discovery_function": inventory_stormshield_packets,
-    "check_function": check_stormshield_packets,
-    "service_name": "Packet Stats %s",
-    "fetch": SNMPTree(
+check_info["stormshield_packets"] = LegacyCheckDefinition(
+    detect=DETECT_STORMSHIELD,
+    discovery_function=inventory_stormshield_packets,
+    check_function=check_stormshield_packets,
+    service_name="Packet Stats %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.4.1.1",
         oids=["2", "3", "6", "11", "12", "16", "23", "24"],
     ),
-}
+)

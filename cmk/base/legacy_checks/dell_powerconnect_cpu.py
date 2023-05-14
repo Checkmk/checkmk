@@ -16,7 +16,7 @@
 # Default values for parameters that can be overriden.
 
 
-from cmk.base.check_api import contains, MKCounterWrapped, saveint
+from cmk.base.check_api import contains, LegacyCheckDefinition, MKCounterWrapped, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -66,13 +66,13 @@ def check_dell_powerconnect_cpu(item, params, info):
     return (3, "Invalid  information in SNMP data")
 
 
-check_info["dell_powerconnect_cpu"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
-    "check_function": check_dell_powerconnect_cpu,
-    "discovery_function": inventory_dell_powerconnect_cpu,
-    "service_name": "CPU utilization",
-    "fetch": SNMPTree(
+check_info["dell_powerconnect_cpu"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
+    check_function=check_dell_powerconnect_cpu,
+    discovery_function=inventory_dell_powerconnect_cpu,
+    service_name="CPU utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.89.1",
         oids=["6", "7", "8", "9"],
     ),
-}
+)

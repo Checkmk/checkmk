@@ -42,6 +42,7 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_bytes_human_readable,
     get_timestamp_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
 
@@ -139,12 +140,12 @@ def check_mkbackup_system(item, _no_params, parsed):
     return check_mkbackup(job_state)
 
 
-check_info["mkbackup"] = {
-    "parse_function": parse_mkbackup,
-    "discovery_function": inventory_mkbackup_system,
-    "check_function": check_mkbackup_system,
-    "service_name": "Backup %s",
-}
+check_info["mkbackup"] = LegacyCheckDefinition(
+    parse_function=parse_mkbackup,
+    discovery_function=inventory_mkbackup_system,
+    check_function=check_mkbackup_system,
+    service_name="Backup %s",
+)
 
 
 def inventory_mkbackup_site(parsed):
@@ -162,8 +163,8 @@ def check_mkbackup_site(item, _no_params, parsed):
     return check_mkbackup(job_state)
 
 
-check_info["mkbackup.site"] = {
-    "discovery_function": inventory_mkbackup_site,
-    "check_function": check_mkbackup_site,
-    "service_name": "OMD %s",
-}
+check_info["mkbackup.site"] = LegacyCheckDefinition(
+    discovery_function=inventory_mkbackup_site,
+    check_function=check_mkbackup_site,
+    service_name="OMD %s",
+)

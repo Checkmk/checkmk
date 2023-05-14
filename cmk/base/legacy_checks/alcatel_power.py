@@ -6,7 +6,7 @@
 import collections
 from typing import Mapping
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -69,14 +69,14 @@ def check_alcatel_power(item, _no_params, device):
     yield state, "[%s] Operational status: %s" % (device.power_type, device.oper_state_readable)
 
 
-check_info["alcatel_power"] = {
-    "detect": DETECT_ALCATEL,
-    "parse_function": parse_alcatel_power,
-    "check_function": check_alcatel_power,
-    "discovery_function": inventory_alcatel_power,
-    "service_name": "Power Supply %s",
-    "fetch": SNMPTree(
+check_info["alcatel_power"] = LegacyCheckDefinition(
+    detect=DETECT_ALCATEL,
+    parse_function=parse_alcatel_power,
+    check_function=check_alcatel_power,
+    discovery_function=inventory_alcatel_power,
+    service_name="Power Supply %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.800.1.1.1.1.1.1.1",
         oids=[OIDEnd(), "2", "36"],
     ),
-}
+)

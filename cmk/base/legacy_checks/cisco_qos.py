@@ -15,6 +15,7 @@ from cmk.base.check_api import (
     get_average,
     get_nic_speed_human_readable,
     get_rate,
+    LegacyCheckDefinition,
     saveint,
 )
 from cmk.base.config import check_info, factory_settings
@@ -317,16 +318,16 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
     return (state, infotext.lstrip(", "), perfdata)
 
 
-check_info["cisco_qos"] = {
-    "detect": all_of(
+check_info["cisco_qos"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.166.1.1.1.1.4.*")
     ),
-    "service_name": "QoS %s",
-    "check_function": check_cisco_qos,
-    "discovery_function": inventory_cisco_qos,
-    "check_ruleset_name": "cisco_qos",
-    "default_levels_variable": "cisco_qos_default_levels",
-    "fetch": [
+    service_name="QoS %s",
+    check_function=check_cisco_qos,
+    discovery_function=inventory_cisco_qos,
+    check_ruleset_name="cisco_qos",
+    default_levels_variable="cisco_qos_default_levels",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.166.1.1.1.1",
             oids=[OIDEnd(), "4"],
@@ -376,4 +377,4 @@ check_info["cisco_qos"] = {
             oids=[OIDEnd(), "3"],
         ),
     ],
-}
+)

@@ -10,7 +10,7 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
@@ -44,16 +44,16 @@ def check_kentix_co(item: str, params: dict, section: int) -> Iterable:
     )
 
 
-check_info["kentix_co"] = {
-    "detect": DETECT_KENTIX,
-    "parse_function": parse_kentix_co,
-    "discovery_function": inventory_kentix_co,
-    "check_function": check_kentix_co,
-    "default_levels_variable": "kentix_co",
-    "service_name": "Carbon Monoxide",
-    "fetch": SNMPTree(
+check_info["kentix_co"] = LegacyCheckDefinition(
+    detect=DETECT_KENTIX,
+    parse_function=parse_kentix_co,
+    discovery_function=inventory_kentix_co,
+    check_function=check_kentix_co,
+    default_levels_variable="kentix_co",
+    service_name="Carbon Monoxide",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.37954",
         oids=["2.1.4.1", "3.1.3.1"],
     ),
-    "check_ruleset_name": "carbon_monoxide",
-}
+    check_ruleset_name="carbon_monoxide",
+)

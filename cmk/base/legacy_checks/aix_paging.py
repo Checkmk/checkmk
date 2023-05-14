@@ -8,7 +8,7 @@
 
 import collections
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info, factory_settings
 
@@ -61,11 +61,11 @@ def check_aix_paging(item, params, data):
     yield 0, "Active: %s, Auto: %s, Type: %s" % (data.active, data.auto, data.type)
 
 
-check_info["aix_paging"] = {
-    "parse_function": parse_aix_paging,
-    "discovery_function": discover(),
-    "check_function": check_aix_paging,
-    "service_name": "Page Space %s",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["aix_paging"] = LegacyCheckDefinition(
+    parse_function=parse_aix_paging,
+    discovery_function=discover(),
+    check_function=check_aix_paging,
+    service_name="Page Space %s",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)

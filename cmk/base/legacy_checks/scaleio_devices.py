@@ -14,7 +14,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -75,9 +75,9 @@ def check_scaleio_devices(item, params, devices):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-check_info["scaleio_devices"] = {
-    "parse_function": parse_scaleio_devices,
-    "discovery_function": discover(),
-    "check_function": check_scaleio_devices,
-    "service_name": "ScaleIO Data Server %s Devices",
-}
+check_info["scaleio_devices"] = LegacyCheckDefinition(
+    parse_function=parse_scaleio_devices,
+    discovery_function=discover(),
+    check_function=check_scaleio_devices,
+    service_name="ScaleIO Data Server %s Devices",
+)

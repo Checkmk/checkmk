@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.utils import megaraid
 
@@ -51,11 +52,11 @@ def check_storcli_pdisks(item, params, parsed):
     return status, infotext
 
 
-check_info["storcli_pdisks"] = {
-    "default_levels_variable": "storcli_pdisks_default_levels",
-    "parse_function": parse_storcli_pdisks,
-    "discovery_function": inventory_storcli_pdisks,
-    "check_function": check_storcli_pdisks,
-    "service_name": "RAID PDisk EID:Slot-Device %s",
-    "check_ruleset_name": "storcli_pdisks",
-}
+check_info["storcli_pdisks"] = LegacyCheckDefinition(
+    default_levels_variable="storcli_pdisks_default_levels",
+    parse_function=parse_storcli_pdisks,
+    discovery_function=inventory_storcli_pdisks,
+    check_function=check_storcli_pdisks,
+    service_name="RAID PDisk EID:Slot-Device %s",
+    check_ruleset_name="storcli_pdisks",
+)

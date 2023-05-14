@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.akcp_sensor import (
     check_akcp_sensor_drycontact,
     inventory_akcp_sensor_no_params,
@@ -16,13 +17,13 @@ from cmk.base.plugins.agent_based.utils.akcp import DETECT_AKCP_EXP
 #           description            state  online  critical_desc  normal_desc
 # ["Diesel1 Generatorbetrieb",      "2",   "1",        "An",         "Aus"]]
 
-check_info["akcp_exp_drycontact"] = {
-    "detect": DETECT_AKCP_EXP,
-    "check_function": check_akcp_sensor_drycontact,
-    "discovery_function": inventory_akcp_sensor_no_params,
-    "service_name": "Dry Contact %s",
-    "fetch": SNMPTree(
+check_info["akcp_exp_drycontact"] = LegacyCheckDefinition(
+    detect=DETECT_AKCP_EXP,
+    check_function=check_akcp_sensor_drycontact,
+    discovery_function=inventory_akcp_sensor_no_params,
+    service_name="Dry Contact %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.2.3.4.1",
         oids=["2", "6", "46", "48", "8"],
     ),
-}
+)

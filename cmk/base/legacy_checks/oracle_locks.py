@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_age_human_readable, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.oracle import oracle_handle_ora_errors
 from cmk.base.config import check_info, factory_settings
 
@@ -131,10 +131,10 @@ def check_oracle_locks(item, params, info):  # pylint: disable=too-many-branches
     raise MKCounterWrapped("Login into database failed")
 
 
-check_info["oracle_locks"] = {
-    "check_function": check_oracle_locks,
-    "discovery_function": inventory_oracle_locks,
-    "service_name": "ORA %s Locks",
-    "default_levels_variable": "oracle_locks_defaults",
-    "check_ruleset_name": "oracle_locks",
-}
+check_info["oracle_locks"] = LegacyCheckDefinition(
+    check_function=check_oracle_locks,
+    discovery_function=inventory_oracle_locks,
+    service_name="ORA %s Locks",
+    default_levels_variable="oracle_locks_defaults",
+    check_ruleset_name="oracle_locks",
+)

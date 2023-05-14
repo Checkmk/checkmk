@@ -25,6 +25,7 @@ from cmk.base.check_api import (
     discover,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info, factory_settings
 
@@ -102,11 +103,11 @@ def check_msoffice_licenses(item, params, item_data):
         yield 0, " Warning units: %s" % lcs_warning_units
 
 
-check_info["msoffice_licenses"] = {
-    "parse_function": parse_msoffice_licenses,
-    "discovery_function": discover(),
-    "check_function": check_msoffice_licenses,
-    "service_name": "MS Office Licenses %s",
-    "check_ruleset_name": "msoffice_licenses",
-    "default_levels_variable": "msoffice_licenses_levels",
-}
+check_info["msoffice_licenses"] = LegacyCheckDefinition(
+    parse_function=parse_msoffice_licenses,
+    discovery_function=discover(),
+    check_function=check_msoffice_licenses,
+    service_name="MS Office Licenses %s",
+    check_ruleset_name="msoffice_licenses",
+    default_levels_variable="msoffice_licenses_levels",
+)

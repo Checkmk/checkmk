@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import regex
+from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -33,13 +33,13 @@ from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
 # .1.3.6.1.4.1.5951.4.1.1.41.7.1.2.25.7 9900
 
 
-check_info["netscaler_health.fan"] = {
-    "detect": SNMP_DETECT,
-    "fetch": SNMPTree(
+check_info["netscaler_health"] = LegacyCheckDefinition(
+    detect=SNMP_DETECT,
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.41.7.1",
         oids=["1", "2"],
     ),
-}
+)
 
 # .
 #   .--fan-----------------------------------------------------------------.
@@ -70,13 +70,13 @@ def check_netscaler_health_fan(item, params, info):
     return None
 
 
-check_info["netscaler_health.fan"] = {
-    "discovery_function": inventory_netscaler_health_fan,
-    "check_function": check_netscaler_health_fan,
-    "service_name": "FAN %s",
-    "default_levels_variable": "netscaler_health_fan_default_levels",
-    "check_ruleset_name": "hw_fans",
-}
+check_info["netscaler_health.fan"] = LegacyCheckDefinition(
+    discovery_function=inventory_netscaler_health_fan,
+    check_function=check_netscaler_health_fan,
+    service_name="FAN %s",
+    default_levels_variable="netscaler_health_fan_default_levels",
+    check_ruleset_name="hw_fans",
+)
 # .
 #   .--temp----------------------------------------------------------------.
 #   |                       _                                              |
@@ -106,13 +106,13 @@ def check_netscaler_health_temp(item, params, info):
     return None
 
 
-check_info["netscaler_health.temp"] = {
-    "check_function": check_netscaler_health_temp,
-    "discovery_function": inventory_netscaler_health_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "netscaler_health_temp_default_levels",
-}
+check_info["netscaler_health.temp"] = LegacyCheckDefinition(
+    check_function=check_netscaler_health_temp,
+    discovery_function=inventory_netscaler_health_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="netscaler_health_temp_default_levels",
+)
 
 # .
 #   .--psu-----------------------------------------------------------------.
@@ -150,8 +150,8 @@ def check_netscaler_health_psu(item, _no_params, info):
     return None
 
 
-check_info["netscaler_health.psu"] = {
-    "check_function": check_netscaler_health_psu,
-    "discovery_function": inventory_netscaler_health_psu,
-    "service_name": "Power Supply %s",
-}
+check_info["netscaler_health.psu"] = LegacyCheckDefinition(
+    check_function=check_netscaler_health_psu,
+    discovery_function=inventory_netscaler_health_psu,
+    service_name="Power Supply %s",
+)

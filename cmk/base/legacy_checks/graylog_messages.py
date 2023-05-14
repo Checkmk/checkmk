@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.graylog import handle_graylog_messages, parse_graylog_agent_data
 from cmk.base.config import check_info
 
@@ -26,10 +27,10 @@ def check_graylog_messages(_no_item, params, parsed):
     return handle_graylog_messages(messages, params)
 
 
-check_info["graylog_messages"] = {
-    "parse_function": parse_graylog_agent_data,
-    "check_function": check_graylog_messages,
-    "discovery_function": inventory_graylog_messages,
-    "service_name": "Graylog Messages",
-    "check_ruleset_name": "graylog_messages",
-}
+check_info["graylog_messages"] = LegacyCheckDefinition(
+    parse_function=parse_graylog_agent_data,
+    check_function=check_graylog_messages,
+    discovery_function=inventory_graylog_messages,
+    service_name="Graylog Messages",
+    check_ruleset_name="graylog_messages",
+)

@@ -29,7 +29,7 @@
 #   '----------------------------------------------------------------------'
 
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -47,11 +47,11 @@ def check_citrix_controller_services(_no_item, _no_params, info):
     return None
 
 
-check_info["citrix_controller.services"] = {
-    "discovery_function": inventory_citrix_controller_services,
-    "check_function": check_citrix_controller_services,
-    "service_name": "Citrix Active Site Services",
-}
+check_info["citrix_controller.services"] = LegacyCheckDefinition(
+    discovery_function=inventory_citrix_controller_services,
+    check_function=check_citrix_controller_services,
+    service_name="Citrix Active Site Services",
+)
 
 # .
 #   .--Desktops Registered-------------------------------------------------.
@@ -94,12 +94,12 @@ def check_citrix_controller_registered(_no_item, params, info):
     return None
 
 
-check_info["citrix_controller.registered"] = {
-    "discovery_function": inventory_citrix_controller_registered,
-    "check_function": check_citrix_controller_registered,
-    "service_name": "Citrix Desktops Registered",
-    "check_ruleset_name": "citrix_desktops_registered",
-}
+check_info["citrix_controller.registered"] = LegacyCheckDefinition(
+    discovery_function=inventory_citrix_controller_registered,
+    check_function=check_citrix_controller_registered,
+    service_name="Citrix Desktops Registered",
+    check_ruleset_name="citrix_desktops_registered",
+)
 
 # .
 #   .--Total Sessions------------------------------------------------------.
@@ -156,12 +156,12 @@ def check_citrix_controller_sessions(_no_item, params, info):
     return state, ", ".join(messages), perf
 
 
-check_info["citrix_controller.sessions"] = {
-    "discovery_function": inventory_citrix_controller_sessions,
-    "check_function": check_citrix_controller_sessions,
-    "service_name": "Citrix Total Sessions",
-    "check_ruleset_name": "citrix_sessions",
-}
+check_info["citrix_controller.sessions"] = LegacyCheckDefinition(
+    discovery_function=inventory_citrix_controller_sessions,
+    check_function=check_citrix_controller_sessions,
+    service_name="Citrix Total Sessions",
+    check_ruleset_name="citrix_sessions",
+)
 
 # .
 #   .--Licensing State-----------------------------------------------------.
@@ -221,11 +221,11 @@ def check_citrix_controller_licensing(_no_item, _no_params, info):
             yield state, "%s: %s" % (title, state_readable)
 
 
-check_info["citrix_controller.licensing"] = {
-    "discovery_function": inventory_citrix_controller_licensing,
-    "check_function": check_citrix_controller_licensing,
-    "service_name": "Citrix Controller Licensing",
-}
+check_info["citrix_controller.licensing"] = LegacyCheckDefinition(
+    discovery_function=inventory_citrix_controller_licensing,
+    check_function=check_citrix_controller_licensing,
+    service_name="Citrix Controller Licensing",
+)
 
 # .
 #   .--Controller State----------------------------------------------------.
@@ -265,8 +265,8 @@ def check_citrix_controller(_no_item, _no_params, info):
     return None
 
 
-check_info["citrix_controller"] = {
-    "discovery_function": inventory_citrix_controller,
-    "check_function": check_citrix_controller,
-    "service_name": "Citrix Controller State",
-}
+check_info["citrix_controller"] = LegacyCheckDefinition(
+    discovery_function=inventory_citrix_controller,
+    check_function=check_citrix_controller,
+    service_name="Citrix Controller State",
+)

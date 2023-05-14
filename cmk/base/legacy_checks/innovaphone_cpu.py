@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info, factory_settings
 
@@ -20,10 +20,10 @@ def check_innovaphone_cpu(_no_item, params, info):
     return check_cpu_util(usage, params)
 
 
-check_info["innovaphone_cpu"] = {
-    "check_function": check_innovaphone_cpu,
-    "discovery_function": inventory_innovaphone_cpu,
-    "service_name": "CPU utilization",
-    "check_ruleset_name": "cpu_utilization",
-    "default_levels_variable": "innovaphone_cpu_default_levels",
-}
+check_info["innovaphone_cpu"] = LegacyCheckDefinition(
+    check_function=check_innovaphone_cpu,
+    discovery_function=inventory_innovaphone_cpu,
+    service_name="CPU utilization",
+    check_ruleset_name="cpu_utilization",
+    default_levels_variable="innovaphone_cpu_default_levels",
+)

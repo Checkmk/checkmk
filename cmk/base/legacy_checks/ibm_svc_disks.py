@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import discover_single
+from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.filerdisks import (
     check_filer_disks,
     FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
@@ -99,11 +99,11 @@ def check_ibm_svc_disks(_no_item, params, parsed):
     return check_filer_disks(disks, params)
 
 
-check_info["ibm_svc_disks"] = {
-    "parse_function": parse_ibm_svc_disks,
-    "check_function": check_ibm_svc_disks,
-    "discovery_function": discover_single,
-    "service_name": "Disk Summary",
-    "check_ruleset_name": "netapp_disks",
-    "default_levels_variable": "filer_disks_default_levels",
-}
+check_info["ibm_svc_disks"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_svc_disks,
+    check_function=check_ibm_svc_disks,
+    discovery_function=discover_single,
+    service_name="Disk Summary",
+    check_ruleset_name="netapp_disks",
+    default_levels_variable="filer_disks_default_levels",
+)

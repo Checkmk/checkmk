@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -29,15 +30,15 @@ def check_apc_symmetra_ext_temp(item, params, info):
     return 3, "Sensor not found in SNMP data"
 
 
-check_info["apc_symmetra_ext_temp"] = {
-    "detect": DETECT,
-    "check_function": check_apc_symmetra_ext_temp,
-    "discovery_function": inventory_apc_symmetra_ext_temp,
-    "service_name": "Temperature External %s",
-    "fetch": SNMPTree(
+check_info["apc_symmetra_ext_temp"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_apc_symmetra_ext_temp,
+    discovery_function=inventory_apc_symmetra_ext_temp,
+    service_name="Temperature External %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.10.2.3.2.1",
         oids=["1", "3", "4", "5"],
     ),
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "apc_symmetra_ext_temp_default_levels",
-}
+    check_ruleset_name="temperature",
+    default_levels_variable="apc_symmetra_ext_temp_default_levels",
+)

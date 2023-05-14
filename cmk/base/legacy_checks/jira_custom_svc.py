@@ -20,6 +20,7 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_item_state,
     get_parsed_item_data,
+    LegacyCheckDefinition,
     set_item_state,
 )
 from cmk.base.config import check_info
@@ -122,10 +123,10 @@ def _get_value_diff(diff_name, svc_value, timespan):
     return diff_val
 
 
-check_info["jira_custom_svc"] = {
-    "parse_function": parse_jira_custom_svc,
-    "check_function": check_jira_custom_svc,
-    "discovery_function": discover(),
-    "service_name": "Jira %s",
-    "check_ruleset_name": "jira_custom_svc",
-}
+check_info["jira_custom_svc"] = LegacyCheckDefinition(
+    parse_function=parse_jira_custom_svc,
+    check_function=check_jira_custom_svc,
+    discovery_function=discover(),
+    service_name="Jira %s",
+    check_ruleset_name="jira_custom_svc",
+)

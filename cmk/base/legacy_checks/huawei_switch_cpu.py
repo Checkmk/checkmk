@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.huawei_switch import parse_huawei_physical_entity_values
 from cmk.base.config import check_info, factory_settings
@@ -29,13 +29,13 @@ def check_huawei_switch_cpu(item, params, item_data):
     return check_cpu_util(util, params, cores=[("core1", util)])
 
 
-check_info["huawei_switch_cpu"] = {
-    "detect": DETECT_HUAWEI_SWITCH,
-    "parse_function": parse_huawei_switch_cpu,
-    "discovery_function": discover(),
-    "check_function": check_huawei_switch_cpu,
-    "service_name": "CPU utilization %s",
-    "fetch": [
+check_info["huawei_switch_cpu"] = LegacyCheckDefinition(
+    detect=DETECT_HUAWEI_SWITCH,
+    parse_function=parse_huawei_switch_cpu,
+    discovery_function=discover(),
+    check_function=check_huawei_switch_cpu,
+    service_name="CPU utilization %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
             oids=[OIDEnd(), "7"],
@@ -45,6 +45,6 @@ check_info["huawei_switch_cpu"] = {
             oids=[OIDEnd(), "5"],
         ),
     ],
-    "check_ruleset_name": "cpu_utilization_multiitem",
-    "default_levels_variable": "huawei_switch_cpu_default_levels",
-}
+    check_ruleset_name="cpu_utilization_multiitem",
+    default_levels_variable="huawei_switch_cpu_default_levels",
+)

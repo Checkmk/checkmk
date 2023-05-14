@@ -9,6 +9,7 @@ from cmk.base.check_api import (
     discover,
     get_bytes_human_readable,
     get_parsed_item_data,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
@@ -51,10 +52,10 @@ def check_couchbase_bucket_mem(_item, params, data):
         )
 
 
-check_info["couchbase_buckets_mem"] = {
-    "parse_function": parse_couchbase_lines,
-    "discovery_function": discover(lambda _k, v: "mem_total" in v and "mem_free" in v),
-    "check_function": check_couchbase_bucket_mem,
-    "service_name": "Couchbase Bucket %s Memory",
-    "check_ruleset_name": "memory_multiitem",
-}
+check_info["couchbase_buckets_mem"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_lines,
+    discovery_function=discover(lambda _k, v: "mem_total" in v and "mem_free" in v),
+    check_function=check_couchbase_bucket_mem,
+    service_name="Couchbase Bucket %s Memory",
+    check_ruleset_name="memory_multiitem",
+)

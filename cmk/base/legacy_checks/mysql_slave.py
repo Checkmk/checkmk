@@ -11,6 +11,7 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_bytes_human_readable,
     get_parsed_item_data,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 from cmk.base.config import check_info
@@ -78,10 +79,10 @@ def check_mysql_slave(_no_item, params, data):
     return state, ", ".join(output), perfdata
 
 
-check_info["mysql_slave"] = {
-    "parse_function": parse_mysql_slave,
-    "discovery_function": discover(lambda k, v: bool(v)),
-    "check_function": check_mysql_slave,
-    "service_name": "MySQL DB Slave %s",
-    "check_ruleset_name": "mysql_slave",
-}
+check_info["mysql_slave"] = LegacyCheckDefinition(
+    parse_function=parse_mysql_slave,
+    discovery_function=discover(lambda k, v: bool(v)),
+    check_function=check_mysql_slave,
+    service_name="MySQL DB Slave %s",
+    check_ruleset_name="mysql_slave",
+)

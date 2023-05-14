@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -18,12 +18,12 @@ def check_ibm_storage_ts(_no_item, _no_params, info):
     return 0, "%s %s, Version %s" % (vendor, product, version)
 
 
-check_info["ibm_storage_ts"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2.6.210"),
-    "check_function": check_ibm_storage_ts,
-    "discovery_function": inventory_ibm_storage_ts,
-    "service_name": "Info",
-    "fetch": [
+check_info["ibm_storage_ts"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2.6.210"),
+    check_function=check_ibm_storage_ts,
+    discovery_function=inventory_ibm_storage_ts,
+    service_name="Info",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2.6.210.1",
             oids=["1", "3", "4"],
@@ -41,7 +41,7 @@ check_info["ibm_storage_ts"] = {
             oids=["1", "10", "15", "16", "17", "18"],
         ),
     ],
-}
+)
 
 
 def inventory_ibm_storage_ts_status(info):
@@ -77,11 +77,11 @@ def check_ibm_storage_ts_status(_no_item, _no_params, info):
     )
 
 
-check_info["ibm_storage_ts.status"] = {
-    "check_function": check_ibm_storage_ts_status,
-    "discovery_function": inventory_ibm_storage_ts_status,
-    "service_name": "Status",
-}
+check_info["ibm_storage_ts.status"] = LegacyCheckDefinition(
+    check_function=check_ibm_storage_ts_status,
+    discovery_function=inventory_ibm_storage_ts_status,
+    service_name="Status",
+)
 
 
 def inventory_ibm_storage_ts_library(info):
@@ -110,11 +110,11 @@ def check_ibm_storage_ts_library(item, _no_params, info):
             return worst_status(dev_status, fault_status), infotext
 
 
-check_info["ibm_storage_ts.library"] = {
-    "check_function": check_ibm_storage_ts_library,
-    "discovery_function": inventory_ibm_storage_ts_library,
-    "service_name": "Library %s",
-}
+check_info["ibm_storage_ts.library"] = LegacyCheckDefinition(
+    check_function=check_ibm_storage_ts_library,
+    discovery_function=inventory_ibm_storage_ts_library,
+    service_name="Library %s",
+)
 
 
 def inventory_ibm_storage_ts_drive(info):
@@ -138,8 +138,8 @@ def check_ibm_storage_ts_drive(item, params, info):
                 yield 1, "%d recovered read errors" % read_warn
 
 
-check_info["ibm_storage_ts.drive"] = {
-    "check_function": check_ibm_storage_ts_drive,
-    "discovery_function": inventory_ibm_storage_ts_drive,
-    "service_name": "Drive %s",
-}
+check_info["ibm_storage_ts.drive"] = LegacyCheckDefinition(
+    check_function=check_ibm_storage_ts_drive,
+    discovery_function=inventory_ibm_storage_ts_drive,
+    service_name="Drive %s",
+)

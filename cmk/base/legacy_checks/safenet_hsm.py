@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import any_of, check_levels, get_rate, startswith
+from cmk.base.check_api import any_of, check_levels, get_rate, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -91,13 +91,13 @@ def check_safenet_hsm_events(_no_item, params, parsed):
     yield check_event_rate("noncritical")
 
 
-check_info["safenet_hsm.events"] = {
-    "default_levels_variable": "safenet_hsm_events_default_levels",
-    "discovery_function": inventory_safenet_hsm_events,
-    "check_function": check_safenet_hsm_events,
-    "service_name": "HSM Safenet Event Stats",
-    "check_ruleset_name": "safenet_hsm_eventstats",
-}
+check_info["safenet_hsm.events"] = LegacyCheckDefinition(
+    default_levels_variable="safenet_hsm_events_default_levels",
+    discovery_function=inventory_safenet_hsm_events,
+    check_function=check_safenet_hsm_events,
+    service_name="HSM Safenet Event Stats",
+    check_ruleset_name="safenet_hsm_eventstats",
+)
 
 # .
 #   .--Operation stats-----------------------------------------------------.
@@ -178,19 +178,19 @@ def check_safenet_hsm(_no_item, params, parsed):
     yield check_operation_errors(parsed["operation_errors"])
 
 
-check_info["safenet_hsm"] = {
-    "detect": any_of(
+check_info["safenet_hsm"] = LegacyCheckDefinition(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12383"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072"),
     ),
-    "default_levels_variable": "safenet_hsm_default_levels",
-    "parse_function": parse_safenet_hsm,
-    "discovery_function": inventory_safenet_hsm,
-    "check_function": check_safenet_hsm,
-    "service_name": "HSM Operation Stats",
-    "fetch": SNMPTree(
+    default_levels_variable="safenet_hsm_default_levels",
+    parse_function=parse_safenet_hsm,
+    discovery_function=inventory_safenet_hsm,
+    check_function=check_safenet_hsm,
+    service_name="HSM Operation Stats",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12383.3.1.1",
         oids=["1", "2", "3", "4"],
     ),
-    "check_ruleset_name": "safenet_hsm_operstats",
-}
+    check_ruleset_name="safenet_hsm_operstats",
+)

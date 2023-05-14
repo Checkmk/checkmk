@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
@@ -40,10 +40,10 @@ def check_couchbase_nodes_status(_item, params, data):
     yield status, "Cluster membership: %s" % membership
 
 
-check_info["couchbase_nodes_info"] = {
-    "parse_function": parse_couchbase_lines,
-    "discovery_function": discover(),
-    "check_function": check_couchbase_nodes_status,
-    "service_name": "Couchbase %s Info",
-    "check_ruleset_name": "couchbase_status",
-}
+check_info["couchbase_nodes_info"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_lines,
+    discovery_function=discover(),
+    check_function=check_couchbase_nodes_status,
+    service_name="Couchbase %s Info",
+    check_ruleset_name="couchbase_status",
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["qmail_stats_default_levels"] = {
@@ -39,10 +39,10 @@ def check_qmail_stats(_no_item, params, info):
     return state, message, perf
 
 
-check_info["qmail_stats"] = {
-    "discovery_function": inventory_qmail_stats,
-    "check_function": check_qmail_stats,
-    "service_name": "Qmail Queue %s",
-    "default_levels_variable": "qmail_stats_default_levels",
-    "check_ruleset_name": "mail_queue_length",
-}
+check_info["qmail_stats"] = LegacyCheckDefinition(
+    discovery_function=inventory_qmail_stats,
+    check_function=check_qmail_stats,
+    service_name="Qmail Queue %s",
+    default_levels_variable="qmail_stats_default_levels",
+    check_ruleset_name="mail_queue_length",
+)

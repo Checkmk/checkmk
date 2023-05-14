@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -48,15 +48,15 @@ def check_climaveneta_temp(item, params, info):
     return None
 
 
-check_info["climaveneta_temp"] = {
-    "detect": equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
-    "check_function": check_climaveneta_temp,
-    "discovery_function": inventory_climaveneta_temp,
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+check_info["climaveneta_temp"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
+    check_function=check_climaveneta_temp,
+    discovery_function=inventory_climaveneta_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9839.2.1",
         oids=[OIDEnd(), "2"],
     ),
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "climaveneta_temp_default_levels",
-}
+    check_ruleset_name="temperature",
+    default_levels_variable="climaveneta_temp_default_levels",
+)

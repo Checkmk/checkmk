@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -47,12 +48,12 @@ def check_ups_cps_battery_temp(item, params, parsed):
     return None
 
 
-check_info["ups_cps_battery.temp"] = {
-    "discovery_function": inventory_ups_cps_battery_temp,
-    "check_function": check_ups_cps_battery_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-}
+check_info["ups_cps_battery.temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_ups_cps_battery_temp,
+    check_function=check_ups_cps_battery_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+)
 
 # .
 #   .--Capacity------------------------------------------------------------.
@@ -105,16 +106,16 @@ def check_ups_cps_battery(item, params, parsed):
     yield battime_status, ("%.0f minutes remaining on battery" % (battime / 60.0)) + levelstext
 
 
-check_info["ups_cps_battery"] = {
-    "detect": DETECT_UPS_CPS,
-    "parse_function": parse_ups_cps_battery,
-    "default_levels_variable": "ups_cps_battery",
-    "discovery_function": inventory_ups_cps_battery,
-    "check_function": check_ups_cps_battery,
-    "service_name": "UPS Battery",
-    "fetch": SNMPTree(
+check_info["ups_cps_battery"] = LegacyCheckDefinition(
+    detect=DETECT_UPS_CPS,
+    parse_function=parse_ups_cps_battery,
+    default_levels_variable="ups_cps_battery",
+    discovery_function=inventory_ups_cps_battery,
+    check_function=check_ups_cps_battery,
+    service_name="UPS Battery",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3808.1.1.1.2.2",
         oids=["1", "3", "4"],
     ),
-    "check_ruleset_name": "ups_capacity",
-}
+    check_ruleset_name="ups_capacity",
+)

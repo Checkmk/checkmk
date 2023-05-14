@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, startswith
+from cmk.base.check_api import discover, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -35,16 +35,16 @@ def check_aruba_cpu_util(item, params, parsed):
     return check_cpu_util(measured_cpu_util, params)
 
 
-check_info["aruba_cpu_util"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14823"),
-    "parse_function": parse_aruba_cpu_util,
-    "check_function": check_aruba_cpu_util,
-    "discovery_function": discover(),
-    "service_name": "CPU utilization %s",
-    "fetch": SNMPTree(
+check_info["aruba_cpu_util"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14823"),
+    parse_function=parse_aruba_cpu_util,
+    check_function=check_aruba_cpu_util,
+    discovery_function=discover(),
+    service_name="CPU utilization %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.14823.2.2.1.1.1.9.1",
         oids=["2", "3"],
     ),
-    "check_ruleset_name": "cpu_utilization_multiitem",
-    "default_levels_variable": "aruba_cpu_util_default_levels",
-}
+    check_ruleset_name="cpu_utilization_multiitem",
+    default_levels_variable="aruba_cpu_util_default_levels",
+)

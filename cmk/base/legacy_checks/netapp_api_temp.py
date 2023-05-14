@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
 from cmk.base.config import check_info
@@ -63,12 +64,12 @@ def check_netapp_api_temp(item, params, parsed):
     return check_temperature_list(sensorlist, params, "netapp_api_temp_%s" % item)
 
 
-check_info["netapp_api_temp"] = {
-    "check_function": check_netapp_api_temp,
-    "discovery_function": inventory_netapp_api_temp,
-    "parse_function": lambda info: netapp_api_parse_lines(
+check_info["netapp_api_temp"] = LegacyCheckDefinition(
+    check_function=check_netapp_api_temp,
+    discovery_function=inventory_netapp_api_temp,
+    parse_function=lambda info: netapp_api_parse_lines(
         info, custom_keys=["temp-sensor-list", "temp-sensor-element-no"]
     ),
-    "check_ruleset_name": "temperature",
-    "service_name": "Temperature %s",
-}
+    check_ruleset_name="temperature",
+    service_name="Temperature %s",
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.checkpoint import checkpoint_sensorstatus_to_nagios
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -26,13 +27,13 @@ def check_checkpoint_fan(item, params, info):
             yield state, "Status: %s, %s %s" % (state_readable, value, unit)
 
 
-check_info["checkpoint_fan"] = {
-    "detect": DETECT,
-    "check_function": check_checkpoint_fan,
-    "discovery_function": inventory_checkpoint_fan,
-    "service_name": "Fan %s",
-    "fetch": SNMPTree(
+check_info["checkpoint_fan"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_checkpoint_fan,
+    discovery_function=inventory_checkpoint_fan,
+    service_name="Fan %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.8.2.1",
         oids=["2", "3", "4", "6"],
     ),
-}
+)

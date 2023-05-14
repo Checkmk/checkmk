@@ -32,6 +32,7 @@
 # POLLING?
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -76,8 +77,8 @@ def check_tsm_drives(item, params, info):
     return (3, "drive not found")
 
 
-check_info["tsm_drives"] = {
-    "check_function": check_tsm_drives,
-    "discovery_function": inventory_tsm_drives,
-    "service_name": "TSM Drive %s",
-}
+check_info["tsm_drives"] = LegacyCheckDefinition(
+    check_function=check_tsm_drives,
+    discovery_function=inventory_tsm_drives,
+    service_name="TSM Drive %s",
+)

@@ -4,7 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_age_human_readable, get_item_state, set_item_state
+from cmk.base.check_api import (
+    get_age_human_readable,
+    get_item_state,
+    LegacyCheckDefinition,
+    set_item_state,
+)
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 
@@ -58,13 +63,13 @@ def check_siemens_plc_temp(item, params, info):
     return None
 
 
-check_info["siemens_plc.temp"] = {
-    "discovery_function": inventory_siemens_plc_temp,
-    "check_function": check_siemens_plc_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "siemens_plc_temp_default_levels",
-}
+check_info["siemens_plc.temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_siemens_plc_temp,
+    check_function=check_siemens_plc_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="siemens_plc_temp_default_levels",
+)
 
 # .
 #   .--State flags---------------------------------------------------------.
@@ -97,12 +102,12 @@ def check_siemens_plc_flag(item, params, info):
     return None
 
 
-check_info["siemens_plc.flag"] = {
-    "discovery_function": inventory_siemens_plc_flag,
-    "check_function": check_siemens_plc_flag,
-    "service_name": "Flag %s",
-    "check_ruleset_name": "siemens_plc_flag",
-}
+check_info["siemens_plc.flag"] = LegacyCheckDefinition(
+    discovery_function=inventory_siemens_plc_flag,
+    check_function=check_siemens_plc_flag,
+    service_name="Flag %s",
+    check_ruleset_name="siemens_plc_flag",
+)
 
 # .
 #   .--Duration------------------------------------------------------------.
@@ -160,12 +165,12 @@ def check_siemens_plc_duration(item, params, info):
     return None
 
 
-check_info["siemens_plc.duration"] = {
-    "discovery_function": inventory_siemens_plc_duration,
-    "check_function": check_siemens_plc_duration,
-    "service_name": "Duration %s",
-    "check_ruleset_name": "siemens_plc_duration",
-}
+check_info["siemens_plc.duration"] = LegacyCheckDefinition(
+    discovery_function=inventory_siemens_plc_duration,
+    check_function=check_siemens_plc_duration,
+    service_name="Duration %s",
+    check_ruleset_name="siemens_plc_duration",
+)
 
 # .
 #   .--Counter-------------------------------------------------------------.
@@ -207,12 +212,12 @@ def check_siemens_plc_counter(item, params, info):
     return None
 
 
-check_info["siemens_plc.counter"] = {
-    "discovery_function": inventory_siemens_plc_counter,
-    "check_function": check_siemens_plc_counter,
-    "service_name": "Counter %s",
-    "check_ruleset_name": "siemens_plc_counter",
-}
+check_info["siemens_plc.counter"] = LegacyCheckDefinition(
+    discovery_function=inventory_siemens_plc_counter,
+    check_function=check_siemens_plc_counter,
+    service_name="Counter %s",
+    check_ruleset_name="siemens_plc_counter",
+)
 
 # .
 #   .--Info----------------------------------------------------------------.
@@ -238,11 +243,11 @@ def check_siemens_plc_info(item, _no_params, info):
     return None
 
 
-check_info["siemens_plc.info"] = {
-    "discovery_function": inventory_siemens_plc_info,
-    "check_function": check_siemens_plc_info,
-    "service_name": "Info %s",
-}
+check_info["siemens_plc.info"] = LegacyCheckDefinition(
+    discovery_function=inventory_siemens_plc_info,
+    check_function=check_siemens_plc_info,
+    service_name="Info %s",
+)
 
 # .
 #   .--CPU-State-----------------------------------------------------------.
@@ -274,8 +279,8 @@ def check_siemens_plc_cpu_state(_no_item, _no_params, info):
     return 3, "CPU is in unknown state"
 
 
-check_info["siemens_plc_cpu_state"] = {
-    "discovery_function": inventory_siemens_plc_cpu_state,
-    "check_function": check_siemens_plc_cpu_state,
-    "service_name": "CPU state",
-}
+check_info["siemens_plc_cpu_state"] = LegacyCheckDefinition(
+    discovery_function=inventory_siemens_plc_cpu_state,
+    check_function=check_siemens_plc_cpu_state,
+    service_name="CPU state",
+)

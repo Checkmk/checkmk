@@ -13,6 +13,7 @@ from cmk.base.check_api import (
     discover,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info, factory_settings
 
@@ -60,11 +61,11 @@ def check_lvm_lvs(item, params, entry):
     )
 
 
-check_info["lvm_lvs"] = {
-    "parse_function": parse_lvm_lvs,
-    "discovery_function": discover(),
-    "check_function": check_lvm_lvs,
-    "service_name": "LVM LV Pool %s",
-    "default_levels_variable": "lvm_lvs_default_levels",
-    "check_ruleset_name": "lvm_lvs_pools",
-}
+check_info["lvm_lvs"] = LegacyCheckDefinition(
+    parse_function=parse_lvm_lvs,
+    discovery_function=discover(),
+    check_function=check_lvm_lvs,
+    service_name="LVM LV Pool %s",
+    default_levels_variable="lvm_lvs_default_levels",
+    check_ruleset_name="lvm_lvs_pools",
+)

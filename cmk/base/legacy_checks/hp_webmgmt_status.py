@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, exists, startswith
+from cmk.base.check_api import all_of, exists, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -36,15 +36,15 @@ def check_hp_webmgmt_status(item, _no_params, info):
     return None
 
 
-check_info["hp_webmgmt_status"] = {
-    "detect": all_of(
+check_info["hp_webmgmt_status"] = LegacyCheckDefinition(
+    detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11"),
         exists(".1.3.6.1.4.1.11.2.36.1.1.5.1.1.*"),
     ),
-    "check_function": check_hp_webmgmt_status,
-    "discovery_function": inventory_hp_webmgmt_status,
-    "service_name": "Status %s",
-    "fetch": [
+    check_function=check_hp_webmgmt_status,
+    discovery_function=inventory_hp_webmgmt_status,
+    service_name="Status %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.11.2.36.1.1.5.1.1",
             oids=["1", "3"],
@@ -58,4 +58,4 @@ check_info["hp_webmgmt_status"] = {
             oids=["1"],
         ),
     ],
-}
+)

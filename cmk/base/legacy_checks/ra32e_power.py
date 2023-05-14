@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ra32e import DETECT_RA32E
@@ -25,13 +26,13 @@ def check_ra32e_power(item, params, info):
     return 3, "unknown status"
 
 
-check_info["ra32e_power"] = {
-    "detect": DETECT_RA32E,
-    "discovery_function": inventory_ra32e_power,
-    "check_function": check_ra32e_power,
-    "service_name": "Power Supply",
-    "fetch": SNMPTree(
+check_info["ra32e_power"] = LegacyCheckDefinition(
+    detect=DETECT_RA32E,
+    discovery_function=inventory_ra32e_power,
+    check_function=check_ra32e_power,
+    service_name="Power Supply",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.20916.1.8.1.1.3",
         oids=["1"],
     ),
-}
+)

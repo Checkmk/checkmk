@@ -8,7 +8,7 @@
 # 3
 
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 logins_default_levels = (20, 30)
@@ -30,9 +30,9 @@ def check_logins(_no_item, params, info):
     )
 
 
-check_info["logins"] = {
-    "check_function": check_logins,
-    "discovery_function": inventory_logins,
-    "service_name": "Logins",
-    "check_ruleset_name": "logins",
-}
+check_info["logins"] = LegacyCheckDefinition(
+    check_function=check_logins,
+    discovery_function=inventory_logins,
+    service_name="Logins",
+    check_ruleset_name="logins",
+)

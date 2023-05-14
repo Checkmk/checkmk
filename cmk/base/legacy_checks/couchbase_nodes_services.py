@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
@@ -34,9 +34,9 @@ def check_couchbase_nodes_services(_item, params, data):
     yield 0, "%d services unchanged: %s" % (len(srt), ", ".join(srt))
 
 
-check_info["couchbase_nodes_services"] = {
-    "parse_function": parse_couchbase_lines,
-    "discovery_function": discover_couchbase_nodes_services,
-    "check_function": check_couchbase_nodes_services,
-    "service_name": "Couchbase %s Services",
-}
+check_info["couchbase_nodes_services"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_lines,
+    discovery_function=discover_couchbase_nodes_services,
+    check_function=check_couchbase_nodes_services,
+    service_name="Couchbase %s Services",
+)

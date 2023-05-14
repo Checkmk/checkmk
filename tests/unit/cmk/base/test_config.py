@@ -38,7 +38,7 @@ from cmk.checkers.inventory import InventoryPlugin
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.register.utils_legacy import CheckInfoElement
+from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ip_address_of
 from cmk.base.ip_lookup import AddressFamily
@@ -2766,7 +2766,7 @@ class TestPackedConfigStore:
 
 
 def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin: dict[str, CheckInfoElement] = {
+    duplicate_plugin: dict[str, LegacyCheckDefinition] = {
         "duplicate_plugin": {
             "service_name": "blah",
         },

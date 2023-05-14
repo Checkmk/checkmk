@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
@@ -274,11 +275,11 @@ def check_lantime_ng_refclock_gps(item, params, info):
                 yield state, "Satellites: %d/%d%s" % (good_sats, total_sats, levels_txt)
 
 
-check_info["mbg_lantime_ng_refclock.gps"] = {
-    "check_function": check_lantime_ng_refclock_gps,
-    "discovery_function": inventory_lantime_ng_refclock_gps,
-    "service_name": "LANTIME Refclock %s",
-}
+check_info["mbg_lantime_ng_refclock.gps"] = LegacyCheckDefinition(
+    check_function=check_lantime_ng_refclock_gps,
+    discovery_function=inventory_lantime_ng_refclock_gps,
+    service_name="LANTIME Refclock %s",
+)
 
 # .
 #   .--other refclocks-----------------------------------------------------.
@@ -335,13 +336,13 @@ def check_lantime_ng_refclock(item, _no_params, info):
                 yield 0, "Correlation: %d%%" % correlation, perfdata
 
 
-check_info["mbg_lantime_ng_refclock"] = {
-    "detect": DETECT_MBG_LANTIME_NG,
-    "check_function": check_lantime_ng_refclock,
-    "discovery_function": inventory_lantime_ng_refclock,
-    "service_name": "LANTIME Refclock %s",
-    "fetch": SNMPTree(
+check_info["mbg_lantime_ng_refclock"] = LegacyCheckDefinition(
+    detect=DETECT_MBG_LANTIME_NG,
+    check_function=check_lantime_ng_refclock,
+    discovery_function=inventory_lantime_ng_refclock,
+    service_name="LANTIME Refclock %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.1.2.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
-}
+)

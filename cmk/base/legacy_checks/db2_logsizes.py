@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single
 from cmk.base.config import check_info, factory_settings
@@ -95,11 +95,11 @@ def check_db2_logsizes(item, params, parsed):
     )
 
 
-check_info["db2_logsizes"] = {
-    "parse_function": parse_db2_logsizes,
-    "service_name": "DB2 Logsize %s",
-    "check_function": check_db2_logsizes,
-    "discovery_function": inventory_db2_logsizes,
-    "check_ruleset_name": "db2_logsize",
-    "default_levels_variable": "db2_logsizes_default_levels",
-}
+check_info["db2_logsizes"] = LegacyCheckDefinition(
+    parse_function=parse_db2_logsizes,
+    service_name="DB2 Logsize %s",
+    check_function=check_db2_logsizes,
+    discovery_function=inventory_db2_logsizes,
+    check_ruleset_name="db2_logsize",
+    default_levels_variable="db2_logsizes_default_levels",
+)

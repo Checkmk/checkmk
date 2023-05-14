@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any, List
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -81,14 +82,14 @@ def check_kentix_motion(
         yield 0, "No motion detected", [("motion", sensor.value, sensor.maximum, None, 0, 100)]
 
 
-check_info["kentix_motion"] = {
-    "detect": DETECT_KENTIX,
-    "parse_function": parse_kentix_motion,
-    "discovery_function": inventory_kentix_motion,
-    "check_function": check_kentix_motion,
-    "service_name": "Motion Detector %s",
-    "check_ruleset_name": "motion",
-    "fetch": [
+check_info["kentix_motion"] = LegacyCheckDefinition(
+    detect=DETECT_KENTIX,
+    parse_function=parse_kentix_motion,
+    discovery_function=inventory_kentix_motion,
+    check_function=check_kentix_motion,
+    service_name="Motion Detector %s",
+    check_ruleset_name="motion",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.37954.2.1.5",
             oids=["0", "1", "2"],
@@ -98,4 +99,4 @@ check_info["kentix_motion"] = {
             oids=["0", "1", "2"],
         ),
     ],
-}
+)

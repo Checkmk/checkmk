@@ -6,7 +6,7 @@
 # example output
 
 
-from cmk.base.check_api import any_of, contains, startswith
+from cmk.base.check_api import any_of, contains, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -59,17 +59,17 @@ def check_cisco_asa_conn(item, _no_params, parsed):
             yield state, "Status: %s" % state_readable
 
 
-check_info["cisco_asa_conn"] = {
-    "detect": any_of(
+check_info["cisco_asa_conn"] = LegacyCheckDefinition(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.1.0", "cisco adaptive security"),
         startswith(".1.3.6.1.2.1.1.1.0", "cisco firewall services"),
         contains(".1.3.6.1.2.1.1.1.0", "cisco pix security"),
     ),
-    "parse_function": parse_cisco_asa_conn,
-    "discovery_function": inventory_cisco_asa_conn,
-    "check_function": check_cisco_asa_conn,
-    "service_name": "Connection %s",
-    "fetch": [
+    parse_function=parse_cisco_asa_conn,
+    discovery_function=inventory_cisco_asa_conn,
+    check_function=check_cisco_asa_conn,
+    service_name="Connection %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.31.1.1.1",
             oids=[OIDEnd(), "1"],
@@ -83,4 +83,4 @@ check_info["cisco_asa_conn"] = {
             oids=[OIDEnd(), "7", "8"],
         ),
     ],
-}
+)

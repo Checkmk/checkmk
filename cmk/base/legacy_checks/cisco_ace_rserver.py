@@ -7,7 +7,7 @@
 # Parse an InetAddress type object as defined in the SNMP-FRAMEWORK-MIB
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, SNMPTree
 
@@ -84,13 +84,13 @@ def check_cisco_ace_rserver(item, _no_params, info):
     return None
 
 
-check_info["cisco_ace_rserver"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.824"),
-    "discovery_function": inventory_cisco_ace_rserver,
-    "check_function": check_cisco_ace_rserver,
-    "service_name": "ACE RServer %s",
-    "fetch": SNMPTree(
+check_info["cisco_ace_rserver"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.824"),
+    discovery_function=inventory_cisco_ace_rserver,
+    check_function=check_cisco_ace_rserver,
+    service_name="ACE RServer %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.470.1.1.1.1",
         oids=["1", "3", OIDBytes("4"), "5", "12", "13", "19"],
     ),
-}
+)

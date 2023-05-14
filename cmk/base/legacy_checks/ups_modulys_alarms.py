@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.ups_modulys import DETECT_UPS_MODULYS
@@ -58,13 +59,13 @@ def check_ups_modulys_alarms(_no_item, _no_params, info):
         yield 0, "No alarms"
 
 
-check_info["ups_modulys_alarms"] = {
-    "detect": DETECT_UPS_MODULYS,
-    "discovery_function": inventory_ups_modulys_alarms,
-    "check_function": check_ups_modulys_alarms,
-    "service_name": "UPS Alarms",
-    "fetch": SNMPTree(
+check_info["ups_modulys_alarms"] = LegacyCheckDefinition(
+    detect=DETECT_UPS_MODULYS,
+    discovery_function=inventory_ups_modulys_alarms,
+    check_function=check_ups_modulys_alarms,
+    service_name="UPS Alarms",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2254.2.4",
         oids=[OIDEnd(), "9"],
     ),
-}
+)

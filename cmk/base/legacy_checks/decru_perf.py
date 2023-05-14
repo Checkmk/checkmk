@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.decru import DETECT_DECRU
@@ -41,13 +42,13 @@ def check_decru_perf(item, _no_params, info):
     return (3, "item not found")
 
 
-check_info["decru_perf"] = {
-    "detect": DETECT_DECRU,
-    "check_function": check_decru_perf,
-    "discovery_function": inventory_decru_perf,
-    "service_name": "COUNTER %s",
-    "fetch": SNMPTree(
+check_info["decru_perf"] = LegacyCheckDefinition(
+    detect=DETECT_DECRU,
+    check_function=check_decru_perf,
+    discovery_function=inventory_decru_perf,
+    service_name="COUNTER %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.12962.1.1.2.1.1",
         oids=["1", "2"],
     ),
-}
+)

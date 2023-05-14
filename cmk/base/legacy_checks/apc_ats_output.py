@@ -6,7 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import any_of, check_levels, equals, get_parsed_item_data
+from cmk.base.check_api import (
+    any_of,
+    check_levels,
+    equals,
+    get_parsed_item_data,
+    LegacyCheckDefinition,
+)
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -70,19 +76,19 @@ factory_settings["apc_ats_output_default_levels"] = {
     "load_perc_max": (85, 95),
 }
 
-check_info["apc_ats_output"] = {
-    "detect": any_of(
+check_info["apc_ats_output"] = LegacyCheckDefinition(
+    detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.11"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.32"),
     ),
-    "parse_function": parse_apc_ats_output,
-    "discovery_function": discover_apc_ats_output,
-    "check_function": check_apc_ats_output,
-    "check_ruleset_name": "apc_ats_output",
-    "default_levels_variable": "apc_ats_output_default_levels",
-    "service_name": "Phase %s output",
-    "fetch": SNMPTree(
+    parse_function=parse_apc_ats_output,
+    discovery_function=discover_apc_ats_output,
+    check_function=check_apc_ats_output,
+    check_ruleset_name="apc_ats_output",
+    default_levels_variable="apc_ats_output_default_levels",
+    service_name="Phase %s output",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.8.5.4.3.1",
         oids=["1", "3", "4", "10", "13"],
     ),
-}
+)

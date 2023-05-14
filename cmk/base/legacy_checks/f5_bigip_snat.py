@@ -8,7 +8,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, get_rate
+from cmk.base.check_api import (
+    check_levels,
+    get_bytes_human_readable,
+    get_rate,
+    LegacyCheckDefinition,
+)
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -108,15 +113,15 @@ def check_f5_bigip_snat(item, params, parsed):
                 yield state, infotext
 
 
-check_info["f5_bigip_snat"] = {
-    "detect": DETECT,
-    "parse_function": parse_f5_bigip_snat,
-    "check_function": check_f5_bigip_snat,
-    "discovery_function": inventory_f5_bigip_snat,
-    "check_ruleset_name": "f5_bigip_snat",
-    "service_name": "Source NAT %s",
-    "fetch": SNMPTree(
+check_info["f5_bigip_snat"] = LegacyCheckDefinition(
+    detect=DETECT,
+    parse_function=parse_f5_bigip_snat,
+    check_function=check_f5_bigip_snat,
+    discovery_function=inventory_f5_bigip_snat,
+    check_ruleset_name="f5_bigip_snat",
+    service_name="Source NAT %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.2.9.2.3.1",
         oids=["1", "2", "3", "4", "5", "7", "8"],
     ),
-}
+)

@@ -10,6 +10,7 @@ from cmk.base.check_api import (
     check_levels,
     get_nic_speed_human_readable,
     get_rate,
+    LegacyCheckDefinition,
     MKCounterWrapped,
     RAISE,
 )
@@ -224,10 +225,10 @@ def parse_netapp_api_fcp(info):
     return fcp_interfaces
 
 
-check_info["netapp_api_fcp"] = {
-    "parse_function": parse_netapp_api_fcp,
-    "discovery_function": inventory_netapp_api_fcp,
-    "check_function": check_netapp_api_fcp,
-    "service_name": "Interface FCP %s",
-    "check_ruleset_name": "fcp",
-}
+check_info["netapp_api_fcp"] = LegacyCheckDefinition(
+    parse_function=parse_netapp_api_fcp,
+    discovery_function=inventory_netapp_api_fcp,
+    check_function=check_netapp_api_fcp,
+    service_name="Interface FCP %s",
+    check_ruleset_name="fcp",
+)

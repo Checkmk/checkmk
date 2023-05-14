@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -30,15 +30,15 @@ def check_rms200_temp(item, params, info):
     return None
 
 
-check_info["rms200_temp"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1909.13"),
-    "check_function": check_rms200_temp,
-    "discovery_function": inventory_rms200_temp,
-    "service_name": "Temperature %s ",
-    "check_ruleset_name": "temperature",
-    "fetch": SNMPTree(
+check_info["rms200_temp"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1909.13"),
+    check_function=check_rms200_temp,
+    discovery_function=inventory_rms200_temp,
+    service_name="Temperature %s ",
+    check_ruleset_name="temperature",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.1909.13.1.1.1",
         oids=["1", "2", "5"],
     ),
-    "default_levels_variable": "rms200_temp_default_levels",
-}
+    default_levels_variable="rms200_temp_default_levels",
+)

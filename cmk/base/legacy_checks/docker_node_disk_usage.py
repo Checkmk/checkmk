@@ -12,6 +12,7 @@ from cmk.base.check_api import (
     discover,
     get_bytes_human_readable,
     get_parsed_item_data,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
 
@@ -40,10 +41,10 @@ def check_docker_node_disk_usage(_no_item, params, data):
         )
 
 
-check_info["docker_node_disk_usage"] = {
-    "parse_function": parse_docker_node_disk_usage,
-    "discovery_function": discover(),
-    "check_function": check_docker_node_disk_usage,
-    "service_name": "Docker disk usage - %s",
-    "check_ruleset_name": "docker_node_disk_usage",
-}
+check_info["docker_node_disk_usage"] = LegacyCheckDefinition(
+    parse_function=parse_docker_node_disk_usage,
+    discovery_function=discover(),
+    check_function=check_docker_node_disk_usage,
+    service_name="Docker disk usage - %s",
+    check_ruleset_name="docker_node_disk_usage",
+)

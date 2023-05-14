@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -23,13 +24,13 @@ def check_fireeye_lic_active(_no_item, _no_params, info):
             yield 2, "%s license not active" % feature
 
 
-check_info["fireeye_lic_active"] = {
-    "detect": DETECT,
-    "discovery_function": lambda info: inventory_fireeye_generic(info, False),
-    "check_function": check_fireeye_lic_active,
-    "service_name": "Active Licenses",
-    "fetch": SNMPTree(
+check_info["fireeye_lic_active"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=lambda info: inventory_fireeye_generic(info, False),
+    check_function=check_fireeye_lic_active,
+    service_name="Active Licenses",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1",
         oids=["10", "11", "12"],
     ),
-}
+)

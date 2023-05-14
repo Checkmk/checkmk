@@ -12,6 +12,7 @@ from cmk.base.check_api import (
     get_bytes_human_readable,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info, factory_settings
 
@@ -137,14 +138,14 @@ def check_emcvnx_storage_pools(item, params, parsed):
         ]
 
 
-check_info["emcvnx_storage_pools"] = {
-    "parse_function": parse_emcvnx_storage_pools,
-    "discovery_function": inventory_emcvnx_storage_pools,
-    "check_function": check_emcvnx_storage_pools,
-    "service_name": "Pool %s General",
-    "check_ruleset_name": "emcvnx_storage_pools",
-    "default_levels_variable": "emcvnx_storage_pools_default_levels",
-}
+check_info["emcvnx_storage_pools"] = LegacyCheckDefinition(
+    parse_function=parse_emcvnx_storage_pools,
+    discovery_function=inventory_emcvnx_storage_pools,
+    check_function=check_emcvnx_storage_pools,
+    service_name="Pool %s General",
+    check_ruleset_name="emcvnx_storage_pools",
+    default_levels_variable="emcvnx_storage_pools_default_levels",
+)
 
 # .
 #   .--tiering-------------------------------------------------------------.
@@ -231,13 +232,13 @@ def check_emcvnx_storage_pools_tiering(item, params, data):
         )
 
 
-check_info["emcvnx_storage_pools.tiering"] = {
-    "discovery_function": inventory_emcvnx_storage_pools_tiering,
-    "check_function": check_emcvnx_storage_pools_tiering,
-    "service_name": "Pool %s Tiering Status",
-    "check_ruleset_name": "emcvnx_storage_pools_tiering",
-    "default_levels_variable": "emcvnx_storage_pools_tiering_default_levels",
-}
+check_info["emcvnx_storage_pools.tiering"] = LegacyCheckDefinition(
+    discovery_function=inventory_emcvnx_storage_pools_tiering,
+    check_function=check_emcvnx_storage_pools_tiering,
+    service_name="Pool %s Tiering Status",
+    check_ruleset_name="emcvnx_storage_pools_tiering",
+    default_levels_variable="emcvnx_storage_pools_tiering_default_levels",
+)
 
 
 def inventory_emcvnx_storage_pools_tieringtypes(parsed):
@@ -317,11 +318,11 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
             )
 
 
-check_info["emcvnx_storage_pools.tieringtypes"] = {
-    "discovery_function": inventory_emcvnx_storage_pools_tieringtypes,
-    "check_function": check_emcvnx_storage_pools_tieringtypes,
-    "service_name": "Pool %s tiering",
-}
+check_info["emcvnx_storage_pools.tieringtypes"] = LegacyCheckDefinition(
+    discovery_function=inventory_emcvnx_storage_pools_tieringtypes,
+    check_function=check_emcvnx_storage_pools_tieringtypes,
+    service_name="Pool %s tiering",
+)
 
 # .
 #   .--deduplication-------------------------------------------------------.
@@ -376,8 +377,8 @@ def check_emcvnx_storage_pools_deduplication(_no_item, _no_params, data):
     yield 0, "Shared capacity: %s" % txt, perf
 
 
-check_info["emcvnx_storage_pools.deduplication"] = {
-    "discovery_function": inventory_emcvnx_storage_pools,
-    "check_function": check_emcvnx_storage_pools_deduplication,
-    "service_name": "Pool %s Deduplication",
-}
+check_info["emcvnx_storage_pools.deduplication"] = LegacyCheckDefinition(
+    discovery_function=inventory_emcvnx_storage_pools,
+    check_function=check_emcvnx_storage_pools_deduplication,
+    service_name="Pool %s Deduplication",
+)

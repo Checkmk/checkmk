@@ -8,7 +8,14 @@
 
 import time
 
-from cmk.base.check_api import all_of, get_average, get_rate, not_exists, startswith
+from cmk.base.check_api import (
+    all_of,
+    get_average,
+    get_rate,
+    LegacyCheckDefinition,
+    not_exists,
+    startswith,
+)
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, render, SNMPTree
@@ -285,12 +292,12 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     yield 0, porttype_list[int(porttype)]
 
 
-check_info["fc_port"] = {
-    "detect": all_of(
+check_info["fc_port"] = LegacyCheckDefinition(
+    detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         not_exists(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*"),
     ),
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.3.94",
         oids=[
             "1.10.1.2",
@@ -338,12 +345,12 @@ check_info["fc_port"] = {
             # Count of disparity errors received at this port.
         ],
     ),
-    "check_function": check_fc_port,
-    "discovery_function": inventory_fc_port,
-    "service_name": "FC Interface %s",
-    "check_ruleset_name": "fc_port",
-    "default_levels_variable": "fc_port_default_levels",
-}
+    check_function=check_fc_port,
+    discovery_function=inventory_fc_port,
+    service_name="FC Interface %s",
+    check_ruleset_name="fc_port",
+    default_levels_variable="fc_port_default_levels",
+)
 
 factory_settings["fc_port_default_levels"] = {
     "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 
@@ -18,10 +19,10 @@ def check_innovaphone_temp(item, params, info):
     return check_temperature(int(info[0][1]), params, "innovaphone_temp_%s" % item)
 
 
-check_info["innovaphone_temp"] = {
-    "check_function": check_innovaphone_temp,
-    "discovery_function": inventory_innovaphone_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "innovaphone_temp_default_levels",
-}
+check_info["innovaphone_temp"] = LegacyCheckDefinition(
+    check_function=check_innovaphone_temp,
+    discovery_function=inventory_innovaphone_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="innovaphone_temp_default_levels",
+)

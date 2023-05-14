@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["msexch_database_defaultlevels"] = {
@@ -115,11 +116,11 @@ def check_msexch_database(item, params, parsed):
         yield status, "%.1fms %s" % (value, name), [(perfvar, value, warn, crit, None, None)]
 
 
-check_info["msexch_database"] = {
-    "discovery_function": inventory_msexch_database,
-    "check_function": check_msexch_database,
-    "parse_function": parse_msexch_database,
-    "service_name": "Exchange Database %s",
-    "check_ruleset_name": "msx_database",
-    "default_levels_variable": "msexch_database_defaultlevels",
-}
+check_info["msexch_database"] = LegacyCheckDefinition(
+    discovery_function=inventory_msexch_database,
+    check_function=check_msexch_database,
+    parse_function=parse_msexch_database,
+    service_name="Exchange Database %s",
+    check_ruleset_name="msx_database",
+    default_levels_variable="msexch_database_defaultlevels",
+)

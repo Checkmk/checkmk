@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability, map_presence
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -37,13 +38,13 @@ def check_cisco_ucs_cpu(item, _no_params, info):
             yield 0, "Model: %s, SN: %s" % (model, serial)
 
 
-check_info["cisco_ucs_cpu"] = {
-    "detect": DETECT,
-    "check_function": check_cisco_ucs_cpu,
-    "discovery_function": inventory_cisco_ucs_cpu,
-    "service_name": "CPU %s",
-    "fetch": SNMPTree(
+check_info["cisco_ucs_cpu"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_cisco_ucs_cpu,
+    discovery_function=inventory_cisco_ucs_cpu,
+    service_name="CPU %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.41.9.1",
         oids=["3", "13", "15", "8", "10"],
     ),
-}
+)

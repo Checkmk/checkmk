@@ -8,7 +8,7 @@
 
 from typing import Iterable, NamedTuple, Optional
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -96,14 +96,14 @@ def check_cmciii_lcp_waterflow(item, params, section: Section):
     return state, info_text, perfdata
 
 
-check_info["cmciii_lcp_waterflow"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.1.0", "Rittal LCP"),
-    "parse_function": parse_cmciii_lcp_waterflow,
-    "check_function": check_cmciii_lcp_waterflow,
-    "discovery_function": inventory_cmciii_lcp_waterflow,
-    "service_name": "LCP Fanunit WATER FLOW",
-    "fetch": SNMPTree(
+check_info["cmciii_lcp_waterflow"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.1.0", "Rittal LCP"),
+    parse_function=parse_cmciii_lcp_waterflow,
+    check_function=check_cmciii_lcp_waterflow,
+    discovery_function=inventory_cmciii_lcp_waterflow,
+    service_name="LCP Fanunit WATER FLOW",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.7.4.2.2.1.10.2",
         oids=["74", "75", "76", "77", "78", "79", "80", "81", "82", "83", "84", "85", "86", "87"],
     ),
-}
+)

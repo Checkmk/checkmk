@@ -59,6 +59,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["postfix_mailq_default_levels"] = {
@@ -162,11 +163,11 @@ def check_postfix_mailq(item, params, parsed):
             yield 0, "The mailqueue is empty", [("length", 0, warn, crit), ("size", 0)]
 
 
-check_info["postfix_mailq"] = {
-    "parse_function": parse_postfix_mailq,
-    "discovery_function": inventory_postfix_mailq,
-    "check_function": check_postfix_mailq,
-    "service_name": "Postfix Queue %s",
-    "default_levels_variable": "postfix_mailq_default_levels",
-    "check_ruleset_name": "mail_queue_length",
-}
+check_info["postfix_mailq"] = LegacyCheckDefinition(
+    parse_function=parse_postfix_mailq,
+    discovery_function=inventory_postfix_mailq,
+    check_function=check_postfix_mailq,
+    service_name="Postfix Queue %s",
+    default_levels_variable="postfix_mailq_default_levels",
+    check_ruleset_name="mail_queue_length",
+)

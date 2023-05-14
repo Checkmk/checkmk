@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, any_of, equals, exists, startswith
+from cmk.base.check_api import all_of, any_of, equals, exists, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -61,8 +61,8 @@ def check_brocade_info(item, params, info):
     return 3, "no information found"
 
 
-check_info["brocade_info"] = {
-    "detect": all_of(
+check_info["brocade_info"] = LegacyCheckDefinition(
+    detect=all_of(
         any_of(
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588"),
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.24.1.1588.2.1.1"),
@@ -70,10 +70,10 @@ check_info["brocade_info"] = {
         ),
         exists(".1.3.6.1.4.1.1588.2.1.1.1.1.6.0"),
     ),
-    "check_function": check_brocade_info,
-    "discovery_function": inventory_brocade_info,
-    "service_name": "Brocade Info",
-    "fetch": [
+    check_function=check_brocade_info,
+    discovery_function=inventory_brocade_info,
+    service_name="Brocade Info",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1.2",
             oids=["1"],
@@ -87,4 +87,4 @@ check_info["brocade_info"] = {
             oids=["1"],
         ),
     ],
-}
+)

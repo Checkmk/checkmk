@@ -15,6 +15,7 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_bytes_human_readable,
     get_parsed_item_data,
+    LegacyCheckDefinition,
     state_markers,
 )
 from cmk.base.config import check_info
@@ -299,17 +300,17 @@ def discover_filestats_single(key, data):
     return data[0] == "single_file"
 
 
-check_info["filestats.single"] = {
-    "discovery_function": discover_filestats_single,
-    "check_function": check_filestats_single,
-    "service_name": "File %s",
-    "check_ruleset_name": "filestats_single",
-}
+check_info["filestats.single"] = LegacyCheckDefinition(
+    discovery_function=discover_filestats_single,
+    check_function=check_filestats_single,
+    service_name="File %s",
+    check_ruleset_name="filestats_single",
+)
 
-check_info["filestats"] = {
-    "parse_function": parse_filestats,
-    "discovery_function": discover_filestats,
-    "check_function": check_filestats,
-    "service_name": "File group %s",
-    "check_ruleset_name": "filestats",
-}
+check_info["filestats"] = LegacyCheckDefinition(
+    parse_function=parse_filestats,
+    discovery_function=discover_filestats,
+    check_function=check_filestats,
+    service_name="File group %s",
+    check_ruleset_name="filestats",
+)

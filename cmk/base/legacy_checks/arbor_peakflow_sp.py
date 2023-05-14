@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="assignment"
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.arbor import (
     ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
     check_arbor_disk_usage,
@@ -47,27 +47,27 @@ def parse_peakflow_sp(info):
     return res
 
 
-check_info["arbor_peakflow_sp"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.1.0", "Peakflow SP"),
-    "check_function": check_arbor_memory,
-    "discovery_function": inventory_arbor_memory,
-    "parse_function": parse_peakflow_sp,
-    "service_name": "Memory",
-    "check_ruleset_name": "memory_arbor",
-    "default_levels_variable": "arbor_memory_default_levels",
-    "fetch": SNMPTree(
+check_info["arbor_peakflow_sp"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.1.0", "Peakflow SP"),
+    check_function=check_arbor_memory,
+    discovery_function=inventory_arbor_memory,
+    parse_function=parse_peakflow_sp,
+    service_name="Memory",
+    check_ruleset_name="memory_arbor",
+    default_levels_variable="arbor_memory_default_levels",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9694.1.4.2.1",
         oids=["4.0", "7.0", "10.0", "12.0"],
     ),
-}
+)
 
-check_info["arbor_peakflow_sp.disk_usage"] = {
-    "check_function": check_arbor_disk_usage,
-    "discovery_function": inventory_arbor_disk_usage,
-    "service_name": "Disk Usage %s",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["arbor_peakflow_sp.disk_usage"] = LegacyCheckDefinition(
+    check_function=check_arbor_disk_usage,
+    discovery_function=inventory_arbor_disk_usage,
+    service_name="Disk Usage %s",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)
 
 
 def inventory_arbor_peakflow_sp_flows(parsed):
@@ -81,8 +81,8 @@ def check_arbor_peakflow_sp_flows(_no_item, params, parsed):
     return 0, "%d flows" % flows, [("flows", flows)]
 
 
-check_info["arbor_peakflow_sp.flows"] = {
-    "check_function": check_arbor_peakflow_sp_flows,
-    "discovery_function": inventory_arbor_peakflow_sp_flows,
-    "service_name": "Flow Count",
-}
+check_info["arbor_peakflow_sp.flows"] = LegacyCheckDefinition(
+    check_function=check_arbor_peakflow_sp_flows,
+    discovery_function=inventory_arbor_peakflow_sp_flows,
+    service_name="Flow Count",
+)

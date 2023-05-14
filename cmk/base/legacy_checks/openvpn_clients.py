@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
@@ -48,8 +48,8 @@ def check_openvpn_clients(item, _no_params, info):
     return 3, "Client connection not found"
 
 
-check_info["openvpn_clients"] = {
-    "check_function": check_openvpn_clients,
-    "discovery_function": inventory_openvpn_clients,
-    "service_name": "OpenVPN Client %s",
-}
+check_info["openvpn_clients"] = LegacyCheckDefinition(
+    check_function=check_openvpn_clients,
+    discovery_function=inventory_openvpn_clients,
+    service_name="OpenVPN Client %s",
+)

@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -138,15 +138,15 @@ _OIDS = [
     "7",  # NETBOTZV2-MIB::*ValueStr; empty if sensor is not plugged in
 ]
 
-check_info["apc_netbotz_sensors"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
-    "parse_function": parse_apc_netbotz_sensors,
-    "discovery_function": lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "temp"),
-    "check_function": lambda item, params, parsed: check_apc_netbotz_sensors_temp(
+check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
+    parse_function=parse_apc_netbotz_sensors,
+    discovery_function=lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "temp"),
+    check_function=lambda item, params, parsed: check_apc_netbotz_sensors_temp(
         item, params, parsed, "temp"
     ),
-    "service_name": "Temperature %s",
-    "fetch": [
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.5528.100.4.1.1.1",
             oids=["1", "2", "4", "7"],
@@ -160,9 +160,9 @@ check_info["apc_netbotz_sensors"] = {
             oids=["1", "2", "4", "7"],
         ),
     ],
-    "default_levels_variable": "apc_netbotz_sensors_temp_default_levels",
-    "check_ruleset_name": "temperature",
-}
+    default_levels_variable="apc_netbotz_sensors_temp_default_levels",
+    check_ruleset_name="temperature",
+)
 
 # .
 #   .--dewpoint------------------------------------------------------------.
@@ -181,15 +181,15 @@ factory_settings["apc_netbotz_sensors_dewpoint_default_levels"] = {
 }
 
 
-check_info["apc_netbotz_sensors.dewpoint"] = {
-    "discovery_function": lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "dewpoint"),
-    "check_function": lambda item, params, info: check_apc_netbotz_sensors_temp(
+check_info["apc_netbotz_sensors.dewpoint"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "dewpoint"),
+    check_function=lambda item, params, info: check_apc_netbotz_sensors_temp(
         item, params, info, "dewpoint"
     ),
-    "service_name": "Dew point %s",
-    "default_levels_variable": "apc_netbotz_sensors_dewpoint_default_levels",
-    "check_ruleset_name": "temperature",
-}
+    service_name="Dew point %s",
+    default_levels_variable="apc_netbotz_sensors_dewpoint_default_levels",
+    check_ruleset_name="temperature",
+)
 
 # .
 #   .--humidity------------------------------------------------------------.
@@ -219,9 +219,9 @@ def check_apc_netbotz_sensors_humidity(item, params, parsed):
     return None
 
 
-check_info["apc_netbotz_sensors.humidity"] = {
-    "discovery_function": inventory_apc_netbotz_sensors_humidity,
-    "check_function": check_apc_netbotz_sensors_humidity,
-    "service_name": "Humidity %s",
-    "check_ruleset_name": "humidity",
-}
+check_info["apc_netbotz_sensors.humidity"] = LegacyCheckDefinition(
+    discovery_function=inventory_apc_netbotz_sensors_humidity,
+    check_function=check_apc_netbotz_sensors_humidity,
+    service_name="Humidity %s",
+    check_ruleset_name="humidity",
+)

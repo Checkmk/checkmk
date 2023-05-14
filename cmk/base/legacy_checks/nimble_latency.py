@@ -12,6 +12,7 @@ from cmk.base.check_api import (
     check_levels,
     get_parsed_item_data,
     get_percent_human_readable,
+    LegacyCheckDefinition,
     startswith,
 )
 from cmk.base.config import check_info, factory_settings
@@ -129,13 +130,13 @@ def check_nimble_latency_reads(item, params, data):
     return _check_nimble_latency(item, params, data, NimbleReadsType)
 
 
-check_info["nimble_latency"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
-    "parse_function": parse_nimble_read_latency,
-    "discovery_function": lambda parsed: inventory_nimble_latency(parsed, NimbleReadsType),
-    "check_function": check_nimble_latency_reads,
-    "service_name": "Volume %s Read IO",
-    "fetch": SNMPTree(
+check_info["nimble_latency"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
+    parse_function=parse_nimble_read_latency,
+    discovery_function=lambda parsed: inventory_nimble_latency(parsed, NimbleReadsType),
+    check_function=check_nimble_latency_reads,
+    service_name="Volume %s Read IO",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.37447.1.2.1",
         oids=[
             "3",
@@ -169,9 +170,9 @@ check_info["nimble_latency"] = {
             "51",
         ],
     ),
-    "check_ruleset_name": "nimble_latency",
-    "default_levels_variable": "nimble_latency_default_levels",
-}
+    check_ruleset_name="nimble_latency",
+    default_levels_variable="nimble_latency_default_levels",
+)
 
 
 @get_parsed_item_data
@@ -179,10 +180,10 @@ def check_nimble_latency_writes(item, params, data):
     return _check_nimble_latency(item, params, data, NimbleWritesType)
 
 
-check_info["nimble_latency.write"] = {
-    "discovery_function": lambda parsed: inventory_nimble_latency(parsed, NimbleWritesType),
-    "check_function": check_nimble_latency_writes,
-    "service_name": "Volume %s Write IO",
-    "check_ruleset_name": "nimble_latency",
-    "default_levels_variable": "nimble_latency_default_levels",
-}
+check_info["nimble_latency.write"] = LegacyCheckDefinition(
+    discovery_function=lambda parsed: inventory_nimble_latency(parsed, NimbleWritesType),
+    check_function=check_nimble_latency_writes,
+    service_name="Volume %s Write IO",
+    check_ruleset_name="nimble_latency",
+    default_levels_variable="nimble_latency_default_levels",
+)

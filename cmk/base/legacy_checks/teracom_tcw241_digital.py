@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import contains, discover, get_parsed_item_data
+from cmk.base.check_api import contains, discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -58,13 +58,13 @@ def check_tcw241_digital(item, params, info_dict):
     )
 
 
-check_info["teracom_tcw241_digital"] = {
-    "detect": contains(".1.3.6.1.2.1.1.1.0", "Teracom"),
-    "parse_function": parse_tcw241_digital,
-    "check_function": check_tcw241_digital,
-    "discovery_function": discover(),
-    "service_name": "Digital Sensor %s",
-    "fetch": [
+check_info["teracom_tcw241_digital"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.1.0", "Teracom"),
+    parse_function=parse_tcw241_digital,
+    check_function=check_tcw241_digital,
+    discovery_function=discover(),
+    service_name="Digital Sensor %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.38783.3.2.2.3",
             oids=["1.0", "2.0", "3.0", "4.0"],
@@ -74,4 +74,4 @@ check_info["teracom_tcw241_digital"] = {
             oids=["1.0", "2.0", "3.0", "4.0"],
         ),
     ],
-}
+)

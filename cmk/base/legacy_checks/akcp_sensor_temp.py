@@ -9,7 +9,7 @@
 # ["HGS-RZ1TEMP-TH1", "22", "1",   "2",   "18",   "20",    "25",      "28",      "",     "1"]
 
 
-from cmk.base.check_api import all_of, not_exists, startswith
+from cmk.base.check_api import all_of, LegacyCheckDefinition, not_exists, startswith
 from cmk.base.check_legacy_includes.akcp_sensor import (
     AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
     check_akcp_sensor_temp,
@@ -20,17 +20,17 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 factory_settings["akcp_temp_default_levels"] = AKCP_TEMP_CHECK_DEFAULT_PARAMETERS
 
-check_info["akcp_sensor_temp"] = {
-    "detect": all_of(
+check_info["akcp_sensor_temp"] = LegacyCheckDefinition(
+    detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1"), not_exists(".1.3.6.1.4.1.3854.2.*")
     ),
-    "check_function": check_akcp_sensor_temp,
-    "discovery_function": inventory_akcp_sensor_temp,
-    "service_name": "Temperature %s",
-    "default_levels_variable": "akcp_temp_default_levels",
-    "fetch": SNMPTree(
+    check_function=check_akcp_sensor_temp,
+    discovery_function=inventory_akcp_sensor_temp,
+    service_name="Temperature %s",
+    default_levels_variable="akcp_temp_default_levels",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.1.2.2.1.16.1",
         oids=["1", "3", "12", "4", "10", "9", "7", "8", "14", "5"],
     ),
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)

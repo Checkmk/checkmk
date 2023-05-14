@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     get_levels_quadruple,
     inventory_wmi_table_instances,
@@ -46,11 +46,11 @@ def check_msexch_isstore(item, params, parsed):
         )
 
 
-check_info["msexch_isstore"] = {
-    "discovery_function": discover_msexch_isstore,
-    "check_function": check_msexch_isstore,
-    "parse_function": parse_wmi_table,
-    "service_name": "Exchange IS Store %s",
-    "check_ruleset_name": "msx_info_store",
-    "default_levels_variable": "msexch_info_store_defaultlevels",
-}
+check_info["msexch_isstore"] = LegacyCheckDefinition(
+    discovery_function=discover_msexch_isstore,
+    check_function=check_msexch_isstore,
+    parse_function=parse_wmi_table,
+    service_name="Exchange IS Store %s",
+    check_ruleset_name="msx_info_store",
+    default_levels_variable="msexch_info_store_defaultlevels",
+)

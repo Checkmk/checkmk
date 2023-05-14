@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.config import check_info
 
@@ -49,10 +49,10 @@ def check_db2_backup(item, params, parsed):
         yield 0, "Time since last backup: %s" % get_age_human_readable(age)
 
 
-check_info["db2_backup"] = {
-    "parse_function": parse_db2_dbs,
-    "service_name": "DB2 Backup %s",
-    "check_function": check_db2_backup,
-    "discovery_function": inventory_db2_backup,
-    "check_ruleset_name": "db2_backup",
-}
+check_info["db2_backup"] = LegacyCheckDefinition(
+    parse_function=parse_db2_dbs,
+    service_name="DB2 Backup %s",
+    check_function=check_db2_backup,
+    discovery_function=inventory_db2_backup,
+    check_ruleset_name="db2_backup",
+)

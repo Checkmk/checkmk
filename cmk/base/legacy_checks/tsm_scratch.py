@@ -8,7 +8,7 @@
 # check is SNMP-Based, then remove this section
 
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 tsm_scratch_default_levels = (5, 7)
@@ -57,9 +57,9 @@ def check_tsm_scratch(item, params, parsed):
     )
 
 
-check_info["tsm_scratch"] = {
-    "parse_function": parse_tsm_scratch,
-    "discovery_function": inventory_tsm_scratch,
-    "check_function": check_tsm_scratch,
-    "service_name": "Scratch Pool %s",
-}
+check_info["tsm_scratch"] = LegacyCheckDefinition(
+    parse_function=parse_tsm_scratch,
+    discovery_function=inventory_tsm_scratch,
+    check_function=check_tsm_scratch,
+    service_name="Scratch Pool %s",
+)

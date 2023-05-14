@@ -13,7 +13,7 @@
 
 import time
 
-from cmk.base.check_api import get_bytes_human_readable, get_rate
+from cmk.base.check_api import get_bytes_human_readable, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -122,9 +122,9 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
         yield 0, "%s: %s" % (title, txt)
 
 
-check_info["mkeventd_status"] = {
-    "parse_function": parse_mkeventd_status,
-    "discovery_function": inventory_mkeventd_status,
-    "check_function": check_mkeventd_status,
-    "service_name": "OMD %s Event Console",
-}
+check_info["mkeventd_status"] = LegacyCheckDefinition(
+    parse_function=parse_mkeventd_status,
+    discovery_function=inventory_mkeventd_status,
+    check_function=check_mkeventd_status,
+    service_name="OMD %s Event Console",
+)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -16,8 +17,8 @@ def check_vnx_version(item, params, info):
         yield 0, "%s: %s" % (line[0], line[1])
 
 
-check_info["vnx_version"] = {
-    "discovery_function": inventory_vnx_version,
-    "check_function": check_vnx_version,
-    "service_name": "VNX Version",
-}
+check_info["vnx_version"] = LegacyCheckDefinition(
+    discovery_function=inventory_vnx_version,
+    check_function=check_vnx_version,
+    service_name="VNX Version",
+)

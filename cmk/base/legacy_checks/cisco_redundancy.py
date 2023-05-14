@@ -11,7 +11,7 @@
 # .1.3.6.1.4.1.9.9.176.1.1.8.0   1  --> CISCO-RF-MIB::cRFStatusLastSwactReasonCode.0
 
 
-from cmk.base.check_api import all_of, contains, exists
+from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -99,13 +99,13 @@ def check_cisco_redundancy(_no_item, params, info):
     return state, infotext
 
 
-check_info["cisco_redundancy"] = {
-    "detect": all_of(contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.176.1.1.*")),
-    "discovery_function": inventory_cisco_redundancy,
-    "check_function": check_cisco_redundancy,
-    "service_name": "Redundancy Framework Status",
-    "fetch": SNMPTree(
+check_info["cisco_redundancy"] = LegacyCheckDefinition(
+    detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.176.1.1.*")),
+    discovery_function=inventory_cisco_redundancy,
+    check_function=check_cisco_redundancy,
+    service_name="Redundancy Framework Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.176.1.1",
         oids=["1", "2", "3", "4", "6", "8"],
     ),
-}
+)

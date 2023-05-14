@@ -16,6 +16,7 @@
 # '.1.3.6.1.4.1.232.22.2.5.1.1.1.16' => 'cpqRackPowerSupplyPresent',
 # '.1.3.6.1.4.1.232.22.2.5.1.1.1.17' => 'cpqRackPowerSupplyCondition',
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.hp import DETECT_HP_BLADE
@@ -102,13 +103,13 @@ def check_hp_blade_psu(item, params, info):
     return (3, "item not found in snmp data")
 
 
-check_info["hp_blade_psu"] = {
-    "detect": DETECT_HP_BLADE,
-    "check_function": check_hp_blade_psu,
-    "discovery_function": inventory_hp_blade_psu,
-    "service_name": "PSU %s",
-    "fetch": SNMPTree(
+check_info["hp_blade_psu"] = LegacyCheckDefinition(
+    detect=DETECT_HP_BLADE,
+    check_function=check_hp_blade_psu,
+    discovery_function=inventory_hp_blade_psu,
+    service_name="PSU %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.5.1.1.1",
         oids=["3", "16", "17", "10", "14", "15", "5"],
     ),
-}
+)

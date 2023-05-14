@@ -7,6 +7,7 @@
 # Online WritebackGlobal
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -27,8 +28,8 @@ def check_sansymphony_serverstatus(_no_item, _no_params, info):
     return 2, "SANsymphony is %s" % status
 
 
-check_info["sansymphony_serverstatus"] = {
-    "check_function": check_sansymphony_serverstatus,
-    "discovery_function": inventory_sansymphony_serverstatus,
-    "service_name": "sansymphony Serverstatus",
-}
+check_info["sansymphony_serverstatus"] = LegacyCheckDefinition(
+    check_function=check_sansymphony_serverstatus,
+    discovery_function=inventory_sansymphony_serverstatus,
+    service_name="sansymphony Serverstatus",
+)

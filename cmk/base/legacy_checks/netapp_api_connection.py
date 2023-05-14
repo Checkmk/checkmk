@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -41,9 +42,9 @@ def check_netapp_api_connection(_no_item, params, info):
     return 0, "The agent was able to retrieve all data from the filer"
 
 
-check_info["netapp_api_connection"] = {
-    "discovery_function": inventory_netapp_api_connection,
-    "check_function": check_netapp_api_connection,
-    "service_name": "NetApp filer connection",
-    "check_ruleset_name": "netapp_instance",
-}
+check_info["netapp_api_connection"] = LegacyCheckDefinition(
+    discovery_function=inventory_netapp_api_connection,
+    check_function=check_netapp_api_connection,
+    service_name="NetApp filer connection",
+    check_ruleset_name="netapp_instance",
+)

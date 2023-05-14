@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import equals
+from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -49,18 +49,18 @@ def check_bluenet_sensor_temp(item, params, info):
     return None
 
 
-check_info["bluenet_sensor"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
-    "discovery_function": inventory_bluenet_sensor_temp,
-    "check_function": check_bluenet_sensor_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "bluenet_sensor_temp_default_levels",
-    "fetch": SNMPTree(
+check_info["bluenet_sensor"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
+    discovery_function=inventory_bluenet_sensor_temp,
+    check_function=check_bluenet_sensor_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="bluenet_sensor_temp_default_levels",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.21695.1.10.7.3.1",
         oids=["1", "2", "4", "5"],
     ),
-}
+)
 
 # .
 #   .--Humidity------------------------------------------------------------.
@@ -99,9 +99,9 @@ def check_bluenet_sensor_hum(item, params, info):
     return None
 
 
-check_info["bluenet_sensor.hum"] = {
-    "discovery_function": inventory_bluenet_sensor_hum,
-    "check_function": check_bluenet_sensor_hum,
-    "service_name": "Humidity %s",
-    "check_ruleset_name": "humidity",
-}
+check_info["bluenet_sensor.hum"] = LegacyCheckDefinition(
+    discovery_function=inventory_bluenet_sensor_hum,
+    check_function=check_bluenet_sensor_hum,
+    service_name="Humidity %s",
+    check_ruleset_name="humidity",
+)

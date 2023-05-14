@@ -22,6 +22,7 @@ from cmk.base.check_api import (
     get_bytes_human_readable,
     get_parsed_item_data,
     get_timestamp_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info, factory_settings
 
@@ -106,11 +107,11 @@ def check_splunk_license_state(item, params, item_data):
     )
 
 
-check_info["splunk_license_state"] = {
-    "parse_function": parse_splunk_license_state,
-    "check_function": check_splunk_license_state,
-    "discovery_function": discover(),
-    "service_name": "Splunk License %s",
-    "check_ruleset_name": "splunk_license_state",
-    "default_levels_variable": "splunk_license_state_default_levels",
-}
+check_info["splunk_license_state"] = LegacyCheckDefinition(
+    parse_function=parse_splunk_license_state,
+    check_function=check_splunk_license_state,
+    discovery_function=discover(),
+    service_name="Splunk License %s",
+    check_ruleset_name="splunk_license_state",
+    default_levels_variable="splunk_license_state_default_levels",
+)

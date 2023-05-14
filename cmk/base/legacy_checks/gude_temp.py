@@ -7,7 +7,7 @@ from collections.abc import Iterable, Mapping
 from itertools import chain
 from typing import List
 
-from cmk.base.check_api import any_of, startswith
+from cmk.base.check_api import any_of, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -43,24 +43,24 @@ def check_gude_temp(
     yield check_temperature(reading, params, "gude_temp.%s" % item)
 
 
-check_info["gude_temp"] = {
-    "detect": any_of(
+check_info["gude_temp"] = LegacyCheckDefinition(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.66"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.67"),
     ),
-    "parse_function": parse_gude_temp,
-    "discovery_function": inventory_gude_temp,
-    "check_function": check_gude_temp,
-    "service_name": "Temperature %s",
-    "fetch": [
+    parse_function=parse_gude_temp,
+    discovery_function=inventory_gude_temp,
+    check_function=check_gude_temp,
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.28507.{table}.1.6.1.1",
             oids=[OIDEnd(), "2"],
         )
         for table in ["19", "38", "66", "67"]
     ],
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "gude_temp_default_levels",
-}
+    check_ruleset_name="temperature",
+    default_levels_variable="gude_temp_default_levels",
+)

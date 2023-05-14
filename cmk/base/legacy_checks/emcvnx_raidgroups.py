@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated,assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info, factory_settings
 
@@ -135,11 +136,11 @@ def check_emcvnx_raidgroups_list_luns(item, _no_params, info):
     return 0, "List of LUNs: " + parsed[item]["luns"]
 
 
-check_info["emcvnx_raidgroups.list_luns"] = {
-    "discovery_function": inventory_emcvnx_raidgroups,
-    "check_function": check_emcvnx_raidgroups_list_luns,
-    "service_name": "RAID Group %s LUNs",
-}
+check_info["emcvnx_raidgroups.list_luns"] = LegacyCheckDefinition(
+    discovery_function=inventory_emcvnx_raidgroups,
+    check_function=check_emcvnx_raidgroups_list_luns,
+    service_name="RAID Group %s LUNs",
+)
 
 # .
 #   .--list of disks-------------------------------------------------------.
@@ -172,11 +173,11 @@ def check_emcvnx_raidgroups_list_disks(item, _no_params, info):
     return 0, "List of Disks: " + message
 
 
-check_info["emcvnx_raidgroups.list_disks"] = {
-    "discovery_function": inventory_emcvnx_raidgroups,
-    "check_function": check_emcvnx_raidgroups_list_disks,
-    "service_name": "RAID Group %s Disks",
-}
+check_info["emcvnx_raidgroups.list_disks"] = LegacyCheckDefinition(
+    discovery_function=inventory_emcvnx_raidgroups,
+    check_function=check_emcvnx_raidgroups_list_disks,
+    service_name="RAID Group %s Disks",
+)
 
 # .
 #   .--capacity------------------------------------------------------------.
@@ -229,13 +230,13 @@ def check_emcvnx_raidgroups_capacity(item, params, info):
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
-check_info["emcvnx_raidgroups.capacity"] = {
-    "discovery_function": inventory_emcvnx_raidgroups_capacity,
-    "check_function": check_emcvnx_raidgroups_capacity,
-    "service_name": "RAID Group %s Capacity",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["emcvnx_raidgroups.capacity"] = LegacyCheckDefinition(
+    discovery_function=inventory_emcvnx_raidgroups_capacity,
+    check_function=check_emcvnx_raidgroups_capacity,
+    service_name="RAID Group %s Capacity",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)
 
 # .
 #   .--capacity contiguous-------------------------------------------------.
@@ -283,12 +284,12 @@ def check_emcvnx_raidgroups_capacity_contiguous(item, params, info):
     return rc, message, perfdata
 
 
-check_info["emcvnx_raidgroups.capacity_contiguous"] = {
-    "discovery_function": inventory_emcvnx_raidgroups_capacity_contiguous,
-    "check_function": check_emcvnx_raidgroups_capacity_contiguous,
-    "service_name": "RAID Group %s Capacity Contiguous",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["emcvnx_raidgroups.capacity_contiguous"] = LegacyCheckDefinition(
+    discovery_function=inventory_emcvnx_raidgroups_capacity_contiguous,
+    check_function=check_emcvnx_raidgroups_capacity_contiguous,
+    service_name="RAID Group %s Capacity Contiguous",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)
 
 # .

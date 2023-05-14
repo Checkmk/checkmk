@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.cmctc import DETECT_CMCTC
@@ -27,13 +28,13 @@ def check_cmctc_state(_no_item, _no_params, info):
     return state, infotext
 
 
-check_info["cmctc_state"] = {
-    "detect": DETECT_CMCTC,
-    "discovery_function": inventory_cmctc_state,
-    "check_function": check_cmctc_state,
-    "service_name": "TC unit state",
-    "fetch": SNMPTree(
+check_info["cmctc_state"] = LegacyCheckDefinition(
+    detect=DETECT_CMCTC,
+    discovery_function=inventory_cmctc_state,
+    check_function=check_cmctc_state,
+    service_name="TC unit state",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.4.2",
         oids=["1", "2"],
     ),
-}
+)

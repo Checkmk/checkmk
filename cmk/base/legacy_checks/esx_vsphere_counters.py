@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_bytes_human_readable, MKCounterWrapped
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
 
@@ -63,12 +63,12 @@ def check_esx_vsphere_counters_uptime(_no_item, params, parsed):
     return check_uptime_seconds(params, uptime)
 
 
-check_info["esx_vsphere_counters.uptime"] = {
-    "discovery_function": inventory_esx_vsphere_counters_uptime,
-    "check_function": check_esx_vsphere_counters_uptime,
-    "service_name": "Uptime",
-    "check_ruleset_name": "uptime",
-}
+check_info["esx_vsphere_counters.uptime"] = LegacyCheckDefinition(
+    discovery_function=inventory_esx_vsphere_counters_uptime,
+    check_function=check_esx_vsphere_counters_uptime,
+    service_name="Uptime",
+    check_ruleset_name="uptime",
+)
 
 
 #   .--swap----------------------------------------------------------------.
@@ -113,8 +113,8 @@ def check_esx_vsphere_counters_swap(item, params, parsed):
         yield 0, "Swap %s: %s" % (key, value)
 
 
-check_info["esx_vsphere_counters.swap"] = {
-    "discovery_function": inventory_esx_vsphere_counters_swap,
-    "check_function": check_esx_vsphere_counters_swap,
-    "service_name": "VMKernel Swap",
-}
+check_info["esx_vsphere_counters.swap"] = LegacyCheckDefinition(
+    discovery_function=inventory_esx_vsphere_counters_swap,
+    check_function=check_esx_vsphere_counters_swap,
+    service_name="VMKernel Swap",
+)

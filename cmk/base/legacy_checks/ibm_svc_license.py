@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.license import license_check_levels
 from cmk.base.config import check_info
 
@@ -54,10 +55,10 @@ def check_ibm_svc_license(item, params, parsed):
     return license_check_levels(licensed, used, params)
 
 
-check_info["ibm_svc_license"] = {
-    "check_function": check_ibm_svc_license,
-    "discovery_function": inventory_ibm_svc_license,
-    "parse_function": parse_ibm_svc_license,
-    "service_name": "License %s",
-    "check_ruleset_name": "ibmsvc_licenses",
-}
+check_info["ibm_svc_license"] = LegacyCheckDefinition(
+    check_function=check_ibm_svc_license,
+    discovery_function=inventory_ibm_svc_license,
+    parse_function=parse_ibm_svc_license,
+    service_name="License %s",
+    check_ruleset_name="ibmsvc_licenses",
+)

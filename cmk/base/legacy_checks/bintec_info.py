@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, equals
+from cmk.base.check_api import any_of, equals, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -27,18 +27,18 @@ def check_bintec_info(checktype, params, info):
 
 # This check works on all SNMP hosts
 
-check_info["bintec_info"] = {
-    "detect": any_of(
+check_info["bintec_info"] = LegacyCheckDefinition(
+    detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4.200.83.88.67.66.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4.158.82.78.66.48.0.0"),
     ),
-    "check_function": check_bintec_info,
-    "discovery_function": inventory_bintec_info,
-    "service_name": "Bintec Info",
+    check_function=check_bintec_info,
+    discovery_function=inventory_bintec_info,
+    service_name="Bintec Info",
     # 1.3.6.1.4.1.272.4.1.31.0 S/N
     # 1.3.6.1.4.1.272.4.1.26.0 SW Version
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.272.4.1",
         oids=["26.0", "31.0"],
     ),
-}
+)

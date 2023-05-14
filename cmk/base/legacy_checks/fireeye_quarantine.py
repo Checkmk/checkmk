@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
@@ -30,15 +30,15 @@ def check_fireeye_quarantine(_no_item, params, info):
     )
 
 
-check_info["fireeye_quarantine"] = {
-    "detect": DETECT,
-    "discovery_function": discover_fireeye_quarantine,
-    "check_function": check_fireeye_quarantine,
-    "service_name": "Quarantine Usage",
-    "default_levels_variable": "quarantine_levels",
-    "check_ruleset_name": "fireeye_quarantine",
-    "fetch": SNMPTree(
+check_info["fireeye_quarantine"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=discover_fireeye_quarantine,
+    check_function=check_fireeye_quarantine,
+    service_name="Quarantine Usage",
+    default_levels_variable="quarantine_levels",
+    check_ruleset_name="fireeye_quarantine",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1.40",
         oids=["0"],
     ),
-}
+)

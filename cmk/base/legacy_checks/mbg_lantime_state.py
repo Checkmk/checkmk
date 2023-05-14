@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, equals, not_exists
+from cmk.base.check_api import all_of, equals, LegacyCheckDefinition, not_exists
 from cmk.base.check_legacy_includes.mbg_lantime import (
     check_mbg_lantime_state_common,
     MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
@@ -33,18 +33,18 @@ def check_mbg_lantime_state(_no_item, params, info):
     return check_mbg_lantime_state_common(states, _no_item, params, info)
 
 
-check_info["mbg_lantime_state"] = {
-    "detect": all_of(
+check_info["mbg_lantime_state"] = LegacyCheckDefinition(
+    detect=all_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
         not_exists(".1.3.6.1.4.1.5597.30.0.2.*"),
     ),
-    "check_function": check_mbg_lantime_state,
-    "discovery_function": inventory_mbg_lantime_state,
-    "service_name": "LANTIME State",
-    "check_ruleset_name": "mbg_lantime_state",
-    "default_levels_variable": "mbg_lantime_state_default_levels",
-    "fetch": SNMPTree(
+    check_function=check_mbg_lantime_state,
+    discovery_function=inventory_mbg_lantime_state,
+    service_name="LANTIME State",
+    check_ruleset_name="mbg_lantime_state",
+    default_levels_variable="mbg_lantime_state_default_levels",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.3.1",
         oids=["2", "3", "5", "7"],
     ),
-}
+)

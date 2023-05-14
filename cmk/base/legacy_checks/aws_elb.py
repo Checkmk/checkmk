@@ -8,6 +8,7 @@ from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
     get_percent_human_readable,
+    LegacyCheckDefinition,
     MKCounterWrapped,
 )
 from cmk.base.check_legacy_includes.aws import (
@@ -96,14 +97,14 @@ def check_aws_elb_statistics(item, params, parsed):
     return check_aws_metrics(metric_infos)
 
 
-check_info["aws_elb"] = {
-    "parse_function": parse_aws_elb,
-    "discovery_function": lambda p: inventory_aws_generic_single(p, _aws_elb_statistics_metrics),
-    "check_function": check_aws_elb_statistics,
-    "service_name": "AWS/ELB Statistics",
-    "default_levels_variable": "aws_elb_statistics",
-    "check_ruleset_name": "aws_elb_statistics",
-}
+check_info["aws_elb"] = LegacyCheckDefinition(
+    parse_function=parse_aws_elb,
+    discovery_function=lambda p: inventory_aws_generic_single(p, _aws_elb_statistics_metrics),
+    check_function=check_aws_elb_statistics,
+    service_name="AWS/ELB Statistics",
+    default_levels_variable="aws_elb_statistics",
+    check_ruleset_name="aws_elb_statistics",
+)
 
 # .
 #   .--latency-------------------------------------------------------------.
@@ -129,12 +130,12 @@ def check_aws_elb_latency(item, params, parsed):
     )
 
 
-check_info["aws_elb.latency"] = {
-    "discovery_function": lambda p: inventory_aws_generic_single(p, ["Latency"]),
-    "check_function": check_aws_elb_latency,
-    "service_name": "AWS/ELB Latency",
-    "check_ruleset_name": "aws_elb_latency",
-}
+check_info["aws_elb.latency"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic_single(p, ["Latency"]),
+    check_function=check_aws_elb_latency,
+    service_name="AWS/ELB Latency",
+    check_ruleset_name="aws_elb_latency",
+)
 
 # .
 #   .--HTTP ELB------------------------------------------------------------.
@@ -156,12 +157,12 @@ def check_aws_elb_http_elb(item, params, parsed):
     )
 
 
-check_info["aws_elb.http_elb"] = {
-    "discovery_function": lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
-    "check_function": check_aws_elb_http_elb,
-    "service_name": "AWS/ELB HTTP ELB",
-    "check_ruleset_name": "aws_elb_http",
-}
+check_info["aws_elb.http_elb"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
+    check_function=check_aws_elb_http_elb,
+    service_name="AWS/ELB HTTP ELB",
+    check_ruleset_name="aws_elb_http",
+)
 
 # .
 #   .--HTTP Backend--------------------------------------------------------.
@@ -183,12 +184,12 @@ def check_aws_elb_http_backend(item, params, parsed):
     )
 
 
-check_info["aws_elb.http_backend"] = {
-    "discovery_function": lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
-    "check_function": check_aws_elb_http_backend,
-    "service_name": "AWS/ELB HTTP Backend",
-    "check_ruleset_name": "aws_elb_http",
-}
+check_info["aws_elb.http_backend"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
+    check_function=check_aws_elb_http_backend,
+    service_name="AWS/ELB HTTP Backend",
+    check_ruleset_name="aws_elb_http",
+)
 
 # .
 #   .--Healthy hosts-------------------------------------------------------.
@@ -244,14 +245,14 @@ def check_aws_elb_healthy_hosts(item, params, parsed):
             )
 
 
-check_info["aws_elb.healthy_hosts"] = {
-    "discovery_function": lambda p: inventory_aws_generic_single(
+check_info["aws_elb.healthy_hosts"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic_single(
         p, ["HealthyHostCount", "UnHealthyHostCount"]
     ),
-    "check_function": check_aws_elb_healthy_hosts,
-    "service_name": "AWS/ELB Healthy Hosts",
-    "check_ruleset_name": "aws_elb_healthy_hosts",
-}
+    check_function=check_aws_elb_healthy_hosts,
+    service_name="AWS/ELB Healthy Hosts",
+    check_ruleset_name="aws_elb_healthy_hosts",
+)
 
 # .
 #   .--Backend errors------------------------------------------------------.
@@ -284,9 +285,9 @@ def check_aws_elb_backend_connection_errors(item, params, parsed):
     )
 
 
-check_info["aws_elb.backend_connection_errors"] = {
-    "discovery_function": lambda p: inventory_aws_generic_single(p, ["BackendConnectionErrors"]),
-    "check_function": check_aws_elb_backend_connection_errors,
-    "service_name": "AWS/ELB Backend Connection Errors",
-    "check_ruleset_name": "aws_elb_backend_connection_errors",
-}
+check_info["aws_elb.backend_connection_errors"] = LegacyCheckDefinition(
+    discovery_function=lambda p: inventory_aws_generic_single(p, ["BackendConnectionErrors"]),
+    check_function=check_aws_elb_backend_connection_errors,
+    service_name="AWS/ELB Backend Connection Errors",
+    check_ruleset_name="aws_elb_backend_connection_errors",
+)

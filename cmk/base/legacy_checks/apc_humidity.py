@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -29,15 +29,15 @@ def check_apc_humidity(item, params, info):
     return None
 
 
-check_info["apc_humidity"] = {
-    "detect": DETECT,
-    "check_function": check_apc_humidity,
-    "discovery_function": inventory_apc_humidity,
-    "service_name": "Humidity %s",
-    "fetch": SNMPTree(
+check_info["apc_humidity"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_apc_humidity,
+    discovery_function=inventory_apc_humidity,
+    service_name="Humidity %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.10.4.2.3.1",
         oids=["3", "6"],
     ),
-    "check_ruleset_name": "humidity",
-    "default_levels_variable": "apc_humidity_default_levels",
-}
+    check_ruleset_name="humidity",
+    default_levels_variable="apc_humidity_default_levels",
+)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -44,13 +44,13 @@ def check_hitachi_hus_status(_no_item, _no_params, info):
                 yield state, message
 
 
-check_info["hitachi_hus_status"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.116"),
-    "check_function": check_hitachi_hus_status,
-    "discovery_function": inventory_hitachi_hus_status,
-    "service_name": "Status",
-    "fetch": SNMPTree(
+check_info["hitachi_hus_status"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.116"),
+    check_function=check_hitachi_hus_status,
+    discovery_function=inventory_hitachi_hus_status,
+    service_name="Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.116.5.11.1.2.2",
         oids=["1"],
     ),
-}
+)

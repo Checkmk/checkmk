@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated,index,attr-defined"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.dhcp_pools import check_dhcp_pools_levels
 from cmk.base.config import check_info
 
@@ -100,10 +101,10 @@ def check_isc_dhcpd(item, params, parsed):
         yield check_result
 
 
-check_info["isc_dhcpd"] = {
-    "parse_function": parse_isc_dhcpd,
-    "discovery_function": inventory_isc_dhcpd,
-    "check_function": check_isc_dhcpd,
-    "service_name": "DHCP Pool %s",
-    "check_ruleset_name": "win_dhcp_pools",
-}
+check_info["isc_dhcpd"] = LegacyCheckDefinition(
+    parse_function=parse_isc_dhcpd,
+    discovery_function=inventory_isc_dhcpd,
+    check_function=check_isc_dhcpd,
+    service_name="DHCP Pool %s",
+    check_ruleset_name="win_dhcp_pools",
+)

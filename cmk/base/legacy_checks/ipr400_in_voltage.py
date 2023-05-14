@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -32,14 +32,14 @@ def check_ipr400_in_voltage(item, params, info):
     return 0, infotext, perfdata
 
 
-check_info["ipr400_in_voltage"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.1.0", "ipr voip device ipr400"),
-    "check_function": check_ipr400_in_voltage,
-    "discovery_function": inventory_ipr400_in_voltage,
-    "service_name": "IN Voltage %s",
-    "check_ruleset_name": "evolt",
-    "fetch": SNMPTree(
+check_info["ipr400_in_voltage"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.1.0", "ipr voip device ipr400"),
+    check_function=check_ipr400_in_voltage,
+    discovery_function=inventory_ipr400_in_voltage,
+    service_name="IN Voltage %s",
+    check_ruleset_name="evolt",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.27053.1.4.5.10",
         oids=["0"],
     ),
-}
+)

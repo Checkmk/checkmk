@@ -19,7 +19,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info
 
 
@@ -76,10 +76,10 @@ def check_postgres_sessions(item, params, parsed):
         yield state, infotext, [(key, val, warn, crit)]
 
 
-check_info["postgres_sessions"] = {
-    "parse_function": parse_postgres_sessions,
-    "discovery_function": inventory_postgres_sessions,
-    "check_function": check_postgres_sessions,
-    "service_name": "PostgreSQL Daemon Sessions %s",
-    "check_ruleset_name": "postgres_instance_sessions",
-}
+check_info["postgres_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_postgres_sessions,
+    discovery_function=inventory_postgres_sessions,
+    check_function=check_postgres_sessions,
+    service_name="PostgreSQL Daemon Sessions %s",
+    check_ruleset_name="postgres_instance_sessions",
+)

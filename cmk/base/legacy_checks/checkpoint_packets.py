@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
@@ -72,15 +72,15 @@ def check_checkpoint_packets(_no_item, params, parsed):
         yield state, infotext, [(key, rate, warn, crit, 0)]
 
 
-check_info["checkpoint_packets"] = {
-    "detect": DETECT,
-    "parse_function": parse_checkpoint_packets,
-    "check_function": check_checkpoint_packets,
-    "discovery_function": inventory_checkpoint_packets,
-    "service_name": "Packet Statistics",
-    "check_ruleset_name": "checkpoint_packets",
-    "default_levels_variable": "checkpoint_packets_default_levels",
-    "fetch": [
+check_info["checkpoint_packets"] = LegacyCheckDefinition(
+    detect=DETECT,
+    parse_function=parse_checkpoint_packets,
+    check_function=check_checkpoint_packets,
+    discovery_function=inventory_checkpoint_packets,
+    service_name="Packet Statistics",
+    check_ruleset_name="checkpoint_packets",
+    default_levels_variable="checkpoint_packets_default_levels",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.1.1",
             oids=["4", "5", "6", "7"],
@@ -90,4 +90,4 @@ check_info["checkpoint_packets"] = {
             oids=["5", "6"],
         ),
     ],
-}
+)

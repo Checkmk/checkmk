@@ -14,6 +14,7 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_parsed_item_data,
     get_timestamp_human_readable,
+    LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.graylog import handle_iso_utc_to_localtimestamp, json
 from cmk.base.config import check_info, factory_settings
@@ -164,11 +165,11 @@ def _handle_collector_states(collector_state, params):
     return 3
 
 
-check_info["graylog_sidecars"] = {
-    "parse_function": parse_graylog_sidecars,
-    "check_function": check_graylog_sidecars,
-    "discovery_function": discover(),
-    "default_levels_variable": "graylog_sidecars_default_levels",
-    "service_name": "Graylog Sidecar %s",
-    "check_ruleset_name": "graylog_sidecars",
-}
+check_info["graylog_sidecars"] = LegacyCheckDefinition(
+    parse_function=parse_graylog_sidecars,
+    check_function=check_graylog_sidecars,
+    discovery_function=discover(),
+    default_levels_variable="graylog_sidecars_default_levels",
+    service_name="Graylog Sidecar %s",
+    check_ruleset_name="graylog_sidecars",
+)

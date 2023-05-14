@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -26,13 +26,13 @@ def check_orion_backup(item, params, info):
     return state, "Status: %s, Expected time: %s minutes" % (state_readable, backup_time)
 
 
-check_info["orion_backup"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20246"),
-    "discovery_function": inventory_orion_backup,
-    "check_function": check_orion_backup,
-    "service_name": "Backup",
-    "fetch": SNMPTree(
+check_info["orion_backup"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20246"),
+    discovery_function=inventory_orion_backup,
+    check_function=check_orion_backup,
+    service_name="Backup",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.20246.2.3.1.1.1.2.5.3.3",
         oids=["2", "3"],
     ),
-}
+)

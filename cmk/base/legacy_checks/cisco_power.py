@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.cisco import DETECT_CISCO
@@ -77,13 +78,13 @@ def check_cisco_power(item, _no_params, info):
     return None
 
 
-check_info["cisco_power"] = {
-    "detect": DETECT_CISCO,
-    "check_function": check_cisco_power,
-    "discovery_function": inventory_cisco_power,
-    "service_name": "Power %s",
-    "fetch": SNMPTree(
+check_info["cisco_power"] = LegacyCheckDefinition(
+    detect=DETECT_CISCO,
+    check_function=check_cisco_power,
+    discovery_function=inventory_cisco_power,
+    service_name="Power %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.13.1.5.1",
         oids=[OIDEnd(), "2", "3", "4"],
     ),
-}
+)

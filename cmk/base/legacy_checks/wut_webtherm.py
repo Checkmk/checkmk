@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -72,14 +72,14 @@ def check_wut_webtherm(item, params, parsed):
     return None
 
 
-check_info["wut_webtherm"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5040.1.2."),
-    "default_levels_variable": "wut_webtherm_defaultlevels",
-    "parse_function": parse_wut_webtherm,
-    "discovery_function": inventory_wut_webtherm,
-    "check_function": check_wut_webtherm,
-    "service_name": "Temperature %s",
-    "fetch": [
+check_info["wut_webtherm"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5040.1.2."),
+    default_levels_variable="wut_webtherm_defaultlevels",
+    parse_function=parse_wut_webtherm,
+    discovery_function=inventory_wut_webtherm,
+    check_function=check_wut_webtherm,
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.5040.1.2.{idx}.1",
             oids=[
@@ -90,8 +90,8 @@ check_info["wut_webtherm"] = {
         )
         for idx in _TYPE_TABLE_IDX
     ],
-    "check_ruleset_name": "temperature",
-}
+    check_ruleset_name="temperature",
+)
 
 # .
 #   .--Air Pressure--------------------------------------------------------.
@@ -118,11 +118,11 @@ def check_wut_webtherm_pressure(item, _no_params, parsed):
     return None
 
 
-check_info["wut_webtherm.pressure"] = {
-    "discovery_function": inventory_wut_webtherm_pressure,
-    "check_function": check_wut_webtherm_pressure,
-    "service_name": "Pressure %s",
-}
+check_info["wut_webtherm.pressure"] = LegacyCheckDefinition(
+    discovery_function=inventory_wut_webtherm_pressure,
+    check_function=check_wut_webtherm_pressure,
+    service_name="Pressure %s",
+)
 
 # .
 #   .--Humidity------------------------------------------------------------.
@@ -151,11 +151,11 @@ def check_wut_webtherm_humidity(item, params, parsed):
     return None
 
 
-check_info["wut_webtherm.humidity"] = {
-    "discovery_function": inventory_wut_webtherm_humidity,
-    "check_function": check_wut_webtherm_humidity,
-    "service_name": "Humidity %s",
-    "check_ruleset_name": "humidity",
-}
+check_info["wut_webtherm.humidity"] = LegacyCheckDefinition(
+    discovery_function=inventory_wut_webtherm_humidity,
+    check_function=check_wut_webtherm_humidity,
+    service_name="Humidity %s",
+    check_ruleset_name="humidity",
+)
 
 # .

@@ -45,6 +45,7 @@
 
 # mypy: disable-error-code="var-annotated,assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -135,11 +136,11 @@ def check_aix_lvm(item, _no_params, info):
     return (3, "no such volume found")
 
 
-check_info["aix_lvm"] = {
-    "check_function": check_aix_lvm,
-    "discovery_function": inventory_aix_lvm,
-    "service_name": "Logical Volume %s",
+check_info["aix_lvm"] = LegacyCheckDefinition(
+    check_function=check_aix_lvm,
+    discovery_function=inventory_aix_lvm,
+    service_name="Logical Volume %s",
     # "group"              : "",
     # "default_levels_variable" : "services_default_levels",
     # first check we have a vendor mib from W&T, then check for the model in their MIB.
-}
+)

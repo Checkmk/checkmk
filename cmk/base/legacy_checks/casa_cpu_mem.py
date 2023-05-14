@@ -6,7 +6,7 @@
 from collections.abc import Iterable
 from typing import List, Mapping
 
-from cmk.base.check_api import get_parsed_item_data
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -47,14 +47,14 @@ def check_casa_cpu_mem(item, params, data):
     )
 
 
-check_info["casa_cpu_mem"] = {
-    "detect": DETECT_CASA,
-    "parse_function": parse_casa_cpu_mem,
-    "discovery_function": inventory_casa_cpu_mem,
-    "check_function": check_casa_cpu_mem,
-    "service_name": "Memory %s",
-    "check_ruleset_name": "memory_multiitem",
-    "fetch": [
+check_info["casa_cpu_mem"] = LegacyCheckDefinition(
+    detect=DETECT_CASA,
+    parse_function=parse_casa_cpu_mem,
+    discovery_function=inventory_casa_cpu_mem,
+    check_function=check_casa_cpu_mem,
+    service_name="Memory %s",
+    check_ruleset_name="memory_multiitem",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
             oids=[OIDEnd(), "2"],
@@ -72,4 +72,4 @@ check_info["casa_cpu_mem"] = {
             oids=[OIDEnd(), "1"],
         ),
     ],
-}
+)

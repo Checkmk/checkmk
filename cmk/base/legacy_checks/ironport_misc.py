@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -11,8 +12,8 @@ def check_ironport_misc(item, params, info):
     return (3, "Sorry. Check not implemented in this version.")
 
 
-check_info["ironport_misc"] = {
-    "check_function": check_ironport_misc,
-    "service_name": "%s",
-    "check_ruleset_name": "obsolete",
-}
+check_info["ironport_misc"] = LegacyCheckDefinition(
+    check_function=check_ironport_misc,
+    service_name="%s",
+    check_ruleset_name="obsolete",
+)

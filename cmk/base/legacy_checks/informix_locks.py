@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 factory_settings["informix_locks_default_levels"] = {
@@ -47,11 +48,11 @@ def check_informix_locks(item, params, parsed):
     return None
 
 
-check_info["informix_locks"] = {
-    "parse_function": parse_informix_locks,
-    "discovery_function": inventory_informix_locks,
-    "check_function": check_informix_locks,
-    "service_name": "Informix Locks %s",
-    "check_ruleset_name": "informix_locks",
-    "default_levels_variable": "informix_locks_default_levels",
-}
+check_info["informix_locks"] = LegacyCheckDefinition(
+    parse_function=parse_informix_locks,
+    discovery_function=inventory_informix_locks,
+    check_function=check_informix_locks,
+    service_name="Informix Locks %s",
+    check_ruleset_name="informix_locks",
+    default_levels_variable="informix_locks_default_levels",
+)

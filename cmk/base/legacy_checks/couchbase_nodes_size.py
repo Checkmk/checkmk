@@ -9,13 +9,14 @@ from cmk.base.check_api import (
     discover,
     get_bytes_human_readable,
     get_parsed_item_data,
+    LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
-check_info["couchbase_nodes_size"] = {
-    "parse_function": parse_couchbase_lines,
-}
+check_info["couchbase_nodes_size"] = LegacyCheckDefinition(
+    parse_function=parse_couchbase_lines,
+)
 
 
 def get_couchbase_check_by_keys(key_disk, key_size):
@@ -44,32 +45,32 @@ def get_couchbase_check_by_keys(key_disk, key_size):
     return check_couchbase_nodes_size
 
 
-check_info["couchbase_nodes_size.docs"] = {
-    "discovery_function": discover(),
-    "check_function": get_couchbase_check_by_keys(
+check_info["couchbase_nodes_size.docs"] = LegacyCheckDefinition(
+    discovery_function=discover(),
+    check_function=get_couchbase_check_by_keys(
         "couch_docs_actual_disk_size",
         "couch_docs_data_size",
     ),
-    "service_name": "Couchbase %s Documents",
-    "check_ruleset_name": "couchbase_size_docs",
-}
+    service_name="Couchbase %s Documents",
+    check_ruleset_name="couchbase_size_docs",
+)
 
-check_info["couchbase_nodes_size.spacial_views"] = {
-    "discovery_function": discover(),
-    "check_function": get_couchbase_check_by_keys(
+check_info["couchbase_nodes_size.spacial_views"] = LegacyCheckDefinition(
+    discovery_function=discover(),
+    check_function=get_couchbase_check_by_keys(
         "couch_spatial_disk_size",
         "couch_spatial_data_size",
     ),
-    "service_name": "Couchbase %s Spacial Views",
-    "check_ruleset_name": "couchbase_size_spacial",
-}
+    service_name="Couchbase %s Spacial Views",
+    check_ruleset_name="couchbase_size_spacial",
+)
 
-check_info["couchbase_nodes_size.couch_views"] = {
-    "discovery_function": discover(),
-    "check_function": get_couchbase_check_by_keys(
+check_info["couchbase_nodes_size.couch_views"] = LegacyCheckDefinition(
+    discovery_function=discover(),
+    check_function=get_couchbase_check_by_keys(
         "couch_views_actual_disk_size",
         "couch_views_data_size",
     ),
-    "service_name": "Couchbase %s Couch Views",
-    "check_ruleset_name": "couchbase_size_couch",
-}
+    service_name="Couchbase %s Couch Views",
+    check_ruleset_name="couchbase_size_couch",
+)

@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="var-annotated,assignment"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.hp_msa import check_hp_msa_health, inventory_hp_msa_health
 from cmk.base.config import check_info, factory_settings
@@ -167,12 +168,12 @@ def parse_hp_msa_volume(info):
     return parsed
 
 
-check_info["hp_msa_volume"] = {
-    "parse_function": parse_hp_msa_volume,
-    "discovery_function": inventory_hp_msa_health,
-    "check_function": check_hp_msa_volume_health,
-    "service_name": "Volume Health %s",
-}
+check_info["hp_msa_volume"] = LegacyCheckDefinition(
+    parse_function=parse_hp_msa_volume,
+    discovery_function=inventory_hp_msa_health,
+    check_function=check_hp_msa_volume_health,
+    service_name="Volume Health %s",
+)
 
 # .
 #   .--volume df-----------------------------------------------------------.
@@ -205,10 +206,10 @@ def check_hp_msa_volume_df(item, params, parsed):
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
-check_info["hp_msa_volume.df"] = {
-    "discovery_function": inventory_hp_msa_volume_df,
-    "check_function": check_hp_msa_volume_df,
-    "service_name": "Filesystem %s",
-    "check_ruleset_name": "filesystem",
-    "default_levels_variable": "filesystem_default_levels",
-}
+check_info["hp_msa_volume.df"] = LegacyCheckDefinition(
+    discovery_function=inventory_hp_msa_volume_df,
+    check_function=check_hp_msa_volume_df,
+    service_name="Filesystem %s",
+    check_ruleset_name="filesystem",
+    default_levels_variable="filesystem_default_levels",
+)

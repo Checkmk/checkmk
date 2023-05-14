@@ -20,7 +20,7 @@
 
 import time
 
-from cmk.base.check_api import equals, get_rate
+from cmk.base.check_api import equals, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -44,13 +44,13 @@ def check_sophos_messages(item, params, info):
     return None
 
 
-check_info["sophos_messages"] = {
-    "detect": equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
-    "discovery_function": inventory_sophos_messages,
-    "check_function": check_sophos_messages,
-    "service_name": "Messages %s",
-    "fetch": SNMPTree(
+check_info["sophos_messages"] = LegacyCheckDefinition(
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
+    discovery_function=inventory_sophos_messages,
+    check_function=check_sophos_messages,
+    service_name="Messages %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.2604.1.1.1.4.1",
         oids=["2", "3", "4"],
     ),
-}
+)

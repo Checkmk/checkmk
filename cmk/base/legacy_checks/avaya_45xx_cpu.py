@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import contains
+from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -27,16 +27,16 @@ def check_avaya_45xx_cpu(item, params, info):
     return None
 
 
-check_info["avaya_45xx_cpu"] = {
-    "detect": contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.45.3"),
-    "check_function": check_avaya_45xx_cpu,
-    "discovery_function": inventory_avaya_45xx_cpu,
-    "service_name": "CPU utilization CPU %s",
-    "check_ruleset_name": "cpu_utilization_multiitem",
-    "default_levels_variable": "avaya_45xx_cpu_default_levels",
+check_info["avaya_45xx_cpu"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.45.3"),
+    check_function=check_avaya_45xx_cpu,
+    discovery_function=inventory_avaya_45xx_cpu,
+    service_name="CPU utilization CPU %s",
+    check_ruleset_name="cpu_utilization_multiitem",
+    default_levels_variable="avaya_45xx_cpu_default_levels",
     # S5-CHASSIS-MIB
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.45.1.6.3.8.1.1.5",
         oids=["3"],
     ),
-}
+)

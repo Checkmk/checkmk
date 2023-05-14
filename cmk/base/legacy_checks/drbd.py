@@ -129,7 +129,7 @@ import re
 # Default thresholds for drbd checks
 import time
 
-from cmk.base.check_api import get_rate, state_markers
+from cmk.base.check_api import get_rate, LegacyCheckDefinition, state_markers
 from cmk.base.config import check_info
 
 drbd_net_default_levels = (None, None)
@@ -353,12 +353,12 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
     return (3, "Undefined state")
 
 
-check_info["drbd"] = {
-    "discovery_function": lambda info: inventory_drbd(info, "drbd"),
-    "check_function": check_drbd_general,
-    "check_ruleset_name": "drbd",
-    "service_name": "DRBD %s status",
-}
+check_info["drbd"] = LegacyCheckDefinition(
+    discovery_function=lambda info: inventory_drbd(info, "drbd"),
+    check_function=check_drbd_general,
+    check_ruleset_name="drbd",
+    service_name="DRBD %s status",
+)
 
 
 def drbd_get_rates(list_):
@@ -389,12 +389,12 @@ def check_drbd_net(item, params, info):
     return (3, "Undefined state")
 
 
-check_info["drbd.net"] = {
-    "discovery_function": lambda info: inventory_drbd(info, "drbd.net"),
-    "check_function": check_drbd_net,
-    "check_ruleset_name": "drbd.net",
-    "service_name": "DRBD %s net",
-}
+check_info["drbd.net"] = LegacyCheckDefinition(
+    discovery_function=lambda info: inventory_drbd(info, "drbd.net"),
+    check_function=check_drbd_net,
+    check_ruleset_name="drbd.net",
+    service_name="DRBD %s net",
+)
 
 
 def check_drbd_disk(item, params, info):
@@ -414,12 +414,12 @@ def check_drbd_disk(item, params, info):
     return (3, "Undefined state")
 
 
-check_info["drbd.disk"] = {
-    "discovery_function": lambda info: inventory_drbd(info, "drbd.disk"),
-    "check_function": check_drbd_disk,
-    "check_ruleset_name": "drbd.disk",
-    "service_name": "DRBD %s disk",
-}
+check_info["drbd.disk"] = LegacyCheckDefinition(
+    discovery_function=lambda info: inventory_drbd(info, "drbd.disk"),
+    check_function=check_drbd_disk,
+    check_ruleset_name="drbd.disk",
+    service_name="DRBD %s disk",
+)
 
 
 def check_drbd_stats(item, params, info):
@@ -451,9 +451,9 @@ def check_drbd_stats(item, params, info):
     return (3, "Undefined state")
 
 
-check_info["drbd.stats"] = {
-    "discovery_function": lambda info: inventory_drbd(info, "drbd.stats"),
-    "check_function": check_drbd_stats,
-    "check_ruleset_name": "drbd.stats",
-    "service_name": "DRBD %s stats",
-}
+check_info["drbd.stats"] = LegacyCheckDefinition(
+    discovery_function=lambda info: inventory_drbd(info, "drbd.stats"),
+    check_function=check_drbd_stats,
+    check_ruleset_name="drbd.stats",
+    service_name="DRBD %s stats",
+)

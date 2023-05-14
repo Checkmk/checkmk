@@ -51,6 +51,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -95,9 +96,9 @@ def check_pvecm_status(_no_item, _no_params, parsed):
             )
 
 
-check_info["pvecm_status"] = {
-    "parse_function": parse_pvecm_status,
-    "discovery_function": inventory_pvecm_status,
-    "check_function": check_pvecm_status,
-    "service_name": "PVE Cluster State",
-}
+check_info["pvecm_status"] = LegacyCheckDefinition(
+    parse_function=parse_pvecm_status,
+    discovery_function=inventory_pvecm_status,
+    check_function=check_pvecm_status,
+    service_name="PVE Cluster State",
+)

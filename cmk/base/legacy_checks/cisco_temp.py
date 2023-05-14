@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, contains, not_exists
+from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, not_exists
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -33,15 +33,15 @@ def check_cisco_temp(item, _no_params, info):
     return 3, "sensor not found in SNMP output"
 
 
-check_info["cisco_temp"] = {
-    "detect": all_of(
+check_info["cisco_temp"] = LegacyCheckDefinition(
+    detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), not_exists(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
     ),
-    "check_function": check_cisco_temp,
-    "discovery_function": inventory_cisco_temp,
-    "service_name": "Temperature %s",
-    "fetch": SNMPTree(
+    check_function=check_cisco_temp,
+    discovery_function=inventory_cisco_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.13.1.3.1",
         oids=["2", "6"],
     ),
-}
+)

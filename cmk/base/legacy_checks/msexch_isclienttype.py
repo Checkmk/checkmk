@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     get_levels_quadruple,
     inventory_wmi_table_instances,
@@ -56,11 +56,11 @@ def check_msexch_isclienttype(item, params, parsed):
     )
 
 
-check_info["msexch_isclienttype"] = {
-    "discovery_function": discover_msexch_isclienttype,
-    "check_function": check_msexch_isclienttype,
-    "parse_function": parse_wmi_table,
-    "service_name": "Exchange IS Client Type %s",
-    "check_ruleset_name": "msx_info_store",
-    "default_levels_variable": "msexch_isclienttype_defaultlevels",
-}
+check_info["msexch_isclienttype"] = LegacyCheckDefinition(
+    discovery_function=discover_msexch_isclienttype,
+    check_function=check_msexch_isclienttype,
+    parse_function=parse_wmi_table,
+    service_name="Exchange IS Client Type %s",
+    check_ruleset_name="msx_info_store",
+    default_levels_variable="msexch_isclienttype_defaultlevels",
+)

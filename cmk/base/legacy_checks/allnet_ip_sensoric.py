@@ -7,6 +7,7 @@
 import re
 from collections.abc import Mapping
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
@@ -100,12 +101,12 @@ def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
     yield 0 if value == 0 else 2, "%d%% of the normal level" % value, perfdata
 
 
-check_info["allnet_ip_sensoric.tension"] = {
+check_info["allnet_ip_sensoric.tension"] = LegacyCheckDefinition(
     # section already migrated!
-    "check_function": check_allnet_ip_sensoric_tension,
-    "discovery_function": inventory_allnet_ip_sensoric_tension,
-    "service_name": "Electric Tension %s",
-}
+    check_function=check_allnet_ip_sensoric_tension,
+    discovery_function=inventory_allnet_ip_sensoric_tension,
+    service_name="Electric Tension %s",
+)
 
 # .
 #   .--temp----------------------------------------------------------------.
@@ -139,14 +140,14 @@ def check_allnet_ip_sensoric_temp(item, params, parsed):
     yield check_temperature(temp, params, "allnet_ip_sensoric_temp_%s" % item)
 
 
-check_info["allnet_ip_sensoric.temp"] = {
+check_info["allnet_ip_sensoric.temp"] = LegacyCheckDefinition(
     # section already migrated!
-    "check_function": check_allnet_ip_sensoric_temp,
-    "discovery_function": inventory_allnet_ip_sensoric_temp,
-    "service_name": "Temperature %s",
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "allnet_ip_sensoric_temp_default_levels",
-}
+    check_function=check_allnet_ip_sensoric_temp,
+    discovery_function=inventory_allnet_ip_sensoric_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    default_levels_variable="allnet_ip_sensoric_temp_default_levels",
+)
 
 # .
 #   .--humidity------------------------------------------------------------.
@@ -180,13 +181,13 @@ def check_allnet_ip_sensoric_humidity(item, params, parsed):
     yield check_humidity(float(parsed[sensor_id]["value_float"]), params)
 
 
-check_info["allnet_ip_sensoric.humidity"] = {
+check_info["allnet_ip_sensoric.humidity"] = LegacyCheckDefinition(
     # section already migrated!
-    "check_function": check_allnet_ip_sensoric_humidity,
-    "discovery_function": inventory_allnet_ip_sensoric_humidity,
-    "service_name": "Humidity %s",
-    "check_ruleset_name": "humidity",
-}
+    check_function=check_allnet_ip_sensoric_humidity,
+    discovery_function=inventory_allnet_ip_sensoric_humidity,
+    service_name="Humidity %s",
+    check_ruleset_name="humidity",
+)
 
 # .
 #   .--pressure------------------------------------------------------------.
@@ -220,11 +221,11 @@ def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
     yield 0, "%0.5f bar" % pressure, perfdata
 
 
-check_info["allnet_ip_sensoric.pressure"] = {
+check_info["allnet_ip_sensoric.pressure"] = LegacyCheckDefinition(
     # section already migrated!
-    "check_function": check_allnet_ip_sensoric_pressure,
-    "discovery_function": inventory_allnet_ip_sensoric_pressure,
-    "service_name": "Pressure %s",
-}
+    check_function=check_allnet_ip_sensoric_pressure,
+    discovery_function=inventory_allnet_ip_sensoric_pressure,
+    service_name="Pressure %s",
+)
 
 # .

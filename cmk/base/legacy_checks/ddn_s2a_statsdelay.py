@@ -6,7 +6,12 @@
 
 # mypy: disable-error-code="no-untyped-def,list-item"
 
-from cmk.base.check_api import get_item_state, MKCounterWrapped, set_item_state
+from cmk.base.check_api import (
+    get_item_state,
+    LegacyCheckDefinition,
+    MKCounterWrapped,
+    set_item_state,
+)
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info, factory_settings
 
@@ -153,11 +158,11 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
     )
 
 
-check_info["ddn_s2a_statsdelay"] = {
-    "default_levels_variable": "ddn_s2a_statsdelay_default_levels",
-    "parse_function": parse_ddn_s2a_statsdelay,
-    "discovery_function": inventory_ddn_s2a_statsdelay,
-    "check_function": check_ddn_s2a_statsdelay,
-    "service_name": "DDN S2A Delay %s",
-    "check_ruleset_name": "ddn_s2a_wait",
-}
+check_info["ddn_s2a_statsdelay"] = LegacyCheckDefinition(
+    default_levels_variable="ddn_s2a_statsdelay_default_levels",
+    parse_function=parse_ddn_s2a_statsdelay,
+    discovery_function=inventory_ddn_s2a_statsdelay,
+    check_function=check_ddn_s2a_statsdelay,
+    service_name="DDN S2A Delay %s",
+    check_ruleset_name="ddn_s2a_wait",
+)

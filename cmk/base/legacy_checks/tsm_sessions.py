@@ -8,7 +8,7 @@
 # check is SNMP-Based, then remove this section
 
 
-from cmk.base.check_api import saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
 tsm_session_default_levels = (300, 600)
@@ -41,8 +41,8 @@ def check_tsm_sessions(item, params, info):
     return state, "%d sessions too long in RecvW or MediaW state" % count
 
 
-check_info["tsm_sessions"] = {
-    "check_function": check_tsm_sessions,
-    "discovery_function": inventory_tsm_sessions,
-    "service_name": "tsm_sessions",
-}
+check_info["tsm_sessions"] = LegacyCheckDefinition(
+    check_function=check_tsm_sessions,
+    discovery_function=inventory_tsm_sessions,
+    service_name="tsm_sessions",
+)

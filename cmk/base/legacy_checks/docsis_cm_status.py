@@ -22,7 +22,7 @@
 # docsIfCmStatusInvalidRegistrationResponses  1.3.6.1.2.1.10.127.1.2.2.1.9
 
 
-from cmk.base.check_api import any_of, equals
+from cmk.base.check_api import any_of, equals, LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -82,18 +82,18 @@ def check_docsis_cm_status(item, params, info):
         yield 3, "Status Entry not found"
 
 
-check_info["docsis_cm_status"] = {
-    "detect": any_of(
+check_info["docsis_cm_status"] = LegacyCheckDefinition(
+    detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.900.2.0.0.0.0.0"),
     ),
-    "check_function": check_docsis_cm_status,
-    "discovery_function": inventory_docsis_cm_status,
-    "service_name": "Cable Modem %s Status",
-    "fetch": SNMPTree(
+    check_function=check_docsis_cm_status,
+    discovery_function=inventory_docsis_cm_status,
+    service_name="Cable Modem %s Status",
+    fetch=SNMPTree(
         base=".1.3.6.1.2.1.10.127.1.2.2.1",
         oids=[OIDEnd(), "1", "3"],
     ),
-    "default_levels_variable": "docsis_cm_status_default_levels",
-    "check_ruleset_name": "docsis_cm_status",
-}
+    default_levels_variable="docsis_cm_status_default_levels",
+    check_ruleset_name="docsis_cm_status",
+)

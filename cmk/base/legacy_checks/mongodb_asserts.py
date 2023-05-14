@@ -13,7 +13,7 @@
 
 import time
 
-from cmk.base.check_api import get_rate
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -42,9 +42,9 @@ def check_mongodb_asserts(_no_item, params, info):
         ]
 
 
-check_info["mongodb_asserts"] = {
-    "service_name": "MongoDB Asserts",
-    "check_function": check_mongodb_asserts,
-    "discovery_function": inventory_mongodb_asserts,
-    "check_ruleset_name": "mongodb_asserts",
-}
+check_info["mongodb_asserts"] = LegacyCheckDefinition(
+    service_name="MongoDB Asserts",
+    check_function=check_mongodb_asserts,
+    discovery_function=inventory_mongodb_asserts,
+    check_ruleset_name="mongodb_asserts",
+)

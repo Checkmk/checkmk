@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.hp_msa import parse_hp_msa
 from cmk.base.config import check_info
 
@@ -78,9 +79,9 @@ def check_hp_msa_fan(item, params, parsed):
             )
 
 
-check_info["hp_msa_fan"] = {
-    "parse_function": parse_hp_msa,
-    "discovery_function": inventory_hp_msa_fan,
-    "check_function": check_hp_msa_fan,
-    "service_name": "Fan %s",
-}
+check_info["hp_msa_fan"] = LegacyCheckDefinition(
+    parse_function=parse_hp_msa,
+    discovery_function=inventory_hp_msa_fan,
+    check_function=check_hp_msa_fan,
+    service_name="Fan %s",
+)

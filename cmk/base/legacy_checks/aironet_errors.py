@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import any_of, check_levels, equals, get_rate
+from cmk.base.check_api import any_of, check_levels, equals, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
@@ -31,8 +31,8 @@ def check_aironet_errors(item, params, info):
             return
 
 
-check_info["aironet_errors"] = {
-    "detect": any_of(
+check_info["aironet_errors"] = LegacyCheckDefinition(
+    detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.525"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.618"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.685"),
@@ -40,12 +40,12 @@ check_info["aironet_errors"] = {
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1034"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1247"),
     ),
-    "check_function": check_aironet_errors,
-    "discovery_function": inventory_aironet_errors,
-    "service_name": "MAC CRC errors radio %s",
+    check_function=check_aironet_errors,
+    discovery_function=inventory_aironet_errors,
+    service_name="MAC CRC errors radio %s",
     # CISCO-DOT11-IF-MIB::cd11IfRecFrameMacCrcErrors
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.272.1.2.1.1.1",
         oids=[OIDEnd(), "2"],
     ),
-}
+)

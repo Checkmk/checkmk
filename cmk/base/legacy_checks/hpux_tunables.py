@@ -42,6 +42,7 @@
 # For legacy reasons we need to keep the old format:
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 
 
@@ -130,12 +131,12 @@ def check_hpux_tunables_nkthread(_no_item, params, info):
     return check_hpux_tunables(info, params, tunable, descr)
 
 
-check_info["hpux_tunables.nkthread"] = {
-    "discovery_function": inventory_hpux_tunables_nkthread,
-    "check_function": check_hpux_tunables_nkthread,
-    "service_name": "Number of threads",
-    "default_levels_variable": "hpux_tunables_nkthread_default_levels",
-}
+check_info["hpux_tunables.nkthread"] = LegacyCheckDefinition(
+    discovery_function=inventory_hpux_tunables_nkthread,
+    check_function=check_hpux_tunables_nkthread,
+    service_name="Number of threads",
+    default_levels_variable="hpux_tunables_nkthread_default_levels",
+)
 
 # .
 #   .--nproc---------------------------------------------------------------.
@@ -163,12 +164,12 @@ def check_hpux_tunables_nproc(_no_item, params, info):
     return check_hpux_tunables(info, params, tunable, descr)
 
 
-check_info["hpux_tunables.nproc"] = {
-    "discovery_function": inventory_hpux_tunables_nproc,
-    "check_function": check_hpux_tunables_nproc,
-    "service_name": "Number of processes",
-    "default_levels_variable": "hpux_tunables_nproc_default_levels",
-}
+check_info["hpux_tunables.nproc"] = LegacyCheckDefinition(
+    discovery_function=inventory_hpux_tunables_nproc,
+    check_function=check_hpux_tunables_nproc,
+    service_name="Number of processes",
+    default_levels_variable="hpux_tunables_nproc_default_levels",
+)
 
 # .
 #   .--maxfiles_lim--------------------------------------------------------.
@@ -196,12 +197,12 @@ def check_hpux_tunables_maxfiles_lim(_no_item, params, info):
     return check_hpux_tunables(info, params, tunable, descr)
 
 
-check_info["hpux_tunables.maxfiles_lim"] = {
-    "discovery_function": inventory_hpux_tunables_maxfiles_lim,
-    "check_function": check_hpux_tunables_maxfiles_lim,
-    "service_name": "Number of open files",
-    "default_levels_variable": "hpux_tunables_maxfiles_lim_default_levels",
-}
+check_info["hpux_tunables.maxfiles_lim"] = LegacyCheckDefinition(
+    discovery_function=inventory_hpux_tunables_maxfiles_lim,
+    check_function=check_hpux_tunables_maxfiles_lim,
+    service_name="Number of open files",
+    default_levels_variable="hpux_tunables_maxfiles_lim_default_levels",
+)
 
 # .
 #   .--semmni--------------------------------------------------------------.
@@ -229,12 +230,12 @@ def check_hpux_tunables_semmni(_no_item, params, info):
     return check_hpux_tunables(info, params, tunable, descr)
 
 
-check_info["hpux_tunables.semmni"] = {
-    "discovery_function": inventory_hpux_tunables_semmni,
-    "check_function": check_hpux_tunables_semmni,
-    "service_name": "Number of IPC Semaphore IDs",
-    "default_levels_variable": "hpux_tunables_semmni_default_levels",
-}
+check_info["hpux_tunables.semmni"] = LegacyCheckDefinition(
+    discovery_function=inventory_hpux_tunables_semmni,
+    check_function=check_hpux_tunables_semmni,
+    service_name="Number of IPC Semaphore IDs",
+    default_levels_variable="hpux_tunables_semmni_default_levels",
+)
 
 # .
 #   .--shmseg--------------------------------------------------------------.
@@ -262,12 +263,12 @@ def check_hpux_tunables_shmseg(_no_item, params, info):
     return check_hpux_tunables(info, params, tunable, descr)
 
 
-check_info["hpux_tunables.shmseg"] = {
-    "discovery_function": inventory_hpux_tunables_shmseg,
-    "check_function": check_hpux_tunables_shmseg,
-    "service_name": "Number of shared memory segments",
-    "default_levels_variable": "hpux_tunables_shmseg_default_levels",
-}
+check_info["hpux_tunables.shmseg"] = LegacyCheckDefinition(
+    discovery_function=inventory_hpux_tunables_shmseg,
+    check_function=check_hpux_tunables_shmseg,
+    service_name="Number of shared memory segments",
+    default_levels_variable="hpux_tunables_shmseg_default_levels",
+)
 
 # .
 #   .--semmns--------------------------------------------------------------.
@@ -295,9 +296,9 @@ def check_hpux_tunables_semmns(_no_item, params, info):
     return check_hpux_tunables(info, params, tunable, descr)
 
 
-check_info["hpux_tunables.semmns"] = {
-    "discovery_function": inventory_hpux_tunables_semmns,
-    "check_function": check_hpux_tunables_semmns,
-    "service_name": "Number of IPC Semaphores",
-    "default_levels_variable": "hpux_tunables_semmns_default_levels",
-}
+check_info["hpux_tunables.semmns"] = LegacyCheckDefinition(
+    discovery_function=inventory_hpux_tunables_semmns,
+    check_function=check_hpux_tunables_semmns,
+    service_name="Number of IPC Semaphores",
+    default_levels_variable="hpux_tunables_semmns_default_levels",
+)

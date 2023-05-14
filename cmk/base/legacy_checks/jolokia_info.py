@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -33,9 +33,9 @@ def check_jolokia_info(item, _no_params, data):
     return 0, "%s %s (Jolokia version %s)" % (product.title(), version, jolokia_version)
 
 
-check_info["jolokia_info"] = {
-    "parse_function": parse_jolokia_info,
-    "service_name": "JVM %s",
-    "check_function": check_jolokia_info,
-    "discovery_function": discover(),
-}
+check_info["jolokia_info"] = LegacyCheckDefinition(
+    parse_function=parse_jolokia_info,
+    service_name="JVM %s",
+    check_function=check_jolokia_info,
+    discovery_function=discover(),
+)

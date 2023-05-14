@@ -11,7 +11,7 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.base.check_api import any_of, contains, startswith
+from cmk.base.check_api import any_of, contains, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -41,18 +41,18 @@ def check_cisco_asa_connections(_no_item, params, info):
     return state, "%s, Max. since system startup: %s" % (infotext, overall_used_conns), perfdata
 
 
-check_info["cisco_asa_connections"] = {
-    "detect": any_of(
+check_info["cisco_asa_connections"] = LegacyCheckDefinition(
+    detect=any_of(
         startswith(".1.3.6.1.2.1.1.1.0", "cisco adaptive security"),
         startswith(".1.3.6.1.2.1.1.1.0", "cisco firewall services"),
         contains(".1.3.6.1.2.1.1.1.0", "cisco pix security"),
     ),
-    "discovery_function": inventory_cisco_asa_connections,
-    "check_function": check_cisco_asa_connections,
-    "service_name": "Connections",
-    "fetch": SNMPTree(
+    discovery_function=inventory_cisco_asa_connections,
+    check_function=check_cisco_asa_connections,
+    service_name="Connections",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.147.1.2.2.2.1",
         oids=["5"],
     ),
-    "check_ruleset_name": "cisco_fw_connections",
-}
+    check_ruleset_name="cisco_fw_connections",
+)

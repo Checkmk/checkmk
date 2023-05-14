@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.apc import DETECT
@@ -52,14 +53,14 @@ def check_apc_inrow_airflow(_no_item, params, info):
     return state, "Current: %.0f l/s %s" % (flow, message), perf
 
 
-check_info["apc_inrow_airflow"] = {
-    "detect": DETECT,
-    "check_function": check_apc_inrow_airflow,
-    "discovery_function": inventory_apc_inrow_airflow,
-    "service_name": "Airflow",
-    "fetch": SNMPTree(
+check_info["apc_inrow_airflow"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_apc_inrow_airflow,
+    discovery_function=inventory_apc_inrow_airflow,
+    service_name="Airflow",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
         oids=["5"],
     ),
-    "check_ruleset_name": "airflow",
-}
+    check_ruleset_name="airflow",
+)

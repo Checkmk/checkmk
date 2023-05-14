@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 """Cisco prime connection count check
 This check will compare the sum of all 'count' entries against lower levels and additionally
 output the sums of all individual connection types
@@ -10,7 +11,7 @@ see: https://d1nmyq4gcgsfi5.cloudfront.net/media/pi_3_3_devnet/api/v2/data/Clien
 """
 
 
-from cmk.base.check_api import check_levels, discover_single
+from cmk.base.check_api import check_levels, discover_single, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 from cmk.base.config import check_info
 
@@ -61,10 +62,10 @@ def check_cisco_prime_wifi_connections(item, params, parsed):
             yield 0, "%s: %d" % (cname, count), [("wifi_connection_" + ctype, count)]
 
 
-check_info["cisco_prime_wifi_connections"] = {
-    "parse_function": lambda info: parse_cisco_prime("clientCountsDTO", info),
-    "discovery_function": discover_single,
-    "check_function": check_cisco_prime_wifi_connections,
-    "service_name": "Cisco Prime WiFi Connections",
-    "check_ruleset_name": "cisco_prime_wifi_connections",
-}
+check_info["cisco_prime_wifi_connections"] = LegacyCheckDefinition(
+    parse_function=lambda info: parse_cisco_prime("clientCountsDTO", info),
+    discovery_function=discover_single,
+    check_function=check_cisco_prime_wifi_connections,
+    service_name="Cisco Prime WiFi Connections",
+    check_ruleset_name="cisco_prime_wifi_connections",
+)

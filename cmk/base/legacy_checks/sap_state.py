@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -25,8 +26,8 @@ def check_sap_state(item, _no_parameters, info):
             return value_to_status(value), "Status: %s" % value
 
 
-check_info["sap_state"] = {
-    "check_function": check_sap_state,
-    "discovery_function": inventory_sap_state,
-    "service_name": "SAP State %s",
-}
+check_info["sap_state"] = LegacyCheckDefinition(
+    check_function=check_sap_state,
+    discovery_function=inventory_sap_state,
+    service_name="SAP State %s",
+)

@@ -32,6 +32,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -76,9 +77,9 @@ def check_3ware_disks(item, _no_params, info):
 
 # declare the check to Checkmk
 
-check_info["3ware_disks"] = {
-    "check_function": check_3ware_disks,
-    "discovery_function": inventory_3ware_disks,
-    "service_name": "RAID 3ware disk %s",
-    "check_ruleset_name": "raid_disk",
-}
+check_info["3ware_disks"] = LegacyCheckDefinition(
+    check_function=check_3ware_disks,
+    discovery_function=inventory_3ware_disks,
+    service_name="RAID 3ware disk %s",
+    check_ruleset_name="raid_disk",
+)

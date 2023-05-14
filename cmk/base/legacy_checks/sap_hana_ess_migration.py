@@ -9,7 +9,7 @@
 import datetime
 
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
-from cmk.base.check_api import get_parsed_item_data, MKCounterWrapped
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info
 
 # With reference to SQL sample output (see internal ticket SUP-253)
@@ -64,9 +64,9 @@ def check_sap_hana_ess_migration(item, params, data):
     return states["cmk_state"], infotext
 
 
-check_info["sap_hana_ess_migration"] = {
-    "parse_function": parse_sap_hana_ess_migration,
-    "discovery_function": inventory_sap_hana_ess_migration,
-    "check_function": check_sap_hana_ess_migration,
-    "service_name": "SAP HANA ESS Migration %s",
-}
+check_info["sap_hana_ess_migration"] = LegacyCheckDefinition(
+    parse_function=parse_sap_hana_ess_migration,
+    discovery_function=inventory_sap_hana_ess_migration,
+    check_function=check_sap_hana_ess_migration,
+    service_name="SAP HANA ESS Migration %s",
+)

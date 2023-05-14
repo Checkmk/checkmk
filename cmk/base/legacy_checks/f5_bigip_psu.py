@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -48,14 +49,14 @@ def check_f5_bigip_psu(item, _no_params, info):
     return (3, "item not found in SNMP output")
 
 
-check_info["f5_bigip_psu"] = {
-    "detect": DETECT,
-    "check_function": check_f5_bigip_psu,
-    "discovery_function": inventory_f5_bigip_psu,
-    "service_name": "PSU %s",
+check_info["f5_bigip_psu"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_f5_bigip_psu,
+    discovery_function=inventory_f5_bigip_psu,
+    service_name="PSU %s",
     # Get ID and status from the SysChassisPowerSupplyTable
-    "fetch": SNMPTree(
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.3.2.2.2.1",
         oids=["1", "2"],
     ),
-}
+)

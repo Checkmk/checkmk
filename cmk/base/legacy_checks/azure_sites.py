@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
     get_data_or_go_stale,
@@ -40,11 +40,11 @@ def check_azure_sites(_item, params, resource):
         yield 0, "%s: %s" % kv_pair
 
 
-check_info["azure_sites"] = {
-    "parse_function": parse_resources,
-    "discovery_function": discover(),
-    "check_function": check_azure_sites,
-    "service_name": "Site %s",
-    "default_levels_variable": "levels_azure_sites",
-    "check_ruleset_name": "webserver",
-}
+check_info["azure_sites"] = LegacyCheckDefinition(
+    parse_function=parse_resources,
+    discovery_function=discover(),
+    check_function=check_azure_sites,
+    service_name="Site %s",
+    default_levels_variable="levels_azure_sites",
+    check_ruleset_name="webserver",
+)

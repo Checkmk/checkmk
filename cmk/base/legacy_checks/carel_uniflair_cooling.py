@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
@@ -48,15 +49,15 @@ def check_carel_uniflair_cooling(item, _no_params, info):
     return (0, output, perfdata)
 
 
-check_info["carel_uniflair_cooling"] = {
+check_info["carel_uniflair_cooling"] = LegacyCheckDefinition(
     # All the OIDs of this checks seems to be wrong for the current version
     # of this device, so the detection is disbaled until we have better information
-    "detect": DETECT_NEVER,
-    "check_function": check_carel_uniflair_cooling,
-    "discovery_function": inventory_carel_uniflair_cooling,
-    "service_name": "Carel uniflair cooling",
-    "fetch": SNMPTree(
+    detect=DETECT_NEVER,
+    check_function=check_carel_uniflair_cooling,
+    discovery_function=inventory_carel_uniflair_cooling,
+    service_name="Carel uniflair cooling",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9839.2.1",
         oids=["1.31.0", "1.51.0", "1.67.0", "2.6.0"],
     ),
-}
+)

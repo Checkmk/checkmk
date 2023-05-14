@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.domino import DETECT
@@ -33,14 +34,14 @@ def check_domino_users(_no_item, params, info):
         yield state, infotext, perfdata
 
 
-check_info["domino_users"] = {
-    "detect": DETECT,
-    "check_function": check_domino_users,
-    "discovery_function": inventory_domino_users,
-    "service_name": "Domino Users",
-    "fetch": SNMPTree(
+check_info["domino_users"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_domino_users,
+    discovery_function=inventory_domino_users,
+    service_name="Domino Users",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72.1.1.6.3",
         oids=["6"],
     ),
-    "check_ruleset_name": "domino_users",
-}
+    check_ruleset_name="domino_users",
+)

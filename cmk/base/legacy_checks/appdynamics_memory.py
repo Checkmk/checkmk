@@ -10,7 +10,7 @@
 
 # mypy: disable-error-code="arg-type,list-item"
 
-from cmk.base.check_api import get_bytes_human_readable
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -100,9 +100,9 @@ def check_appdynamics_memory(item, params, info):  # pylint: disable=too-many-br
             yield 0, "Committed: %s" % get_bytes_human_readable(committed), perfdata
 
 
-check_info["appdynamics_memory"] = {
-    "discovery_function": inventory_appdynamics_memory,
-    "check_function": check_appdynamics_memory,
-    "service_name": "AppDynamics Memory %s",
-    "check_ruleset_name": "jvm_memory",
-}
+check_info["appdynamics_memory"] = LegacyCheckDefinition(
+    discovery_function=inventory_appdynamics_memory,
+    check_function=check_appdynamics_memory,
+    service_name="AppDynamics Memory %s",
+    check_ruleset_name="jvm_memory",
+)

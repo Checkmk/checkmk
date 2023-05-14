@@ -6,7 +6,7 @@
 # example output
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -32,12 +32,12 @@ def check_dell_idrac_raid(item, _no_params, info):
             yield state, "Status of %s: %s" % (name, state_readable)
 
 
-check_info["dell_idrac_raid"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10892.5"),
-    "discovery_function": inventory_dell_idrac_raid,
-    "check_function": check_dell_idrac_raid,
-    "service_name": "Raid Controller %s",
-    "fetch": [
+check_info["dell_idrac_raid"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10892.5"),
+    discovery_function=inventory_dell_idrac_raid,
+    check_function=check_dell_idrac_raid,
+    service_name="Raid Controller %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.674.10892.5.5.1.20.130.1.1",
             oids=["1", "2", "38"],
@@ -47,7 +47,7 @@ check_info["dell_idrac_raid"] = {
             oids=["1", "4", "6", "21"],
         ),
     ],
-}
+)
 
 
 def inventory_dell_idrac_raid_bbu(info):
@@ -72,8 +72,8 @@ def check_dell_idrac_raid_bbu(item, params, info):
             yield state, "Battery status: %s" % state_readable
 
 
-check_info["dell_idrac_raid.bbu"] = {
-    "discovery_function": inventory_dell_idrac_raid_bbu,
-    "check_function": check_dell_idrac_raid_bbu,
-    "service_name": "Raid BBU %s",
-}
+check_info["dell_idrac_raid.bbu"] = LegacyCheckDefinition(
+    discovery_function=inventory_dell_idrac_raid_bbu,
+    check_function=check_dell_idrac_raid_bbu,
+    service_name="Raid BBU %s",
+)

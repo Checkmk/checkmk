@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.datapower import DETECT
@@ -55,13 +56,13 @@ def check_datapower_raid_bat(item, _no_params, info):
     return None
 
 
-check_info["datapower_raid_bat"] = {
-    "detect": DETECT,
-    "discovery_function": inventory_datapower_raid_bat,
-    "check_function": check_datapower_raid_bat,
-    "service_name": "Raid Battery %s",
-    "fetch": SNMPTree(
+check_info["datapower_raid_bat"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=inventory_datapower_raid_bat,
+    check_function=check_datapower_raid_bat,
+    service_name="Raid Battery %s",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.258.1",
         oids=["1", "2", "3", "4", "5"],
     ),
-}
+)

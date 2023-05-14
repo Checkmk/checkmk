@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.hp_msa import parse_hp_msa
 from cmk.base.config import check_info, factory_settings
@@ -64,11 +65,11 @@ def check_hp_msa_controller_cpu(item, params, parsed):
     return None
 
 
-check_info["hp_msa_controller"] = {
-    "parse_function": parse_hp_msa,
-    "discovery_function": inventory_hp_msa_controller_cpu,
-    "check_function": check_hp_msa_controller_cpu,
-    "service_name": "CPU Utilization %s",
-    "check_ruleset_name": "cpu_utilization_multiitem",
-    "default_levels_variable": "hp_msa_controller",
-}
+check_info["hp_msa_controller"] = LegacyCheckDefinition(
+    parse_function=parse_hp_msa,
+    discovery_function=inventory_hp_msa_controller_cpu,
+    check_function=check_hp_msa_controller_cpu,
+    service_name="CPU Utilization %s",
+    check_ruleset_name="cpu_utilization_multiitem",
+    default_levels_variable="hp_msa_controller",
+)

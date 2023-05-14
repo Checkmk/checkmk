@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -45,13 +45,13 @@ def check_cisco_ucs_lun(_no_item, _no_params, info):
     yield mode_state, "Mode: %s" % mode_state_readable
 
 
-check_info["cisco_ucs_lun"] = {
-    "detect": DETECT,
-    "check_function": check_cisco_ucs_lun,
-    "discovery_function": inventory_cisco_ucs_lun,
-    "service_name": "LUN",
-    "fetch": SNMPTree(
+check_info["cisco_ucs_lun"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_cisco_ucs_lun,
+    discovery_function=inventory_cisco_ucs_lun,
+    service_name="LUN",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.45.8.1",
         oids=["14", "13", "9"],
     ),
-}
+)

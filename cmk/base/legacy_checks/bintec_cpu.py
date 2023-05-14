@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -40,14 +40,14 @@ def check_bintec_cpu(_no_item, params, info):
 # tplink_cpu, hr_cpu, cisco_nexus_cpu, bintec_cpu, winperf_processor,
 # lxc_container_cpu, docker_container_cpu.
 # Migration via cmk/update_config.py!
-check_info["bintec_cpu"] = {
-    "detect": startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4."),
-    "discovery_function": inventory_bintec_cpu,
-    "check_function": check_bintec_cpu,
-    "service_name": "CPU utilization",
-    "fetch": SNMPTree(
+check_info["bintec_cpu"] = LegacyCheckDefinition(
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4."),
+    discovery_function=inventory_bintec_cpu,
+    check_function=check_bintec_cpu,
+    service_name="CPU utilization",
+    fetch=SNMPTree(
         base=".1.3.6.1.4.1.272.4.17.4.1.1",
         oids=["15", "16", "17"],
     ),
-    "check_ruleset_name": "cpu_utilization_os",
-}
+    check_ruleset_name="cpu_utilization_os",
+)

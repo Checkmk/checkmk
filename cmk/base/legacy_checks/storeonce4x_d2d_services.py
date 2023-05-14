@@ -6,7 +6,7 @@
 
 import json
 
-from cmk.base.check_api import discover_single
+from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -28,9 +28,9 @@ def check_storeonce4x_d2d_services(_item, _params, parsed):
         )
 
 
-check_info["storeonce4x_d2d_services"] = {
-    "parse_function": parse_storeonce4x_d2d_services,
-    "discovery_function": discover_single,
-    "check_function": check_storeonce4x_d2d_services,
-    "service_name": "D2D Services",
-}
+check_info["storeonce4x_d2d_services"] = LegacyCheckDefinition(
+    parse_function=parse_storeonce4x_d2d_services,
+    discovery_function=discover_single,
+    check_function=check_storeonce4x_d2d_services,
+    service_name="D2D Services",
+)

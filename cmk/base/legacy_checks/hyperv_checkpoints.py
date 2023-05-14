@@ -9,7 +9,7 @@
 # c85ae17b-1a6c-4a34-949a-a1b9385ef67a 2040
 
 
-from cmk.base.check_api import get_age_human_readable
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -52,9 +52,9 @@ def check_hyperv_checkpoints(item, params, info):
         yield 0, "No Checkpoints found"
 
 
-check_info["hyperv_checkpoints"] = {
-    "check_function": check_hyperv_checkpoints,
-    "discovery_function": inventory_hyperv_checkpoints,
-    "service_name": "HyperV Checkpoints",
-    "check_ruleset_name": "vm_snapshots",
-}
+check_info["hyperv_checkpoints"] = LegacyCheckDefinition(
+    check_function=check_hyperv_checkpoints,
+    discovery_function=inventory_hyperv_checkpoints,
+    service_name="HyperV Checkpoints",
+    check_ruleset_name="vm_snapshots",
+)

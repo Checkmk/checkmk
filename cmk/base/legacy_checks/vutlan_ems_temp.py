@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -46,18 +47,18 @@ def check_vutlan_ems_temp(item, params, parsed):
     )
 
 
-check_info["vutlan_ems_temp"] = {
-    "detect": DETECT_VUTLAN_EMS,
-    "parse_function": parse_vutlan_ems_temp,
-    "discovery_function": discover_vutlan_ems_temp,
-    "check_function": check_vutlan_ems_temp,
-    "service_name": "Temperature %s",
-    "fetch": [
+check_info["vutlan_ems_temp"] = LegacyCheckDefinition(
+    detect=DETECT_VUTLAN_EMS,
+    parse_function=parse_vutlan_ems_temp,
+    discovery_function=discover_vutlan_ems_temp,
+    check_function=check_vutlan_ems_temp,
+    service_name="Temperature %s",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.39052.1.3.1",
             oids=[OIDEnd(), "7", "9"],
         )
     ],
-    "check_ruleset_name": "temperature",
-    "default_levels_variable": "vutlan_ems_temp_default_levels",
-}
+    check_ruleset_name="temperature",
+    default_levels_variable="vutlan_ems_temp_default_levels",
+)

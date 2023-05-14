@@ -104,26 +104,7 @@ def check_oracle_instance(  # pylint: disable=too-many-branches
 
     # ASM has no login and archivelog check
     if instance.database_role != "ASM":
-        # logins are only possible when the database is open
-        if instance.openmode == "OPEN":
-            yield _asses_property("Logins", instance.logins, params, _LOGINS_MAP)
-
-        # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
-        if instance.name != "_MGMTDB" and instance.sid != "-MGMTDB" and not instance.pdb:
-            assert instance.log_mode is not None
-            yield _asses_property("Log Mode", instance.log_mode, params, _ARCHIVELOG_MAP)
-
-            # archivelog is only valid in non pdb
-            # force logging is only usable when archivelog is enabled
-            if instance.log_mode == "ARCHIVELOG":
-                if instance.archiver != "STARTED":
-                    assert instance.archiver is not None
-                    yield 2, f"Archiver {instance.archiver.lower()}"
-
-                assert instance.force_logging is not None
-                yield _asses_property(
-                    "Force Logging", instance.force_logging, params, _FORCELOGGING_MAP
-                )
+        yield from _check_archive_log(instance, params)
 
     if instance.pdb and instance.ptotal_size is not None:
         yield check_levels(
@@ -142,6 +123,31 @@ def _asses_property(
         0 if (key := key_map.get(value.upper())) is None else params[key],
         f"{label} {value.lower()}",
     )
+
+
+def _check_archive_log(instance: Instance, params: _Params) -> Iterable[tuple[int, str]]:
+    # logins are only possible when the database is open
+    if instance.openmode == "OPEN":
+        yield _asses_property("Logins", instance.logins, params, _LOGINS_MAP)
+
+    # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
+    if instance.name == "_MGMTDB" or instance.sid == "-MGMTDB" or instance.pdb:
+        return
+
+    assert instance.log_mode is not None
+    yield _asses_property("Log Mode", instance.log_mode, params, _ARCHIVELOG_MAP)
+
+    # archivelog is only valid in non pdb
+    # force logging is only usable when archivelog is enabled
+    if instance.log_mode != "ARCHIVELOG":
+        return
+
+    if instance.archiver != "STARTED":
+        assert instance.archiver is not None
+        yield 2, f"Archiver {instance.archiver.lower()}"
+
+    assert instance.force_logging is not None
+    yield _asses_property("Force Logging", instance.force_logging, params, _FORCELOGGING_MAP)
 
 
 check_info["oracle_instance"] = {

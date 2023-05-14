@@ -19,7 +19,7 @@ from cmk.base.api.agent_based.type_defs import (
     StringTable,
 )
 
-from ..utils_legacy import CheckInfoElement
+from .utils_legacy import CheckInfoElement
 
 
 def get_section_name(check_plugin_name: str) -> str:

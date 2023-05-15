@@ -45,3 +45,9 @@ def test_plugin(test_site: Site, tmp_path_factory: pytest.TempPathFactory) -> No
 
     output_dir = tmp_path_factory.mktemp("check_output")
     assert compare_check_output(test_site, output_dir), "Check output mismatch!"
+
+
+@pytest.mark.type("plugins-integration")
+@pytest.mark.update_checks
+def test_store_update_checks():
+    pass

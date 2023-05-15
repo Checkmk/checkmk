@@ -746,7 +746,7 @@ class ModeDistributedMonitoring(WatoMode):
         sites = sort_sites(self._site_mgmt.load_sites())
 
         if is_free():
-            html.show_message(get_free_message())
+            html.show_message(get_free_message(format_html=True))
 
         html.div("", id_="message_container")
         with table_element(

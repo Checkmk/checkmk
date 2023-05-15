@@ -9,7 +9,7 @@ import socket
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, NamedTuple
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -19,6 +19,7 @@ from tests.testlib.base import Scenario
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
+from cmk.utils import password_store
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
@@ -2826,3 +2827,164 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
         agent_based_register.get_section_plugin(SectionName("duplicate_plugin"))
         == registered_section
     )
+
+
+def test_commandline_arguments_basics() -> None:
+    assert (
+        config.commandline_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2")
+        == "args 123 -x 1 -y 2"
+    )
+
+    assert (
+        config.commandline_arguments(
+            HostName("bla"), "blub", ["args", "1; echo", "-x", "1", "-y", "2"]
+        )
+        == "args '1; echo' -x 1 -y 2"
+    )
+
+    assert (
+        config.commandline_arguments(
+            HostName("bla"), "blub", ["args", "1 2 3", "-d=2", "--hallo=eins", 9]
+        )
+        == "args '1 2 3' -d=2 --hallo=eins 9"
+    )
+
+    with pytest.raises(MKGeneralException):
+        config.commandline_arguments("bla", "blub", (1, 2))
+
+
+@pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", "aädg"])
+def test_commandline_arguments_password_store(pw: str) -> None:
+    password_store.save({"pw-id": pw})
+    assert config.commandline_arguments(
+        HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
+    ) == "--pwstore=2@11@pw-id arg1 '--password=%s' arg3" % ("*" * len(pw))
+
+
+def test_commandline_arguments_not_existing_password(  # type:ignore[no-untyped-def]
+    capsys,
+) -> None:
+    assert (
+        config.commandline_arguments(
+            HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
+        )
+        == "--pwstore=2@11@pw-id arg1 '--password=***' arg3"
+    )
+    stderr = capsys.readouterr().err
+    assert 'The stored password "pw-id" used by service "blub" on host "bla"' in stderr
+
+
+def test_commandline_arguments_wrong_types() -> None:
+    with pytest.raises(MKGeneralException):
+        config.commandline_arguments(HostName("bla"), "blub", 1)  # type: ignore[arg-type]
+
+    with pytest.raises(MKGeneralException):
+        config.commandline_arguments(HostName("bla"), "blub", (1, 2))
+
+
+def test_commandline_arguments_str() -> None:
+    assert (
+        config.commandline_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2")
+        == "args 123 -x 1 -y 2"
+    )
+
+
+def test_commandline_arguments_list() -> None:
+    assert config.commandline_arguments(HostName("bla"), "blub", ["a", "123"]) == "a 123"
+
+
+def test_commandline_arguments_list_with_numbers() -> None:
+    assert config.commandline_arguments(HostName("bla"), "blub", [1, 1.2]) == "1 1.2"
+
+
+def test_commandline_arguments_list_with_pwstore_reference() -> None:
+    assert (
+        config.commandline_arguments(
+            HostName("bla"), "blub", ["a", ("store", "pw1", "--password=%s")]
+        )
+        == "--pwstore=2@11@pw1 a '--password=***'"
+    )
+
+
+def test_commandline_arguments_list_with_invalid_type() -> None:
+    with pytest.raises(MKGeneralException):
+        config.commandline_arguments(HostName("bla"), "blub", [None])  # type: ignore[list-item]
+
+
+class TestSpecialAgentConfiguration(NamedTuple):
+    args: Sequence[str]
+    stdin: str | None
+
+
+# Hocus pocus...
+fun_args_stdin: tuple[tuple[config.SpecialAgentInfoFunctionResult, tuple[str, str | None]]] = (
+    ("arg0 arg;1", "arg0 arg;1", None),
+    (["arg0", "arg;1"], "arg0 'arg;1'", None),
+    (TestSpecialAgentConfiguration(["arg0"], None), "arg0", None),
+    (TestSpecialAgentConfiguration(["arg0", "arg;1"], None), "arg0 'arg;1'", None),
+    (TestSpecialAgentConfiguration(["list0", "list1"], None), "list0 list1", None),
+    (
+        TestSpecialAgentConfiguration(["arg0", "arg;1"], "stdin_blob"),
+        "arg0 'arg;1'",
+        "stdin_blob",
+    ),
+    (
+        TestSpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
+        "list0 list1",
+        "stdin_blob",
+    ),
+)  # type: ignore[assignment]
+
+
+class TestMakeSpecialAgentCmdline:
+    # ... and more hocus pocus.
+
+    @pytest.fixture(autouse=True)
+    def agent_dir(self, monkeypatch):
+        dir_ = Path("/tmp")
+        monkeypatch.setattr(cmk.utils.paths, "local_agents_dir", dir_)
+        monkeypatch.setattr(cmk.utils.paths, "agents_dir", dir_)
+        return dir_
+
+    @pytest.fixture
+    def agentname(self):
+        return "my_id"
+
+    @pytest.fixture(params=fun_args_stdin)
+    def patch_config(self, agentname, monkeypatch, request):
+        fun, args, stdin = request.param
+        monkeypatch.setitem(
+            config.special_agent_info,
+            agentname,
+            lambda a, b, c: fun,
+        )
+        return args, stdin
+
+    @pytest.fixture
+    def expected_args(self, patch_config):
+        return patch_config[0]
+
+    @pytest.fixture
+    def expected_stdin(self, patch_config):
+        return patch_config[1]
+
+    @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
+    def test_make_special_agent_cmdline(
+        self,
+        agentname,
+        ipaddress,
+        agent_dir,
+        expected_args,
+        monkeypatch,
+    ):
+        hostname = HostName("testhost")
+        params: dict[Any, Any] = {}
+        ts = Scenario()
+        ts.add_host(hostname)
+        config_cache = ts.apply(monkeypatch)
+
+        # end of setup
+
+        assert config_cache.make_special_agent_cmdline(hostname, ipaddress, agentname, params) == (
+            str(agent_dir / "special" / ("agent_%s" % agentname)) + " " + expected_args
+        )

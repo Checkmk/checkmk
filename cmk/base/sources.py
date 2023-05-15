@@ -145,6 +145,7 @@ class _Builder:
             for agentname, params in self.config_cache.special_agents(self.host_name):
                 with suppress(KeyError):
                     yield SpecialAgentSource(
+                        self.config_cache,
                         self.host_name,
                         self.ipaddress,
                         max_age=self.max_age_agent,

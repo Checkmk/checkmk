@@ -6,13 +6,12 @@
 import abc
 import dataclasses
 import os
-import shlex
 import shutil
 import socket
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
-from typing import Any, Literal, NamedTuple, Union
+from typing import Any, Literal, NamedTuple
 
 import cmk.utils.config_path
 import cmk.utils.config_warnings as config_warnings
@@ -24,7 +23,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicenseState, LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path, write_licensed_state
-from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.store import load_object_from_file, lock_checkmk_configuration, save_object_to_file
@@ -48,7 +46,6 @@ from cmk.base.nagios_utils import do_check_nagiosconfig
 
 CoreCommandName = str
 CoreCommand = str
-CheckCommandArguments = Iterable[Union[int, float, str, tuple[str, str, str]]]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -473,7 +470,7 @@ def iter_active_check_services(
     description = config.active_check_service_description(
         hostname, host_config.alias, check_name, params
     )
-    arguments = commandline_arguments(
+    arguments = config.commandline_arguments(
         hostname,
         description,
         active_info["argument_function"](params),
@@ -481,57 +478,6 @@ def iter_active_check_services(
     )
 
     yield description, arguments
-
-
-def _prepare_check_command(
-    command_spec: CheckCommandArguments,
-    hostname: HostName,
-    description: ServiceName | None,
-    stored_passwords: Mapping[str, str],
-) -> str:
-    """Prepares a check command for execution by Checkmk
-
-    In case a list is given it quotes element if necessary. It also prepares password store entries
-    for the command line. These entries will be completed by the executed program later to get the
-    password from the password store.
-    """
-    passwords: list[tuple[str, str, str]] = []
-    formatted: list[str] = []
-    for arg in command_spec:
-        if isinstance(arg, (int, float)):
-            formatted.append("%s" % arg)
-
-        elif isinstance(arg, str):
-            formatted.append(shlex.quote(arg))
-
-        elif isinstance(arg, tuple) and len(arg) == 3:
-            pw_ident, preformated_arg = arg[1:]
-            try:
-                password = stored_passwords[pw_ident]
-            except KeyError:
-                if hostname and description:
-                    descr = f' used by service "{description}" on host "{hostname}"'
-                elif hostname:
-                    descr = ' used by host host "%s"' % (hostname)
-                else:
-                    descr = ""
-
-                console.warning(
-                    f'The stored password "{pw_ident}"{descr} does not exist (anymore).'
-                )
-                password = "%%%"
-
-            pw_start_index = str(preformated_arg.index("%s"))
-            formatted.append(shlex.quote(preformated_arg % ("*" * len(password))))
-            passwords.append((str(len(formatted)), pw_start_index, pw_ident))
-
-        else:
-            raise MKGeneralException(f"Invalid argument for command line: {arg!r}")
-
-    if passwords:
-        formatted = ["--pwstore=%s" % ",".join(["@".join(p) for p in passwords])] + formatted
-
-    return " ".join(formatted)
 
 
 def get_active_check_descriptions(
@@ -569,72 +515,6 @@ def get_active_check_descriptions(
 #   +----------------------------------------------------------------------+
 #   | Command line arguments for special agents or active checks           |
 #   '----------------------------------------------------------------------'
-
-
-def commandline_arguments(
-    hostname: HostName,
-    description: ServiceName | None,
-    commandline_args: config.SpecialAgentInfoFunctionResult,
-    stored_passwords: Mapping[str, str] | None = None,
-) -> str:
-    """Commandline arguments for special agents or active checks."""
-    if isinstance(commandline_args, str):
-        return commandline_args
-
-    # Some special agents also have stdin configured
-    args = getattr(commandline_args, "args", commandline_args)
-
-    if not isinstance(args, list):
-        raise MKGeneralException(
-            "The check argument function needs to return either a list of arguments or a "
-            "string of the concatenated arguments (Host: %s, Service: %s)."
-            % (hostname, description)
-        )
-
-    return _prepare_check_command(
-        args,
-        hostname,
-        description,
-        cmk.utils.password_store.load() if stored_passwords is None else stored_passwords,
-    )
-
-
-def make_special_agent_cmdline(
-    hostname: HostName,
-    ipaddress: HostAddress | None,
-    agentname: str,
-    params: Mapping[str, object],
-) -> str:
-    """
-    Raises:
-        KeyError if the special agent is deactivated.
-
-    """
-
-    def _make_source_path(agentname: str) -> Path:
-        file_name = "agent_%s" % agentname
-        local_path = cmk.utils.paths.local_agents_dir / "special" / file_name
-        if local_path.exists():
-            return local_path
-        return Path(cmk.utils.paths.agents_dir) / "special" / file_name
-
-    def _make_source_args(
-        hostname: HostName,
-        ipaddress: HostAddress | None,
-        agentname: str,
-    ) -> str:
-        info_func = config.special_agent_info[agentname]
-        # TODO: CMK-3812 (see above)
-        agent_configuration = info_func(params, hostname, ipaddress)
-        return commandline_arguments(hostname, None, agent_configuration)
-
-    path = _make_source_path(agentname)
-    args = _make_source_args(
-        hostname,
-        ipaddress,
-        agentname,
-    )
-    return f"{path} {args}"
 
 
 def make_special_agent_stdin(

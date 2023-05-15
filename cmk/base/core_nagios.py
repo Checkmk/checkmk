@@ -544,11 +544,9 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             #                              If this is missing, we create a passive check
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,
             #                              we use "check-mk-custom"
-            # "has_perfdata"  (optional)   If present and True, we activate perf_data
             description = config.get_final_service_description(
                 hostname, entry["service_description"]
             )
-            has_perfdata = entry.get("has_perfdata", False)
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")
 
@@ -598,11 +596,10 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
             used_descriptions[description] = ("custom(%s)" % command_name, description)
 
-            template = "check_mk_perf," if has_perfdata else ""
             command = f"{command_name}!{command_line}"
 
             service_spec = {
-                "use": "%scheck_mk_default" % template,
+                "use": "check_mk_perf,check_mk_default",
                 "host_name": hostname,
                 "service_description": description,
                 "check_command": _simulate_command(cfg, command),

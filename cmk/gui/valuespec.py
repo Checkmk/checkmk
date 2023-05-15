@@ -3332,6 +3332,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[CascadingDropdownChoiceValue] = DEF_VALUE,
         validate: ValueSpecValidateFunc[CascadingDropdownChoiceValue] | None = None,
+        show_title_of_choices: bool = False,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
@@ -3364,6 +3365,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         # once the user selected this choice in case it was initially hidden.
         self._render_sub_vs_page_name = render_sub_vs_page_name
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
+        self._show_title_of_choices = show_title_of_choices
 
     def allow_empty(self) -> bool:
         return self._no_preselect_title is None
@@ -3482,6 +3484,8 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
     def show_sub_valuespec(self, varprefix: str, vs: ValueSpec, value: Any) -> None:
         html.help(vs.help())
+        if self._show_title_of_choices and (title_of_choice := vs.title()):
+            html.p(title_of_choice)
         vs.render_input(varprefix, value)
 
     def _show_sub_valuespec_container(

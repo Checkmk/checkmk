@@ -6,6 +6,7 @@ import logging
 import os
 import subprocess
 from collections.abc import Iterator
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -72,28 +73,24 @@ def run_as_site_user(site_name: str, cmd: list[str]) -> subprocess.CompletedProc
     return run_cmd(cmd)
 
 
-def cleanup_folders(site_id: str) -> None:
-    """Cleanup existing wato-agents and agent-output folders in the test site."""
-    wato_agents_path = "$OMD_ROOT/etc/check_mk/conf.d/wato/agents"
-    agent_output_path = "$OMD_ROOT/var/check_mk/agent_output"
+@dataclass
+class SiteFolders:
+    site_id: str
+    folders = ["$OMD_ROOT/etc/check_mk/conf.d/wato/agents", "$OMD_ROOT/var/check_mk/agent_output"]
 
-    LOGGER.info("Cleaning up wato-agents folder...")
-    assert run_as_site_user(site_id, ["rm", "-rf", wato_agents_path]).returncode == 0
+    def cleanup(self) -> "SiteFolders":
+        """Cleanup existing wato-agents and agent-output folders in the test site."""
+        for folder in self.folders:
+            LOGGER.info('Removing folder "%s"...', folder)
+            assert run_as_site_user(self.site_id, ["rm", "-rf", folder]).returncode == 0
+        return self
 
-    LOGGER.info("Cleaning up agent-output folder...")
-    assert run_as_site_user(site_id, ["rm", "-rf", agent_output_path]).returncode == 0
-
-
-def create_folders(site_id: str) -> None:
-    """Create wato-agents and agent-output folders in the test site."""
-    wato_agents_path = "$OMD_ROOT/etc/check_mk/conf.d/wato/agents"
-    agent_output_path = "$OMD_ROOT/var/check_mk/agent_output"
-
-    LOGGER.info("Creating wato-agents folder...")
-    assert run_as_site_user(site_id, ["mkdir", wato_agents_path]).returncode == 0
-
-    LOGGER.info("Creating agent-output folder...")
-    assert run_as_site_user(site_id, ["mkdir", agent_output_path]).returncode == 0
+    def create(self) -> "SiteFolders":
+        """Create wato-agents and agent-output folders in the test site."""
+        for folder in self.folders:
+            LOGGER.info('Creating folder "%s"...', folder)
+            assert run_as_site_user(self.site_id, ["mkdir", "-p", folder]).returncode == 0
+        return self
 
 
 def create_wato_hosts(site_id: str) -> None:

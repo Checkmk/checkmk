@@ -9,21 +9,19 @@ from tests.testlib.site import Site
 
 from .checks import compare_check_output
 from .conftest import (
-    cleanup_folders,
-    create_folders,
     create_wato_hosts,
     create_wato_rules,
     inject_agent_output,
     LOGGER,
     run_as_site_user,
+    SiteFolders,
 )
 
 
 def test_plugin(test_site: Site, tmp_path_factory: pytest.TempPathFactory) -> None:
     host_name = "test_agent_plugin_injected"
 
-    cleanup_folders(test_site.id)
-    create_folders(test_site.id)
+    SiteFolders(test_site.id).cleanup().create()
     create_wato_hosts(test_site.id)
     create_wato_rules(test_site.id)
     inject_agent_output(test_site.id)

@@ -8,7 +8,7 @@ import dataclasses
 import time
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,
@@ -52,41 +52,46 @@ def discover_f5_bigip_interfaces(section: Section) -> Iterable[tuple[str, dict]]
     yield from ((port, {}) for port, interface in section.items() if interface.state == 0)
 
 
-f5_bigip_interface_states = {
-    1: "down (has no link and is initialized)",
-    2: "disabled (has been forced down)",
-    3: "uninitialized (has not been initialized)",
-    4: "loopback (in loopback mode)",
-    5: "unpopulated (interface not physically populated)",
-}
-
-
 def check_f5_bigip_interfaces(item, _no_params, section):
     if (interface := section.get(item)) is None:
         return
 
+    match interface.state:
+        case 0:
+            yield 0, "Up"
+        case 1:
+            yield 2, "Down (has no link and is initialized)"
+        case 2:
+            yield 2, "Disabled (has been forced down)"
+        case 3:
+            yield 2, "Uninitialized (has not been initialized)"
+        case 4:
+            yield 2, "Loopback (in loopback mode)"
+        case 5:
+            yield 2, "Unpopulated (interface not physically populated)"
+        case unknown_state:
+            yield 3, f"Unknown state ({unknown_state})"
+
     if interface.state != 0:
-        yield (
-            2,
-            "State of {} is {}".format(
-                f5_bigip_interface_states.get(interface.state, "unhandled (%d)" % interface.state),
-                interface.port,
-            ),
-        )
         return
 
     this_time = int(time.time())
     value_store = get_value_store()
-    in_per_sec = get_rate(value_store, "in", this_time, interface.inbytes)
-    out_per_sec = get_rate(value_store, "out", this_time, interface.outbytes)
+    yield check_levels(
+        get_rate(value_store, "in", this_time, interface.inbytes),
+        "bytes_in",
+        None,
+        human_readable_func=render.iobandwidth,
+        infoname="In bytes",
+    )
 
-    inbytes_h = render.iobandwidth(in_per_sec)
-    outbytes_h = render.iobandwidth(out_per_sec)
-    perf = [
-        ("bytes_in", in_per_sec),
-        ("bytes_out", out_per_sec),
-    ]
-    yield 0, f"in bytes: {inbytes_h}, out bytes: {outbytes_h}", perf
+    yield check_levels(
+        get_rate(value_store, "out", this_time, interface.outbytes),
+        "bytes_out",
+        None,
+        human_readable_func=render.iobandwidth,
+        infoname="Out bytes",
+    )
 
 
 check_info["f5_bigip_interfaces"] = LegacyCheckDefinition(

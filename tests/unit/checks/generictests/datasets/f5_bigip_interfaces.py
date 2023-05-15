@@ -40,14 +40,9 @@ checks = {
             "1.1",
             {},
             [
-                (
-                    0,
-                    "in bytes: 0.00 B/s, out bytes: 0.00 B/s",
-                    [
-                        ("bytes_in", 0.0, None, None, None, None),
-                        ("bytes_out", 0.0, None, None, None, None),
-                    ],
-                )
+                (0, "Up", []),
+                (0, "In bytes: 0.00 B/s", [("bytes_in", 0.0)]),
+                (0, "Out bytes: 0.00 B/s", [("bytes_out", 0.0)]),
             ],
         ),
     ]

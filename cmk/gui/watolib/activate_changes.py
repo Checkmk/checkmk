@@ -158,13 +158,17 @@ class MKLicensingError(Exception):
     pass
 
 
-def get_free_message() -> str:
-    return _(
-        "Sorry, but your unlimited 30-day trial of Checkmk has ended. "
-        "Your Checkmk installation does not allow distributed setups after the 30-day trial period. "
-        "In case you want to test distributed setups, please contact us at "
-        "https://checkmk.com/contact"
+def get_free_message(format_html: bool = False) -> str:
+    subject = _("Trial period ended: Distributed setup not allowed")
+    body = _(
+        "Your trial period has ended, and your license state is automatically converted to 'Free'. "
+        "In this license state, a distributed setup is not allowed. In case you want to test "
+        "distributed setups, please contact us at "
     )
+    contact_link = "<a href='https://checkmk.com/contact'>https://checkmk.com/contact</a>"
+    if format_html:
+        return "<b>%s</b><br>%s%s" % (subject, body, contact_link)
+    return "%s\n%s%s" % (subject, body, "https://checkmk.com/contact")
 
 
 # TODO: find a way to make this more obvious/transparent in code

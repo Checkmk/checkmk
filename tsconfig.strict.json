@@ -51,7 +51,7 @@
         "./web/htdocs/js/modules/prediction.ts",
         "./web/htdocs/js/modules/bi.ts",
         //"./web/htdocs/js/modules/figures/cmk_stats.ts",
-        //"./web/htdocs/js/modules/figures/cmk_table.ts",
+        "./web/htdocs/js/modules/figures/cmk_table.ts",
         "./web/htdocs/js/modules/figures/cmk_figures.ts",
         //"./web/htdocs/js/modules/figures/cmk_figures_plugins.ts",
         "./web/htdocs/js/modules/quicksearch.ts",

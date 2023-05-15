@@ -13,7 +13,7 @@ from typing import Any, Dict, List, NoReturn, Optional
 from livestatus import QueryTypes, SingleSiteConnection
 
 # These variable will be substituted at 'make dist' time
-__version__ = "2.1.0p28"
+__version__ = "2.1.0p29"
 
 
 def dump_templates():

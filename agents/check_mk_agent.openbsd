@@ -125,7 +125,7 @@ section_openbsd_mem() {
 # shellcheck disable=SC2039 # In POSIX sh, set flag -A is undefined.
 section_misc_sections() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.1.0p28"
+    echo "Version: 2.1.0p29"
     echo "AgentOS: openbsd"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"

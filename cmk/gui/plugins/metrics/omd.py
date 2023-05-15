@@ -32,7 +32,7 @@ metric_info["omd_rrd_size"] = {
     "unit": "bytes",
     "color": "21/a",
 }
-metric_info["pnp4nagios"] = {
+metric_info["omd_pnp4nagios_size"] = {
     "title": "Size of PNP4Nagios",
     "unit": "bytes",
     "color": "21/b",

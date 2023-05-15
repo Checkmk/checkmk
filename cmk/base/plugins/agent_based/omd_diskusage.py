@@ -49,6 +49,7 @@ SPECS: Final = [
     Spec(metric_name="omd_agents_size", path="var/check_mk/agents/", label="Agents"),
     Spec(metric_name="omd_history_size", path="var/mkeventd/history/", label="History"),
     Spec(metric_name="omd_core_size", path="var/check_mk/core/", label="Core"),
+    Spec(metric_name="omd_pnp4nagios_size", path="/var/pnp4nagios/", label="PNP4Nagios"),
     Spec(
         metric_name="omd_inventory_size", path="var/check_mk/inventory_archive/", label="Inventory"
     ),

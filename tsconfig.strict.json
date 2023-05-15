@@ -57,7 +57,10 @@
         "./web/htdocs/js/modules/quicksearch.ts",
         "./web/htdocs/js/modules/webauthn.ts",
         "./web/htdocs/js/modules/search.ts",
-        "./enterprise/web/htdocs/js/modules/figures/cmk_tabs.ts"
+        "./enterprise/web/htdocs/js/modules/figures/cmk_tabs.ts",
+        "./enterprise/web/htdocs/js/modules/figures/cmk_state.ts",
+        "./enterprise/web/htdocs/js/modules/figures/cmk_inventory.ts",
+        "./enterprise/web/htdocs/js/modules/figures/cmk_state_summary.ts"
     ],
     "exclude": [
         "./web/**/*",

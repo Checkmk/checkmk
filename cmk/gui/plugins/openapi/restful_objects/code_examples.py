@@ -145,11 +145,13 @@ PASSWORD="{{ password }}"
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 out=$(
-  curl \\
+  curl {%- if includes_redirect %} -L {%- endif %} \\
 {%- if query_params %}
     -G \\
 {%- endif %}
+    {%- if not includes_redirect %}
     --request {{ request_method | upper }} \\
+    {%- endif %}
     --write-out "\\nxxx-status_code=%{http_code}\\n" \\
     --header "Authorization: Bearer $USERNAME $PASSWORD" \\
     --header "Accept: {{ endpoint.content_type }}" \\
@@ -497,30 +499,35 @@ def code_samples(  # type:ignore[no-untyped-def]
 
     """
     env = _jinja_environment()
-
-    return [
-        {
-            "label": example.label,
-            "lang": example.lang,
-            "source": env.get_template(example.label)
-            .render(
-                hostname="localhost",
-                site=omd_site(),
-                username="automation",
-                password="test123",
-                endpoint=endpoint,
-                path_params=to_openapi(path_params, "path"),
-                query_params=to_openapi(query_params, "query"),
-                header_params=to_openapi(header_params, "header"),
-                request_endpoint=endpoint.path,
-                request_method=endpoint.method,
-                request_schema=_get_schema(endpoint.request_schema),
-                request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
-            )
-            .strip(),
-        }
-        for example in CODE_EXAMPLES
-    ]
+    result: list[CodeSample] = []
+    for example in CODE_EXAMPLES:
+        schema = _get_schema(endpoint.request_schema)
+        result.append(
+            {
+                "label": example.label,
+                "lang": example.lang,
+                "source": env.get_template(example.label)
+                .render(
+                    hostname="localhost",
+                    site=omd_site(),
+                    username="automation",
+                    password="test123",
+                    endpoint=endpoint,
+                    path_params=to_openapi(path_params, "path"),
+                    query_params=to_openapi(query_params, "query"),
+                    header_params=to_openapi(header_params, "header"),
+                    includes_redirect="redirect" in schema.declared_fields
+                    if schema is not None
+                    else False,
+                    request_endpoint=endpoint.path,
+                    request_method=endpoint.method,
+                    request_schema=schema,
+                    request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
+                )
+                .strip(),
+            }
+        )
+    return result
 
 
 def format_nicely(obj: object) -> str:

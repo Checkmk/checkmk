@@ -153,18 +153,12 @@ class UpdateResult:
         return "\n".join(lines) + "\n"
 
 
-#   .--add pairs or rows---------------------------------------------------.
-#   |                 _     _               _                              |
-#   |        __ _  __| | __| |  _ __   __ _(_)_ __ ___    ___  _ __        |
-#   |       / _` |/ _` |/ _` | | '_ \ / _` | | '__/ __|  / _ \| '__|       |
-#   |      | (_| | (_| | (_| | | |_) | (_| | | |  \__ \ | (_) | |          |
-#   |       \__,_|\__,_|\__,_| | .__/ \__,_|_|_|  |___/  \___/|_|          |
-#   |                          |_|                                         |
-#   |                                                                      |
-#   |                        _ __ _____      _____                         |
-#   |                       | '__/ _ \ \ /\ / / __|                        |
-#   |                       | | | (_) \ V  V /\__ \                        |
-#   |                       |_|  \___/ \_/\_/ |___/                        |
+#   .--mutable tree--------------------------------------------------------.
+#   |                      _        _     _        _                       |
+#   |      _ __ ___  _   _| |_ __ _| |__ | | ___  | |_ _ __ ___  ___       |
+#   |     | '_ ` _ \| | | | __/ _` | '_ \| |/ _ \ | __| '__/ _ \/ _ \      |
+#   |     | | | | | | |_| | || (_| | |_) | |  __/ | |_| | |  __/  __/      |
+#   |     |_| |_| |_|\__,_|\__\__,_|_.__/|_|\___|  \__|_|  \___|\___|      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
@@ -194,12 +188,18 @@ class MutableTree:
 
 
 # .
-#   .--filter tree---------------------------------------------------------.
-#   |               __ _ _ _              _                                |
-#   |              / _(_) | |_ ___ _ __  | |_ _ __ ___  ___                |
-#   |             | |_| | | __/ _ \ '__| | __| '__/ _ \/ _ \               |
-#   |             |  _| | | ||  __/ |    | |_| | |  __/  __/               |
-#   |             |_| |_|_|\__\___|_|     \__|_|  \___|\___|               |
+#   .--immutable tree------------------------------------------------------.
+#   |          _                           _        _     _                |
+#   |         (_)_ __ ___  _ __ ___  _   _| |_ __ _| |__ | | ___           |
+#   |         | | '_ ` _ \| '_ ` _ \| | | | __/ _` | '_ \| |/ _ \          |
+#   |         | | | | | | | | | | | | |_| | || (_| | |_) | |  __/          |
+#   |         |_|_| |_| |_|_| |_| |_|\__,_|\__\__,_|_.__/|_|\___|          |
+#   |                                                                      |
+#   |                          _                                           |
+#   |                         | |_ _ __ ___  ___                           |
+#   |                         | __| '__/ _ \/ _ \                          |
+#   |                         | |_| | |  __/  __/                          |
+#   |                          \__|_|  \___|\___|                          |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
@@ -217,7 +217,7 @@ def _filter_table(table: Table, filter_func: SDFilterFunc) -> Table:
     return filtered
 
 
-def _filter_node(node: StructuredDataNode, filters: Sequence[SDFilter]) -> StructuredDataNode:
+def _filter_node(node: StructuredDataNode, filters: Iterable[SDFilter]) -> StructuredDataNode:
     filtered = StructuredDataNode(name=node.name, path=node.path)
 
     for f in filters:
@@ -236,23 +236,6 @@ def _filter_node(node: StructuredDataNode, filters: Sequence[SDFilter]) -> Struc
                 filtered_node.add_node(sub_node)
 
     return filtered
-
-
-def filter_tree(tree: object, filters: Sequence[SDFilter]) -> StructuredDataNode:
-    if not isinstance(tree, StructuredDataNode):
-        raise TypeError(f"Cannot filter {type(tree)}")
-    return _filter_node(tree, filters)
-
-
-# .
-#   .--merge trees---------------------------------------------------------.
-#   |                                       _                              |
-#   |       _ __ ___   ___ _ __ __ _  ___  | |_ _ __ ___  ___  ___         |
-#   |      | '_ ` _ \ / _ \ '__/ _` |/ _ \ | __| '__/ _ \/ _ \/ __|        |
-#   |      | | | | | |  __/ | | (_| |  __/ | |_| | |  __/  __/\__ \        |
-#   |      |_| |_| |_|\___|_|  \__, |\___|  \__|_|  \___|\___||___/        |
-#   |                          |___/                                       |
-#   '----------------------------------------------------------------------'
 
 
 def _merge_attributes(attributes_lhs: Attributes, attributes_rhs: Attributes) -> Attributes:
@@ -323,23 +306,6 @@ def _merge_nodes(node_lhs: StructuredDataNode, node_rhs: StructuredDataNode) -> 
         node.add_node(node_lhs.nodes_by_name[key])
 
     return node
-
-
-def merge_trees(tree_lhs: object, tree_rhs: object) -> StructuredDataNode:
-    if not (isinstance(tree_lhs, StructuredDataNode) and isinstance(tree_rhs, StructuredDataNode)):
-        raise TypeError(f"Cannot merge {type(tree_lhs)} and {type(tree_rhs)}")
-    return _merge_nodes(tree_lhs, tree_rhs)
-
-
-# .
-#   .--compare trees-------------------------------------------------------.
-#   |                                             _                        |
-#   |   ___ ___  _ __ ___  _ __   __ _ _ __ ___  | |_ _ __ ___  ___  ___   |
-#   |  / __/ _ \| '_ ` _ \| '_ \ / _` | '__/ _ \ | __| '__/ _ \/ _ \/ __|  |
-#   | | (_| (_) | | | | | | |_) | (_| | | |  __/ | |_| | |  __/  __/\__ \  |
-#   |  \___\___/|_| |_| |_| .__/ \__,_|_|  \___|  \__|_|  \___|\___||___/  |
-#   |                     |_|                                              |
-#   '----------------------------------------------------------------------'
 
 
 def _new_delta_tree_node(value: SDValue) -> tuple[None, SDValue]:
@@ -481,10 +447,147 @@ def _compare_nodes(
     )
 
 
-def compare_trees(tree_lhs: object, tree_rhs: object) -> DeltaStructuredDataNode:
-    if not (isinstance(tree_lhs, StructuredDataNode) and isinstance(tree_rhs, StructuredDataNode)):
-        raise TypeError(f"Cannot compare {type(tree_lhs)} and {type(tree_rhs)}")
-    return _compare_nodes(tree_lhs, tree_rhs)
+class ImmutableTree:
+    def __init__(self, tree: StructuredDataNode) -> None:
+        self.tree: Final = tree
+
+    def filter(self, filters: Iterable[SDFilter]) -> ImmutableTree:
+        return ImmutableTree(_filter_node(self.tree, filters))
+
+    def merge(self, tree_rhs: StructuredDataNode) -> ImmutableTree:
+        return ImmutableTree(_merge_nodes(self.tree, tree_rhs))
+
+    def difference(self, tree_rhs: StructuredDataNode) -> ImmutableDeltaTree:
+        return ImmutableDeltaTree(_compare_nodes(self.tree, tree_rhs))
+
+
+def _filter_delta_attributes(
+    delta_attributes: DeltaAttributes, filter_func: SDFilterFunc
+) -> DeltaAttributes:
+    return DeltaAttributes(
+        path=delta_attributes.path, pairs=_get_filtered_dict(delta_attributes.pairs, filter_func)
+    )
+
+
+def _filter_delta_table(delta_table: DeltaTable, filter_func: SDFilterFunc) -> DeltaTable:
+    return DeltaTable(
+        path=delta_table.path,
+        key_columns=delta_table.key_columns,
+        rows=[
+            filtered_row
+            for row in delta_table.rows
+            if (filtered_row := _get_filtered_dict(row, filter_func))
+        ],
+    )
+
+
+def _filter_delta_node(
+    delta_tree: DeltaStructuredDataNode, filters: Iterable[SDFilter]
+) -> DeltaStructuredDataNode:
+    filtered = DeltaStructuredDataNode(
+        name=delta_tree.name,
+        path=delta_tree.path,
+        attributes=DeltaAttributes(path=delta_tree.path, pairs={}),
+        table=DeltaTable(path=delta_tree.path, key_columns=[], rows=[]),
+        _nodes={},
+    )
+
+    for f in filters:
+        # First check if node exists
+        node = delta_tree.get_node(f.path)
+        if node is None:
+            continue
+
+        filtered.add_node(
+            node.path,
+            DeltaStructuredDataNode(
+                name=node.name,
+                path=node.path,
+                attributes=_filter_delta_attributes(node.attributes, f.filter_attributes),
+                table=_filter_delta_table(node.table, f.filter_columns),
+                _nodes={child.name: child for child in node.nodes if f.filter_nodes(child.name)},
+            ),
+        )
+
+    return filtered
+
+
+def _merge_delta_attributes(
+    delta_attributes_lhs: DeltaAttributes, delta_attributes_rhs: DeltaAttributes
+) -> DeltaAttributes:
+    return DeltaAttributes(
+        path=delta_attributes_lhs.path,
+        pairs={
+            **delta_attributes_lhs.pairs,
+            **delta_attributes_rhs.pairs,
+        },
+    )
+
+
+def _merge_delta_table(delta_table_lhs: DeltaTable, delta_table_rhs: DeltaTable) -> DeltaTable:
+    delta_key_columns = []
+    for key_column in delta_table_lhs.key_columns:
+        if key_column not in delta_key_columns:
+            delta_key_columns.append(key_column)
+    for key_column in delta_table_rhs.key_columns:
+        if key_column not in delta_key_columns:
+            delta_key_columns.append(key_column)
+
+    delta_rows = []
+    for row in delta_table_lhs.rows:
+        if row not in delta_rows:
+            delta_rows.append(row)
+    for row in delta_table_rhs.rows:
+        if row not in delta_rows:
+            delta_rows.append(row)
+
+    return DeltaTable(
+        path=delta_table_lhs.path,
+        key_columns=delta_key_columns,
+        rows=delta_rows,
+    )
+
+
+def _merge_delta_nodes(
+    delta_node_lhs: DeltaStructuredDataNode, delta_node_rhs: DeltaStructuredDataNode
+) -> DeltaStructuredDataNode:
+    delta_nodes = {}
+
+    compared_keys = _compare_dict_keys(
+        old_dict=delta_node_lhs.nodes_by_name,
+        new_dict=delta_node_rhs.nodes_by_name,
+    )
+
+    for key in compared_keys.only_old:
+        delta_nodes[key] = delta_node_lhs.nodes_by_name[key]
+
+    for key in compared_keys.both:
+        delta_nodes[key] = _merge_delta_nodes(
+            delta_node_lhs.nodes_by_name[key],
+            delta_node_rhs.nodes_by_name[key],
+        )
+
+    for key in compared_keys.only_new:
+        delta_nodes[key] = delta_node_rhs.nodes_by_name[key]
+
+    return DeltaStructuredDataNode(
+        name=delta_node_lhs.name,
+        path=delta_node_lhs.path,
+        attributes=_merge_delta_attributes(delta_node_lhs.attributes, delta_node_rhs.attributes),
+        table=_merge_delta_table(delta_node_lhs.table, delta_node_rhs.table),
+        _nodes=delta_nodes,
+    )
+
+
+class ImmutableDeltaTree:
+    def __init__(self, tree: DeltaStructuredDataNode) -> None:
+        self.tree: Final = tree
+
+    def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
+        return ImmutableDeltaTree(_filter_delta_node(self.tree, filters))
+
+    def merge(self, tree_rhs: DeltaStructuredDataNode) -> ImmutableDeltaTree:
+        return ImmutableDeltaTree(_merge_delta_nodes(self.tree, tree_rhs))
 
 
 # .
@@ -1234,124 +1337,6 @@ class Attributes:
 #   |              \__,_|\___|_|\__\__,_|  \__|_|  \___|\___|              |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def _filter_delta_attributes(
-    delta_attributes: DeltaAttributes, filter_func: SDFilterFunc
-) -> DeltaAttributes:
-    return DeltaAttributes(
-        path=delta_attributes.path, pairs=_get_filtered_dict(delta_attributes.pairs, filter_func)
-    )
-
-
-def _filter_delta_table(delta_table: DeltaTable, filter_func: SDFilterFunc) -> DeltaTable:
-    return DeltaTable(
-        path=delta_table.path,
-        key_columns=delta_table.key_columns,
-        rows=[
-            filtered_row
-            for row in delta_table.rows
-            if (filtered_row := _get_filtered_dict(row, filter_func))
-        ],
-    )
-
-
-def filter_delta_tree(
-    delta_tree: DeltaStructuredDataNode, filters: Sequence[SDFilter]
-) -> DeltaStructuredDataNode:
-    filtered = DeltaStructuredDataNode(
-        name=delta_tree.name,
-        path=delta_tree.path,
-        attributes=DeltaAttributes(path=delta_tree.path, pairs={}),
-        table=DeltaTable(path=delta_tree.path, key_columns=[], rows=[]),
-        _nodes={},
-    )
-
-    for f in filters:
-        # First check if node exists
-        node = delta_tree.get_node(f.path)
-        if node is None:
-            continue
-
-        filtered.add_node(
-            node.path,
-            DeltaStructuredDataNode(
-                name=node.name,
-                path=node.path,
-                attributes=_filter_delta_attributes(node.attributes, f.filter_attributes),
-                table=_filter_delta_table(node.table, f.filter_columns),
-                _nodes={child.name: child for child in node.nodes if f.filter_nodes(child.name)},
-            ),
-        )
-
-    return filtered
-
-
-def _merge_delta_attributes(
-    delta_attributes_lhs: DeltaAttributes, delta_attributes_rhs: DeltaAttributes
-) -> DeltaAttributes:
-    return DeltaAttributes(
-        path=delta_attributes_lhs.path,
-        pairs={
-            **delta_attributes_lhs.pairs,
-            **delta_attributes_rhs.pairs,
-        },
-    )
-
-
-def _merge_delta_table(delta_table_lhs: DeltaTable, delta_table_rhs: DeltaTable) -> DeltaTable:
-    delta_key_columns = []
-    for key_column in delta_table_lhs.key_columns:
-        if key_column not in delta_key_columns:
-            delta_key_columns.append(key_column)
-    for key_column in delta_table_rhs.key_columns:
-        if key_column not in delta_key_columns:
-            delta_key_columns.append(key_column)
-
-    delta_rows = []
-    for row in delta_table_lhs.rows:
-        if row not in delta_rows:
-            delta_rows.append(row)
-    for row in delta_table_rhs.rows:
-        if row not in delta_rows:
-            delta_rows.append(row)
-
-    return DeltaTable(
-        path=delta_table_lhs.path,
-        key_columns=delta_key_columns,
-        rows=delta_rows,
-    )
-
-
-def _merge_delta_nodes(
-    delta_node_lhs: DeltaStructuredDataNode, delta_node_rhs: DeltaStructuredDataNode
-) -> DeltaStructuredDataNode:
-    delta_nodes = {}
-
-    compared_keys = _compare_dict_keys(
-        old_dict=delta_node_lhs.nodes_by_name,
-        new_dict=delta_node_rhs.nodes_by_name,
-    )
-
-    for key in compared_keys.only_old:
-        delta_nodes[key] = delta_node_lhs.nodes_by_name[key]
-
-    for key in compared_keys.both:
-        delta_nodes[key] = _merge_delta_nodes(
-            delta_node_lhs.nodes_by_name[key],
-            delta_node_rhs.nodes_by_name[key],
-        )
-
-    for key in compared_keys.only_new:
-        delta_nodes[key] = delta_node_rhs.nodes_by_name[key]
-
-    return DeltaStructuredDataNode(
-        name=delta_node_lhs.name,
-        path=delta_node_lhs.path,
-        attributes=_merge_delta_attributes(delta_node_lhs.attributes, delta_node_rhs.attributes),
-        table=_merge_delta_table(delta_node_lhs.table, delta_node_rhs.table),
-        _nodes=delta_nodes,
-    )
 
 
 @dataclass(frozen=True)

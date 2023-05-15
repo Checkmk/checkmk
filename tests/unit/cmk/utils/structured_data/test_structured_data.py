@@ -17,12 +17,10 @@ from cmk.utils.structured_data import (
     _compare_attributes,
     _compare_tables,
     Attributes,
-    compare_trees,
     DeltaStructuredDataNode,
-    filter_delta_tree,
-    filter_tree,
+    ImmutableDeltaTree,
+    ImmutableTree,
     make_filter,
-    merge_trees,
     parse_visible_raw_path,
     PermittedPath,
     RetentionIntervals,
@@ -283,7 +281,7 @@ def test_add_node() -> None:
 
 def test_compare_trees_self_1() -> None:
     empty_root = _create_empty_tree()
-    delta_tree0 = compare_trees(empty_root, empty_root)
+    delta_tree0 = ImmutableTree(empty_root).difference(empty_root).tree
     delta_result0 = delta_tree0.count_entries()
     assert delta_result0["new"] == 0
     assert delta_result0["changed"] == 0
@@ -291,7 +289,7 @@ def test_compare_trees_self_1() -> None:
     assert delta_tree0.is_empty()
 
     filled_root = _create_filled_tree()
-    delta_tree1 = compare_trees(filled_root, filled_root)
+    delta_tree1 = ImmutableTree(filled_root).difference(filled_root).tree
     delta_result1 = delta_tree1.count_entries()
     assert delta_result1["new"] == 0
     assert delta_result1["changed"] == 0
@@ -304,33 +302,36 @@ def test_compare_trees_1() -> None:
     empty_root = _create_empty_tree()
     filled_root = _create_filled_tree()
 
-    delta_tree0 = compare_trees(empty_root, filled_root)
+    delta_tree0 = ImmutableTree(empty_root).difference(filled_root).tree
     delta_result0 = delta_tree0.count_entries()
     assert delta_result0["new"] == 0
     assert delta_result0["changed"] == 0
     assert delta_result0["removed"] == 12
 
-    delta_tree1 = compare_trees(filled_root, empty_root)
+    delta_tree1 = ImmutableTree(filled_root).difference(empty_root).tree
     delta_result1 = delta_tree1.count_entries()
     assert delta_result1["new"] == 12
     assert delta_result1["changed"] == 0
     assert delta_result1["removed"] == 0
 
-    assert filter_delta_tree(delta_tree1, []).is_empty()
+    assert ImmutableDeltaTree(delta_tree1).filter([]).tree.is_empty()
 
 
 def test_filter_delta_tree_nt() -> None:
-    filtered = filter_delta_tree(
-        compare_trees(_create_filled_tree(), _create_empty_tree()),
-        [
-            SDFilter(
-                path=("path", "to", "nta", "nt"),
-                filter_nodes=lambda n: False,
-                filter_attributes=lambda k: k in ["nt1"],
-                filter_columns=lambda k: k in ["nt1"],
-            )
-        ],
-    )
+    filtered = (
+        ImmutableTree(_create_filled_tree())
+        .difference(_create_empty_tree())
+        .filter(
+            [
+                SDFilter(
+                    path=("path", "to", "nta", "nt"),
+                    filter_nodes=lambda n: False,
+                    filter_attributes=lambda k: k in ["nt1"],
+                    filter_columns=lambda k: k in ["nt1"],
+                )
+            ],
+        )
+    ).tree
 
     assert filtered.get_node(("path", "to", "nta", "na")) is None
     assert filtered.get_node(("path", "to", "nta", "ta")) is None
@@ -350,17 +351,20 @@ def test_filter_delta_tree_nt() -> None:
 
 
 def test_filter_delta_tree_na() -> None:
-    filtered = filter_delta_tree(
-        compare_trees(_create_filled_tree(), _create_empty_tree()),
-        [
-            SDFilter(
-                path=("path", "to", "nta", "na"),
-                filter_nodes=lambda n: False,
-                filter_attributes=lambda k: k in ["na1"],
-                filter_columns=lambda k: k in ["na1"],
-            )
-        ],
-    )
+    filtered = (
+        ImmutableTree(_create_filled_tree())
+        .difference(_create_empty_tree())
+        .filter(
+            [
+                SDFilter(
+                    path=("path", "to", "nta", "na"),
+                    filter_nodes=lambda n: False,
+                    filter_attributes=lambda k: k in ["na1"],
+                    filter_columns=lambda k: k in ["na1"],
+                )
+            ],
+        )
+    ).tree
 
     assert filtered.get_node(("path", "to", "nta", "nt")) is None
     assert filtered.get_node(("path", "to", "nta", "ta")) is None
@@ -375,16 +379,20 @@ def test_filter_delta_tree_na() -> None:
 
 
 def test_filter_delta_tree_ta() -> None:
-    filtered = filter_delta_tree(
-        compare_trees(_create_filled_tree(), _create_empty_tree()),
-        [
-            SDFilter(
-                path=("path", "to", "nta", "ta"),
-                filter_nodes=lambda n: False,
-                filter_attributes=lambda k: k in ["ta1"],
-                filter_columns=lambda k: k in ["ta1"],
-            )
-        ],
+    filtered = (
+        ImmutableTree(_create_filled_tree())
+        .difference(_create_empty_tree())
+        .filter(
+            [
+                SDFilter(
+                    path=("path", "to", "nta", "ta"),
+                    filter_nodes=lambda n: False,
+                    filter_attributes=lambda k: k in ["ta1"],
+                    filter_columns=lambda k: k in ["ta1"],
+                )
+            ],
+        )
+        .tree
     )
 
     assert filtered.get_node(("path", "to", "nta", "nt")) is None
@@ -405,22 +413,26 @@ def test_filter_delta_tree_ta() -> None:
 
 
 def test_filter_delta_tree_nta_ta() -> None:
-    filtered = filter_delta_tree(
-        compare_trees(_create_filled_tree(), _create_empty_tree()),
-        [
-            SDFilter(
-                path=("path", "to", "nta", "ta"),
-                filter_nodes=lambda n: False,
-                filter_attributes=lambda k: k in ["ta0"],
-                filter_columns=lambda k: k in ["ta0"],
-            ),
-            SDFilter(
-                path=("path", "to", "nta", "ta"),
-                filter_nodes=lambda n: False,
-                filter_attributes=lambda k: k in ["ta1"],
-                filter_columns=lambda k: k in ["ta1"],
-            ),
-        ],
+    filtered = (
+        ImmutableTree(_create_filled_tree())
+        .difference(_create_empty_tree())
+        .filter(
+            [
+                SDFilter(
+                    path=("path", "to", "nta", "ta"),
+                    filter_nodes=lambda n: False,
+                    filter_attributes=lambda k: k in ["ta0"],
+                    filter_columns=lambda k: k in ["ta0"],
+                ),
+                SDFilter(
+                    path=("path", "to", "nta", "ta"),
+                    filter_nodes=lambda n: False,
+                    filter_attributes=lambda k: k in ["ta1"],
+                    filter_columns=lambda k: k in ["ta1"],
+                ),
+            ],
+        )
+        .tree
     )
 
     assert filtered.get_node(("path", "to", "nta", "nt")) is None
@@ -595,13 +607,13 @@ def test__compare_tables_row_keys(
 
 def test_filter_tree_no_paths() -> None:
     filled_root = _create_filled_tree()
-    assert filter_tree(filled_root, []).is_empty()
+    assert ImmutableTree(filled_root).filter([]).tree.is_empty()
 
 
 def test_filter_tree_wrong_node() -> None:
     filled_root = _create_filled_tree()
     filters = _make_filters([(("path", "to", "nta", "ta"), None)])
-    filtered = filter_tree(filled_root, filters)
+    filtered = ImmutableTree(filled_root).filter(filters).tree
     assert filtered.get_node(("path", "to", "nta", "na")) is None
     assert filtered.get_node(("path", "to", "nta", "nt")) is None
 
@@ -609,7 +621,9 @@ def test_filter_tree_wrong_node() -> None:
 def test_filter_tree_paths_no_keys() -> None:
     filled_root = _create_filled_tree()
     filters = _make_filters([(("path", "to", "nta", "ta"), None)])
-    filtered_node = filter_tree(filled_root, filters).get_node(("path", "to", "nta", "ta"))
+    filtered_node = (
+        ImmutableTree(filled_root).filter(filters).tree.get_node(("path", "to", "nta", "ta"))
+    )
     assert filtered_node is not None
 
     assert not filtered_node.attributes.is_empty()
@@ -629,7 +643,9 @@ def test_filter_tree_paths_no_keys() -> None:
 def test_filter_tree_paths_and_keys() -> None:
     filled_root = _create_filled_tree()
     filters = _make_filters([(("path", "to", "nta", "ta"), ["ta1"])])
-    filtered_node = filter_tree(filled_root, filters).get_node(("path", "to", "nta", "ta"))
+    filtered_node = (
+        ImmutableTree(filled_root).filter(filters).tree.get_node(("path", "to", "nta", "ta"))
+    )
     assert filtered_node is not None
 
     assert not filtered_node.attributes.is_empty()
@@ -680,7 +696,7 @@ def test_filter_tree_mixed() -> None:
             (("path", "to", "nta", "ta"), ["ta0"]),
         ]
     )
-    filtered_node = filter_tree(filled_root, filters)
+    filtered_node = ImmutableTree(filled_root).filter(filters).tree
 
     # TODO 'serialize' only contains 8 entries because:
     # At the moment it's not possible to display attributes and table
@@ -891,7 +907,7 @@ def test_real_count_entries(tree_name: HostName, result: int) -> None:
 )
 def test_compare_trees_self_2(tree_name: HostName) -> None:
     tree = _get_tree_store().load(host_name=tree_name)
-    delta_result = compare_trees(tree, tree).count_entries()
+    delta_result = ImmutableTree(tree).difference(tree).tree.count_entries()
     assert (
         delta_result["new"],
         delta_result["changed"],
@@ -940,7 +956,7 @@ def test_compare_trees_2(
     tree_store = _get_tree_store()
     tree_old = tree_store.load(host_name=tree_name_old)
     tree_new = tree_store.load(host_name=tree_name_new)
-    delta_result = compare_trees(tree_new, tree_old).count_entries()
+    delta_result = ImmutableTree(tree_new).difference(tree_old).tree.count_entries()
     assert (
         delta_result["new"],
         delta_result["changed"],
@@ -1053,9 +1069,10 @@ def test_merge_trees_1(
 ) -> None:
     tree_store = _get_tree_store()
 
-    tree = merge_trees(
-        tree_store.load(host_name=HostName("tree_old_addresses")),
-        tree_store.load(host_name=tree_name),
+    tree = (
+        ImmutableTree(tree_store.load(host_name=HostName("tree_old_addresses")))
+        .merge(tree_store.load(host_name=tree_name))
+        .tree
     )
 
     assert id(tree) == id(tree)
@@ -1073,7 +1090,7 @@ def test_merge_trees_2() -> None:
     tree_store = _get_tree_store()
     tree_inv = tree_store.load(host_name=HostName("tree_inv"))
     tree_status = tree_store.load(host_name=HostName("tree_status"))
-    tree = merge_trees(tree_inv, tree_status)
+    tree = ImmutableTree(tree_inv).merge(tree_status).tree
     assert "foobar" in tree.serialize()["Nodes"]
     table = tree.get_table(("foobar",))
     assert table is not None
@@ -1099,7 +1116,7 @@ def test_real_filtered_tree(
     unavail: Sequence[tuple[str, str]],
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
-    filtered = filter_tree(tree, _make_filters(paths))
+    filtered = ImmutableTree(tree).filter(_make_filters(paths)).tree
     assert id(tree) != id(filtered)
     assert not tree.is_equal(filtered)
     for path in unavail:
@@ -1174,7 +1191,7 @@ def test_real_filtered_tree_networking(
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
     the_paths = list(paths)
-    filtered = filter_tree(tree, _make_filters(paths))
+    filtered = ImmutableTree(tree).filter(_make_filters(paths)).tree
     assert the_paths == paths
     assert filtered.get_node(("networking",)) is not None
     assert filtered.get_node(("hardware",)) is None
@@ -1228,7 +1245,7 @@ def test_delta_structured_data_tree_serialization(
 
     old_tree = tree_store.load(host_name=tree_name_old)
     new_tree = tree_store.load(host_name=tree_name_new)
-    delta_tree = compare_trees(old_tree, new_tree)
+    delta_tree = ImmutableTree(old_tree).difference(new_tree).tree
 
     delta_raw_tree = delta_tree.serialize()
     assert isinstance(delta_raw_tree, dict)

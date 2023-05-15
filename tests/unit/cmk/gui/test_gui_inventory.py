@@ -158,32 +158,6 @@ _StatusDataTree = StructuredDataNode.deserialize({"status": "node"})
 _MergedTree = StructuredDataNode.deserialize({"inv": "node", "status": "node"})
 
 
-@pytest.mark.parametrize(
-    "inventory_tree, status_data_tree, expected_tree",
-    [
-        (_InvTree, None, _InvTree),
-        (None, _StatusDataTree, _StatusDataTree),
-        (_InvTree, _StatusDataTree, _MergedTree),
-    ],
-)
-def test__merge_inventory_and_status_data_tree(
-    inventory_tree: StructuredDataNode | None,
-    status_data_tree: StructuredDataNode | None,
-    expected_tree: StructuredDataNode | None,
-) -> None:
-    merged_tree = cmk.gui.inventory._merge_inventory_and_status_data_tree(
-        inventory_tree,
-        status_data_tree,
-    )
-    assert merged_tree is not None
-    assert merged_tree.is_equal(expected_tree)
-
-
-def test__merge_inventory_and_status_data_tree_both_None() -> None:
-    merged_tree = cmk.gui.inventory._merge_inventory_and_status_data_tree(None, None)
-    assert merged_tree is None
-
-
 def test_get_history_empty() -> None:
     for hostname in [
         HostName("inv-host"),

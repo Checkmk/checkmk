@@ -26,13 +26,11 @@ import cmk.utils.regex
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.structured_data import (
-    compare_trees,
     DeltaStructuredDataNode,
-    filter_delta_tree,
-    filter_tree,
+    ImmutableDeltaTree,
+    ImmutableTree,
     load_tree,
     make_filter,
-    merge_trees,
     PermittedPath,
     SDFilter,
     SDKey,
@@ -136,8 +134,20 @@ def load_filtered_and_merged_tree(row: Row) -> StructuredDataNode | None:
     inventory_tree = _load_structured_data_tree("inventory", hostname)
     status_data_tree = _load_status_data_tree(hostname, row)
 
-    merged_tree = _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree)
-    return _filter_tree(merged_tree)
+    if inventory_tree is None:
+        return status_data_tree
+
+    if status_data_tree is None:
+        return inventory_tree
+
+    if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
+        return (
+            ImmutableTree(inventory_tree)
+            .merge(status_data_tree)
+            .filter([make_filter(entry) for entry in permitted_paths if entry])
+            .tree
+        )
+    return ImmutableTree(inventory_tree).merge(status_data_tree).tree
 
 
 def get_status_data_via_livestatus(site: livestatus.SiteId | None, hostname: HostName) -> Row:
@@ -244,9 +254,9 @@ def load_latest_delta_tree(hostname: HostName) -> DeltaStructuredDataNode | None
         if len(tree_paths) == 0:
             raise FilterInventoryHistoryPathsError()
         return FilteredInventoryHistoryPaths(
-            start_tree_path=InventoryHistoryPath.default()
-            if len(tree_paths) == 1
-            else tree_paths[-2],
+            start_tree_path=(
+                InventoryHistoryPath.default() if len(tree_paths) == 1 else tree_paths[-2]
+            ),
             tree_paths=[tree_paths[-1]],
         )
 
@@ -470,7 +480,7 @@ class _CachedDeltaTreeLoader:
         previous_tree: StructuredDataNode,
         current_tree: StructuredDataNode,
     ) -> HistoryEntry | None:
-        delta_tree = compare_trees(current_tree, previous_tree)
+        delta_tree = ImmutableTree(current_tree).difference(previous_tree).tree
         delta_result = delta_tree.count_entries()
         new = delta_result["new"]
         changed = delta_result["changed"]
@@ -489,7 +499,9 @@ class _CachedDeltaTreeLoader:
         if self.filters is None:
             return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
 
-        if (filtered_delta_tree := filter_delta_tree(delta_tree, self.filters)).is_empty():
+        if (
+            filtered_delta_tree := ImmutableDeltaTree(delta_tree).filter(self.filters).tree
+        ).is_empty():
             return None
 
         delta_result = filtered_delta_tree.count_entries()
@@ -551,29 +563,6 @@ def _load_status_data_tree(hostname: HostName | None, row: Row) -> StructuredDat
     if not raw_status_data_tree:
         return _load_structured_data_tree("status_data", hostname)
     return StructuredDataNode.deserialize(ast.literal_eval(raw_status_data_tree.decode("utf-8")))
-
-
-def _merge_inventory_and_status_data_tree(
-    inventory_tree: StructuredDataNode | None,
-    status_data_tree: StructuredDataNode | None,
-) -> StructuredDataNode | None:
-    if inventory_tree is None:
-        return status_data_tree
-
-    if status_data_tree is None:
-        return inventory_tree
-
-    return merge_trees(inventory_tree, status_data_tree)
-
-
-def _filter_tree(struct_tree: StructuredDataNode | None) -> StructuredDataNode | None:
-    if struct_tree is None:
-        return None
-
-    if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
-        return filter_tree(struct_tree, [make_filter(entry) for entry in permitted_paths if entry])
-
-    return struct_tree
 
 
 @request_memoize()
@@ -706,18 +695,20 @@ def inventory_of_host(host_name: HostName, api_request):  # type: ignore[no-unty
         return {}
 
     if "paths" in api_request:
-        merged_tree = filter_tree(
-            merged_tree,
-            [
-                make_filter(
-                    (inventory_path.path, [inventory_path.key] if inventory_path.key else None)
-                )
-                for raw_path in api_request["paths"]
-                for inventory_path in (InventoryPath.parse(raw_path),)
-            ],
+        return (
+            ImmutableTree(merged_tree)
+            .filter(
+                [
+                    make_filter(
+                        (inventory_path.path, [inventory_path.key] if inventory_path.key else None)
+                    )
+                    for raw_path in api_request["paths"]
+                    for inventory_path in (InventoryPath.parse(raw_path),)
+                ],
+            )
+            .tree.serialize()
         )
 
-    assert merged_tree is not None
     return merged_tree.serialize()
 
 

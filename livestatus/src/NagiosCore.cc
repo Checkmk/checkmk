@@ -83,6 +83,10 @@ NagiosCore::NagiosCore(
         ihostgroups_by_handle_[hg] = std::make_unique<NebHostGroup>(*hg);
     }
 
+    for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
+        iservicegroups_by_handle_[sg] = std::make_unique<NebServiceGroup>(*sg);
+    }
+
     for (const ::contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
         icontacts_[ctc] = std::make_unique<NebContact>(*ctc);
     }
@@ -140,6 +144,12 @@ std::unique_ptr<const IHost> NagiosCore::getHostByDesignation(
 const IService *NagiosCore::iservice(const ::service *handle) const {
     auto it = iservices_by_handle_.find(handle);
     return it == iservices_by_handle_.end() ? nullptr : it->second.get();
+}
+
+const IServiceGroup *NagiosCore::iservicegroup(
+    const ::servicegroup *handle) const {
+    auto it = iservicegroups_by_handle_.find(handle);
+    return it == iservicegroups_by_handle_.end() ? nullptr : it->second.get();
 }
 
 const IService *NagiosCore::find_service(

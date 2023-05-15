@@ -77,6 +77,7 @@ public:
     const IHostGroup *ihostgroup(const ::hostgroup *handle) const;
 
     const IService *iservice(const ::service *handle) const;
+    const IServiceGroup *iservicegroup(const ::servicegroup *handle) const;
 
     const IHost *find_host(const std::string &name) override;
     const IHostGroup *find_hostgroup(const std::string &name) const override;
@@ -231,6 +232,9 @@ private:
 
     std::unordered_map<const ::service *, std::unique_ptr<IService>>
         iservices_by_handle_;
+    std::unordered_map<const ::servicegroup *, std::unique_ptr<IServiceGroup>>
+        iservicegroups_by_handle_;
+    // host is never nullptr
 
     std::unordered_map<const ::contact *, std::unique_ptr<IContact>> icontacts_;
     std::unordered_map<const ::contactgroup *, std::unique_ptr<IContactGroup>>

@@ -161,9 +161,11 @@ class ModeBackgroundJobDetails(WatoMode):
             )
         else:
             job_snapshot: BackgroundStatusSnapshot | None = _get_job_snaphot(job)
-            if job_snapshot is not None:
+            if job_snapshot is not None and job.exists():
                 job_manager = gui_background_job.GUIBackgroundJobManager()
                 job_manager.show_job_details_from_snapshot(job_snapshot)
+            else:
+                html.show_message(_("Background job info is not available"))
 
 
 @page_registry.register_page("ajax_background_job_details")

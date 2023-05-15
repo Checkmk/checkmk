@@ -695,18 +695,21 @@ class Site:
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                logger.info('Executing .f12 in "%s"...', path)
-                assert (
-                    os.system(  # nosec
-                        'cd "%s" ; '
-                        "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
+                logger.info("Executing .f12 in '%s' ...", path)
+                try:
+                    subprocess.check_output(
+                        f"sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE={self.id} "
                         "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
-                        "bash .f12" % (path, self.id)
+                        "bash .f12",
+                        cwd=path,
+                        shell=True,
+                        stderr=subprocess.STDOUT,
+                        text=True,
                     )
-                    >> 8
-                    == 0
-                )
-                logger.info('Executing .f12 in "%s" DONE', path)
+                except subprocess.CalledProcessError as exc:
+                    logger.info("Executing .f12 in '%s' ... FAILED:\n%s", path, exc.output)
+                    raise
+                logger.info("Executing .f12 in '%s' ... DONE", path)
 
         assert (
             self.execute(["cmk-update-config"]).wait() == 0

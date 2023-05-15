@@ -467,8 +467,6 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     if actchecks:
         cfg.write("\n\n# Active checks\n")
         for acttype, act_info, params in actchecks:
-            has_perfdata = act_info.get("has_perfdata", False)
-
             # Make hostname available as global variable in argument functions
             with plugin_contexts.current_host(hostname):
                 for description, args in core_config.iter_active_check_services(
@@ -506,8 +504,6 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                     # TODO: is this right? description on the right, not item?
                     used_descriptions[description] = ("active(" + acttype + ")", description)
 
-                    template = "check_mk_perf," if has_perfdata else ""
-
                     if host_attrs["address"] in ["0.0.0.0", "::"]:
                         command_name = "check-mk-custom"
                         command = (
@@ -519,7 +515,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                         command = f"check_mk_active-{acttype}!{escaped_args}"
 
                     service_spec = {
-                        "use": "%scheck_mk_default" % template,
+                        "use": "check_mk_perf,check_mk_default",
                         "host_name": hostname,
                         "service_description": description,
                         "check_command": _simulate_command(cfg, command),

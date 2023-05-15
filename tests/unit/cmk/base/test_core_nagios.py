@@ -476,7 +476,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             id="active_check",
@@ -508,7 +508,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             id="offline_active_check",
@@ -545,7 +545,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             id="arguments_list",
@@ -578,7 +578,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             id="duplicate_active_checks",
@@ -619,7 +619,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           HTTP my special HTTP\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             id="old_service_description",
@@ -687,7 +687,7 @@ def test_create_nagios_servicedefs_active_check(
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           My description\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             "\n"
@@ -883,7 +883,7 @@ def test_create_nagios_servicedefs_invalid_args(
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n"
             "\n"

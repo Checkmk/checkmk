@@ -195,3 +195,10 @@ python(
     sha256 = PYTHON_SHA256,
     version_str = PYTHON_VERSION,
 )
+
+load("//packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios")
+
+pnp4nagios(
+    sha256 = "ab59a8a02d0f70de3cf89b12fe1e9216e4b1127bc29c04a036cd06dde72ee8fb",
+    version_str = "0.6.26",
+)

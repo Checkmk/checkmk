@@ -23,11 +23,6 @@ class Spec:
 
 @dataclass(frozen=True)
 class Directory:
-    spec: Spec
-
-
-@dataclass(frozen=True)
-class DirectoryWithValue(Directory):
     value: int
     spec: Spec
 
@@ -73,19 +68,13 @@ def sub_section_parser(string_table: StringTable) -> Iterator[tuple[str, Sequenc
         yield name, sub_section
 
 
-def _parse_line(spec: Spec, line: str) -> Directory:
-    if "No such file" in line:
-        return Directory(spec=spec)
-    return DirectoryWithValue(spec=spec, value=int(line.split()[0]))
-
-
 def parse(string_table: StringTable) -> Section:
     sites: dict[str, Site] = {}
     for section_name, lines in sub_section_parser(string_table):
         entries = []
         for line in lines:
             if spec := next((spec for spec in SPECS if spec.path in line), None):
-                entries.append(_parse_line(spec, line))
+                entries.append(Directory(spec=spec, value=int(line.split()[0])))
             else:
                 site = int(line.split()[0])
             sites[section_name.split()[1]] = Site(site, entries)
@@ -110,7 +99,7 @@ def check(item: str, section: Section) -> CheckResult:
     )
     for entry in sorted(site.entries, key=lambda x: x.spec.label):
         yield from check_levels(
-            entry.value if isinstance(entry, DirectoryWithValue) else 0,
+            entry.value,
             metric_name=entry.spec.metric_name,
             label=entry.spec.label,
             render_func=render.bytes,

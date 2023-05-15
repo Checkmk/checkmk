@@ -1085,20 +1085,28 @@ section_omd() {
             fi
         done
 
+        _du_no_errors() {
+            if [ -e "${1}" ]; then
+                output=$(du -bs "$1") && printf "%s\n" "${output}"
+            else
+                printf "0 %s\n" "${1}"
+            fi
+        }
+
         echo '<<<omd_diskusage:sep(0)>>>'
         for sitedir in /omd/sites/*; do
             site=${sitedir#/omd/sites/}
             echo "[site ${site}]"
-            du -bs "$sitedir"
-            du -bs "$sitedir/var/log"
-            du -bs "$sitedir/var/check_mk/rrd"
-            du -bs "$sitedir/var/pnp4nagios/"
-            du -bs "$sitedir/tmp/"
-            du -bs "$sitedir/local/"
-            du -bs "$sitedir/var/check_mk/agents/"
-            du -bs "$sitedir/var/mkeventd/history/"
-            du -bs "$sitedir/var/check_mk/core/"
-            du -bs "$sitedir/var/check_mk/inventory_archive/"
+            _du_no_errors "$sitedir"
+            _du_no_errors "$sitedir/var/log"
+            _du_no_errors "$sitedir/var/check_mk/rrd"
+            _du_no_errors "$sitedir/var/pnp4nagios/"
+            _du_no_errors "$sitedir/tmp/"
+            _du_no_errors "$sitedir/local/"
+            _du_no_errors "$sitedir/var/check_mk/agents/"
+            _du_no_errors "$sitedir/var/mkeventd/history/"
+            _du_no_errors "$sitedir/var/check_mk/core/"
+            _du_no_errors "$sitedir/var/check_mk/inventory_archive/"
         done
 
         echo '<<<omd_info:sep(59)>>>'

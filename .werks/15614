@@ -1,0 +1,15 @@
+Title: omd_diskusage: Do not Report Usage Upon Missing Permission
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1684162377
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This Werk affects users who use the check plugin <tt>omd_diskusage</tt> (a 2.2.0 feature).
+
+Previously, <tt>check_mk_agent.linux</tt> would report misleading information, if it had
+insufficient permissions to read the directories from <tt>/omd/sites/</tt>. With this change, these
+directories are skipped.

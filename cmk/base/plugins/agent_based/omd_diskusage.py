@@ -78,11 +78,13 @@ def parse(string_table: StringTable) -> Section:
     for site_name, lines in sub_section_parser(string_table):
         site_dir = f"/omd/sites/{site_name}"
         entries = []
+        site: None | int = None
         for line in lines:
             if spec := next((spec for spec in SPECS if line.endswith(spec.path(site_dir))), None):
                 entries.append(Directory(spec=spec, value=int(line.split()[0])))
             else:
                 site = int(line.split()[0])
+        if site is not None:
             sites[site_name] = Site(site, entries)
     return Section(sites)
 

@@ -1616,7 +1616,7 @@ class AutomationDiagHost(Automation):
             if source_info.fetcher_type is FetcherType.PROGRAM and cmd:
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
-                    cmdline=config_cache.translate_program_commandline(host_name, ipaddress, cmd),
+                    cmdline=config_cache.translate_commandline(host_name, ipaddress, cmd),
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,
                 )

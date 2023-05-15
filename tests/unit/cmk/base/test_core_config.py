@@ -326,7 +326,7 @@ def test_template_translation(
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.translate_program_commandline(
+    assert config_cache.translate_commandline(
         hostname, ipaddress, template
     ) == "<NOTHING>x{}x{}x<host>x<ip>x".format(ipaddress if ipaddress is not None else "", hostname)
 

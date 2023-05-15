@@ -1,0 +1,15 @@
+Title: <tt>cisco_qos</tt>: Interpret thresholds correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1684155079
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+There were two issues with applying the thresholds on the used bandwidth and the dropped bits in the
+Cisco QoS services:
+
+LI: There was a minor rounding issue regarding the absolute levels on the used bandwidth. If the measurement unit was set to Bits (the default), these levels were by mistake round down when converting them to bytes.
+LI: In case the available bandwidth is zero, any relative levels should not be applied, since this would lead to a permanent CRIT state. However, even absolute levels were not applied in case of zero bandwidth.

@@ -7,6 +7,7 @@
 # mypy: disable-error-code="var-annotated"
 
 import time
+from typing import Literal
 
 from cmk.base.check_api import (
     get_average,
@@ -245,24 +246,10 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
     bw = speed / 8.0
 
     # Determine post warn/crit levels
-    if isinstance(post_warn, float):
-        post_warn = bw / 100.0 * post_warn
-        post_crit = bw / 100.0 * post_crit
-    elif isinstance(post_warn, int):
-        if unit == "bit":
-            post_warn = post_warn // 8
-            post_crit = post_crit // 8
+    post_warn, post_crit = _compute_thresholds((post_warn, post_crit), bw, unit)
 
     # Determine drop warn/crit levels
-    if isinstance(drop_warn, float):
-        drop_warn = bw / 100.0 * drop_warn
-        drop_crit = bw / 100.0 * drop_crit
-    # Convert the drop levels to byte
-    elif unit == "bit":
-        if isinstance(drop_warn, int):
-            drop_warn = drop_warn / 8.0
-        if isinstance(drop_crit, int):
-            drop_crit = drop_crit / 8.0
+    drop_warn, drop_crit = _compute_thresholds((drop_warn, drop_crit), bw, unit)
 
     # Handle counter values
     state = 0
@@ -307,10 +294,10 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
         ("drop", drop_rate, drop_warn, drop_crit),
     ]:
         infotext += ", %s: %s" % (what, format_value(rate))
-        if crit is not None and rate >= crit and bw:
+        if crit is not None and rate >= crit:
             state = max(2, state)
             infotext += "(!!)"
-        elif warn is not None and rate >= warn and bw:
+        elif warn is not None and rate >= warn:
             state = max(1, state)
             infotext += "(!)"
 
@@ -319,6 +306,22 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
     else:
         infotext += ", Policy-Map-ID: %s, Int-Bandwidth: %s" % (policy_map_id, format_value(bw))
     return (state, infotext.lstrip(", "), perfdata)
+
+
+def _compute_thresholds(
+    raw_thresholds: tuple[float, float] | tuple[None, None],
+    bandwidth: float,
+    unit: Literal["bit", "byte"],
+) -> tuple[float, float] | tuple[None, None]:
+    if isinstance(raw_thresholds[0], float):
+        if bandwidth:
+            return bandwidth * raw_thresholds[0] / 100, bandwidth * raw_thresholds[1] / 100
+        return None, None
+    if isinstance(raw_thresholds[0], int):
+        if unit == "bit":
+            return raw_thresholds[0] / 8, raw_thresholds[1] / 8
+        return raw_thresholds
+    return raw_thresholds
 
 
 check_info["cisco_qos"] = LegacyCheckDefinition(

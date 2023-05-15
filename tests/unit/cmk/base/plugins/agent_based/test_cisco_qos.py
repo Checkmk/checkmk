@@ -926,13 +926,13 @@ _STRING_TABLE_ZERO_SPEED = [
             },
             [
                 Result(
-                    state=State.OK,
-                    summary="post: 0 Bit/s, drop: 0 Bit/s, Policy-Name: mypolicy, Int-Bandwidth: 0 Bit/s",
+                    state=State.WARN,
+                    summary="post: 0 Bit/s(!), drop: 0 Bit/s(!), Policy-Name: mypolicy, Int-Bandwidth: 0 Bit/s",
                 ),
-                Metric("post", 0.0, levels=(0.0, 0.0), boundaries=(0.0, 0.0)),
+                Metric("post", 0.0, levels=(0.0, 0.125), boundaries=(0.0, 0.0)),
                 Metric("drop", 0.0, levels=(0.0, 0.125), boundaries=(0.0, 0.0)),
             ],
-            id="absolute thresholds => should apply, but currently doesn't (bug)",
+            id="absolute thresholds => should apply",
         ),
         pytest.param(
             {
@@ -944,8 +944,8 @@ _STRING_TABLE_ZERO_SPEED = [
                     state=State.OK,
                     summary="post: 0 Bit/s, drop: 0 Bit/s, Policy-Name: mypolicy, Int-Bandwidth: 0 Bit/s",
                 ),
-                Metric("post", 0.0, levels=(0.0, 0.0), boundaries=(0.0, 0.0)),
-                Metric("drop", 0.0, levels=(0.0, 0.0), boundaries=(0.0, 0.0)),
+                Metric("post", 0.0, boundaries=(0.0, 0.0)),
+                Metric("drop", 0.0, boundaries=(0.0, 0.0)),
             ],
             id="relative thresholds => do not apply",
         ),

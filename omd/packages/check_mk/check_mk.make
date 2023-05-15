@@ -12,9 +12,10 @@ CHECK_MK_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MK_DIR)
 
 CHECK_MK_LANGUAGES := de ro nl fr it ja pt_PT es
 
-CHECK_MK_TAROPTS := --owner=root --group=root --exclude=.svn --exclude=*~ \
-                    --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
-                    --exclude=__pycache__ --exclude=*.pyc
+CHECK_MK_TAROPTS := \
+	--owner=root --group=root --exclude=.svn --exclude=*~ \
+	--exclude=.gitignore --exclude=*.swp --exclude=.f12 \
+	--exclude=__pycache__ --exclude=*.pyc
 
 # It is used from top-level Makefile and this makefile as an intermediate step.
 # We should end up with one central place to care for packaging our files
@@ -76,16 +77,16 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
 	tar -c -C $(REPO_PATH)/web \
 	    $(CHECK_MK_TAROPTS) \
-            app \
-            htdocs/openapi \
-            htdocs/css \
-            htdocs/images \
-            htdocs/jquery \
-            $(patsubst $(REPO_PATH)/web/%,%,$(JAVASCRIPT_MINI)) \
-            $(patsubst $(REPO_PATH)/web/%,%.map,$(JAVASCRIPT_MINI)) \
-            htdocs/sounds \
-            $(patsubst $(REPO_PATH)/web/%,%,$(THEME_RESOURCES)) \
-	    | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
+	    app \
+	    htdocs/openapi \
+	    htdocs/css \
+	    htdocs/images \
+	    htdocs/jquery \
+	    $(patsubst $(REPO_PATH)/web/%,%,$(JAVASCRIPT_MINI)) \
+	    $(patsubst $(REPO_PATH)/web/%,%.map,$(JAVASCRIPT_MINI)) \
+	    htdocs/sounds \
+	    $(patsubst $(REPO_PATH)/web/%,%,$(THEME_RESOURCES)) | \
+	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS,ChangeLog} $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
@@ -161,8 +162,8 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    $(EDITION_EXCLUDE) \
 	    cmk | tar -x -C $(CHECK_MK_INSTALL_DIR)/lib/python3
 
-        # legacy checks have been moved to checks/ in a dedicated step above.
-        rm -rf $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/legacy_checks
+	# legacy checks have been moved to checks/ in a dedicated step above.
+	rm -rf $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/legacy_checks
 
 	# cmk needs to be a namespace package (CMK-3979)
 	rm -f \

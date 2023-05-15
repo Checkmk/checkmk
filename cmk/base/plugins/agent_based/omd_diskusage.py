@@ -57,10 +57,10 @@ def sub_section_parser(string_table: StringTable) -> Iterator[tuple[str, Sequenc
     for line in string_table:
         if line[0].startswith("[") and line[0].endswith("]"):
             if len(sub_section) == 0:
-                name = line[0][1:-1]
+                name = line[0].removeprefix("[site ")[:-1]
                 continue
             yield name, sub_section
-            name = line[0][1:-1]
+            name = line[0].removeprefix("[site ")[:-1]
             sub_section = []
         elif line[0] != "":
             sub_section.append(line[0])
@@ -77,7 +77,7 @@ def parse(string_table: StringTable) -> Section:
                 entries.append(Directory(spec=spec, value=int(line.split()[0])))
             else:
                 site = int(line.split()[0])
-            sites[section_name.split()[1]] = Site(site, entries)
+            sites[section_name] = Site(site, entries)
     return Section(sites)
 
 

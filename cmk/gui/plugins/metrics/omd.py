@@ -88,4 +88,15 @@ graph_info["omd_fileusage"] = {
         ("omd_inventory_size", "stack"),
         ("omd_size", "line"),
     ],
+    "optional_metrics": [
+        "omd_log_size",
+        "omd_rrd_size",
+        "omd_pnp4nagios_size",
+        "omd_tmp_size",
+        "omd_local_size",
+        "omd_agents_size",
+        "omd_history_size",
+        "omd_core_size",
+        "omd_inventory_size",
+    ],
 }

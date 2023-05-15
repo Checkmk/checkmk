@@ -342,24 +342,17 @@ class LicenseUsageSample:
 
     @classmethod
     def get_parser(cls, version: str) -> LicenseUsageSampleParser:
-        # Note:
-        # === Instance ID ===
-        # Checkmk:
-        #    < 2.0: The instance ID is added during history loading (before submit)
-        #   >= 2.0: The instance ID is added during _create_sample
-        # License server:
-        #    < 2.0: The instance ID may be None
-        #   >= 2.0: The instance ID must be an UUID
-        # === Site hash ===
-        # - Old samples do not contain "site_hash".
-        # - When loading the history in Checkmk we add the "site_hash".
-        # - On the license server the "site_hash" is already part of the sample.
-
         if version == "1.0":
             return cls._parse_sample_v1_0
 
-        if version == "1.1":
+        if version in ["1.1", "1.2", "1.3"]:
             return cls._parse_sample_v1_1
+
+        if version == "1.4":
+            return cls._parse_sample_v1_4
+
+        if version == "1.5":
+            return cls._parse_sample_v1_5
 
         if version in ["2.0", "2.1"]:
             return cls._parse_sample_v2_0
@@ -428,6 +421,79 @@ class LicenseUsageSample:
             num_hosts=raw_sample["num_hosts"],
             num_hosts_cloud=0,
             num_hosts_shadow=0,
+            num_hosts_excluded=raw_sample["num_hosts_excluded"],
+            num_services=raw_sample["num_services"],
+            num_services_cloud=0,
+            num_services_shadow=0,
+            num_services_excluded=raw_sample["num_services_excluded"],
+            extension_ntop=extensions.ntop,
+        )
+
+    @classmethod
+    def _parse_sample_v1_4(
+        cls,
+        raw_sample: object,
+        *,
+        instance_id: UUID | None = None,
+        site_hash: str | None = None,
+    ) -> LicenseUsageSample:
+        if not isinstance(raw_sample, dict):
+            raise TypeError("Parse sample 1.4: Wrong sample type: %r" % type(raw_sample))
+
+        if not (site_hash := raw_sample.get("site_hash", site_hash)):
+            raise ValueError("Parse sample 1.4: No such site hash")
+
+        extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
+        return cls(
+            instance_id=instance_id,
+            site_hash=site_hash,
+            version=raw_sample["version"],
+            edition=raw_sample["edition"],
+            platform=cls._restrict_platform(raw_sample["platform"]),
+            is_cma=raw_sample["is_cma"],
+            sample_time=raw_sample["sample_time"],
+            timezone=raw_sample["timezone"],
+            num_hosts=raw_sample["num_hosts"],
+            num_hosts_cloud=0,
+            num_hosts_shadow=raw_sample["num_shadow_hosts"],
+            num_hosts_excluded=raw_sample["num_hosts_excluded"],
+            num_services=raw_sample["num_services"],
+            num_services_cloud=0,
+            num_services_shadow=0,
+            num_services_excluded=raw_sample["num_services_excluded"],
+            extension_ntop=extensions.ntop,
+        )
+
+    @classmethod
+    def _parse_sample_v1_5(
+        cls,
+        raw_sample: object,
+        *,
+        instance_id: UUID | None = None,
+        site_hash: str | None = None,
+    ) -> LicenseUsageSample:
+        if not isinstance(raw_sample, dict):
+            raise TypeError("Parse sample 1.4: Wrong sample type: %r" % type(raw_sample))
+
+        if not (raw_instance_id := raw_sample.get("instance_id")):
+            raise ValueError("Parse sample 2.0: No such instance ID")
+
+        if not (site_hash := raw_sample.get("site_hash", site_hash)):
+            raise ValueError("Parse sample 1.4: No such site hash")
+
+        extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
+        return cls(
+            instance_id=UUID(raw_instance_id),
+            site_hash=site_hash,
+            version=raw_sample["version"],
+            edition=raw_sample["edition"],
+            platform=cls._restrict_platform(raw_sample["platform"]),
+            is_cma=raw_sample["is_cma"],
+            sample_time=raw_sample["sample_time"],
+            timezone=raw_sample["timezone"],
+            num_hosts=raw_sample["num_hosts"],
+            num_hosts_cloud=0,
+            num_hosts_shadow=raw_sample["num_shadow_hosts"],
             num_hosts_excluded=raw_sample["num_hosts_excluded"],
             num_services=raw_sample["num_services"],
             num_services_cloud=0,

@@ -34,9 +34,7 @@ TABLE_2 = [
 4096	/omd/sites/abcdfg/tmp/
 323595	/omd/sites/abcdfg/local/
 43255425	/omd/sites/abcdfg/var/check_mk/agents/
-du: cannot access '/omd/sites/abcdfg/var/mkeventd/history/': No such file or directory
 1648718	/omd/sites/abcdfg/var/check_mk/core/
-du: cannot access '/omd/sites/abcdfg/var/check_mk/inventory_archive/': No such file or directory
 [site beta]
 258890373	/omd/sites/beta
 827498	/omd/sites/beta/var/log
@@ -133,8 +131,6 @@ SitesV2 = [
                 Result(state=State.OK, summary="Total: 219 MiB"),
                 Result(state=State.OK, summary="Agents: 41.3 MiB"),
                 Result(state=State.OK, summary="Core: 1.57 MiB"),
-                Result(state=State.OK, summary="History: 0 B"),
-                Result(state=State.OK, summary="Inventory: 0 B"),
                 Result(state=State.OK, summary="Local: 316 KiB"),
                 Result(state=State.OK, summary="Logs: 94.7 KiB"),
                 Result(state=State.OK, summary="RRDs: 118 MiB"),
@@ -144,8 +140,6 @@ SitesV2 = [
                 Metric("omd_size", 229473382.0),
                 Metric("omd_agents_size", 43255425.0),
                 Metric("omd_core_size", 1648718.0),
-                Metric("omd_history_size", 0.0),
-                Metric("omd_inventory_size", 0.0),
                 Metric("omd_local_size", 323595.0),
                 Metric("omd_log_size", 96979.0),
                 Metric("omd_rrd_size", 123481264.0),

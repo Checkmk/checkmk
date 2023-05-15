@@ -85,7 +85,9 @@ set(livestatus_headers
     ${header_location}/TableEventConsoleRules.h
     ${header_location}/TableEventConsoleStatus.h
     ${header_location}/Table.h
+    ${header_location}/TableHostGroups.h
     ${header_location}/TableLabels.h
+    ${header_location}/TableServiceGroups.h
     ${header_location}/TableStatus.h
     ${header_location}/TableTimeperiods.h
     ${header_location}/TimeAggregator.h
@@ -157,7 +159,9 @@ set(livestatus_sources
     TableEventConsoleReplication.cc
     TableEventConsoleRules.cc
     TableEventConsoleStatus.cc
+    TableHostGroups.cc
     TableLabels.cc
+    TableServiceGroups.cc
     TableStatus.cc
     TableTimeperiods.cc
     TimeFilter.cc

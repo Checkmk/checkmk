@@ -107,11 +107,9 @@ liblivestatusneb_a_SOURCES = \
         TableDowntimes.cc \
         TableEventConsoleEvents.cc \
         TableEventConsoleHistory.cc \
-        TableHostGroups.cc \
         TableHosts.cc \
         TableHostsByGroup.cc \
         TableLog.cc \
-        TableServiceGroups.cc \
         TableServices.cc \
         TableServicesByGroup.cc \
         TableServicesByHostGroup.cc \

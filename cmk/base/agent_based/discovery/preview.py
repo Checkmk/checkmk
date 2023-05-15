@@ -6,7 +6,7 @@
 import itertools
 from collections.abc import Callable, Container, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Literal
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -46,13 +46,13 @@ import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
 import cmk.base.core
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.config import ConfigCache
 from cmk.base.core_config import get_active_check_descriptions
 
 from ._host_labels import analyse_cluster_labels, discover_host_labels
 from .autodiscovery import _Transition, get_host_services
 
-__all__ = ["CheckPreview", "get_check_preview"]
+__all__ = ["CheckPreview", "get_check_preview", "get_active_check_preview_rows"]
 
 
 @dataclass(frozen=True)
@@ -76,6 +76,7 @@ def get_check_preview(
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     ignored_services: Container[ServiceName],
+    active_check_preview_rows: Sequence[CheckPreviewEntry],
     on_error: OnError,
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
@@ -88,7 +89,6 @@ def get_check_preview(
         # doing it the other way around breaks one integration test.
         else config.lookup_ip_address(config_cache, host_name)
     )
-    host_attrs = config_cache.get_host_attributes(host_name)
 
     fetched = fetcher(host_name, ip_address=ip_address)
     parsed = parser((f[0], f[1]) for f in fetched)
@@ -186,13 +186,7 @@ def get_check_preview(
     return CheckPreview(
         table=[
             *passive_rows,
-            *_active_check_preview_rows(
-                host_name,
-                config_cache.alias(host_name),
-                config_cache.active_checks(host_name),
-                ignored_services,
-                host_attrs,
-            ),
+            *active_check_preview_rows,
             *_custom_check_preview_rows(
                 host_name, config_cache.custom_checks(host_name), ignored_services
             ),
@@ -272,13 +266,14 @@ def _custom_check_preview_rows(
     )
 
 
-def _active_check_preview_rows(
+def get_active_check_preview_rows(
+    config_cache: ConfigCache,
     host_name: HostName,
-    alias: str,
-    active_checks: list[tuple[str, list[Any]]],
-    ignored_services: Container[ServiceName],
-    host_attrs: ObjectAttributes,
 ) -> Sequence[CheckPreviewEntry]:
+    alias = config_cache.alias(host_name)
+    active_checks = config_cache.active_checks(host_name)
+    host_attrs = config_cache.get_host_attributes(host_name)
+    ignored_services = config.IgnoredServices(config_cache, host_name)
     return list(
         {
             descr: _make_check_preview_entry(

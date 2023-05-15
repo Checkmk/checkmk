@@ -379,6 +379,7 @@ def _execute_discovery(
         discovery_plugins=DiscoveryPluginMapper(config_cache=config_cache),
         find_service_description=config.service_description,
         ignored_services=IgnoredServices(config_cache, host_name),
+        active_check_preview_rows=discovery.get_active_check_preview_rows(config_cache, host_name),
         on_error=on_error,
     )
 

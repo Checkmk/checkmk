@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-from collections.abc import Callable, Container, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -52,7 +52,12 @@ from cmk.base.core_config import get_active_check_descriptions
 from ._host_labels import analyse_cluster_labels, discover_host_labels
 from .autodiscovery import _Transition, get_host_services
 
-__all__ = ["CheckPreview", "get_check_preview", "get_active_check_preview_rows"]
+__all__ = [
+    "CheckPreview",
+    "get_check_preview",
+    "get_active_check_preview_rows",
+    "get_custom_check_preview_rows",
+]
 
 
 @dataclass(frozen=True)
@@ -75,8 +80,8 @@ def get_check_preview(
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-    ignored_services: Container[ServiceName],
     active_check_preview_rows: Sequence[CheckPreviewEntry],
+    custom_check_preview_rows: Sequence[CheckPreviewEntry],
     on_error: OnError,
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
@@ -187,9 +192,7 @@ def get_check_preview(
         table=[
             *passive_rows,
             *active_check_preview_rows,
-            *_custom_check_preview_rows(
-                host_name, config_cache.custom_checks(host_name), ignored_services
-            ),
+            *custom_check_preview_rows,
         ],
         labels=host_labels,
         source_results={
@@ -245,9 +248,11 @@ def _check_preview_table_row(
     )
 
 
-def _custom_check_preview_rows(
-    host_name: HostName, custom_checks: list[dict], ignored_services: Container[ServiceName]
+def get_custom_check_preview_rows(
+    config_cache: ConfigCache, host_name: HostName
 ) -> Sequence[CheckPreviewEntry]:
+    custom_checks = config_cache.custom_checks(host_name)
+    ignored_services = config.IgnoredServices(config_cache, host_name)
     return list(
         {
             entry["service_description"]: _make_check_preview_entry(

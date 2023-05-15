@@ -126,7 +126,7 @@ from cmk.base.agent_based.confcheckers import (
 from cmk.base.agent_based.discovery.autodiscovery import DiscoveryResult
 from cmk.base.agent_based.discovery.livestatus import schedule_discovery_check
 from cmk.base.automations import Automation, automations, MKAutomationError
-from cmk.base.config import ConfigCache, IgnoredServices
+from cmk.base.config import ConfigCache
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -378,8 +378,8 @@ def _execute_discovery(
         check_plugins=CheckPluginMapper(),
         discovery_plugins=DiscoveryPluginMapper(config_cache=config_cache),
         find_service_description=config.service_description,
-        ignored_services=IgnoredServices(config_cache, host_name),
         active_check_preview_rows=discovery.get_active_check_preview_rows(config_cache, host_name),
+        custom_check_preview_rows=discovery.get_custom_check_preview_rows(config_cache, host_name),
         on_error=on_error,
     )
 

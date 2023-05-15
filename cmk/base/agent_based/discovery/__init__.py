@@ -12,6 +12,7 @@ from .preview import (
     get_active_check_descriptions,
     get_active_check_preview_rows,
     get_check_preview,
+    get_custom_check_preview_rows,
 )
 
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "get_active_check_descriptions",
     "get_active_check_preview_rows",
     "get_check_preview",
+    "get_custom_check_preview_rows",
     "get_host_services",
     "livestatus",
 ]

@@ -4,6 +4,7 @@ catalog: cloud/gcp
 license: GPLv2
 distribution: check_mk
 description:
- counts number of filestore instances
+ This service counts number of filestore instances.
+
 discovery:
- One service is created
+ One service is created for all filestores in this project.

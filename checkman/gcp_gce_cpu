@@ -15,4 +15,4 @@ description:
  Upper levels are configurable via the rule "GCP/GCE CPU utilization".
 
 discovery:
- One service is created.
+ One service is created each virtual machine.

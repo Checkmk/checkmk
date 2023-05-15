@@ -662,7 +662,6 @@ class Site:
             cmk_path() + "/agents",
             cmk_path() + "/cmk/base",
             cmk_path() + "/cmk",
-            cmk_path() + "/checks",
             cmk_path() + "/checkman",
             cmk_path() + "/web",
             cmk_path() + "/inventory",

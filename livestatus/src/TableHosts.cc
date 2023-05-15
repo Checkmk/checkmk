@@ -18,7 +18,6 @@
 
 #include "DynamicRRDColumn.h"
 #include "RRDColumn.h"
-#include "ServiceListState.h"
 #include "livestatus/AttributeBitmaskColumn.h"
 #include "livestatus/AttributeListColumn.h"
 #include "livestatus/BlobColumn.h"
@@ -41,6 +40,7 @@
 #include "livestatus/PnpUtils.h"
 #include "livestatus/Query.h"
 #include "livestatus/ServiceListRenderer.h"
+#include "livestatus/ServiceListState.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"

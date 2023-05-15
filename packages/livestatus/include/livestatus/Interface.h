@@ -336,6 +336,10 @@ public:
     virtual ~IServiceGroup() = default;
     [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string name() const = 0;
+    [[nodiscard]] virtual std::string alias() const = 0;
+    [[nodiscard]] virtual std::string notes() const = 0;
+    [[nodiscard]] virtual std::string notes_url() const = 0;
+    [[nodiscard]] virtual std::string action_url() const = 0;
     virtual bool all(
         const std::function<bool(const IService &)> &pred) const = 0;
 };

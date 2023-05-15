@@ -29,6 +29,7 @@ set(livestatus_headers
     ${header_location}/Filter.h
     ${header_location}/global_counters.h
     ${header_location}/HostListRenderer.h
+    ${header_location}/HostListState.h
     ${header_location}/HostServiceState.h
     ${header_location}/InputBuffer.h
     ${header_location}/IntAggregator.h
@@ -68,6 +69,7 @@ set(livestatus_headers
     ${header_location}/Row.h
     ${header_location}/ServiceGroupMembersColumn.h
     ${header_location}/ServiceListRenderer.h
+    ${header_location}/ServiceListState.h
     ${header_location}/StatsColumn.h
     ${header_location}/StringColumn.h
     ${header_location}/StringFilter.h
@@ -110,6 +112,7 @@ set(livestatus_sources
     Filter.cc
     global_counters.cc
     HostListRenderer.cc
+    HostListState.cc
     HostServiceState.cc
     InputBuffer.cc
     IntFilter.cc
@@ -139,6 +142,7 @@ set(livestatus_sources
     RendererPython3.cc
     ServiceGroupMembersColumn.cc
     ServiceListRenderer.cc
+    ServiceListState.cc
     StatsColumn.cc
     StringFilter.cc
     StringUtils.cc

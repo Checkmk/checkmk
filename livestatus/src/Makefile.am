@@ -97,13 +97,11 @@ liblivestatusneb_a_LD_FLAGS = \
     $(AM_LDFLAGS) \
     $(RRDTOOL_LD_FLAGS)
 liblivestatusneb_a_SOURCES = \
-        HostListState.cc \
         MacroExpander.cc \
         NagiosCore.cc \
         NebHost.cc \
         NebService.cc \
         RRDColumn.cc \
-        ServiceListState.cc \
         Store.cc \
         TableComments.cc \
         TableDowntimes.cc \

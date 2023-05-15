@@ -8,9 +8,9 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "HostListState.h"
 #include "livestatus/Column.h"
 #include "livestatus/HostListRenderer.h"
+#include "livestatus/HostListState.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"

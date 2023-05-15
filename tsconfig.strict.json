@@ -60,7 +60,8 @@
         "./enterprise/web/htdocs/js/modules/figures/cmk_tabs.ts",
         "./enterprise/web/htdocs/js/modules/figures/cmk_state.ts",
         "./enterprise/web/htdocs/js/modules/figures/cmk_inventory.ts",
-        "./enterprise/web/htdocs/js/modules/figures/cmk_state_summary.ts"
+        "./enterprise/web/htdocs/js/modules/figures/cmk_state_summary.ts",
+        "./enterprise/web/htdocs/js/modules/license_usage/license_usage_timeseries_graph.ts"
     ],
     "exclude": [
         "./web/**/*",

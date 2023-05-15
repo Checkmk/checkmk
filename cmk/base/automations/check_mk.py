@@ -363,7 +363,7 @@ def _execute_discovery(
         simulation_mode=config.simulation_mode,
         max_cachefile_age=config.max_cachefile_age(),
     )
-    return discovery.get_check_preview(
+    passive_check_preview = discovery.get_check_preview(
         host_name,
         config_cache=config_cache,
         parser=parser,
@@ -378,9 +378,17 @@ def _execute_discovery(
         check_plugins=CheckPluginMapper(),
         discovery_plugins=DiscoveryPluginMapper(config_cache=config_cache),
         find_service_description=config.service_description,
-        active_check_preview_rows=discovery.get_active_check_preview_rows(config_cache, host_name),
-        custom_check_preview_rows=discovery.get_custom_check_preview_rows(config_cache, host_name),
         on_error=on_error,
+    )
+    return discovery.CheckPreview(
+        table=[
+            *passive_check_preview.table,
+            *discovery.get_active_check_preview_rows(config_cache, host_name),
+            *discovery.get_custom_check_preview_rows(config_cache, host_name),
+        ],
+        labels=passive_check_preview.labels,
+        source_results=passive_check_preview.source_results,
+        kept_labels=passive_check_preview.kept_labels,
     )
 
 

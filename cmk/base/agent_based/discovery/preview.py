@@ -80,8 +80,6 @@ def get_check_preview(
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-    active_check_preview_rows: Sequence[CheckPreviewEntry],
-    custom_check_preview_rows: Sequence[CheckPreviewEntry],
     on_error: OnError,
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
@@ -189,11 +187,7 @@ def get_check_preview(
         ]
 
     return CheckPreview(
-        table=[
-            *passive_rows,
-            *active_check_preview_rows,
-            *custom_check_preview_rows,
-        ],
+        table=[*passive_rows],
         labels=host_labels,
         source_results={
             src.ident: result for (src, _sections), result in zip(parsed, summarizer(parsed))

@@ -49,7 +49,6 @@ from cmk.checkers.sectionparser import (
     store_piggybacked_sections,
 )
 
-import cmk.base.core
 from cmk.base.agent_based.confcheckers import ConfiguredSummarizer
 from cmk.base.config import ConfigCache
 

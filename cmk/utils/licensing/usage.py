@@ -356,10 +356,7 @@ class LocalLicenseUsageHistory:
             raise TypeError("Wrong report version type: %r" % type(version))
 
         parser = LicenseUsageSample.get_parser(version)
-        return cls(
-            parser(raw_sample, instance_id=None, site_hash=None)
-            for raw_sample in raw_report.get("history", [])
-        )
+        return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
 
     def add_sample(self, sample: LicenseUsageSample) -> None:
         if sample.sample_time in set(s.sample_time for s in self._samples):

@@ -1392,13 +1392,13 @@ perfometer_info.append(
         "perfometers": [
             {
                 "type": "linear",
-                "segments": ["qos_dropped_bytes_rate"],
-                "total": "qos_dropped_bytes_rate:max",
+                "segments": ["qos_dropped_bits_rate"],
+                "total": "qos_dropped_bits_rate:max",
             },
             {
                 "type": "linear",
-                "segments": ["qos_outbound_bytes_rate"],
-                "total": "qos_outbound_bytes_rate:max",
+                "segments": ["qos_outbound_bits_rate"],
+                "total": "qos_outbound_bits_rate:max",
             },
         ],
     }

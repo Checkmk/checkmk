@@ -659,11 +659,11 @@ def test_discover_cisco_qos(fix_register: FixRegister) -> None:
             {},
             100,
             {
-                "cisco_qos.post.GigabitEthernet0/1.ServiceInstance.16: class-default": (
+                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/1.ServiceInstance.16: class-default": (
                     50,
-                    841000000,
+                    6728000000,
                 ),
-                "cisco_qos.drop.GigabitEthernet0/1.ServiceInstance.16: class-default": (
+                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/1.ServiceInstance.16: class-default": (
                     50,
                     0,
                 ),
@@ -673,8 +673,8 @@ def test_discover_cisco_qos(fix_register: FixRegister) -> None:
                     state=State.OK,
                     summary="post: 31.3 kBit/s, drop: 0 Bit/s, Policy-Name: queue-fix, Int-Bandwidth: 100 kBit/s",
                 ),
-                Metric("post", 3911.04, boundaries=(0.0, 12500.0)),
-                Metric("drop", 0.0, boundaries=(0.0, 12500.0)),
+                Metric("qos_outbound_bits_rate", 31288.32, boundaries=(0.0, 100000.0)),
+                Metric("qos_dropped_bits_rate", 0.0, boundaries=(0.0, 100000.0)),
             ],
             id="no thresholds",
         ),
@@ -686,13 +686,13 @@ def test_discover_cisco_qos(fix_register: FixRegister) -> None:
             },
             100,
             {
-                "cisco_qos.post.GigabitEthernet0/6: class-default": (
+                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default": (
                     50,
-                    3449721085,
+                    27597768680,
                 ),
-                "cisco_qos.drop.GigabitEthernet0/6: class-default": (
+                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default": (
                     50,
-                    87500900,
+                    700007200,
                 ),
             },
             [
@@ -700,8 +700,18 @@ def test_discover_cisco_qos(fix_register: FixRegister) -> None:
                     state=State.CRIT,
                     summary="post: 19.4 kBit/s(!), drop: 900 Bit/s(!!), Policy-Name: 200Mbit, Int-Bandwidth: 100 kBit/s",
                 ),
-                Metric("post", 2420.0, levels=(1250.0, 2500.0), boundaries=(0.0, 12500.0)),
-                Metric("drop", 112.48, levels=(62.5, 93.75), boundaries=(0.0, 12500.0)),
+                Metric(
+                    "qos_outbound_bits_rate",
+                    19360.0,
+                    levels=(10000.0, 20000.0),
+                    boundaries=(0.0, 100000.0),
+                ),
+                Metric(
+                    "qos_dropped_bits_rate",
+                    899.84,
+                    levels=(500.0, 750.0),
+                    boundaries=(0.0, 100000.0),
+                ),
             ],
             id="absolute thresholds",
         ),
@@ -714,13 +724,13 @@ def test_discover_cisco_qos(fix_register: FixRegister) -> None:
             },
             100,
             {
-                "cisco_qos.post.GigabitEthernet0/6: class-default": (
+                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default": (
                     50,
-                    3449721085,
+                    27597768680,
                 ),
-                "cisco_qos.drop.GigabitEthernet0/6: class-default": (
+                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default": (
                     50,
-                    87500900,
+                    700007200,
                 ),
             },
             [
@@ -728,8 +738,18 @@ def test_discover_cisco_qos(fix_register: FixRegister) -> None:
                     state=State.WARN,
                     summary="post: 2.42 kB/s(!), drop: 112 B/s, Policy-Name: 200Mbit, Int-Bandwidth: 12.5 kB/s",
                 ),
-                Metric("post", 2420.0, levels=(1250.0, 2500.0), boundaries=(0.0, 12500.0)),
-                Metric("drop", 112.48, levels=(125.0, 250.0), boundaries=(0.0, 12500.0)),
+                Metric(
+                    "qos_outbound_bits_rate",
+                    19360.0,
+                    levels=(10000.0, 20000.0),
+                    boundaries=(0.0, 100000.0),
+                ),
+                Metric(
+                    "qos_dropped_bits_rate",
+                    899.84,
+                    levels=(1000.0, 2000.0),
+                    boundaries=(0.0, 100000.0),
+                ),
             ],
             id="relative thresholds, output in byte/s",
         ),
@@ -740,21 +760,21 @@ def test_discover_cisco_qos(fix_register: FixRegister) -> None:
             },
             100,
             {
-                "cisco_qos.post.GigabitEthernet0/6: class-default": (
+                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default": (
                     50,
-                    3449721085,
+                    27597768680,
                 ),
-                "cisco_qos.drop.GigabitEthernet0/6: class-default": (
+                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default": (
                     50,
-                    87500900,
+                    700007200,
                 ),
-                "cisco_qos.post.GigabitEthernet0/6: class-default.avg": (
+                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default.avg": (
                     50,
-                    10000,
+                    80000,
                 ),
-                "cisco_qos.drop.GigabitEthernet0/6: class-default.avg": (
+                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default.avg": (
                     50,
-                    200,
+                    1600,
                 ),
             },
             [
@@ -762,10 +782,8 @@ def test_discover_cisco_qos(fix_register: FixRegister) -> None:
                     state=State.OK,
                     summary="post: 76.6 kBit/s, drop: 1.56 kBit/s, Policy-Name: 200Mbit, Int-Bandwidth: 100 kBit/s",
                 ),
-                Metric("post", 2420.0, boundaries=(0.0, 12500.0)),
-                Metric("drop", 112.48, boundaries=(0.0, 12500.0)),
-                Metric("post_avg_10", 9574.567290127237, boundaries=(0.0, 12500.0)),
-                Metric("drop_avg_10", 195.08787984590182, boundaries=(0.0, 12500.0)),
+                Metric("qos_outbound_bits_rate", 19360.0, boundaries=(0.0, 100000.0)),
+                Metric("qos_dropped_bits_rate", 899.84, boundaries=(0.0, 100000.0)),
             ],
             id="averaging",
         ),
@@ -778,21 +796,21 @@ def test_discover_cisco_qos(fix_register: FixRegister) -> None:
             },
             100,
             {
-                "cisco_qos.post.GigabitEthernet0/6: class-default": (
+                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default": (
                     50,
-                    3449721085,
+                    27597768680,
                 ),
-                "cisco_qos.drop.GigabitEthernet0/6: class-default": (
+                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default": (
                     50,
-                    87500900,
+                    700007200,
                 ),
-                "cisco_qos.post.GigabitEthernet0/6: class-default.avg": (
+                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default.avg": (
                     50,
-                    10000,
+                    80000,
                 ),
-                "cisco_qos.drop.GigabitEthernet0/6: class-default.avg": (
+                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default.avg": (
                     50,
-                    100,
+                    800,
                 ),
             },
             [
@@ -800,19 +818,17 @@ def test_discover_cisco_qos(fix_register: FixRegister) -> None:
                     state=State.CRIT,
                     summary="post: 76.6 kBit/s(!!), drop: 806 Bit/s, Policy-Name: 200Mbit, Int-Bandwidth: 100 kBit/s",
                 ),
-                Metric("post", 2420.0, levels=(1250.0, 2500.0), boundaries=(0.0, 12500.0)),
-                Metric("drop", 112.48, levels=(125.0, 250.0), boundaries=(0.0, 12500.0)),
                 Metric(
-                    "post_avg_10",
-                    9574.567290127237,
-                    levels=(1250.0, 2500.0),
-                    boundaries=(0.0, 12500.0),
+                    "qos_outbound_bits_rate",
+                    19360.0,
+                    levels=(10000.0, 20000.0),
+                    boundaries=(0.0, 100000.0),
                 ),
                 Metric(
-                    "drop_avg_10",
-                    100.70044857773246,
-                    levels=(125.0, 250.0),
-                    boundaries=(0.0, 12500.0),
+                    "qos_dropped_bits_rate",
+                    899.84,
+                    levels=(1000.0, 2000.0),
+                    boundaries=(0.0, 100000.0),
                 ),
             ],
             id="averaging and thresholds",
@@ -929,8 +945,8 @@ _STRING_TABLE_ZERO_SPEED = [
                     state=State.WARN,
                     summary="post: 0 Bit/s(!), drop: 0 Bit/s(!), Policy-Name: mypolicy, Int-Bandwidth: 0 Bit/s",
                 ),
-                Metric("post", 0.0, levels=(0.0, 0.125), boundaries=(0.0, 0.0)),
-                Metric("drop", 0.0, levels=(0.0, 0.125), boundaries=(0.0, 0.0)),
+                Metric("qos_outbound_bits_rate", 0.0, levels=(0.0, 1.0), boundaries=(0.0, 0.0)),
+                Metric("qos_dropped_bits_rate", 0.0, levels=(0.0, 1.0), boundaries=(0.0, 0.0)),
             ],
             id="absolute thresholds => should apply",
         ),
@@ -944,8 +960,8 @@ _STRING_TABLE_ZERO_SPEED = [
                     state=State.OK,
                     summary="post: 0 Bit/s, drop: 0 Bit/s, Policy-Name: mypolicy, Int-Bandwidth: 0 Bit/s",
                 ),
-                Metric("post", 0.0, boundaries=(0.0, 0.0)),
-                Metric("drop", 0.0, boundaries=(0.0, 0.0)),
+                Metric("qos_outbound_bits_rate", 0.0, boundaries=(0.0, 0.0)),
+                Metric("qos_dropped_bits_rate", 0.0, boundaries=(0.0, 0.0)),
             ],
             id="relative thresholds => do not apply",
         ),
@@ -964,8 +980,8 @@ def test_check_cisco_qos_zero_speed(
     mocker.patch(
         "cmk.base.item_state.get_value_store",
         lambda: {
-            "cisco_qos.post.QoS Ethernet1/8: c-out-q3": (60, 0),
-            "cisco_qos.drop.QoS Ethernet1/8: c-out-q3": (60, 0),
+            "cisco_qos.qos_outbound_bits_rate.QoS Ethernet1/8: c-out-q3": (60, 0),
+            "cisco_qos.qos_dropped_bits_rate.QoS Ethernet1/8: c-out-q3": (60, 0),
         },
     )
     assert (

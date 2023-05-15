@@ -21,13 +21,13 @@ from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["qos_dropped_bytes_rate"] = {
+metric_info["qos_dropped_bits_rate"] = {
     "title": _("QoS dropped bits"),
     "unit": "bits/s",
     "color": "41/a",
 }
 
-metric_info["qos_outbound_bytes_rate"] = {
+metric_info["qos_outbound_bits_rate"] = {
     "title": _("QoS outbound bits"),
     "unit": "bits/s",
     "color": "26/a",
@@ -48,8 +48,8 @@ metric_info["qos_outbound_bytes_rate"] = {
 graph_info["qos_class_traffic"] = {
     "title": _("QoS class traffic"),
     "metrics": [
-        ("qos_outbound_bytes_rate,8,*@bits/s", "area", _("QoS outbound bits")),
-        ("qos_dropped_bytes_rate,8,*@bits/s", "-area", _("QoS dropped bits")),
+        ("qos_outbound_bits_rate", "area", _("QoS outbound bits")),
+        ("qos_dropped_bits_rate", "-area", _("QoS dropped bits")),
     ],
-    "range": ("qos_dropped_bytes_rate:max,8,*,-1,*", "qos_outbound_bytes_rate:max,8,*"),
+    "range": ("qos_dropped_bits_rate:max,-1,*", "qos_outbound_bits_rate:max"),
 }

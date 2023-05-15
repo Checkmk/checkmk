@@ -156,8 +156,8 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
     policies = dict(info[1])
     classes = dict(info[2])
     config = {".".join(oid.split(".")[-2:]): value for oid, value in info[3]}
-    post_bytes = {".".join(oid.split(".")[-2:]): value for oid, value in info[4]}
-    drop_bytes = {".".join(oid.split(".")[-2:]): value for oid, value in info[5]}
+    post_bytes = {".".join(oid.split(".")[-2:]): saveint(value) for oid, value in info[4]}
+    drop_bytes = {".".join(oid.split(".")[-2:]): saveint(value) for oid, value in info[5]}
     if_names = dict(info[6])
     if_speeds = dict(info[7])
     parents = dict(info[8])
@@ -209,8 +209,8 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
     if policy_id is None or objects_id is None:
         return 3, "Could not find policy_id or objects_id"
 
-    post_b = post_bytes.get(policy_id + "." + objects_id, 0)
-    drop_b = drop_bytes.get(policy_id + "." + objects_id, 0)
+    post_bits = post_bytes.get(policy_id + "." + objects_id, 0) * 8
+    drop_bits = drop_bytes.get(policy_id + "." + objects_id, 0) * 8
     speed = savefloat(if_speeds[if_id])
 
     parent_value_cache = {a_value: a_key.split(".")[1] for a_key, a_value in config.items()}
@@ -242,14 +242,11 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
                 except KeyError:
                     pass
 
-    # Bandwidth needs to be in bytes for later calculations
-    bw = speed / 8.0
-
     # Determine post warn/crit levels
-    post_warn, post_crit = _compute_thresholds((post_warn, post_crit), bw, unit)
+    post_warn, post_crit = _compute_thresholds((post_warn, post_crit), speed, unit)
 
     # Determine drop warn/crit levels
-    drop_warn, drop_crit = _compute_thresholds((drop_warn, drop_crit), bw, unit)
+    drop_warn, drop_crit = _compute_thresholds((drop_warn, drop_crit), speed, unit)
 
     # Handle counter values
     state = 0
@@ -257,30 +254,23 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
     this_time = time.time()
     rates = []
     perfdata = []
-    perfdata_avg = []
 
     for name, counter, warn, crit, min_val, max_val in [
-        ("post", post_b, post_warn, post_crit, 0.0, bw),
-        ("drop", drop_b, drop_warn, drop_crit, 0.0, bw),
+        ("qos_outbound_bits_rate", post_bits, post_warn, post_crit, 0.0, speed),
+        ("qos_dropped_bits_rate", drop_bits, drop_warn, drop_crit, 0.0, speed),
     ]:
-        rate = get_rate("cisco_qos.%s.%s" % (name, item), this_time, saveint(counter))
+        rate = get_rate("cisco_qos.%s.%s" % (name, item), this_time, counter)
         rates.append(rate)
         perfdata.append((name, rate, warn, crit, min_val, max_val))
 
         if average:
             avg_value = get_average("cisco_qos.%s.%s.avg" % (name, item), this_time, rate, average)
             rates.append(avg_value)
-            perfdata_avg.append(
-                ("%s_avg_%d" % (name, average), avg_value, warn, crit, min_val, max_val)
-            )
-
-    perfdata.extend(perfdata_avg)
 
     def format_value(value):
         if unit == "bit":
-            value = value * 8
             return get_nic_speed_human_readable(value)
-        return render.iobandwidth(value)
+        return render.iobandwidth(value / 8)
 
     if average:
         post_rate = rates[1]
@@ -302,9 +292,9 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
             infotext += "(!)"
 
     if policy_name:
-        infotext += ", Policy-Name: %s, Int-Bandwidth: %s" % (policy_name, format_value(bw))
+        infotext += ", Policy-Name: %s, Int-Bandwidth: %s" % (policy_name, format_value(speed))
     else:
-        infotext += ", Policy-Map-ID: %s, Int-Bandwidth: %s" % (policy_map_id, format_value(bw))
+        infotext += ", Policy-Map-ID: %s, Int-Bandwidth: %s" % (policy_map_id, format_value(speed))
     return (state, infotext.lstrip(", "), perfdata)
 
 
@@ -318,8 +308,8 @@ def _compute_thresholds(
             return bandwidth * raw_thresholds[0] / 100, bandwidth * raw_thresholds[1] / 100
         return None, None
     if isinstance(raw_thresholds[0], int):
-        if unit == "bit":
-            return raw_thresholds[0] / 8, raw_thresholds[1] / 8
+        if unit == "byte":
+            return raw_thresholds[0] * 8, raw_thresholds[1] * 8
         return raw_thresholds
     return raw_thresholds
 

@@ -1,0 +1,19 @@
+Title: <tt>cisco_qos</tt>: Handle metric units consistently & drop averaged metrics
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1684161725
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The two metrics produced by the Cisco QoS services (outbound and dropped bits) were displayed
+inconsistently in the UI: The graph rendered the correct values in bits/s, but the values
+displayed in the <i>Service Metrics</i> section were too small by a factor of 8.
+
+Unfortunately, due to current architectural limitations, this change will lead to a loss of metric
+history for users of the Checkmk Raw Edition. We apologize for this inconvenience.
+
+Finally, as of this werk, the Cisco QoS services stop producing useless additional metrics in case
+averaging is activated.

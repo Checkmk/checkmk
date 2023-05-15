@@ -1013,8 +1013,8 @@ check_metrics["check_mk-cisco_wlc_clients"] = {
     "clients": {"name": "connections"},
 }
 check_metrics["check_mk-cisco_qos"] = {
-    "drop": {"name": "qos_dropped_bytes_rate"},
-    "post": {"name": "qos_outbound_bytes_rate"},
+    "drop": {"name": "qos_dropped_bits_rate", "scale": 8},
+    "post": {"name": "qos_outbound_bits_rate", "scale": 8},
 }
 check_metrics["check_mk-hivemanager_devices"] = {
     "clients_count": {"name": "connections"},

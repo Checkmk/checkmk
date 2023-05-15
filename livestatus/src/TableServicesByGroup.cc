@@ -5,7 +5,6 @@
 
 #include "TableServicesByGroup.h"
 
-#include <memory>
 #include <optional>
 
 #include "TableServiceGroups.h"
@@ -59,7 +58,7 @@ void TableServicesByGroup::answerQuery(Query &query, const User &user) {
     // If we know the service group, we simply iterate over it.
     if (auto value = query.stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using service group index with '" << *value << "'";
-        if (const auto sg = core()->find_servicegroup(*value)) {
+        if (const auto *sg = core()->find_servicegroup(*value)) {
             ProcessServiceGroup(query, user, *sg);
         }
         return;

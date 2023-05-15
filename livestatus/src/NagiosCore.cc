@@ -168,11 +168,9 @@ const IContactGroup *NagiosCore::find_contactgroup(const std::string &name) {
     return it == icontactgroups_.end() ? nullptr : it->second.get();
 }
 
-std::unique_ptr<const IServiceGroup> NagiosCore::find_servicegroup(
-    const std::string &name) {
-    const auto *group = ::find_servicegroup(const_cast<char *>(name.c_str()));
-    return group == nullptr ? nullptr
-                            : std::make_unique<NebServiceGroup>(*group);
+const IServiceGroup *NagiosCore::find_servicegroup(const std::string &name) {
+    const auto *handle = ::find_servicegroup(const_cast<char *>(name.c_str()));
+    return handle == nullptr ? nullptr : iservicegroup(handle);
 }
 
 const IContact *NagiosCore::find_contact(const std::string &name) const {

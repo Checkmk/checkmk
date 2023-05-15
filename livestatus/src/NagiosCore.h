@@ -91,9 +91,8 @@ public:
     const IService *find_service(
         const std::string &host_name,
         const std::string &service_description) override;
+    const IServiceGroup *find_servicegroup(const std::string &name) override;
     const IContactGroup *find_contactgroup(const std::string &name) override;
-    std::unique_ptr<const IServiceGroup> find_servicegroup(
-        const std::string &name) override;
 
     const IContact *find_contact(const std::string &name) const override;
     bool all_of_contacts(

@@ -2748,14 +2748,14 @@ class ConfigCache:
         """
         raise: LookupError if no datasource is configured.
         """
-        return self.translate_program_commandline(
+        return self.translate_commandline(
             host_name,
             ip_address,
             self.host_extra_conf(host_name, datasource_programs)[0],
         )
 
-    @staticmethod
     def make_special_agent_cmdline(
+        self,
         hostname: HostName,
         ip_address: HostAddress | None,
         agentname: str,
@@ -2782,7 +2782,8 @@ class ConfigCache:
             info_func = special_agent_info[agentname]
             # TODO: CMK-3812 (see above)
             agent_configuration = info_func(params, hostname, ip_address)
-            return commandline_arguments(hostname, None, agent_configuration)
+            args = commandline_arguments(hostname, None, agent_configuration)
+            return self.translate_commandline(hostname, ip_address, args)
 
         path = _make_source_path(agentname)
         args = _make_source_args(
@@ -4446,7 +4447,7 @@ class ConfigCache:
 
         return s
 
-    def translate_program_commandline(
+    def translate_commandline(
         self,
         host_name: HostName,
         ip_address: HostAddress | None,

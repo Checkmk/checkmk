@@ -17,8 +17,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 @dataclass(frozen=True)
 class Spec:
     metric_name: LiteralString
-    path: LiteralString
+    _path: LiteralString
     label: LiteralString
+
+    def path(self, site_dir: str) -> str:
+        return site_dir + self._path
 
 
 @dataclass(frozen=True)
@@ -37,16 +40,18 @@ Section = NewType("Section", Mapping[str, Site])
 
 
 SPECS: Final = [
-    Spec(metric_name="omd_log_size", path="var/log", label="Logs"),
-    Spec(metric_name="omd_rrd_size", path="var/check_mk/rrd", label="RRDs"),
-    Spec(metric_name="omd_tmp_size", path="tmp/", label="Tmp"),
-    Spec(metric_name="omd_local_size", path="local/", label="Local"),
-    Spec(metric_name="omd_agents_size", path="var/check_mk/agents/", label="Agents"),
-    Spec(metric_name="omd_history_size", path="var/mkeventd/history/", label="History"),
-    Spec(metric_name="omd_core_size", path="var/check_mk/core/", label="Core"),
-    Spec(metric_name="omd_pnp4nagios_size", path="/var/pnp4nagios/", label="PNP4Nagios"),
+    Spec(metric_name="omd_log_size", _path="/var/log", label="Logs"),
+    Spec(metric_name="omd_rrd_size", _path="/var/check_mk/rrd", label="RRDs"),
+    Spec(metric_name="omd_tmp_size", _path="/tmp/", label="Tmp"),
+    Spec(metric_name="omd_local_size", _path="/local/", label="Local"),
+    Spec(metric_name="omd_agents_size", _path="/var/check_mk/agents/", label="Agents"),
+    Spec(metric_name="omd_history_size", _path="/var/mkeventd/history/", label="History"),
+    Spec(metric_name="omd_core_size", _path="/var/check_mk/core/", label="Core"),
+    Spec(metric_name="omd_pnp4nagios_size", _path="/var/pnp4nagios/", label="PNP4Nagios"),
     Spec(
-        metric_name="omd_inventory_size", path="var/check_mk/inventory_archive/", label="Inventory"
+        metric_name="omd_inventory_size",
+        _path="/var/check_mk/inventory_archive/",
+        label="Inventory",
     ),
 ]
 
@@ -70,14 +75,15 @@ def sub_section_parser(string_table: StringTable) -> Iterator[tuple[str, Sequenc
 
 def parse(string_table: StringTable) -> Section:
     sites: dict[str, Site] = {}
-    for section_name, lines in sub_section_parser(string_table):
+    for site_name, lines in sub_section_parser(string_table):
+        site_dir = f"/omd/sites/{site_name}"
         entries = []
         for line in lines:
-            if spec := next((spec for spec in SPECS if spec.path in line), None):
+            if spec := next((spec for spec in SPECS if line.endswith(spec.path(site_dir))), None):
                 entries.append(Directory(spec=spec, value=int(line.split()[0])))
             else:
                 site = int(line.split()[0])
-            sites[section_name] = Site(site, entries)
+            sites[site_name] = Site(site, entries)
     return Section(sites)
 
 

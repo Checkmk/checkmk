@@ -27,24 +27,24 @@ TABLE = [
 
 TABLE_2 = [
     [l]
-    for l in """[site abcdfg]
-229473382	/omd/sites/abcdfg
-96979	/omd/sites/abcdfg/var/log
-123481264	/omd/sites/abcdfg/var/check_mk/rrd
-4096	/omd/sites/abcdfg/tmp/
-323595	/omd/sites/abcdfg/local/
-43255425	/omd/sites/abcdfg/var/check_mk/agents/
-1648718	/omd/sites/abcdfg/var/check_mk/core/
-[site beta]
-258890373	/omd/sites/beta
-827498	/omd/sites/beta/var/log
-152635621	/omd/sites/beta/var/check_mk/rrd
-12288	/omd/sites/beta/tmp/
-323595	/omd/sites/beta/local/
-43169326	/omd/sites/beta/var/check_mk/agents/
-4096    /omd/sites/beta/var/mkeventd/history/
-743561	/omd/sites/beta/var/check_mk/core/
-13208	/omd/sites/beta/var/check_mk/inventory_archive/
+    for l in """[site log]
+229473382	/omd/sites/log
+96979	/omd/sites/log/var/log
+123481264	/omd/sites/log/var/check_mk/rrd
+4096	/omd/sites/log/tmp/
+323595	/omd/sites/log/local/
+43255425	/omd/sites/log/var/check_mk/agents/
+1648718	/omd/sites/log/var/check_mk/core/
+[site local]
+258890373	/omd/sites/local
+827498	/omd/sites/local/var/log
+152635621	/omd/sites/local/var/check_mk/rrd
+12288	/omd/sites/local/tmp/
+323595	/omd/sites/local/local/
+43169326	/omd/sites/local/var/check_mk/agents/
+4096    /omd/sites/local/var/mkeventd/history/
+743561	/omd/sites/local/var/check_mk/core/
+13208	/omd/sites/local/var/check_mk/inventory_archive/
 """.split(
         "\n"
     )
@@ -68,7 +68,7 @@ def test_discovery(section: Section) -> None:
 
 def test_discovery_v2(section_v2: Section) -> None:
     services = list(discovery(section_v2))
-    assert services == [Service(item="abcdfg"), Service(item="beta")]
+    assert services == [Service(item="log"), Service(item="local")]
 
 
 @dataclass
@@ -126,7 +126,7 @@ def test_check(site: SiteTest, section: Section) -> None:
 SitesV2 = [
     pytest.param(
         SiteTest(
-            item="abcdfg",
+            item="log",
             expected_results=[
                 Result(state=State.OK, summary="Total: 219 MiB"),
                 Result(state=State.OK, summary="Agents: 41.3 MiB"),
@@ -146,11 +146,11 @@ SitesV2 = [
                 Metric("omd_tmp_size", 4096.0),
             ],
         ),
-        id="abcdfg",
+        id="log",
     ),
     pytest.param(
         SiteTest(
-            item="beta",
+            item="local",
             expected_results=[
                 Result(state=State.OK, summary="Total: 247 MiB"),
                 Result(state=State.OK, summary="Agents: 41.2 MiB"),
@@ -174,7 +174,7 @@ SitesV2 = [
                 Metric("omd_tmp_size", 12288.0),
             ],
         ),
-        id="beta",
+        id="local",
     ),
 ]
 

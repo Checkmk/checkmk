@@ -23,8 +23,7 @@ description:
  The following directories give insight into the state of the site. There
  are no direct actions to be taken or consequences for monitoring.
  - var/check_mk/rrd/ - Modern graphing data.
- - var/mkeventd/history/ - The Event Console archive, see
-   https://docs.checkmk.com/latest/en/ec.html?lquery=var/mkeventd/history#_location_of_the_archive
+ - var/mkeventd/history/ - Contains archived events from the Event Console.
  - var/check_mk/inventory_archive/ - A cache of the HW/SW Inventory data.
 
 item:

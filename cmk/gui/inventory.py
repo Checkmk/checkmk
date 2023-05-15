@@ -28,10 +28,12 @@ from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.structured_data import (
     compare_trees,
     DeltaStructuredDataNode,
+    filter_delta_tree,
     filter_tree,
     load_tree,
     make_filter,
     merge_trees,
+    SDFilter,
     SDKey,
     SDPath,
     StructuredDataNode,
@@ -324,6 +326,11 @@ def _get_history(
     cached_tree_loader = _CachedTreeLoader()
     corrupted_history_files: set[Path] = set()
     history: list[HistoryEntry] = []
+    filters = (
+        [make_filter(entry) for entry in permitted_paths if entry]
+        if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
+        else None
+    )
 
     for previous, current in _get_pairs(filtered_tree_paths):
         if current.timestamp is None:
@@ -333,6 +340,7 @@ def _get_history(
             hostname,
             previous.timestamp,
             current.timestamp,
+            filters,
         )
 
         if (cached_history_entry := cached_delta_tree_loader.get_cached_entry()) is not None:
@@ -412,7 +420,7 @@ class _CachedTreeLoader:
 
     def _load_tree_from_file(self, filepath: Path) -> StructuredDataNode:
         try:
-            tree = _filter_tree(load_tree(filepath))
+            tree = load_tree(filepath)
         except FileNotFoundError:
             raise LoadStructuredDataError()
 
@@ -428,6 +436,8 @@ class _CachedDeltaTreeLoader:
     hostname: HostName
     previous_timestamp: int | None
     current_timestamp: int
+    # TODO Cleanup
+    filters: Sequence[SDFilter] | None
 
     @property
     def _path(self) -> Path:
@@ -447,8 +457,7 @@ class _CachedDeltaTreeLoader:
             return None
 
         new, changed, removed, raw_delta_tree = cached_data
-        return HistoryEntry(
-            self.current_timestamp,
+        return self._make_history_entry(
             new,
             changed,
             removed,
@@ -470,8 +479,26 @@ class _CachedDeltaTreeLoader:
                 self._path,
                 repr((new, changed, removed, delta_tree.serialize())),
             )
-            return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
+            return self._make_history_entry(new, changed, removed, delta_tree)
         return None
+
+    def _make_history_entry(
+        self, new: int, changed: int, removed: int, delta_tree: DeltaStructuredDataNode
+    ) -> HistoryEntry | None:
+        if self.filters is None:
+            return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
+
+        if (filtered_delta_tree := filter_delta_tree(delta_tree, self.filters)).is_empty():
+            return None
+
+        delta_result = filtered_delta_tree.count_entries()
+        return HistoryEntry(
+            self.current_timestamp,
+            delta_result["new"],
+            delta_result["changed"],
+            delta_result["removed"],
+            filtered_delta_tree,
+        )
 
 
 # .
@@ -542,7 +569,7 @@ def _filter_tree(struct_tree: StructuredDataNode | None) -> StructuredDataNode |
     if struct_tree is None:
         return None
 
-    if permitted_paths := _get_permitted_inventory_paths():
+    if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
         return filter_tree(struct_tree, [make_filter(entry) for entry in permitted_paths if entry])
 
     return struct_tree

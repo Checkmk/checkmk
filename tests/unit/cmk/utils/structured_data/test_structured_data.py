@@ -19,11 +19,13 @@ from cmk.utils.structured_data import (
     Attributes,
     compare_trees,
     DeltaStructuredDataNode,
+    filter_delta_tree,
     filter_tree,
     make_filter,
     merge_trees,
     parse_visible_raw_path,
     RetentionIntervals,
+    SDFilter,
     SDKeys,
     SDNodeName,
     SDPath,
@@ -311,6 +313,129 @@ def test_compare_trees_1() -> None:
     assert delta_result1["changed"] == 0
     assert delta_result1["removed"] == 0
 
+    assert filter_delta_tree(delta_tree1, []).is_empty()
+
+
+def test_filter_delta_tree_nt() -> None:
+    filtered = filter_delta_tree(
+        compare_trees(_create_filled_tree(), _create_empty_tree()),
+        [
+            SDFilter(
+                path=("path", "to", "nta", "nt"),
+                filter_nodes=lambda n: False,
+                filter_attributes=lambda k: k in ["nt1"],
+                filter_columns=lambda k: k in ["nt1"],
+            )
+        ],
+    )
+
+    assert filtered.get_node(("path", "to", "nta", "na")) is None
+    assert filtered.get_node(("path", "to", "nta", "ta")) is None
+
+    filtered_child = filtered.get_node(("path", "to", "nta", "nt"))
+    assert filtered_child is not None
+    assert filtered_child.path == ("path", "to", "nta", "nt")
+    assert filtered_child.attributes.path == ("path", "to", "nta", "nt")
+    assert filtered_child.table.path == ("path", "to", "nta", "nt")
+    assert filtered_child.attributes.pairs == {}
+    assert len(filtered_child.table.rows) == 2
+    for row in (
+        {"nt1": (None, "NT 01")},
+        {"nt1": (None, "NT 11")},
+    ):
+        assert row in filtered_child.table.rows
+
+
+def test_filter_delta_tree_na() -> None:
+    filtered = filter_delta_tree(
+        compare_trees(_create_filled_tree(), _create_empty_tree()),
+        [
+            SDFilter(
+                path=("path", "to", "nta", "na"),
+                filter_nodes=lambda n: False,
+                filter_attributes=lambda k: k in ["na1"],
+                filter_columns=lambda k: k in ["na1"],
+            )
+        ],
+    )
+
+    assert filtered.get_node(("path", "to", "nta", "nt")) is None
+    assert filtered.get_node(("path", "to", "nta", "ta")) is None
+
+    filtered_child = filtered.get_node(("path", "to", "nta", "na"))
+    assert filtered_child is not None
+    assert filtered_child.path == ("path", "to", "nta", "na")
+    assert filtered_child.attributes.path == ("path", "to", "nta", "na")
+    assert filtered_child.table.path == ("path", "to", "nta", "na")
+    assert filtered_child.attributes.pairs == {"na1": (None, "NA 1")}
+    assert filtered_child.table.rows == []
+
+
+def test_filter_delta_tree_ta() -> None:
+    filtered = filter_delta_tree(
+        compare_trees(_create_filled_tree(), _create_empty_tree()),
+        [
+            SDFilter(
+                path=("path", "to", "nta", "ta"),
+                filter_nodes=lambda n: False,
+                filter_attributes=lambda k: k in ["ta1"],
+                filter_columns=lambda k: k in ["ta1"],
+            )
+        ],
+    )
+
+    assert filtered.get_node(("path", "to", "nta", "nt")) is None
+    assert filtered.get_node(("path", "to", "nta", "na")) is None
+
+    filtered_child = filtered.get_node(("path", "to", "nta", "ta"))
+    assert filtered_child is not None
+    assert filtered_child.path == ("path", "to", "nta", "ta")
+    assert filtered_child.attributes.path == ("path", "to", "nta", "ta")
+    assert filtered_child.table.path == ("path", "to", "nta", "ta")
+    assert filtered_child.attributes.pairs == {"ta1": (None, "TA 1")}
+    assert len(filtered_child.table.rows) == 2
+    for row in (
+        {"ta1": (None, "TA 01")},
+        {"ta1": (None, "TA 11")},
+    ):
+        assert row in filtered_child.table.rows
+
+
+def test_filter_delta_tree_nta_ta() -> None:
+    filtered = filter_delta_tree(
+        compare_trees(_create_filled_tree(), _create_empty_tree()),
+        [
+            SDFilter(
+                path=("path", "to", "nta", "ta"),
+                filter_nodes=lambda n: False,
+                filter_attributes=lambda k: k in ["ta0"],
+                filter_columns=lambda k: k in ["ta0"],
+            ),
+            SDFilter(
+                path=("path", "to", "nta", "ta"),
+                filter_nodes=lambda n: False,
+                filter_attributes=lambda k: k in ["ta1"],
+                filter_columns=lambda k: k in ["ta1"],
+            ),
+        ],
+    )
+
+    assert filtered.get_node(("path", "to", "nta", "nt")) is None
+    assert filtered.get_node(("path", "to", "nta", "na")) is None
+    assert filtered.get_node(("path", "to", "nta", "ta")) is not None
+
+    filtered_ta = filtered.get_node(("path", "to", "nta", "ta"))
+    assert filtered_ta is not None
+    assert filtered_ta.attributes.pairs == {"ta0": (None, "TA 0"), "ta1": (None, "TA 1")}
+    assert len(filtered_ta.table.rows) == 4
+    for row in (
+        {"ta0": (None, "TA 00")},
+        {"ta0": (None, "TA 10")},
+        {"ta1": (None, "TA 01")},
+        {"ta1": (None, "TA 11")},
+    ):
+        assert row in filtered_ta.table.rows
+
 
 @pytest.mark.parametrize(
     "old_attributes_data, new_attributes_data, result",
@@ -472,7 +597,7 @@ def test_filter_tree_no_paths() -> None:
 
 def test_filter_tree_wrong_node() -> None:
     filled_root = _create_filled_tree()
-    filters = _make_filters([(["path", "to", "nta", "ta"], None)])
+    filters = _make_filters([(("path", "to", "nta", "ta"), None)])
     filtered = filter_tree(filled_root, filters)
     assert filtered.get_node(("path", "to", "nta", "na")) is None
     assert filtered.get_node(("path", "to", "nta", "nt")) is None
@@ -480,7 +605,7 @@ def test_filter_tree_wrong_node() -> None:
 
 def test_filter_tree_paths_no_keys() -> None:
     filled_root = _create_filled_tree()
-    filters = _make_filters([(["path", "to", "nta", "ta"], None)])
+    filters = _make_filters([(("path", "to", "nta", "ta"), None)])
     filtered_node = filter_tree(filled_root, filters).get_node(("path", "to", "nta", "ta"))
     assert filtered_node is not None
 
@@ -500,7 +625,7 @@ def test_filter_tree_paths_no_keys() -> None:
 
 def test_filter_tree_paths_and_keys() -> None:
     filled_root = _create_filled_tree()
-    filters = _make_filters([(["path", "to", "nta", "ta"], ["ta1"])])
+    filters = _make_filters([(("path", "to", "nta", "ta"), ["ta1"])])
     filtered_node = filter_tree(filled_root, filters).get_node(("path", "to", "nta", "ta"))
     assert filtered_node is not None
 
@@ -548,8 +673,8 @@ def test_filter_tree_mixed() -> None:
 
     filters = _make_filters(
         [
-            (["path", "to", "another"], None),
-            (["path", "to", "nta", "ta"], ["ta0"]),
+            (("path", "to", "another"), None),
+            (("path", "to", "nta", "ta"), ["ta0"]),
         ]
     )
     filtered_node = filter_tree(filled_root, filters)
@@ -958,16 +1083,16 @@ def test_merge_trees_2() -> None:
         (
             # container                   table                    attributes
             [
-                (["hardware", "components"], None),
-                (["networking", "interfaces"], None),
-                (["software", "os"], None),
+                (("hardware", "components"), None),
+                (("networking", "interfaces"), None),
+                (("software", "os"), None),
             ],
             [("hardware", "system"), ("software", "applications")],
         ),
     ],
 )
-def test_filter_tree(
-    paths: Sequence[tuple[Sequence[str], None]],
+def test_real_filtered_tree(
+    paths: Sequence[tuple[tuple[str, ...], None]],
     unavail: Sequence[tuple[str, str]],
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
@@ -983,20 +1108,20 @@ def test_filter_tree(
     [
         (
             [
-                (["networking"], None),
+                (("networking",), None),
             ],
             3178,
         ),
         (
             [
-                (["networking"], []),
+                (("networking",), []),
             ],
             None,
         ),
         (
             [
                 (
-                    ["networking"],
+                    ("networking",),
                     ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"],
                 ),
             ],
@@ -1004,44 +1129,44 @@ def test_filter_tree(
         ),
         (
             [
-                (["networking", "interfaces"], None),
+                (("networking", "interfaces"), None),
             ],
             3178,
         ),
         (
             [
-                (["networking", "interfaces"], []),
+                (("networking", "interfaces"), []),
             ],
             3178,
         ),
         (
             [
-                (["networking", "interfaces"], ["admin_status"]),
+                (("networking", "interfaces"), ["admin_status"]),
             ],
             326,
         ),
         (
             [
-                (["networking", "interfaces"], ["admin_status", "FOOBAR"]),
+                (("networking", "interfaces"), ["admin_status", "FOOBAR"]),
             ],
             326,
         ),
         (
             [
-                (["networking", "interfaces"], ["admin_status", "oper_status"]),
+                (("networking", "interfaces"), ["admin_status", "oper_status"]),
             ],
             652,
         ),
         (
             [
-                (["networking", "interfaces"], ["admin_status", "oper_status", "FOOBAR"]),
+                (("networking", "interfaces"), ["admin_status", "oper_status", "FOOBAR"]),
             ],
             652,
         ),
     ],
 )
-def test_filter_tree_networking(
-    paths: Sequence[tuple[Sequence[str], Sequence[str]]],
+def test_real_filtered_tree_networking(
+    paths: Sequence[tuple[tuple[str, ...], Sequence[str]]],
     amount_if_entries: int,
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))

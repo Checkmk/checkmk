@@ -1226,6 +1226,124 @@ class Attributes:
 #   '----------------------------------------------------------------------'
 
 
+def _filter_delta_attributes(
+    delta_attributes: DeltaAttributes, filter_func: SDFilterFunc
+) -> DeltaAttributes:
+    return DeltaAttributes(
+        path=delta_attributes.path, pairs=_get_filtered_dict(delta_attributes.pairs, filter_func)
+    )
+
+
+def _filter_delta_table(delta_table: DeltaTable, filter_func: SDFilterFunc) -> DeltaTable:
+    return DeltaTable(
+        path=delta_table.path,
+        key_columns=delta_table.key_columns,
+        rows=[
+            filtered_row
+            for row in delta_table.rows
+            if (filtered_row := _get_filtered_dict(row, filter_func))
+        ],
+    )
+
+
+def filter_delta_tree(
+    delta_tree: DeltaStructuredDataNode, filters: Sequence[SDFilter]
+) -> DeltaStructuredDataNode:
+    filtered = DeltaStructuredDataNode(
+        name=delta_tree.name,
+        path=delta_tree.path,
+        attributes=DeltaAttributes(path=delta_tree.path, pairs={}),
+        table=DeltaTable(path=delta_tree.path, key_columns=[], rows=[]),
+        _nodes={},
+    )
+
+    for f in filters:
+        # First check if node exists
+        node = delta_tree.get_node(f.path)
+        if node is None:
+            continue
+
+        filtered.add_node(
+            node.path,
+            DeltaStructuredDataNode(
+                name=node.name,
+                path=node.path,
+                attributes=_filter_delta_attributes(node.attributes, f.filter_attributes),
+                table=_filter_delta_table(node.table, f.filter_columns),
+                _nodes={child.name: child for child in node.nodes if f.filter_nodes(child.name)},
+            ),
+        )
+
+    return filtered
+
+
+def _merge_delta_attributes(
+    delta_attributes_lhs: DeltaAttributes, delta_attributes_rhs: DeltaAttributes
+) -> DeltaAttributes:
+    return DeltaAttributes(
+        path=delta_attributes_lhs.path,
+        pairs={
+            **delta_attributes_lhs.pairs,
+            **delta_attributes_rhs.pairs,
+        },
+    )
+
+
+def _merge_delta_table(delta_table_lhs: DeltaTable, delta_table_rhs: DeltaTable) -> DeltaTable:
+    delta_key_columns = []
+    for key_column in delta_table_lhs.key_columns:
+        if key_column not in delta_key_columns:
+            delta_key_columns.append(key_column)
+    for key_column in delta_table_rhs.key_columns:
+        if key_column not in delta_key_columns:
+            delta_key_columns.append(key_column)
+
+    delta_rows = []
+    for row in delta_table_lhs.rows:
+        if row not in delta_rows:
+            delta_rows.append(row)
+    for row in delta_table_rhs.rows:
+        if row not in delta_rows:
+            delta_rows.append(row)
+
+    return DeltaTable(
+        path=delta_table_lhs.path,
+        key_columns=delta_key_columns,
+        rows=delta_rows,
+    )
+
+
+def _merge_delta_nodes(
+    delta_node_lhs: DeltaStructuredDataNode, delta_node_rhs: DeltaStructuredDataNode
+) -> DeltaStructuredDataNode:
+    delta_nodes = {}
+
+    compared_keys = _compare_dict_keys(
+        old_dict=delta_node_lhs.nodes_by_name,
+        new_dict=delta_node_rhs.nodes_by_name,
+    )
+
+    for key in compared_keys.only_old:
+        delta_nodes[key] = delta_node_lhs.nodes_by_name[key]
+
+    for key in compared_keys.both:
+        delta_nodes[key] = _merge_delta_nodes(
+            delta_node_lhs.nodes_by_name[key],
+            delta_node_rhs.nodes_by_name[key],
+        )
+
+    for key in compared_keys.only_new:
+        delta_nodes[key] = delta_node_rhs.nodes_by_name[key]
+
+    return DeltaStructuredDataNode(
+        name=delta_node_lhs.name,
+        path=delta_node_lhs.path,
+        attributes=_merge_delta_attributes(delta_node_lhs.attributes, delta_node_rhs.attributes),
+        table=_merge_delta_table(delta_node_lhs.table, delta_node_rhs.table),
+        _nodes=delta_nodes,
+    )
+
+
 @dataclass(frozen=True)
 class DeltaStructuredDataNode:
     name: SDNodeName
@@ -1267,6 +1385,40 @@ class DeltaStructuredDataNode:
                 return False
         return True
 
+    def add_node(self, path: SDPath, node: DeltaStructuredDataNode) -> None:
+        if not path:
+            return
+
+        node_name = path[0]
+        node_path = self.path + (path[0],)
+        if len(path) == 1:
+            self._nodes[node_name] = _merge_delta_nodes(
+                self._nodes.get(
+                    node_name,
+                    DeltaStructuredDataNode(
+                        name=node_name,
+                        path=node_path,
+                        attributes=DeltaAttributes(path=node_path, pairs={}),
+                        table=DeltaTable(path=node_path, key_columns=[], rows=[]),
+                        _nodes={},
+                    ),
+                ),
+                node,
+            )
+            return
+
+        child = self._nodes.setdefault(
+            node_name,
+            DeltaStructuredDataNode(
+                name=node_name,
+                path=node_path,
+                attributes=DeltaAttributes(path=node_path, pairs={}),
+                table=DeltaTable(path=node_path, key_columns=[], rows=[]),
+                _nodes={},
+            ),
+        )
+        child.add_node(path[1:], node)
+
     def get_node(self, path: SDPath) -> DeltaStructuredDataNode | None:
         if not path:
             return self
@@ -1276,6 +1428,10 @@ class DeltaStructuredDataNode:
     @property
     def nodes(self) -> Iterator[DeltaStructuredDataNode]:
         yield from self._nodes.values()
+
+    @property
+    def nodes_by_name(self) -> Mapping[SDNodeName, DeltaStructuredDataNode]:
+        return self._nodes
 
     def serialize(self) -> SDRawDeltaTree:
         return {

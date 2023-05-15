@@ -359,6 +359,7 @@ class SpecialAgentSource(Source[AgentRawData]):
 
     def __init__(
         self,
+        config_cache: ConfigCache,
         host_name: HostName,
         ipaddress: HostAddress | None,
         *,
@@ -367,6 +368,7 @@ class SpecialAgentSource(Source[AgentRawData]):
         params: Mapping[str, object],
     ) -> None:
         super().__init__()
+        self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
@@ -384,7 +386,7 @@ class SpecialAgentSource(Source[AgentRawData]):
 
     def fetcher(self) -> Fetcher[AgentRawData]:
         return ProgramFetcher(
-            cmdline=core_config.make_special_agent_cmdline(
+            cmdline=self.config_cache.make_special_agent_cmdline(
                 self.host_name,
                 self.ipaddress,
                 self._agent_name,

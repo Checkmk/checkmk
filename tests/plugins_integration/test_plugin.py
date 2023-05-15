@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from tests.testlib.site import Site
 
 from .checks import compare_check_output
@@ -17,7 +19,7 @@ from .conftest import (
 )
 
 
-def test_plugin(test_site: Site) -> None:
+def test_plugin(test_site: Site, tmp_path_factory: pytest.TempPathFactory) -> None:
     host_name = "test_agent_plugin_injected"
 
     cleanup_folders(test_site.id)
@@ -42,4 +44,6 @@ def test_plugin(test_site: Site) -> None:
     discovery_stdout = run_as_site_user(test_site.id, ["cmk", "-d", host_name]).stdout
 
     assert discovery_stdout == cat_stdout
-    assert compare_check_output(test_site), "Check output mismatch!"
+
+    output_dir = tmp_path_factory.mktemp("check_output")
+    assert compare_check_output(test_site, output_dir), "Check output mismatch!"

@@ -8,9 +8,7 @@ UPDATE_MODE = os.environ.get("UPDATE_MODE", "0") == "1"
 
 AGENT_OUTPUT_DIR = f"{os.path.dirname(__file__)}/agent_output"
 SECTION_NAMES = [_ for _ in os.getenv("SECTION_NAMES", "").split(",") if _]
-
 EXPECTED_OUTPUT_DIR = f"{os.path.dirname(__file__)}/check_output"
-ACTUAL_OUTPUT_DIR = os.getenv("CHECK_OUTPUT_DIR", "/tmp/check_output")
 HOST_NAMES = [_ for _ in os.getenv("HOST_NAMES", "").split(",") if _]
 CHECK_NAMES = [_ for _ in os.getenv("CHECK_NAMES", "").split(",") if _]
 

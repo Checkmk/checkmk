@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import typing
+from pathlib import Path
 
 import requests
 import yaml
@@ -75,10 +76,8 @@ def get_check_results(site: Site, host_name: str) -> dict[str, typing.Any]:
         ) from exc
 
 
-def compare_check_output(site: Site) -> bool:
+def compare_check_output(site: Site, output_dir: Path) -> bool:
     """Get the processed check output and compare it to the existing dumps."""
-    if not os.path.exists(constants.ACTUAL_OUTPUT_DIR):
-        os.makedirs(constants.ACTUAL_OUTPUT_DIR)
     host_names = [
         host.get("id")
         for host in api_get(site, "/domain-types/host_config/collections/all")
@@ -109,7 +108,7 @@ def compare_check_output(site: Site) -> bool:
             if len(constants.CHECK_NAMES) > 0 and check_file_name not in constants.CHECK_NAMES:
                 continue
             json_canon_file_path = f"{constants.EXPECTED_OUTPUT_DIR}/{check_file_name}.json"
-            json_result_file_path = f"{constants.ACTUAL_OUTPUT_DIR}/{check_file_name}.json"
+            json_result_file_path = str(output_dir / f"{check_file_name}.json")
             result_data = check_result.get("extensions", {})
 
             if constants.UPDATE_MODE:

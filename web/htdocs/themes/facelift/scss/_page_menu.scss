@@ -16,9 +16,14 @@ div#top_heading {
   padding: 0;
 
   div.titlebar {
+    display: flex;
     height: 53px;
     padding: 0.5 * $spacing $spacing 0;
     background-color: $bg-color;
+
+    > div:first-child {
+      flex-grow: 1;
+    }
   }
 
   a.title {
@@ -36,12 +41,11 @@ div#top_heading {
   }
 
   div.page_state {
-    position: absolute;
-    top: 14px;
-    right: $spacing;
+    position: relative;
     display: flex;
     align-items: center;
     height: inherit;
+    box-sizing: border-box;
 
     > a {
       display: inherit;
@@ -54,7 +58,7 @@ div#top_heading {
     }
 
     &.pending_changes {
-      top: 3px;
+      padding-bottom: 4px;
 
       div.text_container span {
         display: block;
@@ -67,16 +71,20 @@ div#top_heading {
       }
     }
 
-    &.no_changes div.text_container {
-      span.changes_number {
-        display: none;
-      }
+    &.no_changes {
+      padding-top: 18px;
 
-      span.changes_str {
-        color: $font-color-dimmed;
+      div.text_container {
+        span.changes_number {
+          display: none;
+        }
 
-        &:hover {
-          color: $font-color;
+        span.changes_str {
+          color: $font-color-dimmed;
+
+          &:hover {
+            color: $font-color;
+          }
         }
       }
     }
@@ -97,12 +105,12 @@ div#top_heading {
     }
 
     &.reload {
-      top: 6px;
+      padding-top: 2px;
 
       div.text_container span {
         position: absolute;
         right: 6px;
-        bottom: 22px;
+        bottom: 21px;
         font-size: $font-size-small;
         line-height: $font-size-small;
       }

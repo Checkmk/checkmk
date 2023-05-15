@@ -38,6 +38,7 @@ def top_heading(
 
     writer.open_div(id_="top_heading")
     writer.open_div(class_="titlebar")
+    writer.open_div()
 
     # HTML() is needed here to prevent a double escape when we do  self._escape_attribute
     # here and self.a() escapes the content (with permissive escaping) again. We don't want
@@ -53,6 +54,8 @@ def top_heading(
 
     if breadcrumb:
         BreadcrumbRenderer().show(breadcrumb)
+
+    writer.close_div()
 
     if page_state is None:
         page_state = _make_default_page_state(

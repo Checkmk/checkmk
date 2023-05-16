@@ -24,12 +24,6 @@
 #include "livestatus/PnpUtils.h"
 #include "livestatus/strutil.h"
 
-#ifdef CMC
-#include "CmcService.h"
-#else
-#include "NebService.h"
-#endif
-
 RRDColumnArgs::RRDColumnArgs(const std::string &arguments,
                              const std::string &column_name) {
     auto invalid = [&column_name](const std::string &message) {
@@ -94,18 +88,6 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
     const IService &svc, std::chrono::seconds timezone_offset) const {
     return make(svc.host().name(), svc.description(), timezone_offset);
 }
-
-#ifdef CMC
-std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
-    const Service &svc, std::chrono::seconds timezone_offset) const {
-    return (*this)(CmcService{svc}, timezone_offset);
-}
-#else
-std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
-    const ::service &svc, std::chrono::seconds timezone_offset) const {
-    return (*this)(NebService{svc}, timezone_offset);
-}
-#endif
 
 namespace {
 bool isVariableName(const std::string &token) {

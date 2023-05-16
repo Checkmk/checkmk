@@ -17,12 +17,6 @@
 #include "livestatus/ListColumn.h"
 #include "livestatus/overload.h"  // IWYU pragma: keep
 
-#ifdef CMC
-class Service;
-#else
-#include "nagios.h"
-#endif
-
 class IHost;
 class IService;
 class ListRenderer;
@@ -49,15 +43,6 @@ public:
         const IHost &hst, std::chrono::seconds timezone_offset) const;
     std::vector<value_type> operator()(
         const IService &svc, std::chrono::seconds timezone_offset) const;
-
-// TODO(sp): Remove.
-#ifdef CMC
-    std::vector<value_type> operator()(
-        const Service &svc, std::chrono::seconds timezone_offset) const;
-#else
-    std::vector<value_type> operator()(
-        const ::service &svc, std::chrono::seconds timezone_offset) const;
-#endif
 
 private:
     MonitoringCore *_mc;

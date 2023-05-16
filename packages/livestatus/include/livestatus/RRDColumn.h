@@ -6,8 +6,6 @@
 #ifndef RRDColumn_h
 #define RRDColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <string>
 #include <utility>

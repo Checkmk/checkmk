@@ -17,7 +17,6 @@
 #include <vector>
 
 #include "DynamicRRDColumn.h"
-#include "RRDColumn.h"
 #include "TableHosts.h"
 #include "livestatus/AttributeBitmaskColumn.h"
 #include "livestatus/AttributeListColumn.h"
@@ -35,6 +34,7 @@
 #include "livestatus/MapUtils.h"
 #include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
+#include "livestatus/RRDColumn.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/TimeColumn.h"

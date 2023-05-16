@@ -12,8 +12,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "RRDColumn.h"
 #include "livestatus/DynamicColumn.h"
+#include "livestatus/RRDColumn.h"
 #include "livestatus/opids.h"
 class Column;
 class ColumnOffsets;

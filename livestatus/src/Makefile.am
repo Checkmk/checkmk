@@ -22,12 +22,6 @@ LIBLIVESTATUS_INCLUDE := $(LIBLIVESTATUS_PATH)/include
 LIBLIVESTATUS_SO := $(LIBLIVESTATUS_PATH)/build/src/liblivestatus.so
 RE2_INCLUDE := $(LIBLIVESTATUS_PATH)/build/_deps/re2-src
 
-RRDTOOL_VERSION := rrdtool-1.7.2
-RRDTOOL_PATH := $(abs_top_srcdir)/omd/build/intermediate_install/$(RRDTOOL_VERSION)
-RRDTOOL_BUILD_LOG := $(RRDTOOL_PATH)/build.log
-RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_PATH)/lib
-RRDTOOL_CPPFLAGS := -I$(RRDTOOL_PATH)/include
-
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/third_party/googletest
 GOOGLETEST_VERSION := googletest-71140c3ca7-patched
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
@@ -59,14 +53,9 @@ test_neb_SOURCES = \
     test/test_MacroExpander.cc \
     test/test_Table.cc \
     test/test_utilities.cc
-$(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE) $(RRDTOOL_VERSION)
-test_neb_CPPFLAGS = \
-    $(AM_CPPFLAGS) \
-    -I$(GOOGLETEST_INCLUDE) \
-    $(RRDTOOL_CPPFLAGS)
-test_neb_LDFLAGS = \
-    $(AM_LDFLAGS) \
-    $(RRDTOOL_LD_FLAGS)
+$(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE)
+test_neb_CPPFLAGS = $(AM_CPPFLAGS) -I$(GOOGLETEST_INCLUDE)
+test_neb_LDFLAGS = $(AM_LDFLAGS)
 test_neb_LDADD = \
     liblivestatusneb.a \
     -lstdc++fs \
@@ -90,18 +79,13 @@ unit-test: test_neb$(EXEEXT) $(LIBLIVESTATUS_SO)
 pkglib_LIBRARIES = liblivestatusneb.a
 
 liblivestatusneb_a_CXXFLAGS = -fPIC
-liblivestatusneb_a_CPPFLAGS = \
-    $(AM_CPPFLAGS) \
-    $(RRDTOOL_CPPFLAGS)
-liblivestatusneb_a_LD_FLAGS = \
-    $(AM_LDFLAGS) \
-    $(RRDTOOL_LD_FLAGS)
+liblivestatusneb_a_CPPFLAGS = $(AM_CPPFLAGS)
+liblivestatusneb_a_LD_FLAGS = $(AM_LDFLAGS)
 liblivestatusneb_a_SOURCES = \
         MacroExpander.cc \
         NagiosCore.cc \
         NebHost.cc \
         NebService.cc \
-        RRDColumn.cc \
         Store.cc \
         TableComments.cc \
         TableDowntimes.cc \
@@ -117,7 +101,7 @@ liblivestatusneb_a_SOURCES = \
         TimeperiodsCache.cc \
         module.cc \
         pnp4nagios.cc
-$(liblivestatusneb_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
+$(liblivestatusneb_a_SOURCES): $(ASIO_INCLUDE)
 
 # Called during packaging. Copied from Makefile.am "all-am" to exclude noinst* targets
 all-packaging-local: Makefile $(bin_PROGRAMS) $(pkglib_LIBRARIES) all-local
@@ -130,17 +114,6 @@ $(ASIO_INCLUDE): $(ASIO_VERSION)
 $(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
 	$(RM) -r $@
 	tar xzf $<
-	touch $@
-
-$(RRDTOOL_VERSION):
-# TODO: This is specialized for OMD environments. We need make this automatically detect the
-# OMD scenario and perform specific things for OMD and other things for rrdtool standalone.
-	@echo Building rrdtool library...
-# Building rrdtool with modern compilers results in *tons* of warnings, which
-# would totally hide any output of our own stuff, so we write it to a log file
-# in case something goes seriously wrong.
-	mkdir -p $$(dirname $(RRDTOOL_BUILD_LOG))
-	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $(RRDTOOL_PATH)))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
 	touch $@
 
 $(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile
@@ -169,7 +142,7 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 
 livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)
 # Note: libstdc++fs is only available as a static library, so we are lucky.
-	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) $(LIBLIVESTATUS_SO) $(RRDTOOL_LD_FLAGS)
+	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) $(LIBLIVESTATUS_SO)
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -I. -I../.. -I.. -c NagiosMockup.cc -o NagiosMockup.o
 	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatusneb_a_LD_FLAGS) $(LIBLIVESTATUS_SO)

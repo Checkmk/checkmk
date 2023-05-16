@@ -130,7 +130,7 @@ class QosData:
 Section = Mapping[tuple[InterfaceName, cbQosCMName], QosData]
 
 
-def parse_cisco_qos(  # pylint: disable=too-many-branches
+def parse_cisco_qos(
     string_table: List[StringTable],
 ) -> Section:
     policy_index_to_interface_index = {
@@ -207,34 +207,6 @@ def parse_cisco_qos(  # pylint: disable=too-many-branches
             except StopIteration:
                 continue
 
-            speed: float = interface_index_to_interface_speed[if_index]
-
-            for pol_and_obj_idx, parent_idx in policy_and_object_index_to_parent_index.items():
-                if config_index_to_object_index[config_index] == parent_idx:
-                    if (
-                        policy_and_object_index_to_object_type[pol_and_obj_idx]
-                        is _QosObjectType.QUEUEING
-                    ):
-                        try:
-                            qos_unit = config_index_to_bandwidth_units[
-                                policy_and_object_index_to_config_index[pol_and_obj_idx]
-                            ]
-                            qos_bandwidth = config_index_to_bandwidth[
-                                policy_and_object_index_to_config_index[pol_and_obj_idx]
-                            ]
-                        except KeyError:
-                            continue
-
-                        match qos_unit:
-                            case _QueueingBandwidthUnits.KBPS:
-                                speed = qos_bandwidth * 1000
-                            case _QueueingBandwidthUnits.PERCENTAGE:
-                                speed *= qos_bandwidth / 100
-                            case _QueueingBandwidthUnits.PERCENTAGE_REMAINING:
-                                speed *= 1 - (qos_bandwidth / 100)
-
-                        break
-
             section[(if_name, class_name)] = QosData(
                 outbound_bits_counter=policy_and_object_index_to_outbound_bytes_counters.get(
                     (policy_index, object_index), 0
@@ -244,7 +216,15 @@ def parse_cisco_qos(  # pylint: disable=too-many-branches
                     (policy_index, object_index), 0
                 )
                 * 8,
-                bandwidth=speed,
+                bandwidth=_calculate_bandwidth(
+                    interface_speed=interface_index_to_interface_speed[if_index],
+                    object_index=config_index_to_object_index[config_index],
+                    policy_and_object_index_to_config_index=policy_and_object_index_to_config_index,
+                    policy_and_object_index_to_parent_index=policy_and_object_index_to_parent_index,
+                    policy_and_object_index_to_object_type=policy_and_object_index_to_object_type,
+                    config_index_to_bandwidth=config_index_to_bandwidth,
+                    config_index_to_bandwidth_units=config_index_to_bandwidth_units,
+                ),
                 policy_map_index=policy_map_idx,
                 policy_map_name=config_index_to_policy_name.get(policy_map_idx),
             )
@@ -303,6 +283,51 @@ class _QueueingBandwidthUnits(Enum):
     PER_MILLION = "6"
     # not part of the MIB, but observed in reality (walk from SUP-14099)
     _UNKNOWN = "0"
+
+
+def _calculate_bandwidth(
+    *,
+    interface_speed: float,
+    object_index: _cbQosObjectsIndex,
+    policy_and_object_index_to_config_index: Mapping[
+        tuple[_cbQosPolicyIndex, _cbQosObjectsIndex], cbQosConfigIndex
+    ],
+    policy_and_object_index_to_parent_index: Mapping[
+        tuple[_cbQosPolicyIndex, _cbQosObjectsIndex], _cbQosObjectsIndex
+    ],
+    policy_and_object_index_to_object_type: Mapping[
+        tuple[_cbQosPolicyIndex, _cbQosObjectsIndex], _QosObjectType
+    ],
+    config_index_to_bandwidth: Mapping[cbQosConfigIndex, int],
+    config_index_to_bandwidth_units: Mapping[cbQosConfigIndex, _QueueingBandwidthUnits],
+) -> float:
+    bandwidth = interface_speed
+    for pol_and_obj_idx in (
+        pol_and_obj_idx
+        for pol_and_obj_idx, parent_idx in policy_and_object_index_to_parent_index.items()
+        if object_index == parent_idx
+        and policy_and_object_index_to_object_type[pol_and_obj_idx] is _QosObjectType.QUEUEING
+    ):
+        try:
+            qos_unit = config_index_to_bandwidth_units[
+                policy_and_object_index_to_config_index[pol_and_obj_idx]
+            ]
+            qos_bandwidth = config_index_to_bandwidth[
+                policy_and_object_index_to_config_index[pol_and_obj_idx]
+            ]
+        except KeyError:
+            continue
+
+        match qos_unit:
+            case _QueueingBandwidthUnits.KBPS:
+                bandwidth = qos_bandwidth * 1000
+            case _QueueingBandwidthUnits.PERCENTAGE:
+                bandwidth *= qos_bandwidth / 100
+            case _QueueingBandwidthUnits.PERCENTAGE_REMAINING:
+                bandwidth *= 1 - (qos_bandwidth / 100)
+
+        return bandwidth
+    return bandwidth
 
 
 register.snmp_section(

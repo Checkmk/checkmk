@@ -21,7 +21,7 @@
 ' -----------------------------------------------------------------------------------------
 
 Option Explicit
-Const CMK_VERSION = "2.2.0b8"
+Const CMK_VERSION = "2.2.0b9"
 
 Dim fso
 Dim objStdout

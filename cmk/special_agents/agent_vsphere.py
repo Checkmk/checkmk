@@ -35,7 +35,7 @@ import cmk.special_agents.utils as utils
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-__version__ = "2.2.0b8"
+__version__ = "2.2.0b9"
 
 USER_AGENT = f"checkmk-special-vsphere-{__version__}"
 

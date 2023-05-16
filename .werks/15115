@@ -25,8 +25,8 @@ C+:
 OMD[mySite]:~$ mkp list
 Name            Version Title                 Author       Req. Version Until Version Files State
 --------------- ------- --------------------- ------------ ------------ ------------- ----- -----------------------------
-my_package      1.0     A test package        tribe29 GmbH 1.6.0        None          1     Enabled (active on this site)
-another-package 1.0     A nother test package tribe29 GmbH 2.0.0        2.1.0         42    Enabled (inactive on this site)
+my_package      1.0     A test package        Checkmk GmbH 1.6.0        None          1     Enabled (active on this site)
+another-package 1.0     A nother test package Checkmk GmbH 2.0.0        2.1.0         42    Enabled (inactive on this site)
 C-:
 
 This change was originally intended to be part of the 2.2 release.

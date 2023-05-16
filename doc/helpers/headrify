@@ -127,8 +127,8 @@ headrify ()
       sed -r '0,/^'"$endline"'$/Id' $file | sed '/./,$!d' | sed '1{/^\*\/$/d}' | sed '/./,$!d' >> $TMP
       tmpwritten=true
       break
-    elif [[ "$(echo "$line" | sed -n '/copyright/I p' | sed -n '/tribe29/ !p')" ]]; then
-      echo "Skipping $file because it seems to hold a non tribe29 copyright notice already."
+    elif [[ "$(echo "$line" | sed -n '/copyright/I p' | sed -n '/Checkmk/ !p')" ]]; then
+      echo "Skipping $file because it seems to hold a non Checkmk copyright notice already."
       rm -f $TMP
       return
     elif [[ ( $count == $bangpathlines ) && ( "$bangpath" == *"$line"* || "$line" = *"coding: utf-8"* || "$line" = "#!/usr/bin/python"* ) ]]; then

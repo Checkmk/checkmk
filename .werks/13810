@@ -14,7 +14,7 @@ The agent can be configured under the same Datasource Programs rule
 within Checkmk. Monitoring services can be extended by deploying Checkmk's
 collectors in the monitored Kubernetes cluster. For the detailed description
 on how to deploy the collectors please refer to the following guide:
-https://github.com/tribe29/checkmk_kube_agent/blob/main/README.rst
+https://github.com/checkmk/checkmk_kube_agent/blob/main/README.rst
 
 This werk introduces monitoring for the following Kubernetes objects:
 

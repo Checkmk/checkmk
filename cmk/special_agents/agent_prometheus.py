@@ -9,7 +9,6 @@ import argparse
 import ast
 import json
 import logging
-import math
 import sys
 import traceback
 from collections import defaultdict, OrderedDict
@@ -370,28 +369,6 @@ class PromQLResponse:
         }.get(len(self.response), "unsupported query")
         return {"invalid_info": inv_info}
 
-    @staticmethod
-    def _identify_metric_scrape_target(promql_metric_info: PromQLMetric) -> str:
-        promql_metric_labels = promql_metric_info["labels"]
-        scrape_target_name = "{}-{}".format(
-            promql_metric_labels["job"],
-            promql_metric_labels["instance"],
-        )
-        return scrape_target_name
-
-    @staticmethod
-    def _extract_metric_label(promql_metric_info: PromQLMetric, label_key: str) -> str:
-        return promql_metric_info["labels"][label_key]
-
-    @staticmethod
-    def _extract_metric_labels(
-        metric_labels_dict: Mapping[str, str], promql_labels_subset: list[str]
-    ) -> str:
-        metric_labels_holder = ""
-        for promql_label in promql_labels_subset:
-            metric_labels_holder += metric_labels_dict[promql_label]
-        return metric_labels_holder
-
 
 class PromQLResult:
     """The PromQL result object representation for internal usage"""
@@ -414,12 +391,6 @@ class PromQLResult:
     def label_value(self, key: str, default=None) -> str:  # type: ignore[no-untyped-def]
         return self.labels.get(key, default)
 
-    def has_labels(self, keys: list[str]) -> bool:
-        for key in keys:
-            if key not in self.labels:
-                return False
-        return True
-
     def value(self, default_value: float | int | None = None, as_string: bool = False) -> float:
         try:
             value = self.internal_values[1]
@@ -430,27 +401,6 @@ class PromQLResult:
             if default_value:
                 return default_value
             raise e
-
-
-def parse_piggybacked_values(
-    promql_results: list[PromQLResult],
-    metric_description: str,
-    label_as_piggyback_host: str,
-    values_as_int: bool = False,
-) -> dict[str, dict[str, int | float]]:
-    result: dict[str, dict[str, int | float]] = {}
-    for promql_result in promql_results:
-        piggyback_host = promql_result.label_value(label_as_piggyback_host)
-        if piggyback_host == "":
-            continue
-
-        if values_as_int:
-            metric_value: int | float = int(promql_result.value())
-        else:
-            metric_value = promql_result.value()
-
-        result.setdefault(piggyback_host, {})[metric_description] = metric_value
-    return result
 
 
 def parse_piggybacked_services(
@@ -501,93 +451,6 @@ class PromQLMultiResponse(PromQLResponse):
         self.labels_overall_frequencies: dict[str, dict[str, float]] = {}
         self.promql_metrics = self._process_multi_result()
 
-    def get_piggybacked_services(
-        self, metric_description: str, promql_label_for_piggyback: str | None = None
-    ) -> dict[str, dict[str, Any]]:
-        """Process PromQL response to get "piggybacked" services
-
-        Args:
-            metric_description: Name of Metric
-            promql_label_for_piggyback: PromQL label used to determine the piggyback host
-
-        Returns:
-            dict: where key is the piggyback host and the value is a dict containing the services metrics
-
-        """
-        result: dict[str, dict[str, Any]] = {}
-        for promql_metric in self.promql_metrics:
-            if promql_label_for_piggyback is not None:
-                piggyback_host = self._extract_metric_label(
-                    promql_metric, promql_label_for_piggyback
-                )
-                promql_metric.update({"host_selection_label": promql_label_for_piggyback})
-            else:
-                piggyback_host = self._identify_metric_scrape_target(promql_metric)
-
-            if piggyback_host == "":
-                continue
-
-            result.setdefault(piggyback_host, {}).setdefault(metric_description, []).append(
-                promql_metric
-            )
-        return result
-
-    def get_value_only_piggybacked_services(
-        self,
-        metric_description: str,
-        promql_label_for_piggyback: str | None = None,
-        number_convert: str = "float",
-    ) -> dict[str, dict[str, int | float]]:
-        result: dict[str, dict[str, int | float]] = {}
-        for promql_metric in self.promql_metrics:
-            if promql_label_for_piggyback is not None:
-                piggyback_host = self._extract_metric_label(
-                    promql_metric, promql_label_for_piggyback
-                )
-            else:
-                piggyback_host = self._identify_metric_scrape_target(promql_metric)
-
-            if piggyback_host == "":
-                continue
-
-            if number_convert == "int":
-                metric_value: int | float = int(promql_metric["value"])
-            elif number_convert == "float":
-                metric_value = float(promql_metric["value"])
-            result.setdefault(piggyback_host, {})[metric_description] = metric_value
-        return result
-
-    def get_value_only_dict(self, key_label: str) -> dict[str, float]:
-        result = {}
-        for promql_metric in self.promql_metrics:
-            result[self._extract_metric_label(promql_metric, key_label)] = float(
-                promql_metric["value"]
-            )
-        return result
-
-    def get_piggybacked_services_with_least_labels(
-        self, metric_description: str, promql_label_for_piggyback: str | None = None
-    ) -> dict[str, dict[str, dict[str, Any]]]:
-        """Piggybacked services with subset of unique making PromQL labels
-
-        Args:
-            metric_description: Name of Metric
-            promql_label_for_piggyback: PromQL label used to determine the piggyback host
-
-        Returns:
-            Piggybacked services dict which additionally includes the subset of PromQL labels
-
-        """
-        piggybacked_services = self.get_piggybacked_services(
-            metric_description, promql_label_for_piggyback
-        )
-        unique_least_promql_labels = self._get_unique_least_promql_labels()
-        for _piggyback_host_name, service_info in piggybacked_services.items():
-            service_info.setdefault("unique_labels", {})[
-                metric_description
-            ] = unique_least_promql_labels
-        return piggybacked_services
-
     def _process_multi_result(self) -> list[PromQLMetric]:
         result: list[PromQLMetric] = []
         if not self.response:
@@ -606,86 +469,6 @@ class PromQLMultiResponse(PromQLResponse):
             )
             promql_specific_label_frequencies[metric_specific_label] += 1
             promql_specific_label_frequencies["total_count"] += 1
-
-    def _get_unique_least_promql_labels(self) -> list[str]:
-        information_gains = self._determine_promql_labels_information_gains()
-        promql_labels_by_relevance = PromQLMultiResponse._extract_promql_labels_by_relevance(
-            information_gains
-        )
-        unique_least_labels = self._determine_unique_least_labels_combination(
-            promql_labels_by_relevance
-        )
-        return unique_least_labels
-
-    def _determine_promql_labels_information_gains(self) -> dict[str, float]:
-        """Calculates the information gain for each PromQL label
-
-        An information gain value of 0 for a PromQL label signifies that all metric labels are the same across the
-        list of metrics. In consequence, a higher information gain value signifies that more distinctive information is
-        gained by analysing this PromQL label.
-
-        """
-        information_gains = {}
-        for promql_label, metric_labels_frequencies in self.labels_overall_frequencies.items():
-            promql_label_total_count = metric_labels_frequencies["total_count"]
-            metric_label_probabilities = [
-                metric_label_count / promql_label_total_count
-                for metric_label, metric_label_count in metric_labels_frequencies.items()
-                if metric_label != "total_count"
-            ]
-            information_gains[promql_label] = sum(
-                PromQLMultiResponse._determine_single_entropy(metric_label_probability)
-                for metric_label_probability in metric_label_probabilities
-            )
-        return information_gains
-
-    @staticmethod
-    def _determine_single_entropy(p: float) -> float:
-        if p > 1.0 or p <= 0.0:
-            return 0
-        return -p * math.log2(p)
-
-    @staticmethod
-    def _extract_promql_labels_by_relevance(information_gains: dict[str, float]) -> list[str]:
-        """Creates a list with the PromQL labels sorted by information gain relevance"""
-        promql_labels_by_relevance = [
-            a for a, b in sorted(information_gains.items(), key=lambda x: x[1], reverse=True)
-        ]
-        if all(label in promql_labels_by_relevance for label in ("pod", "pod_name")):
-            promql_labels_by_relevance.remove("pod_name")
-        return promql_labels_by_relevance
-
-    def _determine_unique_least_labels_combination(
-        self, promql_labels_by_relevance: list[str]
-    ) -> list[str]:
-        """Determines the smallest, valid subset of PromQL labels which allows to uniquely identify
-        each PromQL metric from the PromQL query result set. It should be noted that this approach does not
-        find the exact solution to the underlying problem as the problem cannot be solved in polynomial time (NP-Hard)
-        """
-        promql_labels_subset = []
-
-        for promql_label in promql_labels_by_relevance:
-            promql_labels_subset.append(promql_label)
-            if self._verify_all_unique(promql_labels_subset):
-                return promql_labels_subset
-
-        return promql_labels_by_relevance
-
-    def _verify_all_unique(self, promql_labels_subset: list[str]) -> bool:
-        seen_labels_combination: list[str] = []
-        for promql_metric in self.promql_metrics:
-            metric_labels_dict = promql_metric["labels"]
-            metric_labels_subset = PromQLMultiResponse._extract_metric_labels(
-                metric_labels_dict, promql_labels_subset
-            )
-
-            if metric_labels_subset in seen_labels_combination:
-                # this subset was already seen before meaning that the current selection of promql labels
-                # does not make each metric unique of the given promql query
-                return False
-
-            seen_labels_combination.append(metric_labels_subset)
-        return True
 
 
 class PrometheusServer:
@@ -1176,10 +959,6 @@ def _extract_config_args(config: dict[str, Any]) -> dict[str, Any]:
         "custom_services": config.get("promql_checks", []),
         "exporter_options": exporter_options,
     }
-
-
-def _get_host_label(labels):
-    return "{}:{}".format(labels["job"], labels["instance"])
 
 
 class ApiError(Exception):

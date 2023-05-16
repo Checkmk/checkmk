@@ -89,13 +89,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import (
-    make_confirm_delete_link,
-    makeactionuri,
-    makeuri,
-    makeuri_contextless,
-    urlencode,
-)
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validate import validate_id
 from cmk.gui.valuespec import (
@@ -622,14 +616,13 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return makeuri_contextless(request, http_vars, filename="edit_%s.py" % self.type_name())
 
     def clone_url(self) -> str:
-        backurl = urlencode(makeuri(request, []))
         return makeuri_contextless(
             request,
             [
                 ("owner", self.owner()),
                 ("load_name", self.name()),
                 ("mode", "clone"),
-                ("back", backurl),
+                ("back", makeuri_contextless(request, [])),
             ],
             filename="edit_%s.py" % self.type_name(),
         )

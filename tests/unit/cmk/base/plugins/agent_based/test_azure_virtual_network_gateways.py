@@ -354,6 +354,72 @@ SECTION_WITH_MISSING_PEER_ADDRESSES = {
     )
 }
 
+SECTION_WITHOUT_PEER_ADDRESSES = {
+    "vpn-001": VNetGateway(
+        resource=Resource(
+            id="/subscriptions/xyz/resourceGroups/rg-vpn-1/providers/Microsoft.Network/virtualNetworkGateways/vpn-001",
+            name="vpn-001",
+            type="Microsoft.Network/virtualNetworkGateways",
+            group="rg-vpn-1",
+            kind=None,
+            location="maxwellmonteswest",
+            tags={},
+            properties={
+                "health": {
+                    "availabilityState": "Available",
+                    "summary": "This gateway is running normally. There aren’t any known Azure platform problems affecting this gateway.",
+                    "reasonType": "",
+                    "occuredTime": "2022-06-27T21:25:58Z",
+                },
+                "remote_vnet_peerings": [
+                    {
+                        "name": "vnet-peering-1",
+                        "peeringState": "Connected",
+                        "peeringSyncLevel": "FullyInSync",
+                    }
+                ],
+            },
+            specific_info={
+                "bgpSettings": {
+                    "asn": 65149,
+                    "bgpPeeringAddress": "10.31.128.132,10.31.128.133",
+                    "peerWeight": 0,
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": True,
+                "activeActive": True,
+                "disableIPSecReplayProtection": False,
+            },
+            metrics={},
+            subscription="xyz",
+        ),
+        remote_vnet_peerings=[
+            RemoteVnetPeering(
+                name="vnet-peering-1", peeringState="Connected", peeringSyncLevel="FullyInSync"
+            )
+        ],
+        health=VNetGWHealth(
+            availabilityState="Available",
+            summary="This gateway is running normally. There aren’t any known Azure platform problems affecting this gateway.",
+            reasonType="",
+            occuredTime="2022-06-27T21:25:58Z",
+        ),
+        settings=VNetGWSettings(
+            disableIPSecReplayProtection=False,
+            gatewayType="Vpn",
+            vpnType="RouteBased",
+            activeActive=True,
+            enableBgp=True,
+            bgpSettings=BgpSettings(
+                asn=65149,
+                peerWeight=0,
+                bgpPeeringAddresses=[],
+            ),
+        ),
+    )
+}
+
 
 @pytest.mark.parametrize(
     "string_table,expected_parsed",
@@ -399,6 +465,16 @@ SECTION_WITH_MISSING_PEER_ADDRESSES = {
             ],
             SECTION_WITH_MISSING_PEER_ADDRESSES,
             id="vnet gateway with some peering addresses missing",
+        ),
+        pytest.param(
+            [
+                ["Resource"],
+                [
+                    '{"id": "/subscriptions/xyz/resourceGroups/rg-vpn-1/providers/Microsoft.Network/virtualNetworkGateways/vpn-001", "name": "vpn-001", "type": "Microsoft.Network/virtualNetworkGateways", "location": "maxwellmonteswest", "subscription": "xyz", "group": "rg-vpn-1", "provider": "Microsoft.Network", "properties": {"health": {"availabilityState": "Available", "summary": "This gateway is running normally. There aren\\u2019t any known Azure platform problems affecting this gateway.", "reasonType": "", "occuredTime": "2022-06-27T21:25:58Z"}, "remote_vnet_peerings": [{"name": "vnet-peering-1", "peeringState": "Connected", "peeringSyncLevel": "FullyInSync"}]}, "specific_info": {"bgpSettings": {"asn": 65149, "bgpPeeringAddress": "10.31.128.132,10.31.128.133", "peerWeight": 0}, "gatewayType": "Vpn", "vpnType": "RouteBased", "enableBgp": true, "activeActive": true, "disableIPSecReplayProtection": false}}'
+                ],
+            ],
+            SECTION_WITHOUT_PEER_ADDRESSES,
+            id="vnet gateway without peering addresses",
         ),
     ],
 )

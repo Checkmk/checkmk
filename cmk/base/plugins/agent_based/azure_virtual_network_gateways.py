@@ -29,7 +29,7 @@ class PeeringAddresses(BaseModel):
 class BgpSettings(BaseModel):
     asn: int
     peerWeight: int
-    bgpPeeringAddresses: Sequence[PeeringAddresses]
+    bgpPeeringAddresses: Sequence[PeeringAddresses] = []
 
 
 class RemoteVnetPeering(BaseModel):

@@ -55,7 +55,7 @@ from cmk.utils.translations import translate_hostname
 from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
-from .config import Config, ConfigFromWATO, ECRulePack, MatchGroups, Rule, TextPattern
+from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule, TextPattern
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_line, Event
@@ -437,9 +437,9 @@ class EventServer(ECServerThread):
         self._syslog_tcp: socket.socket | None = None
         self._snmptrap: socket.socket | None = None
 
-        # TODO: Improve type!
-        self._rules: list[Any] = []
-        self._hash_stats = []
+        self._rules: list[Rule] = []
+        self._rule_by_id: dict[str | None, Rule] = {}
+        self._hash_stats: list[list[int]] = []  # facility/priority
         for _unused_facility in range(32):
             self._hash_stats.append([0] * 8)
 
@@ -1823,7 +1823,7 @@ class EventServer(ECServerThread):
 
     def _get_rule_event_limit(self, rule_id: str | None) -> tuple[int, str]:
         """Prefer the rule individual limit for by_rule limit (in case there is some)"""
-        if rule_limit := self._rule_by_id.get(rule_id, {}).get("event_limit"):
+        if rule_limit := self._rule_by_id.get(rule_id, Rule()).get("event_limit"):
             return rule_limit["limit"], rule_limit["action"]
 
         return (
@@ -3204,7 +3204,7 @@ class EventStatus:
         event_server.new_event_respecting_limits(event)
 
     def count_event(
-        self, event_server: EventServer, event: Event, rule: str, count: dict[str, int]
+        self, event_server: EventServer, event: Event, rule: str, count: Count
     ) -> Event | None:
         """
         Find previous occurrence of this event and account for
@@ -3227,10 +3227,8 @@ class EventStatus:
                 if count["separate_match_groups"] and ev["match_groups"] != event["match_groups"]:
                     continue
 
-                if (
-                    count.get("count_duration") is not None
-                    and ev["first"] + count["count_duration"] < event["time"]
-                ):
+                count_duration = count.get("count_duration")
+                if count_duration is not None and ev["first"] + count_duration < event["time"]:
                     # Counting has been discontinued on this event after a certain time
                     continue
 

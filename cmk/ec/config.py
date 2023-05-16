@@ -113,6 +113,8 @@ class ContactGroups(TypedDict):
 
 
 class Expect(TypedDict):
+    interval: int  # seconds
+    count: int
     merge: Literal["open", "acked", "never"]
 
 
@@ -137,6 +139,17 @@ State = Union[
 ]
 
 
+class Count(TypedDict):
+    count: int
+    period: int  # seconds
+    algorithm: Literal["interval", "tokenbucket", "dynabucket"]
+    count_duration: int | None  # seconds
+    count_ack: bool
+    separate_host: bool
+    separate_application: bool
+    separate_match_groups: bool
+
+
 # TODO: This is only a rough approximation.
 class Rule(TypedDict, total=False):
     actions: Iterable[str]
@@ -147,9 +160,10 @@ class Rule(TypedDict, total=False):
     cancel_application: str
     cancel_priority: tuple[int, int]
     contact_groups: ContactGroups
-    count: int
+    count: Count
     disabled: bool
     expect: Expect
+    event_limit: EventLimit
     hits: int
     id: str
     invert_matching: bool

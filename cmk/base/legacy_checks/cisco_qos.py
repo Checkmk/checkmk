@@ -3,29 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-# mypy: disable-error-code="var-annotated"
-
 import time
-from typing import Literal
+from collections.abc import Iterator, Mapping
+from typing import Any, Literal
 
 from cmk.base.check_api import (
     get_average,
     get_nic_speed_human_readable,
     get_rate,
     LegacyCheckDefinition,
-    savefloat,
-    saveint,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    contains,
-    exists,
-    OIDEnd,
-    render,
-    SNMPTree,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.cisco_qos import InterfaceName, QoSClassName, Section
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
@@ -120,133 +110,30 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # .1.3.6.1.4.1.9.9.166.1.9.1.1.1.1608 3094
 
 
-def cisco_qos_get_config_entries_by_class_id(config, class_id):
-    return [if_index.split(".") for if_index, value in config.items() if value == class_id]
+def inventory_cisco_qos(section: Section) -> Iterator[tuple[str, dict]]:
+    yield from ((f"{if_name}: {class_name}", {}) for if_name, class_name in section)
 
 
-def inventory_cisco_qos(info):
-    if len(info) == 12:
-        ifs = dict(info[0])
-        config = {".".join(oid.split(".")[-2:]): value for oid, value in info[3]}
-        if_names = dict(info[6])
-
-        # Find all interfaces for each class and create one service for each pair
-        items = []
-        for class_id, class_name in info[2]:
-            # Get interface ids which use this qos class
-            for policy_id, _objects_id in cisco_qos_get_config_entries_by_class_id(
-                config, class_id
-            ):
-                if ifs.get(policy_id) in if_names:
-                    if_name = if_names[ifs[policy_id]]
-                    items += [("%s: %s" % (if_name, class_name), {})]
-
-        return items
-    return []
-
-
-def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
+def check_cisco_qos(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> object:
     unit = params.get("unit", "bit")
     average = params.get("average")
     post_warn, post_crit = params.get("post", (None, None))
     drop_warn, drop_crit = params.get("drop", (None, None))
 
-    # Load values and format them
-    ifs = dict(info[0])
-    policies = dict(info[1])
-    classes = dict(info[2])
-    config = {".".join(oid.split(".")[-2:]): value for oid, value in info[3]}
-    post_bytes = {".".join(oid.split(".")[-2:]): saveint(value) for oid, value in info[4]}
-    drop_bytes = {".".join(oid.split(".")[-2:]): saveint(value) for oid, value in info[5]}
-    if_names = dict(info[6])
-    if_speeds = dict(info[7])
-    parents = dict(info[8])
-    if_qos_bandwidth = dict(info[9])
-    if_qos_bandwidth_units = dict(info[10])
-    object_types = dict(info[11])
+    raw_if_name, raw_class_name = item.split(": ")
 
-    if_name, class_name = item.split(": ")
-
-    # Gather the class id by class_name
-    class_id = None
-    for cid, cname in classes.items():
-        if class_name == cname:
-            class_id = cid
-            break
-
-    # Gather the interface id by class_name
-    if_id = None
-    for iid2 in ifs.values():
-        if if_name == if_names.get(iid2):
-            if_id = iid2
-            break
-
-    if not if_id or not class_id:
-        return (3, "QoS class not found for that interface")
-
-    policy_id, objects_id, policy_map_id, policy_name = None, None, None, None
-    for this_policy_id, this_objects_id in cisco_qos_get_config_entries_by_class_id(
-        config, class_id
-    ):
-        if if_id != ifs[this_policy_id]:
-            continue  # skip the ones of other interfaces
-
-        # Get the policy_map_id. To retrieve this get one of the config entries
-        # of type "policy map" from the config table. All of this type should have
-        # the same value, which is then the policy_map_id.
-        for key in object_types:
-            if key.startswith(this_policy_id + ".") and object_types[key] == "1":
-                policy_map_id = config[key]
-                break
-
-        if policy_map_id is None:
-            return 3, "Invalid policy map id"
-
-        policy_name = policies.get(policy_map_id)
-        policy_id = this_policy_id
-        objects_id = this_objects_id
-
-    if policy_id is None or objects_id is None:
-        return 3, "Could not find policy_id or objects_id"
-
-    post_bits = post_bytes.get(policy_id + "." + objects_id, 0) * 8
-    drop_bits = drop_bytes.get(policy_id + "." + objects_id, 0) * 8
-    speed = savefloat(if_speeds[if_id])
-
-    parent_value_cache = {a_value: a_key.split(".")[1] for a_key, a_value in config.items()}
-
-    # if a_value == class_id:
-    #     parent_value = a_key.split(".")[1]
-    for b_key, b_value in parents.items():
-        if parent_value_cache[class_id] == b_value:
-            if object_types[b_key] == "4":
-                try:
-                    # 1 kbps
-                    # 2 percentage
-                    # 3 percentageRemaining
-                    # 4 ratioRemaining
-                    # 5 perThousand
-                    # 6 perMillion
-                    qos_unit = float(if_qos_bandwidth_units[config[b_key]])
-                    qos_bandwidth = savefloat(if_qos_bandwidth[config[b_key]])
-                    if qos_unit == 1:
-                        speed = qos_bandwidth * 1000.0
-
-                    elif qos_unit == 2:
-                        speed = speed * (qos_bandwidth / 100.0)
-
-                    elif qos_unit == 3:
-                        remaining = speed * (qos_bandwidth / 100.0)
-                        speed = speed - remaining
-                    break
-                except KeyError:
-                    pass
+    if not (qos_data := section.get((InterfaceName(raw_if_name), QoSClassName(raw_class_name)))):
+        return None
 
     # Determine post warn/crit levels
-    post_warn, post_crit = _compute_thresholds((post_warn, post_crit), speed, unit)
+    post_warn, post_crit = _compute_thresholds((post_warn, post_crit), qos_data.bandwidth, unit)
 
     # Determine drop warn/crit levels
-    drop_warn, drop_crit = _compute_thresholds((drop_warn, drop_crit), speed, unit)
+    drop_warn, drop_crit = _compute_thresholds((drop_warn, drop_crit), qos_data.bandwidth, unit)
 
     # Handle counter values
     state = 0
@@ -256,8 +143,22 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
     perfdata = []
 
     for name, counter, warn, crit, min_val, max_val in [
-        ("qos_outbound_bits_rate", post_bits, post_warn, post_crit, 0.0, speed),
-        ("qos_dropped_bits_rate", drop_bits, drop_warn, drop_crit, 0.0, speed),
+        (
+            "qos_outbound_bits_rate",
+            qos_data.outbound_bits_counter,
+            post_warn,
+            post_crit,
+            0.0,
+            qos_data.bandwidth,
+        ),
+        (
+            "qos_dropped_bits_rate",
+            qos_data.dropped_bits_counter,
+            drop_warn,
+            drop_crit,
+            0.0,
+            qos_data.bandwidth,
+        ),
     ]:
         rate = get_rate("cisco_qos.%s.%s" % (name, item), this_time, counter)
         rates.append(rate)
@@ -291,10 +192,16 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
             state = max(1, state)
             infotext += "(!)"
 
-    if policy_name:
-        infotext += ", Policy-Name: %s, Int-Bandwidth: %s" % (policy_name, format_value(speed))
+    if qos_data.policy_name:
+        infotext += ", Policy-Name: %s, Int-Bandwidth: %s" % (
+            qos_data.policy_name,
+            format_value(qos_data.bandwidth),
+        )
     else:
-        infotext += ", Policy-Map-ID: %s, Int-Bandwidth: %s" % (policy_map_id, format_value(speed))
+        infotext += ", Policy-Map-ID: %s, Int-Bandwidth: %s" % (
+            qos_data.policy_map_id,
+            format_value(qos_data.bandwidth),
+        )
     return (state, infotext.lstrip(", "), perfdata)
 
 
@@ -315,62 +222,9 @@ def _compute_thresholds(
 
 
 check_info["cisco_qos"] = LegacyCheckDefinition(
-    detect=all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.166.1.1.1.1.4.*")
-    ),
     service_name="QoS %s",
     check_function=check_cisco_qos,
     discovery_function=inventory_cisco_qos,
     check_ruleset_name="cisco_qos",
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.166.1.1.1.1",
-            oids=[OIDEnd(), "4"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.166.1.6.1.1",
-            oids=[OIDEnd(), "1"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.166.1.7.1.1",
-            oids=[OIDEnd(), "1"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.166.1.5.1.1",
-            oids=[OIDEnd(), "2"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.166.1.15.1.1",
-            oids=[OIDEnd(), "9"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.166.1.15.1.1",
-            oids=[OIDEnd(), "16"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.2.1.2.2.1",
-            oids=[OIDEnd(), "2"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.2.1.2.2.1",
-            oids=[OIDEnd(), "5"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.166.1.5.1.1",
-            oids=[OIDEnd(), "4"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.166.1.9.1.1",
-            oids=[OIDEnd(), "1"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.166.1.9.1.1",
-            oids=[OIDEnd(), "2"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.9.9.166.1.5.1.1",
-            oids=[OIDEnd(), "3"],
-        ),
-    ],
     check_default_parameters={"drop": (0.01, 0.01)},
 )

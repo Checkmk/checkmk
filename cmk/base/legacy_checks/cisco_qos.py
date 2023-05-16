@@ -15,7 +15,7 @@ from cmk.base.check_api import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.cisco_qos import InterfaceName, QoSClassName, Section
+from cmk.base.plugins.agent_based.cisco_qos import cbQosCMName, InterfaceName, Section
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
@@ -126,7 +126,7 @@ def check_cisco_qos(
 
     raw_if_name, raw_class_name = item.split(": ")
 
-    if not (qos_data := section.get((InterfaceName(raw_if_name), QoSClassName(raw_class_name)))):
+    if not (qos_data := section.get((InterfaceName(raw_if_name), cbQosCMName(raw_class_name)))):
         return None
 
     # Determine post warn/crit levels
@@ -192,14 +192,14 @@ def check_cisco_qos(
             state = max(1, state)
             infotext += "(!)"
 
-    if qos_data.policy_name:
+    if qos_data.policy_map_name:
         infotext += ", Policy-Name: %s, Int-Bandwidth: %s" % (
-            qos_data.policy_name,
+            qos_data.policy_map_name,
             format_value(qos_data.bandwidth),
         )
     else:
         infotext += ", Policy-Map-ID: %s, Int-Bandwidth: %s" % (
-            qos_data.policy_map_id,
+            qos_data.policy_map_index,
             format_value(qos_data.bandwidth),
         )
     return (state, infotext.lstrip(", "), perfdata)

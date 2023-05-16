@@ -896,12 +896,12 @@ def fixture_section_zero_speed() -> Section:
             [
                 # post_bytes
                 # [objects_id, post_b]
-                ["0005", "0"],
+                ["7.0005", "0"],
             ],
             [
                 # drop_bytes
                 # [objects_id, drop_b]
-                ["0005", "0"],
+                ["7.0005", "0"],
             ],
             [
                 # if_names

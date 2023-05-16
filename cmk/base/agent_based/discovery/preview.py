@@ -46,8 +46,7 @@ import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
 import cmk.base.core
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.config import ConfigCache
-from cmk.base.core_config import get_active_check_descriptions
+from cmk.base.config import ConfigCache, get_active_check_descriptions
 
 from ._host_labels import analyse_cluster_labels, discover_host_labels
 from .autodiscovery import _Transition, get_host_services

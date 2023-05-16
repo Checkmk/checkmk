@@ -11,7 +11,7 @@ import socket
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
-from typing import Any, Literal, NamedTuple
+from typing import Literal
 
 import cmk.utils.config_path
 import cmk.utils.config_warnings as config_warnings
@@ -384,111 +384,6 @@ def _verify_non_duplicate_hosts(duplicates: Iterable[HostName]) -> None:
             "This might lead to invalid/incomplete monitoring for these hosts."
             % ", ".join(duplicates)
         )
-
-
-# .
-#   .--Active Checks-------------------------------------------------------.
-#   |       _        _   _              ____ _               _             |
-#   |      / \   ___| |_(_)_   _____   / ___| |__   ___  ___| | _____      |
-#   |     / _ \ / __| __| \ \ / / _ \ | |   | '_ \ / _ \/ __| |/ / __|     |
-#   |    / ___ \ (__| |_| |\ V /  __/ | |___| | | |  __/ (__|   <\__ \     |
-#   |   /_/   \_\___|\__|_| \_/ \___|  \____|_| |_|\___|\___|_|\_\___/     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Active check specific functions                                      |
-#   '----------------------------------------------------------------------'
-
-
-class HostAddressConfiguration(NamedTuple):
-    """Host configuration for active checks
-
-    This class is exposed to the active checks that implement a service_generator.
-    However, it's NOT part of the official API and can change at any time.
-    """
-
-    hostname: str
-    host_address: str
-    alias: str
-    ipv4address: str | None
-    ipv6address: str | None
-    indexed_ipv4addresses: dict[str, str]
-    indexed_ipv6addresses: dict[str, str]
-
-
-def _get_indexed_addresses(
-    host_attrs: config.ObjectAttributes, address_family: Literal["4", "6"]
-) -> Iterator[tuple[str, str]]:
-    for name, address in host_attrs.items():
-        address_template = f"_ADDRESSES_{address_family}_"
-        if address_template in name:
-            index = name.removeprefix(address_template)
-            yield f"$_HOSTADDRESSES_{address_family}_{index}$", address
-
-
-def _get_host_address_config(
-    hostname: str, host_attrs: config.ObjectAttributes
-) -> HostAddressConfiguration:
-    return HostAddressConfiguration(
-        hostname=hostname,
-        host_address=host_attrs["address"],
-        alias=host_attrs["alias"],
-        ipv4address=host_attrs.get("_ADDRESS_4"),
-        ipv6address=host_attrs.get("_ADDRESS_6"),
-        indexed_ipv4addresses=dict(_get_indexed_addresses(host_attrs, "4")),
-        indexed_ipv6addresses=dict(_get_indexed_addresses(host_attrs, "6")),
-    )
-
-
-def iter_active_check_services(
-    check_name: str,
-    active_info: Mapping[str, Any],
-    hostname: HostName,
-    host_attrs: config.ObjectAttributes,
-    params: dict[Any, Any],
-    stored_passwords: Mapping[str, str],
-) -> Iterator[tuple[str, str]]:
-    """Iterate active service descriptions and arguments
-
-    This function is used to allow multiple active services per one WATO rule.
-    This functionality is now used only in ICMP active check and it's NOT
-    part of an official API. This function can be changed at any time.
-    """
-    host_config = _get_host_address_config(hostname, host_attrs)
-
-    if "service_generator" in active_info:
-        for desc, args in active_info["service_generator"](host_config, params):
-            yield str(desc), str(args)
-        return
-
-    description = config.active_check_service_description(
-        hostname, host_config.alias, check_name, params
-    )
-    arguments = config.commandline_arguments(
-        hostname,
-        description,
-        active_info["argument_function"](params),
-        stored_passwords,
-    )
-
-    yield description, arguments
-
-
-def get_active_check_descriptions(
-    hostname: HostName,
-    hostalias: str,
-    host_attrs: ObjectAttributes,
-    check_name: str,
-    params: dict,
-) -> Iterator[str]:
-    host_config = _get_host_address_config(hostname, host_attrs)
-    active_check_info = config.active_check_info[check_name]
-
-    if "service_generator" in active_check_info:
-        for description, _ in active_check_info["service_generator"](host_config, params):
-            yield str(description)
-        return
-
-    yield config.active_check_service_description(hostname, hostalias, check_name, params)
 
 
 # .

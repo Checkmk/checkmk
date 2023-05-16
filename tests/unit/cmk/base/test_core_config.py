@@ -30,7 +30,7 @@ from cmk.checkers.checking import CheckPluginName
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.config import ConfigCache, HostAddressConfiguration, ObjectAttributes
 from cmk.base.core_config import (
     CollectedHostLabels,
     get_labels_from_attributes,
@@ -220,7 +220,7 @@ def test_get_tag_attributes(
                 "_ADDRESSES_4_1": "127.0.0.2",
                 "_ADDRESSES_4_2": "127.0.0.3",
             },
-            core_config.HostAddressConfiguration(
+            HostAddressConfiguration(
                 hostname="myhost",
                 host_address="127.0.0.1",
                 alias="my_host_alias",
@@ -238,9 +238,9 @@ def test_get_tag_attributes(
 def test_get_host_config(
     hostname: str,
     host_attrs: config.ObjectAttributes,
-    expected_result: core_config.HostAddressConfiguration,
+    expected_result: HostAddressConfiguration,
 ) -> None:
-    host_config = core_config._get_host_address_config(hostname, host_attrs)
+    host_config = config._get_host_address_config(hostname, host_attrs)
     assert host_config == expected_result
 
 
@@ -309,7 +309,7 @@ def test_iter_active_check_services(
 
     active_info = active_check_info[check_name]
     services = list(
-        core_config.iter_active_check_services(
+        config.iter_active_check_services(
             check_name, active_info, hostname, host_attrs, {}, password_store.load()
         )
     )

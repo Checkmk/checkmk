@@ -469,7 +469,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         for acttype, act_info, params in actchecks:
             # Make hostname available as global variable in argument functions
             with plugin_contexts.current_host(hostname):
-                for description, args in core_config.iter_active_check_services(
+                for description, args in config.iter_active_check_services(
                     acttype, act_info, hostname, host_attrs, params, stored_passwords
                 ):
                     if not description:

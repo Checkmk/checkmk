@@ -1022,7 +1022,7 @@ class AutomationAnalyseServices(Automation):
             host_attrs = config_cache.get_host_attributes(host_name)
             for plugin_name, entries in config_cache.active_checks(host_name):
                 for active_check_params in entries:
-                    for description in core_config.get_active_check_descriptions(
+                    for description in config.get_active_check_descriptions(
                         host_name,
                         config_cache.alias(host_name),
                         host_attrs,
@@ -1852,7 +1852,7 @@ class AutomationActiveCheck(Automation):
         stored_passwords = cmk.utils.password_store.load()
         with plugin_contexts.current_host(host_name):
             for params in dict(config_cache.active_checks(host_name)).get(plugin, []):
-                for description, command_args in core_config.iter_active_check_services(
+                for description, command_args in config.iter_active_check_services(
                     plugin, act_info, host_name, host_attrs, params, stored_passwords
                 ):
                     if description != item:

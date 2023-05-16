@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 
-UPDATE_MODE = os.environ.get("UPDATE_MODE", "0") == "1"
-
 AGENT_OUTPUT_DIR = f"{os.path.dirname(__file__)}/agent_output"
 SECTION_NAMES = [_ for _ in os.getenv("SECTION_NAMES", "").split(",") if _]
 EXPECTED_OUTPUT_DIR = f"{os.path.dirname(__file__)}/check_output"

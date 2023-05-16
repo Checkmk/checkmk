@@ -6,8 +6,8 @@ import json
 import logging
 import os
 import re
-import typing
 from pathlib import Path
+from typing import Any, Optional
 
 import requests
 import yaml
@@ -60,7 +60,7 @@ def api_get(site: Site, request_path: str) -> requests.Response:
     return response
 
 
-def get_check_results(site: Site, host_name: str) -> dict[str, typing.Any]:
+def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
     """Return the current check results from the API."""
     try:
         response = api_get(
@@ -76,8 +76,10 @@ def get_check_results(site: Site, host_name: str) -> dict[str, typing.Any]:
         ) from exc
 
 
-def compare_check_output(site: Site, output_dir: Path) -> bool:
-    """Get the processed check output and compare it to the existing dumps."""
+def process_check_output(
+    site: Site, output_dir: Optional[Path] = None, update_mode: bool = False
+) -> bool:
+    """Process the check output and either dump or compare it."""
     host_names = [
         host.get("id")
         for host in api_get(site, "/domain-types/host_config/collections/all")
@@ -85,7 +87,7 @@ def compare_check_output(site: Site, output_dir: Path) -> bool:
         .get("value", [])
         if host.get("id") not in (None, "", site.id)
     ]
-    passed = True if constants.UPDATE_MODE else None
+    passed = True if update_mode else None
     for host_name in host_names:
         if len(constants.HOST_NAMES) > 0 and host_name not in constants.HOST_NAMES:
             continue
@@ -108,16 +110,17 @@ def compare_check_output(site: Site, output_dir: Path) -> bool:
             if len(constants.CHECK_NAMES) > 0 and check_file_name not in constants.CHECK_NAMES:
                 continue
             json_canon_file_path = f"{constants.EXPECTED_OUTPUT_DIR}/{check_file_name}.json"
-            json_result_file_path = str(output_dir / f"{check_file_name}.json")
+
             result_data = check_result.get("extensions", {})
 
-            if constants.UPDATE_MODE:
+            if update_mode:
                 with open(json_canon_file_path, "w", encoding="utf-8") as json_file:
                     json_file.write(f"{json.dumps(result_data, indent=4)}\n")
                 continue
-
-            with open(json_result_file_path, "w", encoding="utf-8") as json_file:
-                json_file.write(f"{json.dumps(result_data, indent=4)}\n")
+            if output_dir:
+                json_result_file_path = str(output_dir / f"{check_file_name}.json")
+                with open(json_result_file_path, "w", encoding="utf-8") as json_file:
+                    json_file.write(f"{json.dumps(result_data, indent=4)}\n")
             with open(json_canon_file_path, "r", encoding="utf-8") as json_file:
                 canon_data = json.load(json_file)
 
@@ -139,3 +142,13 @@ def compare_check_output(site: Site, output_dir: Path) -> bool:
             passed = False
 
     return passed is True
+
+
+def compare_check_output(site: Site, output_dir: Path) -> bool:
+    """Process the check output and compare it to the existing dumps."""
+    return process_check_output(site, output_dir)
+
+
+def update_check_output(site: Site) -> bool:
+    """Process the check output and update the stored dumps."""
+    return process_check_output(site, update_mode=True)

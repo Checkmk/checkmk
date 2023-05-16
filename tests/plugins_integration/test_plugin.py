@@ -7,7 +7,7 @@ import pytest
 
 from tests.testlib.site import Site
 
-from .checks import compare_check_output
+from .checks import compare_check_output, update_check_output
 from .conftest import (
     create_wato_hosts,
     create_wato_rules,
@@ -47,7 +47,7 @@ def test_plugin(test_site: Site, tmp_path_factory: pytest.TempPathFactory) -> No
     assert compare_check_output(test_site, output_dir), "Check output mismatch!"
 
 
-@pytest.mark.type("plugins-integration")
 @pytest.mark.update_checks
-def test_store_update_checks():
-    pass
+def test_store_update_checks(test_site: Site) -> None:
+    # dump_section_output() TODO: improve section-output  dump function
+    assert update_check_output(test_site), "Failed to update check output!"

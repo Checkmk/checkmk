@@ -34,21 +34,15 @@ def pytest_collection_modifyitems(config, items):
     skip_update_checks = pytest.mark.skip(
         reason="Test used to store checks output. Selectable with --update-checks"
     )
-    skip_no_update_checks = pytest.mark.skip(
+    skip_check_tests = pytest.mark.skip(
         reason="Only tests marked as 'update_checks' have been selected"
     )
-
     for item in items:
-        if "update_checks" in item.keywords:  # test is marked as 'update_checks'
-            if config.getoption("--update-checks"):
-                continue  # execute test
-            else:
-                item.add_marker(skip_update_checks)
-        else:
-            if config.getoption("--update-checks"):
-                item.add_marker(skip_no_update_checks)
-            else:
-                continue  # execute test
+        if ("update_checks" in item.keywords) == config.getoption("--update-checks"):
+            continue
+        item.add_marker(
+            skip_update_checks if "update_checks" in item.keywords else skip_check_tests
+        )
 
 
 @pytest.fixture(name="test_site", scope="session")

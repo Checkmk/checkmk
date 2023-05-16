@@ -34,6 +34,5 @@ def dump_section_output() -> None:
         section_output = check_sections[section_name]
         LOGGER.debug(section_output)
         raw_file_path = f"{constants.AGENT_OUTPUT_DIR}/{section_name}"
-        if constants.UPDATE_MODE:
-            with open(raw_file_path, "w", encoding="utf-8") as raw_file:
-                raw_file.write(section_output)
+        with open(raw_file_path, "w", encoding="utf-8") as raw_file:
+            raw_file.write(section_output)

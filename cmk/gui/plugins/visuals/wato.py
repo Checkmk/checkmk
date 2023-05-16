@@ -16,7 +16,7 @@ from cmk.gui.i18n import _l
 from cmk.gui.plugins.visuals.utils import Filter, filter_registry
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
 from cmk.gui.valuespec import DualListChoice, ValueSpec
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 
 def _wato_folders_to_lq_regex(path: str) -> str:
@@ -46,7 +46,7 @@ class FilterWatoFolder(Filter):
         return active_config.wato_enabled or site_config.is_wato_slave_site()
 
     def load_wato_data(self):
-        self.tree = Folder.root_folder()
+        self.tree = folder_tree().root_folder()
         self.path_to_tree: dict[str, str] = {}  # will be filled by self.folder_selection
         self.selection = list(self.folder_selection(self.tree))
         self.last_wato_data_update = time.time()

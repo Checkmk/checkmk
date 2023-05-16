@@ -99,7 +99,7 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings,
     save_site_global_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, make_action_link
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
 from cmk.gui.watolib.site_management import add_changes_after_editing_site_connection
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
@@ -613,7 +613,7 @@ class ModeDistributedMonitoring(WatoMode):
             raise MKUserError(None, _("You can not delete the connection to the local site."))
 
         # Make sure that site is not being used by hosts and folders
-        if delete_id in Folder.root_folder().all_site_ids():
+        if delete_id in folder_tree().root_folder().all_site_ids():
             search_url = makeactionuri_contextless(
                 request,
                 transactions,

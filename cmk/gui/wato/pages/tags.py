@@ -60,8 +60,8 @@ from cmk.gui.watolib.host_attributes import host_attribute, undeclare_host_tag_a
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
     CREHost,
-    Folder,
     folder_preserving_link,
+    folder_tree,
     make_action_link,
 )
 from cmk.gui.watolib.rulesets import Ruleset
@@ -86,8 +86,9 @@ class ABCTagMode(WatoMode, abc.ABC):
     def _save_tags_and_update_hosts(self, tag_config):
         self._tag_config_file.save(tag_config)
         load_config()
-        Folder.invalidate_caches()
-        Folder.root_folder().rewrite_hosts_files()
+        tree = folder_tree()
+        tree.invalidate_caches()
+        tree.root_folder().rewrite_hosts_files()
 
     def _load_effective_config(self):
         self._builtin_config = cmk.utils.tags.BuiltinTagConfig()

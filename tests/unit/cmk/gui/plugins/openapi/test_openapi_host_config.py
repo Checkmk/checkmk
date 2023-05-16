@@ -24,7 +24,7 @@ import cmk.gui.watolib.bakery as bakery
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree, Host
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
@@ -121,7 +121,7 @@ def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
     assert api_attributes["locked_attributes"] == ["alias"]
 
     # Ensure that the attributes were stored as expected
-    hosts_config = Folder.root_folder()._load_hosts_file()
+    hosts_config = folder_tree().root_folder()._load_hosts_file()
     assert hosts_config is not None
     assert hosts_config["host_attributes"]["foobar"]["locked_attributes"] == ["alias"]
     assert hosts_config["host_attributes"]["foobar"]["locked_by"] == (
@@ -1195,7 +1195,7 @@ def test_openapi_all_hosts_with_non_existing_site(
     def mock_all_hosts_recursively(_cls):
         return {
             "foo": CREHost(
-                folder=CREFolder.root_folder(),
+                folder=folder_tree().root_folder(),
                 host_name="foo",
                 attributes={"site": "a_non_existing_site"},
                 cluster_nodes=None,
@@ -1218,7 +1218,7 @@ def test_openapi_host_with_non_existing_site(
 ) -> None:
     def mock_host(_hostname):
         return CREHost(
-            folder=CREFolder.root_folder(),
+            folder=folder_tree().root_folder(),
             host_name="foo",
             attributes={"site": "a_non_existing_site"},
             cluster_nodes=None,

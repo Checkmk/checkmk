@@ -2439,14 +2439,14 @@ def get_hosts_from_checkboxes(filterfunc=None):
 
 class FullPathFolderChoice(DropdownChoice):
     def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        kwargs["choices"] = _hosts_and_folders.Folder.folder_choices_fulltitle
+        kwargs["choices"] = _hosts_and_folders.folder_tree().folder_choices_fulltitle
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 
 
 class FolderChoice(DropdownChoice):
     def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        kwargs["choices"] = _hosts_and_folders.Folder.folder_choices
+        kwargs["choices"] = _hosts_and_folders.folder_tree().folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 

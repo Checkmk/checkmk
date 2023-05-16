@@ -16,7 +16,7 @@ from cmk.utils.paths import default_config_dir
 from cmk.utils.type_defs import HostName
 
 from cmk.gui.watolib import automatic_host_removal
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 
 
@@ -44,7 +44,7 @@ def test_remove_hosts_no_rules_early_return(
 
 @pytest.fixture(name="setup_hosts")
 def fixture_setup_hosts() -> None:
-    Folder.root_folder().create_hosts(
+    folder_tree().root_folder().create_hosts(
         [
             (hostname, {}, None)
             for hostname in (
@@ -60,7 +60,7 @@ def fixture_setup_hosts() -> None:
 
 @pytest.fixture(name="setup_rules")
 def fixture_setup_rules() -> None:
-    root_folder = Folder.root_folder()
+    root_folder = folder_tree().root_folder()
     ruleset = Ruleset("automatic_host_removal", {})
     ruleset.append_rule(
         root_folder,
@@ -189,7 +189,7 @@ def test_remove_hosts(
         )
         automatic_host_removal._remove_hosts(mocker.MagicMock())
 
-    assert sorted(Folder.root_folder().all_hosts_recursively()) == [
+    assert sorted(folder_tree().root_folder().all_hosts_recursively()) == [
         "host_crit_keep",
         "host_no_rule_match",
         "host_ok",

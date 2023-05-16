@@ -98,6 +98,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     CREHost,
     Folder,
     folder_preserving_link,
+    folder_tree,
     Host,
     make_action_link,
 )
@@ -864,7 +865,7 @@ class ModeEditRuleset(WatoMode):
             self._just_edited_rule = None
             return
 
-        rule_folder = Folder.folder(folder)
+        rule_folder = folder_tree().folder(folder)
         rulesets = FolderRulesets.load_folder_rulesets(rule_folder)
         ruleset = rulesets.get(self._name)
 
@@ -1028,7 +1029,7 @@ class ModeEditRuleset(WatoMode):
 
         folder = mandatory_parameter("folder", request.var("folder"))
 
-        rule_folder = Folder.folder(request.get_str_input_mandatory("_folder", folder))
+        rule_folder = folder_tree().folder(request.get_str_input_mandatory("_folder", folder))
         rule_folder.need_permission("write")
         rulesets = FolderRulesets.load_folder_rulesets(rule_folder)
         ruleset = rulesets.get(self._name)
@@ -1647,7 +1648,7 @@ class ModeRuleSearchForm(WatoMode):
                         elements=[
                             DropdownChoice(
                                 title=_("Selection"),
-                                choices=Folder.folder_choices,
+                                choices=folder_tree().folder_choices,
                             ),
                             DropdownChoice(
                                 title=_("Recursion"),
@@ -1720,7 +1721,7 @@ class ABCEditRuleMode(WatoMode):
         """
         rule_folder = request.get_ascii_input("rule_folder")
         if rule_folder:
-            self._folder = Folder.folder(rule_folder)
+            self._folder = folder_tree().folder(rule_folder)
         else:
             rule_id = request.get_ascii_input_mandatory("rule_id")
 
@@ -1828,7 +1829,7 @@ class ABCEditRuleMode(WatoMode):
         self._update_rule_from_vars()
 
         # Check permissions on folders
-        new_rule_folder = Folder.folder(self._get_rule_conditions_from_vars().host_folder)
+        new_rule_folder = folder_tree().folder(self._get_rule_conditions_from_vars().host_folder)
         if not isinstance(self, ModeNewRule):
             self._folder.need_permission("write")
         new_rule_folder.need_permission("write")
@@ -2261,7 +2262,7 @@ class VSExplicitConditions(Transform):
         return DropdownChoice(
             title=_("Folder"),
             help=_("Rule only applies to hosts directly in or below this folder."),
-            choices=Folder.folder_choices,
+            choices=folder_tree().folder_choices,
             encode_value=False,
         )
 
@@ -2742,13 +2743,14 @@ class ModeNewRule(ABCEditRuleMode):
         return _("Add rule: %s") % self._rulespec.title
 
     def _set_folder(self) -> None:
+        tree = folder_tree()
         if request.has_var("_new_dflt_rule"):
             # Start creating a new rule with default selections (root folder)
-            self._folder = Folder.root_folder()
+            self._folder = tree.root_folder()
 
         elif request.has_var("_new_rule"):
             # Start creating a new rule in the chosen folder
-            self._folder = Folder.folder(request.get_ascii_input_mandatory("rule_folder"))
+            self._folder = tree.folder(request.get_ascii_input_mandatory("rule_folder"))
 
         elif request.has_var("_new_host_rule"):
             # Start creating a new rule for a specific host
@@ -2757,11 +2759,11 @@ class ModeNewRule(ABCEditRuleMode):
         else:
             # Submitting the create dialog
             try:
-                self._folder = Folder.folder(self._get_folder_path_from_vars())
+                self._folder = tree.folder(self._get_folder_path_from_vars())
             except MKUserError:
                 # Folder can not be gathered from form if an error occurs
                 folder = mandatory_parameter("rule_folder", request.var("rule_folder"))
-                self._folder = Folder.folder(folder)
+                self._folder = tree.folder(folder)
 
     def _get_folder_path_from_vars(self) -> str:
         return self._get_rule_conditions_from_vars().host_folder

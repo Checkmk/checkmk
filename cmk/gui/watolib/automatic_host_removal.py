@@ -27,7 +27,7 @@ from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree, Host
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
 
 
@@ -187,7 +187,7 @@ def _should_delete_host(
 
 def _activate_changes(sites: Iterable[SiteId]) -> None:
     # workaround until CMK-13093 is fixed
-    Folder.invalidate_caches()
+    folder_tree().invalidate_caches()
     manager = ActivateChangesManager()
     manager.load()
     with SuperUserContext():

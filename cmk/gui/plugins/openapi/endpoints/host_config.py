@@ -67,7 +67,7 @@ from cmk.gui.valuespec import Hostname
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_rename import perform_rename_hosts
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree, Host
 
 from cmk import fields
 
@@ -308,7 +308,7 @@ def _bulk_host_action_response(
 )
 def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
     """Show all hosts"""
-    root_folder = Folder.root_folder()
+    root_folder = folder_tree().root_folder()
     effective_attributes: bool = param.get("effective_attributes", False)
 
     hosts = (host for host in root_folder.all_hosts_recursively().values() if host.may("read"))

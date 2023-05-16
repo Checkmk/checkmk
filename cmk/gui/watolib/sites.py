@@ -323,7 +323,7 @@ class SiteManagement:
     @classmethod
     def save_sites(cls, sites: SiteConfigurations, activate: bool = True) -> None:
         # TODO: Clean this up
-        from cmk.gui.watolib.hosts_and_folders import Folder
+        from cmk.gui.watolib.hosts_and_folders import folder_tree
 
         store.mkdir(multisite_dir())
         store.save_to_mk_file(cls._sites_mk(), "sites", sites)
@@ -333,7 +333,7 @@ class SiteManagement:
         if activate:
             load_config()  # make new site configuration active
             _update_distributed_wato_file(sites)
-            Folder.invalidate_caches()
+            folder_tree().invalidate_caches()
             cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
             _create_nagvis_backends(sites)
@@ -348,14 +348,14 @@ class SiteManagement:
     @classmethod
     def delete_site(cls, site_id):
         # TODO: Clean this up
-        from cmk.gui.watolib.hosts_and_folders import Folder
+        from cmk.gui.watolib.hosts_and_folders import folder_tree
 
         all_sites = cls.load_sites()
         if site_id not in all_sites:
             raise MKUserError(None, _("Unable to delete unknown site id: %s") % site_id)
 
         # Make sure that site is not being used by hosts and folders
-        if site_id in Folder.root_folder().all_site_ids():
+        if site_id in folder_tree().root_folder().all_site_ids():
             search_url = makeactionuri(
                 request,
                 transactions,

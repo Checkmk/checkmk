@@ -20,9 +20,8 @@ from cmk.automations.results import (
 )
 
 from cmk.gui.utils import transaction_manager
-from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.audit_log import AuditLogStore
-from cmk.gui.watolib.hosts_and_folders import CREHost
+from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree
 from cmk.gui.watolib.services import (
     checkbox_id,
     DiscoveryAction,
@@ -121,13 +120,12 @@ def fixture_sample_host(
     sample_host_name: HostName,
 ) -> Generator[CREHost, None, None]:
     hostname = sample_host_name
-    hosts_and_folders.CREFolder.root_folder().create_hosts([(hostname, {}, None)])
-    host = hosts_and_folders.CREFolder.root_folder().host(hostname)
+    root_folder = folder_tree().root_folder()
+    root_folder.create_hosts([(hostname, {}, None)])
+    host = root_folder.host(hostname)
     assert host is not None
     yield host
-    hosts_and_folders.CREFolder.root_folder().delete_hosts(
-        [hostname], automation=lambda *args, **kwargs: DeleteHostsResult()
-    )
+    root_folder.delete_hosts([hostname], automation=lambda *args, **kwargs: DeleteHostsResult())
 
 
 @pytest.mark.usefixtures("inline_background_jobs")

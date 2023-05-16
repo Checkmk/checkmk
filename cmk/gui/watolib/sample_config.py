@@ -23,7 +23,7 @@ from cmk.gui.userdb import create_cmk_automation_user
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings
 from cmk.gui.watolib.group_writer import save_group_information
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.notifications import save_notification_rules
 from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.tags import TagConfigFile
@@ -289,8 +289,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             ],
         }
 
-        rulesets = FolderRulesets.load_folder_rulesets(Folder.root_folder())
-        rulesets.replace_folder_config(Folder.root_folder(), ruleset_config)
+        root_folder = folder_tree().root_folder()
+        rulesets = FolderRulesets.load_folder_rulesets(root_folder)
+        rulesets.replace_folder_config(root_folder, ruleset_config)
         rulesets.save()
 
         notification_rules = [get_default_notification_rule()]

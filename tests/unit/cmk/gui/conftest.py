@@ -57,7 +57,7 @@ from cmk.gui.type_defs import SessionInfo
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
-from cmk.gui.watolib import hosts_and_folders
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 SPEC_LOCK = threading.Lock()
 
@@ -432,13 +432,12 @@ def with_host(
     with_admin_login,
 ):
     hostnames = [HostName("heute"), HostName("example.com")]
-    hosts_and_folders.CREFolder.root_folder().create_hosts(
+    root_folder = folder_tree().root_folder()
+    root_folder.create_hosts(
         [(hostname, {}, None) for hostname in hostnames],
     )
     yield hostnames
-    hosts_and_folders.CREFolder.root_folder().delete_hosts(
-        hostnames, automation=lambda *args, **kwargs: DeleteHostsResult()
-    )
+    root_folder.delete_hosts(hostnames, automation=lambda *args, **kwargs: DeleteHostsResult())
 
 
 @pytest.fixture(autouse=True)

@@ -47,7 +47,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopic,
     HostAttributeTopicBasicSettings,
 )
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_preserving_link, folder_tree
 from cmk.gui.watolib.notifications import load_notification_rules, load_user_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.utils import convert_cgroups_from_tuple
@@ -233,7 +233,7 @@ def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
     used_in += _find_usages_of_contact_group_in_users(name)
     used_in += _find_usages_of_contact_group_in_default_user_profile(name, global_config)
     used_in += _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config)
-    used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, Folder.root_folder())
+    used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, folder_tree().root_folder())
     used_in += _find_usages_of_contact_group_in_notification_rules(name)
     used_in += _find_usages_of_contact_group_in_dashboards(name)
     used_in += _find_usages_of_contact_group_in_ec_rules(name)

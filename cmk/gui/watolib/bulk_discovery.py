@@ -25,7 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
-from cmk.gui.watolib.hosts_and_folders import Folder, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
 DiscoveryMode = NewType("DiscoveryMode", str)
 DoFullScan = NewType("DoFullScan", bool)
@@ -226,8 +226,9 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         # The following code updates the host config. The progress from loading the Setup folder
         # until it has been saved needs to be locked.
         with store.lock_checkmk_configuration():
-            Folder.invalidate_caches()
-            folder = Folder.folder(task.folder_path)
+            tree = folder_tree()
+            tree.invalidate_caches()
+            folder = tree.folder(task.folder_path)
             for count, hostname in enumerate(task.host_names, self._num_hosts_processed + 1):
                 self._process_service_counts_for_host(response.hosts[hostname])
                 msg = self._process_discovery_result_for_host(

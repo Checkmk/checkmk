@@ -33,7 +33,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.rulesets import RuleConditions, VSExplicitConditions
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
@@ -175,7 +175,7 @@ class ModePredefinedConditions(SimpleListMode):
         html.open_li()
         html.write_text(
             "{}: {}".format(
-                _("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()
+                _("Folder"), folder_tree().folder(entry["conditions"]["host_folder"]).alias_path()
             )
         )
         html.close_li()
@@ -303,10 +303,11 @@ class ModeEditPredefinedCondition(SimpleEditMode):
     def _move_rules_for_conditions(self, conditions, old_path):
         # type (RuleConditions, str) -> None
         """Apply changed folder of predefined condition to rules"""
-        old_folder = Folder.folder(old_path)
+        tree = folder_tree()
+        old_folder = tree.folder(old_path)
         old_rulesets = FolderRulesets.load_folder_rulesets(old_folder)
 
-        new_folder = Folder.folder(conditions.host_folder)
+        new_folder = tree.folder(conditions.host_folder)
         new_rulesets = FolderRulesets.load_folder_rulesets(new_folder)
 
         for old_ruleset in old_rulesets.get_rulesets().values():
@@ -328,7 +329,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         the changed predefined condition. Since the conditions are only applied to the
         rules while saving them this step is needed.
         """
-        folder = Folder.folder(conditions.host_folder)
+        folder = folder_tree().folder(conditions.host_folder)
         rulesets = FolderRulesets.load_folder_rulesets(folder)
 
         for ruleset in rulesets.get_rulesets().values():

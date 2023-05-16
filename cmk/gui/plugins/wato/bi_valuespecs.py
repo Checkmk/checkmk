@@ -33,7 +33,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.bi import actions
 from cmk.bi.aggregation_functions import (
@@ -386,7 +386,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                 DropdownChoice(
                     title=_("Folder"),
                     help=_("The rule is only applied to hosts directly in or below this folder."),
-                    choices=Folder.folder_choices(),
+                    choices=folder_tree().folder_choices(),
                     encode_value=False,
                 ),
             ),

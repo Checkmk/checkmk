@@ -33,20 +33,21 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.bakery import has_agent_bakery
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.search import MatchItem
 
 
 @pytest.fixture(autouse=True)
 def test_env(with_admin_login: UserId, load_config: None) -> Iterator[None]:
     # Ensure we have clean folder/host caches
-    hosts_and_folders.Folder.invalidate_caches()
+    tree = folder_tree()
+    tree.invalidate_caches()
 
     yield
 
     # Cleanup WATO folders created by the test
-    shutil.rmtree(hosts_and_folders.Folder.root_folder().filesystem_path(), ignore_errors=True)
-    os.makedirs(hosts_and_folders.Folder.root_folder().filesystem_path())
+    shutil.rmtree(tree.root_folder().filesystem_path(), ignore_errors=True)
+    os.makedirs(tree.root_folder().filesystem_path())
 
 
 @pytest.fixture(autouse=True)
@@ -113,7 +114,7 @@ def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
     ],
 )
 def test_host_tags(attributes: dict, expected_tags: dict[str, str]) -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     host = hosts_and_folders.Host(folder, "test-host", attributes, cluster_nodes=None)
 
     assert host.tag_groups() == expected_tags
@@ -147,7 +148,7 @@ def test_host_tags(attributes: dict, expected_tags: dict[str, str]) -> None:
     ],
 )
 def test_host_is_ping_host(attributes: dict[str, str], result: bool) -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     host = hosts_and_folders.Host(folder, "test-host", attributes, cluster_nodes=None)
 
     assert host.is_ping_host() == result
@@ -205,7 +206,7 @@ def in_chdir(directory: str) -> Iterator[None]:
 
 def test_create_nested_folders(request_context: None) -> None:
     with in_chdir("/"):
-        root = hosts_and_folders.Folder.root_folder()
+        root = folder_tree().root_folder()
 
         folder1 = hosts_and_folders.Folder(name="folder1", parent_folder=root)
         folder1.persist_instance()
@@ -218,7 +219,7 @@ def test_create_nested_folders(request_context: None) -> None:
 
 def test_eq_operation(request_context: None) -> None:
     with in_chdir("/"):
-        root = hosts_and_folders.Folder.root_folder()
+        root = folder_tree().root_folder()
         folder1 = hosts_and_folders.Folder(name="folder1", parent_folder=root)
         folder1.persist_instance()
 
@@ -261,7 +262,7 @@ def test_mgmt_inherit_credentials_explicit_host(
     credentials: str | dict[str, str],
     folder_credentials: str | dict[str, str],
 ) -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.set_attribute(host_attribute, folder_credentials)
 
     folder.create_hosts(
@@ -305,7 +306,7 @@ def test_mgmt_inherit_credentials(
     base_variable: str,
     folder_credentials: str | dict[str, str],
 ) -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.set_attribute(host_attribute, folder_credentials)
 
     folder.create_hosts(
@@ -353,7 +354,7 @@ def test_mgmt_inherit_protocol_explicit_host(
     credentials: str | dict[str, str],
     folder_credentials: str | dict[str, str],
 ) -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.set_attribute("management_protocol", None)
     folder.set_attribute(host_attribute, folder_credentials)
 
@@ -398,7 +399,7 @@ def test_mgmt_inherit_protocol(
     base_variable: str,
     folder_credentials: str | dict[str, str],
 ) -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.set_attribute("management_protocol", protocol)
     folder.set_attribute(host_attribute, folder_credentials)
 
@@ -571,11 +572,11 @@ def test_recursive_subfolder_choices_function_calls(
 
 
 def test_subfolder_creation() -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.create_subfolder("foo", "Foo Folder", {})
 
     # Upon instantiation, all the subfolders should be already known.
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     assert len(folder._subfolders) == 1
 
 
@@ -1008,7 +1009,7 @@ def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch) -> None:
     with get_fake_setup_redis_client(
         monkeypatch, _convert_folder_tree_to_all_folders(wato_folder), []
     ):
-        hosts_and_folders.CREFolder.all_folders()
+        folder_tree().all_folders()
         # Check if wato_folders class matches
         assert isinstance(g.wato_folders, hosts_and_folders.WATOFoldersOnDemand)
         # Check if item is None
@@ -1025,25 +1026,23 @@ def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_folder_exists() -> None:
-    hosts_and_folders.Folder.root_folder().create_subfolder("foo", "foo", {}).create_subfolder(
-        "bar", "bar", {}
-    )
-    assert hosts_and_folders.Folder.folder_exists("foo")
-    assert hosts_and_folders.Folder.folder_exists("foo/bar")
-    assert not hosts_and_folders.Folder.folder_exists("bar")
-    assert not hosts_and_folders.Folder.folder_exists("foo/foobar")
+    tree = folder_tree()
+    tree.root_folder().create_subfolder("foo", "foo", {}).create_subfolder("bar", "bar", {})
+    assert tree.folder_exists("foo")
+    assert tree.folder_exists("foo/bar")
+    assert not tree.folder_exists("bar")
+    assert not tree.folder_exists("foo/foobar")
     with pytest.raises(MKUserError):
-        hosts_and_folders.Folder.folder_exists("../wato")
+        tree.folder_exists("../wato")
 
 
 def test_folder_access() -> None:
-    hosts_and_folders.Folder.root_folder().create_subfolder("foo", "foo", {}).create_subfolder(
-        "bar", "bar", {}
-    )
-    assert isinstance(hosts_and_folders.Folder.folder("foo/bar"), hosts_and_folders.CREFolder)
-    assert isinstance(hosts_and_folders.Folder.folder(""), hosts_and_folders.CREFolder)
+    tree = folder_tree()
+    tree.root_folder().create_subfolder("foo", "foo", {}).create_subfolder("bar", "bar", {})
+    assert isinstance(tree.folder("foo/bar"), hosts_and_folders.CREFolder)
+    assert isinstance(tree.folder(""), hosts_and_folders.CREFolder)
     with pytest.raises(MKGeneralException):
-        hosts_and_folders.Folder.folder("unknown_folder")
+        tree.folder("unknown_folder")
 
 
 def test_new_empty_folder(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1069,10 +1068,11 @@ def test_new_empty_folder(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(uuid, "uuid4", lambda: uuid.UUID("c6bda767ae5c47038f73d8906fb91bb4"))
 
+    tree = folder_tree()
     with on_time("2018-01-10 02:00:00", "CET"):
-        folder1 = Folder(name="folder1", parent_folder=Folder.root_folder())
+        folder1 = Folder(name="folder1", parent_folder=tree.root_folder())
         folder1.persist_instance()
-        Folder.invalidate_caches()
+        tree.invalidate_caches()
 
     folder = Folder(name="bla", folder_path="/folder1")
     assert folder.name() == "bla"
@@ -1131,7 +1131,7 @@ def test_next_network_scan_at(
 
 @pytest.mark.usefixtures("request_context")
 def test_folder_times() -> None:
-    root = Folder.root_folder()
+    root = folder_tree().root_folder()
 
     with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()

@@ -33,7 +33,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     call_hook_hosts_changed,
     CREFolder,
     CREHost,
-    Folder,
+    folder_tree,
     Host,
 )
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
@@ -115,14 +115,14 @@ def perform_rename_hosts(
         action_counts[action] += 1
 
     update_interface(_("Calling final hooks"))
-    call_hook_hosts_changed(Folder.root_folder())
+    call_hook_hosts_changed(folder_tree().root_folder())
 
     return action_counts, auth_problems
 
 
 def _rename_host_in_folder(folder: CREFolder, oldname: HostName, newname: HostName) -> list[str]:
     folder.rename_host(oldname, newname)
-    folder.invalidate_caches()
+    folder_tree().invalidate_caches()
     return ["folder"]
 
 
@@ -163,7 +163,7 @@ def _rename_host_in_parents(
         oldname,
         newname,
         folder_parent_renamed,
-        Folder.root_folder(),
+        folder_tree().root_folder(),
     )
     return ["parents"] * len(parents), folder_parent_renamed
 
@@ -204,7 +204,7 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
         for subfolder in folder.subfolders():
             rename_host_in_folder_rules(subfolder)
 
-    rename_host_in_folder_rules(Folder.root_folder())
+    rename_host_in_folder_rules(folder_tree().root_folder())
     if changed_rulesets:
         actions = []
         unique = set(changed_rulesets)

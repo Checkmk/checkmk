@@ -26,7 +26,7 @@ from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host, update_metadata
+from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, Host, update_metadata
 
 NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
 NetworkScanResult = dict[str, Any]
@@ -103,7 +103,7 @@ def execute_network_scan_job() -> None:
 def _find_folder_to_scan() -> CREFolder | None:
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
-    for folder in Folder.all_folders().values():
+    for folder in folder_tree().all_folders().values():
         scheduled_time = folder.next_network_scan_at()
         if scheduled_time is not None and scheduled_time < time.time():
             if folder_to_scan is None:
@@ -145,7 +145,7 @@ def _save_network_scan_result(folder: CREFolder, result: NetworkScanResult) -> N
     with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
         # folder again to get the current state.
-        write_folder = Folder.folder(folder.path())
+        write_folder = folder_tree().folder(folder.path())
         write_folder.set_attribute("network_scan_result", result)
         write_folder.save()
 
@@ -162,7 +162,7 @@ class AutomationNetworkScan(AutomationCommand):
         return NetworkScanRequest(folder_path=folder_path)
 
     def execute(self, api_request):
-        folder = Folder.folder(api_request.folder_path)
+        folder = folder_tree().folder(api_request.folder_path)
         return _do_network_scan(folder)
 
 

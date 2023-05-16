@@ -14,7 +14,7 @@ from cmk.utils.tags import TagGroupID
 
 import cmk.gui.watolib.hosts_and_folders
 from cmk.gui.watolib.builtin_attributes import HostAttributeSite
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.post_rename_site.logger import logger
 from cmk.post_rename_site.plugins.actions.hosts_and_folders import update_hosts_and_folders
@@ -55,7 +55,7 @@ def test_rewrite_folder_explicit_site() -> None:
         }
     )
 
-    folder = Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.load_instance()
     assert folder.attribute("site") == "stable"
 
@@ -83,12 +83,12 @@ host_attributes.update(
 """
     )
 
-    assert Folder.root_folder().load_host("ag").attribute("site") == "stable"
+    assert folder_tree().root_folder().load_host("ag").attribute("site") == "stable"
     update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"), logger)
-    assert Folder.root_folder().load_host("ag").attribute("site") == "dingdong"
+    assert folder_tree().root_folder().load_host("ag").attribute("site") == "dingdong"
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
-    hosts_config = Folder.root_folder()._load_hosts_file()
+    hosts_config = folder_tree().root_folder()._load_hosts_file()
     assert hosts_config is not None
     assert hosts_config["host_tags"]["ag"]["site"] == "dingdong"
 
@@ -130,9 +130,12 @@ host_attributes.update(
 """
     )
 
-    assert Folder.root_folder().attribute("site") is None
-    assert Folder.root_folder().load_host("ag").attribute("site") is None
-    assert Folder.root_folder().load_host("ag").site_id() == "NO_SITE"
+    tree = folder_tree()
+    root_folder = tree.root_folder()
+
+    assert root_folder.attribute("site") is None
+    assert root_folder.load_host("ag").attribute("site") is None
+    assert root_folder.load_host("ag").site_id() == "NO_SITE"
 
     # Simulate changed omd_site that we would have in application code in the moment the rename
     # action is executed.
@@ -141,14 +144,14 @@ host_attributes.update(
 
     update_hosts_and_folders(SiteId("NO_SITE"), SiteId("dingdong"), logger)
 
-    Folder.invalidate_caches()
+    tree.invalidate_caches()
 
-    assert Folder.root_folder().attribute("site") is None
-    assert Folder.root_folder().load_host("ag").attribute("site") is None
-    assert Folder.root_folder().load_host("ag").site_id() == "dingdong"
-    assert Folder.root_folder().load_host("ag").tag_groups()[TagGroupID("site")] == "dingdong"
+    assert root_folder.attribute("site") is None
+    assert root_folder.load_host("ag").attribute("site") is None
+    assert root_folder.load_host("ag").site_id() == "dingdong"
+    assert root_folder.load_host("ag").tag_groups()[TagGroupID("site")] == "dingdong"
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
-    hosts_config = Folder.root_folder()._load_hosts_file()
+    hosts_config = root_folder._load_hosts_file()
     assert hosts_config is not None
     assert hosts_config["host_tags"]["ag"]["site"] == "dingdong"

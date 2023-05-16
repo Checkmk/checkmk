@@ -12,7 +12,7 @@ from cmk.gui import userdb
 from cmk.gui.config import load_config
 from cmk.gui.plugins.watolib.utils import wato_fileheader
 from cmk.gui.watolib.host_attributes import transform_pre_16_host_topics
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.utils import multisite_dir
 
 
@@ -23,8 +23,9 @@ def update_user_custom_attrs(now: datetime):  # type: ignore[no-untyped-def]
 
 def update_host_custom_attrs():
     load_config()
-    Folder.invalidate_caches()
-    Folder.root_folder().rewrite_hosts_files()
+    tree = folder_tree()
+    tree.invalidate_caches()
+    tree.root_folder().rewrite_hosts_files()
 
 
 def load_custom_attrs_from_mk_file(lock):

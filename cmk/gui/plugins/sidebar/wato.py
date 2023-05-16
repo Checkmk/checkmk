@@ -36,7 +36,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -208,8 +208,8 @@ def compute_foldertree():
     hosts = sites.live().query(query)
     sites.live().set_prepend_site(False)
 
-    def get_folder(path, num=0):
-        folder = Folder.folder(path)
+    def get_folder(tree, path, num=0):
+        folder = tree.folder(path)
         return {
             "title": folder.title() or path.split("/")[-1],
             ".path": path,
@@ -223,6 +223,7 @@ def compute_foldertree():
     # Now get number of hosts by folder
     # Count all children for each folder
     user_folders = {}
+    tree = folder_tree()
     for _site, filename, num in sorted(hosts):
         # Remove leading /wato/
         wato_folder_path = filename[6:]
@@ -233,9 +234,9 @@ def compute_foldertree():
         for num_parts in range(0, len(path_parts)):
             this_folder_path = "/".join(path_parts[:num_parts])
 
-            if Folder.folder_exists(this_folder_path):
+            if tree.folder_exists(this_folder_path):
                 if this_folder_path not in user_folders:
-                    user_folders[this_folder_path] = get_folder(this_folder_path, num)
+                    user_folders[this_folder_path] = get_folder(tree, this_folder_path, num)
                 else:
                     user_folders[this_folder_path][".num_hosts"] += num
 

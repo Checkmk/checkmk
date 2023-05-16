@@ -10,7 +10,7 @@ from cmk.gui.watolib.host_attributes import (
     declare_custom_host_attrs,
     transform_pre_16_host_topics,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 _update_config_based_host_attributes_config_hash: str | None = None
 
@@ -36,7 +36,7 @@ def _update_config_based_host_attributes() -> None:
     _declare_host_tag_attributes()
     declare_custom_host_attrs()
 
-    Folder.invalidate_caches()
+    folder_tree().invalidate_caches()
 
     _update_config_based_host_attributes_config_hash = _compute_config_hash()
 

@@ -22,16 +22,12 @@ from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs.user_id import UserId
 
 import cmk.gui.utils
-
-# Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk.gui.wato
-import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 from cmk.gui.wato.pages.rulesets import Rule
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, folder_tree
 from cmk.gui.watolib.rulesets import RuleOptions, Ruleset, RuleValue
 
 
@@ -78,7 +74,7 @@ def test_rule_from_ruleset_defaults(
     request_context: None, ruleset_name: str, default_value: RuleValue, is_binary: bool
 ) -> None:
     ruleset = _ruleset(ruleset_name)
-    rule = rulesets.Rule.from_ruleset_defaults(hosts_and_folders.Folder.root_folder(), ruleset)
+    rule = rulesets.Rule.from_ruleset_defaults(folder_tree().root_folder(), ruleset)
     assert isinstance(rule.conditions, rulesets.RuleConditions)
     assert rule.rule_options == RuleOptions(
         disabled=False,
@@ -98,14 +94,14 @@ def test_rule_from_config_unhandled_format(
 
     with pytest.raises(MKGeneralException, match="Invalid rule"):
         rulesets.Rule.from_config(
-            hosts_and_folders.Folder.root_folder(),
+            folder_tree().root_folder(),
             ruleset,
             [],
         )
 
     with pytest.raises(MKGeneralException, match="Invalid rule"):
         rulesets.Rule.from_config(
-            hosts_and_folders.Folder.root_folder(),
+            folder_tree().root_folder(),
             ruleset,
             (None,),
         )
@@ -157,7 +153,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec):
     )
     error = "Found old style tuple ruleset"
     with pytest.raises(MKGeneralException, match=error):
-        ruleset.replace_folder_config(hosts_and_folders.Folder.root_folder(), [rule_spec])
+        ruleset.replace_folder_config(folder_tree().root_folder(), [rule_spec])
 
 
 @pytest.mark.parametrize(
@@ -402,7 +398,7 @@ def test_rule_from_config_dict(
         rule_spec["options"] = rule_options
 
     rule = rulesets.Rule.from_config(
-        hosts_and_folders.Folder.root_folder(),
+        folder_tree().root_folder(),
         _ruleset(ruleset_name),
         rule_spec,
     )
@@ -476,7 +472,7 @@ def test_ruleset_to_config(
             "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
         )
         ruleset.replace_folder_config(
-            hosts_and_folders.Folder.root_folder(),
+            folder_tree().root_folder(),
             [
                 {
                     "id": "1",
@@ -496,7 +492,7 @@ def test_ruleset_to_config(
                 },
             ],
         )
-        assert ruleset.to_config(hosts_and_folders.Folder.root_folder()) == expected_result
+        assert ruleset.to_config(folder_tree().root_folder()) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -536,8 +532,8 @@ def test_ruleset_to_config_sub_folder(
             "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
         )
 
-        hosts_and_folders.Folder.create_missing_folders("abc")
-        folder = hosts_and_folders.Folder.folder("abc")
+        folder_tree().create_missing_folders("abc")
+        folder = folder_tree().folder("abc")
 
         ruleset.replace_folder_config(
             folder,
@@ -565,7 +561,7 @@ def test_ruleset_to_config_sub_folder(
 
 def test_rule_clone(request_context: None) -> None:
     rule = rulesets.Rule.from_config(
-        hosts_and_folders.Folder.root_folder(),
+        folder_tree().root_folder(),
         _ruleset("clustered_services"),
         {
             "id": "10",
@@ -652,8 +648,8 @@ def test_matches_search_with_rules(
     folder_name: str,
     expected_result: bool,
 ) -> None:
-    hosts_and_folders.Folder.create_missing_folders(folder_name)
-    folder = hosts_and_folders.Folder.folder(folder_name)
+    folder_tree().create_missing_folders(folder_name)
+    folder = folder_tree().folder(folder_name)
     ruleset = _ruleset("host_contactgroups")
     rule = rulesets.Rule.from_config(folder, ruleset, rule_config)
     ruleset.append_rule(folder, rule)
@@ -673,7 +669,7 @@ class _RuleHelper:
     @staticmethod
     def _make_rule(ruleset: str, value: dict) -> rulesets.Rule:
         return rulesets.Rule.from_config(
-            hosts_and_folders.Folder.root_folder(),
+            folder_tree().root_folder(),
             _ruleset(ruleset),
             {"id": "1", "value": value, "condition": {"host_name": ["HOSTLIST"]}},
         )
@@ -778,7 +774,7 @@ def test_rules_grouped_by_folder() -> None:
         Folder(name="", folder_path="Main"),
     ]
 
-    root: CREFolder = Folder.root_folder()
+    root: CREFolder = folder_tree().root_folder()
     ruleset: Ruleset = Ruleset("only_hosts", {TagID("TAG1"): TagGroupID("TG1")})
     rules: list[tuple[CREFolder, int, Rule]] = [
         (root, 0, Rule.from_ruleset_defaults(root, ruleset))

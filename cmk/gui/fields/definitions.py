@@ -37,7 +37,7 @@ from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import configured_sites
 from cmk.gui.watolib.host_attributes import host_attribute
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.tags import load_tag_group
 
@@ -188,13 +188,14 @@ class FolderField(base.String):
             except ValueError:
                 return False
 
+        tree = folder_tree()
         if folder_id == "/":
-            folder = Folder.root_folder()
+            folder = tree.root_folder()
         elif _ishexdigit(folder_id):
-            folder = Folder._by_id(folder_id)
+            folder = tree._by_id(folder_id)
         else:
             folder_id = cls._normalize_folder(folder_id)
-            folder = Folder.folder(folder_id[1:])
+            folder = tree.folder(folder_id[1:])
 
         return folder
 

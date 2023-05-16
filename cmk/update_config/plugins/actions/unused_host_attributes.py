@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from logging import Logger
 
-from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
@@ -19,7 +19,7 @@ class RemoveUnusedHostAttributes(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         touched_folders: list[CREFolder] = []
 
-        for _name, host in CREFolder.root_folder().all_hosts_recursively().items():
+        for _name, host in folder_tree().root_folder().all_hosts_recursively().items():
             for attribute in UNUSED_ATTRIBUTES:
                 logger.debug(f"Rewriting {host.name()}.")
                 if host.attribute(attribute):

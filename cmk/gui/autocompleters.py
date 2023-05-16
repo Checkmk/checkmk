@@ -33,7 +33,7 @@ from cmk.gui.plugins.visuals.utils import (
 from cmk.gui.type_defs import Choices, Sequence
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.valuespec import autocompleter_registry, Labels
-from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree, Host
 
 
 def __live_query_to_choices(
@@ -171,7 +171,7 @@ def monitored_service_description_autocompleter(value: str, params: dict) -> Cho
 def wato_folder_choices_autocompleter(value: str, params: dict) -> Choices:
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_folders: Choices = []
-    for path, name in Folder.folder_choices_fulltitle():
+    for path, name in folder_tree().folder_choices_fulltitle():
         if match_pattern.search(name) is not None:
             # select2 omits empty strings ("") as option therefore the path of the Main folder is
             # replaced by a placeholder

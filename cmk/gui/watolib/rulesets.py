@@ -49,6 +49,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
     CREHost,
     Folder,
+    folder_tree,
     get_wato_redis_client,
     Host,
     may_use_redis,
@@ -477,14 +478,14 @@ class AllRulesets(RulesetCollection):
 
         for folder_path_with_slash in relevant_folders:
             stripped_folder = folder_path_with_slash.strip("/")
-            self._load_folder_rulesets(Folder.folder(stripped_folder), only_varname)
+            self._load_folder_rulesets(folder_tree().folder(stripped_folder), only_varname)
 
     @staticmethod
     def load_all_rulesets() -> AllRulesets:
         """Load all rules of all folders"""
         rulesets = RulesetCollection._initialize_rulesets()
         self = AllRulesets(rulesets)
-        self._load_rulesets_recursively(Folder.root_folder())
+        self._load_rulesets_recursively(folder_tree().root_folder())
         return self
 
     def save_folder(self, folder: CREFolder) -> None:
@@ -492,7 +493,7 @@ class AllRulesets(RulesetCollection):
 
     def save(self) -> None:
         """Save all rulesets of all folders recursively"""
-        self._save_rulesets_recursively(Folder.root_folder())
+        self._save_rulesets_recursively(folder_tree().root_folder())
 
     def _save_rulesets_recursively(self, folder: CREFolder) -> None:
         for subfolder in folder.subfolders():
@@ -507,7 +508,7 @@ class SingleRulesetRecursively(AllRulesets):
     def load_single_ruleset_recursively(name: RulesetName) -> SingleRulesetRecursively:
         rulesets = RulesetCollection._initialize_rulesets(only_varname=name)
         self = SingleRulesetRecursively(rulesets)
-        self._load_rulesets_recursively(Folder.root_folder(), only_varname=name)
+        self._load_rulesets_recursively(folder_tree().root_folder(), only_varname=name)
         return self
 
     def save_folder(self, folder: CREFolder) -> None:
@@ -1369,7 +1370,7 @@ class Rule:
 
     def _get_search_folders(self, search_options: SearchOptions) -> list[str]:
         current_folder, do_recursion = search_options["rule_folder"]
-        current_folder = Folder.folder(current_folder)
+        current_folder = folder_tree().folder(current_folder)
         search_in_folders = [current_folder.path()]
         if do_recursion:
             search_in_folders = [x for x, _y in current_folder.recursive_subfolder_choices()]

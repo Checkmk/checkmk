@@ -64,7 +64,13 @@ from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import cmk_version_of_remote_automation_source
 from cmk.gui.watolib.check_mk_automations import active_check
-from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, folder_preserving_link, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    CREHost,
+    Folder,
+    folder_preserving_link,
+    folder_tree,
+    Host,
+)
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (
     checkbox_id,
@@ -239,7 +245,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         # Make Folder() be able to detect the current folder correctly
         request.set_var("folder", api_request["folder_path"])
 
-        folder = Folder.folder(api_request["folder_path"])
+        folder = folder_tree().folder(api_request["folder_path"])
         host = folder.host(api_request["host_name"])
         if not host:
             raise MKUserError("host", _("You called this page with an invalid host name."))

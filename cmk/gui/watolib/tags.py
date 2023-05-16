@@ -20,7 +20,7 @@ from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset
 from cmk.gui.watolib.utils import format_php, multisite_dir, wato_root_dir
 
@@ -142,8 +142,9 @@ def tag_group_exists(ident: TagGroupID, builtin_included=False) -> bool:  # type
 
 def _update_tag_dependencies():
     load_config()
-    Folder.invalidate_caches()
-    Folder.root_folder().rewrite_hosts_files()
+    tree = folder_tree()
+    tree.invalidate_caches()
+    tree.root_folder().rewrite_hosts_files()
 
 
 class RepairError(MKGeneralException):
@@ -292,7 +293,7 @@ def change_host_tags(
     affected_folder, affected_hosts = _change_host_tags_in_folders(
         operation,
         mode,
-        Folder.root_folder(),
+        folder_tree().root_folder(),
     )
 
     affected_rulesets = change_host_tags_in_rulesets(operation, mode)

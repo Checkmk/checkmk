@@ -51,7 +51,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
-from cmk.gui.watolib.hosts_and_folders import BaseFolder, CREFolder, Folder
+from cmk.gui.watolib.hosts_and_folders import BaseFolder, CREFolder, folder_tree
 
 from cmk import fields
 
@@ -313,7 +313,7 @@ def move(params: Mapping[str, Any]) -> Response:
             "parent": gui_fields.FolderField(
                 description="Show all sub-folders of this folder. The default is the root-folder.",
                 example="/servers",
-                load_default=Folder.root_folder,  # because we can't load it too early.
+                load_default=lambda: folder_tree().root_folder(),
             ),
             "recursive": fields.Boolean(
                 description="List the folder (default: root) and all its sub-folders recursively.",

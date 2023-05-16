@@ -26,7 +26,7 @@ from cmk.gui.session import _UserContext
 from cmk.gui.type_defs import SearchResult, SearchResultsByTopic
 from cmk.gui.watolib import search
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     IndexBuilder,
@@ -316,7 +316,7 @@ class TestIndexBuilderAndSearcher:
 
 @pytest.fixture(name="created_host_url")
 def fixture_created_host_url() -> str:
-    folder = Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.create_hosts([(HostName("host"), {}, [])])
     return "wato.py?folder=&host=host&mode=edit_host"
 

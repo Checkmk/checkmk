@@ -63,7 +63,7 @@ from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUni
 from cmk.gui.watolib import activate_changes, backup_snapshots
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import MKAutomationException
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 
 
@@ -687,8 +687,9 @@ def _get_object_reference(object_ref: ObjectRef | None) -> tuple[str | None, str
         return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.Folder:
-        if Folder.folder_exists(object_ref.ident):
-            folder = Folder.folder(object_ref.ident)
+        tree = folder_tree()
+        if tree.folder_exists(object_ref.ident):
+            folder = tree.folder(object_ref.ident)
             return folder.url(), folder.title()
         return None, object_ref.ident
 

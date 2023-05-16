@@ -76,6 +76,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
     Folder,
     folder_preserving_link,
+    folder_tree,
     Host,
     make_action_link,
 )
@@ -556,8 +557,9 @@ class ModeFolder(WatoMode):
         if request.has_var("_move_folder_to"):
             if transactions.check_transaction():
                 var_ident = mandatory_parameter("_ident", request.var("_ident"))
-                what_folder = Folder.folder(var_ident)
-                target_folder = Folder.folder(
+                tree = folder_tree()
+                what_folder = tree.folder(var_ident)
+                target_folder = tree.folder(
                     mandatory_parameter("_move_folder_to", request.var("_move_folder_to"))
                 )
                 Folder.current().move_subfolder_to(what_folder, target_folder)
@@ -584,7 +586,7 @@ class ModeFolder(WatoMode):
         if (target_folder_str := request.var("_move_host_to")) is not None:
             hostname = request.var("_ident")
             if hostname and Folder.current().has_host(hostname):
-                Folder.current().move_hosts([hostname], Folder.folder(target_folder_str))
+                Folder.current().move_hosts([hostname], folder_tree().folder(target_folder_str))
                 return redirect(folder_url)
 
         # bulk operation on hosts
@@ -607,7 +609,7 @@ class ModeFolder(WatoMode):
             target_folder_path = target_folder_path if target_folder_path != "@main" else ""
             if target_folder_path is None:
                 raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
-            target_folder = Folder.folder(target_folder_path)
+            target_folder = folder_tree().folder(target_folder_path)
             Folder.current().move_hosts(selected_host_names, target_folder)
             flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
             return redirect(folder_url)
@@ -1150,11 +1152,12 @@ class ModeFolder(WatoMode):
         # The alias path is a '/' separated path of folder titles.
         # An empty path is interpreted as root path. The actual file
         # name is the host list with the name "Hosts".
+        tree = folder_tree()
         if aliaspath in ("", "/"):
-            folder = Folder.root_folder()
+            folder = tree.root_folder()
         else:
             parts = aliaspath.strip("/").split("/")
-            folder = Folder.root_folder()
+            folder = tree.root_folder()
             while len(parts) > 0:
                 # Look in the current folder for a subfolder with the target title
                 subfolder = folder.subfolder_by_title(parts[0])
@@ -1223,7 +1226,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
                 choices += host.folder().choices_for_moving_host()
 
         elif self._what == "folder" and self._ident is not None:
-            folder = Folder.folder(self._ident)
+            folder = folder_tree().folder(self._ident)
             choices += folder.choices_for_moving_folder()
 
         else:
@@ -1259,7 +1262,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         # two breadcrumb layers up. This is a very specific case, so we realize this locally instead
         # of using a generic approach. Just like it done locally by the action method.
         if (backfolder := request.var("backfolder")) is not None:
-            breadcrumb = make_folder_breadcrumb(Folder.folder(backfolder))
+            breadcrumb = make_folder_breadcrumb(folder_tree().folder(backfolder))
             breadcrumb.append(self._breadcrumb_item())
 
         return make_simple_form_page_menu(
@@ -1273,7 +1276,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def action(self) -> ActionResult:
         if (backfolder := request.var("backfolder")) is not None:
             # Edit icon on subfolder preview should bring user back to parent folder
-            folder = Folder.folder(backfolder)
+            folder = folder_tree().folder(backfolder)
         else:
             folder = Folder.current()
 

@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, DropdownChoice, NetworkPort, TextInput, Tuple
 from cmk.gui.watolib.rulespecs import Rulespec
 
 
@@ -19,7 +19,7 @@ def _special_agents_jolokia_mk_jolokia_elements():
     return [
         (
             "port",
-            Integer(
+            NetworkPort(
                 title=_("TCP port for connection"),
                 default_value=8080,
                 minvalue=1,

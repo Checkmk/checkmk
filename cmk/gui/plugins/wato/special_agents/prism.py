@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextInput
+from cmk.gui.valuespec import Dictionary, NetworkPort, TextInput
 
 
 def _valuespec_special_agents_prism():
@@ -20,7 +20,7 @@ def _valuespec_special_agents_prism():
         elements=[
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("TCP port for connection"),
                     default_value=9440,
                     minvalue=1,

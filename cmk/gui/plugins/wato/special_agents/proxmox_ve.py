@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, FixedValue, Integer, TextInput
+from cmk.gui.valuespec import Dictionary, FixedValue, Integer, NetworkPort, TextInput
 
 
 def _valuespec_special_agents_proxmox_ve():
@@ -22,7 +22,7 @@ def _valuespec_special_agents_proxmox_ve():
                 "password",
                 MigrateToIndividualOrStoredPassword(title=_("Password"), allow_empty=False),
             ),
-            ("port", Integer(title=_("Port"), default_value=8006)),
+            ("port", NetworkPort(title=_("Port"), default_value=8006)),
             (
                 "no-cert-check",
                 FixedValue(

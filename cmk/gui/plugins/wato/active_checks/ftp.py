@@ -14,6 +14,7 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOfStrings,
+    NetworkPort,
     TextInput,
     Tuple,
 )
@@ -25,7 +26,7 @@ def _valuespec_active_checks_ftp() -> Dictionary:
         elements=[
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("Portnumber"),
                     default_value=21,
                 ),

@@ -20,6 +20,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     Integer,
     ListChoice,
+    NetworkPort,
     TextInput,
 )
 from cmk.gui.watolib.rulespecs import Rulespec
@@ -64,7 +65,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
             ),
             (
                 "tcp_port",
-                Integer(
+                NetworkPort(
                     title=_("TCP Port number"),
                     help=_("Port number for HTTPS connection to vSphere"),
                     default_value=443,

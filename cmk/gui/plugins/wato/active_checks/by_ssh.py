@@ -6,7 +6,15 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Integer, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    FixedValue,
+    Integer,
+    NetworkPort,
+    TextInput,
+    Tuple,
+)
 
 
 def _valuespec_active_checks_by_ssh():
@@ -47,7 +55,7 @@ def _valuespec_active_checks_by_ssh():
                     ),
                     (
                         "port",
-                        Integer(
+                        NetworkPort(
                             title=_("SSH Port"),
                             help=_("Default is 22."),
                             minvalue=1,

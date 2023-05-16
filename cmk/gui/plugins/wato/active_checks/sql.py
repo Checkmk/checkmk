@@ -15,7 +15,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     Float,
-    Integer,
+    NetworkPort,
     TextAreaUnicode,
     TextInput,
     Tuple,
@@ -57,7 +57,7 @@ def _valuespec_active_checks_sql() -> Dictionary:
             ),
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("Database Port"),
                     help=_("The port the DBMS listens to"),
                 ),

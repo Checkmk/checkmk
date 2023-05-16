@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary, Integer, TextInput, Tuple
+from cmk.gui.valuespec import Checkbox, Dictionary, Integer, NetworkPort, TextInput, Tuple
 
 
 def _valuespec_active_checks_sftp():
@@ -33,7 +33,7 @@ def _valuespec_active_checks_sftp():
                         "description",
                         TextInput(title=_("Service Description"), default_value="SFTP", size=30),
                     ),
-                    ("port", Integer(title=_("Port"), default_value=22)),
+                    ("port", NetworkPort(title=_("Port"), default_value=22)),
                     (
                         "look_for_keys",
                         Checkbox(

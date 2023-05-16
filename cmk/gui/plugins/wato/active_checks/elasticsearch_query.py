@@ -12,6 +12,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
     ListOfStrings,
+    NetworkPort,
     TextInput,
     Tuple,
 )
@@ -69,7 +70,7 @@ def _valuespec_active_checks_elasticsearch_query():
             ),
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("Port"),
                     help=_(
                         "Use this option to query a port which is different from standard port 9200."

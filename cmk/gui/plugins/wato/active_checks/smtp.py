@@ -20,6 +20,7 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOfStrings,
+    NetworkPort,
     TextInput,
     Tuple,
 )
@@ -58,7 +59,7 @@ def _valuespec_active_checks_smtp() -> Tuple:
                     ),
                     (
                         "port",
-                        Integer(
+                        NetworkPort(
                             title=_("TCP Port to connect to"),
                             help=_(
                                 "The TCP Port the SMTP server is listening on. "

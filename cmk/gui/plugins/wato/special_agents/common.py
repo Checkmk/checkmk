@@ -25,8 +25,8 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     HTTPUrl,
-    Integer,
     ListOf,
+    NetworkPort,
     RegExp,
     TextInput,
 )
@@ -232,7 +232,7 @@ def api_request_connection_elements(  # type: ignore[no-untyped-def]
     help_text: str, default_port: int
 ):
     return [
-        ("port", Integer(title=_("Port"), default_value=default_port)),
+        ("port", NetworkPort(title=_("Port"), default_value=default_port)),
         (
             "path-prefix",
             TextInput(title=_("Custom path prefix"), help=help_text, allow_empty=False),
@@ -330,7 +330,7 @@ def connection_set(options: list[str] | None = None, auth_option: str | None = N
         connection_options.append(
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("TCP port number"),
                     help=_("Port number that server is listening on."),
                     default_value=4223,

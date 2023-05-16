@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, TextInput, Tuple
+from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, NetworkPort, TextInput, Tuple
 from cmk.gui.watolib.rulespecs import Rulespec
 
 
@@ -31,7 +31,7 @@ def _valuespec_special_agents_activemq() -> Dictionary:
                     allow_empty=False,
                 ),
             ),
-            ("port", Integer(title=_("Port Number"), default_value=8161)),
+            ("port", NetworkPort(title=_("Port Number"), default_value=8161)),
             (
                 "protocol",
                 DropdownChoice(

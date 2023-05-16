@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, ListOfStrings, TextInput
+from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOfStrings, NetworkPort, TextInput
 
 
 def _valuespec_special_agents_3par() -> Dictionary:
@@ -33,7 +33,7 @@ def _valuespec_special_agents_3par() -> Dictionary:
             ),
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("TCP port number"),
                     help=_("Port number that 3par is listening on. The default is 8080."),
                     default_value=8080,

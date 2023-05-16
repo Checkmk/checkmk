@@ -14,6 +14,7 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOfStrings,
+    NetworkPort,
     TextInput,
     Tuple,
 )
@@ -27,7 +28,7 @@ def _valuespec_active_checks_tcp() -> Tuple:
             "<tt>check_tcp</tt> from the standard Nagios plugins."
         ),
         elements=[
-            Integer(title=_("TCP Port"), minvalue=1, maxvalue=65535),
+            NetworkPort(title=_("TCP Port"), minvalue=1, maxvalue=65535),
             Dictionary(
                 title=_("Optional parameters"),
                 elements=[

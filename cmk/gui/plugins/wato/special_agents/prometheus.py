@@ -21,10 +21,10 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Float,
     Hostname,
-    Integer,
     ListChoice,
     ListOf,
     Migrate,
+    NetworkPort,
     TextInput,
     Tuple,
 )
@@ -51,7 +51,7 @@ def _valuespec_connection_elements(  # pylint: disable=redefined-builtin
     return Migrate(
         valuespec=Dictionary(
             elements=[
-                ("port", Integer(title=_("Port"), default_value=6443)),
+                ("port", NetworkPort(title=_("Port"), default_value=6443)),
                 (
                     "path_prefix",
                     TextInput(

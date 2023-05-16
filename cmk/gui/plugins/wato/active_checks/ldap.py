@@ -17,6 +17,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     Float,
     Integer,
+    NetworkPort,
     TextInput,
     Tuple,
 )
@@ -85,7 +86,7 @@ def _valuespec_active_checks_ldap():
                     ),
                     (
                         "port",
-                        Integer(
+                        NetworkPort(
                             title=_("TCP Port"),
                             help=_(
                                 "Default is 389 for normal connections and 636 for SSL connections."

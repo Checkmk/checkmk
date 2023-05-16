@@ -10,9 +10,9 @@ from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword,
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
-    Integer,
     ListChoice,
     ListOfStrings,
+    NetworkPort,
     TextInput,
 )
 from cmk.gui.watolib.rulespecs import Rulespec
@@ -63,7 +63,7 @@ def _valuespec_special_agents_elasticsearch():
             ),
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("Port"),
                     help=_(
                         "Use this option to query a port which is different from standard port 9200."

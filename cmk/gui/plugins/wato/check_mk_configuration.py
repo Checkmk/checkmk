@@ -86,6 +86,7 @@ from cmk.gui.valuespec import (
     LogLevelChoice,
     Migrate,
     MonitoringState,
+    NetworkPort,
     Optional,
     PasswordSpec,
     RegExp,
@@ -3539,7 +3540,7 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
         (
             "tcp",
             _("TCP Connect"),
-            Integer(label=_("to port:"), minvalue=1, maxvalue=65535, default_value=80),
+            NetworkPort(label=_("to port:"), minvalue=1, maxvalue=65535, default_value=80),
         ),
         ("ok", _("Always assume host to be up")),
         ("agent", _("Use the status of the Checkmk Agent")),
@@ -5256,7 +5257,7 @@ rulespec_registry.register(
 
 
 def _valuespec_snmp_ports():
-    return Integer(
+    return NetworkPort(
         minvalue=1,
         maxvalue=65535,
         default_value=161,
@@ -5293,7 +5294,7 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
 
 
 def _valuespec_agent_ports():
-    return Integer(
+    return NetworkPort(
         minvalue=1,
         maxvalue=65535,
         default_value=6556,

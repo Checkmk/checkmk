@@ -18,6 +18,7 @@ from cmk.gui.valuespec import (
     ID,
     Integer,
     ListOf,
+    NetworkPort,
     TextInput,
     Tuple,
     ValueSpec,
@@ -176,7 +177,7 @@ def _valuespec_special_agents_siemens_plc():
                             ),
                             (
                                 "tcp_port",
-                                Integer(
+                                NetworkPort(
                                     title=_("TCP Port number"),
                                     help=_("Port number for communicating with the PLC"),
                                     default_value=102,

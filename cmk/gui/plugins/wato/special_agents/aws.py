@@ -25,12 +25,12 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryEntry,
     FixedValue,
-    Integer,
     ListChoice,
     ListOf,
     ListOfStrings,
     Migrate,
     MigrateNotUpdated,
+    NetworkPort,
     TextInput,
     Tuple,
     ValueSpec,
@@ -459,7 +459,7 @@ def _valuespec_special_agents_aws() -> Migrate:
                         title=_("Proxy server details"),
                         elements=[
                             ("proxy_host", TextInput(title=_("Proxy host"), allow_empty=False)),
-                            ("proxy_port", Integer(title=_("Port"))),
+                            ("proxy_port", NetworkPort(title=_("Port"))),
                             (
                                 "proxy_user",
                                 TextInput(

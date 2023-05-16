@@ -1943,10 +1943,12 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
 
 
 def NetworkPort(  # pylint: disable=redefined-builtin
-    title: str | None,
+    title: str | None = None,
+    size: int | None = None,
     help: str | None = None,
-    minvalue: int = 1,
+    minvalue: int = 0,
     maxvalue: int = 65535,
+    label: str | None = None,
     default_value: ValueSpecDefault[int] = DEF_VALUE,
 ) -> Integer:
     return Integer(
@@ -1955,6 +1957,7 @@ def NetworkPort(  # pylint: disable=redefined-builtin
         minvalue=minvalue,
         maxvalue=maxvalue,
         default_value=default_value,
+        label=label,
     )
 
 

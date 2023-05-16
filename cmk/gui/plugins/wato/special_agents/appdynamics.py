@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextInput
+from cmk.gui.valuespec import Dictionary, Integer, NetworkPort, TextInput
 from cmk.gui.watolib.rulespecs import Rulespec
 
 
@@ -57,7 +57,7 @@ def _valuespec_special_agents_appdynamics():
             ),
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("TCP port number"),
                     help=_("Port number that AppDynamics is listening on. The default is 8090."),
                     default_value=8090,

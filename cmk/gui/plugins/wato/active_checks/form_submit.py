@@ -11,6 +11,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
     ListOfStrings,
+    NetworkPort,
     RegExp,
     TextInput,
     Tuple,
@@ -59,7 +60,7 @@ def _valuespec_active_checks_form_submit() -> Tuple:
                     ),
                     (
                         "port",
-                        Integer(
+                        NetworkPort(
                             title=_("TCP Port"),
                             minvalue=1,
                             maxvalue=65535,

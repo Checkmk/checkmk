@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextInput
+from cmk.gui.valuespec import Dictionary, NetworkPort, TextInput
 
 
 def _valuespec_special_agents_ddn_s2a():
@@ -22,7 +22,7 @@ def _valuespec_special_agents_ddn_s2a():
                 "password",
                 MigrateToIndividualOrStoredPassword(title=_("Password"), allow_empty=False),
             ),
-            ("port", Integer(title=_("Port"), default_value=8008)),
+            ("port", NetworkPort(title=_("Port"), default_value=8008)),
         ],
         optional_keys=["port"],
         title=_("DDN S2A"),

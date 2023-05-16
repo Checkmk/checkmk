@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Dictionary, Integer, TextInput
+from cmk.gui.valuespec import Dictionary, Integer, NetworkPort, TextInput
 
 
 def _valuespec_special_agents_tinkerforge():
@@ -16,7 +16,7 @@ def _valuespec_special_agents_tinkerforge():
         elements=[
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("TCP port number"),
                     help=_("Port number that AppDynamics is listening on. The default is 8090."),
                     default_value=4223,

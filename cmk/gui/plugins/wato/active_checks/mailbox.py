@@ -29,6 +29,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListOfStrings,
     Migrate,
+    NetworkPort,
     RegExp,
     TextInput,
     Transform,
@@ -119,7 +120,7 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
                         ),
                         (
                             "tcp_port",
-                            Integer(
+                            NetworkPort(
                                 title=_("TCP Port"),
                                 label=_("(default is %r for %s/TLS)") % (port_defaults, protocol),
                             ),
@@ -294,7 +295,7 @@ def _valuespec_active_checks_mail_loop() -> Migrate:
                 ),
                 (
                     "smtp_port",
-                    Integer(
+                    NetworkPort(
                         title=_("SMTP TCP Port to connect to"),
                         help=_(
                             "The TCP Port the SMTP server is listening on. Defaulting to <tt>25</tt>."
@@ -501,7 +502,7 @@ def _valuespec_active_checks_mail() -> Migrate:
                                                     title=_("Address"),
                                                     allow_empty=False,
                                                 ),
-                                                Integer(
+                                                NetworkPort(
                                                     title=_("Port"),
                                                     default_value=514,
                                                     minvalue=1,

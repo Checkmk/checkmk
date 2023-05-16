@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Integer, TextInput
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, NetworkPort, TextInput
 
 
 def _valuespec_special_agents_ruckus_spot():
@@ -37,7 +37,7 @@ def _valuespec_special_agents_ruckus_spot():
             ),
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("Port"),
                     default_value=8443,
                 ),
@@ -68,7 +68,7 @@ def _valuespec_special_agents_ruckus_spot():
                     elements=[
                         (
                             "port",
-                            Integer(
+                            NetworkPort(
                                 title=_("Port"),
                                 default_value=6556,
                             ),

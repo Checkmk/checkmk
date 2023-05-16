@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, TextInput
+from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, NetworkPort, TextInput
 
 
 def _valuespec_active_checks_uniserv():
@@ -15,7 +15,7 @@ def _valuespec_active_checks_uniserv():
         title=_("Check uniserv service"),
         optional_keys=False,
         elements=[
-            ("port", Integer(title=_("Port"))),
+            ("port", NetworkPort(title=_("Port"))),
             (
                 "service",
                 TextInput(

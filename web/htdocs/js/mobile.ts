@@ -3,20 +3,13 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import * as forms from "forms";
+import * as graphs from "graphs";
 
 // NOTE: We use an up-to-date version of jQuery from the package-lock.json together
 // with a patched version of jQuery mobile to make it compatible with jQuery:
 // https://github.com/jquery/jquery-mobile/issues/8662#issuecomment-687738965
 require("script-loader!jquery");
 require("script-loader!../jquery/jquery.mobile-1.4.5.min.js");
-
-// Optional import is currently not possible using the ES6 imports
-let graphs;
-try {
-    graphs = require("graphs");
-} catch (e) {
-    graphs = null;
-}
 
 /* Disable data-ajax per default, as it makes problems in most
    of our cases */

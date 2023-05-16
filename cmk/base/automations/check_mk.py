@@ -26,7 +26,6 @@ import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.password_store
-import cmk.utils.paths as paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
@@ -36,6 +35,10 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import (
     autochecks_dir,
+    autodiscovery_dir,
+    base_autochecks_dir,
+    base_discovered_host_labels_dir,
+    checks_dir,
     counters_dir,
     data_source_cache_dir,
     discovered_host_labels_dir,
@@ -398,7 +401,7 @@ automations.register(AutomationAutodiscovery())
 def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     file_cache_options = FileCacheOptions(use_outdated=True)
 
-    if not (queue := AutoQueue(cmk.utils.paths.autodiscovery_dir)):
+    if not (queue := AutoQueue(autodiscovery_dir)):
         return {}, False
 
     config.load()
@@ -439,8 +442,8 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
 
     core = create_core(config.monitoring_core)
     with config.set_use_core_config(
-        autochecks_dir=Path(cmk.utils.paths.base_autochecks_dir),
-        discovered_host_labels_dir=cmk.utils.paths.base_discovered_host_labels_dir,
+        autochecks_dir=Path(base_autochecks_dir),
+        discovered_host_labels_dir=base_discovered_host_labels_dir,
     ):
         try:
             _config_cache.clear_all()
@@ -490,8 +493,8 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         if config_cache.is_cluster(hostname):
             config.load_all_agent_based_plugins(
                 check_api.get_check_api_context,
-                local_checks_dir=paths.local_checks_dir,
-                checks_dir=paths.checks_dir,
+                local_checks_dir=local_checks_dir,
+                checks_dir=checks_dir,
             )
 
         # Fix data from version <2.0
@@ -1337,8 +1340,8 @@ class AutomationGetConfiguration(Automation):
         if missing_variables:
             config.load_all_agent_based_plugins(
                 check_api.get_check_api_context,
-                local_checks_dir=paths.local_checks_dir,
-                checks_dir=paths.checks_dir,
+                local_checks_dir=local_checks_dir,
+                checks_dir=checks_dir,
             )
             config.load(with_conf_d=False)
 

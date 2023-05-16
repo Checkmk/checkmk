@@ -8,6 +8,8 @@ ARG CMK_VERSION="2.1.0p29"
 # Choose one of: raw, enterprise, managed
 ARG CMK_EDITION="raw"
 
+ARG CMK_DL_URL="https://download.checkmk.com/checkmk"
+
 # The following variables can be set during container init (docker run -e KEY=val)
 ARG CMK_SITE_ID
 ENV CMK_SITE_ID="cmk"
@@ -78,8 +80,11 @@ RUN set -e \
     && PKG_FILE="${PKG_NAME}_0.${DISTRO_CODENAME}_$(dpkg --print-architecture).deb" \
     && CREDENTIALS_URL="http://localhost:8000/secret" \
     && if [ ! -e "/${PKG_FILE}" ]; then \
-        echo "ERROR: Please provide ${PKG_FILE} by downloading it from https://download.checkmk.com/checkmk" \
-        && return 1 ; \
+        echo "Receive download credentials from ${CREDENTIALS_URL}..." && \
+        CMK_DL_CREDENTIALS=$(curl -fsS "${CREDENTIALS_URL}") && \
+        echo "Downloading ${PKG_FILE}..." && \
+        echo "--user \"${CMK_DL_CREDENTIALS}\"" \
+            | curl -f -o "${PKG_FILE}" -K - "${CMK_DL_URL}/${CMK_VERSION}/${PKG_FILE}" ; \
        fi \
     && gpg -q --import "/Check_MK-pubkey.gpg" \
     && gpg --verify "${PKG_FILE}" \

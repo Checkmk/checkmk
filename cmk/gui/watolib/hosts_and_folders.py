@@ -53,7 +53,6 @@ from cmk.automations.results import ABCAutomationResult
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
-import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -1047,7 +1046,7 @@ def _disable_redis_locally() -> Iterator[None]:
         _REDIS_ENABLED_LOCALLY = last_value
 
 
-def _wato_folders_factory() -> Mapping[PathWithoutSlash, CREFolder | None]:
+def _wato_folders_factory() -> Mapping[PathWithoutSlash, CREFolder]:
     if not may_use_redis():
         return _get_fully_loaded_wato_folders()
 
@@ -1074,19 +1073,19 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     # '--------------------------------------------------------------------'
 
     @staticmethod
-    def all_folders():
+    def all_folders() -> Mapping[PathWithoutSlash, CREFolder]:
         if "wato_folders" not in g:
             g.wato_folders = _wato_folders_factory()
         return g.wato_folders
 
     @staticmethod
-    def folder_choices():
+    def folder_choices() -> Sequence[tuple[str, str]]:
         if "folder_choices" not in g:
             g.folder_choices = Folder.root_folder().recursive_subfolder_choices()
         return g.folder_choices
 
     @staticmethod
-    def folder_choices_fulltitle():
+    def folder_choices_fulltitle() -> Sequence[tuple[str, str]]:
         if "folder_choices_full_title" not in g:
             g.folder_choices_full_title = Folder.root_folder().recursive_subfolder_choices(
                 pretty=False
@@ -1100,7 +1099,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         raise MKGeneralException("No Setup folder %s." % folder_path)
 
     @staticmethod
-    def create_missing_folders(folder_path):
+    def create_missing_folders(folder_path: PathWithoutSlash) -> None:
         folder = Folder.folder("")
         for subfolder_name in Folder._split_folder_path(folder_path):
             if (existing_folder := folder.subfolder(subfolder_name)) is None:
@@ -1109,7 +1108,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
                 folder = existing_folder
 
     @staticmethod
-    def _split_folder_path(folder_path):
+    def _split_folder_path(folder_path: PathWithoutSlash) -> Iterable[str]:
         if not folder_path:
             return []
         return folder_path.split("/")
@@ -1130,7 +1129,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         return super().parent_folder_chain()
 
     @staticmethod
-    def invalidate_caches():
+    def invalidate_caches() -> None:
         Folder.root_folder().drop_caches()
         if may_use_redis():
             get_wato_redis_client().clear_cached_folders()
@@ -1171,7 +1170,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         return folder
 
     @staticmethod
-    def current_disk_folder():
+    def current_disk_folder() -> CREFolder:
         folder = Folder.current()
         while not folder.is_disk_folder():
             folder = folder.parent()
@@ -1228,7 +1227,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             self._locked_subfolders = False
 
     @property
-    def _subfolders(self):
+    def _subfolders(self) -> dict[PathWithoutSlash, CREFolder]:
         if self._loaded_subfolders is None:
             self._loaded_subfolders = self._load_subfolders()
         return self._loaded_subfolders
@@ -1236,11 +1235,11 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def __repr__(self) -> str:
         return f"Folder({self.path()!r}, {self._title!r})"
 
-    def get_root_dir(self):
+    def get_root_dir(self) -> PathWithoutSlash:
         return self._root_dir
 
     # Dangerous operation! Only use this if you have a good knowledge of the internas
-    def set_root_dir(self, root_dir):
+    def set_root_dir(self, root_dir: str) -> None:
         self._root_dir = _ensure_trailing_slash(root_dir)
 
     def parent(self) -> CREFolder:
@@ -1255,7 +1254,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def is_disk_folder(self) -> bool:
         return True
 
-    def _load_hosts_on_demand(self):
+    def _load_hosts_on_demand(self) -> None:
         if self._hosts is None:
             self._load_hosts()
 
@@ -1492,7 +1491,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             "lock_subfolders": self._locked_subfolders,
         }
 
-    def _fallback_title(self):
+    def _fallback_title(self) -> str:
         if self.is_root():
             return _("Main")
         return self.name()
@@ -1619,7 +1618,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def title(self) -> str:
         return self._title
 
-    def filesystem_path(self):
+    def filesystem_path(self) -> PathWithoutSlash:
         return (self._root_dir + self.path()).rstrip("/")
 
     def ident(self) -> str:
@@ -1634,12 +1633,12 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
         return self.name()
 
-    def path_for_gui_rule_matching(self):
+    def path_for_gui_rule_matching(self) -> PathWithSlash:
         if self.is_root():
             return "/"
         return "/wato/%s/" % self.path()
 
-    def path_for_rule_matching(self):
+    def path_for_rule_matching(self) -> PathWithSlash:
         path = self.path()
         return "/wato/%s/" % path if path else "/wato/"
 
@@ -1746,18 +1745,14 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             choices.append((subfolder.path(), subfolder.title()))
         return choices
 
-    def _prefixed_title(self, current_depth, pretty):
+    def _prefixed_title(self, current_depth: int, pretty: bool) -> str:
         if not pretty:
-            return HTML(
-                escaping.escape_attribute("/".join(str(p) for p in self.title_path_without_root()))
-            )
+            return "/".join(str(p) for p in self.title_path_without_root())
 
         title_prefix = ("\u00a0" * 6 * current_depth) + "\u2514\u2500 " if current_depth else ""
-        return HTML(title_prefix + escaping.escape_attribute(self.title()))
+        return title_prefix + self.title()
 
-    def _walk_tree(  # type: ignore[no-untyped-def]
-        self, results: list[tuple[str, HTML]], current_depth, pretty
-    ):
+    def _walk_tree(self, results: list[tuple[str, str]], current_depth: int, pretty: bool) -> bool:
         visible_subfolders = False
         for subfolder in sorted(
             self._subfolders.values(), key=operator.methodcaller("title"), reverse=True
@@ -1777,8 +1772,8 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
         return False
 
-    def recursive_subfolder_choices(self, pretty=True):
-        result: list[tuple[str, HTML]] = []
+    def recursive_subfolder_choices(self, pretty: bool = True) -> Sequence[tuple[str, str]]:
+        result: list[tuple[str, str]] = []
         self._walk_tree(result, 0, pretty)
         result.reverse()
         return result
@@ -2777,7 +2772,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         return mapping
 
 
-class WATOFoldersOnDemand(Mapping[PathWithoutSlash, CREFolder | None]):
+class WATOFoldersOnDemand(Mapping[PathWithoutSlash, CREFolder]):
     def __init__(self, values: dict[PathWithoutSlash, CREFolder | None]) -> None:
         self._raw_dict: dict[PathWithoutSlash, CREFolder | None] = values
 
@@ -2903,7 +2898,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):  # pylint: disa
     def has_subfolders(self) -> bool:
         return False
 
-    def choices_for_moving_host(self):
+    def choices_for_moving_host(self) -> Sequence[tuple[str, str]]:
         return Folder.folder_choices()
 
     def path(self):
@@ -3844,7 +3839,7 @@ def check_wato_foldername(htmlvarname: str | None, name: str, just_name: bool = 
         )
 
 
-def _ensure_trailing_slash(path: str) -> str:
+def _ensure_trailing_slash(path: str) -> PathWithSlash:
     """Ensure one single trailing slash on a pathname.
 
     Examples:

@@ -5,7 +5,6 @@
 
 import re
 from collections.abc import Callable, Collection, Iterable, Mapping
-from html import unescape
 from itertools import chain
 
 from livestatus import LivestatusColumn, MultiSiteConnection
@@ -172,12 +171,11 @@ def monitored_service_description_autocompleter(value: str, params: dict) -> Cho
 def wato_folder_choices_autocompleter(value: str, params: dict) -> Choices:
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_folders: Choices = []
-    for path, name in Folder.folder_choices_fulltitle():  # str, HTML
-        name = str(name)
+    for path, name in Folder.folder_choices_fulltitle():
         if match_pattern.search(name) is not None:
             # select2 omits empty strings ("") as option therefore the path of the Main folder is
             # replaced by a placeholder
-            matching_folders.append((path, unescape(name)) if path != "" else ("@main", name))
+            matching_folders.append((path, name) if path != "" else ("@main", name))
     return matching_folders
 
 

@@ -32,7 +32,6 @@ from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.bakery import has_agent_bakery
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.search import MatchItem
@@ -548,7 +547,7 @@ def test_recursive_subfolder_choices(
     monkeypatch: MonkeyPatch,
     make_folder: Callable,
     actual_builder: Callable[[Callable], hosts_and_folders.CREFolder],
-    expected: list[tuple[str, HTML]],
+    expected: list[tuple[str, str]],
 ) -> None:
     with monkeypatch.context() as m:
         m.setattr(

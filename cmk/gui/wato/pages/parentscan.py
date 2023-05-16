@@ -268,7 +268,9 @@ class ParentScanBackgroundJob(BackgroundJob):
             # Put new gateways in subfolder "Parents" of current
             # folder. Does this folder already exist?
             if current.has_subfolder("parents"):
-                return current.subfolder("parents")
+                parents_folder = current.subfolder("parents")
+                assert parents_folder is not None
+                return parents_folder
             # Create new gateway folder
             return current.create_subfolder("parents", _("Parents"), {})
 

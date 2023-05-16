@@ -803,20 +803,20 @@ class ColumnDisplayHint:
             return self.filter_class(
                 inv_info=table_view_name,
                 ident=ident,
-                title=self.long_inventory_title,
+                title=self.long_title,
             )
 
         if (ranged_table_filter_name := get_ranged_table_filter_name(ident)) is not None:
             return FilterInvtableIDRange(
                 inv_info=table_view_name,
                 ident=ranged_table_filter_name,
-                title=self.long_inventory_title,
+                title=self.long_title,
             )
 
         return FilterInvtableText(
             inv_info=table_view_name,
             ident=ident,
-            title=self.long_inventory_title,
+            title=self.long_title,
         )
 
 
@@ -867,7 +867,7 @@ class AttributeDisplayHint:
         if self.data_type == "str":
             return FilterInvText(
                 ident=ident,
-                title=self.long_inventory_title,
+                title=self.long_title,
                 inventory_path=inventory_path,
                 is_show_more=self.is_show_more,
             )
@@ -875,7 +875,7 @@ class AttributeDisplayHint:
         if self.data_type == "bool":
             return FilterInvBool(
                 ident=ident,
-                title=self.long_inventory_title,
+                title=self.long_title,
                 inventory_path=inventory_path,
                 is_show_more=self.is_show_more,
             )
@@ -883,7 +883,7 @@ class AttributeDisplayHint:
         filter_info = _inv_filter_info().get(self.data_type, {})
         return FilterInvFloat(
             ident=ident,
-            title=self.long_inventory_title,
+            title=self.long_title,
             inventory_path=inventory_path,
             unit=filter_info.get("unit"),
             scale=filter_info.get("scale", 1.0),

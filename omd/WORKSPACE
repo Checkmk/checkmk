@@ -62,8 +62,8 @@ heirloommailx(
 load("//packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins")
 
 monitoring_plugins(
-    sha256 = "8d9405baf113a9f25e4fb961d56f9f231da02e3ada0f41dbb0fa4654534f717b",
-    version_str = "2.3.2",  # version also listed in monitoring-plugins.make
+    sha256 = "7023b1dc17626c5115b061e7ce02e06f006e35af92abf473334dffe7ff3c2d6d",
+    version_str = "2.3.3",
 )
 
 load("//packages/stunnel:stunnel_http.bzl", "stunnel")

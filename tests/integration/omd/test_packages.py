@@ -18,7 +18,7 @@ class MonitoringPlugin:
     binary_name: str
     stream: StreamType = "stdout"
     cmd_line_option: str = "-V"
-    expected: str = "v2.3.2"
+    expected: str = "v2.3.3"
 
     def __post_init__(self):
         self.path = f"lib/nagios/plugins/{self.binary_name}"

@@ -198,13 +198,13 @@ def parse_cisco_qos(  # pylint: disable=too-many-branches
             if (if_name := interface_index_to_interface_name.get(if_index)) is None:
                 continue
 
-            policy_map_idx = None
-            for (pol_idx, obj_idx), type_ in policy_and_object_index_to_object_type.items():
-                if pol_idx == policy_index and type_ is _QosObjectType.POLICYMAP:
-                    policy_map_idx = policy_and_object_index_to_config_index[(pol_idx, obj_idx)]
-                    break
-
-            if policy_map_idx is None:
+            try:
+                policy_map_idx = next(
+                    policy_and_object_index_to_config_index[(pol_idx, obj_idx)]
+                    for (pol_idx, obj_idx), type_ in policy_and_object_index_to_object_type.items()
+                    if pol_idx == policy_index and type_ is _QosObjectType.POLICYMAP
+                )
+            except StopIteration:
                 continue
 
             speed: float = interface_index_to_interface_speed[if_index]

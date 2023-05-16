@@ -199,7 +199,7 @@ class MainArea(LocatorHelper):
 
     def check_page_title(self, title: str) -> None:
         """check the page title"""
-        expect(self.locator("div.titlebar > a")).to_have_text(title)
+        expect(self.locator(".titlebar a>>nth=0")).to_have_text(title)
 
     def expect_no_entries(self) -> None:
         """Expect no previous entries are found in the page.

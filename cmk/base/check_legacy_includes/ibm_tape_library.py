@@ -8,7 +8,11 @@
 
 
 def scan_ibm_tape_library(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.32925.1")
+        return (
+        oid(".1.3.6.1.4.1.14851.3.1.3.5.0").startswith("IBM TS4300 Tape Library")
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.32925.1")
+        or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.14851")
+    )
 
 
 def ibm_tape_library_parse_device_name(name):

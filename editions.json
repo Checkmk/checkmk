@@ -32,13 +32,6 @@
             "debian-10"
         ]
     },
-    "free": {
-        "NAME": "Free Edition",
-        "DISTROS": [
-            "ubuntu-20.04",
-            "ubuntu-22.04"
-        ]
-    },
     "cloud": {
         "NAME": "Cloud Edition",
         "DISTROS": [

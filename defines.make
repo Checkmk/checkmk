@@ -33,14 +33,6 @@ else
 CLOUD              := no
 endif
 
-# Will be set to "yes" by cmk build system when building a free edition
-FREE               := no
-
-ifeq (yes,$(FREE))
-EDITION            := free
-EDITION_SHORT      := cfe
-endif
-
 VERSION            := 2.2.0b9
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name

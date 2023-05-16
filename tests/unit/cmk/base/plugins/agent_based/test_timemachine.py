@@ -8,13 +8,8 @@ import datetime
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.checkers.checking import CheckPluginName
-
+from cmk.base.plugins.agent_based import timemachine
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-
-pytestmark = pytest.mark.checks
 
 
 class MockedDateTime(datetime.datetime):
@@ -23,27 +18,22 @@ class MockedDateTime(datetime.datetime):
         return cls(2022, 5, 6, 14, 59, 40, 552190)
 
 
-def test_discovery_timemachine_discovered_service(fix_register: FixRegister) -> None:
-    check = fix_register.check_plugins[CheckPluginName("timemachine")]
+def test_discovery_timemachine_discovered_service() -> None:
     assert list(
-        check.discovery_function("/Volumes/Backup/Backups.backupdb/macvm/2013-11-28-202610")
+        timemachine.discover_timemachine("/Volumes/Backup/Backups.backupdb/macvm/2013-11-28-202610")
     ) == [Service()]
 
 
-def test_discovery_timemachine_no_discovered_service(fix_register: FixRegister) -> None:
-    check = fix_register.check_plugins[CheckPluginName("timemachine")]
-    result = check.discovery_function("Unable to locate machine directory for host.")
+def test_discovery_timemachine_no_discovered_service() -> None:
+    result = timemachine.discover_timemachine("Unable to locate machine directory for host.")
     assert not list(result)
 
 
-def test_check_timemachine_state_ok(
-    fix_register: FixRegister, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    check = fix_register.check_plugins[CheckPluginName("timemachine")]
+def test_check_timemachine_state_ok(monkeypatch: pytest.MonkeyPatch) -> None:
     info = "/Volumes/Backup/Backups.backupdb/macvm/2022-05-05-202610"
     monkeypatch.setattr(datetime, "datetime", MockedDateTime)
     monkeypatch.setenv("TZ", "Europe/Berlin")
-    result = list(check.check_function(params={"age": (86400, 172800)}, section=info))
+    result = list(timemachine.check_timemachine(params={"age": (86400, 172800)}, section=info))
     assert result == [
         Result(
             state=State.OK,
@@ -52,14 +42,11 @@ def test_check_timemachine_state_ok(
     ]
 
 
-def test_check_timemachine_state_crit(
-    fix_register: FixRegister, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    check = fix_register.check_plugins[CheckPluginName("timemachine")]
+def test_check_timemachine_state_crit(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(datetime, "datetime", MockedDateTime)
     monkeypatch.setenv("TZ", "Europe/Berlin")
     result = list(
-        check.check_function(
+        timemachine.check_timemachine(
             params={"age": (86400, 172800)},
             section="/Volumes/Backup/Backups.backupdb/macvm/2022-05-01-202610",
         )
@@ -72,14 +59,11 @@ def test_check_timemachine_state_crit(
     ]
 
 
-def test_check_timemachine_state_warn(
-    fix_register: FixRegister, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    check = fix_register.check_plugins[CheckPluginName("timemachine")]
+def test_check_timemachine_state_warn(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(datetime, "datetime", MockedDateTime)
     monkeypatch.setenv("TZ", "Europe/Berlin")
     result = list(
-        check.check_function(
+        timemachine.check_timemachine(
             params={"age": (86400, 172800)},
             section="/Volumes/Backup/Backups.backupdb/macvm/2022-05-04-202610",
         )
@@ -92,23 +76,19 @@ def test_check_timemachine_state_warn(
     ]
 
 
-def test_check_agent_failure(fix_register: FixRegister) -> None:
-    check = fix_register.check_plugins[CheckPluginName("timemachine")]
+def test_check_agent_failure() -> None:
     info = "Unable to locate machine directory for host."
-    result = list(check.check_function(params={"age": (86400, 172800)}, section=info))
+    result = list(timemachine.check_timemachine(params={"age": (86400, 172800)}, section=info))
     assert result == [
         Result(state=State.CRIT, summary=f"Backup seems to have failed, message was: {info}")
     ]
 
 
-def test_check_future_backup_date(
-    fix_register: FixRegister, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    check = fix_register.check_plugins[CheckPluginName("timemachine")]
+def test_check_future_backup_date(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(datetime, "datetime", MockedDateTime)
     monkeypatch.setenv("TZ", "Europe/Berlin")
     result = list(
-        check.check_function(
+        timemachine.check_timemachine(
             params={"age": (86400, 172800)},
             section="/Volumes/Backup/Backups.backupdb/macvm/2022-05-07-202610",
         )

@@ -8,6 +8,7 @@
 
 import logging
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -16,7 +17,12 @@ import requests
 import requests.exceptions
 
 import tests.testlib as testlib
-from tests.testlib.utils import cmk_path, current_base_branch_name
+from tests.testlib.utils import (
+    cmk_path,
+    current_base_branch_name,
+    get_cmk_download_credentials,
+    get_cmk_download_credentials_file,
+)
 
 import docker  # type: ignore[import]
 
@@ -114,14 +120,26 @@ def _build(request, client, version, prepare_package=True):
     if prepare_package:
         _prepare_package(version)
 
+    logger.info("Starting helper container for build secrets")
+    secret_container = client.containers.run(
+        image="busybox",
+        command=["timeout", "180", "httpd", "-f", "-p", "8000", "-h", "/files"],
+        detach=True,
+        remove=True,
+        volumes={get_cmk_download_credentials_file(): {"bind": "/files/secret", "mode": "ro"}},
+    )
+    request.addfinalizer(lambda: secret_container.remove(force=True))
+
     logger.info("Building docker image (or reuse existing): %s", _image_name(version))
     try:
         image, build_logs = client.images.build(
             path=build_path,
             tag=_image_name(version),
+            network_mode="container:%s" % secret_container.id,
             buildargs={
                 "CMK_VERSION": version.version,
                 "CMK_EDITION": version.edition(),
+                "CMK_DL_CREDENTIALS": ":".join(get_cmk_download_credentials()),
                 "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )
@@ -355,6 +373,20 @@ def test_build_using_local_deb(request, client, version):
         _build(request, client, version, prepare_package=False)
     os.unlink(str(package_path))
     _prepare_package(version)
+
+
+# Test that the deb package from the download server is used.
+# Works only with daily enterprise builds.
+def test_build_using_package_from_download_server(request, client, version):
+    if not (
+        version.edition() == "enterprise" and re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)
+    ):
+        pytest.skip("only enterprise daily packages are available on the download server")
+    package_path = Path(build_path, _package_name(version))
+    # make sure no local package is used.
+    if package_path.exists():
+        os.unlink(str(package_path))
+    _build(request, client, version, prepare_package=False)
 
 
 # Test that the local GPG file is used by making the build fail because of an empty file

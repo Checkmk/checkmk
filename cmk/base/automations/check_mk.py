@@ -960,7 +960,6 @@ class AutomationAnalyseServices(Automation):
                 service_info := self._get_service_info(
                     config_cache=config_cache,
                     host_name=host_name,
-                    host_attrs=config_cache.get_host_attributes(host_name),
                     servicedesc=servicedesc,
                 )
             )
@@ -978,7 +977,6 @@ class AutomationAnalyseServices(Automation):
         self,
         config_cache: ConfigCache,
         host_name: HostName,
-        host_attrs: config.ObjectAttributes,
         servicedesc: str,
     ) -> ServiceInfo:
         # We just consider types of checks that are managed via WATO.
@@ -1021,6 +1019,7 @@ class AutomationAnalyseServices(Automation):
 
         # 4. Active checks
         with plugin_contexts.current_host(host_name):
+            host_attrs = config_cache.get_host_attributes(host_name)
             for plugin_name, entries in config_cache.active_checks(host_name):
                 for active_check_params in entries:
                     for description in core_config.get_active_check_descriptions(

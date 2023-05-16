@@ -30,10 +30,6 @@ from cmk.gui.valuespec import (
 )
 
 
-def _deprecate_kube_state(*value: object, **kwargs: object) -> typing.NoReturn:
-    raise MKUserError(None, _("The kube-state-metrics option is deprecated - Werk 14572."))
-
-
 def _deprecate_dynamic_host_adress(*value: object, **kwargs: object) -> typing.NoReturn:
     raise MKUserError(None, _("The options IP Address and Host name are deprecated - Werk 14573."))
 
@@ -227,55 +223,6 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                                     ],
                                     title=_("Node Exporter metrics"),
                                     optional_keys=["host_mapping"],
-                                ),
-                            ),
-                            (
-                                "kube_state",
-                                _("(deprecated) Kube-state-metrics"),
-                                Dictionary(
-                                    elements=[
-                                        (
-                                            "cluster_name",
-                                            Hostname(
-                                                title=_("Cluster name"),
-                                                allow_empty=False,
-                                                help=_(
-                                                    "You must specify a name for your Kubernetes cluster. The provided name"
-                                                    " will be used to create a piggyback host for the cluster related services."
-                                                ),
-                                            ),
-                                        ),
-                                        namespace_element,
-                                        filter_kubernetes_namespace_element(),
-                                        (
-                                            "entities",
-                                            ListChoice(
-                                                choices=[
-                                                    ("cluster", _("Cluster")),
-                                                    ("nodes", _("Nodes")),
-                                                    ("services", _("Services")),
-                                                    ("pods", _("Pods")),
-                                                    ("daemon_sets", _("Daemon sets")),
-                                                ],
-                                                default_value=[
-                                                    "cluster",
-                                                    "nodes",
-                                                    "services",
-                                                    "pods",
-                                                    "daemon_sets",
-                                                ],
-                                                allow_empty=False,
-                                                title=_("Retrieve information about..."),
-                                                help=_(
-                                                    "For your Kubernetes cluster select for which entity levels "
-                                                    "you would like to retrieve information about. Piggyback hosts "
-                                                    "for the respective entities will be created."
-                                                ),
-                                            ),
-                                        ),
-                                    ],
-                                    optional_keys=["namespace_include_patterns"],
-                                    validate=_deprecate_kube_state,
                                 ),
                             ),
                             (

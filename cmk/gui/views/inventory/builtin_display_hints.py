@@ -836,13 +836,6 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.fritz.upnp_config_enabled": {
             "title": _l("uPnP configuration enabled")
         },
-        ".software.applications.kubernetes.": {"title": _l("Kubernetes")},  # CMK-12034
-        ".software.applications.kubernetes.service_info.": {  # CMK-12034
-            "title": _l("Service"),
-            "keyorder": ["cluster_ip", "load_balancer_ip"],
-        },
-        ".software.applications.kubernetes.service_info.cluster_ip": {"title": _l("Cluster IP")},  # CMK-12034
-        ".software.applications.kubernetes.service_info.load_balancer_ip": {"title": _l("Load Balancer IP")},  # CMK-12034
         ".software.applications.kube.": {"title": _l("Kubernetes")},
         ".software.applications.kube.labels:": {
             "title": _l("Labels"),

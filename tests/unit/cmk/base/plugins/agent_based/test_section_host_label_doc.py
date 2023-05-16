@@ -42,11 +42,6 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
 }
 
 
-KNOWN_MISSING_DOCSTRING: Final = {
-    "k8s_daemon_pods",
-    "k8s_pod_container",
-}
-
 KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
     "labels",
     "ps",
@@ -64,16 +59,10 @@ def test_all_sections_have_host_labels_documented(
     )
 
     encountered_labels: DefaultDict[str, dict[SectionName, Sequence[str]]] = defaultdict(dict)
-    unused_known_missing = KNOWN_MISSING_DOCSTRING.copy()
 
     for section in (
         s for s in sections if s.host_label_function.__name__ != "_noop_host_label_function"
     ):
-        if str(section.name) in KNOWN_MISSING_DOCSTRING:
-            assert not section.host_label_function.__doc__
-            unused_known_missing.remove(str(section.name))
-            continue
-
         assert (
             section.host_label_function.__doc__
         ), f"Missing doc-string for host label function of {section.name}"
@@ -100,7 +89,6 @@ def test_all_sections_have_host_labels_documented(
             encountered_labels[doc.header][section.name] = doc.lines
 
     assert ALL_DOCUMENTED_BUILTIN_HOST_LABELS == set(encountered_labels.keys())
-    assert not unused_known_missing  # keep test up to date
 
     for label_name, section_to_lines in encountered_labels.items():
         if len({" ".join(lines) for lines in section_to_lines.values()}) != 1:

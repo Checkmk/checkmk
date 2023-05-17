@@ -72,25 +72,3 @@ def test_create_site_certificate(ca: CertificateAuthority) -> None:
         cert,
         _rsa_public_key_from_cert_or_csr(ca.root_ca.cert),
     )
-
-
-def test_write_agent_receiver_certificate(ca: CertificateAuthority) -> None:
-    assert not ca.agent_receiver_certificate_exists
-
-    ca.create_agent_receiver_certificate("my-site")
-    assert ca.agent_receiver_certificate_exists
-    assert _file_permissions_is_660(ca._agent_receiver_cert_path)
-
-    cert, key = load_cert_and_private_key(ca._agent_receiver_cert_path)
-    assert check_cn(
-        cert,
-        "my-site",
-    )
-    check_certificate_against_private_key(
-        cert,
-        key,
-    )
-    check_certificate_against_public_key(
-        cert,
-        _rsa_public_key_from_cert_or_csr(ca.root_ca.cert),
-    )

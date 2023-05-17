@@ -5,7 +5,7 @@
 
 PIDFILE=$OMD_ROOT/tmp/run/agent-receiver.pid
 PID=$(cat $PIDFILE 2>/dev/null)
-KEY_AND_CERT_FILE=$OMD_ROOT/etc/ssl/agent_receiver_cert.pem
+KEY_AND_CERT_FILE="${OMD_ROOT}/etc/ssl/sites/${OMD_SITE}.pem"
 CERT_STORE="${OMD_ROOT}/etc/ssl/agent_cert_store.pem"
 
 . $OMD_ROOT/etc/omd/site.conf

@@ -7,7 +7,6 @@ import gzip
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple
 
 import pytest
 
@@ -20,12 +19,9 @@ from cmk.utils.structured_data import (
     DeltaStructuredDataNode,
     ImmutableDeltaTree,
     ImmutableTree,
-    make_filter,
     parse_visible_raw_path,
-    PermittedPath,
     RetentionIntervals,
     SDFilter,
-    SDKeys,
     SDNodeName,
     SDPath,
     StructuredDataNode,
@@ -34,15 +30,6 @@ from cmk.utils.structured_data import (
     TreeStore,
 )
 from cmk.utils.type_defs import HostName
-
-
-def _make_filters(
-    allowed_paths: Sequence[tuple[tuple[str, ...], Sequence[str] | None]]
-) -> Sequence[SDFilter]:
-    return [make_filter(entry) for entry in allowed_paths]
-
-
-# Test basic methods of StructuredDataNode, Table, Attributes
 
 
 def _create_empty_tree():
@@ -612,7 +599,14 @@ def test_filter_tree_no_paths() -> None:
 
 def test_filter_tree_wrong_node() -> None:
     filled_root = _create_filled_tree()
-    filters = _make_filters([(("path", "to", "nta", "ta"), None)])
+    filters = [
+        SDFilter(
+            path=("path", "to", "nta", "ta"),
+            filter_nodes=lambda k: True,
+            filter_attributes=lambda k: True,
+            filter_columns=lambda k: True,
+        ),
+    ]
     filtered = ImmutableTree(filled_root).filter(filters).tree
     assert filtered.get_node(("path", "to", "nta", "na")) is None
     assert filtered.get_node(("path", "to", "nta", "nt")) is None
@@ -620,7 +614,14 @@ def test_filter_tree_wrong_node() -> None:
 
 def test_filter_tree_paths_no_keys() -> None:
     filled_root = _create_filled_tree()
-    filters = _make_filters([(("path", "to", "nta", "ta"), None)])
+    filters = [
+        SDFilter(
+            path=("path", "to", "nta", "ta"),
+            filter_nodes=lambda k: True,
+            filter_attributes=lambda k: True,
+            filter_columns=lambda k: True,
+        ),
+    ]
     filtered_node = (
         ImmutableTree(filled_root).filter(filters).tree.get_node(("path", "to", "nta", "ta"))
     )
@@ -642,7 +643,14 @@ def test_filter_tree_paths_no_keys() -> None:
 
 def test_filter_tree_paths_and_keys() -> None:
     filled_root = _create_filled_tree()
-    filters = _make_filters([(("path", "to", "nta", "ta"), ["ta1"])])
+    filters = [
+        SDFilter(
+            path=("path", "to", "nta", "ta"),
+            filter_nodes=lambda k: True,
+            filter_attributes=lambda k: k in ["ta1"],
+            filter_columns=lambda k: k in ["ta1"],
+        ),
+    ]
     filtered_node = (
         ImmutableTree(filled_root).filter(filters).tree.get_node(("path", "to", "nta", "ta"))
     )
@@ -690,12 +698,20 @@ def test_filter_tree_mixed() -> None:
         ]
     )
 
-    filters = _make_filters(
-        [
-            (("path", "to", "another"), None),
-            (("path", "to", "nta", "ta"), ["ta0"]),
-        ]
-    )
+    filters = [
+        SDFilter(
+            path=("path", "to", "another"),
+            filter_nodes=lambda k: True,
+            filter_attributes=lambda k: True,
+            filter_columns=lambda k: True,
+        ),
+        SDFilter(
+            path=("path", "to", "nta", "ta"),
+            filter_nodes=lambda k: True,
+            filter_attributes=lambda k: k in ["ta0"],
+            filter_columns=lambda k: k in ["ta0"],
+        ),
+    ]
     filtered_node = ImmutableTree(filled_root).filter(filters).tree
 
     # TODO 'serialize' only contains 8 entries because:
@@ -1098,25 +1114,40 @@ def test_merge_trees_2() -> None:
 
 
 @pytest.mark.parametrize(
-    "paths, unavail",
+    "filters, unavail",
     [
         (
             # container                   table                    attributes
             [
-                (("hardware", "components"), None),
-                (("networking", "interfaces"), None),
-                (("software", "os"), None),
+                SDFilter(
+                    path=("hardware", "components"),
+                    filter_nodes=lambda k: True,
+                    filter_attributes=lambda k: True,
+                    filter_columns=lambda k: True,
+                ),
+                SDFilter(
+                    path=("networking", "interfaces"),
+                    filter_nodes=lambda k: True,
+                    filter_attributes=lambda k: True,
+                    filter_columns=lambda k: True,
+                ),
+                SDFilter(
+                    path=("software", "os"),
+                    filter_nodes=lambda k: True,
+                    filter_attributes=lambda k: True,
+                    filter_columns=lambda k: True,
+                ),
             ],
             [("hardware", "system"), ("software", "applications")],
         ),
     ],
 )
 def test_real_filtered_tree(
-    paths: Sequence[tuple[tuple[str, ...], None]],
+    filters: Sequence[SDFilter],
     unavail: Sequence[tuple[str, str]],
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
-    filtered = ImmutableTree(tree).filter(_make_filters(paths)).tree
+    filtered = ImmutableTree(tree).filter(filters).tree
     assert id(tree) != id(filtered)
     assert not tree.is_equal(filtered)
     for path in unavail:
@@ -1124,75 +1155,110 @@ def test_real_filtered_tree(
 
 
 @pytest.mark.parametrize(
-    "paths, amount_if_entries",
+    "filters, amount_if_entries",
     [
         (
             [
-                (("networking",), None),
+                SDFilter(
+                    path=("networking",),
+                    filter_nodes=lambda k: True,
+                    filter_attributes=lambda k: True,
+                    filter_columns=lambda k: True,
+                )
             ],
             3178,
         ),
         (
             [
-                (("networking",), []),
-            ],
-            None,
-        ),
-        (
-            [
-                (
-                    ("networking",),
-                    ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"],
+                SDFilter(
+                    path=("networking",),
+                    filter_nodes=lambda k: False,
+                    filter_attributes=lambda k: False,
+                    filter_columns=lambda k: False,
                 ),
             ],
             None,
         ),
         (
             [
-                (("networking", "interfaces"), None),
+                SDFilter(
+                    path=("networking",),
+                    filter_nodes=lambda k: False,
+                    filter_attributes=(
+                        lambda k: k
+                        in ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
+                    ),
+                    filter_columns=(
+                        lambda k: k
+                        in ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
+                    ),
+                ),
+            ],
+            None,
+        ),
+        (
+            [
+                SDFilter(
+                    path=("networking", "interfaces"),
+                    filter_nodes=lambda k: True,
+                    filter_attributes=lambda k: True,
+                    filter_columns=lambda k: True,
+                ),
             ],
             3178,
         ),
         (
             [
-                (("networking", "interfaces"), []),
-            ],
-            3178,
-        ),
-        (
-            [
-                (("networking", "interfaces"), ["admin_status"]),
-            ],
-            326,
-        ),
-        (
-            [
-                (("networking", "interfaces"), ["admin_status", "FOOBAR"]),
+                SDFilter(
+                    path=("networking", "interfaces"),
+                    filter_nodes=lambda k: False,
+                    filter_attributes=lambda k: k in ["admin_status"],
+                    filter_columns=lambda k: k in ["admin_status"],
+                ),
             ],
             326,
         ),
         (
             [
-                (("networking", "interfaces"), ["admin_status", "oper_status"]),
+                SDFilter(
+                    path=("networking", "interfaces"),
+                    filter_nodes=lambda k: False,
+                    filter_attributes=lambda k: k in ["admin_status", "FOOBAR"],
+                    filter_columns=lambda k: k in ["admin_status", "FOOBAR"],
+                ),
+            ],
+            326,
+        ),
+        (
+            [
+                SDFilter(
+                    path=("networking", "interfaces"),
+                    filter_nodes=lambda k: False,
+                    filter_attributes=lambda k: k in ["admin_status", "oper_status"],
+                    filter_columns=lambda k: k in ["admin_status", "oper_status"],
+                ),
             ],
             652,
         ),
         (
             [
-                (("networking", "interfaces"), ["admin_status", "oper_status", "FOOBAR"]),
+                SDFilter(
+                    path=("networking", "interfaces"),
+                    filter_nodes=lambda k: False,
+                    filter_attributes=lambda k: k in ["admin_status", "oper_status", "FOOBAR"],
+                    filter_columns=lambda k: k in ["admin_status", "oper_status", "FOOBAR"],
+                ),
             ],
             652,
         ),
     ],
 )
 def test_real_filtered_tree_networking(
-    paths: Sequence[tuple[tuple[str, ...], Sequence[str]]],
+    filters: Sequence[SDFilter],
     amount_if_entries: int,
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
-    the_paths = list(paths)
-    filtered = ImmutableTree(tree).filter(_make_filters(paths)).tree
-    assert the_paths == paths
+    filtered = ImmutableTree(tree).filter(filters).tree
     assert filtered.get_node(("networking",)) is not None
     assert filtered.get_node(("hardware",)) is None
     assert filtered.get_node(("software",)) is None
@@ -1254,178 +1320,6 @@ def test_delta_structured_data_tree_serialization(
 
 
 # Test filters
-
-
-class ExpectedFilterResults(NamedTuple):
-    nodes: bool
-    restricted_nodes: bool
-    attributes: bool
-    restricted_attributes: bool
-    columns: bool
-    restricted_columns: bool
-
-
-@pytest.mark.parametrize(
-    "entry, expected_path, expected_filter_results",
-    [
-        # Tuple format
-        (
-            (("path", "to", "node"), None),
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=True,
-            ),
-        ),
-        (
-            (("path", "to", "node"), []),
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=False,
-                restricted_nodes=False,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=True,
-            ),
-        ),
-        (
-            (("path", "to", "node"), ["key"]),
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=False,
-                restricted_nodes=False,
-                attributes=True,
-                restricted_attributes=False,
-                columns=True,
-                restricted_columns=False,
-            ),
-        ),
-        # Dict format
-        (
-            {
-                "visible_raw_path": "path.to.node",
-            },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=True,
-            ),
-        ),
-        (
-            {
-                "visible_raw_path": "path.to.node",
-                "nodes": ("choices", ["node"]),
-            },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=False,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=True,
-            ),
-        ),
-        (
-            {
-                "visible_raw_path": "path.to.node",
-                "attributes": ("choices", ["key"]),
-            },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=True,
-                restricted_attributes=False,
-                columns=True,
-                restricted_columns=True,
-            ),
-        ),
-        (
-            {
-                "visible_raw_path": "path.to.node",
-                "columns": ("choices", ["key"]),
-            },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=False,
-            ),
-        ),
-        (
-            {"visible_raw_path": "path.to.node", "nodes": "nothing"},
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=False,
-                restricted_nodes=False,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=True,
-            ),
-        ),
-        (
-            {
-                "visible_raw_path": "path.to.node",
-                "attributes": "nothing",
-            },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=False,
-                restricted_attributes=False,
-                columns=True,
-                restricted_columns=True,
-            ),
-        ),
-        (
-            {
-                "visible_raw_path": "path.to.node",
-                "columns": "nothing",
-            },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=True,
-                restricted_attributes=True,
-                columns=False,
-                restricted_columns=False,
-            ),
-        ),
-    ],
-)
-def test_make_filter(
-    entry: tuple[SDPath, SDKeys | None] | PermittedPath,
-    expected_path: SDPath,
-    expected_filter_results: ExpectedFilterResults,
-) -> None:
-    f = make_filter(entry)
-
-    assert f.path == expected_path
-
-    assert f.filter_nodes("node") is expected_filter_results.nodes
-    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
-
-    assert f.filter_attributes("key") is expected_filter_results.attributes
-    assert f.filter_attributes("other") is expected_filter_results.restricted_attributes
-
-    assert f.filter_columns("key") is expected_filter_results.columns
-    assert f.filter_columns("other") is expected_filter_results.restricted_columns
 
 
 # Test helper

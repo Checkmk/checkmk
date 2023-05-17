@@ -66,14 +66,6 @@ _RETENTIONS_KEY = "Retentions"
 
 SDEncodeAs = Callable[[SDValue], tuple[SDValue | None, SDValue | None]]
 SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
-SDFilterFunc = Callable[[SDKey], bool]
-
-
-class SDFilter(NamedTuple):
-    path: SDPath
-    filter_nodes: SDFilterFunc
-    filter_attributes: SDFilterFunc
-    filter_columns: SDFilterFunc
 
 
 class _RawIntervalFromConfigMandatory(TypedDict):
@@ -153,6 +145,51 @@ class UpdateResult:
         return "\n".join(lines) + "\n"
 
 
+#   .--filters-------------------------------------------------------------.
+#   |                       __ _ _ _                                       |
+#   |                      / _(_) | |_ ___ _ __ ___                        |
+#   |                     | |_| | | __/ _ \ '__/ __|                       |
+#   |                     |  _| | | ||  __/ |  \__ \                       |
+#   |                     |_| |_|_|\__\___|_|  |___/                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# TODO filter table rows?
+
+
+SDFilterFunc = Callable[[SDKey], bool]
+
+
+class SDFilter(NamedTuple):
+    path: SDPath
+    filter_nodes: SDFilterFunc
+    filter_attributes: SDFilterFunc
+    filter_columns: SDFilterFunc
+
+
+def make_filter_from_choice(
+    choice: tuple[str, Sequence[str]] | Literal["nothing"] | Literal["all"] | None
+) -> SDFilterFunc:
+    def _make_choices_filter(choices: Sequence[str | int]) -> SDFilterFunc:
+        return lambda key: key in choices
+
+    # TODO Improve:
+    # For contact groups (via make_filter)
+    #   - ('choices', ['some', 'keys'])
+    #   - 'nothing' -> _use_nothing
+    #   - None -> _use_all
+    # For retention intervals (directly)
+    #   - ('choices', ['some', 'keys'])
+    #   - MISSING (see mk/base/agent_based/inventory.py::_get_intervals_from_config) -> _use_nothing
+    #   - 'all' -> _use_all
+    if isinstance(choice, tuple):
+        return _make_choices_filter(choice[-1])
+    if choice == "nothing":
+        return lambda k: False
+    return lambda k: True
+
+
+# .
 #   .--mutable tree--------------------------------------------------------.
 #   |                      _        _     _        _                       |
 #   |      _ __ ___  _   _| |_ __ _| |__ | | ___  | |_ _ __ ___  ___       |
@@ -677,87 +714,6 @@ class TreeOrArchiveStore(TreeStore):
         target_dir.mkdir(parents=True, exist_ok=True)
         tree_file.rename(target_dir / str(int(tree_file.stat().st_mtime)))
         self._gz_file(host_name).unlink(missing_ok=True)
-
-
-# .
-#   .--filters-------------------------------------------------------------.
-#   |                       __ _ _ _                                       |
-#   |                      / _(_) | |_ ___ _ __ ___                        |
-#   |                     | |_| | | __/ _ \ '__/ __|                       |
-#   |                     |  _| | | ||  __/ |  \__ \                       |
-#   |                     |_| |_|_|\__\___|_|  |___/                       |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-# TODO filter table rows?
-
-
-def _use_all(_key: str) -> Literal[True]:
-    return True
-
-
-def _use_nothing(_key: str) -> Literal[False]:
-    return False
-
-
-def _make_choices_filter(choices: Sequence[str | int]) -> SDFilterFunc:
-    return lambda key: key in choices
-
-
-class _PermittedPath(TypedDict):
-    visible_raw_path: str
-
-
-class PermittedPath(_PermittedPath, total=False):
-    attributes: tuple[str, Sequence[str]] | Literal["nothing"]
-    columns: tuple[str, Sequence[str]] | Literal["nothing"]
-    nodes: tuple[str, Sequence[str]] | Literal["nothing"]
-
-
-def make_filter(entry: tuple[SDPath, Sequence[SDKey] | None] | PermittedPath) -> SDFilter:
-    if isinstance(entry, tuple):
-        path, keys = entry
-        return (
-            SDFilter(
-                path=path,
-                filter_nodes=_use_all,
-                filter_attributes=_use_all,
-                filter_columns=_use_all,
-            )
-            if keys is None
-            else SDFilter(
-                path=path,
-                filter_nodes=_use_nothing,
-                filter_attributes=_make_choices_filter(keys) if keys else _use_all,
-                filter_columns=_make_choices_filter(keys) if keys else _use_all,
-            )
-        )
-
-    return SDFilter(
-        path=parse_visible_raw_path(entry["visible_raw_path"]),
-        filter_attributes=make_filter_from_choice(entry.get("attributes")),
-        filter_columns=make_filter_from_choice(entry.get("columns")),
-        filter_nodes=make_filter_from_choice(entry.get("nodes")),
-    )
-
-
-def make_filter_from_choice(
-    choice: tuple[str, Sequence[str]] | Literal["nothing"] | Literal["all"] | None
-) -> SDFilterFunc:
-    # TODO Improve:
-    # For contact groups (via make_filter)
-    #   - ('choices', ['some', 'keys'])
-    #   - 'nothing' -> _use_nothing
-    #   - None -> _use_all
-    # For retention intervals (directly)
-    #   - ('choices', ['some', 'keys'])
-    #   - MISSING (see mk/base/agent_based/inventory.py::_get_intervals_from_config) -> _use_nothing
-    #   - 'all' -> _use_all
-    if isinstance(choice, tuple):
-        return _make_choices_filter(choice[-1])
-    if choice == "nothing":
-        return _use_nothing
-    return _use_all
 
 
 # .

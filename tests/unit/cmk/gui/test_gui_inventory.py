@@ -4,16 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 from pytest import MonkeyPatch
 
 import cmk.utils
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import SDPath, StructuredDataNode
 
 import cmk.gui.inventory
-from cmk.gui.inventory import InventoryPath, TreeSource
+from cmk.gui.inventory import (
+    _make_filters_from_api_request_paths,
+    _make_filters_from_permitted_paths,
+    InventoryPath,
+    PermittedPath,
+    TreeSource,
+)
 from cmk.gui.type_defs import HostName, Row
 
 
@@ -121,6 +128,213 @@ def test_parse_tree_path(
     inventory_path = InventoryPath.parse(raw_path)
     assert inventory_path == expected_path
     assert inventory_path.node_name == expected_node_name
+
+
+class ExpectedFilterResults(NamedTuple):
+    nodes: bool
+    restricted_nodes: bool
+    attributes: bool
+    restricted_attributes: bool
+    columns: bool
+    restricted_columns: bool
+
+
+@pytest.mark.parametrize(
+    "entry, expected_path, expected_filter_results",
+    [
+        (
+            {
+                "visible_raw_path": "path.to.node",
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "nodes": ("choices", ["node"]),
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "attributes": ("choices", ["key"]),
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=False,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "columns": ("choices", ["key"]),
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=False,
+            ),
+        ),
+        (
+            {"visible_raw_path": "path.to.node", "nodes": "nothing"},
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=False,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "attributes": "nothing",
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=False,
+                restricted_attributes=False,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "columns": "nothing",
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=False,
+                restricted_columns=False,
+            ),
+        ),
+    ],
+)
+def test__make_filters_from_permitted_paths(
+    entry: PermittedPath,
+    expected_path: SDPath,
+    expected_filter_results: ExpectedFilterResults,
+) -> None:
+    f = _make_filters_from_permitted_paths([entry])[0]
+
+    assert f.path == expected_path
+
+    assert f.filter_nodes("node") is expected_filter_results.nodes
+    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
+
+    assert f.filter_attributes("key") is expected_filter_results.attributes
+    assert f.filter_attributes("other") is expected_filter_results.restricted_attributes
+
+    assert f.filter_columns("key") is expected_filter_results.columns
+    assert f.filter_columns("other") is expected_filter_results.restricted_columns
+
+
+@pytest.mark.parametrize(
+    "entry, expected_path, expected_filter_results",
+    [
+        # Tuple format
+        (
+            ".path.to.node.",
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            ".path.to.node:",
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            ".path.to.node:*.key",
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=False,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=False,
+                columns=True,
+                restricted_columns=False,
+            ),
+        ),
+        (
+            ".path.to.node.key",
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=False,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=False,
+                columns=True,
+                restricted_columns=False,
+            ),
+        ),
+    ],
+)
+def test__make_filters_from_api_request_paths(
+    entry: str,
+    expected_path: SDPath,
+    expected_filter_results: ExpectedFilterResults,
+) -> None:
+    f = _make_filters_from_api_request_paths([entry])[0]
+
+    assert f.path == expected_path
+
+    assert f.filter_nodes("node") is expected_filter_results.nodes
+    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
+
+    assert f.filter_attributes("key") is expected_filter_results.attributes
+    assert f.filter_attributes("other") is expected_filter_results.restricted_attributes
+
+    assert f.filter_columns("key") is expected_filter_results.columns
+    assert f.filter_columns("other") is expected_filter_results.restricted_columns
 
 
 @pytest.mark.parametrize(

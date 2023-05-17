@@ -15,7 +15,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from enum import auto, Enum
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import Literal, NamedTuple, TypedDict
 
 import dicttoxml  # type: ignore[import]
 
@@ -30,9 +30,10 @@ from cmk.utils.structured_data import (
     ImmutableDeltaTree,
     ImmutableTree,
     load_tree,
-    make_filter,
-    PermittedPath,
+    make_filter_from_choice,
+    parse_visible_raw_path,
     SDFilter,
+    SDFilterFunc,
     SDKey,
     SDPath,
     StructuredDataNode,
@@ -127,6 +128,30 @@ class InventoryPath:
         return self.path[-1] if self.path else ""
 
 
+class _PermittedPath(TypedDict):
+    visible_raw_path: str
+
+
+class PermittedPath(_PermittedPath, total=False):
+    attributes: tuple[str, Sequence[str]] | Literal["nothing"]
+    columns: tuple[str, Sequence[str]] | Literal["nothing"]
+    nodes: tuple[str, Sequence[str]] | Literal["nothing"]
+
+
+def _make_filters_from_permitted_paths(
+    permitted_paths: Sequence[PermittedPath],
+) -> Sequence[SDFilter]:
+    def _make_filter(entry: PermittedPath) -> SDFilter:
+        return SDFilter(
+            path=parse_visible_raw_path(entry["visible_raw_path"]),
+            filter_attributes=make_filter_from_choice(entry.get("attributes")),
+            filter_columns=make_filter_from_choice(entry.get("columns")),
+            filter_nodes=make_filter_from_choice(entry.get("nodes")),
+        )
+
+    return [_make_filter(entry) for entry in permitted_paths if entry]
+
+
 def load_filtered_and_merged_tree(row: Row) -> StructuredDataNode | None:
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
@@ -144,7 +169,7 @@ def load_filtered_and_merged_tree(row: Row) -> StructuredDataNode | None:
         return (
             ImmutableTree(inventory_tree)
             .merge(status_data_tree)
-            .filter([make_filter(entry) for entry in permitted_paths if entry])
+            .filter(_make_filters_from_permitted_paths(permitted_paths))
             .tree
         )
     return ImmutableTree(inventory_tree).merge(status_data_tree).tree
@@ -338,7 +363,7 @@ def _get_history(
     corrupted_history_files: set[Path] = set()
     history: list[HistoryEntry] = []
     filters = (
-        [make_filter(entry) for entry in permitted_paths if entry]
+        _make_filters_from_permitted_paths(permitted_paths)
         if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
         else None
     )
@@ -684,6 +709,33 @@ def has_inventory(hostname: HostName) -> bool:
     )
 
 
+def _make_filters_from_api_request_paths(api_request_paths: Sequence[str]) -> Sequence[SDFilter]:
+    def _make_choices_filter(choices: Sequence[str | int]) -> SDFilterFunc:
+        return lambda key: key in choices
+
+    def _make_filter(entry: tuple[SDPath, Sequence[str] | None]) -> SDFilter:
+        path, keys = entry
+        if keys is None:
+            return SDFilter(
+                path=path,
+                filter_nodes=lambda k: True,
+                filter_attributes=lambda k: True,
+                filter_columns=lambda k: True,
+            )
+        return SDFilter(
+            path=path,
+            filter_nodes=lambda k: False,
+            filter_attributes=_make_choices_filter(keys),
+            filter_columns=_make_choices_filter(keys),
+        )
+
+    return [
+        _make_filter((inventory_path.path, [inventory_path.key] if inventory_path.key else None))
+        for raw_path in api_request_paths
+        for inventory_path in (InventoryPath.parse(raw_path),)
+    ]
+
+
 def inventory_of_host(host_name: HostName, api_request):  # type: ignore[no-untyped-def]
     raw_site = api_request.get("site")
     site = livestatus.SiteId(raw_site) if raw_site is not None else None
@@ -697,15 +749,7 @@ def inventory_of_host(host_name: HostName, api_request):  # type: ignore[no-unty
     if "paths" in api_request:
         return (
             ImmutableTree(merged_tree)
-            .filter(
-                [
-                    make_filter(
-                        (inventory_path.path, [inventory_path.key] if inventory_path.key else None)
-                    )
-                    for raw_path in api_request["paths"]
-                    for inventory_path in (InventoryPath.parse(raw_path),)
-                ],
-            )
+            .filter(_make_filters_from_api_request_paths(api_request["paths"]))
             .tree.serialize()
         )
 

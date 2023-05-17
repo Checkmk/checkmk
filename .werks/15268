@@ -1,0 +1,15 @@
+Title: Incorrect edition provided by livestatus after update using Nagios core
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1684912783
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk is relevant to users operating Checkmk with Nagios core that are using the new "edition" livestatus column or the Checkmk Cloud Edition with Distributed Monitoring.
+If such a system is updated to another edition, the livestatus information is not updated with it.
+Since this information is used to determine compatibility between central and remote sites in Distributed Monitoring, sites can incorrectly be detected as incompatible.
+
+With this werk, an update will update the livestatus information as well.

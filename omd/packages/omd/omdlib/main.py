@@ -851,12 +851,15 @@ def _execute_update_file(
     conflict_mode: str,
     old_version: str,
     new_version: str,
+    new_edition: str,
     old_perms: Permissions,
 ) -> None:
     todo = True
     while todo:
         try:
-            update_file(relpath, site, conflict_mode, old_version, new_version, old_perms)
+            update_file(
+                relpath, site, conflict_mode, old_version, new_version, new_edition, old_perms
+            )
             todo = False
         except MKTerminate:
             raise
@@ -898,6 +901,7 @@ def update_file(  # pylint: disable=too-many-branches
     conflict_mode: str,
     old_version: str,
     new_version: str,
+    to_edition: str,
     old_perms: Permissions,
 ) -> None:
     old_skel = site.version_skel_dir
@@ -917,6 +921,9 @@ def update_file(  # pylint: disable=too-many-branches
             return
 
     replacements = site.replacements
+    # omd_version of the site still contains the old version/edition at this point, make sure new
+    # edition is provided
+    replacements["###EDITION###"] = to_edition
 
     old_path = old_skel + "/" + relpath
     new_path = new_skel + "/" + relpath
@@ -2910,13 +2917,17 @@ def main_update(  # pylint: disable=too-many-branches
 
     # First walk through skeleton files of new version
     for relpath in walk_skel(to_skelroot, conflict_mode=conflict_mode, depth_first=False):
-        _execute_update_file(relpath, site, conflict_mode, from_version, to_version, old_perms)
+        _execute_update_file(
+            relpath, site, conflict_mode, from_version, to_version, to_edition, old_perms
+        )
 
     # Now handle files present in old but not in new skel files
     for relpath in walk_skel(
         from_skelroot, conflict_mode=conflict_mode, depth_first=True, exclude_if_in=to_skelroot
     ):
-        _execute_update_file(relpath, site, conflict_mode, from_version, to_version, old_perms)
+        _execute_update_file(
+            relpath, site, conflict_mode, from_version, to_version, to_edition, old_perms
+        )
 
     # Change symbolic link pointing to new version
     create_version_symlink(site, to_version)

@@ -300,6 +300,21 @@ def test_selector() -> None:
             False,
             id="explicit config doesn't match, unknown resource",
         ),
+        pytest.param(
+            ARGS,
+            AzureResource(
+                {
+                    "id": "id1",
+                    "name": "Resource1",
+                    "type": "Microsoft.Compute/virtualMachines",
+                    "location": "westeurope",
+                    "tags": {"tag1": "value1", "tag2": "value2", "mytag": "True"},
+                    "group": "TEST-GROUP",
+                }
+            ),
+            True,
+            id="group name in different case",
+        ),
     ],
 )
 def test_selector_do_monitor(args: Args, resource: AzureResource, is_monitored: bool) -> None:

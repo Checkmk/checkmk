@@ -1,0 +1,40 @@
+# The common set of distros which gets build during an official release
+common: &common
+      - "debian-10"
+      - "debian-11"
+      - "ubuntu-20.04"
+      - "ubuntu-22.04"
+      - "ubuntu-22.10"
+      - "centos-7"
+      - "centos-8"
+      - "almalinux-9"
+      - "sles-12sp5"
+      - "sles-15sp1"
+      - "sles-15sp2"
+      - "sles-15sp3"
+      - "sles-15sp4"
+
+# A reduced set of distros for the daily builds
+daily_reduced: &daily_reduced
+    - "ubuntu-20.04"
+    - "ubuntu-22.04"
+    - "ubuntu-22.10"
+    - "debian-10"
+
+editions:
+    enterprise:
+        release: [*common, "cma-3"]
+        daily: [*common, "cma-3"]
+        testbuild: ["ubuntu-22.04", "centos-7", "cma-3"]
+    cloud:
+        release: [*common, "cma-3"]
+        daily: *daily_reduced
+        testbuild: []
+    managed:
+        release: [*common, "cma-3"]
+        daily: []
+        testbuild: []
+    raw:
+        release: [*common]
+        daily: *daily_reduced
+        testbuild: []

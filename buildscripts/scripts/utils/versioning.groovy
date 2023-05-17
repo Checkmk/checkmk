@@ -78,14 +78,19 @@ def get_cmk_version(branch, version) {
       "${version}");
 }
 
-def configured_or_overridden_distros(edition, distro_list, distro_key="DISTROS") {
+def configured_or_overridden_distros(edition, distro_list, use_case="daily") {
     if(distro_list) {
         return distro_list.trim().split(' ');
     }
-    try {
-        return load_json("${checkout_dir}/editions.json")[edition][distro_key];
-    } catch (Exception exc) {
-        raise("Could not find editions.json:'${edition}':'{distro_key}'");
+    docker_image_from_alias("IMAGE_TESTING").inside() {
+        dir("${checkout_dir}") {
+            return sh(script: """scripts/run-pipenv run \
+                  buildscripts/scripts/get_distros.py \
+                  --edition "${edition}" \
+                  --editions_file "${checkout_dir}/editions.yml" \
+                  --use_case "${use_case}" 
+            """, returnStdout: true).trim().split();
+        }
     }
 }
 

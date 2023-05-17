@@ -24,6 +24,7 @@ from cmk.utils.structured_data import (
     make_filter,
     merge_trees,
     parse_visible_raw_path,
+    PermittedPath,
     RetentionIntervals,
     SDFilter,
     SDKeys,
@@ -37,7 +38,9 @@ from cmk.utils.structured_data import (
 from cmk.utils.type_defs import HostName
 
 
-def _make_filters(allowed_paths):
+def _make_filters(
+    allowed_paths: Sequence[tuple[tuple[str, ...], Sequence[str] | None]]
+) -> Sequence[SDFilter]:
     return [make_filter(entry) for entry in allowed_paths]
 
 
@@ -1390,7 +1393,7 @@ class ExpectedFilterResults(NamedTuple):
     ],
 )
 def test_make_filter(
-    entry: tuple[SDPath, SDKeys | None] | dict,
+    entry: tuple[SDPath, SDKeys | None] | PermittedPath,
     expected_path: SDPath,
     expected_filter_results: ExpectedFilterResults,
 ) -> None:

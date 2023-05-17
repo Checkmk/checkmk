@@ -33,6 +33,7 @@ from cmk.utils.structured_data import (
     load_tree,
     make_filter,
     merge_trees,
+    PermittedPath,
     SDFilter,
     SDKey,
     SDPath,
@@ -576,7 +577,7 @@ def _filter_tree(struct_tree: StructuredDataNode | None) -> StructuredDataNode |
 
 
 @request_memoize()
-def _get_permitted_inventory_paths():
+def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
     """
     Returns either a list of permitted paths or
     None in case the user is allowed to see the whole tree.

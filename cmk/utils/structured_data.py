@@ -601,7 +601,17 @@ def _make_choices_filter(choices: Sequence[str | int]) -> SDFilterFunc:
     return lambda key: key in choices
 
 
-def make_filter(entry: tuple[SDPath, SDKeys | None] | dict) -> SDFilter:
+class _PermittedPath(TypedDict):
+    visible_raw_path: str
+
+
+class PermittedPath(_PermittedPath, total=False):
+    attributes: tuple[str, Sequence[str]] | Literal["nothing"]
+    columns: tuple[str, Sequence[str]] | Literal["nothing"]
+    nodes: tuple[str, Sequence[str]] | Literal["nothing"]
+
+
+def make_filter(entry: tuple[SDPath, Sequence[SDKey] | None] | PermittedPath) -> SDFilter:
     if isinstance(entry, tuple):
         path, keys = entry
         return (

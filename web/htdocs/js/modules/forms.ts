@@ -452,3 +452,15 @@ function _remove_listof_vars(form: HTMLFormElement) {
         }
     }
 }
+
+export function replace_error_msg_with_confirm_dialog() {
+    const dialog = document.getElementsByClassName(
+        "really"
+    )[0] as HTMLDivElement;
+    const error_msg = document.getElementsByClassName(
+        "error"
+    )[0] as HTMLDivElement;
+
+    error_msg.replaceWith(dialog);
+    utils.remove_class(dialog, "hidden");
+}

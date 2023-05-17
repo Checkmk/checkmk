@@ -7,13 +7,17 @@
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.transaction_manager import transactions
 
 
 def confirm_with_preview(
-    msg: str | HTML, confirm_options: list[tuple[str, str]], method: str = "POST"
+    msg: str | HTML,
+    confirm_options: list[tuple[str, str]],
+    method: str = "POST",
+    class_: CSSSpec | None = None,
 ) -> bool | None:
     """Show a confirm dialog to the user
 
@@ -37,7 +41,7 @@ def confirm_with_preview(
         mobile = is_mobile(request, response)
         if mobile:
             html.open_center()
-        html.open_div(class_="really")
+        html.open_div(class_="really " + " ".join(class_) if class_ is not None else "")
         html.write_text(msg)
         html.begin_form("confirm", method=method, add_transid=False)
         html.hidden_fields(add_action_vars=True)

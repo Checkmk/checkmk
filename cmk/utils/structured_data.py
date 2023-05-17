@@ -37,7 +37,6 @@ SDNodeName = str
 SDPath = tuple[SDNodeName, ...]
 
 SDKey = str
-SDKeys = list[SDKey]
 # TODO be more specific (None, str, float, int, DeltaValue:Tuple of previous)
 SDValue = Any  # needs only to support __eq__
 
@@ -143,6 +142,10 @@ class UpdateResult:
             lines.append(f"  Path '{' > '.join(path)}':")
             lines.extend(f"    {r}" for r in reasons)
         return "\n".join(lines) + "\n"
+
+
+def parse_visible_raw_path(raw_path: str) -> SDPath:
+    return tuple(part for part in raw_path.split(".") if part)
 
 
 #   .--filters-------------------------------------------------------------.
@@ -1562,10 +1565,6 @@ def _count_dict_entries(dict_: dict[SDKey, tuple[SDValue, SDValue]]) -> SDDeltaC
             case [False, False] if value0 != value1:
                 counter["changed"] += 1
     return counter
-
-
-def parse_visible_raw_path(raw_path: str) -> SDPath:
-    return tuple(part for part in raw_path.split(".") if part)
 
 
 def _serialize_retentions(

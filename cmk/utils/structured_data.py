@@ -63,9 +63,6 @@ _ROWS_KEY = "Rows"
 _NODES_KEY = "Nodes"
 _RETENTIONS_KEY = "Retentions"
 
-SDEncodeAs = Callable[[SDValue], tuple[SDValue | None, SDValue | None]]
-SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
-
 
 class _RawIntervalFromConfigMandatory(TypedDict):
     interval: int
@@ -1298,6 +1295,23 @@ class Attributes:
 #   '----------------------------------------------------------------------'
 
 
+_SDEncodeAs = Callable[[SDValue], tuple[SDValue | None, SDValue | None]]
+_SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
+
+
+def _count_dict_entries(dict_: dict[SDKey, tuple[SDValue, SDValue]]) -> _SDDeltaCounter:
+    counter: _SDDeltaCounter = Counter()
+    for value0, value1 in dict_.values():
+        match [value0 is None, value1 is None]:
+            case [True, False]:
+                counter["new"] += 1
+            case [False, True]:
+                counter["removed"] += 1
+            case [False, False] if value0 != value1:
+                counter["changed"] += 1
+    return counter
+
+
 @dataclass(frozen=True)
 class DeltaStructuredDataNode:
     name: SDNodeName
@@ -1308,7 +1322,7 @@ class DeltaStructuredDataNode:
 
     @classmethod
     def make_from_node(
-        cls, *, node: StructuredDataNode, encode_as: SDEncodeAs
+        cls, *, node: StructuredDataNode, encode_as: _SDEncodeAs
     ) -> DeltaStructuredDataNode:
         return cls(
             name=node.name,
@@ -1425,8 +1439,8 @@ class DeltaStructuredDataNode:
             },
         )
 
-    def count_entries(self) -> SDDeltaCounter:
-        counter: SDDeltaCounter = Counter()
+    def count_entries(self) -> _SDDeltaCounter:
+        counter: _SDDeltaCounter = Counter()
         counter.update(self.attributes.count_entries())
         counter.update(self.table.count_entries())
         for node in self._nodes.values():
@@ -1441,7 +1455,7 @@ class DeltaTable:
     rows: list[dict[SDKey, tuple[SDValue, SDValue]]]
 
     @classmethod
-    def make_from_table(cls, *, table: Table, encode_as: SDEncodeAs) -> DeltaTable:
+    def make_from_table(cls, *, table: Table, encode_as: _SDEncodeAs) -> DeltaTable:
         return cls(
             path=table.path,
             key_columns=table.key_columns,
@@ -1464,8 +1478,8 @@ class DeltaTable:
             rows=raw_delta_table.get("Rows", []),
         )
 
-    def count_entries(self) -> SDDeltaCounter:
-        counter: SDDeltaCounter = Counter()
+    def count_entries(self) -> _SDDeltaCounter:
+        counter: _SDDeltaCounter = Counter()
         for row in self.rows:
             counter.update(_count_dict_entries(row))
         return counter
@@ -1478,7 +1492,7 @@ class DeltaAttributes:
 
     @classmethod
     def make_from_attributes(
-        cls, *, attributes: Attributes, encode_as: SDEncodeAs
+        cls, *, attributes: Attributes, encode_as: _SDEncodeAs
     ) -> DeltaAttributes:
         return cls(
             path=attributes.path,
@@ -1500,7 +1514,7 @@ class DeltaAttributes:
             pairs=raw_delta_attributes.get("Pairs", {}),
         )
 
-    def count_entries(self) -> SDDeltaCounter:
+    def count_entries(self) -> _SDDeltaCounter:
         return _count_dict_entries(self.pairs)
 
 
@@ -1552,19 +1566,6 @@ def _make_retentions_filter_func(
 
 def _get_filtered_dict(dict_: dict, filter_func: SDFilterFunc) -> dict:
     return {k: v for k, v in dict_.items() if filter_func(k)}
-
-
-def _count_dict_entries(dict_: dict[SDKey, tuple[SDValue, SDValue]]) -> SDDeltaCounter:
-    counter: SDDeltaCounter = Counter()
-    for value0, value1 in dict_.values():
-        match [value0 is None, value1 is None]:
-            case [True, False]:
-                counter["new"] += 1
-            case [False, True]:
-                counter["removed"] += 1
-            case [False, False] if value0 != value1:
-                counter["changed"] += 1
-    return counter
 
 
 def _serialize_retentions(

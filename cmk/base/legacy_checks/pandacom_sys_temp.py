@@ -34,4 +34,5 @@ check_info["pandacom_sys_temp"] = LegacyCheckDefinition(
     ),
     default_levels_variable="pandacom_temp_default_levels",
     check_ruleset_name="temperature",
+    check_default_parameters=PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS,
 )

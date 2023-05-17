@@ -51,4 +51,7 @@ check_info["cmc_temp"] = LegacyCheckDefinition(
             oids=["4", "5", "6", "7"],
         ),
     ],
+    check_default_parameters={
+        "levels": (45.0, 50.0),
+    },
 )

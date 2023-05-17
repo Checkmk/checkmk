@@ -105,4 +105,8 @@ check_info["win_printers"] = LegacyCheckDefinition(
     discovery_function=discover_win_printers,
     service_name="Printer %s",
     default_levels_variable="win_printer_default_levels",
+    check_default_parameters={
+        "warn_states": [8, 11],
+        "crit_states": [9, 10],
+    },
 )

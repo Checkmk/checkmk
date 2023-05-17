@@ -102,4 +102,7 @@ check_info["db2_logsizes"] = LegacyCheckDefinition(
     discovery_function=inventory_db2_logsizes,
     check_ruleset_name="db2_logsize",
     default_levels_variable="db2_logsizes_default_levels",
+    check_default_parameters={
+        "levels": (-20.0, -10.0),  # Interpreted as free space in df_check_filesystem_single
+    },
 )

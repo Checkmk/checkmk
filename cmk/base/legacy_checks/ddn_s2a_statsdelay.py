@@ -165,4 +165,8 @@ check_info["ddn_s2a_statsdelay"] = LegacyCheckDefinition(
     check_function=check_ddn_s2a_statsdelay,
     service_name="DDN S2A Delay %s",
     check_ruleset_name="ddn_s2a_wait",
+    check_default_parameters={
+        "read_avg": (0.1, 0.2),
+        "write_avg": (0.1, 0.2),
+    },
 )

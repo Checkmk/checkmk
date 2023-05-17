@@ -45,4 +45,5 @@ check_info["pulse_secure_disk_util"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="pulse_secure_disk_util",
     default_levels_variable="pulse_secure_disk_util_def_levels",
+    check_default_parameters={"upper_levels": (80.0, 90.0)},
 )

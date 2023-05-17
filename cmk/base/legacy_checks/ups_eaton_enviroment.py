@@ -72,4 +72,9 @@ check_info["ups_eaton_enviroment"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.534.1.6",
         oids=["1", "5", "6"],
     ),
+    check_default_parameters={
+        "temp": (40, 50),
+        "remote_temp": (40, 50),
+        "humidity": (65, 80),
+    },
 )

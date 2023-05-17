@@ -46,4 +46,7 @@ check_info["fireeye_lic_expiration"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.25597.11.5.1.16.1",
         oids=["1", "5"],
     ),
+    check_default_parameters={
+        "days": (120, 90),
+    },
 )

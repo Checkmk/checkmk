@@ -57,4 +57,8 @@ check_info["vutlan_ems_humidity"] = LegacyCheckDefinition(
     ],
     check_ruleset_name="humidity",
     default_levels_variable="vutlan_ems_humidity_default_levels",
+    check_default_parameters={
+        "levels": (60.0, 70.0),
+        "levels_lower": (30.0, 15.0),
+    },
 )

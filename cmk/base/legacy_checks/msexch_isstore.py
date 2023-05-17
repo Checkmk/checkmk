@@ -53,4 +53,10 @@ check_info["msexch_isstore"] = LegacyCheckDefinition(
     service_name="Exchange IS Store %s",
     check_ruleset_name="msx_info_store",
     default_levels_variable="msexch_info_store_defaultlevels",
+    check_default_parameters={
+        # attention! those three dictionaries are tuples when returned by wato!
+        "store_latency": {"upper": (40.0, 50.0)},
+        "clienttype_latency": {"upper": (40.0, 50.0)},
+        "clienttype_requests": {"upper": (60, 70)},
+    },
 )

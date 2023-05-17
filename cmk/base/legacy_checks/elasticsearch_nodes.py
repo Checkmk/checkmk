@@ -82,4 +82,5 @@ check_info["elasticsearch_nodes"] = LegacyCheckDefinition(
     default_levels_variable="elasticsearch_nodes",
     service_name="Elasticsearch Node %s",
     check_ruleset_name="elasticsearch_nodes",
+    check_default_parameters={"cpu_levels": (75.0, 90.0)},
 )

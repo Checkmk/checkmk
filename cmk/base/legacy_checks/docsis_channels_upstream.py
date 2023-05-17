@@ -199,4 +199,9 @@ check_info["docsis_channels_upstream"] = LegacyCheckDefinition(
     ],
     default_levels_variable="docsis_channels_upstream_default_levels",
     check_ruleset_name="docsis_channels_upstream",
+    check_default_parameters={
+        "signal_noise": (10.0, 5.0),  # dB
+        "corrected": (5.0, 8.0),  # Percent
+        "uncorrectable": (1.0, 2.0),  # Percent
+    },
 )

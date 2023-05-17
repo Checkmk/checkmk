@@ -97,4 +97,7 @@ check_info["hp_mcs_sensors.fan"] = LegacyCheckDefinition(
     service_name="Sensor %s",
     check_ruleset_name="hw_fans",
     default_levels_variable="hp_mcs_sensors_fan_default_levels",
+    check_default_parameters={
+        "lower": (1000, 500),
+    },
 )

@@ -26,4 +26,5 @@ check_info["innovaphone_cpu"] = LegacyCheckDefinition(
     service_name="CPU utilization",
     check_ruleset_name="cpu_utilization",
     default_levels_variable="innovaphone_cpu_default_levels",
+    check_default_parameters={"util": (90.0, 95.0)},
 )

@@ -75,4 +75,7 @@ check_info["ucs_c_rack_server_power"] = LegacyCheckDefinition(
     check_ruleset_name="power_multiitem",
     service_name="Motherboard Power Statistics %s",
     default_levels_variable="ucs_c_rack_server_util_power_default_levels",
+    check_default_parameters={
+        "power_upper_levels": (90, 100),
+    },
 )

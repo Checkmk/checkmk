@@ -136,6 +136,9 @@ check_info["hpux_tunables.nkthread"] = LegacyCheckDefinition(
     check_function=check_hpux_tunables_nkthread,
     service_name="Number of threads",
     default_levels_variable="hpux_tunables_nkthread_default_levels",
+    check_default_parameters={
+        "levels": (80.0, 85.0),
+    },
 )
 
 # .
@@ -169,6 +172,7 @@ check_info["hpux_tunables.nproc"] = LegacyCheckDefinition(
     check_function=check_hpux_tunables_nproc,
     service_name="Number of processes",
     default_levels_variable="hpux_tunables_nproc_default_levels",
+    check_default_parameters={"levels": (90.0, 96.0)},
 )
 
 # .
@@ -202,6 +206,7 @@ check_info["hpux_tunables.maxfiles_lim"] = LegacyCheckDefinition(
     check_function=check_hpux_tunables_maxfiles_lim,
     service_name="Number of open files",
     default_levels_variable="hpux_tunables_maxfiles_lim_default_levels",
+    check_default_parameters={"levels": (85.0, 90.0)},
 )
 
 # .
@@ -235,6 +240,7 @@ check_info["hpux_tunables.semmni"] = LegacyCheckDefinition(
     check_function=check_hpux_tunables_semmni,
     service_name="Number of IPC Semaphore IDs",
     default_levels_variable="hpux_tunables_semmni_default_levels",
+    check_default_parameters={"levels": (85.0, 90.0)},
 )
 
 # .
@@ -268,6 +274,7 @@ check_info["hpux_tunables.shmseg"] = LegacyCheckDefinition(
     check_function=check_hpux_tunables_shmseg,
     service_name="Number of shared memory segments",
     default_levels_variable="hpux_tunables_shmseg_default_levels",
+    check_default_parameters={"levels": (85.0, 90.0)},
 )
 
 # .
@@ -301,4 +308,5 @@ check_info["hpux_tunables.semmns"] = LegacyCheckDefinition(
     check_function=check_hpux_tunables_semmns,
     service_name="Number of IPC Semaphores",
     default_levels_variable="hpux_tunables_semmns_default_levels",
+    check_default_parameters={"levels": (85.0, 90.0)},
 )

@@ -41,4 +41,5 @@ check_info["fireeye_quarantine"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.25597.13.1.40",
         oids=["0"],
     ),
+    check_default_parameters={"usage": (70, 80)},
 )

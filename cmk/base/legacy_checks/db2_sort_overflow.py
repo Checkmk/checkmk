@@ -50,4 +50,5 @@ check_info["db2_sort_overflow"] = LegacyCheckDefinition(
     discovery_function=inventory_db2_sort_overflow,
     check_ruleset_name="db2_sortoverflow",
     default_levels_variable="db2_sort_overflow_default_levels",
+    check_default_parameters={"levels_perc": (2.0, 4.0)},
 )

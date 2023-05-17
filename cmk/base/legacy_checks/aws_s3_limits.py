@@ -25,4 +25,7 @@ check_info["aws_s3_limits"] = LegacyCheckDefinition(
     service_name="AWS/S3 Limits %s",
     check_ruleset_name="aws_s3_limits",
     default_levels_variable="aws_s3_limits_default_levels",
+    check_default_parameters={
+        "buckets": (None, 80.0, 90.0),
+    },
 )

@@ -71,4 +71,9 @@ check_info["enterasys_powersupply"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "2", "3", "4"],
     ),
     check_ruleset_name="enterasys_powersupply",
+    check_default_parameters={
+        "redundancy_ok_states": [
+            1,
+        ],
+    },
 )

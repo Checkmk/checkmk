@@ -30,4 +30,5 @@ check_info["netapp_cpu"] = LegacyCheckDefinition(
     check_function=check_netapp_cpu,
     default_levels_variable="netapp_cpu_default_levels",
     check_ruleset_name="cpu_utilization",
+    check_default_parameters={"util": (80.0, 90.0)},
 )

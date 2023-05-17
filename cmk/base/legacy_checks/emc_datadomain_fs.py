@@ -44,4 +44,5 @@ check_info["emc_datadomain_fs"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.19746.1.3.2.1.1",
         oids=["1", "3", "4", "5", "6", "7", "8"],
     ),
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

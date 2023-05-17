@@ -162,4 +162,11 @@ check_info["jenkins_queue"] = LegacyCheckDefinition(
     default_levels_variable="jenkins_queue_default_levels",
     service_name="Jenkins Queue",
     check_ruleset_name="jenkins_queue",
+    check_default_parameters={
+        "in_queue_since": (3600, 7200),
+        "stuck": 2,
+        "blocked": 0,
+        "pending": 0,
+        "jenkins_stuck_tasks": (1, 2),
+    },
 )

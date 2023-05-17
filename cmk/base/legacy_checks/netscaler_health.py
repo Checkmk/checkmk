@@ -76,6 +76,10 @@ check_info["netscaler_health.fan"] = LegacyCheckDefinition(
     service_name="FAN %s",
     default_levels_variable="netscaler_health_fan_default_levels",
     check_ruleset_name="hw_fans",
+    check_default_parameters={
+        "lower": (3500, 3000),
+        "upper": (None, None),
+    },
 )
 # .
 #   .--temp----------------------------------------------------------------.
@@ -112,6 +116,9 @@ check_info["netscaler_health.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     default_levels_variable="netscaler_health_temp_default_levels",
+    check_default_parameters={
+        "levels": (80.0, 90.0),
+    },
 )
 
 # .

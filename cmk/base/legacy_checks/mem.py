@@ -155,6 +155,16 @@ check_info["mem.linux"] = LegacyCheckDefinition(
     service_name="Memory",
     default_levels_variable="mem_linux_default_levels",
     check_ruleset_name="memory_linux",
+    check_default_parameters={
+        "levels_virtual": ("perc_used", (80.0, 90.0)),
+        "levels_total": ("perc_used", (120.0, 150.0)),
+        "levels_shm": ("perc_used", (20.0, 30.0)),
+        "levels_pagetables": ("perc_used", (8.0, 16.0)),
+        "levels_committed": ("perc_used", (100.0, 150.0)),
+        "levels_commitlimit": ("perc_free", (20.0, 10.0)),
+        "levels_vmalloc": ("abs_free", (50 * 1024 * 1024, 30 * 1024 * 1024)),
+        "levels_hardwarecorrupted": ("abs_used", (1, 1)),
+    },
 )
 
 # .
@@ -360,6 +370,10 @@ check_info["mem.win"] = LegacyCheckDefinition(
     service_name="Memory",
     check_ruleset_name="memory_pagefile_win",
     default_levels_variable="memory_win_default_levels",
+    check_default_parameters={
+        "memory": (80.0, 90.0),
+        "pagefile": (80.0, 90.0),
+    },
 )
 
 # .

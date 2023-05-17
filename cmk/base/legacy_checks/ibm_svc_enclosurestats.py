@@ -78,6 +78,7 @@ check_info["ibm_svc_enclosurestats.temp"] = LegacyCheckDefinition(
     service_name="Temperature Enclosure %s",
     check_ruleset_name="temperature",
     default_levels_variable="ibm_svc_enclosurestats_temperature_default_levels",
+    check_default_parameters={"levels": (35.0, 40.0)},
 )
 
 # .

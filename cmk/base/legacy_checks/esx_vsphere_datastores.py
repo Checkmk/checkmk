@@ -108,6 +108,7 @@ check_info["esx_vsphere_datastores"] = LegacyCheckDefinition(
     service_name="Filesystem %s",
     check_ruleset_name="esx_vsphere_datastores",
     default_levels_variable="filesystem_default_levels",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
 # .

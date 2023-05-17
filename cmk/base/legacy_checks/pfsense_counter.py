@@ -104,4 +104,12 @@ check_info["pfsense_counter"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "2"],
     ),
     check_ruleset_name="pfsense_counter",
+    check_default_parameters={
+        "badoffset": (100.0, 10000.0),
+        "short": (100.0, 10000.0),
+        "memdrop": (100.0, 10000.0),
+        "normalized": (100.0, 10000.0),
+        "fragment": (100.0, 10000.0),
+        "average": 3,
+    },
 )

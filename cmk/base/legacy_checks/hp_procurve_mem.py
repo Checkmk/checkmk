@@ -61,4 +61,5 @@ check_info["hp_procurve_mem"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.11.2.14.11.5.1.1.2.1.1.1",
         oids=["5", "7"],
     ),
+    check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

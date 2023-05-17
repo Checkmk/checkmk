@@ -25,4 +25,5 @@ check_info["innovaphone_temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     default_levels_variable="innovaphone_temp_default_levels",
+    check_default_parameters={"levels": (45.0, 50.0)},
 )

@@ -94,4 +94,5 @@ check_info["informix_dbspaces"] = LegacyCheckDefinition(
     service_name="Informix Tablespace %s",
     check_ruleset_name="informix_dbspaces",
     default_levels_variable="informix_dbspaces_default_levels",
+    check_default_parameters={"levels_perc": (80.0, 85.0)},
 )

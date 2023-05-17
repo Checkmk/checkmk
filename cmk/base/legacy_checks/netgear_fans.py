@@ -142,4 +142,7 @@ check_info["netgear_fans"] = LegacyCheckDefinition(
     ],
     default_levels_variable="netgear_fans_default_levels",
     check_ruleset_name="hw_fans",
+    check_default_parameters={
+        "lower": (1500, 1200),
+    },
 )

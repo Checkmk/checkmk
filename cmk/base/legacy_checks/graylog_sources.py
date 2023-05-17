@@ -98,4 +98,5 @@ check_info["graylog_sources"] = LegacyCheckDefinition(
     default_levels_variable="graylog_sources_default_levels",
     service_name="Graylog Source %s",
     check_ruleset_name="graylog_sources",
+    check_default_parameters={},
 )

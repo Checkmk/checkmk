@@ -34,4 +34,5 @@ check_info["pulse_secure_temp"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="pulse_secure_temp_def_levels",
+    check_default_parameters={"levels": (70.0, 75.0)},
 )

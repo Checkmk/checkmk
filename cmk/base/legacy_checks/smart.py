@@ -64,4 +64,5 @@ check_info["smart.temp"] = LegacyCheckDefinition(
     service_name="Temperature SMART %s",
     check_ruleset_name="temperature",
     default_levels_variable="smart_temp_default_levels",
+    check_default_parameters={"levels": (35.0, 40.0)},
 )

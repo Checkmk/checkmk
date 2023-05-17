@@ -483,6 +483,7 @@ check_info["mongodb_cluster.collections"] = LegacyCheckDefinition(
     check_function=check_mongodb_cluster_shards,
     service_name="MongoDB Cluster: %s",
     check_ruleset_name="mongodb_cluster",
+    check_default_parameters={"levels_number_jumbo": (1, 2)},
 )
 
 #   .--balancer------------------------------------------------------------.

@@ -44,4 +44,7 @@ check_info["netextreme_psu_in"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="el_inphase",
     default_levels_variable="netextreme_psu_in_default_levels",
+    check_default_parameters={
+        "power": (110, 120),  # This levels a recomended by the manufactorer
+    },
 )

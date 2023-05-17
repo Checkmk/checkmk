@@ -103,4 +103,10 @@ check_info["hivemanager_devices"] = LegacyCheckDefinition(
     service_name="Client %s",
     default_levels_variable="hivemanger_devices",
     check_ruleset_name="hivemanager_devices",
+    check_default_parameters={
+        "alert_on_loss": True,
+        "max_clients": (25, 50),
+        "crit_states": ["Critical"],
+        "warn_states": ["Maybe", "Major", "Minor"],
+    },
 )

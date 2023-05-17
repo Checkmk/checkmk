@@ -89,4 +89,7 @@ check_info["eltek_outdoor_temp"] = LegacyCheckDefinition(
         oids=["1", "2", "3"],
     ),
     default_levels_variable="eltek_outdoor_temp_default_variables",
+    check_default_parameters={
+        "levels": (35, 40),
+    },
 )

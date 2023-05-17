@@ -203,6 +203,7 @@ check_info["mongodb_replica_set"] = LegacyCheckDefinition(
     check_function=check_mongodb_replica_set_lag,
     service_name="MongoDB Replication Lag",
     check_ruleset_name="mongodb_replica_set",
+    check_default_parameters={"levels_mongdb_replication_lag": (10, 60, 3600)},
 )
 
 #   .--primary election----------------------------------------------------.

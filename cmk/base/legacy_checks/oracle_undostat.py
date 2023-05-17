@@ -76,4 +76,8 @@ check_info["oracle_undostat"] = LegacyCheckDefinition(
     service_name="ORA %s Undo Retention",
     default_levels_variable="oracle_undostat_defaults",
     check_ruleset_name="oracle_undostat",
+    check_default_parameters={
+        "levels": (600, 300),
+        "nospaceerrcnt_state": 2,
+    },
 )

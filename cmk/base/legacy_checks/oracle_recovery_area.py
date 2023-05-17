@@ -69,4 +69,7 @@ check_info["oracle_recovery_area"] = LegacyCheckDefinition(
     service_name="ORA %s Recovery Area",
     default_levels_variable="oracle_recovery_area_defaults",
     check_ruleset_name="oracle_recovery_area",
+    check_default_parameters={
+        "levels": (70.0, 90.0),
+    },
 )

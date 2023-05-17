@@ -39,4 +39,7 @@ check_info["enterasys_cpu_util"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="cpu_utilization_multiitem",
     default_levels_variable="enterasys_cpu_default_levels",
+    check_default_parameters={
+        "levels": (90.0, 95.0),
+    },
 )

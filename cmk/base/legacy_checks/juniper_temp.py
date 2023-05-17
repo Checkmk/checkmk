@@ -54,4 +54,7 @@ check_info["juniper_temp"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="juniper_temp_default_levels",
+    check_default_parameters={
+        "levels": (55.0, 60.0),  # Just an assumption based on observed real temperatures
+    },
 )

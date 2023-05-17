@@ -31,4 +31,5 @@ check_info["fortigate_cpu"] = LegacyCheckDefinition(
         oids=["8"],
     ),
     default_levels_variable="fortigate_cpu_default_levels",
+    check_default_parameters={"util": (80.0, 90.0)},
 )

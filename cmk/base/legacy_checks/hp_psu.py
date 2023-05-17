@@ -49,6 +49,9 @@ check_info["hp_psu.temp"] = LegacyCheckDefinition(
     check_function=check_hp_psu_temp,
     service_name="Temperature Power Supply %s",
     check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels": (70.0, 80.0),
+    },
 )
 
 #   .--Status--------------------------------------------------------------.

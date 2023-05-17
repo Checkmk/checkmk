@@ -63,4 +63,8 @@ check_info["msexch_rpcclientaccess"] = LegacyCheckDefinition(
     service_name="Exchange RPC Client Access",
     check_ruleset_name="msx_rpcclientaccess",
     default_levels_variable="msexch_rpcclientaccess_defaultlevels",
+    check_default_parameters={
+        "latency": (200.0, 250.0),
+        "requests": (30, 40),
+    },
 )

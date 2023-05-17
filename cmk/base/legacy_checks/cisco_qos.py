@@ -378,4 +378,5 @@ check_info["cisco_qos"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "3"],
         ),
     ],
+    check_default_parameters={"drop": (0.01, 0.01)},
 )

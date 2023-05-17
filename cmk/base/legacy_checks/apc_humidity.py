@@ -40,4 +40,8 @@ check_info["apc_humidity"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="humidity",
     default_levels_variable="apc_humidity_default_levels",
+    check_default_parameters={
+        "levels": (40, 35),
+        "levels_lower": (60, 65),
+    },
 )

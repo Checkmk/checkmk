@@ -245,6 +245,10 @@ check_info["watchdog_sensors.humidity"] = LegacyCheckDefinition(
     service_name="%s",
     check_ruleset_name="humidity",
     default_levels_variable="watchdog_sensors_humidity_default_levels",
+    check_default_parameters={
+        "levels": (50, 55),
+        "levels_lower": (10, 15),
+    },
 )
 
 # .

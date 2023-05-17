@@ -204,6 +204,9 @@ check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
     service_name="VS %s Connections",
     default_levels_variable="checkpoint_vsx_default_levels",
     check_ruleset_name="checkpoint_vsx_connections",
+    check_default_parameters={
+        "levels_perc": (90.0, 95.0),
+    },
 )
 # .
 #   .--packets-------------------------------------------------------------.

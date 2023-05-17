@@ -47,4 +47,7 @@ check_info["aruba_cpu_util"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="cpu_utilization_multiitem",
     default_levels_variable="aruba_cpu_util_default_levels",
+    check_default_parameters={
+        "levels": (80.0, 90.0),
+    },
 )

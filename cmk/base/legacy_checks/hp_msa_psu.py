@@ -116,6 +116,14 @@ check_info["hp_msa_psu.sensor"] = LegacyCheckDefinition(
     service_name="Power Supply Voltage %s",
     default_levels_variable="hp_msa_psu_default_levels",
     check_ruleset_name="hp_msa_psu_voltage",
+    check_default_parameters={
+        "levels_33v_lower": (3.25, 3.20),
+        "levels_33v_upper": (3.4, 3.45),
+        "levels_5v_lower": (4.9, 4.8),
+        "levels_5v_upper": (5.1, 5.2),
+        "levels_12v_lower": (11.9, 11.8),
+        "levels_12v_upper": (12.1, 12.2),
+    },
 )
 
 # .
@@ -144,4 +152,7 @@ check_info["hp_msa_psu.temp"] = LegacyCheckDefinition(
     service_name="Temperature Power Supply %s",
     check_ruleset_name="temperature",
     default_levels_variable="hp_msa_psu_temp_default_levels",
+    check_default_parameters={
+        "levels": (40.0, 45.0),  # Just assumed
+    },
 )

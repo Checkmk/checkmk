@@ -56,4 +56,9 @@ check_info["fireeye_mailq"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.25597.13.1",
         oids=["44", "45", "47", "48", "49"],
     ),
+    check_default_parameters={
+        "deferred": (1, 50),
+        "hold": (500, 1000),
+        "drop": (50, 500),
+    },
 )

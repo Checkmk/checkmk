@@ -42,4 +42,7 @@ check_info["avaya_45xx_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.45.1.6.3.7.1.1.5",
         oids=["5"],
     ),
+    check_default_parameters={
+        "levels": (55.0, 60.0),
+    },
 )

@@ -67,4 +67,8 @@ check_info["gude_relayport"] = LegacyCheckDefinition(
     ),
     default_levels_variable="gude_relayport_default_levels",
     check_ruleset_name="el_inphase",
+    check_default_parameters={
+        "voltage": (220, 210),
+        "current": (15, 16),
+    },
 )

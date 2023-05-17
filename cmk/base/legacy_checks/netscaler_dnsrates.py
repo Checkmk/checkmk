@@ -60,4 +60,8 @@ check_info["netscaler_dnsrates"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     default_levels_variable="netscaler_dnsrates_default_levels",
+    check_default_parameters={
+        "query": (1500.0, 2000.0),
+        "answer": (1500.0, 2000.0),
+    },
 )

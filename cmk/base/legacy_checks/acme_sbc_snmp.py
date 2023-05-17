@@ -71,4 +71,7 @@ check_info["acme_sbc_snmp"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="acme_sbc_snmp",
     default_levels_variable="acme_sbc_snmp_default_levels",
+    check_default_parameters={
+        "levels_lower": (99, 75),
+    },
 )

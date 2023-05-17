@@ -212,4 +212,5 @@ check_info["hp_msa_volume.df"] = LegacyCheckDefinition(
     service_name="Filesystem %s",
     check_ruleset_name="filesystem",
     default_levels_variable="filesystem_default_levels",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

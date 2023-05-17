@@ -70,4 +70,5 @@ check_info["couchbase_nodes_stats.mem"] = LegacyCheckDefinition(
     service_name="Couchbase %s Memory",
     check_ruleset_name="memory_multiitem",
     default_levels_variable="memory_default_levels",
+    check_default_parameters=MEMORY_DEFAULT_LEVELS,
 )

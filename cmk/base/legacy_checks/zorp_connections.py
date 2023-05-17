@@ -55,4 +55,7 @@ check_info["zorp_connections"] = LegacyCheckDefinition(  # mypy: ignore
     service_name="Zorp Connections",
     default_levels_variable="zorp_connections",
     check_ruleset_name="zorp_connections",
+    check_default_parameters={
+        "levels": (15, 20),
+    },
 )

@@ -55,4 +55,8 @@ check_info["pulse_secure_mem_util"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="pulse_secure_mem_util",
     default_levels_variable="pulse_secure_mem_util_def_levels",
+    check_default_parameters={
+        "mem_used_percent": (90, 95),
+        "swap_used_percent": (5, None),
+    },
 )

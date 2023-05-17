@@ -38,4 +38,7 @@ check_info["liebert_fans"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="hw_fans_perc",
     default_levels_variable="liebert_fans_default_levels",
+    check_default_parameters={
+        "levels": (80, 90),
+    },
 )

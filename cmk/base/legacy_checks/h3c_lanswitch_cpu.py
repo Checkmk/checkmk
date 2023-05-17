@@ -80,4 +80,5 @@ check_info["h3c_lanswitch_cpu"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "3"],
     ),
     default_levels_variable="switch_cpu_default_levels",
+    check_default_parameters={"levels": (50, 75)},
 )

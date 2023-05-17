@@ -118,4 +118,7 @@ check_info["ups_cps_battery"] = LegacyCheckDefinition(
         oids=["1", "3", "4"],
     ),
     check_ruleset_name="ups_capacity",
+    check_default_parameters={
+        "capacity": (95, 90),
+    },
 )

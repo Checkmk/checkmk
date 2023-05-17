@@ -145,6 +145,7 @@ check_info["emcvnx_storage_pools"] = LegacyCheckDefinition(
     service_name="Pool %s General",
     check_ruleset_name="emcvnx_storage_pools",
     default_levels_variable="emcvnx_storage_pools_default_levels",
+    check_default_parameters={"percent_full": (70.0, 90.0)},
 )
 
 # .
@@ -238,6 +239,9 @@ check_info["emcvnx_storage_pools.tiering"] = LegacyCheckDefinition(
     service_name="Pool %s Tiering Status",
     check_ruleset_name="emcvnx_storage_pools_tiering",
     default_levels_variable="emcvnx_storage_pools_tiering_default_levels",
+    check_default_parameters={
+        "time_to_complete": (21 * 60 * 60 * 24, 28 * 60 * 60 * 24),
+    },
 )
 
 

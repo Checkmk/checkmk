@@ -79,4 +79,7 @@ check_info["dell_powerconnect_temp"] = LegacyCheckDefinition(
         oids=["9", "10"],
     ),
     check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels": (35.0, 40.0),
+    },
 )

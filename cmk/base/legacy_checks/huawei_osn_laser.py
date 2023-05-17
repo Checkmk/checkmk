@@ -74,4 +74,8 @@ check_info["huawei_osn_laser"] = LegacyCheckDefinition(
     ),
     default_levels_variable="huawei_osn_laser_default_levels",
     check_ruleset_name="huawei_osn_laser",
+    check_default_parameters={
+        "levels_low_in": (-160.0, -180.0),
+        "levels_low_out": (-35.0, -40.0),
+    },
 )

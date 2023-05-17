@@ -33,4 +33,15 @@ check_info["aws_elbv2_limits"] = LegacyCheckDefinition(
     service_name="AWS/ELBv2 Limits %s",
     check_ruleset_name="aws_elbv2_limits",
     default_levels_variable="aws_elbv2_limits_default_levels",
+    check_default_parameters={
+        "application_load_balancers": (None, 80.0, 90.0),
+        "application_load_balancer_rules": (None, 80.0, 90.0),
+        "application_load_balancer_listeners": (None, 80.0, 90.0),
+        "application_load_balancer_target_groups": (None, 80.0, 90.0),
+        "application_load_balancer_certificates": (None, 80.0, 90.0),
+        "network_load_balancers": (None, 80.0, 90.0),
+        "network_load_balancer_listeners": (None, 80.0, 90.0),
+        "network_load_balancer_target_groups": (None, 80.0, 90.0),
+        "load_balancer_target_groups": (None, 80.0, 90.0),
+    },
 )

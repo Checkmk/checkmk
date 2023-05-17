@@ -60,4 +60,5 @@ check_info["liebert_maintenance"] = LegacyCheckDefinition(
         oids=["10.1.2.1.4868", "20.1.2.1.4868", "10.1.2.1.4869", "20.1.2.1.4869"],
     ),
     default_levels_variable="liebert_maintenance_default_levels",
+    check_default_parameters={"levels": (10, 5)},  # Remaining days until next maintenance
 )

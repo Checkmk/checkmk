@@ -130,4 +130,7 @@ check_info["jolokia_jvm_threading.pool"] = LegacyCheckDefinition(
     default_levels_variable="jolokia_jvm_threading.pool",
     service_name="JVM %s",
     check_ruleset_name="jvm_tp",
+    check_default_parameters={
+        "currentThreadsBusy": (80, 90),
+    },
 )

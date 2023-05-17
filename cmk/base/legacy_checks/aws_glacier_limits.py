@@ -35,4 +35,7 @@ check_info["aws_glacier_limits"] = LegacyCheckDefinition(
     service_name="AWS/Glacier Limits %s",
     check_ruleset_name="aws_glacier_limits",
     default_levels_variable="aws_glacier_limits_default_levels",
+    check_default_parameters={
+        "number_of_vaults": (None, 80.0, 90.0),
+    },
 )

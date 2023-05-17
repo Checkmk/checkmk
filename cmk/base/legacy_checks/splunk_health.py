@@ -82,4 +82,9 @@ check_info["splunk_health"] = LegacyCheckDefinition(
     service_name="Splunk Health",
     check_ruleset_name="splunk_health",
     default_levels_variable="splunk_health_default_levels",
+    check_default_parameters={
+        "green": 0,
+        "yellow": 1,
+        "red": 2,
+    },
 )

@@ -194,6 +194,9 @@ check_info["hp_msa_disk.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     default_levels_variable="hp_msa_disk_temp_default_levels",
+    check_default_parameters={
+        "levels": (40.0, 45.0),  # just an assumption
+    },
 )
 
 # .

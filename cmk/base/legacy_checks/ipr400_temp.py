@@ -34,4 +34,7 @@ check_info["ipr400_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.27053.1.4.5",
         oids=["9"],
     ),
+    check_default_parameters={
+        "levels": (30.0, 40.0),  # reported temperature seems to be near room temperature usually
+    },
 )

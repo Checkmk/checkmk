@@ -99,4 +99,7 @@ check_info["ibm_svc_portsas"] = LegacyCheckDefinition(
     discovery_function=inventory_ibm_svc_portsas,
     service_name="SAS %s",
     default_levels_variable="ibm_svc_portsas_default_levels",
+    check_default_parameters={
+        "current_state": "offline",
+    },
 )

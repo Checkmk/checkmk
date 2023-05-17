@@ -131,4 +131,11 @@ check_info["cups_queues"] = LegacyCheckDefinition(
     service_name="CUPS Queue %s",
     default_levels_variable="cups_queues_default_levels",
     check_ruleset_name="cups_queues",
+    check_default_parameters={
+        "job_count": (5, 10),  # warn/crit for queue entries
+        "job_age": (360, 720),  # warn/crit for entry age in seconds
+        "is_idle": 0,  # state for "is idle"
+        "now_printing": 0,  # state for "now printing"
+        "disabled_since": 2,  # state for "disbaled since"
+    },
 )

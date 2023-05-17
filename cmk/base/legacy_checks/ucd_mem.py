@@ -80,4 +80,8 @@ check_info["ucd_mem"] = LegacyCheckDefinition(
     ),
     default_levels_variable="ucd_mem_default_levels",
     check_ruleset_name="memory_simple",
+    check_default_parameters={
+        "levels": ("perc_used", (80.0, 90.0)),
+        "swap_errors": 0,
+    },
 )

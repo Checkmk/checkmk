@@ -115,4 +115,5 @@ check_info["printer_supply_ricoh"] = LegacyCheckDefinition(
         oids=["2", "5"],
     ),
     default_levels_variable="printer_supply_ricoh_default_levels",
+    check_default_parameters={"levels": (20.0, 10.0)},
 )

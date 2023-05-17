@@ -222,6 +222,10 @@ check_info["redis_info.persistence"] = LegacyCheckDefinition(
     service_name="Redis %s Persistence",
     check_ruleset_name="redis_info_persistence",
     default_levels_variable="redis_info_persistence_default_levels",
+    check_default_parameters={
+        "rdb_last_bgsave": 1,
+        "aof_last_rewrite": 1,
+    },
 )
 # .
 #   .--Clients-------------------------------------------------------------.

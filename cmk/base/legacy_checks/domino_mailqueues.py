@@ -53,4 +53,5 @@ check_info["domino_mailqueues"] = LegacyCheckDefinition(
         oids=["1", "6", "21", "31", "34"],
     ),
     check_ruleset_name="domino_mailqueues",
+    check_default_parameters={"queue_length": (300, 350)},
 )

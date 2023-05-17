@@ -151,6 +151,7 @@ check_info["janitza_umg"] = LegacyCheckDefinition(
             oids=["8"],
         ),
     ],
+    check_default_parameters={},
 )
 
 
@@ -182,6 +183,7 @@ check_info["janitza_umg.freq"] = LegacyCheckDefinition(
     service_name="Frequency %s",
     default_levels_variable="janitza_umg_freq_default_levels",
     check_ruleset_name="efreq",
+    check_default_parameters={"levels_lower": (0, 0)},
 )
 
 
@@ -211,4 +213,5 @@ check_info["janitza_umg.temp"] = LegacyCheckDefinition(
     service_name="Temperature External %s",
     default_levels_variable="janitza_umg_temp_default_levels",
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )

@@ -59,4 +59,5 @@ check_info["storcli_pdisks"] = LegacyCheckDefinition(
     check_function=check_storcli_pdisks,
     service_name="RAID PDisk EID:Slot-Device %s",
     check_ruleset_name="storcli_pdisks",
+    check_default_parameters=megaraid.PDISKS_DEFAULTS,
 )

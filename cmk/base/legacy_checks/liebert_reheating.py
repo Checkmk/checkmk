@@ -43,4 +43,7 @@ check_info["liebert_reheating"] = LegacyCheckDefinition(
         oids=["10.1.2.1.5080", "20.1.2.1.5080", "30.1.2.1.5080"],
     ),
     default_levels_variable="liebert_reheating_default_levels",
+    check_default_parameters={
+        "levels": (80, 90),
+    },
 )

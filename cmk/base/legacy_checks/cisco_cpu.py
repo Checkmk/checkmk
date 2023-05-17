@@ -72,4 +72,5 @@ check_info["cisco_cpu"] = LegacyCheckDefinition(
         oids=["5", "8"],
     ),
     default_levels_variable="cisco_cpu_default_levels",
+    check_default_parameters={"util": (80.0, 90.0)},
 )

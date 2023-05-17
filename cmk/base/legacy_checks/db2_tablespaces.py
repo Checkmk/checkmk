@@ -118,4 +118,8 @@ check_info["db2_tablespaces"] = LegacyCheckDefinition(
     discovery_function=inventory_db2_tablespaces,
     check_ruleset_name="db2_tablespaces",
     default_levels_variable="db2_tablespaces_default_levels",
+    check_default_parameters={
+        "levels": (10.0, 5.0),
+        "magic_normsize": 1000,
+    },
 )

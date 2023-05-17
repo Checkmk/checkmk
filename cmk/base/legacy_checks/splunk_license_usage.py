@@ -73,4 +73,7 @@ check_info["splunk_license_usage"] = LegacyCheckDefinition(
     service_name="Splunk License Usage",
     check_ruleset_name="splunk_license_usage",
     default_levels_variable="splunk_license_usage_default_levels",
+    check_default_parameters={
+        "usage_bytes": (80.0, 90.0),
+    },
 )

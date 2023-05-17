@@ -84,4 +84,5 @@ check_info["ups_socomec_capacity"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.4555.1.1.1.1.2",
         oids=["2", "3", "4"],
     ),
+    check_default_parameters={"battime": (0, 0), "capacity": (95, 90)},
 )

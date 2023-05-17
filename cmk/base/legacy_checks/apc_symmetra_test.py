@@ -120,6 +120,9 @@ check_info["apc_symmetra_test"] = LegacyCheckDefinition(
         oids=["3", "4"],
     ),
     default_levels_variable="apc_test_levels",
+    check_default_parameters={
+        "levels_elapsed_time": None,
+    },
 )
 
 factory_settings["apc_test_levels"] = {

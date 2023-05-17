@@ -90,4 +90,7 @@ check_info["oracle_sessions"] = LegacyCheckDefinition(
     service_name="ORA %s Sessions",
     check_ruleset_name="oracle_sessions",
     default_levels_variable="oracle_sessions_default_levels",
+    check_default_parameters={
+        "sessions_abs": (150, 300),
+    },
 )

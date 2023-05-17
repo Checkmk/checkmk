@@ -105,6 +105,9 @@ check_info["ceph_status"] = LegacyCheckDefinition(
     check_function=check_ceph_status,
     service_name="Ceph Status",
     default_levels_variable="ceph_status_default_levels",
+    check_default_parameters={
+        "epoch": (1, 3, 30),
+    },
 )
 
 # .
@@ -176,6 +179,11 @@ check_info["ceph_status.osds"] = LegacyCheckDefinition(
     service_name="Ceph OSDs",
     default_levels_variable="ceph_osds_default_levels",
     check_ruleset_name="ceph_osds",
+    check_default_parameters={
+        "epoch": (50, 100, 15),
+        "num_out_osds": (5.0, 7.0),
+        "num_down_osds": (5.0, 7.0),
+    },
 )
 
 # .
@@ -283,4 +291,7 @@ check_info["ceph_status.mgrs"] = LegacyCheckDefinition(
     service_name="Ceph MGRs",
     default_levels_variable="ceph_mgrs_default_levels",
     check_ruleset_name="ceph_mgrs",
+    check_default_parameters={
+        "epoch": (1, 2, 5),
+    },
 )

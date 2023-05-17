@@ -38,4 +38,5 @@ check_info["barracuda_system_cpu_util"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="cpu_utilization",
     default_levels_variable="barracuda_system_cpu_util_default_levels",
+    check_default_parameters={"util": (80.0, 90.0)},
 )

@@ -69,6 +69,10 @@ check_info["siemens_plc.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     default_levels_variable="siemens_plc_temp_default_levels",
+    check_default_parameters={
+        "levels": (70.0, 80.0),
+        "device_levels_handling": "devdefault",
+    },
 )
 
 # .

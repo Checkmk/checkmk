@@ -54,4 +54,5 @@ check_info["juniper_screenos_cpu"] = LegacyCheckDefinition(
         oids=["2", "4"],
     ),
     default_levels_variable="juniper_screenos_cpu_default_levels",
+    check_default_parameters={"util": (80.0, 90.0)},
 )

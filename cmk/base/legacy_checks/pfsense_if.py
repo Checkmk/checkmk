@@ -39,4 +39,8 @@ check_info["pfsense_if"] = LegacyCheckDefinition(
         oids=["2", "12"],
     ),
     check_ruleset_name="firewall_if",
+    check_default_parameters={
+        "ipv4_in_blocked": (100.0, 10000.0),
+        "average": 3,
+    },
 )

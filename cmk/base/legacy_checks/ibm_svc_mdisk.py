@@ -85,4 +85,14 @@ check_info["ibm_svc_mdisk"] = LegacyCheckDefinition(
     service_name="MDisk %s",
     check_ruleset_name="ibm_svc_mdisk",
     default_levels_variable="ibm_svc_mdisk_default_levels",
+    check_default_parameters={
+        "online_state": 0,  # online state is OK
+        "degraded_state": 1,  # degraded state is WARN
+        "offline_state": 2,  # offline state is CRIT
+        "excluded_state": 2,  # excluded state is CRIT
+        "managed_mode": 0,  # managed mode is OK
+        "array_mode": 0,  # array mode is OK
+        "image_mode": 0,  # image mode is OK
+        "unmanaged_mode": 1,  # unmanaged mode is WARN
+    },
 )

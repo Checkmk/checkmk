@@ -186,6 +186,9 @@ check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
     service_name="AWS/DynamoDB Read Capacity",
     check_ruleset_name="aws_dynamodb_capacity",
     default_levels_variable="aws_dynamodb_capacity_defaults",
+    check_default_parameters={
+        "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
+    },
 )
 
 check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
@@ -196,6 +199,9 @@ check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
     service_name="AWS/DynamoDB Write Capacity",
     check_ruleset_name="aws_dynamodb_capacity",
     default_levels_variable="aws_dynamodb_capacity_defaults",
+    check_default_parameters={
+        "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
+    },
 )
 
 check_info["aws_dynamodb_table.latency"] = LegacyCheckDefinition(

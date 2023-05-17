@@ -59,4 +59,5 @@ check_info["poseidon_temp"] = LegacyCheckDefinition(
         oids=["2", "4", "5"],
     ),
     default_levels_variable="poseidon_temp_default_levels",
+    check_default_parameters={},
 )

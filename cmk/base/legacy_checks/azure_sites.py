@@ -47,4 +47,11 @@ check_info["azure_sites"] = LegacyCheckDefinition(
     service_name="Site %s",
     default_levels_variable="levels_azure_sites",
     check_ruleset_name="webserver",
+    check_default_parameters={
+        # https://www.nngroup.com/articles/response-times-3-important-limits/
+        "avg_response_time_levels": (1.0, 10.0),
+        # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
+        "error_rate_levels": (0.01, 0.04),
+        "cpu_time_percent_levels": (85.0, 95.0),
+    },
 )

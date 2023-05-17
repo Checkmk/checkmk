@@ -77,4 +77,5 @@ check_info["dell_om_sensors"] = LegacyCheckDefinition(
         oids=["2", "5", "6", "8", "10", "11", "12", "13"],
     ),
     default_levels_variable="dell_om_sensors_default_levels",
+    check_default_parameters={"levels": (50.0, 60.0)},
 )

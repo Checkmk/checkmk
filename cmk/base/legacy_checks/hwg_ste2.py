@@ -35,6 +35,7 @@ check_info["hwg_ste2"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="hwg_temp_defaultlevels",
+    check_default_parameters=HWG_TEMP_DEFAULTLEVELS,
 )
 
 
@@ -44,4 +45,5 @@ check_info["hwg_ste2.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
     check_ruleset_name="humidity",
     default_levels_variable="hwg_humidity_defaultlevels",
+    check_default_parameters=HWG_HUMIDITY_DEFAULTLEVELS,
 )

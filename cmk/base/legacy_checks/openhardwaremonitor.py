@@ -207,6 +207,11 @@ check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     default_levels_variable="openhardwaremonitor_temperature_default_levels",
+    check_default_parameters={
+        "cpu": {"levels": (60, 70)},
+        "hdd": {"levels": (40, 50)},
+        "_default": {"levels": (70, 80)},
+    },
 )
 
 # .
@@ -257,6 +262,10 @@ check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
     service_name="Fan %s",
     default_levels_variable="openhardwaremonitor_fan_default_levels",
     check_ruleset_name="hw_fans",
+    check_default_parameters={
+        "lower": (None, None),
+        "upper": (None, None),
+    },
 )
 
 # .
@@ -322,4 +331,7 @@ check_info["openhardwaremonitor.smart"] = LegacyCheckDefinition(
     service_name="SMART %s Stats",
     default_levels_variable="openhardwaremonitor_smart_default_levels",
     check_ruleset_name="openhardwaremonitor_smart",
+    check_default_parameters={
+        "remaining_life": (30, 10),  # wild guess
+    },
 )

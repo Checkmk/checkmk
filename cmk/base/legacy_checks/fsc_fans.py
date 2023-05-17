@@ -68,4 +68,7 @@ check_info["fsc_fans"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="hw_fans",
     default_levels_variable="fsc_fans_default_levels",
+    check_default_parameters={
+        "lower": (2000, 1000),
+    },
 )

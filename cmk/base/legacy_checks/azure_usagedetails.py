@@ -55,4 +55,5 @@ check_info["azure_usagedetails"] = LegacyCheckDefinition(
     service_name="Costs %s",
     default_levels_variable="levels_azure_usagedetails",
     check_ruleset_name="azure_usagedetails",
+    check_default_parameters={},
 )

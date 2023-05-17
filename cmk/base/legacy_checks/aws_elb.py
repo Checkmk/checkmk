@@ -104,6 +104,10 @@ check_info["aws_elb"] = LegacyCheckDefinition(
     service_name="AWS/ELB Statistics",
     default_levels_variable="aws_elb_statistics",
     check_ruleset_name="aws_elb_statistics",
+    check_default_parameters={
+        "levels_surge_queue_length": (1024, 1024),
+        "levels_spillover": (0.001, 0.001),
+    },
 )
 
 # .

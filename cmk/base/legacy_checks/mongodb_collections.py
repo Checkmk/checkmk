@@ -227,4 +227,5 @@ check_info["mongodb_collections"] = LegacyCheckDefinition(
     check_function=check_mongodb_collections,
     service_name="MongoDB Collection: %s",
     check_ruleset_name="mongodb_collections",
+    check_default_parameters={"levels_nindexes": (62, 65)},
 )

@@ -48,4 +48,5 @@ check_info["filehandler"] = LegacyCheckDefinition(
     service_name="Filehandler",
     default_levels_variable="filehandler_default_levels",
     check_ruleset_name="filehandler",
+    check_default_parameters={"levels": (80.0, 90.0)},
 )

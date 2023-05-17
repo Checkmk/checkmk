@@ -152,6 +152,9 @@ check_info["ra32e_sensors"] = LegacyCheckDefinition(
     ],
     check_ruleset_name="temperature",
     default_levels_variable="ra32e_temp_defaultlevels",
+    check_default_parameters={
+        "levels": (30.0, 35.0),
+    },
 )
 
 # .
@@ -183,6 +186,9 @@ check_info["ra32e_sensors.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
     check_ruleset_name="humidity",
     default_levels_variable="ra32e_sensors_humidity_defaultlevels",
+    check_default_parameters={
+        "levels": (70.0, 80.0),
+    },
 )
 
 # .
@@ -210,6 +216,9 @@ check_info["ra32e_sensors.voltage"] = LegacyCheckDefinition(
     service_name="Voltage %s",
     check_ruleset_name="ups_outphase",
     default_levels_variable="ra32e_sensors_voltage_defaultlevels",
+    check_default_parameters={
+        "voltage": (210, 180),
+    },
 )
 
 # .

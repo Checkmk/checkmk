@@ -46,4 +46,5 @@ check_info["mbg_lantime_ng_state"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.5597.30.0.2",
         oids=["1", "2", "3", "4"],
     ),
+    check_default_parameters=MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
 )

@@ -131,4 +131,7 @@ check_info["ucs_bladecenter_fans.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     default_levels_variable="ucs_bladecenter_fans_temp_default_levels",
+    check_default_parameters={
+        "levels": (40.0, 50.0),
+    },
 )

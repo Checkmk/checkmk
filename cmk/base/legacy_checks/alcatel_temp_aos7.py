@@ -81,4 +81,5 @@ check_info["alcatel_temp_aos7"] = LegacyCheckDefinition(
             "23",
         ],
     ),
+    check_default_parameters=ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS,
 )

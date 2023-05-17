@@ -58,4 +58,7 @@ check_info["huawei_switch_mem"] = LegacyCheckDefinition(
     ],
     check_ruleset_name="memory_percentage_used_multiitem",
     default_levels_variable="huawei_switch_mem_default_levels",
+    check_default_parameters={
+        "levels": (80.0, 90.0),
+    },
 )

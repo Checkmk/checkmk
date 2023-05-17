@@ -38,4 +38,7 @@ check_info["huawei_osn_temp"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="huawei_osn_temp_default_levels",
+    check_default_parameters={
+        "levels": (70.0, 80.0),
+    },
 )

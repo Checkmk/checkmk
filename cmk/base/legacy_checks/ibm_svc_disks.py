@@ -104,4 +104,5 @@ check_info["ibm_svc_disks"] = LegacyCheckDefinition(
     service_name="Disk Summary",
     check_ruleset_name="netapp_disks",
     default_levels_variable="filer_disks_default_levels",
+    check_default_parameters=FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
 )

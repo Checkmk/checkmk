@@ -49,4 +49,5 @@ check_info["systemtime"] = LegacyCheckDefinition(
     service_name="System Time",
     check_ruleset_name="systemtime",
     default_levels_variable="systemtime_default_levels",
+    check_default_parameters={"levels": (30, 60)},
 )

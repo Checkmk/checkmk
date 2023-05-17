@@ -56,4 +56,10 @@ check_info["bluecat_ha"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.13315.3.1.5.2.1",
         oids=["1"],
     ),
+    check_default_parameters={
+        "oper_states": {
+            "warning": [5, 6, 7],
+            "critical": [8, 4],
+        },
+    },
 )

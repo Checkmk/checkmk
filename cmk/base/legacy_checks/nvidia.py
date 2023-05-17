@@ -45,6 +45,7 @@ check_info["nvidia.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     default_levels_variable="nvidia_temp_default_levels",
+    check_default_parameters={"levels": (60.0, 65.0)},
 )
 
 check_info["nvidia.temp_core"] = LegacyCheckDefinition(
@@ -53,6 +54,7 @@ check_info["nvidia.temp_core"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     default_levels_variable="nvidia_temp_core_default_levels",
+    check_default_parameters={"levels": (90.0, 95.0)},
 )
 
 

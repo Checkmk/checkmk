@@ -55,4 +55,7 @@ check_info["informix_locks"] = LegacyCheckDefinition(
     service_name="Informix Locks %s",
     check_ruleset_name="informix_locks",
     default_levels_variable="informix_locks_default_levels",
+    check_default_parameters={
+        "levels": (70, 80),
+    },
 )

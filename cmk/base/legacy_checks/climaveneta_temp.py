@@ -59,4 +59,5 @@ check_info["climaveneta_temp"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="climaveneta_temp_default_levels",
+    check_default_parameters={"levels": (28.0, 30.0)},
 )

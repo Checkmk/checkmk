@@ -58,4 +58,5 @@ check_info["ups_in_freq"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "2"],
     ),
     default_levels_variable="ups_in_freq_default_levels",
+    check_default_parameters={"levels_lower": (45, 40)},
 )

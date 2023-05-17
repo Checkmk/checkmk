@@ -72,4 +72,7 @@ check_info["informix_tabextents"] = LegacyCheckDefinition(
     service_name="Informix Table Extents %s",
     check_ruleset_name="informix_tabextents",
     default_levels_variable="informix_tabextents_default_levels",
+    check_default_parameters={
+        "levels": (40, 70),
+    },
 )

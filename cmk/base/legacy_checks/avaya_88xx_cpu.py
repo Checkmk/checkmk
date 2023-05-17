@@ -36,4 +36,5 @@ check_info["avaya_88xx_cpu"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.2272.1.1",
         oids=["20"],
     ),
+    check_default_parameters={"util": (90.0, 95.0)},
 )

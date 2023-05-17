@@ -55,4 +55,5 @@ check_info["checkpoint_memory"] = LegacyCheckDefinition(
     ),
     default_levels_variable="checkpoint_memory_default_levels",
     check_ruleset_name="memory_simple",
+    check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

@@ -94,4 +94,9 @@ check_info["f5_bigip_conns"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="f5_connections",
     default_levels_variable="f5_bigip_conns_default_levels",
+    check_default_parameters={
+        "conns": (25000, 30000),
+        "ssl_conns": (25000, 30000),
+        "http_req_rate": (500, 1000),
+    },
 )

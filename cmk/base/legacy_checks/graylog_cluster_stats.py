@@ -192,6 +192,11 @@ check_info["graylog_cluster_stats.elastic"] = LegacyCheckDefinition(
     default_levels_variable="graylog_cluster_stats_elastic_defaultlevels",
     service_name="Graylog Cluster Elasticsearch Stats",
     check_ruleset_name="graylog_cluster_stats_elastic",
+    check_default_parameters={
+        "green": 0,
+        "yellow": 1,
+        "red": 2,
+    },
 )
 
 

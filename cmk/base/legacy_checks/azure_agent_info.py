@@ -173,4 +173,10 @@ check_info["azure_agent_info"] = LegacyCheckDefinition(
     service_name="Azure Agent Info",
     default_levels_variable="azure_agent_info_levels",
     check_ruleset_name="azure_agent_info",
+    check_default_parameters={
+        "warning_levels": (1, 10),
+        "exception_levels": (1, 1),
+        "remaining_reads_levels_lower": (6000, 3000),
+        "remaining_reads_unknown_state": 1,
+    },
 )

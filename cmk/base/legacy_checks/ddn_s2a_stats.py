@@ -140,6 +140,9 @@ check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
     check_function=check_ddn_s2a_stats_io,
     service_name="DDN S2A IO %s",
     check_ruleset_name="storage_iops",
+    check_default_parameters={
+        "total": (28000, 33000),
+    },
 )
 
 # .
@@ -215,4 +218,7 @@ check_info["ddn_s2a_stats"] = LegacyCheckDefinition(
     check_function=check_ddn_s2a_stats,
     service_name="DDN S2A Data Rate %s",
     check_ruleset_name="storage_throughput",
+    check_default_parameters={
+        "total": (4800 * 1024 * 1024, 5500 * 1024 * 1024),
+    },
 )

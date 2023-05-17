@@ -57,6 +57,7 @@ check_info["arbor_pravail"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.9694.1.6.2",
         oids=["6.0", "7.0", "8.0", "1.0", "39.0"],
     ),
+    check_default_parameters=ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
 )
 
 check_info["arbor_pravail.disk_usage"] = LegacyCheckDefinition(
@@ -65,6 +66,7 @@ check_info["arbor_pravail.disk_usage"] = LegacyCheckDefinition(
     service_name="Disk Usage %s",
     check_ruleset_name="filesystem",
     default_levels_variable="filesystem_default_levels",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
 check_info["arbor_pravail.host_fault"] = LegacyCheckDefinition(

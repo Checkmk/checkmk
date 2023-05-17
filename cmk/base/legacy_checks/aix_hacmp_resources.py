@@ -75,4 +75,7 @@ check_info["aix_hacmp_resources"] = LegacyCheckDefinition(
     check_function=check_aix_hacmp_resources,
     service_name="HACMP RG %s",
     check_ruleset_name="hacmp_resources",
+    check_default_parameters={
+        "expect_online_on": "first",
+    },
 )

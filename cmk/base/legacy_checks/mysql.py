@@ -320,6 +320,7 @@ check_info["mysql.galeradonor"] = LegacyCheckDefinition(
     check_function=check_mysql_galeradonor,
     service_name="MySQL Galera Donor %s",
     default_levels_variable="MYSQL_GALERA_DEFAULT_PARAMETERS",
+    check_default_parameters={},
 )
 
 # .
@@ -401,6 +402,7 @@ check_info["mysql.galerasize"] = LegacyCheckDefinition(
     check_function=check_mysql_galerasize,
     service_name="MySQL Galera Size %s",
     default_levels_variable="MYSQL_GALERA_DEFAULT_PARAMETERS",
+    check_default_parameters={},
 )
 
 # .

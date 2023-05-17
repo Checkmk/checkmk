@@ -49,4 +49,5 @@ check_info["fast_lta_silent_cubes.capacity"] = LegacyCheckDefinition(
     service_name="Fast LTA SC Capacity %s",
     check_ruleset_name="filesystem",
     default_levels_variable="filesystem_default_levels",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

@@ -172,6 +172,11 @@ check_info["rabbitmq_nodes"] = LegacyCheckDefinition(
     service_name="RabbitMQ Node %s",
     check_ruleset_name="rabbitmq_nodes",
     default_levels_variable="rabbitmq_nodes_default_levels",
+    check_default_parameters={
+        "state": 2,
+        "disk_free_alarm": 2,
+        "mem_alarm": 2,
+    },
 )
 
 

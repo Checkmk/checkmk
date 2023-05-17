@@ -75,6 +75,9 @@ check_info["docsis_channels_downstream"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="docsis_channels_downstream",
     default_levels_variable="docsis_channels_downstream",
+    check_default_parameters={
+        "power": (5.0, 1.0),
+    },
 )
 
 # Information for future extensions of the check:

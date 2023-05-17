@@ -228,4 +228,9 @@ check_info["security_master.temp"] = LegacyCheckDefinition(
     service_name="Sensor %s",
     check_ruleset_name="temperature",
     default_levels_variable="security_master_temp_default_levels",
+    check_default_parameters={
+        "device_levels_handling": "worst",  # this variable is required, in order to define,
+        # which status limits are used, also 'levels' are
+        # added via WATO, if needed
+    },
 )

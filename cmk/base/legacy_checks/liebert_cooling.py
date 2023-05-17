@@ -40,4 +40,5 @@ check_info["liebert_cooling"] = LegacyCheckDefinition(
     ),
     default_levels_variable="liebert_cooling_default_levels",
     check_ruleset_name="liebert_cooling",
+    check_default_parameters={"min_capacity": (90, 80)},
 )

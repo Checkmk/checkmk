@@ -55,4 +55,7 @@ check_info["mssql_connections"] = LegacyCheckDefinition(
     service_name="MSSQL Connections %s",
     check_ruleset_name="mssql_connections",
     default_levels_variable="mssql_connections_default_levels",
+    check_default_parameters={
+        "levels": (None, None),
+    },
 )

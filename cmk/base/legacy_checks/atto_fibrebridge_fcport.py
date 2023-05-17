@@ -50,4 +50,8 @@ check_info["atto_fibrebridge_fcport"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.4547.2.3.3.2.1",
         oids=[OIDEnd(), "2", "3"],
     ),
+    check_default_parameters={
+        "fc_tx_words": None,
+        "fc_rx_words": None,
+    },
 )

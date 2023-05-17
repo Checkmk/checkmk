@@ -45,4 +45,7 @@ check_info["qmail_stats"] = LegacyCheckDefinition(
     service_name="Qmail Queue %s",
     default_levels_variable="qmail_stats_default_levels",
     check_ruleset_name="mail_queue_length",
+    check_default_parameters={
+        "deferred": (10, 20),
+    },
 )

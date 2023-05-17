@@ -90,4 +90,13 @@ check_info["brocade_tm"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.1991.1.14.2.1.2.2.1",
         oids=["3", "4", "5", "6", "9", "11", "13", "15"],
     ),
+    check_default_parameters={
+        "brcdTMStatsTotalIngressPktsCnt": (1000, 10000),
+        "brcdTMStatsIngressEnqueuePkts": (1000, 10000),
+        "brcdTMStatsEgressEnqueuePkts": (1000, 10000),
+        "brcdTMStatsIngressDequeuePkts": (1000, 10000),
+        "brcdTMStatsIngressTotalQDiscardPkts": (1000, 10000),
+        "brcdTMStatsIngressOldestDiscardPkts": (1000, 10000),
+        "brcdTMStatsEgressDiscardPkts": (1000, 10000),
+    },
 )

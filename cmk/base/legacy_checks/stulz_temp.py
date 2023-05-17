@@ -91,4 +91,5 @@ check_info["stulz_temp"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "1"],
     ),
     default_levels_variable="stulz_temp_default_levels",
+    check_default_parameters={"levels": (25.0, 28.0)},
 )

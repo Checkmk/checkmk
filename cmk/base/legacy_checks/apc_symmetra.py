@@ -313,6 +313,11 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
     ],
     check_ruleset_name="apc_symentra",
     default_levels_variable="apc_default_levels",
+    check_default_parameters={
+        "capacity": (95, 80),
+        "calibration_state": 0,
+        "battery_replace_state": 1,
+    },
 )
 
 # .
@@ -357,6 +362,10 @@ check_info["apc_symmetra.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     default_levels_variable="apc_symmetra_temp_default_levels",
     check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels_battery": (50, 60),
+        "levels_sensors": (25, 30),
+    },
 )
 
 # .
@@ -387,4 +396,5 @@ check_info["apc_symmetra.elphase"] = LegacyCheckDefinition(
     service_name="Phase %s",
     default_levels_variable="apc_symmetra_elphase_default_levels",
     check_ruleset_name="ups_outphase",
+    check_default_parameters={},
 )

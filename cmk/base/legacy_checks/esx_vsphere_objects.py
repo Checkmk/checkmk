@@ -106,6 +106,14 @@ check_info["esx_vsphere_objects"] = LegacyCheckDefinition(
     service_name="%s",
     check_ruleset_name="esx_vsphere_objects",
     default_levels_variable="esx_vsphere_objects_default_levels",
+    check_default_parameters={
+        "states": {
+            "poweredOn": 0,
+            "poweredOff": 1,
+            "suspended": 1,
+            "unknown": 3,
+        }
+    },
 )
 
 

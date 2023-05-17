@@ -55,4 +55,5 @@ check_info["brocade_mlx_temp"] = LegacyCheckDefinition(
     ),
     default_levels_variable="brocade_mlx_temperature_default_levels",
     check_ruleset_name="temperature",
+    check_default_parameters={"levels": (105.0, 110.0)},
 )

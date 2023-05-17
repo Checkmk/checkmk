@@ -45,4 +45,5 @@ check_info["alcatel_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.6486.800.1.1.1.3.1.1.3.1",
         oids=["4", "5"],
     ),
+    check_default_parameters=ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS,
 )

@@ -91,4 +91,8 @@ check_info["apc_ats_output"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.318.1.1.8.5.4.3.1",
         oids=["1", "3", "4", "10", "13"],
     ),
+    check_default_parameters={
+        "output_voltage_max": (240, 250),
+        "load_perc_max": (85, 95),
+    },
 )

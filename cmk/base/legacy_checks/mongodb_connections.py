@@ -82,4 +82,7 @@ check_info["mongodb_connections"] = LegacyCheckDefinition(
     discovery_function=inventory_mongodb_connections,
     default_levels_variable="mongodb_connections_default_levels",
     check_ruleset_name="db_connections_mongodb",
+    check_default_parameters={
+        "levels_perc": (80.0, 90.0),  # Levels at 80%/90% of maximum
+    },
 )

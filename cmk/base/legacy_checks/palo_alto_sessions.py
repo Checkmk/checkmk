@@ -73,4 +73,7 @@ check_info["palo_alto_sessions"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5", "6", "7"],
     ),
     check_ruleset_name="palo_alto_sessions",
+    check_default_parameters={
+        "levels_sessions_used": (60, 70),
+    },
 )

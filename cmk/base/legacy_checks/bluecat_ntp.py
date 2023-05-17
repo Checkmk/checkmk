@@ -68,4 +68,11 @@ check_info["bluecat_ntp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.13315.3.1.4.2",
         oids=["1.1", "2.1", "2.2"],
     ),
+    check_default_parameters={
+        "oper_states": {
+            "warning": [2, 3, 4],
+            "critical": [5],
+        },
+        "stratum": (8, 10),
+    },
 )

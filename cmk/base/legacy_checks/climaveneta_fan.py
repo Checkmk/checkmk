@@ -36,4 +36,7 @@ check_info["climaveneta_fan"] = LegacyCheckDefinition(
     ),
     default_levels_variable="climaveneta_fan_default_levels",
     check_ruleset_name="hw_fans",
+    check_default_parameters={
+        "lower": (200, 100),
+    },
 )

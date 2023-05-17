@@ -29,4 +29,5 @@ check_info["hwg_humidity"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="humidity",
     default_levels_variable="hwg_humidity_defaultlevels",
+    check_default_parameters=HWG_HUMIDITY_DEFAULTLEVELS,
 )

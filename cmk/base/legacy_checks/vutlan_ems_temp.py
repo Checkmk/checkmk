@@ -61,4 +61,8 @@ check_info["vutlan_ems_temp"] = LegacyCheckDefinition(
     ],
     check_ruleset_name="temperature",
     default_levels_variable="vutlan_ems_temp_default_levels",
+    check_default_parameters={
+        "levels": (35.0, 40.0),
+        "levels_lower": (0.0, -1.0),
+    },
 )

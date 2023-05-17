@@ -65,4 +65,7 @@ check_info["db2_connections"] = LegacyCheckDefinition(
     discovery_function=inventory_db2_connections,
     check_ruleset_name="db2_connections",
     default_levels_variable="db2_connections_default_levels",
+    check_default_parameters={
+        "levels_total": (150, 200),
+    },
 )

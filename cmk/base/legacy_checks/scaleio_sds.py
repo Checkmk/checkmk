@@ -79,6 +79,7 @@ check_info["scaleio_sds"] = LegacyCheckDefinition(
     service_name="ScaleIO SDS capacity %s",
     check_ruleset_name="filesystem",
     default_levels_variable="filesystem_default_levels",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
 

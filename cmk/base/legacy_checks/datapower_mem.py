@@ -46,4 +46,5 @@ check_info["datapower_mem"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="memory_simple",
     default_levels_variable="datapower_mem_default_levels",
+    check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

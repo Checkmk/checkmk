@@ -49,4 +49,7 @@ check_info["huawei_osn_power"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     default_levels_variable="huawei_osn_power_default_levels",
+    check_default_parameters={
+        "levels": (700, 730),
+    },
 )

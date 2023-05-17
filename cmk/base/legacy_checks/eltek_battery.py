@@ -106,6 +106,9 @@ check_info["eltek_battery.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     default_levels_variable="eltek_battery_temp_default_variables",
+    check_default_parameters={
+        "levels": (27.0, 35.0),
+    },
 )
 
 # .
@@ -130,4 +133,8 @@ check_info["eltek_battery.supply"] = LegacyCheckDefinition(
     service_name="Battery %s",
     check_ruleset_name="el_inphase",
     default_levels_variable="eltek_battery_phase_default_variables",
+    check_default_parameters={
+        "voltage": (52, 48),
+        "current": (50, 76),
+    },
 )

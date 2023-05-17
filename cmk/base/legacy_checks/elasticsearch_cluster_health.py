@@ -168,6 +168,7 @@ check_info["elasticsearch_cluster_health.shards"] = LegacyCheckDefinition(
     default_levels_variable="elasticsearch_cluster_shards",
     service_name="Elasticsearch Cluster Shards",
     check_ruleset_name="elasticsearch_cluster_shards",
+    check_default_parameters={"active_shards_percent_as_number": (100.0, 50.0)},
 )
 
 

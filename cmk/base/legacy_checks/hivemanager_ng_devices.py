@@ -81,4 +81,7 @@ check_info["hivemanager_ng_devices"] = LegacyCheckDefinition(
     service_name="Client %s",
     default_levels_variable="hivemanger_ng_devices",
     check_ruleset_name="hivemanager_ng_devices",
+    check_default_parameters={
+        "max_clients": (25, 50),
+    },
 )

@@ -170,4 +170,8 @@ check_info["postfix_mailq"] = LegacyCheckDefinition(
     service_name="Postfix Queue %s",
     default_levels_variable="postfix_mailq_default_levels",
     check_ruleset_name="mail_queue_length",
+    check_default_parameters={
+        "deferred": (10, 20),
+        "active": (200, 300),  # may become large for big mailservers
+    },
 )

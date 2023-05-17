@@ -163,4 +163,7 @@ check_info["veeam_client"] = LegacyCheckDefinition(
     service_name="VEEAM Client %s",
     check_ruleset_name="veeam_backup",
     default_levels_variable="veeam_client",
+    check_default_parameters={
+        "age": (108000, 172800),  # 30h/2d
+    },
 )

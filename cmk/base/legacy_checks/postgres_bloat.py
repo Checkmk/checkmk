@@ -162,4 +162,8 @@ check_info["postgres_bloat"] = LegacyCheckDefinition(
     service_name="PostgreSQL Bloat %s",
     check_ruleset_name="db_bloat",
     default_levels_variable="postgres_bloat_default_levels",
+    check_default_parameters={
+        "table_bloat_perc": (180.0, 200.0),  # WARN at 180%, CRIT at 200%
+        "index_bloat_perc": (180.0, 200.0),
+    },
 )

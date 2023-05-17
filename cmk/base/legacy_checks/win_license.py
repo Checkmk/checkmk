@@ -93,4 +93,8 @@ check_info["win_license"] = LegacyCheckDefinition(
     check_function=check_win_license,
     check_ruleset_name="win_license",
     default_levels_variable="windows_license_default_levels",
+    check_default_parameters={
+        "status": ["Licensed", "Initial grace period"],
+        "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
+    },
 )

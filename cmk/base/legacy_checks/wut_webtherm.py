@@ -91,6 +91,9 @@ check_info["wut_webtherm"] = LegacyCheckDefinition(
         for idx in _TYPE_TABLE_IDX
     ],
     check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels": (30.0, 35.0),
+    },
 )
 
 # .

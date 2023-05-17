@@ -252,4 +252,5 @@ check_info["fireeye_mail.received"] = LegacyCheckDefinition(
     check_function=check_fireeye_mail_received,
     service_name="Mails Received",
     default_levels_variable="received_levels",
+    check_default_parameters={"rate": (6000, 7000)},
 )

@@ -197,4 +197,5 @@ check_info["ibm_mq_queues"] = LegacyCheckDefinition(
     service_name="IBM MQ Queue %s",
     default_levels_variable="ibm_mq_queues_default_levels",
     check_ruleset_name="ibm_mq_queues",
+    check_default_parameters={},
 )

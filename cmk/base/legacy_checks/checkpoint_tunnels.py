@@ -52,4 +52,12 @@ check_info["checkpoint_tunnels"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.2620.500.9002.1",
         oids=["2", "3"],
     ),
+    check_default_parameters={
+        "Active": 0,
+        "Destroy": 1,
+        "Idle": 0,
+        "Phase1": 2,
+        "Down": 2,
+        "Init": 1,
+    },
 )

@@ -38,4 +38,10 @@ check_info["ucs_c_rack_server_led"] = LegacyCheckDefinition(
     service_name="LED %s",
     check_ruleset_name="ucs_c_rack_server_led",
     default_levels_variable="ucs_c_rack_server_led_default_levels",
+    check_default_parameters={
+        "amber": 1,
+        "blue": 0,
+        "green": 0,
+        "red": 2,
+    },
 )

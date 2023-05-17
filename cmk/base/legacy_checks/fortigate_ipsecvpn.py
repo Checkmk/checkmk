@@ -83,4 +83,7 @@ check_info["fortigate_ipsecvpn"] = LegacyCheckDefinition(
     ),
     default_levels_variable="fortigate_ipsecvpn_default_levels",
     check_ruleset_name="ipsecvpn",
+    check_default_parameters={
+        "levels": (1, 2),
+    },
 )

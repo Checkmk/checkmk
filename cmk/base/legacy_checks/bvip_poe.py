@@ -43,4 +43,5 @@ check_info["bvip_poe"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="epower_single",
     default_levels_variable="bvip_poe_default_levels",
+    check_default_parameters={"levels": (50.0, 60.0)},
 )

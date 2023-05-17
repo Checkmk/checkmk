@@ -25,4 +25,7 @@ check_info["aws_cloudwatch_alarms_limits"] = LegacyCheckDefinition(
     service_name="AWS/CloudWatch Alarms Limits %s",
     check_ruleset_name="aws_cloudwatch_alarms_limits",
     default_levels_variable="aws_cloudwatch_alarms_limits_default_levels",
+    check_default_parameters={
+        "cloudwatch_alarms": (None, 80.0, 90.0),
+    },
 )

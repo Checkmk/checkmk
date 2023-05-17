@@ -60,4 +60,7 @@ check_info["huawei_switch_temp"] = LegacyCheckDefinition(
     ],
     check_ruleset_name="temperature",
     default_levels_variable="huawei_switch_temp_default_levels",
+    check_default_parameters={
+        "levels": (80.0, 90.0),
+    },
 )

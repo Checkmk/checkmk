@@ -229,6 +229,10 @@ check_info["openbsd_sensors.fan"] = LegacyCheckDefinition(
     service_name="Fan %s",
     default_levels_variable="openbsd_sensors_fan_default_levels",
     check_ruleset_name="hw_fans",
+    check_default_parameters={
+        "lower": (500, 300),
+        "upper": (8000, 8400),
+    },
 )
 
 # .

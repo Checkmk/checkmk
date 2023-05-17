@@ -43,4 +43,8 @@ check_info["qnap_fans"] = LegacyCheckDefinition(
     ),
     default_levels_variable="qnap_fan_default_levels",
     check_ruleset_name="hw_fans",
+    check_default_parameters={
+        "upper": (None, None),
+        "lower": (2000, 1000),
+    },
 )

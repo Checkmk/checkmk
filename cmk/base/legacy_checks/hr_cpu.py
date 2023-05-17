@@ -54,4 +54,7 @@ check_info["hr_cpu"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="cpu_utilization_os",
     default_levels_variable="hr_cpu_default_levels",
+    check_default_parameters={
+        "util": (80.0, 90.0),
+    },
 )

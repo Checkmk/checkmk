@@ -73,6 +73,7 @@ check_info["f5_bigip_mem"] = LegacyCheckDefinition(
     ),
     default_levels_variable="f5_bigip_mem_default_levels",
     check_ruleset_name="memory_simple",
+    check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )
 
 
@@ -101,4 +102,5 @@ check_info["f5_bigip_mem.tmm"] = LegacyCheckDefinition(
     service_name="Memory",
     default_levels_variable="f5_bigip_mem_default_levels",
     check_ruleset_name="memory_simple",
+    check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

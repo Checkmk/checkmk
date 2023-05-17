@@ -138,4 +138,8 @@ check_info["postgres_connections"] = LegacyCheckDefinition(
     service_name="PostgreSQL Connections %s",
     check_ruleset_name="db_connections",
     default_levels_variable="postgres_connections_default_levels",
+    check_default_parameters={
+        "levels_perc_active": (80.0, 90.0),  # Levels at 80%/90% of maximum
+        "levels_perc_idle": (80.0, 90.0),  # Levels at 80%/90% of maximum
+    },
 )

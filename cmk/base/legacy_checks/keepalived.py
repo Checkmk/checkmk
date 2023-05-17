@@ -74,4 +74,11 @@ check_info["keepalived"] = LegacyCheckDefinition(
         ),
     ],
     check_ruleset_name="keepalived",
+    check_default_parameters={
+        "master": "0",
+        "unknown": "3",
+        "init": "0",
+        "backup": "0",
+        "fault": "2",
+    },
 )

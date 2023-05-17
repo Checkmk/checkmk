@@ -79,4 +79,5 @@ check_info["netapp_api_snapshots"] = LegacyCheckDefinition(
     default_levels_variable="netapp_api_snapshots_default_levels",
     service_name="Snapshots Volume %s",
     check_ruleset_name="netapp_snapshots",
+    check_default_parameters={"levels": (85.0, 90.0)},
 )

@@ -61,4 +61,7 @@ check_info["arris_cmts_mem"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="memory_multiitem",
     default_levels_variable="arris_cmts_mem",
+    check_default_parameters={
+        "levels": (80.0, 90.0),
+    },
 )

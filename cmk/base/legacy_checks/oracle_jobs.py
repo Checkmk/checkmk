@@ -270,4 +270,9 @@ check_info["oracle_jobs"] = LegacyCheckDefinition(
     check_function=check_oracle_jobs,
     discovery_function=inventory_oracle_jobs,
     default_levels_variable="oracle_jobs_defaults",
+    check_default_parameters={
+        "consider_job_status": "ignore",
+        "missinglog": 1,
+        "status_missing_jobs": 2,
+    },
 )

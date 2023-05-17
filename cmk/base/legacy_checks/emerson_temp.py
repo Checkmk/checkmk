@@ -50,4 +50,5 @@ check_info["emerson_temp"] = LegacyCheckDefinition(
         oids=["7"],
     ),
     default_levels_variable="emerson_temp_default",
+    check_default_parameters={"levels": (40.0, 50.0)},
 )

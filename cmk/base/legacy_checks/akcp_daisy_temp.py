@@ -78,4 +78,5 @@ check_info["akcp_daisy_temp"] = LegacyCheckDefinition(
     ],
     check_ruleset_name="temperature",
     default_levels_variable="akcp_daisy_temp_defaultlevels",
+    check_default_parameters={"levels": (28.0, 32.0)},
 )

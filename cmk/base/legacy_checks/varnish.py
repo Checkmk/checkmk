@@ -558,6 +558,7 @@ check_info["varnish.esi"] = LegacyCheckDefinition(
     service_name="Varnish ESI",
     default_levels_variable="varnish_esi_default_levels",
     check_ruleset_name="varnish_esi",
+    check_default_parameters={"errors": (1.0, 2.0)},
 )
 # .
 #   .--objects-------------------------------------------------------------.
@@ -630,6 +631,7 @@ check_info["varnish.cache_hit_ratio"] = LegacyCheckDefinition(
     default_levels_variable="varnish_cache_hit_ratio_default_levels",
     service_name="Varnish Cache Hit Ratio",
     check_ruleset_name="varnish_cache_hit_ratio",
+    check_default_parameters={"levels_lower": (70.0, 60.0)},
 )
 # .
 #   .--backend success ratio-----------------------------------------------.
@@ -656,6 +658,7 @@ check_info["varnish.backend_success_ratio"] = LegacyCheckDefinition(
     default_levels_variable="varnish_backend_success_ratio_default_levels",
     service_name="Varnish Backend Success Ratio",
     check_ruleset_name="varnish_backend_success_ratio",
+    check_default_parameters={"levels_lower": (70.0, 60.0)},
 )
 # .
 #   .--worker thread ratio-------------------------------------------------.
@@ -695,4 +698,5 @@ check_info["varnish.worker_thread_ratio"] = LegacyCheckDefinition(
     service_name="Varnish Worker Thread Ratio",
     default_levels_variable="varnish_worker_thread_ratio_default_levels",
     check_ruleset_name="varnish_worker_thread_ratio",
+    check_default_parameters={"levels_lower": (70.0, 60.0)},
 )

@@ -44,6 +44,11 @@ check_info["azure_databases.storage"] = LegacyCheckDefinition(
     service_name="DB %s Storage",
     default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
+    check_default_parameters={
+        "storage_percent_levels": (85.0, 95.0),
+        "cpu_percent_levels": (85.0, 95.0),
+        "dtu_percent_levels": (85.0, 95.0),
+    },
 )
 
 
@@ -62,6 +67,11 @@ check_info["azure_databases.deadlock"] = LegacyCheckDefinition(
     service_name="DB %s Deadlocks",
     default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
+    check_default_parameters={
+        "storage_percent_levels": (85.0, 95.0),
+        "cpu_percent_levels": (85.0, 95.0),
+        "dtu_percent_levels": (85.0, 95.0),
+    },
 )
 
 
@@ -84,6 +94,11 @@ check_info["azure_databases.cpu"] = LegacyCheckDefinition(
     service_name="DB %s CPU",
     default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
+    check_default_parameters={
+        "storage_percent_levels": (85.0, 95.0),
+        "cpu_percent_levels": (85.0, 95.0),
+        "dtu_percent_levels": (85.0, 95.0),
+    },
 )
 
 
@@ -108,6 +123,11 @@ check_info["azure_databases.dtu"] = LegacyCheckDefinition(
     service_name="DB %s DTU",
     default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
+    check_default_parameters={
+        "storage_percent_levels": (85.0, 95.0),
+        "cpu_percent_levels": (85.0, 95.0),
+        "dtu_percent_levels": (85.0, 95.0),
+    },
 )
 
 _AZURE_CONNECTIONS_METRICS = (
@@ -134,6 +154,11 @@ check_info["azure_databases.connections"] = LegacyCheckDefinition(
     service_name="DB %s Connections",
     default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
+    check_default_parameters={
+        "storage_percent_levels": (85.0, 95.0),
+        "cpu_percent_levels": (85.0, 95.0),
+        "dtu_percent_levels": (85.0, 95.0),
+    },
 )
 
 
@@ -150,4 +175,9 @@ check_info["azure_databases"] = LegacyCheckDefinition(
     service_name="DB %s",
     default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
+    check_default_parameters={
+        "storage_percent_levels": (85.0, 95.0),
+        "cpu_percent_levels": (85.0, 95.0),
+        "dtu_percent_levels": (85.0, 95.0),
+    },
 )

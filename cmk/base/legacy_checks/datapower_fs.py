@@ -54,4 +54,5 @@ check_info["datapower_fs"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.14685.3.1.29",
         oids=["1", "2", "3", "4", "5", "6", "7", "8"],
     ),
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

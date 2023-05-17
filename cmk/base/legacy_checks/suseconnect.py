@@ -123,4 +123,9 @@ check_info["suseconnect"] = LegacyCheckDefinition(
     check_function=check_suseconnect,
     check_ruleset_name="sles_license",
     default_levels_variable="sles_license_default_levels",
+    check_default_parameters={
+        "status": "Registered",
+        "subscription_status": "ACTIVE",
+        "days_left": (14, 7),
+    },
 )

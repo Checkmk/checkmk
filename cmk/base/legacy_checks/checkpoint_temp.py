@@ -54,4 +54,5 @@ check_info["checkpoint_temp"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "6"],
     ),
     default_levels_variable="checkpoint_temp_default_levels",
+    check_default_parameters={"levels": (50.0, 60.0)},
 )

@@ -139,6 +139,9 @@ check_info["ups_test"] = LegacyCheckDefinition(
         ),
     ],
     default_levels_variable="ups_test_default_levels",
+    check_default_parameters={
+        "levels_elapsed_time": None,
+    },
 )
 
 factory_settings["ups_test_default_levels"] = {

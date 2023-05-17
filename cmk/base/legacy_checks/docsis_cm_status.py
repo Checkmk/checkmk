@@ -96,4 +96,8 @@ check_info["docsis_cm_status"] = LegacyCheckDefinition(
     ),
     default_levels_variable="docsis_cm_status_default_levels",
     check_ruleset_name="docsis_cm_status",
+    check_default_parameters={
+        "tx_power": (20.0, 10.0),
+        "error_states": [13, 2, 1],
+    },
 )

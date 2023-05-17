@@ -39,4 +39,5 @@ check_info["fireeye_active_vms"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.25597.11.5.1.9",
         oids=["0"],
     ),
+    check_default_parameters={"vms": (100, 120)},
 )

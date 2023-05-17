@@ -162,6 +162,10 @@ check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
     ],
     default_levels_variable="apc_netbotz_sensors_temp_default_levels",
     check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels": (30.0, 35.0),
+        "levels_lower": (25.0, 20.0),
+    },
 )
 
 # .
@@ -189,6 +193,10 @@ check_info["apc_netbotz_sensors.dewpoint"] = LegacyCheckDefinition(
     service_name="Dew point %s",
     default_levels_variable="apc_netbotz_sensors_dewpoint_default_levels",
     check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels": (18.0, 25.0),
+        "levels_lower": (-4.0, -6.0),
+    },
 )
 
 # .

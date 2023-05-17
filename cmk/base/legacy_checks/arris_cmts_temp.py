@@ -38,4 +38,5 @@ check_info["arris_cmts_temp"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="arris_cmts_temp_default_levels",
+    check_default_parameters={"levels": (40.0, 46.0)},
 )

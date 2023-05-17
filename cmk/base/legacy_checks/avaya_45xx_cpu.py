@@ -39,4 +39,5 @@ check_info["avaya_45xx_cpu"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.45.1.6.3.8.1.1.5",
         oids=["3"],
     ),
+    check_default_parameters={"levels": (90.0, 95.0)},
 )

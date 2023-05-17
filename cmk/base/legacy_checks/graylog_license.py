@@ -126,4 +126,14 @@ check_info["graylog_license"] = LegacyCheckDefinition(
     default_levels_variable="graylog_license_default_levels",
     service_name="Graylog License",
     check_ruleset_name="graylog_license",
+    check_default_parameters={
+        "no_enterprise": 0,
+        "valid": 2,
+        "cluster_not_covered": 1,
+        "traffic_exceeded": 1,
+        "violated": 2,
+        "nodes_exceeded": 1,
+        "expired": 2,
+        "remote_checks_failed": 1,
+    },
 )

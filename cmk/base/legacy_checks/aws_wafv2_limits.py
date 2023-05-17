@@ -29,4 +29,11 @@ check_info["aws_wafv2_limits"] = LegacyCheckDefinition(
     service_name="AWS/WAFV2 Limits %s",
     check_ruleset_name="aws_wafv2_limits",
     default_levels_variable="aws_wafv2_limits_default_levels",
+    check_default_parameters={
+        "web_acls": (None, 80.0, 90.0),
+        "rule_groups": (None, 80.0, 90.0),
+        "ip_sets": (None, 80.0, 90.0),
+        "regex_pattern_sets": (None, 80.0, 90.0),
+        "web_acl_capacity_units": (None, 80.0, 90.0),
+    },
 )

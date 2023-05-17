@@ -47,4 +47,8 @@ check_info["ups_socomec_outphase"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.4555.1.1.1.1.4.4.1",
         oids=["1", "2", "3", "4"],
     ),
+    check_default_parameters={
+        "voltage": (210, 200),
+        "output_load": (80, 90),
+    },
 )

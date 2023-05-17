@@ -72,4 +72,7 @@ check_info["acme_certificates"] = LegacyCheckDefinition(
     ),
     default_levels_variable="acme_certificates_default_levels",
     check_ruleset_name="acme_certificates",
+    check_default_parameters={
+        "expire_lower": (604800, 2592000),  # 1 week, 30 days, suggested by customer
+    },
 )

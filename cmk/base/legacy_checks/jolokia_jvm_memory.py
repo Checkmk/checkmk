@@ -111,6 +111,11 @@ check_info["jolokia_jvm_memory"] = LegacyCheckDefinition(
     service_name="JVM %s Memory",
     default_levels_variable="jolokia_jvm_memory",
     check_ruleset_name="jvm_memory",
+    check_default_parameters={
+        "perc_heap": (80.0, 90.0),
+        "perc_nonheap": (80.0, 90.0),
+        "perc_total": (80.0, 90.0),
+    },
 )
 
 # .
@@ -168,4 +173,7 @@ check_info["jolokia_jvm_memory.pools"] = LegacyCheckDefinition(
     service_name="JVM %s",
     default_levels_variable="jolokia_jvm_memory_pools",
     check_ruleset_name="jvm_memory_pools",
+    check_default_parameters={
+        "perc_used": (80.0, 90.0),
+    },
 )

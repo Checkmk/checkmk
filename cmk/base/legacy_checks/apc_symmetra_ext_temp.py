@@ -41,4 +41,5 @@ check_info["apc_symmetra_ext_temp"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="apc_symmetra_ext_temp_default_levels",
+    check_default_parameters={"levels": (30.0, 35.0)},
 )

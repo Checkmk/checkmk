@@ -57,4 +57,5 @@ check_info["netapp_fcpio"] = LegacyCheckDefinition(
     service_name="FCP I/O",
     check_ruleset_name="netapp_fcportio",
     default_levels_variable="netapp_fcpio_default_levels",
+    check_default_parameters={},
 )

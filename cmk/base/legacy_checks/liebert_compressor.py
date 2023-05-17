@@ -45,4 +45,7 @@ check_info["liebert_compressor"] = LegacyCheckDefinition(
         oids=["10.1.2.1.5266", "20.1.2.1.5266", "30.1.2.1.5266"],
     ),
     default_levels_variable="liebert_compressor_default_levels",
+    check_default_parameters={
+        "levels": (8, 12),
+    },
 )

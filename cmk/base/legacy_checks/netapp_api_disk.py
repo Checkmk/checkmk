@@ -38,4 +38,5 @@ check_info["netapp_api_disk.summary"] = LegacyCheckDefinition(
     service_name="NetApp Disks Summary",
     check_ruleset_name="netapp_disks",
     default_levels_variable="filer_disks_default_levels",
+    check_default_parameters=FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
 )

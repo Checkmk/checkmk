@@ -52,4 +52,7 @@ check_info["ups_bat_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.2.1.33.1",
         oids=["1.5", "2.7"],
     ),
+    check_default_parameters={
+        "levels": (40.0, 50.0),
+    },
 )

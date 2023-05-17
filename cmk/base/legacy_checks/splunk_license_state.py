@@ -114,4 +114,8 @@ check_info["splunk_license_state"] = LegacyCheckDefinition(
     service_name="Splunk License %s",
     check_ruleset_name="splunk_license_state",
     default_levels_variable="splunk_license_state_default_levels",
+    check_default_parameters={
+        "state": 2,
+        "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
+    },
 )

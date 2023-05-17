@@ -47,4 +47,5 @@ check_info["dell_chassis_temp"] = LegacyCheckDefinition(
         oids=["10", "11", "12"],
     ),
     default_levels_variable="dell_chassis_temp_default_levels",
+    check_default_parameters={"levels": (60.0, 80.0)},
 )

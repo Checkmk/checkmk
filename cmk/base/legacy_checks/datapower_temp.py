@@ -56,4 +56,7 @@ check_info["datapower_temp"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "5", "6"],
     ),
     default_levels_variable="datapower_temp_default_levels",
+    check_default_parameters={
+        "levels": (65.0, 70.0),  # 70C recommended alarm level by IBM
+    },
 )

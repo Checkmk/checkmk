@@ -68,4 +68,5 @@ check_info["apc_sts_inputs"] = LegacyCheckDefinition(
             oids=["2", "3", "4"],
         ),
     ],
+    check_default_parameters={},
 )

@@ -110,4 +110,7 @@ check_info["msoffice_licenses"] = LegacyCheckDefinition(
     service_name="MS Office Licenses %s",
     check_ruleset_name="msoffice_licenses",
     default_levels_variable="msoffice_licenses_levels",
+    check_default_parameters={
+        "usage": (80.0, 90.0),
+    },
 )

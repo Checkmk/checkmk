@@ -60,6 +60,10 @@ check_info["bluenet_sensor"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.21695.1.10.7.3.1",
         oids=["1", "2", "4", "5"],
     ),
+    check_default_parameters={
+        "levels": (28.0, 35.0),
+        "levels_lower": (13.0, 17.0),
+    },
 )
 
 # .

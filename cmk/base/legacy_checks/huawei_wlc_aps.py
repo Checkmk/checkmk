@@ -164,6 +164,7 @@ check_info["huawei_wlc_aps.status"] = LegacyCheckDefinition(
     check_function=check_huawei_wlc_aps_status,
     service_name="AP %s Status",
     default_levels_variable="huawei_channel_default",
+    check_default_parameters={"levels": (80.0, 90.0)},
 )
 
 
@@ -188,6 +189,7 @@ check_info["huawei_wlc_aps.cpu"] = LegacyCheckDefinition(
     discovery_function=discovery_huawei_wlc_aps_cpu,
     service_name="AP %s CPU",
     default_levels_variable="huawei_cpu_default",
+    check_default_parameters={"levels": (80.0, 90.0)},
 )
 
 
@@ -216,6 +218,7 @@ check_info["huawei_wlc_aps.mem"] = LegacyCheckDefinition(
     discovery_function=discovery_huawei_wlc_aps_mem,
     service_name="AP %s Memory",
     default_levels_variable="huawei_mem_default",
+    check_default_parameters={"levels": (80.0, 90.0)},
 )
 
 

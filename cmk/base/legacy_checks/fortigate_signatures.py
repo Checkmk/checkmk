@@ -87,4 +87,8 @@ check_info["fortigate_signatures"] = LegacyCheckDefinition(
     ),
     default_levels_variable="fortigate_signature_default_levels",
     check_ruleset_name="fortinet_signatures",
+    check_default_parameters={
+        "av_age": (86400, 172800),
+        "ips_age": (86400, 172800),
+    },
 )

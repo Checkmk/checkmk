@@ -97,6 +97,9 @@ check_info["safenet_hsm.events"] = LegacyCheckDefinition(
     check_function=check_safenet_hsm_events,
     service_name="HSM Safenet Event Stats",
     check_ruleset_name="safenet_hsm_eventstats",
+    check_default_parameters={
+        "critical_event_rate": (0.0001, 0.0005),
+    },
 )
 
 # .
@@ -193,4 +196,5 @@ check_info["safenet_hsm"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4"],
     ),
     check_ruleset_name="safenet_hsm_operstats",
+    check_default_parameters={"error_rate": (0.01, 0.05), "request_rate": None},
 )

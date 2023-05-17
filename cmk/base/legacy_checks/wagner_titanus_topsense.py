@@ -355,6 +355,9 @@ check_info["wagner_titanus_topsense.temp"] = LegacyCheckDefinition(
     discovery_function=inventory_wagner_titanus_topsense_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels": (30.0, 35.0),
+    },
 )
 
 # .

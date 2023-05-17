@@ -72,6 +72,7 @@ check_info["huawei_wlc_devs.mem"] = LegacyCheckDefinition(
     check_function=check_huawei_wlc_devs_mem,
     service_name="Device %s Memory",
     default_levels_variable="huawei_mem_default",
+    check_default_parameters={"levels": (80.0, 90.0)},
 )
 
 
@@ -97,4 +98,5 @@ check_info["huawei_wlc_devs.cpu"] = LegacyCheckDefinition(
     check_function=check_huawei_wlc_devs_cpu,
     service_name="Device %s CPU",
     default_levels_variable="huawei_cpu_default",
+    check_default_parameters={"levels": (80.0, 90.0)},
 )

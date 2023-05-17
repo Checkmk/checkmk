@@ -81,4 +81,7 @@ check_info["etherbox2_temp"] = LegacyCheckDefinition(
     ],
     default_levels_variable="etherbox2_temp_default_levels",
     check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels": (30.0, 35.0),
+    },
 )

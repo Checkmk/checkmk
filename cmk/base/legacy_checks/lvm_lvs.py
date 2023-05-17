@@ -68,4 +68,8 @@ check_info["lvm_lvs"] = LegacyCheckDefinition(
     service_name="LVM LV Pool %s",
     default_levels_variable="lvm_lvs_default_levels",
     check_ruleset_name="lvm_lvs_pools",
+    check_default_parameters={
+        "levels_data": (80.0, 90.0),
+        "levels_meta": (80.0, 90.0),
+    },
 )

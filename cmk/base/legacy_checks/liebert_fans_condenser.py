@@ -33,4 +33,7 @@ check_info["liebert_fans_condenser"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="hw_fans_perc",
     default_levels_variable="liebert_fans_condenser_default_levels",
+    check_default_parameters={
+        "levels": (80, 90),
+    },
 )

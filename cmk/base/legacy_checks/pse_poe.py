@@ -61,4 +61,5 @@ check_info["pse_poe"] = LegacyCheckDefinition(
         base=".1.3.6.1.2.1.105.1.3.1.1",
         oids=[OIDEnd(), "2", "3", "4"],
     ),
+    check_default_parameters={"levels": (90.0, 95.0)},
 )

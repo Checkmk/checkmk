@@ -60,4 +60,5 @@ check_info["sensatronics_temp"] = LegacyCheckDefinition(
         for table in _TABLES
     ],
     default_levels_variable="sensatronics_temp_default_levels",
+    check_default_parameters={"levels": (23.0, 25.0)},
 )

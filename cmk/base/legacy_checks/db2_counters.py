@@ -125,4 +125,5 @@ check_info["db2_counters"] = LegacyCheckDefinition(
     discovery_function=inventory_db2_counters,
     check_ruleset_name="db2_counters",
     default_levels_variable="db2_counters_default_levels",
+    check_default_parameters={},
 )

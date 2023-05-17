@@ -236,6 +236,7 @@ check_info["emcvnx_raidgroups.capacity"] = LegacyCheckDefinition(
     service_name="RAID Group %s Capacity",
     check_ruleset_name="filesystem",
     default_levels_variable="filesystem_default_levels",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
 # .
@@ -290,6 +291,7 @@ check_info["emcvnx_raidgroups.capacity_contiguous"] = LegacyCheckDefinition(
     service_name="RAID Group %s Capacity Contiguous",
     check_ruleset_name="filesystem",
     default_levels_variable="filesystem_default_levels",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
 # .

@@ -27,4 +27,9 @@ check_info["aws_dynamodb_limits"] = LegacyCheckDefinition(
     service_name="AWS/DynamoDB Limits %s",
     check_ruleset_name="aws_dynamodb_limits",
     default_levels_variable="aws_dynamodb_limits_default_levels",
+    check_default_parameters={
+        "number_of_tables": (None, 80.0, 90.0),
+        "read_capacity": (None, 80.0, 90.0),
+        "write_capacity": (None, 80.0, 90.0),
+    },
 )

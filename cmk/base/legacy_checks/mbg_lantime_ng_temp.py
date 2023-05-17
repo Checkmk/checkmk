@@ -36,4 +36,7 @@ check_info["mbg_lantime_ng_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.5597.30.0.5.2",
         oids=["1"],
     ),
+    check_default_parameters={
+        "levels": (80.0, 90.0),  # levels for system temperature
+    },
 )

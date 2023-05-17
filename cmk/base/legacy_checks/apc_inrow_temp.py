@@ -56,4 +56,5 @@ check_info["apc_inrow_temp"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="apc_inrow_temp_default_levels",
+    check_default_parameters={"levels": (30.0, 35.0)},
 )

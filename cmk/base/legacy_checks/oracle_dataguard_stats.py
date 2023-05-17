@@ -171,4 +171,10 @@ check_info["oracle_dataguard_stats"] = LegacyCheckDefinition(
     service_name="ORA %s Dataguard-Stats",
     default_levels_variable="oracle_dataguard_stats",
     check_ruleset_name="oracle_dataguard_stats",
+    check_default_parameters={
+        "apply_lag": (3600, 14400),
+        "missing_apply_lag_state": 1,
+        "active_dataguard_option": 1,
+        "primary_broker_state": False,
+    },
 )

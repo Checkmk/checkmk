@@ -100,4 +100,7 @@ check_info["stormshield_cluster_node"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
     check_ruleset_name="stormshield_quality",
+    check_default_parameters={
+        "quality": (80, 50),
+    },
 )

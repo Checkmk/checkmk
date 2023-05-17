@@ -198,4 +198,12 @@ check_info["cisco_ip_sla"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "1", "2"],
         ),
     ],
+    check_default_parameters={
+        "state": "active",
+        "connection_lost_occured": "no",
+        "timeout_occured": "no",
+        "completion_time_over_treshold_occured": "no",
+        "latest_rtt_completion_time": (250, 500),
+        "latest_rtt_state": "ok",
+    },
 )

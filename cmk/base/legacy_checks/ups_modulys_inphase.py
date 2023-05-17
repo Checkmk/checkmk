@@ -49,4 +49,5 @@ check_info["ups_modulys_inphase"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.2254.2.4.4",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
     ),
+    check_default_parameters={},
 )

@@ -62,6 +62,7 @@ check_info["arbor_peakflow_tms"] = LegacyCheckDefinition(
             oids=["1.2.0", "2.1.0"],
         ),
     ],
+    check_default_parameters=ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
 )
 
 check_info["arbor_peakflow_tms.disk_usage"] = LegacyCheckDefinition(
@@ -70,6 +71,7 @@ check_info["arbor_peakflow_tms.disk_usage"] = LegacyCheckDefinition(
     service_name="Disk Usage %s",
     check_ruleset_name="filesystem",
     default_levels_variable="filesystem_default_levels",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
 check_info["arbor_peakflow_tms.host_fault"] = LegacyCheckDefinition(

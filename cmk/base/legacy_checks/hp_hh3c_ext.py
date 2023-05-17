@@ -221,4 +221,7 @@ check_info["hp_hh3c_ext.mem"] = LegacyCheckDefinition(
     service_name="Memory %s",
     check_ruleset_name="memory_multiitem",
     default_levels_variable="hp_hh3c_ext_mem_default_levels",
+    check_default_parameters={
+        "levels": (80.0, 90.0),
+    },
 )

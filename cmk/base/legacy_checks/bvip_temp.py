@@ -38,4 +38,5 @@ check_info["bvip_temp"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "1"],
     ),
     check_ruleset_name="temperature",
+    check_default_parameters={"levels": (50.0, 60.0)},
 )

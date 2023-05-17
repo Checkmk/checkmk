@@ -350,6 +350,12 @@ check_info["fc_port"] = LegacyCheckDefinition(
     service_name="FC Interface %s",
     check_ruleset_name="fc_port",
     default_levels_variable="fc_port_default_levels",
+    check_default_parameters={
+        "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors
+        "rxencoutframes": (3.0, 20.0),  # allowed percentage of Enc-OUT Frames
+        "notxcredits": (3.0, 20.0),  # allowed percentage of No Tx Credits
+        "c3discards": (3.0, 20.0),  # allowed percentage of C3 discards
+    },
 )
 
 factory_settings["fc_port_default_levels"] = {

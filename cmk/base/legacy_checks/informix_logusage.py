@@ -100,4 +100,5 @@ check_info["informix_logusage"] = LegacyCheckDefinition(
     service_name="Informix Log Usage %s",
     check_ruleset_name="informix_logusage",
     default_levels_variable="informix_logusage_default_levels",
+    check_default_parameters={"levels_perc": (80.0, 85.0)},
 )

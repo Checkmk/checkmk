@@ -38,4 +38,5 @@ check_info["cisco_oldcpu"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="cpu_utilization",
     default_levels_variable="cisco_oldcpu_default_levels",
+    check_default_parameters={"util": (80.0, 90.0)},
 )

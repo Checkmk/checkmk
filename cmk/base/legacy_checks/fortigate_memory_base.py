@@ -61,4 +61,5 @@ check_info["fortigate_memory_base"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.12356.101.4.1",
         oids=["4", "5"],
     ),
+    check_default_parameters=fortigate_memory_base_default_levels,
 )

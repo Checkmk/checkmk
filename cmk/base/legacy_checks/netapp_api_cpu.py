@@ -89,6 +89,7 @@ check_info["netapp_api_cpu.utilization"] = LegacyCheckDefinition(
     service_name="CPU utilization",
     default_levels_variable="netapp_api_cpu_cm_default_levels",
     check_ruleset_name="cpu_utilization",
+    check_default_parameters={"util": (90.0, 95.0)},
 )
 
 

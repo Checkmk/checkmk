@@ -49,4 +49,13 @@ check_info["stormshield_updates"] = LegacyCheckDefinition(
         oids=["2", "3", "4"],
     ),
     check_ruleset_name="stormshield_updates",
+    check_default_parameters={
+        "Not Available": 1,
+        "Broken": 2,
+        "Uptodate": 0,
+        "Disabled": 1,
+        "Never started": 0,
+        "Running": 0,
+        "Failed": 2,
+    },
 )

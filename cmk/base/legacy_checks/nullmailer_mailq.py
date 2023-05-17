@@ -38,4 +38,5 @@ check_info["nullmailer_mailq"] = LegacyCheckDefinition(
     service_name="Nullmailer Queue %s",
     default_levels_variable="nullmailer_mailq_default_levels",
     check_ruleset_name="mail_queue_length",
+    check_default_parameters=NULLMAILER_MAILQ_DEFAULT_LEVELS,
 )

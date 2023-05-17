@@ -172,6 +172,15 @@ check_info["nimble_latency"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="nimble_latency",
     default_levels_variable="nimble_latency_default_levels",
+    check_default_parameters={
+        # The latency range that is used to start measuring against levels.
+        # The numbers of operations of and above this range are added and then
+        # taken as a percentage of the total number of operations.
+        "range_reference": "20",
+        # These are percentage values!
+        "read": (10.0, 20.0),
+        "write": (10.0, 20.0),
+    },
 )
 
 
@@ -186,4 +195,13 @@ check_info["nimble_latency.write"] = LegacyCheckDefinition(
     service_name="Volume %s Write IO",
     check_ruleset_name="nimble_latency",
     default_levels_variable="nimble_latency_default_levels",
+    check_default_parameters={
+        # The latency range that is used to start measuring against levels.
+        # The numbers of operations of and above this range are added and then
+        # taken as a percentage of the total number of operations.
+        "range_reference": "20",
+        # These are percentage values!
+        "read": (10.0, 20.0),
+        "write": (10.0, 20.0),
+    },
 )

@@ -99,6 +99,12 @@ check_info["ucs_bladecenter_psu"] = LegacyCheckDefinition(
     service_name="Voltage %s",
     check_ruleset_name="ucs_bladecenter_chassis_voltage",
     default_levels_variable="ucs_bladecenter_psu_default_levels",
+    check_default_parameters={
+        "levels_3v_lower": (3.25, 3.20),
+        "levels_3v_upper": (3.4, 3.45),
+        "levels_12v_lower": (11.9, 11.8),
+        "levels_12v_upper": (12.1, 12.2),
+    },
 )
 
 # .
@@ -181,4 +187,7 @@ check_info["ucs_bladecenter_psu.chassis_temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     default_levels_variable="ucs_bladecenter_psu_chassis_temp_default_levels",
+    check_default_parameters={
+        "levels": (35.0, 40.0),
+    },
 )

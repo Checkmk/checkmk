@@ -46,4 +46,7 @@ check_info["cisco_ucs_temp_mem"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="cisco_ucs_temp_mem_default_levels",
+    check_default_parameters={
+        "levels": (75.0, 85.0),
+    },
 )

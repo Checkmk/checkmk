@@ -136,4 +136,5 @@ check_info["brocade.temp"] = LegacyCheckDefinition(
         oids=["3", "4", "5"],
     ),
     default_levels_variable="brocade_temp_default_levels",
+    check_default_parameters={"levels": (55.0, 60.0)},
 )

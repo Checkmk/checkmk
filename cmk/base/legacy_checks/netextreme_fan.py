@@ -45,4 +45,8 @@ check_info["netextreme_fan"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="hw_fans",
     default_levels_variable="netextreme_fan_default_levels",
+    check_default_parameters={
+        "lower": (2000, 1000),
+        "upper": (8000, 8400),
+    },
 )

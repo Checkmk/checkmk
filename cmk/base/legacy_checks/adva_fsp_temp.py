@@ -63,4 +63,5 @@ check_info["adva_fsp_temp"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="adva_fsp_temp_default_levels",
+    check_default_parameters={},
 )

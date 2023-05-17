@@ -40,4 +40,5 @@ check_info["juniper_screenos_temp"] = LegacyCheckDefinition(
         oids=["4", "3"],
     ),
     default_levels_variable="juniper_screenos_temp_default_levels",
+    check_default_parameters={"levels": (70.0, 80.0)},
 )

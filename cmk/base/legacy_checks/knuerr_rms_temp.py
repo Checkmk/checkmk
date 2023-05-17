@@ -34,4 +34,7 @@ check_info["knuerr_rms_temp"] = LegacyCheckDefinition(
         oids=["4"],
     ),
     check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels": (30.0, 35.0),
+    },
 )

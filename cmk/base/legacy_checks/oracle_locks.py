@@ -137,4 +137,7 @@ check_info["oracle_locks"] = LegacyCheckDefinition(
     service_name="ORA %s Locks",
     default_levels_variable="oracle_locks_defaults",
     check_ruleset_name="oracle_locks",
+    check_default_parameters={
+        "levels": (1800, 3600),
+    },
 )

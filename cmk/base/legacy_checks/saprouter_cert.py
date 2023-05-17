@@ -113,4 +113,7 @@ check_info["saprouter_cert"] = LegacyCheckDefinition(
     service_name="SAP router certificate",
     default_levels_variable="saprouter_cert_default_levels",
     check_ruleset_name="saprouter_cert_age",
+    check_default_parameters={
+        "validity_age": (86400 * 30, 86400 * 7),
+    },
 )

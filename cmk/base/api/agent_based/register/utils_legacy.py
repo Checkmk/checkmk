@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable, Mapping
-from typing import NotRequired, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 from cmk.base.api.agent_based.checking_classes import Service
 from cmk.base.api.agent_based.section_classes import SNMPTree
@@ -24,4 +24,5 @@ class LegacyCheckDefinition(TypedDict):
     parse_function: NotRequired[Callable[[list], object]]
     check_ruleset_name: NotRequired[str]
     default_levels_variable: NotRequired[str]
+    check_default_parameters: NotRequired[Mapping[str, Any]]
     service_name: NotRequired[str]

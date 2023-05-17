@@ -67,4 +67,8 @@ check_info["netextreme_psu_out"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="el_inphase",
     default_levels_variable="netextreme_psu_out_default_levels",
+    check_default_parameters={
+        "voltage": (11, 10),
+        "current": (4, 5),
+    },
 )

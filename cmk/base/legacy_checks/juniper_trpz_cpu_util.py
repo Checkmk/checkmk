@@ -60,4 +60,5 @@ check_info["juniper_trpz_cpu_util"] = LegacyCheckDefinition(
         oids=["1", "2", "3"],
     ),
     default_levels_variable="juniper_trpz_cpu_util_default_levels",
+    check_default_parameters={"util": (80.0, 90.0)},
 )

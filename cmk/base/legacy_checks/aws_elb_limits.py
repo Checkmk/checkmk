@@ -27,4 +27,9 @@ check_info["aws_elb_limits"] = LegacyCheckDefinition(
     service_name="AWS/ELB Limits %s",
     check_ruleset_name="aws_elb_limits",
     default_levels_variable="aws_elb_limits_default_levels",
+    check_default_parameters={
+        "load_balancers": (None, 80.0, 90.0),
+        "load_balancer_listeners": (None, 80.0, 90.0),
+        "load_balancer_registered_instances": (None, 80.0, 90.0),
+    },
 )

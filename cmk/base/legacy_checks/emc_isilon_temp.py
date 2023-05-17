@@ -69,6 +69,9 @@ check_info["emc_isilon_temp"] = LegacyCheckDefinition(
         oids=["3", "4"],
     ),
     default_levels_variable="emc_isilon_temp_default_levels",
+    check_default_parameters={
+        "levels": (28.0, 33.0),  # assumed useful levels for ambient / air temperature
+    },
 )
 
 # .
@@ -97,4 +100,7 @@ check_info["emc_isilon_temp.cpu"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     default_levels_variable="emc_isilon_temp_cpu_default_levels",
+    check_default_parameters={
+        "levels": (75.0, 85.0),  # assumed useful levels for ambient / air temperature
+    },
 )

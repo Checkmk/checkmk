@@ -52,6 +52,9 @@ check_info["bintec_sensors.fan"] = LegacyCheckDefinition(
     ),
     default_levels_variable="bintec_sensors_fan_default_levels",
     check_ruleset_name="hw_fans",
+    check_default_parameters={
+        "lower": (2000, 1000),
+    },
 )
 
 # .
@@ -92,6 +95,7 @@ check_info["bintec_sensors.temp"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5", "7"],
     ),
     default_levels_variable="bintec_sensors_temp_default_levels",
+    check_default_parameters={"levels": (35.0, 40.0)},
 )
 
 # .

@@ -172,4 +172,9 @@ check_info["graylog_sidecars"] = LegacyCheckDefinition(
     default_levels_variable="graylog_sidecars_default_levels",
     service_name="Graylog Sidecar %s",
     check_ruleset_name="graylog_sidecars",
+    check_default_parameters={
+        "running_lower": (1, 0),
+        "stopped_upper": (1, 1),
+        "failing_upper": (1, 1),
+    },
 )

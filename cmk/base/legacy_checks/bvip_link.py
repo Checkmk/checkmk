@@ -61,4 +61,9 @@ check_info["bvip_link"] = LegacyCheckDefinition(
     ),
     default_levels_variable="bvip_link_default_levels",
     check_ruleset_name="bvip_link",
+    check_default_parameters={
+        "ok_states": [0, 4, 5],
+        "warn_states": [7],
+        "crit_states": [1, 2, 3],
+    },
 )

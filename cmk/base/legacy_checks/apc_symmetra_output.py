@@ -49,4 +49,7 @@ check_info["apc_symmetra_output"] = LegacyCheckDefinition(
     ),
     default_levels_variable="apc_symmetra_output_default_levels",
     check_ruleset_name="ups_outphase",
+    check_default_parameters={
+        "voltage": (220, 220),
+    },
 )

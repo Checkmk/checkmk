@@ -29,4 +29,5 @@ check_info["hwg_temp"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="hwg_temp_defaultlevels",
+    check_default_parameters=HWG_TEMP_DEFAULTLEVELS,
 )

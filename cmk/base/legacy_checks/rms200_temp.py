@@ -41,4 +41,5 @@ check_info["rms200_temp"] = LegacyCheckDefinition(
         oids=["1", "2", "5"],
     ),
     default_levels_variable="rms200_temp_default_levels",
+    check_default_parameters={"levels": (25.0, 28.0)},
 )

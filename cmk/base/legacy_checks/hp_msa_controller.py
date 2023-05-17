@@ -72,4 +72,7 @@ check_info["hp_msa_controller"] = LegacyCheckDefinition(
     service_name="CPU Utilization %s",
     check_ruleset_name="cpu_utilization_multiitem",
     default_levels_variable="hp_msa_controller",
+    check_default_parameters={
+        "levels": (80.0, 90.0),
+    },
 )

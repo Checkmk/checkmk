@@ -63,4 +63,8 @@ check_info["barracuda_mailqueues"] = LegacyCheckDefinition(
     ),
     default_levels_variable="barracuda_mailq_default_levels",
     check_ruleset_name="mail_queue_length",
+    check_default_parameters={
+        "deferred": (80, 100),
+        "active": (80, 100),
+    },
 )

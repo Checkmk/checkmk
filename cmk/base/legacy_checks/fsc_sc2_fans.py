@@ -27,4 +27,5 @@ check_info["fsc_sc2_fans"] = LegacyCheckDefinition(
     ),
     default_levels_variable="fan_fsc_sc2_levels",
     check_ruleset_name="hw_fans",
+    check_default_parameters=FAN_FSC_SC2_CHECK_DEFAULT_PARAMETERS,
 )

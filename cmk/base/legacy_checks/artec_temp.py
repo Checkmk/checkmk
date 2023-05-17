@@ -40,4 +40,7 @@ check_info["artec_temp"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="temperature",
     default_levels_variable="artec_temp_default_levels",
+    check_default_parameters={
+        "levels": (36.0, 40.0),
+    },
 )

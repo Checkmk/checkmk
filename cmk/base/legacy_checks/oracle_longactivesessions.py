@@ -87,4 +87,7 @@ check_info["oracle_longactivesessions"] = LegacyCheckDefinition(
     service_name="ORA %s Long Active Sessions",
     default_levels_variable="oracle_longactivesessions_defaults",
     check_ruleset_name="oracle_longactivesessions",
+    check_default_parameters={
+        "levels": (500, 1000),
+    },
 )

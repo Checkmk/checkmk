@@ -66,4 +66,13 @@ check_info["emc_datadomain_mtree"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="emc_datadomain_mtree",
     default_levels_variable="emc_datadomain_mtree_default_levels",
+    check_default_parameters={
+        "deleted": 2,
+        "read-only": 1,
+        "read-write": 0,
+        "replication destination": 0,
+        "retention lock disabled": 0,
+        "retention lock enabled": 0,
+        "unknown": 3,
+    },
 )

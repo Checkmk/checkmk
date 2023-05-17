@@ -46,4 +46,5 @@ check_info["emc_isilon_fans"] = LegacyCheckDefinition(
     ),
     check_ruleset_name="hw_fans",
     default_levels_variable="emc_isilon_fan_default_levels",
+    check_default_parameters={"lower": (3000, 2500)},
 )

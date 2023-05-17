@@ -219,4 +219,17 @@ check_info["windows_tasks"] = LegacyCheckDefinition(
     service_name="Task %s",
     check_ruleset_name="windows_tasks",
     default_levels_variable="windows_tasks",
+    check_default_parameters={
+        # This list is overruled by a ruleset, if configured.
+        # The defaults are brought back individually below.
+        # Put them here anyway to make them available in the checks man page.
+        "exit_code_to_state": [
+            {
+                "exit_code": key,
+                "monitoring_state": state,
+                "info_text": text,
+            }
+            for key, (state, text) in _MAP_EXIT_CODES.items()
+        ],
+    },
 )

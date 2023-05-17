@@ -54,4 +54,5 @@ check_info["informix_sessions"] = LegacyCheckDefinition(
     service_name="Informix Sessions %s",
     check_ruleset_name="informix_sessions",
     default_levels_variable="informix_sessions_default_levels",
+    check_default_parameters={"levels": (50, 60)},
 )

@@ -117,4 +117,8 @@ check_info["websphere_mq_channels"] = LegacyCheckDefinition(
     service_name="MQ Channel %s",
     default_levels_variable="websphere_mq_channels_default_levels",
     check_ruleset_name="websphere_mq_channels",
+    check_default_parameters={
+        "message_count": (900, 1000),
+        "status": {"RUNNING": 0, "STOPPED": 1},
+    },
 )

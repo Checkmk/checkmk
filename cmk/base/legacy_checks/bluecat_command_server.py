@@ -49,4 +49,10 @@ check_info["bluecat_command_server"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.13315.3.1.7.2.1",
         oids=["1"],
     ),
+    check_default_parameters={
+        "oper_states": {
+            "warning": [2, 3, 4],
+            "critical": [5],
+        },
+    },
 )

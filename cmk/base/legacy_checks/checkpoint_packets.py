@@ -90,4 +90,12 @@ check_info["checkpoint_packets"] = LegacyCheckDefinition(
             oids=["5", "6"],
         ),
     ],
+    check_default_parameters={
+        "accepted": (100000, 200000),
+        "rejected": (100000, 200000),
+        "dropped": (100000, 200000),
+        "logged": (100000, 200000),
+        "espencrypted": (100000, 200000),
+        "espdecrypted": (100000, 200000),
+    },
 )

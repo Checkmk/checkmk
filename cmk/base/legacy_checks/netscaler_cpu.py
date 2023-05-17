@@ -56,4 +56,5 @@ check_info["netscaler_cpu"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.5951.4.1.1.41.6.1",
         oids=["1", "2"],
     ),
+    check_default_parameters={"levels": (90.0, 95.0)},
 )

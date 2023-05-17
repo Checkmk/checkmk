@@ -234,6 +234,10 @@ check_info["icom_repeater.temp"] = LegacyCheckDefinition(
     check_function=check_icom_repeater_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels": (50.0, 55.0),
+        "levels_lower": (-20.0, -25.0),
+    },
 )
 
 # .

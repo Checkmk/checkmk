@@ -190,4 +190,9 @@ check_info["emcvnx_disks"] = LegacyCheckDefinition(
     service_name="Enclosure %s",
     check_ruleset_name="emcvnx_disks",
     default_levels_variable="emcvnx_disks_default_levels",
+    check_default_parameters={
+        "state_read_error": (2, 2),  # (state, count of errors)
+        "state_write_error": (2, 2),  # (state, count of errors)
+        "state_rebuilding": 1,
+    },
 )

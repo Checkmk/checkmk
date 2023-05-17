@@ -43,4 +43,7 @@ check_info["qnap_hdd_temp"] = LegacyCheckDefinition(
     ),
     default_levels_variable="qnap_hdd_temp_default_levels",
     check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels": (40.0, 45.0),
+    },
 )

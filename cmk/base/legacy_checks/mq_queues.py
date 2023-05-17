@@ -80,4 +80,8 @@ check_info["mq_queues"] = LegacyCheckDefinition(
     service_name="Queue %s",
     check_ruleset_name="mq_queues",
     default_levels_variable="mq_queues_default_levels",
+    check_default_parameters={
+        "size": (None, None),
+        "consumerCount": (None, None),
+    },
 )

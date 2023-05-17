@@ -69,4 +69,8 @@ check_info["oracle_logswitches"] = LegacyCheckDefinition(
     service_name="ORA %s Logswitches",
     check_ruleset_name="oracle_logswitches",
     default_levels_variable="oracle_logswitches_default_levels",
+    check_default_parameters={
+        "levels": (50, 100),
+        "levels_lower": (-1, -1),
+    },
 )

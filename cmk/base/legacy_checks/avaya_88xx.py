@@ -79,6 +79,9 @@ check_info["avaya_88xx"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.2272.1.4.7.1.1",
         oids=["2", "3"],
     ),
+    check_default_parameters={
+        "levels": (55.0, 60.0),
+    },
 )
 
 check_info["avaya_88xx.fan"] = LegacyCheckDefinition(

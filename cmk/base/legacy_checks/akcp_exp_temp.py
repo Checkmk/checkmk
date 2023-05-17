@@ -31,4 +31,5 @@ check_info["akcp_exp_temp"] = LegacyCheckDefinition(
         oids=["2", "4", "5", "6", "9", "10", "11", "12", "19", "8"],
     ),
     check_ruleset_name="temperature",
+    check_default_parameters=AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
 )

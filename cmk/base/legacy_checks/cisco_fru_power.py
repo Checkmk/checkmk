@@ -48,11 +48,18 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from typing import Final
+from collections.abc import Iterable, Mapping
+from typing import Final, List
 
 from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, not_exists
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDCached, OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+DiscoveryResult = Iterable[tuple[str, dict]]
+CheckResult = Iterable[tuple[int, str]]
+
+Section = Mapping[str, tuple[int, str]]
 
 _STATE_MAP: Final = {
     "1": (1, "off env other"),
@@ -70,9 +77,9 @@ _STATE_MAP: Final = {
 }
 
 
-def parse_cisco_fru_power(info):
+def parse_cisco_fru_power(string_table: List[StringTable]) -> Section:
     ppre_parsed = {}
-    for end_oid, oper_state, fru_current in info[0]:
+    for end_oid, oper_state, fru_current in string_table[0]:
         # We discover only "real" power supplies which have current value >= 0
         # Others such as modules do not have such values
         if oper_state not in ["", "0", "1", "5"] and fru_current and int(fru_current) >= 0:
@@ -81,7 +88,7 @@ def parse_cisco_fru_power(info):
             )
 
     pre_parsed = {}
-    for end_oid, name in info[1]:
+    for end_oid, name in string_table[1]:
         if end_oid in ppre_parsed:
             pre_parsed.setdefault(name, [])
             pre_parsed[name].append(ppre_parsed[end_oid])
@@ -97,16 +104,16 @@ def parse_cisco_fru_power(info):
     return parsed
 
 
-def inventory_cisco_fru_power(parsed):
-    for item in parsed:
-        yield item, None
+def discover_cisco_fru_power(section: Section) -> DiscoveryResult:
+    yield from ((item, {}) for item in section)
 
 
-def check_cisco_fru_power(item, _no_params, parsed):
-    if item in parsed:
-        state, state_readable = parsed[item]
-        return state, "Status: %s" % state_readable
-    return None
+def check_cisco_fru_power(item: str, _no_params: object, section: Section) -> CheckResult:
+    if (fru := section.get(item)) is None:
+        return
+
+    state, state_readable = fru
+    yield state, "Status: %s" % state_readable
 
 
 check_info["cisco_fru_power"] = LegacyCheckDefinition(
@@ -114,7 +121,7 @@ check_info["cisco_fru_power"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), not_exists(".1.3.6.1.4.1.9.9.13.1.5.1.*")
     ),
     parse_function=parse_cisco_fru_power,
-    discovery_function=inventory_cisco_fru_power,
+    discovery_function=discover_cisco_fru_power,
     check_function=check_cisco_fru_power,
     service_name="FRU Power %s",
     fetch=[

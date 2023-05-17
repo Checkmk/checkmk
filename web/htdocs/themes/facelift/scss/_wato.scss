@@ -167,14 +167,14 @@ div#service_container {
   }
 }
 
-div#datasources_container {
+@mixin message-container-mixin {
   display: grid;
   position: relative;
   margin-bottom: $spacing;
   padding: 12px 16px;
   background-color: $headline-color;
 
-  div.datasources_state {
+  div.state_bar {
     position: absolute;
     width: 25px;
     height: 100%;
@@ -192,11 +192,15 @@ div#datasources_container {
     }
   }
 
-  div.datasources_output {
-    h2 {
-      margin: 0 25px 0px;
-    }
+  div.message_container > h2 {
+    margin: 0 25px 0px;
+  }
+}
 
+div#datasources_container {
+  @include message-container-mixin;
+
+  div.message_container {
     &:first-child h2 {
       margin: 0;
     }
@@ -217,42 +221,16 @@ div#datasources_container {
 }
 
 div#activation_state_message_container {
-  display: grid;
-  position: relative;
-  margin-bottom: $spacing;
-  padding: 12px 16px;
-  background-color: $headline-color;
+  @include message-container-mixin;
 
-  div.activation_state {
-    position: absolute;
-    width: 25px;
-    height: 100%;
+  div.message_container div {
+    margin: 5px 25px;
 
     span {
-      display: flex;
-      height: 100%;
-      border-radius: $border-radius-left;
-      justify-content: center;
-      align-items: center;
+      display: block;
+      margin-bottom: $spacing;
 
-      img {
-        width: 14px;
-      }
-    }
-  }
-
-  div.activation_state_message {
-    h2 {
-      margin: 0 25px 10px;
-    }
-
-    div {
-      margin: 5px 25px;
-      span {
-        display: block;
-        margin-bottom: $spacing;
-      }
-      span:last-child {
+      &:last-child {
         margin-bottom: 0px;
       }
     }

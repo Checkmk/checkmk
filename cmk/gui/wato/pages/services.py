@@ -520,7 +520,7 @@ class DiscoveryPageRenderer:
 
         with output_funnel.plugged():
             # Colored overall state field
-            html.open_div(class_="datasources_state state%s" % overall_state)
+            html.open_div(class_="state_bar state%s" % overall_state)
             html.open_span()
             match overall_state:
                 case 0:
@@ -533,7 +533,7 @@ class DiscoveryPageRenderer:
             html.close_div()
 
             # Output per data source
-            html.open_div(class_="datasources_output")
+            html.open_div(class_="message_container")
             if overall_state == 0:
                 html.h2(_("All datasources are OK"))
             else:

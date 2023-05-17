@@ -48,34 +48,36 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from typing import Final
+
 from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, not_exists
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDCached, OIDEnd, SNMPTree
 
+_STATE_MAP: Final = {
+    "1": (1, "off env other"),
+    "2": (0, "on"),
+    "3": (1, "off admin"),
+    "4": (2, "off denied"),
+    "5": (2, "off env power"),
+    "6": (2, "off env temp"),
+    "7": (2, "off env fan"),
+    "8": (2, "failed"),
+    "9": (1, "on but fan fail"),
+    "10": (1, "off cooling"),
+    "11": (1, "off connector rating"),
+    "12": (2, "on but inline power fail"),
+}
+
 
 def parse_cisco_fru_power(info):
-    map_states = {
-        "1": (1, "off env other"),
-        "2": (0, "on"),
-        "3": (1, "off admin"),
-        "4": (2, "off denied"),
-        "5": (2, "off env power"),
-        "6": (2, "off env temp"),
-        "7": (2, "off env fan"),
-        "8": (2, "failed"),
-        "9": (1, "on but fan fail"),
-        "10": (1, "off cooling"),
-        "11": (1, "off connector rating"),
-        "12": (2, "on but inline power fail"),
-    }
-
     ppre_parsed = {}
     for end_oid, oper_state, fru_current in info[0]:
         # We discover only "real" power supplies which have current value >= 0
         # Others such as modules do not have such values
         if oper_state not in ["", "0", "1", "5"] and fru_current and int(fru_current) >= 0:
             ppre_parsed.setdefault(
-                end_oid, map_states.get(oper_state, (3, "unexpected(%s)" % oper_state))
+                end_oid, _STATE_MAP.get(oper_state, (3, "unexpected(%s)" % oper_state))
             )
 
     pre_parsed = {}

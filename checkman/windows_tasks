@@ -23,4 +23,5 @@ item:
  Name of the task
 
 inventory:
- One service is created for each task which is not disabled.
+ One service is created for each task. Per default 'Disabled' services are filtered out but can be included
+ with the appropriate discovery rule.

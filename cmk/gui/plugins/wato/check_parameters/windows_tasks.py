@@ -6,16 +6,42 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Dictionary,
-    ListOf,
-    MonitoringState,
-    TextAscii,
-)
+    TextAscii,)
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
 )
+from cmk.gui.valuespec import Checkbox, Dictionary, ListOf, MonitoringState
+from cmk.gui.watolib.rulespecs import HostRulespec
+
+
+def _valuespec_inventory_windows_tasks():
+    return Dictionary(
+        title=_("Windows Tasks discovery"),
+        elements=[(
+            "disabled_tasks",
+            Checkbox(
+                title=_("Discover Tasks"),
+                label=_("Include 'Disabled' Tasks"),
+                help=
+                _("Decides whether 'Disabled' tasks should be ignored or discovered as individual services."
+                 ),
+            ),
+        )],
+        help=_("This rule can be used to control the discovery for Windows Tasks checks."),
+        optional_keys=[],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="dict",
+        name="inventory_windows_tasks_rules",
+        valuespec=_valuespec_inventory_windows_tasks,
+    ))
 
 # Code duplication with checks/windows_tasks
 # because of base/gui import restrictions

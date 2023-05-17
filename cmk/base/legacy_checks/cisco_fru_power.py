@@ -79,20 +79,18 @@ _STATE_MAP: Final = {
 
 
 def parse_cisco_fru_power(string_table: List[StringTable]) -> Section:
-    ppre_parsed = {}
-    for end_oid, oper_state, fru_current in string_table[0]:
-        if _is_real_psu(oper_state, fru_current):
-            ppre_parsed.setdefault(
-                end_oid, _STATE_MAP.get(oper_state, (3, "unexpected(%s)" % oper_state))
-            )
+    states_and_currents, names = string_table
 
-    name_map = _oid_name_map(string_table[1], ppre_parsed)
+    raw_states = {oid_end: oper_state for oid_end, oper_state, _current in states_and_currents}
+    raw_currents = {oid_end: current for oid_end, _oper_state, current in states_and_currents}
 
-    parsed = {}
-    for name, oid_end in name_map.items():
-        parsed[name] = ppre_parsed[oid_end]
+    name_map = _oid_name_map(names, raw_states)
 
-    return parsed
+    return {
+        name: _STATE_MAP.get(raw_states[oid_end], (3, "unexpected(%s)" % raw_states[oid_end]))
+        for name, oid_end in name_map.items()
+        if _is_real_psu(raw_states[oid_end], raw_currents[oid_end])
+    }
 
 
 def _is_real_psu(oper_state: str, current: str) -> bool:

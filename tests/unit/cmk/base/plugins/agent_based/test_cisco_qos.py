@@ -669,12 +669,12 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
                 ),
             },
             [
-                Result(
-                    state=State.OK,
-                    summary="post: 31.3 kBit/s, drop: 0 Bit/s, Policy-Name: queue-fix, Int-Bandwidth: 100 kBit/s",
-                ),
+                Result(state=State.OK, summary="Outbound traffic: 31.3 kBit/s"),
                 Metric("qos_outbound_bits_rate", 31288.32, boundaries=(0.0, 100000.0)),
+                Result(state=State.OK, summary="Dropped traffic: 0.00 Bit/s"),
                 Metric("qos_dropped_bits_rate", 0.0, boundaries=(0.0, 100000.0)),
+                Result(state=State.OK, summary="Policy map name: queue-fix"),
+                Result(state=State.OK, summary="Bandwidth: 100 kBit/s"),
             ],
             id="no thresholds",
         ),
@@ -697,8 +697,8 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
             },
             [
                 Result(
-                    state=State.CRIT,
-                    summary="post: 19.4 kBit/s(!), drop: 900 Bit/s(!!), Policy-Name: 200Mbit, Int-Bandwidth: 100 kBit/s",
+                    state=State.WARN,
+                    summary="Outbound traffic: 19.4 kBit/s (warn/crit at 10.0 kBit/s/20.0 kBit/s)",
                 ),
                 Metric(
                     "qos_outbound_bits_rate",
@@ -706,12 +706,18 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
                     levels=(10000.0, 20000.0),
                     boundaries=(0.0, 100000.0),
                 ),
+                Result(
+                    state=State.CRIT,
+                    summary="Dropped traffic: 900 Bit/s (warn/crit at 500 Bit/s/750 Bit/s)",
+                ),
                 Metric(
                     "qos_dropped_bits_rate",
                     899.84,
                     levels=(500.0, 750.0),
                     boundaries=(0.0, 100000.0),
                 ),
+                Result(state=State.OK, summary="Policy map name: 200Mbit"),
+                Result(state=State.OK, summary="Bandwidth: 100 kBit/s"),
             ],
             id="absolute thresholds",
         ),
@@ -736,7 +742,7 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
             [
                 Result(
                     state=State.WARN,
-                    summary="post: 2.42 kB/s(!), drop: 112 B/s, Policy-Name: 200Mbit, Int-Bandwidth: 12.5 kB/s",
+                    summary="Outbound traffic: 2.42 kB/s (warn/crit at 1.25 kB/s/2.50 kB/s)",
                 ),
                 Metric(
                     "qos_outbound_bits_rate",
@@ -744,12 +750,15 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
                     levels=(10000.0, 20000.0),
                     boundaries=(0.0, 100000.0),
                 ),
+                Result(state=State.OK, summary="Dropped traffic: 112 B/s"),
                 Metric(
                     "qos_dropped_bits_rate",
                     899.84,
                     levels=(1000.0, 2000.0),
                     boundaries=(0.0, 100000.0),
                 ),
+                Result(state=State.OK, summary="Policy map name: 200Mbit"),
+                Result(state=State.OK, summary="Bandwidth: 12.5 kB/s"),
             ],
             id="relative thresholds, output in byte/s",
         ),
@@ -778,12 +787,12 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
                 ),
             },
             [
-                Result(
-                    state=State.OK,
-                    summary="post: 76.6 kBit/s, drop: 1.56 kBit/s, Policy-Name: 200Mbit, Int-Bandwidth: 100 kBit/s",
-                ),
+                Result(state=State.OK, summary="Outbound traffic (10-min. average): 76.6 kBit/s"),
                 Metric("qos_outbound_bits_rate", 19360.0, boundaries=(0.0, 100000.0)),
+                Result(state=State.OK, summary="Dropped traffic (10-min. average): 1.56 kBit/s"),
                 Metric("qos_dropped_bits_rate", 899.84, boundaries=(0.0, 100000.0)),
+                Result(state=State.OK, summary="Policy map name: 200Mbit"),
+                Result(state=State.OK, summary="Bandwidth: 100 kBit/s"),
             ],
             id="averaging",
         ),
@@ -816,7 +825,7 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
             [
                 Result(
                     state=State.CRIT,
-                    summary="post: 76.6 kBit/s(!!), drop: 806 Bit/s, Policy-Name: 200Mbit, Int-Bandwidth: 100 kBit/s",
+                    summary="Outbound traffic (10-min. average): 76.6 kBit/s (warn/crit at 10.0 kBit/s/20.0 kBit/s)",
                 ),
                 Metric(
                     "qos_outbound_bits_rate",
@@ -824,12 +833,15 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
                     levels=(10000.0, 20000.0),
                     boundaries=(0.0, 100000.0),
                 ),
+                Result(state=State.OK, summary="Dropped traffic (10-min. average): 806 Bit/s"),
                 Metric(
                     "qos_dropped_bits_rate",
                     899.84,
                     levels=(1000.0, 2000.0),
                     boundaries=(0.0, 100000.0),
                 ),
+                Result(state=State.OK, summary="Policy map name: 200Mbit"),
+                Result(state=State.OK, summary="Bandwidth: 100 kBit/s"),
             ],
             id="averaging and thresholds",
         ),
@@ -948,10 +960,16 @@ def fixture_section_zero_speed() -> Section:
             [
                 Result(
                     state=State.WARN,
-                    summary="post: 0 Bit/s(!), drop: 0 Bit/s(!), Policy-Name: mypolicy, Int-Bandwidth: 0 Bit/s",
+                    summary="Outbound traffic: 0.00 Bit/s (warn/crit at 0.00 Bit/s/1.00 Bit/s)",
                 ),
                 Metric("qos_outbound_bits_rate", 0.0, levels=(0.0, 1.0), boundaries=(0.0, 0.0)),
+                Result(
+                    state=State.WARN,
+                    summary="Dropped traffic: 0.00 Bit/s (warn/crit at 0.00 Bit/s/1.00 Bit/s)",
+                ),
                 Metric("qos_dropped_bits_rate", 0.0, levels=(0.0, 1.0), boundaries=(0.0, 0.0)),
+                Result(state=State.OK, summary="Policy map name: mypolicy"),
+                Result(state=State.OK, summary="Bandwidth: 0 Bit/s"),
             ],
             id="absolute thresholds => should apply",
         ),
@@ -961,12 +979,12 @@ def fixture_section_zero_speed() -> Section:
                 "drop": (0.0, 1.0),
             },
             [
-                Result(
-                    state=State.OK,
-                    summary="post: 0 Bit/s, drop: 0 Bit/s, Policy-Name: mypolicy, Int-Bandwidth: 0 Bit/s",
-                ),
+                Result(state=State.OK, summary="Outbound traffic: 0.00 Bit/s"),
                 Metric("qos_outbound_bits_rate", 0.0, boundaries=(0.0, 0.0)),
+                Result(state=State.OK, summary="Dropped traffic: 0.00 Bit/s"),
                 Metric("qos_dropped_bits_rate", 0.0, boundaries=(0.0, 0.0)),
+                Result(state=State.OK, summary="Policy map name: mypolicy"),
+                Result(state=State.OK, summary="Bandwidth: 0 Bit/s"),
             ],
             id="relative thresholds => do not apply",
         ),

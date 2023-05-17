@@ -7,12 +7,7 @@ import time
 from collections.abc import Iterator, Mapping
 from typing import Any, Literal
 
-from cmk.base.check_api import (
-    get_average,
-    get_nic_speed_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_average, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.cisco_qos import cbQosCMName, InterfaceName, Section
@@ -118,107 +113,69 @@ def check_cisco_qos(
     item: str,
     params: Mapping[str, Any],
     section: Section,
-) -> object:
+) -> Iterator[object]:
+    raw_if_name, raw_class_name = item.split(": ")
+    if not (qos_data := section.get((InterfaceName(raw_if_name), cbQosCMName(raw_class_name)))):
+        return
+
     unit = params.get("unit", "bit")
     average = params.get("average")
-    post_warn, post_crit = params.get("post", (None, None))
-    drop_warn, drop_crit = params.get("drop", (None, None))
+    timestamp = time.time()
 
-    raw_if_name, raw_class_name = item.split(": ")
-
-    if not (qos_data := section.get((InterfaceName(raw_if_name), cbQosCMName(raw_class_name)))):
-        return None
-
-    # Determine post warn/crit levels
-    post_warn, post_crit = _compute_thresholds((post_warn, post_crit), qos_data.bandwidth, unit)
-
-    # Determine drop warn/crit levels
-    drop_warn, drop_crit = _compute_thresholds((drop_warn, drop_crit), qos_data.bandwidth, unit)
-
-    # Handle counter values
-    state = 0
-    infotext = ""
-    this_time = time.time()
-    rates = []
-    perfdata = []
-
-    for name, counter, warn, crit, min_val, max_val in [
+    for label, metric_name, counter, thresholds in [
         (
+            "Outbound traffic",
             "qos_outbound_bits_rate",
             qos_data.outbound_bits_counter,
-            post_warn,
-            post_crit,
-            0.0,
-            qos_data.bandwidth,
+            _compute_thresholds(params.get("post"), qos_data.bandwidth, unit),
         ),
         (
+            "Dropped traffic",
             "qos_dropped_bits_rate",
             qos_data.dropped_bits_counter,
-            drop_warn,
-            drop_crit,
-            0.0,
-            qos_data.bandwidth,
+            _compute_thresholds(params.get("drop"), qos_data.bandwidth, unit),
         ),
     ]:
-        rate = get_rate("cisco_qos.%s.%s" % (name, item), this_time, counter)
-        rates.append(rate)
-        perfdata.append((name, rate, warn, crit, min_val, max_val))
-
-        if average:
-            avg_value = get_average("cisco_qos.%s.%s.avg" % (name, item), this_time, rate, average)
-            rates.append(avg_value)
-
-    def format_value(value):
-        if unit == "bit":
-            return get_nic_speed_human_readable(value)
-        return render.iobandwidth(value / 8)
-
-    if average:
-        post_rate = rates[1]
-        drop_rate = rates[3]
-    else:
-        post_rate = rates[0]
-        drop_rate = rates[1]
-
-    for what, rate, warn, crit in [
-        ("post", post_rate, post_warn, post_crit),
-        ("drop", drop_rate, drop_warn, drop_crit),
-    ]:
-        infotext += ", %s: %s" % (what, format_value(rate))
-        if crit is not None and rate >= crit:
-            state = max(2, state)
-            infotext += "(!!)"
-        elif warn is not None and rate >= warn:
-            state = max(1, state)
-            infotext += "(!)"
-
-    if qos_data.policy_map_name:
-        infotext += ", Policy-Name: %s, Int-Bandwidth: %s" % (
-            qos_data.policy_map_name,
-            format_value(qos_data.bandwidth),
+        rate = get_rate("cisco_qos.%s.%s" % (metric_name, item), timestamp, counter)
+        state, text, _empty_perf_data = check_levels(
+            get_average("cisco_qos.%s.%s.avg" % (metric_name, item), timestamp, rate, average)
+            if average
+            else rate,
+            dsname=None,
+            params=thresholds,
+            infoname=f"{label} ({average}-min. average)" if average else label,
+            human_readable_func=lambda v: (
+                render.networkbandwidth if unit == "bit" else render.iobandwidth
+            )(v / 8),
         )
-    else:
-        infotext += ", Policy-Map-ID: %s, Int-Bandwidth: %s" % (
-            qos_data.policy_map_index,
-            format_value(qos_data.bandwidth),
-        )
-    return (state, infotext.lstrip(", "), perfdata)
+        yield state, text, [
+            (metric_name, rate, *(thresholds or (None, None)), 0, qos_data.bandwidth)
+        ]
+
+    yield (
+        0,
+        f"Policy map name: {qos_data.policy_map_name}"
+        if qos_data.policy_map_name
+        else f"Policy map  config index: {qos_data.policy_map_index}",
+    )
+    yield (
+        0,
+        f"Bandwidth: {(render.nicspeed if unit == 'bit' else render.iobandwidth)(qos_data.bandwidth / 8 )}",
+    )
 
 
 def _compute_thresholds(
-    raw_thresholds: tuple[float, float] | tuple[None, None],
+    raw_thresholds: tuple[float, float] | None,
     bandwidth: float,
     unit: Literal["bit", "byte"],
-) -> tuple[float, float] | tuple[None, None]:
-    if isinstance(raw_thresholds[0], float):
-        if bandwidth:
-            return bandwidth * raw_thresholds[0] / 100, bandwidth * raw_thresholds[1] / 100
-        return None, None
+) -> tuple[float, float] | None:
+    if not raw_thresholds:
+        return None
+    if isinstance(raw_thresholds[0], float) and bandwidth:
+        return bandwidth * raw_thresholds[0] / 100, bandwidth * raw_thresholds[1] / 100
     if isinstance(raw_thresholds[0], int):
-        if unit == "byte":
-            return raw_thresholds[0] * 8, raw_thresholds[1] * 8
-        return raw_thresholds
-    return raw_thresholds
+        return raw_thresholds if unit == "bit" else (raw_thresholds[0] * 8, raw_thresholds[1] * 8)
+    return None
 
 
 check_info["cisco_qos"] = LegacyCheckDefinition(
@@ -226,5 +183,8 @@ check_info["cisco_qos"] = LegacyCheckDefinition(
     check_function=check_cisco_qos,
     discovery_function=inventory_cisco_qos,
     check_ruleset_name="cisco_qos",
-    check_default_parameters={"drop": (0.01, 0.01)},
+    check_default_parameters={
+        "drop": (1, 1),
+        "unit": "bit",
+    },
 )

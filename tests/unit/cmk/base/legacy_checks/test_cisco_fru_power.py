@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.base.legacy_checks.cisco_fru_power import parse_cisco_fru_power
+from cmk.base.legacy_checks.cisco_fru_power import FRU, parse_cisco_fru_power
 
 pytestmark = pytest.mark.checks
 
@@ -38,10 +38,10 @@ def test_parse_cisco_fru_power() -> None:
     ]
 
     section = {
-        "michl": (0, "on"),
-        "schorsch": (1, "off cooling"),
-        "sepp-1": (0, "on"),
-        "sepp-2": (0, "on"),
+        "michl": FRU("2", "23"),
+        "schorsch": FRU("10", "0"),
+        "sepp-1": FRU("2", "23"),
+        "sepp-2": FRU("2", "23"),
     }
 
     assert parse_cisco_fru_power([states_and_currents, names]) == section

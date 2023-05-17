@@ -49,6 +49,7 @@
 # mypy: disable-error-code="var-annotated"
 
 from collections.abc import Container, Iterable, Mapping
+from dataclasses import dataclass
 from itertools import groupby
 from typing import Final, List
 
@@ -60,7 +61,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 DiscoveryResult = Iterable[tuple[str, dict]]
 CheckResult = Iterable[tuple[int, str]]
 
-Section = Mapping[str, tuple[int, str]]
+
+@dataclass(frozen=True)
+class FRU:
+    state: str
+    current: str
+
+
+Section = Mapping[str, FRU]
 
 _STATE_MAP: Final = {
     "1": (1, "off env other"),
@@ -87,7 +95,7 @@ def parse_cisco_fru_power(string_table: List[StringTable]) -> Section:
     name_map = _oid_name_map(names, raw_states)
 
     return {
-        name: _STATE_MAP.get(raw_states[oid_end], (3, "unexpected(%s)" % raw_states[oid_end]))
+        name: FRU(state=raw_states[oid_end], current=raw_currents[oid_end])
         for name, oid_end in name_map.items()
         if _is_real_psu(raw_states[oid_end], raw_currents[oid_end])
     }
@@ -116,7 +124,7 @@ def check_cisco_fru_power(item: str, _no_params: object, section: Section) -> Ch
     if (fru := section.get(item)) is None:
         return
 
-    state, state_readable = fru
+    state, state_readable = _STATE_MAP.get(fru.state, (3, f"unexpected ({fru.state})"))
     yield state, "Status: %s" % state_readable
 
 

@@ -59,6 +59,10 @@ def cce_path() -> str:  # TODO: Use Path
     return str(repo_path() / "cloud")
 
 
+def cse_path() -> str:  # TODO: Use Path
+    return str(repo_path() / "saas")
+
+
 def is_enterprise_repo() -> bool:
     return os.path.exists(cmc_path())
 
@@ -69,6 +73,10 @@ def is_managed_repo() -> bool:
 
 def is_cloud_repo() -> bool:
     return os.path.exists(cce_path())
+
+
+def is_saas_repo() -> bool:
+    return os.path.exists(cse_path())
 
 
 def is_containerized() -> bool:

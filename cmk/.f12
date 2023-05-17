@@ -11,7 +11,7 @@ ROOT=/omd/sites/$SITE
 CMK_VERSION=$(basename "$(readlink "$ROOT"/version)")
 CMK_VERSION=${CMK_VERSION%.*}
 
-# Needed by {managed,cloud}/cmk/.f12 to set the correct edition after .f12
+# Needed by {managed,cloud,saas}/cmk/.f12 to set the correct edition after .f12
 if [ -z "$ORIG_EDITION" ]; then
     ORIG_EDITION=$(sudo su - "$SITE" -c "python3 -c 'import cmk.utils.version; print(cmk.utils.version.edition().short)'")
     export ORIG_EDITION

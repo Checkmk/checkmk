@@ -14,7 +14,13 @@ import pytest
 from fakeredis import FakeRedis
 from pytest import MonkeyPatch
 
-from tests.testlib import is_cloud_repo, is_enterprise_repo, is_managed_repo, repo_path
+from tests.testlib import (
+    is_cloud_repo,
+    is_enterprise_repo,
+    is_managed_repo,
+    is_saas_repo,
+    repo_path,
+)
 
 # Import this fixture to not clutter this file, but it's unused here...
 from tests.testlib.certs import fixture_self_signed  # pylint: disable=unused-import # noqa: F401
@@ -94,6 +100,9 @@ def fixture_capsys(capsys: pytest.CaptureFixture[str]) -> Iterator[pytest.Captur
 def fixture_edition(request: pytest.FixtureRequest) -> Iterable[cmk_version.Edition]:
     # The param seems to be an optional attribute which mypy can not understand
     edition_short = request.param
+    if edition_short == "cse" and not is_saas_repo():
+        pytest.skip("Needed files are not available")
+
     if edition_short == "cce" and not is_cloud_repo():
         pytest.skip("Needed files are not available")
 

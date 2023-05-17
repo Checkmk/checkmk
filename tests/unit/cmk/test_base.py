@@ -26,6 +26,7 @@ def cache_clear() -> None:
         ("2016.09.22.cee", cmk_version.Edition.CEE),
         ("2.1.0p3.cme", cmk_version.Edition.CME),
         ("2.1.0p3.cce", cmk_version.Edition.CCE),
+        ("2.1.0p3.cse", cmk_version.Edition.CSE),
     ],
 )
 def test_is_enterprise_edition(

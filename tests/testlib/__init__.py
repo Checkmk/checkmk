@@ -38,6 +38,7 @@ from tests.testlib.utils import (
     is_cloud_repo,
     is_enterprise_repo,
     is_managed_repo,
+    is_saas_repo,
     repo_path,
     site_id,
     virtualenv_path,
@@ -94,6 +95,8 @@ def fake_version_and_paths() -> None:
         edition_short = "cme"
     elif is_cloud_repo():
         edition_short = "cce"
+    elif is_saas_repo():
+        edition_short = "cse"
     elif is_enterprise_repo():
         edition_short = "cee"
     else:

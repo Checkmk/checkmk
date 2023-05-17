@@ -543,6 +543,7 @@ check_info["varnish.fetch"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 factory_settings["varnish_esi_default_levels"] = {"errors": (1.0, 2.0)}
+
 check_info["varnish.esi"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_varnish(parsed, ["esi_errors"]),
     check_function=lambda item, params, parsed: check_varnish_stats(
@@ -620,6 +621,7 @@ check_info["varnish.worker"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 factory_settings["varnish_cache_hit_ratio_default_levels"] = {"levels_lower": (70.0, 60.0)}
+
 check_info["varnish.cache_hit_ratio"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_varnish(parsed, ["cache_miss", "cache_hit"]),
     check_function=lambda item, params, parsed: check_varnish_ratio(
@@ -645,6 +647,7 @@ check_info["varnish.cache_hit_ratio"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 factory_settings["varnish_backend_success_ratio_default_levels"] = {"levels_lower": (70.0, 60.0)}
+
 check_info["varnish.backend_success_ratio"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_varnish(parsed, ["backend_fail", "backend_conn"]),
     check_function=lambda item, params, parsed: check_varnish_ratio(

@@ -20,18 +20,15 @@ from cmk.base.check_legacy_includes.jolokia import (
 )
 from cmk.base.config import check_info, factory_settings
 
-factory_settings.update(
-    {
-        "jolokia_jvm_memory": {
-            "perc_heap": (80.0, 90.0),
-            "perc_nonheap": (80.0, 90.0),
-            "perc_total": (80.0, 90.0),
-        },
-        "jolokia_jvm_memory_pools": {
-            "perc_used": (80.0, 90.0),
-        },
-    }
-)
+factory_settings["jolokia_jvm_memory"] = {
+    "perc_heap": (80.0, 90.0),
+    "perc_nonheap": (80.0, 90.0),
+    "perc_total": (80.0, 90.0),
+}
+
+factory_settings["jolokia_jvm_memory_pools"] = {
+    "perc_used": (80.0, 90.0),
+}
 
 
 def parse_jolokia_jvm_memory(info):

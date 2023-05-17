@@ -47,7 +47,9 @@ ap_state_map = {
 
 # Defined by customer, see SUP-1020
 factory_settings["huawei_cpu_default"] = {"levels": (80.0, 90.0)}
+
 factory_settings["huawei_mem_default"] = {"levels": (80.0, 90.0)}
+
 factory_settings["huawei_channel_default"] = {"levels": (80.0, 90.0)}
 
 

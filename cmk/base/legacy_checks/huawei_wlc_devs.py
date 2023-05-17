@@ -19,6 +19,7 @@ from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 factory_settings["huawei_cpu_default"] = {"levels": (80.0, 90.0)}
+
 factory_settings["huawei_mem_default"] = {"levels": (80.0, 90.0)}
 
 

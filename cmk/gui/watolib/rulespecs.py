@@ -42,7 +42,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.watolib.check_mk_automations import get_check_information
+from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -1056,9 +1056,9 @@ class CheckTypeGroupSelection(ElementSelection):
         self._checkgroup = checkgroup
 
     def get_elements(self):
-        checks = get_check_information().plugin_infos
+        checks = get_check_information_cached()
         elements = {
-            cn: "{} - {}".format(cn, c["title"])
+            str(cn): "{} - {}".format(cn, c["title"])
             for (cn, c) in checks.items()
             if c.get("group") == self._checkgroup
         }

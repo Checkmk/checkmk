@@ -48,7 +48,8 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Container, Iterable, Mapping
+from itertools import groupby
 from typing import Final, List
 
 from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, not_exists
@@ -85,19 +86,11 @@ def parse_cisco_fru_power(string_table: List[StringTable]) -> Section:
                 end_oid, _STATE_MAP.get(oper_state, (3, "unexpected(%s)" % oper_state))
             )
 
-    pre_parsed = {}
-    for end_oid, name in string_table[1]:
-        if end_oid in ppre_parsed:
-            pre_parsed.setdefault(name, [])
-            pre_parsed[name].append(ppre_parsed[end_oid])
+    name_map = _oid_name_map(string_table[1], ppre_parsed)
 
     parsed = {}
-    for name, infos in pre_parsed.items():
-        if len(infos) > 1:
-            for k, state_info in enumerate(infos):
-                parsed["%s-%d" % (name, k + 1)] = state_info
-        else:
-            parsed[name] = infos[0]
+    for name, oid_end in name_map.items():
+        parsed[name] = ppre_parsed[oid_end]
 
     return parsed
 
@@ -106,6 +99,15 @@ def _is_real_psu(oper_state: str, current: str) -> bool:
     # We discover only "real" power supplies which have current value >= 0
     # Others such as modules do not have such values
     return oper_state not in ["", "0", "1", "5"] and bool(current) and int(current) >= 0
+
+
+def _oid_name_map(names: StringTable, filter_oids: Container[str]) -> Mapping[str, str]:
+    return {
+        name if len(oid_ends) == 1 else f"{name}-{num}": oid_end
+        for name, oid_ends_names in groupby(sorted(names, key=lambda x: x[1]), key=lambda x: x[1])
+        if (oid_ends := [oe for oe, _name in oid_ends_names if oe in filter_oids])
+        for num, oid_end in enumerate(oid_ends, start=1)
+    }
 
 
 def discover_cisco_fru_power(section: Section) -> DiscoveryResult:

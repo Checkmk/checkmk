@@ -1007,7 +1007,7 @@ class PasswordClient(RestApiClient):
         owner: str,
         password: str,
         shared: Sequence[str],
-        customer: str,
+        customer: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
         body = {
@@ -1016,7 +1016,7 @@ class PasswordClient(RestApiClient):
             "owner": owner,
             "password": password,
             "shared": shared,
-            "customer": customer,
+            "customer": "provider" if customer is None else customer,
         }
         return self.request(
             "post",
@@ -1024,6 +1024,9 @@ class PasswordClient(RestApiClient):
             body=body,
             expect_ok=expect_ok,
         )
+
+    def get(self, ident: str, expect_ok: bool = True) -> Response:
+        return self.request("get", url=f"/objects/password/{ident}", expect_ok=expect_ok)
 
 
 @register_client

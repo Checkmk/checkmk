@@ -79,7 +79,7 @@ def test_openapi_password(
     assert resp.json["extensions"] == {
         "comment": "Something but nothing random",
         "documentation_url": "",
-        "owned_by": None,
+        "owned_by": "admin",
         "shared": ["all"],
         "customer": "global",
     }
@@ -258,3 +258,16 @@ def test_password_with_newlines(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Non
     password_store.load()  # see if it loads correctly
     stored_credentials = password_store.extract("gcp")
     assert stored_credentials == credentials_with_newlines.replace("\n", "")
+
+
+def test_openapi_password_without_owner_regression(clients: ClientRegistry) -> None:
+    clients.Password.create(
+        ident="so_secret",
+        title="so_secret",
+        owner="admin",
+        password="no_one_can_know",
+        shared=["all"],
+    )
+
+    resp = clients.Password.get("so_secret")
+    assert resp.json["extensions"].get("owned_by") is not None

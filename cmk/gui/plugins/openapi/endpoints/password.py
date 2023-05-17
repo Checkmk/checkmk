@@ -188,6 +188,8 @@ def _serve_password(ident, password_details):
 
 
 def serialize_password(ident, details):
+    if details["owned_by"] is None:
+        details["owned_by"] = "admin"
     return constructors.domain_object(
         domain_type="password",
         identifier=ident,

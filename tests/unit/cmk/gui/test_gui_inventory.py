@@ -354,15 +354,20 @@ def test__make_filters_from_api_request_paths(
         ),
     ],
 )
-def test__load_status_data_tree(
+def test_load_filtered_and_merged_tree(
     monkeypatch: MonkeyPatch, hostname: HostName | None, row: Row, expected_tree: StructuredDataNode
 ) -> None:
     monkeypatch.setattr(
         cmk.gui.inventory,
-        "_load_structured_data_tree",
-        lambda *args, **kw: StructuredDataNode.deserialize({"loaded": "tree"}),
+        "_load_tree_from_file",
+        (
+            lambda *args, **kw: StructuredDataNode.deserialize({"loaded": "tree"})
+            if kw["tree_type"] == "status_data"
+            else None
+        ),
     )
-    status_data_tree = cmk.gui.inventory._load_status_data_tree(hostname, row)
+    row.update({"host_name": hostname})
+    status_data_tree = cmk.gui.inventory.load_filtered_and_merged_tree(row)
     assert status_data_tree is not None
     assert status_data_tree.is_equal(expected_tree)
 

@@ -155,9 +155,15 @@ def _make_filters_from_permitted_paths(
 def load_filtered_and_merged_tree(row: Row) -> StructuredDataNode | None:
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
-    hostname = row.get("host_name")
-    inventory_tree = _load_structured_data_tree("inventory", hostname)
-    status_data_tree = _load_status_data_tree(hostname, row)
+    host_name = row.get("host_name")
+    inventory_tree = _load_tree_from_file(tree_type="inventory", host_name=host_name)
+    status_data_tree: StructuredDataNode | None
+    if raw_status_data_tree := row.get("host_structured_status"):
+        status_data_tree = StructuredDataNode.deserialize(
+            ast.literal_eval(raw_status_data_tree.decode("utf-8"))
+        )
+    else:
+        status_data_tree = _load_tree_from_file(tree_type="status_data", host_name=host_name)
 
     if inventory_tree is None:
         return status_data_tree
@@ -555,14 +561,14 @@ class LoadStructuredDataError(MKException):
 
 
 @request_memoize(maxsize=None)
-def _load_structured_data_tree(
-    tree_type: Literal["inventory", "status_data"], hostname: HostName | None
+def _load_tree_from_file(
+    *, tree_type: Literal["inventory", "status_data"], host_name: HostName | None
 ) -> StructuredDataNode | None:
     """Load data of a host, cache it in the current HTTP request"""
-    if not hostname:
+    if not host_name:
         return None
 
-    if "/" in hostname:
+    if "/" in host_name:
         # just for security reasons
         return None
 
@@ -573,21 +579,12 @@ def _load_structured_data_tree(
                 if tree_type == "inventory"
                 else cmk.utils.paths.status_data_dir
             )
-            / hostname
+            / host_name
         )
     except Exception as e:
         if active_config.debug:
             html.show_warning("%s" % e)
         raise LoadStructuredDataError()
-
-
-def _load_status_data_tree(hostname: HostName | None, row: Row) -> StructuredDataNode | None:
-    # If no data from livestatus could be fetched (CRE) try to load from cache
-    # or status dir
-    raw_status_data_tree = row.get("host_structured_status")
-    if not raw_status_data_tree:
-        return _load_structured_data_tree("status_data", hostname)
-    return StructuredDataNode.deserialize(ast.literal_eval(raw_status_data_tree.decode("utf-8")))
 
 
 @request_memoize()

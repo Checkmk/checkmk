@@ -39,6 +39,8 @@ def test_parse_cisco_fru_power() -> None:
 
     section = {
         "michl": FRU(2, 23),
+        "resl": FRU(5, 0),
+        "stofferl": FRU(5, 23),
         "schorsch": FRU(10, 0),
         "sepp-1": FRU(2, 23),
         "sepp-2": FRU(2, 23),

@@ -46,8 +46,6 @@
 # ...
 
 
-# mypy: disable-error-code="var-annotated"
-
 from collections.abc import Container, Iterable, Mapping
 from dataclasses import dataclass
 from itertools import groupby
@@ -118,7 +116,7 @@ def _make_fru(raw_state: str, raw_current: str) -> FRU | None:
 def _is_real_psu(fru: FRU) -> bool:
     # We discover only "real" power supplies which have current value >= 0
     # Others such as modules do not have such values
-    return fru.state not in {0, 1, 5} and fru.current >= 0
+    return fru.state != 0 and fru.current >= 0
 
 
 def _oid_name_map(names: StringTable, filter_oids: Container[str]) -> Mapping[str, str]:
@@ -131,7 +129,7 @@ def _oid_name_map(names: StringTable, filter_oids: Container[str]) -> Mapping[st
 
 
 def discover_cisco_fru_power(section: Section) -> DiscoveryResult:
-    yield from ((item, {}) for item in section)
+    yield from ((item, {}) for item, fru in section.items() if fru.state != 3)
 
 
 def check_cisco_fru_power(item: str, _no_params: object, section: Section) -> CheckResult:

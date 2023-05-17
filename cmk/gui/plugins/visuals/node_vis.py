@@ -76,7 +76,7 @@ class FilterTopologyMeshDepth(FilterRange):
                 column="topology_mesh_depth",
                 title=_l("Topology mesh depth"),
                 step=1,
-                default=0,
+                default=2,
                 min=0,
                 max=10,
             )

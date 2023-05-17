@@ -19,6 +19,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Extra, Field, validator
 
+from cmk.utils.version import __version__, Version
+
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 _logger = logging.getLogger(__name__)
@@ -98,6 +100,8 @@ class Manifest(BaseModel):
         For the future, we plan to implement a dialog to ask the user whether they really mean
         to exclude beta releases.
         """
+        if Version(__version__) >= Version("2.2.0"):
+            return raw
         return "2.2.0b1" if raw == "2.2.0" else raw
 
 

@@ -45,10 +45,10 @@ def main() {
     /// used on different nodes
     def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024";
 
-    def (jenkins_base_folder, distro_key, omd_env_vars, upload_path_suffix) = (
+    def (jenkins_base_folder, use_case, omd_env_vars, upload_path_suffix) = (
         env.JOB_BASE_NAME == "testbuild" ? [
             new File(currentBuild.fullProjectName).parent,
-            "DISTROS_TESTBUILD",
+            "testbuild",
             /// Testbuilds: Do not use our build cache to ensure we catch build related
             /// issues. And disable python optimizations to execute the build faster
             ["NEXUS_BUILD_CACHE_URL=", "PYTHON_ENABLE_OPTIMIZATIONS=",
@@ -56,14 +56,12 @@ def main() {
             "testbuild/",
         ] : [
             new File(new File(currentBuild.fullProjectName).parent).parent,
-            "DISTROS",
+            VERSION == "daily" ? "daily" : "release",
             [],
             "",
         ]);
 
-    // Build all distros in case we're building from a git tag aka release
-    def edition = (VERSION == "daily") ? EDITION : "enterprise";
-    def distros = versioning.configured_or_overridden_distros(edition, OVERRIDE_DISTROS, distro_key);
+    def distros = versioning.configured_or_overridden_distros(edition, OVERRIDE_DISTROS, use_case);
 
     def deploy_to_website = !params.SKIP_DEPLOY_TO_WEBSITE && !jenkins_base_folder.startsWith("Testing");
 

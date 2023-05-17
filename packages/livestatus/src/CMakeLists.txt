@@ -212,7 +212,7 @@ target_include_directories(livestatus PUBLIC ../include ${asio_ext_include}
 target_link_libraries(
   livestatus
   PRIVATE pthread
-  PUBLIC re2::re2)
+  PRIVATE re2::re2)
 target_compile_features(livestatus PUBLIC cxx_std_17)
 set_target_properties(livestatus PROPERTIES VERSION ${PROJECT_VERSION}
                                             SOVERSION ${PROJECT_VERSION_MAJOR})

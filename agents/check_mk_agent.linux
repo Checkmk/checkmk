@@ -626,7 +626,7 @@ section_nfs_mounts() {
             done
 
         echo '<<<cifsmounts>>>'
-        sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
+        sed -n -e '/ cifs /s/.*\ \([^ ]*\)\ cifs\ .*/\1/p' </proc/mounts |
             sed 's/\\040/ /g' |
             while read -r MP; do
                 if [ ! -r "${MP}" ]; then

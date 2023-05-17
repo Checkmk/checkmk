@@ -285,7 +285,12 @@ def get_active_check_preview_rows(
             for plugin_name, entries in active_checks
             for params in entries
             for descr in get_active_check_descriptions(
-                host_name, alias, host_attrs, plugin_name, params
+                plugin_name,
+                config.active_check_info[plugin_name],
+                host_name,
+                alias,
+                host_attrs,
+                params,
             )
         }.values()
     )

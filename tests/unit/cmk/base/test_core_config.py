@@ -310,7 +310,13 @@ def test_iter_active_check_services(
     active_info = active_check_info[check_name]
     services = list(
         config.iter_active_check_services(
-            check_name, active_info, hostname, host_attrs, {}, password_store.load()
+            check_name,
+            active_info,
+            hostname,
+            host_attrs["alias"],
+            host_attrs,
+            {},
+            password_store.load(),
         )
     )
     assert services == expected_result

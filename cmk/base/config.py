@@ -207,6 +207,7 @@ def iter_active_check_services(
     check_name: str,
     active_info: Mapping[str, Any],
     hostname: HostName,
+    hostalias: str,
     host_attrs: ObjectAttributes,
     params: dict[Any, Any],
     stored_passwords_: Mapping[str, str],
@@ -224,7 +225,7 @@ def iter_active_check_services(
             yield str(desc), str(args)
         return
 
-    description = active_check_service_description(hostname, host_config.alias, check_name, params)
+    description = active_check_service_description(hostname, hostalias, check_name, params)
     arguments = commandline_arguments(
         hostname,
         description,
@@ -259,17 +260,17 @@ def _get_host_address_config(
 
 
 def get_active_check_descriptions(
+    check_name: str,
+    active_info: Mapping[str, Any],
     hostname: HostName,
     hostalias: str,
     host_attrs: ObjectAttributes,
-    check_name: str,
     params: dict,
 ) -> Iterator[str]:
     host_config = _get_host_address_config(hostname, host_attrs)
-    active_check_info_ = active_check_info[check_name]
 
-    if "service_generator" in active_check_info_:
-        for description, _ in active_check_info_["service_generator"](host_config, params):
+    if "service_generator" in active_info:
+        for description, _ in active_info["service_generator"](host_config, params):
             yield str(description)
         return
 

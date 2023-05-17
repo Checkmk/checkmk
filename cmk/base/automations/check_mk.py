@@ -1023,10 +1023,11 @@ class AutomationAnalyseServices(Automation):
             for plugin_name, entries in config_cache.active_checks(host_name):
                 for active_check_params in entries:
                     for description in config.get_active_check_descriptions(
+                        plugin_name,
+                        config.active_check_info[plugin_name],
                         host_name,
                         config_cache.alias(host_name),
                         host_attrs,
-                        plugin_name,
                         active_check_params,
                     ):
                         if description == servicedesc:
@@ -1853,7 +1854,13 @@ class AutomationActiveCheck(Automation):
         with plugin_contexts.current_host(host_name):
             for params in dict(config_cache.active_checks(host_name)).get(plugin, []):
                 for description, command_args in config.iter_active_check_services(
-                    plugin, act_info, host_name, host_attrs, params, stored_passwords
+                    plugin,
+                    act_info,
+                    host_name,
+                    host_attrs["alias"],
+                    host_attrs,
+                    params,
+                    stored_passwords,
                 ):
                     if description != item:
                         continue

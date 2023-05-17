@@ -80,9 +80,7 @@ _STATE_MAP: Final = {
 def parse_cisco_fru_power(string_table: List[StringTable]) -> Section:
     ppre_parsed = {}
     for end_oid, oper_state, fru_current in string_table[0]:
-        # We discover only "real" power supplies which have current value >= 0
-        # Others such as modules do not have such values
-        if oper_state not in ["", "0", "1", "5"] and fru_current and int(fru_current) >= 0:
+        if _is_real_psu(oper_state, fru_current):
             ppre_parsed.setdefault(
                 end_oid, _STATE_MAP.get(oper_state, (3, "unexpected(%s)" % oper_state))
             )
@@ -102,6 +100,12 @@ def parse_cisco_fru_power(string_table: List[StringTable]) -> Section:
             parsed[name] = infos[0]
 
     return parsed
+
+
+def _is_real_psu(oper_state: str, current: str) -> bool:
+    # We discover only "real" power supplies which have current value >= 0
+    # Others such as modules do not have such values
+    return oper_state not in ["", "0", "1", "5"] and bool(current) and int(current) >= 0
 
 
 def discover_cisco_fru_power(section: Section) -> DiscoveryResult:

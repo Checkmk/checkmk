@@ -79,7 +79,7 @@ def test_openapi_password(
     assert resp.json["extensions"] == {
         "comment": "Something but nothing random",
         "documentation_url": "",
-        "owned_by": None,
+        "owned_by": "admin",
         "shared": ["all"],
         "customer": "global",
     }
@@ -295,3 +295,16 @@ def test_password_min_length_update(clients: ClientRegistry) -> None:
 
     resp.assert_status_code(400)
     assert resp.json["fields"] == {"password": ["string '' is too short. The minimum length is 1."]}
+
+
+def test_openapi_password_without_owner_regression(clients: ClientRegistry) -> None:
+    clients.Password.create(
+        ident="so_secret",
+        title="so_secret",
+        owner="admin",
+        password="no_one_can_know",
+        shared=["all"],
+    )
+
+    resp = clients.Password.get("so_secret")
+    assert resp.json["extensions"].get("owned_by") is not None

@@ -1199,10 +1199,7 @@ def _register_table_views_and_columns() -> None:
                 attr_hint,
             )
 
-        _register_table_view(
-            inventory.InventoryPath(path=hints.abc_path, source=inventory.TreeSource.table),
-            hints,
-        )
+        _register_table_view(hints)
 
 
 # .
@@ -1535,10 +1532,7 @@ class ABCDataSourceInventory(ABCDataSource):
         raise NotImplementedError()
 
 
-def _register_table_view(
-    inventory_path: inventory.InventoryPath,
-    hints: DisplayHints,
-) -> None:
+def _register_table_view(hints: DisplayHints) -> None:
     if (table_view_spec := hints.table_hint.view_spec) is None:
         return
 
@@ -1555,7 +1549,9 @@ def _register_table_view(
             (ABCDataSourceInventory,),
             {
                 "_ident": table_view_spec.view_name,
-                "_inventory_path": inventory_path,
+                "_inventory_path": inventory.InventoryPath(
+                    path=hints.abc_path, source=inventory.TreeSource.table
+                ),
                 "_title": table_view_spec.long_inventory_title,
                 "_infos": ["host", table_view_spec.view_name],
                 "ident": property(lambda s: s._ident),
@@ -1590,7 +1586,8 @@ def _register_table_view(
         table_view_spec.title,
         painters,
         filters,
-        inventory_path,
+        hints.abc_path,
+        hints.table_hint.is_show_more,
         table_view_spec.icon,
     )
 
@@ -1619,12 +1616,11 @@ def _register_views(
     title_plural: str,
     painters: Sequence[ColumnSpec],
     filters: Iterable[FilterName],
-    inventory_path: inventory.InventoryPath,
-    icon: Icon | None = None,
+    path: SDPath,
+    is_show_more: bool,
+    icon: Icon | None,
 ) -> None:
     """Declare two views: one for searching globally. And one for the items of one host"""
-    is_show_more = DISPLAY_HINTS.get_hints(inventory_path.path).table_hint.is_show_more
-
     context: VisualContext = {f: {} for f in filters}
 
     # View for searching for items
@@ -1697,7 +1693,7 @@ def _register_views(
         "mustsearch": False,
         "link_from": {
             "single_infos": ["host"],
-            "has_inventory_tree": inventory_path.path,
+            "has_inventory_tree": path,
         },
         # Columns
         "painters": painters,

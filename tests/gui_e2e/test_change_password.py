@@ -58,18 +58,18 @@ def _change_password(page: PPage, new_pw: str, new_pw_conf: str, old_pw: str) ->
 
 
 @pytest.mark.parametrize(
-    "new_pw,new_pw_conf,old_pw",
+    "new_pw,new_pw_conf",
     [
-        ("new", "new", "cmk"),
-        ("😎 ", "😎 ", "cmk"),
-        ("😎 ", "", "cmk"),
+        ("newnewnewnew", "newnewnewnew"),
+        ("😎 😎 😎 😎 😎 😎 ", "😎 😎 😎 😎 😎 😎 "),
+        ("😎 😎 😎 😎 😎 😎 ", ""),
     ],
 )
 def test_user_change_password_success(
+    test_site: Site,
     logged_in_page: PPage,
     new_pw: str,
     new_pw_conf: str,
-    old_pw: str,
 ) -> None:
     """Test changing the user's own password in the user profile menu"""
     # Note: if these fail, we will probably also fail to reset the password to "cmk", so you might
@@ -77,12 +77,10 @@ def test_user_change_password_success(
 
     page = logged_in_page
 
-    _change_password(page, new_pw=new_pw, new_pw_conf=new_pw_conf, old_pw=old_pw)
+    _change_password(page, new_pw=new_pw, new_pw_conf=new_pw_conf, old_pw=test_site.admin_password)
     page.main_area.check_success("Successfully changed password.")
 
-    # change the password back to cmk
-    _change_password(page, new_pw="cmk", new_pw_conf="cmk", old_pw=new_pw)
-    page.main_area.check_success("Successfully changed password.")
+    test_site.reset_admin_password()
 
 
 @pytest.mark.parametrize(
@@ -119,7 +117,7 @@ def test_user_change_password_incompatible_with_policy(
     the PW policy
     """
     page = logged_in_page
-    _change_password(page, new_pw="1234", new_pw_conf="1234", old_pw="cmk")
+    _change_password(page, new_pw="123456789010", new_pw_conf="123456789010", old_pw="cmk")
     page.main_area.check_error(
         "The password does not use enough character groups. You need to "
         "set a password which uses at least %d of them." % 2
@@ -162,8 +160,8 @@ def test_setting_password_incompatible_with_policy(
     pw_field_suffix = "Y21rYWRtaW4="  # base64 'cmkadmin'
     logged_in_page.go(test_site.url_for_path("wato.py?edit=cmkadmin&folder=&mode=edit_user"))
 
-    logged_in_page.locator(f"input[name='_password_{pw_field_suffix}']").fill("cmk")
-    logged_in_page.locator(f"input[name='_password2_{pw_field_suffix}']").fill("cmk")
+    logged_in_page.locator(f"input[name='_password_{pw_field_suffix}']").fill("cmkcmkcmkcmk")
+    logged_in_page.locator(f"input[name='_password2_{pw_field_suffix}']").fill("cmkcmkcmkcmk")
     logged_in_page.locator("#suggestions >> text=Save").click()
 
     logged_in_page.check_error(

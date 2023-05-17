@@ -506,6 +506,11 @@ class Site:
         p = self.execute(["mkdir", "-p", self.path(rel_path)])
         return p.wait() == 0
 
+    def reset_admin_password(self, new_password: str | None = None) -> None:
+        self.check_output(
+            ["cmk-passwd", "-i", "cmkadmin"], input=new_password or self.admin_password
+        )
+
     def listdir(self, rel_path: str) -> list[str]:
         p = self.execute(["ls", "-1", self.path(rel_path)], stdout=subprocess.PIPE)
         output = p.communicate()[0].strip()

@@ -26,11 +26,11 @@ def _change_password(page: PPage, old_password: str, new_password: str) -> None:
     page.main_area.check_success("Successfully changed password.")
 
 
-def test_v2_1_5(logged_in_page: PPage) -> None:
+def test_v2_1_5(test_site: Site, logged_in_page: PPage) -> None:
     """Verify users can change their password."""
 
     page = logged_in_page
-    _change_password(page, "cmk", "not-cmk")
+    _change_password(page, "cmk", "not-cmk-really-not")
     page.logout()
 
     # check old password, shouldn't work anymore
@@ -38,10 +38,7 @@ def test_v2_1_5(logged_in_page: PPage) -> None:
     page.check_error("Invalid login")
 
     # changing it back for other tests
-    page.login("cmkadmin", "not-cmk")
-    page.main_area.check_page_title("Main dashboard")
-    _change_password(page, "not-cmk", "cmk")
-    page.logout()
+    test_site.reset_admin_password()
 
     page.login("cmkadmin", "cmk")
     page.main_area.check_page_title("Main dashboard")

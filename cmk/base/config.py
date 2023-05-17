@@ -1777,7 +1777,6 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
     context = {
         "check_info": check_info,
         "precompile_params": precompile_params,
-        "factory_settings": factory_settings,
         "active_check_info": active_check_info,
         "special_agent_info": special_agent_info,
     }
@@ -1954,7 +1953,6 @@ def _extract_check_plugins(
                 create_check_plugin_from_legacy(
                     check_plugin_name,
                     check_info_dict,
-                    factory_settings,
                     contexts[check_plugin_name],
                     validate_creation_kwargs=validate_creation_kwargs,
                 )

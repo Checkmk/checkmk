@@ -8,7 +8,7 @@ import copy
 import functools
 import itertools
 from collections import defaultdict
-from collections.abc import Callable, Generator, Iterable, Mapping
+from collections.abc import Callable, Generator, Iterable
 from contextlib import suppress
 from typing import Any
 
@@ -26,7 +26,6 @@ from cmk.base.api.agent_based.checking_classes import (
     State,
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
 from .utils_legacy import LegacyCheckDefinition
 
@@ -275,24 +274,9 @@ def _create_signature_check_function(
     return check_migration_wrapper
 
 
-def _create_wrapped_parameters(
-    check_info_element: LegacyCheckDefinition,
-    factory_settings: dict[str, Mapping],
-) -> ParametersTypeAlias:
-    """compute default parameters and wrap them in a dictionary"""
-    if (params_variable_name := check_info_element.get("default_levels_variable")) is None:
-        return {}
-
-    default_parameters = factory_settings[params_variable_name]
-    if isinstance(default_parameters, dict):
-        return default_parameters
-    return wrap_parameters(default_parameters)
-
-
 def create_check_plugin_from_legacy(
     check_plugin_name: str,
     check_info_element: LegacyCheckDefinition,
-    factory_settings: dict[str, Mapping[str, Any]],
     check_context: dict[str, object],
     *,
     validate_creation_kwargs: bool = True,
@@ -309,11 +293,6 @@ def create_check_plugin_from_legacy(
         )
 
     new_check_name = maincheckify(check_plugin_name)
-
-    check_default_parameters = _create_wrapped_parameters(
-        check_info_element,
-        factory_settings,
-    )
 
     discovery_function = _create_discovery_function(
         check_plugin_name,
@@ -334,7 +313,7 @@ def create_check_plugin_from_legacy(
         discovery_default_parameters=None,  # legacy madness!
         discovery_ruleset_name=None,
         check_function=check_function,
-        check_default_parameters=check_default_parameters,
+        check_default_parameters=check_info_element.get("check_default_parameters", {}),
         check_ruleset_name=check_info_element.get("check_ruleset_name"),
         # Legacy check plugins may return an item even if the service description
         # does not contain a '%s'. In this case the old check API assumes an implicit,

@@ -1,0 +1,16 @@
+Title: <tt>mk_oracle</tt>: Fix asynchronous execution on <tt>systemd</tt> systems and direct call from the command line
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1684319501
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p29
+
+On <tt>systemd</tt> systems, the Oracle agent plugin did not properly execute any asynchronous SQL
+queries (see also <a href="https://checkmk.com/werk/13732">werk #13732</a>). Furthermore, when being
+called directly from the command line without any options, the plugin incorrectly reported
+`Unhandled location` and terminated, even if it was located under <tt>..check_mk_agent/plugins/</tt>.
+

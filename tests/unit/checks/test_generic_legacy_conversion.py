@@ -350,7 +350,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "cisco_fan",
         "cisco_fantray",
         "cisco_fru_module_status",
-        "cisco_fru_power",
         "cisco_fru_powerusage",
         "cisco_hsrp",
         "cisco_ip_sla",

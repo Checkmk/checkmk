@@ -46,25 +46,28 @@
 # ...
 
 
-from collections.abc import Container, Iterable, Mapping
+from collections.abc import Container, Mapping
 from dataclasses import dataclass
 from itertools import groupby
 from typing import Final, List
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
     contains,
     not_exists,
     OIDCached,
     OIDEnd,
+    register,
+    Result,
+    Service,
     SNMPTree,
+    State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-DiscoveryResult = Iterable[tuple[str, dict]]
-CheckResult = Iterable[tuple[int, str]]
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
 
 @dataclass(frozen=True)
@@ -76,18 +79,18 @@ class FRU:
 Section = Mapping[str, FRU]
 
 _STATE_MAP: Final = {
-    1: (1, "off env other"),
-    2: (0, "on"),
-    3: (1, "off admin"),
-    4: (2, "off denied"),
-    5: (2, "off env power"),
-    6: (2, "off env temp"),
-    7: (2, "off env fan"),
-    8: (2, "failed"),
-    9: (1, "on but fan fail"),
-    10: (1, "off cooling"),
-    11: (1, "off connector rating"),
-    12: (2, "on but inline power fail"),
+    1: (State.WARN, "off env other"),
+    2: (State.OK, "on"),
+    3: (State.WARN, "off admin"),
+    4: (State.CRIT, "off denied"),
+    5: (State.CRIT, "off env power"),
+    6: (State.CRIT, "off env temp"),
+    7: (State.CRIT, "off env fan"),
+    8: (State.CRIT, "failed"),
+    9: (State.WARN, "on but fan fail"),
+    10: (State.WARN, "off cooling"),
+    11: (State.WARN, "off connector rating"),
+    12: (State.CRIT, "on but inline power fail"),
 }
 
 
@@ -129,25 +132,22 @@ def _oid_name_map(names: StringTable, filter_oids: Container[str]) -> Mapping[st
 
 
 def discover_cisco_fru_power(section: Section) -> DiscoveryResult:
-    yield from ((item, {}) for item, fru in section.items() if fru.state != 3)
+    yield from (Service(item=item) for item, fru in section.items() if fru.state != 3)
 
 
-def check_cisco_fru_power(item: str, _no_params: object, section: Section) -> CheckResult:
+def check_cisco_fru_power(item: str, section: Section) -> CheckResult:
     if (fru := section.get(item)) is None:
         return
 
-    state, state_readable = _STATE_MAP.get(fru.state, (3, f"unexpected ({fru.state})"))
-    yield state, "Status: %s" % state_readable
+    state, state_readable = _STATE_MAP.get(fru.state, (State.UNKNOWN, f"unexpected ({fru.state})"))
+    yield Result(state=state, summary="Status: %s" % state_readable)
 
 
-check_info["cisco_fru_power"] = LegacyCheckDefinition(
+register.snmp_section(
+    name="cisco_fru_power",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), not_exists(".1.3.6.1.4.1.9.9.13.1.5.1.*")
     ),
-    parse_function=parse_cisco_fru_power,
-    discovery_function=discover_cisco_fru_power,
-    check_function=check_cisco_fru_power,
-    service_name="FRU Power %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.117.1.1.2.1",
@@ -158,4 +158,12 @@ check_info["cisco_fru_power"] = LegacyCheckDefinition(
             oids=[OIDEnd(), OIDCached("7")],
         ),
     ],
+    parse_function=parse_cisco_fru_power,
+)
+
+register.check_plugin(
+    name="cisco_fru_power",
+    service_name="FRU Power %s",
+    discovery_function=discover_cisco_fru_power,
+    check_function=check_cisco_fru_power,
 )

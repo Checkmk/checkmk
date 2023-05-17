@@ -4,11 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import pytest
-
-from cmk.base.legacy_checks.cisco_fru_power import FRU, parse_cisco_fru_power
-
-pytestmark = pytest.mark.checks
+from cmk.base.plugins.agent_based.cisco_fru_power import FRU, parse_cisco_fru_power
 
 
 def test_parse_cisco_fru_power() -> None:

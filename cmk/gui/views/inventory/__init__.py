@@ -901,17 +901,6 @@ def _inv_filter_info():
     }
 
 
-def inv_titleinfo_long(raw_path: str) -> str:
-    """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
-    inventory_path = inventory.InventoryPath.parse(raw_path)
-    hints = DISPLAY_HINTS.get_hints(inventory_path.path)
-
-    if inventory_path.key:
-        return hints.get_attribute_hint(inventory_path.key).long_title
-
-    return hints.node_hint.long_title
-
-
 @dataclass
 class _RelatedRawHints:
     for_node: InventoryHintSpec = field(default_factory=dict)

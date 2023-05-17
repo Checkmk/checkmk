@@ -1590,7 +1590,7 @@ def _register_table_view(
         table_view_spec.title,
         painters,
         filters,
-        [inventory_path],
+        inventory_path,
         table_view_spec.icon,
     )
 
@@ -1619,13 +1619,11 @@ def _register_views(
     title_plural: str,
     painters: Sequence[ColumnSpec],
     filters: Iterable[FilterName],
-    inventory_paths: Sequence[inventory.InventoryPath],
+    inventory_path: inventory.InventoryPath,
     icon: Icon | None = None,
 ) -> None:
     """Declare two views: one for searching globally. And one for the items of one host"""
-    is_show_more = True
-    if len(inventory_paths) == 1:
-        is_show_more = DISPLAY_HINTS.get_hints(inventory_paths[0].path).table_hint.is_show_more
+    is_show_more = DISPLAY_HINTS.get_hints(inventory_path.path).table_hint.is_show_more
 
     context: VisualContext = {f: {} for f in filters}
 
@@ -1699,7 +1697,7 @@ def _register_views(
         "mustsearch": False,
         "link_from": {
             "single_infos": ["host"],
-            "has_inventory_tree": [inventory_path.path for inventory_path in inventory_paths],
+            "has_inventory_tree": inventory_path.path,
         },
         # Columns
         "painters": painters,
@@ -1752,7 +1750,8 @@ multisite_builtin_views["inv_host"] = {
     "hidden": True,
     "link_from": {
         "single_infos": ["host"],
-        "has_inventory_tree": [inventory.InventoryPath.parse(".").path],
+        # Check root of inventory tree
+        "has_inventory_tree": tuple(),
     },
     # Layout options
     "layout": "dataset",
@@ -2136,7 +2135,7 @@ multisite_builtin_views["inv_host_history"] = {
     "is_show_more": True,
     "link_from": {
         "single_infos": ["host"],
-        "has_inventory_tree_history": [inventory.InventoryPath.parse(".").path],
+        "has_inventory_tree_history": tuple(),
     },
     # Layout options
     "layout": "table",

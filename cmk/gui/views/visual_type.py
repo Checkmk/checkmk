@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 
 from livestatus import SiteId
 
@@ -110,12 +110,12 @@ class VisualTypeViews(VisualType):
         return _has_inventory_tree(
             hostname,
             SiteId(str(site_id)),
-            link_from.get("has_inventory_tree", []),
+            link_from.get("has_inventory_tree"),
             is_history=False,
         ) or _has_inventory_tree(
             hostname,
             SiteId(str(site_id)),
-            link_from.get("has_inventory_tree_history", []),
+            link_from.get("has_inventory_tree_history"),
             is_history=True,
         )
 
@@ -123,10 +123,10 @@ class VisualTypeViews(VisualType):
 def _has_inventory_tree(
     hostname: HostName,
     site_id: SiteId,
-    paths: Sequence[SDPath],
+    path: SDPath | None,
     is_history: bool,
 ) -> bool:
-    if not paths:
+    if path is None:
         return False
 
     # FIXME In order to decide whether this view is enabled
@@ -142,9 +142,10 @@ def _has_inventory_tree(
     if struct_tree.is_empty():
         return False
 
-    return any(
-        (node := struct_tree.get_node(path)) is not None and not node.is_empty() for path in paths
-    )
+    if (node := struct_tree.get_node(path)) is None:
+        return False
+
+    return not node.is_empty()
 
 
 def _get_struct_tree(

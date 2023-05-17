@@ -213,8 +213,8 @@ SingleInfos = Sequence[InfoName]
 class LinkFromSpec(TypedDict, total=False):
     single_infos: SingleInfos
     host_labels: Labels
-    has_inventory_tree: Sequence[SDPath]
-    has_inventory_tree_history: Sequence[SDPath]
+    has_inventory_tree: SDPath
+    has_inventory_tree_history: SDPath
 
 
 class Visual(TypedDict):

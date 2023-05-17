@@ -93,13 +93,31 @@
 # get cbQosQueueingCfgBandwidth
 # .1.3.6.1.4.1.9.9.166.1.9.1.1.1.1608 3094
 
-from collections.abc import Mapping
+import time
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import Any, List, Literal
 
-from .agent_based_api.v1 import all_of, contains, exists, OIDEnd, register, SNMPTree
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import (
+    all_of,
+    check_levels,
+    contains,
+    exists,
+    get_average,
+    get_rate,
+    get_value_store,
+    GetRateError,
+    Metric,
+    OIDEnd,
+    register,
+    render,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class InterfaceName(str):
@@ -386,4 +404,123 @@ register.snmp_section(
             oids=[OIDEnd(), "3"],
         ),
     ],
+)
+
+
+def discover_cisco_qos(section: Section) -> DiscoveryResult:
+    yield from (Service(item=f"{if_name}: {class_name}") for if_name, class_name in section)
+
+
+def check_cisco_qos(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
+    yield from check_cisco_qos_(
+        item=item,
+        params=params,
+        section=section,
+        timestamp=time.time(),
+        value_store=get_value_store(),
+    )
+
+
+def check_cisco_qos_(
+    *,
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+    timestamp: float,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+    raw_if_name, raw_class_name = item.split(": ")
+    if not (qos_data := section.get((InterfaceName(raw_if_name), cbQosCMName(raw_class_name)))):
+        return
+
+    unit = params.get("unit", "bit")
+    average = params.get("average")
+
+    for label, metric_name, counter, thresholds in [
+        (
+            "Outbound traffic",
+            "qos_outbound_bits_rate",
+            qos_data.outbound_bits_counter,
+            _compute_thresholds(params.get("post"), qos_data.bandwidth, unit),
+        ),
+        (
+            "Dropped traffic",
+            "qos_dropped_bits_rate",
+            qos_data.dropped_bits_counter,
+            _compute_thresholds(params.get("drop"), qos_data.bandwidth, unit),
+        ),
+    ]:
+        try:
+            rate = get_rate(
+                value_store=value_store,
+                key=metric_name,
+                time=timestamp,
+                value=counter,
+                raise_overflow=True,
+            )
+        except GetRateError:
+            continue
+        yield from check_levels(
+            get_average(
+                value_store=value_store,
+                key=f"{metric_name}.avg",
+                time=timestamp,
+                value=rate,
+                backlog_minutes=average,
+            )
+            if average
+            else rate,
+            levels_upper=thresholds,
+            label=f"{label} ({average}-min. average)" if average else label,
+            render_func=lambda v: (
+                render.networkbandwidth if unit == "bit" else render.iobandwidth
+            )(v / 8),
+        )
+        yield Metric(
+            name=metric_name,
+            value=rate,
+            levels=thresholds,
+            boundaries=(0, qos_data.bandwidth),
+        )
+
+    yield Result(
+        state=State.OK,
+        summary=f"Policy map name: {qos_data.policy_map_name}"
+        if qos_data.policy_map_name
+        else f"Policy map  config index: {qos_data.policy_map_index}",
+    )
+    yield Result(
+        state=State.OK,
+        summary=f"Bandwidth: {(render.nicspeed if unit == 'bit' else render.iobandwidth)(qos_data.bandwidth / 8 )}",
+    )
+
+
+def _compute_thresholds(
+    raw_thresholds: tuple[float, float] | None,
+    bandwidth: float,
+    unit: Literal["bit", "byte"],
+) -> tuple[float, float] | None:
+    if not raw_thresholds:
+        return None
+    if isinstance(raw_thresholds[0], float) and bandwidth:
+        return bandwidth * raw_thresholds[0] / 100, bandwidth * raw_thresholds[1] / 100
+    if isinstance(raw_thresholds[0], int):
+        return raw_thresholds if unit == "bit" else (raw_thresholds[0] * 8, raw_thresholds[1] * 8)
+    return None
+
+
+register.check_plugin(
+    name="cisco_qos",
+    service_name="QoS %s",
+    discovery_function=discover_cisco_qos,
+    check_function=check_cisco_qos,
+    check_default_parameters={
+        "drop": (1, 1),
+        "unit": "bit",
+    },
+    check_ruleset_name="cisco_qos",
 )

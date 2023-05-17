@@ -6,15 +6,15 @@
 from collections.abc import Mapping
 
 import pytest
-from pytest_mock import MockerFixture
-
-from tests.unit.conftest import FixRegister
-
-from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.cisco_qos import parse_cisco_qos, Section
+from cmk.base.plugins.agent_based.cisco_qos import (
+    check_cisco_qos_,
+    discover_cisco_qos,
+    parse_cisco_qos,
+    Section,
+)
 
 
 @pytest.fixture(name="section", scope="module")
@@ -613,10 +613,8 @@ def fixture_section() -> Section:
     )
 
 
-def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None:
-    assert list(
-        fix_register.check_plugins[CheckPluginName("cisco_qos")].discovery_function(section)
-    ) == [
+def test_discover_cisco_qos(section: Section) -> None:
+    assert list(discover_cisco_qos(section)) == [
         Service(item="GigabitEthernet0/3: class-default"),
         Service(item="GigabitEthernet0/6: class-default"),
         Service(item="GigabitEthernet0/1.ServiceInstance.16: class-default"),
@@ -658,15 +656,20 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
             "GigabitEthernet0/1.ServiceInstance.16: class-default",
             {},
             100,
+            {},
+            [
+                Result(state=State.OK, summary="Policy map name: queue-fix"),
+                Result(state=State.OK, summary="Bandwidth: 100 kBit/s"),
+            ],
+            id="empty value store should not raise GetRateError",
+        ),
+        pytest.param(
+            "GigabitEthernet0/1.ServiceInstance.16: class-default",
+            {},
+            100,
             {
-                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/1.ServiceInstance.16: class-default": (
-                    50,
-                    6728000000,
-                ),
-                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/1.ServiceInstance.16: class-default": (
-                    50,
-                    0,
-                ),
+                "qos_outbound_bits_rate": (50, 6728000000),
+                "qos_dropped_bits_rate": (50, 0),
             },
             [
                 Result(state=State.OK, summary="Outbound traffic: 31.3 kBit/s"),
@@ -686,14 +689,8 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
             },
             100,
             {
-                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default": (
-                    50,
-                    27597768680,
-                ),
-                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default": (
-                    50,
-                    700007200,
-                ),
+                "qos_outbound_bits_rate": (50, 27597768680),
+                "qos_dropped_bits_rate": (50, 700007200),
             },
             [
                 Result(
@@ -730,14 +727,8 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
             },
             100,
             {
-                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default": (
-                    50,
-                    27597768680,
-                ),
-                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default": (
-                    50,
-                    700007200,
-                ),
+                "qos_outbound_bits_rate": (50, 27597768680),
+                "qos_dropped_bits_rate": (50, 700007200),
             },
             [
                 Result(
@@ -769,27 +760,15 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
             },
             100,
             {
-                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default": (
-                    50,
-                    27597768680,
-                ),
-                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default": (
-                    50,
-                    700007200,
-                ),
-                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default.avg": (
-                    50,
-                    80000,
-                ),
-                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default.avg": (
-                    50,
-                    1600,
-                ),
+                "qos_outbound_bits_rate": (50, 27597768680),
+                "qos_dropped_bits_rate": (50, 700007200),
+                "qos_outbound_bits_rate.avg": (50, 80000),
+                "qos_dropped_bits_rate.avg": (50, 1600),
             },
             [
-                Result(state=State.OK, summary="Outbound traffic (10-min. average): 76.6 kBit/s"),
+                Result(state=State.OK, summary="Outbound traffic (10-min. average): 19.4 kBit/s"),
                 Metric("qos_outbound_bits_rate", 19360.0, boundaries=(0.0, 100000.0)),
-                Result(state=State.OK, summary="Dropped traffic (10-min. average): 1.56 kBit/s"),
+                Result(state=State.OK, summary="Dropped traffic (10-min. average): 900 Bit/s"),
                 Metric("qos_dropped_bits_rate", 899.84, boundaries=(0.0, 100000.0)),
                 Result(state=State.OK, summary="Policy map name: 200Mbit"),
                 Result(state=State.OK, summary="Bandwidth: 100 kBit/s"),
@@ -805,27 +784,15 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
             },
             100,
             {
-                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default": (
-                    50,
-                    27597768680,
-                ),
-                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default": (
-                    50,
-                    700007200,
-                ),
-                "cisco_qos.qos_outbound_bits_rate.GigabitEthernet0/6: class-default.avg": (
-                    50,
-                    80000,
-                ),
-                "cisco_qos.qos_dropped_bits_rate.GigabitEthernet0/6: class-default.avg": (
-                    50,
-                    800,
-                ),
+                "qos_outbound_bits_rate": (50, 27597768680),
+                "qos_dropped_bits_rate": (50, 700007200),
+                "qos_outbound_bits_rate.avg": (50, 80000),
+                "qos_dropped_bits_rate.avg": (50, 800),
             },
             [
                 Result(
-                    state=State.CRIT,
-                    summary="Outbound traffic (10-min. average): 76.6 kBit/s (warn/crit at 10.0 kBit/s/20.0 kBit/s)",
+                    state=State.WARN,
+                    summary="Outbound traffic (10-min. average): 19.4 kBit/s (warn/crit at 10.0 kBit/s/20.0 kBit/s)",
                 ),
                 Metric(
                     "qos_outbound_bits_rate",
@@ -833,7 +800,7 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
                     levels=(10000.0, 20000.0),
                     boundaries=(0.0, 100000.0),
                 ),
-                Result(state=State.OK, summary="Dropped traffic (10-min. average): 806 Bit/s"),
+                Result(state=State.OK, summary="Dropped traffic (10-min. average): 900 Bit/s"),
                 Metric(
                     "qos_dropped_bits_rate",
                     899.84,
@@ -847,9 +814,7 @@ def test_discover_cisco_qos(fix_register: FixRegister, section: Section) -> None
         ),
     ],
 )
-def test_check_cisco_qos(
-    mocker: MockerFixture,
-    fix_register: FixRegister,
+def test_check_cisco_qos_(
     section: Section,
     item: str,
     params: Mapping[str, object],
@@ -857,20 +822,14 @@ def test_check_cisco_qos(
     value_store: Mapping[str, object],
     expected_result: CheckResult,
 ) -> None:
-    mocker.patch(
-        "cmk.base.legacy_checks.cisco_qos.time.time",
-        lambda: timestamp,
-    )
-    mocker.patch(
-        "cmk.base.item_state.get_value_store",
-        lambda: value_store,
-    )
     assert (
         list(
-            fix_register.check_plugins[CheckPluginName("cisco_qos")].check_function(
+            check_cisco_qos_(
                 item=item,
                 params=params,
                 section=section,
+                timestamp=timestamp,
+                value_store=dict(value_store),
             )
         )
         == expected_result
@@ -991,29 +950,21 @@ def fixture_section_zero_speed() -> Section:
     ],
 )
 def test_check_cisco_qos_zero_speed(
-    mocker: MockerFixture,
-    fix_register: FixRegister,
     section_zero_speed: Section,
     params: Mapping[str, object],
     expected_result: CheckResult,
 ) -> None:
-    mocker.patch(
-        "cmk.base.legacy_checks.cisco_qos.time.time",
-        lambda: 100,
-    )
-    mocker.patch(
-        "cmk.base.item_state.get_value_store",
-        lambda: {
-            "cisco_qos.qos_outbound_bits_rate.QoS Ethernet1/8: c-out-q3": (60, 0),
-            "cisco_qos.qos_dropped_bits_rate.QoS Ethernet1/8: c-out-q3": (60, 0),
-        },
-    )
     assert (
         list(
-            fix_register.check_plugins[CheckPluginName("cisco_qos")].check_function(
+            check_cisco_qos_(
                 item="QoS Ethernet1/8: c-out-q3",
                 params=params,
                 section=section_zero_speed,
+                timestamp=100,
+                value_store={
+                    "qos_outbound_bits_rate": (60, 0),
+                    "qos_dropped_bits_rate": (60, 0),
+                },
             )
         )
         == expected_result

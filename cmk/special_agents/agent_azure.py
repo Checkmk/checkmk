@@ -171,7 +171,7 @@ ALL_METRICS: dict[str, list[tuple]] = {
 }
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> Args:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
@@ -645,10 +645,10 @@ class ExplicitConfig:
             self.add_key(key, value)
 
     @property
-    def fetchall(self):
+    def fetchall(self) -> bool:
         return not self.groups
 
-    def add_key(self, key, value):
+    def add_key(self, key: str, value: str) -> None:
         if key == "group":
             self.current_group = self.groups.setdefault(value, GroupConfig(value))
             return
@@ -656,7 +656,7 @@ class ExplicitConfig:
             raise RuntimeError("missing arg: group=<name>")
         self.current_group.add_key(key, value)
 
-    def is_configured(self, resource) -> bool:  # type: ignore[no-untyped-def]
+    def is_configured(self, resource: AzureResource) -> bool:
         if self.fetchall:
             return True
         group_config = self.groups.get(resource.info["group"])
@@ -673,12 +673,12 @@ class ExplicitConfig:
 
 
 class TagBasedConfig:
-    def __init__(self, required, key_values) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, required: Sequence[str], key_values: Sequence[Sequence[str]]) -> None:
         super().__init__()
         self._required = required
         self._values = key_values
 
-    def is_configured(self, resource) -> bool:  # type: ignore[no-untyped-def]
+    def is_configured(self, resource: AzureResource) -> bool:
         if not all(k in resource.tags for k in self._required):
             return False
         for key, val in self._values:
@@ -696,12 +696,12 @@ class TagBasedConfig:
 
 
 class Selector:
-    def __init__(self, args) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, args: Args) -> None:
         super().__init__()
         self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
         self._tag_based_config = TagBasedConfig(args.require_tag, args.require_tag_value)
 
-    def do_monitor(self, resource):
+    def do_monitor(self, resource: AzureResource) -> bool:
         if not self._explicit_config.is_configured(resource):
             return False
         if not self._tag_based_config.is_configured(resource):

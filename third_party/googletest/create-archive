@@ -3,12 +3,10 @@ set -e
 
 # Googletest doesn't provide releases anymore, it uses a "Abseil Live at Head philosophy" nowadays.
 SHA=71140c3ca7
+PACKAGE=googletest-${SHA}
 
 rm -rf googletest
-git clone \
-    --depth=1 \
-    --branch=main \
-    git@github.com:google/googletest.git
+git clone git@github.com:google/googletest.git
 cd googletest
 git checkout --detach ${SHA}
 git apply ../googletest.diff
@@ -16,8 +14,8 @@ git config user.name "John Doe"
 git config user.email "john@doe.com"
 git commit --all --message="Applied local patches"
 git archive \
-    --prefix=googletest-${SHA}-patched/ \
-    --output=../googletest-${SHA}-patched.tar.gz \
+    --prefix=${PACKAGE}-patched/ \
+    --output=../${PACKAGE}-patched.tar.gz \
     -9 \
     HEAD
 cd ..

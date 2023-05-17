@@ -77,7 +77,7 @@ def _show_activation_state_messages(
 ) -> None:
     html.open_div(id="activation_state_message_container")
 
-    html.open_div(class_="activation_state state%s" % state.value)
+    html.open_div(class_="state_bar state%s" % state.value)
     html.open_span()
     match state:
         case ActivationState.WARNING:
@@ -87,7 +87,7 @@ def _show_activation_state_messages(
     html.close_span()
     html.close_div()  # activation_state
 
-    html.open_div(class_="activation_state_message")
+    html.open_div(class_="message_container")
     html.h2(title)
     html.open_div()
     for msg in messages:

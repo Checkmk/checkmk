@@ -1,0 +1,74 @@
+Title: Adjustments to local extensions may be required
+Class: feature
+Compatible: incomp
+Component: multisite
+Date: 1684328541
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.2.0
+
+In 2.2, we moved a lot of internal UI code and removed implicitly imported
+names to reduce unclear situations. This helps our internal code structure, but
+may cause issues for existing extensions which were relying on these moved or
+removed names.<br><br>
+
+It is important to note that such code restructuring is part of the continuous
+improvement and evolution of Checkmk. These changes can lead to more efficient
+workflows, improved features, and better performance.<br><br>
+
+For 2.2 we tried to keep compatibility for the most extensions but could not
+make sure to cover them all.<br><br>
+
+Therefore, we would like to give you a few examples, how to adjust local
+extensions if you see incompatibilities with Checkmk 2.2.<br>
+Please note: Each example stands for one possible import problem, so the module
+names are interchangeable.<br><br>
+
+<b>Loading "metrics/my_custom_file" failed: No module named
+'cmk.gui.plugins.metrics.check_mk'</b><br>
+
+There is an import from the not existing module "cmk.gui.plugins.metrics.check_mk".
+Check your plugin to see what is imported from there, e.g. "df_translation" and
+add the import:
+
+F+:metrics/my_custom_file
+from cmk.gui.plugins.metrics.translation import df_translation
+F-:
+
+<b>Loading "views/my_custom_file" failed: name 'inventory_displayhints' is not
+defined</b><br>
+
+In earlier versions, an explicit import was not needed, with 2.2 you have to
+add:
+
+F+:views/my_custom_file
+from cmk.gui.views.inventory.registry import inventory_displayhints
+F-:
+
+<b>Loading "wato/my_custom_file" failed: cannot import name
+'RulespecGroupIntegrateOtherServices' from
+'cmk.gui.plugins.wato.active_checks'</b><br>
+
+The location of some modules may have changed. The simplest way to find the new
+place is to grep for it in '~/lib/python3/cmk/gui' and adjust the import in
+bar:
+
+F+:wato/my_custom_file
+from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
+F-:
+
+<b>Loading "wato/my_custom_file" failed: name 'socket' is not defined</b><br>
+
+System modules like 'socket' have to be imported from 2.2 on, so please add:
+
+F+:wato/my_custom_file
+import socket
+F-:
+
+For Checkmk 2.3 we plan to introduce a fully described API to avoid such
+adjustments with every major release in the future.<br><br>
+
+Also see related werks:
+
+<a href='https://checkmk.com/werk/13094'>Werk #13094: Various ValueSpec-related API cleanups</a>

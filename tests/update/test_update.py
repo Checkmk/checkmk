@@ -31,8 +31,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.type("update")
 def test_update(test_site: Site, tmp_path: Path) -> None:
-    # TODO: check source installation (version check done in test_site fixture)
-    # TODO: set config
+    # TODO: set config - see CMK-13493
 
     # get version data
     base_version = test_site.version
@@ -94,8 +93,7 @@ def test_update(test_site: Site, tmp_path: Path) -> None:
 
     target_site = update_site(test_site, target_version, interactive=True)
 
-    # TODO: check target installation (version check done in update_site function)
-    # TODO: check config
+    # TODO: check config - see CMK-13493
 
     # Dumping cmc config as parseable object (JSON)
     # cmk --dump-cmc-config
@@ -150,7 +148,7 @@ def test_update(test_site: Site, tmp_path: Path) -> None:
 
     assert len(target_data_host) >= len(base_data_host)
 
-    # TODO: 'Interface 2' service is not found after the update. Investigate.
+    # TODO: 'Interface 2' service is not found after the update. Investigate: CMK-13495
     base_ok_services.remove("Interface 2")
 
     err_msg = (

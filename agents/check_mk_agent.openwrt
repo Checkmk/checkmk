@@ -394,14 +394,9 @@ section_mounts() {
             done
 
         echo '<<<cifsmounts>>>'
-        # SC2162: read without -r will mangle backslashes.
-        # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
-        # Since escaping of field seperators is not relevant when reading into one variable, we probably
-        # would have wanted "read -r".
-        # shellcheck disable=SC2162
-        sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
+        sed -n -e '/ cifs /s/.*\ \([^ ]*\)\ cifs\ .*/\1/p' </proc/mounts |
             sed 's/\\040/ /g' |
-            while read MP; do
+            while read -r MP; do
                 if [ ! -r "${MP}" ]; then
                     echo "${MP} Permission denied"
                 elif [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then

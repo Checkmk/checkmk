@@ -1,0 +1,18 @@
+Title: agent_azure: Make resource group filter case-insensitive
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1684327089
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Due to the inconsistant behaviour of the Azure API, the filtering of
+resources by resource group wasn't working as expected.
+The resource group name returned by the API was sometimes of a different
+case then the one visible in the Azure portal, which led to resources not
+being discovered by Checkmk.
+
+Now, the resource group filtering is case-insensitive and the problem
+no longer occurrs.

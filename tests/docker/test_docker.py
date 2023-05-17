@@ -66,31 +66,14 @@ def resolve_image_alias(alias):
 def _build(request, client, version, add_args=None):
     _prepare_build()
 
-    print("Starting helper container for build secrets")
-    secret_container = client.containers.run(
-        image="busybox",
-        command=["timeout", "180", "httpd", "-f", "-p", "8000", "-h", "/files"],
-        detach=True,
-        remove=True,
-        volumes={
-            testlib.utils.get_cmk_download_credentials_file(): {
-                "bind": "/files/secret",
-                "mode": "ro"
-            }
-        },
-    )
-    request.addfinalizer(lambda: secret_container.remove(force=True))
-
     print("Building docker image: %s" % _image_name(version))
     try:
         image, build_logs = client.images.build(
             path=build_path,
             tag=_image_name(version),
-            network_mode="container:%s" % secret_container.id,
             buildargs={
                 "CMK_VERSION": version.version,
                 "CMK_EDITION": version.edition(),
-                "CMK_DL_CREDENTIALS": ":".join(testlib.utils.get_cmk_download_credentials()),
                 "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )
@@ -291,20 +274,6 @@ def test_start_with_custom_command(request, client, version):
 
     assert "Created new site" in output
     assert output.endswith("1\n")
-
-
-# Test that the local deb package is used by making the build fail because of an empty file
-def test_build_using_local_deb(request, client, version):
-    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "buster")
-    pkg_path = os.path.join(build_path, package_name)
-    try:
-        with open(pkg_path, "w") as f:
-            f.write("")
-
-        with pytest.raises(docker.errors.BuildError):
-            _build(request, client, version)
-    finally:
-        os.unlink(pkg_path)
 
 
 # Test that the local GPG file is used by making the build fail because of an empty file

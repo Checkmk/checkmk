@@ -1,5 +1,5 @@
 OPENSSL := openssl
-OPENSSL_VERS := 1.1.1q
+OPENSSL_VERS := 1.1.1t
 OPENSSL_DIR := $(OPENSSL)-$(OPENSSL_VERS)
 # Increase this to enforce a recreation of the build cache
 OPENSSL_BUILD_ID := 3

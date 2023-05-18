@@ -19,8 +19,6 @@
 # virtualmachine  OpenSUSE_I
 
 
-# mypy: disable-error-code="assignment"
-
 import collections
 
 from cmk.base.check_api import LegacyCheckDefinition
@@ -130,9 +128,8 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
 
     for distribution in params.get("distribution", []):
         ruled_vms = distribution.get("vm_names", [])
-        hosts = set(vm.hostsystem for vm in virtualmachines if vm.name[3:] in ruled_vms)
+        hosts = sorted(set(vm.hostsystem for vm in virtualmachines if vm.name[3:] in ruled_vms))
         count = len(hosts)
-        hosts = sorted(hosts)
         if count < distribution["hosts_count"]:
             yield distribution.get("state", 2), (
                 "VMs %s are running on %d host%s: %s"

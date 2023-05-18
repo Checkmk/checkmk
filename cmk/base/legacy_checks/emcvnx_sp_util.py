@@ -10,7 +10,7 @@
 # suggested by customer
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 import time
 
@@ -45,7 +45,7 @@ def check_emcvnx_sp_util(item, params, parsed):
     busy_ticks_rate = get_rate("emcvnx_sp_util.busy_ticks", now, parsed["busy"])
     idle_ticks_rate = get_rate("emcvnx_sp_util.idle_ticks", now, parsed["idle"])
     if busy_ticks_rate + idle_ticks_rate == 0:
-        sp_util = 0
+        sp_util = 0.0
     else:
         sp_util = 100 * (
             busy_ticks_rate / (busy_ticks_rate + idle_ticks_rate)

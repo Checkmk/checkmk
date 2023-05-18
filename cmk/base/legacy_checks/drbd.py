@@ -122,8 +122,6 @@
 #   oos (out of sync). Amount of storage currently out of sync; in Kibibytes. Since 8.2.6.
 
 
-# mypy: disable-error-code="assignment"
-
 import re
 
 # Default thresholds for drbd checks
@@ -206,7 +204,7 @@ def inventory_drbd(info, checktype):
             if checktype == "drbd":
                 if "ro" not in parsed or "ds" not in parsed:
                     continue
-                levels = {
+                levels: dict | tuple = {
                     "roles_inventory": parsed["ro"],
                     "diskstates_inventory": parsed["ds"],
                 }

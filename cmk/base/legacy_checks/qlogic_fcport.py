@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 import time
 
 from cmk.base.check_api import any_of, get_rate, LegacyCheckDefinition, startswith
@@ -185,7 +183,7 @@ def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-bra
 
             # error rates
             discards = int(c2_discards) + int(c3_discards)
-            error_sum = 0
+            error_sum = 0.0
             for descr, counter, value in [
                 ("Link Failures", "link_failures", link_failures),
                 ("Sync Losses", "sync_losses", sync_losses),

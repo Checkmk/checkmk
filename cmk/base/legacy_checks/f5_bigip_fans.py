@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.check_legacy_includes.fan import check_fan
@@ -34,7 +32,7 @@ f5_bigip_fans_default_levels = (2000, 500)
 def parse_f5_bigip_fans(info):
     fantyp = ["Chassis", "Processor"]
     fanchoice = 0
-    parsed = {}
+    parsed: dict[str, tuple[int, int | None]] = {}
 
     for line in info:
         for fanentry in line:

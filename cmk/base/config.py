@@ -477,11 +477,11 @@ SpecialAgentInfoFunctionResult = (
 # Note: being more specific here makes no sense,
 # as it prevents us from typing the individual
 # parameters as what we actually know them to be.
-_SpecialAgentConfigParams = Any
+# I rather have a meaningless type here that suppressions
+# in every argument thingy.
+# We're building a proper API for 2.3 anyway.
+SpecialAgentInfoFunction = Callable
 
-SpecialAgentInfoFunction = Callable[
-    [_SpecialAgentConfigParams, str, str | None], SpecialAgentInfoFunctionResult
-]
 HostCheckCommand = Union[None, str, tuple[str, int | str]]
 PingLevels = dict[str, Union[int, tuple[float, float]]]
 
@@ -1649,7 +1649,7 @@ legacy_check_plugin_names: dict[CheckPluginName, str] = {}
 # optional functions for parameter precompilation
 precompile_params: dict[str, Callable[[str, str, dict[str, Any]], Any]] = {}
 # factory settings for dictionary-configured checks
-factory_settings: dict[str, dict[str, Any]] = {}
+factory_settings: dict[str, Mapping[str, Any]] = {}
 # definitions of active "legacy" checks
 active_check_info: dict[str, dict[str, Any]] = {}
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}

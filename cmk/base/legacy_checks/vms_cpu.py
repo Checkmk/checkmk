@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.transforms import transform_cpu_iowait
@@ -17,7 +15,7 @@ from cmk.base.config import check_info
 
 
 def parse_vms_cpu(info):
-    parsed = {}
+    parsed: dict[str, int | float] = {}
     try:
         parsed["num_cpus"] = int(info[0][0])
         for i, key in enumerate(("idle", "user", "wait_interrupt", "wait_npsync"), 1):

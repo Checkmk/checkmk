@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -20,7 +18,7 @@ def inventory_tplink_mem(info):
 
 def check_tplink_mem(_no_item, params, info):
     num_units = 0
-    mem_used = 0
+    mem_used = 0.0
     for line in info:
         unit_used = int(line[0])
         mem_used += unit_used

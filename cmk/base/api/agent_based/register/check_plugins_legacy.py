@@ -8,7 +8,7 @@ import copy
 import functools
 import itertools
 from collections import defaultdict
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, Mapping
 from contextlib import suppress
 from typing import Any
 
@@ -277,7 +277,7 @@ def _create_signature_check_function(
 
 def _create_wrapped_parameters(
     check_info_element: LegacyCheckDefinition,
-    factory_settings: dict[str, dict],
+    factory_settings: dict[str, Mapping],
 ) -> ParametersTypeAlias:
     """compute default parameters and wrap them in a dictionary"""
     if (params_variable_name := check_info_element.get("default_levels_variable")) is None:
@@ -292,7 +292,7 @@ def _create_wrapped_parameters(
 def create_check_plugin_from_legacy(
     check_plugin_name: str,
     check_info_element: LegacyCheckDefinition,
-    factory_settings: dict[str, dict],
+    factory_settings: dict[str, Mapping[str, Any]],
     check_context: dict[str, object],
     *,
     validate_creation_kwargs: bool = True,

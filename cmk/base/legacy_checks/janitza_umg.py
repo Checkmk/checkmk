@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import any_of, check_levels, equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
@@ -72,7 +70,7 @@ def parse_janitza_umg_inphase(info):
         return sum(counts[:block_id], phase)
 
     # voltages are in 100mv, currents in 1mA, power in Watts / VA
-    result = {}
+    result: dict[str, float | list | int | dict] = {}
 
     for phase in range(num_phases):
         result["Phase %d" % (phase + 1)] = {

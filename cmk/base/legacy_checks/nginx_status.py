@@ -11,8 +11,6 @@
 # 127.0.0.1 80 Reading: 0 Writing: 1 Waiting: 0
 
 
-# mypy: disable-error-code="assignment"
-
 import time
 
 from cmk.base.check_api import (
@@ -67,7 +65,6 @@ def check_nginx_status(item, params, data):
         per_sec = get_rate("nginx_status.%s" % key, this_time, data[key])
         computed_values["%s_per_sec" % key] = per_sec
 
-    perf: list[tuple]
     state, txt, perf = check_levels(
         data["active"],
         "active",
@@ -80,8 +77,8 @@ def check_nginx_status(item, params, data):
         data["writing"],
         data["waiting"],
     )
-    perf += [(key, data[key]) for key in ("reading", "writing", "waiting")]
     yield state, txt, perf
+    yield 0, "", [(key, data[key]) for key in ("reading", "writing", "waiting")]
 
     requests_rate = computed_values["requests_per_sec"]
     state, txt, perf = check_levels(requests_rate, "requests", None, infoname="Requests", unit="/s")

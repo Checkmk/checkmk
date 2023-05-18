@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
@@ -61,7 +61,7 @@ def parse_emcvnx_raidgroups(info):
     append = False
     for line in info:
         if len(line) > 2 and line[0] == "RaidGroup" and line[1] == "ID:":
-            rg = {}
+            rg: dict[str, str | list] = {}
             parsed[line[2]] = rg
         elif len(line) > 3 and line[0] == "List" and line[1] == "of" and line[2] == "luns:":
             rg["luns"] = ",".join(line[3:])

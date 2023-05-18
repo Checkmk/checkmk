@@ -39,6 +39,12 @@ checks = {
                     "Active: 10 (2 reading, 1 writing, 3 waiting)",
                     [
                         ("active", 10, None, None, None, None),
+                    ],
+                ),
+                (
+                    0,
+                    "",
+                    [
                         ("reading", 2, None, None, None, None),
                         ("writing", 1, None, None, None, None),
                         ("waiting", 3, None, None, None, None),
@@ -62,6 +68,12 @@ checks = {
                     "Active: 24 (1 reading, 5 writing, 0 waiting)",
                     [
                         ("active", 24, None, None, None, None),
+                    ],
+                ),
+                (
+                    0,
+                    "",
+                    [
                         ("reading", 1, None, None, None, None),
                         ("writing", 5, None, None, None, None),
                         ("waiting", 0, None, None, None, None),

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.arbor import (
     ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="list-item,assignment"
+# mypy: disable-error-code="list-item"
 
 from typing import Optional, Sequence
 

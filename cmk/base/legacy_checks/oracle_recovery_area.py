@@ -10,8 +10,6 @@
 # ORACLE_SID used_pct size used reclaimable
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info, factory_settings
 
@@ -29,7 +27,7 @@ def check_oracle_recovery_area(item, params, info):
         if line[0] == item:
             size_mb, used_mb, reclaimable_mb = map(int, line[2:5])
             if size_mb == 0:
-                perc_used = 0
+                perc_used = 0.0
             else:
                 perc_used = float(used_mb - reclaimable_mb) / size_mb * 100
 

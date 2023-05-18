@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 import re
 
@@ -212,10 +212,10 @@ def check_brocade_mlx_module_cpu(item, params, info):
             if module_state != "10":
                 return 3, "Module is not in state running"
 
-            cpu_util1 = ""
-            cpu_util5 = ""
-            cpu_util60 = ""
-            cpu_util300 = ""
+            cpu_util1: str | int = ""
+            cpu_util5: str | int = ""
+            cpu_util60: str | int = ""
+            cpu_util300: str | int = ""
             for oid_end, cpu_util in info[1]:
                 if oid_end == "%s.1.1" % module_id:
                     cpu_util1 = saveint(cpu_util)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 import time
 
@@ -89,7 +89,7 @@ def check_omd_apache(item, _no_params, parsed):
         ("secs", "Seconds serving"),
         ("bytes", "Sent"),
     ]:
-        total = 0
+        total = 0.0
         for key, value in sorted(stats[ty].items(), key=lambda k_v: k_v[1], reverse=True):
             rate = get_rate(
                 "omd_apache.%s.%s.%s" % (item, ty, key), this_time, value, onwrap=SKIP, is_rate=True
@@ -97,8 +97,8 @@ def check_omd_apache(item, _no_params, parsed):
             total += rate
             yield 0, "", [(ty + "_" + key, rate)]
 
-        total = render.iobandwidth(total) if ty == "bytes" else ("%.2f/s" % total)
-        yield 0, "%s: %s" % (title, total)
+        total_str = render.iobandwidth(total) if ty == "bytes" else ("%.2f/s" % total)
+        yield 0, f"{title}: {total_str}"
 
 
 # This check uses the section defined in cmk/base/plugins/agent_based/omd_apache.py!

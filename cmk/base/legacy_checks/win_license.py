@@ -12,8 +12,6 @@
 # Time remaining: 11820 minute(s) (8 day(s))
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, regex
 from cmk.base.config import check_info, factory_settings
 
@@ -24,7 +22,7 @@ factory_settings["windows_license_default_levels"] = {
 
 
 def parse_win_license(info):
-    parsed = {}
+    parsed: dict[str, str | int] = {}
     for line in info:
         if len(line) == 0:
             continue

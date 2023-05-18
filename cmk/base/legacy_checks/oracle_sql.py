@@ -23,7 +23,7 @@
 # elapsed:TS
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -38,12 +38,8 @@ def parse_oracle_sql(info):
             var_name, data_str = entry.split("=", 1)
             perf_entry = [var_name]
             for data_entry in data_str.split(";"):
-                if "." in data_entry:
-                    conversion = float
-                else:
-                    conversion = int
                 try:
-                    perf_entry.append(conversion(data_entry))
+                    perf_entry.append(float(data_entry) if "." in data_entry else int(data_entry))
                 except Exception:
                     perf_entry.append(None)
             perfdata.append(tuple(perf_entry))

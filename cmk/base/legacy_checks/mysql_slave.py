@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="arg-type,assignment"
+# mypy: disable-error-code="arg-type"
 
 from cmk.base.check_api import (
     discover,
@@ -19,7 +19,7 @@ from cmk.base.config import check_info
 
 @mysql_parse_per_item
 def parse_mysql_slave(info):
-    data = {}
+    data: dict[str, int | bool | None] = {}
     for line in info:
         if not line[0].endswith(":"):
             continue
@@ -29,10 +29,9 @@ def parse_mysql_slave(info):
 
         # Parse some values
         try:
-            val = int(val)
+            data[key] = int(val)
         except ValueError:
-            val = {"Yes": True, "No": False, "None": None}.get(val, val)
-        data[key] = val
+            data[key] = {"Yes": True, "No": False, "None": None}.get(val, val)
 
     return data
 

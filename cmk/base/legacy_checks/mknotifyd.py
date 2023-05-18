@@ -51,7 +51,7 @@
 # OutputBuffer:             0 Bytes
 
 
-# mypy: disable-error-code="var-annotated,index,attr-defined,assignment"
+# mypy: disable-error-code="var-annotated,index,attr-defined"
 
 import time
 
@@ -61,7 +61,7 @@ from cmk.base.config import check_info
 
 def parse_mknotifyd(info):  # pylint: disable=too-many-branches
     try:
-        timestamp, data = int(info[0][0]), info[1:]
+        timestamp, data = float(info[0][0]), info[1:]
     except (IndexError, ValueError):
         # versions before 1.5.0p23/1.6.0p4 did not include a timestamp
         timestamp, data = time.time(), info

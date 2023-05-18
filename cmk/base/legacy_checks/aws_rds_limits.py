@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-# mypy: disable-error-code="assignment"
+from collections.abc import Callable
+from typing import Any, Type
 
 from cmk.base.check_api import (
     discover,
@@ -44,7 +44,7 @@ def parse_aws_rds_limits(info):
             factor = 1024**4 / 1000.0
             limit = limit * factor
             amount = amount * factor
-            human_readable_f = get_bytes_human_readable
+            human_readable_f: Callable[[Any], str] | Type[int] = get_bytes_human_readable
         else:
             human_readable_f = int
         limits_by_region.setdefault(region, []).append(

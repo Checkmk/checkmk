@@ -16,14 +16,14 @@
 # AgentVersion 7.6.0.5026
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
 def parse_citrix_state(info):
-    parsed = {
+    parsed: dict[str, Any] = {
         "instance": {},
     }
     for line in info:

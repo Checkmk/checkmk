@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="list-item,assignment"
+# mypy: disable-error-code="list-item"
 
 from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
@@ -24,7 +24,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
 def parse_icom_repeater(info):  # pylint: disable=too-many-branches
-    parsed = {}
+    parsed: dict[str, int | dict | float] = {}
     for line in info:
         if line[1] == "Temperature":
             parsed["temp"] = float(line[2][:-1])

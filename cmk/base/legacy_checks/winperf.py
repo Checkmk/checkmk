@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import (
     check_levels,
     get_percent_human_readable,
@@ -28,7 +26,7 @@ def inventory_win_cpuusage(info):
 
 def check_win_cpuusage(item, params, info):
     if isinstance(params, tuple):
-        levels = params
+        levels: tuple | None = params
     elif isinstance(params, dict):
         levels = params.get("levels")
     else:  # legacy: old params may be None
@@ -40,7 +38,7 @@ def check_win_cpuusage(item, params, info):
             # Windows sends one counter for each CPU plus one counter that
             # I've forgotton what's it for (idle?)
             num_cpus = len(line) - 4
-            overall_perc = 0
+            overall_perc = 0.0
             for cpu in range(0, num_cpus):
                 ticks = int(line[2 + cpu])
                 ticks_per_sec = get_rate("cpuusage.%d" % cpu, this_time, ticks)

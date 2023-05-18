@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint, startswith
 from cmk.base.check_legacy_includes.humidity import check_humidity
@@ -71,9 +71,7 @@ def parse_security_master(info):  # pylint: disable=too-many-branches
         72: "smoke",
     }
 
-    parsed = {}
-    for value in supported_sensors.values():
-        parsed[value] = {}
+    parsed = {"temp": {}, "humidity": {}, "smoke": {}}
 
     for oid, sensor in info[0]:
         if ".5.0" not in str(oid):

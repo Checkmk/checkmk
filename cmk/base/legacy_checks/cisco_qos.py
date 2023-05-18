@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 import time
 
@@ -16,6 +16,7 @@ from cmk.base.check_api import (
     get_nic_speed_human_readable,
     get_rate,
     LegacyCheckDefinition,
+    savefloat,
     saveint,
 )
 from cmk.base.config import check_info, factory_settings
@@ -207,7 +208,7 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
 
     post_b = post_bytes.get(policy_id + "." + objects_id, 0)
     drop_b = drop_bytes.get(policy_id + "." + objects_id, 0)
-    speed = saveint(if_speeds[if_id])
+    speed = savefloat(if_speeds[if_id])
 
     parent_value_cache = {a_value: a_key.split(".")[1] for a_key, a_value in config.items()}
 
@@ -223,10 +224,10 @@ def check_cisco_qos(item, params, info):  # pylint: disable=too-many-branches
                     # 4 ratioRemaining
                     # 5 perThousand
                     # 6 perMillion
-                    qos_unit = int(if_qos_bandwidth_units[config[b_key]])
-                    qos_bandwidth = saveint(if_qos_bandwidth[config[b_key]])
+                    qos_unit = float(if_qos_bandwidth_units[config[b_key]])
+                    qos_bandwidth = savefloat(if_qos_bandwidth[config[b_key]])
                     if qos_unit == 1:
-                        speed = qos_bandwidth * 1000
+                        speed = qos_bandwidth * 1000.0
 
                     elif qos_unit == 2:
                         speed = speed * (qos_bandwidth / 100.0)

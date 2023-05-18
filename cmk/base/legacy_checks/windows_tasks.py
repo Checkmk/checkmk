@@ -21,7 +21,7 @@
 # http://msdn.microsoft.com/en-us/library/aa383604%28VS.85%29.aspx
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
@@ -29,7 +29,7 @@ from cmk.base.config import check_info, factory_settings
 
 def parse_windows_tasks(info):
     data = {}
-    last_task = False
+    last_task: bool | str = False
     for line in info:
         name = line[0].strip()
         value = ":".join(line[1:]).strip()

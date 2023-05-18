@@ -15,8 +15,6 @@
 # heap_usage_bytes 65501032
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import (
     check_levels,
     discover_single,
@@ -27,7 +25,7 @@ from cmk.base.config import check_info
 
 
 def parse_mongodb_mem(info):
-    parsed = {}
+    parsed: dict[str, str | int] = {}
     for line in info:
         key, value = line[0], " ".join(line[1:])
         try:

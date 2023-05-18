@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 from cmk.base.check_api import LegacyCheckDefinition
@@ -40,11 +40,11 @@ def check_ucs_bladecenter_faultinst(_item, params, parsed):
             extra_info = []
             for instance in instances:
                 extra_info.append("%s" % instance["Descr"])
-            extra_info = ": " + ", ".join(extra_info)
+            extra_info_str = ": " + ", ".join(extra_info)
         else:
-            extra_info = ""
+            extra_info_str = ""
 
-        yield sev_state, "%d %s Instances%s" % (len(instances), sev.upper(), extra_info)
+        yield sev_state, "%d %s Instances%s" % (len(instances), sev.upper(), extra_info_str)
 
 
 check_info["ucs_bladecenter_faultinst"] = LegacyCheckDefinition(

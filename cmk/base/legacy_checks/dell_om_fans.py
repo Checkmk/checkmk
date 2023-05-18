@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
@@ -24,14 +22,14 @@ def _construct_levels(warn_upper, crit_upper, warn_lower, crit_lower):
     # - "", "", 3, 4
     # - "", "", "", 4
     if warn_lower not in ["", None] and crit_lower not in ["", None]:
-        lower = (int(warn_lower), int(crit_lower))
+        lower: tuple[int, int] | tuple[None, None] = (int(warn_lower), int(crit_lower))
     elif crit_lower not in ["", None]:
         lower = (int(crit_lower), int(crit_lower))
     else:
         lower = (None, None)
 
     if warn_upper not in ["", None] and crit_upper not in ["", None]:
-        upper = (int(warn_upper), int(crit_upper))
+        upper: tuple[int, int] | tuple[None, None] = (int(warn_upper), int(crit_upper))
     elif crit_upper not in ["", None]:
         upper = (int(crit_upper), int(crit_upper))
     else:

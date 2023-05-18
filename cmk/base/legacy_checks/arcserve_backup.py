@@ -56,7 +56,7 @@
 #                                 'size'  : 480413566894}}
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -64,13 +64,13 @@ from cmk.base.config import check_info
 
 def parse_arcserve_backup(info):
     unit_factor = {"kb": 1024, "mb": 1024**2, "gb": 1024**3, "tb": 1024**4}
-    parsed = {}
+    parsed: dict[str, str | int | dict] = {}
     for line in info:
         if line[0] == "Beschreibung:":
             backup_id = " ".join(line[1:-1])
             if backup_id[-1] == ".":
                 backup_id = backup_id[0:-1]
-                backup = {}
+                backup: dict[str, str | int] = {}
                 parsed[backup_id] = backup
         elif (
             len(line) > 5

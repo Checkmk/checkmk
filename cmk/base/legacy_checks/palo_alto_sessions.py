@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info, factory_settings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -24,7 +22,7 @@ def check_palo_alto_sessions(_no_item, params, info):
     sessions_supported, total, tcp, udp, icmp, sslproxy = map(int, info[0])
 
     if sessions_supported == 0:
-        sessions_used_perc = 0
+        sessions_used_perc = 0.0
     else:
         sessions_used_perc = float(total) * 100 / sessions_supported
 

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 import time
 
 from cmk.base.check_api import (
@@ -20,6 +18,7 @@ from cmk.base.config import check_info
 
 
 def parse_jolokia_generic(info):
+    value: str | float
     parsed = {}
     for line in info:
         try:

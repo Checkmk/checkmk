@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 import time
 
@@ -29,7 +29,7 @@ def inventory_f5_bigip_conns(info):
 def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branches
     # Connection rate
     now = time.time()
-    total_native_compat_rate = 0
+    total_native_compat_rate = 0.0
     conns_dict = {}
 
     for line in info:

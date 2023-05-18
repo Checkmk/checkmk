@@ -43,7 +43,7 @@
 # }
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -128,10 +128,10 @@ def check_aix_lvm(item, _no_params, info):
             state = max(state, 2)
 
         if state == 0:
-            msgtxt = "LV is open/syncd"
+            msgtxt_str = "LV is open/syncd"
         else:
-            msgtxt = ", ".join(msgtxt)
-        return (state, msgtxt)
+            msgtxt_str = ", ".join(msgtxt)
+        return state, msgtxt_str
 
     return (3, "no such volume found")
 

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.filerdisks import (
     check_filer_disks,
@@ -73,7 +71,7 @@ def check_ibm_svc_disks(_no_item, params, parsed):
         use = data["use"]
         capacity = data["capacity"]
 
-        disk = {}
+        disk: dict[str, str | float] = {}
         disk["identifier"] = "Enclosure: %s, Slot: %s, Type: %s" % (
             data["enclosure_id"],
             data["slot_id"],

@@ -7,8 +7,6 @@
 # <json>
 
 
-# mypy: disable-error-code="assignment"
-
 import datetime
 import enum
 import json
@@ -165,7 +163,7 @@ def _get_start_timestamp(primary, secondaries):
     :param secondaries: rest of replica set
     :return: start of operation and name of member
     """
-    start_operation_timestamp = 0
+    start_operation_timestamp = 0.0
     name = "unknown"
     if primary:
         start_operation_timestamp = parse_date(primary.get("optimeDate", {}).get("$date", 0))

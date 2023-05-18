@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="arg-type,assignment"
+# mypy: disable-error-code="arg-type"
 
 import datetime
 
@@ -34,8 +34,8 @@ def parse_sap_hana_ess_migration(info):
                 timestamp = datetime.datetime.strptime(
                     elem + lines[0][idx + 1], "%Y-%m-%d%H:%M:%S.%f0"
                 )
-                timestamp = datetime.datetime.strftime(timestamp, "%Y-%m-%d %H:%M:%S")
-                parsed[sid_instance]["timestamp"] = timestamp
+                timestamp_str = datetime.datetime.strftime(timestamp, "%Y-%m-%d %H:%M:%S")
+                parsed[sid_instance]["timestamp"] = timestamp_str
             except (ValueError, IndexError):
                 pass
 

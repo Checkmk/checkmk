@@ -9,8 +9,6 @@
 # 20201AF1 DRS_WATCHDOG_22 LEF 0 00:01:39.97 284611 2030
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
@@ -21,7 +19,7 @@ def inventory_vms_queuejobs(info):
 
 def check_vms_queuejobs(_no_item, params, info):
     names = []
-    max_cpu_secs = 0
+    max_cpu_secs = 0.0
     max_cpu_job = None
     for _id, name, _state, cpu_days, cpu_time, _ios, _pgfaults in info:
         names.append(name)

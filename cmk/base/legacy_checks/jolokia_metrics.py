@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="arg-type,assignment"
+# mypy: disable-error-code="arg-type"
 
 import time
 
@@ -375,7 +375,7 @@ def check_jolokia_metrics_cache(metrics, totals, item, params, info):
         # we display the "metrics" first, totals after, but to "fix" metrics based on zero-totals
         # we need to go over the totals once
         for total in totals:
-            val = int(parsed[inst]["CacheStatistics"][cache][total])
+            val: float | int = int(parsed[inst]["CacheStatistics"][cache][total])
             if val != 0:
                 break
 

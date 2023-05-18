@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,operator,assignment"
-
-import collections
 import socket
 import time
 
@@ -67,7 +64,7 @@ def get_ip_address_human_readable(ip_addr):
 
 
 def parse_f5_bigip_vserver(info):
-    vservers = {}
+    vservers: dict[str, dict] = {}
     for line in info:
         instance = vservers.setdefault(
             line[0],
@@ -106,28 +103,31 @@ def inventory_f5_bigip_vserver(parsed):
 
 
 def get_aggregated_values(vserver):
-    aggregation = collections.Counter()
     now = time.time()
 
-    counter_keys = {
-        "if_in_pkts",
-        "if_out_pkts",
-        "if_in_octets",
-        "if_out_octets",
-        "connections_rate",
-        "packet_velocity_asic",
+    aggregation = {
+        k: 0.0
+        for k in (
+            "if_in_pkts",
+            "if_out_pkts",
+            "if_in_octets",
+            "if_out_octets",
+            "connections_rate",
+            "packet_velocity_asic",
+        )
+        if k in vserver
     }
     # Calculate counters
-    for what in counter_keys & set(vserver):
+    for what in aggregation:
         for idx, entry in enumerate(vserver[what]):
             rate = get_rate("%s.%s" % (what, idx), now, entry)
             aggregation[what] += rate
 
     # Calucate min/max/sum/mean values
     for what, function in [
-        ("connections_duration_min", min),
-        ("connections_duration_max", max),
-        ("connections", sum),
+        ("connections_duration_min", lambda x: float(min(x))),
+        ("connections_duration_max", lambda x: float(max(x))),
+        ("connections", lambda x: float(sum(x))),
         ("connections_duration_mean", lambda x: float(sum(x)) / len(x)),
     ]:
         value_list = vserver.get(what)
@@ -138,7 +138,9 @@ def get_aggregated_values(vserver):
         in_key = "if_in_%s" % unit
         out_key = "if_out_%s" % unit
         if in_key in aggregation or out_key in aggregation:
-            aggregation["if_total_%s" % unit] = aggregation[in_key] + aggregation[out_key]
+            aggregation["if_total_%s" % unit] = aggregation.get(in_key, 0.0) + aggregation.get(
+                out_key, 0.0
+            )
 
     return aggregation
 

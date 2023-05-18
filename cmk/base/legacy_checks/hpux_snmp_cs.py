@@ -32,8 +32,6 @@
 # .1.3.6.1.4.1.11.2.3.1.1.16.0  10
 
 
-# mypy: disable-error-code="assignment"
-
 import time
 
 from cmk.base.check_api import get_rate, LegacyCheckDefinition, MKCounterWrapped, startswith
@@ -50,7 +48,7 @@ def inventory_hpux_snmp_cpu(info):
 def check_hpux_snmp_cpu(item, _no_params, info):
     parts = dict(info)
     this_time = time.time()
-    total_rate = 0
+    total_rate = 0.0
     rates = []
     for what, oid in [("user", "13.0"), ("system", "14.0"), ("idle", "15.0"), ("nice", "16.0")]:
         value = int(parts[oid])

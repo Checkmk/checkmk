@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="assignment"
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info, factory_settings
@@ -28,7 +26,7 @@ def inventory_hr_cpu(info):
 
 def check_hr_cpu(_no_item, params, info):
     num_cpus = 0
-    util = 0
+    util = 0.0
     cores = []
     for line in info:
         core_util = int(line[0])

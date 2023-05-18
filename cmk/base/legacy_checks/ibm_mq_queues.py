@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,assignment"
+# mypy: disable-error-code="var-annotated"
 
 import dateutil.parser
 
@@ -180,7 +180,7 @@ def ibm_mq_procs(cnt, label, levels_key, metric, params):
 
 def ibm_mq_get_qtime(qtime, label, key):
     if not qtime or qtime == "999999999":
-        time_in_seconds = 0
+        time_in_seconds = 0.0
         info_value = "n/a"
     else:
         time_in_seconds = int(qtime) / 1000000

@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-# mypy: disable-error-code="var-annotated,arg-type,operator,assignment"
+# mypy: disable-error-code="var-annotated,arg-type,operator"
 
 import json
 
@@ -369,8 +369,8 @@ def _handle_output(params, value, total, info_text, perf_key):
 
     if isinstance(warn, float):
         value_check = perc_value
-        warn_abs = int((warn / 100.0) * total)
-        crit_abs = int((crit / 100.0) * total)
+        warn_abs: int | None = int((warn / 100.0) * total)
+        crit_abs: int | None = int((crit / 100.0) * total)
         level_msg = " (warn/crit at %s/%s)" % (
             get_percent_human_readable(warn),
             get_percent_human_readable(crit),

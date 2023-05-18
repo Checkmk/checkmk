@@ -53,7 +53,7 @@ def inventory_h3c_lanswitch_cpu(info):
 
 
 def check_h3c_lanswitch_cpu(item, params, info):
-    warn, crit = params
+    warn, crit = params["levels"]
     for line in info:
         if h3c_lanswitch_cpu_genitem(line[0]) == item:
             util = int(line[1])
@@ -70,7 +70,7 @@ def check_h3c_lanswitch_cpu(item, params, info):
 
 
 # Reasonably low warning and crit levels
-factory_settings["switch_cpu_default_levels"] = (50, 75)
+factory_settings["switch_cpu_default_levels"] = {"levels": (50, 75)}
 
 check_info["h3c_lanswitch_cpu"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com s"),

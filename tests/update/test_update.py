@@ -5,7 +5,6 @@
 import logging
 from pathlib import Path
 
-import pytest
 from faker import Faker
 
 from tests.testlib.site import Site
@@ -29,7 +28,6 @@ from .conftest import (
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.type("update")
 def test_update(test_site: Site, tmp_path: Path) -> None:
     # TODO: set config - see CMK-13493
 

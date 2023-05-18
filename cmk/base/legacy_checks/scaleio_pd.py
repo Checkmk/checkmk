@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.scaleio import (
     get_scaleio_data,
     parse_scaleio,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<scaleio_pd>>>
 # PROTECTION_DOMAIN 91ebcf4500000000:
@@ -20,8 +20,6 @@ from cmk.base.config import check_info, factory_settings
 #        STATE                                              PROTECTION_DOMAIN_ACTIVE
 #        MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
 #        UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_scaleio_pd(parsed):
@@ -49,7 +47,6 @@ check_info["scaleio_pd"] = LegacyCheckDefinition(
     check_function=check_scaleio_pd,
     service_name="ScaleIO PD capacity %s",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 

@@ -8,14 +8,12 @@
 
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # Agent output:
 # <<<netapp_api_snapshots:sep(9)>>>
 # volume_snapshot volch150    percent-reserved 22 blocks-reserved 3322    size-total 12122 ...
 # volume_snapshot volch150    percentage-of-total-blocks 0 cumulative-total 122924 ...
-
-factory_settings["netapp_api_snapshots_default_levels"] = {"levels": (85.0, 90.0)}
 
 
 def inventory_netapp_api_snapshots(parsed):
@@ -76,7 +74,6 @@ check_info["netapp_api_snapshots"] = LegacyCheckDefinition(
     ),
     check_function=check_netapp_api_snapshots,
     discovery_function=inventory_netapp_api_snapshots,
-    default_levels_variable="netapp_api_snapshots_default_levels",
     service_name="Snapshots Volume %s",
     check_ruleset_name="netapp_snapshots",
     check_default_parameters={"levels": (85.0, 90.0)},

@@ -8,10 +8,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.df import FSBlock
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_emc_isilon_ifs(section: FSBlock):
@@ -28,6 +26,5 @@ check_info["emc_isilon_ifs"] = LegacyCheckDefinition(
     discovery_function=inventory_emc_isilon_ifs,
     service_name="Filesystem %s",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

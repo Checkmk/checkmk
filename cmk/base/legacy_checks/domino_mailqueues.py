@@ -5,11 +5,9 @@
 
 
 from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.domino import DETECT
-
-factory_settings["domino_mailqueues_defaults"] = {"queue_length": (300, 350)}
 
 MAILQUEUES_LABEL = (
     ("lnDeadMail", "Dead mails"),
@@ -47,7 +45,6 @@ check_info["domino_mailqueues"] = LegacyCheckDefinition(
     discovery_function=discover(),
     check_function=check_domino_mailqueues,
     service_name="Domino Queue %s",
-    default_levels_variable="domino_mailqueues_defaults",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72.1.1.4",
         oids=["1", "6", "21", "31", "34"],

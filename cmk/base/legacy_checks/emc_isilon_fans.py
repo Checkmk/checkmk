@@ -6,11 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_ISILON
-
-factory_settings["emc_isilon_fan_default_levels"] = {"lower": (3000, 2500)}
 
 
 # Examples for sensor names:
@@ -45,6 +43,5 @@ check_info["emc_isilon_fans"] = LegacyCheckDefinition(
         oids=["3", "4"],
     ),
     check_ruleset_name="hw_fans",
-    default_levels_variable="emc_isilon_fan_default_levels",
     check_default_parameters={"lower": (3000, 2500)},
 )

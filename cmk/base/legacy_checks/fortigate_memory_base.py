@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
 from cmk.base.plugins.agent_based.utils.memory import get_levels_mode_from_value
@@ -14,8 +14,6 @@ from cmk.base.plugins.agent_based.utils.memory import get_levels_mode_from_value
 fortigate_memory_base_default_levels = {
     "levels": (70.0, 80.0),
 }
-
-factory_settings["fortigate_memory_base_default_levels"] = fortigate_memory_base_default_levels
 
 
 def parse_fortigate_memory_base(info):
@@ -53,7 +51,6 @@ check_info["fortigate_memory_base"] = LegacyCheckDefinition(
     detect=DETECT_FORTIGATE,
     parse_function=parse_fortigate_memory_base,
     check_function=check_fortigate_memory_base,
-    default_levels_variable="fortigate_memory_base_default_levels",
     discovery_function=inventory_fortigate_memory_base,
     service_name="Memory",
     check_ruleset_name="memory",

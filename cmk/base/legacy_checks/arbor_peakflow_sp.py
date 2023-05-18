@@ -12,7 +12,7 @@ from cmk.base.check_legacy_includes.arbor import (
     inventory_arbor_disk_usage,
     inventory_arbor_memory,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
@@ -28,11 +28,6 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 # .1.3.6.1.4.1.9694.1.4.2.1.10.0 0 --> PEAKFLOW-SP-MIB::deviceSwapSpaceUsage.0
 # .1.3.6.1.4.1.9694.1.4.2.1.11.0 0 --> PEAKFLOW-SP-MIB::deviceTotalFlows.0
 # .1.3.6.1.4.1.9694.1.4.2.1.12.0 0 --> PEAKFLOW-SP-MIB::deviceTotalFlowsHC.0
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-
-factory_settings["arbor_memory_default_levels"] = ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS
 
 
 def parse_peakflow_sp(info):
@@ -52,7 +47,6 @@ check_info["arbor_peakflow_sp"] = LegacyCheckDefinition(
     parse_function=parse_peakflow_sp,
     service_name="Memory",
     check_ruleset_name="memory_arbor",
-    default_levels_variable="arbor_memory_default_levels",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9694.1.4.2.1",
         oids=["4.0", "7.0", "10.0", "12.0"],
@@ -65,7 +59,6 @@ check_info["arbor_peakflow_sp.disk_usage"] = LegacyCheckDefinition(
     discovery_function=inventory_arbor_disk_usage,
     service_name="Disk Usage %s",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 

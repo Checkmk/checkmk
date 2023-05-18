@@ -27,7 +27,7 @@ from cmk.base.check_api import (
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 nodes_info = {
     "open_file_descriptors": "Open file descriptors",
@@ -56,9 +56,6 @@ def parse_elasticsearch_nodes(info):
     return parsed
 
 
-factory_settings["elasticsearch_nodes"] = {"cpu_levels": (75.0, 90.0)}
-
-
 @get_parsed_item_data
 def check_elasticsearch_nodes(item, params, item_data):
     for data_key, params_key, hr_func in [
@@ -79,7 +76,6 @@ check_info["elasticsearch_nodes"] = LegacyCheckDefinition(
     parse_function=parse_elasticsearch_nodes,
     check_function=check_elasticsearch_nodes,
     discovery_function=discover(),
-    default_levels_variable="elasticsearch_nodes",
     service_name="Elasticsearch Node %s",
     check_ruleset_name="elasticsearch_nodes",
     check_default_parameters={"cpu_levels": (75.0, 90.0)},

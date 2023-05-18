@@ -9,7 +9,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # Example output from agent:
 # <<<ibm_svc_enclosurestats:sep(58)>>>
@@ -55,8 +55,6 @@ def parse_ibm_svc_enclosurestats(info):
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ibm_svc_enclosurestats_temperature_default_levels"] = {"levels": (35.0, 40.0)}
-
 
 def inventory_ibm_svc_enclosurestats_temp(info):
     for enclosure_id, data in parse_ibm_svc_enclosurestats(info).items():
@@ -77,7 +75,6 @@ check_info["ibm_svc_enclosurestats.temp"] = LegacyCheckDefinition(
     discovery_function=inventory_ibm_svc_enclosurestats_temp,
     service_name="Temperature Enclosure %s",
     check_ruleset_name="temperature",
-    default_levels_variable="ibm_svc_enclosurestats_temperature_default_levels",
     check_default_parameters={"levels": (35.0, 40.0)},
 )
 

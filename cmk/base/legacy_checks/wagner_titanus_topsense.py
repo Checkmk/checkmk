@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import any_of, equals, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 check_info["wagner_titanus_topsense"] = LegacyCheckDefinition(
@@ -325,10 +325,6 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = LegacyCheckDefinition(
 #   |                                               |_|                    |
 #   '----------------------------------------------------------------------'
 
-factory_settings["wagner_titanus_topsense_temperature_default_values"] = {
-    "levels": (30.0, 35.0),
-}
-
 
 def inventory_wagner_titanus_topsense_temp(info):
     return [("Ambient 1", {}), ("Ambient 2", {})]
@@ -351,7 +347,6 @@ def check_wagner_titanus_topsense_temp(item, params, info):
 
 check_info["wagner_titanus_topsense.temp"] = LegacyCheckDefinition(
     check_function=check_wagner_titanus_topsense_temp,
-    default_levels_variable="wagner_titanus_topsense_temperature_default_values",
     discovery_function=inventory_wagner_titanus_topsense_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",

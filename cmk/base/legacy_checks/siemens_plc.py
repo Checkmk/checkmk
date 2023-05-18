@@ -11,7 +11,7 @@ from cmk.base.check_api import (
     set_item_state,
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<siemens_plc>>>
 # PFT01 temp Gesamt 279183569715
@@ -45,11 +45,6 @@ from cmk.base.config import check_info, factory_settings
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["siemens_plc_temp_default_levels"] = {
-    "levels": (70.0, 80.0),
-    "device_levels_handling": "devdefault",
-}
-
 
 def inventory_siemens_plc_temp(info):
     return [(l[0] + " " + l[2], {}) for l in info if l[1] == "temp"]
@@ -68,7 +63,6 @@ check_info["siemens_plc.temp"] = LegacyCheckDefinition(
     check_function=check_siemens_plc_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="siemens_plc_temp_default_levels",
     check_default_parameters={
         "levels": (70.0, 80.0),
         "device_levels_handling": "devdefault",

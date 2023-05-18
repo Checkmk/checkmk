@@ -13,7 +13,7 @@ from cmk.base.check_api import (
     get_rate,
     LegacyCheckDefinition,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 # Old comments:
@@ -53,12 +53,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 #  [u'82', u'4', u'38800000']],
 # [[u'3', u'104052489', u'22364', u'23308', u'389']],
 # []]
-
-factory_settings["docsis_channels_upstream_default_levels"] = {
-    "signal_noise": (10.0, 5.0),  # dB
-    "corrected": (5.0, 8.0),  # Percent
-    "uncorrectable": (1.0, 2.0),  # Percent
-}
 
 
 def parse_docsis_channels_upstream(info):
@@ -197,7 +191,6 @@ check_info["docsis_channels_upstream"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "3", "4", "5", "7"],
         ),
     ],
-    default_levels_variable="docsis_channels_upstream_default_levels",
     check_ruleset_name="docsis_channels_upstream",
     check_default_parameters={
         "signal_noise": (10.0, 5.0),  # dB

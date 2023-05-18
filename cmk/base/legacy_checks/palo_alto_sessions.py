@@ -5,13 +5,9 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.palo_alto import DETECT_PALO_ALTO
-
-factory_settings["palo_alto_sessions"] = {
-    "levels_sessions_used": (60, 70),
-}
 
 
 def inventory_palo_alto_sessions(info):
@@ -64,7 +60,6 @@ def check_palo_alto_sessions(_no_item, params, info):
 
 check_info["palo_alto_sessions"] = LegacyCheckDefinition(
     detect=DETECT_PALO_ALTO,
-    default_levels_variable="palo_alto_sessions",
     discovery_function=inventory_palo_alto_sessions,
     check_function=check_palo_alto_sessions,
     service_name="Palo Alto Sessions",

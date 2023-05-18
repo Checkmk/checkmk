@@ -6,14 +6,13 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 
 # .1.3.6.1.4.1.1916.1.32.1.2.0 59 --> EXTREME-SOFTWARE-MONITOR-MIB::extremeCpuMonitorTotalUtilization.0$
 
 # As in some other checks
-factory_settings["netextreme_cpu_util_default_levels"] = {"util": (80.0, 90.0)}
 
 
 def inventory_netextreme_cpu_util(info):
@@ -35,6 +34,5 @@ check_info["netextreme_cpu_util"] = LegacyCheckDefinition(
         oids=["0"],
     ),
     check_ruleset_name="cpu_utilization",
-    default_levels_variable="netextreme_cpu_util_default_levels",
     check_default_parameters={"util": (80.0, 90.0)},
 )

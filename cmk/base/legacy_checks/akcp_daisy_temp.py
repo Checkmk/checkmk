@@ -8,10 +8,8 @@ from itertools import chain
 
 from cmk.base.check_api import all_of, any_of, equals, exists, LegacyCheckDefinition, not_exists
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-
-factory_settings["akcp_daisy_temp_defaultlevels"] = {"levels": (28.0, 32.0)}
 
 
 def inventory_akcp_daisy_temp(info):
@@ -77,6 +75,5 @@ check_info["akcp_daisy_temp"] = LegacyCheckDefinition(
         ),
     ],
     check_ruleset_name="temperature",
-    default_levels_variable="akcp_daisy_temp_defaultlevels",
     check_default_parameters={"levels": (28.0, 32.0)},
 )

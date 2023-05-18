@@ -4,13 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ibm import DETECT_IBM_IMM
-
-factory_settings["ibm_imm_fan_default_levels"] = {
-    "levels_lower": (28, 25),  # Just a guess. Please give feedback.
-}
 
 
 def inventory_ibm_imm_fan(info):
@@ -64,7 +60,6 @@ check_info["ibm_imm_fan"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.2.3.51.3.1.3.2.1",
         oids=["2", "3"],
     ),
-    default_levels_variable="ibm_imm_fan_default_levels",
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={
         "levels_lower": (28, 25),  # Just a guess. Please give feedback.

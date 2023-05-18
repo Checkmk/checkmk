@@ -10,19 +10,9 @@ from cmk.base.check_api import (
     get_parsed_item_data,
     LegacyCheckDefinition,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
-
-factory_settings["emc_datadomain_mtree_default_levels"] = {
-    "deleted": 2,
-    "read-only": 1,
-    "read-write": 0,
-    "replication destination": 0,
-    "retention lock disabled": 0,
-    "retention lock enabled": 0,
-    "unknown": 3,
-}
 
 
 def parse_emc_datadomain_mtree(info):
@@ -65,7 +55,6 @@ check_info["emc_datadomain_mtree"] = LegacyCheckDefinition(
         oids=["2", "3", "4"],
     ),
     check_ruleset_name="emc_datadomain_mtree",
-    default_levels_variable="emc_datadomain_mtree_default_levels",
     check_default_parameters={
         "deleted": 2,
         "read-only": 1,

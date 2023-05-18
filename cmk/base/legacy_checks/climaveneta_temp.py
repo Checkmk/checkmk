@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 climaveneta_sensors = {
@@ -28,8 +28,6 @@ climaveneta_sensors = {
     25: "Regulation Fan 2",
     28: "Suction",
 }
-
-factory_settings["climaveneta_temp_default_levels"] = {"levels": (28.0, 30.0)}
 
 
 def inventory_climaveneta_temp(info):
@@ -58,6 +56,5 @@ check_info["climaveneta_temp"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "2"],
     ),
     check_ruleset_name="temperature",
-    default_levels_variable="climaveneta_temp_default_levels",
     check_default_parameters={"levels": (28.0, 30.0)},
 )

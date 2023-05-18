@@ -8,7 +8,7 @@ import cmk.utils.aws_constants as aws_types
 
 from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 default_running_ondemand_instances = [
     (inst_type, (None, 80.0, 90.0)) for inst_type in aws_types.AWSEC2InstTypes
@@ -17,20 +17,6 @@ default_running_ondemand_instances = [
 default_running_ondemand_instance_families = [
     ("%s_vcpu" % inst_fam, (None, 80.0, 90.0)) for inst_fam in aws_types.AWSEC2InstFamilies
 ]
-
-factory_settings["aws_ec2_limits_default_levels"] = {
-    "vpc_elastic_ip_addresses": (None, 80.0, 90.0),
-    "elastic_ip_addresses": (None, 80.0, 90.0),
-    "vpc_sec_group_rules": (None, 80.0, 90.0),
-    "vpc_sec_groups": (None, 80.0, 90.0),
-    "if_vpc_sec_group": (None, 80.0, 90.0),
-    "spot_inst_requests": (None, 80.0, 90.0),
-    "active_spot_fleet_requests": (None, 80.0, 90.0),
-    "spot_fleet_total_target_capacity": (None, 80.0, 90.0),
-    "running_ondemand_instances_total": (None, 80.0, 90.0),
-    "running_ondemand_instances": default_running_ondemand_instances,
-    "running_ondemand_instances_vcpus": default_running_ondemand_instance_families,
-}
 
 
 def _transform_ec2_limits(params):
@@ -64,7 +50,6 @@ check_info["aws_ec2_limits"] = LegacyCheckDefinition(
     check_function=check_aws_ec2_limits,
     service_name="AWS/EC2 Limits %s",
     check_ruleset_name="aws_ec2_limits",
-    default_levels_variable="aws_ec2_limits_default_levels",
     check_default_parameters={
         "vpc_elastic_ip_addresses": (None, 80.0, 90.0),
         "elastic_ip_addresses": (None, 80.0, 90.0),

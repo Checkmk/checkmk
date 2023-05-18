@@ -18,11 +18,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["cisco_prime_wifi_access_points"] = {
-    "levels": (20, 40),
-}
+from cmk.base.config import check_info
 
 
 def check_cisco_prime_wifi_access_points(item, params, parsed):
@@ -46,7 +42,6 @@ check_info["cisco_prime_wifi_access_points"] = LegacyCheckDefinition(
     parse_function=lambda info: parse_cisco_prime("accessPointsDTO", info),
     discovery_function=discover_single,
     check_function=check_cisco_prime_wifi_access_points,
-    default_levels_variable="cisco_prime_wifi_access_points",
     service_name="Cisco Prime WiFi Access Points",
     check_ruleset_name="cisco_prime_wifi_access_points",
     check_default_parameters={

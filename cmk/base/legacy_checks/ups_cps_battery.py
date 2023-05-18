@@ -5,7 +5,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_CPS
 
@@ -65,10 +65,6 @@ check_info["ups_cps_battery.temp"] = LegacyCheckDefinition(
 #   |                         |_|                     |___/                |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ups_cps_battery"] = {
-    "capacity": (95, 90),
-}
-
 
 def inventory_ups_cps_battery(parsed):
     if "capacity" in parsed:
@@ -109,7 +105,6 @@ def check_ups_cps_battery(item, params, parsed):
 check_info["ups_cps_battery"] = LegacyCheckDefinition(
     detect=DETECT_UPS_CPS,
     parse_function=parse_ups_cps_battery,
-    default_levels_variable="ups_cps_battery",
     discovery_function=inventory_ups_cps_battery,
     check_function=check_ups_cps_battery,
     service_name="UPS Battery",

@@ -12,9 +12,7 @@
 import json
 
 from cmk.base.check_api import discover_single, get_bytes_human_readable, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["mongodb_cluster_levels"] = {"levels_number_jumbo": (1, 2)}
+from cmk.base.config import check_info
 
 
 def parse_mongodb_cluster(info):
@@ -478,7 +476,6 @@ def _mongodb_cluster_split_namespace(namespace):
 
 
 check_info["mongodb_cluster.collections"] = LegacyCheckDefinition(
-    default_levels_variable="mongodb_cluster_levels",
     discovery_function=inventory_mongodb_cluster_shards,
     check_function=check_mongodb_cluster_shards,
     service_name="MongoDB Cluster: %s",

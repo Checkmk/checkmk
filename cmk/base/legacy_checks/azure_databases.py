@@ -13,14 +13,9 @@ from cmk.base.check_legacy_includes.azure import (
     parse_resources,
 )
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
-factory_settings["azure_databases_default_levels"] = {
-    "storage_percent_levels": (85.0, 95.0),
-    "cpu_percent_levels": (85.0, 95.0),
-    "dtu_percent_levels": (85.0, 95.0),
-}
 
 
 @get_data_or_go_stale
@@ -42,7 +37,6 @@ check_info["azure_databases.storage"] = LegacyCheckDefinition(
     discovery_function=discover_azure_by_metrics("average_storage_percent"),
     check_function=check_azure_databases_storage,
     service_name="DB %s Storage",
-    default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -65,7 +59,6 @@ check_info["azure_databases.deadlock"] = LegacyCheckDefinition(
     discovery_function=discover_azure_by_metrics("average_deadlock"),
     check_function=check_azure_databases_deadlock,
     service_name="DB %s Deadlocks",
-    default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -92,7 +85,6 @@ check_info["azure_databases.cpu"] = LegacyCheckDefinition(
     discovery_function=discover_azure_by_metrics("average_cpu_percent"),
     check_function=check_azure_databases_cpu,
     service_name="DB %s CPU",
-    default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -121,7 +113,6 @@ check_info["azure_databases.dtu"] = LegacyCheckDefinition(
     discovery_function=discover_azure_by_metrics("average_dtu_consumption_percent"),
     check_function=check_azure_databases_dtu,
     service_name="DB %s DTU",
-    default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -152,7 +143,6 @@ check_info["azure_databases.connections"] = LegacyCheckDefinition(
     ),
     check_function=check_azure_databases_connections,
     service_name="DB %s Connections",
-    default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -173,7 +163,6 @@ check_info["azure_databases"] = LegacyCheckDefinition(
     discovery_function=discover(),
     check_function=check_azure_databases,
     service_name="DB %s",
-    default_levels_variable="azure_databases_default_levels",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),

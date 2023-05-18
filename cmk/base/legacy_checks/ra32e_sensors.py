@@ -7,7 +7,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ra32e import DETECT_RA32E
 
@@ -100,10 +100,6 @@ def inventory_ra32e_sensors(parsed, quantity):
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ra32e_temp_defaultlevels"] = {
-    "levels": (30.0, 35.0),
-}
-
 
 def check_ra32e_sensors(item, params, parsed):
     temperature = parsed["temperature"].get(item)
@@ -151,7 +147,6 @@ check_info["ra32e_sensors"] = LegacyCheckDefinition(
         ),
     ],
     check_ruleset_name="temperature",
-    default_levels_variable="ra32e_temp_defaultlevels",
     check_default_parameters={
         "levels": (30.0, 35.0),
     },
@@ -167,10 +162,6 @@ check_info["ra32e_sensors"] = LegacyCheckDefinition(
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ra32e_sensors_humidity_defaultlevels"] = {
-    "levels": (70.0, 80.0),
-}
-
 
 def check_ra32e_humidity_sensors(item, params, parsed):
     humidity = parsed["humidity"].get(item)
@@ -185,7 +176,6 @@ check_info["ra32e_sensors.humidity"] = LegacyCheckDefinition(
     check_function=check_ra32e_humidity_sensors,
     service_name="Humidity %s",
     check_ruleset_name="humidity",
-    default_levels_variable="ra32e_sensors_humidity_defaultlevels",
     check_default_parameters={
         "levels": (70.0, 80.0),
     },
@@ -201,10 +191,6 @@ check_info["ra32e_sensors.humidity"] = LegacyCheckDefinition(
 #   |                                         |___/                        |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ra32e_sensors_voltage_defaultlevels"] = {
-    "voltage": (210, 180),
-}
-
 
 def check_ra32e_sensors_voltage(item, params, parsed):
     return next(check_elphase(item, params, parsed["voltage"]))
@@ -215,7 +201,6 @@ check_info["ra32e_sensors.voltage"] = LegacyCheckDefinition(
     check_function=check_ra32e_sensors_voltage,
     service_name="Voltage %s",
     check_ruleset_name="ups_outphase",
-    default_levels_variable="ra32e_sensors_voltage_defaultlevels",
     check_default_parameters={
         "voltage": (210, 180),
     },

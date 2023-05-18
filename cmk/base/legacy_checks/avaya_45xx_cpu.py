@@ -8,10 +8,8 @@ import time
 
 from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["avaya_45xx_cpu_default_levels"] = {"levels": (90.0, 95.0)}
 
 
 def inventory_avaya_45xx_cpu(info):
@@ -33,8 +31,6 @@ check_info["avaya_45xx_cpu"] = LegacyCheckDefinition(
     discovery_function=inventory_avaya_45xx_cpu,
     service_name="CPU utilization CPU %s",
     check_ruleset_name="cpu_utilization_multiitem",
-    default_levels_variable="avaya_45xx_cpu_default_levels",
-    # S5-CHASSIS-MIB
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.45.1.6.3.8.1.1.5",
         oids=["3"],

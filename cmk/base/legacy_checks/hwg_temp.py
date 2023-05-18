@@ -11,11 +11,8 @@ from cmk.base.check_legacy_includes.hwg import (
     inventory_hwg_temp,
     parse_hwg,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["hwg_temp_defaultlevels"] = HWG_TEMP_DEFAULTLEVELS
-
 
 check_info["hwg_temp"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "hwg"),
@@ -28,6 +25,5 @@ check_info["hwg_temp"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "7"],
     ),
     check_ruleset_name="temperature",
-    default_levels_variable="hwg_temp_defaultlevels",
     check_default_parameters=HWG_TEMP_DEFAULTLEVELS,
 )

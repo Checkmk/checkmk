@@ -8,7 +8,7 @@ from itertools import cycle
 
 from cmk.base.check_api import contains, discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # .1.3.6.1.4.1.705.2.3.2.1.2.1 3997 --> MG-SNMP-STS-MIB::stsmgSource1PhasePhaseVoltage.1
@@ -35,8 +35,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 # .1.3.6.1.4.1.705.2.4.2.1.4.3 3300 --> MG-SNMP-STS-MIB::stsmgSource2ActivePower.3
 # .1.3.6.1.4.1.705.2.4.16.0 499 --> MG-SNMP-STS-MIB::stsmgSource2Frequency.0
 
-factory_settings["apc_sts_inputs_default_levels"] = {}
-
 
 def parse_apc_sts_inputs(info):
     return {
@@ -56,7 +54,6 @@ check_info["apc_sts_inputs"] = LegacyCheckDefinition(
     discovery_function=discover(),
     check_function=check_elphase,
     service_name="Input %s",
-    default_levels_variable="apc_sts_inputs_default_levels",
     check_ruleset_name="el_inphase",
     fetch=[
         SNMPTree(

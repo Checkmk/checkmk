@@ -5,14 +5,11 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_OSN
 
 # The laser should not get hotter than 70°C
-factory_settings["huawei_osn_temp_default_levels"] = {
-    "levels": (70.0, 80.0),
-}
 
 
 def inventory_huawei_osn_temp(info):
@@ -37,7 +34,6 @@ check_info["huawei_osn_temp"] = LegacyCheckDefinition(
         oids=["2.190", "6.190"],
     ),
     check_ruleset_name="temperature",
-    default_levels_variable="huawei_osn_temp_default_levels",
     check_default_parameters={
         "levels": (70.0, 80.0),
     },

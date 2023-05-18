@@ -6,14 +6,13 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.barracuda import DETECT_BARRACUDA
 
 # .1.3.6.1.4.1.20632.2.13 3
 
 # Suggested by customer
-factory_settings["barracuda_system_cpu_util_default_levels"] = {"util": (80.0, 90.0)}
 
 
 def inventory_barracuda_system_cpu_util(info):
@@ -37,6 +36,5 @@ check_info["barracuda_system_cpu_util"] = LegacyCheckDefinition(
         oids=["13"],
     ),
     check_ruleset_name="cpu_utilization",
-    default_levels_variable="barracuda_system_cpu_util_default_levels",
     check_default_parameters={"util": (80.0, 90.0)},
 )

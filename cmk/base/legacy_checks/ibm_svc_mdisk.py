@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # Example output from agent:
 # <<<ibm_svc_mdisk:sep(58)>>>
@@ -22,17 +22,6 @@ from cmk.base.config import check_info, factory_settings
 # 7:stp5_300G_01-03:online:managed:16:stp5_300G_01:1.1TB:0000000000000003:BLUBB5:600a0b80006e1dcc0000f76951305bc000000000000000000000000000000000:generic_hdd
 # 8:stp6_300G_01-03:online:managed:15:stp6_300G_01:1.1TB:0000000000000003:BLUBB6:600a0b80006e1d5e00000e9a51305a3200000000000000000000000000000000:generic_hdd
 # 9:stp5_300G_01-04:online:managed:16:stp5_300G_01:1.1TB:0000000000000004:BLUBB5:600a0b80006e1dbc0000f7d051341cc000000000000000000000000000000000:generic_hdd
-
-factory_settings["ibm_svc_mdisk_default_levels"] = {
-    "online_state": 0,  # online state is OK
-    "degraded_state": 1,  # degraded state is WARN
-    "offline_state": 2,  # offline state is CRIT
-    "excluded_state": 2,  # excluded state is CRIT
-    "managed_mode": 0,  # managed mode is OK
-    "array_mode": 0,  # array mode is OK
-    "image_mode": 0,  # image mode is OK
-    "unmanaged_mode": 1,  # unmanaged mode is WARN
-}
 
 
 def parse_ibm_svc_mdisk(info):
@@ -84,7 +73,6 @@ check_info["ibm_svc_mdisk"] = LegacyCheckDefinition(
     discovery_function=inventory_ibm_svc_mdisk,
     service_name="MDisk %s",
     check_ruleset_name="ibm_svc_mdisk",
-    default_levels_variable="ibm_svc_mdisk_default_levels",
     check_default_parameters={
         "online_state": 0,  # online state is OK
         "degraded_state": 1,  # degraded state is WARN

@@ -32,13 +32,7 @@
 
 
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["oracle_jobs_defaults"] = {
-    "consider_job_status": "ignore",
-    "missinglog": 1,
-    "status_missing_jobs": 2,
-}
+from cmk.base.config import check_info
 
 
 def inventory_oracle_jobs(info):
@@ -269,7 +263,6 @@ check_info["oracle_jobs"] = LegacyCheckDefinition(
     check_ruleset_name="oracle_jobs",
     check_function=check_oracle_jobs,
     discovery_function=inventory_oracle_jobs,
-    default_levels_variable="oracle_jobs_defaults",
     check_default_parameters={
         "consider_job_status": "ignore",
         "missinglog": 1,

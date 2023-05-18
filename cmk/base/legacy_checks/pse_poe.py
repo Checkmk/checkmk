@@ -8,15 +8,13 @@
 
 from cmk.base.check_api import exists, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.poe import check_poe_data, PoeValues
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 # We fetch the following columns from SNMP:
 # 2 pethMainPsePower (The nominal power of the PSE expressed in Watts)
 # 3 pethMainPseOperStatus (The operational status of the main PSE) (on(1), off(2), faulty(3))
 # 4 pethMainPseConsumptionPower (Measured usage power expressed in Watts)
-
-factory_settings["pse_poe_default_levels"] = {"levels": (90.0, 95.0)}
 
 
 def parse_pse_poe(info):
@@ -52,7 +50,6 @@ def check_pse_poe(item, params, poe_data):
 
 check_info["pse_poe"] = LegacyCheckDefinition(
     detect=exists(".1.3.6.1.2.1.105.1.3.1.1.*"),
-    default_levels_variable="pse_poe_default_levels",
     parse_function=parse_pse_poe,
     check_function=check_pse_poe,
     discovery_function=inventory_pse_poe,

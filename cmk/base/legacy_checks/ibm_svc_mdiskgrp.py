@@ -13,7 +13,7 @@ from cmk.base.check_api import (
 )
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # Example output from agent:
 # <<<ibm_svc_mdiskgrp:sep(58)>>>
@@ -156,15 +156,11 @@ def check_ibm_svc_mdiskgrp(item, params, data):
     ]
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-
 check_info["ibm_svc_mdiskgrp"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_mdiskgrp,
     check_function=check_ibm_svc_mdiskgrp,
     discovery_function=inventory_ibm_svc_mdiskgrp,
     service_name="Pool Capacity %s",
     check_ruleset_name="ibm_svc_mdiskgrp",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

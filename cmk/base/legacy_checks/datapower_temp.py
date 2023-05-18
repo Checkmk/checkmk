@@ -6,15 +6,11 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.datapower import DETECT
 
 #
-
-factory_settings["datapower_temp_default_levels"] = {
-    "levels": (65.0, 70.0),  # 70C recommended alarm level by IBM
-}
 
 
 def inventory_datapower_temp(info):
@@ -55,7 +51,6 @@ check_info["datapower_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.14685.3.1.141.1",
         oids=["1", "2", "3", "5", "6"],
     ),
-    default_levels_variable="datapower_temp_default_levels",
     check_default_parameters={
         "levels": (65.0, 70.0),  # 70C recommended alarm level by IBM
     },

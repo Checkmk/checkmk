@@ -5,19 +5,9 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.stormshield import DETECT_STORMSHIELD
-
-factory_settings["stormshield_updates"] = {
-    "Not Available": 1,
-    "Broken": 2,
-    "Uptodate": 0,
-    "Disabled": 1,
-    "Never started": 0,
-    "Running": 0,
-    "Failed": 2,
-}
 
 
 def inventory_stormshield_updates(info):
@@ -42,7 +32,6 @@ check_info["stormshield_updates"] = LegacyCheckDefinition(
     detect=DETECT_STORMSHIELD,
     discovery_function=inventory_stormshield_updates,
     check_function=check_stormshield_updates,
-    default_levels_variable="stormshield_updates",
     service_name="Autoupdate %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.9.1.1",

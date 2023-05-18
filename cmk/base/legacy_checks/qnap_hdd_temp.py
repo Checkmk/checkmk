@@ -6,13 +6,9 @@
 
 from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.qnap import DETECT_QNAP
-
-factory_settings["qnap_hdd_temp_default_levels"] = {
-    "levels": (40.0, 45.0),
-}
 
 
 def parse_qnap_hdd_temp(info):
@@ -41,7 +37,6 @@ check_info["qnap_hdd_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.24681.1.2.11.1",
         oids=["2", "3"],
     ),
-    default_levels_variable="qnap_hdd_temp_default_levels",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (40.0, 45.0),

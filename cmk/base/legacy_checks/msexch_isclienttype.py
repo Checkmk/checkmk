@@ -12,7 +12,7 @@ from cmk.base.check_legacy_includes.wmi import (
     wmi_calculate_raw_average,
     wmi_yield_raw_persec,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # checks for is store and is clienttype
 # as I understand it, these are logically related but the performance
@@ -20,12 +20,6 @@ from cmk.base.config import check_info, factory_settings
 
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
-factory_settings["msexch_isclienttype_defaultlevels"] = {
-    # attention! those three dictionaries are tuples when returned by wato!
-    "store_latency": {"upper": (40.0, 50.0)},
-    "clienttype_latency": {"upper": (40.0, 50.0)},
-    "clienttype_requests": {"upper": (60, 70)},
-}
 
 
 def discover_msexch_isclienttype(parsed):
@@ -62,7 +56,6 @@ check_info["msexch_isclienttype"] = LegacyCheckDefinition(
     parse_function=parse_wmi_table,
     service_name="Exchange IS Client Type %s",
     check_ruleset_name="msx_info_store",
-    default_levels_variable="msexch_isclienttype_defaultlevels",
     check_default_parameters={
         # attention! those three dictionaries are tuples when returned by wato!
         "store_latency": {"upper": (40.0, 50.0)},

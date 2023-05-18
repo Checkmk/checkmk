@@ -22,20 +22,11 @@
 import collections
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 vsphere_object_names = {
     "hostsystem": "HostSystem",
     "virtualmachine": "VM",
-}
-
-factory_settings["esx_vsphere_objects_default_levels"] = {
-    "states": {
-        "poweredOn": 0,
-        "poweredOff": 1,
-        "suspended": 1,
-        "unknown": 3,
-    }
 }
 
 
@@ -105,7 +96,6 @@ check_info["esx_vsphere_objects"] = LegacyCheckDefinition(
     check_function=check_esx_vsphere_objects,
     service_name="%s",
     check_ruleset_name="esx_vsphere_objects",
-    default_levels_variable="esx_vsphere_objects_default_levels",
     check_default_parameters={
         "states": {
             "poweredOn": 0,

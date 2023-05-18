@@ -6,17 +6,13 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<db2_connections>>>
 # [[[db2taddm:CMDBS1]]]
 # port 50214
 # sessions 40
 # latency 0:1.03
-
-factory_settings["db2_connections_default_levels"] = {
-    "levels_total": (150, 200),
-}
 
 
 def inventory_db2_connections(parsed):
@@ -64,7 +60,6 @@ check_info["db2_connections"] = LegacyCheckDefinition(
     check_function=check_db2_connections,
     discovery_function=inventory_db2_connections,
     check_ruleset_name="db2_connections",
-    default_levels_variable="db2_connections_default_levels",
     check_default_parameters={
         "levels_total": (150, 200),
     },

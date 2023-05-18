@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.hp_msa import (
     parse_hp_msa,
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<hp_msa_psu>>>
 # power-supplies 1 durable-id psu_1.1
@@ -75,14 +75,6 @@ check_info["hp_msa_psu"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 # Just an assumption
-factory_settings["hp_msa_psu_default_levels"] = {
-    "levels_33v_lower": (3.25, 3.20),
-    "levels_33v_upper": (3.4, 3.45),
-    "levels_5v_lower": (4.9, 4.8),
-    "levels_5v_upper": (5.1, 5.2),
-    "levels_12v_lower": (11.9, 11.8),
-    "levels_12v_upper": (12.1, 12.2),
-}
 
 
 def inventory_hp_msa_psu(parsed):
@@ -114,7 +106,6 @@ check_info["hp_msa_psu.sensor"] = LegacyCheckDefinition(
     discovery_function=inventory_hp_msa_psu,
     check_function=check_hp_msa_psu,
     service_name="Power Supply Voltage %s",
-    default_levels_variable="hp_msa_psu_default_levels",
     check_ruleset_name="hp_msa_psu_voltage",
     check_default_parameters={
         "levels_33v_lower": (3.25, 3.20),
@@ -136,10 +127,6 @@ check_info["hp_msa_psu.sensor"] = LegacyCheckDefinition(
 #   |                       |_|                                            |
 #   +----------------------------------------------------------------------+
 
-factory_settings["hp_msa_psu_temp_default_levels"] = {
-    "levels": (40.0, 45.0),  # Just assumed
-}
-
 
 @get_parsed_item_data
 def check_hp_msa_psu_temp(item, params, data):
@@ -151,7 +138,6 @@ check_info["hp_msa_psu.temp"] = LegacyCheckDefinition(
     check_function=check_hp_msa_psu_temp,
     service_name="Temperature Power Supply %s",
     check_ruleset_name="temperature",
-    default_levels_variable="hp_msa_psu_temp_default_levels",
     check_default_parameters={
         "levels": (40.0, 45.0),  # Just assumed
     },

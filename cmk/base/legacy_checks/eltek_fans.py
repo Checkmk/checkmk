@@ -51,13 +51,9 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.eltek import DETECT_ELTEK
-
-factory_settings["eltek_fans_default_variables"] = {
-    "levels": (99, 100),
-}
 
 
 def inventory_eltek_fans(info):
@@ -107,7 +103,6 @@ check_info["eltek_fans"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.12148.9.1.17.3.1",
         oids=["1", "4", "6"],
     ),
-    default_levels_variable="eltek_fans_default_variables",
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={
         "levels": (99, 100),

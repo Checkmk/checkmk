@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # Example output from agent:
 
@@ -118,8 +118,6 @@ check_info["allnet_ip_sensoric.tension"] = LegacyCheckDefinition(
 #   |                                        |_|                           |
 #   '----------------------------------------------------------------------'
 
-factory_settings["allnet_ip_sensoric_temp_default_levels"] = {"levels": (35.0, 40.0)}
-
 
 def inventory_allnet_ip_sensoric_temp(parsed):
     return [
@@ -146,7 +144,6 @@ check_info["allnet_ip_sensoric.temp"] = LegacyCheckDefinition(
     discovery_function=inventory_allnet_ip_sensoric_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="allnet_ip_sensoric_temp_default_levels",
     check_default_parameters={"levels": (35.0, 40.0)},
 )
 

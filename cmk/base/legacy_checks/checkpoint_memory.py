@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
 
@@ -20,8 +20,6 @@ from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
 
 # .1.3.6.1.4.1.2620.1.6.7.4.3.0 8101654528 --> CHECKPOINT-MIB::memTotalReal
 # .1.3.6.1.4.1.2620.1.6.7.4.4.0 2091094016 --> CHECKPOINT-MIB::memAvailReal
-
-factory_settings["checkpoint_memory_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
 
 
 def inventory_checkpoint_memory(info):
@@ -53,7 +51,6 @@ check_info["checkpoint_memory"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.2620.1.6.7.4",
         oids=["3", "4"],
     ),
-    default_levels_variable="checkpoint_memory_default_levels",
     check_ruleset_name="memory_simple",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

@@ -8,7 +8,7 @@ import time
 
 from cmk.base.check_api import get_rate, LegacyCheckDefinition, RAISE
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # 7mode
 # <<<netapp_api_cpu:sep(9)>>>
@@ -20,8 +20,6 @@ from cmk.base.config import check_info, factory_settings
 # cpu-info clu1-02        num_processors 2
 # cpu-info clu1-01        cpu_busy 5340000        nvram-battery-status battery_ok
 # cpu-info clu1-02        cpu_busy 5400000        nvram-battery-status battery_ok
-
-factory_settings["netapp_api_cpu_cm_default_levels"] = {"util": (90.0, 95.0)}
 
 
 def inventory_netapp_api_cpu_utilization(parsed):
@@ -87,7 +85,6 @@ check_info["netapp_api_cpu.utilization"] = LegacyCheckDefinition(
         item, params, parsed, "7mode"
     ),
     service_name="CPU utilization",
-    default_levels_variable="netapp_api_cpu_cm_default_levels",
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},
 )

@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 
@@ -15,9 +15,6 @@ from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 
 # Maximum power consumption is 123 W
 # as in the documentation 'Summit-X460-G2-DS.pdf'
-factory_settings["netextreme_psu_default_levels"] = {
-    "power": (110, 120),
-}
 
 
 def parse_netextreme_psu(info):
@@ -38,7 +35,6 @@ check_info["netextreme_psu"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     check_ruleset_name="el_inphase",
-    default_levels_variable="netextreme_psu_default_levels",
     check_default_parameters={
         "power": (110, 120),
     },

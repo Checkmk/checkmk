@@ -6,11 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["nvidia_temp_default_levels"] = {"levels": (60.0, 65.0)}
-
-factory_settings["nvidia_temp_core_default_levels"] = {"levels": (90.0, 95.0)}
+from cmk.base.config import check_info
 
 
 def format_nvidia_name(identifier):
@@ -44,7 +40,6 @@ check_info["nvidia.temp"] = LegacyCheckDefinition(
     discovery_function=lambda info: inventory_nvidia_temp(False, info),
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="nvidia_temp_default_levels",
     check_default_parameters={"levels": (60.0, 65.0)},
 )
 
@@ -53,7 +48,6 @@ check_info["nvidia.temp_core"] = LegacyCheckDefinition(
     discovery_function=lambda info: inventory_nvidia_temp(True, info),
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="nvidia_temp_core_default_levels",
     check_default_parameters={"levels": (90.0, 95.0)},
 )
 

@@ -6,11 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.apc import DETECT
-
-factory_settings["apc_symmetra_ext_temp_default_levels"] = {"levels": (30.0, 35.0)}
 
 
 def inventory_apc_symmetra_ext_temp(info):
@@ -40,6 +38,5 @@ check_info["apc_symmetra_ext_temp"] = LegacyCheckDefinition(
         oids=["1", "3", "4", "5"],
     ),
     check_ruleset_name="temperature",
-    default_levels_variable="apc_symmetra_ext_temp_default_levels",
     check_default_parameters={"levels": (30.0, 35.0)},
 )

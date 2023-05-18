@@ -12,11 +12,7 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["mssql_connections_default_levels"] = {
-    "levels": (None, None),
-}
+from cmk.base.config import check_info
 
 
 def parse_mssql_connections(info):
@@ -54,7 +50,6 @@ check_info["mssql_connections"] = LegacyCheckDefinition(
     check_function=check_mssql_connections,
     service_name="MSSQL Connections %s",
     check_ruleset_name="mssql_connections",
-    default_levels_variable="mssql_connections_default_levels",
     check_default_parameters={
         "levels": (None, None),
     },

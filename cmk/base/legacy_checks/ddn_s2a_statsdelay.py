@@ -13,12 +13,7 @@ from cmk.base.check_api import (
     set_item_state,
 )
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["ddn_s2a_statsdelay_default_levels"] = {
-    "read_avg": (0.1, 0.2),
-    "write_avg": (0.1, 0.2),
-}
+from cmk.base.config import check_info
 
 
 def parse_ddn_s2a_statsdelay(info):
@@ -159,7 +154,6 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
 
 
 check_info["ddn_s2a_statsdelay"] = LegacyCheckDefinition(
-    default_levels_variable="ddn_s2a_statsdelay_default_levels",
     parse_function=parse_ddn_s2a_statsdelay,
     discovery_function=inventory_ddn_s2a_statsdelay,
     check_function=check_ddn_s2a_statsdelay,

@@ -15,12 +15,8 @@ from cmk.base.check_api import (
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["huawei_cpu_default"] = {"levels": (80.0, 90.0)}
-
-factory_settings["huawei_mem_default"] = {"levels": (80.0, 90.0)}
 
 
 def parse_huawei_wlc_devs(info):
@@ -71,7 +67,6 @@ check_info["huawei_wlc_devs.mem"] = LegacyCheckDefinition(
     parse_function=parse_huawei_wlc_devs,
     check_function=check_huawei_wlc_devs_mem,
     service_name="Device %s Memory",
-    default_levels_variable="huawei_mem_default",
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
@@ -97,6 +92,5 @@ check_info["huawei_wlc_devs.cpu"] = LegacyCheckDefinition(
     discovery_function=discovery_huawei_wlc_devs_cpu,
     check_function=check_huawei_wlc_devs_cpu,
     service_name="Device %s CPU",
-    default_levels_variable="huawei_cpu_default",
     check_default_parameters={"levels": (80.0, 90.0)},
 )

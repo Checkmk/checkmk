@@ -7,11 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.checkpoint import checkpoint_sensorstatus_to_nagios
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
-
-factory_settings["checkpoint_temp_default_levels"] = {"levels": (50.0, 60.0)}
 
 
 def format_item_checkpoint_temp(name):
@@ -53,6 +51,5 @@ check_info["checkpoint_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.2620.1.6.7.8.1.1",
         oids=["2", "3", "4", "6"],
     ),
-    default_levels_variable="checkpoint_temp_default_levels",
     check_default_parameters={"levels": (50.0, 60.0)},
 )

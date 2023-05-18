@@ -38,7 +38,7 @@ from cmk.base.check_api import (
 )
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # <<<rabbitmq_nodes>>>
@@ -122,13 +122,6 @@ def parse_rabbitmq_nodes(info):
     return parsed
 
 
-factory_settings["rabbitmq_nodes_default_levels"] = {
-    "state": 2,
-    "disk_free_alarm": 2,
-    "mem_alarm": 2,
-}
-
-
 @get_parsed_item_data
 def check_rabbitmq_nodes(item, params, parsed):
     if not parsed:
@@ -171,7 +164,6 @@ check_info["rabbitmq_nodes"] = LegacyCheckDefinition(
     discovery_function=discover(),
     service_name="RabbitMQ Node %s",
     check_ruleset_name="rabbitmq_nodes",
-    default_levels_variable="rabbitmq_nodes_default_levels",
     check_default_parameters={
         "state": 2,
         "disk_free_alarm": 2,

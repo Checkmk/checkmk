@@ -11,13 +11,9 @@
 from collections.abc import Iterable
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
-
-factory_settings["kentix_co"] = {
-    "levels_ppm": (10, 25),
-}
 
 
 def parse_kentix_co(string_table: list[list[str]]) -> int | None:
@@ -49,7 +45,6 @@ check_info["kentix_co"] = LegacyCheckDefinition(
     parse_function=parse_kentix_co,
     discovery_function=inventory_kentix_co,
     check_function=check_kentix_co,
-    default_levels_variable="kentix_co",
     service_name="Carbon Monoxide",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.37954",

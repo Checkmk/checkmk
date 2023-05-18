@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.liebert import parse_liebert_wrapper
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
 
@@ -14,10 +14,6 @@ from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5080 Reheat Utilization
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5080 0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5080 %
-
-factory_settings["liebert_reheating_default_levels"] = {
-    "levels": (80, 90),
-}
 
 
 def inventory_liebert_reheating(parsed):
@@ -42,7 +38,6 @@ check_info["liebert_reheating"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=["10.1.2.1.5080", "20.1.2.1.5080", "30.1.2.1.5080"],
     ),
-    default_levels_variable="liebert_reheating_default_levels",
     check_default_parameters={
         "levels": (80, 90),
     },

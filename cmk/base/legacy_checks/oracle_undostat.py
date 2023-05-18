@@ -15,12 +15,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
     MKCounterWrapped,
 )
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["oracle_undostat_defaults"] = {
-    "levels": (600, 300),
-    "nospaceerrcnt_state": 2,
-}
+from cmk.base.config import check_info
 
 
 def parse_oracle_undostat(info):
@@ -74,7 +69,6 @@ check_info["oracle_undostat"] = LegacyCheckDefinition(
     check_function=check_oracle_undostat,
     discovery_function=discover_oracle_undostat,
     service_name="ORA %s Undo Retention",
-    default_levels_variable="oracle_undostat_defaults",
     check_ruleset_name="oracle_undostat",
     check_default_parameters={
         "levels": (600, 300),

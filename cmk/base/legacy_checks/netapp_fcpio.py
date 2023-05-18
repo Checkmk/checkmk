@@ -15,10 +15,8 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
     startswith,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["netapp_fcpio_default_levels"] = {}
 
 
 def check_netapp_fcpio(item, params, info):
@@ -56,6 +54,5 @@ check_info["netapp_fcpio"] = LegacyCheckDefinition(
     discovery_function=lambda info: [(None, {})],
     service_name="FCP I/O",
     check_ruleset_name="netapp_fcportio",
-    default_levels_variable="netapp_fcpio_default_levels",
     check_default_parameters={},
 )

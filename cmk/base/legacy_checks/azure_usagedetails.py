@@ -10,9 +10,7 @@ import collections
 
 from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import get_data_or_go_stale, parse_resources
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["levels_azure_usagedetails"] = {}
+from cmk.base.config import check_info
 
 
 def parse_azure_usagedetails(info):
@@ -53,7 +51,6 @@ check_info["azure_usagedetails"] = LegacyCheckDefinition(
     discovery_function=discover(),
     check_function=check_azure_usagedetails,
     service_name="Costs %s",
-    default_levels_variable="levels_azure_usagedetails",
     check_ruleset_name="azure_usagedetails",
     check_default_parameters={},
 )

@@ -17,7 +17,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.graylog import handle_iso_utc_to_localtimestamp, json
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<graylog_sidecars>>>
 # {"sort": "node_name", "pagination": {"count": 1, "per_page": 50, "total": 1,
@@ -67,13 +67,6 @@ def parse_graylog_sidecars(info):
         )
 
     return parsed
-
-
-factory_settings["graylog_sidecars_default_levels"] = {
-    "running_lower": (1, 0),
-    "stopped_upper": (1, 1),
-    "failing_upper": (1, 1),
-}
 
 
 @get_parsed_item_data
@@ -169,7 +162,6 @@ check_info["graylog_sidecars"] = LegacyCheckDefinition(
     parse_function=parse_graylog_sidecars,
     check_function=check_graylog_sidecars,
     discovery_function=discover(),
-    default_levels_variable="graylog_sidecars_default_levels",
     service_name="Graylog Sidecar %s",
     check_ruleset_name="graylog_sidecars",
     check_default_parameters={

@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # Example:
@@ -15,10 +15,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # Temperature is in Celcius by default.
 # Tested with Dell PowerConnect 5448 and 5424 models.
-
-factory_settings["dell_powerconnect_temp_default_values"] = {
-    "levels": (35.0, 40.0),
-}
 
 
 def parse_dell_powerconnect_temp(info):
@@ -73,7 +69,6 @@ check_info["dell_powerconnect_temp"] = LegacyCheckDefinition(
     check_function=check_dell_powerconnect_temp,
     discovery_function=inventory_dell_powerconnect_temp,
     service_name="Temperature %s",
-    default_levels_variable="dell_powerconnect_temp_default_values",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.89.53.15.1",
         oids=["9", "10"],

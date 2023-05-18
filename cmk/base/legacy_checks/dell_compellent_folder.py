@@ -6,11 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_DELL_COMPELLENT
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_dell_compellent_folder(info):
@@ -38,6 +36,5 @@ check_info["dell_compellent_folder"] = LegacyCheckDefinition(
         oids=["2", "5", "6"],
     ),
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

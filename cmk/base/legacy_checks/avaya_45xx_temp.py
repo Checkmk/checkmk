@@ -6,12 +6,8 @@
 
 from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["avaya_45xx_temp_default_levels"] = {
-    "levels": (55.0, 60.0),
-}
 
 
 def inventory_avaya_45xx_temp(info):
@@ -31,7 +27,6 @@ check_info["avaya_45xx_temp"] = LegacyCheckDefinition(
     check_function=check_avaya_45xx_temp,
     discovery_function=inventory_avaya_45xx_temp,
     service_name="Temperature Chassis %s",
-    default_levels_variable="avaya_45xx_temp_default_levels",
     check_ruleset_name="temperature",
     # S5-CHASSIS-MIB::s5ChasTmpSnrTmpValue
     # The current temperature value of the temperature

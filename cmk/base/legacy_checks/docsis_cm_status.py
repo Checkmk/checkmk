@@ -23,13 +23,8 @@
 
 
 from cmk.base.check_api import any_of, equals, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-
-factory_settings["docsis_cm_status_default_levels"] = {
-    "tx_power": (20.0, 10.0),
-    "error_states": [13, 2, 1],
-}
 
 
 def inventory_docsis_cm_status(info):
@@ -94,7 +89,6 @@ check_info["docsis_cm_status"] = LegacyCheckDefinition(
         base=".1.3.6.1.2.1.10.127.1.2.2.1",
         oids=[OIDEnd(), "1", "3"],
     ),
-    default_levels_variable="docsis_cm_status_default_levels",
     check_ruleset_name="docsis_cm_status",
     check_default_parameters={
         "tx_power": (20.0, 10.0),

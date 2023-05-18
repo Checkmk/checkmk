@@ -11,11 +11,7 @@
 
 
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, MKCounterWrapped
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["oracle_recovery_area_defaults"] = {
-    "levels": (70.0, 90.0),
-}
+from cmk.base.config import check_info
 
 
 def inventory_oracle_recovery_area(info):
@@ -67,7 +63,6 @@ check_info["oracle_recovery_area"] = LegacyCheckDefinition(
     check_function=check_oracle_recovery_area,
     discovery_function=inventory_oracle_recovery_area,
     service_name="ORA %s Recovery Area",
-    default_levels_variable="oracle_recovery_area_defaults",
     check_ruleset_name="oracle_recovery_area",
     check_default_parameters={
         "levels": (70.0, 90.0),

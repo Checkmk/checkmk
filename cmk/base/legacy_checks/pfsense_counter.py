@@ -7,17 +7,8 @@
 import time
 
 from cmk.base.check_api import contains, get_average, get_rate, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-
-factory_settings["pfsense_counter_default_levels"] = {
-    "badoffset": (100.0, 10000.0),
-    "short": (100.0, 10000.0),
-    "memdrop": (100.0, 10000.0),
-    "normalized": (100.0, 10000.0),
-    "fragment": (100.0, 10000.0),
-    "average": 3,
-}
 
 
 def parse_pfsense_counter(info):
@@ -94,7 +85,6 @@ def check_pfsense_counter(_no_item, params, parsed):
 
 check_info["pfsense_counter"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
-    default_levels_variable="pfsense_counter_default_levels",
     parse_function=parse_pfsense_counter,
     discovery_function=inventory_pfsense_counter,
     check_function=check_pfsense_counter,

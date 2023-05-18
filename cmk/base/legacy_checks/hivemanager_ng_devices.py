@@ -16,11 +16,7 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["hivemanger_ng_devices"] = {
-    "max_clients": (25, 50),
-}
+from cmk.base.config import check_info
 
 
 def parse_hivemanager_ng_devices(info):
@@ -79,7 +75,6 @@ check_info["hivemanager_ng_devices"] = LegacyCheckDefinition(
     check_function=check_hivemanager_ng_devices,
     discovery_function=inventory_hivemanager_ng_devices,
     service_name="Client %s",
-    default_levels_variable="hivemanger_ng_devices",
     check_ruleset_name="hivemanager_ng_devices",
     check_default_parameters={
         "max_clients": (25, 50),

@@ -6,10 +6,8 @@
 
 from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["poseidon_temp_default_levels"] = {}
 
 
 def parse_poseidon_temp(info):
@@ -58,6 +56,5 @@ check_info["poseidon_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.21796.3.3.3.1",
         oids=["2", "4", "5"],
     ),
-    default_levels_variable="poseidon_temp_default_levels",
     check_default_parameters={},
 )

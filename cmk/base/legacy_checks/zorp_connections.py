@@ -11,11 +11,7 @@ It sums up all connections and checks against configurable maximum values.
 
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["zorp_connections"] = {
-    "levels": (15, 20),
-}
+from cmk.base.config import check_info
 
 
 def parse_zorp_connections(info):
@@ -53,7 +49,6 @@ check_info["zorp_connections"] = LegacyCheckDefinition(  # mypy: ignore
     discovery_function=lambda parsed: [(None, {})],
     check_function=check_zorp_connections,
     service_name="Zorp Connections",
-    default_levels_variable="zorp_connections",
     check_ruleset_name="zorp_connections",
     check_default_parameters={
         "levels": (15, 20),

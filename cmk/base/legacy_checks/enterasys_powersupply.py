@@ -13,15 +13,9 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.enterasys import DETECT_ENTERASYS
-
-factory_settings["enterasys_powersupply_default"] = {
-    "redundancy_ok_states": [
-        1,
-    ],
-}
 
 
 def inventory_enterasys_powersupply(info):
@@ -65,7 +59,6 @@ check_info["enterasys_powersupply"] = LegacyCheckDefinition(
     check_function=check_enterasys_powersupply,
     discovery_function=inventory_enterasys_powersupply,
     service_name="PSU %s",
-    default_levels_variable="enterasys_powersupply_default",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.52.4.3.1.2.1.1",
         oids=[OIDEnd(), "2", "3", "4"],

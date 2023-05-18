@@ -17,10 +17,8 @@ from cmk.base.check_api import (
     get_timestamp_human_readable,
     LegacyCheckDefinition,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.mongodb import parse_date
-
-factory_settings["mongodb_collections_levels"] = {"levels_nindexes": (62, 65)}
 
 
 def parse_mongodb_collections(info):
@@ -221,7 +219,6 @@ def _mongodb_collections_get_as_int(data, key):
 
 
 check_info["mongodb_collections"] = LegacyCheckDefinition(
-    default_levels_variable="mongodb_collections_levels",
     parse_function=parse_mongodb_collections,
     discovery_function=inventory_mongodb_collections,
     check_function=check_mongodb_collections,

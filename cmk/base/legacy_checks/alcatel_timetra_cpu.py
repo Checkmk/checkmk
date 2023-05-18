@@ -6,10 +6,8 @@
 
 from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["alcatel_timetra_cpu_default_levels"] = {"util": (90.0, 95.0)}
 
 
 def inventory_alcatel_timetra_cpu(info):
@@ -31,6 +29,5 @@ check_info["alcatel_timetra_cpu"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     check_ruleset_name="cpu_utilization",
-    default_levels_variable="alcatel_timetra_cpu_default_levels",
     check_default_parameters={"util": (90.0, 95.0)},
 )

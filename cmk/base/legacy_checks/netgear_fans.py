@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.netgear import DETECT_NETGEAR
 
@@ -38,9 +38,6 @@ from cmk.base.plugins.agent_based.utils.netgear import DETECT_NETGEAR
 # .1.3.6.1.4.1.4526.10.43.1.6.1.4.2.5 0 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanSpeed.2.5
 
 # Just assumed
-factory_settings["netgear_fans_default_levels"] = {
-    "lower": (1500, 1200),
-}
 
 
 def netgear_map_state_txt_to_int(state_nr, version):
@@ -140,7 +137,6 @@ check_info["netgear_fans"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "3", "4"],
         ),
     ],
-    default_levels_variable="netgear_fans_default_levels",
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (1500, 1200),

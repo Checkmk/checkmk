@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.vutlan import DETECT_VUTLAN_EMS
 
@@ -14,11 +14,6 @@ from cmk.base.plugins.agent_based.utils.vutlan import DETECT_VUTLAN_EMS
 # MIB can also be browsed on
 # https://mibs.observium.org/mib/SKYCONTROL-SYSTEM-MIB/#
 # NOTE: the unit is not given in the SNMP walk, it is °C
-
-factory_settings["vutlan_ems_temp_default_levels"] = {
-    "levels": (35.0, 40.0),
-    "levels_lower": (0.0, -1.0),
-}
 
 
 def parse_vutlan_ems_temp(info):
@@ -60,7 +55,6 @@ check_info["vutlan_ems_temp"] = LegacyCheckDefinition(
         )
     ],
     check_ruleset_name="temperature",
-    default_levels_variable="vutlan_ems_temp_default_levels",
     check_default_parameters={
         "levels": (35.0, 40.0),
         "levels_lower": (0.0, -1.0),

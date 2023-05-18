@@ -6,15 +6,11 @@
 
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.oracle import oracle_handle_ora_errors
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<oracle_locks>>>
 # TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL
 # newdb|25|15231|ol6131|sqlplus@ol6131 (TNS V1-V3)|13275|oracle|SYS|3782|VALID|1|407|1463|ol6131|sqlplus@ol6131 (TNS V1-V3)|13018|oracle|SYS
-
-factory_settings["oracle_locks_defaults"] = {
-    "levels": (1800, 3600),
-}
 
 
 def inventory_oracle_locks(info):
@@ -135,7 +131,6 @@ check_info["oracle_locks"] = LegacyCheckDefinition(
     check_function=check_oracle_locks,
     discovery_function=inventory_oracle_locks,
     service_name="ORA %s Locks",
-    default_levels_variable="oracle_locks_defaults",
     check_ruleset_name="oracle_locks",
     check_default_parameters={
         "levels": (1800, 3600),

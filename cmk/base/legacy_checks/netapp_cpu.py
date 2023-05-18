@@ -6,10 +6,8 @@
 
 from cmk.base.check_api import all_of, exists, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["netapp_cpu_default_levels"] = {"util": (80.0, 90.0)}
 
 
 def check_netapp_cpu(item, params, info):
@@ -28,7 +26,6 @@ check_info["netapp_cpu"] = LegacyCheckDefinition(
     service_name="CPU utilization",
     discovery_function=lambda info: [(None, {})],
     check_function=check_netapp_cpu,
-    default_levels_variable="netapp_cpu_default_levels",
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},
 )

@@ -13,12 +13,8 @@ from cmk.base.check_api import (
     get_bytes_human_readable,
     LegacyCheckDefinition,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-
-factory_settings["veeam_client"] = {
-    "age": (108000, 172800),  # 30h/2d
-}
 
 
 def parse_veeam_client(info):
@@ -162,7 +158,6 @@ check_info["veeam_client"] = LegacyCheckDefinition(
     discovery_function=inventory_veeam_client,
     service_name="VEEAM Client %s",
     check_ruleset_name="veeam_backup",
-    default_levels_variable="veeam_client",
     check_default_parameters={
         "age": (108000, 172800),  # 30h/2d
     },

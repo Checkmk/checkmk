@@ -9,7 +9,7 @@
 import time
 
 from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint, state_markers
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # Example output from agent:
@@ -98,12 +98,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 #                   'state': 'Enabled'},
 # }
 
-factory_settings["emcvnx_disks_default_levels"] = {
-    "state_read_error": (2, 2),  # (state, count of errors)
-    "state_write_error": (2, 2),  # (state, count of errors)
-    "state_rebuilding": 1,
-}
-
 
 def parse_emcvnx_disks(info):
     parsed = {}
@@ -189,7 +183,6 @@ check_info["emcvnx_disks"] = LegacyCheckDefinition(
     check_function=check_emcvnx_disks,
     service_name="Enclosure %s",
     check_ruleset_name="emcvnx_disks",
-    default_levels_variable="emcvnx_disks_default_levels",
     check_default_parameters={
         "state_read_error": (2, 2),  # (state, count of errors)
         "state_write_error": (2, 2),  # (state, count of errors)

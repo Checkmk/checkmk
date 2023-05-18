@@ -6,15 +6,11 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 
 # Just an assumption, levels as in other fan checks
-factory_settings["netextreme_fan_default_levels"] = {
-    "lower": (2000, 1000),
-    "upper": (8000, 8400),
-}
 
 
 def inventory_netextreme_fan(info):
@@ -44,7 +40,6 @@ check_info["netextreme_fan"] = LegacyCheckDefinition(
         oids=["1", "2", "4"],
     ),
     check_ruleset_name="hw_fans",
-    default_levels_variable="netextreme_fan_default_levels",
     check_default_parameters={
         "lower": (2000, 1000),
         "upper": (8000, 8400),

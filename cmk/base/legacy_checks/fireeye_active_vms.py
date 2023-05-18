@@ -5,11 +5,9 @@
 
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils import fireeye
-
-factory_settings["active_vm_levels"] = {"vms": (100, 120)}
 
 
 def discover_fireeye_active_vms(string_table):
@@ -33,7 +31,6 @@ check_info["fireeye_active_vms"] = LegacyCheckDefinition(
     discovery_function=discover_fireeye_active_vms,
     check_function=check_fireeye_active_vms,
     service_name="Active VMs",
-    default_levels_variable="active_vm_levels",
     check_ruleset_name="fireeye_active_vms",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1.9",

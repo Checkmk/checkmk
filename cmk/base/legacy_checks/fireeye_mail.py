@@ -8,7 +8,7 @@ import time
 
 from cmk.base.check_api import check_levels, get_average, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
@@ -235,8 +235,6 @@ check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
 # .1.3.6.1.4.1.25597.13.1.51.0 04/06/17 12:16:03
 # .1.3.6.1.4.1.25597.13.1.52.0 4282
 
-factory_settings["received_levels"] = {"rate": (6000, 7000)}
-
 
 def check_fireeye_mail_received(_no_item, params, info):
     start, end, received = info[0][13:16]
@@ -251,6 +249,5 @@ check_info["fireeye_mail.received"] = LegacyCheckDefinition(
     discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
     check_function=check_fireeye_mail_received,
     service_name="Mails Received",
-    default_levels_variable="received_levels",
     check_default_parameters={"rate": (6000, 7000)},
 )

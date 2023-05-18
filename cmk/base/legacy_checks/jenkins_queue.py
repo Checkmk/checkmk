@@ -22,7 +22,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
     state_markers,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 MAP_QUEUE_STATES = {
     True: "yes",
@@ -41,15 +41,6 @@ def parse_jenkins_queue(info):
 
 def inventory_jenkins_queue(parsed):
     yield None, {}
-
-
-factory_settings["jenkins_queue_default_levels"] = {
-    "in_queue_since": (3600, 7200),
-    "stuck": 2,
-    "blocked": 0,
-    "pending": 0,
-    "jenkins_stuck_tasks": (1, 2),
-}
 
 
 def check_jenkins_queue(_no_item, params, parsed):
@@ -159,7 +150,6 @@ check_info["jenkins_queue"] = LegacyCheckDefinition(
     parse_function=parse_jenkins_queue,
     check_function=check_jenkins_queue,
     discovery_function=inventory_jenkins_queue,
-    default_levels_variable="jenkins_queue_default_levels",
     service_name="Jenkins Queue",
     check_ruleset_name="jenkins_queue",
     check_default_parameters={

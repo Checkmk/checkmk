@@ -6,12 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["ipr400_temp_default_levels"] = {
-    "levels": (30.0, 40.0),  # reported temperature seems to be near room temperature usually
-}
 
 
 def inventory_ipr400_temp(info):
@@ -27,7 +23,6 @@ check_info["ipr400_temp"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.1.0", "ipr voip device ipr400"),
     check_function=check_ipr400_temp,
     discovery_function=inventory_ipr400_temp,
-    default_levels_variable="ipr400_temp_default_levels",
     service_name="Temperature %s ",
     check_ruleset_name="temperature",
     fetch=SNMPTree(

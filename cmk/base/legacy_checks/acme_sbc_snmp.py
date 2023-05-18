@@ -5,7 +5,7 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.acme import DETECT_ACME
 
@@ -13,10 +13,6 @@ from cmk.base.plugins.agent_based.utils.acme import DETECT_ACME
 
 # .1.3.6.1.4.1.9148.3.2.1.1.3 Health Score (apSysHealthScore)
 # .1.3.6.1.4.1.9148.3.2.1.1.4 Health Status Description (apSysRedundancy)
-
-factory_settings["acme_sbc_snmp_default_levels"] = {
-    "levels_lower": (99, 75),
-}
 
 
 def inventory_acme_sbc_snmp(info):
@@ -70,7 +66,6 @@ check_info["acme_sbc_snmp"] = LegacyCheckDefinition(
         oids=["3", "4"],
     ),
     check_ruleset_name="acme_sbc_snmp",
-    default_levels_variable="acme_sbc_snmp_default_levels",
     check_default_parameters={
         "levels_lower": (99, 75),
     },

@@ -10,14 +10,12 @@ import collections
 
 from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # example output
 # <<<aix_paging>>>
 # Page Space      Physical Volume   Volume Group    Size %Used   Active    Auto    Type   Chksum
 # hd6                   hdisk11                rootvg       10240MB    23        yes        yes       lv       0
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 AIXPaging = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
@@ -67,6 +65,5 @@ check_info["aix_paging"] = LegacyCheckDefinition(
     check_function=check_aix_paging,
     service_name="Page Space %s",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

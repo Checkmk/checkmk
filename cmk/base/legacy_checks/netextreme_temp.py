@@ -6,16 +6,13 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 
 # .1.3.6.1.4.1.1916.1.1.1.8.0 31 --> EXTREME-SYSTEM-MIB::extremeCurrentTemperature.0
 
 # Just an assumption
-factory_settings["netextreme_temp_default_levels"] = {
-    "levels": (45.0, 50.0),
-}
 
 
 def inventory_netextreme_temp(info):
@@ -36,7 +33,6 @@ check_info["netextreme_temp"] = LegacyCheckDefinition(
         oids=["8"],
     ),
     check_ruleset_name="temperature",
-    default_levels_variable="netextreme_temp_default_levels",
     check_default_parameters={
         "levels": (45.0, 50.0),
     },

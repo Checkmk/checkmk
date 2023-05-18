@@ -14,7 +14,7 @@ from cmk.base.check_api import (
 )
 from cmk.base.check_legacy_includes.redis import parse_redis_info
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<redis_info>>>
 # [[[MY_FIRST_REDIS|127.0.0.1|6380]]]
@@ -172,11 +172,6 @@ check_info["redis_info"] = LegacyCheckDefinition(
 # aof_last_write_status - Status of the last write operation to the AOF
 # aof_last_cow_size - The size in bytes of copy-on-write allocations during the last AOF rewrite operation
 
-factory_settings["redis_info_persistence_default_levels"] = {
-    "rdb_last_bgsave": 1,
-    "aof_last_rewrite": 1,
-}
-
 
 def check_redis_info_persistence(item, params, item_data):
     persistence_data = item_data.get(item, {}).get("Persistence")
@@ -221,7 +216,6 @@ check_info["redis_info.persistence"] = LegacyCheckDefinition(
     discovery_function=discover(lambda k, values: "Persistence" in values),
     service_name="Redis %s Persistence",
     check_ruleset_name="redis_info_persistence",
-    default_levels_variable="redis_info_persistence_default_levels",
     check_default_parameters={
         "rdb_last_bgsave": 1,
         "aof_last_rewrite": 1,

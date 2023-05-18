@@ -9,7 +9,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.hp_msa import check_hp_msa_health, inventory_hp_msa_health
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<hp_msa_volume>>>
 # volumes 1 durable-id V0
@@ -203,14 +203,10 @@ def check_hp_msa_volume_df(item, params, parsed):
         yield df_check_filesystem_single(item, size_mb, avail_mb, 0, None, None, params)
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-
 check_info["hp_msa_volume.df"] = LegacyCheckDefinition(
     discovery_function=inventory_hp_msa_volume_df,
     check_function=check_hp_msa_volume_df,
     service_name="Filesystem %s",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

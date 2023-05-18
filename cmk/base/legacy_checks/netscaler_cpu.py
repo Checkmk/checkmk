@@ -12,11 +12,9 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
-
-factory_settings["netscaler_cpu_default_levels"] = {"levels": (90.0, 95.0)}
 
 
 def inventory_netscaler_cpu(info):
@@ -49,7 +47,6 @@ check_info["netscaler_cpu"] = LegacyCheckDefinition(
     detect=SNMP_DETECT,
     check_function=check_netscaler_cpu,
     discovery_function=inventory_netscaler_cpu,
-    default_levels_variable="netscaler_cpu_default_levels",
     service_name="CPU Utilization %s",
     check_ruleset_name="cpu_utilization_multiitem",
     fetch=SNMPTree(

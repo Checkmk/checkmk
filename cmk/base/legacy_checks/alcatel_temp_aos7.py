@@ -6,11 +6,9 @@
 from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.alcatel import ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL_AOS7
-
-factory_settings["alcatel_temp_aos7"] = ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 
 
 def parse_alcatel_aos7_temp(info):
@@ -59,7 +57,6 @@ check_info["alcatel_temp_aos7"] = LegacyCheckDefinition(
     check_function=check_alcatel_aos7_temp,
     service_name="Temperature Board %s",
     check_ruleset_name="temperature",
-    default_levels_variable="alcatel_temp_aos7",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.801.1.1.1.3.1.1.3.1",
         oids=[

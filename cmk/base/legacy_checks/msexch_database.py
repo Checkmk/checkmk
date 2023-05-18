@@ -7,14 +7,7 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["msexch_database_defaultlevels"] = {
-    "read_attached_latency": (200.0, 250.0),
-    "read_recovery_latency": (150.0, 200.0),
-    "write_latency": (40.0, 50.0),
-    "log_latency": (5.0, 10.0),
-}
+from cmk.base.config import check_info
 
 _CHECKED_COUNTERS = [  # counter, setting, name, perfvar
     (
@@ -122,7 +115,6 @@ check_info["msexch_database"] = LegacyCheckDefinition(
     parse_function=parse_msexch_database,
     service_name="Exchange Database %s",
     check_ruleset_name="msx_database",
-    default_levels_variable="msexch_database_defaultlevels",
     check_default_parameters={
         "read_attached_latency": (200.0, 250.0),
         "read_recovery_latency": (150.0, 200.0),

@@ -14,7 +14,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
     MKCounterWrapped,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<oracle_dataguard_stats:sep(124)>>>
 # TESTDB|TESTDBU2|PHYSICAL STANDBY|apply finish time|+00 00:00:00.000|NOT ALLOWED|ENABLED|MAXIMUM PERFORMANCE|DISABLED||||APPLYING_LOG
@@ -24,14 +24,6 @@ from cmk.base.config import check_info, factory_settings
 # TUX12C|TUXSTDB|PHYSICAL STANDBY|apply lag|+00 00:28:57
 # TUX12C|TUXSTDB|PHYSICAL STANDBY|apply finish time|+00 00:00:17.180
 # TUX12C|TUXSTDB|PHYSICAL STANDBY|estimated startup time|20
-
-
-factory_settings["oracle_dataguard_stats"] = {
-    "apply_lag": (3600, 14400),
-    "missing_apply_lag_state": 1,
-    "active_dataguard_option": 1,
-    "primary_broker_state": False,
-}
 
 
 def inventory_oracle_dataguard_stats(parsed):
@@ -169,7 +161,6 @@ check_info["oracle_dataguard_stats"] = LegacyCheckDefinition(
     check_function=check_oracle_dataguard_stats,
     discovery_function=inventory_oracle_dataguard_stats,
     service_name="ORA %s Dataguard-Stats",
-    default_levels_variable="oracle_dataguard_stats",
     check_ruleset_name="oracle_dataguard_stats",
     check_default_parameters={
         "apply_lag": (3600, 14400),

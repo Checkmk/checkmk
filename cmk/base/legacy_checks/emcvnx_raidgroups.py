@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # Example output from agent:
 # <<<emcvnx_raidgroups>>>
@@ -227,15 +227,11 @@ def check_emcvnx_raidgroups_capacity(item, params, info):
     return rc, message, perfdata
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-
 check_info["emcvnx_raidgroups.capacity"] = LegacyCheckDefinition(
     discovery_function=inventory_emcvnx_raidgroups_capacity,
     check_function=check_emcvnx_raidgroups_capacity,
     service_name="RAID Group %s Capacity",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
@@ -290,7 +286,6 @@ check_info["emcvnx_raidgroups.capacity_contiguous"] = LegacyCheckDefinition(
     check_function=check_emcvnx_raidgroups_capacity_contiguous,
     service_name="RAID Group %s Capacity Contiguous",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 

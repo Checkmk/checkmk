@@ -11,7 +11,7 @@ import time
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.apc import DETECT
 
@@ -120,11 +120,6 @@ def parse_apc_symmetra(info):
 # apc_default_levels = ( 95, 40, 1, 220 )  or  { "levels" : ( 95, 40, 1, 220 ) }
 # crit_capacity, crit_sys_temp, crit_batt_curr, crit_voltage = levels
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
-factory_settings["apc_default_levels"] = {
-    "capacity": (95, 80),
-    "calibration_state": 0,
-    "battery_replace_state": 1,
-}
 
 
 def inventory_apc_symmetra(parsed):
@@ -312,7 +307,6 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
         ),
     ],
     check_ruleset_name="apc_symentra",
-    default_levels_variable="apc_default_levels",
     check_default_parameters={
         "capacity": (95, 80),
         "calibration_state": 0,
@@ -331,10 +325,6 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
-factory_settings["apc_symmetra_temp_default_levels"] = {
-    "levels_battery": (50, 60),
-    "levels_sensors": (25, 30),
-}
 
 
 def inventory_apc_symmetra_temp(parsed):
@@ -360,7 +350,6 @@ check_info["apc_symmetra.temp"] = LegacyCheckDefinition(
     discovery_function=inventory_apc_symmetra_temp,
     check_function=check_apc_symmetra_temp,
     service_name="Temperature %s",
-    default_levels_variable="apc_symmetra_temp_default_levels",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels_battery": (50, 60),
@@ -388,13 +377,10 @@ def check_apc_symmetra_elphase(item, params, parsed):
     return check_elphase(item, params, parsed.get("elphase", {}))
 
 
-factory_settings["apc_symmetra_elphase_default_levels"] = {}
-
 check_info["apc_symmetra.elphase"] = LegacyCheckDefinition(
     discovery_function=inventory_apc_symmetra_elphase,
     check_function=check_apc_symmetra_elphase,
     service_name="Phase %s",
-    default_levels_variable="apc_symmetra_elphase_default_levels",
     check_ruleset_name="ups_outphase",
     check_default_parameters={},
 )

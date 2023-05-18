@@ -5,7 +5,7 @@
 
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
@@ -15,12 +15,6 @@ from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 # .1.3.6.1.4.1.25597.13.1.47.0 0
 # .1.3.6.1.4.1.25597.13.1.48.0 96
 # .1.3.6.1.4.1.25597.13.1.49.0 0
-
-factory_settings["fireeye_mailq"] = {
-    "deferred": (1, 50),
-    "hold": (500, 1000),
-    "drop": (50, 500),
-}
 
 
 def parse_fireeye_mailq(info):
@@ -50,7 +44,6 @@ check_info["fireeye_mailq"] = LegacyCheckDefinition(
     discovery_function=dicsover_fireeye_mailq,
     check_function=check_fireeye_mailq,
     service_name="Mail Queues",
-    default_levels_variable="fireeye_mailq",
     check_ruleset_name="fireeye_mailq",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",

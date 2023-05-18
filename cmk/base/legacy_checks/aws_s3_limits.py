@@ -6,11 +6,7 @@
 
 from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["aws_s3_limits_default_levels"] = {
-    "buckets": (None, 80.0, 90.0),
-}
+from cmk.base.config import check_info
 
 
 @get_parsed_item_data
@@ -24,7 +20,6 @@ check_info["aws_s3_limits"] = LegacyCheckDefinition(
     check_function=check_aws_s3_limits,
     service_name="AWS/S3 Limits %s",
     check_ruleset_name="aws_s3_limits",
-    default_levels_variable="aws_s3_limits_default_levels",
     check_default_parameters={
         "buckets": (None, 80.0, 90.0),
     },

@@ -9,7 +9,7 @@
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<ucs_bladecenter_fans:sep(9)>>>
 # equipmentNetworkElementFanStats Dn sys/switch-A/fan-module-1-1/fan-1/stats      SpeedAvg 8542
@@ -98,10 +98,6 @@ check_info["ucs_bladecenter_fans"] = LegacyCheckDefinition(
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ucs_bladecenter_fans_temp_default_levels"] = {
-    "levels": (40.0, 50.0),
-}
-
 
 # Fans are grouped per module, usually 8 components
 def inventory_ucs_bladecenter_fans_temp(parsed):
@@ -130,7 +126,6 @@ check_info["ucs_bladecenter_fans.temp"] = LegacyCheckDefinition(
     check_function=check_ucs_bladecenter_fans_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="ucs_bladecenter_fans_temp_default_levels",
     check_default_parameters={
         "levels": (40.0, 50.0),
     },

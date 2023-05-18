@@ -11,11 +11,7 @@
 
 
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["oracle_longactivesessions_defaults"] = {
-    "levels": (500, 1000),
-}
+from cmk.base.config import check_info
 
 
 def inventory_oracle_longactivesessions(info):
@@ -85,7 +81,6 @@ check_info["oracle_longactivesessions"] = LegacyCheckDefinition(
     check_function=check_oracle_longactivesessions,
     discovery_function=inventory_oracle_longactivesessions,
     service_name="ORA %s Long Active Sessions",
-    default_levels_variable="oracle_longactivesessions_defaults",
     check_ruleset_name="oracle_longactivesessions",
     check_default_parameters={
         "levels": (500, 1000),

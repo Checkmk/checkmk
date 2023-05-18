@@ -10,14 +10,8 @@ import time
 
 from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT, get_conn_rate_params
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["f5_bigip_conns_default_levels"] = {
-    "conns": (25000, 30000),
-    "ssl_conns": (25000, 30000),
-    "http_req_rate": (500, 1000),
-}
 
 
 def inventory_f5_bigip_conns(info):
@@ -93,7 +87,6 @@ check_info["f5_bigip_conns"] = LegacyCheckDefinition(
         oids=["1.8", "9.2", "9.6", "9.9", "1.56"],
     ),
     check_ruleset_name="f5_connections",
-    default_levels_variable="f5_bigip_conns_default_levels",
     check_default_parameters={
         "conns": (25000, 30000),
         "ssl_conns": (25000, 30000),

@@ -11,13 +11,8 @@ from cmk.base.check_api import (
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["pulse_secure_mem_util_def_levels"] = {
-    "mem_used_percent": (90, 95),
-    "swap_used_percent": (5, None),
-}
 
 METRICS_INFO_NAMES_PULSE_SECURE_MEM = (
     ["mem_used_percent", "swap_used_percent"],
@@ -54,7 +49,6 @@ check_info["pulse_secure_mem_util"] = LegacyCheckDefinition(
         oids=["11", "24"],
     ),
     check_ruleset_name="pulse_secure_mem_util",
-    default_levels_variable="pulse_secure_mem_util_def_levels",
     check_default_parameters={
         "mem_used_percent": (90, 95),
         "swap_used_percent": (5, None),

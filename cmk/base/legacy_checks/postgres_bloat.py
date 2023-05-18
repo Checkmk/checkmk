@@ -12,7 +12,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
     MKCounterWrapped,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils import postgres
 
 # <<<postgres_bloat>>>
@@ -34,11 +34,6 @@ from cmk.base.plugins.agent_based.utils import postgres
 # testdb
 # [databases_end]
 # ...
-
-factory_settings["postgres_bloat_default_levels"] = {
-    "table_bloat_perc": (180.0, 200.0),  # WARN at 180%, CRIT at 200%
-    "index_bloat_perc": (180.0, 200.0),
-}
 
 
 def inventory_postgres_bloat(parsed):
@@ -161,7 +156,6 @@ check_info["postgres_bloat"] = LegacyCheckDefinition(
     discovery_function=inventory_postgres_bloat,
     service_name="PostgreSQL Bloat %s",
     check_ruleset_name="db_bloat",
-    default_levels_variable="postgres_bloat_default_levels",
     check_default_parameters={
         "table_bloat_perc": (180.0, 200.0),  # WARN at 180%, CRIT at 200%
         "index_bloat_perc": (180.0, 200.0),

@@ -6,16 +6,12 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 
 # .1.3.6.1.2.1.25.3.3.1.2.768 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.768
 # .1.3.6.1.2.1.25.3.3.1.2.769 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.769
-
-factory_settings["hr_cpu_default_levels"] = {
-    "util": (80.0, 90.0),
-}
 
 
 def inventory_hr_cpu(info):
@@ -53,7 +49,6 @@ check_info["hr_cpu"] = LegacyCheckDefinition(
         oids=["2"],
     ),
     check_ruleset_name="cpu_utilization_os",
-    default_levels_variable="hr_cpu_default_levels",
     check_default_parameters={
         "util": (80.0, 90.0),
     },

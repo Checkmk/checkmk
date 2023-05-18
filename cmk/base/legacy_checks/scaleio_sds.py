@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.scaleio import (
     get_scaleio_data,
     parse_scaleio,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # example output
 # <<<scaleio_sds>>>
@@ -50,9 +50,6 @@ from cmk.base.config import check_info, factory_settings
 #
 
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-
 def inventory_scaleio_sds(parsed):
     for entry in parsed:
         yield entry, {}
@@ -78,7 +75,6 @@ check_info["scaleio_sds"] = LegacyCheckDefinition(
     check_function=check_scaleio_sds,
     service_name="ScaleIO SDS capacity %s",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 

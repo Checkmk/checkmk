@@ -5,7 +5,7 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
 
@@ -16,15 +16,6 @@ tunnel_states = {
     "130": "Phase1",
     "131": "Down",
     "132": "Init",
-}
-
-factory_settings["checkpoint_tunnels_default_levels"] = {
-    "Active": 0,
-    "Destroy": 1,
-    "Idle": 0,
-    "Phase1": 2,
-    "Down": 2,
-    "Init": 1,
 }
 
 
@@ -46,7 +37,6 @@ check_info["checkpoint_tunnels"] = LegacyCheckDefinition(
     check_function=check_checkpoint_tunnels,
     discovery_function=inventory_checkpoint_tunnels,
     check_ruleset_name="checkpoint_tunnels",
-    default_levels_variable="checkpoint_tunnels_default_levels",
     service_name="Tunnel %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.500.9002.1",

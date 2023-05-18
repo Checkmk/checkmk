@@ -9,7 +9,7 @@
 from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.636159851 nbAlinkEnc_0_4_TEMP
@@ -99,10 +99,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer
-factory_settings["apc_netbotz_sensors_temp_default_levels"] = {
-    "levels": (30.0, 35.0),
-    "levels_lower": (25.0, 20.0),
-}
 
 
 def parse_apc_netbotz_sensors(info):
@@ -160,7 +156,6 @@ check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
             oids=["1", "2", "4", "7"],
         ),
     ],
-    default_levels_variable="apc_netbotz_sensors_temp_default_levels",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (30.0, 35.0),
@@ -179,11 +174,6 @@ check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer
-factory_settings["apc_netbotz_sensors_dewpoint_default_levels"] = {
-    "levels": (18.0, 25.0),
-    "levels_lower": (-4.0, -6.0),
-}
-
 
 check_info["apc_netbotz_sensors.dewpoint"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "dewpoint"),
@@ -191,7 +181,6 @@ check_info["apc_netbotz_sensors.dewpoint"] = LegacyCheckDefinition(
         item, params, info, "dewpoint"
     ),
     service_name="Dew point %s",
-    default_levels_variable="apc_netbotz_sensors_dewpoint_default_levels",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (18.0, 25.0),

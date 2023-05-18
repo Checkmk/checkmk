@@ -4,14 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.blade import DETECT_BLADE_BX
-
-factory_settings["blade_bx_powerfan_default_levels"] = {
-    "levels_lower": (20, 10),
-    "levels": (80, 90),
-}
 
 blade_bx_status = {
     "1": "unknown",
@@ -90,7 +85,6 @@ check_info["blade_bx_powerfan"] = LegacyCheckDefinition(
     discovery_function=inventory_blade_bx_powerfan,
     service_name="Blade Cooling %s",
     check_ruleset_name="hw_fans_perc",
-    default_levels_variable="blade_bx_powerfan_default_levels",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7244.1.1.1.3.3.1.1",
         oids=["2", "3", "4", "5", "6", "7"],

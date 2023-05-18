@@ -18,7 +18,7 @@
 
 
 from cmk.base.check_api import contains, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 
@@ -67,9 +67,6 @@ def check_h3c_lanswitch_cpu(item, params, info):
     return (3, "%s not found" % item)
 
 
-# Reasonably low warning and crit levels
-factory_settings["switch_cpu_default_levels"] = {"levels": (50, 75)}
-
 check_info["h3c_lanswitch_cpu"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com s"),
     discovery_function=inventory_h3c_lanswitch_cpu,
@@ -79,6 +76,5 @@ check_info["h3c_lanswitch_cpu"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.43.45.1.6.1.1.1",
         oids=[OIDEnd(), "3"],
     ),
-    default_levels_variable="switch_cpu_default_levels",
     check_default_parameters={"levels": (50, 75)},
 )

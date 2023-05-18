@@ -6,11 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.bvip import DETECT_BVIP
-
-factory_settings["bvip_temp_default_levels"] = {"levels": (50.0, 60.0)}
 
 
 def inventory_bvip_temp(info):
@@ -31,7 +29,6 @@ check_info["bvip_temp"] = LegacyCheckDefinition(
     detect=DETECT_BVIP,
     check_function=check_bvip_temp,
     discovery_function=inventory_bvip_temp,
-    default_levels_variable="bvip_temp_default_levels",
     service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1.7.1",

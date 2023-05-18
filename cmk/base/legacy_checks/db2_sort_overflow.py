@@ -6,14 +6,12 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<db2_sort_overflow>>>
 # [[[test:datenbank1]]]
 # Total sorts 100
 # Sort overflows 3
-
-factory_settings["db2_sort_overflow_default_levels"] = {"levels_perc": (2.0, 4.0)}
 
 
 def inventory_db2_sort_overflow(parsed):
@@ -49,6 +47,5 @@ check_info["db2_sort_overflow"] = LegacyCheckDefinition(
     check_function=check_db2_sort_overflow,
     discovery_function=inventory_db2_sort_overflow,
     check_ruleset_name="db2_sortoverflow",
-    default_levels_variable="db2_sort_overflow_default_levels",
     check_default_parameters={"levels_perc": (2.0, 4.0)},
 )

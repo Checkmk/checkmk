@@ -19,10 +19,8 @@ from cmk.base.check_api import (
     not_contains,
     not_exists,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["cisco_cpu_default_levels"] = {"util": (80.0, 90.0)}
 
 
 def inventory_cisco_cpu(info):
@@ -71,6 +69,5 @@ check_info["cisco_cpu"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.9.9.109.1.1.1.1",
         oids=["5", "8"],
     ),
-    default_levels_variable="cisco_cpu_default_levels",
     check_default_parameters={"util": (80.0, 90.0)},
 )

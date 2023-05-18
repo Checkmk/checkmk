@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import parse_snmp_uptime
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
 
@@ -138,12 +138,7 @@ check_info["ups_test"] = LegacyCheckDefinition(
             oids=["3", "5", "4"],
         ),
     ],
-    default_levels_variable="ups_test_default_levels",
     check_default_parameters={
         "levels_elapsed_time": None,
     },
 )
-
-factory_settings["ups_test_default_levels"] = {
-    "levels_elapsed_time": None,
-}

@@ -10,7 +10,7 @@ import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<ucs_bladecenter_psu:sep(9)>>>
 # equipmentPsuInputStats  Dn sys/switch-A/psu-2/input-stats       Current 0.656250        PowerAvg 153.335938     Voltage 231.500000
@@ -48,13 +48,6 @@ def ucs_bladecenter_psu_parse(info):
 #   |        \____|_| |_|\__,_|___/___/_|___/    \_/ \___/|_|\__(_)        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-factory_settings["ucs_bladecenter_psu_default_levels"] = {
-    "levels_3v_lower": (3.25, 3.20),
-    "levels_3v_upper": (3.4, 3.45),
-    "levels_12v_lower": (11.9, 11.8),
-    "levels_12v_upper": (12.1, 12.2),
-}
 
 
 def inventory_ucs_bladecenter_psu(parsed):
@@ -98,7 +91,6 @@ check_info["ucs_bladecenter_psu"] = LegacyCheckDefinition(
     check_function=check_ucs_bladecenter_psu,
     service_name="Voltage %s",
     check_ruleset_name="ucs_bladecenter_chassis_voltage",
-    default_levels_variable="ucs_bladecenter_psu_default_levels",
     check_default_parameters={
         "levels_3v_lower": (3.25, 3.20),
         "levels_3v_upper": (3.4, 3.45),
@@ -155,10 +147,6 @@ check_info["ucs_bladecenter_psu.switch_power"] = LegacyCheckDefinition(
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ucs_bladecenter_psu_chassis_temp_default_levels"] = {
-    "levels": (35.0, 40.0),
-}
-
 
 def inventory_ucs_bladecenter_psu_chassis_temp(parsed):
     for key, values in parsed.items():
@@ -186,7 +174,6 @@ check_info["ucs_bladecenter_psu.chassis_temp"] = LegacyCheckDefinition(
     check_function=check_ucs_bladecenter_psu_chassis_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="ucs_bladecenter_psu_chassis_temp_default_levels",
     check_default_parameters={
         "levels": (35.0, 40.0),
     },

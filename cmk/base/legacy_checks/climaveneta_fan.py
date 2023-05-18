@@ -6,12 +6,8 @@
 
 from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["climaveneta_fan_default_levels"] = {
-    "lower": (200, 100),
-}
 
 
 def inventory_climaveneta_fan(info):
@@ -34,7 +30,6 @@ check_info["climaveneta_fan"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.9839.2.1.2",
         oids=["42", "43"],
     ),
-    default_levels_variable="climaveneta_fan_default_levels",
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (200, 100),

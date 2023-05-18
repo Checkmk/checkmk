@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import any_of, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 # Knowledge from customer:
@@ -19,11 +19,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 # Device with OID_END=19 is a simple switch outlet: 1 Port and 1 powerbank
 # Once it's plugged in, the state is "on". Thus we use PortState in
 # discovering function.
-
-factory_settings["gude_powerbank_default_levels"] = {
-    "voltage": (220, 210),
-    "current": (15, 16),
-}
 
 
 def parse_gude_powerbanks(info):
@@ -102,7 +97,6 @@ check_info["gude_powerbanks"] = LegacyCheckDefinition(
         )
         for table in _TABLES
     ],
-    default_levels_variable="gude_powerbank_default_levels",
     check_ruleset_name="el_inphase",
     check_default_parameters={
         "voltage": (220, 210),

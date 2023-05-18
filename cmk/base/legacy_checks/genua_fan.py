@@ -8,15 +8,10 @@ from typing import List
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
-
-factory_settings["genua_fan_default_levels"] = {
-    "lower": (2000, 1000),
-    "upper": (8000, 8400),
-}
 
 
 def inventory_genua_fan(string_table: List[StringTable]) -> Iterable[tuple[str, dict[str, object]]]:
@@ -68,7 +63,6 @@ check_info["genua_fan"] = LegacyCheckDefinition(
             oids=["2", "3", "4"],
         ),
     ],
-    default_levels_variable="genua_fan_default_levels",
     check_default_parameters={
         "lower": (2000, 1000),
         "upper": (8000, 8400),

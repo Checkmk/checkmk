@@ -7,7 +7,7 @@
 from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element, MEMORY_DEFAULT_LEVELS
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
 check_info["couchbase_nodes_stats"] = LegacyCheckDefinition(
@@ -29,8 +29,6 @@ check_info["couchbase_nodes_stats.cpu_util"] = LegacyCheckDefinition(
     service_name="Couchbase %s CPU utilization",
     check_ruleset_name="cpu_utilization_multiitem",
 )
-
-factory_settings["memory_default_levels"] = MEMORY_DEFAULT_LEVELS
 
 
 @get_parsed_item_data
@@ -69,6 +67,5 @@ check_info["couchbase_nodes_stats.mem"] = LegacyCheckDefinition(
     check_function=check_couchbase_nodes_mem,
     service_name="Couchbase %s Memory",
     check_ruleset_name="memory_multiitem",
-    default_levels_variable="memory_default_levels",
     check_default_parameters=MEMORY_DEFAULT_LEVELS,
 )

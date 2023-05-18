@@ -9,11 +9,7 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["informix_tabextents_default_levels"] = {
-    "levels": (40, 70),
-}
+from cmk.base.config import check_info
 
 
 def parse_informix_tabextents(info):
@@ -71,7 +67,6 @@ check_info["informix_tabextents"] = LegacyCheckDefinition(
     check_function=check_informix_tabextents,
     service_name="Informix Table Extents %s",
     check_ruleset_name="informix_tabextents",
-    default_levels_variable="informix_tabextents_default_levels",
     check_default_parameters={
         "levels": (40, 70),
     },

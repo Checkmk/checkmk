@@ -6,10 +6,8 @@
 
 from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["rms200_temp_default_levels"] = {"levels": (25.0, 28.0)}
 
 
 def inventory_rms200_temp(info):
@@ -40,6 +38,5 @@ check_info["rms200_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.1909.13.1.1.1",
         oids=["1", "2", "5"],
     ),
-    default_levels_variable="rms200_temp_default_levels",
     check_default_parameters={"levels": (25.0, 28.0)},
 )

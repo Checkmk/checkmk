@@ -5,13 +5,9 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
-
-factory_settings["fortigate_ipsecvpn_default_levels"] = {
-    "levels": (1, 2),
-}
 
 
 def inventory_fortigate_ipsecvpn(info):
@@ -81,7 +77,6 @@ check_info["fortigate_ipsecvpn"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.12356.101.12.2.2.1",
         oids=["3", "20"],
     ),
-    default_levels_variable="fortigate_ipsecvpn_default_levels",
     check_ruleset_name="ipsecvpn",
     check_default_parameters={
         "levels": (1, 2),

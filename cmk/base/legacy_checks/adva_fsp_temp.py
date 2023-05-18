@@ -6,11 +6,10 @@
 
 from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # this is currently here only to prevent error messages when upgrading
-factory_settings["adva_fsp_temp_default_levels"] = {}
 
 
 def inventory_adva_fsp_temp(info):
@@ -62,6 +61,5 @@ check_info["adva_fsp_temp"] = LegacyCheckDefinition(
         ],
     ),
     check_ruleset_name="temperature",
-    default_levels_variable="adva_fsp_temp_default_levels",
     check_default_parameters={},
 )

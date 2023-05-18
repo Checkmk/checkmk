@@ -7,17 +7,13 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # comNET GmbH, Fabian Binder - 2018-05-30
 
 # .1.3.6.1.4.1.9.9.719.1.30.12.1.2 memory Unit Name
 # .1.3.6.1.4.1.9.9.719.1.30.12.1.6 cucsMemoryUnitEnvStatsTemperature
-
-factory_settings["cisco_ucs_temp_mem_default_levels"] = {
-    "levels": (75.0, 85.0),
-}
 
 
 def inventory_cisco_ucs_temp_mem(info):
@@ -45,7 +41,6 @@ check_info["cisco_ucs_temp_mem"] = LegacyCheckDefinition(
         oids=["2", "6"],
     ),
     check_ruleset_name="temperature",
-    default_levels_variable="cisco_ucs_temp_mem_default_levels",
     check_default_parameters={
         "levels": (75.0, 85.0),
     },

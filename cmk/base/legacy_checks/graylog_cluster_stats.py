@@ -13,7 +13,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.graylog import parse_graylog_agent_data
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<graylog_cluster_stats>>>
 # [[u'{"stream_rule_count": 7, "input_count_by_type":
@@ -90,13 +90,6 @@ def inventory_graylog_cluster_stats_elastic(parsed):
     if elastic_data is not None:
         return [(None, {})]
     return []
-
-
-factory_settings["graylog_cluster_stats_elastic_defaultlevels"] = {
-    "green": 0,
-    "yellow": 1,
-    "red": 2,
-}
 
 
 def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
@@ -189,7 +182,6 @@ def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
 check_info["graylog_cluster_stats.elastic"] = LegacyCheckDefinition(
     check_function=check_graylog_cluster_stats_elastic,
     discovery_function=inventory_graylog_cluster_stats_elastic,
-    default_levels_variable="graylog_cluster_stats_elastic_defaultlevels",
     service_name="Graylog Cluster Elasticsearch Stats",
     check_ruleset_name="graylog_cluster_stats_elastic",
     check_default_parameters={

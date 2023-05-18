@@ -16,10 +16,8 @@ from cmk.base.check_api import (
     startswith,
 )
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def parse_fast_lta_volumes(info):
@@ -54,6 +52,5 @@ check_info["fast_lta_volumes"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.27417.5.1.1",
         oids=["2", "9", "11"],
     ),
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

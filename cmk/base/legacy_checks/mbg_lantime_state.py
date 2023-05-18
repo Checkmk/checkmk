@@ -9,10 +9,8 @@ from cmk.base.check_legacy_includes.mbg_lantime import (
     check_mbg_lantime_state_common,
     MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["mbg_lantime_state_default_levels"] = MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS
 
 
 def inventory_mbg_lantime_state(info):
@@ -42,7 +40,6 @@ check_info["mbg_lantime_state"] = LegacyCheckDefinition(
     discovery_function=inventory_mbg_lantime_state,
     service_name="LANTIME State",
     check_ruleset_name="mbg_lantime_state",
-    default_levels_variable="mbg_lantime_state_default_levels",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.3.1",
         oids=["2", "3", "5", "7"],

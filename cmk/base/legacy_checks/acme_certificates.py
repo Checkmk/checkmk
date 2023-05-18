@@ -7,7 +7,7 @@
 import time
 
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.acme import DETECT_ACME
 
@@ -15,10 +15,6 @@ from cmk.base.plugins.agent_based.utils.acme import DETECT_ACME
 # .1.3.6.1.4.1.9148.3.9.1.10.1.5.65.1 Jul 25 00:33:17 2003 GMT
 # .1.3.6.1.4.1.9148.3.9.1.10.1.6.65.1 Aug 17 05:19:39 2027 GMT
 # .1.3.6.1.4.1.9148.3.9.1.10.1.7.65.1 /C=US/O=Avaya Inc./OU=SIP Product Certificate Authority/CN=SIP Product Certificate Authority
-
-factory_settings["acme_certificates_default_levels"] = {
-    "expire_lower": (604800, 2592000),  # 1 week, 30 days, suggested by customer
-}
 
 
 def inventory_acme_certificates(info):
@@ -70,7 +66,6 @@ check_info["acme_certificates"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.9148.3.9.1.10.1",
         oids=["3", "5", "6", "7"],
     ),
-    default_levels_variable="acme_certificates_default_levels",
     check_ruleset_name="acme_certificates",
     check_default_parameters={
         "expire_lower": (604800, 2592000),  # 1 week, 30 days, suggested by customer

@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_ISILON
 
@@ -54,10 +54,6 @@ def isilon_temp_item_name(sensor_name):
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["emc_isilon_temp_default_levels"] = {
-    "levels": (28.0, 33.0),  # assumed useful levels for ambient / air temperature
-}
-
 check_info["emc_isilon_temp"] = LegacyCheckDefinition(
     detect=DETECT_ISILON,
     discovery_function=lambda info: inventory_isilon_temp(info, is_cpu=False),
@@ -68,7 +64,6 @@ check_info["emc_isilon_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.12124.2.54.1",
         oids=["3", "4"],
     ),
-    default_levels_variable="emc_isilon_temp_default_levels",
     check_default_parameters={
         "levels": (28.0, 33.0),  # assumed useful levels for ambient / air temperature
     },
@@ -90,16 +85,11 @@ check_info["emc_isilon_temp"] = LegacyCheckDefinition(
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["emc_isilon_temp_cpu_default_levels"] = {
-    "levels": (75.0, 85.0),  # assumed useful levels for ambient / air temperature
-}
-
 check_info["emc_isilon_temp.cpu"] = LegacyCheckDefinition(
     discovery_function=lambda info: inventory_isilon_temp(info, is_cpu=True),
     check_function=check_isilon_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="emc_isilon_temp_cpu_default_levels",
     check_default_parameters={
         "levels": (75.0, 85.0),  # assumed useful levels for ambient / air temperature
     },

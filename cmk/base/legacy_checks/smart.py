@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # EXAMPLE DATA FROM: WDC SSC-D0128SC-2100
 # <<<smart>>>
@@ -29,8 +29,6 @@ from cmk.base.config import check_info, factory_settings
 # TODO: Need to completely rework smart check. Use IDs instead of changing
 # descriptions! But be careful: There is no standard neither for IDs nor for
 # descriptions. Only use those, which are common sense.
-
-factory_settings["smart_temp_default_levels"] = {"levels": (35.0, 40.0)}
 
 
 def inventory_smart_temp(section):
@@ -63,6 +61,5 @@ check_info["smart.temp"] = LegacyCheckDefinition(
     discovery_function=inventory_smart_temp,
     service_name="Temperature SMART %s",
     check_ruleset_name="temperature",
-    default_levels_variable="smart_temp_default_levels",
     check_default_parameters={"levels": (35.0, 40.0)},
 )

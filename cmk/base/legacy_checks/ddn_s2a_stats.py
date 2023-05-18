@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 
 def parse_ddn_s2a_stats(info):
@@ -86,10 +86,6 @@ check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ddn_s2a_stats_io_default_levels"] = {
-    "total": (28000, 33000),
-}
-
 
 def inventory_ddn_s2a_stats_io(parsed):
     if "All_ports_Read_IOs" in parsed:
@@ -135,7 +131,6 @@ def check_ddn_s2a_stats_io(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
-    default_levels_variable="ddn_s2a_stats_io_default_levels",
     discovery_function=inventory_ddn_s2a_stats_io,
     check_function=check_ddn_s2a_stats_io,
     service_name="DDN S2A IO %s",
@@ -154,10 +149,6 @@ check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
 #   |             |____/ \__,_|\__\__,_| |_|  \__,_|\__\___|               |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-factory_settings["ddn_s2a_stats_default_levels"] = {
-    "total": (4800 * 1024 * 1024, 5500 * 1024 * 1024),
-}
 
 
 def inventory_ddn_s2a_stats(parsed):
@@ -212,7 +203,6 @@ def check_ddn_s2a_stats(item, params, parsed):
 
 
 check_info["ddn_s2a_stats"] = LegacyCheckDefinition(
-    default_levels_variable="ddn_s2a_stats_default_levels",
     parse_function=parse_ddn_s2a_stats,
     discovery_function=inventory_ddn_s2a_stats,
     check_function=check_ddn_s2a_stats,

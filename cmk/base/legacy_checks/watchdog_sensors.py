@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import any_of, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 # very odd and confusing example outputs:
@@ -206,11 +206,6 @@ check_info["watchdog_sensors.temp"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["watchdog_sensors_humidity_default_levels"] = {
-    "levels": (50, 55),
-    "levels_lower": (10, 15),
-}
-
 
 def inventory_watchdog_sensors_humidity(parsed):
     for key in parsed.get("humidity", {}):
@@ -244,7 +239,6 @@ check_info["watchdog_sensors.humidity"] = LegacyCheckDefinition(
     check_function=check_watchdog_sensors_humidity,
     service_name="%s",
     check_ruleset_name="humidity",
-    default_levels_variable="watchdog_sensors_humidity_default_levels",
     check_default_parameters={
         "levels": (50, 55),
         "levels_lower": (10, 15),

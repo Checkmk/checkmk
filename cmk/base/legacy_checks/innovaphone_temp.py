@@ -6,9 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["innovaphone_temp_default_levels"] = {"levels": (45.0, 50.0)}
+from cmk.base.config import check_info
 
 
 def inventory_innovaphone_temp(info):
@@ -24,6 +22,5 @@ check_info["innovaphone_temp"] = LegacyCheckDefinition(
     discovery_function=inventory_innovaphone_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="innovaphone_temp_default_levels",
     check_default_parameters={"levels": (45.0, 50.0)},
 )

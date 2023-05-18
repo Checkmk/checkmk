@@ -16,7 +16,7 @@ from cmk.base.check_legacy_includes.graylog import (
     handle_iso_utc_to_localtimestamp,
     parse_graylog_agent_data,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<graylog_license>>>
 # {"status": [{"violated": true,"expired": false,"expiration_upcoming":
@@ -42,18 +42,6 @@ def inventory_graylog_license(parsed):
     if license_state is not None:
         return [(None, {})]
     return []
-
-
-factory_settings["graylog_license_default_levels"] = {
-    "no_enterprise": 0,
-    "valid": 2,
-    "cluster_not_covered": 1,
-    "traffic_exceeded": 1,
-    "violated": 2,
-    "nodes_exceeded": 1,
-    "expired": 2,
-    "remote_checks_failed": 1,
-}
 
 
 def check_graylog_license(_no_item, params, parsed):
@@ -123,7 +111,6 @@ check_info["graylog_license"] = LegacyCheckDefinition(
     parse_function=parse_graylog_agent_data,
     check_function=check_graylog_license,
     discovery_function=inventory_graylog_license,
-    default_levels_variable="graylog_license_default_levels",
     service_name="Graylog License",
     check_ruleset_name="graylog_license",
     check_default_parameters={

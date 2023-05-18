@@ -5,15 +5,9 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.bvip import DETECT_BVIP
-
-factory_settings["bvip_link_default_levels"] = {
-    "ok_states": [0, 4, 5],
-    "warn_states": [7],
-    "crit_states": [1, 2, 3],
-}
 
 
 def inventory_bvip_link(info):
@@ -59,7 +53,6 @@ check_info["bvip_link"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.3967.1.5.1.8",
         oids=["1"],
     ),
-    default_levels_variable="bvip_link_default_levels",
     check_ruleset_name="bvip_link",
     check_default_parameters={
         "ok_states": [0, 4, 5],

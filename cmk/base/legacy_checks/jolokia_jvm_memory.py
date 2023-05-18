@@ -18,17 +18,7 @@ from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["jolokia_jvm_memory"] = {
-    "perc_heap": (80.0, 90.0),
-    "perc_nonheap": (80.0, 90.0),
-    "perc_total": (80.0, 90.0),
-}
-
-factory_settings["jolokia_jvm_memory_pools"] = {
-    "perc_used": (80.0, 90.0),
-}
+from cmk.base.config import check_info
 
 
 def parse_jolokia_jvm_memory(info):
@@ -109,7 +99,6 @@ check_info["jolokia_jvm_memory"] = LegacyCheckDefinition(
     discovery_function=discover_jolokia_jvm_memory,
     check_function=check_jolokia_jvm_memory,
     service_name="JVM %s Memory",
-    default_levels_variable="jolokia_jvm_memory",
     check_ruleset_name="jvm_memory",
     check_default_parameters={
         "perc_heap": (80.0, 90.0),
@@ -171,7 +160,6 @@ check_info["jolokia_jvm_memory.pools"] = LegacyCheckDefinition(
     discovery_function=discover_jolokia_jvm_memory_pools,
     check_function=check_jolokia_jvm_memory_pools,
     service_name="JVM %s",
-    default_levels_variable="jolokia_jvm_memory_pools",
     check_ruleset_name="jvm_memory_pools",
     check_default_parameters={
         "perc_used": (80.0, 90.0),

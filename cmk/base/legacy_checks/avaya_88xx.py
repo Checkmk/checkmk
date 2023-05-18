@@ -7,7 +7,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.avaya import DETECT_AVAYA
 
@@ -43,11 +43,6 @@ def check_avaya_88xx_fan(item, _no_params, parsed):
     return state, text
 
 
-factory_settings["avaya_88xx_default_levels"] = {
-    "levels": (55.0, 60.0),
-}
-
-
 def inventory_avaya_88xx(parsed):
     sensors = parsed["temp"]
     for idx, temp in enumerate(sensors):
@@ -72,7 +67,6 @@ check_info["avaya_88xx"] = LegacyCheckDefinition(
     check_function=check_avaya_88xx,
     discovery_function=inventory_avaya_88xx,
     service_name="Temperature Fan %s",
-    default_levels_variable="avaya_88xx_default_levels",
     check_ruleset_name="temperature",
     # RAPID-CITY MIB
     fetch=SNMPTree(

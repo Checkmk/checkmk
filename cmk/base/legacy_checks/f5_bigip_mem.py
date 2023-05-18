@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # FIXME
@@ -23,8 +23,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 # TMM (Traffic Management Module) memory
 # .1.3.6.1.4.1.3375.2.1.1.2.1.143 0 sysStatMemoryTotalKb
 # .1.3.6.1.4.1.3375.2.1.1.2.1.144 0 sysStatMemoryUsedKb
-
-factory_settings["f5_bigip_mem_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
 
 
 def parse_f5_bigip_mem(info):
@@ -71,7 +69,6 @@ check_info["f5_bigip_mem"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.3375.2.1",
         oids=["7.1.1", "7.1.2", "1.2.1.143", "1.2.1.144"],
     ),
-    default_levels_variable="f5_bigip_mem_default_levels",
     check_ruleset_name="memory_simple",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )
@@ -100,7 +97,6 @@ check_info["f5_bigip_mem.tmm"] = LegacyCheckDefinition(
     discovery_function=discover_f5_bigip_mem_tmm,
     check_function=check_f5_bigip_mem_tmm,
     service_name="Memory",
-    default_levels_variable="f5_bigip_mem_default_levels",
     check_ruleset_name="memory_simple",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

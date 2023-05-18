@@ -24,7 +24,7 @@ from cmk.base.check_api import (
     get_timestamp_human_readable,
     LegacyCheckDefinition,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 SplunkLicenseState = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "SplunkLicenseState",
@@ -62,12 +62,6 @@ def parse_splunk_license_state(info):
             pass
 
     return parsed
-
-
-factory_settings["splunk_license_state_default_levels"] = {
-    "state": 2,
-    "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
-}
 
 
 @get_parsed_item_data
@@ -113,7 +107,6 @@ check_info["splunk_license_state"] = LegacyCheckDefinition(
     discovery_function=discover(),
     service_name="Splunk License %s",
     check_ruleset_name="splunk_license_state",
-    default_levels_variable="splunk_license_state_default_levels",
     check_default_parameters={
         "state": 2,
         "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),

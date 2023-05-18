@@ -18,10 +18,8 @@
 
 
 from cmk.base.check_api import equals, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["printer_supply_ricoh_default_levels"] = {"levels": (20.0, 10.0)}
 
 
 def parse_printer_supply_ricoh(info):
@@ -114,6 +112,5 @@ check_info["printer_supply_ricoh"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.367.3.2.1.2.24.1.1",
         oids=["2", "5"],
     ),
-    default_levels_variable="printer_supply_ricoh_default_levels",
     check_default_parameters={"levels": (20.0, 10.0)},
 )

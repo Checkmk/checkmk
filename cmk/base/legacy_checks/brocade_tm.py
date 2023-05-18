@@ -13,19 +13,9 @@ import re
 import time
 
 from cmk.base.check_api import get_rate, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
-
-factory_settings["brocade_tm_default_levels"] = {
-    "brcdTMStatsTotalIngressPktsCnt": (1000, 10000),
-    "brcdTMStatsIngressEnqueuePkts": (1000, 10000),
-    "brcdTMStatsEgressEnqueuePkts": (1000, 10000),
-    "brcdTMStatsIngressDequeuePkts": (1000, 10000),
-    "brcdTMStatsIngressTotalQDiscardPkts": (1000, 10000),
-    "brcdTMStatsIngressOldestDiscardPkts": (1000, 10000),
-    "brcdTMStatsEgressDiscardPkts": (1000, 10000),
-}
 
 
 def inventory_brocade_tm(info):
@@ -85,7 +75,6 @@ check_info["brocade_tm"] = LegacyCheckDefinition(
     discovery_function=inventory_brocade_tm,
     service_name="TM %s",
     check_ruleset_name="brocade_tm",
-    default_levels_variable="brocade_tm_default_levels",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1991.1.14.2.1.2.2.1",
         oids=["3", "4", "5", "6", "9", "11", "13", "15"],

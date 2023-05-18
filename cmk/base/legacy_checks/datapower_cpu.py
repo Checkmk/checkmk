@@ -6,11 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.datapower import DETECT
-
-factory_settings["datapower_cpu_default_levels"] = {"util": (80.0, 90.0)}
 
 
 def inventory_datapower_cpu(info):
@@ -33,6 +31,5 @@ check_info["datapower_cpu"] = LegacyCheckDefinition(
         oids=["2"],
     ),
     check_ruleset_name="cpu_utilization",
-    default_levels_variable="datapower_cpu_default_levels",
     check_default_parameters={"util": (80.0, 90.0)},
 )

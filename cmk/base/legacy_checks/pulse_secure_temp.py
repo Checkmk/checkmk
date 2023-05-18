@@ -7,10 +7,8 @@
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
 from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["pulse_secure_temp_def_levels"] = {"levels": (70.0, 75.0)}
 
 
 # no get_parsed_item_data because the temperature can be exactly 0 for some devices, which would
@@ -33,6 +31,5 @@ check_info["pulse_secure_temp"] = LegacyCheckDefinition(
         oids=["42"],
     ),
     check_ruleset_name="temperature",
-    default_levels_variable="pulse_secure_temp_def_levels",
     check_default_parameters={"levels": (70.0, 75.0)},
 )

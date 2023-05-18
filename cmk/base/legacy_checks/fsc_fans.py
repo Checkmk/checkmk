@@ -16,12 +16,8 @@ from cmk.base.check_api import (
     startswith,
 )
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["fsc_fans_default_levels"] = {
-    "lower": (2000, 1000),
-}
 
 
 def parse_fsc_fans(info):
@@ -67,7 +63,6 @@ check_info["fsc_fans"] = LegacyCheckDefinition(
         oids=["16", "8"],
     ),
     check_ruleset_name="hw_fans",
-    default_levels_variable="fsc_fans_default_levels",
     check_default_parameters={
         "lower": (2000, 1000),
     },

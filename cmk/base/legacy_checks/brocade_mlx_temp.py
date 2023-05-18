@@ -6,11 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
-
-factory_settings["brocade_mlx_temperature_default_levels"] = {"levels": (105.0, 110.0)}
 
 
 def parse_brocade_mlx_temp(info):
@@ -53,7 +51,6 @@ check_info["brocade_mlx_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.1991.1.1.2.13.1.1",
         oids=["3", "4"],
     ),
-    default_levels_variable="brocade_mlx_temperature_default_levels",
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (105.0, 110.0)},
 )

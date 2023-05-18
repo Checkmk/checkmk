@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.apc import DETECT
 
@@ -17,8 +17,6 @@ from cmk.base.plugins.agent_based.utils.apc import DETECT
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.11.0 219 --> PowerNet-MIB::airIRRCUnitStatusReturnAirTempMetric.0
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.24.0 131 --> PowerNet-MIB::airIRRCUnitStatusEnteringFluidTemperatureMetric.0
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.26.0 154 --> PowerNet-MIB::airIRRCUnitStatusLeavingFluidTemperatureMetric.0
-
-factory_settings["apc_inrow_temp_default_levels"] = {"levels": (30.0, 35.0)}
 
 
 def parse_apc_inrow_temp(info):
@@ -55,6 +53,5 @@ check_info["apc_inrow_temp"] = LegacyCheckDefinition(
         oids=["7", "9", "11", "24", "26"],
     ),
     check_ruleset_name="temperature",
-    default_levels_variable="apc_inrow_temp_default_levels",
     check_default_parameters={"levels": (30.0, 35.0)},
 )

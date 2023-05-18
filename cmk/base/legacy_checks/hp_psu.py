@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import all_of, any_of, contains, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 
@@ -24,10 +24,6 @@ def parse_hp_psu(info):
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["hp_psu_temp_default_levels"] = {
-    "levels": (70.0, 80.0),
-}
-
 
 def inventory_hp_psu_temp(parsed):
     for index in parsed:
@@ -44,7 +40,6 @@ def check_hp_psu_temp(item, params, data):
 
 
 check_info["hp_psu.temp"] = LegacyCheckDefinition(
-    default_levels_variable="hp_psu_temp_default_levels",
     discovery_function=inventory_hp_psu_temp,
     check_function=check_hp_psu_temp,
     service_name="Temperature Power Supply %s",

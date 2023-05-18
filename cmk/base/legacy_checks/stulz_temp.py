@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.stulz import DETECT_STULZ
 
@@ -31,8 +31,6 @@ from cmk.base.plugins.agent_based.utils.stulz import DETECT_STULZ
 # .1.3.6.1.4.1.29462.10.2.1.1.1.1.2.1.1.1195.1.2.1 425 --> Stulz-WIB8000-MIB::unitSupplyAirHumidity.1.2.1
 # .1.3.6.1.4.1.29462.10.2.1.1.1.1.3.1.1.1208.1.1.1 11 --> Stulz-WIB8000-MIB::currentRaisedFloorPressure.1.1.1
 # .1.3.6.1.4.1.29462.10.2.1.1.1.1.3.1.1.1208.1.2.1 16 --> Stulz-WIB8000-MIB::currentRaisedFloorPressure.1.2.1
-
-factory_settings["stulz_temp_default_levels"] = {"levels": (25.0, 28.0)}
 
 
 def parse_stulz_temp(info):
@@ -90,6 +88,5 @@ check_info["stulz_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1",
         oids=[OIDEnd(), "1"],
     ),
-    default_levels_variable="stulz_temp_default_levels",
     check_default_parameters={"levels": (25.0, 28.0)},
 )

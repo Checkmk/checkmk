@@ -12,11 +12,7 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["oracle_sessions_default_levels"] = {
-    "sessions_abs": (150, 300),
-}
+from cmk.base.config import check_info
 
 
 def parse_oracle_sessions(info):
@@ -89,7 +85,6 @@ check_info["oracle_sessions"] = LegacyCheckDefinition(
     check_function=check_oracle_sessions,
     service_name="ORA %s Sessions",
     check_ruleset_name="oracle_sessions",
-    default_levels_variable="oracle_sessions_default_levels",
     check_default_parameters={
         "sessions_abs": (150, 300),
     },

@@ -19,11 +19,7 @@ from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["jolokia_jvm_threading.pool"] = {
-    "currentThreadsBusy": (80, 90),
-}
+from cmk.base.config import check_info
 
 
 def parse_jolokia_jvm_threading(info):
@@ -127,7 +123,6 @@ def check_jolokia_jvm_threading_pool(item, params, parsed):
 check_info["jolokia_jvm_threading.pool"] = LegacyCheckDefinition(
     discovery_function=discover_jolokia_jvm_threading_pool,
     check_function=check_jolokia_jvm_threading_pool,
-    default_levels_variable="jolokia_jvm_threading.pool",
     service_name="JVM %s",
     check_ruleset_name="jvm_tp",
     check_default_parameters={

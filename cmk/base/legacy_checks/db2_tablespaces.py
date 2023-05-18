@@ -14,7 +14,7 @@ from cmk.base.check_api import (
     MKCounterWrapped,
 )
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # No used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
@@ -38,11 +38,6 @@ from cmk.base.config import check_info, factory_settings
 db_get_tablespace_levels_in_bytes = (
     cmk.base.plugins.agent_based.utils.db.get_tablespace_levels_in_bytes
 )
-
-factory_settings["db2_tablespaces_default_levels"] = {
-    "levels": (10.0, 5.0),
-    "magic_normsize": 1000,
-}
 
 
 def inventory_db2_tablespaces(parsed):
@@ -117,7 +112,6 @@ check_info["db2_tablespaces"] = LegacyCheckDefinition(
     check_function=check_db2_tablespaces,
     discovery_function=inventory_db2_tablespaces,
     check_ruleset_name="db2_tablespaces",
-    default_levels_variable="db2_tablespaces_default_levels",
     check_default_parameters={
         "levels": (10.0, 5.0),
         "magic_normsize": 1000,

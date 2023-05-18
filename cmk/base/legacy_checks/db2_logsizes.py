@@ -9,7 +9,7 @@
 from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<db2_logsizes>>>
 # [[[db2taddm:CMDBS1]]]
@@ -18,10 +18,6 @@ from cmk.base.config import check_info, factory_settings
 # logfilsiz 2048
 # logprimary 6
 # logsecond 100
-
-factory_settings["db2_logsizes_default_levels"] = {
-    "levels": (-20.0, -10.0),  # Interpreted as free space in df_check_filesystem_single
-}
 
 
 def parse_db2_logsizes(info):
@@ -101,7 +97,6 @@ check_info["db2_logsizes"] = LegacyCheckDefinition(
     check_function=check_db2_logsizes,
     discovery_function=inventory_db2_logsizes,
     check_ruleset_name="db2_logsize",
-    default_levels_variable="db2_logsizes_default_levels",
     check_default_parameters={
         "levels": (-20.0, -10.0),  # Interpreted as free space in df_check_filesystem_single
     },

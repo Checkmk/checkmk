@@ -9,7 +9,7 @@
 from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 #   .--fans----------------------------------------------------------------.
@@ -20,10 +20,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 #   |                        |_|  \__,_|_| |_|___/                         |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-factory_settings["bintec_sensors_fan_default_levels"] = {
-    "lower": (2000, 1000),
-}
 
 
 def inventory_bintec_sensors_fan(info):
@@ -50,7 +46,6 @@ check_info["bintec_sensors.fan"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.272.4.17.7.1.1.1",
         oids=["2", "3", "4", "5", "7"],
     ),
-    default_levels_variable="bintec_sensors_fan_default_levels",
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (2000, 1000),
@@ -66,8 +61,6 @@ check_info["bintec_sensors.fan"] = LegacyCheckDefinition(
 #   |                       \__\___|_| |_| |_| .__/                        |
 #   |                                        |_|                           |
 #   '----------------------------------------------------------------------'
-
-factory_settings["bintec_sensors_temp_default_levels"] = {"levels": (35.0, 40.0)}
 
 
 def inventory_bintec_sensors_temp(info):
@@ -94,7 +87,6 @@ check_info["bintec_sensors.temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.272.4.17.7.1.1.1",
         oids=["2", "3", "4", "5", "7"],
     ),
-    default_levels_variable="bintec_sensors_temp_default_levels",
     check_default_parameters={"levels": (35.0, 40.0)},
 )
 

@@ -5,12 +5,8 @@
 
 
 from cmk.base.check_api import any_of, equals, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["docsis_channels_downstream"] = {
-    "power": (5.0, 1.0),
-}
 
 
 def inventory_docsis_channels_downstream(info):
@@ -74,7 +70,6 @@ check_info["docsis_channels_downstream"] = LegacyCheckDefinition(
         oids=["1", "2", "6"],
     ),
     check_ruleset_name="docsis_channels_downstream",
-    default_levels_variable="docsis_channels_downstream",
     check_default_parameters={
         "power": (5.0, 1.0),
     },

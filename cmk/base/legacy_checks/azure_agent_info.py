@@ -11,14 +11,7 @@ import time
 
 from cmk.base.check_api import check_levels, get_item_state, LegacyCheckDefinition, set_item_state
 from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["azure_agent_info_levels"] = {
-    "warning_levels": (1, 10),
-    "exception_levels": (1, 1),
-    "remaining_reads_levels_lower": (6000, 3000),
-    "remaining_reads_unknown_state": 1,
-}
+from cmk.base.config import check_info
 
 
 def _update_remaining_reads(parsed, value):
@@ -171,7 +164,6 @@ check_info["azure_agent_info"] = LegacyCheckDefinition(
     discovery_function=discovery_azure_agent_info,
     check_function=check_azure_agent_info,
     service_name="Azure Agent Info",
-    default_levels_variable="azure_agent_info_levels",
     check_ruleset_name="azure_agent_info",
     check_default_parameters={
         "warning_levels": (1, 10),

@@ -9,7 +9,7 @@
 import time
 
 from cmk.base.check_api import any_of, check_levels, get_rate, LegacyCheckDefinition, startswith
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
@@ -31,10 +31,6 @@ def parse_safenet_hsm(info):
 #   |         |_____| \_/ \___|_| |_|\__| |___/\__\__,_|\__|___/           |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-factory_settings["safenet_hsm_events_default_levels"] = {
-    "critical_event_rate": (0.0001, 0.0005),
-}
 
 
 def inventory_safenet_hsm_events(parsed):
@@ -92,7 +88,6 @@ def check_safenet_hsm_events(_no_item, params, parsed):
 
 
 check_info["safenet_hsm.events"] = LegacyCheckDefinition(
-    default_levels_variable="safenet_hsm_events_default_levels",
     discovery_function=inventory_safenet_hsm_events,
     check_function=check_safenet_hsm_events,
     service_name="HSM Safenet Event Stats",
@@ -117,8 +112,6 @@ check_info["safenet_hsm.events"] = LegacyCheckDefinition(
 #   |                       |___/\__\__,_|\__|___/                         |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-factory_settings["safenet_hsm_default_levels"] = {"error_rate": (0.01, 0.05), "request_rate": None}
 
 
 def inventory_safenet_hsm(parsed):
@@ -186,7 +179,6 @@ check_info["safenet_hsm"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12383"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072"),
     ),
-    default_levels_variable="safenet_hsm_default_levels",
     parse_function=parse_safenet_hsm,
     discovery_function=inventory_safenet_hsm,
     check_function=check_safenet_hsm,

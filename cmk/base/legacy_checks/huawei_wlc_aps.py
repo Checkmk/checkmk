@@ -14,7 +14,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
@@ -46,11 +46,6 @@ ap_state_map = {
 }
 
 # Defined by customer, see SUP-1020
-factory_settings["huawei_cpu_default"] = {"levels": (80.0, 90.0)}
-
-factory_settings["huawei_mem_default"] = {"levels": (80.0, 90.0)}
-
-factory_settings["huawei_channel_default"] = {"levels": (80.0, 90.0)}
 
 
 def parse_huawei_wlc_aps(info):
@@ -163,7 +158,6 @@ check_info["huawei_wlc_aps.status"] = LegacyCheckDefinition(
     discovery_function=discovery_huawei_wlc_aps_status,
     check_function=check_huawei_wlc_aps_status,
     service_name="AP %s Status",
-    default_levels_variable="huawei_channel_default",
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
@@ -188,7 +182,6 @@ check_info["huawei_wlc_aps.cpu"] = LegacyCheckDefinition(
     check_function=check_huawei_wlc_aps_cpu,
     discovery_function=discovery_huawei_wlc_aps_cpu,
     service_name="AP %s CPU",
-    default_levels_variable="huawei_cpu_default",
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
@@ -217,7 +210,6 @@ check_info["huawei_wlc_aps.mem"] = LegacyCheckDefinition(
     check_function=check_huawei_wlc_aps_mem,
     discovery_function=discovery_huawei_wlc_aps_mem,
     service_name="AP %s Memory",
-    default_levels_variable="huawei_mem_default",
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 

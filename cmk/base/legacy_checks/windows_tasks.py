@@ -24,7 +24,7 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 
 def parse_windows_tasks(info):
@@ -197,28 +197,12 @@ def check_windows_tasks(item, params, parsed):
         yield 0, ", ".join(additional_infos)
 
 
-factory_settings["windows_tasks"] = {
-    # This list is overruled by a ruleset, if configured.
-    # The defaults are brought back individually below.
-    # Put them here anyway to make them available in the checks man page.
-    "exit_code_to_state": [
-        {
-            "exit_code": key,
-            "monitoring_state": state,
-            "info_text": text,
-        }
-        for key, (state, text) in _MAP_EXIT_CODES.items()
-    ],
-}
-
-
 check_info["windows_tasks"] = LegacyCheckDefinition(
     parse_function=parse_windows_tasks,
     check_function=check_windows_tasks,
     discovery_function=inventory_windows_tasks,
     service_name="Task %s",
     check_ruleset_name="windows_tasks",
-    default_levels_variable="windows_tasks",
     check_default_parameters={
         # This list is overruled by a ruleset, if configured.
         # The defaults are brought back individually below.

@@ -4,16 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_OSN
 
 # The typical OSN power unit delivers 750 W max
-
-
-factory_settings["huawei_osn_power_default_levels"] = {
-    "levels": (700, 730),
-}
 
 
 def inventory_huawei_osn_power(info):
@@ -48,7 +43,6 @@ check_info["huawei_osn_power"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.2011.2.25.4.70.20.20.10.1",
         oids=["1", "2"],
     ),
-    default_levels_variable="huawei_osn_power_default_levels",
     check_default_parameters={
         "levels": (700, 730),
     },

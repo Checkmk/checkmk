@@ -32,7 +32,7 @@
 import json
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 
 def parse_graylog_nodes(info):
@@ -48,26 +48,6 @@ def parse_graylog_nodes(info):
                 pass
 
     return parsed
-
-
-factory_settings["graylog_nodes_default_levels"] = {
-    "lb_throttled": 2,
-    "lb_alive": 0,
-    "lb_dead": 2,
-    "lc_uninitialized": 1,
-    "lc_paused": 1,
-    "lc_running": 0,
-    "lc_failed": 2,
-    "lc_halting": 1,
-    "lc_throttled": 2,
-    "lc_starting": 1,
-    "lc_override_lb_alive": 0,
-    "lc_override_lb_dead": 1,
-    "lc_override_lb_throttled": 1,
-    "ps_true": 0,
-    "ps_false": 2,
-    "input_state": 1,
-}
 
 
 def inventory_graylog_nodes(parsed):
@@ -160,7 +140,6 @@ check_info["graylog_nodes"] = LegacyCheckDefinition(
     parse_function=parse_graylog_nodes,
     check_function=check_graylog_nodes,
     discovery_function=inventory_graylog_nodes,
-    default_levels_variable="graylog_nodes_default_levels",
     service_name="Graylog Node %s",
     check_ruleset_name="graylog_nodes",
     check_default_parameters={

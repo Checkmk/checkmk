@@ -5,11 +5,9 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.bvip import DETECT_BVIP
-
-factory_settings["bvip_poe_default_levels"] = {"levels": (50.0, 60.0)}
 
 
 def inventory_bvip_poe(info):
@@ -42,6 +40,5 @@ check_info["bvip_poe"] = LegacyCheckDefinition(
         oids=["10"],
     ),
     check_ruleset_name="epower_single",
-    default_levels_variable="bvip_poe_default_levels",
     check_default_parameters={"levels": (50.0, 60.0)},
 )

@@ -15,21 +15,11 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
     startswith,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # Default levels: issue a WARN/CRIT if 1%/2% of read or write IO
 # operations have a latency of 10-20 ms or above.
-factory_settings["nimble_latency_default_levels"] = {
-    # The latency range that is used to start measuring against levels.
-    # The numbers of operations of and above this range are added and then
-    # taken as a percentage of the total number of operations.
-    "range_reference": "20",
-    # These are percentage values!
-    "read": (10.0, 20.0),
-    "write": (10.0, 20.0),
-}
-
 NimbleReadsType = "read"
 NimbleWritesType = "write"
 
@@ -171,7 +161,6 @@ check_info["nimble_latency"] = LegacyCheckDefinition(
         ],
     ),
     check_ruleset_name="nimble_latency",
-    default_levels_variable="nimble_latency_default_levels",
     check_default_parameters={
         # The latency range that is used to start measuring against levels.
         # The numbers of operations of and above this range are added and then
@@ -194,7 +183,6 @@ check_info["nimble_latency.write"] = LegacyCheckDefinition(
     check_function=check_nimble_latency_writes,
     service_name="Volume %s Write IO",
     check_ruleset_name="nimble_latency",
-    default_levels_variable="nimble_latency_default_levels",
     check_default_parameters={
         # The latency range that is used to start measuring against levels.
         # The numbers of operations of and above this range are added and then

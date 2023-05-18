@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.infoblox import DETECT_INFOBLOX
 
@@ -27,9 +27,6 @@ from cmk.base.plugins.agent_based.utils.infoblox import DETECT_INFOBLOX
 # .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.3.41 --> IB-PLATFORMONE-MIB::ibNodeServiceDesc.sys-temp
 
 # Suggested by customer
-factory_settings["infoblox_temp_default_levels"] = {
-    "levels": (40.0, 50.0),
-}
 
 
 def parse_infoblox_temp(info):
@@ -100,7 +97,6 @@ check_info["infoblox_temp"] = LegacyCheckDefinition(
         ),
     ],
     check_ruleset_name="temperature",
-    default_levels_variable="infoblox_temp_default_levels",
     check_default_parameters={
         "levels": (40.0, 50.0),
     },

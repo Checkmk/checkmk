@@ -16,69 +16,9 @@ from cmk.base.check_legacy_includes.wmi import (
     wmi_yield_raw_counter,
     wmi_yield_raw_persec,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # these defaults were specified by customer
-factory_settings["skype_mobile_defaultlevels"] = {"requests_processing": {"upper": (10000, 20000)}}
-
-factory_settings["skype_xmpp_defaultlevels"] = {
-    "failed_outbound_streams": {"upper": (0.01, 0.02)},
-    "failed_inbound_streams": {"upper": (0.01, 0.02)},
-}
-
-factory_settings["skype_edgeauth_defaultlevels"] = {
-    "bad_requests": {"upper": (20, 40)},
-}
-
-factory_settings["skype_mediation_server_defaultlevels"] = {
-    "load_call_failure_index": {"upper": (10, 20)},
-    "failed_calls_because_of_proxy": {"upper": (10, 20)},
-    "failed_calls_because_of_gateway": {"upper": (10, 20)},
-    "media_connectivity_failure": {"upper": (1, 2)},
-}
-
-factory_settings["skype_sip_defaultlevels"] = {
-    "message_processing_time": {"upper": (1.0, 2.0)},  # for edge servers: < 3
-    "incoming_responses_dropped": {"upper": (1.0, 2.0)},
-    "incoming_requests_dropped": {"upper": (1.0, 2.0)},
-    "queue_latency": {"upper": (0.1, 0.2)},
-    "sproc_latency": {"upper": (0.1, 0.2)},
-    "throttled_requests": {"upper": (0.2, 0.4)},
-    "local_503_responses": {"upper": (0.01, 0.02)},
-    "timedout_incoming_messages": {"upper": (2, 4)},
-    "holding_time_incoming": {"upper": (6.0, 12.0)},
-    "flow_controlled_connections": {"upper": (1, 2)},
-    "outgoing_queue_delay": {"upper": (2.0, 4.0)},
-    "timedout_sends": {"upper": (0.01, 0.02)},
-    "authentication_errors": {"upper": (1, 2)},
-}
-
-factory_settings["skype_conferencing_defaultlevels"] = {
-    "incomplete_calls": {"upper": (20, 40)},
-    "create_conference_latency": {"upper": (5000, 10000)},
-    "allocation_latency": {"upper": (5000, 10000)},
-}
-
-factory_settings["skype_edge_defaultlevels"] = {
-    "authentication_failures": {"upper": (20, 40)},
-    "allocate_requests_exceeding": {"upper": (20, 40)},
-    "packets_dropped": {"upper": (200, 400)},
-}
-
-factory_settings["skype_proxy_defaultlevels"] = {
-    "throttled_connections": {"upper": (1, 2)},
-}
-
-factory_settings["skype_defaultlevels"] = {
-    "failed_search_requests": {"upper": (1.0, 2.0)},
-    "failed_locations_requests": {"upper": (1.0, 2.0)},
-    "timedout_ad_requests": {"upper": (0.01, 0.02)},
-    "5xx_responses": {"upper": (1.0, 2.0)},
-    "asp_requests_rejected": {"upper": (1, 2)},
-    "failed_file_requests": {"upper": (1.0, 2.0)},
-    "join_failures": {"upper": (1, 2)},
-    "failed_validate_cert": {"upper": (1, 2)},
-}
 
 
 def check_skype(_no_item, params, parsed):
@@ -183,7 +123,6 @@ check_info["skype"] = LegacyCheckDefinition(
     parse_function=lambda info: parse_wmi_table(info, key="instance"),
     service_name="Skype Web Components",
     check_ruleset_name="skype",
-    default_levels_variable="skype_defaultlevels",
     check_default_parameters={
         "failed_search_requests": {"upper": (1.0, 2.0)},
         "failed_locations_requests": {"upper": (1.0, 2.0)},
@@ -292,7 +231,6 @@ check_info["skype.conferencing"] = LegacyCheckDefinition(
     parse_function=lambda info: parse_wmi_table(info, key="instance"),
     service_name="Skype Conferencing",
     check_ruleset_name="skype_conferencing",
-    default_levels_variable="skype_conferencing_defaultlevels",
     check_default_parameters={
         "incomplete_calls": {"upper": (20, 40)},
         "create_conference_latency": {"upper": (5000, 10000)},
@@ -454,7 +392,6 @@ check_info["skype.sip_stack"] = LegacyCheckDefinition(
     check_function=check_skype_sip_stack,
     service_name="Skype SIP Stack",
     check_ruleset_name="skype_sip",
-    default_levels_variable="skype_sip_defaultlevels",
     check_default_parameters={
         "message_processing_time": {"upper": (1.0, 2.0)},  # for edge servers: < 3
         "incoming_responses_dropped": {"upper": (1.0, 2.0)},
@@ -529,7 +466,6 @@ check_info["skype.mediation_server"] = LegacyCheckDefinition(
     check_function=check_skype_mediation_server,
     service_name="Skype Mediation Server",
     check_ruleset_name="skype_mediation_server",
-    default_levels_variable="skype_mediation_server_defaultlevels",
     check_default_parameters={
         "load_call_failure_index": {"upper": (10, 20)},
         "failed_calls_because_of_proxy": {"upper": (10, 20)},
@@ -558,7 +494,6 @@ check_info["skype.edge_auth"] = LegacyCheckDefinition(
     check_function=check_skype_edge_auth,
     service_name="Skype Edge Authentification",
     check_ruleset_name="skype_edgeauth",
-    default_levels_variable="skype_edgeauth_defaultlevels",
     check_default_parameters={
         "bad_requests": {"upper": (20, 40)},
     },
@@ -634,7 +569,6 @@ check_info["skype.edge"] = LegacyCheckDefinition(
     check_function=check_skype_av_edge,
     service_name="Skype AV Edge %s",
     check_ruleset_name="skype_edge",
-    default_levels_variable="skype_edge_defaultlevels",
     check_default_parameters={
         "authentication_failures": {"upper": (20, 40)},
         "allocate_requests_exceeding": {"upper": (20, 40)},
@@ -670,7 +604,6 @@ check_info["skype.data_proxy"] = LegacyCheckDefinition(
     check_function=check_skype_data_proxy,
     service_name="Skype Data Proxy %s",
     check_ruleset_name="skype_proxy",
-    default_levels_variable="skype_proxy_defaultlevels",
     check_default_parameters={
         "throttled_connections": {"upper": (1, 2)},
     },
@@ -706,7 +639,6 @@ check_info["skype.xmpp_proxy"] = LegacyCheckDefinition(
     check_function=check_skype_xmpp_proxy,
     service_name="Skype XMPP Proxy",
     check_ruleset_name="skype_xmpp",
-    default_levels_variable="skype_xmpp_defaultlevels",
     check_default_parameters={
         "failed_outbound_streams": {"upper": (0.01, 0.02)},
         "failed_inbound_streams": {"upper": (0.01, 0.02)},
@@ -757,6 +689,5 @@ check_info["skype.mobile"] = LegacyCheckDefinition(
     check_function=check_skype_mobile,
     service_name="Skype Mobile Sessions",
     check_ruleset_name="skype_mobile",
-    default_levels_variable="skype_mobile_defaultlevels",
     check_default_parameters={"requests_processing": {"upper": (10000, 20000)}},
 )

@@ -17,13 +17,7 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["splunk_health_default_levels"] = {
-    "green": 0,
-    "yellow": 1,
-    "red": 2,
-}
+from cmk.base.config import check_info
 
 
 def parse_splunk_health(info):
@@ -81,7 +75,6 @@ check_info["splunk_health"] = LegacyCheckDefinition(
     discovery_function=inventory_splunk_health,
     service_name="Splunk Health",
     check_ruleset_name="splunk_health",
-    default_levels_variable="splunk_health_default_levels",
     check_default_parameters={
         "green": 0,
         "yellow": 1,

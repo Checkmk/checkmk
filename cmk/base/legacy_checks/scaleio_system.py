@@ -7,7 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.scaleio import get_scaleio_data, parse_scaleio
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<scaleio_system:sep(9)>>>
 # SYSTEM 5914d6b47d479d5a:
@@ -18,7 +18,6 @@ from cmk.base.config import check_info, factory_settings
 #        MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
 #        UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
 #
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_scaleio_system(parsed):
@@ -48,6 +47,5 @@ check_info["scaleio_system"] = LegacyCheckDefinition(
     check_function=check_scaleio_system,
     service_name="ScaleIO System %s",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

@@ -19,7 +19,7 @@ from cmk.base.check_api import (
     savefloat,
     saveint,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, render, SNMPTree
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
@@ -113,8 +113,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, render, SNMP
 
 # get cbQosQueueingCfgBandwidth
 # .1.3.6.1.4.1.9.9.166.1.9.1.1.1.1608 3094
-
-factory_settings["cisco_qos_default_levels"] = {"drop": (0.01, 0.01)}
 
 
 def cisco_qos_get_config_entries_by_class_id(config, class_id):
@@ -327,7 +325,6 @@ check_info["cisco_qos"] = LegacyCheckDefinition(
     check_function=check_cisco_qos,
     discovery_function=inventory_cisco_qos,
     check_ruleset_name="cisco_qos",
-    default_levels_variable="cisco_qos_default_levels",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.166.1.1.1.1",

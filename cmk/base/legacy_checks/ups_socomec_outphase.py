@@ -6,14 +6,9 @@
 
 from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ups_socomec import DETECT_SOCOMEC
-
-factory_settings["socomec_outphase_default_levels"] = {
-    "voltage": (210, 200),
-    "output_load": (80, 90),
-}
 
 
 def parse_ups_socomec_outphase(info):
@@ -39,7 +34,6 @@ check_info["ups_socomec_outphase"] = LegacyCheckDefinition(
     parse_function=parse_ups_socomec_outphase,
     discovery_function=discover(),
     check_function=check_ups_socomec_outphase,
-    default_levels_variable="socomec_outphase_default_levels",
     service_name="Output %s",
     check_ruleset_name="ups_outphase",
     # Phase Index, Voltage/dV, Current/dA, Load/%

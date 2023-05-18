@@ -6,15 +6,7 @@
 
 from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["aws_wafv2_limits_default_levels"] = {
-    "web_acls": (None, 80.0, 90.0),
-    "rule_groups": (None, 80.0, 90.0),
-    "ip_sets": (None, 80.0, 90.0),
-    "regex_pattern_sets": (None, 80.0, 90.0),
-    "web_acl_capacity_units": (None, 80.0, 90.0),
-}
+from cmk.base.config import check_info
 
 
 @get_parsed_item_data
@@ -28,7 +20,6 @@ check_info["aws_wafv2_limits"] = LegacyCheckDefinition(
     check_function=check_aws_wafv2_limits,
     service_name="AWS/WAFV2 Limits %s",
     check_ruleset_name="aws_wafv2_limits",
-    default_levels_variable="aws_wafv2_limits_default_levels",
     check_default_parameters={
         "web_acls": (None, 80.0, 90.0),
         "rule_groups": (None, 80.0, 90.0),

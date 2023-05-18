@@ -8,12 +8,8 @@
 
 from cmk.base.check_api import equals, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-
-factory_settings["arris_cmts_mem"] = {
-    "levels": (80.0, 90.0),
-}
 
 
 def parse_arris_cmts_mem(info):
@@ -60,7 +56,6 @@ check_info["arris_cmts_mem"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "2", "3"],
     ),
     check_ruleset_name="memory_multiitem",
-    default_levels_variable="arris_cmts_mem",
     check_default_parameters={
         "levels": (80.0, 90.0),
     },

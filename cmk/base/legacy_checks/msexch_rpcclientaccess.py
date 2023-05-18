@@ -13,14 +13,10 @@ from cmk.base.check_legacy_includes.wmi import (
     wmi_yield_raw_counter,
     wmi_yield_raw_persec,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
-factory_settings["msexch_rpcclientaccess_defaultlevels"] = {
-    "latency": (200.0, 250.0),
-    "requests": (30, 40),
-}
 
 
 def discover_msexch_rpcclientaccess(parsed):
@@ -62,7 +58,6 @@ check_info["msexch_rpcclientaccess"] = LegacyCheckDefinition(
     parse_function=parse_wmi_table,
     service_name="Exchange RPC Client Access",
     check_ruleset_name="msx_rpcclientaccess",
-    default_levels_variable="msexch_rpcclientaccess_defaultlevels",
     check_default_parameters={
         "latency": (200.0, 250.0),
         "requests": (30, 40),

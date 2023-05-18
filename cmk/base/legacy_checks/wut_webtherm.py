@@ -7,7 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 _TYPE_TABLE_IDX = (1, 2, 3, 6, 7, 8, 9, 16, 18, 36, 37, 38, 42)
@@ -57,10 +57,6 @@ def parse_wut_webtherm(string_table):
 #   |                             main check                               |
 #   '----------------------------------------------------------------------'
 
-factory_settings["wut_webtherm_defaultlevels"] = {
-    "levels": (30.0, 35.0),
-}
-
 
 def inventory_wut_webtherm(parsed):
     return [(sensor_id, {}) for sensor_id, values in parsed.items() if values["type"] == "temp"]
@@ -74,7 +70,6 @@ def check_wut_webtherm(item, params, parsed):
 
 check_info["wut_webtherm"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5040.1.2."),
-    default_levels_variable="wut_webtherm_defaultlevels",
     parse_function=parse_wut_webtherm,
     discovery_function=inventory_wut_webtherm,
     check_function=check_wut_webtherm,

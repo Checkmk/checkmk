@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.liebert import parse_liebert_wrapper
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
 
@@ -14,8 +14,6 @@ from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5078 Cooling Capacity (Primary)
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5078 0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5078 %
-
-factory_settings["liebert_cooling_default_levels"] = {"min_capacity": (90, 80)}
 
 
 @get_parsed_item_data
@@ -38,7 +36,6 @@ check_info["liebert_cooling"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=["10.1.2.1.5078", "20.1.2.1.5078", "30.1.2.1.5078"],
     ),
-    default_levels_variable="liebert_cooling_default_levels",
     check_ruleset_name="liebert_cooling",
     check_default_parameters={"min_capacity": (90, 80)},
 )

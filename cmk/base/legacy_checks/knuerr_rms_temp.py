@@ -6,13 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.knuerr import DETECT_KNUERR
-
-factory_settings["knuerr_rms_temp_default_levels"] = {
-    "levels": (30.0, 35.0),
-}
 
 
 def inventory_knuerr_rms_temp(info):
@@ -25,7 +21,6 @@ def check_knuerr_rms_temp(_no_item, params, info):
 
 check_info["knuerr_rms_temp"] = LegacyCheckDefinition(
     detect=DETECT_KNUERR,
-    default_levels_variable="knuerr_rms_temp_default_levels",
     check_function=check_knuerr_rms_temp,
     discovery_function=inventory_knuerr_rms_temp,
     service_name="Temperature %s",

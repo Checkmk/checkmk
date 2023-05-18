@@ -6,11 +6,7 @@
 
 from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["aws_cloudwatch_alarms_limits_default_levels"] = {
-    "cloudwatch_alarms": (None, 80.0, 90.0),
-}
+from cmk.base.config import check_info
 
 
 @get_parsed_item_data
@@ -24,7 +20,6 @@ check_info["aws_cloudwatch_alarms_limits"] = LegacyCheckDefinition(
     check_function=check_aws_cloudwatch_alarms_limits,
     service_name="AWS/CloudWatch Alarms Limits %s",
     check_ruleset_name="aws_cloudwatch_alarms_limits",
-    default_levels_variable="aws_cloudwatch_alarms_limits_default_levels",
     check_default_parameters={
         "cloudwatch_alarms": (None, 80.0, 90.0),
     },

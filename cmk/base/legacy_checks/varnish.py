@@ -15,7 +15,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 
 # Special thanks to Rene Stolle (r.stolle@funkemedien.de)
@@ -542,8 +542,6 @@ check_info["varnish.fetch"] = LegacyCheckDefinition(
 #   |                          |_____|____/___|                            |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-factory_settings["varnish_esi_default_levels"] = {"errors": (1.0, 2.0)}
-
 check_info["varnish.esi"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_varnish(parsed, ["esi_errors"]),
     check_function=lambda item, params, parsed: check_varnish_stats(
@@ -556,7 +554,6 @@ check_info["varnish.esi"] = LegacyCheckDefinition(
         ],
     ),
     service_name="Varnish ESI",
-    default_levels_variable="varnish_esi_default_levels",
     check_ruleset_name="varnish_esi",
     check_default_parameters={"errors": (1.0, 2.0)},
 )
@@ -621,14 +618,11 @@ check_info["varnish.worker"] = LegacyCheckDefinition(
 #   |   \___\__,_|\___|_| |_|\___| |_| |_|_|\__| |_|  \__,_|\__|_|\___/    |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-factory_settings["varnish_cache_hit_ratio_default_levels"] = {"levels_lower": (70.0, 60.0)}
-
 check_info["varnish.cache_hit_ratio"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_varnish(parsed, ["cache_miss", "cache_hit"]),
     check_function=lambda item, params, parsed: check_varnish_ratio(
         item, params, parsed, ("cache_hit", "cache_miss", "cache_hit_ratio")
     ),
-    default_levels_variable="varnish_cache_hit_ratio_default_levels",
     service_name="Varnish Cache Hit Ratio",
     check_ruleset_name="varnish_cache_hit_ratio",
     check_default_parameters={"levels_lower": (70.0, 60.0)},
@@ -648,14 +642,11 @@ check_info["varnish.cache_hit_ratio"] = LegacyCheckDefinition(
 #   |      |___/\__,_|\___\___\___||___/___/ |_|  \__,_|\__|_|\___/        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-factory_settings["varnish_backend_success_ratio_default_levels"] = {"levels_lower": (70.0, 60.0)}
-
 check_info["varnish.backend_success_ratio"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_varnish(parsed, ["backend_fail", "backend_conn"]),
     check_function=lambda item, params, parsed: check_varnish_ratio(
         item, params, parsed, ("backend_conn", "backend_fail", "varnish_backend_success_ratio")
     ),
-    default_levels_variable="varnish_backend_success_ratio_default_levels",
     service_name="Varnish Backend Success Ratio",
     check_ruleset_name="varnish_backend_success_ratio",
     check_default_parameters={"levels_lower": (70.0, 60.0)},
@@ -675,7 +666,6 @@ check_info["varnish.backend_success_ratio"] = LegacyCheckDefinition(
 #   |                       |_|  \__,_|\__|_|\___/                         |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-factory_settings["varnish_worker_thread_ratio_default_levels"] = {"levels_lower": (70.0, 60.0)}
 
 
 def check_varnish_worker_thread_ratio(_no_item, params, parsed):
@@ -696,7 +686,6 @@ check_info["varnish.worker_thread_ratio"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_varnish(parsed, ["n_wrk", "n_wrk_create"]),
     check_function=check_varnish_worker_thread_ratio,
     service_name="Varnish Worker Thread Ratio",
-    default_levels_variable="varnish_worker_thread_ratio_default_levels",
     check_ruleset_name="varnish_worker_thread_ratio",
     check_default_parameters={"levels_lower": (70.0, 60.0)},
 )

@@ -10,7 +10,7 @@ from cmk.base.check_legacy_includes.filerdisks import (
     FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
 )
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # Agent output:
 # <<<ibm_svc_disk:sep(58)>>>
@@ -38,8 +38,6 @@ from cmk.base.config import check_info, factory_settings
 # newer versions report an additional column
 # 0:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:4:1:24:::inactive
 # 1:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:3:1:23:::inactive
-
-factory_settings["filer_disks_default_levels"] = FILER_DISKS_CHECK_DEFAULT_PARAMETERS
 
 
 def parse_ibm_svc_disks(info):
@@ -103,6 +101,5 @@ check_info["ibm_svc_disks"] = LegacyCheckDefinition(
     discovery_function=discover_single,
     service_name="Disk Summary",
     check_ruleset_name="netapp_disks",
-    default_levels_variable="filer_disks_default_levels",
     check_default_parameters=FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
 )

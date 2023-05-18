@@ -9,7 +9,7 @@
 from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint, startswith
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 #
@@ -196,12 +196,6 @@ check_info["security_master.humidity"] = LegacyCheckDefinition(
 #   |                                        |_|                           |
 #   '----------------------------------------------------------------------'
 
-factory_settings["security_master_temp_default_levels"] = {
-    "device_levels_handling": "worst",  # this variable is required, in order to define,
-    # which status limits are used, also 'levels' are
-    # added via WATO, if needed
-}
-
 
 def check_security_master_temperature(item, params, parsed):
     sensor = parsed["temp"].get(item)
@@ -227,7 +221,6 @@ check_info["security_master.temp"] = LegacyCheckDefinition(
     check_function=check_security_master_temperature,
     service_name="Sensor %s",
     check_ruleset_name="temperature",
-    default_levels_variable="security_master_temp_default_levels",
     check_default_parameters={
         "device_levels_handling": "worst",  # this variable is required, in order to define,
         # which status limits are used, also 'levels' are

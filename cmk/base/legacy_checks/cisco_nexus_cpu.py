@@ -6,14 +6,10 @@
 
 from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # .1.3.6.1.4.1.9.9.305.1.1.1.0 1 --> CISCO-SYSTEM-EXT-MIB::cseSysCPUUtilization.0
-
-factory_settings["cisco_nexus_cpu_default_levels"] = {
-    "util": (80.0, 90.0),
-}
 
 
 def inventory_cisco_nexus_cpu(info):
@@ -44,7 +40,6 @@ check_info["cisco_nexus_cpu"] = LegacyCheckDefinition(
         oids=["0"],
     ),
     check_ruleset_name="cpu_utilization_os",
-    default_levels_variable="cisco_nexus_cpu_default_levels",
     check_default_parameters={
         "util": (80.0, 90.0),
     },

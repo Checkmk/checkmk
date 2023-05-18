@@ -8,12 +8,8 @@
 
 from cmk.base.check_api import discover, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["aruba_cpu_util_default_levels"] = {
-    "levels": (80.0, 90.0),
-}
 
 
 def parse_aruba_cpu_util(info):
@@ -46,7 +42,6 @@ check_info["aruba_cpu_util"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     check_ruleset_name="cpu_utilization_multiitem",
-    default_levels_variable="aruba_cpu_util_default_levels",
     check_default_parameters={
         "levels": (80.0, 90.0),
     },

@@ -16,7 +16,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
     state_markers,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 
 def parse_ceph_status(info):
@@ -55,9 +55,6 @@ def ceph_check_epoch(id_, epoch, params):
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer: 1,3 per 30 min
-factory_settings["ceph_status_default_levels"] = {
-    "epoch": (1, 3, 30),
-}
 
 
 def inventory_ceph_status(parsed):
@@ -104,7 +101,6 @@ check_info["ceph_status"] = LegacyCheckDefinition(
     discovery_function=inventory_ceph_status,
     check_function=check_ceph_status,
     service_name="Ceph Status",
-    default_levels_variable="ceph_status_default_levels",
     check_default_parameters={
         "epoch": (1, 3, 30),
     },
@@ -121,11 +117,6 @@ check_info["ceph_status"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer: 50, 100 per 15 min
-factory_settings["ceph_osds_default_levels"] = {
-    "epoch": (50, 100, 15),
-    "num_out_osds": (5.0, 7.0),
-    "num_down_osds": (5.0, 7.0),
-}
 
 
 def inventory_ceph_status_osds(parsed):
@@ -177,7 +168,6 @@ check_info["ceph_status.osds"] = LegacyCheckDefinition(
     discovery_function=inventory_ceph_status_osds,
     check_function=check_ceph_status_osds,
     service_name="Ceph OSDs",
-    default_levels_variable="ceph_osds_default_levels",
     check_ruleset_name="ceph_osds",
     check_default_parameters={
         "epoch": (50, 100, 15),
@@ -267,9 +257,6 @@ check_info["ceph_status.pgs"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer: 1, 2 per 5 min
-factory_settings["ceph_mgrs_default_levels"] = {
-    "epoch": (1, 2, 5),
-}
 
 
 def inventory_ceph_status_mgrs(parsed):
@@ -289,7 +276,6 @@ check_info["ceph_status.mgrs"] = LegacyCheckDefinition(
     discovery_function=inventory_ceph_status_mgrs,
     check_function=check_ceph_status_mgrs,
     service_name="Ceph MGRs",
-    default_levels_variable="ceph_mgrs_default_levels",
     check_ruleset_name="ceph_mgrs",
     check_default_parameters={
         "epoch": (1, 2, 5),

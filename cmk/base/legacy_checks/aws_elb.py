@@ -17,7 +17,7 @@ from cmk.base.check_legacy_includes.aws import (
     check_aws_metrics,
     inventory_aws_generic_single,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
@@ -66,11 +66,6 @@ def parse_aws_elb(info):
 # we want levels_spillover < 1 / (2 * cache_interval), such that the service goes CRIT as soon as
 # there is a single count; the factor of 2 comes from AWSSection.period in
 # cmk/special_agents/agent_aws.py
-factory_settings["aws_elb_statistics"] = {
-    "levels_surge_queue_length": (1024, 1024),
-    "levels_spillover": (0.001, 0.001),
-}
-
 _aws_elb_statistics_metrics = [
     "SurgeQueueLength",
     "SpilloverCount",
@@ -102,7 +97,6 @@ check_info["aws_elb"] = LegacyCheckDefinition(
     discovery_function=lambda p: inventory_aws_generic_single(p, _aws_elb_statistics_metrics),
     check_function=check_aws_elb_statistics,
     service_name="AWS/ELB Statistics",
-    default_levels_variable="aws_elb_statistics",
     check_ruleset_name="aws_elb_statistics",
     check_default_parameters={
         "levels_surge_queue_length": (1024, 1024),

@@ -7,7 +7,7 @@
 import time
 
 from cmk.base.check_api import get_rate, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
 
@@ -16,15 +16,6 @@ from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
 # .1.3.6.1.4.1.2620.1.1.5.0 0
 # .1.3.6.1.4.1.2620.1.1.6.0 1495
 # .1.3.6.1.4.1.2620.1.1.7.0 16297
-
-factory_settings["checkpoint_packets_default_levels"] = {
-    "accepted": (100000, 200000),
-    "rejected": (100000, 200000),
-    "dropped": (100000, 200000),
-    "logged": (100000, 200000),
-    "espencrypted": (100000, 200000),
-    "espdecrypted": (100000, 200000),
-}
 
 
 def parse_checkpoint_packets(info):
@@ -79,7 +70,6 @@ check_info["checkpoint_packets"] = LegacyCheckDefinition(
     discovery_function=inventory_checkpoint_packets,
     service_name="Packet Statistics",
     check_ruleset_name="checkpoint_packets",
-    default_levels_variable="checkpoint_packets_default_levels",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.1.1",

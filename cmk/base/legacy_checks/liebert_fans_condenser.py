@@ -6,13 +6,9 @@
 
 from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.liebert import parse_liebert_wrapper
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
-
-factory_settings["liebert_fans_condenser_default_levels"] = {
-    "levels": (80, 90),
-}
 
 
 @get_parsed_item_data
@@ -32,7 +28,6 @@ check_info["liebert_fans_condenser"] = LegacyCheckDefinition(
         oids=["10.1.2.1.5276", "20.1.2.1.5276", "30.1.2.1.5276"],
     ),
     check_ruleset_name="hw_fans_perc",
-    default_levels_variable="liebert_fans_condenser_default_levels",
     check_default_parameters={
         "levels": (80, 90),
     },

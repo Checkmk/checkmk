@@ -7,7 +7,7 @@
 from cmk.base.check_api import any_of, equals, LegacyCheckDefinition, saveint, startswith
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # Example output from agent:
@@ -103,8 +103,6 @@ check_info["brocade.power"] = LegacyCheckDefinition(
     ),
 )
 
-factory_settings["brocade_temp_default_levels"] = {"levels": (55.0, 60.0)}
-
 
 def inventory_brocade_temp(info):
     converted = brocade_sensor_convert(info, "SLOT")
@@ -135,6 +133,5 @@ check_info["brocade.temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.1588.2.1.1.1.1.22.1",
         oids=["3", "4", "5"],
     ),
-    default_levels_variable="brocade_temp_default_levels",
     check_default_parameters={"levels": (55.0, 60.0)},
 )

@@ -6,13 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.enterasys import DETECT_ENTERASYS
-
-factory_settings["enterasys_cpu_default_levels"] = {
-    "levels": (90.0, 95.0),
-}
 
 
 def inventory_enterasys_cpu_util(info):
@@ -38,7 +34,6 @@ check_info["enterasys_cpu_util"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "3"],
     ),
     check_ruleset_name="cpu_utilization_multiitem",
-    default_levels_variable="enterasys_cpu_default_levels",
     check_default_parameters={
         "levels": (90.0, 95.0),
     },

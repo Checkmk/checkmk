@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 #   .--Parse function------------------------------------------------------.
@@ -206,11 +206,6 @@ check_info["icom_repeater.pll_volt"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["icom_repeater_temp_default_levels"] = {
-    "levels": (50.0, 55.0),
-    "levels_lower": (-20.0, -25.0),
-}
-
 
 def inventory_icom_repeater_temp(parsed):
     if "temp" in parsed:
@@ -230,7 +225,6 @@ def check_icom_repeater_temp(_no_item, params, parsed):
 
 check_info["icom_repeater.temp"] = LegacyCheckDefinition(
     discovery_function=inventory_icom_repeater_temp,
-    default_levels_variable="icom_repeater_temp_default_levels",
     check_function=check_icom_repeater_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",

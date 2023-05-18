@@ -16,9 +16,7 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["filehandler_default_levels"] = {"levels": (80.0, 90.0)}
+from cmk.base.config import check_info
 
 
 def inventory_filehandler(info):
@@ -46,7 +44,6 @@ check_info["filehandler"] = LegacyCheckDefinition(
     check_function=check_filehandler,
     discovery_function=inventory_filehandler,
     service_name="Filehandler",
-    default_levels_variable="filehandler_default_levels",
     check_ruleset_name="filehandler",
     check_default_parameters={"levels": (80.0, 90.0)},
 )

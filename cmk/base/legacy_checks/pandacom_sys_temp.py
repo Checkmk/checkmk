@@ -6,13 +6,11 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.pandacom_temp import PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.pandacom import DETECT_PANDACOM
 
 # .1.3.6.1.4.1.3652.3.1.1.6.0 27
-
-factory_settings["pandacom_temp_default_levels"] = PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS
 
 
 def inventory_pandacom_sys_temp(info):
@@ -32,7 +30,6 @@ check_info["pandacom_sys_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.3652.3.1.1",
         oids=["6"],
     ),
-    default_levels_variable="pandacom_temp_default_levels",
     check_ruleset_name="temperature",
     check_default_parameters=PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS,
 )

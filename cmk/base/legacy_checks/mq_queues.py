@@ -19,12 +19,7 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["mq_queues_default_levels"] = {
-    "size": (None, None),
-    "consumerCount": (None, None),
-}
+from cmk.base.config import check_info
 
 
 def inventory_mq_queues(info):
@@ -79,7 +74,6 @@ check_info["mq_queues"] = LegacyCheckDefinition(
     discovery_function=inventory_mq_queues,
     service_name="Queue %s",
     check_ruleset_name="mq_queues",
-    default_levels_variable="mq_queues_default_levels",
     check_default_parameters={
         "size": (None, None),
         "consumerCount": (None, None),

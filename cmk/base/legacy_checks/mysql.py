@@ -18,7 +18,7 @@ from cmk.base.check_api import (
 )
 from cmk.base.check_legacy_includes.diskstat import check_diskstat_line
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<mysql>>>
 # [[mysql]]
@@ -249,7 +249,6 @@ check_info["mysql.connections"] = LegacyCheckDefinition(
 #   |                   |____/ \__\__,_|\__|\__,_|___/                     |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-factory_settings["MYSQL_GALERA_DEFAULT_PARAMETERS"] = {}
 
 
 def _has_wsrep_provider(data) -> bool:
@@ -319,7 +318,6 @@ check_info["mysql.galeradonor"] = LegacyCheckDefinition(
     discovery_function=inventory_mysql_galeradonor,
     check_function=check_mysql_galeradonor,
     service_name="MySQL Galera Donor %s",
-    default_levels_variable="MYSQL_GALERA_DEFAULT_PARAMETERS",
     check_default_parameters={},
 )
 
@@ -401,7 +399,6 @@ check_info["mysql.galerasize"] = LegacyCheckDefinition(
     discovery_function=inventory_mysql_galerasize,
     check_function=check_mysql_galerasize,
     service_name="MySQL Galera Size %s",
-    default_levels_variable="MYSQL_GALERA_DEFAULT_PARAMETERS",
     check_default_parameters={},
 )
 

@@ -11,15 +11,7 @@ from cmk.base.check_legacy_includes.azure import (
     iter_resource_attributes,
     parse_resources,
 )
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["levels_azure_sites"] = {
-    # https://www.nngroup.com/articles/response-times-3-important-limits/
-    "avg_response_time_levels": (1.0, 10.0),
-    # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
-    "error_rate_levels": (0.01, 0.04),
-    "cpu_time_percent_levels": (85.0, 95.0),
-}
+from cmk.base.config import check_info
 
 _AZURE_SITES_METRICS = (  # metric_key, cmk_key, display_name, use_rate_flag
     ("total_CpuTime", "cpu_time_percent", "CPU time", True),
@@ -45,7 +37,6 @@ check_info["azure_sites"] = LegacyCheckDefinition(
     discovery_function=discover(),
     check_function=check_azure_sites,
     service_name="Site %s",
-    default_levels_variable="levels_azure_sites",
     check_ruleset_name="webserver",
     check_default_parameters={
         # https://www.nngroup.com/articles/response-times-3-important-limits/

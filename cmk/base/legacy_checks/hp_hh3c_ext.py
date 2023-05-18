@@ -10,7 +10,7 @@ from cmk.base.check_api import any_of, get_parsed_item_data, LegacyCheckDefiniti
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDCached, OIDEnd, SNMPTree
 
 
@@ -188,10 +188,6 @@ check_info["hp_hh3c_ext.cpu"] = LegacyCheckDefinition(
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-factory_settings["hp_hh3c_ext_mem_default_levels"] = {
-    "levels": (80.0, 90.0),
-}
-
 
 def inventory_hp_hh3c_ext_mem(parsed):
     for name, attrs in parsed.items():
@@ -220,7 +216,6 @@ check_info["hp_hh3c_ext.mem"] = LegacyCheckDefinition(
     check_function=check_hp_hh3c_ext_mem,
     service_name="Memory %s",
     check_ruleset_name="memory_multiitem",
-    default_levels_variable="hp_hh3c_ext_mem_default_levels",
     check_default_parameters={
         "levels": (80.0, 90.0),
     },

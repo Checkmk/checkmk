@@ -7,9 +7,7 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["informix_dbspaces_default_levels"] = {"levels_perc": (80.0, 85.0)}
+from cmk.base.config import check_info
 
 
 def parse_informix_dbspaces(info):
@@ -93,6 +91,5 @@ check_info["informix_dbspaces"] = LegacyCheckDefinition(
     check_function=check_informix_dbspaces,
     service_name="Informix Tablespace %s",
     check_ruleset_name="informix_dbspaces",
-    default_levels_variable="informix_dbspaces_default_levels",
     check_default_parameters={"levels_perc": (80.0, 85.0)},
 )

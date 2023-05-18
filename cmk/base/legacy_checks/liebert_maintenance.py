@@ -10,7 +10,7 @@ import time
 
 from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.liebert import parse_liebert_without_unit_wrapper
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
 
@@ -19,10 +19,6 @@ from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.4868 5
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.4869 Calculated Next Maintenance Year
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.4869 2017
-
-factory_settings["liebert_maintenance_default_levels"] = {
-    "levels": (10, 5)  # Remaining days until next maintenance
-}
 
 
 def inventory_liebert_maintenance(parsed):
@@ -59,6 +55,5 @@ check_info["liebert_maintenance"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=["10.1.2.1.4868", "20.1.2.1.4868", "10.1.2.1.4869", "20.1.2.1.4869"],
     ),
-    default_levels_variable="liebert_maintenance_default_levels",
     check_default_parameters={"levels": (10, 5)},  # Remaining days until next maintenance
 )

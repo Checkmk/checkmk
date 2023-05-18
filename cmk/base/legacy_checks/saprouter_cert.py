@@ -30,11 +30,7 @@
 import time
 
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["saprouter_cert_default_levels"] = {
-    "validity_age": (86400 * 30, 86400 * 7),
-}
+from cmk.base.config import check_info
 
 
 def parse_saprouter_cert(info):
@@ -111,7 +107,6 @@ check_info["saprouter_cert"] = LegacyCheckDefinition(
     discovery_function=inventory_saprouter_cert,
     check_function=check_saprouter_cert,
     service_name="SAP router certificate",
-    default_levels_variable="saprouter_cert_default_levels",
     check_ruleset_name="saprouter_cert_age",
     check_default_parameters={
         "validity_age": (86400 * 30, 86400 * 7),

@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 
@@ -24,10 +24,6 @@ from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 # .1.3.6.1.4.1.1916.1.1.1.38.1.5.2.2 -3 --> EXTREME-SYSTEM-MIB::extremePowerSupplyOutputUnitMultiplier.2.2
 
 # Just assumed
-factory_settings["netextreme_psu_out_default_levels"] = {
-    "voltage": (11, 10),
-    "current": (4, 5),
-}
 
 
 def parse_netextreme_psu_out(info):
@@ -66,7 +62,6 @@ check_info["netextreme_psu_out"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "3", "4", "5"],
     ),
     check_ruleset_name="el_inphase",
-    default_levels_variable="netextreme_psu_out_default_levels",
     check_default_parameters={
         "voltage": (11, 10),
         "current": (4, 5),

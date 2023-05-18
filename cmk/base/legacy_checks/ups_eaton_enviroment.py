@@ -5,14 +5,8 @@
 
 
 from cmk.base.check_api import any_of, equals, LegacyCheckDefinition, saveint
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["ups_eaton_enviroment_default"] = {
-    "temp": (40, 50),
-    "remote_temp": (40, 50),
-    "humidity": (65, 80),
-}
 
 
 def inventory_ups_eaton_enviroment(info):
@@ -63,7 +57,6 @@ check_info["ups_eaton_enviroment"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1"),
     ),
-    default_levels_variable="ups_eaton_enviroment_default",
     discovery_function=inventory_ups_eaton_enviroment,
     check_function=check_ups_eaton_enviroment,
     service_name="Enviroment",

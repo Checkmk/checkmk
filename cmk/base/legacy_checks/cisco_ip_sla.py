@@ -7,17 +7,8 @@
 # mypy: disable-error-code="var-annotated,operator"
 
 from cmk.base.check_api import all_of, contains, exists, get_parsed_item_data, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, OIDEnd, SNMPTree
-
-factory_settings["cisco_ip_sla_default_levels"] = {
-    "state": "active",
-    "connection_lost_occured": "no",
-    "timeout_occured": "no",
-    "completion_time_over_treshold_occured": "no",
-    "latest_rtt_completion_time": (250, 500),
-    "latest_rtt_state": "ok",
-}
 
 
 def parse_cisco_ip_sla(info):
@@ -179,7 +170,6 @@ check_info["cisco_ip_sla"] = LegacyCheckDefinition(
     check_function=check_cisco_ip_sla,
     service_name="Cisco IP SLA %s",
     check_ruleset_name="cisco_ip_sla",
-    default_levels_variable="cisco_ip_sla_default_levels",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.42.1.2.2.1",

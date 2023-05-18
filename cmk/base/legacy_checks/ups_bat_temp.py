@@ -6,13 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
-
-factory_settings["ups_bat_temp_default"] = {
-    "levels": (40.0, 50.0),
-}
 
 
 def format_item_ups_bat_temp(name, new_format):
@@ -45,7 +41,6 @@ check_info["ups_bat_temp"] = LegacyCheckDefinition(
     detect=DETECT_UPS_GENERIC,
     discovery_function=inventory_ups_bat_temp,
     check_function=check_ups_bat_temp,
-    default_levels_variable="ups_bat_temp_default",
     service_name="Temperature %s",
     check_ruleset_name="temperature",
     fetch=SNMPTree(

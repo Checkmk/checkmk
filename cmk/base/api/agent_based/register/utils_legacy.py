@@ -23,6 +23,5 @@ class LegacyCheckDefinition(TypedDict):
     ]
     parse_function: NotRequired[Callable[[list], object]]
     check_ruleset_name: NotRequired[str]
-    default_levels_variable: NotRequired[str]
     check_default_parameters: NotRequired[Mapping[str, Any]]
     service_name: NotRequired[str]

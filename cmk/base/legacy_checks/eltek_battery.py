@@ -6,7 +6,7 @@
 from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.eltek import DETECT_ELTEK
 
@@ -82,9 +82,6 @@ check_info["eltek_battery"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 # suggested by customer
-factory_settings["eltek_battery_temp_default_variables"] = {
-    "levels": (27.0, 35.0),
-}
 
 
 def inventory_eltek_battery_temp(parsed):
@@ -105,7 +102,6 @@ check_info["eltek_battery.temp"] = LegacyCheckDefinition(
     check_function=check_eltek_battery_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="eltek_battery_temp_default_variables",
     check_default_parameters={
         "levels": (27.0, 35.0),
     },
@@ -122,17 +118,11 @@ check_info["eltek_battery.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 # suggested by customer
-factory_settings["eltek_battery_phase_default_variables"] = {
-    "voltage": (52, 48),
-    "current": (50, 76),
-}
-
 check_info["eltek_battery.supply"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: discover()(parsed["supply"]),
     check_function=lambda item, params, parsed: check_elphase(item, params, parsed["supply"]),
     service_name="Battery %s",
     check_ruleset_name="el_inphase",
-    default_levels_variable="eltek_battery_phase_default_variables",
     check_default_parameters={
         "voltage": (52, 48),
         "current": (50, 76),

@@ -5,13 +5,9 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
-
-factory_settings["fireeye_lic"] = {
-    "days": (120, 90),
-}
 
 
 def inventory_fireeye_lic_expiration(info):
@@ -40,7 +36,6 @@ check_info["fireeye_lic_expiration"] = LegacyCheckDefinition(
     discovery_function=inventory_fireeye_lic_expiration,
     check_function=check_fireeye_lic_expiration,
     service_name="License Expiration %s",
-    default_levels_variable="fireeye_lic",
     check_ruleset_name="fireeye_lic",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1.16.1",

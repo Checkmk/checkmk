@@ -7,7 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # example output
@@ -73,10 +73,6 @@ check_info["hp_mcs_sensors"] = LegacyCheckDefinition(
     check_ruleset_name="temperature",
 )
 
-factory_settings["hp_mcs_sensors_fan_default_levels"] = {
-    "lower": (1000, 500),
-}
-
 
 def inventory_hp_mcs_sensors_fan(parsed):
     for entry in parsed.values():
@@ -96,7 +92,6 @@ check_info["hp_mcs_sensors.fan"] = LegacyCheckDefinition(
     check_function=check_hp_mcs_sensors_fan,
     service_name="Sensor %s",
     check_ruleset_name="hw_fans",
-    default_levels_variable="hp_mcs_sensors_fan_default_levels",
     check_default_parameters={
         "lower": (1000, 500),
     },

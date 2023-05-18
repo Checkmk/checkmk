@@ -7,16 +7,13 @@
 from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<netapp_api_aggr:sep(9)>>>
 # aggregation aggr0_root_n1       size-available 940666880        size-total 1793064960
 # aggregation aggr0_root_n2       size-available 940556288        size-total 1793064960
 # aggregation aggr1_n1    size-available 2915315712       size-total 9437184000
 # aggregation aggr1_n2    size-available 2936561664       size-total 9437184000
-
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_netapp_api_aggr(parsed):
@@ -41,6 +38,5 @@ check_info["netapp_api_aggr"] = LegacyCheckDefinition(
     discovery_function=inventory_netapp_api_aggr,
     service_name="Aggregation %s",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

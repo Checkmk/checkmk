@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import all_of, contains, equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 # .1.3.6.1.4.1.14848.2.1.7.1.2.1 -0.0008 Volt --> BETTER-NETWORKS-ETHERNETBOX-MIB::ethernetboxObjects.7.1.2.1
@@ -24,9 +24,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 # .1.3.6.1.4.1.14848.2.1.9.1.2.4 248          --> BETTER-NETWORKS-ETHERNETBOX-MIB::ethernetboxObjects.9.1.2.4
 
 # suggested by customer
-factory_settings["etherbox2_temp_default_levels"] = {
-    "levels": (30.0, 35.0),
-}
 
 
 def parse_etherbox2_temp(info):
@@ -79,7 +76,6 @@ check_info["etherbox2_temp"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "2"],
         ),
     ],
-    default_levels_variable="etherbox2_temp_default_levels",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (30.0, 35.0),

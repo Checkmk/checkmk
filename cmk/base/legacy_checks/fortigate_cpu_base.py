@@ -9,11 +9,8 @@ from cmk.base.check_legacy_includes.fortigate_cpu import (
     check_fortigate_cpu,
     inventory_fortigate_cpu,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["fortigate_cpu_base_default_levels"] = {"util": (80.0, 90.0)}
-
 
 check_info["fortigate_cpu_base"] = LegacyCheckDefinition(
     detect=all_of(
@@ -29,6 +26,5 @@ check_info["fortigate_cpu_base"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.12356.101.4.1",
         oids=["3"],
     ),
-    default_levels_variable="fortigate_cpu_base_default_levels",
     check_default_parameters={"util": (80.0, 90.0)},
 )

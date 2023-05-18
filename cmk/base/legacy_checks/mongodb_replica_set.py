@@ -21,11 +21,10 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
     set_item_state,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.mongodb import parse_date
 
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
-factory_settings["mongodb_replica_set_levels"] = {"levels_mongdb_replication_lag": (10, 60, 3600)}
 
 
 def parse_mongodb_replica_set(info):
@@ -197,7 +196,6 @@ def _calculate_replication_lag(start_operation_time, secondary_operation_time):
 
 
 check_info["mongodb_replica_set"] = LegacyCheckDefinition(
-    default_levels_variable="mongodb_replica_set_levels",
     parse_function=parse_mongodb_replica_set,
     discovery_function=discover_single,
     check_function=check_mongodb_replica_set_lag,

@@ -6,11 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_SCREENOS
-
-factory_settings["juniper_screenos_temp_default_levels"] = {"levels": (70.0, 80.0)}
 
 
 def inventory_juniper_screenos_temp(info):
@@ -39,6 +37,5 @@ check_info["juniper_screenos_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.3224.21.4.1",
         oids=["4", "3"],
     ),
-    default_levels_variable="juniper_screenos_temp_default_levels",
     check_default_parameters={"levels": (70.0, 80.0)},
 )

@@ -5,11 +5,9 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition, savefloat
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_TRPZ
-
-factory_settings["juniper_trpz_cpu_util_default_levels"] = {"util": (80.0, 90.0)}
 
 
 def inventory_juniper_trpz_cpu_util(info):
@@ -59,6 +57,5 @@ check_info["juniper_trpz_cpu_util"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.14525.4.8.1.1.11",
         oids=["1", "2", "3"],
     ),
-    default_levels_variable="juniper_trpz_cpu_util_default_levels",
     check_default_parameters={"util": (80.0, 90.0)},
 )

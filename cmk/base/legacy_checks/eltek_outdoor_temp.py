@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.eltek import DETECT_ELTEK
 
@@ -56,9 +56,6 @@ from cmk.base.plugins.agent_based.utils.eltek import DETECT_ELTEK
 # .1.3.6.1.4.1.12148.9.1.17.3.1.3.13 0 --> ELTEK-DISTRIBUTED-MIB::ioUnitOutDoorTemp2.13
 
 # suggested by customer
-factory_settings["eltek_outdoor_temp_default_variables"] = {
-    "levels": (35, 40),
-}
 
 
 def inventory_eltek_outdoor_temp(info):
@@ -88,7 +85,6 @@ check_info["eltek_outdoor_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.12148.9.1.17.3.1",
         oids=["1", "2", "3"],
     ),
-    default_levels_variable="eltek_outdoor_temp_default_variables",
     check_default_parameters={
         "levels": (35, 40),
     },

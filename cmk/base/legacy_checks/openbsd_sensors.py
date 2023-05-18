@@ -10,7 +10,7 @@ from cmk.base.check_api import exists, get_parsed_item_data, LegacyCheckDefiniti
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 #   .--example output------------------------------------------------------.
@@ -212,11 +212,6 @@ check_info["openbsd_sensors"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["openbsd_sensors_fan_default_levels"] = {
-    "lower": (500, 300),
-    "upper": (8000, 8400),
-}
-
 
 @get_parsed_item_data
 def check_openbsd_sensors_fan(item, params, parsed):
@@ -227,7 +222,6 @@ check_info["openbsd_sensors.fan"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "fan"),
     check_function=check_openbsd_sensors_fan,
     service_name="Fan %s",
-    default_levels_variable="openbsd_sensors_fan_default_levels",
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (500, 300),

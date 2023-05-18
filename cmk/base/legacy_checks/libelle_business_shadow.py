@@ -8,7 +8,7 @@ import re
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 #   .--Example output from agent-------------------------------------------.
 # <<<libelle_business_shadow:sep(58)>>>
@@ -380,8 +380,6 @@ check_info["libelle_business_shadow.process"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
 
 def inventory_libelle_business_shadow_archive_dir(info):
     parsed = check_libelle_business_shadow_parse(info)
@@ -404,7 +402,6 @@ check_info["libelle_business_shadow.archive_dir"] = LegacyCheckDefinition(
     discovery_function=inventory_libelle_business_shadow_archive_dir,
     service_name="Libelle Business Shadow %s",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 

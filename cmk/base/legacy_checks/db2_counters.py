@@ -38,9 +38,7 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import get_rate, LegacyCheckDefinition, MKCounterWrapped, RAISE
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["db2_counters_default_levels"] = {}
+from cmk.base.config import check_info
 
 db2_counters_map = {
     "deadlocks": "Deadlocks",
@@ -124,6 +122,5 @@ check_info["db2_counters"] = LegacyCheckDefinition(
     check_function=check_db2_counters,
     discovery_function=inventory_db2_counters,
     check_ruleset_name="db2_counters",
-    default_levels_variable="db2_counters_default_levels",
     check_default_parameters={},
 )

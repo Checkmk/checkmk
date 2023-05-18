@@ -7,7 +7,7 @@
 from cmk.base.check_api import equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 #   .--Temperature---------------------------------------------------------.
@@ -20,10 +20,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 #   +----------------------------------------------------------------------+
 
 # ambient temperature levels for a datacenter
-factory_settings["bluenet_sensor_temp_default_levels"] = {
-    "levels": (28.0, 35.0),
-    "levels_lower": (13.0, 17.0),
-}
 
 
 def inventory_bluenet_sensor_temp(info):
@@ -55,7 +51,6 @@ check_info["bluenet_sensor"] = LegacyCheckDefinition(
     check_function=check_bluenet_sensor_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="bluenet_sensor_temp_default_levels",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21695.1.10.7.3.1",
         oids=["1", "2", "4", "5"],

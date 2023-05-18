@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.datapower import DETECT
 
@@ -15,8 +15,6 @@ from cmk.base.plugins.agent_based.utils.datapower import DETECT
 # have a '%s'.  At the moment the current empty item '' and 'Memory' without '%s'
 # works but is not consistent.  This will be fixed in the future.
 # If we change this we loose history and parameter sets have to be adapted.
-
-factory_settings["datapower_mem_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
 
 
 def inventory_datapower_mem(info):
@@ -45,6 +43,5 @@ check_info["datapower_mem"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     check_ruleset_name="memory_simple",
-    default_levels_variable="datapower_mem_default_levels",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

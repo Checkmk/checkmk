@@ -13,25 +13,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["aws_rds_limits_default_levels"] = {
-    "db_instances": (None, 80.0, 90.0),
-    "reserved_db_instances": (None, 80.0, 90.0),
-    "allocated_storage": (None, 80.0, 90.0),
-    "db_security_groups": (None, 80.0, 90.0),
-    "auths_per_db_security_groups": (None, 80.0, 90.0),
-    "db_parameter_groups": (None, 80.0, 90.0),
-    "manual_snapshots": (None, 80.0, 90.0),
-    "event_subscriptions": (None, 80.0, 90.0),
-    "db_subnet_groups": (None, 80.0, 90.0),
-    "option_groups": (None, 80.0, 90.0),
-    "subnet_per_db_subnet_groups": (None, 80.0, 90.0),
-    "read_replica_per_master": (None, 80.0, 90.0),
-    "db_clusters": (None, 80.0, 90.0),
-    "db_cluster_parameter_groups": (None, 80.0, 90.0),
-    "db_cluster_roles": (None, 80.0, 90.0),
-}
+from cmk.base.config import check_info
 
 
 def parse_aws_rds_limits(info):
@@ -64,7 +46,6 @@ check_info["aws_rds_limits"] = LegacyCheckDefinition(
     check_function=check_aws_rds_limits,
     service_name="AWS/RDS Limits %s",
     check_ruleset_name="aws_rds_limits",
-    default_levels_variable="aws_rds_limits_default_levels",
     check_default_parameters={
         "db_instances": (None, 80.0, 90.0),
         "reserved_db_instances": (None, 80.0, 90.0),

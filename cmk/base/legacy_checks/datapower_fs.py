@@ -6,11 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.datapower import DETECT
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def inventory_datapower_fs(info):
@@ -49,7 +47,6 @@ check_info["datapower_fs"] = LegacyCheckDefinition(
     check_function=check_datapower_fs,
     service_name="Filesystem %s",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.29",
         oids=["1", "2", "3", "4", "5", "6", "7", "8"],

@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.hp_msa import (
     parse_hp_msa,
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # drives 1 durable-id disk_01.01
 # drives 1 enclosure-id 1
@@ -171,10 +171,6 @@ check_info["hp_msa_disk"] = LegacyCheckDefinition(
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["hp_msa_disk_temp_default_levels"] = {
-    "levels": (40.0, 45.0),  # just an assumption
-}
-
 
 def inventory_hp_msa_disk_temp(parsed):
     return [("Disks", {})]
@@ -193,7 +189,6 @@ check_info["hp_msa_disk.temp"] = LegacyCheckDefinition(
     check_function=check_hp_msa_disk_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="hp_msa_disk_temp_default_levels",
     check_default_parameters={
         "levels": (40.0, 45.0),  # just an assumption
     },

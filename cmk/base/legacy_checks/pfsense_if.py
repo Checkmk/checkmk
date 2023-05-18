@@ -6,13 +6,8 @@
 
 from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.firewall_if import check_firewall_if
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["pfsense_if_default_levels"] = {
-    "ipv4_in_blocked": (100.0, 10000.0),
-    "average": 3,
-}
 
 
 def parse_pfsense_if(info):
@@ -31,7 +26,6 @@ check_info["pfsense_if"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
     parse_function=parse_pfsense_if,
     discovery_function=inventory_pfsense_if,
-    default_levels_variable="pfsense_if_default_levels",
     check_function=check_firewall_if,
     service_name="Firewall Interface %s",
     fetch=SNMPTree(

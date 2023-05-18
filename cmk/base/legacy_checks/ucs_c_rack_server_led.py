@@ -7,14 +7,7 @@
 from typing import Iterable
 
 from cmk.base.check_api import discover, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["ucs_c_rack_server_led_default_levels"] = {
-    "amber": 1,
-    "blue": 0,
-    "green": 0,
-    "red": 2,
-}
+from cmk.base.config import check_info
 
 
 def check_ucs_c_rack_server_led(
@@ -37,7 +30,6 @@ check_info["ucs_c_rack_server_led"] = LegacyCheckDefinition(
     check_function=check_ucs_c_rack_server_led,
     service_name="LED %s",
     check_ruleset_name="ucs_c_rack_server_led",
-    default_levels_variable="ucs_c_rack_server_led_default_levels",
     check_default_parameters={
         "amber": 1,
         "blue": 0,

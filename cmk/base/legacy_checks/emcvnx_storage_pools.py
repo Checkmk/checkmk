@@ -14,7 +14,7 @@ from cmk.base.check_api import (
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 
 def parse_emcvnx_storage_pools(info):
@@ -70,7 +70,6 @@ def inventory_emcvnx_storage_pools(parsed):
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer
-factory_settings["emcvnx_storage_pools_default_levels"] = {"percent_full": (70.0, 90.0)}
 
 
 def check_emcvnx_storage_pools(item, params, parsed):
@@ -144,7 +143,6 @@ check_info["emcvnx_storage_pools"] = LegacyCheckDefinition(
     check_function=check_emcvnx_storage_pools,
     service_name="Pool %s General",
     check_ruleset_name="emcvnx_storage_pools",
-    default_levels_variable="emcvnx_storage_pools_default_levels",
     check_default_parameters={"percent_full": (70.0, 90.0)},
 )
 
@@ -159,9 +157,6 @@ check_info["emcvnx_storage_pools"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer
-factory_settings["emcvnx_storage_pools_tiering_default_levels"] = {
-    "time_to_complete": (21 * 60 * 60 * 24, 28 * 60 * 60 * 24),
-}
 
 
 def parse_emcvnx_time_to_complete(time_to_complete):
@@ -238,7 +233,6 @@ check_info["emcvnx_storage_pools.tiering"] = LegacyCheckDefinition(
     check_function=check_emcvnx_storage_pools_tiering,
     service_name="Pool %s Tiering Status",
     check_ruleset_name="emcvnx_storage_pools_tiering",
-    default_levels_variable="emcvnx_storage_pools_tiering_default_levels",
     check_default_parameters={
         "time_to_complete": (21 * 60 * 60 * 24, 28 * 60 * 60 * 24),
     },

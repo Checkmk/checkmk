@@ -5,11 +5,7 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["qmail_stats_default_levels"] = {
-    "deferred": (10, 20),
-}
+from cmk.base.config import check_info
 
 
 def inventory_qmail_stats(info):
@@ -43,7 +39,6 @@ check_info["qmail_stats"] = LegacyCheckDefinition(
     discovery_function=inventory_qmail_stats,
     check_function=check_qmail_stats,
     service_name="Qmail Queue %s",
-    default_levels_variable="qmail_stats_default_levels",
     check_ruleset_name="mail_queue_length",
     check_default_parameters={
         "deferred": (10, 20),

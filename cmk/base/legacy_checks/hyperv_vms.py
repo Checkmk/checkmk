@@ -49,35 +49,7 @@
 
 
 from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["hyperv_vms_default_levels"] = {
-    "FastSaved": 0,
-    "FastSavedCritical": 2,
-    "FastSaving": 0,
-    "FastSavingCritical": 2,
-    "Off": 1,
-    "OffCritical": 2,
-    "Other": 3,
-    "Paused": 0,
-    "PausedCritical": 2,
-    "Pausing": 0,
-    "PausingCritical": 2,
-    "Reset": 1,
-    "ResetCritical": 2,
-    "Resuming": 0,
-    "ResumingCritical": 2,
-    "Running": 0,
-    "RunningCritical": 2,
-    "Saved": 0,
-    "SavedCritical": 2,
-    "Saving": 0,
-    "SavingCritical": 2,
-    "Starting": 0,
-    "StartingCritical": 2,
-    "Stopping": 1,
-    "StoppingCritical": 2,
-}
+from cmk.base.config import check_info
 
 
 def parse_hyperv_vms(info):
@@ -162,7 +134,6 @@ check_info["hyperv_vms"] = LegacyCheckDefinition(
     discovery_function=inventory_hyperv_vms,
     service_name="VM %s",
     check_ruleset_name="hyperv_vms",
-    default_levels_variable="hyperv_vms_default_levels",
     check_default_parameters={
         "FastSaved": 0,
         "FastSavedCritical": 2,

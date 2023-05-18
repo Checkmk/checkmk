@@ -11,7 +11,7 @@ import collections
 from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped, regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<openhardwaremonitor:sep(44)>>>
 # Index,Name,Parent,SensorType,Value
@@ -40,12 +40,6 @@ from cmk.base.config import check_info, factory_settings
 
 # since the temperature sensors could be anything (cpu, gpu, hdd, psu) we need different
 # default levels per item type
-factory_settings["openhardwaremonitor_temperature_default_levels"] = {
-    "cpu": {"levels": (60, 70)},
-    "hdd": {"levels": (40, 50)},
-    "_default": {"levels": (70, 80)},
-}
-
 OpenhardwaremonitorTraits = {
     "Clock": {"unit": " MHz", "factor": 1.0, "perf_var": "clock"},
     "Temperature": {"unit": "°C", "factor": 1.0},
@@ -206,7 +200,6 @@ check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
     check_function=check_openhardwaremonitor_temperature,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="openhardwaremonitor_temperature_default_levels",
     check_default_parameters={
         "cpu": {"levels": (60, 70)},
         "hdd": {"levels": (40, 50)},
@@ -242,11 +235,6 @@ check_info["openhardwaremonitor.power"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings["openhardwaremonitor_fan_default_levels"] = {
-    "lower": (None, None),
-    "upper": (None, None),
-}
-
 
 def check_openhardwaremonitor_fan(item, params, parsed):
     if item in parsed.get("Fan", {}):
@@ -260,7 +248,6 @@ check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_openhardwaremonitor("Fan", parsed),
     check_function=check_openhardwaremonitor_fan,
     service_name="Fan %s",
-    default_levels_variable="openhardwaremonitor_fan_default_levels",
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (None, None),
@@ -280,10 +267,6 @@ check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
 
 openhardwaremonitor_smart_readings = {
     "Level": [{"name": "Remaining Life", "key": "remaining_life", "lower_bounds": True}],
-}
-
-factory_settings["openhardwaremonitor_smart_default_levels"] = {
-    "remaining_life": (30, 10),  # wild guess
 }
 
 
@@ -329,7 +312,6 @@ check_info["openhardwaremonitor.smart"] = LegacyCheckDefinition(
     discovery_function=inventory_openhardwaremonitor_smart,
     check_function=check_openhardwaremonitor_smart,
     service_name="SMART %s Stats",
-    default_levels_variable="openhardwaremonitor_smart_default_levels",
     check_ruleset_name="openhardwaremonitor_smart",
     check_default_parameters={
         "remaining_life": (30, 10),  # wild guess

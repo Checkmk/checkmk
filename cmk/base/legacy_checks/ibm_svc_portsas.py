@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # Example agent output:
 # <<<ibm_svc_portsas:sep(58)>>>
@@ -31,10 +31,6 @@ from cmk.base.config import check_info, factory_settings
 
 # the corresponding header line
 # id:port_id:port_speed:node_id:node_name:WWPN:status:switch_WWPN:attachment:type:adapter_location:adapter_port_id
-
-factory_settings["ibm_svc_portsas_default_levels"] = {
-    "current_state": "offline",
-}
 
 
 def parse_ibm_svc_portsas(info):
@@ -98,7 +94,6 @@ check_info["ibm_svc_portsas"] = LegacyCheckDefinition(
     check_function=check_ibm_svc_portsas,
     discovery_function=inventory_ibm_svc_portsas,
     service_name="SAS %s",
-    default_levels_variable="ibm_svc_portsas_default_levels",
     check_default_parameters={
         "current_state": "offline",
     },

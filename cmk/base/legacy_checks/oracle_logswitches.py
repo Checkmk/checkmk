@@ -9,16 +9,11 @@ from cmk.base.check_legacy_includes.oracle import (
     oracle_handle_ora_errors,
     oracle_handle_ora_errors_discovery,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<oracle_logswitches>>>
 # pengt  15
 # hirni  22
-
-factory_settings["oracle_logswitches_default_levels"] = {
-    "levels": (50, 100),
-    "levels_lower": (-1, -1),
-}
 
 
 def inventory_oracle_logswitches(info):
@@ -68,7 +63,6 @@ check_info["oracle_logswitches"] = LegacyCheckDefinition(
     discovery_function=inventory_oracle_logswitches,
     service_name="ORA %s Logswitches",
     check_ruleset_name="oracle_logswitches",
-    default_levels_variable="oracle_logswitches_default_levels",
     check_default_parameters={
         "levels": (50, 100),
         "levels_lower": (-1, -1),

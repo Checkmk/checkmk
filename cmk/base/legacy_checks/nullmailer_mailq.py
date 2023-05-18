@@ -10,7 +10,7 @@ from cmk.base.check_legacy_includes.nullmailer_mailq import (
     NULLMAILER_MAILQ_DEFAULT_LEVELS,
     parse_nullmailer_mailq,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # Example agent output:
 # old format
@@ -23,9 +23,6 @@ from cmk.base.config import check_info, factory_settings
 # 8 1 failed
 
 
-factory_settings["nullmailer_mailq_default_levels"] = NULLMAILER_MAILQ_DEFAULT_LEVELS
-
-
 def inventory_nullmailer_mailq(parsed):
     if parsed:
         yield "", {}
@@ -36,7 +33,6 @@ check_info["nullmailer_mailq"] = LegacyCheckDefinition(
     check_function=check_nullmailer_mailq,
     discovery_function=inventory_nullmailer_mailq,
     service_name="Nullmailer Queue %s",
-    default_levels_variable="nullmailer_mailq_default_levels",
     check_ruleset_name="mail_queue_length",
     check_default_parameters=NULLMAILER_MAILQ_DEFAULT_LEVELS,
 )

@@ -12,14 +12,9 @@
 import time
 
 from cmk.base.check_api import get_rate, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
-
-factory_settings["netscaler_dnsrates_default_levels"] = {
-    "query": (1500.0, 2000.0),
-    "answer": (1500.0, 2000.0),
-}
 
 
 def inventory_netscaler_dnsrates(info):
@@ -59,7 +54,6 @@ check_info["netscaler_dnsrates"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.5951.4.1.1.53.1",
         oids=["1", "2"],
     ),
-    default_levels_variable="netscaler_dnsrates_default_levels",
     check_default_parameters={
         "query": (1500.0, 2000.0),
         "answer": (1500.0, 2000.0),

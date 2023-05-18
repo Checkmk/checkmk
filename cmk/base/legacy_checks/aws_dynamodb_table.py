@@ -15,12 +15,8 @@ from cmk.base.check_legacy_includes.aws import (
     aws_get_float_human_readable,
     inventory_aws_generic_single,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
-
-factory_settings["aws_dynamodb_capacity_defaults"] = {
-    "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
-}
 
 
 def parse_aws_dynamodb_table(info):
@@ -185,7 +181,6 @@ check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
     check_function=check_aws_dynamodb_read_capacity,
     service_name="AWS/DynamoDB Read Capacity",
     check_ruleset_name="aws_dynamodb_capacity",
-    default_levels_variable="aws_dynamodb_capacity_defaults",
     check_default_parameters={
         "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
     },
@@ -198,7 +193,6 @@ check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
     check_function=check_aws_dynamodb_write_capacity,
     service_name="AWS/DynamoDB Write Capacity",
     check_ruleset_name="aws_dynamodb_capacity",
-    default_levels_variable="aws_dynamodb_capacity_defaults",
     check_default_parameters={
         "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
     },

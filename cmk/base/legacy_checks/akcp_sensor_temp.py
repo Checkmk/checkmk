@@ -15,10 +15,8 @@ from cmk.base.check_legacy_includes.akcp_sensor import (
     check_akcp_sensor_temp,
     inventory_akcp_sensor_temp,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["akcp_temp_default_levels"] = AKCP_TEMP_CHECK_DEFAULT_PARAMETERS
 
 check_info["akcp_sensor_temp"] = LegacyCheckDefinition(
     detect=all_of(
@@ -27,7 +25,6 @@ check_info["akcp_sensor_temp"] = LegacyCheckDefinition(
     check_function=check_akcp_sensor_temp,
     discovery_function=inventory_akcp_sensor_temp,
     service_name="Temperature %s",
-    default_levels_variable="akcp_temp_default_levels",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.1.2.2.1.16.1",
         oids=["1", "3", "12", "4", "10", "9", "7", "8", "14", "5"],

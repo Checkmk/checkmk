@@ -11,14 +11,7 @@
 
 
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["hivemanger_devices"] = {
-    "alert_on_loss": True,
-    "max_clients": (25, 50),
-    "crit_states": ["Critical"],
-    "warn_states": ["Maybe", "Major", "Minor"],
-}
+from cmk.base.config import check_info
 
 
 def inventory_hivemanager_devices(info):
@@ -101,7 +94,6 @@ check_info["hivemanager_devices"] = LegacyCheckDefinition(
     check_function=check_hivemanager_devices,
     discovery_function=inventory_hivemanager_devices,
     service_name="Client %s",
-    default_levels_variable="hivemanger_devices",
     check_ruleset_name="hivemanager_devices",
     check_default_parameters={
         "alert_on_loss": True,

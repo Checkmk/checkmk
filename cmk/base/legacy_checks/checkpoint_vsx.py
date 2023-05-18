@@ -16,7 +16,7 @@ from cmk.base.check_api import (
     get_rate,
     LegacyCheckDefinition,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
 
@@ -162,9 +162,6 @@ check_info["checkpoint_vsx"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-factory_settings["checkpoint_vsx_default_levels"] = {
-    "levels_perc": (90.0, 95.0),
-}
 
 
 @get_parsed_item_data
@@ -202,7 +199,6 @@ check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
     discovery_function=discover(lambda k, values: "conn_num" in values),
     check_function=check_checkpoint_vsx_connections,
     service_name="VS %s Connections",
-    default_levels_variable="checkpoint_vsx_default_levels",
     check_ruleset_name="checkpoint_vsx_connections",
     check_default_parameters={
         "levels_perc": (90.0, 95.0),

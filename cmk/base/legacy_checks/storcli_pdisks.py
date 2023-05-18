@@ -5,10 +5,8 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils import megaraid
-
-factory_settings["storcli_pdisks_default_levels"] = megaraid.PDISKS_DEFAULTS
 
 
 def parse_storcli_pdisks(info):
@@ -53,7 +51,6 @@ def check_storcli_pdisks(item, params, parsed):
 
 
 check_info["storcli_pdisks"] = LegacyCheckDefinition(
-    default_levels_variable="storcli_pdisks_default_levels",
     parse_function=parse_storcli_pdisks,
     discovery_function=inventory_storcli_pdisks,
     check_function=check_storcli_pdisks,

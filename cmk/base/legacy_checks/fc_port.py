@@ -17,7 +17,7 @@ from cmk.base.check_api import (
     startswith,
 )
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, render, SNMPTree
 
 # Taken from connUnitPortState
@@ -349,7 +349,6 @@ check_info["fc_port"] = LegacyCheckDefinition(
     discovery_function=inventory_fc_port,
     service_name="FC Interface %s",
     check_ruleset_name="fc_port",
-    default_levels_variable="fc_port_default_levels",
     check_default_parameters={
         "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors
         "rxencoutframes": (3.0, 20.0),  # allowed percentage of Enc-OUT Frames
@@ -357,10 +356,3 @@ check_info["fc_port"] = LegacyCheckDefinition(
         "c3discards": (3.0, 20.0),  # allowed percentage of C3 discards
     },
 )
-
-factory_settings["fc_port_default_levels"] = {
-    "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors
-    "rxencoutframes": (3.0, 20.0),  # allowed percentage of Enc-OUT Frames
-    "notxcredits": (3.0, 20.0),  # allowed percentage of No Tx Credits
-    "c3discards": (3.0, 20.0),  # allowed percentage of C3 discards
-}

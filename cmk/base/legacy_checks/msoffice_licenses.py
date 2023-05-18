@@ -27,7 +27,7 @@ from cmk.base.check_api import (
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 
 def parse_msoffice_licenses(info):
@@ -46,11 +46,6 @@ def parse_msoffice_licenses(info):
             pass
 
     return parsed
-
-
-factory_settings["msoffice_licenses_levels"] = {
-    "usage": (80.0, 90.0),
-}
 
 
 @get_parsed_item_data
@@ -109,7 +104,6 @@ check_info["msoffice_licenses"] = LegacyCheckDefinition(
     check_function=check_msoffice_licenses,
     service_name="MS Office Licenses %s",
     check_ruleset_name="msoffice_licenses",
-    default_levels_variable="msoffice_licenses_levels",
     check_default_parameters={
         "usage": (80.0, 90.0),
     },

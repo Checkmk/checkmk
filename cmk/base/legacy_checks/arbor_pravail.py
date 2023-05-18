@@ -16,7 +16,7 @@ from cmk.base.check_legacy_includes.arbor import (
     inventory_arbor_host_fault,
     inventory_arbor_memory,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
@@ -27,11 +27,6 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 # .1.3.6.1.4.1.9694.1.6.2.7.0 49 --> PRAVAIL-MIB::devicePhysicalMemoryUsage.0
 # .1.3.6.1.4.1.9694.1.6.2.8.0 0 --> PRAVAIL-MIB::deviceSwapSpaceUsage.0
 # .1.3.6.1.4.1.9694.1.6.2.39.0 43 --> PRAVAIL-MIB::pravailOverrunDropRatePps.0
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-
-factory_settings["arbor_memory_default_levels"] = ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS
 
 
 def parse_pravail(info):
@@ -52,7 +47,6 @@ check_info["arbor_pravail"] = LegacyCheckDefinition(
     parse_function=parse_pravail,
     service_name="Memory",
     check_ruleset_name="memory_arbor",
-    default_levels_variable="arbor_memory_default_levels",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9694.1.6.2",
         oids=["6.0", "7.0", "8.0", "1.0", "39.0"],
@@ -65,7 +59,6 @@ check_info["arbor_pravail.disk_usage"] = LegacyCheckDefinition(
     discovery_function=inventory_arbor_disk_usage,
     service_name="Disk Usage %s",
     check_ruleset_name="filesystem",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 

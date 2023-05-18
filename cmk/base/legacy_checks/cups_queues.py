@@ -31,15 +31,7 @@
 import time
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["cups_queues_default_levels"] = {
-    "job_count": (5, 10),  # warn/crit for queue entries
-    "job_age": (360, 720),  # warn/crit for entry age in seconds
-    "is_idle": 0,  # state for "is idle"
-    "now_printing": 0,  # state for "now printing"
-    "disabled_since": 2,  # state for "disbaled since"
-}
+from cmk.base.config import check_info
 
 
 def parse_cups_queues(info):
@@ -129,7 +121,6 @@ check_info["cups_queues"] = LegacyCheckDefinition(
     discovery_function=inventory_cups_queues,
     check_function=check_cups_queues,
     service_name="CUPS Queue %s",
-    default_levels_variable="cups_queues_default_levels",
     check_ruleset_name="cups_queues",
     check_default_parameters={
         "job_count": (5, 10),  # warn/crit for queue entries

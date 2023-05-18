@@ -6,11 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.enterasys import DETECT_ENTERASYS
-
-factory_settings["enterasys_temp_default_levels"] = {"levels": (30.0, 35.0)}
 
 
 def inventory_enterasys_temp(info):
@@ -36,7 +34,6 @@ check_info["enterasys_temp"] = LegacyCheckDefinition(
     detect=DETECT_ENTERASYS,
     check_function=check_enterasys_temp,
     discovery_function=inventory_enterasys_temp,
-    default_levels_variable="enterasys_temp_default_levels",
     service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.52.4.1.1.8.1",

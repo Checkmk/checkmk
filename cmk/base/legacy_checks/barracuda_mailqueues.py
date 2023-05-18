@@ -11,14 +11,9 @@
 # Suggested by customer
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.barracuda import DETECT_BARRACUDA
-
-factory_settings["barracuda_mailq_default_levels"] = {
-    "deferred": (80, 100),
-    "active": (80, 100),
-}
 
 
 def inventory_barracuda_mailqueues(info):
@@ -61,7 +56,6 @@ check_info["barracuda_mailqueues"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.20632.2",
         oids=["2", "3", "4", "60"],
     ),
-    default_levels_variable="barracuda_mailq_default_levels",
     check_ruleset_name="mail_queue_length",
     check_default_parameters={
         "deferred": (80, 100),

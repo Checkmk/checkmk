@@ -6,11 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.dell import DETECT_CHASSIS
-
-factory_settings["dell_chassis_temp_default_levels"] = {"levels": (60.0, 80.0)}
 
 
 def inventory_dell_chassis_temp(info):
@@ -46,6 +44,5 @@ check_info["dell_chassis_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.674.10892.2.3.1",
         oids=["10", "11", "12"],
     ),
-    default_levels_variable="dell_chassis_temp_default_levels",
     check_default_parameters={"levels": (60.0, 80.0)},
 )

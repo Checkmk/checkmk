@@ -10,7 +10,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
     MKCounterWrapped,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils import postgres
 
 # OLD FORMAT - with idle filter
@@ -49,11 +49,6 @@ from cmk.base.plugins.agent_based.utils import postgres
 # testdb
 # [databases_end]
 # ...
-
-factory_settings["postgres_connections_default_levels"] = {
-    "levels_perc_active": (80.0, 90.0),  # Levels at 80%/90% of maximum
-    "levels_perc_idle": (80.0, 90.0),  # Levels at 80%/90% of maximum
-}
 
 
 def _transform_params(params):
@@ -137,7 +132,6 @@ check_info["postgres_connections"] = LegacyCheckDefinition(
     discovery_function=inventory_postgres_connections,
     service_name="PostgreSQL Connections %s",
     check_ruleset_name="db_connections",
-    default_levels_variable="postgres_connections_default_levels",
     check_default_parameters={
         "levels_perc_active": (80.0, 90.0),  # Levels at 80%/90% of maximum
         "levels_perc_idle": (80.0, 90.0),  # Levels at 80%/90% of maximum

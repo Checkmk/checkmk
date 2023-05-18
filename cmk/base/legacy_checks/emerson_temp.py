@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 #
@@ -18,8 +18,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 #
 # the mib is the NetSure_ESNA.mib, which we have received from directly
 # from a customer, its named "Emerson Energy Systems (EES) Power MIB"
-
-factory_settings["emerson_temp_default"] = {"levels": (40.0, 50.0)}
 
 
 def inventory_emerson_temp(info):
@@ -49,6 +47,5 @@ check_info["emerson_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.6302.2.1.2",
         oids=["7"],
     ),
-    default_levels_variable="emerson_temp_default",
     check_default_parameters={"levels": (40.0, 50.0)},
 )

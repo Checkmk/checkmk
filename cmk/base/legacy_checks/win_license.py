@@ -13,12 +13,7 @@
 
 
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, regex
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["windows_license_default_levels"] = {
-    "status": ["Licensed", "Initial grace period"],
-    "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
-}
+from cmk.base.config import check_info
 
 
 def parse_win_license(info):
@@ -92,7 +87,6 @@ check_info["win_license"] = LegacyCheckDefinition(
     discovery_function=inventory_win_license,
     check_function=check_win_license,
     check_ruleset_name="win_license",
-    default_levels_variable="windows_license_default_levels",
     check_default_parameters={
         "status": ["Licensed", "Initial grace period"],
         "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),

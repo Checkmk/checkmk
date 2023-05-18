@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 
@@ -29,10 +29,6 @@ from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 # .1.3.6.1.4.1.2021.4.101.0         --> UCD-SNMP-MIB::smemSwapErrorMsg.0
 
 # suggested by customer
-factory_settings["ucd_mem_default_levels"] = {
-    "levels": ("perc_used", (80.0, 90.0)),
-    "swap_errors": 0,
-}
 
 
 def parse_ucd_mem(info):
@@ -78,7 +74,6 @@ check_info["ucd_mem"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.2021.4",
         oids=["5", "6", "3", "4", "11", "12", "13", "14", "15", "100", "2", "101"],
     ),
-    default_levels_variable="ucd_mem_default_levels",
     check_ruleset_name="memory_simple",
     check_default_parameters={
         "levels": ("perc_used", (80.0, 90.0)),

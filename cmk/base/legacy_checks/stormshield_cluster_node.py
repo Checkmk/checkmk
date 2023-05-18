@@ -5,12 +5,8 @@
 
 
 from cmk.base.check_api import all_of, any_of, equals, exists, LegacyCheckDefinition, startswith
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["stormshield_cluster_node"] = {
-    "quality": (80, 50),
-}
 
 online_mapping = {"1": "online", "0": "offline"}
 
@@ -93,7 +89,6 @@ check_info["stormshield_cluster_node"] = LegacyCheckDefinition(
     ),
     discovery_function=inventory_stormshield_cluster_node,
     check_function=check_stormshield_cluster_node,
-    default_levels_variable="stormshield_cluster_node",
     service_name="HA Member %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.11.7.1",

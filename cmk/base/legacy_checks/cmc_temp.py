@@ -6,14 +6,10 @@
 
 from cmk.base.check_api import contains, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # [[[u'26', u'26']], [[u'45', u'15', u'45', u'15']]]
-
-factory_settings["cmc_temp_default_levels"] = {
-    "levels": (45.0, 50.0),
-}
 
 
 def inventory_cmc_temp(info):
@@ -39,7 +35,6 @@ check_info["cmc_temp"] = LegacyCheckDefinition(
     discovery_function=inventory_cmc_temp,
     check_function=check_cmc_temp,
     check_ruleset_name="temperature",
-    default_levels_variable="cmc_temp_default_levels",
     service_name="Temperature Sensor %s",
     fetch=[
         SNMPTree(

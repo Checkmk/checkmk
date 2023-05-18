@@ -7,7 +7,7 @@
 from cmk.base.check_api import any_of, check_levels, equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 
 # 508 and 604 have the same mib
@@ -99,8 +99,6 @@ def inventory_janitza_umg_inphase(parsed):
             yield item, {}
 
 
-factory_settings["janitza_umg_inphase_default_levels"] = {}
-
 check_info["janitza_umg"] = LegacyCheckDefinition(
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.8.6"),
@@ -111,7 +109,6 @@ check_info["janitza_umg"] = LegacyCheckDefinition(
     discovery_function=inventory_janitza_umg_inphase,
     check_function=check_elphase,
     service_name="Input %s",
-    default_levels_variable="janitza_umg_inphase_default_levels",
     check_ruleset_name="el_inphase",
     fetch=[
         SNMPTree(
@@ -174,14 +171,10 @@ def check_janitza_umg_freq(item, params, parsed):
     )
 
 
-factory_settings["janitza_umg_freq_default_levels"] = {"levels_lower": (0, 0)}
-
-
 check_info["janitza_umg.freq"] = LegacyCheckDefinition(
     discovery_function=inventory_janitza_umg_freq,
     check_function=check_janitza_umg_freq,
     service_name="Frequency %s",
-    default_levels_variable="janitza_umg_freq_default_levels",
     check_ruleset_name="efreq",
     check_default_parameters={"levels_lower": (0, 0)},
 )
@@ -204,14 +197,10 @@ def check_janitza_umg_temp(item, params, parsed):
     return None
 
 
-factory_settings["janitza_umg_temp_default_levels"] = {}
-
-
 check_info["janitza_umg.temp"] = LegacyCheckDefinition(
     discovery_function=inventory_janitza_umg_temp,
     check_function=check_janitza_umg_temp,
     service_name="Temperature External %s",
-    default_levels_variable="janitza_umg_temp_default_levels",
     check_ruleset_name="temperature",
     check_default_parameters={},
 )

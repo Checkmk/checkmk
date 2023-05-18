@@ -8,7 +8,7 @@
 
 from cmk.base.check_api import discover, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # .1.3.6.1.4.1.28507.38.1.3.1.2.1.2.1 TWTA 2 --> GUDEADS-EPC822X-MIB::epc822XPortName.1
@@ -18,11 +18,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 # .1.3.6.1.4.1.28507.38.1.5.1.2.1.6.1 228 --> GUDEADS-EPC822X-MIB::epc822XVoltage.1
 # .1.3.6.1.4.1.28507.38.1.5.1.2.1.7.1 4995 --> GUDEADS-EPC822X-MIB::epc822XFrequency.1
 # .1.3.6.1.4.1.28507.38.1.5.1.2.1.10.1 0 --> GUDEADS-EPC822X-MIB::epc822XPowerApparent.1
-
-factory_settings["gude_relayport_default_levels"] = {
-    "voltage": (220, 210),
-    "current": (15, 16),
-}
 
 
 def parse_gude_relayport(info):
@@ -65,7 +60,6 @@ check_info["gude_relayport"] = LegacyCheckDefinition(
             "5.5.2.1.10",
         ],
     ),
-    default_levels_variable="gude_relayport_default_levels",
     check_ruleset_name="el_inphase",
     check_default_parameters={
         "voltage": (220, 210),

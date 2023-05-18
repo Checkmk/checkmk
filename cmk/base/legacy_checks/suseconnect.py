@@ -54,14 +54,8 @@ import time
 from typing import Iterable
 
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.suseconnect import get_data, Section
-
-factory_settings["sles_license_default_levels"] = {
-    "status": "Registered",
-    "subscription_status": "ACTIVE",
-    "days_left": (14, 7),
-}
 
 
 def inventory_suseconnect(section: Section) -> Iterable[tuple[None, dict]]:
@@ -122,7 +116,6 @@ check_info["suseconnect"] = LegacyCheckDefinition(
     discovery_function=inventory_suseconnect,
     check_function=check_suseconnect,
     check_ruleset_name="sles_license",
-    default_levels_variable="sles_license_default_levels",
     check_default_parameters={
         "status": "Registered",
         "subscription_status": "ACTIVE",

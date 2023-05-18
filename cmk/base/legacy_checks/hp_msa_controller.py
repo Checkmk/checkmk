@@ -7,7 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.hp_msa import parse_hp_msa
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<hp_msa_controller>>>
 # controller-statistics 1 durable-id controller_A
@@ -47,10 +47,6 @@ from cmk.base.config import check_info, factory_settings
 #   |                           main check                                 |
 #   '----------------------------------------------------------------------'
 
-factory_settings["hp_msa_controller"] = {
-    "levels": (80.0, 90.0),
-}
-
 
 def inventory_hp_msa_controller_cpu(parsed):
     for key in parsed:
@@ -71,7 +67,6 @@ check_info["hp_msa_controller"] = LegacyCheckDefinition(
     check_function=check_hp_msa_controller_cpu,
     service_name="CPU Utilization %s",
     check_ruleset_name="cpu_utilization_multiitem",
-    default_levels_variable="hp_msa_controller",
     check_default_parameters={
         "levels": (80.0, 90.0),
     },

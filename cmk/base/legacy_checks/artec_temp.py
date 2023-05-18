@@ -6,15 +6,12 @@
 
 from cmk.base.check_api import all_of, contains, equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 # .1.3.6.1.4.1.31560.3.1.1.1.48 33 --> ARTEC-MIB::hddTemperature
 
 # suggested by customer
-factory_settings["artec_temp_default_levels"] = {
-    "levels": (36.0, 40.0),
-}
 
 
 def inventory_artec_temp(info):
@@ -39,7 +36,6 @@ check_info["artec_temp"] = LegacyCheckDefinition(
         oids=["48"],
     ),
     check_ruleset_name="temperature",
-    default_levels_variable="artec_temp_default_levels",
     check_default_parameters={
         "levels": (36.0, 40.0),
     },

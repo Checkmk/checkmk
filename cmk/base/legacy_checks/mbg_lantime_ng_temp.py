@@ -6,13 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
-
-factory_settings["mbg_lantime_ng_temp_default_levels"] = {
-    "levels": (80.0, 90.0),  # levels for system temperature
-}
 
 
 def inventory_mbg_lantime_ng_temp(info):
@@ -30,7 +26,6 @@ check_info["mbg_lantime_ng_temp"] = LegacyCheckDefinition(
     check_function=check_mbg_lantime_ng_temp,
     discovery_function=inventory_mbg_lantime_ng_temp,
     service_name="Temperature %s",
-    default_levels_variable="mbg_lantime_ng_temp_default_levels",
     check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.2",

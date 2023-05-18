@@ -7,11 +7,8 @@ from collections.abc import Iterable, Mapping
 
 from cmk.base.check_api import any_of, equals, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["sensatronics_temp_default_levels"] = {"levels": (23.0, 25.0)}
-
 
 Section = Mapping[str, float]
 
@@ -59,6 +56,5 @@ check_info["sensatronics_temp"] = LegacyCheckDefinition(
         )
         for table in _TABLES
     ],
-    default_levels_variable="sensatronics_temp_default_levels",
     check_default_parameters={"levels": (23.0, 25.0)},
 )

@@ -15,7 +15,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # Example output from agent:
 # [zmucvm99-lds]
@@ -25,9 +25,6 @@ from cmk.base.config import check_info, factory_settings
 # type    VMFS
 # uncommitted 51973812224
 # url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa
-
-
-factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
 def parse_esx_vsphere_datastores(info):
@@ -107,7 +104,6 @@ check_info["esx_vsphere_datastores"] = LegacyCheckDefinition(
     check_function=check_esx_vsphere_datastores,
     service_name="Filesystem %s",
     check_ruleset_name="esx_vsphere_datastores",
-    default_levels_variable="filesystem_default_levels",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 

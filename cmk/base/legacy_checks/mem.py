@@ -17,7 +17,7 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.mem import check_memory_dict, check_memory_element
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
@@ -30,17 +30,6 @@ from cmk.base.config import check_info, factory_settings
 #   |  Specialized memory check for Linux that takes into account          |
 #   |  all of its specific information in /proc/meminfo.                   |
 #   '----------------------------------------------------------------------'
-
-factory_settings["mem_linux_default_levels"] = {
-    "levels_virtual": ("perc_used", (80.0, 90.0)),
-    "levels_total": ("perc_used", (120.0, 150.0)),
-    "levels_shm": ("perc_used", (20.0, 30.0)),
-    "levels_pagetables": ("perc_used", (8.0, 16.0)),
-    "levels_committed": ("perc_used", (100.0, 150.0)),
-    "levels_commitlimit": ("perc_free", (20.0, 10.0)),
-    "levels_vmalloc": ("abs_free", (50 * 1024 * 1024, 30 * 1024 * 1024)),
-    "levels_hardwarecorrupted": ("abs_used", (1, 1)),
-}
 
 
 def inventory_mem_linux(section):
@@ -153,7 +142,6 @@ check_info["mem.linux"] = LegacyCheckDefinition(
     discovery_function=inventory_mem_linux,
     check_function=check_mem_linux,
     service_name="Memory",
-    default_levels_variable="mem_linux_default_levels",
     check_ruleset_name="memory_linux",
     check_default_parameters={
         "levels_virtual": ("perc_used", (80.0, 90.0)),
@@ -197,10 +185,6 @@ check_info["mem.linux"] = LegacyCheckDefinition(
 _MB = 1024**2
 
 # Special memory and page file check for Windows
-factory_settings["memory_win_default_levels"] = {
-    "memory": (80.0, 90.0),
-    "pagefile": (80.0, 90.0),
-}
 
 
 def inventory_mem_win(section):
@@ -369,7 +353,6 @@ check_info["mem.win"] = LegacyCheckDefinition(
     discovery_function=inventory_mem_win,
     service_name="Memory",
     check_ruleset_name="memory_pagefile_win",
-    default_levels_variable="memory_win_default_levels",
     check_default_parameters={
         "memory": (80.0, 90.0),
         "pagefile": (80.0, 90.0),

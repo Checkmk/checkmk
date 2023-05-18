@@ -12,14 +12,10 @@ from cmk.base.check_legacy_includes.huawei_switch import (
     Section,
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
-
-factory_settings["huawei_switch_temp_default_levels"] = {
-    "levels": (80.0, 90.0),
-}
 
 
 def parse_huawei_switch_temp(string_table: List[StringTable]) -> Section:
@@ -59,7 +55,6 @@ check_info["huawei_switch_temp"] = LegacyCheckDefinition(
         ),
     ],
     check_ruleset_name="temperature",
-    default_levels_variable="huawei_switch_temp_default_levels",
     check_default_parameters={
         "levels": (80.0, 90.0),
     },

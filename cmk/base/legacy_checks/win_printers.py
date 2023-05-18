@@ -14,13 +14,8 @@ from collections.abc import Iterable, Mapping
 from typing import Any, Final, NamedTuple
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-factory_settings["win_printer_default_levels"] = {
-    "warn_states": [8, 11],
-    "crit_states": [9, 10],
-}
 
 
 class PrinterQueue(NamedTuple):
@@ -104,7 +99,6 @@ check_info["win_printers"] = LegacyCheckDefinition(
     check_ruleset_name="windows_printer_queues",
     discovery_function=discover_win_printers,
     service_name="Printer %s",
-    default_levels_variable="win_printer_default_levels",
     check_default_parameters={
         "warn_states": [8, 11],
         "crit_states": [9, 10],

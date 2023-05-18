@@ -14,14 +14,8 @@ from cmk.base.check_legacy_includes.hwg import (
     inventory_hwg_temp,
     parse_hwg,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["hwg_humidity_defaultlevels"] = HWG_HUMIDITY_DEFAULTLEVELS
-
-
-factory_settings["hwg_temp_defaultlevels"] = HWG_TEMP_DEFAULTLEVELS
-
 
 check_info["hwg_ste2"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "STE2"),
@@ -34,7 +28,6 @@ check_info["hwg_ste2"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "7"],
     ),
     check_ruleset_name="temperature",
-    default_levels_variable="hwg_temp_defaultlevels",
     check_default_parameters=HWG_TEMP_DEFAULTLEVELS,
 )
 
@@ -44,6 +37,5 @@ check_info["hwg_ste2.humidity"] = LegacyCheckDefinition(
     discovery_function=inventory_hwg_humidity,
     service_name="Humidity %s",
     check_ruleset_name="humidity",
-    default_levels_variable="hwg_humidity_defaultlevels",
     check_default_parameters=HWG_HUMIDITY_DEFAULTLEVELS,
 )

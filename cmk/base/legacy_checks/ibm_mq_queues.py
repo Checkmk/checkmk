@@ -10,7 +10,7 @@ import dateutil.parser
 
 from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.ibm_mq import is_ibm_mq_service_vanished
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 
 # <<<ibm_mq_queues:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)
@@ -40,8 +40,6 @@ from cmk.base.config import check_info, factory_settings
 # 2 MQSC commands read.
 # No commands have a syntax error.
 # All valid MQSC commands were processed.
-
-factory_settings["ibm_mq_queues_default_levels"] = {}
 
 
 def inventory_ibm_mq_queues(parsed):
@@ -195,7 +193,6 @@ check_info["ibm_mq_queues"] = LegacyCheckDefinition(
     discovery_function=inventory_ibm_mq_queues,
     check_function=check_ibm_mq_queues,
     service_name="IBM MQ Queue %s",
-    default_levels_variable="ibm_mq_queues_default_levels",
     check_ruleset_name="ibm_mq_queues",
     check_default_parameters={},
 )

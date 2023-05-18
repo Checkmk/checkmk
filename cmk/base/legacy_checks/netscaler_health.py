@@ -7,7 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
 
@@ -51,11 +51,6 @@ check_info["netscaler_health"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-factory_settings["netscaler_health_fan_default_levels"] = {
-    "lower": (3500, 3000),
-    "upper": (None, None),
-}
-
 
 def inventory_netscaler_health_fan(info):
     for name, value in info:
@@ -74,7 +69,6 @@ check_info["netscaler_health.fan"] = LegacyCheckDefinition(
     discovery_function=inventory_netscaler_health_fan,
     check_function=check_netscaler_health_fan,
     service_name="FAN %s",
-    default_levels_variable="netscaler_health_fan_default_levels",
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (3500, 3000),
@@ -90,10 +84,6 @@ check_info["netscaler_health.fan"] = LegacyCheckDefinition(
 #   |                       \__\___|_| |_| |_| .__/                        |
 #   |                                        |_|                           |
 #   +----------------------------------------------------------------------+
-
-factory_settings["netscaler_health_temp_default_levels"] = {
-    "levels": (80.0, 90.0),
-}
 
 
 def inventory_netscaler_health_temp(info):
@@ -115,7 +105,6 @@ check_info["netscaler_health.temp"] = LegacyCheckDefinition(
     discovery_function=inventory_netscaler_health_temp,
     service_name="Temperature %s",
     check_ruleset_name="temperature",
-    default_levels_variable="netscaler_health_temp_default_levels",
     check_default_parameters={
         "levels": (80.0, 90.0),
     },

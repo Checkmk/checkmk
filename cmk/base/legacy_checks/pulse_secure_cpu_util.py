@@ -9,10 +9,8 @@ import time
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
 from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["pulse_secure_cpu_util_def_levels"] = {"util": (80.0, 90.0)}
 
 KEY_PULSE_SECURE_CPU = "cpu_util"
 
@@ -35,6 +33,5 @@ check_info["pulse_secure_cpu_util"] = LegacyCheckDefinition(
         oids=["10"],
     ),
     check_ruleset_name="cpu_utilization",
-    default_levels_variable="pulse_secure_cpu_util_def_levels",
     check_default_parameters={"util": (80.0, 90.0)},
 )

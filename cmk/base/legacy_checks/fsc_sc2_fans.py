@@ -11,10 +11,8 @@ from cmk.base.check_legacy_includes.fsc_sc2 import (
     FAN_FSC_SC2_CHECK_DEFAULT_PARAMETERS,
     inventory_fsc_sc2_fans,
 )
-from cmk.base.config import check_info, factory_settings
+from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-
-factory_settings["fan_fsc_sc2_levels"] = FAN_FSC_SC2_CHECK_DEFAULT_PARAMETERS
 
 check_info["fsc_sc2_fans"] = LegacyCheckDefinition(
     detect=DETECT_FSC_SC2,
@@ -25,7 +23,6 @@ check_info["fsc_sc2_fans"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.5.2.1",
         oids=["3", "5", "6"],
     ),
-    default_levels_variable="fan_fsc_sc2_levels",
     check_ruleset_name="hw_fans",
     check_default_parameters=FAN_FSC_SC2_CHECK_DEFAULT_PARAMETERS,
 )

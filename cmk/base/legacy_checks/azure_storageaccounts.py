@@ -14,23 +14,7 @@ from cmk.base.check_legacy_includes.azure import (
     iter_resource_attributes,
     parse_resources,
 )
-from cmk.base.config import check_info, factory_settings
-
-factory_settings["levels_azure_storageaccounts"] = {}
-# metrics description:
-# https://docs.microsoft.com/en-US/azure/monitoring-and-diagnostics/monitoring-supported-metrics#microsoftstoragestorageaccounts
-# 'ingress_levels': tuple [B]
-# 'egress_levels': tuple [B]
-# 'used_capacity_levels': tuple [B]
-# 'server_latency_levels': tuple [ms]
-# 'e2e_latency_levels': tuple [ms]
-# 'transactions_levels': tuple int
-# 'availablility_levels': tuple float
-#     The percentage of availability for the storage service or the specified API operation.
-#     Availability is calculated by taking the TotalBillableRequests value and dividing it
-#     by the number of applicable requests, including those that produced unexpected errors.
-#     All unexpected errors result in reduced availability for the storage service or the
-#     specified API operation.
+from cmk.base.config import check_info
 
 
 @get_data_or_go_stale
@@ -58,7 +42,6 @@ check_info["azure_storageaccounts"] = LegacyCheckDefinition(
     discovery_function=discover(),
     check_function=check_azure_storageaccounts,
     service_name="Storage %s account",
-    default_levels_variable="levels_azure_storageaccounts",
     check_ruleset_name="azure_storageaccounts",
     check_default_parameters={}
     # metrics description:
@@ -95,7 +78,6 @@ check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
     ),
     check_function=check_azure_storageaccounts_flow,
     service_name="Storage %s flow",
-    default_levels_variable="levels_azure_storageaccounts",
     check_ruleset_name="azure_storageaccounts",
     check_default_parameters={}
     # metrics description:
@@ -134,7 +116,6 @@ check_info["azure_storageaccounts.performance"] = LegacyCheckDefinition(
     ),
     check_function=check_azure_storageaccounts_performance,
     service_name="Storage %s performance",
-    default_levels_variable="levels_azure_storageaccounts",
     check_ruleset_name="azure_storageaccounts",
     check_default_parameters={}
     # metrics description:

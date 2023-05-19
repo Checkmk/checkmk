@@ -17,7 +17,7 @@ export interface Cell<Config = PieChartData | NtopTalkerData> {
     figure_config: Config;
 }
 
-interface NtopTalkerDataPlotDefinition {
+export interface NtopTalkerDataPlotDefinition {
     id: string;
     color: string;
     plot_type: string;
@@ -30,7 +30,7 @@ interface NtopTalkerDataPlotDefinition {
     use_tags: string[];
 }
 
-interface NtopTalkerData {
+export interface NtopTalkerData {
     id: string;
     figure_type: string;
     zoom_settings: {lock_zoom_x: boolean; lock_zoom_x_scale: boolean};
@@ -65,10 +65,10 @@ export interface Row<Config = PieChartData | NtopTalkerData> {
     cells: Cell<Config>[];
 }
 
-interface TableFigureData<Config = PieChartData | NtopTalkerData>
+export interface TableFigureData<Config = PieChartData | NtopTalkerData>
     extends cmk_figures.FigureData {
     title?: string;
-    rows?: Row<Config>[];
+    rows: Row<Config>[];
     classes?: string[];
 }
 
@@ -80,7 +80,7 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
     }
 
     getEmptyData(): TableFigureData {
-        return cmk_figures.getEmptyBasicFigureData();
+        return {data: [], plot_definitions: [], rows: []};
     }
 
     initialize(debug?: boolean) {

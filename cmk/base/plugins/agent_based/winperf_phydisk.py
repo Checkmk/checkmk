@@ -339,19 +339,17 @@ def _calc_denom_for_wait(
     metric_y: str,
     v_y: float,
 ) -> float | None:
-    rate = _get_rate(metric_y, params, v_x=params.timestamp, v_y=v_y)
-    # TODO(jh): get_rate returns Rate for new_metric_value. Fix or explain, please
-    match _get_rate(metric_x, params, v_x=params.timestamp, v_y=v_x):
-        case None:
-            return None
-        case 0.0:
-            # using 1 for the base if the counter didn't increase. This makes little to no sense
-            denom = 1.0
-        case denom_rate:
-            assert denom_rate is not None
-            denom = denom_rate
+    dx_dt = _get_rate(metric_x, params, v_x=params.timestamp, v_y=v_x)
+    dy_dt = _get_rate(metric_y, params, v_x=params.timestamp, v_y=v_y)
 
-    return None if rate is None else rate / denom
+    if dx_dt is None or dy_dt is None:
+        return None
+
+    if dx_dt == 0.0:
+        # using 1 for the base if the counter didn't increase. This makes little to no sense
+        return dy_dt
+
+    return dy_dt / dx_dt
 
 
 def _get_rate(metric: str, params: _Params, *, v_x: float, v_y: float) -> float | None:

@@ -300,7 +300,12 @@ def _compute_rate_for_metric(
             else (rate * scaling, False)
         )
 
-    return _calc_denom_for_wait(metric, disk, params, value)
+    if params.frequency is None:
+        return None, False
+    scaling = 1.0 / params.frequency
+
+    rate, raised = _calc_denom_for_wait(metric, disk, params, value)
+    return (None, raised) if rate is None else (rate * scaling, raised)
 
 
 def _is_work_metric(metric: str) -> bool:
@@ -327,8 +332,6 @@ def _scaling(metric: str) -> float | None:
 def _calc_denom_for_wait(
     metric: str, disk: diskstat.Disk, params: _Params, value: float
 ) -> _DenomType:
-    if params.frequency is None:
-        return None, False
     denom_value = disk.get(_as_denom_metric(metric))
     if denom_value is None:
         return None, False
@@ -341,10 +344,10 @@ def _calc_denom_for_wait(
             return denom_value, True
         case 0.0:
             # using 1 for the base if the counter didn't increase. This makes little to no sense
-            denom, exception_raised = 1 * params.frequency, False
+            denom, exception_raised = 1.0, False
         case denom_rate:
             assert denom_rate is not None
-            denom, exception_raised = denom_rate * params.frequency, False
+            denom, exception_raised = denom_rate, False
 
     return (None, True) if rate is None else (rate / denom, exception_raised)
 

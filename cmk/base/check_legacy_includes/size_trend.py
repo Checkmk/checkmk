@@ -155,7 +155,8 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
                 return "%0.1f days" % (hours / 24)  # fixed: true-division
             return "%d hours" % hours
 
-        hours_left = (size_mb - used_mb) / trend * range_hours
+        # CMK-13217: size_mb - used_mb < 0: the device reported nonsense
+        hours_left = max((size_mb - used_mb) / trend * range_hours, 0)
         hours_txt = format_hours(hours_left)
 
         timeleft = levels.get("trend_timeleft")

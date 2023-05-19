@@ -152,13 +152,14 @@ def size_trend(
             boundaries=(0, size_mb / range_sec * SEC_PER_H),
         )
 
-    # The start value of hours_left is negative. The pnp graph and the perfometer
-    # will interpret this as inifinite -> not growing
-    hours_left = -1
     if mb_in_range > 0:
-        hours_left = (size_mb - used_mb) / mb_in_range * range_sec / SEC_PER_H
         yield from check_levels(
-            hours_left,
+            # CMK-13217: size_mb - used_mb < 0: the device reported nonsense, resulting in a crash:
+            # ValueError("Cannot render negative timespan")
+            max(
+                (size_mb - used_mb) / mb_in_range * range_sec / SEC_PER_H,
+                0,
+            ),
             levels_lower=levels.get("trend_timeleft"),
             metric_name="trend_hoursleft" if "trend_showtimeleft" in levels else None,
             render_func=lambda x: render.timespan(x * SEC_PER_H),

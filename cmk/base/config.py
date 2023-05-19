@@ -203,6 +203,29 @@ class IgnoredServices(Container[ServiceName]):
         return self._config_cache.service_ignored(self._host_name, _item)
 
 
+def _get_host_address_config(
+    hostname: str, host_attrs: ObjectAttributes
+) -> HostAddressConfiguration:
+    def _get_indexed_addresses(
+        host_attrs: ObjectAttributes, address_family: Literal["4", "6"]
+    ) -> Iterator[tuple[str, str]]:
+        for name, address in host_attrs.items():
+            address_template = f"_ADDRESSES_{address_family}_"
+            if address_template in name:
+                index = name.removeprefix(address_template)
+                yield f"$_HOSTADDRESSES_{address_family}_{index}$", address
+
+    return HostAddressConfiguration(
+        hostname=hostname,
+        host_address=host_attrs["address"],
+        alias=host_attrs["alias"],
+        ipv4address=host_attrs.get("_ADDRESS_4"),
+        ipv6address=host_attrs.get("_ADDRESS_6"),
+        indexed_ipv4addresses=dict(_get_indexed_addresses(host_attrs, "4")),
+        indexed_ipv6addresses=dict(_get_indexed_addresses(host_attrs, "6")),
+    )
+
+
 def iter_active_check_services(
     check_name: str,
     active_info: Mapping[str, Any],
@@ -234,29 +257,6 @@ def iter_active_check_services(
     )
 
     yield description, arguments
-
-
-def _get_host_address_config(
-    hostname: str, host_attrs: ObjectAttributes
-) -> HostAddressConfiguration:
-    def _get_indexed_addresses(
-        host_attrs: ObjectAttributes, address_family: Literal["4", "6"]
-    ) -> Iterator[tuple[str, str]]:
-        for name, address in host_attrs.items():
-            address_template = f"_ADDRESSES_{address_family}_"
-            if address_template in name:
-                index = name.removeprefix(address_template)
-                yield f"$_HOSTADDRESSES_{address_family}_{index}$", address
-
-    return HostAddressConfiguration(
-        hostname=hostname,
-        host_address=host_attrs["address"],
-        alias=host_attrs["alias"],
-        ipv4address=host_attrs.get("_ADDRESS_4"),
-        ipv6address=host_attrs.get("_ADDRESS_6"),
-        indexed_ipv4addresses=dict(_get_indexed_addresses(host_attrs, "4")),
-        indexed_ipv6addresses=dict(_get_indexed_addresses(host_attrs, "6")),
-    )
 
 
 def get_active_check_descriptions(

@@ -48,8 +48,6 @@
 #   '----------------------------------------------------------------------'
 
 
-# mypy: disable-error-code="list-item"
-
 from cmk.base.check_api import all_of, any_of, contains, equals, exists, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -143,18 +141,10 @@ def check_supermicro_sensors(item, _no_params, info):
                 reading = "State %d" % int(reading)
                 unit = ""
 
-            perfdata = []
-
-            if perfvar:
-                if crit_upper is not None:
-                    perfdata = [(perfvar, reading, warn_upper, crit_upper)]
-                else:
-                    perfdata = [(perfvar, reading)]
-
             return (
                 worst_status(status_high, status_low, dev_status),
                 "%s%s" % (reading, unit),
-                perfdata,
+                [(perfvar, reading, warn_upper, crit_upper)] if perfvar else [],
             )
 
 

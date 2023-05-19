@@ -477,8 +477,7 @@ SpecialAgentInfoFunctionResult = (
 # Note: being more specific here makes no sense,
 # as it prevents us from typing the individual
 # parameters as what we actually know them to be.
-# I rather have a meaningless type here that suppressions
-# in every argument thingy.
+# I rather have a meaningless type here than suppressions in every argument thingy.
 # We're building a proper API for 2.3 anyway.
 SpecialAgentInfoFunction = Callable
 

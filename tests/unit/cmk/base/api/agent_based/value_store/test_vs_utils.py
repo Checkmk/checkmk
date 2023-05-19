@@ -5,6 +5,7 @@
 
 from ast import literal_eval
 from pathlib import Path
+from unittest.mock import Mock
 
 # pylint: disable=protected-access
 import pytest
@@ -109,7 +110,7 @@ class Test_StaticDiskSyncedMapping:
             deserializer=literal_eval,
         )
 
-    def test_mapping_features(self, mocker, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
+    def test_mapping_features(self, mocker: Mock, tmp_path: Path) -> None:
         self._mock_load(mocker)
         sdsm = self._get_sdsm(tmp_path)
         assert sdsm.get(("check_no", None, "moo")) is None
@@ -125,7 +126,7 @@ class Test_StaticDiskSyncedMapping:
         ]
         assert len(sdsm) == 2
 
-    def test_store(self, mocker, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
+    def test_store(self, mocker: Mock, tmp_path: Path) -> None:
         self._mock_load(mocker)
         self._mock_store(mocker)
 

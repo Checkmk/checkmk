@@ -7,6 +7,7 @@ import pytest
 
 import cmk.base.plugins.agent_based.local as local
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.cache_helper import CacheInfo
 
 
@@ -44,7 +45,9 @@ def test_invalid_metric_name_does_not_crash() -> None:
         ("0 name - has a backslash\\", ("0", "name", "-", "has a backslash\\")),
     ],
 )
-def test_regex_parser(check_line, expected_components) -> None:  # type: ignore[no-untyped-def]
+def test_regex_parser(
+    check_line: str, expected_components: tuple[str, str, str, str | None] | None
+) -> None:
     assert local._split_check_result(check_line) == expected_components
 
 
@@ -70,7 +73,7 @@ def test_regex_parser(check_line, expected_components) -> None:  # type: ignore[
         ),
     ],
 )
-def test_local_format_error(string_table, exception_reason) -> None:  # type: ignore[no-untyped-def]
+def test_local_format_error(string_table: StringTable, exception_reason: str) -> None:
     with pytest.raises(ValueError) as e:
         list(local.discover_local(local.parse_local(string_table)))
     assert str(e.value) == exception_reason
@@ -263,7 +266,7 @@ def test_local_format_error(string_table, exception_reason) -> None:  # type: ig
         ),
     ],
 )
-def test_parse(string_table_row, expected_parsed_data) -> None:  # type: ignore[no-untyped-def]
+def test_parse(string_table_row: list[str], expected_parsed_data: local.LocalSection) -> None:
     assert local.parse_local([string_table_row]) == expected_parsed_data
 
 
@@ -310,7 +313,7 @@ def test_fix_state() -> None:
         ),
     ],
 )
-def test_cached(age, expected) -> None:  # type: ignore[no-untyped-def]
+def test_cached(age: float, expected: float) -> None:
     local_result = local.LocalResult(
         cache_info=CacheInfo(
             age=age,

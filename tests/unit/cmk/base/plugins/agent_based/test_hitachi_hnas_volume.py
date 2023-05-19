@@ -11,6 +11,7 @@ from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import hitachi_hnas_volume
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.hitachi_hnas_volume import (
     check_hitachi_hnas_virtual_volume,
     check_hitachi_hnas_volume,
@@ -63,6 +64,7 @@ def value_store_fixture(monkeypatch):
     yield value_store_patched
 
 
+@pytest.mark.usefixtures("value_store_patch")
 @pytest.mark.parametrize(
     "item,params,section,expected",
     [
@@ -133,7 +135,12 @@ def value_store_fixture(monkeypatch):
     ],
     ids=["mounted", "unformated", "patterns", "with sizes"],
 )
-def test_check_hitachi_hnas_volume(value_store_patch, item, params, section, expected) -> None:  # type: ignore[no-untyped-def]
+def test_check_hitachi_hnas_volume(
+    item: str,
+    params: Mapping[str, object],
+    section: Section,
+    expected: CheckResult,
+) -> None:
     """Hitachi volume check function returns expected results for different volume params"""
 
     with on_time("2021-07-22 12:00", "CET"):

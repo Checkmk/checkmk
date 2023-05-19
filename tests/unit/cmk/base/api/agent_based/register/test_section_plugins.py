@@ -6,6 +6,8 @@
 # pylint: disable=protected-access
 
 
+from collections.abc import Callable
+
 import pytest
 
 from cmk.utils.type_defs import ParsedSectionName, SectionName
@@ -39,10 +41,10 @@ def parse_dummy(string_table):  # pylint: disable=unused-argument
         42,
     ],
 )
-def test_validate_parse_function_type(parse_function) -> None:  # type: ignore[no-untyped-def]
+def test_validate_parse_function_type(parse_function: object) -> None:
     with pytest.raises(TypeError):
         section_plugins._validate_parse_function(
-            parse_function,
+            parse_function,  # type:ignore[arg-type]
             expected_annotation=(str, "str"),  # irrelevant for test
         )
 
@@ -56,7 +58,7 @@ def test_validate_parse_function_type(parse_function) -> None:  # type: ignore[n
         lambda foo, string_table: None,
     ],
 )
-def test_validate_parse_function_value(parse_function) -> None:  # type: ignore[no-untyped-def]
+def test_validate_parse_function_value(parse_function: Callable[..., None]) -> None:
     with pytest.raises(ValueError):
         section_plugins._validate_parse_function(
             parse_function,
@@ -65,7 +67,7 @@ def test_validate_parse_function_value(parse_function) -> None:  # type: ignore[
 
 
 def test_validate_parse_function_annotation_string_table() -> None:
-    def _parse_function(string_table: list[StringTable]):  # type: ignore[no-untyped-def]
+    def _parse_function(string_table: list[StringTable]) -> list[StringTable]:
         return string_table
 
     with pytest.raises(TypeError):

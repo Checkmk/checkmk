@@ -3063,7 +3063,11 @@ main_queries() {
 main() {
     # See werk 13732 for more details about this main function
 
-    parent_dir=$(basename "$(dirname "$0")")
+    if [ "$0" = "./mk_oracle" ]; then
+        parent_dir=$(basename "$(pwd)")
+    else
+        parent_dir=$(basename "$(dirname "$0")")
+    fi
 
     if $MK_ORA_ON_CL || [ "$parent_dir" = plugins ]; then
         # Does not work properly (async sections) on distros

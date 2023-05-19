@@ -292,23 +292,16 @@ def _compute_rate_for_metric(
     disk: diskstat.Disk,
     params: _Params,
 ) -> tuple[float | None, bool]:
-    scaling = _scaling(metric)
-    if scaling is not None:
-        return (
-            (None, True)
-            if (rate := _get_rate(metric, params, v_x=params.timestamp, v_y=value)) is None
-            else (rate * scaling, False)
-        )
-
-    metric_x = _as_denom_metric(metric)
-    value_x = disk.get(metric_x)
-    if params.frequency is None or value_x is None:
+    scaling = _scaling(metric, params)
+    metric_key, value_x = _get_x_metric(metric, params, disk)
+    if scaling is None or value_x is None:
         return None, False
 
-    scaling = 1.0 / params.frequency
-
-    rate = _get_rate(f"{metric}_by_{metric_x}", params, v_x=value_x, v_y=value)
-    return (None, True) if rate is None else (rate * scaling, False)
+    return (
+        (None, True)
+        if (rate := _get_rate(metric_key, params, v_x=value_x, v_y=value)) is None
+        else (rate * scaling, False)
+    )
 
 
 def _is_work_metric(metric: str) -> bool:
@@ -324,12 +317,20 @@ def _as_denom_metric(metric: str) -> str:
     return metric + _METRIC_DENOM_SUFFIX
 
 
-def _scaling(metric: str) -> float | None:
+def _scaling(metric: str, params: _Params) -> float | None:
     if metric.endswith(MetricSuffix.QUEUE_LENGTH):
         return 1e-7
     if not metric.endswith(MetricSuffix.WAIT):
         return 1.0
-    return None
+    return None if params.frequency is None else 1.0 / params.frequency
+
+
+def _get_x_metric(metric: str, params: _Params, disk: diskstat.Disk) -> tuple[str, float | None]:
+    if metric.endswith(MetricSuffix.WAIT):
+        y_metric = _as_denom_metric(metric)
+        return f"{metric}_by_{y_metric}", disk.get(y_metric)
+
+    return metric, params.timestamp
 
 
 def _get_rate(metric: str, params: _Params, *, v_x: float, v_y: float) -> float | None:

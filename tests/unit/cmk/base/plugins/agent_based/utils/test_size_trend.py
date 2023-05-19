@@ -138,3 +138,32 @@ def test_size_trend_shrinking_warn(args: ArgsDict) -> None:
         ),
         Metric("trend", -4800.0, boundaries=(0.0, 2000.0)),
     ]
+
+
+def test_size_trend_negative_free_space() -> None:
+    assert list(
+        size_trend(
+            value_store={
+                "vs_key.delta": (50, 101),
+            },
+            value_store_key="vs_key",
+            resource="something",
+            levels={
+                "trend_range": 1,
+                "trend_perfdata": True,
+                "trend_timeleft": (12, 6),
+            },
+            used_mb=130,
+            size_mb=123,
+            timestamp=100,
+        )
+    ) == [
+        Metric("growth", 50112.0),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +2.04 GiB"),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +1697.56%"),
+        Metric("trend", 50112.0, boundaries=(0.0, 122.99999999999999)),
+        Result(
+            state=State.CRIT,
+            summary="Time left until something full: 0 seconds (warn/crit below 12 hours 0 minutes/6 hours 0 minutes)",
+        ),
+    ]

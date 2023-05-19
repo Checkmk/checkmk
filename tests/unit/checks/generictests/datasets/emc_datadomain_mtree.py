@@ -27,7 +27,7 @@ discovery = {
 }
 
 
-_factory_settings = {
+_defeault_params = {
     "deleted": 2,
     "read-only": 1,
     "read-write": 0,
@@ -41,22 +41,22 @@ checks = {
     "": [
         (
             "/data/col1/boost_vmware",
-            _factory_settings,
+            _defeault_params,
             [(0, "Status: read-write, Precompiled: 3.85 TiB", [("precompiled", 4234086134579)])],
         ),
         (
             "/data/col1/repl_cms_dc1",
-            _factory_settings,
+            _defeault_params,
             [(1, "Status: read-only, Precompiled: 33.3 GiB", [("precompiled", 35755602739)])],
         ),
         (
             "/data/col1/nfs_cms_dc1",
-            _factory_settings,
+            _defeault_params,
             [(2, "Status: deleted, Precompiled: 0 B", [("precompiled", 0)])],
         ),
         (
             "something",
-            _factory_settings,
+            _defeault_params,
             [(3, "Status: invalid code -1, Precompiled: 0 B", [("precompiled", 0)])],
         ),
     ]

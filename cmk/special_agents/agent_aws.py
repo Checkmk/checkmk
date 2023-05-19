@@ -2620,8 +2620,7 @@ class ELBLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self) -> int:
-        # If you change this, you might have to adjust factory_settings['levels_spillover'] in
-        # checks/aws_elb
+        # If you change this, you might have to adjust the defaults for 'levels_spillover' in checks/aws_elb
         return 300
 
     @property

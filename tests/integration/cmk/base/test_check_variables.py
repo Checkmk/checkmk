@@ -127,7 +127,7 @@ check_info["test_check_2"] = {
 
 # Test whether or not factory settings and checkgroup parameters work
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="flaky on raw edition")
-def test_check_factory_settings(request: pytest.FixtureRequest, site: Site) -> None:
+def test_check_default_parameters(request: pytest.FixtureRequest, site: Site) -> None:
     host_name = "check-variables-test-host"
 
     create_linux_test_host(request, site, host_name)

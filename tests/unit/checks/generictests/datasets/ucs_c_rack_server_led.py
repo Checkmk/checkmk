@@ -60,7 +60,7 @@ discovery = {
     ]
 }
 
-_factory_settings = {
+_default_params = {
     "amber": 1,
     "blue": 0,
     "green": 0,
@@ -71,27 +71,27 @@ checks = {
     "": [
         (
             "Rack Unit 1 1",
-            _factory_settings,
+            _default_params,
             [(0, "Color: green"), (0, "Name: LED_PSU_STATUS"), (0, "Operational state: on")],
         ),
         (
             "Rack Unit 1 2",
-            _factory_settings,
+            _default_params,
             [(0, "Color: blue"), (0, "Name: LED_PSU_STATUS"), (0, "Operational state: on")],
         ),
         (
             "Rack Unit 1 3",
-            _factory_settings,
+            _default_params,
             [(1, "Color: amber"), (0, "Name: LED_PSU_STATUS"), (0, "Operational state: on")],
         ),
         (
             "Rack Unit 1 4",
-            _factory_settings,
+            _default_params,
             [(2, "Color: red"), (0, "Name: LED_PSU_STATUS"), (0, "Operational state: on")],
         ),
         (
             "Rack Unit 1 5",
-            _factory_settings,
+            _default_params,
             [(3, "Color: orange"), (0, "Name: LED_PSU_STATUS"), (0, "Operational state: on")],
         ),
     ]

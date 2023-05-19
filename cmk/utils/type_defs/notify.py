@@ -57,12 +57,15 @@ NotificationType = Literal[
 NotificationContext = NewType("NotificationContext", dict[str, str])
 PluginNotificationContext = dict[str, str]
 
+NotificationRuleID = NewType("NotificationRuleID", str)
+
 
 class EventRule(TypedDict, total=False):
     """Event Rule
 
     used to be dict[str, Any], feel free to add stuff"""
 
+    rule_id: NotificationRuleID
     alert_handler: tuple[HandlerName, HandlerParameters]
     allow_disable: bool
     contact: str

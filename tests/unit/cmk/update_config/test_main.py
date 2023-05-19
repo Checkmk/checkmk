@@ -12,7 +12,10 @@ from pytest_mock import MockerFixture
 
 import cmk.utils.paths
 
+from cmk.gui.watolib.notifications import load_notification_rules
+
 from cmk.update_config import main, registry
+from cmk.update_config.plugins.actions.rule_notification_ids import UpdateRuleNotificationIDs
 
 
 @pytest.fixture(autouse=True)
@@ -106,3 +109,38 @@ def test_config_updater_executes_plugins(
 def test_load_plugins() -> None:
     main._load_plugins(logging.getLogger())
     assert main.update_action_registry
+
+
+def test_rule_notification_id_update(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    default_rules = [
+        {
+            "allow_disable": True,
+            "contact_all": False,
+            "contact_all_with_email": False,
+            "contact_object": True,
+            "description": "Notify all contacts of a host/service via HTML email",
+            "disabled": False,
+            "notify_plugin": ("mail", {}),
+        }
+    ]
+    monkeypatch.setattr(
+        "cmk.update_config.plugins.actions.rule_notification_ids.load_notification_rules",
+        lambda: default_rules,
+    )
+    action_registry = registry.UpdateActionRegistry()
+
+    action_registry.register(
+        UpdateRuleNotificationIDs(
+            name="Update rule notification config",
+            title="Add a rule_id to each notification rule",
+            sort_index=80,
+        )
+    )
+
+    for _, action in action_registry.items():
+        action(logging.getLogger(), {})
+
+    for rule in load_notification_rules():
+        assert "rule_id" in rule

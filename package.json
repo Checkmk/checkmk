@@ -36,6 +36,7 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.16.0",
     "@babel/preset-env": "^7.16.4",
     "@babel/preset-typescript": "^7.16.0",
+    "@types/crossfilter": "^0.0.34",
     "@types/d3": "^7.1.1",
     "@types/dc": "^4.2.1",
     "@types/jquery": "^3.5.13",

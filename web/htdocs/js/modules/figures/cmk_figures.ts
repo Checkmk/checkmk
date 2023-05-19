@@ -1,4 +1,4 @@
-import crossfilter from "crossfilter2";
+import crossfilter, {Crossfilter} from "crossfilter2";
 import * as d3 from "d3";
 import {CMKAjaxReponse} from "types";
 
@@ -285,7 +285,7 @@ export abstract class FigureBase<T extends FigureData> {
     _post_body: string;
     _dashlet_spec: any; //TODO: specify this type starting from DashletConfig
     _data: T;
-    _crossfilter: any; //TODO: add @types/crossfilter
+    _crossfilter: Crossfilter<any>;
     scheduler: Scheduler;
     figure_size!: {width: number; height: number};
     plot_size!: {width: number; height: number};
@@ -495,7 +495,7 @@ export abstract class FigureBase<T extends FigureData> {
             +(new Date().getDate() - this._fetch_start) / 1000;
     }
 
-    process_data(data: T) {
+    process_data(data: any) {
         this._data_pre_processor_hooks.forEach(pre_processor_func => {
             data = pre_processor_func(data);
         });

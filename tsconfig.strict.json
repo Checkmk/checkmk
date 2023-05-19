@@ -63,7 +63,7 @@
         "./enterprise/web/htdocs/js/modules/figures/cmk_state_summary.ts",
         "./enterprise/web/htdocs/js/modules/license_usage/license_usage_timeseries_graph.ts",
         //"./enterprise/web/htdocs/js/modules/ntop/ntop_alerts.ts",
-        //"./enterprise/web/htdocs/js/modules/ntop/ntop_flows.ts",
+        "./enterprise/web/htdocs/js/modules/ntop/ntop_flows.ts",
         //"./enterprise/web/htdocs/js/modules/ntop/ntop_host_details.ts",
         "./enterprise/web/htdocs/js/modules/ntop/ntop_top_talkers.ts",
         "./enterprise/web/htdocs/js/modules/ntop/ntop_utils.ts"

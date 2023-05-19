@@ -296,7 +296,7 @@ def _compute_rate_for_metric(
     if scaling is not None:
         return (
             (None, True)
-            if (rate := _get_rate(metric, params, value)) is None
+            if (rate := _get_rate(metric, params, v_x=params.timestamp, v_y=value)) is None
             else (rate * scaling, False)
         )
 
@@ -333,9 +333,9 @@ def _calc_denom_for_wait(
     if denom_value is None:
         return None, False
 
-    rate = _get_rate(metric, params, value)
+    rate = _get_rate(metric, params, v_x=params.timestamp, v_y=value)
     # TODO(jh): get_rate returns Rate for new_metric_value. Fix or explain, please
-    match _get_rate(_as_denom_metric(metric), params, denom_value):
+    match _get_rate(_as_denom_metric(metric), params, v_x=params.timestamp, v_y=denom_value):
         case None:
             # using the value if the rate can not be computed. Why?
             return denom_value, True
@@ -349,13 +349,13 @@ def _calc_denom_for_wait(
     return (None, True) if rate is None else (rate / denom, exception_raised)
 
 
-def _get_rate(metric: str, params: _Params, value: float) -> float | None:
+def _get_rate(metric: str, params: _Params, *, v_x: float, v_y: float) -> float | None:
     try:
         return get_rate(
             params.value_store,
             metric + params.value_store_suffix,
-            params.timestamp,
-            value,
+            v_x,
+            v_y,
             raise_overflow=True,
         )
     except GetRateError:

@@ -17,16 +17,14 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.checkers import (
-    DiscoveryPlugin,
-    FetcherFunction,
-    HostKey,
-    HostLabelDiscoveryPlugin,
-    ParserFunction,
-    SectionPlugin,
-)
+from cmk.checkers import DiscoveryPlugin, FetcherFunction, HostKey, ParserFunction, SectionPlugin
 from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import AutochecksStore, QualifiedDiscovery
+from cmk.checkers.discovery import (
+    AutochecksStore,
+    discover_host_labels,
+    HostLabelDiscoveryPlugin,
+    QualifiedDiscovery,
+)
 from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,
@@ -39,7 +37,6 @@ import cmk.base.core
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
-from ._host_labels import discover_host_labels
 
 __all__ = ["commandline_discovery"]
 

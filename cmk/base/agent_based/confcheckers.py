@@ -36,7 +36,6 @@ from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 from cmk.checkers import (
     CheckPlugin,
     DiscoveryPlugin,
-    HostLabelDiscoveryPlugin,
     parse_raw_data,
     SectionPlugin,
     Source,
@@ -44,6 +43,7 @@ from cmk.checkers import (
 )
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers.discovery import HostLabelDiscoveryPlugin
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkers.summarize import summarize

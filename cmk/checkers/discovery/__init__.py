@@ -4,12 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._autochecks import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
+from ._host_labels import (
+    analyse_cluster_labels,
+    discover_host_labels,
+    HostLabel,
+    HostLabelDiscoveryPlugin,
+)
 from ._utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = [
+    "analyse_cluster_labels",
     "AutocheckServiceWithNodes",
     "AutocheckEntry",
     "AutochecksStore",
+    "discover_host_labels",
     "DiscoveryMode",
+    "HostLabel",
+    "HostLabelDiscoveryPlugin",
     "QualifiedDiscovery",
 ]

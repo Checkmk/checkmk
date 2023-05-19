@@ -36,9 +36,11 @@ from cmk.checkers.check_table import ServiceID
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.discovery import (
+    analyse_cluster_labels,
     AutocheckEntry,
     AutocheckServiceWithNodes,
     AutochecksStore,
+    discover_host_labels,
     DiscoveryMode,
     QualifiedDiscovery,
 )
@@ -63,7 +65,6 @@ from cmk.base.agent_based.confcheckers import (
 )
 from cmk.base.agent_based.discovery import _discovered_services
 from cmk.base.agent_based.discovery._discovery import _check_host_labels, _check_service_lists
-from cmk.base.agent_based.discovery._host_labels import analyse_cluster_labels, discover_host_labels
 from cmk.base.agent_based.discovery.autodiscovery import (
     _get_cluster_services,
     _get_node_services,

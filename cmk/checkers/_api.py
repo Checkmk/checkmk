@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Generic, NamedTuple, Protocol, Self
+from typing import Generic, Protocol
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import (
@@ -34,12 +34,10 @@ from .sectionparser import SectionPlugin
 from .type_defs import AgentRawDataSection, SectionNameCollection
 
 __all__ = [
-    "HostLabel",
     "parse_raw_data",
     "ParserFunction",
     "CheckPlugin",
     "DiscoveryPlugin",
-    "HostLabelDiscoveryPlugin",
     "SectionPlugin",
     "Source",
     "SummarizerFunction",
@@ -98,34 +96,6 @@ class SummarizerFunction(Protocol):
         ...
 
 
-class _KV(NamedTuple):
-    name: str
-    value: str
-
-
-class HostLabel(_KV):
-    """Representing a host label in Checkmk
-
-    This class creates a host label that can be yielded by a host_label_function as regisitered
-    with the section.
-
-        >>> my_label = HostLabel("my_key", "my_value")
-
-    """
-
-    __slots__ = ()
-
-    def __new__(cls, name: str, value: str) -> Self:
-        if not isinstance(name, str):
-            raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
-        if not isinstance(value, str):
-            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
-        return super().__new__(cls, name, value)
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.name!r}, {self.value!r})"
-
-
 class PService(Protocol):
     def as_autocheck_entry(self, name: CheckPluginName) -> AutocheckEntry:
         ...
@@ -148,12 +118,6 @@ class DiscoveryPlugin:
     # This doesn't feel right.
     service_name: str
     function: Callable[..., Iterable[PService]]
-    parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]
-
-
-@dataclass(frozen=True)
-class HostLabelDiscoveryPlugin:
-    function: Callable[..., Iterator[HostLabel]]
     parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]
 
 

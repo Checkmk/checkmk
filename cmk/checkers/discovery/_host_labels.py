@@ -2,42 +2,83 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 """Discovery of HostLabels."""
-from collections.abc import Iterable, Mapping, Sequence
-from typing import TypeVar
+
+from __future__ import annotations
+
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
+from typing import NamedTuple, Self, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
-from cmk.utils.labels import HostLabel
+from cmk.utils.labels import HostLabel as _HostLabel
 from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import merge_cluster_labels
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.checkers import HostKey, HostLabelDiscoveryPlugin, SourceType
-from cmk.checkers.discovery import QualifiedDiscovery
+from cmk.checkers._typedefs import HostKey, Parameters, SourceType
+from cmk.checkers.discovery._utils import QualifiedDiscovery
 from cmk.checkers.sectionparser import Provider, ResolvedResult
 
 __all__ = [
     "analyse_cluster_labels",
     "discover_host_labels",
+    "HostLabel",
+    "HostLabelDiscoveryPlugin",
 ]
+
+
+class _KV(NamedTuple):
+    name: str
+    value: str
+
+
+class HostLabel(_KV):
+    """Representing a host label in Checkmk
+
+    This class creates a host label that can be yielded by a host_label_function as regisitered
+    with the section.
+
+        >>> my_label = HostLabel("my_key", "my_value")
+
+    """
+
+    __slots__ = ()
+
+    def __new__(cls, name: str, value: str) -> Self:
+        if not isinstance(name, str):
+            raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
+        if not isinstance(value, str):
+            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
+        return super().__new__(cls, name, value)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.name!r}, {self.value!r})"
+
+
+@dataclass(frozen=True)
+class HostLabelDiscoveryPlugin:
+    function: Callable[..., Iterator[HostLabel]]
+    parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]
 
 
 def analyse_cluster_labels(
     cluster_name: HostName,
     node_names: Sequence[HostName],
     *,
-    discovered_host_labels: Mapping[HostName, Sequence[HostLabel]],
-    existing_host_labels: Mapping[HostName, Sequence[HostLabel]],
-) -> tuple[QualifiedDiscovery[HostLabel], Mapping[HostName, Sequence[HostLabel]]]:
+    discovered_host_labels: Mapping[HostName, Sequence[_HostLabel]],
+    existing_host_labels: Mapping[HostName, Sequence[_HostLabel]],
+) -> tuple[QualifiedDiscovery[_HostLabel], Mapping[HostName, Sequence[_HostLabel]]]:
     kept_labels = {
-        node_name: QualifiedDiscovery[HostLabel](
+        node_name: QualifiedDiscovery[_HostLabel](
             preexisting=existing_host_labels.get(node_name, ()),
             current=discovered_host_labels.get(node_name, ()),
         ).kept()
         for node_name in node_names
     }
 
-    cluster_labels = QualifiedDiscovery[HostLabel](
+    cluster_labels = QualifiedDiscovery[_HostLabel](
         preexisting=merge_cluster_labels(
             nodes_labels for node in node_names if (nodes_labels := existing_host_labels.get(node))
         ),
@@ -56,7 +97,7 @@ def discover_host_labels(
     *,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
-) -> Sequence[HostLabel]:
+) -> Sequence[_HostLabel]:
     # make names unique
     labels_by_name = {
         **_discover_host_labels_for_source_type(
@@ -102,7 +143,7 @@ def _discover_host_labels_for_source_type(
     host_key: HostKey,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
-) -> Mapping[str, HostLabel]:
+) -> Mapping[str, _HostLabel]:
     host_labels = {}
     try:
         parsed_results = _all_parsing_results(host_key, providers)
@@ -124,7 +165,7 @@ def _discover_host_labels_for_source_type(
             try:
                 for label in host_label_plugin.function(**kwargs):
                     console.vverbose(f"  {label.name}: {label.value} ({section_name})\n")
-                    host_labels[label.name] = HostLabel(label.name, label.value, section_name)
+                    host_labels[label.name] = _HostLabel(label.name, label.value, section_name)
             except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception as exc:

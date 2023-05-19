@@ -29,7 +29,6 @@ from cmk.checkers import (
     DiscoveryPlugin,
     FetcherFunction,
     HostKey,
-    HostLabelDiscoveryPlugin,
     ParserFunction,
     SectionPlugin,
     SummarizerFunction,
@@ -39,7 +38,9 @@ from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import (
     AutocheckEntry,
     AutocheckServiceWithNodes,
+    discover_host_labels,
     DiscoveryMode,
+    HostLabelDiscoveryPlugin,
     QualifiedDiscovery,
 )
 from cmk.checkers.sectionparser import (
@@ -54,7 +55,6 @@ from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import discover_host_labels
 
 __all__ = ["get_host_services"]
 

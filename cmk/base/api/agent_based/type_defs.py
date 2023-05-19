@@ -18,7 +18,7 @@ from cmk.utils.type_defs import (
     SNMPDetectBaseType,
 )
 
-from cmk.checkers import HostLabel
+from cmk.checkers.discovery import HostLabel
 
 
 class OIDSpecTuple(NamedTuple):

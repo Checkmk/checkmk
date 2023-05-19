@@ -427,7 +427,7 @@ class Site:
             raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.returncode))
         return stdout
 
-    def delete_file(self, rel_path: str, missing_ok: bool = False) -> None:
+    def delete_file(self, rel_path: str) -> None:
         p = self.execute(["rm", "-f", self.path(rel_path)])
         if p.wait() != 0:
             raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
@@ -1172,7 +1172,6 @@ class SiteFactory:
         self,
         version: CMKVersion,
         update_from_git: bool = False,
-        install_test_python_modules: bool = True,
         prefix: str | None = None,
         update: bool = False,
         update_conflict_mode: str = "install",

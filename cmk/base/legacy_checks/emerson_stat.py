@@ -32,9 +32,7 @@
 # from a customer, it is named "Emerson Energy Systems (EES) Power MIB"
 
 
-# mypy: disable-error-code="operator"
-
-from cmk.base.check_api import LegacyCheckDefinition, saveint, startswith
+from cmk.base.check_api import LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
@@ -61,8 +59,8 @@ def check_emerson_stat(item, params, info):
             9: "testing",
             10: "disabled",
         }
-        status = saveint(info[0][0])
-        infotext = "Status: " + status_text.get(status)
+        status = int(info[0][0])
+        infotext = "Status: " + status_text[status]
 
         state = 0
         if status in [5, 6, 10]:

@@ -4,23 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,operator"
-
 import re
+from collections.abc import Callable, Mapping
 
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
 from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-sap_hana_connect_state_map = {
-    "Worker: OK": {"cmk_state": 0, "fun": lambda inp: inp == "0"},
-    "Standby: OK": {"cmk_state": 0, "fun": lambda inp: inp == "1"},
-    "No connect": {"cmk_state": 2, "fun": lambda inp: inp not in ("0", "1")},
+_SAP_HANA_CONNECT_STATE_MAP: Mapping[str, tuple[int, Callable[[str], bool]]] = {
+    "Worker: OK": (0, lambda inp: inp == "0"),
+    "Standby: OK": (0, lambda inp: inp == "1"),
+    "No connect": (2, lambda inp: inp not in ("0", "1")),
 }
 
 
 def parse_sap_hana_connect(info):
-    parsed = {}
+    parsed: dict[str, dict] = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
         inst = parsed.setdefault(
             sid_instance,
@@ -35,9 +34,9 @@ def parse_sap_hana_connect(info):
         for elem in lines[0]:
             if "retcode" in elem:
                 retcode = elem.split(":")[1].lstrip()
-                for k, v in sap_hana_connect_state_map.items():
-                    if v["fun"](retcode):
-                        inst["cmk_state"] = v["cmk_state"]
+                for k, (state, evaluator) in _SAP_HANA_CONNECT_STATE_MAP.items():
+                    if evaluator(retcode):
+                        inst["cmk_state"] = state
                         inst["message"] = k
             if "Driver version" in elem:
                 inst["driver_version"] = elem.split("Driver version")[1].lstrip()

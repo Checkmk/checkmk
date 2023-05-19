@@ -19,8 +19,6 @@
 # SNMPv2-SMI::enterprises.789.1.2.3.8.0 = INTEGER: 4
 
 
-# mypy: disable-error-code="operator"
-
 from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, startswith
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -72,7 +70,7 @@ def check_netapp_cluster(item, _no_params, info):
 
     # if the partner name has changed, we'd like to issue a warning
     if cfPartnerName != item:
-        return (1, "Partner Name %s instead of %s") % (cfPartnerName, item)
+        return 1, f"Partner Name {cfPartnerName} instead of {item}"
 
     # OK - Cluster enabled, Cluster can takeover and the partner is OK and the
     # infiniband interconnect is working.

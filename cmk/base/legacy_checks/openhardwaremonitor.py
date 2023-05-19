@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,operator"
-
 import collections
+from collections.abc import Mapping
+from typing import NotRequired, TypedDict
 
 from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped, regex
 from cmk.base.check_legacy_includes.fan import check_fan
@@ -38,9 +38,16 @@ from cmk.base.config import check_info
 # Index,Name,Parent,SensorType,Value,WMIStatus
 # 1,CPU Core #1,/intelcpu/0,Load,1.562500,OK/Timeout
 
+
+class _Trait(TypedDict):
+    unit: str
+    factor: float
+    perf_var: NotRequired[str]
+
+
 # since the temperature sensors could be anything (cpu, gpu, hdd, psu) we need different
 # default levels per item type
-OpenhardwaremonitorTraits = {
+OpenhardwaremonitorTraits: Mapping[str, _Trait] = {
     "Clock": {"unit": " MHz", "factor": 1.0, "perf_var": "clock"},
     "Temperature": {"unit": "°C", "factor": 1.0},
     "Power": {"unit": " W", "factor": 1.0, "perf_var": "w"},
@@ -60,7 +67,7 @@ OpenhardwaremonitorSensor = collections.namedtuple(  # pylint: disable=collectio
 
 
 def parse_openhardwaremonitor(info):
-    parsed = {}
+    parsed: dict[str, dict[str, OpenhardwaremonitorSensor]] = {}
     for line in info:
         if line[0] == "Index":
             # header line
@@ -76,7 +83,7 @@ def parse_openhardwaremonitor(info):
             continue
 
         full_name = _create_openhardwaremonitor_full_name(parent, name)
-        traits = OpenhardwaremonitorTraits.get(sensor_type, {})
+        traits = OpenhardwaremonitorTraits.get(sensor_type, _Trait(unit="", factor=1.1))
         parsed.setdefault(sensor_type, {}).setdefault(
             full_name,
             OpenhardwaremonitorSensor(

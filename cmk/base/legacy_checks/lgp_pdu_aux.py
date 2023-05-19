@@ -34,8 +34,7 @@
 #    120, # LIEBERT-GP-PDU-MIB::lgpPduAuxMeasDrClosureState
 #    125, # LIEBERT-GP-PDU-MIB::lgpPduAuxMeasDrClosureConfig
 
-
-# mypy: disable-error-code="operator"
+from collections.abc import Callable, Mapping
 
 from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint
 from cmk.base.config import check_info
@@ -56,24 +55,24 @@ lgp_pdu_aux_states = [
     "closed",
 ]
 
-_lgp_pdu_aux_fields = {
+_lgp_pdu_aux_fields: Mapping[str, tuple[Callable[[str], str | float | int], str]] = {
     # Index, Type, Factor, ID
-    "10": (str, None, "Type"),
-    "15": (str, None, "SystemLabel"),
-    "20": (str, None, "UserLabel"),
-    "35": (str, None, "SerialNumber"),
-    "70": (savefloat, 0.1, "Temp"),
-    "75": (savefloat, 0.1, "TempLowCrit"),
-    "80": (savefloat, 0.1, "TempHighCrit"),
-    "85": (savefloat, 0.1, "TempLowWarn"),
-    "90": (savefloat, 0.1, "TempHighWarn"),
-    "95": (savefloat, 0.1, "Hum"),
-    "100": (savefloat, 0.1, "HumLowCrit"),
-    "105": (savefloat, 0.1, "HumHighCrit"),
-    "110": (savefloat, 0.1, "HumLowWarn"),
-    "115": (savefloat, 0.1, "HumHighWarn"),
-    "120": (saveint, None, "DoorState"),
-    "125": (saveint, None, "DoorConfig"),
+    "10": (lambda x: lgp_pdu_aux_types.get(x, "UNHANDLED"), "Type"),
+    "15": (str, "SystemLabel"),
+    "20": (str, "UserLabel"),
+    "35": (str, "SerialNumber"),
+    "70": (lambda x: savefloat(x) * 0.1, "Temp"),
+    "75": (lambda x: savefloat(x) * 0.1, "TempLowCrit"),
+    "80": (lambda x: savefloat(x) * 0.1, "TempHighCrit"),
+    "85": (lambda x: savefloat(x) * 0.1, "TempLowWarn"),
+    "90": (lambda x: savefloat(x) * 0.1, "TempHighWarn"),
+    "95": (lambda x: savefloat(x) * 0.1, "Hum"),
+    "100": (lambda x: savefloat(x) * 0.1, "HumLowCrit"),
+    "105": (lambda x: savefloat(x) * 0.1, "HumHighCrit"),
+    "110": (lambda x: savefloat(x) * 0.1, "HumLowWarn"),
+    "115": (lambda x: savefloat(x) * 0.1, "HumHighWarn"),
+    "120": (saveint, "DoorState"),
+    "125": (saveint, "DoorConfig"),
 }
 
 
@@ -83,19 +82,14 @@ def lgp_pdu_aux_fmt(info):
         type_, id_ = oid.split(".", 1)
         if not id_ in new_info:
             new_info[id_] = {"TypeIndex": id_.split(".")[-1]}
-        # Skip not handled rows
-        if type_ in _lgp_pdu_aux_fields:
-            ty, factor, key = _lgp_pdu_aux_fields[type_]
 
-            if key == "Type":
-                value = lgp_pdu_aux_types.get(value, "UNHANDLED")
-            else:
-                if factor:
-                    value = ty(value) * factor
-                else:
-                    value = ty(value)
+        try:
+            converter, key = _lgp_pdu_aux_fields[type_]
+        except KeyError:
+            continue
 
-            new_info[id_][key] = value
+        new_info[id_][key] = converter(value)
+
     return new_info
 
 

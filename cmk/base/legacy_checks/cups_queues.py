@@ -26,16 +26,25 @@
 # Default thresholds
 
 
-# mypy: disable-error-code="attr-defined,operator"
-
 import time
+from collections.abc import Mapping
+from typing import TypedDict
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_cups_queues(info):
-    parsed = {}
+class _Data(TypedDict):
+    status_readable: str
+    output: str
+    jobs: list[float]
+
+
+Section = Mapping[str, _Data]
+
+
+def parse_cups_queues(info: list[list[str]]) -> Section:
+    parsed: dict[str, _Data] = {}
 
     for num, line in enumerate(info):
         if line[0] == "printer":

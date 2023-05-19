@@ -24,9 +24,8 @@
 # Boston, MA 02110-1301 USA.
 
 
-# mypy: disable-error-code="var-annotated,arg-type,operator"
-
 import json
+from collections.abc import Callable, Sequence
 
 from cmk.base.check_api import (
     check_levels,
@@ -57,9 +56,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 # 1556846120, "io_file_handle_open_attempt_count": 11, "node_links":
 # []}
 
+_ItemData = dict
+
 
 def parse_rabbitmq_nodes(info):
-    parsed = {}
+    parsed: dict[str, _ItemData] = {}
 
     for nodes in info:
         for node_json in nodes:
@@ -306,18 +307,21 @@ check_info["rabbitmq_nodes.mem"] = LegacyCheckDefinition(
 _UNITS_NODES_GC = {"gc_num_rate": "1/s"}
 
 
+_METRIC_SPECS: Sequence[tuple[str, str, Callable, str]] = [
+    ("gc_num", "GC runs", int, "gc_runs"),
+    ("gc_num_rate", "Rate", float, "gc_runs_rate"),
+    ("gc_bytes_reclaimed", "Bytes reclaimed by GC", get_bytes_human_readable, "gc_bytes"),
+    ("gc_bytes_reclaimed_rate", "Rate", render.iobandwidth, "gc_bytes_rate"),
+    ("run_queue", "Runtime run queue", int, "runtime_run_queue"),
+]
+
+
 def check_rabbitmq_nodes_gc(item, params, parsed):
     gc_data = parsed.get(item, {}).get("gc")
     if not gc_data:
         return
 
-    for key, infotext, hr_func, perf_key in [
-        ("gc_num", "GC runs", int, "gc_runs"),
-        ("gc_num_rate", "Rate", float, "gc_runs_rate"),
-        ("gc_bytes_reclaimed", "Bytes reclaimed by GC", get_bytes_human_readable, "gc_bytes"),
-        ("gc_bytes_reclaimed_rate", "Rate", render.iobandwidth, "gc_bytes_rate"),
-        ("run_queue", "Runtime run queue", int, "runtime_run_queue"),
-    ]:
+    for key, infotext, hr_func, perf_key in _METRIC_SPECS:
         value = gc_data.get(key)
         if value is None:
             continue
@@ -364,7 +368,7 @@ def _handle_output(params, value, total, info_text, perf_key):
 
     perc_value = 100.0 * value / total
 
-    if isinstance(warn, float):
+    if isinstance(warn, float) and isinstance(crit, float):
         value_check = perc_value
         warn_abs: int | None = int((warn / 100.0) * total)
         crit_abs: int | None = int((crit / 100.0) * total)

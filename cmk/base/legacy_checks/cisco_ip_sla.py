@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated,operator"
+from collections.abc import Callable, Sequence
 
 from cmk.base.check_api import all_of, contains, exists, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -70,7 +70,7 @@ def parse_cisco_ip_sla(info):
         return ""
 
     # contains description, parse function, unit and type
-    contents = [
+    contents: Sequence[tuple[tuple[str, Callable | None, str, str | None], ...]] = [
         (  # rttMonEchoAdminEntry
             ("Target address", to_ip_address, "", None),
             ("Source address", to_ip_address, "", None),
@@ -100,7 +100,7 @@ def parse_cisco_ip_sla(info):
         ),
     ]
 
-    parsed = {}
+    parsed: dict[str, list] = {}
     for content, entries in zip(contents, info):
         if not entries:
             continue

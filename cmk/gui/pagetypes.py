@@ -1563,10 +1563,6 @@ _save_pagetype_icons: Dict[str, Icon] = {
         "emblem": "time",
     },
     "graph_collection": "save_graph",
-    "graph_tuning": {
-        "icon": "save_graph",
-        "emblem": "settings",
-    },
     "view": "save_view",
 }
 

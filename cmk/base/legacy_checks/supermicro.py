@@ -54,39 +54,31 @@ from cmk.base.check_api import all_of, any_of, contains, equals, exists, LegacyC
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+DETECT_SUPERMICRO = any_of(
+    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
+    all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.10876.2.1.1.1.1.2.1")),
+)
+
 
 def inventory_supermicro_health(info):
-    if info[1]:
+    if info:
         return [(None, None)]
     return []
 
 
 def check_supermicro_health(_no_item, _no_params, info):
-    return int(info[1][0][0]), info[1][0][1]
+    return int(info[0][0]), info[0][1]
 
 
 check_info["supermicro"] = LegacyCheckDefinition(
-    detect=any_of(
-        equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
-        all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.10876.2.1.1.1.1.2.1")),
-    ),
+    detect=DETECT_SUPERMICRO,
     check_function=check_supermicro_health,
     discovery_function=inventory_supermicro_health,
     service_name="Overall Hardware Health",
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.10876.2.1.1.1.1",
-            oids=["2", "3", "4", "5", "6", "11", "12"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.10876.2",
-            oids=["2", "3"],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.10876.100.1.4.1",
-            oids=["1", "2", "4"],
-        ),
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.10876.2",
+        oids=["2", "3"],
+    ),
 )
 
 # .
@@ -101,7 +93,7 @@ check_info["supermicro"] = LegacyCheckDefinition(
 
 
 def inventory_supermicro_sensors(info):
-    for name, _sensor_type, _reading, _high, _low, _unit, _status in info[0]:
+    for name, _sensor_type, _reading, _high, _low, _unit, _status in info:
         yield name, None
 
 
@@ -118,7 +110,7 @@ def check_supermicro_sensors(item, _no_params, info):
             abs(x[0] - x[1][0]) for x in enumerate(sorted(enumerate(args), key=lambda x: x[1]))
         )
 
-    for name, sensor_type, reading, high, low, unit, dev_status in info[0]:
+    for name, sensor_type, reading, high, low, unit, dev_status in info:
         if name == item:
             reading = float(reading)
             dev_status = int(dev_status)
@@ -166,7 +158,12 @@ def check_supermicro_sensors(item, _no_params, info):
             )
 
 
-check_info["supermicro.sensors"] = LegacyCheckDefinition(
+check_info["supermicro_sensors"] = LegacyCheckDefinition(
+    detect=DETECT_SUPERMICRO,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.10876.2.1.1.1.1",
+        oids=["2", "3", "4", "5", "6", "11", "12"],
+    ),
     check_function=check_supermicro_sensors,
     discovery_function=inventory_supermicro_sensors,
     service_name="Sensor %s",
@@ -188,7 +185,7 @@ def format_item_supermicro_smart(name):
 
 
 def inventory_supermicro_smart(info):
-    for _serial, name, _status in info[2]:
+    for _serial, name, _status in info:
         yield format_item_supermicro_smart(name), None
 
 
@@ -198,13 +195,18 @@ def check_supermicro_smart(item, _no_params, info):
     # It's likely - but not verified - that status 1 would indicate a non-
     # critical problem if it's used at all)
     status_map = {"0": "Healthy", "1": "Warning", "2": "Critical", "3": "Unknown"}
-    for serial, name, status in info[2]:
+    for serial, name, status in info:
         if format_item_supermicro_smart(name) == item:
             return int(status), "(S/N %s) %s" % (serial, status_map[status])
     return None
 
 
-check_info["supermicro.smart"] = LegacyCheckDefinition(
+check_info["supermicro_smart"] = LegacyCheckDefinition(
+    detect=DETECT_SUPERMICRO,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.10876.100.1.4.1",
+        oids=["1", "2", "4"],
+    ),
     check_function=check_supermicro_smart,
     discovery_function=inventory_supermicro_smart,
     service_name="SMART Health %s",

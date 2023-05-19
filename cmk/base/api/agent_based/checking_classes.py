@@ -4,15 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for check plugins
 """
+
+from __future__ import annotations
+
 import enum
 from collections.abc import Callable, Iterable, Sequence
-from typing import NamedTuple, Optional, overload, Union
+from typing import NamedTuple, Optional, overload, Self, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.type_defs import EvalableFloat, MetricTuple, ParsedSectionName, RuleSetName
 
-from cmk.checkers import PluginSuppliedLabel
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import AutocheckEntry
 
@@ -22,7 +24,12 @@ from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, RuleSetTypeN
 _OptionalPair = Optional[tuple[Optional[float], Optional[float]]]
 
 
-class ServiceLabel(PluginSuppliedLabel):
+class _KV(NamedTuple):
+    name: str
+    value: str
+
+
+class ServiceLabel(_KV):
     """Representing a service label in Checkmk
 
     This class creates a service label that can be passed to a 'Service' object.
@@ -31,6 +38,18 @@ class ServiceLabel(PluginSuppliedLabel):
         >>> my_label = ServiceLabel("my_key", "my_value")
 
     """
+
+    __slots__ = ()
+
+    def __new__(cls, name: str, value: str) -> Self:
+        if not isinstance(name, str):
+            raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
+        if not isinstance(value, str):
+            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
+        return super().__new__(cls, name, value)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.name!r}, {self.value!r})"
 
 
 class Service(

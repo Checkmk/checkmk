@@ -7,7 +7,7 @@ import abc
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence, Set
 from dataclasses import dataclass
 from functools import partial
-from typing import Generic, NamedTuple, Protocol
+from typing import Generic, NamedTuple, Protocol, Self
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import (
@@ -40,7 +40,6 @@ __all__ = [
     "CheckPlugin",
     "DiscoveryPlugin",
     "HostLabelDiscoveryPlugin",
-    "PluginSuppliedLabel",
     "SectionPlugin",
     "Source",
     "SummarizerFunction",
@@ -99,29 +98,12 @@ class SummarizerFunction(Protocol):
         ...
 
 
-class PluginSuppliedLabel(
-    NamedTuple(  # pylint: disable=typing-namedtuple-call
-        "_LabelTuple", [("name", str), ("value", str)]
-    )
-):
-    """A user friendly variant of our internally used labels
-
-    This is a tiny bit redundant, but it helps decoupling API
-    code from internal representations.
-    """
-
-    def __init__(self, name: str, value: str) -> None:
-        super().__init__()
-        if not isinstance(name, str):
-            raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
-        if not isinstance(value, str):
-            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.name!r}, {self.value!r})"
+class _KV(NamedTuple):
+    name: str
+    value: str
 
 
-class HostLabel(PluginSuppliedLabel):
+class HostLabel(_KV):
     """Representing a host label in Checkmk
 
     This class creates a host label that can be yielded by a host_label_function as regisitered
@@ -130,6 +112,18 @@ class HostLabel(PluginSuppliedLabel):
         >>> my_label = HostLabel("my_key", "my_value")
 
     """
+
+    __slots__ = ()
+
+    def __new__(cls, name: str, value: str) -> Self:
+        if not isinstance(name, str):
+            raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
+        if not isinstance(value, str):
+            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
+        return super().__new__(cls, name, value)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.name!r}, {self.value!r})"
 
 
 class PService(Protocol):

@@ -731,7 +731,7 @@ export function calculate_domain(data: {value: number}): [number, number] {
     return [lower + upper * (1 - 1 / 0.95), upper / 0.95];
 }
 
-type Domain = [number, number];
+export type Domain = [number, number];
 export function adjust_domain(domain: Domain, metrics: any): Domain {
     let [dmin, dmax] = domain;
 
@@ -756,10 +756,10 @@ interface _Metric {
 }
 
 interface Bounds {
-    warn: null | number;
-    crit: null | number;
-    min: null | number;
-    max: null | number;
+    warn?: number;
+    crit?: number;
+    min?: number;
+    max?: number;
 }
 
 export function make_levels(

@@ -10,3 +10,17 @@ export type PartialK<T, K extends PropertyKey = PropertyKey> = Partial<
     Omit<T, K> extends infer O
     ? {[P in keyof O]: O[P]}
     : never;
+
+export interface PlotDefinition {
+    id: string;
+    color: string;
+    plot_type: string;
+    label: string;
+    use_tags: string[];
+    hidden: boolean;
+    is_scalar: boolean;
+    metric?: {
+        bounds: Record<string, number>;
+        unit: Record<string, string>;
+    };
+}

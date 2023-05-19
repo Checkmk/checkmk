@@ -41,6 +41,7 @@
     "@types/dc": "^4.2.1",
     "@types/jquery": "^3.5.13",
     "@types/lodash": "^4.14.191",
+    "@types/lodash.range": "^3.2.7",
     "@types/node": "^17.0.10",
     "@types/select2": "^4.0.55",
     "@types/yaireo__tagify": "^4.16.1",

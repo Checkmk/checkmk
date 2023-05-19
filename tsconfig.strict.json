@@ -21,7 +21,6 @@
         "./web/htdocs/js/modules/figures/cmk_figures_plugins.ts",
         "./enterprise/web/htdocs/js/modules/graphs_cee.ts",
         "./enterprise/web/htdocs/js/modules/figures/cmk_figures_plugins_cee.ts",
-        "./enterprise/web/htdocs/js/modules/figures/cmk_barplot.ts",
         "./enterprise/web/htdocs/js/modules/figures/cmk_site_overview.ts",
         "./enterprise/web/htdocs/js/modules/figures/cmk_dc_table.ts",
         "./enterprise/web/htdocs/js/modules/figures/cmk_alert_overview.ts",

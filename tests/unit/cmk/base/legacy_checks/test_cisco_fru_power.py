@@ -38,10 +38,10 @@ def test_parse_cisco_fru_power() -> None:
     ]
 
     section = {
-        "michl": FRU("2", "23"),
-        "schorsch": FRU("10", "0"),
-        "sepp-1": FRU("2", "23"),
-        "sepp-2": FRU("2", "23"),
+        "michl": FRU(2, 23),
+        "schorsch": FRU(10, 0),
+        "sepp-1": FRU(2, 23),
+        "sepp-2": FRU(2, 23),
     }
 
     assert parse_cisco_fru_power([states_and_currents, names]) == section

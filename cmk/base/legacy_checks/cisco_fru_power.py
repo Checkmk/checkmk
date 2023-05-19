@@ -64,25 +64,25 @@ CheckResult = Iterable[tuple[int, str]]
 
 @dataclass(frozen=True)
 class FRU:
-    state: str
-    current: str
+    state: int
+    current: int
 
 
 Section = Mapping[str, FRU]
 
 _STATE_MAP: Final = {
-    "1": (1, "off env other"),
-    "2": (0, "on"),
-    "3": (1, "off admin"),
-    "4": (2, "off denied"),
-    "5": (2, "off env power"),
-    "6": (2, "off env temp"),
-    "7": (2, "off env fan"),
-    "8": (2, "failed"),
-    "9": (1, "on but fan fail"),
-    "10": (1, "off cooling"),
-    "11": (1, "off connector rating"),
-    "12": (2, "on but inline power fail"),
+    1: (1, "off env other"),
+    2: (0, "on"),
+    3: (1, "off admin"),
+    4: (2, "off denied"),
+    5: (2, "off env power"),
+    6: (2, "off env temp"),
+    7: (2, "off env fan"),
+    8: (2, "failed"),
+    9: (1, "on but fan fail"),
+    10: (1, "off cooling"),
+    11: (1, "off connector rating"),
+    12: (2, "on but inline power fail"),
 }
 
 
@@ -95,16 +95,23 @@ def parse_cisco_fru_power(string_table: List[StringTable]) -> Section:
     name_map = _oid_name_map(names, raw_states)
 
     return {
-        name: FRU(state=raw_states[oid_end], current=raw_currents[oid_end])
+        name: fru
         for name, oid_end in name_map.items()
-        if _is_real_psu(raw_states[oid_end], raw_currents[oid_end])
+        if (fru := _make_fru(raw_states[oid_end], raw_currents[oid_end])) and _is_real_psu(fru)
     }
 
 
-def _is_real_psu(oper_state: str, current: str) -> bool:
+def _make_fru(raw_state: str, raw_current: str) -> FRU | None:
+    try:
+        return FRU(state=int(raw_state), current=int(raw_current))
+    except ValueError:
+        return None
+
+
+def _is_real_psu(fru: FRU) -> bool:
     # We discover only "real" power supplies which have current value >= 0
     # Others such as modules do not have such values
-    return oper_state not in ["", "0", "1", "5"] and bool(current) and int(current) >= 0
+    return fru.state not in {0, 1, 5} and fru.current >= 0
 
 
 def _oid_name_map(names: StringTable, filter_oids: Container[str]) -> Mapping[str, str]:

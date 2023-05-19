@@ -25,7 +25,7 @@ __all__ = [
     "analyse_cluster_labels",
     "discover_host_labels",
     "HostLabel",
-    "HostLabelDiscoveryPlugin",
+    "HostLabelPlugin",
 ]
 
 
@@ -58,7 +58,7 @@ class HostLabel(_KV):
 
 
 @dataclass(frozen=True)
-class HostLabelDiscoveryPlugin:
+class HostLabelPlugin:
     function: Callable[..., Iterator[HostLabel]]
     parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]
 
@@ -93,7 +93,7 @@ def analyse_cluster_labels(
 
 def discover_host_labels(
     host_name: HostName,
-    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
     *,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
@@ -138,7 +138,7 @@ def _all_parsing_results(
 
 
 def _discover_host_labels_for_source_type(
-    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
     *,
     host_key: HostKey,
     providers: Mapping[HostKey, Provider],

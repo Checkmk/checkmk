@@ -22,7 +22,7 @@ from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.discovery import (
     AutochecksStore,
     discover_host_labels,
-    HostLabelDiscoveryPlugin,
+    HostLabelPlugin,
     QualifiedDiscovery,
 )
 from cmk.checkers.sectionparser import (
@@ -48,7 +48,7 @@ def commandline_discovery(
     fetcher: FetcherFunction,
     config_cache: ConfigCache,
     section_plugins: Mapping[SectionName, SectionPlugin],
-    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
@@ -132,7 +132,7 @@ def _preprocess_hostnames(
 def _commandline_discovery_on_host(
     *,
     real_host_name: HostName,
-    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],

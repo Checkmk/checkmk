@@ -29,7 +29,7 @@ from cmk.checkers.discovery import (
     analyse_cluster_labels,
     discover_host_labels,
     DiscoveryMode,
-    HostLabelDiscoveryPlugin,
+    HostLabelPlugin,
     QualifiedDiscovery,
 )
 from cmk.checkers.sectionparser import filter_out_errors, make_providers, store_piggybacked_sections
@@ -52,7 +52,7 @@ def execute_check_discovery(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
-    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:

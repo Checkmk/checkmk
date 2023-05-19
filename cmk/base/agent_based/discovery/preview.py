@@ -35,7 +35,7 @@ from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.discovery import (
     analyse_cluster_labels,
     discover_host_labels,
-    HostLabelDiscoveryPlugin,
+    HostLabelPlugin,
     QualifiedDiscovery,
 )
 from cmk.checkers.sectionparser import (
@@ -78,7 +78,7 @@ def get_check_preview(
     fetcher: FetcherFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
-    host_label_plugins: Mapping[SectionName, HostLabelDiscoveryPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],

@@ -4,12 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._autochecks import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
-from ._host_labels import (
-    analyse_cluster_labels,
-    discover_host_labels,
-    HostLabel,
-    HostLabelDiscoveryPlugin,
-)
+from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabel, HostLabelPlugin
 from ._utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = [
@@ -20,6 +15,6 @@ __all__ = [
     "discover_host_labels",
     "DiscoveryMode",
     "HostLabel",
-    "HostLabelDiscoveryPlugin",
+    "HostLabelPlugin",
     "QualifiedDiscovery",
 ]

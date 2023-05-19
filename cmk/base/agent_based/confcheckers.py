@@ -43,7 +43,7 @@ from cmk.checkers import (
 )
 from cmk.checkers.checking import CheckPluginName
 from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.discovery import HostLabelDiscoveryPlugin
+from cmk.checkers.discovery import HostLabelPlugin
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkers.summarize import summarize
@@ -289,14 +289,14 @@ class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):
         )
 
 
-class HostLabelPluginMapper(Mapping[SectionName, HostLabelDiscoveryPlugin]):
+class HostLabelPluginMapper(Mapping[SectionName, HostLabelPlugin]):
     def __init__(self, *, config_cache: ConfigCache) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
 
-    def __getitem__(self, __key: SectionName) -> HostLabelDiscoveryPlugin:
+    def __getitem__(self, __key: SectionName) -> HostLabelPlugin:
         plugin = _api.get_section_plugin(__key)
-        return HostLabelDiscoveryPlugin(
+        return HostLabelPlugin(
             function=plugin.host_label_function,
             parameters=partial(
                 config.get_plugin_parameters,

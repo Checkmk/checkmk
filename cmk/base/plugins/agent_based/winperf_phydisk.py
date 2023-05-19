@@ -324,15 +324,21 @@ def _calc_denom_for_wait(metric: str, disk: diskstat.Disk, params: _Params) -> _
     if denom_value is None:
         return None, False
 
-    exception_raised = False
-    # using 1 for the base if the counter didn't increase. This makes little to no sense
     try:
         # TODO(jh): get_rate returns Rate for new_metric_value. Fix or explain, please
-        denom_value = _get_rate(_as_denom_metric(metric), params, denom_value) or 1
+        denom_rate: float | None = _get_rate(_as_denom_metric(metric), params, denom_value)
     except IgnoreResultsError:
-        exception_raised = True
+        denom_rate = None
 
-    return denom_value * params.frequency, exception_raised
+    match denom_rate:
+        case None:
+            # using the value if the rate can not be computed. Why?
+            return denom_value, True
+        case 0.0:
+            # using 1 for the base if the counter didn't increase. This makes little to no sense
+            return 1 * params.frequency, False
+        case _:
+            return denom_rate * params.frequency, False
 
 
 def _get_rate(metric: str, params: _Params, value: float) -> float:

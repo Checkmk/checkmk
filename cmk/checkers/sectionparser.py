@@ -5,14 +5,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence, Set
+from dataclasses import dataclass
 from typing import Any, Final, Generic, NamedTuple
 
 import cmk.utils.piggyback
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostName, ParsedSectionName, result, SectionName
 
-from ._api import SectionPlugin
 from ._typedefs import HostKey, SourceInfo, SourceType
 from .crash_reporting import create_section_crash_dump
 from .host_sections import HostSections, TRawDataSection
@@ -20,6 +20,15 @@ from .host_sections import HostSections, TRawDataSection
 _CacheInfo = tuple[int, int]
 
 ParsedSectionContent = object  # the parse function may return *anything*.
+
+
+@dataclass(frozen=True)
+class SectionPlugin:
+    supersedes: Set[SectionName]
+    # This function isn't typed precisely in the Check API.  Let's just
+    # keep the smallest common type of all the unions defined over there.
+    parse_function: Callable[..., object]
+    parsed_section_name: ParsedSectionName
 
 
 def filter_out_errors(

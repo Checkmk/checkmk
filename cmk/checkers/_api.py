@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence, Set
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from typing import Generic, NamedTuple, Protocol, Self
@@ -17,7 +17,6 @@ from cmk.utils.type_defs import (
     ParsedSectionName,
     result,
     RuleSetName,
-    SectionName,
 )
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection, TRawData
@@ -31,6 +30,7 @@ from .checking import CheckPluginName
 from .checkresults import ActiveCheckResult
 from .discovery import AutocheckEntry
 from .host_sections import HostSections
+from .sectionparser import SectionPlugin
 from .type_defs import AgentRawDataSection, SectionNameCollection
 
 __all__ = [
@@ -149,15 +149,6 @@ class DiscoveryPlugin:
     service_name: str
     function: Callable[..., Iterable[PService]]
     parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]
-
-
-@dataclass(frozen=True)
-class SectionPlugin:
-    supersedes: Set[SectionName]
-    # This function isn't typed precisely in the Check API.  Let's just
-    # keep the smallest common type of all the unions defined over there.
-    parse_function: Callable[..., object]
-    parsed_section_name: ParsedSectionName
 
 
 @dataclass(frozen=True)

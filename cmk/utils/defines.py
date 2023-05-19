@@ -5,7 +5,11 @@
 """This module serves constants which are needed in several components
 of Check_MK."""
 
+from typing import Final
+
 from cmk.utils.i18n import _
+
+ALL_SITES_INFLUX_TAG: Final = "-all-sites"
 
 # TODO: Investigate Checkmk code for more defines and other places
 #       where similar strucures are defined and use the things from

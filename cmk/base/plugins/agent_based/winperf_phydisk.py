@@ -258,31 +258,41 @@ def _compute_rates_single_disk(
     value_store: MutableMapping[str, Any],
     value_store_suffix: str = "",
 ) -> diskstat.Disk:
-    disk_with_rates = {}
     params: Final = _Params(
         value_store=value_store,
         value_store_suffix=value_store_suffix,
         timestamp=disk["timestamp"],
         frequency=disk.get("frequency"),
     )
-    raise_ignore_results = False
-    metric_values = [(metric, value) for metric, value in disk.items() if _is_work_metric(metric)]
-    for metric, value in metric_values:
-        denom, exception_raised = _calc_denom(metric, disk, params)
-        if denom is None:
-            continue
-        if exception_raised:
-            raise_ignore_results = True
 
-        try:
-            disk_with_rates[metric] = _get_rate(metric, params, value) / denom
-        except IgnoreResultsError:
-            raise_ignore_results = True
+    rates_and_errors = {
+        metric: _compute_rate_for_metric(metric, value, disk, params)
+        for metric, value in disk.items()
+        if _is_work_metric(metric)
+    }
 
-    if raise_ignore_results:
+    if any(raised for _rate, raised in rates_and_errors.values()):
         raise IgnoreResultsError("Initializing counters")
 
-    return disk_with_rates
+    return {
+        metric: rate for metric, (rate, _raised) in rates_and_errors.items() if rate is not None
+    }
+
+
+def _compute_rate_for_metric(
+    metric: str,
+    value: float,
+    disk: diskstat.Disk,
+    params: _Params,
+) -> tuple[float | None, bool]:
+    denom, exception_raised = _calc_denom(metric, disk, params)
+    if denom is None:
+        return None, exception_raised
+
+    try:
+        return _get_rate(metric, params, value) / denom, exception_raised
+    except IgnoreResultsError:
+        return None, True
 
 
 def _is_work_metric(metric: str) -> bool:

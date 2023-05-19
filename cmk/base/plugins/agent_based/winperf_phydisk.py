@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from dataclasses import dataclass
 from enum import IntEnum, StrEnum, unique
 from typing import Any, Final, Mapping, MutableMapping, Optional, Sequence, Union
 
@@ -249,31 +248,13 @@ def discover_winperf_phydisk(
     )
 
 
-@dataclass(frozen=True)
-class _Params:
-    value_store: MutableMapping[str, Any]
-    value_store_suffix: str
-    timestamp: float
-    frequency: Optional[float]
-
-
-_DenomType = tuple[Optional[float], bool]
-
-
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
     value_store: MutableMapping[str, Any],
     value_store_suffix: str = "",
 ) -> diskstat.Disk:
-    params: Final = _Params(
-        value_store=value_store,
-        value_store_suffix=value_store_suffix,
-        timestamp=disk["timestamp"],
-        frequency=disk.get("frequency"),
-    )
-
     rates_and_errors = {
-        metric: _compute_rate_for_metric(metric, value, disk, params)
+        metric: _compute_rate_for_metric(metric, value, disk, value_store, value_store_suffix)
         for metric, value in disk.items()
         if _is_work_metric(metric)
     }
@@ -290,10 +271,11 @@ def _compute_rate_for_metric(
     metric: str,
     value: float,
     disk: diskstat.Disk,
-    params: _Params,
+    value_store: MutableMapping[str, Any],
+    value_store_suffix: str,
 ) -> tuple[float | None, bool]:
-    scaling = _scaling(metric, params)
-    metric_key, value_x = _get_x_metric(metric, params, disk)
+    scaling = _scaling(metric, disk.get("frequency"))
+    metric_key, value_x = _get_x_metric(metric, disk)
     if scaling is None or value_x is None:
         return None, False
 
@@ -301,11 +283,7 @@ def _compute_rate_for_metric(
         return (
             scaling
             * get_rate(
-                params.value_store,
-                metric_key + params.value_store_suffix,
-                value_x,
-                value,
-                raise_overflow=True,
+                value_store, metric_key + value_store_suffix, value_x, value, raise_overflow=True
             ),
             False,
         )
@@ -326,20 +304,20 @@ def _as_denom_metric(metric: str) -> str:
     return metric + _METRIC_DENOM_SUFFIX
 
 
-def _scaling(metric: str, params: _Params) -> float | None:
+def _scaling(metric: str, frequency: float | None) -> float | None:
     if metric.endswith(MetricSuffix.QUEUE_LENGTH):
         return 1e-7
     if not metric.endswith(MetricSuffix.WAIT):
         return 1.0
-    return None if params.frequency is None else 1.0 / params.frequency
+    return None if frequency is None else 1.0 / frequency
 
 
-def _get_x_metric(metric: str, params: _Params, disk: diskstat.Disk) -> tuple[str, float | None]:
+def _get_x_metric(metric: str, disk: diskstat.Disk) -> tuple[str, float | None]:
     if metric.endswith(MetricSuffix.WAIT):
         y_metric = _as_denom_metric(metric)
         return f"{metric}_by_{y_metric}", disk.get(y_metric)
 
-    return metric, params.timestamp
+    return metric, disk["timestamp"]
 
 
 def _with_average_in_seconds(params: Mapping[str, Any]) -> Mapping[str, Any]:

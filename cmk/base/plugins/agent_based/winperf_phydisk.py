@@ -300,12 +300,15 @@ def _compute_rate_for_metric(
             else (rate * scaling, False)
         )
 
-    if params.frequency is None:
+    metric_x = _as_denom_metric(metric)
+    value_x = disk.get(metric_x)
+    if params.frequency is None or value_x is None:
         return None, False
+
     scaling = 1.0 / params.frequency
 
-    rate, raised = _calc_denom_for_wait(metric, disk, params, value)
-    return (None, raised) if rate is None else (rate * scaling, raised)
+    rate = _calc_denom_for_wait(params, metric_x, value_x, metric, value)
+    return (None, True) if rate is None else (rate * scaling, False)
 
 
 def _is_work_metric(metric: str) -> bool:
@@ -330,26 +333,25 @@ def _scaling(metric: str) -> float | None:
 
 
 def _calc_denom_for_wait(
-    metric: str, disk: diskstat.Disk, params: _Params, value: float
-) -> _DenomType:
-    denom_value = disk.get(_as_denom_metric(metric))
-    if denom_value is None:
-        return None, False
-
-    rate = _get_rate(metric, params, v_x=params.timestamp, v_y=value)
+    params: _Params,
+    metric_x: str,
+    v_x: float,
+    metric_y: str,
+    v_y: float,
+) -> float | None:
+    rate = _get_rate(metric_y, params, v_x=params.timestamp, v_y=v_y)
     # TODO(jh): get_rate returns Rate for new_metric_value. Fix or explain, please
-    match _get_rate(_as_denom_metric(metric), params, v_x=params.timestamp, v_y=denom_value):
+    match _get_rate(metric_x, params, v_x=params.timestamp, v_y=v_x):
         case None:
-            # using the value if the rate can not be computed. Why?
-            return denom_value, True
+            return None
         case 0.0:
             # using 1 for the base if the counter didn't increase. This makes little to no sense
-            denom, exception_raised = 1.0, False
+            denom = 1.0
         case denom_rate:
             assert denom_rate is not None
-            denom, exception_raised = denom_rate, False
+            denom = denom_rate
 
-    return (None, True) if rate is None else (rate / denom, exception_raised)
+    return None if rate is None else rate / denom
 
 
 def _get_rate(metric: str, params: _Params, *, v_x: float, v_y: float) -> float | None:

@@ -52,6 +52,7 @@ def notify_error(error) {
             def notify_emails = [
                 "timotheus.bachinger@checkmk.com",
                 "frans.fuerst@checkmk.com",
+                "jonas.scharpf@checkmk.com",
             ];
             currentBuild.changeSets.each { changeSet ->
                 print("|| error-reporting:   changeSet=${changeSet}");
@@ -59,9 +60,6 @@ def notify_error(error) {
 
                 def culprits_emails = changeSet.items.collect {e -> e.authorEmail};
                 print("|| error-reporting:   culprits_emails ${culprits_emails}");
-
-                notify_emails += culprits_emails;
-                print("|| error-reporting:   notify_emails ${notify_emails}");
             }
 
             // It seems the option "Allowed domains" is not working properly.
@@ -78,7 +76,10 @@ def notify_error(error) {
 
             /// fallback - for investigation
             notify_emails = notify_emails ?: [
-                "timotheus.bachinger@checkmk.com", "frans.fuerst@checkmk.com"];
+                "timotheus.bachinger@checkmk.com",
+                "frans.fuerst@checkmk.com",
+                "jonas.scharpf@checkmk.com",
+            ];
 
             print("|| error-reporting: notify_emails ${notify_emails}");
 

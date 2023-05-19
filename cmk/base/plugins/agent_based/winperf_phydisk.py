@@ -292,7 +292,15 @@ def _compute_rate_for_metric(
     disk: diskstat.Disk,
     params: _Params,
 ) -> tuple[float | None, bool]:
-    denom, exception_raised = _calc_denom(metric, disk, params)
+    scaling = _scaling(metric)
+    if scaling is not None:
+        return (
+            (None, True)
+            if (rate := _get_rate(metric, params, value)) is None
+            else (rate * scaling, False)
+        )
+
+    denom, exception_raised = _calc_denom_for_wait(metric, disk, params)
     if denom is None:
         return None, exception_raised
 
@@ -313,13 +321,12 @@ def _as_denom_metric(metric: str) -> str:
     return metric + _METRIC_DENOM_SUFFIX
 
 
-def _calc_denom(metric: str, disk: diskstat.Disk, params: _Params) -> _DenomType:
+def _scaling(metric: str) -> float | None:
     if metric.endswith(MetricSuffix.QUEUE_LENGTH):
-        return 10_000_000.0, False
+        return 1e-7
     if not metric.endswith(MetricSuffix.WAIT):
-        return 1.0, False
-
-    return _calc_denom_for_wait(metric, disk, params)
+        return 1.0
+    return None
 
 
 def _calc_denom_for_wait(metric: str, disk: diskstat.Disk, params: _Params) -> _DenomType:

@@ -1187,13 +1187,7 @@ def _register_table_views_and_columns() -> None:
         _register_node_painter("_".join(ident), hints)
 
         for key, attr_hint in hints.attribute_hints.items():
-            _register_attribute_column(
-                inventory.InventoryPath(
-                    path=hints.abc_path, source=inventory.TreeSource.attributes, key=key
-                ),
-                "_".join(ident + (key,)),
-                attr_hint,
-            )
+            _register_attribute_column("_".join(ident + (key,)), attr_hint, hints.abc_path, key)
 
         _register_table_view(hints)
 
@@ -1288,9 +1282,7 @@ def _export_node_for_csv() -> str | HTML:
 
 
 def _register_attribute_column(
-    inventory_path: inventory.InventoryPath,
-    name: str,
-    hint: AttributeDisplayHint,
+    name: str, hint: AttributeDisplayHint, path: SDPath, key: str
 ) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
@@ -1326,15 +1318,21 @@ def _register_attribute_column(
             "printable": True,
             "load_inv": True,
             "sorter": name,
-            "paint": lambda row: _paint_host_inventory_attribute(row, inventory_path, hint),
-            "export_for_python": lambda row, cell: _export_attribute_as_python_or_json(
-                row, inventory_path
+            "paint": lambda row: _paint_host_inventory_attribute(row, path, key, hint),
+            "export_for_python": lambda row, cell: _compute_attribute_painter_data(row, path, key),
+            "export_for_csv": lambda row, cell: (
+                ""
+                if (data := _compute_attribute_painter_data(row, path, key)) is None
+                else str(data)
             ),
-            "export_for_csv": lambda row, cell: _export_attribute_for_csv(row, inventory_path),
-            "export_for_json": lambda row, cell: _export_attribute_as_python_or_json(
-                row, inventory_path
-            ),
+            "export_for_json": lambda row, cell: _compute_attribute_painter_data(row, path, key),
         },
+    )
+
+    inventory_path = inventory.InventoryPath(
+        path=path,
+        source=inventory.TreeSource.attributes,
+        key=key,
     )
 
     # Declare sorter. It will detect numbers automatically
@@ -1351,9 +1349,7 @@ def _register_attribute_column(
     filter_registry.register(hint.make_filter(name, inventory_path))
 
 
-def _compute_attribute_painter_data(
-    row: Row, inventory_path: inventory.InventoryPath
-) -> None | str | int | float:
+def _compute_attribute_painter_data(row: Row, path: SDPath, key: str) -> str | int | float | None:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
@@ -1362,19 +1358,13 @@ def _compute_attribute_painter_data(
     if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
         return None
 
-    if (node := tree.get_node(inventory_path.path)) is None:
-        return None
-
-    if inventory_path.key in node.attributes.pairs:
-        return node.attributes.pairs[inventory_path.key]
-
-    return None
+    return None if (node := tree.get_node(path)) is None else node.attributes.pairs.get(key)
 
 
 def _paint_host_inventory_attribute(
-    row: Row, inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
+    row: Row, path: SDPath, key: str, hint: AttributeDisplayHint
 ) -> CellSpec:
-    if (attribute_data := _compute_attribute_painter_data(row, inventory_path)) is None:
+    if (attribute_data := _compute_attribute_painter_data(row, path, key)) is None:
         return "", ""
 
     painter_options = PainterOptions.get_instance()
@@ -1389,24 +1379,6 @@ def _paint_host_inventory_attribute(
         code = HTML(output_funnel.drain())
 
     return "", code
-
-
-def _export_attribute_as_python(
-    row: Row, inventory_path: inventory.InventoryPath
-) -> None | str | int | float:
-    return _compute_attribute_painter_data(row, inventory_path)
-
-
-def _export_attribute_for_csv(row: Row, inventory_path: inventory.InventoryPath) -> str | HTML:
-    return (
-        "" if (data := _compute_attribute_painter_data(row, inventory_path)) is None else str(data)
-    )
-
-
-def _export_attribute_as_python_or_json(
-    row: Row, inventory_path: inventory.InventoryPath
-) -> None | str | int | float:
-    return _compute_attribute_painter_data(row, inventory_path)
 
 
 def _register_table_column(

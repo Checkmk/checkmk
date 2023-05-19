@@ -297,11 +297,20 @@ def _compute_rate_for_metric(
     if scaling is None or value_x is None:
         return None, False
 
-    return (
-        (None, True)
-        if (rate := _get_rate(metric_key, params, v_x=value_x, v_y=value)) is None
-        else (rate * scaling, False)
-    )
+    try:
+        return (
+            scaling
+            * get_rate(
+                params.value_store,
+                metric_key + params.value_store_suffix,
+                value_x,
+                value,
+                raise_overflow=True,
+            ),
+            False,
+        )
+    except GetRateError:
+        return None, True
 
 
 def _is_work_metric(metric: str) -> bool:
@@ -331,19 +340,6 @@ def _get_x_metric(metric: str, params: _Params, disk: diskstat.Disk) -> tuple[st
         return f"{metric}_by_{y_metric}", disk.get(y_metric)
 
     return metric, params.timestamp
-
-
-def _get_rate(metric: str, params: _Params, *, v_x: float, v_y: float) -> float | None:
-    try:
-        return get_rate(
-            params.value_store,
-            metric + params.value_store_suffix,
-            v_x,
-            v_y,
-            raise_overflow=True,
-        )
-    except GetRateError:
-        return None
 
 
 def _with_average_in_seconds(params: Mapping[str, Any]) -> Mapping[str, Any]:

@@ -307,7 +307,7 @@ def _compute_rate_for_metric(
 
     scaling = 1.0 / params.frequency
 
-    rate = _calc_denom_for_wait(params, metric_x, value_x, metric, value)
+    rate = _get_rate(f"{metric}_by_{metric_x}", params, v_x=value_x, v_y=value)
     return (None, True) if rate is None else (rate * scaling, False)
 
 
@@ -330,26 +330,6 @@ def _scaling(metric: str) -> float | None:
     if not metric.endswith(MetricSuffix.WAIT):
         return 1.0
     return None
-
-
-def _calc_denom_for_wait(
-    params: _Params,
-    metric_x: str,
-    v_x: float,
-    metric_y: str,
-    v_y: float,
-) -> float | None:
-    dx_dt = _get_rate(metric_x, params, v_x=params.timestamp, v_y=v_x)
-    dy_dt = _get_rate(metric_y, params, v_x=params.timestamp, v_y=v_y)
-
-    if dx_dt is None or dy_dt is None:
-        return None
-
-    if dx_dt == 0.0:
-        # using 1 for the base if the counter didn't increase. This makes little to no sense
-        return dy_dt
-
-    return dy_dt / dx_dt
 
 
 def _get_rate(metric: str, params: _Params, *, v_x: float, v_y: float) -> float | None:

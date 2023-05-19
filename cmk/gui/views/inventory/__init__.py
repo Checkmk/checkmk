@@ -1184,11 +1184,7 @@ def _register_table_views_and_columns() -> None:
 
         ident = ("inv",) + hints.abc_path
 
-        _register_node_painter(
-            inventory.InventoryPath(path=hints.abc_path, source=inventory.TreeSource.node),
-            "_".join(ident),
-            hints,
-        )
+        _register_node_painter("_".join(ident), hints)
 
         for key, attr_hint in hints.attribute_hints.items():
             _register_attribute_column(
@@ -1213,11 +1209,7 @@ def _register_table_views_and_columns() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _register_node_painter(
-    inventory_path: inventory.InventoryPath,
-    name: str,
-    hints: DisplayHints,
-) -> None:
+def _register_node_painter(name: str, hints: DisplayHints) -> None:
     """Declares painters for (sub) trees on all host related datasources."""
     register_painter(
         name,
@@ -1245,21 +1237,23 @@ def _register_node_painter(
             "printable": False,
             "load_inv": True,
             "sorter": name,
-            "paint": lambda row: _paint_host_inventory_tree(row, inventory_path, hints),
-            "export_for_python": lambda row, cell: _export_node_as_python_or_json(
-                row, inventory_path
+            "paint": lambda row: _paint_host_inventory_tree(row, hints),
+            "export_for_python": lambda row, cell: (
+                node.serialize()
+                if (node := _compute_node_painter_data(row, hints.abc_path))
+                else {}
             ),
             "export_for_csv": lambda row, cell: _export_node_for_csv(),
-            "export_for_json": lambda row, cell: _export_node_as_python_or_json(
-                row, inventory_path
+            "export_for_json": lambda row, cell: (
+                node.serialize()
+                if (node := _compute_node_painter_data(row, hints.abc_path))
+                else {}
             ),
         },
     )
 
 
-def _compute_node_painter_data(
-    row: Row, inventory_path: inventory.InventoryPath
-) -> StructuredDataNode | None:
+def _compute_node_painter_data(row: Row, path: SDPath) -> StructuredDataNode | None:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
@@ -1268,13 +1262,11 @@ def _compute_node_painter_data(
     if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
         return None
 
-    return tree.get_node(inventory_path.path)
+    return tree.get_node(path)
 
 
-def _paint_host_inventory_tree(
-    row: Row, inventory_path: inventory.InventoryPath, hints: DisplayHints
-) -> CellSpec:
-    if not (node := _compute_node_painter_data(row, inventory_path)):
+def _paint_host_inventory_tree(row: Row, hints: DisplayHints) -> CellSpec:
+    if not (node := _compute_node_painter_data(row, hints.abc_path)):
         return "", ""
 
     painter_options = PainterOptions.get_instance()
@@ -1291,16 +1283,8 @@ def _paint_host_inventory_tree(
     return "invtree", code
 
 
-def _export_node_as_python(row: Row, inventory_path: inventory.InventoryPath) -> dict:
-    return node.serialize() if (node := _compute_node_painter_data(row, inventory_path)) else {}
-
-
 def _export_node_for_csv() -> str | HTML:
     raise CSVExportError()
-
-
-def _export_node_as_python_or_json(row: Row, inventory_path: inventory.InventoryPath) -> dict:
-    return node.serialize() if (node := _compute_node_painter_data(row, inventory_path)) else {}
 
 
 def _register_attribute_column(

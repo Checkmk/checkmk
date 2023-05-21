@@ -15,10 +15,14 @@ from cmk.base.check_legacy_includes.wmi import (
     wmi_yield_raw_average_timer,
     wmi_yield_raw_counter,
     wmi_yield_raw_persec,
+    WMISection,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-# these defaults were specified by customer
+
+def parse_skype(string_table: StringTable) -> WMISection:
+    return parse_wmi_table(string_table, key="instance")
 
 
 def check_skype(_no_item, params, parsed):
@@ -109,6 +113,7 @@ def check_skype(_no_item, params, parsed):
 
 
 check_info["skype"] = LegacyCheckDefinition(
+    parse_function=parse_skype,
     discovery_function=lambda table: inventory_wmi_table_total(
         table,
         required_tables=[
@@ -120,9 +125,9 @@ check_info["skype"] = LegacyCheckDefinition(
         ],
     ),
     check_function=check_skype,
-    parse_function=lambda info: parse_wmi_table(info, key="instance"),
     service_name="Skype Web Components",
     check_ruleset_name="skype",
+    # these defaults were specified by customer
     check_default_parameters={
         "failed_search_requests": {"upper": (1.0, 2.0)},
         "failed_locations_requests": {"upper": (1.0, 2.0)},
@@ -228,7 +233,6 @@ check_info["skype.conferencing"] = LegacyCheckDefinition(
         ],
     ),
     check_function=check_skype_conferencing,
-    parse_function=lambda info: parse_wmi_table(info, key="instance"),
     service_name="Skype Conferencing",
     check_ruleset_name="skype_conferencing",
     check_default_parameters={

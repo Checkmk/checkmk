@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
 from cmk.base.check_api import (
@@ -13,11 +14,16 @@ from cmk.base.check_api import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 METRICS_INFO_NAMES_PULSE_SECURE_MEM = (
     ["mem_used_percent", "swap_used_percent"],
     ["RAM used", "Swap used"],
 )
+
+
+def parse_pulse_secure_mem(string_table: StringTable) -> Mapping[str, int]:
+    return pulse_secure.parse_pulse_secure(string_table, *METRICS_INFO_NAMES_PULSE_SECURE_MEM[0])
 
 
 def check_pulse_secure_mem(item, params, parsed):
@@ -37,10 +43,7 @@ def check_pulse_secure_mem(item, params, parsed):
 
 check_info["pulse_secure_mem_util"] = LegacyCheckDefinition(
     detect=pulse_secure.DETECT_PULSE_SECURE,
-    parse_function=lambda info: pulse_secure.parse_pulse_secure(
-        info,
-        *METRICS_INFO_NAMES_PULSE_SECURE_MEM[0],
-    ),
+    parse_function=parse_pulse_secure_mem,
     discovery_function=discover_single,
     check_function=check_pulse_secure_mem,
     service_name="Pulse Secure IVE memory utilization",

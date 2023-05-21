@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
 from cmk.base.check_api import (
@@ -13,8 +14,13 @@ from cmk.base.check_api import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 METRIC_PULSE_SECURE_DISK = "disk_utilization"
+
+
+def parse_pulse_secure_disk_util(string_table: StringTable) -> Mapping[str, int]:
+    return pulse_secure.parse_pulse_secure(string_table, METRIC_PULSE_SECURE_DISK)
 
 
 def check_pulse_secure_disk_util(item, params, parsed):
@@ -33,7 +39,7 @@ def check_pulse_secure_disk_util(item, params, parsed):
 
 check_info["pulse_secure_disk_util"] = LegacyCheckDefinition(
     detect=pulse_secure.DETECT_PULSE_SECURE,
-    parse_function=lambda info: pulse_secure.parse_pulse_secure(info, METRIC_PULSE_SECURE_DISK),
+    parse_function=parse_pulse_secure_disk_util,
     discovery_function=discover_single,
     check_function=check_pulse_secure_disk_util,
     service_name="Pulse Secure disk utilization",

@@ -5,14 +5,20 @@
 
 
 import time
+from collections.abc import Mapping
 
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
 from cmk.base.check_api import discover_single, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 KEY_PULSE_SECURE_CPU = "cpu_util"
+
+
+def parse_pulse_secure_cpu_util(string_table: StringTable) -> Mapping[str, int]:
+    return pulse_secure.parse_pulse_secure(string_table, KEY_PULSE_SECURE_CPU)
 
 
 def check_pulse_secure_cpu(item, params, parsed):
@@ -24,7 +30,7 @@ def check_pulse_secure_cpu(item, params, parsed):
 
 check_info["pulse_secure_cpu_util"] = LegacyCheckDefinition(
     detect=pulse_secure.DETECT_PULSE_SECURE,
-    parse_function=lambda info: pulse_secure.parse_pulse_secure(info, KEY_PULSE_SECURE_CPU),
+    parse_function=parse_pulse_secure_cpu_util,
     discovery_function=discover_single,
     check_function=check_pulse_secure_cpu,
     service_name="Pulse Secure IVE CPU utilization",

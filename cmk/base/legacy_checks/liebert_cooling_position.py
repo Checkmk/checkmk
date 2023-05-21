@@ -5,10 +5,9 @@
 
 
 from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.liebert import parse_liebert_wrapper
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
+from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT, parse_liebert_float
 
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5303 Free Cooling Valve Open Position
@@ -28,7 +27,7 @@ def check_liebert_cooling_position(item, params, data):
 
 check_info["liebert_cooling_position"] = LegacyCheckDefinition(
     detect=DETECT_LIEBERT,
-    parse_function=parse_liebert_wrapper,
+    parse_function=parse_liebert_float,
     discovery_function=discover(lambda key, _value: key.startswith("Free Cooling")),
     check_function=check_liebert_cooling_position,
     service_name="%s",

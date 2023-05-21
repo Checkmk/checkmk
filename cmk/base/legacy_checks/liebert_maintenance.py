@@ -9,10 +9,12 @@
 import time
 
 from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.liebert import parse_liebert_without_unit_wrapper
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
+from cmk.base.plugins.agent_based.utils.liebert import (
+    DETECT_LIEBERT,
+    parse_liebert_int_without_unit,
+)
 
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.4868 Calculated Next Maintenance Month
@@ -47,7 +49,7 @@ def check_liebert_maintenance(_no_item, params, parsed):
 
 check_info["liebert_maintenance"] = LegacyCheckDefinition(
     detect=DETECT_LIEBERT,
-    parse_function=lambda info: parse_liebert_without_unit_wrapper(info, int),
+    parse_function=parse_liebert_int_without_unit,
     discovery_function=inventory_liebert_maintenance,
     check_function=check_liebert_maintenance,
     service_name="Maintenance",

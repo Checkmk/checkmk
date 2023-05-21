@@ -5,10 +5,12 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.liebert import parse_liebert_without_unit_wrapper
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT
+from cmk.base.plugins.agent_based.utils.liebert import (
+    DETECT_LIEBERT,
+    parse_liebert_str_without_unit,
+)
 
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.100.4626 Supply Chilled Water Over Temp
@@ -35,7 +37,7 @@ def check_liebert_chilled_water(item, _params, parsed):
 
 check_info["liebert_chilled_water"] = LegacyCheckDefinition(
     detect=DETECT_LIEBERT,
-    parse_function=lambda info: parse_liebert_without_unit_wrapper(info, str),
+    parse_function=parse_liebert_str_without_unit,
     discovery_function=inventory_liebert_chilled_water,
     check_function=check_liebert_chilled_water,
     service_name="%s",

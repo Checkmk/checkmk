@@ -14,6 +14,23 @@ SystemSection = Mapping[str, str]
 
 DETECT_LIEBERT = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.476.1.42")
 
+
+def parse_liebert_float(string_table: StringTable) -> dict[str, tuple[float, str]]:
+    return parse_liebert([string_table], float)
+
+
+def parse_liebert_float_without_unit(string_table: StringTable) -> dict[str, float]:
+    return parse_liebert_without_unit([string_table], float)
+
+
+def parse_liebert_int_without_unit(string_table: StringTable) -> dict[str, int]:
+    return parse_liebert_without_unit([string_table], int)
+
+
+def parse_liebert_str_without_unit(string_table: StringTable) -> dict[str, str]:
+    return parse_liebert_without_unit([string_table], str)
+
+
 TParsed = TypeVar("TParsed")
 
 

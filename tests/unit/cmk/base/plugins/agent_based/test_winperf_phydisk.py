@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
+
 import pytest
 
 from cmk.base.plugins.agent_based import winperf_phydisk
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_value_store,
-    IgnoreResultsError,
-    Metric,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric
+from cmk.base.plugins.agent_based.utils import diskstat
 
 STRING_TABLE = [
     ["1435670669.29", "234", "2", "3"],
@@ -147,19 +146,39 @@ DISK = DISK_WO_FREQUENCY.copy()
 DISK["frequency"] = 2
 
 
-def _increment_time_and_frequency(disk):
-    disk_inc = {
-        **disk,
-        "timestamp": disk["timestamp"] + 1,
-    }
-    if "frequency" in disk:
-        disk_inc["frequency"] = disk["frequency"] + 1
+def _advance_time(disk: diskstat.Disk, seconds: int) -> diskstat.Disk:
+    """Fake the passing of time"""
+    disk_inc = {}
+
+    frequency = disk.get("frequency")
+    assert frequency in (None, 2)
+    for metric, value in disk.items():
+        if metric == "frequency":
+            disk_inc["frequency"] = value
+            continue
+        if metric == "timestamp":
+            disk_inc["timestamp"] = value + seconds
+            continue
+        if f"{metric}_base" in disk:
+            if frequency is not None:
+                disk_inc[metric] = value + (seconds * 23)
+            continue
+        if metric.endswith("_base"):
+            if frequency is not None:
+                disk_inc[metric] = value + seconds / frequency
+            continue
+        if metric in ("write_ql", "read_ql"):
+            disk_inc[metric] = value + seconds * 23 * 10_000_000
+            continue
+
+        disk_inc[metric] = value + seconds * 23
+
     return disk_inc
 
 
 def _check_disk_with_rates(disk, disk_with_rates):
     disk_reference = {
-        k: 0 for k in disk if not k.endswith("_base") and k not in ("timestamp", "frequency")
+        k: 23.0 for k in disk if not k.endswith("_base") and k not in ("timestamp", "frequency")
     }
     if "frequency" not in disk:
         disk_reference = {k: v for k, v in disk_reference.items() if not k.startswith("average")}
@@ -186,34 +205,35 @@ def test_parse_winperf_phydisk_real_life() -> None:
     ]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
-def test_compute_rates_single_disk() -> None:
-    # without frequency
+def test_compute_rates_single_disk_without_frequency() -> None:
+    value_store: dict[str, Any] = {}
     # first call should result in IgnoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
         winperf_phydisk._compute_rates_single_disk(
             DISK_WO_FREQUENCY,
-            get_value_store(),
+            value_store,
         )
     disk_with_rates = winperf_phydisk._compute_rates_single_disk(
-        _increment_time_and_frequency(DISK_WO_FREQUENCY),
-        get_value_store(),
+        _advance_time(DISK_WO_FREQUENCY, 60),
+        value_store,
     )
     _check_disk_with_rates(
         DISK_WO_FREQUENCY,
         disk_with_rates,
     )
 
-    # with frequency
+
+def test_compute_rates_single_disk_with_frequency() -> None:
+    value_store: dict[str, Any] = {}
     # first call should result in IgnoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
         winperf_phydisk._compute_rates_single_disk(
             DISK,
-            get_value_store(),
+            value_store,
         )
     disk_with_rates = winperf_phydisk._compute_rates_single_disk(
-        _increment_time_and_frequency(DISK),
-        get_value_store(),
+        _advance_time(DISK, 60),
+        value_store,
     )
     _check_disk_with_rates(
         DISK,

@@ -6,12 +6,10 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.check_legacy_includes.scaleio import (
-    convert_scaleio_space,
-    get_scaleio_data,
-    parse_scaleio,
-)
+from cmk.base.check_legacy_includes.scaleio import convert_scaleio_space
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.scaleio import parse_scaleio, ScaleioSection
 
 # example output
 # <<<scaleio_sds>>>
@@ -50,14 +48,17 @@ from cmk.base.config import check_info
 #
 
 
+def parse_scaleio_sds(string_table: StringTable) -> ScaleioSection:
+    return parse_scaleio(string_table, "SDS")
+
+
 def inventory_scaleio_sds(parsed):
     for entry in parsed:
         yield entry, {}
 
 
 def check_scaleio_sds(item, params, parsed):
-    data = get_scaleio_data(item, parsed)
-    if not data:
+    if not (data := parsed.get(item)):
         return
 
     # How will the data be represented? It's magic and the only
@@ -70,7 +71,7 @@ def check_scaleio_sds(item, params, parsed):
 
 
 check_info["scaleio_sds"] = LegacyCheckDefinition(
-    parse_function=lambda info: parse_scaleio(info, "SDS"),
+    parse_function=parse_scaleio_sds,
     discovery_function=inventory_scaleio_sds,
     check_function=check_scaleio_sds,
     service_name="ScaleIO SDS capacity %s",
@@ -84,9 +85,8 @@ def inventory_scaleio_sds_status(parsed):
         yield entry, {}
 
 
-def check_scaleio_sds_status(item, params, parsed):
-    data = get_scaleio_data(item, parsed)
-    if not data:
+def check_scaleio_sds_status(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
         return
 
     name, pd_id = data["NAME"][0], data["PROTECTION_DOMAIN_ID"][0]
@@ -110,7 +110,6 @@ def check_scaleio_sds_status(item, params, parsed):
 
 
 check_info["scaleio_sds.status"] = LegacyCheckDefinition(
-    parse_function=lambda info: parse_scaleio(info, "SDS"),
     discovery_function=inventory_scaleio_sds_status,
     check_function=check_scaleio_sds_status,
     service_name="ScaleIO SDS status %s",

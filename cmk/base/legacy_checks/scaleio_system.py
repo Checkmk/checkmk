@@ -6,8 +6,9 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.check_legacy_includes.scaleio import get_scaleio_data, parse_scaleio
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.scaleio import parse_scaleio, ScaleioSection
 
 # <<<scaleio_system:sep(9)>>>
 # SYSTEM 5914d6b47d479d5a:
@@ -20,14 +21,17 @@ from cmk.base.config import check_info
 #
 
 
+def parse_scaleio_system(string_table: StringTable) -> ScaleioSection:
+    return parse_scaleio(string_table, "SYSTEM")
+
+
 def inventory_scaleio_system(parsed):
     for entry in parsed:
         yield entry, {}
 
 
 def check_scaleio_system(item, params, parsed):
-    data = get_scaleio_data(item, parsed)
-    if not data:
+    if not (data := parsed.get(item)):
         return
 
     if "levels" not in params:
@@ -42,7 +46,7 @@ def check_scaleio_system(item, params, parsed):
 
 
 check_info["scaleio_system"] = LegacyCheckDefinition(
-    parse_function=lambda info: parse_scaleio(info, "SYSTEM"),
+    parse_function=parse_scaleio_system,
     discovery_function=inventory_scaleio_system,
     check_function=check_scaleio_system,
     service_name="ScaleIO System %s",

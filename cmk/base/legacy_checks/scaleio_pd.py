@@ -6,12 +6,10 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.check_legacy_includes.scaleio import (
-    convert_scaleio_space,
-    get_scaleio_data,
-    parse_scaleio,
-)
+from cmk.base.check_legacy_includes.scaleio import convert_scaleio_space
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.scaleio import parse_scaleio, ScaleioSection
 
 # <<<scaleio_pd>>>
 # PROTECTION_DOMAIN 91ebcf4500000000:
@@ -22,14 +20,17 @@ from cmk.base.config import check_info
 #        UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
 
 
+def parse_scaleio_pd(string_table: StringTable) -> ScaleioSection:
+    return parse_scaleio(string_table, "PROTECTION_DOMAIN")
+
+
 def inventory_scaleio_pd(parsed):
     for entry in parsed:
         yield entry, {}
 
 
 def check_scaleio_pd(item, params, parsed):
-    data = get_scaleio_data(item, parsed)
-    if not data:
+    if not (data := parsed.get(item)):
         return
 
     # How will the data be represented? It's magic and the only
@@ -42,7 +43,7 @@ def check_scaleio_pd(item, params, parsed):
 
 
 check_info["scaleio_pd"] = LegacyCheckDefinition(
-    parse_function=lambda info: parse_scaleio(info, "PROTECTION_DOMAIN"),
+    parse_function=parse_scaleio_pd,
     discovery_function=inventory_scaleio_pd,
     check_function=check_scaleio_pd,
     service_name="ScaleIO PD capacity %s",
@@ -57,8 +58,7 @@ def inventory_scaleio_pd_status(parsed):
 
 
 def check_scaleio_pd_status(item, _no_params, parsed):
-    data = get_scaleio_data(item, parsed)
-    if not data:
+    if not (data := parsed.get(item)):
         return
 
     status = data["STATE"][0].replace("PROTECTION_DOMAIN_", "")

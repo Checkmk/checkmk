@@ -14,6 +14,11 @@ see: https://d1nmyq4gcgsfi5.cloudfront.net/media/pi_3_3_devnet/api/v2/data/Clien
 from cmk.base.check_api import check_levels, discover_single, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+
+def parse_cisco_prime_wifi_connections(string_table: StringTable) -> dict:
+    return parse_cisco_prime("clientCountsDTO", string_table)
 
 
 def check_cisco_prime_wifi_connections(item, params, parsed):
@@ -63,7 +68,7 @@ def check_cisco_prime_wifi_connections(item, params, parsed):
 
 
 check_info["cisco_prime_wifi_connections"] = LegacyCheckDefinition(
-    parse_function=lambda info: parse_cisco_prime("clientCountsDTO", info),
+    parse_function=parse_cisco_prime_wifi_connections,
     discovery_function=discover_single,
     check_function=check_cisco_prime_wifi_connections,
     service_name="Cisco Prime WiFi Connections",

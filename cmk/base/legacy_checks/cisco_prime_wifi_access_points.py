@@ -19,6 +19,11 @@ from cmk.base.check_api import (
 )
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+
+def parse_cisco_prime_wifi_access_points(string_table: StringTable) -> dict:
+    return parse_cisco_prime("accessPointsDTO", string_table)
 
 
 def check_cisco_prime_wifi_access_points(item, params, parsed):
@@ -39,7 +44,7 @@ def check_cisco_prime_wifi_access_points(item, params, parsed):
 
 
 check_info["cisco_prime_wifi_access_points"] = LegacyCheckDefinition(
-    parse_function=lambda info: parse_cisco_prime("accessPointsDTO", info),
+    parse_function=parse_cisco_prime_wifi_access_points,
     discovery_function=discover_single,
     check_function=check_cisco_prime_wifi_access_points,
     service_name="Cisco Prime WiFi Access Points",

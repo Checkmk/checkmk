@@ -29,6 +29,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 # https://library.netapp.com/ecmdocs/ECMP1608437/html/GUID-04407796-688E-489D-901C-A6C9EAC2A7A2.html
 
 
+def parse_netapp_api_vs_traffic(string_table):
+    return netapp_api_parse_lines(string_table, custom_keys=["protocol", "instance_name"])
+
+
 def inventory_netapp_api_vs_traffic(parsed):
     vservers = {x.split(".", 1)[1] for x in parsed}
     for vserver in vservers:
@@ -225,9 +229,7 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
 
 
 check_info["netapp_api_vs_traffic"] = LegacyCheckDefinition(
-    parse_function=lambda info: netapp_api_parse_lines(
-        info, custom_keys=["protocol", "instance_name"]
-    ),
+    parse_function=parse_netapp_api_vs_traffic,
     discovery_function=inventory_netapp_api_vs_traffic,
     check_function=check_netapp_api_vs_traffic,
     service_name="Traffic vServer %s",

@@ -13,6 +13,12 @@ from cmk.base.config import check_info
 # temp-sensor-list 11 temp-sensor-current-condition normal_temperature_range  temp-sensor-is-ambient true temp-sensor-low-warning 5   temp-sensor-hi-warning 40   temp-sensor-hi-critical 42  temp-sensor-current-temperature 24  temp-sensor-element-no 1    temp-sensor-low-critical 0  temp-sensor-is-error false
 
 
+def parse_netapp_api_temp(string_table):
+    return netapp_api_parse_lines(
+        string_table, custom_keys=["temp-sensor-list", "temp-sensor-element-no"]
+    )
+
+
 def inventory_netapp_api_temp(parsed):
     shelfs = {x.split(".")[0] for x in parsed}
     for shelf in shelfs:
@@ -65,11 +71,9 @@ def check_netapp_api_temp(item, params, parsed):
 
 
 check_info["netapp_api_temp"] = LegacyCheckDefinition(
-    check_function=check_netapp_api_temp,
+    parse_function=parse_netapp_api_temp,
     discovery_function=inventory_netapp_api_temp,
-    parse_function=lambda info: netapp_api_parse_lines(
-        info, custom_keys=["temp-sensor-list", "temp-sensor-element-no"]
-    ),
+    check_function=check_netapp_api_temp,
     check_ruleset_name="temperature",
     service_name="Temperature %s",
 )

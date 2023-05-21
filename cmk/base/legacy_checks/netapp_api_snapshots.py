@@ -16,6 +16,10 @@ from cmk.base.config import check_info
 # volume_snapshot volch150    percentage-of-total-blocks 0 cumulative-total 122924 ...
 
 
+def parse_netapp_api_snapshots(string_table):
+    return netapp_api_parse_lines(string_table, custom_keys=["volume_snapshot"], as_dict_list=True)
+
+
 def inventory_netapp_api_snapshots(parsed):
     for key in parsed:
         yield key, {}
@@ -69,9 +73,7 @@ def check_netapp_api_snapshots(item, params, parsed):
 
 
 check_info["netapp_api_snapshots"] = LegacyCheckDefinition(
-    parse_function=lambda info: netapp_api_parse_lines(
-        info, custom_keys=["volume_snapshot"], as_dict_list=True
-    ),
+    parse_function=parse_netapp_api_snapshots,
     check_function=check_netapp_api_snapshots,
     discovery_function=inventory_netapp_api_snapshots,
     service_name="Snapshots Volume %s",

@@ -16,7 +16,6 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "TableHosts.h"
 #include "livestatus/AttributeBitmaskColumn.h"
 #include "livestatus/AttributeListColumn.h"
 #include "livestatus/BlobColumn.h"
@@ -37,6 +36,7 @@
 #include "livestatus/RRDColumn.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/TableHosts.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 

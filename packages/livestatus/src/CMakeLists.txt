@@ -9,8 +9,8 @@ set(livestatus_headers
     ${header_location}/BitMask.h
     ${header_location}/BlobColumn.h
     ${header_location}/ChronoUtils.h
-    ${header_location}/ColumnFilter.h
     ${header_location}/Column.h
+    ${header_location}/ColumnFilter.h
     ${header_location}/CommentRenderer.h
     ${header_location}/CountAggregator.h
     ${header_location}/CrashReport.h
@@ -62,9 +62,9 @@ set(livestatus_headers
     ${header_location}/Query.h
     ${header_location}/Queue.h
     ${header_location}/RegExp.h
+    ${header_location}/Renderer.h
     ${header_location}/RendererBrokenCSV.h
     ${header_location}/RendererCSV.h
-    ${header_location}/Renderer.h
     ${header_location}/RendererJSON.h
     ${header_location}/RendererPython3.h
     ${header_location}/Row.h
@@ -77,6 +77,7 @@ set(livestatus_headers
     ${header_location}/StringFilter.h
     ${header_location}/StringUtils.h
     ${header_location}/strutil.h
+    ${header_location}/Table.h
     ${header_location}/TableColumns.h
     ${header_location}/TableCommands.h
     ${header_location}/TableContactGroups.h
@@ -86,8 +87,8 @@ set(livestatus_headers
     ${header_location}/TableEventConsoleReplication.h
     ${header_location}/TableEventConsoleRules.h
     ${header_location}/TableEventConsoleStatus.h
-    ${header_location}/Table.h
     ${header_location}/TableHostGroups.h
+    ${header_location}/TableHosts.h
     ${header_location}/TableLabels.h
     ${header_location}/TableServiceGroups.h
     ${header_location}/TableStatus.h
@@ -139,8 +140,8 @@ set(livestatus_sources
     POSIXUtils.cc
     Query.cc
     RegExp.cc
-    RendererBrokenCSV.cc
     Renderer.cc
+    RendererBrokenCSV.cc
     RendererCSV.cc
     RendererJSON.cc
     RendererPython3.cc
@@ -163,6 +164,7 @@ set(livestatus_sources
     TableEventConsoleRules.cc
     TableEventConsoleStatus.cc
     TableHostGroups.cc
+    TableHosts.cc
     TableLabels.cc
     TableServiceGroups.cc
     TableStatus.cc

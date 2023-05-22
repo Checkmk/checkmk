@@ -6,8 +6,6 @@
 #ifndef TableHosts_h
 #define TableHosts_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <string>
 
 #include "livestatus/Row.h"

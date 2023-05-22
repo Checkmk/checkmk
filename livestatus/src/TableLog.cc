@@ -12,7 +12,6 @@
 #include <stdexcept>
 #include <variant>  // IWYU pragma: keep
 
-#include "TableHosts.h"
 #include "TableServices.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
@@ -23,6 +22,7 @@
 #include "livestatus/StringColumn.h"
 #include "livestatus/TableCommands.h"
 #include "livestatus/TableContacts.h"
+#include "livestatus/TableHosts.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 class IContact;

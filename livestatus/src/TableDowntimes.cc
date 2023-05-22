@@ -10,7 +10,6 @@
 #include <memory>
 #include <variant>  // IWYU pragma: keep
 
-#include "TableHosts.h"
 #include "TableServices.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
@@ -20,6 +19,7 @@
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/TableHosts.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 

@@ -1,0 +1,12 @@
+Title: Distributed monitoring respects InfluxDB site restriction rule
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1684747470
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0p1
+
+
+

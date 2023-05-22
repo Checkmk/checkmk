@@ -6,7 +6,7 @@
 import logging
 import os
 import sys
-from collections.abc import Callable, Container, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
@@ -556,13 +556,17 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_hosts(hostlist: list[HostName]) -> None:
+def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     config_cache = config.get_config_cache()
-    if not hostlist:
-        hostlist = sorted(config_cache.all_active_hosts())
+    all_hosts = frozenset(config_cache.all_active_hosts())
+    hosts = frozenset(hostlist)
+    if not hosts:
+        hosts = all_hosts
 
-    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostlist))
-    for hostname in hostlist:
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(hosts)
+    for hostname in sorted(hosts - all_hosts):
+        sys.stderr.write(f"unknown host: {hostname}\n")
+    for hostname in sorted(hosts & all_hosts):
         cmk.base.dump_host.dump_host(hostname)
 
 

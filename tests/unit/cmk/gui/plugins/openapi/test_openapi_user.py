@@ -1362,9 +1362,16 @@ def test_create_user_with_non_existing_custom_attribute(
     )
 
 
-def test_user_with_invalid_id(clients: ClientRegistry) -> None:
+@pytest.mark.parametrize(
+    "username",
+    [
+        "!@#@%)@!#&)!@*#$",  # disallowed characters
+        64 * "𐌈",  # too long
+    ],
+)
+def test_user_with_invalid_id(clients: ClientRegistry, username: str) -> None:
     clients.User.create(
-        username="!@#@%)@!#&)!@*#$", fullname="Sym Bols", expect_ok=False
+        username=username, fullname="Invalid name", expect_ok=False
     ).assert_status_code(400)
 
 

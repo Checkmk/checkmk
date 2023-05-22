@@ -25,7 +25,6 @@
 #include "TableEventConsoleHistory.h"
 #include "TableHostsByGroup.h"
 #include "TableLog.h"
-#include "TableServices.h"
 #include "TableServicesByGroup.h"
 #include "TableServicesByHostGroup.h"
 #include "TableStateHistory.h"
@@ -43,6 +42,7 @@
 #include "livestatus/TableHosts.h"
 #include "livestatus/TableLabels.h"
 #include "livestatus/TableServiceGroups.h"
+#include "livestatus/TableServices.h"
 #include "livestatus/TableStatus.h"
 #include "livestatus/TableTimeperiods.h"
 class Query;

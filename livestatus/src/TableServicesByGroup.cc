@@ -7,7 +7,6 @@
 
 #include <optional>
 
-#include "TableServices.h"
 #include "livestatus/Column.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
@@ -15,6 +14,7 @@
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/TableServiceGroups.h"
+#include "livestatus/TableServices.h"
 #include "livestatus/User.h"
 
 namespace {

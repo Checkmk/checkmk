@@ -14,7 +14,6 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "TableServices.h"
 #include "livestatus/Attributes.h"  // IWYU pragma: keep
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
@@ -31,6 +30,7 @@
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/TableHosts.h"
+#include "livestatus/TableServices.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 

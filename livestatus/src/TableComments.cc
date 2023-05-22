@@ -10,7 +10,6 @@
 #include <memory>
 #include <variant>
 
-#include "TableServices.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
@@ -19,6 +18,7 @@
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TableHosts.h"
+#include "livestatus/TableServices.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 

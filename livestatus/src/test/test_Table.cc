@@ -16,7 +16,6 @@
 #include <utility>
 #include <vector>
 
-#include "TableDowntimes.h"
 #include "TableEventConsoleEvents.h"
 #include "TableEventConsoleHistory.h"
 #include "TableHostsByGroup.h"
@@ -38,6 +37,7 @@
 #include "livestatus/TableContactGroups.h"
 #include "livestatus/TableContacts.h"
 #include "livestatus/TableCrashReports.h"
+#include "livestatus/TableDowntimes.h"
 #include "livestatus/TableEventConsoleRules.h"
 #include "livestatus/TableEventConsoleStatus.h"
 #include "livestatus/TableHostGroups.h"

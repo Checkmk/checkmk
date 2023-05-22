@@ -3,28 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Generator
+
 import pytest
 
 from tests.testlib.site import Site
 
 from .checks import compare_check_output, update_check_output
-from .conftest import (
-    create_wato_hosts,
-    create_wato_rules,
-    inject_agent_output,
-    LOGGER,
-    run_as_site_user,
-    SiteFolders,
-)
+from .conftest import LOGGER, run_as_site_user
 
 
-def test_plugin(test_site: Site, tmp_path_factory: pytest.TempPathFactory) -> None:
+def test_plugin(
+    test_site: Site, setup: Generator, tmp_path_factory: pytest.TempPathFactory
+) -> None:
     host_name = "test_agent_plugin_injected"
-
-    SiteFolders(test_site.id).cleanup().create()
-    create_wato_hosts(test_site.id)
-    create_wato_rules(test_site.id)
-    inject_agent_output(test_site.id)
 
     LOGGER.info("Running update-config...")
     assert run_as_site_user(test_site.id, ["cmk-update-config"]).returncode == 0
@@ -48,6 +40,6 @@ def test_plugin(test_site: Site, tmp_path_factory: pytest.TempPathFactory) -> No
 
 
 @pytest.mark.update_checks
-def test_store_update_checks(test_site: Site) -> None:
+def test_store_update_checks(test_site: Site, setup: Generator) -> None:
     # dump_section_output() TODO: improve section-output  dump function
     assert update_check_output(test_site), "Failed to update check output!"

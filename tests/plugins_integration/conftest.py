@@ -6,8 +6,8 @@ import logging
 import os
 import subprocess
 from collections.abc import Iterator
-from dataclasses import dataclass
 from pathlib import Path
+from typing import Generator
 
 import pytest
 
@@ -75,6 +75,49 @@ def site() -> Iterator[Site]:
         site_to_return.save_results()
 
 
+@pytest.fixture(scope="session")
+def setup(test_site: Site) -> Generator:
+    """Setup test-site and perform cleanup after test execution."""
+
+    folders = ["$OMD_ROOT/etc/check_mk/conf.d/wato/agents", "$OMD_ROOT/var/check_mk/agent_output"]
+    omd_root = _omd_root_path(test_site.id)
+
+    # create wato-agents and agent-output folders in the test site
+    for folder in folders:
+        LOGGER.info('Creating folder "%s"...', folder)
+        assert run_as_site_user(test_site.id, ["mkdir", "-p", folder]).returncode == 0
+
+    # create wato-hosts by injecting the corresponding python script in the test site
+    injected_script = Path(__file__).parent.resolve() / "injected_scripts/wato_hosts.py"
+    wato_hosts_path = omd_root / "etc/check_mk/conf.d/wato/agents/hosts.mk"
+
+    LOGGER.info("Creating hosts in wato...")
+    assert run_as_superuser(["cp", str(injected_script), str(wato_hosts_path)]).returncode == 0
+
+    # create wato-rules by injecting the corresponding python script in the test site
+    injected_script = Path(__file__).parent.resolve() / "injected_scripts/wato_rules.py"
+    wato_rules_path = omd_root / "etc/check_mk/conf.d/wato/agents/rules.mk"
+
+    LOGGER.info("Creating rules in wato...")
+    assert run_as_superuser(["cp", str(injected_script), str(wato_rules_path)]).returncode == 0
+
+    # inject agent-output in the test site
+    injected_output = Path(__file__).parent.resolve() / "agent_output"
+    agent_output_path = omd_root / "var/check_mk/"
+
+    LOGGER.info("Injecting agent-output...")
+    assert (
+        run_as_superuser(["cp", "-r", str(injected_output), str(agent_output_path)]).returncode == 0
+    )
+
+    yield
+
+    # cleanup existing wato-agents and agent-output folders in the test site
+    for folder in folders:
+        LOGGER.info('Removing folder "%s"...', folder)
+        assert run_as_site_user(test_site.id, ["rm", "-rf", folder]).returncode == 0
+
+
 def _omd_root_path(site_id: str) -> Path:
     return Path(run_as_superuser(["su", "-l", f"{site_id}", "-c", "echo $OMD_ROOT"]).stdout.strip())
 
@@ -99,55 +142,3 @@ def run_as_superuser(cmd: list[str]) -> subprocess.CompletedProcess:
 def run_as_site_user(site_name: str, cmd: list[str]) -> subprocess.CompletedProcess:
     cmd = ["/usr/bin/sudo", "-i", "-u", site_name] + cmd
     return run_cmd(cmd)
-
-
-@dataclass
-class SiteFolders:
-    site_id: str
-    folders = ["$OMD_ROOT/etc/check_mk/conf.d/wato/agents", "$OMD_ROOT/var/check_mk/agent_output"]
-
-    def cleanup(self) -> "SiteFolders":
-        """Cleanup existing wato-agents and agent-output folders in the test site."""
-        for folder in self.folders:
-            LOGGER.info('Removing folder "%s"...', folder)
-            assert run_as_site_user(self.site_id, ["rm", "-rf", folder]).returncode == 0
-        return self
-
-    def create(self) -> "SiteFolders":
-        """Create wato-agents and agent-output folders in the test site."""
-        for folder in self.folders:
-            LOGGER.info('Creating folder "%s"...', folder)
-            assert run_as_site_user(self.site_id, ["mkdir", "-p", folder]).returncode == 0
-        return self
-
-
-def create_wato_hosts(site_id: str) -> None:
-    """Create wato-hosts by injecting the corresponding python script in the test site."""
-    omd_root = _omd_root_path(site_id)
-    injected_script = Path(__file__).parent.resolve() / "injected_scripts/wato_hosts.py"
-    wato_hosts_path = omd_root / "etc/check_mk/conf.d/wato/agents/hosts.mk"
-
-    LOGGER.info("Creating hosts in wato...")
-    assert run_as_superuser(["cp", str(injected_script), str(wato_hosts_path)]).returncode == 0
-
-
-def create_wato_rules(site_id: str) -> None:
-    """Create wato-rules by injecting the corresponding python script in the test site."""
-    omd_root = _omd_root_path(site_id)
-    injected_script = Path(__file__).parent.resolve() / "injected_scripts/wato_rules.py"
-    wato_rules_path = omd_root / "etc/check_mk/conf.d/wato/agents/rules.mk"
-
-    LOGGER.info("Creating rules in wato...")
-    assert run_as_superuser(["cp", str(injected_script), str(wato_rules_path)]).returncode == 0
-
-
-def inject_agent_output(site_id: str) -> None:
-    """Inject agent-output in the test site."""
-    omd_root = _omd_root_path(site_id)
-    injected_output = Path(__file__).parent.resolve() / "agent_output"
-    agent_output_path = omd_root / "var/check_mk/"
-
-    LOGGER.info("Injecting agent-output...")
-    assert (
-        run_as_superuser(["cp", "-r", str(injected_output), str(agent_output_path)]).returncode == 0
-    )

@@ -100,6 +100,7 @@ set(livestatus_headers
     ${header_location}/TableServices.h
     ${header_location}/TableServicesByGroup.h
     ${header_location}/TableServicesByHostGroup.h
+    ${header_location}/TableStateHistory.h
     ${header_location}/TableStatus.h
     ${header_location}/TableTimeperiods.h
     ${header_location}/TimeAggregator.h
@@ -185,6 +186,7 @@ set(livestatus_sources
     TableServices.cc
     TableServicesByGroup.cc
     TableServicesByHostGroup.cc
+    TableStateHistory.cc
     TableStatus.cc
     TableTimeperiods.cc
     TimeFilter.cc

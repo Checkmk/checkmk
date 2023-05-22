@@ -19,7 +19,6 @@
 #include <utility>
 #include <vector>
 #endif
-#include "TableStateHistory.h"
 #include "livestatus/LogCache.h"
 #include "livestatus/Table.h"
 #include "livestatus/TableColumns.h"
@@ -43,6 +42,7 @@
 #include "livestatus/TableServices.h"
 #include "livestatus/TableServicesByGroup.h"
 #include "livestatus/TableServicesByHostGroup.h"
+#include "livestatus/TableStateHistory.h"
 #include "livestatus/TableStatus.h"
 #include "livestatus/TableTimeperiods.h"
 class Query;

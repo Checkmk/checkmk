@@ -95,6 +95,7 @@ pexpect = "*" # used for update testing
 dill = "*"
 jsonschema = "*"
 polyfactory = "*" # used for generating mock data for unit tests
+checkmk-dev-tools = "==0.1.24"  # provides tooling for build artifacts
 
 [packages]
 setuptools-scm = "==4.1.2"  # needed by various setup.py

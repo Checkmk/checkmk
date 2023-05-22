@@ -416,6 +416,7 @@ StatusCodeInt = Literal[
     423,
     428,
     504,
+    409,
 ]
 ErrorStatusCodeInt = Literal[400, 401, 403, 404, 405, 406, 409, 412, 415, 422, 423, 428, 500]
 StatusCode = Literal[

@@ -90,7 +90,6 @@ liblivestatusneb_a_SOURCES = \
         TableEventConsoleEvents.cc \
         TableEventConsoleHistory.cc \
         TableLog.cc \
-        TableServicesByGroup.cc \
         TableServicesByHostGroup.cc \
         TableStateHistory.cc \
         TimeperiodsCache.cc \

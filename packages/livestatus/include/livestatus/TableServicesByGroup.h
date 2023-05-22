@@ -6,8 +6,6 @@
 #ifndef TableServicesByGroup_h
 #define TableServicesByGroup_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <string>
 
 #include "livestatus/Table.h"

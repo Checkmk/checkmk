@@ -330,6 +330,18 @@ class Request(
             )
         return self.remote_addr
 
+    @overload
+    def get_str_input(self, varname: str) -> str | None:
+        ...
+
+    @overload
+    def get_str_input(self, varname: str, deflt: str) -> str:
+        ...
+
+    @overload
+    def get_str_input(self, varname: str, deflt: None) -> str | None:
+        ...
+
     def get_str_input(self, varname: str, deflt: str | None = None) -> str | None:
         return self.var(varname, deflt)
 

@@ -1259,9 +1259,16 @@ def test_create_user_with_non_existing_custom_attribute(
     )
 
 
-def test_user_with_invalid_id(api_client: RestApiClient) -> None:
+@pytest.mark.parametrize(
+    "username",
+    [
+        "!@#@%)@!#&)!@*#$",  # disallowed characters
+        64 * "𐌈",  # too long
+    ],
+)
+def test_user_with_invalid_id(api_client: RestApiClient, username: str) -> None:
     api_client.create_user(
-        username="!@#@%)@!#&)!@*#$", fullname="Sym Bols", expect_ok=False
+        username=username, fullname="Invalid name", expect_ok=False
     ).assert_status_code(400)
 
 

@@ -898,7 +898,9 @@ class Username(fields.String):
     def _validate(self, value):
         super()._validate(value)
 
-        if not re.match(r"^[\w$][-@.\w$]*$", value):
+        if not re.match(r"^[\w$][-@.\w$]*$", value) or len(bytes(value, encoding="utf-8")) > 255:
+            # Note: starting in version 2.2 this check can happen in the UserId type, but here
+            # UserId is just a NewType.
             raise self.make_error("invalid_name", username=value)
 
         # TODO: change to names list only

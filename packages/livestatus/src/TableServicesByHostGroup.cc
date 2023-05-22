@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "TableServicesByHostGroup.h"
+#include "livestatus/TableServicesByHostGroup.h"
 
 #include "livestatus/Column.h"
 #include "livestatus/Interface.h"

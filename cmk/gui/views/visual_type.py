@@ -156,12 +156,12 @@ def _get_struct_tree(
     if cache_id in struct_tree_cache:
         return struct_tree_cache[cache_id]
 
-    struct_tree: StructuredDataNode | DeltaStructuredDataNode | None
-    if is_history:
-        struct_tree = load_latest_delta_tree(hostname)
-    else:
-        row = get_status_data_via_livestatus(site_id, hostname)
-        struct_tree = load_filtered_and_merged_tree(row)
+    tree = (
+        load_latest_delta_tree(hostname)
+        if is_history
+        else load_filtered_and_merged_tree(get_status_data_via_livestatus(site_id, hostname))
+    )
+    struct_tree = None if tree is None else tree.tree
 
     struct_tree_cache[cache_id] = struct_tree
     return struct_tree

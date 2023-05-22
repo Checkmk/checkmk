@@ -152,15 +152,15 @@ def _make_filters_from_permitted_paths(
     return [_make_filter(entry) for entry in permitted_paths if entry]
 
 
-def load_filtered_and_merged_tree(row: Row) -> StructuredDataNode | None:
+def load_filtered_and_merged_tree(row: Row) -> ImmutableTree | None:
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
     host_name = row.get("host_name")
     inventory_tree = _load_tree_from_file(tree_type="inventory", host_name=host_name)
-    status_data_tree: StructuredDataNode | None
+    status_data_tree: ImmutableTree | None
     if raw_status_data_tree := row.get("host_structured_status"):
-        status_data_tree = StructuredDataNode.deserialize(
-            ast.literal_eval(raw_status_data_tree.decode("utf-8"))
+        status_data_tree = ImmutableTree(
+            StructuredDataNode.deserialize(ast.literal_eval(raw_status_data_tree.decode("utf-8")))
         )
     else:
         status_data_tree = _load_tree_from_file(tree_type="status_data", host_name=host_name)
@@ -171,14 +171,11 @@ def load_filtered_and_merged_tree(row: Row) -> StructuredDataNode | None:
     if status_data_tree is None:
         return inventory_tree
 
+    merged_tree = inventory_tree.merge(status_data_tree)
     if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
-        return (
-            ImmutableTree(inventory_tree)
-            .merge(status_data_tree)
-            .filter(_make_filters_from_permitted_paths(permitted_paths))
-            .tree
-        )
-    return ImmutableTree(inventory_tree).merge(status_data_tree).tree
+        return merged_tree.filter(_make_filters_from_permitted_paths(permitted_paths))
+
+    return merged_tree
 
 
 def get_status_data_via_livestatus(site: livestatus.SiteId | None, hostname: HostName) -> Row:
@@ -266,7 +263,7 @@ class HistoryEntry(NamedTuple):
     new: int
     changed: int
     removed: int
-    delta_tree: DeltaStructuredDataNode
+    delta_tree: ImmutableDeltaTree
 
 
 class FilteredInventoryHistoryPaths(NamedTuple):
@@ -278,7 +275,7 @@ class FilterInventoryHistoryPathsError(Exception):
     pass
 
 
-def load_latest_delta_tree(hostname: HostName) -> DeltaStructuredDataNode | None:
+def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree | None:
     def _get_latest_timestamps(
         tree_paths: Sequence[InventoryHistoryPath],
     ) -> FilteredInventoryHistoryPaths:
@@ -303,7 +300,7 @@ def load_latest_delta_tree(hostname: HostName) -> DeltaStructuredDataNode | None
 def load_delta_tree(
     hostname: HostName,
     timestamp: int,
-) -> tuple[DeltaStructuredDataNode | None, Sequence[str]]:
+) -> tuple[ImmutableDeltaTree | None, Sequence[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
@@ -449,24 +446,24 @@ def _get_pairs(
 
 @dataclass(frozen=True)
 class _CachedTreeLoader:
-    _lookup: dict[Path, StructuredDataNode] = field(default_factory=dict)
+    _lookup: dict[Path, ImmutableTree] = field(default_factory=dict)
 
-    def get_tree(self, filepath: Path) -> StructuredDataNode:
+    def get_tree(self, filepath: Path) -> ImmutableTree:
         if filepath == _DEFAULT_PATH_TO_TREE:
-            return StructuredDataNode()
+            return ImmutableTree()
 
         if filepath in self._lookup:
             return self._lookup[filepath]
 
         return self._lookup.setdefault(filepath, self._load_tree_from_file(filepath))
 
-    def _load_tree_from_file(self, filepath: Path) -> StructuredDataNode:
+    def _load_tree_from_file(self, filepath: Path) -> ImmutableTree:
         try:
             tree = load_tree(filepath)
         except FileNotFoundError:
             raise LoadStructuredDataError()
 
-        if tree is None or tree.is_empty():
+        if tree.tree.is_empty():
             # load_file may return an empty tree
             raise LoadStructuredDataError()
 
@@ -503,39 +500,37 @@ class _CachedDeltaTreeLoader:
             new,
             changed,
             removed,
-            DeltaStructuredDataNode.deserialize(raw_delta_tree),
+            ImmutableDeltaTree(DeltaStructuredDataNode.deserialize(raw_delta_tree)),
         )
 
     def get_calculated_or_store_entry(
         self,
-        previous_tree: StructuredDataNode,
-        current_tree: StructuredDataNode,
+        previous_tree: ImmutableTree,
+        current_tree: ImmutableTree,
     ) -> HistoryEntry | None:
-        delta_tree = ImmutableTree(current_tree).difference(previous_tree).tree
-        delta_result = delta_tree.count_entries()
+        delta_tree = current_tree.difference(previous_tree)
+        delta_result = delta_tree.tree.count_entries()
         new = delta_result["new"]
         changed = delta_result["changed"]
         removed = delta_result["removed"]
         if new or changed or removed:
             store.save_text_to_file(
                 self._path,
-                repr((new, changed, removed, delta_tree.serialize())),
+                repr((new, changed, removed, delta_tree.tree.serialize())),
             )
             return self._make_history_entry(new, changed, removed, delta_tree)
         return None
 
     def _make_history_entry(
-        self, new: int, changed: int, removed: int, delta_tree: DeltaStructuredDataNode
+        self, new: int, changed: int, removed: int, delta_tree: ImmutableDeltaTree
     ) -> HistoryEntry | None:
         if self.filters is None:
             return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
 
-        if (
-            filtered_delta_tree := ImmutableDeltaTree(delta_tree).filter(self.filters).tree
-        ).is_empty():
+        if (filtered_delta_tree := delta_tree.filter(self.filters)).tree.is_empty():
             return None
 
-        delta_result = filtered_delta_tree.count_entries()
+        delta_result = filtered_delta_tree.tree.count_entries()
         return HistoryEntry(
             self.current_timestamp,
             delta_result["new"],
@@ -563,7 +558,7 @@ class LoadStructuredDataError(MKException):
 @request_memoize(maxsize=None)
 def _load_tree_from_file(
     *, tree_type: Literal["inventory", "status_data"], host_name: HostName | None
-) -> StructuredDataNode | None:
+) -> ImmutableTree | None:
     """Load data of a host, cache it in the current HTTP request"""
     if not host_name:
         return None
@@ -739,18 +734,15 @@ def inventory_of_host(host_name: HostName, api_request):  # type: ignore[no-unty
     verify_permission(host_name, site)
 
     row = get_status_data_via_livestatus(site, host_name)
-    merged_tree = load_filtered_and_merged_tree(row)
-    if not merged_tree:
+    if (tree := load_filtered_and_merged_tree(row)) is None:
         return {}
 
     if "paths" in api_request:
-        return (
-            ImmutableTree(merged_tree)
-            .filter(_make_filters_from_api_request_paths(api_request["paths"]))
-            .tree.serialize()
-        )
+        return tree.filter(
+            _make_filters_from_api_request_paths(api_request["paths"])
+        ).tree.serialize()
 
-    return merged_tree.serialize()
+    return tree.tree.serialize()
 
 
 def verify_permission(host_name: HostName, site: livestatus.SiteId | None) -> None:

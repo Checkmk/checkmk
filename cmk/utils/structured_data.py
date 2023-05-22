@@ -201,8 +201,8 @@ def make_filter_from_choice(
 
 
 class MutableTree:
-    def __init__(self, tree: StructuredDataNode) -> None:
-        self.tree: Final = tree
+    def __init__(self, tree: StructuredDataNode | None = None) -> None:
+        self.tree: Final = StructuredDataNode() if tree is None else tree
 
     def add_pairs(
         self,
@@ -485,17 +485,17 @@ def _compare_nodes(
 
 
 class ImmutableTree:
-    def __init__(self, tree: StructuredDataNode) -> None:
-        self.tree: Final = tree
+    def __init__(self, tree: StructuredDataNode | None = None) -> None:
+        self.tree: Final = StructuredDataNode() if tree is None else tree
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableTree:
         return ImmutableTree(_filter_node(self.tree, filters))
 
-    def merge(self, tree_rhs: StructuredDataNode) -> ImmutableTree:
-        return ImmutableTree(_merge_nodes(self.tree, tree_rhs))
+    def merge(self, rhs: ImmutableTree) -> ImmutableTree:
+        return ImmutableTree(_merge_nodes(self.tree, rhs.tree))
 
-    def difference(self, tree_rhs: StructuredDataNode) -> ImmutableDeltaTree:
-        return ImmutableDeltaTree(_compare_nodes(self.tree, tree_rhs))
+    def difference(self, rhs: ImmutableTree) -> ImmutableDeltaTree:
+        return ImmutableDeltaTree(_compare_nodes(self.tree, rhs.tree))
 
 
 def _filter_delta_attributes(
@@ -645,10 +645,10 @@ class ImmutableDeltaTree:
 #   - status_data/HOSTNAME, status_data/HOSTNAME.gz
 
 
-def load_tree(filepath: Path) -> StructuredDataNode:
+def load_tree(filepath: Path) -> ImmutableTree:
     if raw_tree := store.load_object_from_file(filepath, default=None):
-        return StructuredDataNode.deserialize(raw_tree)
-    return StructuredDataNode()
+        return ImmutableTree(StructuredDataNode.deserialize(raw_tree))
+    return ImmutableTree()
 
 
 class TreeStore:
@@ -656,7 +656,7 @@ class TreeStore:
         self._tree_dir = Path(tree_dir)
         self._last_filepath = Path(tree_dir) / ".last"
 
-    def load(self, *, host_name: HostName) -> StructuredDataNode:
+    def load(self, *, host_name: HostName) -> ImmutableTree:
         return load_tree(self._tree_file(host_name))
 
     def save(self, *, host_name: HostName, tree: StructuredDataNode, pretty: bool = False) -> None:
@@ -691,7 +691,7 @@ class TreeOrArchiveStore(TreeStore):
         super().__init__(tree_dir)
         self._archive_dir = Path(archive)
 
-    def load_previous(self, *, host_name: HostName) -> StructuredDataNode:
+    def load_previous(self, *, host_name: HostName) -> ImmutableTree:
         if (tree_file := self._tree_file(host_name=host_name)).exists():
             return load_tree(tree_file)
 
@@ -700,7 +700,7 @@ class TreeOrArchiveStore(TreeStore):
                 self._archive_host_dir(host_name).iterdir(), key=lambda tp: int(tp.name)
             )
         except (FileNotFoundError, ValueError):
-            return StructuredDataNode()
+            return ImmutableTree()
 
         return load_tree(latest_archive_tree_file)
 

@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 from typing import NamedTuple
 
-from cmk.utils.structured_data import SDPath, SDRow, StructuredDataNode
+from cmk.utils.structured_data import ImmutableTree, SDPath, SDRow
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -80,12 +80,16 @@ def _add_inventory_data(rows: Rows) -> None:
             continue
 
         try:
-            row["host_inventory"] = load_filtered_and_merged_tree(row)
+            row["host_inventory"] = (
+                ImmutableTree().tree
+                if (tree := load_filtered_and_merged_tree(row)) is None
+                else tree.tree
+            )
         except LoadStructuredDataError:
             # The inventory row may be joined with other rows (perf-o-meter, ...).
             # Therefore we initialize the corrupt inventory tree with an empty tree
             # in order to display all other rows.
-            row["host_inventory"] = StructuredDataNode()
+            row["host_inventory"] = ImmutableTree().tree
             corrupted_inventory_files.append(str(get_short_inventory_filepath(row["host_name"])))
 
             if corrupted_inventory_files:

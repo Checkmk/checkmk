@@ -2147,7 +2147,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                 check_result = inventory.inventorize_cluster(
                     config_cache.nodes_of(hostname) or (),
                     parameters=parameters,
-                    previous_tree=previous_tree,
+                    previous_tree=previous_tree.tree,
                 ).check_result
             else:
                 check_result = inventory.inventorize_host(
@@ -2161,7 +2161,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                     run_plugin_names=run_plugin_names,
                     parameters=parameters,
                     raw_intervals_from_config=raw_intervals_from_config,
-                    previous_tree=previous_tree,
+                    previous_tree=previous_tree.tree,
                 ).check_result
             if check_result.state:
                 section.section_error(check_result.summary)
@@ -2238,7 +2238,7 @@ def _execute_active_check_inventory(
         result = inventory.inventorize_cluster(
             config_cache.nodes_of(host_name) or (),
             parameters=parameters,
-            previous_tree=previous_tree,
+            previous_tree=previous_tree.tree,
         )
     else:
         result = inventory.inventorize_host(
@@ -2252,7 +2252,7 @@ def _execute_active_check_inventory(
             run_plugin_names=EVERYTHING,
             parameters=parameters,
             raw_intervals_from_config=raw_intervals_from_config,
-            previous_tree=previous_tree,
+            previous_tree=previous_tree.tree,
         )
 
     if result.no_data_or_files:
@@ -2260,7 +2260,7 @@ def _execute_active_check_inventory(
 
     if not (result.processing_failed or result.no_data_or_files):
         save_tree_actions = _get_save_tree_actions(
-            previous_tree=previous_tree,
+            previous_tree=previous_tree.tree,
             inventory_tree=result.inventory_tree,
             update_result=result.update_result,
         )

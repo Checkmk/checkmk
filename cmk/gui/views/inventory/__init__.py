@@ -22,6 +22,8 @@ from cmk.utils.structured_data import (
     DeltaAttributes,
     DeltaStructuredDataNode,
     DeltaTable,
+    ImmutableDeltaTree,
+    ImmutableTree,
     RetentionIntervals,
     SDKey,
     SDKeyColumns,
@@ -1453,7 +1455,7 @@ class RowTableInventory(ABCRowTable):
 
     def _get_inv_data(self, hostrow: Row) -> Sequence[SDRow]:
         try:
-            merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
+            tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
             user_errors.add(
                 MKUserError(
@@ -1464,10 +1466,10 @@ class RowTableInventory(ABCRowTable):
             )
             return []
 
-        if merged_tree is None:
+        if tree is None:
             return []
 
-        return _get_table_rows(merged_tree, self._inventory_path)
+        return _get_table_rows(tree.tree, self._inventory_path)
 
     def _prepare_rows(self, inv_data: Sequence[SDRow]) -> Iterable[Row]:
         return (
@@ -1883,7 +1885,7 @@ class RowTableInventoryHistory(ABCRowTable):
         for history_entry in inv_data:
             yield {
                 "invhist_time": history_entry.timestamp,
-                "invhist_delta": history_entry.delta_tree,
+                "invhist_delta": history_entry.delta_tree.tree,
                 "invhist_removed": history_entry.removed,
                 "invhist_new": history_entry.new,
                 "invhist_changed": history_entry.changed,
@@ -2405,7 +2407,7 @@ def ajax_inv_render_tree() -> None:
     tree_id = request.get_ascii_input("tree_id", "")
     show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
 
-    tree: StructuredDataNode | DeltaStructuredDataNode | None
+    tree: ImmutableTree | ImmutableDeltaTree | None
     if tree_id:
         tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id[1:]))
         if corrupted_history_files:
@@ -2449,7 +2451,7 @@ def ajax_inv_render_tree() -> None:
         return
 
     inventory_path = inventory.InventoryPath.parse(raw_path or "")
-    if (node := tree.get_node(inventory_path.path)) is None:
+    if (node := tree.tree.get_node(inventory_path.path)) is None:
         html.show_error(
             _("Invalid path in inventory tree: '%s' >> %s") % (raw_path, repr(inventory_path.path))
         )

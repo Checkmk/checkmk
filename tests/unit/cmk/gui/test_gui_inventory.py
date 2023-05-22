@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 
 import cmk.utils
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.structured_data import SDPath, StructuredDataNode
+from cmk.utils.structured_data import ImmutableTree, SDPath, StructuredDataNode
 
 import cmk.gui.inventory
 from cmk.gui.inventory import (
@@ -361,15 +361,15 @@ def test_load_filtered_and_merged_tree(
         cmk.gui.inventory,
         "_load_tree_from_file",
         (
-            lambda *args, **kw: StructuredDataNode.deserialize({"loaded": "tree"})
+            lambda *args, **kw: ImmutableTree(StructuredDataNode.deserialize({"loaded": "tree"}))
             if kw["tree_type"] == "status_data"
             else None
         ),
     )
     row.update({"host_name": hostname})
-    status_data_tree = cmk.gui.inventory.load_filtered_and_merged_tree(row)
-    assert status_data_tree is not None
-    assert status_data_tree.is_equal(expected_tree)
+    tree = cmk.gui.inventory.load_filtered_and_merged_tree(row)
+    assert tree is not None
+    assert tree.tree.is_equal(expected_tree)
 
 
 _InvTree = StructuredDataNode.deserialize({"inv": "node"})

@@ -393,8 +393,8 @@ class MutableTrees:
 def _create_trees_from_inventory_plugin_items(
     items_of_inventory_plugins: Iterable[ItemsOfInventoryPlugin],
 ) -> MutableTrees:
-    mutable_inv_tree = MutableTree(StructuredDataNode())
-    mutable_sta_tree = MutableTree(StructuredDataNode())
+    mutable_inv_tree = MutableTree()
+    mutable_sta_tree = MutableTree()
     for items_of_inventory_plugin in items_of_inventory_plugins:
         for item in items_of_inventory_plugin.items:
             item.populate_inventory_tree(mutable_inv_tree)

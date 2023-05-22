@@ -7,10 +7,10 @@
 
 #include <memory>
 
-#include "TableEventConsoleEvents.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/TableEventConsoleEvents.h"
 #include "livestatus/TimeColumn.h"
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)

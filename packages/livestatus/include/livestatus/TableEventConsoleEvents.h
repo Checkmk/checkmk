@@ -6,8 +6,6 @@
 #ifndef TableEventConsoleEvents_h
 #define TableEventConsoleEvents_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <string>
 
 #include "livestatus/TableEventConsole.h"

@@ -6,8 +6,6 @@
 #ifndef TableLog_h
 #define TableLog_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <cstddef>
 #include <memory>
 #include <string>

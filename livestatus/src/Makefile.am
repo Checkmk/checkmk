@@ -87,7 +87,6 @@ liblivestatusneb_a_SOURCES = \
         NebHost.cc \
         NebService.cc \
         Store.cc \
-        TableLog.cc \
         TableStateHistory.cc \
         TimeperiodsCache.cc \
         module.cc \

@@ -16,7 +16,6 @@
 #include <utility>
 #include <vector>
 
-#include "TableLog.h"
 #include "TableStateHistory.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
@@ -40,6 +39,7 @@
 #include "livestatus/TableHosts.h"
 #include "livestatus/TableHostsByGroup.h"
 #include "livestatus/TableLabels.h"
+#include "livestatus/TableLog.h"
 #include "livestatus/TableServiceGroups.h"
 #include "livestatus/TableServices.h"
 #include "livestatus/TableServicesByGroup.h"

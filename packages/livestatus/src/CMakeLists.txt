@@ -91,6 +91,7 @@ set(livestatus_headers
     ${header_location}/TableEventConsoleStatus.h
     ${header_location}/TableHostGroups.h
     ${header_location}/TableHosts.h
+    ${header_location}/TableHostsByGroup.h
     ${header_location}/TableLabels.h
     ${header_location}/TableServiceGroups.h
     ${header_location}/TableServices.h
@@ -170,6 +171,7 @@ set(livestatus_sources
     TableEventConsoleStatus.cc
     TableHostGroups.cc
     TableHosts.cc
+    TableHostsByGroup.cc
     TableLabels.cc
     TableServiceGroups.cc
     TableServices.cc

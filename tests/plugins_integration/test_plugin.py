@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import subprocess
 from typing import Generator
 
 import pytest
@@ -10,7 +11,7 @@ import pytest
 from tests.testlib.site import Site
 
 from .checks import compare_check_output, update_check_output
-from .conftest import LOGGER, run_as_site_user
+from .conftest import LOGGER
 
 
 def test_plugin(
@@ -19,22 +20,30 @@ def test_plugin(
     host_name = "test_agent_plugin_injected"
 
     LOGGER.info("Running update-config...")
-    assert run_as_site_user(test_site.id, ["cmk-update-config"]).returncode == 0
+    assert test_site.execute(["cmk-update-config"]).wait() == 0
 
     LOGGER.info("Running service discovery...")
-    assert run_as_site_user(test_site.id, ["cmk", "$DEBUG", "-vII"]).returncode == 0
+    assert test_site.execute(["cmk", "-vI"]).wait() == 0
 
     LOGGER.info("Reloading core...")
-    assert run_as_site_user(test_site.id, ["cmk", "-O"]).returncode == 0
+    assert test_site.execute(["cmk", "-O"]).wait() == 0
 
     # perform assertion over raw data
-    cat_stdout = run_as_site_user(
-        test_site.id, ["cat", f"$OMD_ROOT/var/check_mk/agent_output/{host_name}"]
-    ).stdout
-    discovery_stdout = run_as_site_user(test_site.id, ["cmk", "-d", host_name]).stdout
+    cat_out, _ = test_site.execute(
+        ["cat", f"{test_site.root}/var/check_mk/agent_output/{host_name}"],
+        stdout=subprocess.PIPE,
+        encoding="utf-8",
+    ).communicate()
 
-    assert discovery_stdout == cat_stdout
+    discovery_out, _ = test_site.execute(
+        ["cmk", "-d", host_name],
+        stdout=subprocess.PIPE,
+        encoding="utf-8",
+    ).communicate()
 
+    assert cat_out == discovery_out != ""
+
+    # perform assertion over check data
     assert compare_check_output(
         test_site, tmp_path_factory.mktemp("check_output")
     ), "Check output mismatch!"

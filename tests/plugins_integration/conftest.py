@@ -79,13 +79,16 @@ def site() -> Iterator[Site]:
 def setup(test_site: Site) -> Generator:
     """Setup test-site and perform cleanup after test execution."""
 
-    folders = ["$OMD_ROOT/etc/check_mk/conf.d/wato/agents", "$OMD_ROOT/var/check_mk/agent_output"]
-    omd_root = _omd_root_path(test_site.id)
+    omd_root = Path(test_site.root)
+    folders = [
+        f"{omd_root}/etc/check_mk/conf.d/wato/agents",
+        f"{omd_root}/var/check_mk/agent_output",
+    ]
 
     # create wato-agents and agent-output folders in the test site
     for folder in folders:
         LOGGER.info('Creating folder "%s"...', folder)
-        assert run_as_site_user(test_site.id, ["mkdir", "-p", folder]).returncode == 0
+        assert test_site.execute(["mkdir", "-p", folder]).wait() == 0
 
     # create wato-hosts by injecting the corresponding python script in the test site
     injected_script = Path(__file__).parent.resolve() / "injected_scripts/wato_hosts.py"
@@ -115,11 +118,7 @@ def setup(test_site: Site) -> Generator:
     # cleanup existing wato-agents and agent-output folders in the test site
     for folder in folders:
         LOGGER.info('Removing folder "%s"...', folder)
-        assert run_as_site_user(test_site.id, ["rm", "-rf", folder]).returncode == 0
-
-
-def _omd_root_path(site_id: str) -> Path:
-    return Path(run_as_superuser(["su", "-l", f"{site_id}", "-c", "echo $OMD_ROOT"]).stdout.strip())
+        assert test_site.execute(["rm", "-rf", folder]).wait() == 0
 
 
 def run_cmd(cmd: list[str]) -> subprocess.CompletedProcess:
@@ -136,9 +135,4 @@ def run_cmd(cmd: list[str]) -> subprocess.CompletedProcess:
 
 def run_as_superuser(cmd: list[str]) -> subprocess.CompletedProcess:
     cmd = ["/usr/bin/sudo"] + cmd
-    return run_cmd(cmd)
-
-
-def run_as_site_user(site_name: str, cmd: list[str]) -> subprocess.CompletedProcess:
-    cmd = ["/usr/bin/sudo", "-i", "-u", site_name] + cmd
     return run_cmd(cmd)

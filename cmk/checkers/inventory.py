@@ -128,7 +128,7 @@ def inventorize_host(
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: RawIntervalsFromConfig,
-    old_tree: StructuredDataNode,
+    previous_tree: StructuredDataNode,
 ) -> CheckInventoryTreeResult:
     fetched = fetcher(host_name, ip_address=None)
     host_sections = parser((f[0], f[1]) for f in fetched)
@@ -149,7 +149,7 @@ def inventorize_host(
             )
         ),
         raw_intervals_from_config=raw_intervals_from_config,
-        old_tree=old_tree,
+        previous_tree=previous_tree,
     )
 
     # The call to `parsing_errors()` must be *after*
@@ -173,7 +173,7 @@ def inventorize_host(
                     parameters=parameters,
                     inventory_tree=mutable_trees.inventory.tree,
                     status_data_tree=mutable_trees.status_data.tree,
-                    old_tree=old_tree,
+                    previous_tree=previous_tree,
                     processing_failed=processing_failed,
                     no_data_or_files=no_data_or_files,
                 ),
@@ -190,7 +190,7 @@ def inventorize_cluster(
     nodes: Sequence[HostName],
     *,
     parameters: HWSWInventoryParameters,
-    old_tree: StructuredDataNode,
+    previous_tree: StructuredDataNode,
 ) -> CheckInventoryTreeResult:
     inventory_tree = _inventorize_cluster(nodes=nodes)
     return CheckInventoryTreeResult(
@@ -201,7 +201,7 @@ def inventorize_cluster(
                 parameters=parameters,
                 inventory_tree=inventory_tree,
                 status_data_tree=StructuredDataNode(),
-                old_tree=old_tree,
+                previous_tree=previous_tree,
             ),
         ),
         inventory_tree=inventory_tree,
@@ -246,7 +246,7 @@ def _inventorize_real_host(
     now: int,
     items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
     raw_intervals_from_config: RawIntervalsFromConfig,
-    old_tree: StructuredDataNode,
+    previous_tree: StructuredDataNode,
 ) -> tuple[MutableTrees, UpdateResult]:
     section.section_step("Create inventory or status data tree")
 
@@ -259,7 +259,7 @@ def _inventorize_real_host(
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=raw_intervals_from_config,
         inventory_tree=mutable_trees.inventory.tree,
-        previous_tree=old_tree,
+        previous_tree=previous_tree,
     )
 
     if not mutable_trees.inventory.tree.is_empty():
@@ -460,13 +460,13 @@ def _may_update(
         if (previous_node := previous_tree.get_node(node_path)) is None:
             previous_node = StructuredDataNode()
 
-        if (inv_node := inventory_tree.get_node(node_path)) is None:
-            inv_node = inventory_tree.setdefault_node(node_path)
+        if (inventory_node := inventory_tree.get_node(node_path)) is None:
+            inventory_node = inventory_tree.setdefault_node(node_path)
 
         if choices_for_attributes := entry.get("attributes"):
             raw_cache_info = _get_raw_cache_info((node_path, "Attributes"))
             results.append(
-                inv_node.attributes.update_from_previous(
+                inventory_node.attributes.update_from_previous(
                     now,
                     previous_node.attributes,
                     make_filter_from_choice(choices_for_attributes),
@@ -481,7 +481,7 @@ def _may_update(
         elif choices_for_table := entry.get("columns"):
             raw_cache_info = _get_raw_cache_info((node_path, "TableRow"))
             results.append(
-                inv_node.table.update_from_previous(
+                inventory_node.table.update_from_previous(
                     now,
                     previous_node.table,
                     make_filter_from_choice(choices_for_table),
@@ -501,7 +501,7 @@ def _check_fetched_data_or_trees(
     parameters: HWSWInventoryParameters,
     inventory_tree: StructuredDataNode,
     status_data_tree: StructuredDataNode,
-    old_tree: StructuredDataNode,
+    previous_tree: StructuredDataNode,
     no_data_or_files: bool,
     processing_failed: bool,
 ) -> Iterator[ActiveCheckResult]:
@@ -534,7 +534,7 @@ def _check_fetched_data_or_trees(
         parameters=parameters,
         inventory_tree=inventory_tree,
         status_data_tree=status_data_tree,
-        old_tree=old_tree,
+        previous_tree=previous_tree,
     )
 
 
@@ -543,7 +543,7 @@ def _check_trees(
     parameters: HWSWInventoryParameters,
     inventory_tree: StructuredDataNode,
     status_data_tree: StructuredDataNode,
-    old_tree: StructuredDataNode,
+    previous_tree: StructuredDataNode,
 ) -> Iterator[ActiveCheckResult]:
     if inventory_tree.is_empty() and status_data_tree.is_empty():
         yield ActiveCheckResult(0, "Found no data")
@@ -555,10 +555,10 @@ def _check_trees(
     if swp_table is not None and swp_table.is_empty() and parameters.sw_missing:
         yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
 
-    if not _tree_nodes_are_equal(old_tree, inventory_tree, "software"):
+    if not _tree_nodes_are_equal(previous_tree, inventory_tree, "software"):
         yield ActiveCheckResult(parameters.sw_changes, "software changes")
 
-    if not _tree_nodes_are_equal(old_tree, inventory_tree, "hardware"):
+    if not _tree_nodes_are_equal(previous_tree, inventory_tree, "hardware"):
         yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
 
     if not status_data_tree.is_empty():
@@ -566,16 +566,16 @@ def _check_trees(
 
 
 def _tree_nodes_are_equal(
-    old_tree: StructuredDataNode,
-    inv_tree: StructuredDataNode,
+    previous_tree: StructuredDataNode,
+    inventory_tree: StructuredDataNode,
     edge: str,
 ) -> bool:
-    old_node = old_tree.get_node((edge,))
-    inv_node = inv_tree.get_node((edge,))
-    if old_node is None:
-        return inv_node is None
+    previous_node = previous_tree.get_node((edge,))
+    inventory_node = inventory_tree.get_node((edge,))
+    if previous_node is None:
+        return inventory_node is None
 
-    if inv_node is None:
+    if inventory_node is None:
         return False
 
-    return old_node.is_equal(inv_node)
+    return previous_node.is_equal(inventory_node)

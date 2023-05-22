@@ -151,7 +151,7 @@ def test__inventorize_real_host_only_items() -> None:
             )
         ],
         raw_intervals_from_config=[],
-        old_tree=StructuredDataNode(),
+        previous_tree=StructuredDataNode(),
     )
 
     assert mutable_trees.inventory.tree.serialize() == {
@@ -311,7 +311,7 @@ def test__inventorize_real_host_only_intervals(
                 "columns": table_choices,
             },
         ],
-        old_tree=StructuredDataNode(),
+        previous_tree=StructuredDataNode(),
     )
 
     if attrs_expected_retentions:
@@ -494,7 +494,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
                 "columns": table_choices,
             },
         ],
-        old_tree=StructuredDataNode(),
+        previous_tree=StructuredDataNode(),
     )
 
     if attrs_expected_retentions:
@@ -718,7 +718,7 @@ def test__inventorize_real_host_no_items(
         now=10,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=raw_intervals,
-        old_tree=previous_node,
+        previous_tree=previous_node,
     )
 
     assert mutable_trees.inventory.tree.is_empty()
@@ -757,7 +757,7 @@ def test_updater_merge_previous_attributes(
                 "attributes": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
 
     previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
@@ -801,7 +801,7 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
                 "attributes": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
     assert mutable_trees.inventory.tree.is_empty()
 
@@ -851,7 +851,7 @@ def test_updater_merge_previous_tables(
                 "columns": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
 
     previous_node = previous_tree.get_node(("path-to", "node-with-table"))
@@ -899,7 +899,7 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
                 "columns": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
     assert mutable_trees.inventory.tree.is_empty()
 
@@ -950,7 +950,7 @@ def test_updater_merge_attributes(
                 "attributes": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
 
     previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
@@ -1008,7 +1008,7 @@ def test_updater_merge_attributes_outdated(
                 "attributes": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
 
     previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
@@ -1079,7 +1079,7 @@ def test_updater_merge_tables(
                 "columns": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
 
     previous_node = previous_tree.get_node(("path-to", "node-with-table"))
@@ -1147,7 +1147,7 @@ def test_updater_merge_tables_outdated(
                 "columns": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
 
     previous_node = previous_tree.get_node(("path-to", "node-with-table"))
@@ -1232,7 +1232,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
             {} if failed_state is None else {"inv-fail-status": failed_state}
         ),
         raw_intervals_from_config=(),
-        old_tree=StructuredDataNode(),
+        previous_tree=StructuredDataNode(),
     ).check_result
 
     assert expected == check_result.state
@@ -1253,7 +1253,7 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw({}),
         raw_intervals_from_config=(),
-        old_tree=StructuredDataNode(),
+        previous_tree=StructuredDataNode(),
     ).check_result
 
     assert check_result.state == 0
@@ -1423,7 +1423,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
                 parameters=HWSWInventoryParameters.from_raw({}),
                 inventory_tree=inventory_tree,
                 status_data_tree=StructuredDataNode.deserialize({}),
-                old_tree=StructuredDataNode.deserialize({}),
+                previous_tree=StructuredDataNode.deserialize({}),
                 no_data_or_files=False,
                 processing_failed=True,
             )
@@ -1433,7 +1433,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
 
 
 @pytest.mark.parametrize(
-    "old_tree, inventory_tree, update_result, expected_save_tree_actions",
+    "previous_tree, inventory_tree, update_result, expected_save_tree_actions",
     [
         (
             StructuredDataNode.deserialize(
@@ -1499,14 +1499,14 @@ def test__check_fetched_data_or_trees_only_cluster_property(
     ],
 )
 def test_save_tree_actions(
-    old_tree: StructuredDataNode,
+    previous_tree: StructuredDataNode,
     inventory_tree: StructuredDataNode,
     update_result: UpdateResult,
     expected_save_tree_actions: _SaveTreeActions,
 ) -> None:
     assert (
         _get_save_tree_actions(
-            old_tree=old_tree,
+            previous_tree=previous_tree,
             inventory_tree=inventory_tree,
             update_result=update_result,
         )

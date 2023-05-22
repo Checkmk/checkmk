@@ -1309,9 +1309,9 @@ def test_delta_structured_data_tree_serialization(
 ) -> None:
     tree_store = _get_tree_store()
 
-    old_tree = tree_store.load(host_name=tree_name_old)
+    previous_tree = tree_store.load(host_name=tree_name_old)
     new_tree = tree_store.load(host_name=tree_name_new)
-    delta_tree = ImmutableTree(old_tree).difference(new_tree).tree
+    delta_tree = ImmutableTree(previous_tree).difference(new_tree).tree
 
     delta_raw_tree = delta_tree.serialize()
     assert isinstance(delta_raw_tree, dict)

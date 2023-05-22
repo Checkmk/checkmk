@@ -2142,12 +2142,12 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         section.section_begin(hostname)
         section.section_step("Inventorizing")
         try:
-            old_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, hostname))
+            previous_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, hostname))
             if config_cache.is_cluster(hostname):
                 check_result = inventory.inventorize_cluster(
                     config_cache.nodes_of(hostname) or (),
                     parameters=parameters,
-                    old_tree=old_tree,
+                    previous_tree=previous_tree,
                 ).check_result
             else:
                 check_result = inventory.inventorize_host(
@@ -2161,7 +2161,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                     run_plugin_names=run_plugin_names,
                     parameters=parameters,
                     raw_intervals_from_config=raw_intervals_from_config,
-                    old_tree=old_tree,
+                    previous_tree=previous_tree,
                 ).check_result
             if check_result.state:
                 section.section_error(check_result.summary)
@@ -2232,13 +2232,13 @@ def _execute_active_check_inventory(
         cmk.utils.paths.inventory_output_dir,
         cmk.utils.paths.inventory_archive_dir,
     )
-    old_tree = tree_or_archive_store.load_previous(host_name=host_name)
+    previous_tree = tree_or_archive_store.load_previous(host_name=host_name)
 
     if config_cache.is_cluster(host_name):
         result = inventory.inventorize_cluster(
             config_cache.nodes_of(host_name) or (),
             parameters=parameters,
-            old_tree=old_tree,
+            previous_tree=previous_tree,
         )
     else:
         result = inventory.inventorize_host(
@@ -2252,7 +2252,7 @@ def _execute_active_check_inventory(
             run_plugin_names=EVERYTHING,
             parameters=parameters,
             raw_intervals_from_config=raw_intervals_from_config,
-            old_tree=old_tree,
+            previous_tree=previous_tree,
         )
 
     if result.no_data_or_files:
@@ -2260,7 +2260,7 @@ def _execute_active_check_inventory(
 
     if not (result.processing_failed or result.no_data_or_files):
         save_tree_actions = _get_save_tree_actions(
-            old_tree=old_tree,
+            previous_tree=previous_tree,
             inventory_tree=result.inventory_tree,
             update_result=result.update_result,
         )
@@ -2280,7 +2280,7 @@ class _SaveTreeActions(NamedTuple):
 
 def _get_save_tree_actions(
     *,
-    old_tree: StructuredDataNode,
+    previous_tree: StructuredDataNode,
     inventory_tree: StructuredDataNode,
     update_result: UpdateResult,
 ) -> _SaveTreeActions:
@@ -2289,11 +2289,11 @@ def _get_save_tree_actions(
         console.verbose("No inventory tree.\n")
         return _SaveTreeActions(do_archive=True, do_save=False)
 
-    if old_tree.is_empty():
+    if previous_tree.is_empty():
         console.verbose("New inventory tree.\n")
         return _SaveTreeActions(do_archive=False, do_save=True)
 
-    if has_changed := not old_tree.is_equal(inventory_tree):
+    if has_changed := not previous_tree.is_equal(inventory_tree):
         console.verbose("Inventory tree has changed. Add history entry.\n")
 
     if update_result.save_tree:

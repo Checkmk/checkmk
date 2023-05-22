@@ -3,12 +3,12 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "TableComments.h"
+#include "livestatus/TableComments.h"
 
 #include <chrono>
 #include <cstdint>
 #include <memory>
-#include <variant>
+#include <variant>  // IWYU pragma: keep
 
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"

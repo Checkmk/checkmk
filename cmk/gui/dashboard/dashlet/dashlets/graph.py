@@ -296,7 +296,9 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         return "dashboard_render_graph(%d, %s, %s, %s)" % (
             self._dashlet_id,
             json.dumps(self._graph_identification),
-            json.dumps(self._dashlet_spec["graph_render_options"]),
+            json.dumps(
+                self._dashlet_spec.get("graph_render_options", default_dashlet_graph_render_options)
+            ),
             json.dumps(self._dashlet_spec["timerange"]),
         )
 

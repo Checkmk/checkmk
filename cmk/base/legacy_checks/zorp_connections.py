@@ -44,7 +44,7 @@ def check_zorp_connections(item, params, parsed):
     )
 
 
-check_info["zorp_connections"] = LegacyCheckDefinition(  # mypy: ignore
+check_info["zorp_connections"] = LegacyCheckDefinition(
     parse_function=parse_zorp_connections,
     discovery_function=lambda parsed: [(None, {})],
     check_function=check_zorp_connections,

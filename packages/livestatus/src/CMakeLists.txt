@@ -87,6 +87,7 @@ set(livestatus_headers
     ${header_location}/TableDowntimes.h
     ${header_location}/TableEventConsole.h
     ${header_location}/TableEventConsoleEvents.h
+    ${header_location}/TableEventConsoleHistory.h
     ${header_location}/TableEventConsoleReplication.h
     ${header_location}/TableEventConsoleRules.h
     ${header_location}/TableEventConsoleStatus.h
@@ -170,6 +171,7 @@ set(livestatus_sources
     TableDowntimes.cc
     TableEventConsole.cc
     TableEventConsoleEvents.cc
+    TableEventConsoleHistory.cc
     TableEventConsoleReplication.cc
     TableEventConsoleRules.cc
     TableEventConsoleStatus.cc

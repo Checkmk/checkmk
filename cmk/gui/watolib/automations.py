@@ -302,7 +302,7 @@ def _do_remote_automation_serialized(
     return response
 
 
-def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult:
+def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult | str:
     command_args = [
         ("request_format", "python"),
         (

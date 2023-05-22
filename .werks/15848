@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0b9
+Version: 2.2.0
 
 On <tt>systemd</tt> systems, the Oracle agent plugin did not properly execute any asynchronous SQL
 queries (see also <a href="https://checkmk.com/werk/13732">werk #13732</a>). Furthermore, when being

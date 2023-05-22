@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0b9
+Version: 2.2.0
 
 If you're using SAML authentication with mod_auth_mellon under RHEL9, you might be affected by this werk.
 We're now not shipping mod_auth_mellon/lasso anymore with checkmk but require this during the installation of the checkmk package.

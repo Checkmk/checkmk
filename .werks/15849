@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0b9
+Version: 2.2.0
 
 A negative value for the free space is of course nonsense. However, if a device reported this,
 Checkmk might have crashed with

@@ -6,7 +6,7 @@ Date: 1684227444
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0b9
+Version: 2.2.0
 
 The 'effective_attributes' field that can optionally be requested in the 'show host' and 'show all hosts'
 endpoints now uses the same format as the 'attributes' field.

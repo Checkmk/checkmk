@@ -28,7 +28,7 @@ from cmk.gui.plugins.visuals.utils import (
     VisualInfo,
     VisualType,
 )
-from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, SingleInfos, Visual
+from cmk.gui.type_defs import InfoName, Rows, SingleInfos, Visual
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.views.data_source import ABCDataSource
@@ -429,19 +429,26 @@ def _get_combined_graphs_entry(
     if not _show_in_current_dropdown(view, info.ident, is_single_info):
         return None
 
-    httpvars: HTTPVariables = [
-        ("single_infos", ",".join(view.spec["single_infos"])),
-        ("datasource", view.datasource.ident),
-        ("view_title", view_title(view.spec, view.context)),
-    ]
-
-    url = makeuri(
-        request, httpvars, filename="combined_graphs.py", delvars=["show_checkboxes", "selection"]
-    )
     return PageMenuEntry(
         title=_("All metrics of same type in one graph"),
         icon_name="graph",
-        item=make_simple_link(url),
+        item=make_simple_link(
+            makeuri_contextless(
+                request,
+                [
+                    ("single_infos", ",".join(view.spec["single_infos"])),
+                    ("datasource", view.datasource.ident),
+                    ("view_title", view_title(view.spec, view.context)),
+                    *visuals.context_to_uri_vars(
+                        visuals.active_context_from_request(
+                            view.datasource.infos,
+                            view.context,
+                        )
+                    ),
+                ],
+                filename="combined_graphs.py",
+            )
+        ),
     )
 
 

@@ -254,12 +254,19 @@ class AWSSpecialAgentValuespecBuilder:
                             "requests",
                             FixedValue(
                                 value=None,
-                                totext=_("Monitor request metrics"),
+                                totext=_(
+                                    "Monitor request metrics using the filter <tt>EntireBucket</tt>"
+                                ),
                                 title=_("Request metrics"),
                                 help=_(
-                                    "In order to monitor S3 request metrics you have to "
-                                    "enable request metric monitoring in the AWS/S3 console. "
-                                    "This is a paid feature"
+                                    "In order to monitor S3 request metrics, you have to enable "
+                                    "request metrics in the AWS/S3 console, see the "
+                                    "<a href='https://docs.aws.amazon.com/AmazonS3/latest/userguide/metrics-configurations.html'>AWS/S3 documentation</a>. "
+                                    "This is a paid feature. Note that the filter name has to be "
+                                    "set to <tt>EntireBucket</tt>, as is recommended in the "
+                                    "<a href='https://docs.aws.amazon.com/AmazonS3/latest/userguide/configure-request-metrics-bucket.html'>documentation for a filter that applies to all objects</a>. "
+                                    "The special agent will use this filter name to query S3 request "
+                                    "metrics from the AWS API."
                                 ),
                             ),
                         ),

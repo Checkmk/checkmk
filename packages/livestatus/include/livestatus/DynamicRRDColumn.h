@@ -6,8 +6,6 @@
 #ifndef DynamicRRDColumn_h
 #define DynamicRRDColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <memory>
 #include <stdexcept>
 #include <string>

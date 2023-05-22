@@ -24,6 +24,7 @@ set(livestatus_headers
     ${header_location}/DynamicColumn.h
     ${header_location}/DynamicEventConsoleReplicationColumn.h
     ${header_location}/DynamicFileColumn.h
+    ${header_location}/DynamicRRDColumn.h
     ${header_location}/EventConsoleConnection.h
     ${header_location}/FileSystemHelper.h
     ${header_location}/Filter.h

@@ -16,7 +16,6 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "DynamicRRDColumn.h"
 #include "TableHosts.h"
 #include "livestatus/AttributeBitmaskColumn.h"
 #include "livestatus/AttributeListColumn.h"
@@ -27,6 +26,7 @@
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/DowntimeRenderer.h"
 #include "livestatus/DynamicColumn.h"
+#include "livestatus/DynamicRRDColumn.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"

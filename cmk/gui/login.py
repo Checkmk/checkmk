@@ -149,12 +149,20 @@ class LoginPage(Page):
             if request.request_method != "POST" and not active_config.enable_login_via_get:
                 raise MKUserError(None, _("Method not allowed"))
 
-            username = UserId(request.get_str_input_mandatory("_username", "").rstrip())
-            if username == UserId(""):
-                # the variable is there, but it's empty
+            username_var = request.get_str_input("_username", "")
+            if not username_var:
                 raise MKUserError("_username", _("Missing username"))
 
-            password = request.get_validated_type_input_mandatory(Password, "_password")
+            password_var = request.get_str_input("_password", "")
+            if not password_var:
+                raise MKUserError("_password", _("Missing password"))
+
+            try:
+                username = UserId(username_var.rstrip())
+                password = Password(password_var)
+            except ValueError:
+                # If type validation fails the credentials cannot be valid. Show the generic error.
+                raise MKUserError(None, _("Invalid login"))
 
             default_origtarget = url_prefix() + "check_mk/"
             origtarget = request.get_url_input("_origtarget", default_origtarget)

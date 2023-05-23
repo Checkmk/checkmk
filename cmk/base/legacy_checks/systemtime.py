@@ -12,6 +12,7 @@ from cmk.base.check_api import (
     check_levels,
     discover_single,
     get_age_human_readable,
+    get_agent_data_time,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info

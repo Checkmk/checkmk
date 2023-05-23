@@ -6,9 +6,16 @@
 # Older versions replay an empty string if the state is Unknown / Error state
 
 
-from cmk.base.check_api import all_of, any_of, equals, exists, LegacyCheckDefinition, startswith
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    all_of,
+    any_of,
+    equals,
+    exists,
+    SNMPTree,
+    startswith,
+)
 
 sync_name_mapping = {
     "1": "Synced",

@@ -8,19 +8,17 @@
 # oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"), we recognize both for now
 
 
-from cmk.base.check_api import (
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
     any_of,
-    check_levels,
     contains,
     exists,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
     not_contains,
     not_exists,
+    SNMPTree,
 )
-from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
 def inventory_cisco_cpu(info):

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, equals, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.raritan import (
     check_raritan_sensors_binary,
     raritan_map_state,
@@ -12,7 +12,7 @@ from cmk.base.check_legacy_includes.raritan import (
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
 
 
 def parse_raritan_emx(info):

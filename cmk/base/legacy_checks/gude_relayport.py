@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition, startswith
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 # .1.3.6.1.4.1.28507.38.1.3.1.2.1.2.1 TWTA 2 --> GUDEADS-EPC822X-MIB::epc822XPortName.1
 # .1.3.6.1.4.1.28507.38.1.3.1.2.1.3.1 0 --> GUDEADS-EPC822X-MIB::epc822XPortState.1

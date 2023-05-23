@@ -8,17 +8,16 @@
 # .1.3.6.1.4.1.1588.2.1.1.1.1.7.0 1         Status
 
 
-from cmk.base.check_api import (
+from cmk.base.check_api import LegacyCheckDefinition, saveint
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
     any_of,
     equals,
     exists,
-    LegacyCheckDefinition,
-    saveint,
+    SNMPTree,
     startswith,
 )
-from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
 def inventory_brocade_vdx_status(info):

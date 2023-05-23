@@ -4,13 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition, not_exists
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fortigate_cpu import (
     check_fortigate_cpu,
     inventory_fortigate_cpu,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    all_of,
+    contains,
+    exists,
+    not_exists,
+    SNMPTree,
+)
 
 check_info["fortigate_cpu"] = LegacyCheckDefinition(
     detect=all_of(

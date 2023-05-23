@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, startswith
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.arbor import (
     ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
     check_arbor_disk_usage,
@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.arbor import (
     inventory_arbor_memory,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 # .1.3.6.1.4.1.9694.1.4.2.1.1.0 796 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg1min.0

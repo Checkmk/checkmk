@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, equals, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
 
 def parse_bluenet_meter(info):

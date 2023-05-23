@@ -11,9 +11,9 @@
 # .1.3.6.1.4.1.9.9.176.1.1.8.0   1  --> CISCO-RF-MIB::cRFStatusLastSwactReasonCode.0
 
 
-from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
 
 
 def inventory_cisco_redundancy(info):

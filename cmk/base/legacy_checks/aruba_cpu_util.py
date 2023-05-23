@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition, startswith
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
 def parse_aruba_cpu_util(info):

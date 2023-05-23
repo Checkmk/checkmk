@@ -4,11 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, not_equals
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.fortigate_sessions import fortigate_sessions
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    all_of,
+    contains,
+    not_equals,
+    OIDEnd,
+    SNMPTree,
+)
 
 #
 # monitoring of cluster members (nodes) in fortigate high availability tree

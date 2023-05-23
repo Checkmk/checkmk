@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="index,attr-defined"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition, startswith
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
 def parse_orion_system(info):

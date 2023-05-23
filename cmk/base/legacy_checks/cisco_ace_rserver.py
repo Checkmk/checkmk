@@ -7,9 +7,9 @@
 # Parse an InetAddress type object as defined in the SNMP-FRAMEWORK-MIB
 
 
-from cmk.base.check_api import equals, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, OIDBytes, SNMPTree
 
 
 def parse_framework_mib_inet_address(ip_address_type, ip_address):

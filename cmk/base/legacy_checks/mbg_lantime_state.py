@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import all_of, equals, LegacyCheckDefinition, not_exists
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mbg_lantime import (
     check_mbg_lantime_state_common,
     MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, equals, not_exists, SNMPTree
 
 
 def inventory_mbg_lantime_state(info):

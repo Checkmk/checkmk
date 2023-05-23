@@ -41,9 +41,9 @@
 # .1.3.6.1.4.1.9.9.500.1.3.2.1.7.3001.1 "Port 2"
 
 
-from cmk.base.check_api import LegacyCheckDefinition, startswith
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree, startswith
 
 
 def inventory_cisco_stackpower(info):

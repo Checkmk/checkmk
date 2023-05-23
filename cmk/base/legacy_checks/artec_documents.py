@@ -6,9 +6,9 @@
 
 import time
 
-from cmk.base.check_api import all_of, contains, equals, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, equals, SNMPTree
 
 # .1.3.6.1.4.1.31560.0.0.3.1.3.1.48 Amount Documents Count --> ARTEC-MIB::artecDocumentsName.1.48
 # .1.3.6.1.4.1.31560.0.0.3.1.3.1.49 Replicate Count        --> ARTEC-MIB::artecDocumentsName.1.49

@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition, startswith
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 # Check originally developed for:
 # Arista Networks EOS version 4.20.9M running on an Arista Networks DCS-7280QR-C36

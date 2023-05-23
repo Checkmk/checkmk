@@ -8,17 +8,17 @@
 
 import time
 
-from cmk.base.check_api import (
-    all_of,
-    get_average,
-    get_rate,
-    LegacyCheckDefinition,
-    not_exists,
-    startswith,
-)
+from cmk.base.check_api import get_average, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, render, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    all_of,
+    not_exists,
+    OIDBytes,
+    render,
+    SNMPTree,
+    startswith,
+)
 
 # Taken from connUnitPortState
 # user selected state of the port hardware

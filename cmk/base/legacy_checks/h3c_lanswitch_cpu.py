@@ -17,9 +17,9 @@
 # We prefer "Switch 1 CPU 1" over "65537"...
 
 
-from cmk.base.check_api import contains, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
 
 
 def h3c_lanswitch_cpu_genitem(item):

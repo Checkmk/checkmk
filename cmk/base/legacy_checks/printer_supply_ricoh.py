@@ -17,9 +17,9 @@
 # .1.3.6.1.4.1.367.3.2.1.2.24.1.1.5.1 30
 
 
-from cmk.base.check_api import equals, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
 
 def parse_printer_supply_ricoh(info):

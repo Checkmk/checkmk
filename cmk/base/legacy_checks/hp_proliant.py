@@ -8,9 +8,15 @@
 # .1.3.6.1.4.1.232.2.2.2.1.0  "GB8851CPPH
 
 
-from cmk.base.check_api import all_of, any_of, contains, exists, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    all_of,
+    any_of,
+    contains,
+    exists,
+    SNMPTree,
+)
 
 
 def inventory_proliant_general(info):

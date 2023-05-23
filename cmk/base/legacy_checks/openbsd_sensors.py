@@ -6,12 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import exists, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import exists, SNMPTree
 
 #   .--example output------------------------------------------------------.
 #   |                                               _                      |

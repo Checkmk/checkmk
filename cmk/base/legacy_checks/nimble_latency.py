@@ -13,10 +13,9 @@ from cmk.base.check_api import (
     get_parsed_item_data,
     get_percent_human_readable,
     LegacyCheckDefinition,
-    startswith,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 # Default levels: issue a WARN/CRIT if 1%/2% of read or write IO
 # operations have a latency of 10-20 ms or above.

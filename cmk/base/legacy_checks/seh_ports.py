@@ -6,9 +6,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import contains, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
 
 
 def parse_seh_ports(info):

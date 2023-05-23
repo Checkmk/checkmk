@@ -6,13 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, startswith
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_tape_library import (
     ibm_tape_library_get_device_state,
     ibm_tape_library_parse_device_name,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 # .1.3.6.1.4.1.14851.3.1.6.2.1.2.1 3 --> SNIA-SML-MIB::mediaAccessDeviceObjectType.1
 # .1.3.6.1.4.1.14851.3.1.6.2.1.2.2 3 --> SNIA-SML-MIB::mediaAccessDeviceObjectType.2

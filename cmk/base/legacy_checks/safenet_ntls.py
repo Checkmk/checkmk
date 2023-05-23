@@ -6,9 +6,9 @@
 
 import time
 
-from cmk.base.check_api import any_of, check_levels, get_rate, LegacyCheckDefinition, startswith
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, SNMPTree, startswith
 
 
 def parse_safenet_ntls(info):

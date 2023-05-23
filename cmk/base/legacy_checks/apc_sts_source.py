@@ -7,9 +7,9 @@
 # .1.3.6.1.4.1.705.2.4.5.0 1 --> MG-SNMP-STS-MIB::stsmgSource2Used.0
 
 
-from cmk.base.check_api import contains, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 
 def inventory_apc_sts_source(info):

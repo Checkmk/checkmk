@@ -16,9 +16,9 @@
 # Default values for parameters that can be overriden.
 
 
-from cmk.base.check_api import contains, LegacyCheckDefinition, MKCounterWrapped, saveint
+from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 dell_powerconnect_cpu_default_levels = (80, 90)
 

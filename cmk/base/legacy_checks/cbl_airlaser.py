@@ -9,9 +9,9 @@
 # Migrate to factory settings?
 
 
-from cmk.base.check_api import all_of, contains, exists, LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
 
 airlaser_default_levels = {
     "opttxTempValue": (60, 80),

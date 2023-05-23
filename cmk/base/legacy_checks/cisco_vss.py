@@ -48,9 +48,15 @@
 # cvsDualActiveDetectionNotifEnable.0    .1.5.1.0 2
 
 
-from cmk.base.check_api import all_of, any_of, contains, exists, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    all_of,
+    any_of,
+    contains,
+    exists,
+    SNMPTree,
+)
 
 cisco_vss_role_names = {
     "1": "standalone",

@@ -4,15 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    any_of,
-    contains,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-    startswith,
-)
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree, startswith
 
 
 def inventory_dell_eql_storage(info):

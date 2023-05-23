@@ -6,12 +6,18 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import any_of, get_parsed_item_data, LegacyCheckDefinition, startswith
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDCached, OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    any_of,
+    OIDCached,
+    OIDEnd,
+    SNMPTree,
+    startswith,
+)
 
 
 def parse_hp_hh3c_ext(info):

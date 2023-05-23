@@ -34,9 +34,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, MKCounterWrapped, startswith
+from cmk.base.check_api import get_rate, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree, startswith
 
 
 def inventory_hpux_snmp_cpu(info):

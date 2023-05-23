@@ -9,14 +9,14 @@
 # ["HGS-RZ1TEMP-TH1", "22", "1",   "2",   "18",   "20",    "25",      "28",      "",     "1"]
 
 
-from cmk.base.check_api import all_of, LegacyCheckDefinition, not_exists, startswith
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.akcp_sensor import (
     AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
     check_akcp_sensor_temp,
     inventory_akcp_sensor_temp,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, not_exists, SNMPTree, startswith
 
 check_info["akcp_sensor_temp"] = LegacyCheckDefinition(
     detect=all_of(

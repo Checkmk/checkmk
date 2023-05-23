@@ -9,9 +9,6 @@
 import time
 
 from cmk.base.check_api import (
-    all_of,
-    contains,
-    exists,
     get_average,
     get_nic_speed_human_readable,
     get_rate,
@@ -20,7 +17,14 @@ from cmk.base.check_api import (
     saveint,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, render, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    all_of,
+    contains,
+    exists,
+    OIDEnd,
+    render,
+    SNMPTree,
+)
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 

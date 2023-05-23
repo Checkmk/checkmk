@@ -6,9 +6,9 @@
 # Author: Lars Michelsen <lm@mathias-kettner.de>, 2011-03-21
 
 
-from cmk.base.check_api import contains, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 strem1_temp_defaultlevels = (28, 32)
 

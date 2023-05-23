@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, equals, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
 
 check_info["wagner_titanus_topsense"] = LegacyCheckDefinition(
     detect=any_of(

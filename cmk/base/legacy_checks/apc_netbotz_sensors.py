@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, startswith
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.636159851 nbAlinkEnc_0_4_TEMP
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.882181375 nbAlinkEnc_2_1_TEMP

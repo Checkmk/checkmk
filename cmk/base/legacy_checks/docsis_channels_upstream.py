@@ -6,15 +6,9 @@
 
 import time
 
-from cmk.base.check_api import (
-    any_of,
-    equals,
-    get_percent_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import get_percent_human_readable, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, OIDEnd, SNMPTree
 
 # Old comments:
 # Strange: Channel IDs seem to be not unique. But the second

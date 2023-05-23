@@ -22,9 +22,9 @@
 # docsIfCmStatusInvalidRegistrationResponses  1.3.6.1.2.1.10.127.1.2.2.1.9
 
 
-from cmk.base.check_api import any_of, equals, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, OIDEnd, SNMPTree
 
 
 def inventory_docsis_cm_status(info):

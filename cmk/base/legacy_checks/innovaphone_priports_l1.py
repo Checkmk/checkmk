@@ -6,15 +6,9 @@
 
 import time
 
-from cmk.base.check_api import (
-    equals,
-    get_parsed_item_data,
-    get_rate,
-    LegacyCheckDefinition,
-    saveint,
-)
+from cmk.base.check_api import get_parsed_item_data, get_rate, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
 
 def parse_innovaphone_priports_l1(info):

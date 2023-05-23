@@ -6,15 +6,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import (
-    any_of,
-    check_levels,
-    equals,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
 
 
 def parse_apc_ats_output(info):

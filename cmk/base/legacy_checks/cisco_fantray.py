@@ -50,9 +50,16 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, not_exists
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDCached, OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    all_of,
+    contains,
+    not_exists,
+    OIDCached,
+    OIDEnd,
+    SNMPTree,
+)
 
 
 def parse_cisco_fantray(info):

@@ -5,9 +5,9 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import contains, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
 
 Section = Mapping[str, str]
 

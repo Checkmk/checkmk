@@ -11,9 +11,9 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.base.check_api import any_of, contains, LegacyCheckDefinition, startswith
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree, startswith
 
 
 def inventory_cisco_asa_connections(info):

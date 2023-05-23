@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, contains, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mcafee_gateway import inventory_mcafee_gateway_generic
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 # -- Statistics
 # .1.3.6.1.4.1.1230.2.7.2.1.2.0 200 --> MCAFEE-MWG-MIB::stMalwareDetected.0

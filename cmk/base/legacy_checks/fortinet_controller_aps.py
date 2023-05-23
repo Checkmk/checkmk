@@ -17,9 +17,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import contains, get_timestamp_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import get_timestamp_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 
 def parse_fortinet_controller_aps(info):

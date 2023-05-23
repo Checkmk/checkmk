@@ -6,9 +6,9 @@
 
 import re
 
-from cmk.base.check_api import LegacyCheckDefinition, startswith
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree, startswith
 
 
 def bintec_brrp_status_compose_item(brrp_id):

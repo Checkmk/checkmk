@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import any_of, equals, LegacyCheckDefinition, saveint, startswith
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree, startswith
 
 # Example output from agent:
 # [['1', '24', 'SLOT #0: TEMP #1'],

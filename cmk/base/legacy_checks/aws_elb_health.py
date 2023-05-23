@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover_single, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import parse_aws
 from cmk.base.config import check_info
 
@@ -20,6 +20,11 @@ def parse_aws_elb_health(info):
         return parse_aws(info)[-1]
     except IndexError:
         return {}
+
+
+def discover_aws_elb_health(section):
+    if section:
+        yield None, {}
 
 
 def check_aws_elb_health(item, params, parsed):
@@ -44,7 +49,7 @@ def check_aws_elb_health(item, params, parsed):
 
 check_info["aws_elb_health"] = LegacyCheckDefinition(
     parse_function=parse_aws_elb_health,
-    discovery_function=discover_single,
+    discovery_function=discover_aws_elb_health,
     check_function=check_aws_elb_health,
     service_name="AWS/ELB Health ",
 )

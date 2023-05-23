@@ -6,9 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover_single, get_parsed_item_data, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.aws import inventory_aws_generic, parse_aws
+from collections.abc import Iterable
+
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_legacy_includes.aws import inventory_aws_generic
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.aws import GenericAWSSection, parse_aws
 
 AWSEBSStorageTypes = {
     "standard": "Magnetic volumes",
@@ -42,6 +45,11 @@ def parse_aws_summary(info):
 #   '----------------------------------------------------------------------'
 
 
+def discover_aws_ebs_summary(section: GenericAWSSection) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
+
+
 def check_aws_ebs_summary(item, params, parsed):
     stores_by_state = {}
     stores_by_type = {}
@@ -65,7 +73,7 @@ def check_aws_ebs_summary(item, params, parsed):
 
 check_info["aws_ebs_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws_summary,
-    discovery_function=discover_single,
+    discovery_function=discover_aws_ebs_summary,
     check_function=check_aws_ebs_summary,
     service_name="AWS/EBS Summary",
 )

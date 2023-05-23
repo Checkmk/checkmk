@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated"
+from collections.abc import Iterable, Mapping
+from typing import Any
 
-from cmk.base.check_api import discover_single, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions, inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.aws import aws_rds_service_item
+
+Section = Mapping[str, Any]
 
 
 def parse_aws_rds_summary(info):
@@ -32,8 +35,13 @@ def parse_aws_rds_summary(info):
 #   '----------------------------------------------------------------------'
 
 
+def discover_aws_rds_summary(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
+
+
 def check_aws_rds_summary(item, params, parsed):
-    instances_by_classes = {}
+    instances_by_classes: dict = {}
     for instance in parsed.values():
         instance_class = instance["DBInstanceClass"]
         instances_by_classes.setdefault(instance_class, []).append(instance)
@@ -46,7 +54,7 @@ def check_aws_rds_summary(item, params, parsed):
 
 check_info["aws_rds_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws_rds_summary,
-    discovery_function=discover_single,
+    discovery_function=discover_aws_rds_summary,
     check_function=check_aws_rds_summary,
     service_name="AWS/RDS Summary",
 )

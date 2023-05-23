@@ -4,15 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Iterable, Mapping
+
 from cmk.base.check_api import (
     check_levels,
-    discover_single,
     get_bytes_human_readable,
     get_parsed_item_data,
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.aws import parse_aws
 from cmk.base.config import check_info
+
+Section = Mapping[str, Mapping]
 
 
 def parse_aws_glacier(info):
@@ -90,6 +93,11 @@ check_info["aws_glacier"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------
 
 
+def discover_aws_glacier_summary(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
+
+
 def check_aws_glacier_summary(item, params, parsed):
     sum_size = 0
     largest_vault = None
@@ -116,7 +124,7 @@ def check_aws_glacier_summary(item, params, parsed):
 
 
 check_info["aws_glacier.summary"] = LegacyCheckDefinition(
-    discovery_function=discover_single,
+    discovery_function=discover_aws_glacier_summary,
     check_function=check_aws_glacier_summary,
     service_name="AWS/Glacier Summary",
     check_ruleset_name="aws_glacier_vaults",

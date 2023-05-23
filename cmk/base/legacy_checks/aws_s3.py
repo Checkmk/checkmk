@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated"
+from collections.abc import Iterable, Mapping
 
 from cmk.base.check_api import (
     check_levels,
-    discover_single,
     get_bytes_human_readable,
     get_parsed_item_data,
     LegacyCheckDefinition,
@@ -16,9 +15,11 @@ from cmk.base.check_api import (
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
 
+Section = Mapping[str, Mapping]
+
 
 def parse_aws_s3(info):
-    parsed = {}
+    parsed: dict[str, dict] = {}
     for row in parse_aws(info):
         bucket = parsed.setdefault(row["Label"], {})
         try:
@@ -101,6 +102,11 @@ check_info["aws_s3"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
+def discover_aws_s3_summary(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
+
+
 def check_aws_s3_summary(item, params, parsed):
     sum_size = 0
     largest_bucket = None
@@ -127,7 +133,7 @@ def check_aws_s3_summary(item, params, parsed):
 
 
 check_info["aws_s3.summary"] = LegacyCheckDefinition(
-    discovery_function=discover_single,
+    discovery_function=discover_aws_s3_summary,
     check_function=check_aws_s3_summary,
     service_name="AWS/S3 Summary",
     check_ruleset_name="aws_s3_buckets",

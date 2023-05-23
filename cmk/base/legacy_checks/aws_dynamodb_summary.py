@@ -4,11 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Iterable
 from typing import Dict
 
-from cmk.base.check_api import discover_single, get_bytes_human_readable, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.aws import AWSRegions, parse_aws
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_legacy_includes.aws import AWSRegions
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.aws import GenericAWSSection, parse_aws
+
+
+def discover_aws_dynamodb_summary(section: GenericAWSSection) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_aws_dynamodb_summary(item, params, parsed):
@@ -47,7 +54,7 @@ def check_aws_dynamodb_summary(item, params, parsed):
 
 check_info["aws_dynamodb_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws,
-    discovery_function=discover_single,
+    discovery_function=discover_aws_dynamodb_summary,
     check_function=check_aws_dynamodb_summary,
     service_name="AWS/DynamoDB Summary",
 )

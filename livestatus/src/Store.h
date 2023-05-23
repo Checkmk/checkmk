@@ -68,8 +68,8 @@ public:
     bool answerRequest(InputBuffer *, OutputBuffer *);
     bool answerGetRequest(const std::list<std::string> &lines,
                           OutputBuffer &output, const std::string &tablename);
-    void switchStatehistTable(
-        std::optional<std::chrono::seconds> cache_horizon);
+    void switchStatehistTable(std::optional<std::chrono::seconds> cache_horizon,
+                              Logger *logger);
     void buildStatehistCache(std::optional<std::chrono::seconds> cache_horizon);
     void flushStatehistCache();
     void tryFinishStatehistCache();

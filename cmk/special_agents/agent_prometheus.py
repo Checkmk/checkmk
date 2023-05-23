@@ -498,16 +498,6 @@ class PrometheusServer:
 
         return result
 
-    def scrape_targets_health(self) -> dict[str, dict[str, Any]]:
-        result = {}
-        for scrape_target_name, attributes in self.api_client.scrape_targets_attributes():
-            result[scrape_target_name] = {
-                "health": attributes["health"],
-                "lastScrape": attributes["lastScrape"],
-                "labels": attributes["labels"],
-            }
-        return result
-
     def health(self) -> dict[str, Any]:
         response = self.api_client.query_static_endpoint("/-/healthy")
         return {"status_code": response.status_code, "status_text": response.reason}
@@ -563,22 +553,6 @@ class PrometheusAPI:
 
     def __init__(self, session) -> None:  # type: ignore[no-untyped-def]
         self.session = session
-
-    @property
-    def scrape_targets_dict(self) -> dict[str, Any]:
-        return self._connected_scrape_targets()
-
-    def scrape_targets_attributes(self) -> Iterator[tuple[str, dict[str, Any]]]:
-        """Format the scrape_targets_dict for information processing
-
-        Returns:
-              Tuples consisting of the Scrape Target name and its general attributes. The
-              job-instance labels combination is hereby omitted
-
-        """
-        for _scrape_target_label, info in self.scrape_targets_dict.items():
-            scrape_target_name = info["name"]
-            yield scrape_target_name, info["attributes"]
 
     def perform_specified_promql_queries(
         self, custom_services: list[dict[str, Any]]
@@ -668,41 +642,10 @@ class PrometheusAPI:
         result = self._process_json_request(endpoint)
         return result
 
-    def _connected_scrape_targets(self) -> dict[str, Any]:
-        """Query and parse the information concerning the connected Scrape Targets"""
-        result = self._query_json_endpoint("targets")
-        scrape_targets = self.test(result)
-        return scrape_targets
-
     def _process_json_request(self, api_request: str) -> dict[str, Any]:
         response = self.session.get(api_request)
         response.raise_for_status()
         return response.json()
-
-    def test(self, result: dict[str, Any]) -> dict[str, Any]:
-        scrape_targets = {}
-        scrape_target_names: defaultdict[str, int] = defaultdict(int)
-        for scrape_target_info in result["data"]["activeTargets"]:
-            scrape_target_labels = scrape_target_info["labels"]
-            job_label = scrape_target_labels["job"]
-
-            if job_label not in scrape_target_names:
-                scrape_target_name = job_label
-            else:
-                scrape_target_name = f"{job_label}-{scrape_target_names[job_label]}"
-
-            scrape_target_names[job_label] += 1
-            instance_label = scrape_target_labels["instance"]
-            scrape_targets.update(
-                {
-                    "%s:%s"
-                    % (job_label, instance_label): {
-                        "name": scrape_target_name,
-                        "attributes": scrape_target_info,
-                    }
-                }
-            )
-        return scrape_targets
 
 
 class Section:
@@ -814,11 +757,6 @@ class ApiData:
         g = PiggybackHost()
         g.get("prometheus_api_server").insert(self.prometheus_server.health())
         return "\n".join(g.output())
-
-    def scrape_targets_section(self) -> str:
-        e = PiggybackGroup()
-        e.join("prometheus_scrape_target", self.prometheus_server.scrape_targets_health())
-        return "\n".join(e.output())
 
     def cadvisor_section(self, cadvisor_options: dict[str, Any]) -> Iterator[str]:
         grouping_option = {"both": ["container", "pod"], "container": ["container"], "pod": ["pod"]}

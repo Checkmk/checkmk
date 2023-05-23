@@ -30,7 +30,17 @@ from cmk.gui.valuespec import (
     MigrateNotUpdated,
     RegExp,
     Tuple,
+    Url,
 )
+
+
+def _url(title: str, _help: str, default_value: str) -> Url:
+    return HTTPUrl(
+        allow_empty=False,
+        default_value=default_value,
+        size=80,
+        help=_help,
+    )
 
 
 def _tcp_timeouts():
@@ -108,17 +118,15 @@ def _openshift() -> tuple[str, str, Dictionary]:
             elements=[
                 (
                     "endpoint",
-                    HTTPUrl(
+                    _url(
                         title=_("Prometheus API endpoint"),
-                        allow_empty=False,
                         default_value="https://",
-                        help=_(
+                        _help=_(
                             "The full URL to the Prometheus API endpoint including the "
                             "protocol (http or https). OpenShift exposes such "
                             "endpoints via a route in the openshift-monitoring "
                             "namespace called prometheus-k8s."
                         ),
-                        size=80,
                     ),
                 ),
                 ssl_verification(),
@@ -141,17 +149,15 @@ def _cluster_collector() -> tuple[str, str, Dictionary]:
             elements=[
                 (
                     "endpoint",
-                    HTTPUrl(
+                    _url(
                         title=_("Collector NodePort / Ingress endpoint"),
-                        allow_empty=False,
                         default_value="https://<service url>:30035",
-                        help=_(
+                        _help=_(
                             "The full URL to the Cluster Collector service including "
                             "the protocol (http or https) and the port. Depending on "
                             "the deployed configuration of the service this can "
                             "either be the NodePort or the Ingress endpoint."
                         ),
-                        size=80,
                     ),
                 ),
                 ssl_verification(),
@@ -195,18 +201,16 @@ def _valuespec_special_agents_kube():
                         elements=[
                             (
                                 "endpoint",
-                                HTTPUrl(
+                                _url(
                                     title=_("Endpoint"),
-                                    allow_empty=False,
                                     default_value="https://<control plane ip>:443",
-                                    help=_(
+                                    _help=_(
                                         "The full URL to the Kubernetes API server "
                                         "including the protocol (http or https) and "
                                         "the port. Be aware that a trailing "
                                         "slash at the end of the URL is likely to "
                                         "result in an error."
                                     ),
-                                    size=80,
                                 ),
                             ),
                             ssl_verification(),

@@ -8,13 +8,7 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_parsed_item_data,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, discover, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
 from cmk.base.config import check_info
 
@@ -56,8 +50,9 @@ def transform_units(params):
     return new_params
 
 
-@get_parsed_item_data
-def check_jolokia_jvm_garbagecollectors(item, params, data):
+def check_jolokia_jvm_garbagecollectors(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     now = time.time()
     try:
         count = data["CollectionCount"]

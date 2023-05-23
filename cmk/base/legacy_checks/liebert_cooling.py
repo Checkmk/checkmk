@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT, parse_liebert_float
@@ -15,8 +15,9 @@ from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT, parse_lie
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5078 %
 
 
-@get_parsed_item_data
-def check_liebert_cooling(_item, params, data):
+def check_liebert_cooling(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     yield check_levels(
         data[0],
         "capacity_perc",

@@ -4,14 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT, parse_liebert_float
 
 
-@get_parsed_item_data
-def check_liebert_fans_condenser(_item, params, data):
+def check_liebert_fans_condenser(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     levels = params["levels"] + params.get("levels_lower", (None, None))
     yield check_levels(data[0], "filehandler_perc", levels, unit=data[1])
 

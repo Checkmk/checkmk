@@ -19,7 +19,6 @@ from cmk.base.check_api import (
     discover,
     get_age_human_readable,
     get_item_state,
-    get_parsed_item_data,
     LegacyCheckDefinition,
     set_item_state,
 )
@@ -45,8 +44,9 @@ def parse_jira_custom_svc(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_jira_custom_svc(item, params, item_data):
+def check_jira_custom_svc(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
     if not item_data:
         return
 

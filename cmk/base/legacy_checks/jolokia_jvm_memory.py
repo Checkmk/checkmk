@@ -10,7 +10,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_bytes_human_readable,
-    get_parsed_item_data,
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
@@ -85,8 +84,9 @@ def _iter_type_value_max(mem_data):
         yield "total", heap + nonheap, totalmax
 
 
-@get_parsed_item_data
-def check_jolokia_jvm_memory(_item, params, instance_data):
+def check_jolokia_jvm_memory(item, params, parsed):
+    if not (instance_data := parsed.get(item)):
+        return
     mem_data = instance_data.get("Memory", {})
 
     for mem_type, value, value_max in _iter_type_value_max(mem_data):

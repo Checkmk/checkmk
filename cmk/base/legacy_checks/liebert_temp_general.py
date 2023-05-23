@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.liebert import check_temp_unit
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -29,8 +29,9 @@ from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT, parse_lie
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5518 deg C
 
 
-@get_parsed_item_data
-def check_liebert_temp_general(item, params, data):
+def check_liebert_temp_general(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     value = check_temp_unit(data)
     yield check_temperature(value, params, "check_liebert_fluid_temp.%s" % item)
 

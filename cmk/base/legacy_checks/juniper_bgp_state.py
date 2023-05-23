@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, SNMPTree
 from cmk.base.plugins.agent_based.utils.ip_format import clean_v4_address, clean_v6_address
@@ -50,8 +50,9 @@ def parse_juniper_bgp_state(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_juniper_bgp_state(item, _no_params, data):
+def check_juniper_bgp_state(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     state = data.get("state", "undefined")
     operational_state = data.get("operational_state", "undefined")
 

@@ -6,13 +6,7 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_parsed_item_data,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, discover, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import jolokia_basic_split
 from cmk.base.config import check_info
 
@@ -44,16 +38,18 @@ def parse_jolokia_generic(info):
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_jolokia_generic_string(_item, params, data):
+def check_jolokia_generic_string(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     value = data["value"]
 
     search_strings = params.get("match_strings", [])
     for search_string, status in search_strings:
         if search_string in value:
-            return status, "%s: %s matches" % (value, search_string)
+            yield status, "%s: %s matches" % (value, search_string)
+            return
 
-    return params.get("default_status", 0), value
+    yield params.get("default_status", 0), value
 
 
 check_info["jolokia_generic.string"] = LegacyCheckDefinition(
@@ -74,11 +70,12 @@ check_info["jolokia_generic.string"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_jolokia_generic_rate(item, params, data):
+def check_jolokia_generic_rate(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     rate = get_rate(item, time.time(), data["value"])
     levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
-    return check_levels(rate, "generic_rate", levels)
+    yield check_levels(rate, "generic_rate", levels)
 
 
 check_info["jolokia_generic.rate"] = LegacyCheckDefinition(
@@ -99,10 +96,12 @@ check_info["jolokia_generic.rate"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_jolokia_generic(_item, params, data):
+def check_jolokia_generic(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
-    return check_levels(data["value"], "generic_number", levels)
+    yield check_levels(data["value"], "generic_number", levels)
+    return
 
 
 check_info["jolokia_generic"] = LegacyCheckDefinition(

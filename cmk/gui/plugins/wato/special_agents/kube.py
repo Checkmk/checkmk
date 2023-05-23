@@ -23,7 +23,6 @@ from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,
     Hostname,
-    HTTPUrl,
     Integer,
     ListChoice,
     ListOf,
@@ -35,8 +34,11 @@ from cmk.gui.valuespec import (
 
 
 def _url(title: str, _help: str, default_value: str) -> Url:
-    return HTTPUrl(
+    return Url(
         allow_empty=False,
+        show_as_link=True,
+        default_scheme="http",
+        allowed_schemes=["http", "https"],
         default_value=default_value,
         size=80,
         help=_help,

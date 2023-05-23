@@ -54,9 +54,7 @@ class ContainerTerminatedStateFactory(ModelFactory):
     __model__ = api.ContainerTerminatedState
 
 
-def create_container_state(
-    state: api.ContainerStateType, **kwargs: dict[str, object]
-) -> api.ContainerState:
+def create_container_state(state: api.ContainerStateType) -> api.ContainerState:
     state_factory = {
         api.ContainerStateType.running: ContainerRunningStateFactory.build,
         api.ContainerStateType.waiting: ContainerWaitingStateFactory.build,

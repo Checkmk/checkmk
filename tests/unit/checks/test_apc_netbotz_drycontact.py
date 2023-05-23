@@ -125,4 +125,4 @@ def test_apc_netbotz_drycontact_check(
     expected: tuple[int, str],
 ) -> None:
     check = Check("apc_netbotz_drycontact")
-    assert check.run_check(item, params, data) == expected
+    assert list(check.run_check(item, params, data)) == [expected]

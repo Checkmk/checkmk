@@ -5,7 +5,7 @@
 
 import collections
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL_AOS7
@@ -57,8 +57,9 @@ def inventory_alcatel_power_aos7(_oidend, device):
     )
 
 
-@get_parsed_item_data
-def check_alcatel_power_aos7(item, _no_params, device):
+def check_alcatel_power_aos7(item, _no_params, parsed):
+    if not (device := parsed.get(item)):
+        return
     if device.status_readable == "up":
         status = 0
     else:

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
@@ -40,9 +40,10 @@ def parse_arista_temp(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_arista_temp(item, params, value):
-    return check_temperature(value, params, "temp")
+def check_arista_temp(item, params, parsed):
+    if (value := parsed.get(item)) is None:
+        return
+    yield check_temperature(value, params, "temp")
 
 
 check_info["arista_temp"] = LegacyCheckDefinition(

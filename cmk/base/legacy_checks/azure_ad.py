@@ -9,12 +9,7 @@
 import time
 from calendar import timegm
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR, json
 from cmk.base.config import check_info
 
@@ -64,8 +59,9 @@ def discover_ad_users(parsed):
         yield None, {}
 
 
-@get_parsed_item_data
-def check_azure_users(item, _no_params, data):
+def check_azure_users(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     count = data.get("count")
     if count is not None:
         yield check_levels(
@@ -109,8 +105,9 @@ def discover_sync(parsed):
     ]
 
 
-@get_parsed_item_data
-def check_azure_sync(item, params, data):
+def check_azure_sync(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     sync_enabled = data.get("onPremisesSyncEnabled")
     if sync_enabled is None:
         yield 1, "Synchronization has been disabled"

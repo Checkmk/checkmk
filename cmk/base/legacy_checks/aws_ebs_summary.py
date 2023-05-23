@@ -8,7 +8,7 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.aws import GenericAWSSection, parse_aws
@@ -89,8 +89,9 @@ check_info["aws_ebs_summary"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_aws_ebs_summary_health(item, params, ebs_data):
+def check_aws_ebs_summary_health(item, params, parsed):
+    if not (ebs_data := parsed.get(item)):
+        return
     metrics = ebs_data["VolumeStatus"]
     ebs_status = metrics["Status"]
     yield 0 if ebs_status.lower() == "ok" else 2, "Status: %s" % ebs_status

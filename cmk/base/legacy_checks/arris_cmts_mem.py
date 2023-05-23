@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, OIDEnd, SNMPTree
@@ -32,11 +32,12 @@ def inventory_arris_cmts_mem(parsed):
         yield k, {}
 
 
-@get_parsed_item_data
-def check_arris_cmts_mem(item, params, data):
+def check_arris_cmts_mem(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     warn, crit = params.get("levels", (None, None))
     mode = "abs_used" if isinstance(warn, int) else "perc_used"
-    return check_memory_element(
+    yield check_memory_element(
         "Usage",
         data["mem_used"],
         data["mem_total"],

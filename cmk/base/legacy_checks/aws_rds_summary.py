@@ -7,7 +7,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions, inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.aws import aws_rds_service_item
@@ -70,8 +70,9 @@ check_info["aws_rds_summary"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_aws_rds_summary_db(item, params, data):
+def check_aws_rds_summary_db(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     db_name = data.get("DBName")
     pre_info = ""
     if db_name is not None:

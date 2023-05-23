@@ -6,12 +6,7 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
 
@@ -52,8 +47,10 @@ def parse_aws_s3(info):
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_aws_s3_objects(item, params, metrics):
+def check_aws_s3_objects(item, params, parsed):
+    if not (metrics := parsed.get(item)):
+        return
+
     bucket_sizes = metrics["BucketSizeBytes"]
     storage_infos = []
     for storage_type, value in bucket_sizes.items():

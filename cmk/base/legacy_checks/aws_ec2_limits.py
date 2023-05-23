@@ -6,7 +6,7 @@
 
 import cmk.utils.aws_constants as aws_types
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
 from cmk.base.config import check_info
 
@@ -35,13 +35,14 @@ def _transform_ec2_limits(params):
     return transformed
 
 
-@get_parsed_item_data
-def check_aws_ec2_limits(item, params, region_data):
+def check_aws_ec2_limits(item, params, parsed):
+    if not (region_data := parsed.get(item)):
+        return
     # params look like:
     # {'vpc_sec_group_rules': (50, 80.0, 90.0),
     #  'running_ondemand_instances': [('a1.4xlarge', (20, 80.0, 90.0))]}
     params = _transform_ec2_limits(params)
-    return check_aws_limits("ec2", params, region_data)
+    yield from check_aws_limits("ec2", params, region_data)
 
 
 check_info["aws_ec2_limits"] = LegacyCheckDefinition(

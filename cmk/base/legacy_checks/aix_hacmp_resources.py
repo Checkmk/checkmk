@@ -16,7 +16,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -40,8 +40,9 @@ def inventory_aix_hacmp_resources(parsed):
     return [(key, None) for key in parsed]
 
 
-@get_parsed_item_data
-def check_aix_hacmp_resources(item, params, data):
+def check_aix_hacmp_resources(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     if params is None:
         expected_behaviour = "first"
     else:
@@ -61,7 +62,7 @@ def check_aix_hacmp_resources(item, params, data):
         if not any((resource_state == "online" for resource_state in resource_states)):
             state = 2
 
-    return state, ", ".join(infotext)
+    yield state, ", ".join(infotext)
 
 
 check_info["aix_hacmp_resources"] = LegacyCheckDefinition(

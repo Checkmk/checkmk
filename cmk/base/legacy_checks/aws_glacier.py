@@ -6,12 +6,7 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import parse_aws
 from cmk.base.config import check_info
 
@@ -47,9 +42,10 @@ def inventory_aws_glacier(parsed):
         yield vault_name, {}
 
 
-@get_parsed_item_data
 def check_aws_glacier_archives(item, params, parsed):
-    vault_size = parsed.get("SizeInBytes", 0)
+    if not (data := parsed.get(item)):
+        return
+    vault_size = data.get("SizeInBytes", 0)
     yield check_levels(
         vault_size,
         "aws_glacier_vault_size",
@@ -58,13 +54,13 @@ def check_aws_glacier_archives(item, params, parsed):
         infoname="Vault size",
     )
 
-    num_archives = parsed.get("NumberOfArchives", 0)
+    num_archives = data.get("NumberOfArchives", 0)
     yield 0, "Number of archives: %s" % int(num_archives), [
         ("aws_glacier_num_archives", num_archives)
     ]
 
     tag_infos = []
-    for key, value in list(parsed.get("Tagging", {}).items()):
+    for key, value in list(data.get("Tagging", {}).items()):
         tag_infos.append("%s: %s" % (key, value))
     if tag_infos:
         yield 0, "[Tags]: %s" % ", ".join(tag_infos)

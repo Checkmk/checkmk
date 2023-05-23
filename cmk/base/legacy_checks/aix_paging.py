@@ -8,7 +8,7 @@
 
 import collections
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
 
@@ -52,8 +52,9 @@ def parse_aix_paging(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_aix_paging(item, params, data):
+def check_aix_paging(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     avail_mb = data.size_mb * (1 - data.usage_perc / 100.0)
     yield df_check_filesystem_single(item, data.size_mb, avail_mb, 0, None, None, params)
     yield 0, "Active: %s, Auto: %s, Type: %s" % (data.active, data.auto, data.type)

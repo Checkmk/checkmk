@@ -7,7 +7,6 @@
 from cmk.base.check_api import (
     check_levels,
     discover,
-    get_parsed_item_data,
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
@@ -21,13 +20,15 @@ def parse_huawei_switch_mem(info):
     return parse_huawei_physical_entity_values(info)
 
 
-@get_parsed_item_data
-def check_huawei_switch_mem(item, params, item_data):
+def check_huawei_switch_mem(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
     try:
         mem = float(item_data.value)
     except TypeError:
-        return None
-    return check_levels(
+        return
+
+    yield check_levels(
         mem,
         "mem_used_percent",
         params.get("levels", (None, None)),

@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -58,8 +58,9 @@ def inventory_ibm_svc_mdisk(parsed):
         yield mdisk_name, {}
 
 
-@get_parsed_item_data
-def check_ibm_svc_mdisk(item, params, data):
+def check_ibm_svc_mdisk(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     mdisk_status = data["status"]
     yield params.get("%s_state" % mdisk_status, 1), "Status: %s" % mdisk_status
 

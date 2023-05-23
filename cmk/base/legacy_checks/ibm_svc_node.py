@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -49,8 +49,9 @@ def parse_ibm_svc_node(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_ibm_svc_node(item, _no_params, data):
+def check_ibm_svc_node(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     messages = []
     status = 0
     online_nodes = 0
@@ -64,7 +65,8 @@ def check_ibm_svc_node(item, _no_params, data):
             online_nodes += 1
 
     if nodes_of_iogroup == 0:
-        return 3, "IO Group %s not found in agent output" % item
+        yield 3, "IO Group %s not found in agent output" % item
+        return
 
     if nodes_of_iogroup == online_nodes:
         status = 0
@@ -74,7 +76,7 @@ def check_ibm_svc_node(item, _no_params, data):
         status = 1
 
     # sorted is needed for deterministic test results
-    return status, ", ".join(sorted(messages))
+    yield status, ", ".join(sorted(messages))
 
 
 check_info["ibm_svc_node"] = LegacyCheckDefinition(

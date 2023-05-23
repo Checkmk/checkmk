@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -43,8 +43,9 @@ def parse_ibm_svc_array(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_ibm_svc_array(item, _no_params, data):
+def check_ibm_svc_array(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     raid_status = data["raid_status"]
     raid_level = data["raid_level"]
     tier = data["tier"]
@@ -61,7 +62,7 @@ def check_ibm_svc_array(item, _no_params, data):
     # add information
     message += ", RAID Level: %s, Tier: %s" % (raid_level, tier)
 
-    return status, message
+    yield status, message
 
 
 check_info["ibm_svc_array"] = LegacyCheckDefinition(

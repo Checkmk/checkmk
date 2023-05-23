@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import get_parsed_item_data, get_rate, LegacyCheckDefinition, saveint
+from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
@@ -30,8 +30,9 @@ def inventory_innovaphone_priports_l1(parsed):
     ]
 
 
-@get_parsed_item_data
-def check_innovaphone_priports_l1(item, params, data):
+def check_innovaphone_priports_l1(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     states = {
         1: "Down",
         2: "UP",

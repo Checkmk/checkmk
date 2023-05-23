@@ -6,12 +6,7 @@
 
 import collections
 
-from cmk.base.check_api import (
-    check_levels,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.huawei_switch import huawei_item_dict_from_entities
 from cmk.base.config import check_info
 
@@ -48,10 +43,11 @@ def inventory_huawei_switch_fan(parsed):
             yield (item, {})
 
 
-@get_parsed_item_data
-def check_huawei_switch_fan(item, params, item_data):
+def check_huawei_switch_fan(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
     levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
-    return check_levels(
+    yield check_levels(
         item_data.fan_speed, "fan_perc", levels, human_readable_func=get_percent_human_readable
     )
 

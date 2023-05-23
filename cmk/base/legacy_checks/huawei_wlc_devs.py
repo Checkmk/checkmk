@@ -8,12 +8,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import (
-    check_levels,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
@@ -47,8 +42,9 @@ def discovery_huawei_wlc_devs_mem(parsed):
             yield name, {}
 
 
-@get_parsed_item_data
-def check_huawei_wlc_devs_mem(item, params, data):
+def check_huawei_wlc_devs_mem(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     lev = params.get("levels")
     val = data.get("%s" % "mem_used_percent")
 
@@ -76,8 +72,9 @@ def discovery_huawei_wlc_devs_cpu(parsed):
             yield name, {}
 
 
-@get_parsed_item_data
-def check_huawei_wlc_devs_cpu(item, params, data):
+def check_huawei_wlc_devs_cpu(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     lev = params.get("levels")
     val = data.get("%s" % "cpu_percent")
 

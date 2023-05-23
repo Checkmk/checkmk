@@ -6,11 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import (
-    get_parsed_item_data,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
@@ -94,8 +90,9 @@ def inventory_ibm_svc_mdiskgrp(parsed):
         yield mdisk_name, {}
 
 
-@get_parsed_item_data
-def check_ibm_svc_mdiskgrp(item, params, data):
+def check_ibm_svc_mdiskgrp(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     mgrp_status = data["status"]
 
     if mgrp_status != "online":

@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -60,8 +60,9 @@ def _try_int(string):
         return None
 
 
-@get_parsed_item_data
-def check_ibm_svc_enclosure(item, params, data):
+def check_ibm_svc_enclosure(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     if params is None:
         params = {}
 

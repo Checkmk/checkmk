@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
@@ -37,15 +37,18 @@ def inventory_huawei_switch_stack(parsed):
         yield (item, {"expected_role": role})
 
 
-@get_parsed_item_data
-def check_huawei_switch_stack(item, params, item_data):
+def check_huawei_switch_stack(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
+
     if item_data == huawei_switch_stack_unknown_role:
-        return 2, item_data
+        yield 2, item_data
 
-    if item_data == params["expected_role"]:
-        return 0, item_data
+    elif item_data == params["expected_role"]:
+        yield 0, item_data
 
-    return 2, "Unexpected role: %s (Expected: %s)" % (item_data, params["expected_role"])
+    else:
+        yield 2, "Unexpected role: %s (Expected: %s)" % (item_data, params["expected_role"])
 
 
 check_info["huawei_switch_stack"] = LegacyCheckDefinition(

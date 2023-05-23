@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -74,8 +74,9 @@ def inventory_ibm_svc_portsas(parsed):
         yield item_name, {"current_state": status}
 
 
-@get_parsed_item_data
-def check_ibm_svc_portsas(item, params, data):
+def check_ibm_svc_portsas(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     sasport_status = data["status"]
 
     infotext = "Status: %s" % sasport_status
@@ -86,7 +87,7 @@ def check_ibm_svc_portsas(item, params, data):
 
     infotext += ", Speed: %s, Type: %s" % (data["port_speed"], data["type"])
 
-    return state, infotext
+    yield state, infotext
 
 
 check_info["ibm_svc_portsas"] = LegacyCheckDefinition(

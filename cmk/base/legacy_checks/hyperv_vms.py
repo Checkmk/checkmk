@@ -48,7 +48,7 @@
 # these default values were suggested by Aldi Sued
 
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -89,8 +89,10 @@ def inventory_hyperv_vms(parsed):
     return [(vm_name, {"state": vm["state"]}) for (vm_name, vm) in parsed.items()]
 
 
-@get_parsed_item_data
-def check_hyperv_vms(_item, params, vm):
+def check_hyperv_vms(item, params, parsed):
+    if not (vm := parsed.get(item)):
+        return
+
     # compare against discovered VM state
     if params.get("compare_discovery"):
         discovery_state = params.get("state")

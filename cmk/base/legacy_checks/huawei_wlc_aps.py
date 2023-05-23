@@ -6,12 +6,7 @@
 
 from typing import NamedTuple
 
-from cmk.base.check_api import (
-    check_levels,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
@@ -115,8 +110,9 @@ def discovery_huawei_wlc_aps_status(parsed):
             yield name, {}
 
 
-@get_parsed_item_data
-def check_huawei_wlc_aps_status(item, params, data):
+def check_huawei_wlc_aps_status(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     # General AP Status
     yield data["cmk_status"], "%s" % data["state_readable"]
 
@@ -167,8 +163,9 @@ def discovery_huawei_wlc_aps_cpu(parsed):
             yield name, {}
 
 
-@get_parsed_item_data
-def check_huawei_wlc_aps_cpu(item, params, data):
+def check_huawei_wlc_aps_cpu(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     lev = params["levels"]
     val = data["cpu_percent"]
     yield check_levels(
@@ -191,8 +188,9 @@ def discovery_huawei_wlc_aps_mem(parsed):
             yield name, {}
 
 
-@get_parsed_item_data
-def check_huawei_wlc_aps_mem(item, params, data):
+def check_huawei_wlc_aps_mem(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     lev = params["levels"]
     val = data["mem_used_percent"]
     yield check_levels(
@@ -217,8 +215,9 @@ def discovery_huawei_wlc_aps_temp(parsed):
     yield from ((name, {}) for name in parsed)
 
 
-@get_parsed_item_data
-def check_huawei_wlc_aps_temp(item, params, data):
+def check_huawei_wlc_aps_temp(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     # AP Temp
     temp = data["temp"]
 

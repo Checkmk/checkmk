@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_mq import ibm_mq_check_version
 from cmk.base.config import check_info
 
@@ -61,8 +61,10 @@ def inventory_ibm_mq_managers(parsed):
         yield item, {}
 
 
-@get_parsed_item_data
-def check_ibm_mq_managers(item, params, data):  # pylint: disable=too-many-branches
+def check_ibm_mq_managers(item, params, parsed):  # pylint: disable=too-many-branches
+    if not (data := parsed.get(item)):
+        return
+
     status = data["STATUS"]
     default = data["DEFAULT"]
     instname = data["INSTNAME"]

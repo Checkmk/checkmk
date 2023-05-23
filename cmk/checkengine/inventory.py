@@ -18,6 +18,7 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.log import console, section
 from cmk.utils.structured_data import (
+    ImmutableTree,
     make_filter_from_choice,
     MutableTree,
     parse_visible_raw_path,
@@ -128,7 +129,7 @@ def inventorize_host(
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: RawIntervalsFromConfig,
-    previous_tree: StructuredDataNode,
+    previous_tree: ImmutableTree,
 ) -> CheckInventoryTreeResult:
     fetched = fetcher(host_name, ip_address=None)
     host_sections = parser((f[0], f[1]) for f in fetched)
@@ -190,7 +191,7 @@ def inventorize_cluster(
     nodes: Sequence[HostName],
     *,
     parameters: HWSWInventoryParameters,
-    previous_tree: StructuredDataNode,
+    previous_tree: ImmutableTree,
 ) -> CheckInventoryTreeResult:
     inventory_tree = _inventorize_cluster(nodes=nodes)
     return CheckInventoryTreeResult(
@@ -246,7 +247,7 @@ def _inventorize_real_host(
     now: int,
     items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
     raw_intervals_from_config: RawIntervalsFromConfig,
-    previous_tree: StructuredDataNode,
+    previous_tree: ImmutableTree,
 ) -> tuple[MutableTrees, UpdateResult]:
     section.section_step("Create inventory or status data tree")
 
@@ -393,13 +394,13 @@ class MutableTrees:
 def _create_trees_from_inventory_plugin_items(
     items_of_inventory_plugins: Iterable[ItemsOfInventoryPlugin],
 ) -> MutableTrees:
-    mutable_inv_tree = MutableTree()
-    mutable_sta_tree = MutableTree()
+    inventory_tree = MutableTree()
+    status_data_tree = MutableTree()
     for items_of_inventory_plugin in items_of_inventory_plugins:
         for item in items_of_inventory_plugin.items:
-            item.populate_inventory_tree(mutable_inv_tree)
-            item.populate_status_data_tree(mutable_sta_tree)
-    return MutableTrees(mutable_inv_tree, mutable_sta_tree)
+            item.populate_inventory_tree(inventory_tree)
+            item.populate_status_data_tree(status_data_tree)
+    return MutableTrees(inventory_tree, status_data_tree)
 
 
 # Data for the HW/SW Inventory has a validity period (live data or persisted).
@@ -435,7 +436,7 @@ def _may_update(
     items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
     raw_intervals_from_config: RawIntervalsFromConfig,
     inventory_tree: StructuredDataNode,
-    previous_tree: StructuredDataNode,
+    previous_tree: ImmutableTree,
 ) -> UpdateResult:
     if not raw_intervals_from_config:
         return UpdateResult()
@@ -457,7 +458,7 @@ def _may_update(
     for entry in raw_intervals_from_config:
         node_path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
 
-        if (previous_node := previous_tree.get_node(node_path)) is None:
+        if (previous_node := previous_tree.tree.get_node(node_path)) is None:
             previous_node = StructuredDataNode()
 
         if (inventory_node := inventory_tree.get_node(node_path)) is None:
@@ -501,7 +502,7 @@ def _check_fetched_data_or_trees(
     parameters: HWSWInventoryParameters,
     inventory_tree: StructuredDataNode,
     status_data_tree: StructuredDataNode,
-    previous_tree: StructuredDataNode,
+    previous_tree: ImmutableTree,
     no_data_or_files: bool,
     processing_failed: bool,
 ) -> Iterator[ActiveCheckResult]:
@@ -543,7 +544,7 @@ def _check_trees(
     parameters: HWSWInventoryParameters,
     inventory_tree: StructuredDataNode,
     status_data_tree: StructuredDataNode,
-    previous_tree: StructuredDataNode,
+    previous_tree: ImmutableTree,
 ) -> Iterator[ActiveCheckResult]:
     if inventory_tree.is_empty() and status_data_tree.is_empty():
         yield ActiveCheckResult(0, "Found no data")
@@ -566,11 +567,11 @@ def _check_trees(
 
 
 def _tree_nodes_are_equal(
-    previous_tree: StructuredDataNode,
+    previous_tree: ImmutableTree,
     inventory_tree: StructuredDataNode,
     edge: str,
 ) -> bool:
-    previous_node = previous_tree.get_node((edge,))
+    previous_node = previous_tree.tree.get_node((edge,))
     inventory_node = inventory_tree.get_node((edge,))
     if previous_node is None:
         return inventory_node is None

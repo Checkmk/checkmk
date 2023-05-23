@@ -11,7 +11,12 @@ from typing import Literal
 import pytest
 
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode, UpdateResult
+from cmk.utils.structured_data import (
+    ImmutableTree,
+    RetentionIntervals,
+    StructuredDataNode,
+    UpdateResult,
+)
 from cmk.utils.type_defs import (
     AgentRawData,
     EVERYTHING,
@@ -69,10 +74,10 @@ def test_tree_nodes_equality(edge: str) -> None:
     tree = make_tree("edge")
     other = make_tree("other")
 
-    assert _tree_nodes_are_equal(tree, other, edge) is False
-    assert _tree_nodes_are_equal(other, tree, edge) is False
-    assert _tree_nodes_are_equal(tree, tree, edge) is True
-    assert _tree_nodes_are_equal(other, other, edge) is True
+    assert _tree_nodes_are_equal(ImmutableTree(tree), other, edge) is False
+    assert _tree_nodes_are_equal(ImmutableTree(other), tree, edge) is False
+    assert _tree_nodes_are_equal(ImmutableTree(tree), tree, edge) is True
+    assert _tree_nodes_are_equal(ImmutableTree(other), other, edge) is True
 
 
 # TODO test cases:
@@ -151,7 +156,7 @@ def test__inventorize_real_host_only_items() -> None:
             )
         ],
         raw_intervals_from_config=[],
-        previous_tree=StructuredDataNode(),
+        previous_tree=ImmutableTree(),
     )
 
     assert mutable_trees.inventory.tree.serialize() == {
@@ -311,7 +316,7 @@ def test__inventorize_real_host_only_intervals(
                 "columns": table_choices,
             },
         ],
-        previous_tree=StructuredDataNode(),
+        previous_tree=ImmutableTree(),
     )
 
     if attrs_expected_retentions:
@@ -494,7 +499,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
                 "columns": table_choices,
             },
         ],
-        previous_tree=StructuredDataNode(),
+        previous_tree=ImmutableTree(),
     )
 
     if attrs_expected_retentions:
@@ -594,40 +599,50 @@ def _make_tree_or_items(
     previous_attributes_retentions: dict,
     previous_table_retentions: dict,
     raw_cache_info: tuple[int, int] | None,
-) -> tuple[StructuredDataNode, list[ItemsOfInventoryPlugin]]:
-    previous_tree = StructuredDataNode.deserialize(
-        {
-            "Attributes": {},
-            "Table": {},
-            "Nodes": {
-                "path-to": {
-                    "Attributes": {},
-                    "Table": {},
-                    "Nodes": {
-                        "node-with-attrs": {
-                            "Attributes": {
-                                "Pairs": {"old": "Key", "keys": "Previous Keys"},
-                                "Retentions": previous_attributes_retentions,
+) -> tuple[ImmutableTree, list[ItemsOfInventoryPlugin]]:
+    previous_tree = ImmutableTree(
+        StructuredDataNode.deserialize(
+            {
+                "Attributes": {},
+                "Table": {},
+                "Nodes": {
+                    "path-to": {
+                        "Attributes": {},
+                        "Table": {},
+                        "Nodes": {
+                            "node-with-attrs": {
+                                "Attributes": {
+                                    "Pairs": {"old": "Key", "keys": "Previous Keys"},
+                                    "Retentions": previous_attributes_retentions,
+                                },
+                                "Nodes": {},
+                                "Table": {},
                             },
-                            "Nodes": {},
-                            "Table": {},
-                        },
-                        "node-with-table": {
-                            "Attributes": {},
-                            "Nodes": {},
-                            "Table": {
-                                "KeyColumns": ["ident"],
-                                "Rows": [
-                                    {"ident": "Ident 1", "old": "Key 1", "keys": "Previous Keys 1"},
-                                    {"ident": "Ident 2", "old": "Key 2", "keys": "Previous Keys 2"},
-                                ],
-                                "Retentions": previous_table_retentions,
+                            "node-with-table": {
+                                "Attributes": {},
+                                "Nodes": {},
+                                "Table": {
+                                    "KeyColumns": ["ident"],
+                                    "Rows": [
+                                        {
+                                            "ident": "Ident 1",
+                                            "old": "Key 1",
+                                            "keys": "Previous Keys 1",
+                                        },
+                                        {
+                                            "ident": "Ident 2",
+                                            "old": "Key 2",
+                                            "keys": "Previous Keys 2",
+                                        },
+                                    ],
+                                    "Retentions": previous_table_retentions,
+                                },
                             },
                         },
-                    },
-                }
-            },
-        }
+                    }
+                },
+            }
+        )
     )
     items_of_inventory_plugins = [
         ItemsOfInventoryPlugin(
@@ -690,7 +705,7 @@ def _make_tree_or_items(
 @pytest.mark.parametrize(
     "previous_node, expected_inv_tree",
     [
-        (StructuredDataNode(), StructuredDataNode()),
+        (ImmutableTree(), StructuredDataNode()),
         (
             _make_tree_or_items(
                 previous_attributes_retentions={},
@@ -711,7 +726,7 @@ def _make_tree_or_items(
 )
 def test__inventorize_real_host_no_items(
     raw_intervals: list,
-    previous_node: StructuredDataNode,
+    previous_node: ImmutableTree,
     expected_inv_tree: StructuredDataNode,
 ) -> None:
     mutable_trees, update_result = _inventorize_real_host(
@@ -760,7 +775,7 @@ def test_updater_merge_previous_attributes(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
+    previous_node = previous_tree.tree.get_node(("path-to", "node-with-attrs"))
     assert previous_node is not None
 
     if expected_retentions:
@@ -805,7 +820,7 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
     )
     assert mutable_trees.inventory.tree.is_empty()
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
+    previous_node = previous_tree.tree.get_node(("path-to", "node-with-attrs"))
     assert isinstance(previous_node, StructuredDataNode)
 
     assert not update_result.save_tree
@@ -854,7 +869,7 @@ def test_updater_merge_previous_tables(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-table"))
+    previous_node = previous_tree.tree.get_node(("path-to", "node-with-table"))
     assert isinstance(previous_node, StructuredDataNode)
 
     if expected_retentions:
@@ -903,7 +918,7 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
     )
     assert mutable_trees.inventory.tree.is_empty()
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-table"))
+    previous_node = previous_tree.tree.get_node(("path-to", "node-with-table"))
     assert isinstance(previous_node, StructuredDataNode)
 
     assert not update_result.save_tree
@@ -953,7 +968,7 @@ def test_updater_merge_attributes(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
+    previous_node = previous_tree.tree.get_node(("path-to", "node-with-attrs"))
     assert previous_node is not None
 
     inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-attrs"))
@@ -1011,7 +1026,7 @@ def test_updater_merge_attributes_outdated(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
+    previous_node = previous_tree.tree.get_node(("path-to", "node-with-attrs"))
     assert previous_node is not None
 
     inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-attrs"))
@@ -1082,7 +1097,7 @@ def test_updater_merge_tables(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-table"))
+    previous_node = previous_tree.tree.get_node(("path-to", "node-with-table"))
     assert previous_node is not None
 
     inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-table"))
@@ -1150,7 +1165,7 @@ def test_updater_merge_tables_outdated(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-table"))
+    previous_node = previous_tree.tree.get_node(("path-to", "node-with-table"))
     assert previous_node is not None
 
     inv_node = mutable_trees.inventory.tree.get_node(("path-to", "node-with-table"))
@@ -1232,7 +1247,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
             {} if failed_state is None else {"inv-fail-status": failed_state}
         ),
         raw_intervals_from_config=(),
-        previous_tree=StructuredDataNode(),
+        previous_tree=ImmutableTree(),
     ).check_result
 
     assert expected == check_result.state
@@ -1253,7 +1268,7 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw({}),
         raw_intervals_from_config=(),
-        previous_tree=StructuredDataNode(),
+        previous_tree=ImmutableTree(),
     ).check_result
 
     assert check_result.state == 0
@@ -1423,7 +1438,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
                 parameters=HWSWInventoryParameters.from_raw({}),
                 inventory_tree=inventory_tree,
                 status_data_tree=StructuredDataNode.deserialize({}),
-                previous_tree=StructuredDataNode.deserialize({}),
+                previous_tree=ImmutableTree(),
                 no_data_or_files=False,
                 processing_failed=True,
             )
@@ -1436,8 +1451,10 @@ def test__check_fetched_data_or_trees_only_cluster_property(
     "previous_tree, inventory_tree, update_result, expected_save_tree_actions",
     [
         (
-            StructuredDataNode.deserialize(
-                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+            ImmutableTree(
+                StructuredDataNode.deserialize(
+                    {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+                )
             ),
             # No further impact, may not be realistic here
             StructuredDataNode(),
@@ -1446,7 +1463,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             _SaveTreeActions(do_archive=True, do_save=False),
         ),
         (
-            StructuredDataNode(),
+            ImmutableTree(),
             StructuredDataNode.deserialize(
                 {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
             ),
@@ -1455,8 +1472,10 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             _SaveTreeActions(do_archive=False, do_save=True),
         ),
         (
-            StructuredDataNode.deserialize(
-                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+            ImmutableTree(
+                StructuredDataNode.deserialize(
+                    {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+                )
             ),
             StructuredDataNode.deserialize(
                 {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
@@ -1466,8 +1485,10 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
-            StructuredDataNode.deserialize(
-                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+            ImmutableTree(
+                StructuredDataNode.deserialize(
+                    {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+                )
             ),
             StructuredDataNode.deserialize(
                 {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
@@ -1476,8 +1497,10 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
-            StructuredDataNode.deserialize(
-                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+            ImmutableTree(
+                StructuredDataNode.deserialize(
+                    {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+                )
             ),
             StructuredDataNode.deserialize(
                 {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
@@ -1486,8 +1509,10 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             _SaveTreeActions(do_archive=False, do_save=False),
         ),
         (
-            StructuredDataNode.deserialize(
-                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+            ImmutableTree(
+                StructuredDataNode.deserialize(
+                    {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+                )
             ),
             StructuredDataNode.deserialize(
                 {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
@@ -1499,7 +1524,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
     ],
 )
 def test_save_tree_actions(
-    previous_tree: StructuredDataNode,
+    previous_tree: ImmutableTree,
     inventory_tree: StructuredDataNode,
     update_result: UpdateResult,
     expected_save_tree_actions: _SaveTreeActions,

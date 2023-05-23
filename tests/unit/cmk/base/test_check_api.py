@@ -5,7 +5,6 @@
 
 import math
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -30,25 +29,6 @@ def test_oid_spec_cached(value_eight: str | int) -> None:
     assert oid_cached.column == "8"
     assert oid_cached.encoding == "string"
     assert oid_cached.save_to_cache is True
-
-
-@check_api.get_parsed_item_data
-def check_foo(item, params, parsed_item_data):
-    return 2, "bar"
-
-
-def test_get_parsed_item_data() -> None:
-    params: dict[Any, Any] = {}
-    parsed = {1: "one", 3: {}, 4: [], 5: ""}
-    info = [[1, "one"], [2, "two"]]
-    assert check_foo(1, params, parsed) == (2, "bar")
-    assert check_foo(2, params, parsed) is None
-    assert check_foo(3, params, parsed) is None
-    assert check_foo(4, params, parsed) is None
-    assert check_foo(5, params, parsed) is None
-    output = (3, "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict")
-    assert check_foo(1, params, info) == output
-    assert check_foo.__name__ == "check_foo"
 
 
 def test_validate_filter() -> None:

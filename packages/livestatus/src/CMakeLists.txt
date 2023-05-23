@@ -232,30 +232,35 @@ target_compile_options(re2 PRIVATE -Wno-unused-parameter -DRE2_ON_VALGRIND -O3
 FetchContent_GetProperties(re2 SOURCE_DIR re2_src_dir)
 set(re2_ext_include ${re2_src_dir})
 
-# NOTE: The stuff below is a very cruel and probably fragile hack just to get
-# the few functions we need (rrd_clear_error, rrd_flushcached, rrd_get_error,
-# rrd_xport) statically linked into liblivestatus. When everything is bazelized,
-# we can probably do this in a much cleaner way.
+# NOTE: Build rrdtool as Cmake External Project, because few rrdtool functions
+# (rrd_clear_error, rrd_flushcached, rrd_get_error, rrd_xport) must be
+# statically linked into liblivestatus. When everything is bazelized, we can
+# probably do this better.
 include(ExternalProject)
-# TODO: Use -fdata-sections -ffunction-sections + -Wl,--gc-sections (plus
+
+# TODO(sp): Use -fdata-sections -ffunction-sections + -Wl,--gc-sections (plus
 # perhaps -Wl,--print-gc-sections)
+set(RRDTOOL_CFLAGS
+    "CFLAGS=-g -O2 -D_GNU_SOURCE -fno-strict-aliasing -std=gnu99 -fPIC -Wno-format-truncation -Wno-implicit-fallthrough -Wno-stringop-truncation"
+)
 ExternalProject_Add(
   rrdtool
   URL ${root_repo_dir}/third_party/rrdtool/rrdtool-1.7.2-patched.tar.gz
   URL_HASH
     SHA256=26ae8b0fd13fbc1967ea55974a13988dde1b072bfd1bd7f11031cb2664e60719
   DOWNLOAD_EXTRACT_TIMESTAMP no
+  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/rrdtool
   CONFIGURE_COMMAND
     <SOURCE_DIR>/configure --disable-lua --disable-perl --disable-python
     --disable-ruby --disable-tcl --disable-docs --disable-examples
     --disable-rrdcached --disable-rrdcgi
-  BUILD_COMMAND
-    make --jobs=6
-    "CFLAGS=-g -O2 -D_GNU_SOURCE -fno-strict-aliasing -std=gnu99 -fPIC -Wno-format-truncation -Wno-implicit-fallthrough -Wno-stringop-truncation"
+  BUILD_COMMAND make --jobs=6 ${RRDTOOL_CFLAGS}
   INSTALL_COMMAND "")
+
 ExternalProject_Add_StepDependencies(
   rrdtool download
   ${root_repo_dir}/third_party/rrdtool/rrdtool-1.7.2-patched.tar.gz)
+
 ExternalProject_Get_Property(rrdtool SOURCE_DIR)
 set(rrdtool_ext_include "${SOURCE_DIR}/src")
 ExternalProject_Get_Property(rrdtool BINARY_DIR)
@@ -265,14 +270,16 @@ add_dependencies(livestatus rrdtool)
 target_include_directories(
   livestatus PUBLIC ../include ${asio_ext_include} ${re2_ext_include}
                     ${rrdtool_ext_include})
+
 target_link_libraries(
   livestatus
   PRIVATE pthread
   PRIVATE re2::re2
   PRIVATE ${rrdtool_ext_lib}
-  PRIVATE cairo
-  PRIVATE pango-1.0
-  PRIVATE pangocairo-1.0)
+  PRIVATE cairo # rrdtool stuff
+  PRIVATE pango-1.0 # rrdtool stuff
+  PRIVATE pangocairo-1.0) # rrdtool stuff too
+
 target_compile_features(livestatus PUBLIC cxx_std_17)
 set_target_properties(livestatus PROPERTIES VERSION ${PROJECT_VERSION}
                                             SOVERSION ${PROJECT_VERSION_MAJOR})

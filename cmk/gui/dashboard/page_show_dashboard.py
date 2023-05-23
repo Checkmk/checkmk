@@ -666,6 +666,7 @@ def _extend_display_dropdown(
     )
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
     info_list = ["host", "service"]
+    is_filter_set = request.var("filled_in") == "filter"
 
     display_dropdown.topics.insert(
         0,
@@ -674,7 +675,9 @@ def _extend_display_dropdown(
             entries=[
                 PageMenuEntry(
                     title=_("Filter"),
-                    icon_name="filter",
+                    icon_name={"icon": "filter", "emblem": "warning"}
+                    if is_filter_set
+                    else "filter",
                     item=PageMenuSidePopup(
                         visuals.render_filter_form(
                             info_list,

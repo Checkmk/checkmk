@@ -223,6 +223,11 @@ class MutableTree:
         node.table.add_key_columns(sorted(key_columns))
         node.table.add_rows(rows)
 
+    def get_attribute(self, path: SDPath, key: str) -> int | float | str | None:
+        return (
+            None if (node := self.tree.get_node(path)) is None else node.attributes.pairs.get(key)
+        )
+
 
 # .
 #   .--immutable tree------------------------------------------------------.

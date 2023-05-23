@@ -510,15 +510,11 @@ def _check_fetched_data_or_trees(
         # Inventory trees in Checkmk <2.2 the cluster property was added in any case.
         # Since Checkmk 2.2 we changed this behaviour: see werk 14836.
         # In order to avoid a lot of "useless" warnings we check the following:
-        if (
-            inventory_tree.tree.count_entries() == 1
-            and (
-                cluster_attributes := inventory_tree.tree.get_attributes(
-                    ("software", "applications", "check_mk", "cluster")
-                )
-            )
-            is not None
-            and cluster_attributes.pairs.get("is_cluster") in [True, False]
+        if inventory_tree.tree.count_entries() == 1 and isinstance(
+            inventory_tree.get_attribute(
+                ("software", "applications", "check_mk", "cluster"), "is_cluster"
+            ),
+            bool,
         ):
             yield ActiveCheckResult(0, "No further data for tree update")
         else:

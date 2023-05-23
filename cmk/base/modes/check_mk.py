@@ -2285,12 +2285,12 @@ def _get_save_tree_actions(
     inventory_tree: MutableTree,
     update_result: UpdateResult,
 ) -> _SaveTreeActions:
-    if inventory_tree.tree.is_empty():
+    if not inventory_tree:
         # Archive current inventory tree file if it exists. Important for host inventory icon
         console.verbose("No inventory tree.\n")
         return _SaveTreeActions(do_archive=True, do_save=False)
 
-    if previous_tree.tree.is_empty():
+    if not previous_tree:
         console.verbose("New inventory tree.\n")
         return _SaveTreeActions(do_archive=False, do_save=True)
 

@@ -263,7 +263,7 @@ def _inventorize_real_host(
         previous_tree=previous_tree,
     )
 
-    if not mutable_trees.inventory.tree.is_empty():
+    if mutable_trees.inventory:
         mutable_trees.inventory.add_pairs(
             path=["software", "applications", "check_mk", "cluster"],
             pairs={"is_cluster": False},
@@ -538,7 +538,7 @@ def _check_trees(
     status_data_tree: MutableTree,
     previous_tree: ImmutableTree,
 ) -> Iterator[ActiveCheckResult]:
-    if inventory_tree.tree.is_empty() and status_data_tree.tree.is_empty():
+    if not (inventory_tree or status_data_tree):
         yield ActiveCheckResult(0, "Found no data")
         return
 
@@ -554,7 +554,7 @@ def _check_trees(
     if not _tree_nodes_are_equal(previous_tree, inventory_tree, "hardware"):
         yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
 
-    if not status_data_tree.tree.is_empty():
+    if status_data_tree:
         yield ActiveCheckResult(0, f"Found {status_data_tree.tree.count_entries()} status entries")
 
 

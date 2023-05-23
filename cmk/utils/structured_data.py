@@ -204,6 +204,9 @@ class MutableTree:
     def __init__(self, tree: StructuredDataNode | None = None) -> None:
         self.tree: Final = StructuredDataNode() if tree is None else tree
 
+    def __bool__(self) -> bool:
+        return not self.tree.is_empty()
+
     def add_pairs(
         self,
         *,
@@ -493,6 +496,9 @@ class ImmutableTree:
     def __init__(self, tree: StructuredDataNode | None = None) -> None:
         self.tree: Final = StructuredDataNode() if tree is None else tree
 
+    def __bool__(self) -> bool:
+        return not self.tree.is_empty()
+
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableTree:
         return ImmutableTree(_filter_node(self.tree, filters))
 
@@ -624,6 +630,9 @@ def _merge_delta_nodes(
 class ImmutableDeltaTree:
     def __init__(self, tree: DeltaStructuredDataNode) -> None:
         self.tree: Final = tree
+
+    def __bool__(self) -> bool:
+        return not self.tree.is_empty()
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(_filter_delta_node(self.tree, filters))

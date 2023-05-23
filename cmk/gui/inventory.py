@@ -463,7 +463,7 @@ class _CachedTreeLoader:
         except FileNotFoundError:
             raise LoadStructuredDataError()
 
-        if tree.tree.is_empty():
+        if not tree:
             # load_file may return an empty tree
             raise LoadStructuredDataError()
 
@@ -527,7 +527,7 @@ class _CachedDeltaTreeLoader:
         if self.filters is None:
             return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
 
-        if (filtered_delta_tree := delta_tree.filter(self.filters)).tree.is_empty():
+        if not (filtered_delta_tree := delta_tree.filter(self.filters)):
             return None
 
         delta_result = filtered_delta_tree.tree.count_entries()

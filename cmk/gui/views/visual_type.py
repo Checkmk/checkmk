@@ -7,7 +7,7 @@ from collections.abc import Iterator
 
 from livestatus import SiteId
 
-from cmk.utils.structured_data import DeltaStructuredDataNode, SDPath, StructuredDataNode
+from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDPath
 from cmk.utils.type_defs import HostName
 
 from cmk.gui.ctx_stack import g
@@ -132,36 +132,32 @@ def _has_inventory_tree(
     # FIXME In order to decide whether this view is enabled
     # do we really need to load the whole tree?
     try:
-        struct_tree = _get_struct_tree(is_history, hostname, site_id)
+        inventory_tree = _get_inventory_tree(is_history, hostname, site_id)
     except LoadStructuredDataError:
         return False
 
-    if not struct_tree:
+    if not inventory_tree:
         return False
 
-    if struct_tree.is_empty():
-        return False
-
-    if (node := struct_tree.get_node(path)) is None:
+    if (node := inventory_tree.tree.get_node(path)) is None:
         return False
 
     return not node.is_empty()
 
 
-def _get_struct_tree(
+def _get_inventory_tree(
     is_history: bool, hostname: HostName, site_id: SiteId
-) -> StructuredDataNode | DeltaStructuredDataNode | None:
-    struct_tree_cache = g.setdefault("struct_tree_cache", {})
+) -> ImmutableTree | ImmutableDeltaTree | None:
+    inventory_tree_cache = g.setdefault("inventory_tree_cache", {})
     cache_id = (is_history, hostname, site_id)
-    if cache_id in struct_tree_cache:
-        return struct_tree_cache[cache_id]
+    if cache_id in inventory_tree_cache:
+        return inventory_tree_cache[cache_id]
 
-    tree = (
+    inventory_tree = (
         load_latest_delta_tree(hostname)
         if is_history
         else load_filtered_and_merged_tree(get_status_data_via_livestatus(site_id, hostname))
     )
-    struct_tree = None if tree is None else tree.tree
 
-    struct_tree_cache[cache_id] = struct_tree
-    return struct_tree
+    inventory_tree_cache[cache_id] = inventory_tree
+    return inventory_tree

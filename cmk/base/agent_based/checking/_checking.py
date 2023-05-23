@@ -181,7 +181,7 @@ def _do_inventory_actions_during_checking_for(
         run_plugin_names=EVERYTHING,
     )
 
-    if not status_data_tree.tree.is_empty():
+    if status_data_tree:
         tree_store.save(host_name=host_name, tree=status_data_tree.tree)
 
 

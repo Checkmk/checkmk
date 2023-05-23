@@ -7,7 +7,7 @@
 
 import logging
 import os
-from collections.abc import Iterator
+from typing import Generator
 
 import pytest
 from playwright.sync_api import BrowserContext, Page
@@ -22,7 +22,7 @@ password = "cmk"
 
 
 @pytest.fixture(name="test_site", scope="session", autouse=True)
-def site() -> Iterator[Site]:
+def site() -> Generator:
     logger.info("Setting up testsite")
     reuse = os.environ.get("REUSE")
     # if REUSE is undefined, a site will neither be reused nor be dropped

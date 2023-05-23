@@ -260,6 +260,7 @@ def test_password_with_newlines(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Non
     assert stored_credentials == credentials_with_newlines.replace("\n", "")
 
 
+@managedtest
 def test_openapi_password_without_owner_regression(clients: ClientRegistry) -> None:
     clients.Password.create(
         ident="so_secret",

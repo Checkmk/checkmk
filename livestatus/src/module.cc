@@ -246,8 +246,9 @@ void *main_thread(void *data) {
         if (cc > g_max_fd_ever) {
             g_max_fd_ever = cc;
         }
-        switch (
-            fl_client_queue->push(cc, queue_overflow_strategy::pop_oldest)) {
+        auto &&[ok, size] =
+            fl_client_queue->push(cc, queue_overflow_strategy::pop_oldest);
+        switch (ok) {
             case queue_status::overflow:
             case queue_status::joinable: {
                 const generic_error ge("cannot enqueue client socket");
@@ -270,9 +271,11 @@ void *client_thread(void *data) {
     while (!shouldTerminate()) {
         g_num_queued_connections--;
         g_livestatus_active_connections++;
-        if (auto cc = fl_client_queue->pop(queue_pop_strategy::blocking, {})) {
-            Debug(logger) << "accepted client connection on fd " << *cc;
-            InputBuffer input_buffer{*cc, [] { return shouldTerminate(); },
+        if (auto &&elem =
+                fl_client_queue->pop(queue_pop_strategy::blocking, {})) {
+            auto &&[fd, size] = *elem;
+            Debug(logger) << "accepted client connection on fd " << fd;
+            InputBuffer input_buffer{fd, [] { return shouldTerminate(); },
                                      logger, fl_query_timeout, fl_idle_timeout};
             bool keepalive = true;
             unsigned requestnr = 0;
@@ -282,11 +285,11 @@ void *client_thread(void *data) {
                                   << " on same connection";
                 }
                 counterIncrement(Counter::requests);
-                OutputBuffer output_buffer{
-                    *cc, [] { return shouldTerminate(); }, logger};
+                OutputBuffer output_buffer{fd, [] { return shouldTerminate(); },
+                                           logger};
                 keepalive = fl_core->answerRequest(input_buffer, output_buffer);
             }
-            ::close(*cc);
+            ::close(fd);
         }
         g_livestatus_active_connections--;
     }
@@ -426,9 +429,10 @@ void terminate_threads() {
         Informational(fl_logger_nagios)
             << "waiting for client threads to terminate...";
         fl_client_queue->join();
-        while (auto fd =
+        while (auto &&elem =
                    fl_client_queue->pop(queue_pop_strategy::nonblocking, {})) {
-            ::close(*fd);
+            auto &&[fd, size] = *elem;
+            ::close(fd);
         }
         for (const auto &info : fl_thread_info) {
             if (auto result = pthread_join(info.id, nullptr); result != 0) {

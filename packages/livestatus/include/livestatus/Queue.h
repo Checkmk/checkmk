@@ -35,11 +35,11 @@ public:
     ~Queue();
     [[nodiscard]] size_type approx_size() const;
     [[nodiscard]] std::optional<size_type> limit() const;
-    [[nodiscard]] queue_status push(const_reference elem,
-                                    queue_overflow_strategy strategy);
-    [[nodiscard]] queue_status push(value_type &&elem,
-                                    queue_overflow_strategy strategy);
-    std::optional<value_type> pop(
+    [[nodiscard]] std::pair<queue_status, size_type> push(
+        const_reference elem, queue_overflow_strategy strategy);
+    [[nodiscard]] std::pair<queue_status, size_type> push(
+        value_type &&elem, queue_overflow_strategy strategy);
+    std::optional<std::pair<value_type, size_type>> pop(
         queue_pop_strategy pop_strategy,
         std::optional<std::chrono::nanoseconds> timeout);
     void join();
@@ -77,8 +77,8 @@ std::optional<typename Queue<T, Q>::size_type> Queue<T, Q>::limit() const {
 }
 
 template <typename T, typename Q>
-queue_status Queue<T, Q>::push(const_reference elem,
-                               queue_overflow_strategy strategy) {
+std::pair<queue_status, typename Queue<T, Q>::size_type> Queue<T, Q>::push(
+    const_reference elem, queue_overflow_strategy strategy) {
     auto status{queue_status::ok};
     std::unique_lock<std::mutex> lock(mutex_);
     switch (strategy) {
@@ -86,12 +86,12 @@ queue_status Queue<T, Q>::push(const_reference elem,
             not_full_.wait(lock,
                            [&] { return limit_ != q_.size() || joinable_; });
             if (joinable_) {
-                return queue_status::joinable;
+                return std::make_pair(queue_status::joinable, q_.size());
             }
             break;
         case queue_overflow_strategy::pop_oldest:
             if (joinable_) {
-                return queue_status::joinable;
+                return std::make_pair(queue_status::joinable, q_.size());
             }
             if (limit_ == q_.size()) {
                 q_.pop_front();
@@ -100,21 +100,21 @@ queue_status Queue<T, Q>::push(const_reference elem,
             break;
         case queue_overflow_strategy::dont_push:
             if (joinable_) {
-                return queue_status::joinable;
+                return std::make_pair(queue_status::joinable, q_.size());
             }
             if (limit_ == q_.size()) {
-                return queue_status::overflow;
+                return std::make_pair(queue_status::overflow, q_.size());
             }
             break;
     }
     q_.push_back(elem);
     not_empty_.notify_one();
-    return status;
+    return std::make_pair(status, q_.size());
 }
 
 template <typename T, typename Q>
-queue_status Queue<T, Q>::push(value_type &&elem,
-                               queue_overflow_strategy strategy) {
+std::pair<queue_status, typename Queue<T, Q>::size_type> Queue<T, Q>::push(
+    value_type &&elem, queue_overflow_strategy strategy) {
     auto status{queue_status::ok};
     std::unique_lock<std::mutex> lock(mutex_);
     switch (strategy) {
@@ -122,12 +122,12 @@ queue_status Queue<T, Q>::push(value_type &&elem,
             not_full_.wait(lock,
                            [&] { return limit_ != q_.size() || joinable_; });
             if (joinable_) {
-                return queue_status::joinable;
+                return std::make_pair(queue_status::joinable, q_.size());
             }
             break;
         case queue_overflow_strategy::pop_oldest:
             if (joinable_) {
-                return queue_status::joinable;
+                return std::make_pair(queue_status::joinable, q_.size());
             }
             if (limit_ == q_.size()) {
                 q_.pop_front();
@@ -136,22 +136,23 @@ queue_status Queue<T, Q>::push(value_type &&elem,
             break;
         case queue_overflow_strategy::dont_push:
             if (joinable_) {
-                return queue_status::joinable;
+                return std::make_pair(queue_status::joinable, q_.size());
             }
             if (limit_ == q_.size()) {
-                return queue_status::overflow;
+                return std::make_pair(queue_status::overflow, q_.size());
             }
             break;
     }
     q_.push_back(std::move(elem));
     not_empty_.notify_one();
-    return status;
+    return std::make_pair(status, q_.size());
 }
 
 template <typename T, typename Q>
-std::optional<typename Queue<T, Q>::value_type> Queue<T, Q>::pop(
-    queue_pop_strategy pop_strategy,
-    std::optional<std::chrono::nanoseconds> timeout) {
+std::optional<std::pair<typename Queue<T, Q>::value_type,
+                        typename Queue<T, Q>::size_type>>
+Queue<T, Q>::pop(queue_pop_strategy pop_strategy,
+                 std::optional<std::chrono::nanoseconds> timeout) {
     std::unique_lock<std::mutex> lock(mutex_);
     if (pop_strategy == queue_pop_strategy::blocking) {
         if (timeout) {
@@ -167,7 +168,7 @@ std::optional<typename Queue<T, Q>::value_type> Queue<T, Q>::pop(
     auto elem = std::move(q_.front());
     q_.pop_front();
     not_full_.notify_one();
-    return elem;
+    return std::make_pair(std::move(elem), q_.size());
 };
 
 template <typename T, typename Q>

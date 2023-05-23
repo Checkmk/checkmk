@@ -7,7 +7,7 @@
 import socket
 import time
 
-from cmk.base.check_api import check_levels, get_parsed_item_data, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
@@ -155,8 +155,9 @@ def iter_counter_params():
                 yield direction, unit, boundary, hr_function
 
 
-@get_parsed_item_data
-def check_f5_bigip_vserver(_item, params, data):
+def check_f5_bigip_vserver(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     # Need compatibility to version with _no_params
     if params is None:
         params = {}

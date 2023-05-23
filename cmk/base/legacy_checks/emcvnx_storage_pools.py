@@ -10,7 +10,6 @@ from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
     get_bytes_human_readable,
-    get_parsed_item_data,
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
@@ -185,8 +184,9 @@ def inventory_emcvnx_storage_pools_tiering(parsed):
         yield pool_name, {}
 
 
-@get_parsed_item_data
-def check_emcvnx_storage_pools_tiering(item, params, data):
+def check_emcvnx_storage_pools_tiering(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     for key in ("FAST Cache", "Relocation Status", "Relocation Rate"):
         if key in data:
             yield 0, "%s: %s" % (key.capitalize(), data[key])
@@ -344,8 +344,9 @@ def _emcvnx_get_text_perf(
         return str(field), []
 
 
-@get_parsed_item_data
-def check_emcvnx_storage_pools_deduplication(_no_item, _no_params, data):
+def check_emcvnx_storage_pools_deduplication(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     yield 0, "State: %s" % data.get("Deduplication State", "unknown")
     yield 0, "Status: %s" % data.get("Deduplication Status", "unknown").split("(")[0]
     yield 0, "Rate: %s" % data.get("Deduplication Rate", "unknown")

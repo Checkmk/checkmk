@@ -10,7 +10,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_bytes_human_readable,
-    get_parsed_item_data,
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
@@ -50,8 +49,9 @@ def parse_esx_vsphere_datastores(info):
     return stores
 
 
-@get_parsed_item_data
-def check_esx_vsphere_datastores(item, params, data):
+def check_esx_vsphere_datastores(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     if not data["accessible"]:
         yield 2, "inaccessible"
 

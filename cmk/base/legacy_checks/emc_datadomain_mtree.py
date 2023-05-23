@@ -4,12 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    discover,
-    get_bytes_human_readable,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import discover, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
@@ -22,8 +17,9 @@ def parse_emc_datadomain_mtree(info):
     }
 
 
-@get_parsed_item_data
-def check_emc_datadomain_mtree(_item, params, mtree_data):
+def check_emc_datadomain_mtree(item, params, parsed):
+    if not (mtree_data := parsed.get(item)):
+        return
     state_table = {
         "0": "unknown",
         "1": "deleted",

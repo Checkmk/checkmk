@@ -14,7 +14,6 @@ from cmk.base.check_api import (
     discover,
     get_age_human_readable,
     get_bytes_human_readable,
-    get_parsed_item_data,
     LegacyCheckDefinition,
     state_markers,
 )
@@ -191,8 +190,9 @@ def check_filestats_extremes(files, params, show_files=False):
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_filestats(_item, params, data):
+def check_filestats(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     _output_variety, reported_lines = data
     sumry = [s for s in reported_lines if s.get("type") == "summary"]
     count = sumry[0].get("count", None) if sumry else None
@@ -261,8 +261,9 @@ def check_filestats(_item, params, data):
     yield 0, "\n" + "\n".join(remaining_files_output)
 
 
-@get_parsed_item_data
-def check_filestats_single(_item, params, data):
+def check_filestats_single(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     _output_variety, reported_lines = data
     if len(reported_lines) != 1:
         yield 1, "Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats)."

@@ -23,7 +23,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_bytes_human_readable,
-    get_parsed_item_data,
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
@@ -56,8 +55,9 @@ def parse_elasticsearch_nodes(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_elasticsearch_nodes(item, params, item_data):
+def check_elasticsearch_nodes(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
     for data_key, params_key, hr_func in [
         ("cpu_percent", "cpu_levels", get_percent_human_readable),
         ("cpu_total_in_millis", "cpu_total_in_millis", int),

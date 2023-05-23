@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -31,8 +31,9 @@ def parse_fast_lta_volumes(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_fast_lta_volumes(item, params, data):
+def check_fast_lta_volumes(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     yield df_check_filesystem_list(item, params, data)
 
 

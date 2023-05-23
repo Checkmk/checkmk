@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -36,13 +36,15 @@ def inventory_hp_psu_temp(parsed):
         yield index, {}
 
 
-@get_parsed_item_data
-def check_hp_psu_temp(item, params, data):
+def check_hp_psu_temp(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     # For some status, the device simply reports 0 as a temperature value.
     temp_unknown_status = ["8"]
     if data["status"] in temp_unknown_status and data["temp"] == 0:
-        return 3, "No temperature data available"
-    return check_temperature(data["temp"], params, item)
+        yield 3, "No temperature data available"
+    else:
+        yield check_temperature(data["temp"], params, item)
 
 
 check_info["hp_psu.temp"] = LegacyCheckDefinition(

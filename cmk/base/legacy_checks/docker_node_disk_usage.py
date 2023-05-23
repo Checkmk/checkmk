@@ -11,7 +11,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_bytes_human_readable,
-    get_parsed_item_data,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
@@ -22,8 +21,9 @@ def parse_docker_node_disk_usage(info):
     return {r.get("type"): r for r in disk_usage if r is not None}
 
 
-@get_parsed_item_data
-def check_docker_node_disk_usage(_no_item, params, data):
+def check_docker_node_disk_usage(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     for key, human_readable_func in (
         ("size", get_bytes_human_readable),
         ("reclaimable", get_bytes_human_readable),

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.hp_msa import (
     check_hp_msa_health,
     inventory_hp_msa_health,
@@ -90,8 +90,9 @@ def inventory_hp_msa_psu(parsed):
             yield item, {}
 
 
-@get_parsed_item_data
-def check_hp_msa_psu(_item, params, data):
+def check_hp_msa_psu(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     for psu_type, psu_type_readable, levels_type in [
         ("dc12v", "12 V", "levels_12v_"),
         ("dc5v", "5 V", "levels_5v_"),
@@ -128,9 +129,10 @@ check_info["hp_msa_psu.sensor"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-@get_parsed_item_data
-def check_hp_msa_psu_temp(item, params, data):
-    return check_temperature(float(data["dctemp"]), params, "hp_msa_psu_temp_%s" % item)
+def check_hp_msa_psu_temp(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
+    yield check_temperature(float(data["dctemp"]), params, "hp_msa_psu_temp_%s" % item)
 
 
 check_info["hp_msa_psu.temp"] = LegacyCheckDefinition(

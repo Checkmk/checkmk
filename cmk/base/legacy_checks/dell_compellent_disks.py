@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes import dell_compellent
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -38,8 +38,9 @@ def parse_dell_compellent_disks(info):
     }
 
 
-@get_parsed_item_data
-def check_dell_compellent_disks(_item, _no_params, data):
+def check_dell_compellent_disks(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     dev_state, health, health_message, enclosure, serial = data
     state, state_readable = dell_compellent.dev_state_map(dev_state)
     yield state, "Status: %s" % state_readable

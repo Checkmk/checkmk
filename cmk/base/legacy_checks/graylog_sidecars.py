@@ -12,7 +12,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_age_human_readable,
-    get_parsed_item_data,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
 )
@@ -69,8 +68,10 @@ def parse_graylog_sidecars(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_graylog_sidecars(item, params, item_data):  # pylint: disable=too-many-branches
+def check_graylog_sidecars(item, params, parsed):  # pylint: disable=too-many-branches
+    if not (item_data := parsed.get(item)):
+        return
+
     active_msg = item_data.get("active")
     if active_msg is not None:
         active_state = 0

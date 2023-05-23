@@ -8,7 +8,7 @@
 # equipmentFan<TAB>dn sys/rack-unit-1/fan-module-1-1/fan-1<TAB>id 1<TAB>model <TAB>operability operable
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -32,8 +32,9 @@ def parse_ucs_c_rack_server_fans(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_ucs_c_rack_server_fans(item, _no_params, data):
+def check_ucs_c_rack_server_fans(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     operability_to_status_mapping = {
         "unknown": 3,
         "operable": 0,

@@ -16,7 +16,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -55,8 +55,9 @@ def parse_ucs_c_rack_server_power(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_ucs_c_rack_server_power(item, params, data):
+def check_ucs_c_rack_server_power(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     yield check_levels(
         data["consumedPower"], "power", params["power_upper_levels"], unit="W", infoname="Power"
     )

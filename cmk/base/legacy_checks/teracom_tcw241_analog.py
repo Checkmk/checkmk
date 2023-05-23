@@ -6,7 +6,7 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
@@ -64,8 +64,7 @@ def parse_tcw241_analog(info):
     return info_dict
 
 
-@get_parsed_item_data
-def check_tcw241_analog(item, params, sensor):
+def check_tcw241_analog(item, params, parsed):
     """
     Check sensor data if value is in range
 
@@ -74,7 +73,9 @@ def check_tcw241_analog(item, params, sensor):
     :param sensor: analog sensor data
     :return: status
     """
-    return check_levels(
+    if not (sensor := parsed.get(item)):
+        return
+    yield check_levels(
         sensor.voltage,
         "voltage",
         (sensor.minimum, sensor.maximum),

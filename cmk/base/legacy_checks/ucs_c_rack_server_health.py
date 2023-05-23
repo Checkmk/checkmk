@@ -10,7 +10,7 @@
 # sys/rack-unit-2/board/storage-SAS-SLOT-HBA/vd-0 <TAB>id SLOT-HBA<TAB>health Good
 
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -42,12 +42,13 @@ def inventory_ucs_c_rack_server_health(parsed):
         yield key, {}
 
 
-@get_parsed_item_data
-def check_ucs_c_rack_server_health(item, params, health):
+def check_ucs_c_rack_server_health(item, params, parsed):
     """
     Check function is called only in case parsed is a dict and item exists as key in parsed[item].
     All other potential bad case conditions are handled by @get_parsed_item_data.
     """
+    if not (health := parsed.get(item)):
+        return
     # Dict keys are storage controller health strings provided via special agent -> XML
     # API of servers. Dict values are corresponding check status.
     # For information about the data provided by the special agent

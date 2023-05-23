@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
@@ -42,8 +42,7 @@ def parse_tcw241_digital(info):
     return info_dict
 
 
-@get_parsed_item_data
-def check_tcw241_digital(item, params, info_dict):
+def check_tcw241_digital(item, params, parsed):
     """
     Check sensor if it is open or closed
 
@@ -52,7 +51,9 @@ def check_tcw241_digital(item, params, info_dict):
     :param info_dict: dictionary with digital sensor description and state (open/close)
     :return: status
     """
-    return 0 if info_dict.get("state") == "open" else 2, "[%s] is %s" % (
+    if not (info_dict := parsed.get(item)):
+        return
+    yield 0 if info_dict.get("state") == "open" else 2, "[%s] is %s" % (
         info_dict.get("description"),
         info_dict.get("state"),
     )

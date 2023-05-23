@@ -10,7 +10,6 @@ from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
     get_item_state,
-    get_parsed_item_data,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
     set_item_state,
@@ -46,8 +45,9 @@ def inventory_veeam_tapejobs(parsed):
         yield job, veeam_tapejobs_default_levels
 
 
-@get_parsed_item_data
-def check_veeam_tapejobs(item, params, data):
+def check_veeam_tapejobs(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     job_id = data["job_id"]
     last_result = data["last_result"]
     last_state = data["last_state"]

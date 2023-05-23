@@ -9,7 +9,7 @@
 import datetime
 
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
@@ -48,8 +48,9 @@ def inventory_sap_hana_ess_migration(parsed):
         yield item, {}
 
 
-@get_parsed_item_data
-def check_sap_hana_ess_migration(item, params, data):
+def check_sap_hana_ess_migration(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     if not data or "log" not in data or not data["log"]:
         raise IgnoreResultsError("Login into database failed.")
 
@@ -62,7 +63,7 @@ def check_sap_hana_ess_migration(item, params, data):
         key, {"cmk_state": 3, "state_readable": "Unknown [%s]" % data["log"]}
     )
     infotext = "ESS State: %s Timestamp: %s" % (states["state_readable"], data["timestamp"])
-    return states["cmk_state"], infotext
+    yield states["cmk_state"], infotext
 
 
 check_info["sap_hana_ess_migration"] = LegacyCheckDefinition(

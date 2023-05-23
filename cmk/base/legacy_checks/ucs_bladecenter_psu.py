@@ -5,7 +5,7 @@
 
 
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
-from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
 from cmk.base.config import check_info
@@ -54,8 +54,9 @@ def inventory_ucs_bladecenter_psu(parsed):
             yield key, {}
 
 
-@get_parsed_item_data
-def check_ucs_bladecenter_psu(item, params, psu):
+def check_ucs_bladecenter_psu(item, params, parsed):
+    if not (psu := parsed.get(item)):
+        return
     value_3v = float(psu["Output3v3Avg"])
     value_12v = float(psu["Output12vAvg"])
 
@@ -114,8 +115,9 @@ def inventory_ucs_bladecenter_psu_switch_power(parsed):
             yield key, {}
 
 
-@get_parsed_item_data
-def check_ucs_bladecenter_psu_switch_power(item, params, psu):
+def check_ucs_bladecenter_psu_switch_power(item, params, parsed):
+    if not (psu := parsed.get(item)):
+        return
     # Convert fields
     KEY_MAP = {"Current": "current", "PowerAvg": "power", "Voltage": "voltage"}
 
@@ -125,7 +127,7 @@ def check_ucs_bladecenter_psu_switch_power(item, params, psu):
             k, v = KEY_MAP[k], (float(v), None)
         psu_new[k] = v
 
-    return check_elphase(item, params, {item: psu_new})
+    yield from check_elphase(item, params, {item: psu_new})
 
 
 check_info["ucs_bladecenter_psu.switch_power"] = LegacyCheckDefinition(

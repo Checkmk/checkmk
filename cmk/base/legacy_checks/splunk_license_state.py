@@ -20,7 +20,6 @@ from cmk.base.check_api import (
     discover,
     get_age_human_readable,
     get_bytes_human_readable,
-    get_parsed_item_data,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
 )
@@ -64,8 +63,9 @@ def parse_splunk_license_state(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_splunk_license_state(item, params, item_data):
+def check_splunk_license_state(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
     data = item_data[0]
     state = 0
 

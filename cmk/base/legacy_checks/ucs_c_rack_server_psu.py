@@ -10,7 +10,7 @@
 # equipmentPsu<TAB>dn sys/rack-unit-1/psu-2 <TAB>id 2<TAB>model blabla<TAB>operability inoperable<TAB>voltage ok
 
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -58,8 +58,9 @@ def inventory_ucs_c_rack_server_psu(parsed):
 #########################
 
 
-@get_parsed_item_data
-def check_ucs_c_rack_server_psu(item, _no_params, data):
+def check_ucs_c_rack_server_psu(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     # maps XML API v2.0 XML entity values to check function status values
     operability_to_status_mapping = {
         "unknown": 3,
@@ -114,8 +115,9 @@ check_info["ucs_c_rack_server_psu"] = LegacyCheckDefinition(
 #################################
 
 
-@get_parsed_item_data
-def check_ucs_c_rack_server_psu_voltage(item, _no_params, data):
+def check_ucs_c_rack_server_psu_voltage(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     # maps XML API v2.0 XML entity values to check function status values
     voltage_to_status_mapping = {
         "unknown": 3,

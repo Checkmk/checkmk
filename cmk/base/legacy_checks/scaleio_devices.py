@@ -14,7 +14,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -42,8 +42,9 @@ def _make_state_readable(raw_state):
     return raw_state.replace("_", " ").lower()
 
 
-@get_parsed_item_data
-def check_scaleio_devices(item, params, devices):
+def check_scaleio_devices(item, params, parsed):
+    if not (devices := parsed.get(item)):
+        return
     num_devices = len(devices)
     error_devices = []
     long_output = []

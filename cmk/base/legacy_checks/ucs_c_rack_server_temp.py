@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
@@ -70,8 +70,9 @@ def parse_ucs_c_rack_server_temp(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_ucs_c_rack_server_temp(item, params, temperature):
+def check_ucs_c_rack_server_temp(item, params, parsed):
+    if (temperature := parsed.get(item)) is None:
+        return
     yield check_temperature(
         temperature, params, "ucs_c_rack_server_%s" % item.lower().replace(" ", "_")
     )

@@ -8,7 +8,7 @@ import re
 from collections.abc import Callable, Mapping
 
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 _SAP_HANA_CONNECT_STATE_MAP: Mapping[str, tuple[int, Callable[[str], bool]]] = {
@@ -52,14 +52,15 @@ def parse_sap_hana_connect(info):
     return parsed
 
 
-@get_parsed_item_data
 def check_sap_hana_connect(item, params, parsed):
-    state = parsed["cmk_state"]
+    if not (data := parsed.get(item)):
+        return
+    state = data["cmk_state"]
     message = "%s\nODBC Driver Version: %s, Server Node: %s, Timestamp: %s" % (
-        parsed["message"],
-        parsed["driver_version"],
-        parsed["server_node"],
-        parsed["timestamp"],
+        data["message"],
+        data["driver_version"],
+        data["server_node"],
+        data["timestamp"],
     )
     yield state, message
 

@@ -623,9 +623,6 @@ class ImmutableDeltaTree:
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(_filter_delta_node(self.tree, filters))
 
-    def merge(self, tree_rhs: DeltaStructuredDataNode) -> ImmutableDeltaTree:
-        return ImmutableDeltaTree(_merge_delta_nodes(self.tree, tree_rhs))
-
 
 # .
 #   .--IO------------------------------------------------------------------.

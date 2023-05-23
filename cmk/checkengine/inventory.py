@@ -458,16 +458,12 @@ def _may_update(
     for entry in raw_intervals_from_config:
         node_path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
 
-        if (previous_node := previous_tree.tree.get_node(node_path)) is None:
-            previous_node = StructuredDataNode()
-
-        if (inventory_node := inventory_tree.tree.get_node(node_path)) is None:
-            inventory_node = inventory_tree.tree.setdefault_node(node_path)
+        previous_node = previous_tree.tree.get_node(node_path) or StructuredDataNode()
 
         if choices_for_attributes := entry.get("attributes"):
             raw_cache_info = _get_raw_cache_info((node_path, "Attributes"))
             results.append(
-                inventory_node.attributes.update_from_previous(
+                inventory_tree.tree.setdefault_node(node_path).attributes.update_from_previous(
                     now,
                     previous_node.attributes,
                     make_filter_from_choice(choices_for_attributes),
@@ -482,7 +478,7 @@ def _may_update(
         elif choices_for_table := entry.get("columns"):
             raw_cache_info = _get_raw_cache_info((node_path, "TableRow"))
             results.append(
-                inventory_node.table.update_from_previous(
+                inventory_tree.tree.setdefault_node(node_path).table.update_from_previous(
                     now,
                     previous_node.table,
                     make_filter_from_choice(choices_for_table),

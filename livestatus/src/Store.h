@@ -48,7 +48,7 @@
 class Query;
 class InputBuffer;
 class Logger;
-class MonitoringCore;
+class ICore;
 class OutputBuffer;
 class User;
 
@@ -63,7 +63,7 @@ class Object;
 class Store {
 public:
 #ifdef CMC
-    Store(MonitoringCore *mc, Core *core);
+    Store(ICore *mc, Core *core);
     LogCache *logCache() { return &_log_cache; };
     bool answerRequest(InputBuffer *, OutputBuffer *);
     bool answerGetRequest(const std::list<std::string> &lines,
@@ -79,7 +79,7 @@ public:
     void addDowntimeToStatehistCache(const Object &object, bool started);
     void addFlappingToStatehistCache(const Object &object, bool started);
 #else
-    explicit Store(MonitoringCore *mc);
+    explicit Store(ICore *mc);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
 #endif
     [[nodiscard]] Logger *logger() const;
@@ -87,7 +87,7 @@ public:
 
 private:
     struct TableDummy : public Table {
-        explicit TableDummy(MonitoringCore *mc) : Table(mc) {}
+        explicit TableDummy(ICore *mc) : Table(mc) {}
         [[nodiscard]] std::string name() const override { return "dummy"; }
         [[nodiscard]] std::string namePrefix() const override {
             return "dummy_";
@@ -95,7 +95,7 @@ private:
         void answerQuery(Query & /*unused*/, const User & /*user*/) override {}
     };
 
-    MonitoringCore *_mc;
+    ICore *_mc;
 #ifdef CMC
     Core *_core;
 #endif

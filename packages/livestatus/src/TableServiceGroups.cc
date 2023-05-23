@@ -11,9 +11,9 @@
 #include <vector>
 
 #include "livestatus/Column.h"
+#include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/ServiceGroupMembersColumn.h"
 #include "livestatus/ServiceListState.h"
@@ -35,7 +35,7 @@ std::vector<::column::service_group_members::Entry> BuildServiceGroupListInfo(
 }
 }  // namespace
 
-TableServiceGroups::TableServiceGroups(MonitoringCore *mc) : Table(mc) {
+TableServiceGroups::TableServiceGroups(ICore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});
 }
 

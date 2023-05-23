@@ -13,7 +13,7 @@
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 
-TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
+TableColumns::TableColumns(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<Column>>(
         "table", "The name of the table", offsets, [this](const Column &col) {

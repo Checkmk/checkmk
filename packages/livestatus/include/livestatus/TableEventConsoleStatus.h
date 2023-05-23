@@ -10,11 +10,11 @@
 
 #include "livestatus/Row.h"
 #include "livestatus/TableEventConsole.h"
-class MonitoringCore;
+class ICore;
 
 class TableEventConsoleStatus : public TableEventConsole {
 public:
-    explicit TableEventConsoleStatus(MonitoringCore *mc);
+    explicit TableEventConsoleStatus(ICore *mc);
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
     [[nodiscard]] Row getDefault() const override;

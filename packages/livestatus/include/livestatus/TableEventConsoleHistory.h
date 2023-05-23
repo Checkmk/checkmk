@@ -9,11 +9,11 @@
 #include <string>
 
 #include "livestatus/TableEventConsole.h"
-class MonitoringCore;
+class ICore;
 
 class TableEventConsoleHistory : public TableEventConsole {
 public:
-    explicit TableEventConsoleHistory(MonitoringCore *mc);
+    explicit TableEventConsoleHistory(ICore *mc);
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
 };

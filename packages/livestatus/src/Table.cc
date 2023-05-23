@@ -10,11 +10,11 @@
 
 #include "livestatus/Column.h"
 #include "livestatus/DynamicColumn.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Logger.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/StringUtils.h"
 
-Table::Table(MonitoringCore *mc) : _mc(mc) {}
+Table::Table(ICore *mc) : _mc(mc) {}
 
 Table::~Table() = default;
 

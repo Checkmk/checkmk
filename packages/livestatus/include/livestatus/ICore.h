@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef MonitoringCore_h
-#define MonitoringCore_h
+#ifndef ICore_h
+#define ICore_h
 
 #include <chrono>
 #include <cstddef>
@@ -38,9 +38,9 @@ struct Command {
 };
 
 /// An abstraction layer for the monitoring core (nagios or cmc)
-class MonitoringCore {
+class ICore {
 public:
-    virtual ~MonitoringCore() = default;
+    virtual ~ICore() = default;
 
     [[nodiscard]] virtual const IHost *find_host(const std::string &name) = 0;
     [[nodiscard]] virtual const IHostGroup *find_hostgroup(
@@ -192,4 +192,4 @@ private:
     [[nodiscard]] virtual void *implInternal() const = 0;
 };
 
-#endif  // MonitoringCore_h
+#endif  // ICore_h

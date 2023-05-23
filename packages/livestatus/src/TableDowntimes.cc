@@ -12,9 +12,9 @@
 
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
+#include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
@@ -25,7 +25,7 @@
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
-TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
+TableDowntimes::TableDowntimes(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<IDowntime>>(
         "author", "The contact that scheduled the downtime", offsets,

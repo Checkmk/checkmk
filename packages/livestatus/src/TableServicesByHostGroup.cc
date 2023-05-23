@@ -6,8 +6,8 @@
 #include "livestatus/TableServicesByHostGroup.h"
 
 #include "livestatus/Column.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/TableHostGroups.h"
@@ -21,8 +21,7 @@ struct ServiceAndGroup {
 };
 }  // namespace
 
-TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
-    : Table(mc) {
+TableServicesByHostGroup::TableServicesByHostGroup(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     TableServices::addColumns(
         this, "",

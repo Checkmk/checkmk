@@ -11,13 +11,13 @@
 #include "livestatus/Row.h"
 #include "livestatus/Table.h"
 class ColumnOffsets;
-class MonitoringCore;
+class ICore;
 class Query;
 class User;
 
 class TableHostGroups : public Table {
 public:
-    explicit TableHostGroups(MonitoringCore *mc);
+    explicit TableHostGroups(ICore *mc);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

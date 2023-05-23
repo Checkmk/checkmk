@@ -16,13 +16,13 @@
 class Column;
 class ColumnOffsets;
 class Filter;
-class MonitoringCore;
+class ICore;
 
 template <class T>
 class DynamicRRDColumn : public DynamicColumn {
 public:
     DynamicRRDColumn(const std::string &name, const std::string &description,
-                     MonitoringCore *mc, const ColumnOffsets &offsets)
+                     ICore *mc, const ColumnOffsets &offsets)
         : DynamicColumn(name, description, offsets), _mc(mc) {}
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
@@ -39,7 +39,7 @@ public:
     }
 
 private:
-    MonitoringCore *_mc;
+    ICore *_mc;
 };
 
 #endif  // DynamicRRDColumn_h

@@ -26,12 +26,12 @@
 #include "livestatus/DowntimeRenderer.h"
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/DynamicRRDColumn.h"
+#include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/Logger.h"
 #include "livestatus/MapUtils.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/RRDColumn.h"
 #include "livestatus/StringColumn.h"
@@ -42,7 +42,7 @@
 
 using namespace std::string_literals;
 
-TableServices::TableServices(MonitoringCore *mc) : Table(mc) {
+TableServices::TableServices(ICore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{}, AddHosts::yes, LockComments::yes,
                LockDowntimes::yes);
 }

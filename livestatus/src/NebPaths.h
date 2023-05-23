@@ -6,8 +6,8 @@
 #ifndef NebPaths_h
 #define NebPaths_h
 
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
-#include "livestatus/MonitoringCore.h"
 
 class NebPaths : public IPaths {
 public:

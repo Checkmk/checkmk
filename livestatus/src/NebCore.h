@@ -22,9 +22,9 @@
 
 #include "Downtime.h"  // IWYU pragma: keep
 #include "Store.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Metric.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Triggers.h"
 #include "livestatus/User.h"
@@ -63,7 +63,7 @@ struct NagiosPathConfig {
     std::filesystem::path rrdcached_socket;
 };
 
-class NebCore : public MonitoringCore {
+class NebCore : public ICore {
 public:
     NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
             std::map<unsigned long, std::unique_ptr<Comment>> &comments,

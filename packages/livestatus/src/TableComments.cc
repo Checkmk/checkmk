@@ -11,9 +11,9 @@
 #include <variant>  // IWYU pragma: keep
 
 #include "livestatus/Column.h"
+#include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
@@ -22,7 +22,7 @@
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 
-TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
+TableComments::TableComments(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<IComment>>(
         "author", "The contact that entered the comment", offsets,

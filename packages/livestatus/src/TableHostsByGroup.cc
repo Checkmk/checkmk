@@ -6,7 +6,7 @@
 #include "livestatus/TableHostsByGroup.h"
 
 #include "livestatus/Column.h"
-#include "livestatus/MonitoringCore.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/TableHostGroups.h"
@@ -23,7 +23,7 @@ struct host_and_group {
 };
 }  // namespace
 
-TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
+TableHostsByGroup::TableHostsByGroup(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     TableHosts::addColumns(this, "", offsets.add([](Row r) {
         return r.rawData<host_and_group>()->hst;

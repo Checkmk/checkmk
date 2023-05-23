@@ -11,15 +11,15 @@
 #include "livestatus/Column.h"
 #include "livestatus/HostListRenderer.h"
 #include "livestatus/HostListState.h"
+#include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/LogEntry.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/User.h"
-TableHostGroups::TableHostGroups(MonitoringCore *mc) : Table(mc) {
+TableHostGroups::TableHostGroups(ICore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});
 }
 std::string TableHostGroups::name() const { return "hostgroups"; }

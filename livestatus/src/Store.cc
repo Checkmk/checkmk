@@ -12,10 +12,10 @@
 
 #include "livestatus/CrashReport.h"
 #include "livestatus/EventConsoleConnection.h"
+#include "livestatus/ICore.h"
 #include "livestatus/InputBuffer.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Query.h"
 #include "livestatus/StringUtils.h"
@@ -26,7 +26,7 @@
 #include <chrono>
 #endif
 
-Store::Store(MonitoringCore *mc)
+Store::Store(ICore *mc)
     : _mc(mc)
     , _log_cache(mc)
     , _table_columns(mc)

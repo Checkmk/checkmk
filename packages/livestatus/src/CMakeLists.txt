@@ -32,6 +32,7 @@ set(livestatus_headers
     ${header_location}/HostListRenderer.h
     ${header_location}/HostListState.h
     ${header_location}/HostServiceState.h
+    ${header_location}/ICore.h
     ${header_location}/InputBuffer.h
     ${header_location}/IntAggregator.h
     ${header_location}/IntColumn.h
@@ -48,7 +49,6 @@ set(livestatus_headers
     ${header_location}/Metric.h
     ${header_location}/mk_inventory.h
     ${header_location}/mk_logwatch.h
-    ${header_location}/MonitoringCore.h
     ${header_location}/NullColumn.h
     ${header_location}/opids.h
     ${header_location}/OringFilter.h
@@ -129,6 +129,7 @@ set(livestatus_sources
     HostListRenderer.cc
     HostListState.cc
     HostServiceState.cc
+    ICore.cc
     InputBuffer.cc
     IntFilter.cc
     ListFilter.cc
@@ -140,7 +141,6 @@ set(livestatus_sources
     Metric.cc
     mk_inventory.cc
     mk_logwatch.cc
-    MonitoringCore.cc
     NullColumn.cc
     opids.cc
     OringFilter.cc

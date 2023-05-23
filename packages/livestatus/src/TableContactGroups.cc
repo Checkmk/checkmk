@@ -10,13 +10,13 @@
 #include <vector>
 
 #include "livestatus/Column.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 
-TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
+TableContactGroups::TableContactGroups(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<IContactGroup>>(
         "name", "Name of the contact group", offsets,

@@ -28,6 +28,7 @@
 #include "livestatus/DynamicFileColumn.h"
 #include "livestatus/DynamicRRDColumn.h"
 #include "livestatus/HostListRenderer.h"
+#include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
@@ -35,7 +36,6 @@
 #include "livestatus/Logger.h"
 #include "livestatus/LogwatchList.h"
 #include "livestatus/MapUtils.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/Query.h"
 #include "livestatus/RRDColumn.h"
@@ -67,7 +67,7 @@ std::vector<::column::service_list::Entry> getServices(const IHost &hst,
 }
 }  // namespace
 
-TableHosts::TableHosts(MonitoringCore *mc) : Table(mc) {
+TableHosts::TableHosts(ICore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{}, LockComments::yes,
                LockDowntimes::yes);
 }

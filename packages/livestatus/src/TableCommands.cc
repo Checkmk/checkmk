@@ -9,12 +9,12 @@
 #include <vector>
 
 #include "livestatus/Column.h"
-#include "livestatus/MonitoringCore.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 
-TableCommands::TableCommands(MonitoringCore *mc) : Table(mc) {
+TableCommands::TableCommands(ICore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});
 }
 

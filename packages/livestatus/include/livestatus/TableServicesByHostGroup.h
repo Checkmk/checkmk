@@ -9,13 +9,13 @@
 #include <string>
 
 #include "livestatus/Table.h"
-class MonitoringCore;
+class ICore;
 class Query;
 class User;
 
 class TableServicesByHostGroup : public Table {
 public:
-    explicit TableServicesByHostGroup(MonitoringCore *mc);
+    explicit TableServicesByHostGroup(ICore *mc);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

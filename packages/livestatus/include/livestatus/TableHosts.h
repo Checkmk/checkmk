@@ -11,13 +11,13 @@
 #include "livestatus/Row.h"
 #include "livestatus/Table.h"
 class ColumnOffsets;
-class MonitoringCore;
+class ICore;
 class Query;
 class User;
 
 class TableHosts : public Table {
 public:
-    explicit TableHosts(MonitoringCore *mc);
+    explicit TableHosts(ICore *mc);
     static void addColumns(Table *table, const std::string &prefix,
                            const ColumnOffsets &offsets,
                            LockComments lock_comments,

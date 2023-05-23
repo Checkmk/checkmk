@@ -13,7 +13,7 @@
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 
-TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *mc)
+TableEventConsoleReplication::TableEventConsoleReplication(ICore *mc)
     : Table(mc) {
     const ColumnOffsets offsets{};
     addDynamicColumn(std::make_unique<DynamicEventConsoleReplicationColumn>(

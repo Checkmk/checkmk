@@ -11,7 +11,7 @@
 #include "livestatus/Row.h"
 #include "livestatus/Table.h"
 class ColumnOffsets;
-class MonitoringCore;
+class ICore;
 class Query;
 class User;
 
@@ -19,7 +19,7 @@ class TableServices : public Table {
 public:
     enum class AddHosts { no, yes };
 
-    explicit TableServices(MonitoringCore *mc);
+    explicit TableServices(ICore *mc);
     static void addColumns(Table *table, const std::string &prefix,
                            const ColumnOffsets &offsets, AddHosts add_hosts,
                            LockComments lock_comments,

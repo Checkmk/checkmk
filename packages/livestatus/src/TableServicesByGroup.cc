@@ -8,9 +8,9 @@
 #include <optional>
 
 #include "livestatus/Column.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/TableServiceGroups.h"
@@ -24,7 +24,7 @@ struct service_and_group {
 };
 }  // namespace
 
-TableServicesByGroup::TableServicesByGroup(MonitoringCore *mc) : Table(mc) {
+TableServicesByGroup::TableServicesByGroup(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     TableServices::addColumns(
         this, "",

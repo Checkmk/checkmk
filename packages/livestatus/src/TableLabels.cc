@@ -10,14 +10,14 @@
 #include <unordered_set>
 
 #include "livestatus/Column.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/User.h"
 
-TableLabels::TableLabels(MonitoringCore *mc) : Table(mc) {
+TableLabels::TableLabels(ICore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});
 }
 

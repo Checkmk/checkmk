@@ -11,7 +11,7 @@
 #include "livestatus/IntColumn.h"
 #include "livestatus/StringColumn.h"
 
-TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
+TableEventConsoleRules::TableEventConsoleRules(ICore *mc)
     : TableEventConsole{mc} {
     const ColumnOffsets offsets{};
     addColumn(

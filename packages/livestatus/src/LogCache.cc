@@ -10,16 +10,16 @@
 #include <string>
 #include <system_error>
 
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
-#include "livestatus/MonitoringCore.h"
 
 namespace {
 // Check memory every N'th new message
 constexpr unsigned long check_mem_cycle = 1000;
 }  // namespace
 
-LogCache::LogCache(MonitoringCore *mc)
+LogCache::LogCache(ICore *mc)
     : _mc(mc), _num_cached_log_messages(0), _num_at_last_check(0) {}
 
 void LogCache::update() {

@@ -13,13 +13,13 @@
 #include "livestatus/LogCache.h"
 #include "livestatus/Table.h"
 class Column;
-class MonitoringCore;
+class ICore;
 class Query;
 class User;
 
 class TableLog : public Table {
 public:
-    TableLog(MonitoringCore *mc, LogCache *log_cache);
+    TableLog(ICore *mc, LogCache *log_cache);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

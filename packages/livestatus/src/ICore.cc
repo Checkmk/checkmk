@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "livestatus/MonitoringCore.h"
+#include "livestatus/ICore.h"
 
 #include <filesystem>
 #include <sstream>
@@ -11,7 +11,7 @@
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 
-void MonitoringCore::dumpPaths(Logger *logger) const {
+void ICore::dumpPaths(Logger *logger) const {
     auto p{paths()};
     Notice(logger) << "log file = " << p->log_file();
     Notice(logger) << "crash reports directory = "

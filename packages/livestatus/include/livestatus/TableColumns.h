@@ -11,7 +11,7 @@
 
 #include "livestatus/Table.h"
 class Column;
-class MonitoringCore;
+class ICore;
 class Query;
 class User;
 
@@ -19,7 +19,7 @@ class TableColumns : public Table {
 public:
     enum class Type { table, name, description, type };
 
-    explicit TableColumns(MonitoringCore *mc);
+    explicit TableColumns(ICore *mc);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

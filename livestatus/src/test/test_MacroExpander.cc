@@ -28,7 +28,7 @@ TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
     // There are circular dependencies in the code and this test avoids
     // shooting oneself in the foot.
     //
-    // Make sure that the MonitoringCore abstraction is not accessed during the
+    // Make sure that the ICore abstraction is not accessed during the
     // construction of Store. This is a bit fragile, but it is needed to tie the
     // knot between NebCore and Store.
     ASSERT_EXIT(  // NOLINT

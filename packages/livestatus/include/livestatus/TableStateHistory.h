@@ -20,13 +20,13 @@ class ColumnOffsets;
 class Filter;
 class HostServiceState;
 class LogEntry;
-class MonitoringCore;
+class ICore;
 class Query;
 class User;
 
 class TableStateHistory : public Table {
 public:
-    TableStateHistory(MonitoringCore *mc, LogCache *log_cache);
+    TableStateHistory(ICore *mc, LogCache *log_cache);
     static void addColumns(Table *table, const std::string &prefix,
                            const ColumnOffsets &offsets);
 

@@ -20,7 +20,7 @@
 class ColumnOffsets;
 template <class T>
 class DoubleColumn;
-class MonitoringCore;
+class ICore;
 class Query;
 template <class T>
 class StringColumn;
@@ -30,7 +30,7 @@ class User;
 
 class ECRow {
 public:
-    ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
+    ECRow(ICore *mc, const std::vector<std::string> &headers,
           const std::vector<std::string> &columns);
 
     static std::unique_ptr<StringColumn<ECRow>> makeStringColumn(
@@ -65,7 +65,7 @@ private:
 
 class TableEventConsole : public Table {
 public:
-    explicit TableEventConsole(MonitoringCore *mc);
+    explicit TableEventConsole(ICore *mc);
 
     void answerQuery(Query &query, const User &user) override;
 };

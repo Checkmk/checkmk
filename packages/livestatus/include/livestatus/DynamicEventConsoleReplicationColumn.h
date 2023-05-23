@@ -12,20 +12,19 @@
 #include "livestatus/DynamicColumn.h"
 class Column;
 class ColumnOffsets;
-class MonitoringCore;
+class ICore;
 
 class DynamicEventConsoleReplicationColumn : public DynamicColumn {
 public:
     DynamicEventConsoleReplicationColumn(const std::string &name,
                                          const std::string &description,
-                                         MonitoringCore *mc,
-                                         const ColumnOffsets &);
+                                         ICore *mc, const ColumnOffsets &);
 
     std::unique_ptr<Column> createColumn(const std::string &name,
                                          const std::string &arguments) override;
 
 private:
-    MonitoringCore *_mc;
+    ICore *_mc;
 };
 
 #endif  // DynamicEventConsoleReplicationColumn_h

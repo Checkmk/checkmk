@@ -18,10 +18,10 @@
 
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
+#include "livestatus/ICore.h"
 #include "livestatus/LogCache.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Table.h"
 #include "livestatus/TableColumns.h"
 #include "livestatus/TableCommands.h"
@@ -64,7 +64,7 @@ class ITimeperiod;
 class IHostGroup;
 class IServiceGroup;
 
-class DummyMonitoringCore : public MonitoringCore {
+class DummyMonitoringCore : public ICore {
     const IHost *find_host(const std::string & /*name*/) override {
         return nullptr;
     }

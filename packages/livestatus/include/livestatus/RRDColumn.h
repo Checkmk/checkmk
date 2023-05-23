@@ -18,7 +18,7 @@
 class IHost;
 class IService;
 class ListRenderer;
-class MonitoringCore;
+class ICore;
 
 struct RRDColumnArgs {
     RRDColumnArgs(const std::string &arguments, const std::string &column_name);
@@ -34,7 +34,7 @@ public:
     using C = std::chrono::system_clock;
     using value_type = std::variant<C::time_point, unsigned long, double>;
 
-    RRDDataMaker(MonitoringCore *mc, RRDColumnArgs args)
+    RRDDataMaker(ICore *mc, RRDColumnArgs args)
         : _mc{mc}, _args{std::move(args)} {}
 
     std::vector<value_type> operator()(
@@ -43,7 +43,7 @@ public:
         const IService &svc, std::chrono::seconds timezone_offset) const;
 
 private:
-    MonitoringCore *_mc;
+    ICore *_mc;
     const RRDColumnArgs _args;
 
     [[nodiscard]] std::vector<value_type> make(

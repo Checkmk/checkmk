@@ -15,7 +15,7 @@
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
 
-TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
+TableEventConsoleStatus::TableEventConsoleStatus(ICore *mc)
     : TableEventConsole{mc} {
     const ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(

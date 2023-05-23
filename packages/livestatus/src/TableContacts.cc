@@ -15,18 +15,18 @@
 #include "livestatus/AttributeListColumn.h"
 #include "livestatus/Column.h"
 #include "livestatus/DictColumn.h"
+#include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/MapUtils.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 
 // identical to MAX_CONTACT_ADDRESSES from nagios
 constexpr int32_t max_contact_addresses = 6;
 
-TableContacts::TableContacts(MonitoringCore *mc) : Table(mc) {
+TableContacts::TableContacts(ICore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});
 }
 

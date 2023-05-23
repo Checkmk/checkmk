@@ -20,11 +20,11 @@
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/Filter.h"
 #include "livestatus/HostServiceState.h"
+#include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
@@ -43,7 +43,7 @@ enum {
 
 using namespace std::chrono_literals;
 
-TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
+TableStateHistory::TableStateHistory(ICore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
     addColumns(this, "", ColumnOffsets{});
 }

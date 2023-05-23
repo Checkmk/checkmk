@@ -10,13 +10,13 @@
 
 #include "livestatus/Row.h"
 #include "livestatus/Table.h"
-class MonitoringCore;
+class ICore;
 class Query;
 class User;
 
 class TableContactGroups : public Table {
 public:
-    explicit TableContactGroups(MonitoringCore *mc);
+    explicit TableContactGroups(ICore *mc);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

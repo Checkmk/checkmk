@@ -13,9 +13,9 @@
 #include <variant>  // IWYU pragma: keep
 
 #include "livestatus/Column.h"
+#include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/LogEntry.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
@@ -33,7 +33,7 @@ namespace {
 
 class LogRow {
 public:
-    LogRow(const LogEntry &entry_, MonitoringCore *mc)
+    LogRow(const LogEntry &entry_, ICore *mc)
         : entry{&entry_}
         , hst{mc->find_host(entry_.host_name())}
         , svc{mc->find_service(entry_.host_name(),
@@ -50,7 +50,7 @@ public:
 
 }  // namespace
 
-TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
+TableLog::TableLog(ICore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
     const ColumnOffsets offsets{};
     auto offsets_entry{

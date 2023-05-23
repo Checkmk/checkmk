@@ -9,12 +9,12 @@
 #include <string>
 
 #include "livestatus/TableEventConsole.h"
-class MonitoringCore;
+class ICore;
 class Table;
 
 class TableEventConsoleEvents : public TableEventConsole {
 public:
-    explicit TableEventConsoleEvents(MonitoringCore *mc);
+    explicit TableEventConsoleEvents(ICore *mc);
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
     static void addColumns(Table *table);

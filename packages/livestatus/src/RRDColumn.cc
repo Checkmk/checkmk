@@ -17,10 +17,10 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/strutil.h"
 

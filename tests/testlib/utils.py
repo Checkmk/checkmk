@@ -12,14 +12,14 @@ import re
 import subprocess
 import sys
 import textwrap
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import pexpect  # type: ignore[import]
 
 from cmk.utils.version import Edition
 
-logger = logging.getLogger()
+LOGGER = logging.getLogger()
 
 
 @dataclasses.dataclass
@@ -167,7 +167,7 @@ def current_base_branch_name() -> str:
             if re.match(r"^origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
                 return head[7:]
 
-    logger.warning("Could not determine base branch, using %s", branch_name)
+    LOGGER.warning("Could not determine base branch, using %s", branch_name)
     return branch_name
 
 
@@ -270,7 +270,7 @@ def spawn_expect_process(
     2: unexpected timeout
     3: any other exception
     """
-    logger.info("Executing: %s", subprocess.list2cmdline(args))
+    LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
     with open(logfile_path, "w") as logfile:
         p = pexpect.spawn(" ".join(args), encoding="utf-8", logfile=logfile)
         try:
@@ -286,7 +286,7 @@ def spawn_expect_process(
                                 break_long_words=break_long_words,
                             )
                         )
-                    logger.info("Expecting: '%s'", dialog.expect)
+                    LOGGER.info("Expecting: '%s'", dialog.expect)
                     rc = p.expect(
                         [
                             dialog.expect,  # rc=0
@@ -296,7 +296,7 @@ def spawn_expect_process(
                     )
                     if rc == 0:
                         # msg found; sending input
-                        logger.info(
+                        LOGGER.info(
                             "%s; sending: %s",
                             "Optional message found"
                             if dialog.optional
@@ -305,10 +305,10 @@ def spawn_expect_process(
                         )
                         p.send(dialog.send)
                     elif dialog.optional:
-                        logger.info("Optional message not found; ignoring!")
+                        LOGGER.info("Optional message not found; ignoring!")
                         break
                     else:
-                        logger.error(
+                        LOGGER.error(
                             "Required message not found. "
                             "The following has been found instead:\n"
                             "%s",
@@ -323,8 +323,26 @@ def spawn_expect_process(
             else:
                 rc = p.status
         except Exception as e:
-            logger.exception(e)
-            logger.debug(p)
+            LOGGER.exception(e)
+            LOGGER.debug(p)
             rc = 3
 
     return rc
+
+
+def execute(args: Sequence[str], check: bool = True) -> subprocess.CompletedProcess:
+    LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
+    try:
+        proc = subprocess.run(
+            args,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            close_fds=True,
+            check=check,
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            f"Subprocess terminated non-successfully. Stdout:\n{e.stdout}\nStderr:\n{e.stderr}"
+        ) from e
+    return proc

@@ -7,7 +7,7 @@ import logging
 import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, AnyStr, NamedTuple, NoReturn
+from typing import Any, AnyStr, NamedTuple, NoReturn, Optional
 
 import requests
 
@@ -212,6 +212,35 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
+    def create_folder(
+        self,
+        folder: str,
+        title: Optional[str] = None,
+        attributes: Optional[Mapping[str, Any]] = None,
+    ) -> None:
+        if folder.count("/") > 1:
+            parent_folder, folder_name = folder.rsplit("/", 1)
+        else:
+            parent_folder = "/"
+            folder_name = folder.replace("/", "")
+        response = self.post(
+            "/domain-types/folder_config/collections/all",
+            json={
+                "name": folder_name,
+                "title": title if title else folder_name,
+                "parent": parent_folder,
+                "attributes": attributes if attributes else {},
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_folder(self, folder: str) -> list[dict[str, Any]]:
+        response = self.get(f"/objects/folder_config/{folder.replace('/', '~')}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response.json()
+
     def create_host(
         self,
         hostname: str,
@@ -227,6 +256,19 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         return response
+
+    def get_host(self, hostname: str) -> list[dict[str, Any]]:
+        response = self.get(f"/objects/host_config/{hostname}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response.json()
+
+    def get_hosts(self) -> list[dict[str, Any]]:
+        response = self.get("/domain-types/host_config/collections/all")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
 
     def delete_host(self, hostname: str) -> None:
         response = self.delete(f"/objects/host_config/{hostname}")
@@ -314,6 +356,27 @@ class CMKOpenApiSession(requests.Session):
                     raise UnexpectedResponse.from_response(response)
 
                 time.sleep(0.5)
+
+    def get_host_services(
+        self, hostname: str, pending: Optional[bool] = None, columns: Optional[list[str]] = None
+    ) -> list[dict[str, Any]]:
+        if pending is not None:
+            if columns:
+                columns.append("has_been_checked")
+            else:
+                columns = ["has_been_checked"]
+        query_string = "?columns=" + "&columns=".join(columns) if columns else ""
+        response = self.get(f"/objects/host/{hostname}/collections/services{query_string}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        if pending is not None:
+            value = [
+                _
+                for _ in value
+                if _.get("extensions", {}).get("has_been_checked") == int(not pending)
+            ]
+        return value
 
     def get_baking_status(self) -> BakingStatus:
         response = self.get("/domain-types/agent/actions/baking_status/invoke")

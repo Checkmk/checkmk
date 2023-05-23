@@ -9,13 +9,12 @@ import re
 from pathlib import Path
 from typing import Any
 
-import requests
 import yaml
 
 from tests.testlib.site import Site
+from tests.testlib.utils import execute
 
 from . import constants
-from .conftest import run_cmd
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,9 +36,19 @@ def apply_regexps(identifier: str, canon: dict, result: dict) -> None:
     patterns.update(all_patterns.get(identifier, {}))
     for field_name in patterns:
         pattern = patterns[field_name]
-        LOGGER.debug("> Applying regexp: %s", pattern)
+        LOGGER.info("> Applying regexp: %s", pattern)
+        if not canon.get(field_name):
+            LOGGER.warning(
+                '> Field "%s" not found in canon "%s", skipping...', field_name, identifier
+            )
+            continue
+        if not result.get(field_name):
+            LOGGER.warning(
+                '> Field "%s" not found in result "%s", skipping...', field_name, identifier
+            )
+            continue
         match = re.search(pattern, result[field_name])
-        if match and canon.get(field_name):
+        if match:
             canon[field_name] = re.sub(
                 pattern,
                 match.group(),
@@ -47,28 +56,15 @@ def apply_regexps(identifier: str, canon: dict, result: dict) -> None:
             )
 
 
-def api_get(site: Site, request_path: str) -> requests.Response:
-    """Executes an API "get" request and returns the response."""
-    session = requests.Session()
-    session.headers["authorization"] = f"Bearer automation {site.get_automation_secret()}"
-    request_url = f"http://localhost/{site.id}/check_mk/api/1.0{request_path}"
-    LOGGER.debug("> GET %s", request_url)
-    response = session.get(request_url, timeout=5)
-    assert response.status_code != 404, f'Invalid API path "{request_path}"!'
-    assert response.status_code != 401, f'Invalid authorization for site "{site.id}"!'
-
-    return response
-
-
 def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
     """Return the current check results from the API."""
     try:
-        response = api_get(
-            site,
-            f"/objects/host/{host_name}/collections/services"
-            f"?columns={'&columns='.join(constants.API_SERVICES_COLS)}",
-        )
-        return {check["id"]: check for check in response.json().get("value", {})}
+        return {
+            check["id"]: check
+            for check in site.openapi.get_host_services(
+                host_name, columns=constants.API_SERVICES_COLS
+            )
+        }
     except json.decoder.JSONDecodeError as exc:
         raise ValueError(
             "Could not get valid check data! Make sure the site is running "
@@ -76,19 +72,21 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
         ) from exc
 
 
-def get_host_names(site: Site) -> list[str]:
+def get_host_names(site: Site) -> list:
     """Return the list of hosts from the site."""
     return [
         host.get("id")
-        for host in api_get(site, "/domain-types/host_config/collections/all")
-        .json()
-        .get("value", [])
+        for host in site.openapi.get_hosts()
         if host.get("id") not in (None, "", site.id)
     ]
 
 
 def verify_check_result(
-    check_file_name: str, result_data: dict[str, Any], output_dir: Path, update_mode: bool
+    site: Site,
+    check_file_name: str,
+    result_data: dict[str, Any],
+    output_dir: Path,
+    update_mode: bool,
 ) -> bool:
     """Verify that the check result is matching the stored canon.
 
@@ -114,14 +112,17 @@ def verify_check_result(
             json_file.write(f"{json.dumps(result_data, indent=4)}\n")
         return True
 
-    if len(result_data) == 0:
-        LOGGER.warning("%s: No data returned!", check_file_name)
+    if result_data is None or len(result_data) == 0:
+        LOGGER.error("%s: No data returned!", check_file_name)
     elif len(canon_data) != len(result_data):
-        LOGGER.warning("%s: Data length mismatch!", check_file_name)
+        LOGGER.error("%s: Data length mismatch!", check_file_name)
     else:
-        LOGGER.warning("%s: Data mismatch!", check_file_name)
+        LOGGER.error("%s: Data mismatch!", check_file_name)
 
-    LOGGER.info(run_cmd(["diff", json_canon_file_path, json_result_file_path]).stdout)
+    LOGGER.error(
+        "DIFF: %s",
+        execute(["diff", json_canon_file_path, json_result_file_path], check=False).stdout,
+    )
 
     return False
 
@@ -135,6 +136,7 @@ def process_check_output(site: Site, output_dir: Path, update_mode: bool) -> boo
         LOGGER.info('> Processing agent host "%s"...', host_name)
         check_results = get_check_results(site, host_name)
         for check_id in sorted(check_results):
+            LOGGER.info('> Processing check id "%s"...', check_id)
             check_result = check_results[check_id]
             check_host_name = check_id.split(":", 1)[0]
             check_display_name = check_result.get(
@@ -152,8 +154,9 @@ def process_check_output(site: Site, output_dir: Path, update_mode: bool) -> boo
             ):
                 continue
 
+            LOGGER.info('> Verifying check id "%s"...', check_id)
             if verify_check_result(
-                check_file_name, check_result.get("extensions", {}), output_dir, update_mode
+                site, check_file_name, check_result.get("extensions", {}), output_dir, update_mode
             ):
                 if passed is None:
                     passed = True

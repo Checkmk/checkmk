@@ -4,15 +4,14 @@
 
 import logging
 import os
-import subprocess
-from collections.abc import Iterator
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
+from tests.testlib.openapi_session import UnexpectedResponse
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import current_base_branch_name
+from tests.testlib.utils import current_base_branch_name, execute
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(name="test_site", scope="session")
-def site() -> Iterator[Site]:
+def get_site() -> Generator:
     LOGGER.info("Setting up testsite")
     reuse = os.environ.get("REUSE")
     # if REUSE is undefined, a site will neither be reused nor be dropped
@@ -79,60 +78,72 @@ def site() -> Iterator[Site]:
 def setup(test_site: Site) -> Generator:
     """Setup test-site and perform cleanup after test execution."""
 
-    omd_root = Path(test_site.root)
-    folders = [
-        f"{omd_root}/etc/check_mk/conf.d/wato/agents",
-        f"{omd_root}/var/check_mk/agent_output",
-    ]
+    agent_output_path = test_site.path("var/check_mk/agent_output")
 
-    # create wato-agents and agent-output folders in the test site
-    for folder in folders:
-        LOGGER.info('Creating folder "%s"...', folder)
-        assert test_site.execute(["mkdir", "-p", folder]).wait() == 0
+    # create agent-output folders in the test site
+    LOGGER.info('Creating folder "%s"...', agent_output_path)
+    rc = test_site.execute(["mkdir", "-p", agent_output_path]).wait()
+    assert rc == 0
 
-    # create wato-hosts by injecting the corresponding python script in the test site
-    injected_script = Path(__file__).parent.resolve() / "injected_scripts/wato_hosts.py"
-    wato_hosts_path = omd_root / "etc/check_mk/conf.d/wato/agents/hosts.mk"
-
-    LOGGER.info("Creating hosts in wato...")
-    assert run_as_superuser(["cp", str(injected_script), str(wato_hosts_path)]).returncode == 0
-
-    # create wato-rules by injecting the corresponding python script in the test site
-    injected_script = Path(__file__).parent.resolve() / "injected_scripts/wato_rules.py"
-    wato_rules_path = omd_root / "etc/check_mk/conf.d/wato/agents/rules.mk"
-
-    LOGGER.info("Creating rules in wato...")
-    assert run_as_superuser(["cp", str(injected_script), str(wato_rules_path)]).returncode == 0
-
-    # inject agent-output in the test site
-    injected_output = Path(__file__).parent.resolve() / "agent_output"
-    agent_output_path = omd_root / "var/check_mk/"
+    injected_output = str(Path(__file__).parent.resolve() / "agent_output")
+    host_folder = "/agents"
 
     LOGGER.info("Injecting agent-output...")
-    assert (
-        run_as_superuser(["cp", "-r", str(injected_output), str(agent_output_path)]).returncode == 0
+    assert execute(["sudo", "cp", "-r", f"{injected_output}/.", agent_output_path]).returncode == 0
+
+    try:
+        test_site.openapi.get_folder(host_folder)
+    except UnexpectedResponse as e:
+        if not str(e).startswith("[404]"):
+            raise e
+        test_site.openapi.create_folder(host_folder)
+    test_site.openapi.create_rule(
+        ruleset_name="datasource_programs",
+        value=f"cat {agent_output_path}/<HOST>",
+        folder=host_folder,
     )
+    hosts = [
+        _
+        for _ in test_site.check_output(["ls", "-1", agent_output_path]).split("\n")
+        if _ and not _.startswith(".")
+    ]
+    for host in hosts:
+        try:
+            test_site.openapi.get_host(host)
+        except UnexpectedResponse as e:
+            if not str(e).startswith("[404]"):
+                raise e
+            test_site.openapi.create_host(
+                host,
+                folder=host_folder,
+                attributes={"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"},
+                bake_agent=False,
+            )
+        test_site.openapi.discover_services_and_wait_for_completion(host)
+    test_site.activate_changes_and_wait_for_core_reload()
+
+    for host in hosts:
+        LOGGER.info("Checking for pending services on host %s...", host)
+        pending_checks = test_site.openapi.get_host_services(host, pending=True)
+        while len(pending_checks) > 0:
+            LOGGER.info(
+                "The following pending services were found on host %s: %s. Rescheduling checks...",
+                host,
+                ",".join([_.get("extensions", {}).get("description") for _ in pending_checks]),
+            )
+            for check in pending_checks:
+                try:
+                    test_site.schedule_check(
+                        host, check.get("extensions", {}).get("description"), 0
+                    )
+                except AssertionError:
+                    pass
+            pending_checks = test_site.openapi.get_host_services(host, pending=True)
 
     yield
 
-    # cleanup existing wato-agents and agent-output folders in the test site
-    for folder in folders:
-        LOGGER.info('Removing folder "%s"...', folder)
-        assert test_site.execute(["rm", "-rf", folder]).wait() == 0
-
-
-def run_cmd(cmd: list[str]) -> subprocess.CompletedProcess:
-    LOGGER.info("Executing: %s", subprocess.list2cmdline(cmd))
-    completed_process = subprocess.run(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        encoding="utf-8",
-        check=False,
-    )
-    return completed_process
-
-
-def run_as_superuser(cmd: list[str]) -> subprocess.CompletedProcess:
-    cmd = ["/usr/bin/sudo"] + cmd
-    return run_cmd(cmd)
+    if os.getenv("CLEANUP") != "0":
+        # cleanup existing agent-output folder in the test site
+        LOGGER.info('Removing folder "%s"...', agent_output_path)
+        rc = test_site.execute(["rm", "-rf", agent_output_path]).wait()
+        assert rc == 0

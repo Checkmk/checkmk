@@ -49,8 +49,6 @@
     "in_passive_check_period": 1,
     "in_service_period": 1,
     "initial_state": 0,
-    "is_executing": 0,
-    "is_flapping": 0,
     "label_names": [],
     "label_source_names": [],
     "label_source_values": [],

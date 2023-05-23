@@ -1,0 +1,13 @@
+Title: Ntop: Top talkers throughput stats incorrectly calculated
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1684820759
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+The Ntop top talkers dashboard throughput stats were being calculated
+wrong.  This werk addresses the issues by fixing the calculation.

@@ -16,6 +16,7 @@ from tests.unit.cmk.gui.conftest import SetConfig
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.structured_data import ImmutableTree, StructuredDataNode
 
 import cmk.gui.inventory
 import cmk.gui.plugins.visuals
@@ -809,82 +810,6 @@ filter_table_tests = [
             {"discovery_state": "vanished"},
         ],
     ),
-    FilterTableTest(
-        ident="has_inv",
-        request_vars=[
-            ("is_has_inv", "0"),
-        ],
-        rows=[
-            {"host_inventory": {}},
-            {"host_inventory": {"a": "b"}},
-        ],
-        expected_rows=[
-            {"host_inventory": {}},
-        ],
-    ),
-    FilterTableTest(
-        ident="has_inv",
-        request_vars=[
-            ("is_has_inv", "1"),
-        ],
-        rows=[
-            {"host_inventory": {}},
-            {"host_inventory": {"a": "b"}},
-        ],
-        expected_rows=[
-            {"host_inventory": {"a": "b"}},
-        ],
-    ),
-    FilterTableTest(
-        ident="has_inv",
-        request_vars=[
-            ("is_has_inv", "-1"),
-        ],
-        rows=[
-            {"host_inventory": {}},
-            {"host_inventory": {"a": "b"}},
-        ],
-        expected_rows=[
-            {"host_inventory": {}},
-            {"host_inventory": {"a": "b"}},
-        ],
-    ),
-    # Testing base class FilterInvText
-    FilterTableTest(
-        ident="inv_software_os_vendor",
-        request_vars=[
-            ("inv_software_os_vendor", "bla"),
-        ],
-        rows=[
-            # Not real inventory structures, just input for our monkeypatched function
-            {"host_inventory": {".software.os.vendor": "bla"}},
-            {"host_inventory": {".software.os.vendor": "blabla"}},
-            {"host_inventory": {".software.os.vendor": "ag blabla"}},
-            {"host_inventory": {".software.os.vendor": "blu"}},
-        ],
-        expected_rows=[
-            {"host_inventory": {".software.os.vendor": "bla"}},
-            {"host_inventory": {".software.os.vendor": "blabla"}},
-            {"host_inventory": {".software.os.vendor": "ag blabla"}},
-        ],
-    ),
-    # Testing base class FilterInvFloat
-    FilterTableTest(
-        ident="inv_hardware_cpu_bus_speed",
-        request_vars=[
-            ("inv_hardware_cpu_bus_speed_from", "10"),
-            ("inv_hardware_cpu_bus_speed_until", "20"),
-        ],
-        rows=[
-            # Not real inventory structures, just input for our monkeypatched function
-            {"host_inventory": {".hardware.cpu.bus_speed": 1000000}},
-            {"host_inventory": {".hardware.cpu.bus_speed": 15000000}},
-            {"host_inventory": {".hardware.cpu.bus_speed": 21000000}},
-        ],
-        expected_rows=[
-            {"host_inventory": {".hardware.cpu.bus_speed": 15000000}},
-        ],
-    ),
     # Testing base class FilterInvtableText
     FilterTableTest(
         ident="invbackplane_description",
@@ -1208,18 +1133,6 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
 
         monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
 
-    # Needed for FilterInvFloat test
-    monkeypatch.setattr(
-        cmk.gui.views.inventory,
-        "_get_table_rows",
-        lambda t, p: {cmk.gui.inventory.InventoryPath.parse(k): v for k, v in t.items()}[p],
-    )
-    monkeypatch.setattr(
-        cmk.gui.inventory,
-        "get_attribute",
-        lambda t, p: {cmk.gui.inventory.InventoryPath.parse(k): v for k, v in t.items()}[p],
-    )
-
     # Needed for FilterAggrServiceUsed test
     def is_part_of_aggregation_patch(host: str, service: str) -> bool:
         return {("h", "srv1"): True}.get((host, service), False)
@@ -1233,6 +1146,148 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
         if not cmk_version.is_raw_edition() or test.ident != "deployment_has_agent":
             filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
             assert filt.filter_table(context, test.rows) == test.expected_rows
+
+
+@pytest.mark.parametrize(
+    "test",
+    [
+        # Filter out filled trees (is_has_inv == 0)
+        FilterTableTest(
+            ident="has_inv",
+            request_vars=[
+                ("is_has_inv", "0"),
+            ],
+            rows=[
+                {"host_inventory": StructuredDataNode.deserialize({})},
+                {"host_inventory": StructuredDataNode.deserialize({"a": "b"})},
+            ],
+            expected_rows=[
+                {"host_inventory": StructuredDataNode.deserialize({})},
+            ],
+        ),
+        # Filter out empty trees (is_has_inv == 1)
+        FilterTableTest(
+            ident="has_inv",
+            request_vars=[
+                ("is_has_inv", "1"),
+            ],
+            rows=[
+                {"host_inventory": StructuredDataNode.deserialize({})},
+                {"host_inventory": StructuredDataNode.deserialize({"a": "b"})},
+            ],
+            expected_rows=[
+                {"host_inventory": StructuredDataNode.deserialize({"a": "b"})},
+            ],
+        ),
+        # Do not apply filter (is_has_inv == -1)
+        FilterTableTest(
+            ident="has_inv",
+            request_vars=[
+                ("is_has_inv", "-1"),
+            ],
+            rows=[
+                {"host_inventory": StructuredDataNode.deserialize({})},
+                {"host_inventory": StructuredDataNode.deserialize({"a": "b"})},
+            ],
+            expected_rows=[
+                {"host_inventory": StructuredDataNode.deserialize({})},
+                {"host_inventory": StructuredDataNode.deserialize({"a": "b"})},
+            ],
+        ),
+        # Testing base class FilterInvText
+        FilterTableTest(
+            ident="inv_software_os_vendor",
+            request_vars=[
+                ("inv_software_os_vendor", "bla"),
+            ],
+            rows=[
+                {
+                    "host_inventory": StructuredDataNode.deserialize(
+                        {"software": {"os": {"vendor": "bla"}}}
+                    )
+                },
+                {
+                    "host_inventory": StructuredDataNode.deserialize(
+                        {"software": {"os": {"vendor": "blabla"}}}
+                    )
+                },
+                {
+                    "host_inventory": StructuredDataNode.deserialize(
+                        {"software": {"os": {"vendor": "ag blabla"}}}
+                    )
+                },
+                {
+                    "host_inventory": StructuredDataNode.deserialize(
+                        {"software": {"os": {"vendor": "blu"}}}
+                    )
+                },
+            ],
+            expected_rows=[
+                {
+                    "host_inventory": StructuredDataNode.deserialize(
+                        {"software": {"os": {"vendor": "bla"}}}
+                    )
+                },
+                {
+                    "host_inventory": StructuredDataNode.deserialize(
+                        {"software": {"os": {"vendor": "blabla"}}}
+                    )
+                },
+                {
+                    "host_inventory": StructuredDataNode.deserialize(
+                        {"software": {"os": {"vendor": "ag blabla"}}}
+                    )
+                },
+            ],
+        ),
+        # Testing base class FilterInvFloat
+        FilterTableTest(
+            ident="inv_hardware_cpu_bus_speed",
+            request_vars=[
+                ("inv_hardware_cpu_bus_speed_from", "10"),
+                ("inv_hardware_cpu_bus_speed_until", "20"),
+            ],
+            rows=[
+                {
+                    "host_inventory": StructuredDataNode.deserialize(
+                        {"hardware": {"cpu": {"bus_speed": 1000000}}}
+                    )
+                },
+                {
+                    "host_inventory": StructuredDataNode.deserialize(
+                        {"hardware": {"cpu": {"bus_speed": 15000000}}}
+                    )
+                },
+                {
+                    "host_inventory": StructuredDataNode.deserialize(
+                        {"hardware": {"cpu": {"bus_speed": 21000000}}}
+                    )
+                },
+            ],
+            expected_rows=[
+                {
+                    "host_inventory": StructuredDataNode.deserialize(
+                        {"hardware": {"cpu": {"bus_speed": 15000000}}}
+                    )
+                },
+            ],
+        ),
+    ],
+)
+def test_filters_filter_inv_table(test: FilterTableTest) -> None:
+    with on_time("2018-04-15 16:50", "CET"):
+        context: VisualContext = {test.ident: dict(test.request_vars)}
+
+        # TODO: Fix this for real...
+        if not cmk_version.is_raw_edition():
+            rows = cmk.gui.plugins.visuals.utils.filter_registry[test.ident].filter_table(
+                context, test.rows
+            )
+            assert len(rows) == len(test.expected_rows)
+            for row, expected_row in zip(rows, test.expected_rows):
+                assert ImmutableTree(row["host_inventory"]) == ImmutableTree(
+                    expected_row["host_inventory"]
+                )
 
 
 # Filter form is not really checked. Only checking that no exception occurs

@@ -524,6 +524,14 @@ class ImmutableTree:
     def difference(self, rhs: ImmutableTree) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(_compare_nodes(self.tree, rhs.tree))
 
+    def get_attribute(self, path: SDPath, key: str) -> int | float | str | None:
+        return (
+            None if (node := self.tree.get_node(path)) is None else node.attributes.pairs.get(key)
+        )
+
+    def get_rows(self, path: SDPath) -> Sequence[SDRow]:
+        return [] if (node := self.tree.get_node(path)) is None else node.table.rows
+
 
 # .
 #   .--immutable delta tree------------------------------------------------.

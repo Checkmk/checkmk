@@ -60,15 +60,6 @@ from cmk.gui.valuespec import TextInput, ValueSpec
 # => Should be unified one day.
 
 
-def get_attribute(
-    tree: StructuredDataNode, inventory_path: InventoryPath
-) -> None | str | int | float:
-    if inventory_path.source != TreeSource.attributes or not inventory_path.key:
-        return None
-    attributes = tree.get_attributes(inventory_path.path)
-    return None if attributes is None else attributes.pairs.get(inventory_path.key)
-
-
 class TreeSource(Enum):
     node = auto()
     table = auto()

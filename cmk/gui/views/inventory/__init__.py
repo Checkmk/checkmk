@@ -1344,7 +1344,9 @@ def _register_attribute_column(
         load_inv=True,
         columns=["host_inventory", "host_structured_status"],
         hint=hint,
-        value_extractor=lambda v: inventory.get_attribute(v["host_inventory"], inventory_path),
+        value_extractor=lambda row: ImmutableTree(row["host_inventory"]).get_attribute(
+            inventory_path.path, inventory_path.key or ""
+        ),
     )
 
     # Declare filter. Sync this with _register_table_column()
@@ -1360,7 +1362,7 @@ def _compute_attribute_painter_data(row: Row, path: SDPath, key: str) -> str | i
     if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
         return None
 
-    return None if (node := tree.get_node(path)) is None else node.attributes.pairs.get(key)
+    return ImmutableTree(tree).get_attribute(path, key)
 
 
 def _paint_host_inventory_attribute(
@@ -1469,7 +1471,7 @@ class RowTableInventory(ABCRowTable):
         if tree is None:
             return []
 
-        return _get_table_rows(tree.tree, self._inventory_path)
+        return tree.get_rows(self._inventory_path.path)
 
     def _prepare_rows(self, inv_data: Sequence[SDRow]) -> Iterable[Row]:
         return (
@@ -2458,25 +2460,3 @@ def ajax_inv_render_tree() -> None:
         return
 
     tree_renderer.show(node, DISPLAY_HINTS.get_hints(node.path))
-
-
-# .
-#   .--helper--------------------------------------------------------------.
-#   |                    _          _                                      |
-#   |                   | |__   ___| |_ __   ___ _ __                      |
-#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
-#   |                   | | | |  __/ | |_) |  __/ |                        |
-#   |                   |_| |_|\___|_| .__/ \___|_|                        |
-#   |                                |_|                                   |
-#   '----------------------------------------------------------------------'
-
-
-def _get_table_rows(
-    tree: StructuredDataNode, inventory_path: inventory.InventoryPath
-) -> Sequence[SDRow]:
-    return (
-        []
-        if inventory_path.source != inventory.TreeSource.table
-        or (table := tree.get_table(inventory_path.path)) is None
-        else table.rows
-    )

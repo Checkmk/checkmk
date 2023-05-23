@@ -24,10 +24,10 @@ from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
 from cmk.fetchers.cache import PersistedSections, SectionStore
 
-from cmk.checkers import AgentParser, PiggybackMarker, SectionMarker, SNMPParser
-from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION
-
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from cmk.checkengine import AgentParser, PiggybackMarker, SectionMarker, SNMPParser
+from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION
 
 
 @pytest.fixture(autouse=True)

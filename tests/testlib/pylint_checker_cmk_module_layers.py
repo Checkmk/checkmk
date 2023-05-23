@@ -86,11 +86,11 @@ def _allow_default_plus_checkers(
     imported: ModuleName,
     component: Component,
 ) -> bool:
-    """`cmk.checkers` is the generic (library) part to the check engine."""
+    """`cmk.checkengine` is the generic (library) part to the check engine."""
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported, Component("cmk.checkers")),
+            _in_component(imported, Component("cmk.checkengine")),
         )
     )
 
@@ -101,11 +101,11 @@ def _allow_default_plus_fetchers_and_snmplib(
     component: Component,
 ) -> bool:
     """
-    Allow import of `cmk.checkers`, `cmk.fetchers` and `cmk.snmplib`.
+    Allow import of `cmk.checkengine`, `cmk.fetchers` and `cmk.snmplib`.
 
     `cmk.fetchers` are concrete fetchers implementations to the check engine.
     The module shouldn't be required in too many places, always prefer the
-    more abstract `cmk.checkers` or refactor the code so that `cmk.checkers` can
+    more abstract `cmk.checkengine` or refactor the code so that `cmk.checkengine` can
     be used instead.
 
     `cmk.snmplib` is part of the SNMP fetcher backend.  The same restrictions apply.
@@ -126,7 +126,7 @@ def _allow_default_plus_fetchers_checkers_and_snmplib(
     component: Component,
 ) -> bool:
     """
-    Allow import of `cmk.fetchers`, `cmk.checkers` and `cmk.snmplib`.
+    Allow import of `cmk.fetchers`, `cmk.checkengine` and `cmk.snmplib`.
 
     The layering is such that `fetchers` and `snmplib` is between
     `utils` and `base` so that importing `fetchers` in `utils` is
@@ -138,7 +138,7 @@ def _allow_default_plus_fetchers_checkers_and_snmplib(
                 imported=imported,
                 component=component,
             ),
-            _in_component(imported, Component("cmk.checkers")),
+            _in_component(imported, Component("cmk.checkengine")),
         )
     )
 
@@ -149,10 +149,10 @@ def _allow_default_plus_fetchers_checkers_snmplib_and_bakery(
     component: Component,
 ) -> bool:
     """
-    Allow import of `cmk.checkers`, `cmk.snmplib` and `cmk.cee.bakery`.
+    Allow import of `cmk.checkengine`, `cmk.snmplib` and `cmk.cee.bakery`.
 
     Warning:
-        Refactor to depend on `cmk.checkers` only.
+        Refactor to depend on `cmk.checkengine` only.
 
     """
     return any(
@@ -175,7 +175,7 @@ def _allow_default_plus_fetchers_checkers_bakery(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported, Component("cmk.checkers")),
+            _in_component(imported, Component("cmk.checkengine")),
             _in_component(imported, Component("cmk.fetchers")),
             _in_component(imported, Component("cmk.cee.bakery")),
         )
@@ -216,7 +216,7 @@ def _allow_default_plus_gui_base_and_bakery(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported, Component("cmk.checkers")),
+            _in_component(imported, Component("cmk.checkengine")),
             _in_component(imported, Component("cmk.fetchers")),
             _in_component(imported, Component("cmk.cee.bakery")),
             _in_component(imported, Component("cmk.base")),
@@ -265,7 +265,7 @@ _COMPONENTS = (
     (Component("cmk.cmkpasswd"), _is_default_allowed_import),
     (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),
-    (Component("cmk.checkers"), _allow_default_plus_fetchers_checkers_and_snmplib),
+    (Component("cmk.checkengine"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui"), _allow_default_plus_fetchers_checkers_bakery),
     (Component("cmk.ec"), _is_default_allowed_import),

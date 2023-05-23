@@ -9,7 +9,7 @@ import pytest
 
 from cmk.utils.labels import HostLabel
 
-from cmk.checkers.discovery import DiscoveryMode, QualifiedDiscovery
+from cmk.checkengine.discovery import DiscoveryMode, QualifiedDiscovery
 
 
 class TestDiscoveryMode:

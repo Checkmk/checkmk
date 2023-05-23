@@ -13,11 +13,11 @@ from cmk.utils.paths import agent_based_plugins_dir
 from cmk.utils.type_defs import ParsedSectionName, RuleSetName
 from cmk.utils.version import Edition
 
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.inventory import InventoryPluginName
-
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
+
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.inventory import InventoryPluginName
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 

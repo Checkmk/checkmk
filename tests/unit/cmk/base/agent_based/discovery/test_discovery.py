@@ -31,28 +31,6 @@ from cmk.snmplib.type_defs import SNMPRawDataSection
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkers import HostKey, SectionPlugin, SourceType
-from cmk.checkers.check_table import ServiceID
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.discovery import (
-    analyse_cluster_labels,
-    AutocheckEntry,
-    AutocheckServiceWithNodes,
-    AutochecksStore,
-    discover_host_labels,
-    DiscoveryMode,
-    QualifiedDiscovery,
-)
-from cmk.checkers.host_sections import HostSections
-from cmk.checkers.sectionparser import (
-    ParsedSectionName,
-    ParsedSectionsResolver,
-    Provider,
-    SectionsParser,
-)
-from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION
-
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -77,6 +55,28 @@ from cmk.base.agent_based.discovery.autodiscovery import (
 )
 from cmk.base.api.agent_based.type_defs import SectionPlugin as SectionPluginAPI
 from cmk.base.config import ConfigCache
+
+from cmk.checkengine import HostKey, SectionPlugin, SourceType
+from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.discovery import (
+    analyse_cluster_labels,
+    AutocheckEntry,
+    AutocheckServiceWithNodes,
+    AutochecksStore,
+    discover_host_labels,
+    DiscoveryMode,
+    QualifiedDiscovery,
+)
+from cmk.checkengine.host_sections import HostSections
+from cmk.checkengine.sectionparser import (
+    ParsedSectionName,
+    ParsedSectionsResolver,
+    Provider,
+    SectionsParser,
+)
+from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION
 
 
 def _as_plugin(plugin: SectionPluginAPI) -> SectionPlugin:

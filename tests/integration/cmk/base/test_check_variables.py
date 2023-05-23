@@ -12,7 +12,7 @@ from tests.testlib.site import Site
 
 from cmk.utils import version as cmk_version
 
-from cmk.checkers.discovery._autochecks import _AutochecksSerializer
+from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
 
 
 # Test whether or not factory settings and checkgroup parameters work

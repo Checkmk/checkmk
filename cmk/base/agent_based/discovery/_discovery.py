@@ -16,26 +16,30 @@ from cmk.utils.type_defs import AgentRawData, HostName, Item, result, SectionNam
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.checkers import (
+from cmk.base.config import ConfigCache, DiscoveryCheckParameters
+
+from cmk.checkengine import (
     DiscoveryPlugin,
     ParserFunction,
     SectionPlugin,
     SourceInfo,
     SummarizerFunction,
 )
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.discovery import (
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.discovery import (
     analyse_cluster_labels,
     discover_host_labels,
     DiscoveryMode,
     HostLabelPlugin,
     QualifiedDiscovery,
 )
-from cmk.checkers.sectionparser import filter_out_errors, make_providers, store_piggybacked_sections
-from cmk.checkers.sectionparserutils import check_parsing_errors
-
-from cmk.base.config import ConfigCache, DiscoveryCheckParameters
+from cmk.checkengine.sectionparser import (
+    filter_out_errors,
+    make_providers,
+    store_piggybacked_sections,
+)
+from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters

@@ -20,7 +20,7 @@ from cmk.utils.type_defs import CheckPluginNameStr, ExitSpec, HostName, ServiceN
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-from cmk.checkers import crash_reporting
+from cmk.checkengine import crash_reporting
 
 
 class CheckResultErrorHandler:

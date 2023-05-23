@@ -9,8 +9,6 @@ import pytest
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.checkers.checking import CheckPluginName
-
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.plugins.agent_based.cmciii as cmciii
 import cmk.base.plugins.agent_based.cmciii_phase as cmciii_phase
@@ -18,6 +16,8 @@ import cmk.base.plugins.agent_based.cmciii_status as cmciii_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils.cmciii import SensorType, Variable
+
+from cmk.checkengine.checking import CheckPluginName
 
 
 @pytest.mark.parametrize(

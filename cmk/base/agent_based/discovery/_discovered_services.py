@@ -13,14 +13,14 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console, section
 from cmk.utils.type_defs import HostName, ParsedSectionName
 
-from cmk.checkers import DiscoveryPlugin, HostKey, plugin_contexts, SourceType
-from cmk.checkers.check_table import ServiceID
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import AutocheckEntry, AutochecksStore, QualifiedDiscovery
-from cmk.checkers.sectionparser import Provider
-from cmk.checkers.sectionparserutils import get_section_kwargs
-
 from cmk.base.config import ConfigCache
+
+from cmk.checkengine import DiscoveryPlugin, HostKey, plugin_contexts, SourceType
+from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore, QualifiedDiscovery
+from cmk.checkengine.sectionparser import Provider
+from cmk.checkengine.sectionparserutils import get_section_kwargs
 
 
 def analyse_discovered_services(

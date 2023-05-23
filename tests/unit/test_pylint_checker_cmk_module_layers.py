@@ -24,9 +24,9 @@ COMPONENT_LIST = [c for c, _ in _COMPONENTS]
 @pytest.mark.parametrize(
     "root_name, modname, level, is_package, abs_module",
     [
-        ("cmk.checkers.agent", "_base", 1, False, "cmk.checkers._base"),
+        ("cmk.checkengine.agent", "_base", 1, False, "cmk.checkengine._base"),
         # relative import in __init__
-        ("cmk.checkers", "agent", 1, True, "cmk.checkers.agent"),
+        ("cmk.checkengine", "agent", 1, True, "cmk.checkengine.agent"),
     ],
 )
 def test__get_absolute_importee(
@@ -70,9 +70,9 @@ def test_allowed_import_ok(component: Component) -> None:
         # utils not ok in agent based plugins
         ("_nevermind_", "cmk.base.plugins.agent_based.utils.foo", "cmk.utils.debug", False),
         # `checkers` in `utils` is wrong but anywhere else is OK
-        ("cmk/checkers", "cmk.checkers.snmp", "cmk.utils", True),
-        ("cmk/utils", "cmk.utils.foo", "cmk.checkers", False),
-        ("cmk/base", "cmk.base.sources", "cmk.checkers", True),
+        ("cmk/checkers", "cmk.checkengine.snmp", "cmk.utils", True),
+        ("cmk/utils", "cmk.utils.foo", "cmk.checkengine", False),
+        ("cmk/base", "cmk.base.sources", "cmk.checkengine", True),
         # disallow import of `snmplib` in `utils`
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),
         ("cmk/base", "cmk.base.data_sources", "cmk.snmplib", True),

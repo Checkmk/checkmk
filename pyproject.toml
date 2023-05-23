@@ -64,7 +64,7 @@ known_cmk_cee = "cmk.cee.dcd,cmk.cee.liveproxy,cmk.cee.mknotifyd"
 known_cmk_notification_plugins = "cmk.notification_plugins"
 known_cmk_snmplib = "cmk.snmplib"
 known_cmk_fetchers = "cmk.fetchers"
-known_cmk_checkers = "cmk.checkers"
+known_cmk_checkengine = "cmk.checkengine"
 known_first_party = "cmk"
 
 # Order sections according to our layering.

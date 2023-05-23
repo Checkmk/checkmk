@@ -21,8 +21,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import HostName
 
-from cmk.checkers.checking import CheckPluginName
-
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -206,6 +204,8 @@ from cmk.gui.watolib.translation import (  # noqa: F401 # pylint: disable=unused
     translation_elements,
 )
 from cmk.gui.watolib.users import notification_script_title
+
+from cmk.checkengine.checking import CheckPluginName
 
 
 @permission_section_registry.register

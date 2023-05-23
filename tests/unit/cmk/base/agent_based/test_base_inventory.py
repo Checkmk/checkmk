@@ -26,10 +26,13 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import FetcherType
 
-from cmk.checkers import SectionPlugin, SourceInfo, SourceType
-from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.host_sections import HostSections
-from cmk.checkers.inventory import (
+from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
+from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
+
+from cmk.checkengine import SectionPlugin, SourceInfo, SourceType
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.host_sections import HostSections
+from cmk.checkengine.inventory import (
     _check_fetched_data_or_trees,
     _inventorize_real_host,
     _parse_inventory_plugin_item,
@@ -38,9 +41,6 @@ from cmk.checkers.inventory import (
     inventorize_host,
     ItemsOfInventoryPlugin,
 )
-
-from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
 
 
 @pytest.mark.parametrize(

@@ -13,10 +13,6 @@ import pytest
 
 from cmk.utils.type_defs import HostName
 
-from cmk.checkers import CheckPlugin
-from cmk.checkers.check_table import ServiceID
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.api.agent_based import cluster_mode
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
@@ -28,6 +24,10 @@ from cmk.base.api.agent_based.checking_classes import (
     State,
 )
 from cmk.base.api.agent_based.value_store._utils import ValueStoreManager
+
+from cmk.checkengine import CheckPlugin
+from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import CheckPluginName
 
 TEST_SERVICE_ID = ServiceID(CheckPluginName("unit_test_plugin"), "unit_test_item")
 

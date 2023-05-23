@@ -10,7 +10,7 @@ import pytest
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.checkers.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName
 
 
 @pytest.mark.parametrize(

@@ -10,11 +10,11 @@ from pytest_mock.plugin import MockerFixture
 
 from tests.unit.conftest import FixRegister
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.api.agent_based.checking_classes import CheckFunction
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.windows_updates import parse_windows_updates, Section
+
+from cmk.checkengine.checking import CheckPluginName
 
 SECTION_OK: Final = Section(
     reboot_required=False,

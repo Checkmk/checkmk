@@ -10,8 +10,6 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.suseconnect import (
@@ -19,6 +17,8 @@ from cmk.base.plugins.agent_based.suseconnect import (
     parse_suseconnect,
     Section,
 )
+
+from cmk.checkengine.checking import CheckPluginName
 
 
 @pytest.fixture(name="plugin", scope="module")

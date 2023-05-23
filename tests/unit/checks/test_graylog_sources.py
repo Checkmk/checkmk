@@ -11,12 +11,12 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base import item_state
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+
+from cmk.checkengine.checking import CheckPluginName
 
 
 @pytest.fixture(name="check")

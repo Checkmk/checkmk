@@ -37,7 +37,15 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import FetcherType
 
-from cmk.checkers import (
+import cmk.base.core
+import cmk.base.utils
+from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
+from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
+from cmk.base.api.agent_based.checking_classes import State
+from cmk.base.config import ConfigCache
+
+from cmk.checkengine import (
     CheckPlugin,
     crash_reporting,
     HostKey,
@@ -49,37 +57,29 @@ from cmk.checkers import (
     SourceType,
     SummarizerFunction,
 )
-from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
-from cmk.checkers.inventory import (
+from cmk.checkengine.check_table import ConfiguredService, LegacyCheckParameters
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
+from cmk.checkengine.inventory import (
     HWSWInventoryParameters,
     inventorize_status_data_of_real_host,
     InventoryPlugin,
     InventoryPluginName,
 )
-from cmk.checkers.sectionparser import (
+from cmk.checkengine.sectionparser import (
     filter_out_errors,
     make_providers,
     Provider,
     ResolvedResult,
     store_piggybacked_sections,
 )
-from cmk.checkers.sectionparserutils import (
+from cmk.checkengine.sectionparserutils import (
     check_parsing_errors,
     get_cache_info,
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
-from cmk.checkers.submitters import Submittee, Submitter
-
-import cmk.base.core
-import cmk.base.utils
-from cmk.base.api.agent_based import cluster_mode, value_store
-from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
-from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
-from cmk.base.api.agent_based.checking_classes import State
-from cmk.base.config import ConfigCache
+from cmk.checkengine.submitters import Submittee, Submitter
 
 __all__ = ["execute_checkmk_checks", "check_host_services"]
 

@@ -48,9 +48,9 @@ from tests.testlib.web_session import APIError, CMKWebSession
 
 from cmk.utils.type_defs import HostName
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
+
+from cmk.checkengine.checking import CheckPluginName
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -337,9 +337,9 @@ class BaseCheck(abc.ABC):
         self.name = name
         # we cant use the current_host context, b/c some tests rely on a persistent
         # item state across several calls to run_check
-        import cmk.checkers.plugin_contexts  # pylint: disable=import-outside-toplevel
+        import cmk.checkengine.plugin_contexts  # pylint: disable=import-outside-toplevel
 
-        cmk.checkers.plugin_contexts._hostname = HostName("non-existent-testhost")
+        cmk.checkengine.plugin_contexts._hostname = HostName("non-existent-testhost")
 
 
 class Check(BaseCheck):

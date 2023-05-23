@@ -12,16 +12,16 @@ import pytest
 
 from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
-from cmk.checkers import HostKey, SectionPlugin, SourceType
-from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.host_sections import HostSections
-from cmk.checkers.sectionparser import ParsedSectionsResolver, SectionsParser
-from cmk.checkers.sectionparserutils import (
+from cmk.checkengine import HostKey, SectionPlugin, SourceType
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.host_sections import HostSections
+from cmk.checkengine.sectionparser import ParsedSectionsResolver, SectionsParser
+from cmk.checkengine.sectionparserutils import (
     check_parsing_errors,
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
-from cmk.checkers.type_defs import AgentRawDataSection
+from cmk.checkengine.type_defs import AgentRawDataSection
 
 
 def _test_section(

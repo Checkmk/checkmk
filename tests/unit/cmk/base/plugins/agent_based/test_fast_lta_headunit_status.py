@@ -8,8 +8,6 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.api.agent_based.checking_classes import CheckFunction, CheckPlugin, DiscoveryFunction
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -17,6 +15,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
+
+from cmk.checkengine.checking import CheckPluginName
 
 check_name = "fast_lta_headunit_status"
 

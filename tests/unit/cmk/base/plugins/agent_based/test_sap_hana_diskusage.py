@@ -13,8 +13,6 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.checkers.checking import CheckPluginName
-
 import cmk.base.plugins.agent_based.sap_hana_diskusage as sap_hana_diskusage
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -25,6 +23,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.checkengine.checking import CheckPluginName
 
 NOW_SIMULATED = "1988-06-08 17:00:00.000000"
 LAST_TIME_EPOCH = (

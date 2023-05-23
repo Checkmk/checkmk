@@ -23,8 +23,8 @@ from cmk.utils.rulesets.ruleset_matcher import (
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
 from cmk.utils.type_defs import HostName, ServiceName
 
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import AutocheckEntry
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry
 
 
 def test_ruleset_match_object_no_conditions() -> None:

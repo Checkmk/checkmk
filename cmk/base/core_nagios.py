@@ -40,11 +40,6 @@ from cmk.utils.type_defs import (
     TimeperiodName,
 )
 
-from cmk.checkers import plugin_contexts
-from cmk.checkers.check_table import FilterMode
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.inventory import InventoryPluginName
-
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -61,6 +56,11 @@ from cmk.base.core_config import (
     write_notify_host_file,
 )
 from cmk.base.ip_lookup import AddressFamily
+
+from cmk.checkengine import plugin_contexts
+from cmk.checkengine.check_table import FilterMode
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.inventory import InventoryPluginName
 
 ObjectSpec = dict[str, Any]
 
@@ -1234,7 +1234,7 @@ if os.path.islink(%(dst)r):
     output.write("from cmk.utils.log import console\n")
     output.write("import cmk.base.check_api as check_api\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?
-    output.write("from cmk.checkers.submitters import get_submitter\n")
+    output.write("from cmk.checkengine.submitters import get_submitter\n")
     output.write("\n")
     for module in _get_needed_agent_based_modules(
         needed_agent_based_check_plugin_names,

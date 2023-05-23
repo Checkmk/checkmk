@@ -6,10 +6,10 @@ from collections.abc import Callable
 
 import pytest
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+
+from cmk.checkengine.checking import CheckPluginName
 
 check_name = "ups_test"
 

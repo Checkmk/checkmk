@@ -13,7 +13,7 @@ from contextlib import contextmanager
 
 from cmk.utils.type_defs import HostName, ServiceName
 
-from cmk.checkers.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName
 
 # Is set before check/discovery function execution
 # Host currently being checked

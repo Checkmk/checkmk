@@ -30,11 +30,6 @@ from cmk.snmplib.type_defs import SNMPBackendEnum
 
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
-from cmk.checkers.check_table import ConfiguredService, ServiceID
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import AutocheckEntry
-from cmk.checkers.inventory import InventoryPlugin
-
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin as CheckPluginAPI
@@ -42,6 +37,11 @@ from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ip_address_of
 from cmk.base.ip_lookup import AddressFamily
+
+from cmk.checkengine.check_table import ConfiguredService, ServiceID
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry
+from cmk.checkengine.inventory import InventoryPlugin
 
 
 def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:

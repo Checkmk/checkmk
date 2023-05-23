@@ -10,8 +10,6 @@ from typing import Any
 
 from cmk.utils.type_defs import ParsedSectionName, RuleSetName
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     CheckPlugin,
@@ -30,6 +28,8 @@ from cmk.base.api.agent_based.register.utils import (
     validate_ruleset_type,
 )
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
+
+from cmk.checkengine.checking import CheckPluginName
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 

@@ -14,8 +14,6 @@ from typing import Any
 
 from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_parameters
 
-from cmk.checkers import Parameters
-
 from cmk.base import item_state  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import (
     CheckPlugin,
@@ -26,6 +24,8 @@ from cmk.base.api.agent_based.checking_classes import (
     State,
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+
+from cmk.checkengine import Parameters
 
 from .utils_legacy import LegacyCheckDefinition
 

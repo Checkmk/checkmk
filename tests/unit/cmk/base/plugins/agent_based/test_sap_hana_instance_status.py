@@ -11,11 +11,11 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.sap_hana_instance_status import InstanceProcess, InstanceStatus
+
+from cmk.checkengine.checking import CheckPluginName
 
 
 @pytest.mark.parametrize(

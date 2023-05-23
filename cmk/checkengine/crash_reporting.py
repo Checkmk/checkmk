@@ -17,7 +17,7 @@ from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr, HostName, Sect
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-from cmk.checkers.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName
 
 CrashReportStore = crash_reporting.CrashReportStore
 

@@ -24,9 +24,9 @@ from cmk.snmplib.type_defs import (
     SpecialColumn,
 )
 
-from cmk.checkers import SourceType
-
 from cmk.base.config import ConfigCache
+
+from cmk.checkengine import SourceType
 
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,

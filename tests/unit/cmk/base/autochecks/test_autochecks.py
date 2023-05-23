@@ -16,12 +16,12 @@ import cmk.utils.paths
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import HostName
 
-from cmk.checkers.check_table import ConfiguredService
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
-
 from cmk.base._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.base.config import ConfigCache
+
+from cmk.checkengine.check_table import ConfiguredService
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes
 
 _COMPUTED_PARAMETERS_SENTINEL = TimespecificParameters(())
 

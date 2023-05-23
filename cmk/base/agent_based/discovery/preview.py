@@ -20,7 +20,13 @@ from cmk.utils.type_defs import HostName, Item, SectionName, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.checkers import (
+import cmk.base.agent_based.checking as checking
+import cmk.base.config as config
+import cmk.base.core
+from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
+from cmk.base.config import ConfigCache, get_active_check_descriptions
+
+from cmk.checkengine import (
     CheckPlugin,
     DiscoveryPlugin,
     FetcherFunction,
@@ -29,28 +35,22 @@ from cmk.checkers import (
     SectionPlugin,
     SummarizerFunction,
 )
-from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
-from cmk.checkers.discovery import (
+from cmk.checkengine.check_table import ConfiguredService, LegacyCheckParameters
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
+from cmk.checkengine.discovery import (
     analyse_cluster_labels,
     discover_host_labels,
     HostLabelPlugin,
     QualifiedDiscovery,
 )
-from cmk.checkers.sectionparser import (
+from cmk.checkengine.sectionparser import (
     filter_out_errors,
     make_providers,
     Provider,
     store_piggybacked_sections,
 )
-from cmk.checkers.sectionparserutils import check_parsing_errors
-
-import cmk.base.agent_based.checking as checking
-import cmk.base.config as config
-import cmk.base.core
-from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.config import ConfigCache, get_active_check_descriptions
+from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 from .autodiscovery import _Transition, get_host_services
 

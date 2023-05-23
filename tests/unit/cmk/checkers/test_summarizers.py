@@ -8,8 +8,8 @@ import pytest
 from cmk.utils.exceptions import MKAgentError, MKTimeout
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName
 
-from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.summarize import summarize_failure, summarize_piggyback, summarize_success
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.summarize import summarize_failure, summarize_piggyback, summarize_success
 
 
 class TestAgentSummarizer:

@@ -17,24 +17,24 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.checkers import DiscoveryPlugin, FetcherFunction, HostKey, ParserFunction, SectionPlugin
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import (
+import cmk.base.core
+from cmk.base.config import ConfigCache
+
+from cmk.checkengine import DiscoveryPlugin, FetcherFunction, HostKey, ParserFunction, SectionPlugin
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import (
     AutochecksStore,
     discover_host_labels,
     HostLabelPlugin,
     QualifiedDiscovery,
 )
-from cmk.checkers.sectionparser import (
+from cmk.checkengine.sectionparser import (
     filter_out_errors,
     make_providers,
     Provider,
     store_piggybacked_sections,
 )
-from cmk.checkers.sectionparserutils import check_parsing_errors
-
-import cmk.base.core
-from cmk.base.config import ConfigCache
+from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 from ._discovered_services import analyse_discovered_services
 

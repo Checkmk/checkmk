@@ -10,13 +10,13 @@ from pytest import MonkeyPatch
 import cmk.utils.store as store
 from cmk.utils.type_defs import HostName
 
-from cmk.checkers.check_table import ServiceID
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.api.agent_based.value_store._global_state import (
     get_value_store,
     load_host_value_store,
 )
+
+from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import CheckPluginName
 
 _TEST_KEY = ("check", "item", "user-key")
 

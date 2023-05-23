@@ -20,7 +20,7 @@ from cmk.utils.log import console
 from cmk.utils.timeout import Timeout
 from cmk.utils.type_defs import HostName, ServiceDetails, ServiceName, ServiceState
 
-from cmk.checkers.checkresults import ServiceCheckResult
+from cmk.checkengine.checkresults import ServiceCheckResult
 
 _CacheInfo = tuple[int, int]
 

@@ -5,7 +5,7 @@
 """This package contains the fetchers.
 
 See Also:
-    * `cmk.checkers` for the checkers.
+    * `cmk.checkengine` for the checkers.
 
 """
 

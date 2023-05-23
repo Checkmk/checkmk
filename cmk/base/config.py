@@ -126,19 +126,6 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers import AgentParser, CheckPlugin, DiscoveryPlugin, Parameters, SourceType
-from cmk.checkers.check_table import (
-    ConfiguredService,
-    FilterMode,
-    HostCheckTable,
-    LegacyCheckParameters,
-    ServiceID,
-)
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import AutocheckServiceWithNodes
-from cmk.checkers.inventory import HWSWInventoryParameters, InventoryPlugin
-from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
-
 import cmk.base._autochecks as autochecks
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.default_config as default_config
@@ -153,6 +140,19 @@ from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
+
+from cmk.checkengine import AgentParser, CheckPlugin, DiscoveryPlugin, Parameters, SourceType
+from cmk.checkengine.check_table import (
+    ConfiguredService,
+    FilterMode,
+    HostCheckTable,
+    LegacyCheckParameters,
+    ServiceID,
+)
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckServiceWithNodes
+from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
+from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 # TODO: Prefix helper functions with "_".
 

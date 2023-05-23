@@ -17,9 +17,6 @@ from cmk.snmplib.type_defs import SNMPBackendEnum
 from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkers import Source, SourceType
-from cmk.checkers.check_table import LegacyCheckParameters
-
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.ip_lookup as ip_lookup
@@ -27,6 +24,9 @@ import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import AddressFamily
+
+from cmk.checkengine import Source, SourceType
+from cmk.checkengine.check_table import LegacyCheckParameters
 
 
 def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches

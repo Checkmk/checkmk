@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.checkengine.checking import CheckPluginName
 
 info = [["8001591181312", "3875508482048"]]
 check_name = "fast_lta_silent_cubes_capacity"

@@ -25,7 +25,10 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-from cmk.checkers import (
+from cmk.base.agent_based.confcheckers import ConfiguredSummarizer
+from cmk.base.config import ConfigCache
+
+from cmk.checkengine import (
     DiscoveryPlugin,
     FetcherFunction,
     HostKey,
@@ -33,9 +36,9 @@ from cmk.checkers import (
     SectionPlugin,
     SummarizerFunction,
 )
-from cmk.checkers.check_table import ServiceID
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.discovery import (
+from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutocheckServiceWithNodes,
     discover_host_labels,
@@ -43,15 +46,12 @@ from cmk.checkers.discovery import (
     HostLabelPlugin,
     QualifiedDiscovery,
 )
-from cmk.checkers.sectionparser import (
+from cmk.checkengine.sectionparser import (
     filter_out_errors,
     make_providers,
     Provider,
     store_piggybacked_sections,
 )
-
-from cmk.base.agent_based.confcheckers import ConfiguredSummarizer
-from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters

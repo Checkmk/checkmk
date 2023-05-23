@@ -33,7 +33,13 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkers import (
+import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.api.agent_based.register._config as _api
+import cmk.base.config as config
+from cmk.base.config import ConfigCache
+from cmk.base.sources import make_parser, make_sources
+
+from cmk.checkengine import (
     CheckPlugin,
     DiscoveryPlugin,
     parse_raw_data,
@@ -41,19 +47,13 @@ from cmk.checkers import (
     Source,
     SourceInfo,
 )
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.discovery import HostLabelPlugin
-from cmk.checkers.host_sections import HostSections
-from cmk.checkers.inventory import InventoryPlugin, InventoryPluginName
-from cmk.checkers.summarize import summarize
-from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
-
-import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.api.agent_based.register._config as _api
-import cmk.base.config as config
-from cmk.base.config import ConfigCache
-from cmk.base.sources import make_parser, make_sources
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.discovery import HostLabelPlugin
+from cmk.checkengine.host_sections import HostSections
+from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
+from cmk.checkengine.summarize import summarize
+from cmk.checkengine.type_defs import NO_SELECTION, SectionNameCollection
 
 __all__ = [
     "CheckPluginMapper",

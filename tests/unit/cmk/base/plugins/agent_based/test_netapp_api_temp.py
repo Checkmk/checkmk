@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+
+from cmk.checkengine.checking import CheckPluginName
 
 
 def test_check_netapp_api_temp_missing_value(fix_register) -> None:  # type: ignore[no-untyped-def]

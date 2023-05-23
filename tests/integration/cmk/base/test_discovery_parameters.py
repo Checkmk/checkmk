@@ -8,7 +8,7 @@ import pytest
 from tests.testlib import create_linux_test_host
 from tests.testlib.site import Site
 
-from cmk.checkers.discovery._autochecks import _AutochecksSerializer
+from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
 
 
 def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) -> None:

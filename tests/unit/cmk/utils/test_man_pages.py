@@ -14,7 +14,7 @@ from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 import cmk.utils.man_pages as man_pages
 
-from cmk.checkers.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName
 
 ManPages = Mapping[str, man_pages.ManPage | None]
 

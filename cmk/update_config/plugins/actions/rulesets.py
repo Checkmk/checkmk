@@ -14,12 +14,11 @@ from cmk.utils import debug
 from cmk.utils.log import VERBOSE
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib import timeperiods
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, RulesetCollection
 
+from cmk.checkengine.checking import CheckPluginName
 from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import format_warning, UpdateActionState

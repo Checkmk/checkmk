@@ -7,11 +7,11 @@ from pytest_mock import MockerFixture
 
 from cmk.utils.type_defs import HostName
 
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.plugin_contexts import current_host, current_service
-
 from cmk.base.api.agent_based import utils
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
+
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.plugin_contexts import current_host, current_service
 
 
 def test_check_levels_predictive_default_render_func(mocker: MockerFixture) -> None:

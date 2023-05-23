@@ -19,7 +19,7 @@ from cmk.utils.type_defs import DiscoveryResult, HostName
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksTable
 
-from cmk.checkers.discovery._autochecks import _AutochecksSerializer
+from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
 
 
 @pytest.fixture(name="test_cfg", scope="module")

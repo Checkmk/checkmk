@@ -11,8 +11,8 @@ from cmk.utils.type_defs import ExitSpec, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.error_handling import CheckResultErrorHandler
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.error_handling import CheckResultErrorHandler
 
 
 def _handler() -> CheckResultErrorHandler:

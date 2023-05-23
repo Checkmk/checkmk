@@ -9,8 +9,6 @@ from tests.testlib import on_time
 
 from tests.unit.conftest import FixRegister
 
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
@@ -20,6 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.oracle_instance_section import parse_oracle_instance
 from cmk.base.plugins.agent_based.utils.oracle_instance import GeneralError, Instance, InvalidData
+
+from cmk.checkengine.checking import CheckPluginName
 
 
 def test_discover_oracle_instance_uptime(fix_register: FixRegister) -> None:

@@ -12,9 +12,6 @@ import pytest
 from cmk.utils import store
 from cmk.utils.type_defs import HostName
 
-from cmk.checkers.check_table import ServiceID
-from cmk.checkers.checking import CheckPluginName
-
 from cmk.base.api.agent_based.value_store._utils import (
     _DiskSyncedMapping,
     _DynamicDiskSyncedMapping,
@@ -22,6 +19,9 @@ from cmk.base.api.agent_based.value_store._utils import (
     _ValueStore,
     ValueStoreManager,
 )
+
+from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import CheckPluginName
 
 _TEST_KEY = ("check", "item", "user-key")
 

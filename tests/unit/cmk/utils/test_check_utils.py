@@ -5,7 +5,7 @@
 
 from cmk.utils.type_defs import HostName
 
-from cmk.checkers.checkresults import ServiceCheckResult
+from cmk.checkengine.checkresults import ServiceCheckResult
 
 
 def test_cluster_received_no_data_no_nodes() -> None:

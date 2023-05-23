@@ -11,9 +11,6 @@ from pytest import MonkeyPatch
 
 from cmk.utils.type_defs import ParametersTypeAlias, RuleSetName, SectionName
 
-from cmk.checkers.checking import CheckPluginName
-from cmk.checkers.inventory import InventoryPluginName
-
 from cmk.base.api.agent_based.checking_classes import DiscoveryResult
 from cmk.base.api.agent_based.inventory_classes import InventoryResult
 from cmk.base.api.agent_based.register import (
@@ -28,6 +25,9 @@ from cmk.base.api.agent_based.register import (
 from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import HostLabelGenerator
 from cmk.base.api.agent_based.utils import startswith
+
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.inventory import InventoryPluginName
 
 from .test_check_plugins import dummy_function_ips
 from .test_section_plugins import parse_dummy

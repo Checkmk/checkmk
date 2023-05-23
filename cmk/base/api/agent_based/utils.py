@@ -15,11 +15,11 @@ import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
-from cmk.checkers import plugin_contexts
-
 import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
+
+from cmk.checkengine import plugin_contexts
 
 #     ____       _            _
 #    |  _ \  ___| |_ ___  ___| |_   ___ _ __   ___  ___

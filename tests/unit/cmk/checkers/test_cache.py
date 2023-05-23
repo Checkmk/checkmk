@@ -14,7 +14,7 @@ from cmk.fetchers import Mode
 from cmk.fetchers.cache import PersistedSections, SectionStore
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers.type_defs import AgentRawDataSection
+from cmk.checkengine.type_defs import AgentRawDataSection
 
 
 class MockStore:

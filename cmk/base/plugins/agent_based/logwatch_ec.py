@@ -38,9 +38,6 @@ import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.type_defs import HostName  # pylint: disable=cmk-module-layer-violation
 
-from cmk.checkers.checking import CheckPluginName  # pylint: disable=cmk-module-layer-violation
-from cmk.checkers.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
-
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -58,6 +55,9 @@ from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogForwarderUnixSocket,
     SyslogMessage,
 )
+
+from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 
 ClusterSection = Dict[Optional[str], logwatch.Section]
 _MAX_SPOOL_SIZE = 1024**2

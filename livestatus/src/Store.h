@@ -66,8 +66,6 @@ public:
     Store(ICore *mc, Core *core);
     LogCache *logCache() { return &_log_cache; };
     bool answerRequest(InputBuffer *, OutputBuffer *);
-    bool answerGetRequest(const std::list<std::string> &lines,
-                          OutputBuffer &output, const std::string &tablename);
     void switchStatehistTable(std::optional<std::chrono::seconds> cache_horizon,
                               Logger *logger);
     void buildStatehistCache(std::optional<std::chrono::seconds> cache_horizon);
@@ -90,6 +88,8 @@ public:
 #endif
     [[nodiscard]] Logger *logger() const;
     size_t numCachedLogMessages();
+    bool answerGetRequest(const std::list<std::string> &lines,
+                          OutputBuffer &output, const std::string &tablename);
 
 private:
     struct TableDummy : public Table {
@@ -149,8 +149,6 @@ private:
 #ifndef CMC
     void logRequest(const std::string &line,
                     const std::list<std::string> &lines) const;
-    bool answerGetRequest(const std::list<std::string> &lines,
-                          OutputBuffer &output, const std::string &tablename);
 
     class ExternalCommand {
     public:

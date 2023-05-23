@@ -50,10 +50,8 @@
 # InputBuffer:              0 Bytes
 # OutputBuffer:             0 Bytes
 
-
-# mypy: disable-error-code="var-annotated,index,attr-defined"
-
 import time
+from typing import Any
 
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
 from cmk.base.config import check_info
@@ -66,7 +64,7 @@ def parse_mknotifyd(info):  # pylint: disable=too-many-branches
         # versions before 1.5.0p23/1.6.0p4 did not include a timestamp
         timestamp, data = time.time(), info
 
-    parsed = {
+    parsed: dict[str, Any] = {
         "sites": {},
         "timestamp": timestamp,
     }
@@ -74,7 +72,7 @@ def parse_mknotifyd(info):  # pylint: disable=too-many-branches
     for line in data:
         if line[0].startswith("["):
             site = line[0][1:-1]
-            site_entry = {
+            site_entry: dict[str, dict] = {
                 "spools": {},
                 "connections": {},
                 "queues": {},
@@ -132,7 +130,7 @@ def parse_mknotifyd(info):  # pylint: disable=too-many-branches
     # more than one connection from the same remote host, so we are forced
     # to create artificial numbers if that is the case
     for stats in parsed["sites"].values():
-        remote_addresses = {}
+        remote_addresses: dict = {}
         for connection_name, connection in list(stats["connections"].items()):
             if connection["Type"] == "incoming":
                 remote_address = connection_name.split(":")[0]

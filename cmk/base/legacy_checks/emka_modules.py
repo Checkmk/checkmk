@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated"
-
 from cmk.base.check_api import all_of, contains, LegacyCheckDefinition, startswith
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.humidity import check_humidity
@@ -43,7 +41,7 @@ def parse_emka_modules(info):  # pylint: disable=too-many-branches
         "8": "analogous_output",
     }
 
-    parsed = {"basic_components": {}}
+    parsed: dict = {"basic_components": {}}
     for oidend, status, ty, mod_info, remark in info[0]:
         mo_index, co_index = oidend.split(".")
         if mo_index == "0":

@@ -14,19 +14,17 @@
 #   '----------------------------------------------------------------------'
 
 
-# mypy: disable-error-code="var-annotated"
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
 def parse_esx_vsphere_vm_mounted_devices(section):
     data = section.mounted_devices
-    parsed = {}
+    parsed: dict[str, dict[str, str]] = {}
     for device_data in " ".join(data).split("@@"):
         if "|" not in device_data:
             continue
-        device_attrs = {}
+        device_attrs: dict[str, str] = {}
         for entry in device_data.split("|"):
             k, v = entry.split(" ", 1)
             device_attrs.setdefault(k, v)

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated"
-
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
@@ -19,7 +17,7 @@ from cmk.base.config import check_info
 
 def ucs_bladecenter_psu_parse(info):
     data = ucs_bladecenter.generic_parse(info)
-    psu = {}
+    psu: dict[str, dict] = {}
 
     def get_item_name(key):
         tokens = key.split("/")

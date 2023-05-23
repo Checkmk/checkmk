@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated"
-
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
@@ -20,7 +18,7 @@ from cmk.base.config import check_info
 
 def parse_ucs_bladecenter_fans(info):
     data = ucs_bladecenter.generic_parse(info)
-    fans = {}
+    fans: dict[str, dict] = {}
 
     def get_item_name(key):
         tokens = key.split("/")

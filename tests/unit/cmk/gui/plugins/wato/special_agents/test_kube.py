@@ -15,20 +15,21 @@ from cmk.gui.plugins.wato.special_agents import kube
         "localhost",  # GUI transforms this to 'http://localhost', so users don't see this
         "http://",
         "https://?example:8080/",
+        "http://::1",
+        "http://localhost!:8080",
+        "http://:8080",
     ],
 )
 def test__validate_reject(url: str) -> None:
     with pytest.raises(MKUserError):
         kube._url(title="", default_value="https://", _help="")._validate_value(url, "varprefix")
+        kube._validate(url, "varprefix")
 
 
 @pytest.mark.parametrize(
     "url",
     [
-        "http://::1",
         "https://a?example:8080/",
-        "http://localhost!:8080",
-        "http://:8080",
         "https://example.com",
         "https://[::1]/",
         "http://[0:0:0:0:0:0:0:1]",
@@ -42,3 +43,4 @@ def test__validate_reject(url: str) -> None:
 )
 def test__validate_accept(url: str) -> None:
     kube._url(title="", default_value="https://", _help="")._validate_value(url, "varprefix")
+    kube._validate(url, "varprefix")

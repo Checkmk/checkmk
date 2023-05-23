@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pydantic
+
 from cmk.utils.version import Edition, is_cloud_edition, mark_edition_only
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupVMCloudContainer,
@@ -33,6 +36,14 @@ from cmk.gui.valuespec import (
 )
 
 
+def _validate(url: str, varprefix: str) -> None:
+    try:
+        pydantic.parse_obj_as(pydantic.AnyHttpUrl, url)
+    except pydantic.ValidationError as e:
+        message = ", ".join(s["msg"] for s in e.errors())
+        raise MKUserError(varprefix, f"{url} has problem(s): {message}") from e
+
+
 def _url(title: str, _help: str, default_value: str) -> Url:
     return Url(
         allow_empty=False,
@@ -40,6 +51,7 @@ def _url(title: str, _help: str, default_value: str) -> Url:
         default_scheme="http",
         allowed_schemes=["http", "https"],
         default_value=default_value,
+        validate=_validate,
         size=80,
         help=_help,
     )

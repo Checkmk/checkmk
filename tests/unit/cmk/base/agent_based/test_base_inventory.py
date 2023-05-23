@@ -13,6 +13,7 @@ import pytest
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.structured_data import (
     ImmutableTree,
+    MutableTree,
     RetentionIntervals,
     StructuredDataNode,
     UpdateResult,
@@ -74,10 +75,10 @@ def test_tree_nodes_equality(edge: str) -> None:
     tree = make_tree("edge")
     other = make_tree("other")
 
-    assert _tree_nodes_are_equal(ImmutableTree(tree), other, edge) is False
-    assert _tree_nodes_are_equal(ImmutableTree(other), tree, edge) is False
-    assert _tree_nodes_are_equal(ImmutableTree(tree), tree, edge) is True
-    assert _tree_nodes_are_equal(ImmutableTree(other), other, edge) is True
+    assert _tree_nodes_are_equal(ImmutableTree(tree), MutableTree(other), edge) is False
+    assert _tree_nodes_are_equal(ImmutableTree(other), MutableTree(tree), edge) is False
+    assert _tree_nodes_are_equal(ImmutableTree(tree), MutableTree(tree), edge) is True
+    assert _tree_nodes_are_equal(ImmutableTree(other), MutableTree(other), edge) is True
 
 
 # TODO test cases:
@@ -1279,13 +1280,7 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
     "inventory_tree, active_check_results",
     [
         (
-            StructuredDataNode.deserialize(
-                {
-                    "Attributes": {},
-                    "Table": {},
-                    "Nodes": {},
-                }
-            ),
+            MutableTree(),
             [
                 ActiveCheckResult(
                     state=1,
@@ -1297,38 +1292,43 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
             ],
         ),
         (
-            StructuredDataNode.deserialize(
-                {
-                    "Attributes": {},
-                    "Table": {},
-                    "Nodes": {
-                        "software": {
-                            "Attributes": {},
-                            "Table": {},
-                            "Nodes": {
-                                "applications": {
-                                    "Attributes": {},
-                                    "Table": {},
-                                    "Nodes": {
-                                        "check_mk": {
-                                            "Attributes": {},
-                                            "Table": {},
-                                            "Nodes": {
-                                                "cluster": {
-                                                    "Attributes": {
-                                                        "Pairs": {"is_cluster": True, "foo": "bar"}
+            MutableTree(
+                StructuredDataNode.deserialize(
+                    {
+                        "Attributes": {},
+                        "Table": {},
+                        "Nodes": {
+                            "software": {
+                                "Attributes": {},
+                                "Table": {},
+                                "Nodes": {
+                                    "applications": {
+                                        "Attributes": {},
+                                        "Table": {},
+                                        "Nodes": {
+                                            "check_mk": {
+                                                "Attributes": {},
+                                                "Table": {},
+                                                "Nodes": {
+                                                    "cluster": {
+                                                        "Attributes": {
+                                                            "Pairs": {
+                                                                "is_cluster": True,
+                                                                "foo": "bar",
+                                                            }
+                                                        },
+                                                        "Table": {},
+                                                        "Nodes": {},
                                                     },
-                                                    "Table": {},
-                                                    "Nodes": {},
                                                 },
                                             },
                                         },
                                     },
                                 },
-                            },
-                        }
-                    },
-                }
+                            }
+                        },
+                    }
+                )
             ),
             [
                 ActiveCheckResult(
@@ -1344,36 +1344,40 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
             ],
         ),
         (
-            StructuredDataNode.deserialize(
-                {
-                    "Attributes": {},
-                    "Table": {},
-                    "Nodes": {
-                        "software": {
-                            "Attributes": {},
-                            "Table": {},
-                            "Nodes": {
-                                "applications": {
-                                    "Attributes": {},
-                                    "Table": {},
-                                    "Nodes": {
-                                        "check_mk": {
-                                            "Attributes": {},
-                                            "Table": {},
-                                            "Nodes": {
-                                                "cluster": {
-                                                    "Attributes": {"Pairs": {"is_cluster": True}},
-                                                    "Table": {},
-                                                    "Nodes": {},
+            MutableTree(
+                StructuredDataNode.deserialize(
+                    {
+                        "Attributes": {},
+                        "Table": {},
+                        "Nodes": {
+                            "software": {
+                                "Attributes": {},
+                                "Table": {},
+                                "Nodes": {
+                                    "applications": {
+                                        "Attributes": {},
+                                        "Table": {},
+                                        "Nodes": {
+                                            "check_mk": {
+                                                "Attributes": {},
+                                                "Table": {},
+                                                "Nodes": {
+                                                    "cluster": {
+                                                        "Attributes": {
+                                                            "Pairs": {"is_cluster": True}
+                                                        },
+                                                        "Table": {},
+                                                        "Nodes": {},
+                                                    },
                                                 },
                                             },
                                         },
                                     },
                                 },
-                            },
-                        }
-                    },
-                }
+                            }
+                        },
+                    }
+                )
             ),
             [
                 ActiveCheckResult(
@@ -1386,36 +1390,40 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
             ],
         ),
         (
-            StructuredDataNode.deserialize(
-                {
-                    "Attributes": {},
-                    "Table": {},
-                    "Nodes": {
-                        "software": {
-                            "Attributes": {},
-                            "Table": {},
-                            "Nodes": {
-                                "applications": {
-                                    "Attributes": {},
-                                    "Table": {},
-                                    "Nodes": {
-                                        "check_mk": {
-                                            "Attributes": {},
-                                            "Table": {},
-                                            "Nodes": {
-                                                "cluster": {
-                                                    "Attributes": {"Pairs": {"is_cluster": False}},
-                                                    "Table": {},
-                                                    "Nodes": {},
+            MutableTree(
+                StructuredDataNode.deserialize(
+                    {
+                        "Attributes": {},
+                        "Table": {},
+                        "Nodes": {
+                            "software": {
+                                "Attributes": {},
+                                "Table": {},
+                                "Nodes": {
+                                    "applications": {
+                                        "Attributes": {},
+                                        "Table": {},
+                                        "Nodes": {
+                                            "check_mk": {
+                                                "Attributes": {},
+                                                "Table": {},
+                                                "Nodes": {
+                                                    "cluster": {
+                                                        "Attributes": {
+                                                            "Pairs": {"is_cluster": False}
+                                                        },
+                                                        "Table": {},
+                                                        "Nodes": {},
+                                                    },
                                                 },
                                             },
                                         },
                                     },
                                 },
-                            },
-                        }
-                    },
-                }
+                            }
+                        },
+                    }
+                )
             ),
             [
                 ActiveCheckResult(
@@ -1430,14 +1438,14 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
     ],
 )
 def test__check_fetched_data_or_trees_only_cluster_property(
-    inventory_tree: StructuredDataNode, active_check_results: Sequence[ActiveCheckResult]
+    inventory_tree: MutableTree, active_check_results: Sequence[ActiveCheckResult]
 ) -> None:
     assert (
         list(
             _check_fetched_data_or_trees(
                 parameters=HWSWInventoryParameters.from_raw({}),
                 inventory_tree=inventory_tree,
-                status_data_tree=StructuredDataNode.deserialize({}),
+                status_data_tree=MutableTree(),
                 previous_tree=ImmutableTree(),
                 no_data_or_files=False,
                 processing_failed=True,
@@ -1457,15 +1465,17 @@ def test__check_fetched_data_or_trees_only_cluster_property(
                 )
             ),
             # No further impact, may not be realistic here
-            StructuredDataNode(),
+            MutableTree(),
             # Content of path does not matter here
             UpdateResult(reasons_by_path={("path-to", "node"): []}),
             _SaveTreeActions(do_archive=True, do_save=False),
         ),
         (
             ImmutableTree(),
-            StructuredDataNode.deserialize(
-                {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
+            MutableTree(
+                StructuredDataNode.deserialize(
+                    {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
+                )
             ),
             # Content of path does not matter here
             UpdateResult(reasons_by_path={("path-to", "node"): []}),
@@ -1477,8 +1487,10 @@ def test__check_fetched_data_or_trees_only_cluster_property(
                     {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
                 )
             ),
-            StructuredDataNode.deserialize(
-                {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
+            MutableTree(
+                StructuredDataNode.deserialize(
+                    {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
+                )
             ),
             # Content of path does not matter here
             UpdateResult(reasons_by_path={("path-to", "node"): []}),
@@ -1490,8 +1502,10 @@ def test__check_fetched_data_or_trees_only_cluster_property(
                     {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
                 )
             ),
-            StructuredDataNode.deserialize(
-                {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
+            MutableTree(
+                StructuredDataNode.deserialize(
+                    {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
+                )
             ),
             UpdateResult(),
             _SaveTreeActions(do_archive=True, do_save=True),
@@ -1502,8 +1516,10 @@ def test__check_fetched_data_or_trees_only_cluster_property(
                     {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
                 )
             ),
-            StructuredDataNode.deserialize(
-                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+            MutableTree(
+                StructuredDataNode.deserialize(
+                    {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+                )
             ),
             UpdateResult(),
             _SaveTreeActions(do_archive=False, do_save=False),
@@ -1514,8 +1530,10 @@ def test__check_fetched_data_or_trees_only_cluster_property(
                     {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
                 )
             ),
-            StructuredDataNode.deserialize(
-                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+            MutableTree(
+                StructuredDataNode.deserialize(
+                    {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+                )
             ),
             # Content of path does not matter here
             UpdateResult(reasons_by_path={("path-to", "node"): []}),
@@ -1525,7 +1543,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
 )
 def test_save_tree_actions(
     previous_tree: ImmutableTree,
-    inventory_tree: StructuredDataNode,
+    inventory_tree: MutableTree,
     update_result: UpdateResult,
     expected_save_tree_actions: _SaveTreeActions,
 ) -> None:

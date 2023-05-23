@@ -36,8 +36,8 @@ from cmk.utils.log import console, section
 from cmk.utils.structured_data import (
     ImmutableTree,
     load_tree,
+    MutableTree,
     RawIntervalsFromConfig,
-    StructuredDataNode,
     TreeOrArchiveStore,
     UpdateResult,
 )
@@ -2269,7 +2269,7 @@ def _execute_active_check_inventory(
         if save_tree_actions.do_archive:
             tree_or_archive_store.archive(host_name=host_name)
         if save_tree_actions.do_save:
-            tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree)
+            tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree.tree)
 
     return result.check_result
 
@@ -2282,10 +2282,10 @@ class _SaveTreeActions(NamedTuple):
 def _get_save_tree_actions(
     *,
     previous_tree: ImmutableTree,
-    inventory_tree: StructuredDataNode,
+    inventory_tree: MutableTree,
     update_result: UpdateResult,
 ) -> _SaveTreeActions:
-    if inventory_tree.is_empty():
+    if inventory_tree.tree.is_empty():
         # Archive current inventory tree file if it exists. Important for host inventory icon
         console.verbose("No inventory tree.\n")
         return _SaveTreeActions(do_archive=True, do_save=False)
@@ -2294,7 +2294,7 @@ def _get_save_tree_actions(
         console.verbose("New inventory tree.\n")
         return _SaveTreeActions(do_archive=False, do_save=True)
 
-    if has_changed := not previous_tree.tree.is_equal(inventory_tree):
+    if has_changed := not previous_tree.tree.is_equal(inventory_tree.tree):
         console.verbose("Inventory tree has changed. Add history entry.\n")
 
     if update_result.save_tree:

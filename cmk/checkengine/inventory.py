@@ -113,7 +113,7 @@ class CheckInventoryTreeResult:
     processing_failed: bool
     no_data_or_files: bool
     check_result: ActiveCheckResult
-    inventory_tree: StructuredDataNode
+    inventory_tree: MutableTree
     update_result: UpdateResult
 
 
@@ -172,8 +172,8 @@ def inventorize_host(
             *itertools.chain(
                 _check_fetched_data_or_trees(
                     parameters=parameters,
-                    inventory_tree=mutable_trees.inventory.tree,
-                    status_data_tree=mutable_trees.status_data.tree,
+                    inventory_tree=mutable_trees.inventory,
+                    status_data_tree=mutable_trees.status_data,
                     previous_tree=previous_tree,
                     processing_failed=processing_failed,
                     no_data_or_files=no_data_or_files,
@@ -182,7 +182,7 @@ def inventorize_host(
                 check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
             )
         ),
-        inventory_tree=mutable_trees.inventory.tree,
+        inventory_tree=mutable_trees.inventory,
         update_result=update_result,
     )
 
@@ -201,7 +201,7 @@ def inventorize_cluster(
             *_check_trees(
                 parameters=parameters,
                 inventory_tree=inventory_tree,
-                status_data_tree=StructuredDataNode(),
+                status_data_tree=MutableTree(),
                 previous_tree=previous_tree,
             ),
         ),
@@ -210,8 +210,8 @@ def inventorize_cluster(
     )
 
 
-def _inventorize_cluster(*, nodes: Sequence[HostName]) -> StructuredDataNode:
-    mutable_tree = MutableTree(StructuredDataNode())
+def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
+    mutable_tree = MutableTree()
     mutable_tree.add_pairs(
         path=["software", "applications", "check_mk", "cluster"],
         pairs={"is_cluster": True},
@@ -221,7 +221,7 @@ def _inventorize_cluster(*, nodes: Sequence[HostName]) -> StructuredDataNode:
         key_columns=["name"],
         rows=[{"name": name} for name in nodes],
     )
-    return mutable_tree.tree
+    return mutable_tree
 
 
 def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]) -> bool:
@@ -259,7 +259,7 @@ def _inventorize_real_host(
         now=now,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=raw_intervals_from_config,
-        inventory_tree=mutable_trees.inventory.tree,
+        inventory_tree=mutable_trees.inventory,
         previous_tree=previous_tree,
     )
 
@@ -279,7 +279,7 @@ def inventorize_status_data_of_real_host(
     providers: Mapping[HostKey, Provider],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
-) -> StructuredDataNode:
+) -> MutableTree:
     return _create_trees_from_inventory_plugin_items(
         _collect_inventory_plugin_items(
             host_name,
@@ -288,7 +288,7 @@ def inventorize_status_data_of_real_host(
             inventory_plugins=inventory_plugins,
             run_plugin_names=run_plugin_names,
         )
-    ).status_data.tree
+    ).status_data
 
 
 @dataclass(frozen=True)
@@ -435,7 +435,7 @@ def _may_update(
     now: int,
     items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
     raw_intervals_from_config: RawIntervalsFromConfig,
-    inventory_tree: StructuredDataNode,
+    inventory_tree: MutableTree,
     previous_tree: ImmutableTree,
 ) -> UpdateResult:
     if not raw_intervals_from_config:
@@ -461,8 +461,8 @@ def _may_update(
         if (previous_node := previous_tree.tree.get_node(node_path)) is None:
             previous_node = StructuredDataNode()
 
-        if (inventory_node := inventory_tree.get_node(node_path)) is None:
-            inventory_node = inventory_tree.setdefault_node(node_path)
+        if (inventory_node := inventory_tree.tree.get_node(node_path)) is None:
+            inventory_node = inventory_tree.tree.setdefault_node(node_path)
 
         if choices_for_attributes := entry.get("attributes"):
             raw_cache_info = _get_raw_cache_info((node_path, "Attributes"))
@@ -500,8 +500,8 @@ def _may_update(
 def _check_fetched_data_or_trees(
     *,
     parameters: HWSWInventoryParameters,
-    inventory_tree: StructuredDataNode,
-    status_data_tree: StructuredDataNode,
+    inventory_tree: MutableTree,
+    status_data_tree: MutableTree,
     previous_tree: ImmutableTree,
     no_data_or_files: bool,
     processing_failed: bool,
@@ -515,9 +515,9 @@ def _check_fetched_data_or_trees(
         # Since Checkmk 2.2 we changed this behaviour: see werk 14836.
         # In order to avoid a lot of "useless" warnings we check the following:
         if (
-            inventory_tree.count_entries() == 1
+            inventory_tree.tree.count_entries() == 1
             and (
-                cluster_attributes := inventory_tree.get_attributes(
+                cluster_attributes := inventory_tree.tree.get_attributes(
                     ("software", "applications", "check_mk", "cluster")
                 )
             )
@@ -542,17 +542,17 @@ def _check_fetched_data_or_trees(
 def _check_trees(
     *,
     parameters: HWSWInventoryParameters,
-    inventory_tree: StructuredDataNode,
-    status_data_tree: StructuredDataNode,
+    inventory_tree: MutableTree,
+    status_data_tree: MutableTree,
     previous_tree: ImmutableTree,
 ) -> Iterator[ActiveCheckResult]:
-    if inventory_tree.is_empty() and status_data_tree.is_empty():
+    if inventory_tree.tree.is_empty() and status_data_tree.tree.is_empty():
         yield ActiveCheckResult(0, "Found no data")
         return
 
-    yield ActiveCheckResult(0, f"Found {inventory_tree.count_entries()} inventory entries")
+    yield ActiveCheckResult(0, f"Found {inventory_tree.tree.count_entries()} inventory entries")
 
-    swp_table = inventory_tree.get_table(("software", "packages"))
+    swp_table = inventory_tree.tree.get_table(("software", "packages"))
     if swp_table is not None and swp_table.is_empty() and parameters.sw_missing:
         yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
 
@@ -562,17 +562,17 @@ def _check_trees(
     if not _tree_nodes_are_equal(previous_tree, inventory_tree, "hardware"):
         yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
 
-    if not status_data_tree.is_empty():
-        yield ActiveCheckResult(0, f"Found {status_data_tree.count_entries()} status entries")
+    if not status_data_tree.tree.is_empty():
+        yield ActiveCheckResult(0, f"Found {status_data_tree.tree.count_entries()} status entries")
 
 
 def _tree_nodes_are_equal(
     previous_tree: ImmutableTree,
-    inventory_tree: StructuredDataNode,
+    inventory_tree: MutableTree,
     edge: str,
 ) -> bool:
     previous_node = previous_tree.tree.get_node((edge,))
-    inventory_node = inventory_tree.get_node((edge,))
+    inventory_node = inventory_tree.tree.get_node((edge,))
     if previous_node is None:
         return inventory_node is None
 

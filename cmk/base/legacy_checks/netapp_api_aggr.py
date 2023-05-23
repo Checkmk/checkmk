@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info
@@ -22,14 +22,15 @@ def inventory_netapp_api_aggr(parsed):
             yield name, {}
 
 
-@get_parsed_item_data
-def check_netapp_api_aggr(item, params, aggr):
-    if not ("size-total" in aggr and "size-available" in aggr):
-        return None
+def check_netapp_api_aggr(item, params, parsed):
+    aggr = parsed.get(item, {})
+    if "size-total" not in aggr or "size-available" not in aggr:
+        return
+
     mega = 1024.0 * 1024.0
     size_total = int(aggr.get("size-total")) / mega  # fixed: true-division
     size_avail = int(aggr.get("size-available")) / mega  # fixed: true-division
-    return df_check_filesystem_list(item, params, [(item, size_total, size_avail, 0)])
+    yield df_check_filesystem_list(item, params, [(item, size_total, size_avail, 0)])
 
 
 check_info["netapp_api_aggr"] = LegacyCheckDefinition(

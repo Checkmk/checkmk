@@ -23,7 +23,6 @@
 from cmk.base.check_api import (
     check_levels,
     discover,
-    get_parsed_item_data,
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
@@ -48,8 +47,9 @@ def parse_msoffice_licenses(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_msoffice_licenses(item, params, item_data):
+def check_msoffice_licenses(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
     lcs_active = item_data["active"]
     lcs_consumed = item_data["consumed"]
 

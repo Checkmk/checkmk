@@ -8,12 +8,7 @@
 
 import collections
 
-from cmk.base.check_api import (
-    check_levels,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
@@ -114,9 +109,10 @@ def _check_nimble_latency(item, params, data, ty):
         yield 0, infotext, perfdata
 
 
-@get_parsed_item_data
-def check_nimble_latency_reads(item, params, data):
-    return _check_nimble_latency(item, params, data, NimbleReadsType)
+def check_nimble_latency_reads(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
+    yield from _check_nimble_latency(item, params, data, NimbleReadsType)
 
 
 check_info["nimble_latency"] = LegacyCheckDefinition(
@@ -172,9 +168,10 @@ check_info["nimble_latency"] = LegacyCheckDefinition(
 )
 
 
-@get_parsed_item_data
-def check_nimble_latency_writes(item, params, data):
-    return _check_nimble_latency(item, params, data, NimbleWritesType)
+def check_nimble_latency_writes(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
+    yield from _check_nimble_latency(item, params, data, NimbleWritesType)
 
 
 check_info["nimble_latency.write"] = LegacyCheckDefinition(

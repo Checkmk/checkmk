@@ -10,7 +10,6 @@ from cmk.base.check_api import (
     discover,
     get_age_human_readable,
     get_bytes_human_readable,
-    get_parsed_item_data,
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
@@ -36,8 +35,9 @@ def parse_mysql_slave(info):
     return data
 
 
-@get_parsed_item_data
-def check_mysql_slave(_no_item, params, data):
+def check_mysql_slave(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     state = 0
     perfdata = []
     output = []
@@ -75,7 +75,7 @@ def check_mysql_slave(_no_item, params, data):
         output.append("Slave-SQL: not running(!!)")
         state = 2
 
-    return state, ", ".join(output), perfdata
+    yield state, ", ".join(output), perfdata
 
 
 check_info["mysql_slave"] = LegacyCheckDefinition(

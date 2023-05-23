@@ -11,7 +11,6 @@ import collections
 from cmk.base.check_api import (
     check_levels,
     discover,
-    get_parsed_item_data,
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
@@ -38,8 +37,10 @@ def parse_lvm_lvs(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_lvm_lvs(item, params, entry):
+def check_lvm_lvs(item, params, parsed):
+    if not (entry := parsed.get(item)):
+        return
+
     yield check_levels(
         entry.data,
         "data_usage",

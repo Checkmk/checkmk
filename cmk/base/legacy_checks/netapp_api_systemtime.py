@@ -19,7 +19,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_age_human_readable,
-    get_parsed_item_data,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
 )
@@ -45,8 +44,9 @@ def parse_netapp_api_systemtime(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_netapp_api_systemtime(item, params, entry):
+def check_netapp_api_systemtime(item, params, parsed):
+    if not (entry := parsed.get(item)):
+        return
     yield check_levels(
         entry.system_time,
         None,

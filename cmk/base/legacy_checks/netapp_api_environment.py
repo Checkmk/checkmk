@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import maybefloat, netapp_api_parse_lines
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -48,15 +48,17 @@ def discover_api_environment(predicate=None):
     return discovery_netapp_api_environment
 
 
-@get_parsed_item_data
 def check_netapp_api_environment_discrete(item, _no_params, parsed):
-    sensor_value = parsed.get("discrete-sensor-value")
+    if not (data := parsed.get(item)):
+        return
+
+    sensor_value = data.get("discrete-sensor-value")
     if sensor_value is None:
         return
 
     # According to the documentation the states may vary depending on the platform,
     # but will always include "normal" and "failed"
-    sensor_state = parsed["discrete-sensor-state"]
+    sensor_state = data["discrete-sensor-state"]
     if sensor_state == "normal":
         state = 0
     else:
@@ -65,21 +67,8 @@ def check_netapp_api_environment_discrete(item, _no_params, parsed):
     yield state, "Sensor state: %s, Sensor value: %s" % (sensor_state, sensor_value)
 
 
-@get_parsed_item_data
 def check_netapp_api_environment_threshold(item, _no_params, parsed):
-    """Check a service giving continuous values and boundaries of said.
-
-    :param item:
-        The item's key.
-
-    :param _no_params:
-        We currently ignore all parameters.
-
-    :param parsed:
-        The already parsed item.
-
-    :return:
-    """
+    """Check a service giving continuous values and boundaries of said"""
 
     def _perf_key(_key):
         return _key.replace("/", "").replace(" ", "_").replace("__", "_").lower()
@@ -93,27 +82,30 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
     def _scale_unit(_unit):
         return {"mv": "v", "ma": "a"}.get(_unit.lower(), _unit.lower())
 
-    sensor_value = maybefloat(parsed.get("threshold-sensor-value"))
+    if not (data := parsed.get(item)):
+        return
+
+    sensor_value = maybefloat(data.get("threshold-sensor-value"))
     if sensor_value is None:
-        return None
+        return
 
     # NOTE
     # sensor_type may be fru, discrete (see other check), fan, thermal, current or voltage.
     # (Also battery_life, unknown and counter, but these are currently not used.)
-    unit = parsed.get("value-units", "")
+    unit = data.get("value-units", "")
 
     # fmt: off
-    levels = (_scale(maybefloat(parsed.get('warning-high-threshold')), unit),
-              _scale(maybefloat(parsed.get('critical-high-threshold')), unit),
-              _scale(maybefloat(parsed.get('warning-low-threshold')), unit),
-              _scale(maybefloat(parsed.get('critical-low-threshold')), unit))
+    levels = (_scale(maybefloat(data.get('warning-high-threshold')), unit),
+              _scale(maybefloat(data.get('critical-high-threshold')), unit),
+              _scale(maybefloat(data.get('warning-low-threshold')), unit),
+              _scale(maybefloat(data.get('critical-low-threshold')), unit))
     # fmt: on
 
-    sensor_type = parsed["sensor-type"]
-    sensor_name = parsed["sensor-name"]
+    sensor_type = data["sensor-type"]
+    sensor_name = data["sensor-name"]
 
     if sensor_type == "thermal":
-        return check_temperature(
+        yield check_temperature(
             _scale(sensor_value, unit),
             _no_params,
             _perf_key("netapp_environment_thermal_%s" % (sensor_name,)),
@@ -121,6 +113,7 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
             dev_levels=levels[:2],
             dev_levels_lower=levels[2:],
         )
+        return
 
     if sensor_type == "fan":
         # we don't want to see decimal rpms
@@ -129,7 +122,7 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
         # We want to see the voltage and current in more detail
         human_readable_func = None
 
-    return check_levels(
+    yield check_levels(
         _scale(sensor_value, unit),
         sensor_type,  # coincidentally the same as ours. (current, voltage, fan)
         levels,

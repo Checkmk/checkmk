@@ -11,7 +11,7 @@
 # cdefs1v  running
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -27,8 +27,9 @@ def parse_netapp_api_vs_status(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_netapp_api_vs_status(item, _no_params, data):
+def check_netapp_api_vs_status(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     server_state = data.get("state")
     if not server_state:
         return

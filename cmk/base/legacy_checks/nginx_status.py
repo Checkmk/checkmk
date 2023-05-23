@@ -13,13 +13,7 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_parsed_item_data,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, discover, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -51,8 +45,9 @@ def parse_nginx_status(info):
     return data
 
 
-@get_parsed_item_data
-def check_nginx_status(item, params, data):
+def check_nginx_status(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     if params is None:
         params = {}
 

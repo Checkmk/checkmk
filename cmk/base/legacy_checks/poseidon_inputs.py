@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
@@ -37,8 +37,9 @@ def parse_poseidon_inputs(info):
     return None
 
 
-@get_parsed_item_data
-def check_poseidon_inputs(item, params, data):
+def check_poseidon_inputs(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     alarm_setup = {0: "inactive", 1: "activeOff", 2: "activeOn", 3: "unkown"}
     input_values = {0: "off", 1: "on", 3: "unkown"}
     alarm_states = {0: "normal", 1: "alarm", 3: "unkown"}

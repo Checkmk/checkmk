@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
@@ -182,9 +182,10 @@ def inventory_openbsd_sensors(parsed, sensortype):
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_openbsd_sensors(item, params, parsed):
-    return check_temperature(parsed["value"], params, "openbsd_sensors_%s" % item)
+    if not (data := parsed.get(item)):
+        return
+    yield check_temperature(data["value"], params, "openbsd_sensors_%s" % item)
 
 
 check_info["openbsd_sensors"] = LegacyCheckDefinition(
@@ -213,9 +214,10 @@ check_info["openbsd_sensors"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_openbsd_sensors_fan(item, params, parsed):
-    return check_fan(parsed["value"], params)
+    if not (data := parsed.get(item)):
+        return
+    yield check_fan(data["value"], params)
 
 
 check_info["openbsd_sensors.fan"] = LegacyCheckDefinition(
@@ -242,14 +244,15 @@ check_info["openbsd_sensors.fan"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_openbsd_sensors_voltage(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     item_elphase = {}
     parsed_elphase = {}
-    item_elphase["voltage"] = parsed["value"]
+    item_elphase["voltage"] = data["value"]
     parsed_elphase[item] = item_elphase
 
-    return check_elphase(item, params, parsed_elphase)
+    yield from check_elphase(item, params, parsed_elphase)
 
 
 check_info["openbsd_sensors.voltage"] = LegacyCheckDefinition(
@@ -271,9 +274,10 @@ check_info["openbsd_sensors.voltage"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_openbsd_sensors_powersupply(item, _no_params, parsed):
-    yield parsed["state"], "Status: %s" % parsed["value"]
+    if not (data := parsed.get(item)):
+        return
+    yield data["state"], "Status: %s" % data["value"]
 
 
 check_info["openbsd_sensors.powersupply"] = LegacyCheckDefinition(
@@ -294,9 +298,10 @@ check_info["openbsd_sensors.powersupply"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_openbsd_sensors_indicator(item, params, parsed):
-    yield parsed["state"], "Status: %s" % parsed["value"]
+    if not (data := parsed.get(item)):
+        return
+    yield data["state"], "Status: %s" % data["value"]
 
 
 check_info["openbsd_sensors.indicator"] = LegacyCheckDefinition(
@@ -317,9 +322,10 @@ check_info["openbsd_sensors.indicator"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_openbsd_sensors_drive(item, params, parsed):
-    return parsed["state"], "Status: %s" % parsed["value"]
+    if not (data := parsed.get(item)):
+        return
+    yield data["state"], "Status: %s" % data["value"]
 
 
 check_info["openbsd_sensors.drive"] = LegacyCheckDefinition(

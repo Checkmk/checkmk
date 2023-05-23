@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
@@ -50,15 +50,14 @@ def parse_mbg_lantime_ng_fan(info):
     return parsed
 
 
-@get_parsed_item_data
 def check_mbg_lantime_ng_fan(item, _no_params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
-    fan_status = parsed["status"]
+    fan_status = data["status"]
     yield fan_status["state"], "Status: %s" % fan_status["name"]
 
-    fan_error = parsed["error"]
+    fan_error = data["error"]
     yield fan_error["state"], "Errors: %s" % fan_error["name"]
 
 

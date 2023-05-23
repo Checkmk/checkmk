@@ -6,7 +6,7 @@
 
 from collections.abc import Callable, Sequence
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
@@ -130,8 +130,9 @@ def inventory_cisco_ip_sla(parsed):
         yield index, {}
 
 
-@get_parsed_item_data
-def check_cisco_ip_sla(_item, params, data):
+def check_cisco_ip_sla(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     for description, value, unit, type_ in data:
         if not value:
             continue

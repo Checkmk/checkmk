@@ -7,7 +7,6 @@
 from cmk.base.check_api import (
     check_levels,
     discover,
-    get_parsed_item_data,
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
@@ -15,8 +14,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
 
-@get_parsed_item_data
-def check_couchbase_buckets_fragmentation(_item, params, data):
+def check_couchbase_buckets_fragmentation(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     docs_fragmentation = data.get("couch_docs_fragmentation")
     if docs_fragmentation is not None:
         yield check_levels(

@@ -8,7 +8,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_bytes_human_readable,
-    get_parsed_item_data,
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.mem import check_memory_element
@@ -16,8 +15,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
 
-@get_parsed_item_data
-def check_couchbase_bucket_mem(_item, params, data):
+def check_couchbase_bucket_mem(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     warn, crit = params.get("levels", (None, None))
     mode = "abs_used" if isinstance(warn, int) else "perc_used"
     try:

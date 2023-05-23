@@ -9,7 +9,6 @@ import time
 from cmk.base.check_api import (
     check_levels,
     discover,
-    get_parsed_item_data,
     get_percent_human_readable,
     get_rate,
     LegacyCheckDefinition,
@@ -18,8 +17,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
 
-@get_parsed_item_data
-def check_couchbase_nodes_cache(item, params, data):
+def check_couchbase_nodes_cache(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     misses = data.get("ep_bg_fetched")
     hits = data.get("get_hits")
     if None in (misses, hits):

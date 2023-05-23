@@ -8,7 +8,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_bytes_human_readable,
-    get_parsed_item_data,
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
@@ -16,8 +15,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
 
-@get_parsed_item_data
-def check_couchbase_buckets_vbuckets(_item, params, data):
+def check_couchbase_buckets_vbuckets(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     resident_items_ratio = data.get("vb_active_resident_items_ratio")
     if resident_items_ratio is not None:
         yield check_levels(
@@ -49,8 +49,9 @@ def check_couchbase_buckets_vbuckets(_item, params, data):
         )
 
 
-@get_parsed_item_data
-def check_couchbase_buckets_vbuckets_replica(_item, params, data):
+def check_couchbase_buckets_vbuckets_replica(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     replica_num = data.get("vb_replica_num")
     if replica_num is not None:
         yield check_levels(

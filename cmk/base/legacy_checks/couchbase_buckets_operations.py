@@ -8,7 +8,7 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
@@ -23,8 +23,9 @@ def parse_couchbase_buckets_operations(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_couchbase_buckets_operations(_item, params, data):
+def check_couchbase_buckets_operations(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     ops = data.get("ops")
     if ops is not None:
         yield check_levels(

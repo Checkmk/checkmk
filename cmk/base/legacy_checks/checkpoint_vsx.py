@@ -11,7 +11,6 @@ import time
 from cmk.base.check_api import (
     check_levels,
     discover,
-    get_parsed_item_data,
     get_percent_human_readable,
     get_rate,
     LegacyCheckDefinition,
@@ -118,16 +117,15 @@ def parse_checkpoint_vsx(info):
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_checkpoint_vsx(item, _no_params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
     for key, infotext in [
         ("vs_type", "Type"),
         ("vs_ip", "Main IP"),
     ]:
-        value = parsed.get(key)
+        value = data.get(key)
         if value is None:
             continue
 
@@ -164,12 +162,11 @@ check_info["checkpoint_vsx"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_checkpoint_vsx_connections(item, params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
-    conn_total = parsed.get("conn_num")
+    conn_total = data.get("conn_num")
     if conn_total is None:
         return
 
@@ -181,7 +178,7 @@ def check_checkpoint_vsx_connections(item, params, parsed):
         infoname="Used connections",
     )
 
-    conn_limit = parsed.get("conn_table_size")
+    conn_limit = data.get("conn_table_size")
     if conn_limit is None:
         return
 
@@ -217,9 +214,8 @@ check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_checkpoint_vsx_packets(item, params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
     for key, infotext in [
@@ -229,7 +225,7 @@ def check_checkpoint_vsx_packets(item, params, parsed):
         ("packets_rejected", "Total number of rejected packets"),
         ("logged", "Total number of logs sent"),
     ]:
-        value = parsed.get(key)
+        value = data.get(key)
         if value is None:
             continue
 
@@ -265,9 +261,8 @@ check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_checkpoint_vsx_traffic(item, params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
     for key in [
@@ -275,7 +270,7 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
         ("bytes_dropped"),
         ("bytes_rejected"),
     ]:
-        value = parsed.get(key)
+        value = data.get(key)
         if value is None:
             continue
 
@@ -310,12 +305,11 @@ check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_checkpoint_vsx_status(item, _no_params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
-    ha_state = parsed.get("vs_ha_status")
+    ha_state = data.get("vs_ha_status")
     if ha_state is not None:
         state = 0
         if not ha_state.lower() in ["active", "standby"]:
@@ -323,7 +317,7 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
 
         yield state, "HA Status: %s" % ha_state
 
-    sic_state = parsed.get("vs_sic_status")
+    sic_state = data.get("vs_sic_status")
     if sic_state is not None:
         state = 0
         if sic_state.lower() != "trust established":
@@ -331,11 +325,11 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
 
         yield state, "SIC Status: %s" % sic_state
 
-    policy_name = parsed.get("vs_policy")
+    policy_name = data.get("vs_policy")
     if policy_name is not None:
         yield 0, "Policy name: %s" % policy_name
 
-    policy_type = parsed.get("vs_policy_type")
+    policy_type = data.get("vs_policy_type")
     if policy_type is not None:
         state = 0
         infotext = "Policy type: %s" % policy_type

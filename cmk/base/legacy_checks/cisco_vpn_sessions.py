@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-@get_parsed_item_data
-def check_cisco_vpn_sessions(item, params, data):
+def check_cisco_vpn_sessions(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     yield check_levels(
         data["active_sessions"],
         "active_sessions",

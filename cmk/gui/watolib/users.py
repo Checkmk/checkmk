@@ -124,6 +124,12 @@ def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
     if is_new_user:
         if user_id in all_users:
             raise MKUserError("user_id", _("This username is already being used by another user."))
+        if len(bytes(user_id, encoding="utf-8")) > 255:
+            # Note: starting in version 2.2 this check can happen in the UserId type, but here
+            # UserId is just a NewType.
+            # Also note that we cannot use maxlen of the UserID ValueSpec here because we're
+            # interested in the number of bytes, while the VS looks at characters.
+            raise MKUserError("user_id", _("The username is too long."))
         vs_user_id = UserID(allow_empty=False)
         vs_user_id.validate_value(user_id, "user_id")
     else:

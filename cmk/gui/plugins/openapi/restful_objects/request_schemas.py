@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import urllib.parse
+import re
 
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
@@ -1008,7 +1009,8 @@ class UpdatePassword(BaseSchema):
 class Username(fields.String):
     default_error_messages = {
         "should_exist": "Username missing: {username!r}",
-        "should_not_exist": "Username {username!r} already exists"
+        "should_not_exist": "Username {username!r} already exists",
+        "invalid_name": "Username {username!r} is not a valid checkmk username",
     }
 
     def __init__(
@@ -1029,6 +1031,11 @@ class Username(fields.String):
 
     def _validate(self, value):
         super()._validate(value)
+
+        if not re.match(r"^[\w$][-@.\w$]*$", value) or len(bytes(value, encoding="utf-8")) > 255:
+            # Note: starting in version 2.2 this check can happen in the UserId type, but here
+            # UserId is just a NewType.
+            raise self.make_error("invalid_name", username=value)
 
         # TODO: change to names list only
         usernames = load_users()

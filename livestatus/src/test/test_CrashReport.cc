@@ -12,7 +12,7 @@
 
 #include "Comment.h"   // IWYU pragma: keep
 #include "Downtime.h"  // IWYU pragma: keep
-#include "NagiosCore.h"
+#include "NebCore.h"
 #include "TableQueryHelper.h"
 #include "gtest/gtest.h"
 #include "livestatus/CrashReport.h"
@@ -90,14 +90,14 @@ class CrashReportTableFixture : public CrashReportFixture {
     std::map<unsigned long, std::unique_ptr<Comment>> comments_;
 
 public:
-    NagiosCore core{downtimes_,
-                    comments_,
-                    paths_(),
-                    NagiosLimits{},
-                    NagiosAuthorization{},
-                    Encoding::utf8,
-                    "enterprise",
-                    {}};
+    NebCore core{downtimes_,
+                 comments_,
+                 paths_(),
+                 NagiosLimits{},
+                 NagiosAuthorization{},
+                 Encoding::utf8,
+                 "enterprise",
+                 {}};
     TableCrashReports table{&core};
     const std::string header{"component;id\n"};
 

@@ -30,7 +30,7 @@ TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
     //
     // Make sure that the MonitoringCore abstraction is not accessed during the
     // construction of Store. This is a bit fragile, but it is needed to tie the
-    // knot between NagiosCore and Store.
+    // knot between NebCore and Store.
     ASSERT_EXIT(  // NOLINT
         {
             Store{nullptr};

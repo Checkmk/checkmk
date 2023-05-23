@@ -56,8 +56,7 @@ class LogCache {
 public:
     // TODO(sp) The constructor is not allowed to call any method of the
     // MonitoringCore it gets, because there is a knot between the Store and the
-    // NagiosCore classes, so the MonitoringCore is not yet fully constructed.
-    // :-P
+    // NebCore classes, so the MonitoringCore is not yet fully constructed. :-P
 
     // Used by Store::Store(), which owns the single instance of it in
     // Store::_log_cached. It passes this instance to TableLog::TableLog() and

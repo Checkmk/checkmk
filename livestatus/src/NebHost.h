@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "MacroExpander.h"
-#include "NagiosCore.h"
+#include "NebCore.h"
 #include "TimeperiodsCache.h"
 #include "livestatus/Interface.h"
 #include "nagios.h"

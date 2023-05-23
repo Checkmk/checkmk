@@ -83,7 +83,7 @@ liblivestatusneb_a_CPPFLAGS = $(AM_CPPFLAGS)
 liblivestatusneb_a_LD_FLAGS = $(AM_LDFLAGS)
 liblivestatusneb_a_SOURCES = \
         MacroExpander.cc \
-        NagiosCore.cc \
+        NebCore.cc \
         NebHost.cc \
         NebService.cc \
         Store.cc \

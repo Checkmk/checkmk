@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "NagiosCore.h"
+#include "NebCore.h"
 
 #include <algorithm>
 #include <atomic>
@@ -47,13 +47,12 @@ extern int g_num_queued_connections;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern std::atomic_int32_t g_livestatus_active_connections;
 
-NagiosCore::NagiosCore(
-    std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
-    std::map<unsigned long, std::unique_ptr<Comment>> &comments,
-    NagiosPathConfig paths, const NagiosLimits &limits,
-    NagiosAuthorization authorization, Encoding data_encoding,
-    std::string edition,
-    std::chrono::system_clock::time_point state_file_created)
+NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
+                 std::map<unsigned long, std::unique_ptr<Comment>> &comments,
+                 NagiosPathConfig paths, const NagiosLimits &limits,
+                 NagiosAuthorization authorization, Encoding data_encoding,
+                 std::string edition,
+                 std::chrono::system_clock::time_point state_file_created)
     : _downtimes{downtimes}
     , _comments{comments}
     , _logger_livestatus(Logger::getLogger("cmk.livestatus"))
@@ -97,43 +96,43 @@ NagiosCore::NagiosCore(
     }
 }
 
-const IHost *NagiosCore::ihost(const ::host *handle) const {
+const IHost *NebCore::ihost(const ::host *handle) const {
     auto it = ihosts_by_handle_.find(handle);
     return it == ihosts_by_handle_.end() ? nullptr : it->second.get();
 }
 
-const IHostGroup *NagiosCore::ihostgroup(const ::hostgroup *handle) const {
+const IHostGroup *NebCore::ihostgroup(const ::hostgroup *handle) const {
     auto it = ihostgroups_by_handle_.find(handle);
     return it == ihostgroups_by_handle_.end() ? nullptr : it->second.get();
 }
 
-const IHost *NagiosCore::find_host(const std::string &name) {
+const IHost *NebCore::find_host(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
     const auto *handle = ::find_host(const_cast<char *>(name.c_str()));
     return handle == nullptr ? nullptr : ihost(handle);
 }
 
-const IHostGroup *NagiosCore::find_hostgroup(const std::string &name) const {
+const IHostGroup *NebCore::find_hostgroup(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
     const auto *handle = ::find_hostgroup(const_cast<char *>(name.c_str()));
     return handle == nullptr ? nullptr : ihostgroup(handle);
 }
 
-bool NagiosCore::all_of_hosts(
+bool NebCore::all_of_hosts(
     const std::function<bool(const IHost &)> &pred) const {
     return std::all_of(
         ihosts_by_handle_.cbegin(), ihosts_by_handle_.cend(),
         [pred](const auto &entry) { return pred(*entry.second); });
 }
 
-bool NagiosCore::all_of_services(
+bool NebCore::all_of_services(
     const std::function<bool(const IService &)> &pred) const {
     return std::all_of(
         iservices_by_handle_.cbegin(), iservices_by_handle_.cend(),
         [pred](const auto &entry) { return pred(*entry.second); });
 }
 
-std::unique_ptr<const IHost> NagiosCore::getHostByDesignation(
+std::unique_ptr<const IHost> NebCore::getHostByDesignation(
     const std::string &designation) {
     auto it = _hosts_by_designation.find(mk::unsafe_tolower(designation));
     return it == _hosts_by_designation.end()
@@ -141,19 +140,19 @@ std::unique_ptr<const IHost> NagiosCore::getHostByDesignation(
                : std::make_unique<NebHost>(*it->second);
 }
 
-const IService *NagiosCore::iservice(const ::service *handle) const {
+const IService *NebCore::iservice(const ::service *handle) const {
     auto it = iservices_by_handle_.find(handle);
     return it == iservices_by_handle_.end() ? nullptr : it->second.get();
 }
 
-const IServiceGroup *NagiosCore::iservicegroup(
+const IServiceGroup *NebCore::iservicegroup(
     const ::servicegroup *handle) const {
     auto it = iservicegroups_by_handle_.find(handle);
     return it == iservicegroups_by_handle_.end() ? nullptr : it->second.get();
 }
 
-const IService *NagiosCore::find_service(
-    const std::string &host_name, const std::string &service_description) {
+const IService *NebCore::find_service(const std::string &host_name,
+                                      const std::string &service_description) {
     // Older Nagios headers are not const-correct... :-P
     const auto *handle =
         ::find_service(const_cast<char *>(host_name.c_str()),
@@ -161,32 +160,32 @@ const IService *NagiosCore::find_service(
     return handle == nullptr ? nullptr : iservice(handle);
 }
 
-const IContactGroup *NagiosCore::find_contactgroup(const std::string &name) {
+const IContactGroup *NebCore::find_contactgroup(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
     auto it = icontactgroups_.find(
         ::find_contactgroup(const_cast<char *>(name.c_str())));
     return it == icontactgroups_.end() ? nullptr : it->second.get();
 }
 
-const IServiceGroup *NagiosCore::find_servicegroup(const std::string &name) {
+const IServiceGroup *NebCore::find_servicegroup(const std::string &name) {
     const auto *handle = ::find_servicegroup(const_cast<char *>(name.c_str()));
     return handle == nullptr ? nullptr : iservicegroup(handle);
 }
 
-const IContact *NagiosCore::find_contact(const std::string &name) const {
+const IContact *NebCore::find_contact(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
     auto it = icontacts_.find(::find_contact(const_cast<char *>(name.c_str())));
     return it == icontacts_.end() ? nullptr : it->second.get();
 }
 
-bool NagiosCore::all_of_contacts(
+bool NebCore::all_of_contacts(
     const std::function<bool(const IContact &)> &pred) const {
     return std::all_of(
         icontacts_.cbegin(), icontacts_.cend(),
         [&pred](const auto &entry) { return pred(*entry.second); });
 }
 
-std::unique_ptr<const User> NagiosCore::find_user(const std::string &name) {
+std::unique_ptr<const User> NebCore::find_user(const std::string &name) {
     if (const auto *ctc = find_contact(name)) {
         return std::make_unique<AuthUser>(
             *ctc, _authorization._service, _authorization._group,
@@ -195,23 +194,22 @@ std::unique_ptr<const User> NagiosCore::find_user(const std::string &name) {
     return std::make_unique<UnknownUser>();
 }
 
-std::chrono::system_clock::time_point NagiosCore::last_logfile_rotation()
-    const {
+std::chrono::system_clock::time_point NebCore::last_logfile_rotation() const {
     // TODO(sp) We should better listen to NEBCALLBACK_PROGRAM_STATUS_DATA
     // instead of this 'extern' hack...
     return std::chrono::system_clock::from_time_t(last_log_rotation);
 }
 
-std::chrono::system_clock::time_point NagiosCore::last_config_change() const {
+std::chrono::system_clock::time_point NebCore::last_config_change() const {
     // NOTE: Nagios doesn't reload, it restarts for config changes.
     return std::chrono::system_clock::from_time_t(program_start);
 }
 
-size_t NagiosCore::maxLinesPerLogFile() const {
+size_t NebCore::maxLinesPerLogFile() const {
     return _limits._max_lines_per_logfile;
 }
 
-Command NagiosCore::find_command(const std::string &name) const {
+Command NebCore::find_command(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
     if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
         return Command{._name = cmd->name, ._command_line = cmd->command_line};
@@ -219,7 +217,7 @@ Command NagiosCore::find_command(const std::string &name) const {
     return Command{._name = "", ._command_line = ""};
 }
 
-std::vector<Command> NagiosCore::commands() const {
+std::vector<Command> NebCore::commands() const {
     std::vector<Command> commands;
     for (command *cmd = command_list; cmd != nullptr; cmd = cmd->next) {
         commands.push_back(
@@ -228,7 +226,7 @@ std::vector<Command> NagiosCore::commands() const {
     return commands;
 }
 
-std::vector<std::unique_ptr<const IComment>> NagiosCore::comments_unlocked(
+std::vector<std::unique_ptr<const IComment>> NebCore::comments_unlocked(
     const IHost &hst) const {
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
@@ -240,13 +238,13 @@ std::vector<std::unique_ptr<const IComment>> NagiosCore::comments_unlocked(
     return result;
 }
 
-std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
+std::vector<std::unique_ptr<const IComment>> NebCore::comments(
     const IHost &hst) const {
     // TODO(sp): Do we need a mutex here?
     return comments_unlocked(hst);
 }
 
-std::vector<std::unique_ptr<const IComment>> NagiosCore::comments_unlocked(
+std::vector<std::unique_ptr<const IComment>> NebCore::comments_unlocked(
     const IService &svc) const {
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
@@ -258,13 +256,13 @@ std::vector<std::unique_ptr<const IComment>> NagiosCore::comments_unlocked(
     return result;
 }
 
-std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
+std::vector<std::unique_ptr<const IComment>> NebCore::comments(
     const IService &svc) const {
     // TODO(sp): Do we need a mutex here?
     return comments_unlocked(svc);
 }
 
-bool NagiosCore::all_of_comments(
+bool NebCore::all_of_comments(
     const std::function<bool(const IComment &)> &pred) const {
     // TODO(sp): Do we need a mutex here?
     return std::all_of(_comments.cbegin(), _comments.cend(),
@@ -273,7 +271,7 @@ bool NagiosCore::all_of_comments(
                        });
 }
 
-std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes_unlocked(
+std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
     const IHost &hst) const {
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
@@ -285,13 +283,13 @@ std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes_unlocked(
     return result;
 }
 
-std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
+std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes(
     const IHost &hst) const {
     // TODO(sp): Do we need a mutex here?
     return downtimes_unlocked(hst);
 }
 
-std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes_unlocked(
+std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
     const IService &svc) const {
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
@@ -303,13 +301,13 @@ std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes_unlocked(
     return result;
 }
 
-std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
+std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes(
     const IService &svc) const {
     // TODO(sp): Do we need a mutex here?
     return downtimes_unlocked(svc);
 }
 
-bool NagiosCore::all_of_downtimes(
+bool NebCore::all_of_downtimes(
     // TODO(sp): Do we need a mutex here?
     const std::function<bool(const IDowntime &)> &pred) const {
     return std::all_of(_downtimes.cbegin(), _downtimes.cend(),
@@ -318,7 +316,7 @@ bool NagiosCore::all_of_downtimes(
                        });
 }
 
-bool NagiosCore::all_of_timeperiods(
+bool NebCore::all_of_timeperiods(
     const std::function<bool(const ITimeperiod &)> &pred) const {
     // TODO(sp): Do we need a mutex here?
     for (const timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
@@ -329,21 +327,21 @@ bool NagiosCore::all_of_timeperiods(
     return true;
 }
 
-bool NagiosCore::all_of_contact_groups(
+bool NebCore::all_of_contact_groups(
     const std::function<bool(const IContactGroup &)> &pred) const {
     return std::all_of(
         icontactgroups_.cbegin(), icontactgroups_.cend(),
         [&pred](const auto &entry) { return pred(*entry.second); });
 }
 
-bool NagiosCore::all_of_host_groups(
+bool NebCore::all_of_host_groups(
     const std::function<bool(const IHostGroup &)> &pred) const {
     return std::all_of(
         ihostgroups_by_handle_.cbegin(), ihostgroups_by_handle_.cend(),
         [pred](const auto &entry) { return pred(*entry.second); });
 }
 
-bool NagiosCore::all_of_service_groups(
+bool NebCore::all_of_service_groups(
     const std::function<bool(const IServiceGroup &)> &pred) const {
     for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
         if (!pred(NebServiceGroup{*sg})) {
@@ -353,112 +351,104 @@ bool NagiosCore::all_of_service_groups(
     return true;
 }
 
-bool NagiosCore::mkeventdEnabled() {
+bool NebCore::mkeventdEnabled() {
     if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {
         return config_mkeventd == std::string("on");
     }
     return false;
 }
 
-int32_t NagiosCore::pid() const { return nagios_pid; }
+int32_t NebCore::pid() const { return nagios_pid; }
 
-std::unique_ptr<const IGlobalFlags> NagiosCore::globalFlags() const {
+std::unique_ptr<const IGlobalFlags> NebCore::globalFlags() const {
     return std::make_unique<const NebGlobalFlags>();
 }
 
-std::unique_ptr<const IPaths> NagiosCore::paths() const {
+std::unique_ptr<const IPaths> NebCore::paths() const {
     return std::make_unique<NebPaths>(_paths);
 }
 
-std::chrono::system_clock::time_point NagiosCore::programStartTime() const {
+std::chrono::system_clock::time_point NebCore::programStartTime() const {
     return std::chrono::system_clock::from_time_t(program_start);
 }
-std::chrono::system_clock::time_point NagiosCore::lastCommandCheckTime() const {
+std::chrono::system_clock::time_point NebCore::lastCommandCheckTime() const {
     return std::chrono::system_clock::from_time_t(
         nagios_compat_last_command_check());
 }
-int32_t NagiosCore::intervalLength() const { return interval_length; }
-int32_t NagiosCore::numHosts() const { return g_num_hosts; }
-int32_t NagiosCore::numServices() const { return g_num_services; }
-std::string NagiosCore::programVersion() const { return get_program_version(); }
-std::string NagiosCore::edition() const { return edition_; }
+int32_t NebCore::intervalLength() const { return interval_length; }
+int32_t NebCore::numHosts() const { return g_num_hosts; }
+int32_t NebCore::numServices() const { return g_num_services; }
+std::string NebCore::programVersion() const { return get_program_version(); }
+std::string NebCore::edition() const { return edition_; }
 
-int32_t NagiosCore::externalCommandBufferSlots() const {
+int32_t NebCore::externalCommandBufferSlots() const {
     return nagios_compat_external_command_buffer_slots();
 }
-int32_t NagiosCore::externalCommandBufferUsage() const {
+int32_t NebCore::externalCommandBufferUsage() const {
     return nagios_compat_external_command_buffer_items();
 }
-int32_t NagiosCore::externalCommandBufferMax() const {
+int32_t NebCore::externalCommandBufferMax() const {
     return nagios_compat_external_command_buffer_high();
 }
 
-int32_t NagiosCore::livestatusActiveConnectionsNum() const {
+int32_t NebCore::livestatusActiveConnectionsNum() const {
     return g_livestatus_active_connections.load();
 }
-std::string NagiosCore::livestatusVersion() const { return VERSION; }
-int32_t NagiosCore::livestatusQueuedConnectionsNum() const {
+std::string NebCore::livestatusVersion() const { return VERSION; }
+int32_t NebCore::livestatusQueuedConnectionsNum() const {
     return g_num_queued_connections;
 }
-int32_t NagiosCore::livestatusThreadsNum() const {
-    return g_livestatus_threads;
-}
-double NagiosCore::livestatusUsage() const {
-    return g_avg_livestatus_usage.get();
-}
+int32_t NebCore::livestatusThreadsNum() const { return g_livestatus_threads; }
+double NebCore::livestatusUsage() const { return g_avg_livestatus_usage.get(); }
 
-double NagiosCore::averageLatencyGeneric() const {
+double NebCore::averageLatencyGeneric() const {
     return g_average_active_latency;
 }
-double NagiosCore::averageLatencyRealTime() const { return 0.0; }
-double NagiosCore::averageLatencyFetcher() const { return 0.0; }
-double NagiosCore::averageLatencyChecker() const { return 0.0; }
+double NebCore::averageLatencyRealTime() const { return 0.0; }
+double NebCore::averageLatencyFetcher() const { return 0.0; }
+double NebCore::averageLatencyChecker() const { return 0.0; }
 
-double NagiosCore::helperUsageGeneric() const { return 0.0; }
-double NagiosCore::helperUsageRealTime() const { return 0.0; }
-double NagiosCore::helperUsageFetcher() const { return 0.0; }
-double NagiosCore::helperUsageChecker() const { return 0.0; }
+double NebCore::helperUsageGeneric() const { return 0.0; }
+double NebCore::helperUsageRealTime() const { return 0.0; }
+double NebCore::helperUsageFetcher() const { return 0.0; }
+double NebCore::helperUsageChecker() const { return 0.0; }
 
-bool NagiosCore::hasEventHandlers() const {
-    return g_any_event_handler_enabled;
-}
+bool NebCore::hasEventHandlers() const { return g_any_event_handler_enabled; }
 
-double NagiosCore::averageRunnableJobsFetcher() const { return 0.0; }
-double NagiosCore::averageRunnableJobsChecker() const { return 0.0; }
+double NebCore::averageRunnableJobsFetcher() const { return 0.0; }
+double NebCore::averageRunnableJobsChecker() const { return 0.0; }
 
-std::chrono::system_clock::time_point NagiosCore::stateFileCreatedTime() const {
+std::chrono::system_clock::time_point NebCore::stateFileCreatedTime() const {
     return state_file_created_;
 }
 
-Encoding NagiosCore::dataEncoding() { return _data_encoding; }
-size_t NagiosCore::maxResponseSize() { return _limits._max_response_size; }
-size_t NagiosCore::maxCachedMessages() { return _limits._max_cached_messages; }
+Encoding NebCore::dataEncoding() { return _data_encoding; }
+size_t NebCore::maxResponseSize() { return _limits._max_response_size; }
+size_t NebCore::maxCachedMessages() { return _limits._max_cached_messages; }
 
-Logger *NagiosCore::loggerCore() { return _logger_livestatus; }
-Logger *NagiosCore::loggerLivestatus() { return _logger_livestatus; }
-Logger *NagiosCore::loggerRRD() { return _logger_livestatus; }
+Logger *NebCore::loggerCore() { return _logger_livestatus; }
+Logger *NebCore::loggerLivestatus() { return _logger_livestatus; }
+Logger *NebCore::loggerRRD() { return _logger_livestatus; }
 
-Triggers &NagiosCore::triggers() { return _triggers; }
+Triggers &NebCore::triggers() { return _triggers; }
 
-size_t NagiosCore::numQueuedNotifications() const { return 0; }
-size_t NagiosCore::numQueuedAlerts() const { return 0; }
+size_t NebCore::numQueuedNotifications() const { return 0; }
+size_t NebCore::numQueuedAlerts() const { return 0; }
 
-size_t NagiosCore::numCachedLogMessages() {
-    return _store.numCachedLogMessages();
-}
+size_t NebCore::numCachedLogMessages() { return _store.numCachedLogMessages(); }
 
-bool NagiosCore::isPnpGraphPresent(const IHost &h) const {
+bool NebCore::isPnpGraphPresent(const IHost &h) const {
     return pnpgraph_present(paths()->rrd_multiple_directory(), h.name(),
                             dummy_service_description()) != 0;
 }
 
-bool NagiosCore::isPnpGraphPresent(const IService &s) const {
+bool NebCore::isPnpGraphPresent(const IService &s) const {
     return pnpgraph_present(paths()->rrd_multiple_directory(), s.host().name(),
                             s.description()) != 0;
 }
 
-std::vector<std::string> NagiosCore::metrics(const IHost &h,
-                                             Logger *logger) const {
+std::vector<std::string> NebCore::metrics(const IHost &h,
+                                          Logger *logger) const {
     std::vector<std::string> metrics;
     if (!h.name().empty()) {
         auto names = scan_rrd(paths()->rrd_multiple_directory() / h.name(),
@@ -470,8 +460,8 @@ std::vector<std::string> NagiosCore::metrics(const IHost &h,
     return metrics;
 }
 
-std::vector<std::string> NagiosCore::metrics(const IService &s,
-                                             Logger *logger) const {
+std::vector<std::string> NebCore::metrics(const IService &s,
+                                          Logger *logger) const {
     std::vector<std::string> metrics;
     if (s.host_name().empty() || s.description().empty()) {
         return metrics;
@@ -551,9 +541,9 @@ std::optional<std::string> findCustomAttributeValue(
     return {};
 }
 
-MetricLocation NagiosCore::metricLocation(
-    const std::string &host_name, const std::string &service_description,
-    const Metric::Name &var) const {
+MetricLocation NebCore::metricLocation(const std::string &host_name,
+                                       const std::string &service_description,
+                                       const Metric::Name &var) const {
     return MetricLocation{
         paths()->rrd_multiple_directory() / host_name /
             pnp_cleanup(service_description + "_" +
@@ -561,10 +551,10 @@ MetricLocation NagiosCore::metricLocation(
         "1"};
 }
 
-bool NagiosCore::pnp4nagiosEnabled() const {
+bool NebCore::pnp4nagiosEnabled() const {
     return true;  // TODO(sp) ???
 }
 
-bool NagiosCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
+bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     return _store.answerRequest(input, output);
 }

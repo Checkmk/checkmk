@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "NagiosCore.h"
+#include "NebCore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/RegExp.h"
 #include "livestatus/StringUtils.h"

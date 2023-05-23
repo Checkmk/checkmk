@@ -37,7 +37,7 @@
 
 #include "Comment.h"
 #include "Downtime.h"
-#include "NagiosCore.h"
+#include "NebCore.h"
 #include "TimeperiodsCache.h"
 #include "livestatus/Average.h"
 #include "livestatus/ChronoUtils.h"
@@ -148,7 +148,7 @@ static std::map<unsigned long, std::unique_ptr<Downtime>> fl_downtimes;
 static std::map<unsigned long, std::unique_ptr<Comment>> fl_comments;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-static NagiosCore *fl_core = nullptr;
+static NebCore *fl_core = nullptr;
 
 namespace {
 void update_status() {
@@ -717,10 +717,10 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
                     fl_paths.state_file_created_file, now);
                 auto is_licensed =
                     mk::is_licensed(fl_paths.licensed_state_file);
-                fl_core = new NagiosCore(fl_downtimes, fl_comments, fl_paths,
-                                         fl_limits, fl_authorization,
-                                         fl_data_encoding, fl_edition,
-                                         state_file_created);
+                fl_core =
+                    new NebCore(fl_downtimes, fl_comments, fl_paths, fl_limits,
+                                fl_authorization, fl_data_encoding, fl_edition,
+                                state_file_created);
                 size_t num_services{0};
                 fl_core->all_of_hosts([&num_services](const IHost &hst) {
                     num_services += hst.total_services();

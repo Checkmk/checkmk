@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef NagiosCore_h
-#define NagiosCore_h
+#ifndef NebCore_h
+#define NebCore_h
 
 #include "config.h"  // IWYU pragma: keep
 
@@ -63,14 +63,14 @@ struct NagiosPathConfig {
     std::filesystem::path rrdcached_socket;
 };
 
-class NagiosCore : public MonitoringCore {
+class NebCore : public MonitoringCore {
 public:
-    NagiosCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
-               std::map<unsigned long, std::unique_ptr<Comment>> &comments,
-               NagiosPathConfig paths, const NagiosLimits &limits,
-               NagiosAuthorization authorization, Encoding data_encoding,
-               std::string edition,
-               std::chrono::system_clock::time_point state_file_created);
+    NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
+            std::map<unsigned long, std::unique_ptr<Comment>> &comments,
+            NagiosPathConfig paths, const NagiosLimits &limits,
+            NagiosAuthorization authorization, Encoding data_encoding,
+            std::string edition,
+            std::chrono::system_clock::time_point state_file_created);
 
     // TODO(sp) Nuke this
     const IHost *ihost(const ::host *handle) const;
@@ -208,7 +208,7 @@ public:
                                   const Metric::Name &var) const override;
     bool pnp4nagiosEnabled() const override;
 
-    // specific for NagiosCore
+    // specific for NebCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
     std::map<unsigned long, std::unique_ptr<Downtime>> &_downtimes;
     std::map<unsigned long, std::unique_ptr<Comment>> &_comments;
@@ -240,9 +240,7 @@ private:
         icontactgroups_;
     Triggers _triggers;
 
-    void *implInternal() const override {
-        return const_cast<NagiosCore *>(this);
-    }
+    void *implInternal() const override { return const_cast<NebCore *>(this); }
 };
 
 Attributes CustomAttributes(const customvariablesmember *first,
@@ -252,4 +250,4 @@ std::optional<std::string> findCustomAttributeValue(
     const customvariablesmember *first, AttributeKind kind,
     const std::string &key);
 
-#endif  // NagiosCore_h
+#endif  // NebCore_h

@@ -188,14 +188,8 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         )
         html.close_div()
 
-        version_major_minor = re.sub(r".\d+$", "", Version.from_str(__version__).version_base)
-        if version_major_minor:
-            current_version_link = "https://checkmk.com/product/checkmk-%s" % version_major_minor
-        else:
-            current_version_link = "https://checkmk.com/product/latest-version"
-
         html.open_div(id="info_image")
-        html.open_a(href=current_version_link, target="_blank")
+        html.open_a(href="https://checkmk.com/product/latest-version", target="_blank")
         html.img(theme.url("images/monitoring-machine.png"))
         html.close_a()
         html.close_div()

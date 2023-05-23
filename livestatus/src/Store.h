@@ -45,11 +45,11 @@
 #include "livestatus/TableStateHistory.h"
 #include "livestatus/TableStatus.h"
 #include "livestatus/TableTimeperiods.h"
-class Query;
+class ICore;
 class InputBuffer;
 class Logger;
-class ICore;
 class OutputBuffer;
+class Query;
 class User;
 
 #ifdef CMC
@@ -68,16 +68,22 @@ public:
     bool answerRequest(InputBuffer *, OutputBuffer *);
     bool answerGetRequest(const std::list<std::string> &lines,
                           OutputBuffer &output, const std::string &tablename);
-    void switchStatehistTable();
-    void buildStatehistCache();
+    void switchStatehistTable(
+        std::optional<std::chrono::seconds> cache_horizon);
+    void buildStatehistCache(std::optional<std::chrono::seconds> cache_horizon);
     void flushStatehistCache();
     void tryFinishStatehistCache();
-    void addObjectHistcache(Object *object);
-    void addAlertToStatehistCache(const Object &object, int state,
-                                  const std::string &output,
-                                  const std::string &long_output);
-    void addDowntimeToStatehistCache(const Object &object, bool started);
-    void addFlappingToStatehistCache(const Object &object, bool started);
+    void addObjectHistcache(std::optional<std::chrono::seconds> cache_horizon,
+                            Object *object);
+    void addAlertToStatehistCache(
+        std::optional<std::chrono::seconds> cache_horizon, const Object &object,
+        int state, const std::string &output, const std::string &long_output);
+    void addDowntimeToStatehistCache(
+        std::optional<std::chrono::seconds> cache_horizon, const Object &object,
+        bool started);
+    void addFlappingToStatehistCache(
+        std::optional<std::chrono::seconds> cache_horizon, const Object &object,
+        bool started);
 #else
     explicit Store(ICore *mc);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
@@ -140,9 +146,7 @@ private:
 
     void addTable(Table &table);
     Table &findTable(OutputBuffer &output, const std::string &name);
-#ifdef CMC
-    std::optional<std::chrono::seconds> horizon() const;
-#else
+#ifndef CMC
     void logRequest(const std::string &line,
                     const std::list<std::string> &lines) const;
     bool answerGetRequest(const std::list<std::string> &lines,

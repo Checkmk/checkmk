@@ -31,7 +31,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_bytes_human_readable,
-    get_parsed_item_data,
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
@@ -123,16 +122,15 @@ def parse_rabbitmq_nodes(info):
     return parsed
 
 
-@get_parsed_item_data
 def check_rabbitmq_nodes(item, params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
-    node_type = parsed.get("type")
+    node_type = data.get("type")
     if node_type is not None:
         yield 0, "Type: %s" % node_type.title()
 
-    node_state = parsed.get("state")
+    node_state = data.get("state")
     if node_state is not None:
         state = 0
         if not node_state:
@@ -145,7 +143,7 @@ def check_rabbitmq_nodes(item, params, parsed):
         ("disk_free_alarm", "Disk alarm in effect"),
         ("mem_alarm", "Memory alarm in effect"),
     ]:
-        alarm_value = parsed.get(alarm_key)
+        alarm_value = data.get(alarm_key)
         if alarm_value is None:
             continue
 

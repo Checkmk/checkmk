@@ -41,7 +41,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_bytes_human_readable,
-    get_parsed_item_data,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
@@ -76,16 +75,15 @@ def parse_rabbitmq_queues(info):
     return parsed
 
 
-@get_parsed_item_data
 def check_rabbitmq_queues(item, params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
-    queue_type = parsed.get("type")
+    queue_type = data.get("type")
     if queue_type is not None:
         yield 0, "Type: %s" % queue_type.title()
 
-    queue_state = parsed.get("state")
+    queue_state = data.get("state")
     if queue_state is not None:
         state = 0
         if not queue_state:
@@ -94,7 +92,7 @@ def check_rabbitmq_queues(item, params, parsed):
             "False", "no"
         )
 
-    queue_node = parsed.get("node")
+    queue_node = data.get("node")
     if queue_node is not None:
         yield 0, "Running on node: %s" % queue_node
 
@@ -105,7 +103,7 @@ def check_rabbitmq_queues(item, params, parsed):
         ("messages_publish", "Messages published", "msg_publish_upper"),
         ("messages_publish_rate", "Rate", "msg_publish_rate"),
     ]:
-        msg_value = parsed.get(msg_key)
+        msg_value = data.get(msg_key)
         if msg_value is None:
             continue
 
@@ -125,7 +123,7 @@ def check_rabbitmq_queues(item, params, parsed):
             infoname=infotext,
         )
 
-    queue_memory = parsed.get("memory")
+    queue_memory = data.get("memory")
     if queue_memory is not None:
         yield check_levels(
             queue_memory,

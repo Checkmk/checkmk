@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -21,9 +21,10 @@ def parse_qnap_fans(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_qnap_fans(_item, params, data):
-    return check_fan(data, params)
+def check_qnap_fans(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
+    yield check_fan(data, params)
 
 
 check_info["qnap_fans"] = LegacyCheckDefinition(

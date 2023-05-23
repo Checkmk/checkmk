@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -22,8 +22,9 @@ def parse_qnap_hdd_temp(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_qqnap_hdd_temp(item, params, data):
+def check_qqnap_hdd_temp(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     yield check_temperature(reading=data, unique_name=item, params=params)
 
 

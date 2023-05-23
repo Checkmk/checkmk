@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.poe import check_poe_data, PoeValues
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import exists, OIDEnd, SNMPTree
@@ -43,9 +43,10 @@ def inventory_pse_poe(parsed):
     return [(oid_end, {}) for oid_end in parsed]
 
 
-@get_parsed_item_data
-def check_pse_poe(item, params, poe_data):
-    return check_poe_data(params, poe_data)
+def check_pse_poe(item, params, parsed):
+    if not (poe_data := parsed.get(item)):
+        return
+    yield check_poe_data(params, poe_data)
 
 
 check_info["pse_poe"] = LegacyCheckDefinition(

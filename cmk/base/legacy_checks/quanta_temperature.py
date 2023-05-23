@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.quanta import parse_quanta
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -35,12 +35,15 @@ from cmk.base.plugins.agent_based.utils.quanta import DETECT_QUANTA
 # .1.3.6.1.4.1.7244.1.2.1.3.4.1.9.26 5
 
 
-@get_parsed_item_data
-def check_quanta_temperature(item, params, entry):
-    if entry.value in (-99, None):
-        return entry.status[0], "Status: %s" % entry.status[1]
+def check_quanta_temperature(item, params, parsed):
+    if not (entry := parsed.get(item)):
+        return
 
-    return check_temperature(
+    if entry.value in (-99, None):
+        yield entry.status[0], "Status: %s" % entry.status[1]
+        return
+
+    yield check_temperature(
         entry.value,
         params,
         "quanta_temperature_%s" % entry.name,

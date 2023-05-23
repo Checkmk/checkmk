@@ -44,7 +44,7 @@
 
 import json
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -80,12 +80,11 @@ def parse_rabbitmq_vhosts(info):
     return parsed
 
 
-@get_parsed_item_data
 def check_rabbitmq_vhosts(item, params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
-    vhost_desc = parsed.get("description")
+    vhost_desc = data.get("description")
     if vhost_desc is not None:
         yield 0, "Description: %s" % vhost_desc
 
@@ -98,7 +97,7 @@ def check_rabbitmq_vhosts(item, params, parsed):
         ("message_deliver", "Delivered messages", int, "msg_deliver"),
         ("message_deliver_rate", "Rate", float, "msg_deliver_rate"),
     ]:
-        msg_value = parsed.get(msg_key)
+        msg_value = data.get(msg_key)
         if msg_value is None:
             continue
 

@@ -10,7 +10,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_item_state,
-    get_parsed_item_data,
     LegacyCheckDefinition,
     set_item_state,
 )
@@ -112,8 +111,9 @@ def _metric_levels(
     return None
 
 
-@get_parsed_item_data
-def check_prometheus_custom(item, params, data):
+def check_prometheus_custom(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     for metric_details in data["service_metrics"]:
         promql_expression = metric_details["promql_query"]
         metric_label = metric_details["label"]

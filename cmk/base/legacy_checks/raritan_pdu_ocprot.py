@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
 
@@ -61,8 +61,9 @@ def discover_raritan_pdu_ocprot(section):
     yield from ((item, raritan_pdu_ocprot_current_default_levels) for item in section)
 
 
-@get_parsed_item_data
-def check_raritan_pdu_ocprot(item, params, data):
+def check_raritan_pdu_ocprot(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     states = {
         "-1": (3, "Overcurrent protector information is unavailable"),
         "0": (2, "Overcurrent protector is open"),

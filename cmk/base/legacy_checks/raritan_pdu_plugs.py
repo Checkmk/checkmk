@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.raritan import raritan_map_state
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, any_of, SNMPTree, startswith
@@ -26,8 +26,9 @@ def inventory_raritan_pdu_plugs(parsed):
         yield key, {"discovered_state": value["state"][1]}
 
 
-@get_parsed_item_data
-def check_raritan_pdu_plugs(_no_item, params, data):
+def check_raritan_pdu_plugs(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     if data.get("outlet_name"):
         yield 0, data["outlet_name"]
 

@@ -8,7 +8,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_age_human_readable,
-    get_parsed_item_data,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
 )
@@ -75,8 +74,9 @@ from cmk.base.config import check_info
 # config_file: The path to the config file
 
 
-@get_parsed_item_data
-def check_redis_info(item, params, item_data):
+def check_redis_info(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
     server_data = item_data.get("Server")
     if server_data is None:
         return

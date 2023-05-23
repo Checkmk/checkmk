@@ -24,7 +24,7 @@ PYTHON3_PATHS=(
     automations
     base
     bi
-    checkers
+    checkengine
     ec
     fetchers
     fields

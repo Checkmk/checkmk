@@ -118,19 +118,33 @@ def parse_raw_values(string_table: StringTable) -> Section:
 def _parse_ata_lines(ata_lines: Iterable[Sequence[str]]) -> Section:
     ata_disks: MutableMapping[str, Disk] = {}
 
-    for line in ata_lines:
-        disk = ata_disks.setdefault(line[0], {})
+    for (
+        disk_path,
+        _disk_type,
+        _disk_name,
+        _ID,
+        attribute_name,
+        _flag,
+        value,
+        _worst,
+        threshold,
+        _type,
+        _updated,
+        _when_failed,
+        raw_value,
+        *_raw_value_info,
+    ) in ata_lines:
+        disk = ata_disks.setdefault(disk_path, {})
 
-        field = line[4]
-        if field == "Unknown_Attribute":
+        if attribute_name == "Unknown_Attribute":
             continue
 
-        _set_int_or_zero(disk, field, line[12])
+        _set_int_or_zero(disk, attribute_name, raw_value)
 
-        if field == "Reallocated_Event_Count":  # special case, see check function
+        if attribute_name == "Reallocated_Event_Count":  # special case, see check function
             try:
-                disk["_normalized_value_Reallocated_Event_Count"] = int(line[6])
-                disk["_normalized_threshold_Reallocated_Event_Count"] = int(line[8])
+                disk["_normalized_value_Reallocated_Event_Count"] = int(value)
+                disk["_normalized_threshold_Reallocated_Event_Count"] = int(threshold)
             except ValueError:
                 pass
 

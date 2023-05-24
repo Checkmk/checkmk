@@ -13,7 +13,7 @@ from pathlib import Path
 import requests
 import urllib3
 
-from livestatus import LocalConnection
+from livestatus import LocalConnection, SiteConfiguration, SiteId
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
@@ -39,10 +39,8 @@ from cmk.gui.userdb import htpasswd
 from cmk.gui.utils.urls import doc_reference_url, DocReference
 from cmk.gui.watolib.analyze_configuration import (
     ac_test_registry,
-    ACResult,
-    ACResultCRIT,
-    ACResultOK,
-    ACResultWARN,
+    ACResultState,
+    ACSingleResult,
     ACTest,
     ACTestCategories,
 )
@@ -80,37 +78,40 @@ class ACTestPersistentConnections(ACTest):
         # This check is only executed on the central instance of multisite setups
         return len(sitenames()) > 1
 
-    def execute(self) -> Iterator[ACResult]:
-        for site_id in sitenames():
-            site_config = get_site_config(site_id)
-            for result in self._check_site(site_id, site_config):
-                result.site_id = site_id
-                yield result
+    def execute(self) -> Iterator[ACSingleResult]:
+        yield from (self._check_site(site_id, get_site_config(site_id)) for site_id in sitenames())
 
-    def _check_site(self, site_id, site_config):
+    def _check_site(self, site_id: SiteId, site_config: SiteConfiguration) -> ACSingleResult:
         persist = site_config.get("persist", False)
 
         if persist and _site_is_using_livestatus_proxy(site_id):
-            yield ACResultWARN(
-                _(
+            return ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
                     "Persistent connections are nearly useless "
                     "with Livestatus Proxy Daemon. Better disable it."
-                )
+                ),
+                site_id=site_id,
             )
 
-        elif persist:
+        if persist:
             # TODO: At least for the local site we could calculate this.
             #       Or should we get the apache config from the remote site via automation?
-            yield ACResultWARN(
-                _(
+            return ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
                     "Either disable persistent connections or "
                     "carefully review maximum number of Apache processes and "
                     "possible livestatus connections."
-                )
+                ),
+                site_id=site_id,
             )
 
-        else:
-            yield ACResultOK(_("Is not using persistent connections."))
+        return ACSingleResult(
+            state=ACResultState.OK,
+            text=_("Is not using persistent connections."),
+            site_id=site_id,
+        )
 
 
 @ac_test_registry.register
@@ -133,26 +134,32 @@ class ACTestLiveproxyd(ACTest):
         # This check is only executed on the central instance of multisite setups
         return len(sitenames()) > 1
 
-    def execute(self) -> Iterator[ACResult]:
-        for site_id in sitenames():
-            for result in self._check_site(site_id):
-                result.site_id = site_id
-                yield result
+    def execute(self) -> Iterator[ACSingleResult]:
+        yield from (self._check_site(site_id) for site_id in sitenames())
 
-    def _check_site(self, site_id):
+    def _check_site(self, site_id: SiteId) -> ACSingleResult:
         if _site_is_using_livestatus_proxy(site_id):
-            yield ACResultOK(_("Site is using the Livestatus Proxy Daemon"))
-
-        elif not is_wato_slave_site():
-            yield ACResultWARN(
-                _(
-                    "The Livestatus Proxy is not only good for slave sites, "
-                    "enable it for your master site"
-                )
+            return ACSingleResult(
+                state=ACResultState.OK,
+                text=_("Site is using the Livestatus Proxy Daemon"),
+                site_id=site_id,
             )
 
-        else:
-            yield ACResultWARN(_("Use the Livestatus Proxy Daemon for your site"))
+        if not is_wato_slave_site():
+            return ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
+                    "The Livestatus Proxy is not only good for slave sites, "
+                    "enable it for your master site"
+                ),
+                site_id=site_id,
+            )
+
+        return ACSingleResult(
+            state=ACResultState.WARN,
+            text=_("Use the Livestatus Proxy Daemon for your site"),
+            site_id=site_id,
+        )
 
 
 @ac_test_registry.register
@@ -180,7 +187,7 @@ class ACTestLivestatusUsage(ACTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         local_connection = LocalConnection()
         site_status = local_connection.query_row(
             "GET status\n"
@@ -198,18 +205,27 @@ class ACTestLivestatusUsage(ACTest):
 
         usage_warn, usage_crit = 80, 95
         if usage_perc >= usage_crit:
-            cls: type[ACResult] = ACResultCRIT
+            state = ACResultState.CRIT
         elif usage_perc >= usage_warn:
-            cls = ACResultWARN
+            state = ACResultState.WARN
         else:
-            cls = ACResultOK
+            state = ACResultState.OK
 
-        yield cls(_("The current livestatus usage is %.2f%%") % usage_perc)
-        yield cls(_("%d of %d connections used") % (active_connections, threads))
+        yield ACSingleResult(
+            state=state,
+            text=_("The current livestatus usage is %.2f%%") % usage_perc,
+        )
+        yield ACSingleResult(
+            state=state,
+            text=_("%d of %d connections used") % (active_connections, threads),
+        )
 
         # Only available with Microcore
         if overflows_rate is not None:
-            yield cls(_("you have a connection overflow rate of %.2f/s") % overflows_rate)
+            yield ACSingleResult(
+                state=state,
+                text=_("you have a connection overflow rate of %.2f/s") % overflows_rate,
+            )
 
 
 @ac_test_registry.register
@@ -232,15 +248,18 @@ class ACTestTmpfs(ACTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         if self._tmpfs_mounted(omd_site()):
-            yield ACResultOK(_("The temporary filesystem is mounted"))
+            yield ACSingleResult(
+                state=ACResultState.OK, text=_("The temporary filesystem is mounted")
+            )
         else:
-            yield ACResultWARN(
-                _(
+            yield ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
                     "The temporary filesystem is not mounted. Your installation "
                     "may work with degraded performance."
-                )
+                ),
             )
 
     def _tmpfs_mounted(self, site_id):
@@ -281,7 +300,7 @@ class ACTestLDAPSecured(ACTest):
     def is_relevant(self) -> bool:
         return bool([c for _cid, c in userdb.active_connections() if c.type() == "ldap"])
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         for connection_id, connection in userdb.active_connections():
             if connection.type() != "ldap":
                 continue
@@ -289,12 +308,13 @@ class ACTestLDAPSecured(ACTest):
             assert isinstance(connection, ldap.LDAPUserConnector)
 
             if connection.use_ssl():
-                yield ACResultOK(_("%s: Uses SSL") % connection_id)
+                yield ACSingleResult(state=ACResultState.OK, text=_("%s: Uses SSL") % connection_id)
 
             else:
-                yield ACResultWARN(
-                    _("%s: Not using SSL. Consider enabling it in the connection settings.")
-                    % connection_id
+                yield ACSingleResult(
+                    state=ACResultState.WARN,
+                    text=_("%s: Not using SSL. Consider enabling it in the connection settings.")
+                    % connection_id,
                 )
 
 
@@ -321,14 +341,18 @@ class ACTestLivestatusSecured(ACTest):
         cfg = ConfigDomainOMD().default_globals()
         return bool(cfg["site_livestatus_tcp"])
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         cfg = ConfigDomainOMD().default_globals()
         if not cfg["site_livestatus_tcp"]:
-            yield ACResultOK(_("Livestatus network traffic is encrypted"))
+            yield ACSingleResult(
+                state=ACResultState.OK, text=_("Livestatus network traffic is encrypted")
+            )
             return
 
         if not cfg["site_livestatus_tcp"]["tls"]:
-            yield ACResultCRIT(_("Livestatus network traffic is unencrypted"))
+            yield ACSingleResult(
+                state=ACResultState.CRIT, text=_("Livestatus network traffic is unencrypted")
+            )
 
 
 @ac_test_registry.register
@@ -351,20 +375,23 @@ class ACTestNumberOfUsers(ACTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         users = userdb.load_users()
         num_users = len(users)
         user_warn_threshold = 500
 
         if num_users <= user_warn_threshold:
-            yield ACResultOK(_("You have %d users configured") % num_users)
+            yield ACSingleResult(
+                state=ACResultState.OK, text=_("You have %d users configured") % num_users
+            )
         else:
-            yield ACResultWARN(
-                _(
+            yield ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
                     "You have %d users configured. Please review the number of "
                     "users you have configured in Checkmk."
                 )
-                % num_users
+                % num_users,
             )
 
 
@@ -395,11 +422,14 @@ class ACTestHTTPSecured(ACTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         if request.is_ssl_request:
-            yield ACResultOK(_("Site is using HTTPS"))
+            yield ACSingleResult(state=ACResultState.OK, text=_("Site is using HTTPS"))
         else:
-            yield ACResultWARN(_("Site is using plain HTTP. Consider enabling HTTPS."))
+            yield ACSingleResult(
+                state=ACResultState.WARN,
+                text=_("Site is using plain HTTP. Consider enabling HTTPS."),
+            )
 
 
 @ac_test_registry.register
@@ -421,21 +451,24 @@ class ACTestOldDefaultCredentials(ACTest):
     def is_relevant(self) -> bool:
         return userdb.user_exists(UserId("omdadmin"))
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         if (
             htpasswd.HtpasswdUserConnector({}).check_credentials(
                 UserId("omdadmin"), Password("omd")
             )
             == "omdadmin"
         ):
-            yield ACResultCRIT(
-                _(
+            yield ACSingleResult(
+                state=ACResultState.CRIT,
+                text=_(
                     "Found <tt>omdadmin</tt> with default password. "
                     "It is highly recommended to change this password."
-                )
+                ),
             )
         else:
-            yield ACResultOK(_("Found <tt>omdadmin</tt> using custom password."))
+            yield ACSingleResult(
+                state=ACResultState.OK, text=_("Found <tt>omdadmin</tt> using custom password.")
+            )
 
 
 @ac_test_registry.register
@@ -458,30 +491,39 @@ class ACTestMknotifydCommunicationEncrypted(ACTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         only_encrypted = True
         config = self._get_effective_global_setting("notification_spooler_config")
 
         if (incoming := config.get("incoming", {})) and incoming.get("encryption") == "unencrypted":
             only_encrypted = False
-            yield ACResultCRIT(
-                _("Incoming connections on port %s communicate via plain text")
-                % incoming["listen_port"]
+            yield ACSingleResult(
+                state=ACResultState.CRIT,
+                text=_("Incoming connections on port %s communicate via plain text")
+                % incoming["listen_port"],
             )
 
         for outgoing in config["outgoing"]:
             socket = f"{outgoing['address']}:{outgoing['port']}"
             if outgoing["encryption"] == "upgradable":
                 only_encrypted = False
-                yield ACResultWARN(
-                    _("Encryption for %s is only used if it is enabled on the remote site") % socket
+                yield ACSingleResult(
+                    state=ACResultState.WARN,
+                    text=_("Encryption for %s is only used if it is enabled on the remote site")
+                    % socket,
                 )
             if outgoing["encryption"] == "unencrypted":
                 only_encrypted = False
-                yield ACResultCRIT(_("Plain text communication is enabled for %s") % socket)
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_("Plain text communication is enabled for %s") % socket,
+                )
 
         if only_encrypted:
-            yield ACResultOK("Encrypted communication is enabled for all configured connections")
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text="Encrypted communication is enabled for all configured connections",
+            )
 
 
 @ac_test_registry.register
@@ -508,12 +550,17 @@ class ACTestBackupConfigured(ACTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         n_configured_jobs = len(BackupConfig.load().jobs)
         if n_configured_jobs:
-            yield ACResultOK(_("You have configured %d backup jobs") % n_configured_jobs)
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("You have configured %d backup jobs") % n_configured_jobs,
+            )
         else:
-            yield ACResultWARN(_("There is no backup job configured"))
+            yield ACSingleResult(
+                state=ACResultState.WARN, text=_("There is no backup job configured")
+            )
 
 
 @ac_test_registry.register
@@ -535,12 +582,16 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         for job in BackupConfig.load().jobs.values():
             if job.is_encrypted():
-                yield ACResultOK(_('The job "%s" is encrypted') % job.title)
+                yield ACSingleResult(
+                    state=ACResultState.OK, text=_('The job "%s" is encrypted') % job.title
+                )
             else:
-                yield ACResultWARN(_('There job "%s" is not encrypted') % job.title)
+                yield ACSingleResult(
+                    state=ACResultState.WARN, text=_('There job "%s" is not encrypted') % job.title
+                )
 
 
 @ac_test_registry.register
@@ -568,10 +619,11 @@ class ACTestEscapeHTMLDisabled(ACTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         if not self._get_effective_global_setting("escape_plugin_output"):
-            yield ACResultCRIT(
-                _(
+            yield ACSingleResult(
+                state=ACResultState.CRIT,
+                text=_(
                     "Please consider configuring the host or service rulesets "
                     '<a href="%s">Escape HTML in service output</a> or '
                     '<a href="%s">Escape HTML in host output</a> instead '
@@ -581,12 +633,13 @@ class ACTestEscapeHTMLDisabled(ACTest):
                     "wato.py?mode=edit_ruleset&varname=extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
                     "wato.py?mode=edit_ruleset&varname=extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
                     "wato.py?mode=edit_configvar&varname=escape_plugin_output",
-                )
+                ),
             )
         else:
-            yield ACResultOK(
-                _('Escaping is <a href="%s">enabled globally</a>')
-                % "wato.py?mode=edit_configvar&varname=escape_plugin_output"
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_('Escaping is <a href="%s">enabled globally</a>')
+                % "wato.py?mode=edit_configvar&varname=escape_plugin_output",
             )
 
 
@@ -650,14 +703,15 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         process_limit = self._get_maximum_number_of_processes()
         average_process_size = self._get_average_process_size()
 
         estimated_memory_size = process_limit * (average_process_size * 1.2)
 
-        yield ACResultWARN(
-            _(
+        yield ACSingleResult(
+            state=ACResultState.WARN,
+            text=_(
                 "The Apache may start up to %d processes while the current "
                 "average process size is %s. With these process limits the Apache may "
                 "use up to %s RAM. Please ensure that your system is able to "
@@ -667,7 +721,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
                 process_limit,
                 cmk.utils.render.fmt_bytes(average_process_size),
                 cmk.utils.render.fmt_bytes(estimated_memory_size),
-            )
+            ),
         )
 
     def _get_average_process_size(self):
@@ -732,7 +786,7 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         total_slots = self._get_maximum_number_of_processes()
         open_slots = self._get_number_of_idle_processes()
         used_slots = total_slots - open_slots
@@ -741,17 +795,18 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
 
         usage_warn, usage_crit = 60, 90
         if usage >= usage_crit:
-            cls: type[ACResult] = ACResultCRIT
+            state = ACResultState.CRIT
         elif usage >= usage_warn:
-            cls = ACResultWARN
+            state = ACResultState.WARN
         else:
-            cls = ACResultOK
+            state = ACResultState.OK
 
-        yield cls(
-            _(
+        yield ACSingleResult(
+            state=state,
+            text=_(
                 "%d of the configured maximum of %d processes have been started. This is a usage of %0.2f %%."
             )
-            % (used_slots, total_slots, usage)
+            % (used_slots, total_slots, usage),
         )
 
 
@@ -789,7 +844,7 @@ class ACTestCheckMKHelperUsage(ACTest):
     def is_relevant(self) -> bool:
         return self._uses_microcore()
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_checker average_latency_checker\n"
@@ -800,15 +855,18 @@ class ACTestCheckMKHelperUsage(ACTest):
 
         usage_warn, usage_crit = 85, 95
         if helper_usage_checker_percent >= usage_crit:
-            cls: type[ACResult] = ACResultCRIT
+            state = ACResultState.CRIT
         elif helper_usage_checker_percent >= usage_warn:
-            cls = ACResultWARN
+            state = ACResultState.WARN
         else:
-            cls = ACResultOK
+            state = ACResultState.OK
 
-        yield cls(
-            _("The current checker usage is %.2f%%. The checkers have an average latency of %.3fs.")
-            % (helper_usage_checker_percent, average_latency_checker)
+        yield ACSingleResult(
+            state=state,
+            text=_(
+                "The current checker usage is %.2f%%. The checkers have an average latency of %.3fs."
+            )
+            % (helper_usage_checker_percent, average_latency_checker),
         )
 
 
@@ -845,7 +903,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
     def is_relevant(self) -> bool:
         return self._uses_microcore()
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_fetcher average_latency_fetcher\n"
@@ -856,18 +914,19 @@ class ACTestCheckMKFetcherUsage(ACTest):
 
         usage_warn, usage_crit = 85, 95
         if fetcher_usage_perc >= usage_crit:
-            cls: type[ACResult] = ACResultCRIT
+            state = ACResultState.CRIT
         elif fetcher_usage_perc >= usage_warn:
-            cls = ACResultWARN
+            state = ACResultState.WARN
         else:
-            cls = ACResultOK
+            state = ACResultState.OK
 
-        yield cls(
-            _(
+        yield ACSingleResult(
+            state=state,
+            text=_(
                 "The current fetcher usage is %.2f%%."
                 " The checks have an average check latency of %.3fs."
             )
-            % (fetcher_usage_perc, fetcher_latency)
+            % (fetcher_usage_perc, fetcher_latency),
         )
 
         # Only report this as warning in case the user increased the default helper configuration
@@ -877,11 +936,12 @@ class ACTestCheckMKFetcherUsage(ACTest):
             > default_values["cmc_fetcher_helpers"]
             and fetcher_usage_perc < 50
         ):
-            yield ACResultWARN(
-                _(
+            yield ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
                     "The fetcher usage is below 50%, you may decrease the number of "
                     "fetchers to reduce the memory consumption."
-                )
+                ),
             )
 
 
@@ -919,7 +979,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
     def is_relevant(self) -> bool:
         return self._uses_microcore()
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_checker average_latency_fetcher\n"
@@ -930,18 +990,19 @@ class ACTestCheckMKCheckerUsage(ACTest):
 
         usage_warn, usage_crit = 85, 95
         if checker_usage_perc >= usage_crit:
-            cls: type[ACResult] = ACResultCRIT
+            state = ACResultState.CRIT
         elif checker_usage_perc >= usage_warn:
-            cls = ACResultWARN
+            state = ACResultState.WARN
         else:
-            cls = ACResultOK
+            state = ACResultState.OK
 
-        yield cls(
-            _(
+        yield ACSingleResult(
+            state=state,
+            text=_(
                 "The current checker usage is %.2f%%. "
                 "The checks have an average check latency of %.3fs."
             )
-            % (checker_usage_perc, fetcher_latency)
+            % (checker_usage_perc, fetcher_latency),
         )
 
         # Only report this as warning in case the user increased the default helper configuration
@@ -951,11 +1012,12 @@ class ACTestCheckMKCheckerUsage(ACTest):
             > default_values["cmc_checker_helpers"]
             and checker_usage_perc < 50
         ):
-            yield ACResultWARN(
-                _(
+            yield ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
                     "The checker usage is below 50%, you may decrease the number of "
                     "checkers to reduce the memory consumption."
-                )
+                ),
             )
 
 
@@ -978,11 +1040,16 @@ class ACTestAlertHandlerEventTypes(ACTest):
     def is_relevant(self) -> bool:
         return self._uses_microcore()
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         if "checkresult" in self._get_effective_global_setting("alert_handler_event_types"):
-            yield ACResultCRIT(_("Alert handler are configured to handle all check execution."))
+            yield ACSingleResult(
+                state=ACResultState.CRIT,
+                text=_("Alert handler are configured to handle all check execution."),
+            )
         else:
-            yield ACResultOK(_("Alert handlers will handle state changes."))
+            yield ACSingleResult(
+                state=ACResultState.OK, text=_("Alert handlers will handle state changes.")
+            )
 
 
 @ac_test_registry.register
@@ -1012,7 +1079,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
     def is_relevant(self) -> bool:
         return self._uses_microcore()
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_generic average_latency_generic\n"
@@ -1023,20 +1090,24 @@ class ACTestGenericCheckHelperUsage(ACTest):
 
         usage_warn, usage_crit = 85, 95
         if helper_usage_perc >= usage_crit:
-            cls: type[ACResult] = ACResultCRIT
+            state = ACResultState.CRIT
         elif helper_usage_perc >= usage_warn:
-            cls = ACResultWARN
+            state = ACResultState.WARN
         else:
-            cls = ACResultOK
-        yield cls(_("The current check helper usage is %.2f%%") % helper_usage_perc)
+            state = ACResultState.OK
+        yield ACSingleResult(
+            state=state,
+            text=_("The current check helper usage is %.2f%%") % helper_usage_perc,
+        )
 
         if check_latency_generic > 1:
-            cls = ACResultCRIT
+            state = ACResultState.CRIT
         else:
-            cls = ACResultOK
-        yield cls(
-            _("The active check services have an average check latency of %.3fs.")
-            % (check_latency_generic)
+            state = ACResultState.OK
+        yield ACSingleResult(
+            state=state,
+            text=_("The active check services have an average check latency of %.3fs.")
+            % (check_latency_generic),
         )
 
 
@@ -1071,14 +1142,17 @@ class ACTestSizeOfExtensions(ACTest):
         if not replicates_mkps:
             return
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         size = self._size_of_extensions()
         if size > 100 * 1024 * 1024:
-            cls: type[ACResult] = ACResultCRIT
+            state = ACResultState.CRIT
         else:
-            cls = ACResultOK
+            state = ACResultState.OK
 
-        yield cls(_("Your extensions have a size of %s.") % cmk.utils.render.fmt_bytes(size))
+        yield ACSingleResult(
+            state=state,
+            text=_("Your extensions have a size of %s.") % cmk.utils.render.fmt_bytes(size),
+        )
 
     def _size_of_extensions(self):
         return int(
@@ -1104,13 +1178,16 @@ class ACTestBrokenGUIExtension(ACTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         errors = cmk.gui.utils.get_failed_plugins()
         if not errors:
-            yield ACResultOK(_("No broken extensions were found."))
+            yield ACSingleResult(state=ACResultState.OK, text=_("No broken extensions were found."))
 
         for _path, gui_part, plugin_file, error in errors:
-            yield ACResultCRIT(_('Loading "%s/%s" failed: %s') % (gui_part, plugin_file, error))
+            yield ACSingleResult(
+                state=ACResultState.CRIT,
+                text=_('Loading "%s/%s" failed: %s') % (gui_part, plugin_file, error),
+            )
 
 
 @ac_test_registry.register
@@ -1140,18 +1217,19 @@ class ACTestESXDatasources(ACTest):
     def is_relevant(self) -> bool:
         return self._get_rules()
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         all_rules_ok = True
         for folder, rule_index, rule in self._get_rules():
             vsphere_queries_agent = rule.value.get("direct") in ["agent", "hostsystem_agent"]
             if vsphere_queries_agent:
                 all_rules_ok = False
-                yield ACResultCRIT(
-                    _("Rule %d in Folder %s is affected") % (rule_index + 1, folder.title())
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_("Rule %d in Folder %s is affected") % (rule_index + 1, folder.title()),
                 )
 
         if all_rules_ok:
-            yield ACResultOK(_("No configured rules are affected"))
+            yield ACSingleResult(state=ACResultState.OK, text=_("No configured rules are affected"))
 
 
 @ac_test_registry.register
@@ -1176,16 +1254,19 @@ class ACTestDeprecatedCheckPlugins(ACTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         with suppress(FileNotFoundError):
             if plugin_files := list(local_checks_dir.iterdir()):
-                yield ACResultCRIT(
-                    _("%d check plugins using the deprecated API: %s")
-                    % (len(plugin_files), ", ".join(f.name for f in plugin_files))
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_("%d check plugins using the deprecated API: %s")
+                    % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
                 )
                 return
 
-        yield ACResultOK(_("No check plugins using the deprecated API"))
+        yield ACSingleResult(
+            state=ACResultState.OK, text=_("No check plugins using the deprecated API")
+        )
 
 
 @ac_test_registry.register
@@ -1206,16 +1287,19 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
     def is_relevant(self) -> bool:
         return True
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         with suppress(FileNotFoundError):
             if plugin_files := list(local_inventory_dir.iterdir()):
-                yield ACResultCRIT(
-                    _("%d ignored HW/SW inventory plugins found: %s")
-                    % (len(plugin_files), ", ".join(f.name for f in plugin_files))
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_("%d ignored HW/SW inventory plugins found: %s")
+                    % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
                 )
                 return
 
-        yield ACResultOK(_("No ignored HW/SW inventory plugins found"))
+        yield ACSingleResult(
+            state=ACResultState.OK, text=_("No ignored HW/SW inventory plugins found")
+        )
 
 
 def _site_is_using_livestatus_proxy(site_id):
@@ -1250,16 +1334,22 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
     def is_relevant(self) -> bool:
         return bool(self._get_rules())
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         rules = self._get_rules()
         if not rules:
-            yield ACResultOK(
-                _("No ruleset <b>State in case of restricted address mismatch</b> is configured")
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_(
+                    "No ruleset <b>State in case of restricted address mismatch</b> is configured"
+                ),
             )
             return
 
         for folder_title, rule_state in rules:
-            yield ACResultCRIT(f"Rule in <b>{folder_title}</b> has value <b>{rule_state}</b>")
+            yield ACSingleResult(
+                state=ACResultState.CRIT,
+                text=f"Rule in <b>{folder_title}</b> has value <b>{rule_state}</b>",
+            )
 
     def _get_rules(self):
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
@@ -1293,23 +1383,27 @@ class ACTestCheckMKCheckerNumber(ACTest):
     def is_relevant(self) -> bool:
         return self._uses_microcore()
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         try:
             num_cpu = multiprocessing.cpu_count()
         except NotImplementedError:
-            yield ACResultOK(
-                _("Cannot test. Unable to determine the number of CPUs on target system.")
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("Cannot test. Unable to determine the number of CPUs on target system."),
             )
             return
 
         if self._get_effective_global_setting("cmc_checker_helpers") > num_cpu:
-            yield ACResultWARN(
-                _(
+            yield ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
                     "Configuring more checkers than the number of available CPUs (%d) have "
                     "a detrimental effect, since they are not IO bound."
                 )
-                % num_cpu
+                % num_cpu,
             )
             return
 
-        yield ACResultOK(_("Number of Checkmk checkers is less than number of CPUs"))
+        yield ACSingleResult(
+            state=ACResultState.OK, text=_("Number of Checkmk checkers is less than number of CPUs")
+        )

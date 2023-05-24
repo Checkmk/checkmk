@@ -5,14 +5,15 @@
 """Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved."""
 
+import dataclasses
+import enum
 import traceback
-from collections.abc import Iterator
-from typing import Any
+from collections.abc import Iterable, Iterator, Mapping
+from typing import Any, assert_never, Self
 
-from livestatus import LocalConnection
+from livestatus import LocalConnection, SiteId
 
 import cmk.utils.defines
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 
 import cmk.gui.sites
@@ -24,59 +25,65 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.sites import get_effective_global_setting
 
 
-class ACResult:
-    status: int
+class ACResultState(enum.IntEnum):
+    OK = 0
+    WARN = 1
+    CRIT = 2
 
-    def __init__(self, text: str) -> None:
-        super().__init__()
-        self.text = text
-        self.site_id = omd_site()
-
-    def from_test(self, test):
-        self.test_id = test.id()
-        self.category = test.category()
-        self.title = test.title()
-        self.help = test.help()
+    @property
+    def short_name(self) -> str:
+        return cmk.utils.defines.short_service_state_name(self.value)
 
     @classmethod
-    def merge(cls, *results):
-        """Create a new result object from the given result objects.
+    def worst(cls, states: Iterable[Self]) -> Self:
+        return max(states)
 
-        a) use the worst state
-        b) concatenate the texts
-        """
-        texts, worst_cls = [], ACResultOK
-        for result in results:
-            text = result.text
-            if result.status != 0:
-                text += " (%s)" % ("!" * result.status)
-            texts.append(text)
 
-            if result.status > worst_cls.status:
-                worst_cls = result.__class__
+@dataclasses.dataclass(frozen=True)
+class ACSingleResult:
+    state: ACResultState
+    text: str
+    site_id: SiteId = dataclasses.field(default_factory=omd_site)
 
-        return worst_cls(", ".join(texts))
+    @property
+    def state_marked_text(self) -> str:
+        match self.state:
+            case ACResultState.OK:
+                return self.text
+            case ACResultState.WARN:
+                return f"{self.text} (!)"
+            case ACResultState.CRIT:
+                return f"{self.text} (!!)"
+        assert_never(self.state)
 
-    def status_name(self) -> str:
-        if self.status is None:
-            return ""
-        return cmk.utils.defines.short_service_state_name(self.status)
+
+@dataclasses.dataclass(frozen=True)
+class ACTestResult:
+    state: ACResultState
+    text: str
+    test_id: str
+    category: str
+    title: str
+    help: str
+    site_id: SiteId = dataclasses.field(default_factory=omd_site)
 
     @classmethod
-    def from_repr(cls, repr_data: dict[str, Any]) -> "ACResult":
-        result_class_name = repr_data.pop("class_name")
-        result = globals()[result_class_name](repr_data["text"])
-
-        for key, val in repr_data.items():
-            setattr(result, key, val)
-
-        return result
+    def from_repr(cls, repr_data: Mapping[str, Any]) -> Self:
+        return cls(
+            state=ACResultState(repr_data["state"]),
+            text=repr_data["text"],
+            site_id=SiteId(repr_data["site_id"]),
+            test_id=repr_data["test_id"],
+            category=repr_data["category"],
+            title=repr_data["title"],
+            help=repr_data["help"],
+        )
 
     def __repr__(self) -> str:
         return repr(
             {
                 "site_id": self.site_id,
-                "class_name": self.__class__.__name__,
+                "state": self.state.value,
                 "text": self.text,
                 # These fields are be static - at least for the current version, but
                 # we transfer them to the central system to be able to handle test
@@ -85,20 +92,14 @@ class ACResult:
                 "category": self.category,
                 "title": self.title,
                 "help": self.help,
+                # this field is needed by 2.2 central sites to deserialize
+                "class_name": {
+                    ACResultState.OK: "ACResultOK",
+                    ACResultState.WARN: "ACResultWARN",
+                    ACResultState.CRIT: "ACResultCRIT",
+                }[self.state],
             }
         )
-
-
-class ACResultCRIT(ACResult):
-    status = 2
-
-
-class ACResultWARN(ACResult):
-    status = 1
-
-
-class ACResultOK(ACResult):
-    status = 0
 
 
 class ACTestCategories:
@@ -122,10 +123,6 @@ class ACTestCategories:
 
 
 class ACTest:
-    def __init__(self) -> None:
-        self._executed = False
-        self._results: list[ACResult] = []
-
     def id(self) -> str:
         return self.__class__.__name__
 
@@ -145,7 +142,7 @@ class ACTest:
         be shown to the user."""
         raise NotImplementedError()
 
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         """Implement the test logic here. The method needs to add one or more test
         results like this:
 
@@ -153,43 +150,48 @@ class ACTest:
         """
         raise NotImplementedError()
 
-    def run(self) -> Iterator[ACResult]:
-        self._executed = True
+    def run(self) -> Iterator[ACTestResult]:
         try:
             # Do not merge results that have been gathered on one site for different sites
             results = list(self.execute())
             num_sites = len({r.site_id for r in results})
             if num_sites > 1:
-                for result in results:
-                    result.from_test(self)
-                    yield result
+                yield from (
+                    ACTestResult(
+                        state=result.state,
+                        text=result.text,
+                        site_id=result.site_id,
+                        test_id=self.id(),
+                        category=self.category(),
+                        title=self.title(),
+                        help=self.help(),
+                    )
+                    for result in results
+                )
                 return
 
-            # Merge multiple results produced for a single site
-            total_result = ACResult.merge(*list(self.execute()))
-            total_result.from_test(self)
-            yield total_result
+            yield ACTestResult(
+                state=ACResultState.worst(r.state for r in results)
+                if results
+                else ACResultState.OK,
+                text=", ".join(r.state_marked_text for r in results),
+                test_id=self.id(),
+                category=self.category(),
+                title=self.title(),
+                help=self.help(),
+            )
         except Exception:
             logger.exception("error executing configuration test %s", self.__class__.__name__)
-            result = ACResultCRIT(
-                "<pre>%s</pre>"
+            yield ACTestResult(
+                state=ACResultState.CRIT,
+                text="<pre>%s</pre>"
                 % _("Failed to execute the test %s: %s")
-                % (escaping.escape_attribute(self.__class__.__name__), traceback.format_exc())
+                % (escaping.escape_attribute(self.__class__.__name__), traceback.format_exc()),
+                test_id=self.id(),
+                category=self.category(),
+                title=self.title(),
+                help=self.help(),
             )
-            result.from_test(self)
-            yield result
-
-    def status(self) -> int:
-        return max([0] + [(r.status or 0) for r in self.results])
-
-    def status_name(self) -> str:
-        return cmk.utils.defines.short_service_state_name(self.status())
-
-    @property
-    def results(self) -> list[ACResult]:
-        if not self._executed:
-            raise MKGeneralException(_("The test has not been executed yet"))
-        return self._results
 
     def _uses_microcore(self) -> bool:
         """Whether or not the local site is using the CMC"""
@@ -221,8 +223,8 @@ class AutomationCheckAnalyzeConfig(AutomationCommand):
     def get_request(self):
         return None
 
-    def execute(self, _unused_request: None) -> list[ACResult]:
-        results: list[ACResult] = []
+    def execute(self, _unused_request: None) -> list[ACTestResult]:
+        results: list[ACTestResult] = []
         for test_cls in ac_test_registry.values():
             test = test_cls()
 

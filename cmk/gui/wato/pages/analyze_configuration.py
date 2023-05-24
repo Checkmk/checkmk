@@ -48,11 +48,11 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeactionuri
 from cmk.gui.watolib.analyze_configuration import (
     ac_test_registry,
-    ACResult,
-    ACResultCRIT,
-    ACResultOK,
+    ACResultState,
+    ACSingleResult,
     ACTest,
     ACTestCategories,
+    ACTestResult,
     AutomationCheckAnalyzeConfig,
 )
 from cmk.gui.watolib.automations import do_remote_automation
@@ -76,7 +76,7 @@ class ACTestConnectivity(ACTest):
     # TODO: Figure out what is the right thing to do here. Note that we actually instantiate
     # ACTestConnectivity, and there is no other subclass providing this. Probably a broken class
     # hierarchy?
-    def execute(self) -> Iterator[ACResult]:
+    def execute(self) -> Iterator[ACSingleResult]:
         raise NotImplementedError()
 
 
@@ -256,14 +256,14 @@ class ModeAnalyzeConfig(WatoMode):
             if is_acknowledged:
                 css = ["state", "stale"]
             else:
-                css = ["state", "state%d" % result.status]
+                css = ["state", "state%d" % result.state.value]
 
             table.cell(site_id, css=css)
-            html.span(result.status_name(), title=result.text, class_="state_rounded_fill")
+            html.span(result.state.short_name, title=result.text, class_="state_rounded_fill")
 
             table.cell("", css=["buttons"])
 
-            if result.status != 0:
+            if result.state is not ACResultState.OK:
                 if is_acknowledged:
                     html.icon_button(
                         makeactionuri(
@@ -272,7 +272,7 @@ class ModeAnalyzeConfig(WatoMode):
                             [
                                 ("_do", "unack"),
                                 ("_site_id", result.site_id),
-                                ("_status_id", result.status),
+                                ("_status_id", result.state.value),
                                 ("_test_id", result.test_id),
                             ],
                         ),
@@ -287,7 +287,7 @@ class ModeAnalyzeConfig(WatoMode):
                             [
                                 ("_do", "ack"),
                                 ("_site_id", result.site_id),
-                                ("_status_id", result.status),
+                                ("_status_id", result.state.value),
                                 ("_test_id", result.test_id),
                             ],
                         ),
@@ -312,7 +312,7 @@ class ModeAnalyzeConfig(WatoMode):
 
                 html.open_tr()
                 html.td(escaping.escape_attribute(site_id))
-                html.td(f"{result.status_name()}: {result.text}")
+                html.td(f"{result.state.short_name}: {result.text}")
                 html.close_tr()
             html.close_table()
 
@@ -323,7 +323,7 @@ class ModeAnalyzeConfig(WatoMode):
         test_sites = self._analyze_sites()
 
         self._logger.debug("Executing tests for %d sites" % len(test_sites))
-        results_by_site: dict[SiteId, list[ACResult]] = {}
+        results_by_site: dict[SiteId, list[ACTestResult]] = {}
 
         # Results are fetched simultaneously from the remote sites
         result_queue: multiprocessing.Queue[tuple[SiteId, str]] = multiprocessing.JoinableQueue()
@@ -350,14 +350,21 @@ class ModeAnalyzeConfig(WatoMode):
                 if result["state"] == 0:
                     test_results = []
                     for result_data in result["response"]:
-                        result = ACResult.from_repr(result_data)
+                        result = ACTestResult.from_repr(result_data)
                         test_results.append(result)
 
                     # Add general connectivity result
-                    result = ACResultOK(_("No connectivity problems"))
-                    result.from_test(ACTestConnectivity())
-                    result.site_id = site_id
-                    test_results.append(result)
+                    test_results.append(
+                        ACTestResult(
+                            state=ACResultState.OK,
+                            text=_("No connectivity problems"),
+                            site_id=site_id,
+                            test_id=ACTestConnectivity().id(),
+                            category=ACTestConnectivity().category(),
+                            title=ACTestConnectivity().title(),
+                            help=ACTestConnectivity().help(),
+                        )
+                    )
 
                     results_by_site[site_id] = test_results
 
@@ -368,10 +375,17 @@ class ModeAnalyzeConfig(WatoMode):
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
-                result = ACResultCRIT("%s" % e)
-                result.from_test(ACTestConnectivity())
-                result.site_id = site_id
-                results_by_site[site_id] = [result]
+                results_by_site[site_id] = [
+                    ACTestResult(
+                        state=ACResultState.CRIT,
+                        text=str(e),
+                        site_id=site_id,
+                        test_id=ACTestConnectivity().id(),
+                        category=ACTestConnectivity().category(),
+                        title=ACTestConnectivity().title(),
+                        help=ACTestConnectivity().help(),
+                    )
+                ]
 
                 logger.exception("error analyzing configuration for site %s", site_id)
 
@@ -454,8 +468,8 @@ class ModeAnalyzeConfig(WatoMode):
             result_queue.join_thread()
             result_queue.join()
 
-    def _is_acknowledged(self, result: ACResult) -> bool:
-        return (result.test_id, result.site_id, result.status) in self._acks
+    def _is_acknowledged(self, result: ACTestResult) -> bool:
+        return (result.test_id, result.site_id, result.state.value) in self._acks
 
     def _is_test_disabled(self, test_id: str) -> bool:
         return not self._acks.get(test_id, True)
@@ -493,6 +507,6 @@ class ModeAnalyzeConfig(WatoMode):
 
 @dataclasses.dataclass(frozen=True)
 class _TestResult:
-    results_by_site: dict[SiteId, ACResult]
+    results_by_site: dict[SiteId, ACTestResult]
     title: str
     help: str

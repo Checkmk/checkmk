@@ -25,7 +25,7 @@ from cmk.gui.watolib.sites import get_effective_global_setting
 
 
 class ACResult:
-    status: int | None = None
+    status: int
 
     def __init__(self, text: str) -> None:
         super().__init__()
@@ -87,10 +87,6 @@ class ACResult:
                 "help": self.help,
             }
         )
-
-
-class ACResultNone(ACResult):
-    status = -1
 
 
 class ACResultCRIT(ACResult):

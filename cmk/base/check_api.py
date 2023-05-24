@@ -13,17 +13,8 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 |                                                                           |
 +---------------------------------------------------------------------------+
 
-"""  # pylint: disable=pointless-string-statement
+"""
 
-# NOTE: The above suppression is necessary because our testing framework blindly
-# concatenates lots of files, including this one.
-
-# We import several modules here for the checks
-
-# TODO: Move imports directly to checks?
-import collections  # noqa: F401 # pylint: disable=unused-import
-import enum  # noqa: F401 # pylint: disable=unused-import
-import re  # noqa: F401 # pylint: disable=unused-import
 import socket
 import time
 from collections.abc import Callable
@@ -40,8 +31,6 @@ from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.metrics import MetricName
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 
-from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
-
 from cmk.checkengine.checkresults import state_markers
 from cmk.checkengine.plugin_contexts import host_name as _internal_host_name
 from cmk.checkengine.plugin_contexts import service_description
@@ -54,8 +43,6 @@ from cmk.base.api.agent_based import render as _render
 from cmk.base.api.agent_based.register.utils_legacy import (  # noqa: F401 # pylint: disable=unused-import
     LegacyCheckDefinition,
 )
-from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
-from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]
@@ -97,22 +84,6 @@ def get_check_api_context() -> _config.CheckContext:
 #   +----------------------------------------------------------------------+
 #   |  Helper API for being used in checks                                 |
 #   '----------------------------------------------------------------------'
-
-
-# backwards compatibility: allow to pass integer.
-def BINARY(x: str | int) -> _OIDBytes:
-    return _OIDBytes(str(x))
-
-
-def CACHED_OID(x: str | int) -> _OIDCached:
-    return _OIDCached(str(x))
-
-
-OID_BIN = _SpecialColumn.BIN
-OID_STRING = _SpecialColumn.STRING
-OID_END = _SpecialColumn.END
-OID_END_BIN = _SpecialColumn.END_BIN
-OID_END_OCTET_STRING = _SpecialColumn.END_OCTET_STRING
 
 
 def saveint(i: Any) -> int:
@@ -203,7 +174,6 @@ get_average = _item_state.get_average
 
 SKIP = _item_state.SKIP
 RAISE = _item_state.RAISE
-ZERO = _item_state.ZERO
 
 
 def _normalize_levels(levels: Levels) -> Levels:

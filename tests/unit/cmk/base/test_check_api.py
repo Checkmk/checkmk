@@ -15,22 +15,6 @@ import cmk.base.config as config
 from cmk.base import check_api
 
 
-@pytest.mark.parametrize("value_eight", ["8", 8])
-def test_oid_spec_binary(value_eight: str | int) -> None:
-    oid_bin = check_api.BINARY(value_eight)
-    assert oid_bin.column == "8"
-    assert oid_bin.encoding == "binary"
-    assert oid_bin.save_to_cache is False
-
-
-@pytest.mark.parametrize("value_eight", ["8", 8])
-def test_oid_spec_cached(value_eight: str | int) -> None:
-    oid_cached = check_api.CACHED_OID(value_eight)
-    assert oid_cached.column == "8"
-    assert oid_cached.encoding == "string"
-    assert oid_cached.save_to_cache is True
-
-
 @pytest.mark.parametrize(
     "value, levels, representation, unit, result",
     [

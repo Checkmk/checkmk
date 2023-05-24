@@ -15,7 +15,7 @@ import multiprocessing
 import queue
 import time
 import traceback
-from collections.abc import Collection, Iterator
+from collections.abc import Collection
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -47,37 +47,12 @@ from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeactionuri
 from cmk.gui.watolib.analyze_configuration import (
-    ac_test_registry,
     ACResultState,
-    ACSingleResult,
-    ACTest,
     ACTestCategories,
     ACTestResult,
     AutomationCheckAnalyzeConfig,
 )
 from cmk.gui.watolib.automations import do_remote_automation
-
-
-@ac_test_registry.register
-class ACTestConnectivity(ACTest):
-    def category(self) -> str:
-        return ACTestCategories.connectivity
-
-    def title(self) -> str:
-        return _("Site connectivity")
-
-    def help(self) -> str:
-        return _("This check returns CRIT if the connection to the remote site failed.")
-
-    def is_relevant(self) -> bool:
-        # This test is always irrelevant :)
-        return False
-
-    # TODO: Figure out what is the right thing to do here. Note that we actually instantiate
-    # ACTestConnectivity, and there is no other subclass providing this. Probably a broken class
-    # hierarchy?
-    def execute(self) -> Iterator[ACSingleResult]:
-        raise NotImplementedError()
 
 
 @mode_registry.register
@@ -355,14 +330,10 @@ class ModeAnalyzeConfig(WatoMode):
 
                     # Add general connectivity result
                     test_results.append(
-                        ACTestResult(
+                        _connectivity_result(
                             state=ACResultState.OK,
                             text=_("No connectivity problems"),
                             site_id=site_id,
-                            test_id=ACTestConnectivity().id(),
-                            category=ACTestConnectivity().category(),
-                            title=ACTestConnectivity().title(),
-                            help=ACTestConnectivity().help(),
                         )
                     )
 
@@ -376,14 +347,10 @@ class ModeAnalyzeConfig(WatoMode):
 
             except Exception as e:
                 results_by_site[site_id] = [
-                    ACTestResult(
+                    _connectivity_result(
                         state=ACResultState.CRIT,
                         text=str(e),
                         site_id=site_id,
-                        test_id=ACTestConnectivity().id(),
-                        category=ACTestConnectivity().category(),
-                        title=ACTestConnectivity().title(),
-                        help=ACTestConnectivity().help(),
                     )
                 ]
 
@@ -510,3 +477,15 @@ class _TestResult:
     results_by_site: dict[SiteId, ACTestResult]
     title: str
     help: str
+
+
+def _connectivity_result(*, state: ACResultState, text: str, site_id: SiteId) -> ACTestResult:
+    return ACTestResult(
+        state=state,
+        text=text,
+        site_id=site_id,
+        test_id="ACTestConnectivity",
+        category=ACTestCategories.connectivity,
+        title=_("Site connectivity"),
+        help=_("This check returns CRIT if the connection to the remote site failed."),
+    )

@@ -531,12 +531,6 @@ format-c:
 test-format-c:
 	@$(call clang-format-with,-Werror --dry-run)
 
-format-cmake:
-	$(CMAKE_FORMAT) -i $(CMAKE_TXT_FILES)
-
-test-format-cmake:
-	$(CMAKE_FORMAT) --check $(CMAKE_TXT_FILES)
-
 format-python: format-python-isort format-python-black
 
 format-python-isort:

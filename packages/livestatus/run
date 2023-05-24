@@ -171,6 +171,15 @@ run_clang_format() {
         xargs --no-run-if-empty --null "clang-format-${CLANG_VERSION}" -style=file "$@"
 }
 
+run_cmake_format() {
+    # NOTE: Should we actually require the cmake-format distro package? Probably yes...
+    if command -v cmake-format >/dev/null 2>&1; then
+        # shellcheck disable=SC2068 # Yes, we want splitting for FILES.
+        find ${FILES[@]:-.} -type f -name CMakeLists.txt -not -path "./build/*" -print0 |
+            xargs --no-run-if-empty --null cmake-format "$@"
+    fi
+}
+
 run_build() {
     update_cmake_artifacts
     touch build/.run-build-stamp
@@ -247,14 +256,14 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     test ${RUN_CLEAN} = yes && run_clean
-    test ${RUN_CHECK_FORMAT} = yes && run_clang_format --dry-run -Werror
+    test ${RUN_CHECK_FORMAT} = yes && (run_clang_format --dry-run -Werror && run_cmake_format --check)
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_BUILD_UNIT_TESTS} = yes && run_build_unit_tests
     calculate_files_to_use
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests
     test ${RUN_IWYU} = yes && run_iwyu
     test ${RUN_CLANG_TIDY} = yes && run_clang_tidy
-    test ${RUN_FORMAT} = yes && run_clang_format -i
+    test ${RUN_FORMAT} = yes && (run_clang_format -i && run_cmake_format --in-place)
     test ${RUN_DOCUMENTATION} = yes && run_documentation
     true
 }

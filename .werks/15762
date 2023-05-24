@@ -1,0 +1,12 @@
+Title: tsm_scratch: Fetch tsm scratch correctly if there are no free tapes
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1686916748
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, fetching Tivoli Storage Manager (TSM) scratch crashed if there
+were no free tapes. It resulted with a service becoming UNKNOWN.

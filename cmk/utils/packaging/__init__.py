@@ -5,7 +5,7 @@
 
 import logging
 import subprocess
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -92,7 +92,7 @@ def uninstall(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     manifest: Manifest,
-    post_package_change_actions: bool = True,
+    post_package_change_actions: Callable[[Manifest | None], None],
 ) -> None:
     if err := list(_remove_files(manifest, keep_files={}, path_config=path_config)):
         raise PackageError(", ".join(err))
@@ -102,8 +102,7 @@ def uninstall(
 
     installer.remove_installed_manifest(manifest.name)
 
-    if post_package_change_actions:
-        _execute_post_package_change_actions(manifest)
+    post_package_change_actions(manifest)
 
 
 class PackageStore:
@@ -214,11 +213,12 @@ def disable(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     package_id: PackageID,
+    post_package_change_actions: Callable[[Manifest | None], None],
 ) -> None:
     if (
         installed := installer.get_installed_manifest(package_id.name)
     ) is not None and installed.version == package_id.version:
-        uninstall(installer, path_config, callbacks, installed)
+        uninstall(installer, path_config, callbacks, installed, post_package_change_actions)
     package_store.remove_enabled_mark(package_id)
 
 
@@ -304,9 +304,9 @@ def install(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
-    allow_outdated: bool = True,
-    post_package_change_actions: bool = True,
     site_version: str,
+    post_package_change_actions: Callable[[Manifest], None],
+    allow_outdated: bool = True,
 ) -> Manifest:
     try:
         return _install(
@@ -337,7 +337,7 @@ def _install(
     #  b) users cannot even modify packages without installing them
     # Reconsider!
     allow_outdated: bool,
-    post_package_change_actions: bool,
+    post_package_change_actions: Callable[[Manifest], None],
 ) -> Manifest:
     manifest = extract_manifest(mkp)
 
@@ -376,8 +376,7 @@ def _install(
     # Last but not least install package file
     installer.add_installed_manifest(manifest)
 
-    if post_package_change_actions:
-        _execute_post_package_change_actions(manifest)
+    post_package_change_actions(manifest)
 
     return manifest
 
@@ -609,6 +608,7 @@ def update_active_packages(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     site_version: str,
+    post_package_change_actions: Callable[[Manifest | None], None],
 ) -> None:
     """Update which of the enabled packages are actually active (installed)"""
     package_store = PackageStore(
@@ -620,7 +620,7 @@ def update_active_packages(
         installer,
         path_config,
         callbacks,
-        post_package_change_actions=False,
+        post_package_change_actions=lambda m: None,
         site_version=site_version,
     )
     _install_applicable_inactive_packages(
@@ -628,10 +628,10 @@ def update_active_packages(
         installer,
         path_config,
         callbacks,
-        post_package_change_actions=False,
+        post_package_change_actions=lambda m: None,
         site_version=site_version,
     )
-    _execute_post_package_change_actions(None)
+    post_package_change_actions(None)
 
 
 def _deinstall_inapplicable_active_packages(
@@ -639,8 +639,8 @@ def _deinstall_inapplicable_active_packages(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
-    post_package_change_actions: bool,
     site_version: str,
+    post_package_change_actions: Callable[[Manifest | None], None],
 ) -> None:
     for manifest in installer.get_installed_manifests():
         try:
@@ -671,8 +671,8 @@ def _install_applicable_inactive_packages(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
-    post_package_change_actions: bool,
     site_version: str,
+    post_package_change_actions: Callable[[Manifest | None], None],
 ) -> None:
     for name, manifests in _sort_enabled_packages_for_installation(package_store):
         for manifest in manifests:
@@ -720,6 +720,7 @@ def disable_outdated(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
+    post_package_change_actions: Callable[[Manifest | None], None],
 ) -> None:
     """Check installed packages and disables the outdated ones
 
@@ -736,12 +737,19 @@ def disable_outdated(
                 manifest.version,
                 exc,
             )
-            disable(installer, package_store, path_config, callbacks, manifest.id)
+            disable(
+                installer,
+                package_store,
+                path_config,
+                callbacks,
+                manifest.id,
+                post_package_change_actions,
+            )
         else:
             _logger.info("[%s %s]: Not disabling", manifest.name, manifest.version)
 
 
-def _execute_post_package_change_actions(package: Manifest | None) -> None:
+def execute_post_package_change_actions(package: Manifest | None) -> None:
     if package is None or _package_contains_gui_files(package):
         _invalidate_visuals_cache()
         _reload_apache()

@@ -11,6 +11,7 @@ from typing import Final
 from cmk.utils import paths
 from cmk.utils.packaging import (
     disable,
+    execute_post_package_change_actions,
     Installer,
     PackageID,
     PackageOperationCallbacks,
@@ -94,6 +95,7 @@ def disable_incomp_mkp(
             _PATH_CONFIG,
             _CALLBACKS,
             package_id,
+            execute_post_package_change_actions,
         )
         sys.stdout.write(f"Disabled extension package: {package_id.name} {package_id.version}\n")
         return True

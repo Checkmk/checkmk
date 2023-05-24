@@ -7,7 +7,13 @@ import sys
 from typing import Final
 
 import cmk.utils.paths
-from cmk.utils.packaging import cli, PackageOperationCallbacks, PackagePart, PathConfig
+from cmk.utils.packaging import (
+    cli,
+    execute_post_package_change_actions,
+    PackageOperationCallbacks,
+    PackagePart,
+    PathConfig,
+)
 from cmk.utils.version import __version__
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -53,5 +59,6 @@ if __name__ == "__main__":
             _PATH_CONFIG,
             _CALLBACKS,
             __version__,
+            execute_post_package_change_actions,
         )
     )

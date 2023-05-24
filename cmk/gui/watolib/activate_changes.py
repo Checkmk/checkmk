@@ -2202,6 +2202,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                     )
                 },
                 cmk_version.__version__,
+                cmk.utils.packaging.execute_post_package_change_actions,
             )
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")

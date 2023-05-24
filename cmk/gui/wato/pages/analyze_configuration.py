@@ -205,10 +205,6 @@ class ModeAnalyzeConfig(WatoMode):
             onclick="cmk.wato.toggle_container('test_result_details_%s')" % test_id,
         )
 
-        worst_result = sorted(row_data.results_by_site.values(), key=lambda result: result.status)[
-            0
-        ]
-
         # Disabling of test in total
         is_test_disabled = self._is_test_disabled(test_id)
         if is_test_disabled:
@@ -218,7 +214,7 @@ class ModeAnalyzeConfig(WatoMode):
                     transactions,
                     [
                         ("_do", "enable"),
-                        ("_test_id", worst_result.test_id),
+                        ("_test_id", test_id),
                     ],
                 ),
                 _("Reenable this test"),
@@ -231,7 +227,7 @@ class ModeAnalyzeConfig(WatoMode):
                     transactions,
                     [
                         ("_do", "disable"),
-                        ("_test_id", worst_result.test_id),
+                        ("_test_id", test_id),
                     ],
                 ),
                 _("Disable this test"),

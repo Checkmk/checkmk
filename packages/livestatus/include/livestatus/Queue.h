@@ -6,6 +6,7 @@
 #ifndef Queue_h
 #define Queue_h
 
+#include <atomic>
 #include <condition_variable>
 #include <deque>
 #include <mutex>
@@ -52,7 +53,7 @@ private:
     mutable std::mutex mutex_;
     std::condition_variable not_full_;
     std::condition_variable not_empty_;
-    bool joinable_{false};
+    std::atomic<bool> joinable_{false};
     bool done() const;
 };
 
@@ -173,10 +174,6 @@ Queue<T, Q>::pop(queue_pop_strategy pop_strategy,
 
 template <typename T, typename Q>
 void Queue<T, Q>::join() {
-    // Locking before signaling is not a POSIX recommendation
-    // but still recommended by helgrind.  So let's keep the
-    // whole function under the lock guard.
-    std::lock_guard<std::mutex> lock(mutex_);
     joinable_ = true;
     not_full_.notify_all();
     not_empty_.notify_all();
@@ -184,7 +181,6 @@ void Queue<T, Q>::join() {
 
 template <typename T, typename Q>
 bool Queue<T, Q>::joinable() const {
-    std::lock_guard<std::mutex> lock(mutex_);
     return joinable_;
 }
 

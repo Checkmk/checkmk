@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import glob
 import logging
 import subprocess
 from collections.abc import Iterable, Iterator, Mapping
@@ -16,10 +15,9 @@ from pydantic import BaseModel
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.i18n import _  # noqa: F401
+from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 
-from ..setup_search_index import request_index_rebuild
 from ._installed import Installer
 from ._mkp import (  # noqa: F401
     create_mkp,

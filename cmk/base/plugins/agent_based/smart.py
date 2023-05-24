@@ -21,7 +21,8 @@
 # /dev/sda ATA WDC_SSC-D0128SC- 170 Unknown_Attribute       0x0003   100   100   010    Pre-fail  Always       -       1769478
 # /dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
 import time
-from typing import Any, Callable, Dict, Final, Iterable, Mapping, Sequence, Tuple
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
+from typing import Any, Final, Tuple
 
 from .agent_based_api.v1 import (
     get_rate,
@@ -39,9 +40,11 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 # descriptions! But be careful: There is no standard neither for IDs nor for
 # descriptions. Only use those, which are common sense.
 
-Disk = Dict[str, int]
 
-Section = Dict[str, Disk]
+Section = Mapping[str, Mapping[str, int]]
+
+Disk = MutableMapping[str, int]
+Disks = MutableMapping[str, Disk]
 
 # The command timeouts is a counter and we experienced that on some devices, it will already be
 # increased by one count after a simple reboot. In a faulty situation it will however increase in
@@ -113,7 +116,7 @@ def parse_raw_values(string_table: StringTable) -> Section:
 
 
 def _parse_ata_lines(ata_lines: Iterable[Sequence[str]]) -> Section:
-    ata_disks: Dict[str, Disk] = {}
+    ata_disks: MutableMapping[str, Disk] = {}
 
     for line in ata_lines:
         disk = ata_disks.setdefault(line[0], {})
@@ -135,7 +138,7 @@ def _parse_ata_lines(ata_lines: Iterable[Sequence[str]]) -> Section:
 
 
 def _parse_nvme_lines(nvme_lines: Iterable[Sequence[str]]) -> Section:
-    nvme_disks: Dict[str, Disk] = {}
+    nvme_disks: MutableMapping[str, Disk] = {}
 
     for line in nvme_lines:
         if "/dev" in line[0]:

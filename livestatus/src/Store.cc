@@ -5,6 +5,181 @@
 
 #include "Store.h"
 
+#ifdef CMC
+
+#include <utility>
+
+#include "Core.h"
+#include "GlobalConfig.h"
+#include "livestatus/ChronoUtils.h"
+#include "livestatus/ICore.h"
+#include "livestatus/Logger.h"
+#include "livestatus/OutputBuffer.h"
+#include "livestatus/Query.h"
+class Object;
+
+Store::Store(ICore *mc, Core *core)
+    : _mc(mc)
+    , _core(core)
+    , _log_cache(mc)
+    , _table_cached_statehist(mc)
+    , _table_columns(mc)
+    , _table_commands(mc)
+    , _table_comments(mc)
+    , _table_contactgroups(mc)
+    , _table_contacts(mc)
+    , _table_crash_reports(mc)
+    , _table_downtimes(mc)
+    , _table_eventconsoleevents(mc)
+    , _table_eventconsolehistory(mc)
+    , _table_eventconsolereplication(mc)
+    , _table_eventconsolerules(mc)
+    , _table_eventconsolestatus(mc)
+    , _table_hostgroups(mc)
+    , _table_hosts(mc)
+    , _table_hostsbygroup(mc)
+    , _table_labels(mc)
+    , _table_log(mc, &_log_cache)
+    , _table_servicegroups(mc)
+    , _table_services(mc)
+    , _table_servicesbygroup(mc)
+    , _table_servicesbyhostgroup(mc)
+    , _table_statehistory(mc, &_log_cache)
+    , _table_status(mc)
+    , _table_timeperiods(mc)
+    , _table_dummy(mc) {
+    addTable(_table_columns);
+    addTable(_table_commands);
+    addTable(_table_comments);
+    addTable(_table_contactgroups);
+    addTable(_table_contacts);
+    addTable(_table_crash_reports);
+    addTable(_table_downtimes);
+    addTable(_table_hostgroups);
+    addTable(_table_hostsbygroup);
+    addTable(_table_hosts);
+    addTable(_table_labels);
+    addTable(_table_log);
+    addTable(_table_servicegroups);
+    addTable(_table_servicesbygroup);
+    addTable(_table_servicesbyhostgroup);
+    addTable(_table_services);
+    addTable(_table_status);
+    addTable(_table_timeperiods);
+    addTable(_table_eventconsoleevents);
+    addTable(_table_eventconsolehistory);
+    addTable(_table_eventconsolestatus);
+    addTable(_table_eventconsolereplication);
+    addTable(_table_eventconsolerules);
+
+    switchStatehistTable(core->config()->history_.cache_horizon_,
+                         core->_logger_core);
+}
+
+// Depending on wether the state history cache is enabled or not a different
+// implementation of the statehist table is being used. This can be switched
+// dynamically.
+void Store::switchStatehistTable(
+    std::optional<std::chrono::seconds> cache_horizon, Logger *logger) {
+    if (cache_horizon) {
+        addTable(_table_cached_statehist);
+        Notice(logger) << "using state history cache with a horizon of "
+                       << (mk::ticks<std::chrono::hours>(*cache_horizon) / 24)
+                       << " days";
+    } else {
+        addTable(_table_statehistory);
+        Notice(logger) << "state history cache will not be used";
+    }
+}
+
+void Store::addTable(Table &table) {
+    _tables.emplace(table.name(), &table);
+    _table_columns.addTable(table);
+}
+
+Table &Store::findTable(OutputBuffer &output, const std::string &name) {
+    // NOTE: Even with an invalid table name we continue, so we can parse
+    // headers, especially ResponseHeader.
+    if (name.empty()) {
+        output.setError(OutputBuffer::ResponseCode::invalid_request,
+                        "Invalid GET request, missing table name");
+        return _table_dummy;
+    }
+    auto it = _tables.find(name);
+    if (it == _tables.end()) {
+        output.setError(OutputBuffer::ResponseCode::not_found,
+                        "Invalid GET request, no such table '" + name + "'");
+        return _table_dummy;
+    }
+    return *it->second;
+}
+
+bool Store::answerGetRequest(const std::list<std::string> &lines,
+                             OutputBuffer &output,
+                             const std::string &tablename) {
+    return Query{lines,
+                 findTable(output, tablename),
+                 _mc->dataEncoding(),
+                 _mc->maxResponseSize(),
+                 output,
+                 logger()}
+        .process();
+}
+
+void Store::buildStatehistCache(
+    std::optional<std::chrono::seconds> cache_horizon) {
+    if (cache_horizon) {
+        _table_cached_statehist.startBuildingCache();
+    }
+}
+
+void Store::flushStatehistCache() { _table_cached_statehist.flushCache(); }
+
+void Store::tryFinishStatehistCache() {
+    _table_cached_statehist.finishBuildingCache();
+}
+
+void Store::addObjectHistcache(
+    std::optional<std::chrono::seconds> cache_horizon, Object *object) {
+    if (cache_horizon) {
+        _table_cached_statehist.getOrCreateObjectHistcache(object);
+    }
+}
+
+void Store::addAlertToStatehistCache(
+    std::optional<std::chrono::seconds> cache_horizon, const Object &object,
+    int state, const std::string &output, const std::string &long_output) {
+    if (cache_horizon) {
+        _table_cached_statehist.registerAlert(object, state, output,
+                                              long_output);
+    }
+}
+
+void Store::addDowntimeToStatehistCache(
+    std::optional<std::chrono::seconds> cache_horizon, const Object &object,
+    bool started) {
+    if (cache_horizon) {
+        _table_cached_statehist.registerDowntime(object, started);
+    }
+}
+
+void Store::addFlappingToStatehistCache(
+    std::optional<std::chrono::seconds> cache_horizon, const Object &object,
+    bool started) {
+    if (cache_horizon) {
+        _table_cached_statehist.registerFlapping(object, started);
+    }
+}
+
+Logger *Store::logger() const { return _mc->loggerLivestatus(); }
+
+size_t Store::numCachedLogMessages() {
+    return _log_cache.numCachedLogMessages();
+}
+
+#else
+
+#include <chrono>
 #include <filesystem>
 #include <memory>
 #include <sstream>
@@ -21,10 +196,6 @@
 #include "livestatus/StringUtils.h"
 #include "livestatus/mk_logwatch.h"
 #include "nagios.h"
-
-#ifndef CMC
-#include <chrono>
-#endif
 
 Store::Store(ICore *mc)
     : _mc(mc)
@@ -305,3 +476,4 @@ Logger *Store::logger() const { return _mc->loggerLivestatus(); }
 size_t Store::numCachedLogMessages() {
     return _log_cache.numCachedLogMessages();
 }
+#endif

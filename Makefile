@@ -522,15 +522,17 @@ clang-format-with = $(CLANG_FORMAT) -style=file $(1) $$(find $(FILES_TO_FORMAT_L
 
 format-c:
 	$(call clang-format-with,-i)
+	packages/livestatus/run --format
 
 test-format-c:
 	@$(call clang-format-with,-Werror --dry-run)
+	@packages/livestatus/run --check-format
 
 format-cmake:
-	$(CMAKE_FORMAT) -i $(CMAKE_TXT_FILES)
+	$(CMAKE_FORMAT) --in-place $(CMAKE_TXT_FILES)
 
 test-format-cmake:
-	$(CMAKE_FORMAT) --check $(CMAKE_TXT_FILES)
+	@$(CMAKE_FORMAT) --check $(CMAKE_TXT_FILES)
 
 format-python: format-python-isort format-python-black
 

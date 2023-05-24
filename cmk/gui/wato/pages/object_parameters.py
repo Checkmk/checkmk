@@ -29,7 +29,12 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple, ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    CREHost,
+    folder_from_request,
+    folder_preserving_link,
+)
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.watolib.rulespecs import (
     get_rulegroup,
@@ -59,7 +64,7 @@ class ModeObjectParameters(WatoMode):
 
     def _from_vars(self):
         self._hostname = HostName(request.get_ascii_input_mandatory("host"))
-        host = Folder.current().host(self._hostname)
+        host = folder_from_request().host(self._hostname)
         if host is None:
             raise MKUserError("host", _("The given host does not exist."))
         self._host: CREHost = host

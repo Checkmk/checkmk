@@ -806,7 +806,7 @@ class BaseFolder:
     @staticmethod
     def find_available_folder_name(candidate: str, parent: BaseFolder | None = None) -> str:
         if parent is None:
-            parent = Folder.current()
+            parent = folder_from_request()
 
         basename = BaseFolder._normalize_folder_name(candidate)
         c = 1
@@ -888,7 +888,7 @@ class BaseFolder:
         return id(self)
 
     def is_current_folder(self) -> bool:
-        return self.is_same_as(Folder.current())
+        return self.is_same_as(folder_from_request())
 
     def is_parent_of(self, maybe_child) -> bool:  # type: ignore[no-untyped-def]
         return maybe_child.parent() == self
@@ -1164,55 +1164,71 @@ def folder_tree() -> FolderTree:
     return g.folder_tree
 
 
+# TODO: Fix typing: -> CREFolder | SearchFolder:
+def folder_from_request() -> CREFolder:
+    """Return `Folder` that is specified by the current URL
+
+    This is either by a folder
+    path in the variable "folder" or by a host name in the variable "host". In the
+    latter case we need to load all hosts in all folders and actively search the host.
+    Another case is the host search which has the "host_search" variable set. To handle
+    the later case we call search_folder_from_request() to let it decide whether
+    this is a host search. This method has to return a folder in all cases.
+    """
+    if "wato_current_folder" in g:
+        return g.wato_current_folder
+
+    search_folder = search_folder_from_request()
+    if search_folder:
+        g.wato_current_folder = search_folder
+        return search_folder
+
+    if (var_folder := request.var("folder")) is not None:
+        try:
+            folder = folder_tree().folder(var_folder)
+        except MKGeneralException as e:
+            raise MKUserError("folder", "%s" % e)
+    else:
+        folder = folder_tree().root_folder()
+        if (
+            host_name := request.var("host")
+        ) is not None:  # find host with full scan. Expensive operation
+            host = Host.host(host_name)
+            if host:
+                folder = host.folder()
+
+    g.wato_current_folder = folder
+    return folder
+
+
+# TODO: Add the return type -> SearchFolder | None:
+def search_folder_from_request():
+    if request.has_var("host_search"):
+        base_folder = folder_tree().folder(request.get_str_input_mandatory("folder", ""))
+        search_criteria = {".name": request.var("host_search_host")}
+        search_criteria.update(
+            collect_attributes(
+                "host_search", new=False, do_validate=False, varprefix="host_search_"
+            )
+        )
+        return SearchFolder(base_folder, search_criteria)
+    return None
+
+
+def disk_folder_from_request() -> CREFolder:
+    folder = folder_from_request()
+    while not folder.is_disk_folder():
+        folder = folder.parent()
+    assert isinstance(folder, CREFolder)
+    return folder
+
+
 class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     """This class represents a Setup folder that contains other folders and hosts."""
 
     # Need this for specifying the correct type
     def parent_folder_chain(self) -> list[CREFolder]:  # pylint: disable=useless-super-delegation
         return super().parent_folder_chain()
-
-    # Find folder that is specified by the current URL. This is either by a folder
-    # path in the variable "folder" or by a host name in the variable "host". In the
-    # latter case we need to load all hosts in all folders and actively search the host.
-    # Another case is the host search which has the "host_search" variable set. To handle
-    # the later case we call .current() of SearchFolder() to let it decide whether
-    # this is a host search. This method has to return a folder in all cases.
-    @staticmethod
-    def current() -> CREFolder:
-        if "wato_current_folder" in g:
-            return g.wato_current_folder
-
-        folder = SearchFolder.current_search_folder()
-        if folder:
-            return folder
-
-        if (var_folder := request.var("folder")) is not None:
-            try:
-                folder = folder_tree().folder(var_folder)
-            except MKGeneralException as e:
-                raise MKUserError("folder", "%s" % e)
-        else:
-            folder = folder_tree().root_folder()
-            if (
-                host_name := request.var("host")
-            ) is not None:  # find host with full scan. Expensive operation
-                host = Host.host(host_name)
-                if host:
-                    folder = host.folder()
-
-        Folder.set_current(folder)
-        return folder
-
-    @staticmethod
-    def current_disk_folder() -> CREFolder:
-        folder = Folder.current()
-        while not folder.is_disk_folder():
-            folder = folder.parent()
-        return folder
-
-    @staticmethod
-    def set_current(folder):
-        g.wato_current_folder = folder
 
     def __init__(
         self,
@@ -2823,27 +2839,6 @@ def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupS
 class SearchFolder(WithPermissions, WithAttributes, BaseFolder):  # pylint: disable=abstract-method
     """A virtual folder representing the result of a search."""
 
-    @staticmethod
-    def criteria_from_html_vars():
-        crit = {".name": request.var("host_search_host")}
-        crit.update(
-            collect_attributes(
-                "host_search", new=False, do_validate=False, varprefix="host_search_"
-            )
-        )
-        return crit
-
-    # This method is allowed to return None when no search is currently performed.
-    @staticmethod
-    def current_search_folder():
-        if request.has_var("host_search"):
-            base_folder = folder_tree().folder(request.get_str_input_mandatory("folder", ""))
-            search_criteria = SearchFolder.criteria_from_html_vars()
-            folder = SearchFolder(base_folder, search_criteria)
-            Folder.set_current(folder)
-            return folder
-        return None
-
     # .--------------------------------------------------------------------.
     # | CONSTRUCTION                                                       |
     # '--------------------------------------------------------------------'
@@ -3796,7 +3791,7 @@ def _collect_hosts(folder: CREFolder) -> HostsWithAttributes:
 
 
 def folder_preserving_link(add_vars: HTTPVariables) -> str:
-    return Folder.current().url(add_vars)
+    return folder_from_request().url(add_vars)
 
 
 def make_action_link(vars_: HTTPVariables) -> str:
@@ -3825,7 +3820,7 @@ def get_folder_title(path: str) -> str:
 
 # TODO: Move to Folder()?
 def check_wato_foldername(htmlvarname: str | None, name: str, just_name: bool = False) -> None:
-    if not just_name and Folder.current().has_subfolder(name):
+    if not just_name and folder_from_request().has_subfolder(name):
         raise MKUserError(htmlvarname, _("A folder with that name already exists."))
 
     if not name:

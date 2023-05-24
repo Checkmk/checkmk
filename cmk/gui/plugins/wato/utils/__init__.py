@@ -27,7 +27,6 @@ import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.host_attributes as _host_attributes
-import cmk.gui.watolib.hosts_and_folders as _hosts_and_folders
 import cmk.gui.watolib.rulespecs as _rulespecs
 import cmk.gui.watolib.timeperiods as _timeperiods
 import cmk.gui.weblib as weblib
@@ -165,6 +164,7 @@ from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=un
     HostAttributeTopicMetaData,
     HostAttributeTopicNetworkScan,
 )
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_from_request, folder_tree
 from cmk.gui.watolib.password_store import PasswordStore, passwordstore_choices
 from cmk.gui.watolib.rulespec_groups import (  # noqa: F401 # pylint: disable=unused-import
     RulespecGroupAgentSNMP,
@@ -1554,7 +1554,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
             if attr.show_inherited_value():
                 if for_what in ["host", "cluster"]:
-                    url = _hosts_and_folders.Folder.current().edit_url()
+                    url = folder_from_request().edit_url()
 
                 container = parent  # container is of type Folder
                 while container:
@@ -2396,13 +2396,12 @@ def get_hostnames_from_checkboxes(
 ) -> Sequence[HostName]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    selected = user.get_rowselection(
-        weblib.selection_id(), "wato-folder-/" + _hosts_and_folders.Folder.current().path()
-    )
+    folder = folder_from_request()
+    selected = user.get_rowselection(weblib.selection_id(), "wato-folder-/" + folder.path())
     search_text = request.var("search")
 
     selected_host_names: list[HostName] = []
-    for host_name, host in sorted(_hosts_and_folders.Folder.current().hosts().items()):
+    for host_name, host in sorted(folder.hosts().items()):
         if (not search_text or _search_text_matches(host, search_text)) and (
             "_c_" + host_name
         ) in selected:
@@ -2412,7 +2411,7 @@ def get_hostnames_from_checkboxes(
 
 
 def _search_text_matches(
-    host: _hosts_and_folders.CREHost,
+    host: CREHost,
     search_text: str,
 ) -> bool:
     match_regex = re.compile(search_text, re.IGNORECASE)
@@ -2433,20 +2432,20 @@ def _search_text_matches(
 def get_hosts_from_checkboxes(filterfunc=None):
     """Create list of all host objects that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    folder = _hosts_and_folders.Folder.current()
+    folder = folder_from_request()
     return [folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc)]
 
 
 class FullPathFolderChoice(DropdownChoice):
     def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        kwargs["choices"] = _hosts_and_folders.folder_tree().folder_choices_fulltitle
+        kwargs["choices"] = folder_tree().folder_choices_fulltitle
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 
 
 class FolderChoice(DropdownChoice):
     def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        kwargs["choices"] = _hosts_and_folders.folder_tree().folder_choices
+        kwargs["choices"] = folder_tree().folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 

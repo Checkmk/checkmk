@@ -97,6 +97,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
     CREHost,
     Folder,
+    folder_from_request,
     folder_preserving_link,
     folder_tree,
     Host,
@@ -636,7 +637,7 @@ class ModeRulesetGroup(ABCRulesetMode):
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         if user.may("wato.hosts") or user.may("wato.seeall"):
-            current_folder = Folder.current()
+            current_folder = folder_from_request()
             yield PageMenuEntry(
                 title=_("Hosts in folder: %s") % current_folder.title(),
                 icon_name="folder",
@@ -785,7 +786,7 @@ class ModeEditRuleset(WatoMode):
         self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
 
     def _from_vars(self) -> None:  # pylint: disable=too-many-branches
-        self._folder = Folder.current()
+        self._folder = folder_from_request()
 
         self._name = request.get_ascii_input_mandatory("varname")
         self._back_mode = request.get_ascii_input_mandatory(
@@ -836,7 +837,7 @@ class ModeEditRuleset(WatoMode):
         self._hostname: HostName | None = None
         if hostname:
             self._hostname = HostName(hostname)
-            host = Folder.current().host(self._hostname)
+            host = self._folder.host(self._hostname)
             self._host = host
             if not self._host:
                 raise MKUserError("host", _("The given host does not exist."))
@@ -2754,7 +2755,7 @@ class ModeNewRule(ABCEditRuleMode):
 
         elif request.has_var("_new_host_rule"):
             # Start creating a new rule for a specific host
-            self._folder = Folder.current()
+            self._folder = folder_from_request()
 
         else:
             # Submitting the create dialog

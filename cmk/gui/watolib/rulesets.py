@@ -48,7 +48,7 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
     CREHost,
-    Folder,
+    folder_from_request,
     folder_tree,
     get_wato_redis_client,
     Host,
@@ -937,7 +937,7 @@ class Ruleset:
                 continue
 
             if not rule.matches_host_and_item(
-                Folder.current(),
+                folder_from_request(),
                 hostname,
                 svc_desc_or_item,
                 svc_desc,

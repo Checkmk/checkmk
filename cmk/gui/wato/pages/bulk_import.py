@@ -50,7 +50,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_from_request
 
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any
@@ -224,6 +224,7 @@ class ModeBulkImport(WatoMode):
         fail_messages = []
         selected = []
         imported_hosts = []
+        folder = folder_from_request()
 
         for row_num, row in enumerate(csv_reader):
             if not row:
@@ -231,7 +232,7 @@ class ModeBulkImport(WatoMode):
 
             host_name, attributes = self._get_host_info_from_row(row, row_num)
             try:
-                Folder.current().create_hosts([(host_name, attributes, None)])
+                folder.create_hosts([(host_name, attributes, None)])
                 imported_hosts.append(host_name)
                 selected.append("_c_%s" % host_name)
                 num_succeeded += 1
@@ -253,7 +254,7 @@ class ModeBulkImport(WatoMode):
                 msg += "<li>%s</li>" % fail_msg
             msg += "</ul>"
 
-        folder_path = Folder.current().path()
+        folder_path = folder.path()
         if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
             user.set_rowselection(

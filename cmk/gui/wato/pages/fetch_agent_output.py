@@ -36,7 +36,7 @@ from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
-from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import CREHost, folder_from_request, Host
 
 # .
 #   .--Agent-Output--------------------------------------------------------.
@@ -104,7 +104,7 @@ class AgentOutputPage(Page, abc.ABC):
 
         self._back_url = request.get_url_input("back_url", deflt="") or None
 
-        host = Folder.current().host(host_name)
+        host = folder_from_request().host(host_name)
         if not host:
             raise MKGeneralException(
                 _('Host is not managed by Setup. Click <a href="%s">here</a> to go back.')

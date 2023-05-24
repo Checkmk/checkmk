@@ -18,7 +18,7 @@ from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import TextInput
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_from_request
 
 
 @mode_registry.register
@@ -37,7 +37,7 @@ class ModeSearch(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._folder = Folder.current()
+        self._folder = folder_from_request()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(

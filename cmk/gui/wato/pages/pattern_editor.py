@@ -37,7 +37,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.watolib.check_mk_automations import analyse_service
 from cmk.gui.watolib.config_hostname import ConfigHostname
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link
 from cmk.gui.watolib.rulesets import rules_grouped_by_folder, SingleRulesetRecursively
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -82,7 +82,7 @@ class ModePatternEditor(WatoMode):
         self._item = request.get_str_input_mandatory("file", "")
         self._match_txt = request.get_str_input_mandatory("match", "")
 
-        self._host = Folder.current().host(self._hostname)
+        self._host = folder_from_request().host(self._hostname)
 
         if self._hostname and not self._host:
             raise MKUserError(None, _("This host does not exist."))
@@ -210,9 +210,10 @@ class ModePatternEditor(WatoMode):
         already_matched = False
         abs_rulenr = 0
         service_labels: Labels = {}
+        folder = folder_from_request()
         if self._hostname:
             service_desc = self._get_service_description(self._hostname, "logwatch", self._item)
-            host = Folder.current().host(self._hostname)
+            host = folder.host(self._hostname)
             if not host:
                 raise MKUserError("host", _("The given host does not exist"))
             service_labels = analyse_service(
@@ -220,7 +221,7 @@ class ModePatternEditor(WatoMode):
                 self._hostname,
                 service_desc,
             ).labels
-        for folder, folder_rules in rules_grouped_by_folder(ruleset.get_rules(), Folder.current()):
+        for folder, folder_rules in rules_grouped_by_folder(ruleset.get_rules(), folder):
             with table_element(
                 f"logfile_patterns_{folder.ident()}",
                 title="%s %s (%d)"
@@ -245,7 +246,7 @@ class ModePatternEditor(WatoMode):
 
                         # If hostname (and maybe filename) try match it
                         rule_matches = rule.matches_host_and_item(
-                            Folder.current(),
+                            folder_from_request(),
                             self._hostname,
                             self._item,
                             service_desc,

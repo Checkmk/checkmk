@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect,
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_from_request
 
 
 @mode_registry.register
@@ -46,15 +46,16 @@ class ModeRandomHosts(WatoMode):
         )
 
     def action(self) -> ActionResult:
+        folder = folder_from_request()
         if not transactions.check_transaction():
-            return redirect(mode_url("folder", folder=Folder.current().path()))
+            return redirect(mode_url("folder", folder=folder.path()))
 
         count = request.get_integer_input_mandatory("count")
         folders = request.get_integer_input_mandatory("folders")
         levels = request.get_integer_input_mandatory("levels")
-        created = self._create_random_hosts(Folder.current(), count, folders, levels)
+        created = self._create_random_hosts(folder, count, folders, levels)
         flash(_("Added %d random hosts.") % created)
-        return redirect(mode_url("folder", folder=Folder.current().path()))
+        return redirect(mode_url("folder", folder=folder.path()))
 
     def page(self) -> None:
         html.begin_form("random")

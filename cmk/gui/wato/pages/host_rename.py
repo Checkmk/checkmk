@@ -51,7 +51,12 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import confirm_all_local_changes
 from cmk.gui.watolib.host_rename import perform_rename_hosts
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host, validate_host_uniqueness
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    folder_from_request,
+    Host,
+    validate_host_uniqueness,
+)
 from cmk.gui.watolib.site_changes import SiteChanges
 
 
@@ -214,7 +219,7 @@ class ModeBulkRenameHost(WatoMode):
         return None
 
     def _collect_host_renamings(self, renaming_config):
-        return self._recurse_hosts_for_renaming(Folder.current(), renaming_config)
+        return self._recurse_hosts_for_renaming(folder_from_request(), renaming_config)
 
     def _recurse_hosts_for_renaming(self, folder, renaming_config):
         entries = []
@@ -425,13 +430,14 @@ class ModeRenameHost(WatoMode):
     def _from_vars(self):
         host_name = request.get_ascii_input_mandatory("host")
 
-        if not Folder.current().has_host(host_name):
+        folder = folder_from_request()
+        if not folder.has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
         if not user.may("wato.rename_hosts"):
             raise MKAuthException(_("You don't have the right to rename hosts"))
 
-        self._host = Folder.current().load_host(host_name)
+        self._host = folder.load_host(host_name)
         self._host.need_permission("write")
 
     def title(self) -> str:
@@ -495,13 +501,14 @@ class ModeRenameHost(WatoMode):
             )
 
         newname = HostName(request.get_ascii_input_mandatory("newname"))
-        self._check_new_host_name("newname", newname)
+        folder = folder_from_request()
+        self._check_new_host_name(folder, "newname", newname)
         # Creating pending entry. That makes the site dirty and that will force a sync of
         # the config to that site before the automation is being done.
         host_renaming_job = RenameHostBackgroundJob(
             self._host, title=_("Renaming of %s -> %s") % (self._host.name(), newname)
         )
-        renamings = [(Folder.current(), self._host.name(), newname)]
+        renamings = [(folder, self._host.name(), newname)]
 
         try:
             host_renaming_job.start(
@@ -512,10 +519,10 @@ class ModeRenameHost(WatoMode):
 
         return redirect(host_renaming_job.detail_url())
 
-    def _check_new_host_name(self, varname: str, host_name: HostName) -> None:
+    def _check_new_host_name(self, folder: CREFolder, varname: str, host_name: HostName) -> None:
         if not host_name:
             raise MKUserError(varname, _("Please specify a host name."))
-        if Folder.current().has_host(host_name):
+        if folder.has_host(host_name):
             raise MKUserError(varname, _("A host with this name already exists in this folder."))
         validate_host_uniqueness(varname, host_name)
         Hostname().validate_value(host_name, varname)

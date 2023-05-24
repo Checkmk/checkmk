@@ -66,7 +66,7 @@ from cmk.gui.watolib.automations import cmk_version_of_remote_automation_source
 from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import (
     CREHost,
-    Folder,
+    folder_from_request,
     folder_preserving_link,
     folder_tree,
     Host,
@@ -123,7 +123,7 @@ class ModeDiscovery(WatoMode):
         return ModeEditHost
 
     def _from_vars(self):
-        self._host = Folder.current().load_host(request.get_ascii_input_mandatory("host"))
+        self._host = folder_from_request().load_host(request.get_ascii_input_mandatory("host"))
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
@@ -1466,7 +1466,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
             raise MKUserError("site", _("You called this page with an invalid site."))
 
         self._host_name = HostName(request.get_ascii_input_mandatory("host"))
-        self._host = Folder.current().host(self._host_name)
+        self._host = folder_from_request().host(self._host_name)
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
         self._host.need_permission("read")

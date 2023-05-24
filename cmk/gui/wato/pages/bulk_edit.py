@@ -28,7 +28,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_from_request
 
 
 @mode_registry.register
@@ -62,18 +62,18 @@ class ModeBulkEdit(WatoMode):
         changed_attributes = collect_attributes("bulk", new=False)
         host_names = get_hostnames_from_checkboxes()
         for host_name in host_names:
-            host = Folder.current().load_host(host_name)
+            host = folder_from_request().load_host(host_name)
             host.update_attributes(changed_attributes)
             # call_hook_hosts_changed() is called too often.
             # Either offer API in class Host for bulk change or
             # delay saving until end somehow
 
         flash(_("Edited %d hosts") % len(host_names))
-        return redirect(Folder.current().url())
+        return redirect(folder_from_request().url())
 
     def page(self) -> None:
         host_names = get_hostnames_from_checkboxes()
-        hosts = {host_name: Folder.current().host(host_name) for host_name in host_names}
+        hosts = {host_name: folder_from_request().host(host_name) for host_name in host_names}
         current_host_hash = sha256(repr(hosts).encode()).hexdigest()
 
         # When bulk edit has been made with some hosts, then other hosts have been selected
@@ -108,7 +108,7 @@ class ModeBulkEdit(WatoMode):
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
         html.hidden_field("host_hash", current_host_hash)
-        configure_attributes(False, hosts, "bulk", parent=Folder.current())
+        configure_attributes(False, hosts, "bulk", parent=folder_from_request())
         forms.end()
         html.hidden_fields()
         html.end_form()
@@ -129,7 +129,7 @@ class ModeBulkCleanup(WatoMode):
         return ModeFolder
 
     def _from_vars(self):
-        self._folder = Folder.current()
+        self._folder = folder_from_request()
 
     def title(self) -> str:
         return _("Bulk removal of explicit attributes")

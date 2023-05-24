@@ -49,7 +49,7 @@ from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import collect_attributes
 from cmk.gui.watolib.hosts_and_folders import (
     CREHost,
-    Folder,
+    folder_from_request,
     folder_preserving_link,
     Host,
     validate_all_hosts,
@@ -91,7 +91,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         )
 
     def _page_menu_save_entries(self) -> Iterator[PageMenuEntry]:
-        if Folder.current().locked_hosts():
+        if folder_from_request().locked_hosts():
             return
 
         yield PageMenuEntry(
@@ -136,7 +136,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         # Fake a cluster host in order to get calculated tag groups via effective attributes...
         cluster_computed_datasources = cmk.utils.tags.compute_datasources(
             Host(
-                Folder.current(),
+                folder_from_request(),
                 self._host.name(),
                 collect_attributes("cluster", new=False),
                 [],
@@ -234,7 +234,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             html.close_div()
 
         lock_message = ""
-        locked_hosts = Folder.current().locked_hosts()
+        locked_hosts = folder_from_request().locked_hosts()
         if locked_hosts:
             if locked_hosts is True:
                 lock_message = _("Host attributes locked (You cannot edit this host)")
@@ -265,7 +265,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             new=self._mode != "edit",
             hosts={self._host.name(): self._host} if self._mode != "new" else {},
             for_what="host" if not self._is_cluster() else "cluster",
-            parent=Folder.current(),
+            parent=folder_from_request(),
             basic_attributes=basic_attributes,
         )
 
@@ -329,7 +329,7 @@ class ModeEditHost(ABCHostMode):
 
     def _init_host(self) -> CREHost:
         hostname = request.get_ascii_input_mandatory("host")
-        folder = Folder.current()
+        folder = folder_from_request()
         if not folder.has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
         host = folder.load_host(hostname)
@@ -361,7 +361,7 @@ class ModeEditHost(ABCHostMode):
         )
 
     def action(self) -> ActionResult:
-        folder = Folder.current()
+        folder = folder_from_request()
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
@@ -602,9 +602,10 @@ class CreateHostMode(ABCHostMode):
         clonename = request.get_ascii_input("clone")
         if not clonename:
             return self._init_new_host_object()
-        if not Folder.current().has_host(clonename):
+        folder = folder_from_request()
+        if not folder.has_host(clonename):
             raise MKUserError("host", _("You called this page with an invalid host name."))
-        host = Folder.current().load_host(clonename)
+        host = folder.load_host(clonename)
         self._verify_host_type(host)
         return host
 
@@ -618,7 +619,7 @@ class CreateHostMode(ABCHostMode):
         hostname = HostName(request.get_ascii_input_mandatory("host"))
         Hostname().validate_value(hostname, "host")
 
-        folder = Folder.current()
+        folder = folder_from_request()
         if transactions.check_transaction():
             folder.create_hosts([(hostname, attributes, cluster_nodes)])
 
@@ -683,7 +684,7 @@ class ModeCreateHost(CreateHostMode):
             host_name = HostName(host_name)
 
         return Host(
-            folder=Folder.current(),
+            folder=folder_from_request(),
             host_name=host_name,
             attributes={},
             cluster_nodes=None,
@@ -720,7 +721,7 @@ class ModeCreateCluster(CreateHostMode):
             host_name = HostName(host_name)
 
         return Host(
-            folder=Folder.current(),
+            folder=folder_from_request(),
             host_name=host_name,
             attributes={},
             cluster_nodes=[],

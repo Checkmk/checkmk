@@ -75,6 +75,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     check_wato_foldername,
     CREFolder,
     Folder,
+    folder_from_request,
     folder_preserving_link,
     folder_tree,
     Host,
@@ -108,7 +109,7 @@ class ModeFolder(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._folder = Folder.current()
+        self._folder = folder_from_request()
 
         if request.has_var("_show_host_tags"):
             user.wato_folders_show_tags = request.get_ascii_input("_show_host_tags") == "1"
@@ -470,7 +471,7 @@ class ModeFolder(WatoMode):
                     is_suggested=True,
                 )
 
-        yield make_folder_status_link(Folder.current(), view_name="allhosts")
+        yield make_folder_status_link(folder_from_request(), view_name="allhosts")
 
         if user.may("wato.rulesets") or user.may("wato.seeall"):
             yield PageMenuEntry(
@@ -481,7 +482,7 @@ class ModeFolder(WatoMode):
                         [
                             ("mode", "rule_search"),
                             ("filled_in", "rule_search"),
-                            ("folder", Folder.current().path()),
+                            ("folder", folder_from_request().path()),
                             ("search_p_ruleset_used", DropdownChoice.option_id(True)),
                             ("search_p_ruleset_used_USE", "on"),
                         ]
@@ -562,7 +563,7 @@ class ModeFolder(WatoMode):
                 target_folder = tree.folder(
                     mandatory_parameter("_move_folder_to", request.var("_move_folder_to"))
                 )
-                Folder.current().move_subfolder_to(what_folder, target_folder)
+                folder_from_request().move_subfolder_to(what_folder, target_folder)
             return redirect(folder_url)
 
         # Operations on current FOLDER
@@ -578,15 +579,17 @@ class ModeFolder(WatoMode):
         if delname is not None:
             delname = HostName(delname)
 
-        if delname and Folder.current().has_host(delname):
-            Folder.current().delete_hosts([delname], automation=delete_hosts)
+        if delname and folder_from_request().has_host(delname):
+            folder_from_request().delete_hosts([delname], automation=delete_hosts)
             return redirect(folder_url)
 
         # Move single hosts to other folders
         if (target_folder_str := request.var("_move_host_to")) is not None:
             hostname = request.var("_ident")
-            if hostname and Folder.current().has_host(hostname):
-                Folder.current().move_hosts([hostname], folder_tree().folder(target_folder_str))
+            if hostname and folder_from_request().has_host(hostname):
+                folder_from_request().move_hosts(
+                    [hostname], folder_tree().folder(target_folder_str)
+                )
                 return redirect(folder_url)
 
         # bulk operation on hosts
@@ -610,7 +613,7 @@ class ModeFolder(WatoMode):
             if target_folder_path is None:
                 raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
             target_folder = folder_tree().folder(target_folder_path)
-            Folder.current().move_hosts(selected_host_names, target_folder)
+            folder_from_request().move_hosts(selected_host_names, target_folder)
             flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
             return redirect(folder_url)
 
@@ -1256,7 +1259,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         new = self._folder.name() is None
-        is_enabled = new or not Folder.current().locked()
+        is_enabled = new or not folder_from_request().locked()
 
         # When backfolder is set, we have the special situation that we want to redirect the user
         # two breadcrumb layers up. This is a very specific case, so we realize this locally instead
@@ -1278,7 +1281,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
             # Edit icon on subfolder preview should bring user back to parent folder
             folder = folder_tree().folder(backfolder)
         else:
-            folder = Folder.current()
+            folder = folder_from_request()
 
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
@@ -1296,10 +1299,11 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def page(self) -> None:
         new = self._folder.name() is None
 
-        Folder.current().need_permission("read")
+        folder = folder_from_request()
+        folder.need_permission("read")
 
-        if new and Folder.current().locked():
-            Folder.current().show_locking_information()
+        if new and folder.locked():
+            folder.show_locking_information()
 
         html.begin_form("edit_host", method="POST")
 
@@ -1310,7 +1314,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         html.set_focus("title")
 
         # folder name (omit this for root folder)
-        if new or not Folder.current().is_root():
+        if new or not folder.is_root():
             if not active_config.wato_hide_filenames:
                 basic_attributes += [
                     (
@@ -1328,11 +1332,11 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
         # Attributes inherited to hosts
         if new:
-            parent = Folder.current()
+            parent = folder
             myself = None
         else:
-            parent = Folder.current().parent()
-            myself = Folder.current()
+            parent = folder.parent()
+            myself = folder
 
         configure_attributes(
             new=new,
@@ -1359,7 +1363,7 @@ class ModeEditFolder(ABCFolderMode):
         return ["hosts"]
 
     def _init_folder(self):
-        return Folder.current()
+        return folder_from_request()
 
     def title(self) -> str:
         return _("Folder properties")
@@ -1391,7 +1395,7 @@ class ModeCreateFolder(ABCFolderMode):
         else:
             name = BaseFolder.find_available_folder_name(title)
 
-        Folder.current().create_subfolder(name, title, attributes)
+        folder_from_request().create_subfolder(name, title, attributes)
 
 
 @page_registry.register_page("ajax_set_foldertree")

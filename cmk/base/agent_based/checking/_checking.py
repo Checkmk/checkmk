@@ -294,17 +294,23 @@ def check_host_services(
         with value_store.load_host_value_store(
             host_name, store_changes=not submitter.dry_run
         ) as value_store_manager:
-            submittables = [
-                (
-                    _AggregatedResult(
+            submittables: list[_AggregatedResult] = []
+            for service in _filter_services_to_check(
+                services=services,
+                run_plugin_names=run_plugin_names,
+                config_cache=config_cache,
+                host_name=host_name,
+            ):
+                if service.check_plugin_name not in check_plugins:
+                    submittable = _AggregatedResult(
                         service=service,
                         submit=True,
                         data_received=True,
                         result=ServiceCheckResult.check_not_implemented(),
                         cache_info=None,
                     )
-                    if service.check_plugin_name not in check_plugins
-                    else get_aggregated_result(
+                else:
+                    submittable = get_aggregated_result(
                         host_name,
                         config_cache,
                         providers,
@@ -313,14 +319,7 @@ def check_host_services(
                         value_store_manager=value_store_manager,
                         rtc_package=rtc_package,
                     )
-                )
-                for service in _filter_services_to_check(
-                    services=services,
-                    run_plugin_names=run_plugin_names,
-                    config_cache=config_cache,
-                    host_name=host_name,
-                )
-            ]
+                submittables.append(submittable)
 
     if submittables:
         submitter.submit(

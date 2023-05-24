@@ -63,7 +63,7 @@ if "%~1"=="--test"          (set arg_test=1)         & shift & goto CheckOpts
 if "%~1"=="-D"              (set arg_doc=1)          & shift & goto CheckOpts
 if "%~1"=="--documentation" (set arg_doc=1)          & shift & goto CheckOpts
 
-if "%~1"=="--sign"          (set arg_sign_file=%1) & (set arg_sign_secret=%2)   & (set arg_sign=1) & shift & shift & shift goto CheckOpts
+if "%~1"=="--sign"          (set arg_sign_file=%~2) & (set arg_sign_secret=%~3)  & (set arg_sign=1) & shift & shift & shift & goto CheckOpts
 )
 if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_msi=1)
 

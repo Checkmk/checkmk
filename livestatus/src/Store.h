@@ -8,9 +8,11 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <chrono>
 #include <cstddef>
 #include <list>
 #include <map>
+#include <optional>
 #include <string>
 
 #include "livestatus/LogCache.h"
@@ -46,9 +48,6 @@ class Query;
 class User;
 
 #ifdef CMC
-#include <chrono>
-#include <optional>
-
 #include "TableCachedStatehist.h"
 class Object;
 #else
@@ -60,9 +59,9 @@ class InputBuffer;
 
 class Store {
 public:
-#ifdef CMC
     Store(ICore *mc, std::optional<std::chrono::seconds> cache_horizon,
           Logger *logger);
+#ifdef CMC
     void switchStatehistTable(std::optional<std::chrono::seconds> cache_horizon,
                               Logger *logger);
     void buildStatehistCache(std::optional<std::chrono::seconds> cache_horizon);
@@ -80,7 +79,6 @@ public:
         std::optional<std::chrono::seconds> cache_horizon, const Object &object,
         bool started);
 #else
-    explicit Store(ICore *mc);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
 #endif
     [[nodiscard]] Logger *logger() const;

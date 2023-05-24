@@ -62,7 +62,7 @@ NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
     , _data_encoding(data_encoding)
     , edition_{std::move(edition)}
     , state_file_created_{state_file_created}
-    , _store(this) {
+    , _store(this, {}, _logger_livestatus) {
     for (::host *hst = host_list; hst != nullptr; hst = hst->next) {
         ihosts_by_handle_[hst] = std::make_unique<NebHost>(*hst);
         if (const char *address = hst->address) {

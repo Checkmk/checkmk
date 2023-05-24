@@ -8,8 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import assert_never, Final
 
-from cmk.utils.i18n import _
-
+from ._i18n import _
 from ._mkp import PackagePart
 
 

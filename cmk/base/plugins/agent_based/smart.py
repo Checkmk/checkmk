@@ -21,7 +21,7 @@
 # /dev/sda ATA WDC_SSC-D0128SC- 170 Unknown_Attribute       0x0003   100   100   010    Pre-fail  Always       -       1769478
 # /dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
 import time
-from typing import Any, Callable, Dict, Final, Mapping, Tuple
+from typing import Any, Callable, Dict, Final, Iterable, Mapping, Sequence, Tuple
 
 from .agent_based_api.v1 import (
     get_rate,
@@ -106,45 +106,57 @@ def parse_raw_values(string_table: StringTable) -> Section:
                   'Temperature_Celsius': 40}}
 
     """
-    disks: Section = {}
+    ata_lines = (line for line in string_table if len(line) >= 13)
+    nvme_lines = (line for line in string_table if 3 <= len(line) <= 6)
 
-    for line in string_table:
-        if len(line) >= 13:
-            disk = disks.setdefault(line[0], {})
+    return {**_parse_ata_lines(ata_lines), **_parse_nvme_lines(nvme_lines)}
 
-            field = line[4]
-            if field == "Unknown_Attribute":
-                continue
-            _set_int_or_zero(disk, field, line[12])
 
-            if field == "Reallocated_Event_Count":  # special case, see check function
-                try:
-                    disk["_normalized_value_Reallocated_Event_Count"] = int(line[6])
-                    disk["_normalized_threshold_Reallocated_Event_Count"] = int(line[8])
-                except ValueError:
-                    pass
+def _parse_ata_lines(ata_lines: Iterable[Sequence[str]]) -> Section:
+    ata_disks: Dict[str, Disk] = {}
 
-        # nvme
-        elif 3 <= len(line) <= 6:
-            if "/dev" in line[0]:
-                disk = disks.setdefault(line[0], {})
-                continue
+    for line in ata_lines:
+        disk = ata_disks.setdefault(line[0], {})
 
-            field, value = [e.strip() for e in " ".join(line).split(":")]
-            key = field.replace(" ", "_")
-            value = value.replace("%", "").replace(".", "").replace(",", "")
-            if field == "Temperature":
-                _set_int_or_zero(disk, key, value.split()[0])
-            elif field == "Critical Warning":
-                disk[key] = int(value, 16)
-            elif field == "Data Units Read":
-                disk[key] = int(value.split()[0]) * 512000
-            elif field == "Data Units Written":
-                disk[key] = int(value.split()[0]) * 512000
-            else:
-                _set_int_or_zero(disk, key, value)
+        field = line[4]
+        if field == "Unknown_Attribute":
+            continue
 
-    return disks
+        _set_int_or_zero(disk, field, line[12])
+
+        if field == "Reallocated_Event_Count":  # special case, see check function
+            try:
+                disk["_normalized_value_Reallocated_Event_Count"] = int(line[6])
+                disk["_normalized_threshold_Reallocated_Event_Count"] = int(line[8])
+            except ValueError:
+                pass
+
+    return ata_disks
+
+
+def _parse_nvme_lines(nvme_lines: Iterable[Sequence[str]]) -> Section:
+    nvme_disks: Dict[str, Disk] = {}
+
+    for line in nvme_lines:
+        if "/dev" in line[0]:
+            disk = nvme_disks.setdefault(line[0], {})
+            continue
+
+        field, value = [e.strip() for e in " ".join(line).split(":")]
+        key = field.replace(" ", "_")
+        value = value.replace("%", "").replace(".", "").replace(",", "")
+        if field == "Temperature":
+            _set_int_or_zero(disk, key, value.split()[0])
+        elif field == "Critical Warning":
+            disk[key] = int(value, 16)
+        elif field == "Data Units Read":
+            disk[key] = int(value.split()[0]) * 512000
+        elif field == "Data Units Written":
+            disk[key] = int(value.split()[0]) * 512000
+        else:
+            _set_int_or_zero(disk, key, value)
+
+    return nvme_disks
 
 
 register.agent_section(

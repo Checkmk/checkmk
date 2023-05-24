@@ -48,15 +48,13 @@ import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
 import cmk.base.core
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.config import ConfigCache, get_active_check_descriptions
+from cmk.base.config import ConfigCache
 
 from .autodiscovery import _Transition, get_host_services
 
 __all__ = [
     "CheckPreview",
     "get_check_preview",
-    "get_active_check_preview_rows",
-    "get_custom_check_preview_rows",
 ]
 
 
@@ -245,84 +243,4 @@ def _check_preview_table_row(
         metrics=[],
         labels={l.name: l.value for l in service.service_labels.values()},
         found_on_nodes=list(found_on_nodes),
-    )
-
-
-def get_custom_check_preview_rows(
-    config_cache: ConfigCache, host_name: HostName
-) -> Sequence[CheckPreviewEntry]:
-    custom_checks = config_cache.custom_checks(host_name)
-    ignored_services = config.IgnoredServices(config_cache, host_name)
-
-    def make_check_source(desc: str) -> str:
-        return "ignored_custom" if desc in ignored_services else "custom"
-
-    def make_output(desc: str) -> str:
-        pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
-        return f"WAITING - {pretty} check, cannot be done offline"
-
-    return list(
-        {
-            entry["service_description"]: CheckPreviewEntry(
-                check_source=make_check_source(entry["service_description"]),
-                check_plugin_name="custom",
-                ruleset_name=None,
-                item=entry["service_description"],
-                discovered_parameters=None,
-                effective_parameters=None,
-                description=entry["service_description"],
-                state=None,
-                output=make_output(entry["service_description"]),
-                metrics=[],
-                labels={},
-                found_on_nodes=[host_name],
-            )
-            for entry in custom_checks
-        }.values()
-    )
-
-
-def get_active_check_preview_rows(
-    config_cache: ConfigCache,
-    host_name: HostName,
-) -> Sequence[CheckPreviewEntry]:
-    alias = config_cache.alias(host_name)
-    active_checks = config_cache.active_checks(host_name)
-    host_attrs = config_cache.get_host_attributes(host_name)
-    ignored_services = config.IgnoredServices(config_cache, host_name)
-
-    def make_check_source(desc: str) -> str:
-        return "ignored_active" if desc in ignored_services else "active"
-
-    def make_output(desc: str) -> str:
-        pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
-        return f"WAITING - {pretty} check, cannot be done offline"
-
-    return list(
-        {
-            descr: CheckPreviewEntry(
-                check_source=make_check_source(descr),
-                check_plugin_name=plugin_name,
-                ruleset_name=None,
-                item=descr,
-                discovered_parameters=None,
-                effective_parameters=None,
-                description=descr,
-                state=None,
-                output=make_output(descr),
-                metrics=[],
-                labels={},
-                found_on_nodes=[host_name],
-            )
-            for plugin_name, entries in active_checks
-            for params in entries
-            for descr in get_active_check_descriptions(
-                plugin_name,
-                config.active_check_info[plugin_name],
-                host_name,
-                alias,
-                host_attrs,
-                params,
-            )
-        }.values()
     )

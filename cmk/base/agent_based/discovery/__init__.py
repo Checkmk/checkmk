@@ -7,12 +7,7 @@ from . import livestatus
 from ._discovery import execute_check_discovery
 from .autodiscovery import autodiscovery, automation_discovery, get_host_services
 from .commandline import commandline_discovery
-from .preview import (
-    CheckPreview,
-    get_active_check_preview_rows,
-    get_check_preview,
-    get_custom_check_preview_rows,
-)
+from .preview import CheckPreview, get_check_preview
 
 __all__ = [
     "CheckPreview",
@@ -20,9 +15,7 @@ __all__ = [
     "commandline_discovery",
     "autodiscovery",
     "execute_check_discovery",
-    "get_active_check_preview_rows",
     "get_check_preview",
-    "get_custom_check_preview_rows",
     "get_host_services",
     "livestatus",
 ]

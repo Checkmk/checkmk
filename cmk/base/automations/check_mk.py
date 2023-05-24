@@ -383,8 +383,8 @@ def _execute_discovery(
     return discovery.CheckPreview(
         table=[
             *passive_check_preview.table,
-            *discovery.get_active_check_preview_rows(config_cache, host_name),
-            *discovery.get_custom_check_preview_rows(config_cache, host_name),
+            *config_cache.active_check_preview_rows(host_name),
+            *config_cache.custom_check_preview_rows(host_name),
         ],
         labels=passive_check_preview.labels,
         source_results=passive_check_preview.source_results,

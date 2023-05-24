@@ -2186,6 +2186,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                         uninstall=ec.uninstall_packaged_rule_packs,
                     )
                 },
+                cmk_version.__version__,
             )
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")

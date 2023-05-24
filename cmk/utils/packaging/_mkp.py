@@ -150,8 +150,8 @@ def _extract_manifest_cached(package_path: Path, mtime: float) -> Manifest:
 
 def create_mkp(
     manifest: Manifest,
-    version_packaged: str,
     site_paths: Callable[[PackagePart], Path],
+    version_packaged: str,
 ) -> bytes:
     manifest = Manifest(
         title=manifest.title,

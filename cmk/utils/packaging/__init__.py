@@ -16,7 +16,6 @@ from pydantic import BaseModel
 
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.version as cmk_version
 from cmk.utils.i18n import _  # noqa: F401
 from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 
@@ -88,10 +87,6 @@ def release(
         callbacks[part].release(manifest.files[part])
 
     installer.remove_installed_manifest(pacname)
-
-
-def create_mkp_object(manifest: Manifest, path_config: PathConfig) -> bytes:
-    return create_mkp(manifest, cmk_version.__version__, path_config.get_path)
 
 
 def uninstall(
@@ -229,7 +224,9 @@ def disable(
     package_store.remove_enabled_mark(package_id)
 
 
-def create(installer: Installer, manifest: Manifest, path_config: PathConfig) -> None:
+def create(
+    installer: Installer, manifest: Manifest, path_config: PathConfig, *, version_packaged: str
+) -> None:
     if installer.is_installed(manifest.name):
         raise PackageError("Package already exists.")
 
@@ -242,11 +239,18 @@ def create(installer: Installer, manifest: Manifest, path_config: PathConfig) ->
     _raise_for_nonexisting_files(manifest, path_config)
     _validate_package_files(manifest, installer)
     installer.add_installed_manifest(manifest)
-    _create_enabled_mkp_from_installed_package(package_store, manifest, path_config)
+    _create_enabled_mkp_from_installed_package(
+        package_store, manifest, path_config, version_packaged=version_packaged
+    )
 
 
 def edit(
-    installer: Installer, pacname: PackageName, new_manifest: Manifest, path_config: PathConfig
+    installer: Installer,
+    pacname: PackageName,
+    new_manifest: Manifest,
+    path_config: PathConfig,
+    *,
+    version_packaged: str,
 ) -> None:
     if not installer.is_installed(pacname):
         raise PackageError(f"No such package installed: {pacname}")
@@ -264,7 +268,9 @@ def edit(
     _raise_for_nonexisting_files(new_manifest, path_config)
     _validate_package_files(new_manifest, installer)
 
-    _create_enabled_mkp_from_installed_package(package_store, new_manifest, path_config)
+    _create_enabled_mkp_from_installed_package(
+        package_store, new_manifest, path_config, version_packaged=version_packaged
+    )
     installer.remove_installed_manifest(pacname)
     installer.add_installed_manifest(new_manifest)
 
@@ -277,14 +283,18 @@ def _raise_for_nonexisting_files(manifest: Manifest, path_config: PathConfig) ->
 
 
 def _create_enabled_mkp_from_installed_package(
-    package_store: PackageStore, manifest: Manifest, path_config: PathConfig
+    package_store: PackageStore,
+    manifest: Manifest,
+    path_config: PathConfig,
+    *,
+    version_packaged: str,
 ) -> None:
     """Creates an MKP, saves it on disk and enables it
 
     After we changed and or created an MKP, we must make sure it is present on disk as
     an MKP, just like the uploaded ones.
     """
-    mkp = create_mkp_object(manifest, path_config)
+    mkp = create_mkp(manifest, path_config.get_path, version_packaged)
     package_store.store(mkp, overwrite=True)
     package_store.mark_as_enabled(manifest.id)
 
@@ -295,8 +305,10 @@ def install(
     package_id: PackageID,
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    *,
     allow_outdated: bool = True,
     post_package_change_actions: bool = True,
+    site_version: str,
 ) -> Manifest:
     try:
         return _install(
@@ -305,6 +317,7 @@ def install(
             package_store.read_bytes(package_id),
             path_config,
             callbacks,
+            site_version=site_version,
             allow_outdated=allow_outdated,
             post_package_change_actions=post_package_change_actions,
         )
@@ -319,11 +332,12 @@ def _install(
     mkp: bytes,
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    *,
+    site_version: str,
     # I am not sure whether we should install outdated packages by default -- but
     #  a) this is the compatible way to go
     #  b) users cannot even modify packages without installing them
     # Reconsider!
-    *,
     allow_outdated: bool,
     post_package_change_actions: bool,
 ) -> Manifest:
@@ -340,7 +354,7 @@ def _install(
         _logger.info("[%s %s]: Installing", manifest.name, manifest.version)
 
     _raise_for_installability(
-        installer, path_config, manifest, old_manifest, cmk_version.__version__, allow_outdated
+        installer, path_config, manifest, old_manifest, site_version, allow_outdated
     )
 
     extract_mkp(manifest, mkp, path_config.get_path)
@@ -394,10 +408,7 @@ def _raise_for_installability(
     site_version: str,
     allow_outdated: bool,
 ) -> None:
-    """Raise a `PackageException` if we should not install this package.
-
-    Note: this currently ignores the packages "max version".
-    """
+    """Raise a `PackageException` if we should not install this package"""
     _raise_for_too_old_cmk_version(package.version_min_required, site_version)
     if not allow_outdated:
         _raise_for_too_new_cmk_version(package.version_usable_until, site_version)
@@ -599,6 +610,7 @@ def update_active_packages(
     installer: Installer,
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    site_version: str,
 ) -> None:
     """Update which of the enabled packages are actually active (installed)"""
     package_store = PackageStore(
@@ -607,10 +619,19 @@ def update_active_packages(
         enabled_dir=path_config.packages_enabled_dir,
     )
     _deinstall_inapplicable_active_packages(
-        installer, path_config, callbacks, post_package_change_actions=False
+        installer,
+        path_config,
+        callbacks,
+        post_package_change_actions=False,
+        site_version=site_version,
     )
     _install_applicable_inactive_packages(
-        package_store, installer, path_config, callbacks, post_package_change_actions=False
+        package_store,
+        installer,
+        path_config,
+        callbacks,
+        post_package_change_actions=False,
+        site_version=site_version,
     )
     _execute_post_package_change_actions(None)
 
@@ -621,6 +642,7 @@ def _deinstall_inapplicable_active_packages(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     post_package_change_actions: bool,
+    site_version: str,
 ) -> None:
     for manifest in installer.get_installed_manifests():
         try:
@@ -629,7 +651,7 @@ def _deinstall_inapplicable_active_packages(
                 path_config,
                 manifest,
                 manifest,
-                cmk_version.__version__,
+                site_version,
                 allow_outdated=False,
             )
         except PackageError as exc:
@@ -652,6 +674,7 @@ def _install_applicable_inactive_packages(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     post_package_change_actions: bool,
+    site_version: str,
 ) -> None:
     for name, manifests in _sort_enabled_packages_for_installation(package_store):
         for manifest in manifests:
@@ -664,6 +687,7 @@ def _install_applicable_inactive_packages(
                     callbacks,
                     allow_outdated=False,
                     post_package_change_actions=post_package_change_actions,
+                    site_version=site_version,
                 )
             except PackageError as exc:
                 _logger.info("[%s %s]: Not installed: %s", name, manifest.version, exc)
@@ -696,6 +720,8 @@ def disable_outdated(
     package_store: PackageStore,
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    *,
+    site_version: str,
 ) -> None:
     """Check installed packages and disables the outdated ones
 
@@ -704,7 +730,7 @@ def disable_outdated(
     """
     for manifest in installer.get_installed_manifests():
         try:
-            _raise_for_too_new_cmk_version(manifest.version_usable_until, cmk_version.__version__)
+            _raise_for_too_new_cmk_version(manifest.version_usable_until, site_version)
         except PackageError as exc:
             _logger.info(
                 "[%s %s]: Disabling: %s",

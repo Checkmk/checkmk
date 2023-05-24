@@ -40,7 +40,6 @@
 #include "livestatus/TableStatus.h"
 #include "livestatus/TableTimeperiods.h"
 class ICore;
-class InputBuffer;
 class Logger;
 class OutputBuffer;
 class Query;
@@ -57,14 +56,13 @@ class Object;
 #include <mutex>
 #include <utility>
 #include <vector>
+class InputBuffer;
 #endif
 
 class Store {
 public:
 #ifdef CMC
     Store(ICore *mc, Core *core);
-    LogCache *logCache() { return &_log_cache; };
-    bool answerRequest(InputBuffer *, OutputBuffer *);
     void switchStatehistTable(std::optional<std::chrono::seconds> cache_horizon,
                               Logger *logger);
     void buildStatehistCache(std::optional<std::chrono::seconds> cache_horizon);
@@ -101,9 +99,6 @@ private:
     };
 
     ICore *_mc;
-#ifdef CMC
-    Core *_core;
-#endif
     LogCache _log_cache;
 
 #ifdef CMC

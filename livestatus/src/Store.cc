@@ -77,7 +77,6 @@ Table &Store::findTable(OutputBuffer &output, const std::string &name) {
 
 Store::Store(ICore *mc, Core *core)
     : _mc(mc)
-    , _core(core)
     , _log_cache(mc)
     , _table_cached_statehist(mc)
     , _table_columns(mc)

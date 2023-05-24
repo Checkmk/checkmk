@@ -52,7 +52,7 @@ F-:
 
 The location of some modules may have changed. The simplest way to find the new
 place is to grep for it in '~/lib/python3/cmk/gui' and adjust the import in
-bar:
+'my_custom_file':
 
 F+:wato/my_custom_file
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices

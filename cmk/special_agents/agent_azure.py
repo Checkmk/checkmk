@@ -488,7 +488,8 @@ class ExplicitConfig:
 
     def add_key(self, key, value):
         if key == "group":
-            self.current_group = self.groups.setdefault(value, GroupConfig(value))
+            group_name = value.lower()
+            self.current_group = self.groups.setdefault(group_name, GroupConfig(group_name))
             return
         if self.current_group is None:
             raise RuntimeError("missing arg: group=<name>")
@@ -497,7 +498,7 @@ class ExplicitConfig:
     def is_configured(self, resource):
         if self.fetchall:
             return True
-        group_config = self.groups.get(resource.info["group"])
+        group_config = self.groups.get(resource.info["group"].lower())
         if group_config is None:
             return False
         if group_config.fetchall:

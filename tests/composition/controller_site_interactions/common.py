@@ -10,8 +10,7 @@ from typing import Any
 
 from tests.testlib import wait_until
 from tests.testlib.site import Site
-
-from tests.composition.utils import execute
+from tests.testlib.utils import execute
 
 from cmk.utils.type_defs import HostName
 

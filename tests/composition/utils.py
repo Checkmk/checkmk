@@ -10,12 +10,12 @@ import os
 import socketserver
 import subprocess
 import time
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from multiprocessing import Process
 from pathlib import Path
 
 from tests.testlib.site import Site
-from tests.testlib.utils import is_containerized
+from tests.testlib.utils import execute, is_containerized
 
 from tests.composition.constants import TEST_HOST_1
 
@@ -67,23 +67,6 @@ def get_package_extension() -> str:
     raise NotImplementedError(
         f"'get_package_extension' for '{package_type}' is not supported yet in, please implement it"
     )
-
-
-def execute(command: Sequence[str]) -> subprocess.CompletedProcess:
-    try:
-        proc = subprocess.run(
-            command,
-            encoding="utf-8",
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            close_fds=True,
-            check=True,
-        )
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            f"Subprocess terminated non-successfully. Stdout:\n{e.stdout}\nStderr:\n{e.stderr}"
-        ) from e
-    return proc
 
 
 def install_agent_package(package_path: Path) -> Path:

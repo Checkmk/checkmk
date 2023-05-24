@@ -7,7 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from tests.composition.utils import execute, should_skip_because_uncontainerized
+from tests.testlib.utils import execute
+
+from tests.composition.utils import should_skip_because_uncontainerized
 
 # Skip all agent controller tests if we are not in a container to avoid messing up your machine
 pytestmark = pytest.mark.skipif(

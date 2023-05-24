@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+from base64 import b64encode
 from http.cookies import SimpleCookie
 from typing import Generator, Iterator
 
@@ -18,7 +19,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.session
+import cmk.gui.session  # pylint: disable=unused-import  # this is here for it's side effects...
 from cmk.gui import auth, http, login
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
@@ -127,10 +128,19 @@ def test_login_with_cookies(
             assert session.user.id != with_user[0]
 
 
-@pytest.mark.skip("TODO: to be moved out of REST API blueprint to global in a later commit.")
+# TODO: to be moved out of REST API blueprint to global in a later commit.
 def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": f"Bearer {with_user[0]} {with_user[1]}"}
+    ):
+        assert type(session.user) == LoggedInUser  # pylint: disable=unidiomatic-typecheck
+        assert session.user.id == with_user[0]
+
+
+def test_login_with_basic_auth(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:
+    token = b64encode(f"{with_user[0]}:{with_user[1]}".encode()).decode()
+    with flask_app.test_request_context(
+        "/", method="GET", headers={"Authorization": f"Basic {token}"}
     ):
         assert type(session.user) == LoggedInUser  # pylint: disable=unidiomatic-typecheck
         assert session.user.id == with_user[0]
@@ -237,38 +247,26 @@ def fixture_current_cookie(with_user: tuple[UserId, str], session_id: str) -> It
 
 
 def test_parse_auth_cookie_refuse_pre_16(pre_16_cookie: str) -> None:
-    with pytest.raises(MKAuthException, match="Refusing pre 2.0"):
-        auth.user_from_cookie(auth._fetch_cookie(pre_16_cookie))
+    assert (cookie := auth._get_request_cookie(pre_16_cookie))
+    with pytest.raises(MKAuthException, match="Invalid session ID in auth cookie"):
+        auth.parse_and_check_cookie(cookie)
 
 
 def test_parse_auth_cookie_refuse_pre_20(pre_20_cookie: str) -> None:
-    with pytest.raises(MKAuthException, match="Refusing pre 2.0"):
-        auth.user_from_cookie(auth._fetch_cookie(pre_20_cookie))
+    assert (cookie := auth._get_request_cookie(pre_20_cookie))
+    with pytest.raises(MKAuthException, match="Invalid session ID in auth cookie"):
+        auth.parse_and_check_cookie(cookie)
 
 
 def test_parse_auth_cookie_allow_current(
     current_cookie: str, with_user: tuple[UserId, str], session_id: str
 ) -> None:
-    assert auth.user_from_cookie(auth._fetch_cookie(current_cookie)) == (
+    assert (cookie := auth._get_request_cookie(current_cookie))
+    assert auth.parse_and_check_cookie(cookie) == (
         with_user[0],
         session_id,
         generate_auth_hash(with_user[0], session_id),
     )
-
-
-def test_auth_cookie_is_valid_refuse_pre_16(pre_16_cookie: str) -> None:
-    cookie = cmk.gui.auth._fetch_cookie(pre_16_cookie)
-    assert cmk.gui.session.auth_cookie_is_valid(cookie) is False
-
-
-def test_auth_cookie_is_valid_refuse_pre_20(pre_20_cookie: str) -> None:
-    cookie = cmk.gui.auth._fetch_cookie(pre_20_cookie)
-    assert cmk.gui.session.auth_cookie_is_valid(cookie) is False
-
-
-def test_auth_cookie_is_valid_allow_current(current_cookie: str) -> None:
-    cookie = cmk.gui.auth._fetch_cookie(current_cookie)
-    assert cmk.gui.session.auth_cookie_is_valid(cookie) is True
 
 
 def test_web_server_auth_session(flask_app: flask.Flask, user_id: UserId) -> None:

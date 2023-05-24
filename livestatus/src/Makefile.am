@@ -62,7 +62,6 @@ test_neb_LDADD = \
     $(LIBLIVESTATUS_SO) \
     $(LIBS_DIR)/libgtest.a \
     $(LIBS_DIR)/libgtest_main.a \
-    -lrrd \
     -lpthread
 
 .PHONY: always-rebuild-livestatus-lib

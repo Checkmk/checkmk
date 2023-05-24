@@ -52,7 +52,7 @@ from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
 from cmk.utils.site import omd_site
 from cmk.utils.translations import translate_hostname
-from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
+from cmk.utils.type_defs import HostAddress, HostName, TimeperiodName, Timestamp
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
 from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule, TextPattern
@@ -1922,7 +1922,7 @@ def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress_: str) -> 
     )
     return {
         "time": time.time(),
-        "host": scrub_string(ipaddress_),
+        "host": HostAddress(scrub_string(ipaddress_)),
         "ipaddress": scrub_string(ipaddress_),
         "priority": 5,  # notice
         "facility": 31,  # not used by syslog -> we use this for all traps

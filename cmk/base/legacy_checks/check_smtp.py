@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.type_defs import HostName
+
 from cmk.base.check_api import host_name, is_ipv6_primary, passwordstore_get_cmdline
 from cmk.base.config import active_check_info
 
@@ -26,7 +28,7 @@ def check_smtp_arguments(params):  # pylint: disable=too-many-branches
     # Use the address family of the monitored host by default
     address_family = settings.get("address_family")
     if address_family is None:
-        address_family = "ipv6" if is_ipv6_primary(host_name()) else "ipv4"
+        address_family = "ipv6" if is_ipv6_primary(HostName(host_name())) else "ipv4"
 
     if address_family == "ipv6":
         args.append("-6")

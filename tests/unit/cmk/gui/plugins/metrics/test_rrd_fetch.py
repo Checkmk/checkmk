@@ -12,6 +12,7 @@ from livestatus import SiteId
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.prediction import TimeSeries, TimeSeriesValues
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.plugins.metrics.rrd_fetch as rf
 from cmk.gui.config import active_config
@@ -87,7 +88,7 @@ _GRAPH_RECIPE = TemplateGraphRecipe(
             "template",
             {
                 "site": SiteId("NO_SITE"),
-                "host_name": "my-host",
+                "host_name": HostName("my-host"),
                 "service_description": "Temperature Zone 6",
                 "graph_index": 0,
                 "graph_id": "temperature",

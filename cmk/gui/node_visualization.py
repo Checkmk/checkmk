@@ -727,7 +727,7 @@ class AjaxFetchTopology(AjaxPage):
 
         # Add explicit growth root nodes
         for node_name in itertools.chain.from_iterable(meshes):
-            if topology.is_growth_root(node_name):
+            if topology.is_growth_root(HostName(node_name)):
                 reduced_mesh.add(node_name)
             if len(reduced_mesh) > limit:
                 return [reduced_mesh]
@@ -794,7 +794,7 @@ class Topology:
             "id": nodename,
             "hostname": nodename,  # TODO: remove host reference
             "has_no_parents": self.is_root_node(nodename),
-            "growth_root": self.is_growth_root(nodename),
+            "growth_root": self.is_growth_root(HostName(nodename)),
             "growth_possible": self.may_grow(nodename, mesh),
             "growth_forbidden": self.growth_forbidden(nodename),
             "growth_continue": self.is_growth_continue(nodename),
@@ -1090,7 +1090,7 @@ topology_registry = TopologyRegistry()
 
 class ParentChildNetworkTopology(Topology):
     _topology_site_node_type = "topology_site"
-    _topology_center_node_name = "topology_center"
+    _topology_center_node_name = HostName("topology_center")
     """ Generates parent/child topology view """
 
     @classmethod
@@ -1100,7 +1100,7 @@ class ParentChildNetworkTopology(Topology):
     def title(self) -> str:
         return _("Parent / Child topology")
 
-    def get_mesh_root(self, mesh: set[str]) -> str:
+    def get_mesh_root(self, mesh: set[str]) -> HostName:
         return self._topology_center_node_name
 
     def _fetch_data_for_hosts(self, hostnames: set[str]) -> list[dict]:

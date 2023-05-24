@@ -6,6 +6,8 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.utils.type_defs import HostName
+
 from cmk.base.check_api import host_name, is_ipv6_primary
 from cmk.base.config import active_check_info
 
@@ -19,7 +21,7 @@ def check_traceroute_arguments(params: Mapping[str, Any]) -> list[str]:
     return [
         *args,
         f"--probe_method={params['method'] or 'udp'}",
-        f"--ip_address_family={params['address_family'] or ('ipv6' if is_ipv6_primary(host_name()) else 'ipv4')}",
+        f"--ip_address_family={params['address_family'] or ('ipv6' if is_ipv6_primary(HostName(host_name())) else 'ipv4')}",
         "--routers_missing_warn",
         *(router for router, state in params["routers"] if state == "W"),
         "--routers_missing_crit",

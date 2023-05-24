@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Mapping
 
+from cmk.utils.type_defs import HostName
+
 from cmk.base.check_api import host_name, is_ipv6_primary, passwordstore_get_cmdline
 from cmk.base.config import active_check_info
 
@@ -29,7 +31,7 @@ class HostSettings:
             port=params.get("port"),
             family=params.get(
                 "address_family",
-                "ipv6" if is_ipv6_primary(host_name()) else "ipv4",
+                "ipv6" if is_ipv6_primary(HostName(host_name())) else "ipv4",
             ),
             virtual=params.get("virthost"),
         )

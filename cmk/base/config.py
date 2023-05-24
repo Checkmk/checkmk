@@ -507,7 +507,7 @@ def ip_address_of(
         return lookup_ip_address(config_cache, host_name, family=family)
     except Exception as e:
         if config_cache.is_cluster(host_name):
-            return ""
+            return HostAddress("")
 
         _failed_ip_lookups.append(host_name)
         if not _ignore_ip_lookup_failures:

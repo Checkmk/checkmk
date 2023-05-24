@@ -16,7 +16,7 @@ from dateutil.tz import tzlocal
 
 from livestatus import SiteId
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAddress, HostName
 
 
 # This is far from perfect, but at least we see all possible keys.
@@ -198,7 +198,7 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
         # There is no datetime information in the message, use current time
         event["time"] = _time()
         # There is no host information, use the provided address
-        event["host"] = ipaddress
+        event["host"] = HostAddress(ipaddress)
 
     # Variant 10
     elif line[4] == " " and line[:4].isdigit():

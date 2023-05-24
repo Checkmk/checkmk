@@ -11,12 +11,12 @@ import pytest
 import cmk.utils.debug
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
-
 from cmk.checkengine import crash_reporting
 from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.sectionparser import SectionsParser
 from cmk.checkengine.type_defs import AgentRawDataSection
+
+from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 
 _ParseFunction = Callable[[Sequence[AgentRawDataSection]], Any]
 

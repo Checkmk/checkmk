@@ -16,13 +16,13 @@ from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSe
 from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import HostName, LegacyCheckParameters, RuleSetName
 
-import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base import config
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
+
+import cmk.base.api.agent_based.register as agent_based_register
+from cmk.base import config
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 
 
 @pytest.fixture(autouse=True, scope="module")

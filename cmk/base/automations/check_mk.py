@@ -97,6 +97,12 @@ from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFet
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
+from cmk.checkengine import parse_raw_data, plugin_contexts, SourceType
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes, DiscoveryMode
+from cmk.checkengine.summarize import summarize
+from cmk.checkengine.type_defs import NO_SELECTION
+
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
@@ -125,12 +131,6 @@ from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.sources import make_parser
-
-from cmk.checkengine import parse_raw_data, plugin_contexts, SourceType
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes, DiscoveryMode
-from cmk.checkengine.summarize import summarize
-from cmk.checkengine.type_defs import NO_SELECTION
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]

@@ -17,9 +17,6 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.type_defs import HostName, SectionName
 
-import cmk.base.core
-from cmk.base.config import ConfigCache
-
 from cmk.checkengine import DiscoveryPlugin, FetcherFunction, HostKey, ParserFunction, SectionPlugin
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
@@ -35,6 +32,9 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
+
+import cmk.base.core
+from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
 

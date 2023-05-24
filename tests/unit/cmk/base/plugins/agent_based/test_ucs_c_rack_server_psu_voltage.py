@@ -7,9 +7,9 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
-
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
 
 SECTION = """
 equipmentPsu	dn sys/rack-unit-7/psu-2	id 2	model UCSC-PSU1-1050W	operability operable	voltage ok

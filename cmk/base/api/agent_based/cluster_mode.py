@@ -11,6 +11,9 @@ from typing import Any, Final, NamedTuple, Protocol
 
 from cmk.utils.type_defs import ClusterMode, HostName, state_markers
 
+from cmk.checkengine import CheckPlugin
+from cmk.checkengine.check_table import ServiceID
+
 from cmk.base.api.agent_based.checking_classes import (
     CheckResult,
     IgnoreResults,
@@ -20,9 +23,6 @@ from cmk.base.api.agent_based.checking_classes import (
     State,
 )
 from cmk.base.api.agent_based.value_store import ValueStoreManager
-
-from cmk.checkengine import CheckPlugin
-from cmk.checkengine.check_table import ServiceID
 
 _Kwargs = Mapping[str, Any]
 

@@ -16,8 +16,6 @@ from cmk.utils.type_defs import AgentRawData, HostName, Item, result, SectionNam
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.base.config import ConfigCache, DiscoveryCheckParameters
-
 from cmk.checkengine import (
     DiscoveryPlugin,
     ParserFunction,
@@ -40,6 +38,8 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
+
+from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
 from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters

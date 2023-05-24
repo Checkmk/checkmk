@@ -29,12 +29,12 @@ from typing import (
     TypedDict,
 )
 
+from cmk.checkengine.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-
-from cmk.checkengine.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 
 
 class ItemData(TypedDict):

@@ -25,10 +25,10 @@ import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.type_defs import HostName
 
+from cmk.checkengine.checking import CheckPluginName
+
 import cmk.base.config as config
 import cmk.base.core_nagios as core_nagios
-
-from cmk.checkengine.checking import CheckPluginName
 
 
 def test_format_nagios_object() -> None:

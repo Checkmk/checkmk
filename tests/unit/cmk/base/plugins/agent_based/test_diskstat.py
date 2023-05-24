@@ -9,6 +9,9 @@ from pytest_mock import MockerFixture
 
 from cmk.utils.type_defs import HostName
 
+from cmk.checkengine import plugin_contexts
+from cmk.checkengine.checking import CheckPluginName
+
 from cmk.base.plugins.agent_based import diskstat
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
@@ -18,9 +21,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.utils.multipath import Group
-
-from cmk.checkengine import plugin_contexts
-from cmk.checkengine.checking import CheckPluginName
 
 
 def test_parse_diskstat_minimum() -> None:

@@ -23,12 +23,12 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 
+from cmk.checkengine import Source, SourceInfo, SourceType
+from cmk.checkengine.type_defs import SectionNameCollection
+
 import cmk.base.config as config  # This module should be free from base deps.
 import cmk.base.core_config as core_config
 from cmk.base.config import ConfigCache
-
-from cmk.checkengine import Source, SourceInfo, SourceType
-from cmk.checkengine.type_defs import SectionNameCollection
 
 __all__ = [
     "SNMPSource",

@@ -10,6 +10,8 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
+from cmk.checkengine.checking import CheckPluginName
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.mssql_blocked_sessions import (
@@ -21,8 +23,6 @@ from cmk.base.plugins.agent_based.mssql_blocked_sessions import (
     Params,
     parse_mssql_blocked_sessions,
 )
-
-from cmk.checkengine.checking import CheckPluginName
 
 INFO_0 = [
     ["Blocked _Sessions"],

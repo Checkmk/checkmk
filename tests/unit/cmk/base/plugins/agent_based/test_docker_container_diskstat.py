@@ -10,6 +10,8 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
+from cmk.checkengine.checking import CheckPluginName
+
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
@@ -20,8 +22,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.render import iobandwidth
 from cmk.base.plugins.agent_based.docker_container_diskstat_cgroupv2 import DockerDiskstatParser
-
-from cmk.checkengine.checking import CheckPluginName
 
 # The following string tables are created by executing the following commands:
 #   fio --name wxyz --direct=1 --buffered=0 --size=512m --bs=4k --rw=read --ioengine=sync --numjobs=1

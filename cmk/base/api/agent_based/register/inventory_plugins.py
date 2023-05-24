@@ -10,6 +10,8 @@ from typing import Any
 
 from cmk.utils.type_defs import RuleSetName
 
+from cmk.checkengine.inventory import InventoryPluginName
+
 from cmk.base.api.agent_based.inventory_classes import (
     Attributes,
     InventoryFunction,
@@ -21,8 +23,6 @@ from cmk.base.api.agent_based.register.utils import (
     validate_default_parameters,
     validate_function_arguments,
 )
-
-from cmk.checkengine.inventory import InventoryPluginName
 
 
 def _filter_inventory(

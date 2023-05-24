@@ -37,14 +37,6 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import FetcherType
 
-import cmk.base.core
-import cmk.base.utils
-from cmk.base.api.agent_based import cluster_mode, value_store
-from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
-from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
-from cmk.base.api.agent_based.checking_classes import State
-from cmk.base.config import ConfigCache
-
 from cmk.checkengine import (
     CheckPlugin,
     crash_reporting,
@@ -80,6 +72,14 @@ from cmk.checkengine.sectionparserutils import (
     get_section_kwargs,
 )
 from cmk.checkengine.submitters import Submittee, Submitter
+
+import cmk.base.core
+import cmk.base.utils
+from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
+from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
+from cmk.base.api.agent_based.checking_classes import State
+from cmk.base.config import ConfigCache
 
 __all__ = ["execute_checkmk_checks", "check_host_services"]
 

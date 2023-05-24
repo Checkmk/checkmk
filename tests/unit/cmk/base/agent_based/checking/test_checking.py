@@ -15,13 +15,13 @@ from tests.testlib.base import Scenario
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.type_defs import HostName, LegacyCheckParameters
 
+from cmk.checkengine import HostKey, SourceType
+from cmk.checkengine.checkresults import ServiceCheckResult
+
 import cmk.base.agent_based.checking._checking as checking
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import consume_check_results, Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-
-from cmk.checkengine import HostKey, SourceType
-from cmk.checkengine.checkresults import ServiceCheckResult
 
 
 def make_timespecific_params_list(

@@ -8,10 +8,10 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
+from cmk.checkengine.checking import CheckPluginName
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.vutlan_ems_smoke import SmokeSensor, SmokeSensorSection
-
-from cmk.checkengine.checking import CheckPluginName
 
 pytestmark = pytest.mark.checks
 

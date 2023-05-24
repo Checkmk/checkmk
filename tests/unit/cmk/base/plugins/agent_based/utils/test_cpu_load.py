@@ -7,12 +7,12 @@ from unittest.mock import Mock
 
 from cmk.utils.type_defs import HostName
 
+from cmk.checkengine.check_table import CheckPluginName
+from cmk.checkengine.plugin_contexts import current_host, current_service
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils.cpu import Load, ProcessorType, Section, Threads
 from cmk.base.plugins.agent_based.utils.cpu_load import check_cpu_load
-
-from cmk.checkengine.check_table import CheckPluginName
-from cmk.checkengine.plugin_contexts import current_host, current_service
 
 
 def test_cpu_loads_fixed_levels() -> None:

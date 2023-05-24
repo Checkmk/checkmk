@@ -15,10 +15,10 @@ import cmk.utils.tags
 from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import HostAddress, HostName
 
+from cmk.checkengine.discovery import AutocheckEntry
+
 import cmk.base.config as config
 from cmk.base.config import ConfigCache
-
-from cmk.checkengine.discovery import AutocheckEntry
 
 
 class _AutochecksMocker(config.AutochecksManager):

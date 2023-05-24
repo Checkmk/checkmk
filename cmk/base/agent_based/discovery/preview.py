@@ -20,12 +20,6 @@ from cmk.utils.type_defs import HostName, Item, SectionName, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 
-import cmk.base.agent_based.checking as checking
-import cmk.base.config as config
-import cmk.base.core
-from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.config import ConfigCache, get_active_check_descriptions
-
 from cmk.checkengine import (
     CheckPlugin,
     DiscoveryPlugin,
@@ -51,6 +45,12 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
+
+import cmk.base.agent_based.checking as checking
+import cmk.base.config as config
+import cmk.base.core
+from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
+from cmk.base.config import ConfigCache, get_active_check_descriptions
 
 from .autodiscovery import _Transition, get_host_services
 

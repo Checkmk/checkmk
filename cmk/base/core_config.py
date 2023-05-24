@@ -28,14 +28,14 @@ from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.store import load_object_from_file, lock_checkmk_configuration, save_object_to_file
 from cmk.utils.type_defs import HostAddress, HostName, HostsToUpdate, Item, ServiceName
 
+from cmk.checkengine.check_table import ConfiguredService, ServiceID
+from cmk.checkengine.checking import CheckPluginName
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.obsolete_output as out
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
-
-from cmk.checkengine.check_table import ConfiguredService, ServiceID
-from cmk.checkengine.checking import CheckPluginName
 
 CoreCommandName = str
 CoreCommand = str

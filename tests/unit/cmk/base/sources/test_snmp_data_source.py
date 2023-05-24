@@ -13,11 +13,11 @@ from tests.testlib.base import Scenario
 from cmk.utils.exceptions import MKIPAddressLookupError
 from cmk.utils.type_defs import HostName, ParsedSectionName
 
+from cmk.checkengine.checking import CheckPluginName
+
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-
-from cmk.checkengine.checking import CheckPluginName
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(

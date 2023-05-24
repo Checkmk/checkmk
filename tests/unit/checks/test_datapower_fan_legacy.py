@@ -8,11 +8,11 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
+from cmk.checkengine.checking import CheckPluginName
+
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.datapower_fan import Fan
-
-from cmk.checkengine.checking import CheckPluginName
 
 _SECTION = {
     "Tray 1 Fan 1": Fan(

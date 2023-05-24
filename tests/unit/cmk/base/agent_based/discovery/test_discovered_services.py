@@ -5,10 +5,10 @@
 
 from cmk.utils.type_defs import EVERYTHING
 
-from cmk.base.agent_based.discovery._discovered_services import _analyse_discovered_services
-
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
+
+from cmk.base.agent_based.discovery._discovered_services import _analyse_discovered_services
 
 
 def _service(plugin_name: str, item: str) -> AutocheckEntry:

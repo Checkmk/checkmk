@@ -40,6 +40,11 @@ from cmk.utils.type_defs import (
     TimeperiodName,
 )
 
+from cmk.checkengine import plugin_contexts
+from cmk.checkengine.check_table import FilterMode
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.inventory import InventoryPluginName
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -56,11 +61,6 @@ from cmk.base.core_config import (
     write_notify_host_file,
 )
 from cmk.base.ip_lookup import AddressFamily
-
-from cmk.checkengine import plugin_contexts
-from cmk.checkengine.check_table import FilterMode
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.inventory import InventoryPluginName
 
 ObjectSpec = dict[str, Any]
 

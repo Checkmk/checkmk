@@ -9,10 +9,10 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
+from cmk.checkengine.checking import CheckPluginName
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import GetRateError, Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-from cmk.checkengine.checking import CheckPluginName
 
 # the following string tables should display 150% cpu usage
 # two cpus were working at 75% `stress-ng -c2 -l75`

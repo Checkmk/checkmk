@@ -13,6 +13,8 @@ from tests.testlib.snmp import get_parsed_snmp_section, snmp_is_detected
 
 from cmk.utils.type_defs import SectionName
 
+from cmk.checkengine.checking import CheckPluginName
+
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -28,8 +30,6 @@ from cmk.base.plugins.agent_based.utils.wlc_clients import (
     WlcClientsSection,
 )
 from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
-
-from cmk.checkengine.checking import CheckPluginName
 
 # raw data looks like this:
 # TODO: we sould use this as test input

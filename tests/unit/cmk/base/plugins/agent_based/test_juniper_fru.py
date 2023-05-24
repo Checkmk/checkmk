@@ -12,9 +12,9 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 
 # SUP-13184
 DATA_0 = """

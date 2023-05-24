@@ -6,6 +6,8 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.checkengine import Parameters
+
 from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
     Metric,
@@ -14,8 +16,6 @@ from cmk.base.api.agent_based.checking_classes import (
     ServiceLabel,
     State,
 )
-
-from cmk.checkengine import Parameters
 
 
 def test_parameters_features() -> None:

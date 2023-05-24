@@ -47,6 +47,12 @@ from cmk.utils.type_defs import ServiceDetails, ServiceState, state_markers
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 
+from cmk.checkengine.plugin_contexts import check_type
+from cmk.checkengine.plugin_contexts import (
+    host_name as _internal_host_name,  # pylint: disable=unused-import
+)
+from cmk.checkengine.plugin_contexts import service_description
+
 import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
@@ -74,12 +80,6 @@ from cmk.base.api.agent_based.utils import (  # noqa: F401 # pylint: disable=unu
     not_matches,
     startswith,
 )
-
-from cmk.checkengine.plugin_contexts import check_type
-from cmk.checkengine.plugin_contexts import (
-    host_name as _internal_host_name,  # pylint: disable=unused-import
-)
-from cmk.checkengine.plugin_contexts import service_description
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]

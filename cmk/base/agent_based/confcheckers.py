@@ -33,12 +33,6 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.api.agent_based.register._config as _api
-import cmk.base.config as config
-from cmk.base.config import ConfigCache
-from cmk.base.sources import make_parser, make_sources
-
 from cmk.checkengine import (
     CheckPlugin,
     DiscoveryPlugin,
@@ -54,6 +48,12 @@ from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.type_defs import NO_SELECTION, SectionNameCollection
+
+import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.api.agent_based.register._config as _api
+import cmk.base.config as config
+from cmk.base.config import ConfigCache
+from cmk.base.sources import make_parser, make_sources
 
 __all__ = [
     "CheckPluginMapper",

@@ -15,6 +15,8 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
+from cmk.checkengine.checking import CheckPluginName
+
 from cmk.base.api.agent_based.utils import GetRateError
 from cmk.base.plugins.agent_based import brocade_fcport as bf
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -25,8 +27,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.utils.brocade import DISCOVERY_DEFAULT_PARAMETERS
-
-from cmk.checkengine.checking import CheckPluginName
 
 STRING_TABLE_INDEX_1_MISSING = [
     [

@@ -25,9 +25,6 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-from cmk.base.agent_based.confcheckers import ConfiguredSummarizer
-from cmk.base.config import ConfigCache
-
 from cmk.checkengine import (
     DiscoveryPlugin,
     FetcherFunction,
@@ -52,6 +49,9 @@ from cmk.checkengine.sectionparser import (
     Provider,
     store_piggybacked_sections,
 )
+
+from cmk.base.agent_based.confcheckers import ConfiguredSummarizer
+from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters

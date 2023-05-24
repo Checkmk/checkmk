@@ -15,10 +15,10 @@ from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.type_defs import EvalableFloat, MetricTuple, ParsedSectionName, RuleSetName
 
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, RuleSetTypeName
-
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
+
+from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, RuleSetTypeName
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[tuple[Optional[float], Optional[float]]]

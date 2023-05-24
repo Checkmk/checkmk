@@ -9,10 +9,10 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
+from cmk.checkengine.checking import CheckPluginName
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-
-from cmk.checkengine.checking import CheckPluginName
 
 
 @pytest.mark.parametrize(

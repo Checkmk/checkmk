@@ -48,9 +48,9 @@ from tests.testlib.web_session import APIError, CMKWebSession
 
 from cmk.utils.type_defs import HostName
 
-from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
-
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

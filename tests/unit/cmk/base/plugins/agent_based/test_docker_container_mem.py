@@ -9,11 +9,11 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
+from cmk.checkengine.checking import CheckPluginName
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.docker_container_mem import parse_docker_container_mem
-
-from cmk.checkengine.checking import CheckPluginName
 
 # docker stats: 1007MiB / 4.347GiB
 PLUGIN_OUTPUT_MEM_NO_LIMIT = [

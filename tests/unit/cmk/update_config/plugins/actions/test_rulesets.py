@@ -13,6 +13,8 @@ from pytest_mock import MockerFixture
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.version import is_raw_edition
 
+from cmk.checkengine.checking import CheckPluginName
+
 import cmk.gui.watolib.timeperiods as timeperiods
 from cmk.gui.valuespec import Dictionary, Float, Migrate
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -20,7 +22,6 @@ from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import Rulespec
 
-from cmk.checkengine.checking import CheckPluginName
 from cmk.update_config.plugins.actions import rulesets as rulesets_updater
 
 RuleValue = Any

@@ -7,6 +7,8 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
+from cmk.checkengine.checking import CheckPluginName
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
@@ -18,8 +20,6 @@ from cmk.base.plugins.agent_based.oracle_dataguard_stats import (
     inventory_oracle_dataguard_stats,
     parse_oracle_dataguard_stats,
 )
-
-from cmk.checkengine.checking import CheckPluginName
 
 from .utils_inventory import sort_inventory_result
 

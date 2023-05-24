@@ -5,18 +5,75 @@
 
 #include "Store.h"
 
-#ifdef CMC
+#include "livestatus/ICore.h"
+#include "livestatus/Logger.h"
+#include "livestatus/OutputBuffer.h"
+#include "livestatus/Query.h"
 
+#ifdef CMC
 #include <utility>
 
 #include "Core.h"
 #include "GlobalConfig.h"
 #include "livestatus/ChronoUtils.h"
-#include "livestatus/ICore.h"
-#include "livestatus/Logger.h"
-#include "livestatus/OutputBuffer.h"
-#include "livestatus/Query.h"
 class Object;
+#else
+#include <chrono>
+#include <filesystem>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+
+#include "livestatus/CrashReport.h"
+#include "livestatus/EventConsoleConnection.h"
+#include "livestatus/InputBuffer.h"
+#include "livestatus/Interface.h"
+#include "livestatus/StringUtils.h"
+#include "livestatus/mk_logwatch.h"
+#include "nagios.h"
+#endif
+
+Logger *Store::logger() const { return _mc->loggerLivestatus(); }
+
+size_t Store::numCachedLogMessages() {
+    return _log_cache.numCachedLogMessages();
+}
+
+bool Store::answerGetRequest(const std::list<std::string> &lines,
+                             OutputBuffer &output,
+                             const std::string &tablename) {
+    return Query{lines,
+                 findTable(output, tablename),
+                 _mc->dataEncoding(),
+                 _mc->maxResponseSize(),
+                 output,
+                 logger()}
+        .process();
+}
+
+void Store::addTable(Table &table) {
+    _tables.emplace(table.name(), &table);
+    _table_columns.addTable(table);
+}
+
+Table &Store::findTable(OutputBuffer &output, const std::string &name) {
+    // NOTE: Even with an invalid table name we continue, so we can parse
+    // headers, especially ResponseHeader.
+    if (name.empty()) {
+        output.setError(OutputBuffer::ResponseCode::invalid_request,
+                        "Invalid GET request, missing table name");
+        return _table_dummy;
+    }
+    auto it = _tables.find(name);
+    if (it == _tables.end()) {
+        output.setError(OutputBuffer::ResponseCode::not_found,
+                        "Invalid GET request, no such table '" + name + "'");
+        return _table_dummy;
+    }
+    return *it->second;
+}
+
+#ifdef CMC
 
 Store::Store(ICore *mc, Core *core)
     : _mc(mc)
@@ -92,40 +149,6 @@ void Store::switchStatehistTable(
     }
 }
 
-void Store::addTable(Table &table) {
-    _tables.emplace(table.name(), &table);
-    _table_columns.addTable(table);
-}
-
-Table &Store::findTable(OutputBuffer &output, const std::string &name) {
-    // NOTE: Even with an invalid table name we continue, so we can parse
-    // headers, especially ResponseHeader.
-    if (name.empty()) {
-        output.setError(OutputBuffer::ResponseCode::invalid_request,
-                        "Invalid GET request, missing table name");
-        return _table_dummy;
-    }
-    auto it = _tables.find(name);
-    if (it == _tables.end()) {
-        output.setError(OutputBuffer::ResponseCode::not_found,
-                        "Invalid GET request, no such table '" + name + "'");
-        return _table_dummy;
-    }
-    return *it->second;
-}
-
-bool Store::answerGetRequest(const std::list<std::string> &lines,
-                             OutputBuffer &output,
-                             const std::string &tablename) {
-    return Query{lines,
-                 findTable(output, tablename),
-                 _mc->dataEncoding(),
-                 _mc->maxResponseSize(),
-                 output,
-                 logger()}
-        .process();
-}
-
 void Store::buildStatehistCache(
     std::optional<std::chrono::seconds> cache_horizon) {
     if (cache_horizon) {
@@ -171,31 +194,7 @@ void Store::addFlappingToStatehistCache(
     }
 }
 
-Logger *Store::logger() const { return _mc->loggerLivestatus(); }
-
-size_t Store::numCachedLogMessages() {
-    return _log_cache.numCachedLogMessages();
-}
-
 #else
-
-#include <chrono>
-#include <filesystem>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
-
-#include "livestatus/CrashReport.h"
-#include "livestatus/EventConsoleConnection.h"
-#include "livestatus/ICore.h"
-#include "livestatus/InputBuffer.h"
-#include "livestatus/Interface.h"
-#include "livestatus/Logger.h"
-#include "livestatus/OutputBuffer.h"
-#include "livestatus/Query.h"
-#include "livestatus/StringUtils.h"
-#include "livestatus/mk_logwatch.h"
-#include "nagios.h"
 
 Store::Store(ICore *mc)
     : _mc(mc)
@@ -249,28 +248,6 @@ Store::Store(ICore *mc)
     addTable(_table_eventconsolestatus);
     addTable(_table_eventconsolereplication);
     addTable(_table_eventconsolerules);
-}
-
-void Store::addTable(Table &table) {
-    _tables.emplace(table.name(), &table);
-    _table_columns.addTable(table);
-}
-
-Table &Store::findTable(OutputBuffer &output, const std::string &name) {
-    // NOTE: Even with an invalid table name we continue, so we can parse
-    // headers, especially ResponseHeader.
-    if (name.empty()) {
-        output.setError(OutputBuffer::ResponseCode::invalid_request,
-                        "Invalid GET request, missing table name");
-        return _table_dummy;
-    }
-    auto it = _tables.find(name);
-    if (it == _tables.end()) {
-        output.setError(OutputBuffer::ResponseCode::not_found,
-                        "Invalid GET request, no such table '" + name + "'");
-        return _table_dummy;
-    }
-    return *it->second;
 }
 
 namespace {
@@ -459,21 +436,4 @@ void Store::answerCommandNagios(const ExternalCommand &command) {
     nagios_compat_submit_external_command(command.str().c_str());
 }
 
-bool Store::answerGetRequest(const std::list<std::string> &lines,
-                             OutputBuffer &output,
-                             const std::string &tablename) {
-    return Query{lines,
-                 findTable(output, tablename),
-                 _mc->dataEncoding(),
-                 _mc->maxResponseSize(),
-                 output,
-                 logger()}
-        .process();
-}
-
-Logger *Store::logger() const { return _mc->loggerLivestatus(); }
-
-size_t Store::numCachedLogMessages() {
-    return _log_cache.numCachedLogMessages();
-}
 #endif

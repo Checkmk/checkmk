@@ -12,13 +12,7 @@
 #include <list>
 #include <map>
 #include <string>
-#ifdef CMC
-#include <chrono>
-#include <optional>
-#else
-#include <utility>
-#include <vector>
-#endif
+
 #include "livestatus/LogCache.h"
 #include "livestatus/Table.h"
 #include "livestatus/TableColumns.h"
@@ -53,11 +47,16 @@ class Query;
 class User;
 
 #ifdef CMC
+#include <chrono>
+#include <optional>
+
 #include "TableCachedStatehist.h"
 class Core;
 class Object;
 #else
 #include <mutex>
+#include <utility>
+#include <vector>
 #endif
 
 class Store {

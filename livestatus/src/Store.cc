@@ -13,8 +13,6 @@
 #ifdef CMC
 #include <utility>
 
-#include "Core.h"
-#include "GlobalConfig.h"
 #include "livestatus/ChronoUtils.h"
 class Object;
 #else
@@ -75,7 +73,8 @@ Table &Store::findTable(OutputBuffer &output, const std::string &name) {
 
 #ifdef CMC
 
-Store::Store(ICore *mc, Core *core)
+Store::Store(ICore *mc, std::optional<std::chrono::seconds> cache_horizon,
+             Logger *logger)
     : _mc(mc)
     , _log_cache(mc)
     , _table_cached_statehist(mc)
@@ -128,8 +127,7 @@ Store::Store(ICore *mc, Core *core)
     addTable(_table_eventconsolereplication);
     addTable(_table_eventconsolerules);
 
-    switchStatehistTable(core->config()->history_.cache_horizon_,
-                         core->_logger_core);
+    switchStatehistTable(cache_horizon, logger);
 }
 
 // Depending on wether the state history cache is enabled or not a different

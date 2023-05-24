@@ -50,7 +50,6 @@ class User;
 #include <optional>
 
 #include "TableCachedStatehist.h"
-class Core;
 class Object;
 #else
 #include <mutex>
@@ -62,7 +61,8 @@ class InputBuffer;
 class Store {
 public:
 #ifdef CMC
-    Store(ICore *mc, Core *core);
+    Store(ICore *mc, std::optional<std::chrono::seconds> cache_horizon,
+          Logger *logger);
     void switchStatehistTable(std::optional<std::chrono::seconds> cache_horizon,
                               Logger *logger);
     void buildStatehistCache(std::optional<std::chrono::seconds> cache_horizon);

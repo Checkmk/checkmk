@@ -58,7 +58,6 @@ test_neb_CPPFLAGS = $(AM_CPPFLAGS) -I$(GOOGLETEST_INCLUDE)
 test_neb_LDFLAGS = $(AM_LDFLAGS)
 test_neb_LDADD = \
     liblivestatusneb.a \
-    -lstdc++fs \
     $(LIBLIVESTATUS_SO) \
     $(LIBS_DIR)/libgtest.a \
     $(LIBS_DIR)/libgtest_main.a \
@@ -130,7 +129,7 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 
 livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)
 # Note: libstdc++fs is only available as a static library, so we are lucky.
-	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) $(LIBLIVESTATUS_SO)
+	$(CXXLINK) -shared $^ -lpthread $(AM_LDFLAGS) $(LIBLIVESTATUS_SO)
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -I. -I../.. -I.. -c NagiosMockup.cc -o NagiosMockup.o
 	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatusneb_a_LD_FLAGS) $(LIBLIVESTATUS_SO)

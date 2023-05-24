@@ -14,8 +14,6 @@ import cmk.utils.paths
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
-from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.type_defs import HostName, Item, SectionName, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
@@ -29,7 +27,7 @@ from cmk.checkengine import (
     SectionPlugin,
     SummarizerFunction,
 )
-from cmk.checkengine.check_table import ConfiguredService, LegacyCheckParameters
+from cmk.checkengine.check_table import ConfiguredService
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkengine.discovery import (
@@ -228,19 +226,25 @@ def _check_preview_table_row(
         else ServiceCheckResult.check_not_implemented()
     )
 
-    return _make_check_preview_entry(
-        host_name=host_name,
-        check_plugin_name=str(service.check_plugin_name),
-        item=service.item,
-        description=service.description,
+    def make_output() -> str:
+        return (
+            result.output
+            or f"WAITING - {check_source.split('_')[-1].title()} check, cannot be done offline"
+        )
+
+    return CheckPreviewEntry(
         check_source=check_source,
+        check_plugin_name=str(service.check_plugin_name),
         ruleset_name=ruleset_name,
+        item=service.item,
         discovered_parameters=service.discovered_parameters,
-        effective_parameters=service.parameters,
-        exitcode=result.state,
-        output=result.output,
-        found_on_nodes=found_on_nodes,
+        effective_parameters=service.parameters.preview(cmk.base.core.timeperiod_active),
+        description=service.description,
+        state=result.state,
+        output=make_output(),
+        metrics=[],
         labels={l.name: l.value for l in service.service_labels.values()},
+        found_on_nodes=list(found_on_nodes),
     )
 
 
@@ -249,18 +253,29 @@ def get_custom_check_preview_rows(
 ) -> Sequence[CheckPreviewEntry]:
     custom_checks = config_cache.custom_checks(host_name)
     ignored_services = config.IgnoredServices(config_cache, host_name)
+
+    def make_check_source(desc: str) -> str:
+        return "ignored_custom" if desc in ignored_services else "custom"
+
+    def make_output(desc: str) -> str:
+        pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
+        return f"WAITING - {pretty} check, cannot be done offline"
+
     return list(
         {
-            entry["service_description"]: _make_check_preview_entry(
-                host_name=host_name,
+            entry["service_description"]: CheckPreviewEntry(
+                check_source=make_check_source(entry["service_description"]),
                 check_plugin_name="custom",
+                ruleset_name=None,
                 item=entry["service_description"],
+                discovered_parameters=None,
+                effective_parameters=None,
                 description=entry["service_description"],
-                check_source=(
-                    "ignored_custom"
-                    if entry["service_description"] in ignored_services
-                    else "custom"
-                ),
+                state=None,
+                output=make_output(entry["service_description"]),
+                metrics=[],
+                labels={},
+                found_on_nodes=[host_name],
             )
             for entry in custom_checks
         }.values()
@@ -275,15 +290,29 @@ def get_active_check_preview_rows(
     active_checks = config_cache.active_checks(host_name)
     host_attrs = config_cache.get_host_attributes(host_name)
     ignored_services = config.IgnoredServices(config_cache, host_name)
+
+    def make_check_source(desc: str) -> str:
+        return "ignored_active" if desc in ignored_services else "active"
+
+    def make_output(desc: str) -> str:
+        pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
+        return f"WAITING - {pretty} check, cannot be done offline"
+
     return list(
         {
-            descr: _make_check_preview_entry(
-                host_name=host_name,
+            descr: CheckPreviewEntry(
+                check_source=make_check_source(descr),
                 check_plugin_name=plugin_name,
+                ruleset_name=None,
                 item=descr,
+                discovered_parameters=None,
+                effective_parameters=None,
                 description=descr,
-                check_source="ignored_active" if descr in ignored_services else "active",
-                effective_parameters=params,
+                state=None,
+                output=make_output(descr),
+                metrics=[],
+                labels={},
+                found_on_nodes=[host_name],
             )
             for plugin_name, entries in active_checks
             for params in entries
@@ -296,50 +325,4 @@ def get_active_check_preview_rows(
                 params,
             )
         }.values()
-    )
-
-
-def _make_check_preview_entry(
-    *,
-    host_name: HostName,
-    check_plugin_name: str,
-    item: str | None,
-    description: ServiceName,
-    check_source: str,
-    ruleset_name: RulesetName | None = None,
-    discovered_parameters: LegacyCheckParameters = None,
-    effective_parameters: LegacyCheckParameters | TimespecificParameters = None,
-    exitcode: int | None = None,
-    output: str = "",
-    found_on_nodes: Sequence[HostName] | None = None,
-    labels: dict[str, str] | None = None,
-) -> CheckPreviewEntry:
-    return CheckPreviewEntry(
-        check_source=check_source,
-        check_plugin_name=check_plugin_name,
-        ruleset_name=ruleset_name,
-        item=item,
-        discovered_parameters=discovered_parameters,
-        effective_parameters=_wrap_timespecific_for_preview(effective_parameters),
-        description=description,
-        state=exitcode,
-        output=output
-        or f"WAITING - {check_source.split('_')[-1].title()} check, cannot be done offline",
-        # Service discovery never uses the perfdata in the check table. That entry
-        # is constantly discarded, yet passed around(back and forth) as part of the
-        # discovery result in the request elements. Some perfdata VALUES are not parsable
-        # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
-        metrics=[],
-        labels=labels or {},
-        found_on_nodes=[host_name] if found_on_nodes is None else list(found_on_nodes),
-    )
-
-
-def _wrap_timespecific_for_preview(
-    params: LegacyCheckParameters | TimespecificParameters,
-) -> LegacyCheckParameters:
-    return (
-        params.preview(cmk.base.core.timeperiod_active)
-        if isinstance(params, TimespecificParameters)
-        else params
     )

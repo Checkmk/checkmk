@@ -124,6 +124,10 @@ class CheckPreviewEntry:
     description: str
     state: int | None
     output: str
+    # Service discovery never uses the perfdata in the check table. That entry
+    # is constantly discarded, yet passed around(back and forth) as part of the
+    # discovery result in the request elements. Some perfdata VALUES are not parsable
+    # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
     metrics: list[MetricTuple]
     labels: dict[str, str]
     found_on_nodes: list[HostName]

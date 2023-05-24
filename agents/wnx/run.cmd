@@ -107,6 +107,9 @@ call :build_agent_controller
 :: arg_ohm
 call :build_ohm
 
+:: arg_sign
+call :sign_binaries
+
 :: arg_msi
 call :build_msi
 call :set_msi_version

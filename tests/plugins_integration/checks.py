@@ -7,7 +7,7 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import requests
 import yaml
@@ -39,7 +39,7 @@ def apply_regexps(identifier: str, canon: dict, result: dict) -> None:
         pattern = patterns[field_name]
         LOGGER.debug("> Applying regexp: %s", pattern)
         match = re.search(pattern, result[field_name])
-        if match:
+        if match and canon.get(field_name):
             canon[field_name] = re.sub(
                 pattern,
                 match.group(),
@@ -76,26 +76,66 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
         ) from exc
 
 
-def process_check_output(
-    site: Site, output_dir: Optional[Path] = None, update_mode: bool = False
-) -> bool:
-    """Process the check output and either dump or compare it."""
-    host_names = [
+def get_host_names(site: Site) -> list[str]:
+    """Return the list of hosts from the site."""
+    return [
         host.get("id")
         for host in api_get(site, "/domain-types/host_config/collections/all")
         .json()
         .get("value", [])
         if host.get("id") not in (None, "", site.id)
     ]
+
+
+def verify_check_result(
+    check_file_name: str, result_data: dict[str, Any], output_dir: Path, update_mode: bool
+) -> bool:
+    """Verify that the check result is matching the stored canon.
+
+    Optionally update the stored canon if it does not match."""
+    json_canon_file_path = f"{constants.EXPECTED_OUTPUT_DIR}/{check_file_name}.json"
+    if os.path.exists(json_canon_file_path):
+        with open(json_canon_file_path, "r", encoding="utf-8") as json_file:
+            canon_data = json.load(json_file)
+    else:
+        LOGGER.warning('Canon file "%s" not found!', json_canon_file_path)
+        canon_data = {}
+    json_result_file_path = str(output_dir / f"{check_file_name}.json")
+    with open(json_result_file_path, "w", encoding="utf-8") as json_file:
+        json_file.write(f"{json.dumps(result_data, indent=4)}\n")
+
+    apply_regexps(check_file_name, canon_data, result_data)
+
+    if result_data and canon_data == result_data:
+        return True
+
+    if update_mode:
+        with open(json_canon_file_path, "w", encoding="utf-8") as json_file:
+            json_file.write(f"{json.dumps(result_data, indent=4)}\n")
+        return True
+
+    if len(result_data) == 0:
+        LOGGER.warning("%s: No data returned!", check_file_name)
+    elif len(canon_data) != len(result_data):
+        LOGGER.warning("%s: Data length mismatch!", check_file_name)
+    else:
+        LOGGER.warning("%s: Data mismatch!", check_file_name)
+
+    LOGGER.info(run_cmd(["diff", json_canon_file_path, json_result_file_path]).stdout)
+
+    return False
+
+
+def process_check_output(site: Site, output_dir: Path, update_mode: bool) -> bool:
+    """Process the check output and either dump or compare it."""
     passed = True if update_mode else None
-    for host_name in host_names:
+    for host_name in get_host_names(site):
         if len(constants.HOST_NAMES) > 0 and host_name not in constants.HOST_NAMES:
             continue
         LOGGER.info('> Processing agent host "%s"...', host_name)
         check_results = get_check_results(site, host_name)
         for check_id in sorted(check_results):
             check_result = check_results[check_id]
-
             check_host_name = check_id.split(":", 1)[0]
             check_display_name = check_result.get(
                 "display_name", check_id.split(":", 1)[-1]
@@ -103,42 +143,21 @@ def process_check_output(
             check_safe_name = (
                 check_display_name.replace("$", "_").replace(" ", "_").replace("/", "#")
             )
-            # equals check_id
-            # check_full_name = f"{check_host_name}.{check_display_name}"
             check_file_name = f"{check_host_name}.{check_safe_name}"
 
-            if len(constants.CHECK_NAMES) > 0 and check_file_name not in constants.CHECK_NAMES:
+            if (
+                len(constants.CHECK_NAMES) > 0
+                and check_safe_name not in constants.CHECK_NAMES
+                and check_file_name not in constants.CHECK_NAMES
+            ):
                 continue
-            json_canon_file_path = f"{constants.EXPECTED_OUTPUT_DIR}/{check_file_name}.json"
 
-            result_data = check_result.get("extensions", {})
-
-            if update_mode:
-                with open(json_canon_file_path, "w", encoding="utf-8") as json_file:
-                    json_file.write(f"{json.dumps(result_data, indent=4)}\n")
-                continue
-            if output_dir:
-                json_result_file_path = str(output_dir / f"{check_file_name}.json")
-                with open(json_result_file_path, "w", encoding="utf-8") as json_file:
-                    json_file.write(f"{json.dumps(result_data, indent=4)}\n")
-            with open(json_canon_file_path, "r", encoding="utf-8") as json_file:
-                canon_data = json.load(json_file)
-
-            apply_regexps(check_file_name, canon_data, result_data)
-
-            if result_data and canon_data == result_data:
+            if verify_check_result(
+                check_file_name, check_result.get("extensions", {}), output_dir, update_mode
+            ):
                 if passed is None:
                     passed = True
                 continue
-
-            if len(result_data) == 0:
-                LOGGER.warning("%s: No data returned!", check_file_name)
-            elif canon_data != result_data:
-                if len(canon_data) != len(result_data):
-                    LOGGER.warning("%s: Data length mismatch!", check_file_name)
-                else:
-                    LOGGER.warning("%s: Data mismatch!", check_file_name)
-            LOGGER.info(run_cmd(["diff", json_canon_file_path, json_result_file_path]).stdout)
             passed = False
 
     return passed is True
@@ -146,9 +165,9 @@ def process_check_output(
 
 def compare_check_output(site: Site, output_dir: Path) -> bool:
     """Process the check output and compare it to the existing dumps."""
-    return process_check_output(site, output_dir)
+    return process_check_output(site, output_dir, update_mode=False)
 
 
-def update_check_output(site: Site) -> bool:
+def update_check_output(site: Site, output_dir: Path) -> bool:
     """Process the check output and update the stored dumps."""
-    return process_check_output(site, update_mode=True)
+    return process_check_output(site, output_dir, update_mode=True)

@@ -81,7 +81,12 @@ from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionRes
 from cmk.base.api.agent_based.checking_classes import State
 from cmk.base.config import ConfigCache
 
-__all__ = ["execute_checkmk_checks", "check_host_services"]
+__all__ = [
+    "execute_checkmk_checks",
+    "check_host_services",
+    "get_monitoring_data_kwargs",
+    "get_aggregated_result",
+]
 
 
 class _AggregatedResult(NamedTuple):
@@ -360,6 +365,25 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
     return True
 
 
+def get_check_function(
+    config_cache: ConfigCache,
+    host_name: HostName,
+    plugin: CheckPlugin,
+    service: ConfiguredService,
+    value_store_manager: value_store.ValueStoreManager,
+) -> Callable[..., Iterable[object]]:
+    return (
+        cluster_mode.get_cluster_check_function(
+            *config_cache.get_clustered_service_configuration(host_name, service.description),
+            plugin=plugin,
+            service_id=service.id(),
+            value_store_manager=value_store_manager,
+        )
+        if config_cache.is_cluster(host_name)
+        else plugin.function
+    )
+
+
 def get_aggregated_result(
     host_name: HostName,
     config_cache: ConfigCache,
@@ -374,18 +398,15 @@ def get_aggregated_result(
 
     This function is also called during discovery.
     """
-    check_function = (
-        cluster_mode.get_cluster_check_function(
-            *config_cache.get_clustered_service_configuration(host_name, service.description),
-            plugin=plugin,
-            service_id=service.id(),
-            value_store_manager=value_store_manager,
-        )
-        if config_cache.is_cluster(host_name)
-        else plugin.function
+    check_function = get_check_function(
+        config_cache,
+        host_name,
+        plugin=plugin,
+        service=service,
+        value_store_manager=value_store_manager,
     )
 
-    section_kws, error_result = _get_monitoring_data_kwargs(
+    section_kws, error_result = get_monitoring_data_kwargs(
         host_name, providers, config_cache, service, plugin.sections
     )
     if not section_kws:  # no data found
@@ -492,7 +513,7 @@ def _get_clustered_service_node_keys(
     return [HostKey(nodename, source_type) for nodename in used_nodes]
 
 
-def _get_monitoring_data_kwargs(
+def get_monitoring_data_kwargs(
     host_name: HostName,
     providers: Mapping[HostKey, Provider],
     config_cache: ConfigCache,

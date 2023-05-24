@@ -1,0 +1,14 @@
+Title: Network topology: Minor usability fixes when selecting root nodes
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1684914692
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The host regex filter was not updated accordingly when the user changed the starting node(s) of a topology.
+
+

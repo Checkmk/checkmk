@@ -213,11 +213,11 @@ register.agent_section(
 DISCOVERED_PARAMETERS: Final = (
     "Reallocated_Sector_Ct",  # 5
     "Spin_Retry_Count",  # 10
-    "Reallocated_Event_Count",  # 196
-    "Current_Pending_Sector",  # 197
-    "Command_Timeout",  # 188
     "End-to-End_Error",  # 184
     "Reported_Uncorrect",  # 187
+    "Command_Timeout",  # 188
+    "Reallocated_Event_Count",  # 196
+    "Current_Pending_Sector",  # 197
     "UDMA_CRC_Error_Count",  # 199
     # nvme
     "Critical_Warning",
@@ -245,23 +245,23 @@ def _summary(state: State, text: str) -> Result:
 
 OUTPUT_FIELDS: Tuple[Tuple[Callable[[State, str], Result], str, str, Callable], ...] = (
     # ATA
-    (_summary, "Power_On_Hours", "Powered on", lambda h: render.timespan(h * 3600)),  # 9, also nvme
-    (_summary, "Power_Cycle_Count", "Power cycles", str),  # 12
-    (_summary, "Reported_Uncorrect", "Uncorrectable errors", str),  # 187
     (_summary, "Reallocated_Sector_Ct", "Reallocated sectors", str),  # 5
-    (_summary, "Reallocated_Event_Count", "Reallocated events", str),  # 196
+    (_summary, "Power_On_Hours", "Powered on", lambda h: render.timespan(h * 3600)),  # 9, also nvme
     (_summary, "Spin_Retry_Count", "Spin retries", str),  # 10
-    (_summary, "Current_Pending_Sector", "Pending sectors", str),  # 197
-    (_summary, "Command_Timeout", "Command timeout counter", str),  # 188
+    (_summary, "Power_Cycle_Count", "Power cycles", str),  # 12
     (_summary, "End-to-End_Error", "End-to-End errors", str),  # 184
+    (_summary, "Reported_Uncorrect", "Uncorrectable errors", str),  # 187
+    (_summary, "Command_Timeout", "Command timeout counter", str),  # 188
+    (_summary, "Reallocated_Event_Count", "Reallocated events", str),  # 196
+    (_summary, "Current_Pending_Sector", "Pending sectors", str),  # 197
     (_summary, "UDMA_CRC_Error_Count", "UDMA CRC errors", str),  # 199
     (_summary, "CRC_Error_Count", "CRC errors", str),  # also 199
     # nvme
     (_summary, "Power_Cycles", "Power cycles", str),
     (_summary, "Critical_Warning", "Critical warning", str),
+    (_summary, "Media_and_Data_Integrity_Errors", "Media and data integrity errors", str),
     (_summary, "Available_Spare", "Available spare", render.percent),
     (_summary, "Percentage_Used", "Percentage used", render.percent),
-    (_summary, "Media_and_Data_Integrity_Errors", "Media and data integrity errors", str),
     (_summary, "Error_Information_Log_Entries", "Error information log entries", str),
     (_summary, "Data_Units_Read", "Data units read", render.bytes),
     (_summary, "Data_Units_Written", "Data units written", render.bytes),

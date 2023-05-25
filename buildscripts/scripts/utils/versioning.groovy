@@ -32,14 +32,6 @@ def REPO_PATCH_RULES = [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
-"free": [\
-    "paths_to_be_removed": [\
-        "managed", \
-        "cme", \
-        "cme.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
-    "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
 "managed": [\
     "paths_to_be_removed": [\
         "cloud", \

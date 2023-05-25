@@ -234,6 +234,9 @@ class MutableTree:
         node.table.add_key_columns(sorted(key_columns))
         node.table.add_rows(rows)
 
+    def count_entries(self) -> int:
+        return self.tree.count_entries()
+
     def get_attribute(self, path: SDPath, key: str) -> int | float | str | None:
         return (
             None if (node := self.tree.get_node(path)) is None else node.attributes.pairs.get(key)
@@ -622,6 +625,9 @@ class ImmutableDeltaTree:
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(_filter_delta_node(self.tree, filters))
+
+    def get_stats(self) -> _SDDeltaCounter:
+        return self.tree.count_entries()
 
     def get_tree(self, path: SDPath) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(self.tree.get_node(path))

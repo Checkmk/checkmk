@@ -509,7 +509,7 @@ def _check_fetched_data_or_trees(
         # Inventory trees in Checkmk <2.2 the cluster property was added in any case.
         # Since Checkmk 2.2 we changed this behaviour: see werk 14836.
         # In order to avoid a lot of "useless" warnings we check the following:
-        if inventory_tree.tree.count_entries() == 1 and isinstance(
+        if inventory_tree.count_entries() == 1 and isinstance(
             inventory_tree.get_attribute(
                 ("software", "applications", "check_mk", "cluster"), "is_cluster"
             ),
@@ -541,7 +541,7 @@ def _check_trees(
         yield ActiveCheckResult(0, "Found no data")
         return
 
-    yield ActiveCheckResult(0, f"Found {inventory_tree.tree.count_entries()} inventory entries")
+    yield ActiveCheckResult(0, f"Found {inventory_tree.count_entries()} inventory entries")
 
     swp_table = inventory_tree.tree.get_table(("software", "packages"))
     if swp_table is not None and swp_table.is_empty() and parameters.sw_missing:
@@ -554,4 +554,4 @@ def _check_trees(
         yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
 
     if status_data_tree:
-        yield ActiveCheckResult(0, f"Found {status_data_tree.tree.count_entries()} status entries")
+        yield ActiveCheckResult(0, f"Found {status_data_tree.count_entries()} status entries")

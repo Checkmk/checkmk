@@ -500,10 +500,10 @@ class _CachedDeltaTreeLoader:
         current_tree: ImmutableTree,
     ) -> HistoryEntry | None:
         delta_tree = current_tree.difference(previous_tree)
-        delta_result = delta_tree.tree.count_entries()
-        new = delta_result["new"]
-        changed = delta_result["changed"]
-        removed = delta_result["removed"]
+        delta_stats = delta_tree.get_stats()
+        new = delta_stats["new"]
+        changed = delta_stats["changed"]
+        removed = delta_stats["removed"]
         if new or changed or removed:
             store.save_text_to_file(
                 self._path,
@@ -521,12 +521,12 @@ class _CachedDeltaTreeLoader:
         if not (filtered_delta_tree := delta_tree.filter(self.filters)):
             return None
 
-        delta_result = filtered_delta_tree.tree.count_entries()
+        delta_stats = filtered_delta_tree.get_stats()
         return HistoryEntry(
             self.current_timestamp,
-            delta_result["new"],
-            delta_result["changed"],
-            delta_result["removed"],
+            delta_stats["new"],
+            delta_stats["changed"],
+            delta_stats["removed"],
             filtered_delta_tree,
         )
 

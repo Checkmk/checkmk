@@ -2710,10 +2710,10 @@ class FolderLookupCache:
     def __init__(self, tree: FolderTree) -> None:
         self._folder_tree = tree
 
-    def path(self):
+    def path(self) -> str:
         return os.path.join(cmk.utils.paths.tmp_dir, "wato", "wato_host_folder_lookup.cache")
 
-    def get(self, host_name) -> CREHost | None:  # type: ignore[no-untyped-def]
+    def get(self, host_name: HostName) -> CREHost | None:
         """This function tries to create a host object using its name from a lookup cache.
         If this does not work (cache miss), the regular search for the host is started.
         If the host was found by the regular search, the lookup cache is updated accordingly."""
@@ -2760,30 +2760,30 @@ class FolderLookupCache:
                 g.folder_lookup_cache_dict = {}
         return g.folder_lookup_cache_dict
 
-    def build(self, cache_path):
+    def build(self, cache_path: str) -> None:
         store.acquire_lock(cache_path)
         folder_lookup = {}
         for host_name, host in self._folder_tree.root_folder().all_hosts_recursively().items():
             folder_lookup[host_name] = host.folder().path()
         self._save(cache_path, folder_lookup)
 
-    def _save(self, cache_path, folder_lookup):
+    def _save(self, cache_path: str, folder_lookup: Mapping[HostName, str]) -> None:
         store.save_bytes_to_file(cache_path, pickle.dumps(folder_lookup))
 
-    def delete(self):
+    def delete(self) -> None:
         try:
             os.unlink(self.path())
         except FileNotFoundError:
             pass
 
-    def add_hosts(self, host2path_list):
+    def add_hosts(self, host2path_list: Iterable[tuple[HostName, str]]) -> None:
         cache_path = self.path()
         cache = self.get_cache()
         for hostname, folder_path in host2path_list:
             cache[hostname] = folder_path
         self._save(cache_path, cache)
 
-    def delete_hosts(self, hostnames):
+    def delete_hosts(self, hostnames: Iterable[HostName]) -> None:
         cache_path = self.path()
         cache = self.get_cache()
         for hostname in hostnames:

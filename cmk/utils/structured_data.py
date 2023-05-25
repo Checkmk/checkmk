@@ -525,6 +525,23 @@ class ImmutableTree:
         return ImmutableDeltaTree(_compare_nodes(self.tree, rhs.tree))
 
 
+# .
+#   .--immutable delta tree------------------------------------------------.
+#   |          _                           _        _     _                |
+#   |         (_)_ __ ___  _ __ ___  _   _| |_ __ _| |__ | | ___           |
+#   |         | | '_ ` _ \| '_ ` _ \| | | | __/ _` | '_ \| |/ _ \          |
+#   |         | | | | | | | | | | | | |_| | || (_| | |_) | |  __/          |
+#   |         |_|_| |_| |_|_| |_| |_|\__,_|\__\__,_|_.__/|_|\___|          |
+#   |                                                                      |
+#   |                  _      _ _          _                               |
+#   |               __| | ___| | |_ __ _  | |_ _ __ ___  ___               |
+#   |              / _` |/ _ \ | __/ _` | | __| '__/ _ \/ _ \              |
+#   |             | (_| |  __/ | || (_| | | |_| | |  __/  __/              |
+#   |              \__,_|\___|_|\__\__,_|  \__|_|  \___|\___|              |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
 def _filter_delta_attributes(
     delta_attributes: DeltaAttributes, filter_func: SDFilterFunc
 ) -> DeltaAttributes:
@@ -574,73 +591,6 @@ def _filter_delta_node(
         )
 
     return filtered
-
-
-def _merge_delta_attributes(
-    delta_attributes_lhs: DeltaAttributes, delta_attributes_rhs: DeltaAttributes
-) -> DeltaAttributes:
-    return DeltaAttributes(
-        path=delta_attributes_lhs.path,
-        pairs={
-            **delta_attributes_lhs.pairs,
-            **delta_attributes_rhs.pairs,
-        },
-    )
-
-
-def _merge_delta_table(delta_table_lhs: DeltaTable, delta_table_rhs: DeltaTable) -> DeltaTable:
-    delta_key_columns = []
-    for key_column in delta_table_lhs.key_columns:
-        if key_column not in delta_key_columns:
-            delta_key_columns.append(key_column)
-    for key_column in delta_table_rhs.key_columns:
-        if key_column not in delta_key_columns:
-            delta_key_columns.append(key_column)
-
-    delta_rows = []
-    for row in delta_table_lhs.rows:
-        if row not in delta_rows:
-            delta_rows.append(row)
-    for row in delta_table_rhs.rows:
-        if row not in delta_rows:
-            delta_rows.append(row)
-
-    return DeltaTable(
-        path=delta_table_lhs.path,
-        key_columns=delta_key_columns,
-        rows=delta_rows,
-    )
-
-
-def _merge_delta_nodes(
-    delta_node_lhs: DeltaStructuredDataNode, delta_node_rhs: DeltaStructuredDataNode
-) -> DeltaStructuredDataNode:
-    delta_nodes = {}
-
-    compared_keys = _compare_dict_keys(
-        old_dict=delta_node_lhs.nodes_by_name,
-        new_dict=delta_node_rhs.nodes_by_name,
-    )
-
-    for key in compared_keys.only_old:
-        delta_nodes[key] = delta_node_lhs.nodes_by_name[key]
-
-    for key in compared_keys.both:
-        delta_nodes[key] = _merge_delta_nodes(
-            delta_node_lhs.nodes_by_name[key],
-            delta_node_rhs.nodes_by_name[key],
-        )
-
-    for key in compared_keys.only_new:
-        delta_nodes[key] = delta_node_rhs.nodes_by_name[key]
-
-    return DeltaStructuredDataNode(
-        name=delta_node_lhs.name,
-        path=delta_node_lhs.path,
-        attributes=_merge_delta_attributes(delta_node_lhs.attributes, delta_node_rhs.attributes),
-        table=_merge_delta_table(delta_node_lhs.table, delta_node_rhs.table),
-        _nodes=delta_nodes,
-    )
 
 
 class ImmutableDeltaTree:
@@ -1324,6 +1274,73 @@ class Attributes:
 
 _SDEncodeAs = Callable[[SDValue], tuple[SDValue | None, SDValue | None]]
 _SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
+
+
+def _merge_delta_attributes(
+    delta_attributes_lhs: DeltaAttributes, delta_attributes_rhs: DeltaAttributes
+) -> DeltaAttributes:
+    return DeltaAttributes(
+        path=delta_attributes_lhs.path,
+        pairs={
+            **delta_attributes_lhs.pairs,
+            **delta_attributes_rhs.pairs,
+        },
+    )
+
+
+def _merge_delta_table(delta_table_lhs: DeltaTable, delta_table_rhs: DeltaTable) -> DeltaTable:
+    delta_key_columns = []
+    for key_column in delta_table_lhs.key_columns:
+        if key_column not in delta_key_columns:
+            delta_key_columns.append(key_column)
+    for key_column in delta_table_rhs.key_columns:
+        if key_column not in delta_key_columns:
+            delta_key_columns.append(key_column)
+
+    delta_rows = []
+    for row in delta_table_lhs.rows:
+        if row not in delta_rows:
+            delta_rows.append(row)
+    for row in delta_table_rhs.rows:
+        if row not in delta_rows:
+            delta_rows.append(row)
+
+    return DeltaTable(
+        path=delta_table_lhs.path,
+        key_columns=delta_key_columns,
+        rows=delta_rows,
+    )
+
+
+def _merge_delta_nodes(
+    delta_node_lhs: DeltaStructuredDataNode, delta_node_rhs: DeltaStructuredDataNode
+) -> DeltaStructuredDataNode:
+    delta_nodes = {}
+
+    compared_keys = _compare_dict_keys(
+        old_dict=delta_node_lhs.nodes_by_name,
+        new_dict=delta_node_rhs.nodes_by_name,
+    )
+
+    for key in compared_keys.only_old:
+        delta_nodes[key] = delta_node_lhs.nodes_by_name[key]
+
+    for key in compared_keys.both:
+        delta_nodes[key] = _merge_delta_nodes(
+            delta_node_lhs.nodes_by_name[key],
+            delta_node_rhs.nodes_by_name[key],
+        )
+
+    for key in compared_keys.only_new:
+        delta_nodes[key] = delta_node_rhs.nodes_by_name[key]
+
+    return DeltaStructuredDataNode(
+        name=delta_node_lhs.name,
+        path=delta_node_lhs.path,
+        attributes=_merge_delta_attributes(delta_node_lhs.attributes, delta_node_rhs.attributes),
+        table=_merge_delta_table(delta_node_lhs.table, delta_node_rhs.table),
+        _nodes=delta_nodes,
+    )
 
 
 def _count_dict_entries(dict_: dict[SDKey, tuple[SDValue, SDValue]]) -> _SDDeltaCounter:

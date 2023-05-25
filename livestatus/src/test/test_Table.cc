@@ -48,9 +48,6 @@
 #include "livestatus/TableTimeperiods.h"
 #include "livestatus/Triggers.h"
 
-#ifdef CMC
-#include "TableCachedStatehist.h"
-#endif
 class User;
 class IComment;
 class IContact;
@@ -407,20 +404,11 @@ static ColumnDefinitions all_services_columns() {
            hosts_and_services_columns();
 }
 
-// Let's enforce the fact that TableCachedStatehist must be a drop-in
-// replacement for TableStateHistory.
 static ColumnDefinitions all_state_history_columns() {
     return state_history_columns() +  //
            "current_host_" / all_hosts_columns() +
            "current_service_" / all_services_columns();
 }
-
-#ifdef CMC
-TEST_F(ColumnNamesAndTypesTest, TableCachedStatehist) {
-    EXPECT_EQ(all_state_history_columns(),
-              ColumnDefinitions(TableCachedStatehist{&mc_}));
-}
-#endif
 
 static ColumnDefinitions columns_columns() {
     return {

@@ -18,6 +18,9 @@ def REPO_PATCH_RULES = [\
         "cloud", \
         "cce", \
         "cce.py", \
+        "saas", \
+        "cse", \
+        "cse.py", \
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"],\
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
@@ -29,6 +32,9 @@ def REPO_PATCH_RULES = [\
         "cloud", \
         "cce", \
         "cce.py", \
+        "saas", \
+        "cse", \
+        "cse.py", \
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
@@ -37,10 +43,24 @@ def REPO_PATCH_RULES = [\
         "cloud", \
         "cce", \
         "cce.py", \
+        "saas", \
+        "cse", \
+        "cse.py", \
         "web/htdocs/themes/{facelift,modern-dark}/scss/cce"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cce"]], \
 "cloud": [\
+    "paths_to_be_removed": [\
+        "managed", \
+        "cme", \
+        "cme.py", \
+        "saas", \
+        "cse", \
+        "cse.py", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
+    "folders_to_be_created": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
+"saas": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \

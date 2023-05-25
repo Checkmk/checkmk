@@ -261,7 +261,7 @@ def metric_in_all_rrd_columns(
 
 def merge_multicol(
     row: Row,
-    rrdcols: list[ColumnName],
+    rrdcols: Iterable[ColumnName],
     desired_metric: MetricName,
 ) -> TimeSeries:
     """Establish single timeseries for desired metric

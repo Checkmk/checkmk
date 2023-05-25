@@ -119,7 +119,7 @@ class RowTableLivestatus(RowTable):
 
         for index, cell in enumerate(cells):
             painter = cell.painter()
-            painter.derive(rows, cell, dynamic_columns.get(index))
+            painter.derive(rows, cell, dynamic_columns.get(index, []))
 
         return rows, len(data)
 

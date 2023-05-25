@@ -120,7 +120,7 @@ class PrometheusSessionConfig(SessionConfig):
     prometheus_endpoint: str
 
     def query_url(self) -> str:
-        return self.prometheus_endpoint + PrometheusEndpoints.query
+        return self.prometheus_endpoint.removesuffix("/") + PrometheusEndpoints.query
 
 
 def create_session(config: SessionConfig, logger: logging.Logger) -> requests.Session:
@@ -194,7 +194,7 @@ def node_exporter_getter(
 def make_api_client(config: APISessionConfig, logger: logging.Logger) -> client.ApiClient:  # type: ignore[no-any-unimported]
     client_config = client.Configuration()
 
-    host = config.api_server_endpoint
+    host = config.api_server_endpoint.removesuffix("/")
     client_config.host = host
     if config.token:
         client_config.api_key_prefix["authorization"] = "Bearer"

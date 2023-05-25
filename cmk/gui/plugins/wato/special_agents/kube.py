@@ -29,6 +29,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListChoice,
     ListOf,
+    Migrate,
     MigrateNotUpdated,
     RegExp,
     Tuple,
@@ -128,97 +129,110 @@ def _migrate_usage_endpoint(p: dict[str, object]) -> dict[str, object]:
     return p if is_cloud_edition() else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
 
 
-def _openshift() -> tuple[str, str, Dictionary]:
+def _migrate_old_style_url(p: dict[str, object]) -> dict[str, object]:
+    if "endpoint" in p:
+        p["endpoint_v2"] = p.pop("endpoint") + "/"  # type: ignore[operator]
+    return p
+
+
+def _openshift() -> tuple[str, str, Migrate]:
     return (
         "prometheus",
         mark_edition_only(_("Use data from OpenShift"), Edition.CCE),
-        Dictionary(
-            elements=[
-                (
-                    "endpoint",
-                    _url(
-                        title=_("Prometheus API endpoint"),
-                        default_value="https://",
-                        _help=_(
-                            "The full URL to the Prometheus API endpoint including the "
-                            "protocol (http or https). OpenShift exposes such "
-                            "endpoints via a route in the openshift-monitoring "
-                            "namespace called prometheus-k8s."
+        Migrate(
+            valuespec=Dictionary(
+                elements=[
+                    (
+                        "endpoint_v2",
+                        _url(
+                            title=_("Prometheus API endpoint"),
+                            default_value="https://",
+                            _help=_(
+                                "The full URL to the Prometheus API endpoint including the "
+                                "protocol (http or https). OpenShift exposes such "
+                                "endpoints via a route in the openshift-monitoring "
+                                "namespace called prometheus-k8s."
+                            ),
                         ),
                     ),
-                ),
-                ssl_verification(),
-                (
-                    "proxy",
-                    HTTPProxyReference(),
-                ),
-                _tcp_timeouts(),
-            ],
-            required_keys=["endpoint", "verify-cert"],
+                    ssl_verification(),
+                    (
+                        "proxy",
+                        HTTPProxyReference(),
+                    ),
+                    _tcp_timeouts(),
+                ],
+                required_keys=["endpoint_v2", "verify-cert"],
+            ),
+            migrate=_migrate_old_style_url,
         ),
     )
 
 
-def _cluster_collector() -> tuple[str, str, Dictionary]:
+def _cluster_collector() -> tuple[str, str, Migrate]:
     return (
         "cluster-collector",
         _("Use data from Checkmk Cluster Collector"),
-        Dictionary(  # TODO: adjust help texts depending on ingress inclusion
-            elements=[
-                (
-                    "endpoint",
-                    _url(
-                        title=_("Collector NodePort / Ingress endpoint"),
-                        default_value="https://<service url>:30035",
-                        _help=_(
-                            "The full URL to the Cluster Collector service including "
-                            "the protocol (http or https) and the port. Depending on "
-                            "the deployed configuration of the service this can "
-                            "either be the NodePort or the Ingress endpoint."
+        Migrate(
+            valuespec=Dictionary(  # TODO: adjust help texts depending on ingress inclusion
+                elements=[
+                    (
+                        "endpoint_v2",
+                        _url(
+                            title=_("Collector NodePort / Ingress endpoint"),
+                            default_value="https://<service url>:30035",
+                            _help=_(
+                                "The full URL to the Cluster Collector service including "
+                                "the protocol (http or https) and the port. Depending on "
+                                "the deployed configuration of the service this can "
+                                "either be the NodePort or the Ingress endpoint."
+                            ),
                         ),
                     ),
-                ),
-                ssl_verification(),
-                (
-                    "proxy",
-                    HTTPProxyReference(),
-                ),
-                _tcp_timeouts(),
-            ],
-            required_keys=["endpoint", "verify-cert"],
+                    ssl_verification(),
+                    (
+                        "proxy",
+                        HTTPProxyReference(),
+                    ),
+                    _tcp_timeouts(),
+                ],
+                required_keys=["endpoint_v2", "verify-cert"],
+            ),
+            migrate=_migrate_old_style_url,
         ),
     )
 
 
-def _api_endpoint() -> tuple[str, Dictionary]:
+def _api_endpoint() -> tuple[str, Migrate]:
     return (
         "kubernetes-api-server",
-        Dictionary(
-            elements=[
-                (
-                    "endpoint",
-                    _url(
-                        title=_("Endpoint"),
-                        default_value="https://<control plane ip>:443",
-                        _help=_(
-                            "The full URL to the Kubernetes API server "
-                            "including the protocol (http or https) and "
-                            "the port. Be aware that a trailing "
-                            "slash at the end of the URL is likely to "
-                            "result in an error."
+        Migrate(
+            valuespec=Dictionary(
+                elements=[
+                    (
+                        "endpoint_v2",
+                        _url(
+                            title=_("Endpoint"),
+                            default_value="https://<control plane ip>:443",
+                            _help=_(
+                                "The full URL to the Kubernetes API server including the protocol "
+                                "(http or https) and the port. One trailing slash (if present) "
+                                "will be removed."
+                            ),
                         ),
                     ),
-                ),
-                ssl_verification(),
-                (
-                    "proxy",
-                    HTTPProxyReference({"http", "https"}),  # Kubernetes client does not
-                    # support socks proxies.
-                ),
-                _tcp_timeouts(),
-            ],
-            required_keys=["endpoint", "verify-cert"],
-            title=_("API server connection"),
+                    ssl_verification(),
+                    (
+                        "proxy",
+                        HTTPProxyReference({"http", "https"}),  # Kubernetes client does not
+                        # support socks proxies.
+                    ),
+                    _tcp_timeouts(),
+                ],
+                required_keys=["endpoint_v2", "verify-cert"],
+                title=_("API server connection"),
+            ),
+            migrate=_migrate_old_style_url,
         ),
     )
 

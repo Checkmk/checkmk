@@ -1607,7 +1607,7 @@ def request_cluster_collector(
     parser: Callable[[bytes], Model],
 ) -> Model:
     session = query.create_session(config, LOGGER)
-    url = config.cluster_collector_endpoint + path
+    url = config.cluster_collector_endpoint.removesuffix("/") + path
     request = requests.Request("GET", url)
     prepare_request = session.prepare_request(request)
     try:

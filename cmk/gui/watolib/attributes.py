@@ -158,6 +158,8 @@ def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
     priv_protocol_choices = [
         ("DES", _("CBC-DES")),
         ("AES", _("AES-128")),
+        ("AES-192", _("AES-192")),
+        ("AES-256", _("AES-256")),
     ]
     if for_ec:
         # EC uses pysnmp which supports these protocols
@@ -165,8 +167,6 @@ def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
         priv_protocol_choices.extend(
             [
                 ("3DES-EDE", _("3DES-EDE")),
-                ("AES-192", _("AES-192")),
-                ("AES-256", _("AES-256")),
                 ("AES-192-Blumenthal", _("AES-192-Blumenthal")),
                 ("AES-256-Blumenthal", _("AES-256-Blumenthal")),
             ]

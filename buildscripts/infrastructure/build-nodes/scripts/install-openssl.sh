@@ -8,13 +8,13 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 . "${SCRIPT_DIR}/build_lib.sh"
 
-OPENSSL_VERSION=1.1.1q
+OPENSSL_VERSION=1.1.1t
 DIR_NAME=openssl-${OPENSSL_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tar.gz
 TARGET_DIR=/opt
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=3
+BUILD_ID=4
 
 build_package() {
     mkdir -p /opt/src

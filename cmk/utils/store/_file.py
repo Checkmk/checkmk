@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from os import getgid, getuid
 from pathlib import Path
 from stat import S_IMODE, S_IWOTH
-from typing import Any, Final, Generic, Protocol, TypeVar
+from typing import Any, Final, Generic, Protocol, Type, TypeVar
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
@@ -25,6 +25,8 @@ __all__ = [
     "ObjectStore",
     "PickleSerializer",
     "TextSerializer",
+    "RealIo",
+    "FileIo",
 ]
 
 TObject = TypeVar("TObject")
@@ -108,31 +110,25 @@ def _raise_for_permissions(path: Path) -> None:
         raise MKGeneralException(_('Refusing to read world writable file: "%s"') % path)
 
 
-class ObjectStore(Generic[TObject]):
-    def __init__(self, path: Path, *, serializer: Serializer[TObject]) -> None:
-        self.path: Final = path
-        self._serializer = serializer
+class FileIo(Protocol):
+    def __init__(self, path: Path):
+        ...
 
-    def __fspath__(self) -> str:
-        return str(self.path)
+    def write(self, data: bytes) -> None:
+        ...
 
-    @contextmanager
+    def read(self) -> bytes:
+        ...
+
     def locked(self) -> Iterator[None]:
-        acquired = acquire_lock(self.path)
-        try:
-            yield
-        finally:
-            if acquired:
-                release_lock(self.path)
+        ...
 
-    def write_obj(self, obj: TObject) -> None:
-        return self._save_bytes_to_file(data=self._serializer.serialize(obj))
 
-    def read_obj(self, *, default: TObject) -> TObject:
-        raw = self._load_bytes_from_file()
-        return self._serializer.deserialize(raw) if raw else default
+class RealIo:
+    def __init__(self, path: Path):
+        self.path = path
 
-    def _save_bytes_to_file(self, *, data: bytes) -> None:
+    def write(self, data: bytes) -> None:
         tmp_path = None
         try:
             with tempfile.NamedTemporaryFile(
@@ -159,7 +155,7 @@ class ObjectStore(Generic[TObject]):
         finally:
             release_lock(self.path)
 
-    def _load_bytes_from_file(self) -> bytes:
+    def read(self) -> bytes:
         try:
             _raise_for_permissions(self.path)
             return self.path.read_bytes()
@@ -175,3 +171,40 @@ class ObjectStore(Generic[TObject]):
             if cmk.utils.debug.enabled():
                 raise
             raise MKGeneralException(_('Cannot read file "%s": %s') % (self.path, e))
+
+    def locked(self) -> Iterator[None]:
+        acquired = acquire_lock(self.path)
+        try:
+            yield
+        finally:
+            if acquired:
+                release_lock(self.path)
+
+
+class ObjectStore(Generic[TObject]):
+    """Normally used to serialize data to and from the certain file.
+    It can be used without touching IO: ObjectStore("hurz", TextSerializer, io=NoOpIo).
+    where NoOpIo does nothing(see the testing)
+    Typical use case for Fake/NoOp IO is a testing and, probably in the future validation(dry-run).
+    """
+
+    def __init__(
+        self, path: Path, *, serializer: Serializer[TObject], io: Type[FileIo] = RealIo
+    ) -> None:
+        self.path: Final = path
+        self._serializer = serializer
+        self._io: Final = io(path)
+
+    def __fspath__(self) -> str:
+        return str(self.path)
+
+    @contextmanager
+    def locked(self) -> Iterator[None]:
+        yield from self._io.locked()
+
+    def write_obj(self, obj: TObject) -> None:
+        return self._io.write(self._serializer.serialize(obj))
+
+    def read_obj(self, *, default: TObject) -> TObject:
+        raw = self._io.read()
+        return self._serializer.deserialize(raw) if raw else default

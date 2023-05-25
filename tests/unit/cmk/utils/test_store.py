@@ -12,7 +12,7 @@ import types
 from collections.abc import Callable, Iterator, Sequence
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Type
 
 import pytest
 from pytest import MonkeyPatch
@@ -22,12 +22,68 @@ from tests.testlib import import_module_hack, wait_until
 import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.store import ObjectStore, TextSerializer
+from cmk.utils.store._file import FileIo, RealIo
 from cmk.utils.store.host_storage import (
     get_hosts_file_variables,
     get_standard_hosts_storage,
     StandardStorageLoader,
     StorageFormat,
 )
+
+
+class FakeIo:
+    """This is no-op/fake version of _file.RealIO
+    TODO(sk): should be moved in testlib when we need it not only for store testing"""
+
+    def __init__(self, path: Path):
+        self.path = path
+        self._data = b""
+
+    def write(self, data: bytes) -> None:
+        self._data = data
+
+    def read(self) -> bytes:
+        return self._data
+
+    def locked(self) -> Iterator[None]:
+        yield
+
+
+@pytest.mark.parametrize("io,exists", [(RealIo, True), (FakeIo, False)])
+def test_object_store(io: Type[FileIo], exists: bool, tmp_path: Path) -> None:
+    test_file = tmp_path / "hurz"
+    a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
+    a.write_obj("aaaaa")
+    assert a.read_obj(default="") == "aaaaa"
+    assert test_file.exists() == exists
+    test_file.unlink(missing_ok=True)
+
+
+def test_object_store_fake_io() -> None:
+    a = ObjectStore(Path("  "), serializer=TextSerializer(), io=FakeIo)
+    a.write_obj("aaaaa")
+    assert a.read_obj(default="") == "aaaaa"
+
+
+@pytest.mark.parametrize("io,exists", [(RealIo, True), (FakeIo, False)])
+def test_object_store_locked(io: Type[FileIo], exists: bool, tmp_path: Path) -> None:
+    test_file = tmp_path / "locked_hurz"
+    a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
+    with a.locked():
+        a.write_obj("aaaaa")
+        with a.locked():
+            a.write_obj("bbbbb")
+    assert a.read_obj(default="") == "bbbbb"
+    assert test_file.exists() == exists
+    test_file.unlink(missing_ok=True)
+
+
+@pytest.mark.parametrize("io,exists", [(RealIo, True), (FakeIo, False)])
+def test_object_store_default(io: Type[FileIo], exists: bool, tmp_path: Path) -> None:
+    test_file = tmp_path / "locked_hurz"
+    a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
+    assert a.read_obj(default="zz") == "zz"
 
 
 @pytest.mark.parametrize("path_type", [str, Path])

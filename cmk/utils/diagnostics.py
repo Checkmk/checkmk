@@ -620,6 +620,22 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Contains the last licensing verification result.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "licensing/state_file_created": CheckmkFileInfo(
+        components=[
+            OPT_COMP_LICENSING,
+        ],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Contains the trial start date.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "licensing/licensed_state": CheckmkFileInfo(
+        components=[
+            OPT_COMP_LICENSING,
+        ],
+        sensitivity=CheckmkFileSensitivity.insensitive,
+        description="Contains the licensed state for CMC/NEB.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     # Log files
     "cmc.log": CheckmkFileInfo(
         components=[

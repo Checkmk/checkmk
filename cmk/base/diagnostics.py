@@ -479,6 +479,8 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
             hw_info[procfile] = parser(content)
 
+        hw_info["vendorinfo"] = self._get_vendor_info()
+
         return hw_info
 
     def _get_proc_content(self, filepath: Path) -> list[str]:
@@ -546,6 +548,30 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     def _load_avg_proc_parser(self, content: list[str]) -> dict[str, str]:
         return dict(zip(["loadavg_1", "loadavg_5", "loadavg_15"], content[0].split()))
+
+    def _get_vendor_info(self) -> dict[str, str]:
+        _SYS_FILES = [
+            "bios_vendor",
+            "bios_version",
+            "sys_vendor",
+            "product_name",
+            "chassis_asset_tag",
+        ]
+        _AZURE_TAG = "7783-7084-3265-9085-8269-3286-77"
+        sys_path = Path("/sys/class/dmi/id")
+        vendor_info = {}
+
+        for sys_file in _SYS_FILES:
+            file_content = store.load_text_from_file(sys_path.joinpath(sys_file)).replace("\n", "")
+            if sys_file == "chassis_asset_tag":
+                if file_content == _AZURE_TAG:
+                    vendor_info[sys_file] = "Azure"
+                else:
+                    vendor_info[sys_file] = "Other"
+            else:
+                vendor_info[sys_file] = file_content
+
+        return vendor_info
 
 
 class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -934,7 +960,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
 
         command = [str(Path(cmk.utils.paths.omd_root).joinpath("bin/cmcdump"))]
 
-        for dump_args in (None, "config"):
+        for dump_args in (None, "--config"):
             tmpdir = tmp_dump_folder.joinpath("var/check_mk/core")
             tmpdir.mkdir(parents=True, exist_ok=True)
             suffix = ""

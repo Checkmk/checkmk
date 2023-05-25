@@ -20,32 +20,16 @@ class UpdateRequests(TypedDict):
 
 def request_index_rebuild() -> None:
     with locked(_PATH_UPDATE_REQUESTS):
-        _PATH_UPDATE_REQUESTS.write_text(
-            json.dumps(
-                {
-                    "change_actions": _read_update_requests()["change_actions"],
-                    "rebuild": True,
-                }
-            )
-        )
+        current_requests = _read_update_requests()
+        current_requests["rebuild"] = True
+        _PATH_UPDATE_REQUESTS.write_text(json.dumps(current_requests))
 
 
 def request_index_update(change_action_name: str) -> None:
     with locked(_PATH_UPDATE_REQUESTS):
         current_requests = _read_update_requests()
-        _PATH_UPDATE_REQUESTS.write_text(
-            json.dumps(
-                {
-                    "change_actions": list(
-                        {
-                            *current_requests["change_actions"],
-                            change_action_name,
-                        }
-                    ),
-                    "rebuild": current_requests["rebuild"],
-                }
-            )
-        )
+        current_requests["change_actions"].append(change_action_name)
+        _PATH_UPDATE_REQUESTS.write_text(json.dumps(current_requests))
 
 
 def updates_requested() -> bool:
@@ -60,17 +44,8 @@ def read_and_remove_update_requests() -> UpdateRequests:
 
 
 def _read_update_requests() -> UpdateRequests:
-    if not _PATH_UPDATE_REQUESTS.exists():
-        return _noop_update_requests()
-    # locking the file touches it, so we must handle this case as well
-    if not (raw := _PATH_UPDATE_REQUESTS.read_text()):
-        return _noop_update_requests()
     try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        # if the file was somehow corrupted, we start from scratch
-        return _noop_update_requests()
-
-
-def _noop_update_requests() -> UpdateRequests:
-    return {"rebuild": False, "change_actions": []}
+        return json.loads(_PATH_UPDATE_REQUESTS.read_text())
+    except (json.JSONDecodeError, FileNotFoundError):
+        # missing (unlikely, b/c it's locked), empty, or somehow corrupted: start from scratch
+        return {"rebuild": False, "change_actions": []}

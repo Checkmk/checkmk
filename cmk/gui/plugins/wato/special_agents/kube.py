@@ -190,6 +190,39 @@ def _cluster_collector() -> tuple[str, str, Dictionary]:
     )
 
 
+def _api_endpoint() -> tuple[str, Dictionary]:
+    return (
+        "kubernetes-api-server",
+        Dictionary(
+            elements=[
+                (
+                    "endpoint",
+                    _url(
+                        title=_("Endpoint"),
+                        default_value="https://<control plane ip>:443",
+                        _help=_(
+                            "The full URL to the Kubernetes API server "
+                            "including the protocol (http or https) and "
+                            "the port. Be aware that a trailing "
+                            "slash at the end of the URL is likely to "
+                            "result in an error."
+                        ),
+                    ),
+                ),
+                ssl_verification(),
+                (
+                    "proxy",
+                    HTTPProxyReference({"http", "https"}),  # Kubernetes client does not
+                    # support socks proxies.
+                ),
+                _tcp_timeouts(),
+            ],
+            required_keys=["endpoint", "verify-cert"],
+            title=_("API server connection"),
+        ),
+    )
+
+
 def _valuespec_special_agents_kube():
     return MigrateNotUpdated(
         valuespec=Dictionary(
@@ -213,36 +246,7 @@ def _valuespec_special_agents_kube():
                         allow_empty=False,
                     ),
                 ),
-                (
-                    "kubernetes-api-server",
-                    Dictionary(
-                        elements=[
-                            (
-                                "endpoint",
-                                _url(
-                                    title=_("Endpoint"),
-                                    default_value="https://<control plane ip>:443",
-                                    _help=_(
-                                        "The full URL to the Kubernetes API server "
-                                        "including the protocol (http or https) and "
-                                        "the port. Be aware that a trailing "
-                                        "slash at the end of the URL is likely to "
-                                        "result in an error."
-                                    ),
-                                ),
-                            ),
-                            ssl_verification(),
-                            (
-                                "proxy",
-                                HTTPProxyReference({"http", "https"}),  # Kubernetes client does not
-                                # support socks proxies.
-                            ),
-                            _tcp_timeouts(),
-                        ],
-                        required_keys=["endpoint", "verify-cert"],
-                        title=_("API server connection"),
-                    ),
-                ),
+                _api_endpoint(),
                 _usage_endpoint(is_cloud_edition()),
                 (
                     "monitored-objects",

@@ -25,7 +25,6 @@ from cmk.utils.structured_data import (
     RawIntervalsFromConfig,
     RetentionIntervals,
     SDPath,
-    StructuredDataNode,
     UpdateResult,
 )
 from cmk.utils.type_defs import (
@@ -458,14 +457,14 @@ def _may_update(
     for entry in raw_intervals_from_config:
         node_path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
 
-        previous_node = previous_tree.tree.get_node(node_path) or StructuredDataNode()
+        previous_node = previous_tree.get_tree(node_path)
 
         if choices_for_attributes := entry.get("attributes"):
             raw_cache_info = _get_raw_cache_info((node_path, "Attributes"))
             results.append(
                 inventory_tree.tree.setdefault_node(node_path).attributes.update_from_previous(
                     now,
-                    previous_node.attributes,
+                    previous_node.tree.attributes,
                     make_filter_from_choice(choices_for_attributes),
                     RetentionIntervals(
                         cached_at=raw_cache_info[0],
@@ -480,7 +479,7 @@ def _may_update(
             results.append(
                 inventory_tree.tree.setdefault_node(node_path).table.update_from_previous(
                     now,
-                    previous_node.table,
+                    previous_node.tree.table,
                     make_filter_from_choice(choices_for_table),
                     RetentionIntervals(
                         cached_at=raw_cache_info[0],
@@ -548,27 +547,11 @@ def _check_trees(
     if swp_table is not None and swp_table.is_empty() and parameters.sw_missing:
         yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
 
-    if not _tree_nodes_are_equal(previous_tree, inventory_tree, "software"):
+    if previous_tree.get_tree(("software",)) != inventory_tree.get_tree(("software",)):
         yield ActiveCheckResult(parameters.sw_changes, "software changes")
 
-    if not _tree_nodes_are_equal(previous_tree, inventory_tree, "hardware"):
+    if previous_tree.get_tree(("hardware",)) != inventory_tree.get_tree(("hardware",)):
         yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
 
     if status_data_tree:
         yield ActiveCheckResult(0, f"Found {status_data_tree.tree.count_entries()} status entries")
-
-
-def _tree_nodes_are_equal(
-    previous_tree: ImmutableTree,
-    inventory_tree: MutableTree,
-    edge: str,
-) -> bool:
-    previous_node = previous_tree.tree.get_node((edge,))
-    inventory_node = inventory_tree.tree.get_node((edge,))
-    if previous_node is None:
-        return inventory_node is None
-
-    if inventory_node is None:
-        return False
-
-    return previous_node == inventory_node

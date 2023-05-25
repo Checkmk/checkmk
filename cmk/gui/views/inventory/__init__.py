@@ -1258,7 +1258,7 @@ def _compute_node_painter_data(row: Row, path: SDPath) -> StructuredDataNode | N
     if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
         return None
 
-    return tree.get_node(path)
+    return ImmutableTree(tree).get_tree(path).tree
 
 
 def _paint_host_inventory_tree(row: Row, hints: DisplayHints) -> CellSpec:
@@ -2453,10 +2453,10 @@ def ajax_inv_render_tree() -> None:
         return
 
     inventory_path = inventory.InventoryPath.parse(raw_path or "")
-    if (node := tree.tree.get_node(inventory_path.path)) is None:
+    if not (node := tree.get_tree(inventory_path.path)):
         html.show_error(
             _("Invalid path in inventory tree: '%s' >> %s") % (raw_path, repr(inventory_path.path))
         )
         return
 
-    tree_renderer.show(node, DISPLAY_HINTS.get_hints(node.path))
+    tree_renderer.show(node.tree, DISPLAY_HINTS.get_hints(node.tree.path))

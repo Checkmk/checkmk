@@ -675,19 +675,17 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             raise DiagnosticsElementError("No Checkmk server found")
 
         try:
-            tree = load_tree(Path(cmk.utils.paths.inventory_output_dir) / checkmk_server_name).tree
+            tree = load_tree(Path(cmk.utils.paths.inventory_output_dir) / checkmk_server_name)
         except FileNotFoundError:
             raise DiagnosticsElementError(
                 "No HW/SW inventory tree of '%s' found" % checkmk_server_name
             )
 
-        if (
-            node := tree.get_node(("software", "applications", "check_mk"))
-        ) is None or node.is_empty():
+        if not (node := tree.get_tree(("software", "applications", "check_mk"))):
             raise DiagnosticsElementError(
                 "No HW/SW inventory node 'Software > Applications > Checkmk'"
             )
-        return node.serialize()
+        return node.tree.serialize()
 
 
 #   ---collect exiting files------------------------------------------------

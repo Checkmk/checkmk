@@ -39,7 +39,6 @@ from cmk.checkengine.inventory import (
     _check_fetched_data_or_trees,
     _inventorize_real_host,
     _parse_inventory_plugin_item,
-    _tree_nodes_are_equal,
     HWSWInventoryParameters,
     inventorize_host,
     ItemsOfInventoryPlugin,
@@ -63,22 +62,6 @@ def test_item_collisions(item: Attributes | TableRow, known_class_name: str) -> 
         assert str(e) == (
             "Cannot create TableRow at path ['a', 'b', 'c']: this is a Attributes node."
         )
-
-
-@pytest.mark.parametrize("edge", ["edge", "other"])
-def test_tree_nodes_equality(edge: str) -> None:
-    def make_tree(*nodes: str) -> StructuredDataNode:
-        tree = StructuredDataNode()
-        tree.setdefault_node(nodes)
-        return tree
-
-    tree = make_tree("edge")
-    other = make_tree("other")
-
-    assert _tree_nodes_are_equal(ImmutableTree(tree), MutableTree(other), edge) is False
-    assert _tree_nodes_are_equal(ImmutableTree(other), MutableTree(tree), edge) is False
-    assert _tree_nodes_are_equal(ImmutableTree(tree), MutableTree(tree), edge) is True
-    assert _tree_nodes_are_equal(ImmutableTree(other), MutableTree(other), edge) is True
 
 
 # TODO test cases:

@@ -239,6 +239,9 @@ class MutableTree:
             None if (node := self.tree.get_node(path)) is None else node.attributes.pairs.get(key)
         )
 
+    def get_tree(self, path: SDPath) -> MutableTree:
+        return MutableTree(self.tree.get_node(path))
+
 
 # .
 #   .--immutable tree------------------------------------------------------.
@@ -532,6 +535,9 @@ class ImmutableTree:
     def get_rows(self, path: SDPath) -> Sequence[SDRow]:
         return [] if (node := self.tree.get_node(path)) is None else node.table.rows
 
+    def get_tree(self, path: SDPath) -> ImmutableTree:
+        return ImmutableTree(self.tree.get_node(path))
+
 
 # .
 #   .--immutable delta tree------------------------------------------------.
@@ -602,14 +608,23 @@ def _filter_delta_node(
 
 
 class ImmutableDeltaTree:
-    def __init__(self, tree: DeltaStructuredDataNode) -> None:
-        self.tree: Final = tree
+    def __init__(self, tree: DeltaStructuredDataNode | None = None) -> None:
+        self.tree: Final = tree or DeltaStructuredDataNode(
+            name="",
+            path=tuple(),
+            attributes=DeltaAttributes(path=tuple(), pairs={}),
+            table=DeltaTable(path=tuple(), key_columns=[], rows=[]),
+            _nodes={},
+        )
 
     def __bool__(self) -> bool:
         return not self.tree.is_empty()
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(_filter_delta_node(self.tree, filters))
+
+    def get_tree(self, path: SDPath) -> ImmutableDeltaTree:
+        return ImmutableDeltaTree(self.tree.get_node(path))
 
 
 # .

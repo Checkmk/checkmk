@@ -136,13 +136,7 @@ def _has_inventory_tree(
     except LoadStructuredDataError:
         return False
 
-    if not inventory_tree:
-        return False
-
-    if (node := inventory_tree.tree.get_node(path)) is None:
-        return False
-
-    return not node.is_empty()
+    return inventory_tree is not None and bool(inventory_tree.get_tree(path))
 
 
 def _get_inventory_tree(

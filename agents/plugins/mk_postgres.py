@@ -136,7 +136,6 @@ class PostgresBase:
         self.pg_version = instance.get("pg_version")
         self.my_env = os.environ.copy()
         self.my_env["PGPASSFILE"] = instance.get("pg_passfile", "")
-        self.sep = os.sep
         self.psql_binary_name = "psql"
         if pg_binary_path is None:
             self.psql_binary_path = self.get_psql_binary_path()
@@ -300,7 +299,7 @@ class PostgresBase:
         """
 
         out = subprocess_check_output(
-            ["%s%spg_isready" % (self.psql_binary_dirname, self.sep), "-p", self.pg_port],
+            ["%s%spg_isready" % (self.psql_binary_dirname, os.sep), "-p", self.pg_port],
         )
 
         sys.stdout.write("%s\n" % ensure_str(out))

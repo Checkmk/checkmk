@@ -35,6 +35,7 @@ add_executable(
   test_Queue.cc
   test_StringColumn.cc
   test_StringUtil.cc
+  test_Table.cc
   test_TimeColumn.cc
   test_TrialManager.cc)
 

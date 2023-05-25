@@ -51,7 +51,6 @@ test_neb_SOURCES = \
     test/test_CrashReport.cc \
     test/test_DictFilter.cc \
     test/test_MacroExpander.cc \
-    test/test_Table.cc \
     test/test_utilities.cc
 $(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE)
 test_neb_CPPFLAGS = $(AM_CPPFLAGS) -I$(GOOGLETEST_INCLUDE)

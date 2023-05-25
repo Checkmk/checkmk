@@ -6,7 +6,7 @@
 
 import collections
 import time
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Any
 
 import livestatus
@@ -22,11 +22,14 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
     check_metrics,
+    CheckMetricEntry,
     CombinedGraphMetricSpec,
+    find_matching_translation,
     GraphConsoldiationFunction,
     GraphDataRange,
     GraphRecipe,
     metric_info,
+    reverse_translate_into_all_potentially_relevant_metrics_cached,
     reverse_translate_metric_name,
     RRDData,
     RRDDataKey,
@@ -228,7 +231,7 @@ def fetch_rrd_data(
 
 
 def rrd_columns(
-    metrics: set[MetricProperties],
+    metrics: Iterable[MetricProperties],
     rrd_consolidation: GraphConsoldiationFunction | None,
     data_range: str,
 ) -> Iterator[ColumnName]:
@@ -257,6 +260,30 @@ def metric_in_all_rrd_columns(
         (name, None, scale) for name, scale in reverse_translate_metric_name(metric)
     }
     return list(rrd_columns(metrics, rrd_consolidation, data_range))
+
+
+def all_rrd_columns_potentially_relevant_for_metric(
+    metric_name: MetricName,
+    rrd_consolidation: GraphConsoldiationFunction,
+    from_time: int,
+    until_time: int,
+) -> Iterator[ColumnName]:
+    yield from rrd_columns(
+        (
+            (
+                metric_name,
+                None,
+                # at this point, we do not yet know if there any potential scalings due to metric
+                # translations
+                1,
+            )
+            for metric_name in reverse_translate_into_all_potentially_relevant_metrics_cached(
+                metric_name
+            )
+        ),
+        rrd_consolidation,
+        f"{from_time}:{until_time}:{60}",
+    )
 
 
 def merge_multicol(
@@ -305,6 +332,43 @@ def merge_multicol(
     return TimeSeries(
         single_value_series,
         conversion=_retrieve_unit_conversion_function(desired_metric),
+    )
+
+
+def translate_and_merge_rrd_columns(
+    target_metric: MetricName,
+    rrd_columms: Iterable[tuple[str, TimeSeriesValues]],
+    translations: Mapping[MetricName, CheckMetricEntry],
+) -> TimeSeries:
+    def scaler(scale: float) -> Callable[[float], float]:
+        return lambda v: v * scale
+
+    relevant_ts = []
+
+    for column_name, data in rrd_columms:
+        if data is None:
+            raise MKGeneralException(_("Cannot retrieve historic data with Nagios core"))
+        if len(data) <= 3:
+            continue
+
+        metric_name = MetricName(column_name.split(":")[1])
+        metric_translation = find_matching_translation(metric_name, translations)
+
+        if metric_translation.get("name", metric_name) == target_metric:
+            relevant_ts.append(
+                TimeSeries(data, conversion=scaler(metric_translation.get("scale", 1)))
+            )
+
+    if not relevant_ts:
+        return TimeSeries([0, 0, 0])
+
+    _op_title, op_func = ts.time_series_operators()["MERGE"]
+    single_value_series = [ts.op_func_wrapper(op_func, list(tsp)) for tsp in zip(*relevant_ts)]
+
+    return TimeSeries(
+        single_value_series,
+        timewindow=relevant_ts[0].twindow,
+        conversion=_retrieve_unit_conversion_function(target_metric),
     )
 
 

@@ -10,6 +10,7 @@ import re
 import shlex
 from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
+from functools import lru_cache
 from itertools import chain
 from typing import Any, Final, Literal, NotRequired, overload, TypedDict, TypeVar, Union
 
@@ -534,22 +535,29 @@ def _split_perf_data(perf_data_string: str) -> list[str]:
 
 def perfvar_translation(perfvar_name: str, check_command: str) -> TranslationInfo:
     """Get translation info for one performance var."""
-    cm = check_metrics.get(check_command, {})
-    translation_entry = cm.get(perfvar_name, {})  # Default: no translation necessary
-
-    if not translation_entry:
-        for orig_varname, te in cm.items():
-            if orig_varname[0] == "~" and cmk.utils.regex.regex(orig_varname[1:]).match(
-                perfvar_name
-            ):  # Regex entry
-                translation_entry = te
-                break
-
+    translation_entry = find_matching_translation(
+        MetricNameType(perfvar_name),
+        check_metrics.get(check_command, {}),
+    )
     return {
         "name": translation_entry.get("name", perfvar_name),
         "scale": translation_entry.get("scale", 1.0),
         "auto_graph": translation_entry.get("auto_graph", True),
     }
+
+
+def find_matching_translation(
+    metric_name: MetricNameType,
+    translations: Mapping[MetricNameType, CheckMetricEntry],
+) -> CheckMetricEntry:
+    if translation := translations.get(metric_name):
+        return translation
+    for orig_metric_name, translation in translations.items():
+        if orig_metric_name.startswith("~") and cmk.utils.regex.regex(orig_metric_name[1:]).match(
+            metric_name
+        ):  # Regex entry
+            return translation
+    return {}
 
 
 def scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type: ignore[no-untyped-def]
@@ -1457,6 +1465,48 @@ def reverse_translate_metric_name(
     possible_translations.setdefault(canonical_name, 1.0)
 
     return sorted(possible_translations.items())
+
+
+def reverse_translate_into_all_potentially_relevant_metrics(
+    canonical_name: MetricNameType,
+    current_version: int,
+    all_translations: Iterable[Mapping[MetricNameType, CheckMetricEntry]],
+) -> set[MetricNameType]:
+    return {
+        canonical_name,
+        *(
+            metric_name
+            for trans in all_translations
+            for metric_name, options in trans.items()
+            if canonical_name == options.get("name")
+            and (
+                # From version check used unified metric, and thus deprecates old translation
+                # added a complete stable release, that gives the customer about a year of data
+                # under the appropriate metric name.
+                # We should however get all metrics unified before Cmk 2.1
+                parse_check_mk_version(deprecated) + 10000000
+                if (deprecated := options.get("deprecated"))
+                else current_version
+            )
+            >= current_version
+            # Note: Reverse translations only work for 1-to-1-mappings, entries such as
+            # "~.*rta": {"name": "rta", "scale": m},
+            # cannot be reverse-translated, since multiple metric names are apparently mapped to a
+            # single new name. This is a design flaw we currently have to live with.
+            and not metric_name.startswith("~")
+        ),
+    }
+
+
+@lru_cache
+def reverse_translate_into_all_potentially_relevant_metrics_cached(
+    canonical_name: MetricNameType,
+) -> set[MetricNameType]:
+    return reverse_translate_into_all_potentially_relevant_metrics(
+        canonical_name,
+        parse_check_mk_version(cmk_version.__version__),
+        check_metrics.values(),
+    )
 
 
 def metric_choices(check_command: str, perfvars: tuple[_MetricName, ...]) -> Iterator[Choice]:

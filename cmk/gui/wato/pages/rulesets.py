@@ -96,8 +96,8 @@ from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
     CREHost,
-    Folder,
     folder_from_request,
+    folder_lookup_cache,
     folder_preserving_link,
     folder_tree,
     Host,
@@ -2572,7 +2572,7 @@ class RuleConditionRenderer:
             [x for x in host_name_conditions if isinstance(x, dict) and "$regex" in x]
         )
 
-        folder_lookup_cache = Folder.get_folder_lookup_cache()
+        lookup_cache = folder_lookup_cache().get_folder_lookup_cache()
         text_list: list[HTML] = []
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
@@ -2588,7 +2588,7 @@ class RuleConditionRenderer:
                 elif isinstance(host_spec, str):
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
-                    folder_hint = folder_lookup_cache.get(HostName(host_spec))
+                    folder_hint = lookup_cache.get(HostName(host_spec))
                     if folder_hint is not None and (host := Host.host(host_spec)) is not None:
                         text_list.append(
                             HTMLWriter.render_b(HTMLWriter.render_a(host_spec, host.edit_url()))
@@ -2610,7 +2610,7 @@ class RuleConditionRenderer:
                     expression = _("is not") if is_negate else _("is")
                     # Make sure that the host exists and the lookup will not fail
                     # Otherwise the entire config would be read
-                    folder_hint = folder_lookup_cache.get(HostName(host_spec))
+                    folder_hint = lookup_cache.get(HostName(host_spec))
                     if folder_hint is not None and (host := Host.host(host_spec)) is not None:
                         text_list.append(
                             escape_to_html(expression + " ")

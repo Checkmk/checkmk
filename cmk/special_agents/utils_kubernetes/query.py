@@ -109,7 +109,7 @@ class APISessionConfig(BaseModel):
         )
 
     def url(self, resource_path: str) -> str:
-        return self.api_server_endpoint + resource_path
+        return self.api_server_endpoint.removesuffix("/") + resource_path
 
 
 class CollectorSessionConfig(SessionConfig):
@@ -120,7 +120,7 @@ class PrometheusSessionConfig(SessionConfig):
     prometheus_endpoint: str
 
     def query_url(self) -> str:
-        return self.prometheus_endpoint + PrometheusEndpoints.query
+        return self.prometheus_endpoint.removesuffix("/") + PrometheusEndpoints.query
 
 
 def create_session(config: SessionConfig, logger: logging.Logger) -> requests.Session:

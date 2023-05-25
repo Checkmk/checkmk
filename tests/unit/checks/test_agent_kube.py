@@ -27,7 +27,7 @@ pytestmark = pytest.mark.checks
                 "cluster-name": "cluster",
                 "token": ("password", "cluster"),
                 "kubernetes-api-server": {
-                    "endpoint": "https://11.211.3.32",
+                    "endpoint_v2": "https://11.211.3.32",
                     "verify-cert": False,
                     "proxy": ("no_proxy", "no_proxy"),
                     "timeout": {"connect": 5, "read": 8},
@@ -35,7 +35,7 @@ pytestmark = pytest.mark.checks
                 "usage_endpoint": (
                     "cluster-collector",
                     {
-                        "endpoint": "https://11.211.3.32:20026",
+                        "endpoint_v2": "https://11.211.3.32:20026",
                         "verify-cert": False,
                         "timeout": {"connect": 10, "read": 12},
                     },
@@ -77,14 +77,14 @@ pytestmark = pytest.mark.checks
                 "cluster-name": "cluster",
                 "token": ("password", "cluster"),
                 "kubernetes-api-server": {
-                    "endpoint": "http://11.211.3.32:8080",
+                    "endpoint_v2": "http://11.211.3.32:8080",
                     "verify-cert": False,
                     "proxy": ("no_proxy", "no_proxy"),
                 },
                 "usage_endpoint": (
                     "cluster-collector",
                     {
-                        "endpoint": "https://11.211.3.32:20026",
+                        "endpoint_v2": "https://11.211.3.32:20026",
                         "verify-cert": True,
                     },
                 ),
@@ -118,14 +118,14 @@ pytestmark = pytest.mark.checks
                 "cluster-name": "cluster",
                 "token": ("password", "randomtoken"),
                 "kubernetes-api-server": {
-                    "endpoint": "http://localhost:8080",
+                    "endpoint_v2": "http://localhost:8080",
                     "verify-cert": False,
                     "proxy": ("no_proxy", "no_proxy"),
                 },
                 "usage_endpoint": (
                     "cluster-collector",
                     {
-                        "endpoint": "https://11.211.3.32:20026",
+                        "endpoint_v2": "https://11.211.3.32:20026",
                         "verify-cert": False,
                     },
                 ),
@@ -170,7 +170,7 @@ def test_parse_arguments_with_no_cluster_endpoint() -> None:
         "cluster-name": "cluster",
         "token": ("password", "token"),
         "kubernetes-api-server": {
-            "endpoint": "https://127.0.0.1",
+            "endpoint_v2": "https://127.0.0.1",
             "verify-cert": False,
             "proxy": ("no_proxy", "no_proxy"),
         },
@@ -204,7 +204,7 @@ def test_cronjob_pvcs_piggyback_option() -> None:
             "cluster-name": "cluster",
             "token": ("password", "token"),
             "kubernetes-api-server": {
-                "endpoint": "https://11.211.3.32",
+                "endpoint_v2": "https://11.211.3.32",
                 "verify-cert": False,
                 "proxy": ("no_proxy", "no_proxy"),
             },
@@ -242,7 +242,7 @@ def test_cluster_resource_aggregation() -> None:
             "cluster-name": "cluster",
             "token": ("password", "token"),
             "kubernetes-api-server": {
-                "endpoint": "https://11.211.3.32",
+                "endpoint_v2": "https://11.211.3.32",
                 "verify-cert": False,
                 "proxy": ("no_proxy", "no_proxy"),
             },
@@ -277,7 +277,7 @@ def test_cluster_resource_aggregation() -> None:
             "cluster-name": "cluster",
             "token": ("password", "token"),
             "kubernetes-api-server": {
-                "endpoint": "https://11.211.3.32",
+                "endpoint_v2": "https://11.211.3.32",
                 "verify-cert": False,
                 "proxy": ("no_proxy", "no_proxy"),
             },
@@ -307,7 +307,7 @@ def test_cluster_resource_aggregation() -> None:
             "cluster-name": "cluster",
             "token": ("password", "token"),
             "kubernetes-api-server": {
-                "endpoint": "https://11.211.3.32",
+                "endpoint_v2": "https://11.211.3.32",
                 "verify-cert": False,
                 "proxy": ("no_proxy", "no_proxy"),
             },
@@ -349,7 +349,7 @@ def test_host_labels_annotation_selection() -> None:
             "cluster-name": "cluster",
             "token": ("password", "token"),
             "kubernetes-api-server": {
-                "endpoint": "https://11.211.3.32",
+                "endpoint_v2": "https://11.211.3.32",
                 "verify-cert": False,
                 "proxy": ("no_proxy", "no_proxy"),
             },
@@ -384,7 +384,7 @@ def test_host_labels_annotation_selection() -> None:
             "cluster-name": "cluster",
             "token": ("password", "token"),
             "kubernetes-api-server": {
-                "endpoint": "https://11.211.3.32",
+                "endpoint_v2": "https://11.211.3.32",
                 "verify-cert": False,
                 "proxy": ("no_proxy", "no_proxy"),
             },
@@ -425,7 +425,7 @@ def test_parse_namespace_patterns() -> None:
             "cluster-name": "cluster",
             "token": ("password", "token"),
             "kubernetes-api-server": {
-                "endpoint": "https://11.211.3.32",
+                "endpoint_v2": "https://11.211.3.32",
                 "verify-cert": False,
                 "proxy": ("no_proxy", "no_proxy"),
             },
@@ -466,12 +466,12 @@ def test_parse_namespace_patterns() -> None:
                 "cluster-name": "test",
                 "token": ("password", "token"),
                 "kubernetes-api-server": {
-                    "endpoint": "https://127.0.0.1",
+                    "endpoint_v2": "https://127.0.0.1",
                     "verify-cert": False,
                     "proxy": ("no_proxy", "no_proxy"),
                 },
                 "cluster-collector": {
-                    "endpoint": "https://127.0.0.1:20026",
+                    "endpoint_v2": "https://127.0.0.1:20026",
                     "verify-cert": False,
                 },
                 "monitored-objects": ["pods"],
@@ -483,12 +483,12 @@ def test_parse_namespace_patterns() -> None:
                 "cluster-name": "test",
                 "token": ("password", "token"),
                 "kubernetes-api-server": {
-                    "endpoint": "http://127.0.0.1:8080",
+                    "endpoint_v2": "http://127.0.0.1:8080",
                     "verify-cert": False,
                     "proxy": ("no_proxy", "no_proxy"),
                 },
                 "cluster-collector": {
-                    "endpoint": "https://127.0.0.1:20026",
+                    "endpoint_v2": "https://127.0.0.1:20026",
                     "verify-cert": False,
                 },
                 "monitored-objects": ["pods"],
@@ -500,12 +500,12 @@ def test_parse_namespace_patterns() -> None:
                 "cluster-name": "test",
                 "token": ("password", "randomtoken"),
                 "kubernetes-api-server": {
-                    "endpoint": "http://localhost:8080",
+                    "endpoint_v2": "http://localhost:8080",
                     "verify-cert": True,
                     "proxy": ("no_proxy", "no_proxy"),
                 },
                 "cluster-collector": {
-                    "endpoint": "https://127.0.0.1:20026",
+                    "endpoint_v2": "https://127.0.0.1:20026",
                     "verify-cert": True,
                 },
                 "monitored-objects": ["pods"],
@@ -539,7 +539,7 @@ def test_client_configuration_host(
                 "cluster-name": "cluster",
                 "token": ("password", "cluster"),
                 "kubernetes-api-server": {
-                    "endpoint": "https://11.211.3.32",
+                    "endpoint_v2": "https://11.211.3.32",
                     "verify-cert": False,
                     "proxy": ("no_proxy", "no_proxy"),
                 },
@@ -552,7 +552,7 @@ def test_client_configuration_host(
                 "cluster-name": "cluster",
                 "token": ("password", "cluster"),
                 "kubernetes-api-server": {
-                    "endpoint": "http://11.211.3.32:8080",
+                    "endpoint_v2": "http://11.211.3.32:8080",
                     "verify-cert": False,
                     "proxy": ("environment", "environment"),
                 },
@@ -565,7 +565,7 @@ def test_client_configuration_host(
                 "cluster-name": "cluster",
                 "token": ("password", "randomtoken"),
                 "kubernetes-api-server": {
-                    "endpoint": "http://localhost:8001",
+                    "endpoint_v2": "http://localhost:8001",
                     "verify-cert": False,
                     "proxy": ("url", "http://test:test@127.0.0.1:8080"),
                 },
@@ -578,7 +578,7 @@ def test_client_configuration_host(
                 "cluster-name": "cluster",
                 "token": ("password", "randomtoken"),
                 "kubernetes-api-server": {
-                    "endpoint": "http://localhost:8001",
+                    "endpoint_v2": "http://localhost:8001",
                     "verify-cert": False,
                 },
                 "monitored-objects": ["pods"],

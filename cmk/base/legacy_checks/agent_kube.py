@@ -28,7 +28,7 @@ def _usage_endpoint(
 ) -> list[str]:
     args = [
         f"--{prefix}-endpoint",
-        str(params["endpoint"]),
+        str(params["endpoint_v2"]),
         "--usage-proxy",
         get_http_proxy(params.get("proxy", ("environment", "environment"))).serialize(),
     ]
@@ -72,7 +72,7 @@ def agent_kube_arguments(  # pylint: disable=too-many-branches
             args.append(host_labels_param[1])
 
     api_params = params["kubernetes-api-server"]
-    args.extend(["--api-server-endpoint", api_params["endpoint"]])
+    args.extend(["--api-server-endpoint", api_params["endpoint_v2"]])
     if api_params.get("verify-cert"):
         args.append("--verify-cert-api")
     args.extend(

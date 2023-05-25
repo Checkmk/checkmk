@@ -571,4 +571,4 @@ def _tree_nodes_are_equal(
     if inventory_node is None:
         return False
 
-    return previous_node.is_equal(inventory_node)
+    return previous_node == inventory_node

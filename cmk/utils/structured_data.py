@@ -207,6 +207,14 @@ class MutableTree:
     def __bool__(self) -> bool:
         return not self.tree.is_empty()
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, (MutableTree, ImmutableTree)):
+            raise TypeError(type(other))
+        return self.tree.is_equal(other.tree)
+
+    def __ne__(self, other: object) -> bool:
+        return not self.__eq__(other)
+
     def add_pairs(
         self,
         *,
@@ -498,6 +506,14 @@ class ImmutableTree:
 
     def __bool__(self) -> bool:
         return not self.tree.is_empty()
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, (MutableTree, ImmutableTree)):
+            raise TypeError(type(other))
+        return self.tree.is_equal(other.tree)
+
+    def __ne__(self, other: object) -> bool:
+        return not self.__eq__(other)
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableTree:
         return ImmutableTree(_filter_node(self.tree, filters))

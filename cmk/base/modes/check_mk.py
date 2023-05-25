@@ -2294,7 +2294,7 @@ def _get_save_tree_actions(
         console.verbose("New inventory tree.\n")
         return _SaveTreeActions(do_archive=False, do_save=True)
 
-    if has_changed := not previous_tree.tree.is_equal(inventory_tree.tree):
+    if has_changed := previous_tree != inventory_tree:
         console.verbose("Inventory tree has changed. Add history entry.\n")
 
     if update_result.save_tree:

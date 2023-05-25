@@ -17,7 +17,7 @@ import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
 
-from ._locks import acquire_lock, have_lock, release_lock
+from ._locks import acquire_lock, release_lock
 
 __all__ = [
     "BytesSerializer",
@@ -118,12 +118,11 @@ class ObjectStore(Generic[TObject]):
 
     @contextmanager
     def locked(self) -> Iterator[None]:
-        already_locked = have_lock(self.path)
-        acquire_lock(self.path)  # no-op if already_locked
+        acquired = acquire_lock(self.path)
         try:
             yield
         finally:
-            if not already_locked:
+            if acquired:
                 release_lock(self.path)
 
     def write_obj(self, obj: TObject) -> None:

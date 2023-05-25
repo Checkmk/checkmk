@@ -141,19 +141,23 @@ def _has_lock(name: str) -> bool:
 
 @contextmanager
 def locked(path: Path | str, blocking: bool = True) -> Iterator[None]:
+    acquired = acquire_lock(path, blocking)
     try:
-        acquire_lock(path, blocking)
         yield
     finally:
-        release_lock(path)
+        if acquired:
+            release_lock(path)
 
 
-def acquire_lock(path: Path | str, blocking: bool = True) -> None:
+def acquire_lock(path: Path | str, blocking: bool = True) -> bool:
+    """Obtain physical file lock on a file.
+    If the file is already registered, then  done do nothing and return False.
+    Otherwise, locks file physically, register file in global variable and returns True"""
     if not isinstance(path, Path):
         path = Path(path)
 
     if have_lock(path):
-        return  # No recursive locking
+        return False
 
     logger.debug("Trying to acquire lock on %s", path)
     # Create file (and base dir) for locking if not existent yet
@@ -168,7 +172,7 @@ def acquire_lock(path: Path | str, blocking: bool = True) -> None:
                 if os.path.sameopenfile(fd, fd_new):
                     _set_lock(str(path), os.dup(fd))
                     logger.debug("Got lock on %s", path)
-                    return
+                    return True
 
 
 @contextmanager
@@ -184,16 +188,17 @@ def _open_lock_file(path: os.PathLike) -> Iterator[int]:
 
 @contextmanager
 def try_locked(path: Path | str) -> Iterator[bool]:
+    acquired = try_acquire_lock(path)
     try:
-        yield try_acquire_lock(path)
+        yield acquired
     finally:
-        release_lock(path)
+        if acquired:
+            release_lock(path)
 
 
 def try_acquire_lock(path: Path | str) -> bool:
     try:
-        acquire_lock(path, blocking=False)
-        return True
+        return acquire_lock(path, blocking=False)
     except OSError as e:
         if e.errno != errno.EAGAIN:  # Try again
             raise

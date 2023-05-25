@@ -164,6 +164,7 @@ def test_diagnostics_element_hw_info_content(
         "cpuinfo",
         "loadavg",
         "meminfo",
+        "vendorinfo",
     ]
     content = json.loads(filepath.open().read())
 

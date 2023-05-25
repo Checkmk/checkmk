@@ -36,11 +36,6 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-# TODO: Need to completely rework smart check. Use IDs instead of changing
-# descriptions! But be careful: There is no standard neither for IDs nor for
-# descriptions. Only use those, which are common sense.
-
-
 Section = Mapping[str, Mapping[str, int]]
 
 Disk = MutableMapping[str, int]
@@ -51,6 +46,24 @@ Disks = MutableMapping[str, Disk]
 # much larger steps (100 or 1000). So we accept any rate below 100 counts per hour.
 # See CMK-7684
 MAX_COMMAND_TIMEOUTS_PER_HOUR = 100
+
+CRC_ERRORS_ID: Final = 199
+
+# This mapping also limits the used ATA attributes.
+# All ATA attributes not listed here will be discarded when parsing the raw agent section
+ATA_ID_TO_ATTRIBUTE_NAME: Final[Mapping[int, str]] = {
+    5: "Reallocated_Sector_Ct",
+    9: "Power_On_Hours",
+    10: "Spin_Retry_Count",
+    12: "Power_Cycle_Count",
+    184: "End-to-End_Error",
+    187: "Reported_Uncorrect",
+    188: "Command_Timeout",
+    194: "Temperature",
+    196: "Reallocated_Event_Count",
+    197: "Current_Pending_Sector",
+    CRC_ERRORS_ID: "CRC_Error_Count",
+}
 
 
 def _set_int_or_zero(disk: Disk, key: str, value: Any) -> None:
@@ -106,7 +119,7 @@ def parse_raw_values(string_table: StringTable) -> Section:
                   'Seek_Error_Rate': 0,
                   'Spin_Retry_Count': 0,
                   'Spin_Up_Time': 0,
-                  'Temperature_Celsius': 40}}
+                  'Temperature': 40}}
 
     """
     ata_lines = (line for line in string_table if len(line) >= 13)
@@ -122,7 +135,7 @@ def _parse_ata_lines(ata_lines: Iterable[Sequence[str]]) -> Section:
         disk_path,
         _disk_type,
         _disk_name,
-        _ID,
+        ID,
         attribute_name,
         _flag,
         value,
@@ -139,9 +152,24 @@ def _parse_ata_lines(ata_lines: Iterable[Sequence[str]]) -> Section:
         if attribute_name == "Unknown_Attribute":
             continue
 
-        _set_int_or_zero(disk, attribute_name, raw_value)
+        if int(ID) == CRC_ERRORS_ID and attribute_name == "UDMA_CRC_Error_Count":
+            # UDMA_CRC_Error_Count and CRC_Error_Count share the same attribute ID (199).
+            # Since we explicitly distinguish between the two, we choose "UDMA_CRC_Error_Count"
+            # whenever the ID 199 comes with this textual information.
+            # Otherwise, we default to CRC_Error_Count.
+            _set_int_or_zero(disk, attribute_name, raw_value)
+            continue
 
-        if attribute_name == "Reallocated_Event_Count":  # special case, see check function
+        if (lookup_attribute_name := ATA_ID_TO_ATTRIBUTE_NAME.get(int(ID))) is None:
+            if attribute_name in disk:
+                # Don't override already set attributes
+                continue
+            _set_int_or_zero(disk, attribute_name, raw_value)
+            continue
+
+        _set_int_or_zero(disk, lookup_attribute_name, raw_value)
+
+        if lookup_attribute_name == "Reallocated_Event_Count":  # special case, see check function
             try:
                 disk["_normalized_value_Reallocated_Event_Count"] = int(value)
                 disk["_normalized_threshold_Reallocated_Event_Count"] = int(threshold)
@@ -182,16 +210,14 @@ register.agent_section(
 )
 
 DISCOVERED_PARAMETERS: Final = (
-    "Reallocated_Sector_Ct",
-    "Spin_Retry_Count",
-    "Reallocated_Event_Count",
-    "Current_Pending_Sector",
-    "Command_Timeout",
-    "End-to-End_Error",
-    "Reported_Uncorrect",
-    "Uncorrectable_Error_Cnt",
-    "UDMA_CRC_Error_Count",
-    "CRC_Error_Count",
+    "Reallocated_Sector_Ct",  # 5
+    "Spin_Retry_Count",  # 10
+    "Reallocated_Event_Count",  # 196
+    "Current_Pending_Sector",  # 197
+    "Command_Timeout",  # 188
+    "End-to-End_Error",  # 184
+    "Reported_Uncorrect",  # 187
+    "UDMA_CRC_Error_Count",  # 199
     # nvme
     "Critical_Warning",
     "Media_and_Data_Integrity_Errors",
@@ -217,18 +243,18 @@ def _summary(state: State, text: str) -> Result:
 
 
 OUTPUT_FIELDS: Tuple[Tuple[Callable[[State, str], Result], str, str, Callable], ...] = (
-    (_summary, "Power_On_Hours", "Powered on", lambda h: render.timespan(h * 3600)),
-    (_summary, "Power_Cycle_Count", "Power cycles", str),
-    (_summary, "Reported_Uncorrect", "Uncorrectable errors", str),
-    (_summary, "Uncorrectable_Error_Cnt", "Uncorrectable errors", str),
-    (_summary, "Reallocated_Sector_Ct", "Reallocated sectors", str),
-    (_summary, "Reallocated_Event_Count", "Reallocated events", str),
-    (_summary, "Spin_Retry_Count", "Spin retries", str),
-    (_summary, "Current_Pending_Sector", "Pending sectors", str),
-    (_summary, "Command_Timeout", "Command timeout counter", str),
-    (_summary, "End-to-End_Error", "End-to-End errors", str),
-    (_summary, "UDMA_CRC_Error_Count", "UDMA CRC errors", str),
-    (_summary, "CRC_Error_Count", "CRC errors", str),
+    # ATA
+    (_summary, "Power_On_Hours", "Powered on", lambda h: render.timespan(h * 3600)),  # 9, also nvme
+    (_summary, "Power_Cycle_Count", "Power cycles", str),  # 12
+    (_summary, "Reported_Uncorrect", "Uncorrectable errors", str),  # 187
+    (_summary, "Reallocated_Sector_Ct", "Reallocated sectors", str),  # 5
+    (_summary, "Reallocated_Event_Count", "Reallocated events", str),  # 196
+    (_summary, "Spin_Retry_Count", "Spin retries", str),  # 10
+    (_summary, "Current_Pending_Sector", "Pending sectors", str),  # 197
+    (_summary, "Command_Timeout", "Command timeout counter", str),  # 188
+    (_summary, "End-to-End_Error", "End-to-End errors", str),  # 184
+    (_summary, "UDMA_CRC_Error_Count", "UDMA CRC errors", str),  # 199
+    (_summary, "CRC_Error_Count", "CRC errors", str),  # also 199
     # nvme
     (_summary, "Power_Cycles", "Power cycles", str),
     (_summary, "Critical_Warning", "Critical warning", str),

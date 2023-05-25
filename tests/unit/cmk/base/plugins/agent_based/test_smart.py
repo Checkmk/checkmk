@@ -450,7 +450,7 @@ SECTION_SD = {
         "Reallocated_Sector_Ct": 0,
         "Reported_Uncorrect": 0,
         "Runtime_Bad_Block": 0,
-        "Temperature_Celsius": 39,
+        "Temperature": 39,
         "Total_LBAs_Read": 10967739912,
         "Total_LBAs_Written": 7655764477,
         "UDMA_CRC_Error_Count": 0,

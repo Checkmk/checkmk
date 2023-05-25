@@ -26,10 +26,6 @@ from cmk.base.config import check_info
 # /dev/sda ATA WDC_SSC-D0128SC- 170 Unknown_Attribute       0x0003   100   100   010    Pre-fail  Always       -       1769478
 # /dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
 
-# TODO: Need to completely rework smart check. Use IDs instead of changing
-# descriptions! But be careful: There is no standard neither for IDs nor for
-# descriptions. Only use those, which are common sense.
-
 
 def inventory_smart_temp(section):
     relevant = {"Temperature_Celsius", "Temperature_Internal", "Temperature"}
@@ -39,17 +35,10 @@ def inventory_smart_temp(section):
 
 
 def check_smart_temp(item, params, section):
-    data = section.get(item)
-    if data is None:
+    if (data := section.get(item)) is None:
         return None
 
-    if "Temperature_Celsius" in data:
-        temperature = data["Temperature_Celsius"]
-    elif "Temperature_Internal" in data:
-        temperature = data["Temperature_Internal"]
-    elif "Temperature" in data:
-        temperature = data["Temperature"]
-    else:
+    if (temperature := data.get("Temperature")) is None:
         return None
 
     return check_temperature(temperature, params, "smart_%s" % item)

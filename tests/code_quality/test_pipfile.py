@@ -268,6 +268,7 @@ CEE_UNUSED_PACKAGES = [
     "psycopg2-binary",
     "pyasn1-modules",
     "pycparser",
+    "pyjwt",
     "pykerberos",
     "pymssql",
     "pymysql",
@@ -317,6 +318,7 @@ def test_dependencies_are_declared() -> None:
             "openapi_spec_validator",  # called "openapi-spec-validator" in the Pipfile
             "docstring_parser",  # TODO: Bug in the test code, it *is* used!
             "saml2",
+            "jwt",
         }
     )
 

@@ -212,6 +212,7 @@ pysaml2 = "==7.4.1"  # used by SSO via SAML2.0
 azure-storage-blob = "==12.15.0"  # used for backups to Azure Blob Storage
 azure-identity = "==1.12.0"  # used for backups to Azure Blob Storage
 markdown = "==3.4.3"  # used for werk parsing
+pyjwt = {version = "*", extras = ["crypto"]}  # used for SSO via OAUTH2
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

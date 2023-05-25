@@ -190,16 +190,17 @@ def _parse_nvme_lines(nvme_lines: Iterable[Sequence[str]]) -> Section:
         field, value = [e.strip() for e in " ".join(line).split(":")]
         key = field.replace(" ", "_")
         value = value.replace("%", "").replace(".", "").replace(",", "")
-        if field == "Temperature":
-            _set_int_or_zero(disk, key, value.split()[0])
-        elif field == "Critical Warning":
-            disk[key] = int(value, 16)
-        elif field == "Data Units Read":
-            disk[key] = int(value.split()[0]) * 512000
-        elif field == "Data Units Written":
-            disk[key] = int(value.split()[0]) * 512000
-        else:
-            _set_int_or_zero(disk, key, value)
+        match field:
+            case "Temperature":
+                _set_int_or_zero(disk, key, value.split()[0])
+            case "Critical Warning":
+                disk[key] = int(value, 16)
+            case "Data Units Read":
+                disk[key] = int(value.split()[0]) * 512000
+            case "Data Units Written":
+                disk[key] = int(value.split()[0]) * 512000
+            case _:
+                _set_int_or_zero(disk, key, value)
 
     return nvme_disks
 

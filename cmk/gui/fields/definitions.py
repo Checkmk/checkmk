@@ -536,9 +536,9 @@ class HostField(base.String):
     default_error_messages = {
         "should_exist": "Host not found: {host_name!r}",
         "should_not_exist": "Host {host_name!r} already exists.",
-        "should_be_monitored": "Host {host_name!r} exists, but is not monitored. "
+        "should_be_monitored": "Host {host_name!r} should be monitored but it's not. "
         "Activate the configuration?",
-        "should_not_be_monitored": "Host {host_name!r} exists, but should not be monitored. "
+        "should_not_be_monitored": "Host {host_name!r} should not be monitored but it is. "
         "Activate the configuration?",
         "should_be_cluster": "Host {host_name!r} is not a cluster host, but needs to be.",
         "should_not_be_cluster": "Host {host_name!r} may not be a cluster host, but is.",
@@ -607,9 +607,6 @@ class HostField(base.String):
                 raise self.make_error("should_not_be_cluster", host_name=value)
 
         if self._should_be_monitored is not None:
-            if host is None:
-                raise self.make_error("should_exist", host_name=value)
-
             monitored = host_is_monitored(value)
             if self._should_be_monitored and not monitored:
                 raise self.make_error("should_be_monitored", host_name=value)

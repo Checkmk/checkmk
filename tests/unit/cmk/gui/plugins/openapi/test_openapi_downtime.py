@@ -916,23 +916,31 @@ def test_openapi_delete_downtime_with_params_but_missing_downtime(
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_downtime_non_existing_instance(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = non-existent")
+
     base = "/NO_SITE/check_mk/api/1.0"
-    resp = aut_user_auth_wsgi_app.post(
-        base + "/domain-types/downtime/collections/host",
-        content_type="application/json",
-        params=json.dumps(
-            {
-                "downtime_type": "host",
-                "host_name": "non-existant",
-                "start_time": "2020-01-01T00:00:00Z",
-                "end_time": "2020-01-02T00:00:00Z",
-            }
-        ),
-        headers={"Accept": "application/json"},
-        status=400,
-    )
-    assert resp.json["fields"]["host_name"] == ["Host not found: 'non-existant'"]
+    with live:
+        resp = aut_user_auth_wsgi_app.post(
+            base + "/domain-types/downtime/collections/host",
+            content_type="application/json",
+            params=json.dumps(
+                {
+                    "downtime_type": "host",
+                    "host_name": "non-existent",
+                    "start_time": "2020-01-01T00:00:00Z",
+                    "end_time": "2020-01-02T00:00:00Z",
+                }
+            ),
+            headers={"Accept": "application/json"},
+            status=400,
+        )
+    assert resp.json["fields"]["host_name"] == [
+        "Host 'non-existent' should be monitored but it's not. Activate the configuration?"
+    ]
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -945,7 +953,7 @@ def test_openapi_downtime_non_existing_groups(aut_user_auth_wsgi_app: WebTestApp
         params=json.dumps(
             {
                 "downtime_type": "hostgroup",
-                "hostgroup_name": "non-existant",
+                "hostgroup_name": "non-existent",
                 "start_time": "2020-01-01T00:00:00Z",
                 "end_time": "2020-01-02T00:00:00Z",
             }

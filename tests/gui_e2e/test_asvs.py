@@ -35,7 +35,7 @@ def test_v2_1_5(test_site: Site, logged_in_page: PPage) -> None:
 
     # check old password, shouldn't work anymore
     page.login("cmkadmin", "cmk")
-    page.check_error("Invalid login")
+    page.check_error("Incorrect username or password. Please try again.")
 
     # changing it back for other tests
     test_site.reset_admin_password()

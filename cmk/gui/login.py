@@ -111,6 +111,8 @@ class LoginPage(Page):
     def __init__(self) -> None:
         super().__init__()
         self._no_html_output = False
+        self._username_varname = "_username"
+        self._password_varname = "_password"
 
     def set_no_html_output(self, no_html_output: bool) -> None:
         self._no_html_output = no_html_output
@@ -149,20 +151,24 @@ class LoginPage(Page):
             if request.request_method != "POST" and not active_config.enable_login_via_get:
                 raise MKUserError(None, _("Method not allowed"))
 
-            username_var = request.get_str_input("_username", "")
+            username_var = request.get_str_input(self._username_varname, "")
             if not username_var:
-                raise MKUserError("_username", _("Missing username"))
+                raise MKUserError(
+                    self._username_varname, _("No username entered. Please enter a username.")
+                )
 
-            password_var = request.get_str_input("_password", "")
+            password_var = request.get_str_input(self._password_varname, "")
             if not password_var:
-                raise MKUserError("_password", _("Missing password"))
+                raise MKUserError(
+                    self._password_varname, _("No password entered. Please enter a password.")
+                )
 
             try:
                 username = UserId(username_var.rstrip())
                 password = Password(password_var)
             except ValueError:
                 # If type validation fails the credentials cannot be valid. Show the generic error.
-                raise MKUserError(None, _("Invalid login"))
+                raise MKUserError(None, self._default_login_error_msg)
 
             default_origtarget = url_prefix() + "check_mk/"
             origtarget = request.get_url_input("_origtarget", default_origtarget)
@@ -209,7 +215,7 @@ class LoginPage(Page):
                 raise HTTPRedirect(origtarget)
 
             userdb.on_failed_login(username, now)
-            raise MKUserError(None, _("Invalid login"))
+            raise MKUserError(self._password_varname, self._default_login_error_msg)
 
         except MKUserError as e:
             log_security_event(
@@ -279,23 +285,29 @@ class LoginPage(Page):
         html.open_tr()
         html.td(
             html.render_label(
-                "%s:" % _("Username"), id_="label_user", class_=["legend"], for_="_username"
+                "%s:" % _("Username"),
+                id_="label_user",
+                class_=["legend"],
+                for_=self._username_varname,
             ),
             class_="login_label",
         )
         html.open_td(class_="login_input")
-        html.text_input("_username", id_="input_user")
+        html.text_input(self._username_varname, id_="input_user")
         html.close_td()
         html.close_tr()
         html.open_tr()
         html.td(
             html.render_label(
-                "%s:" % _("Password"), id_="label_pass", class_=["legend"], for_="_password"
+                "%s:" % _("Password"),
+                id_="label_pass",
+                class_=["legend"],
+                for_=self._password_varname,
             ),
             class_="login_label",
         )
         html.open_td(class_="login_input")
-        html.password_input("_password", id_="input_pass", size=None)
+        html.password_input(self._password_varname, id_="input_pass", size=None)
         html.close_td()
         html.close_tr()
         html.close_table()
@@ -334,12 +346,16 @@ class LoginPage(Page):
 
         html.close_div()
 
-        html.set_focus("_username")
+        html.set_focus(self._username_varname)
         html.hidden_fields()
         html.end_form()
         html.close_div()
 
         html.footer()
+
+    @property
+    def _default_login_error_msg(self) -> str:
+        return _("Incorrect username or password. Please try again.")
 
 
 def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None:

@@ -23,7 +23,6 @@ class Object;
 
 #include "livestatus/CrashReport.h"
 #include "livestatus/EventConsoleConnection.h"
-#include "livestatus/InputBuffer.h"
 #include "livestatus/Interface.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/mk_logwatch.h"
@@ -200,36 +199,6 @@ void Store::addFlappingToStatehistCache(
 
 #else
 
-namespace {
-std::list<std::string> getLines(InputBuffer &input) {
-    std::list<std::string> lines;
-    while (!input.empty()) {
-        lines.push_back(input.nextLine());
-        if (lines.back().empty()) {
-            break;
-        }
-    }
-    return lines;
-}
-}  // namespace
-
-void Store::logRequest(const std::string &line,
-                       const std::list<std::string> &lines) const {
-    Informational log(logger());
-    log << "request: " << line;
-    if (logger()->isLoggable(LogLevel::debug)) {
-        for (const auto &l : lines) {
-            log << R"(\n)" << l;
-        }
-    } else {
-        const size_t s = lines.size();
-        if (s > 0) {
-            log << R"(\n{)" << s << (s == 1 ? " line follows" : " lines follow")
-                << "...}";
-        }
-    }
-}
-
 Store::ExternalCommand::ExternalCommand(const std::string &str) {
     constexpr int timestamp_len = 10;
     constexpr int prefix_len = timestamp_len + 3;
@@ -258,57 +227,6 @@ std::vector<std::string> Store::ExternalCommand::args() const {
         return {};
     }
     return mk::split(_arguments.substr(1), ';');
-}
-
-bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
-    // Precondition: output has been reset
-    InputBuffer::Result const res = input.readRequest();
-    if (res != InputBuffer::Result::request_read) {
-        if (res != InputBuffer::Result::eof) {
-            std::ostringstream os;
-            os << "client connection terminated: " << res;
-            output.setError(OutputBuffer::ResponseCode::incomplete_request,
-                            os.str());
-        }
-        return false;
-    }
-    const std::string line = input.nextLine();
-    if (mk::starts_with(line, "GET ")) {
-        auto lines = getLines(input);
-        logRequest(line, lines);
-        return answerGetRequest(lines, output, mk::lstrip(line.substr(4)));
-    }
-    if (mk::starts_with(line, "GET")) {
-        // only to get error message
-        auto lines = getLines(input);
-        logRequest(line, lines);
-        return answerGetRequest(lines, output, "");
-    }
-    if (mk::starts_with(line, "COMMAND ")) {
-        logRequest(line, {});
-        try {
-            answerCommandRequest(ExternalCommand(mk::lstrip(line.substr(8))));
-        } catch (const std::invalid_argument &err) {
-            Warning(logger()) << err.what();
-        }
-        return true;
-    }
-    if (mk::starts_with(line, "LOGROTATE")) {
-        logRequest(line, {});
-        Informational(logger()) << "Forcing logfile rotation";
-        rotate_log_file(std::chrono::system_clock::to_time_t(
-            std::chrono::system_clock::now()));
-        schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
-                           0, 0,
-                           reinterpret_cast<void *>(get_next_log_rotation_time),
-                           1, nullptr, nullptr, 0);
-        return false;
-    }
-    logRequest(line, {});
-    Warning(logger()) << "Invalid request '" << line << "'";
-    output.setError(OutputBuffer::ResponseCode::invalid_request,
-                    "Invalid request method");
-    return false;
 }
 
 void Store::answerCommandRequest(const ExternalCommand &command) {

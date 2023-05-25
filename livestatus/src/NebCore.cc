@@ -9,6 +9,9 @@
 #include <atomic>
 #include <cstdlib>
 #include <iterator>
+#include <list>
+#include <ostream>
+#include <stdexcept>
 #include <utility>
 
 #include "Comment.h"
@@ -25,7 +28,9 @@
 #include "NebTimeperiod.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Average.h"
+#include "livestatus/InputBuffer.h"
 #include "livestatus/Logger.h"
+#include "livestatus/OutputBuffer.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"
 #include "pnp4nagios.h"
@@ -555,6 +560,86 @@ bool NebCore::pnp4nagiosEnabled() const {
     return true;  // TODO(sp) ???
 }
 
+namespace {
+std::list<std::string> getLines(InputBuffer &input) {
+    std::list<std::string> lines;
+    while (!input.empty()) {
+        lines.push_back(input.nextLine());
+        if (lines.back().empty()) {
+            break;
+        }
+    }
+    return lines;
+}
+
+void logRequest(Logger *logger, const std::string &line,
+                const std::list<std::string> &lines) {
+    Informational log(logger);
+    log << "request: " << line;
+    if (logger->isLoggable(LogLevel::debug)) {
+        for (const auto &l : lines) {
+            log << R"(\n)" << l;
+        }
+    } else {
+        const size_t s = lines.size();
+        if (s > 0) {
+            log << R"(\n{)" << s << (s == 1 ? " line follows" : " lines follow")
+                << "...}";
+        }
+    }
+}
+
+}  // namespace
+
 bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
-    return _store.answerRequest(input, output);
+    // Precondition: output has been reset
+    InputBuffer::Result const res = input.readRequest();
+    if (res != InputBuffer::Result::request_read) {
+        if (res != InputBuffer::Result::eof) {
+            std::ostringstream os;
+            os << "client connection terminated: " << res;
+            output.setError(OutputBuffer::ResponseCode::incomplete_request,
+                            os.str());
+        }
+        return false;
+    }
+    const std::string line = input.nextLine();
+    if (mk::starts_with(line, "GET ")) {
+        auto lines = getLines(input);
+        logRequest(_logger_livestatus, line, lines);
+        return _store.answerGetRequest(lines, output,
+                                       mk::lstrip(line.substr(4)));
+    }
+    if (mk::starts_with(line, "GET")) {
+        // only to get error message
+        auto lines = getLines(input);
+        logRequest(_logger_livestatus, line, lines);
+        return _store.answerGetRequest(lines, output, "");
+    }
+    if (mk::starts_with(line, "COMMAND ")) {
+        logRequest(_logger_livestatus, line, {});
+        try {
+            _store.answerCommandRequest(
+                Store::ExternalCommand(mk::lstrip(line.substr(8))));
+        } catch (const std::invalid_argument &err) {
+            Warning(_logger_livestatus) << err.what();
+        }
+        return true;
+    }
+    if (mk::starts_with(line, "LOGROTATE")) {
+        logRequest(_logger_livestatus, line, {});
+        Informational(_logger_livestatus) << "Forcing logfile rotation";
+        rotate_log_file(std::chrono::system_clock::to_time_t(
+            std::chrono::system_clock::now()));
+        schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
+                           0, 0,
+                           reinterpret_cast<void *>(get_next_log_rotation_time),
+                           1, nullptr, nullptr, 0);
+        return false;
+    }
+    logRequest(_logger_livestatus, line, {});
+    Warning(_logger_livestatus) << "Invalid request '" << line << "'";
+    output.setError(OutputBuffer::ResponseCode::invalid_request,
+                    "Invalid request method");
+    return false;
 }

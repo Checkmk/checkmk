@@ -54,7 +54,6 @@ class Object;
 #include <mutex>
 #include <utility>
 #include <vector>
-class InputBuffer;
 #endif
 
 class Store {
@@ -78,8 +77,6 @@ public:
     void addFlappingToStatehistCache(
         std::optional<std::chrono::seconds> cache_horizon, const Object &object,
         bool started);
-#else
-    bool answerRequest(InputBuffer &input, OutputBuffer &output);
 #endif
     [[nodiscard]] Logger *logger() const;
     size_t numCachedLogMessages();
@@ -139,9 +136,7 @@ private:
     void addTable(Table &table);
     Table &findTable(OutputBuffer &output, const std::string &name);
 #ifndef CMC
-    void logRequest(const std::string &line,
-                    const std::list<std::string> &lines) const;
-
+public:
     class ExternalCommand {
     public:
         explicit ExternalCommand(const std::string &str);
@@ -164,6 +159,8 @@ private:
     };
 
     void answerCommandRequest(const ExternalCommand &command);
+
+private:
     void answerCommandMkLogwatchAcknowledge(const ExternalCommand &command);
     void answerCommandDelCrashReport(const ExternalCommand &command);
     void answerCommandEventConsole(const std::string &command);

@@ -103,8 +103,8 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
 
 def get_ntop_page_menu_dropdown(view, host_address):
     return PageMenuDropdown(
-        name="ntop",
-        title="ntop",
+        name="ntopng",
+        title="ntopng",
         topics=_get_ntop_page_menu_topics(view, host_address),
     )
 

@@ -12,8 +12,8 @@ set -e
 ROOT_DIR="$(dirname "$(dirname "$(realpath "$0")")")"
 
 TARGET="$*"
-TARGET_S1="${TARGET/@/}"
-EXECUTION_LOG_FILE_NAME="${ROOT_DIR}/bazel_execution_log-${TARGET_S1/\/\/:/_}.json"
+TARGET_S1=$(echo "${TARGET}" | sed -e 's/\/\///g' -e 's/@//g' -e 's/:/_/g' -e 's/\//_/g')
+EXECUTION_LOG_FILE_NAME="${ROOT_DIR}/bazel_execution_log-${TARGET_S1}.json"
 
 # explicitly create, and later `eval` since run directly with `eval` this script
 # would not abort on error

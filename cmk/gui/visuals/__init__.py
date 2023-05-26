@@ -506,7 +506,7 @@ class _CombinedVisualsCache(Generic[T]):
 
 
 hooks.register_builtin("snapshot-pushed", _CombinedVisualsCache.invalidate_all_caches)
-hooks.register_builtin("snapshot-pushed", store.clear_pickled_object_files)
+hooks.register_builtin("snapshot-pushed", store.clear_pickled_files_cache)
 hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate_all_caches())
 
 

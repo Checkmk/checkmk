@@ -14,7 +14,6 @@
 #ifdef CMC
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Logger.h"
-class Object;
 #endif
 
 Store::Store(ICore *mc, std::optional<std::chrono::seconds> cache_horizon,
@@ -137,51 +136,6 @@ void Store::switchStatehistTable(
     } else {
         addTable(_table_statehistory);
         Notice(logger) << "state history cache will not be used";
-    }
-}
-
-void Store::buildStatehistCache(
-    std::optional<std::chrono::seconds> cache_horizon) {
-    if (cache_horizon) {
-        _table_cached_statehist.startBuildingCache();
-    }
-}
-
-void Store::flushStatehistCache() { _table_cached_statehist.flushCache(); }
-
-void Store::tryFinishStatehistCache() {
-    _table_cached_statehist.finishBuildingCache();
-}
-
-void Store::addObjectHistcache(
-    std::optional<std::chrono::seconds> cache_horizon, Object *object) {
-    if (cache_horizon) {
-        _table_cached_statehist.getOrCreateObjectHistcache(object);
-    }
-}
-
-void Store::addAlertToStatehistCache(
-    std::optional<std::chrono::seconds> cache_horizon, const Object &object,
-    int state, const std::string &output, const std::string &long_output) {
-    if (cache_horizon) {
-        _table_cached_statehist.registerAlert(object, state, output,
-                                              long_output);
-    }
-}
-
-void Store::addDowntimeToStatehistCache(
-    std::optional<std::chrono::seconds> cache_horizon, const Object &object,
-    bool started) {
-    if (cache_horizon) {
-        _table_cached_statehist.registerDowntime(object, started);
-    }
-}
-
-void Store::addFlappingToStatehistCache(
-    std::optional<std::chrono::seconds> cache_horizon, const Object &object,
-    bool started) {
-    if (cache_horizon) {
-        _table_cached_statehist.registerFlapping(object, started);
     }
 }
 

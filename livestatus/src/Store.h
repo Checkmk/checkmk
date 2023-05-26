@@ -49,7 +49,6 @@ class User;
 
 #ifdef CMC
 #include "TableCachedStatehist.h"
-class Object;
 #endif
 
 class Store {
@@ -59,20 +58,10 @@ public:
 #ifdef CMC
     void switchStatehistTable(std::optional<std::chrono::seconds> cache_horizon,
                               Logger *logger);
-    void buildStatehistCache(std::optional<std::chrono::seconds> cache_horizon);
-    void flushStatehistCache();
-    void tryFinishStatehistCache();
-    void addObjectHistcache(std::optional<std::chrono::seconds> cache_horizon,
-                            Object *object);
-    void addAlertToStatehistCache(
-        std::optional<std::chrono::seconds> cache_horizon, const Object &object,
-        int state, const std::string &output, const std::string &long_output);
-    void addDowntimeToStatehistCache(
-        std::optional<std::chrono::seconds> cache_horizon, const Object &object,
-        bool started);
-    void addFlappingToStatehistCache(
-        std::optional<std::chrono::seconds> cache_horizon, const Object &object,
-        bool started);
+    // NOTE: This is a cruel but temporary hack...
+    TableCachedStatehist &getTableCachedStatehist() {
+        return _table_cached_statehist;
+    }
 #endif
     [[nodiscard]] Logger *logger() const;
     size_t numCachedLogMessages();

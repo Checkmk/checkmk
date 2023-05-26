@@ -300,7 +300,7 @@ def merge_multicol(
         return TimeSeries([0, 0, 0])
 
     _op_title, op_func = ts.time_series_operators()["MERGE"]
-    single_value_series = [ts.op_func_wrapper(op_func, tsp) for tsp in zip(*relevant_ts)]
+    single_value_series = [ts.op_func_wrapper(op_func, list(tsp)) for tsp in zip(*relevant_ts)]
 
     return TimeSeries(
         single_value_series,

@@ -19,7 +19,6 @@ from livestatus import SiteId
 import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.memoize import MemoizeCache
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.prediction import livestatus_lql, TimeSeries, TimeSeriesValue
 from cmk.utils.type_defs import HostName
@@ -1368,48 +1367,6 @@ def render_color_icon(color: str) -> HTML:
         style="background-color: rgba(%d, %d, %d, 0.3); border-color: %s;"
         % (*hex_color_to_rgb_color(color), color),
     )
-
-
-@MemoizeCache
-def reverse_translate_metric_name(
-    canonical_name: MetricNameType,
-) -> list[tuple[MetricNameType, float]]:
-    "Return all known perf data names that are translated into canonical_name with corresponding scaling"
-    current_version = parse_check_mk_version(cmk_version.__version__)
-    possible_translations: dict[MetricNameType, float] = {}
-
-    for trans in check_metrics.values():
-        for metric, options in trans.items():
-            # Do we rename and/or scale the metric? Otherwise, we don't care about this translation.
-            if not {"name", "scale"}.intersection(set(options)):
-                continue
-
-            if canonical_name == options.get(
-                "name",
-                # there are translations which just scale the metric but do not change its name
-                metric,
-            ):
-                if "deprecated" in options:
-                    # From version check used unified metric, and thus deprecates old translation
-                    # added a complete stable release, that gives the customer about a year of data
-                    # under the appropriate metric name.
-                    # We should however get all metrics unified before Cmk 2.1
-                    migration_end = parse_check_mk_version(options["deprecated"]) + 10000000
-                else:
-                    migration_end = current_version
-
-                if migration_end >= current_version:
-                    # It is possible to have multiple scales for the same metric accross different
-                    # check plugins. Since we don't have the plugin name available here, the first
-                    # scale will win ...
-                    possible_translations.setdefault(
-                        metric,
-                        options.get("scale", 1.0),
-                    )
-
-    possible_translations.setdefault(canonical_name, 1.0)
-
-    return sorted(possible_translations.items())
 
 
 def reverse_translate_into_all_potentially_relevant_metrics(

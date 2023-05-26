@@ -21,7 +21,6 @@ import cmk.gui.plugins.metrics.timeseries as ts
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
-    check_metrics,
     CheckMetricEntry,
     CombinedGraphMetricSpec,
     find_matching_translation,
@@ -31,11 +30,10 @@ from cmk.gui.plugins.metrics.utils import (
     GraphRecipe,
     metric_info,
     reverse_translate_into_all_potentially_relevant_metrics_cached,
-    reverse_translate_metric_name,
     RRDData,
     unit_info,
 )
-from cmk.gui.type_defs import ColumnName, CombinedGraphSpec, MetricName, Row
+from cmk.gui.type_defs import ColumnName, CombinedGraphSpec, MetricName
 
 
 def fetch_rrd_data_for_graph(
@@ -231,21 +229,6 @@ def rrd_columns(
         yield f"rrddata:{perfvar}:{rpn}:{data_range}"
 
 
-def metric_in_all_rrd_columns(
-    metric: str,
-    rrd_consolidation: GraphConsoldiationFunction,
-    from_time: int,
-    until_time: int,
-) -> list[ColumnName]:
-    """Translate metric name to all perf_data names and construct RRD data columns for each"""
-
-    data_range = f"{from_time}:{until_time}:{60}"
-    metrics: set[MetricProperties] = {
-        (name, None, scale) for name, scale in reverse_translate_metric_name(metric)
-    }
-    return list(rrd_columns(metrics, rrd_consolidation, data_range))
-
-
 def all_rrd_columns_potentially_relevant_for_metric(
     metric_name: MetricName,
     rrd_consolidation: GraphConsoldiationFunction,
@@ -267,55 +250,6 @@ def all_rrd_columns_potentially_relevant_for_metric(
         ),
         rrd_consolidation,
         f"{from_time}:{until_time}:{60}",
-    )
-
-
-def merge_multicol(
-    row: Row,
-    rrdcols: Iterable[ColumnName],
-    desired_metric: MetricName,
-) -> TimeSeries:
-    """Establish single timeseries for desired metric
-
-    If Livestatus query is performed in bulk, over all possible named
-    metrics that translate to desired one, it results in many empty columns
-    per row. Yet, non-empty values have 3 options:
-
-    1. Correspond to desired metric
-    2. Correspond to old metric that translates into desired metric
-    3. Name collision: Metric of different service translates to desired
-    metric, yet same metric exist too in current service
-
-    Thus filter first case 3, then pick both cases 1 & 2.  Finalize by merging
-    the at most remaining 2 timeseries into a single one.
-    """
-
-    relevant_ts = []
-    check_command = row["service_check_command"]
-    translations = check_metrics.get(check_command, {})
-
-    for rrdcol in rrdcols:
-        if not rrdcol.startswith("rrddata"):
-            continue
-
-        if row[rrdcol] is None:
-            raise MKGeneralException(_("Cannot retrieve historic data with Nagios core"))
-
-        current_metric = rrdcol.split(":")[1]
-
-        if translations.get(current_metric, {}).get("name", desired_metric) == desired_metric:
-            if len(row[rrdcol]) > 3:
-                relevant_ts.append(row[rrdcol])
-
-    if not relevant_ts:
-        return TimeSeries([0, 0, 0])
-
-    _op_title, op_func = ts.time_series_operators()["MERGE"]
-    single_value_series = [ts.op_func_wrapper(op_func, tsp) for tsp in zip(*relevant_ts)]
-
-    return TimeSeries(
-        single_value_series,
-        conversion=_retrieve_unit_conversion_function(desired_metric),
     )
 
 

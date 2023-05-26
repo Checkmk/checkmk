@@ -27,7 +27,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, page_registry
@@ -347,11 +347,21 @@ class LoginPage(Page):
 
 
 def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None:
-    remaining_days: int = remaining_trial_time.days
+    # Add 1 to round up the remaining days/hours, to not show "0 days" or "0 hours"
+    # Note: Once the remaining trial time <= 0 seconds, this code is not reached anymore (license
+    #       switch from trial to free)
+    remaining_days: int = remaining_trial_time.days + 1
+    remaining_hours: int = remaining_trial_time.hours + 1
     remaining_percentage: float = remaining_trial_time.perc
 
     html.open_div(class_="trial_expiration_info" + (" warning" if remaining_days < 8 else ""))
-    html.span(_("%d days") % remaining_days, class_="remaining_days")
+    html.span(
+        _("%d days") % remaining_days
+        if remaining_days > 1
+        else "%d " % remaining_hours + ungettext("hour", "hours", remaining_hours),
+        class_="remaining_time",
+    )
+
     html.span(_(" left in your free trial"))
 
     html.open_div(class_="time_bar")

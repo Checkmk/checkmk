@@ -25,8 +25,15 @@ using namespace std::literals;
 namespace vs = std::views;
 
 namespace cma::provider {
+namespace config {
 
-bool PluginsProvider::isAllowedByCurrentConfig() const {
+// set behavior of the output
+// i future may be controlled using yml
+bool g_local_no_send_if_empty_body = true;
+bool g_local_send_empty_at_end = false;
+}  // namespace config
+
+bool PluginsBaseProvider::isAllowedByCurrentConfig() const {
     return cfg::groups::g_global.allowedSection(cfg_name_);
 }
 
@@ -58,7 +65,7 @@ int FindMaxTimeout(const PluginMap &pm, PluginMode need_type) {
 
 // Scans for sync plugins max timeout and set this max
 // if timeout is too big, than set default from the max_wait
-void PluginsProvider::updateSyncTimeout() {
+void PluginsBaseProvider::updateSyncTimeout() {
     const auto max_plugin_timeout = FindMaxTimeout(pm_, PluginMode::sync);
     const auto section_max_wait = cfg::GetVal(
         cfg_name_, cfg::vars::kPluginMaxWait, cfg::kDefaultPluginTimeout);
@@ -78,7 +85,7 @@ static void LogExecuteExtensions(std::string_view title,
     XLOG::d.i("{} [{}]", title, formatted_string);
 }
 
-void PluginsProvider::updateCommandLine() {
+void PluginsBaseProvider::updateCommandLine() {
     try {
         if (getHostSp() == nullptr && exec_type_ == ExecType::plugin) {
             XLOG::l("Plugins must have correctly set owner to use modules");
@@ -90,8 +97,8 @@ void PluginsProvider::updateCommandLine() {
     }
 }
 
-void PluginsProvider::UpdatePluginMapCmdLine(PluginMap &pm,
-                                             srv::ServiceProcessor *sp) {
+void PluginsBaseProvider::UpdatePluginMapCmdLine(PluginMap &pm,
+                                                 srv::ServiceProcessor *sp) {
     for (auto &[name, entry] : pm) {
         XLOG::t.i("checking entry");
         entry.setCmdLine(L""sv);
@@ -123,7 +130,7 @@ void PluginsProvider::UpdatePluginMapCmdLine(PluginMap &pm,
     }
 }
 
-std::vector<std::string> PluginsProvider::gatherAllowedExtensions() const {
+std::vector<std::string> PluginsBaseProvider::gatherAllowedExtensions() const {
     auto *sp = getHostSp();
     auto global_exts =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kExecute);
@@ -133,7 +140,7 @@ std::vector<std::string> PluginsProvider::gatherAllowedExtensions() const {
         return global_exts;
     }
 
-    auto mc = sp->getModuleCommander();
+    const auto &mc = sp->getModuleCommander();
 
     auto exts = mc.getExtensions();
     for (auto &e : exts) {
@@ -153,7 +160,7 @@ std::vector<std::string> PluginsProvider::gatherAllowedExtensions() const {
     return exts;
 }
 
-void PluginsProvider::loadConfig() {
+void PluginsBaseProvider::loadConfig() {
     auto folder_vector = exec_type_ == ExecType::local
                              ? cfg::groups::g_local_group.folders()
                              : cfg::groups::g_plugins.folders();
@@ -173,7 +180,7 @@ void PluginsProvider::loadConfig() {
         XLOG::l("There are no allowed extensions in config. This is strange.");
     }
 
-    cma::FilterPathByExtension(files, exts);
+    FilterPathByExtension(files, exts);
     RemoveForbiddenNames(files);
 
     XLOG::d.t("Left [{}] files to execute", files.size());
@@ -184,7 +191,9 @@ void PluginsProvider::loadConfig() {
     // linking exe units with all plugins in map
     std::vector<cfg::Plugins::ExeUnit> exe_units;
     cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-    UpdatePluginMap(getHostSp() == nullptr ? nullptr : getHostSp()->getInternalUsers(), pm_, exec_type_, files, exe_units, true);
+    UpdatePluginMap(
+        getHostSp() == nullptr ? nullptr : getHostSp()->getInternalUsers(), pm_,
+        exec_type_, files, exe_units, true);
     XLOG::d.t("Left [{}] files to execute in '{}'", pm_.size(), uniq_name_);
 
     updateCommandLine();
@@ -197,7 +206,7 @@ std::string ToString(const std::vector<char> &v) {
 }
 }  // namespace
 
-void PluginsProvider::gatherAllData(std::string &out) {
+void PluginsBaseProvider::gatherAllData(std::string &out) {
     int last_count = 0;
     const auto data_sync = RunSyncPlugins(pm_, last_count, timeout());
     last_count_ += last_count;
@@ -209,17 +218,19 @@ void PluginsProvider::gatherAllData(std::string &out) {
     out += ToString(data_async);
 }
 
-void PluginsProvider::preStart() {
+void PluginsBaseProvider::preStart() {
     loadConfig();
     int last_count = 0;
     RunAsyncPlugins(pm_, last_count, true);
 }
 
-void PluginsProvider::detachedStart() {
+void PluginsBaseProvider::detachedStart() {
     loadConfig();
     int last_count = 0;
     RunDetachedPlugins(pm_, last_count);
 }
+
+std::string PluginsBaseProvider::makeBody() { return section_last_output_; }
 
 void PluginsProvider::updateSectionStatus() {
     auto out = section::MakeEmptyHeader();
@@ -227,13 +238,6 @@ void PluginsProvider::updateSectionStatus() {
     out += section::MakeEmptyHeader();
     section_last_output_ = out;
 }
-
-namespace config {
-// set behavior of the output
-// i future may be controlled using yml
-bool g_local_no_send_if_empty_body = true;
-bool g_local_send_empty_at_end = false;
-}  // namespace config
 
 void LocalProvider::updateSectionStatus() {
     std::string body;
@@ -251,7 +255,5 @@ void LocalProvider::updateSectionStatus() {
     }
     section_last_output_ = out;
 }
-
-std::string PluginsProvider::makeBody() { return section_last_output_; }
 
 }  // namespace cma::provider

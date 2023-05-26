@@ -22,24 +22,19 @@ extern bool g_local_no_send_if_empty_body;
 extern bool g_local_send_empty_at_end;
 }  // namespace config
 
-class PluginsProvider : public Asynchronous {
+class PluginsBaseProvider : public Asynchronous {
 public:
-    PluginsProvider() : Asynchronous(section::kPlugins) {
+    PluginsBaseProvider(std::string_view name, ExecType exec_type,
+                        std::string_view cfg_name)
+        : Asynchronous(name, '\0')
+        , cfg_name_{cfg_name}
+        , exec_type_{exec_type}
+        , last_count_{0} {
         setHeaderless();
-        exec_type_ = ExecType::plugin;
-        cfg_name_ = cfg::groups::kPlugins;
-        last_count_ = 0;
-    }
-
-    PluginsProvider(std::string_view name, char separator)
-        : Asynchronous(name, separator) {
-        setHeaderless();
-        exec_type_ = ExecType::plugin;
-        cfg_name_ = cfg::groups::kPlugins;
     }
 
     void loadConfig() override;
-    void updateSectionStatus() override;
+    void updateSectionStatus() override = 0;
     bool isAllowedByCurrentConfig() const override;
     void preStart() override;
     void detachedStart();
@@ -57,19 +52,25 @@ protected:
     std::string section_last_output_;
     int last_count_;
     std::string makeBody() override;
+};
 
+class PluginsProvider final : public PluginsBaseProvider {
+public:
+    PluginsProvider()
+        : PluginsBaseProvider(section::kPlugins, ExecType::plugin,
+                              cfg::groups::kPlugins) {}
+    void updateSectionStatus() override;
 #if defined(ENABLE_WHITE_BOX_TESTING)
     friend class PluginTest;
     FRIEND_TEST(PluginTest, ModulesCmdLine);
 #endif
 };
 
-class LocalProvider final : public PluginsProvider {
+class LocalProvider final : public PluginsBaseProvider {
 public:
-    LocalProvider() : PluginsProvider(section::kLocal, '\0') {
-        exec_type_ = ExecType::local;
-        cfg_name_ = cfg::groups::kLocal;
-    }
+    LocalProvider()
+        : PluginsBaseProvider(section::kLocal, ExecType::local,
+                              cfg::groups::kLocal) {}
     void updateSectionStatus() override;
 };
 

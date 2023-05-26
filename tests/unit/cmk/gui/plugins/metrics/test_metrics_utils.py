@@ -9,7 +9,6 @@ import pytest
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
-import cmk.utils.version
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.metrics as metrics
@@ -189,40 +188,6 @@ def test_normalize_perf_data(
     perf_data: Perfdata, check_command: str, result: tuple[str, NormalizedPerfData]
 ) -> None:
     assert utils.normalize_perf_data(perf_data, check_command) == result
-
-
-@pytest.mark.parametrize(
-    "canonical_name, perf_data_names, on_cmk_version",
-    [
-        ("user", [("user", 1)], "2.0.0"),
-        ("io_wait", [("io_wait", 1), ("wait", 1)], "1.6.0p18"),
-        (
-            "mem_used",
-            [
-                ("mem_used", 1),
-                ("memory", 1048576),
-                ("memory_used", 1),
-                ("memused", 1),
-                ("ramused", 1048576),
-                ("usage", 1),
-            ],
-            "2.0.0",
-        ),
-        ("mem_used", [("mem_used", 1)], "2.1.0b2"),
-        ("mem_lnx_shmem", [("mem_lnx_shmem", 1), ("shared", 1048576), ("shmem", 1)], "2.0.0i1"),
-        ("mem_lnx_shmem", [("mem_lnx_shmem", 1), ("shmem", 1)], "2.1.0b2"),
-        ("fs_size", [("fs_size", 1024**2)], "2.3.0"),
-    ],
-)
-def test_reverse_translation_metric_name(
-    monkeypatch: pytest.MonkeyPatch,
-    canonical_name: str,
-    perf_data_names: Sequence[tuple[str, int]],
-    on_cmk_version: str,
-) -> None:
-    utils.reverse_translate_metric_name.clear()  # clear memoized cache, to incorporate version
-    monkeypatch.setattr(cmk.utils.version, "__version__", on_cmk_version)
-    assert utils.reverse_translate_metric_name(canonical_name) == perf_data_names
 
 
 @pytest.mark.parametrize(

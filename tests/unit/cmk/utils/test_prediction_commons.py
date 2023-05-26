@@ -251,3 +251,12 @@ class TestTimeseries:
 
     def test_conversion_noop_default(self) -> None:
         assert prediction.TimeSeries([1, 2, 3, 4, None, 5]).values == [4, None, 5]
+
+    def test_count(self) -> None:
+        assert (
+            prediction.TimeSeries(
+                [1, 2, None, 4, None, 5],
+                timewindow=(7, 8, 9),
+            ).count(None)
+            == 2
+        )

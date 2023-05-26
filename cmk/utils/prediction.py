@@ -256,6 +256,9 @@ class TimeSeries:
     def __iter__(self) -> Iterator[TimeSeriesValue]:
         yield from self.values
 
+    def count(self, /, v: TimeSeriesValue) -> int:
+        return self.values.count(v)
+
 
 def lq_logic(filter_condition: str, values: list[str], join: str) -> str:
     """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""

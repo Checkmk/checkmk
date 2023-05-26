@@ -20,7 +20,10 @@ def execute_test(Map config = [:]) {
             if (defaultDict.output_file) {
                 cmd += " 2>&1 | tee ${defaultDict.output_file}"
             }
-            sh """${cmd}""";
+            sh("""
+                set -o pipefail
+                ${cmd}
+            """);
         }
     }
 }

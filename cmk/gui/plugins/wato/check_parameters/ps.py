@@ -365,6 +365,15 @@ def process_level_elements():
             ),
         ),
         (
+            "process_usernames",
+            Checkbox(
+                title="Include usernames in service details",
+                label="Acquire and show usernames",
+                help=_("If enabled, the service details will contain username of a process owner."),
+                default_value=True,
+            ),
+        ),
+        (
             "process_info_arguments",
             Integer(
                 title=_("Include process arguments in long-output"),

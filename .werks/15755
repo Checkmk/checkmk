@@ -1,0 +1,16 @@
+Title: ps: Make showing usernames in service details configurable
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1685109906
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+An additional option "Include usernames in service details" is added to
+the "State and count of processes" service monitoring rule.
+It enables the user to configure whether the usernames are shown in
+the service details of the "Process" service.
+
+Usernames will be shown in the service details by default.

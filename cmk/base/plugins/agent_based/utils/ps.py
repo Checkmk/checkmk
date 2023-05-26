@@ -482,13 +482,11 @@ def process_capture(
         if command_line:
             process.append(("name", (command_line[0], "")))
 
-        # extended performance data: virtualsize, residentsize, %cpu
-        if (
-            process_info.user is not None
-            and process_info.virtual is not None
-            and process_info.physical is not None
-        ):
+        if process_info.user is not None and params.get("process_usernames", True):
             process.append(("user", (process_info.user, "")))
+
+        # extended performance data: virtualsize, residentsize, %cpu
+        if process_info.virtual is not None and process_info.physical is not None:
             process.append(("virtual size", (process_info.virtual, "kB")))
             process.append(("resident size", (process_info.physical, "kB")))
 

@@ -100,7 +100,6 @@ bool isVariableName(const std::string &token) {
              std::all_of(token.begin(), token.end(), is_number_part));
 }
 
-// TODO(sp): copy-n-paste from pnp4nagios.cc
 std::string replace_all(const std::string &str, const std::string &chars,
                         char replacement) {
     std::string result(str);

@@ -12,6 +12,7 @@
 #include <list>
 #include <ostream>
 #include <stdexcept>
+#include <system_error>
 #include <utility>
 
 #include "Comment.h"
@@ -36,7 +37,6 @@
 #include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/mk_logwatch.h"
-#include "pnp4nagios.h"
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int g_num_hosts;
@@ -473,6 +473,20 @@ size_t NebCore::numQueuedNotifications() const { return 0; }
 size_t NebCore::numQueuedAlerts() const { return 0; }
 
 size_t NebCore::numCachedLogMessages() { return _store.numCachedLogMessages(); }
+
+namespace {
+int pnpgraph_present(const std::filesystem::path &pnp_path,
+                     const std::string &host, const std::string &service) {
+    if (pnp_path.empty()) {
+        return -1;
+    }
+    const std::filesystem::path path =
+        pnp_path / pnp_cleanup(host) / (pnp_cleanup(service) + ".xml");
+    std::error_code ec;
+    (void)std::filesystem::status(path, ec);
+    return ec ? 0 : 1;
+}
+}  // namespace
 
 bool NebCore::isPnpGraphPresent(const IHost &h) const {
     return pnpgraph_present(paths()->rrd_multiple_directory(), h.name(),

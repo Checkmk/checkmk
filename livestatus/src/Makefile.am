@@ -85,8 +85,7 @@ liblivestatusneb_a_SOURCES = \
         NebService.cc \
         Store.cc \
         TimeperiodsCache.cc \
-        module.cc \
-        pnp4nagios.cc
+        module.cc
 $(liblivestatusneb_a_SOURCES): $(ASIO_INCLUDE)
 
 # Called during packaging. Copied from Makefile.am "all-am" to exclude noinst* targets

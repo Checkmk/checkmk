@@ -100,7 +100,6 @@ __all__ = [
     "PasswordType",
     "PhaseOneResult",
     "PluginNotificationContext",
-    "NotificationRuleID",
     "RuleSetName",
     "Seconds",
     "SectionName",

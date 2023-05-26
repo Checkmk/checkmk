@@ -2707,10 +2707,12 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
 
 class FolderLookupCache:
+    """Helps to find hosts faster in the folder hierarchy"""
+
     def __init__(self, tree: FolderTree) -> None:
         self._folder_tree = tree
 
-    def path(self) -> str:
+    def _path(self) -> str:
         return os.path.join(cmk.utils.paths.tmp_dir, "wato", "wato_host_folder_lookup.cache")
 
     def get(self, host_name: HostName) -> CREHost | None:
@@ -2735,7 +2737,7 @@ class FolderLookupCache:
 
             # Save newly found host instance to cache
             cache[host_name] = host_instance.folder().path()
-            self._save(self.path(), cache)
+            self._save(cache)
             return host_instance
         except RequestTimeout:
             raise
@@ -2748,9 +2750,9 @@ class FolderLookupCache:
 
     def get_cache(self) -> dict[HostName, str]:
         if "folder_lookup_cache_dict" not in g:
-            cache_path = self.path()
+            cache_path = self._path()
             if not os.path.exists(cache_path) or os.stat(cache_path).st_size == 0:
-                self.build(cache_path)
+                self.build()
             try:
                 g.folder_lookup_cache_dict = store.load_object_from_pickle_file(
                     cache_path, default={}
@@ -2760,38 +2762,48 @@ class FolderLookupCache:
                 g.folder_lookup_cache_dict = {}
         return g.folder_lookup_cache_dict
 
-    def build(self, cache_path: str) -> None:
-        store.acquire_lock(cache_path)
+    def rebuild_outdated(self, max_age: int) -> None:
+        cache_path = Path(self._path())
+        if cache_path.exists() and time.time() - cache_path.stat().st_mtime < max_age:
+            return
+
+        # Touch the file. The cronjob interval might be faster than the file creation
+        # Note: If this takes longer than the RequestTimeout -> Problem
+        #       On very big configurations, e.g. 300MB this might take 30-50 seconds
+        cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+        cache_path.touch()
+        self.build()
+
+    def build(self) -> None:
+        store.acquire_lock(self._path())
         folder_lookup = {}
         for host_name, host in self._folder_tree.root_folder().all_hosts_recursively().items():
             folder_lookup[host_name] = host.folder().path()
-        self._save(cache_path, folder_lookup)
+        self._save(folder_lookup)
 
-    def _save(self, cache_path: str, folder_lookup: Mapping[HostName, str]) -> None:
-        store.save_bytes_to_file(cache_path, pickle.dumps(folder_lookup))
+    def _save(self, folder_lookup: Mapping[HostName, str]) -> None:
+        store.save_bytes_to_file(self._path(), pickle.dumps(folder_lookup))
 
     def delete(self) -> None:
         try:
-            os.unlink(self.path())
+            os.unlink(self._path())
         except FileNotFoundError:
             pass
 
     def add_hosts(self, host2path_list: Iterable[tuple[HostName, str]]) -> None:
-        cache_path = self.path()
         cache = self.get_cache()
         for hostname, folder_path in host2path_list:
             cache[hostname] = folder_path
-        self._save(cache_path, cache)
+        self._save(cache)
 
     def delete_hosts(self, hostnames: Iterable[HostName]) -> None:
-        cache_path = self.path()
         cache = self.get_cache()
         for hostname in hostnames:
             try:
                 del cache[hostname]
             except KeyError:
                 pass
-        self._save(cache_path, cache)
+        self._save(cache)
 
 
 class WATOFoldersOnDemand(Mapping[PathWithoutSlash, CREFolder]):
@@ -3925,17 +3937,7 @@ def rebuild_folder_lookup_cache() -> None:
     if not (localtime.tm_hour == 5 and localtime.tm_min < 5):
         return
 
-    lookup_cache = folder_lookup_cache()
-    cache_path = Path(lookup_cache.path())
-    if cache_path.exists() and time.time() - cache_path.stat().st_mtime < 300:
-        return
-
-    # Touch the file. The cronjob interval might be faster than the file creation
-    # Note: If this takes longer than the RequestTimeout -> Problem
-    #       On very big configurations, e.g. 300MB this might take 30-50 seconds
-    cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-    cache_path.touch()
-    lookup_cache.build(str(cache_path))
+    folder_lookup_cache().rebuild_outdated(max_age=300)
 
 
 def ajax_popup_host_action_menu() -> None:

@@ -94,7 +94,7 @@ def patch_tag_config(
 @pytest.fixture(name="folder_lookup")
 def fixture_folder_lookup(mocker: MockerFixture) -> None:
     folder_cache = {"cached_host": "cached_host_value"}
-    mocker.patch.object(FolderLookupCache, "get_folder_lookup_cache", return_value=folder_cache)
+    mocker.patch.object(FolderLookupCache, "get_cache", return_value=folder_cache)
 
     class MockHost:
         def edit_url(self):

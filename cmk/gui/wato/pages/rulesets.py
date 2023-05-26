@@ -2572,7 +2572,7 @@ class RuleConditionRenderer:
             [x for x in host_name_conditions if isinstance(x, dict) and "$regex" in x]
         )
 
-        lookup_cache = folder_lookup_cache().get_folder_lookup_cache()
+        lookup_cache = folder_lookup_cache().get_cache()
         text_list: list[HTML] = []
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all

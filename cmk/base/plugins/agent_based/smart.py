@@ -52,17 +52,17 @@ CRC_ERRORS_ID: Final = 199
 # This mapping also limits the used ATA attributes.
 # All ATA attributes not listed here will be discarded when parsing the raw agent section
 ATA_ID_TO_ATTRIBUTE_NAME: Final[Mapping[int, str]] = {
-    5: "Reallocated_Sector_Ct",
+    5: "Reallocated_Sectors",
     9: "Power_On_Hours",
-    10: "Spin_Retry_Count",
-    12: "Power_Cycle_Count",
-    184: "End-to-End_Error",
-    187: "Reported_Uncorrect",
-    188: "Command_Timeout",
+    10: "Spin_Retries",
+    12: "Power_Cycles",
+    184: "End-to-End_Errors",
+    187: "Uncorrectable_Errors",
+    188: "Command_Timeout_Counter",
     194: "Temperature",
-    196: "Reallocated_Event_Count",
-    197: "Current_Pending_Sector",
-    CRC_ERRORS_ID: "CRC_Error_Count",
+    196: "Reallocated_Events",
+    197: "Pending_Sectors",
+    CRC_ERRORS_ID: "CRC_Errors",
 }
 
 
@@ -108,16 +108,16 @@ def parse_raw_values(string_table: StringTable) -> Section:
     ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '173', 'Unknown_Attribute',
     ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '4217788040605'],
     ... ]))
-    {'/dev/sda': {'Current_Pending_Sector': 0,
-                  'Head_Flying_Hours': 0,
+    {'/dev/sda': {'Head_Flying_Hours': 0,
+                  'Pending_Sectors': 0,
                   'Power-Off_Retract_Count': 0,
-                  'Power_Cycle_Count': 523,
+                  'Power_Cycles': 523,
                   'Power_On_Hours': 1408,
                   'Program_Fail_Count_Chip': 0,
                   'Raw_Read_Error_Rate': 16777215,
-                  'Reallocated_Sector_Ct': 0,
+                  'Reallocated_Sectors': 0,
                   'Seek_Error_Rate': 0,
-                  'Spin_Retry_Count': 0,
+                  'Spin_Retries': 0,
                   'Spin_Up_Time': 0,
                   'Temperature': 40}}
 
@@ -157,7 +157,7 @@ def _parse_ata_lines(ata_lines: Iterable[Sequence[str]]) -> Section:
             # Since we explicitly distinguish between the two, we choose "UDMA_CRC_Error_Count"
             # whenever the ID 199 comes with this textual information.
             # Otherwise, we default to CRC_Error_Count.
-            _set_int_or_zero(disk, attribute_name, raw_value)
+            _set_int_or_zero(disk, "UDMA_CRC_Errors", raw_value)
             continue
 
         if (lookup_attribute_name := ATA_ID_TO_ATTRIBUTE_NAME.get(int(ID))) is None:
@@ -169,10 +169,10 @@ def _parse_ata_lines(ata_lines: Iterable[Sequence[str]]) -> Section:
 
         _set_int_or_zero(disk, lookup_attribute_name, raw_value)
 
-        if lookup_attribute_name == "Reallocated_Event_Count":  # special case, see check function
+        if lookup_attribute_name == "Reallocated_Events":  # special case, see check function
             try:
-                disk["_normalized_value_Reallocated_Event_Count"] = int(value)
-                disk["_normalized_threshold_Reallocated_Event_Count"] = int(threshold)
+                disk["_normalized_value_Reallocated_Events"] = int(value)
+                disk["_normalized_threshold_Reallocated_Events"] = int(threshold)
             except ValueError:
                 pass
 
@@ -211,14 +211,14 @@ register.agent_section(
 )
 
 DISCOVERED_PARAMETERS: Final = (
-    "Reallocated_Sector_Ct",  # 5
-    "Spin_Retry_Count",  # 10
-    "End-to-End_Error",  # 184
-    "Reported_Uncorrect",  # 187
-    "Command_Timeout",  # 188
-    "Reallocated_Event_Count",  # 196
-    "Current_Pending_Sector",  # 197
-    "UDMA_CRC_Error_Count",  # 199
+    "Reallocated_Sectors",  # 5
+    "Spin_Retries",  # 10
+    "End-to-End_Errors",  # 184
+    "Uncorrectable_Errors",  # 187
+    "Command_Timeout_Counter",  # 188
+    "Reallocated_Events",  # 196
+    "Pending_Sectors",  # 197
+    "UDMA_CRC_Errors",  # 199
     # nvme
     "Critical_Warning",
     "Media_and_Data_Integrity_Errors",
@@ -243,28 +243,27 @@ def _summary(state: State, text: str) -> Result:
     return Result(state=state, summary=text)
 
 
-OUTPUT_FIELDS: Tuple[Tuple[Callable[[State, str], Result], str, str, Callable], ...] = (
+OUTPUT_FIELDS: Tuple[Tuple[Callable[[State, str], Result], str, Callable], ...] = (
     # ATA
-    (_summary, "Reallocated_Sector_Ct", "Reallocated sectors", str),  # 5
-    (_summary, "Power_On_Hours", "Powered on", lambda h: render.timespan(h * 3600)),  # 9, also nvme
-    (_summary, "Spin_Retry_Count", "Spin retries", str),  # 10
-    (_summary, "Power_Cycle_Count", "Power cycles", str),  # 12
-    (_summary, "End-to-End_Error", "End-to-End errors", str),  # 184
-    (_summary, "Reported_Uncorrect", "Uncorrectable errors", str),  # 187
-    (_summary, "Command_Timeout", "Command timeout counter", str),  # 188
-    (_summary, "Reallocated_Event_Count", "Reallocated events", str),  # 196
-    (_summary, "Current_Pending_Sector", "Pending sectors", str),  # 197
-    (_summary, "UDMA_CRC_Error_Count", "UDMA CRC errors", str),  # 199
-    (_summary, "CRC_Error_Count", "CRC errors", str),  # also 199
+    (_summary, "Reallocated_Sectors", str),  # 5
+    (_summary, "Power_On_Hours", lambda h: render.timespan(h * 3600)),  # 9, also nvme
+    (_summary, "Spin_Retries", str),  # 10
+    (_summary, "Power_Cycles", str),  # 12, also nvme
+    (_summary, "End-to-End_Errors", str),  # 184
+    (_summary, "Uncorrectable_Errors", str),  # 187
+    (_summary, "Command_Timeout_Counter", str),  # 188
+    (_summary, "Reallocated_Events", str),  # 196
+    (_summary, "Pending_Sectors", str),  # 197
+    (_summary, "UDMA_CRC_Errors", str),  # 199
+    (_summary, "CRC_errors", str),  # also 199
     # nvme
-    (_summary, "Power_Cycles", "Power cycles", str),
-    (_summary, "Critical_Warning", "Critical warning", str),
-    (_summary, "Media_and_Data_Integrity_Errors", "Media and data integrity errors", str),
-    (_summary, "Available_Spare", "Available spare", render.percent),
-    (_summary, "Percentage_Used", "Percentage used", render.percent),
-    (_summary, "Error_Information_Log_Entries", "Error information log entries", str),
-    (_summary, "Data_Units_Read", "Data units read", render.bytes),
-    (_summary, "Data_Units_Written", "Data units written", render.bytes),
+    (_summary, "Critical_Warning", str),
+    (_summary, "Media_and_Data_Integrity_Errors", str),
+    (_summary, "Available_Spare", render.percent),
+    (_summary, "Percentage_Used", render.percent),
+    (_summary, "Error_Information_Log_Entries", str),
+    (_summary, "Data_Units_Read", render.bytes),
+    (_summary, "Data_Units_Written", render.bytes),
 )
 
 
@@ -274,20 +273,20 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
     if disk is None:
         return
 
-    for make_result, field, descr, renderer in OUTPUT_FIELDS:
+    for make_result, field, renderer in OUTPUT_FIELDS:
         value = disk.get(field)
         if value is None:
             continue
         assert isinstance(value, int)
 
-        infotext = "%s: %s" % (descr, renderer(value))
+        infotext = "%s: %s" % (_display_attribute_name(field), renderer(value))
 
         ref_value = params.get(field)
         if field == "Available_Spare":
             ref_value = disk["Available_Spare_Threshold"]
 
         if ref_value is None:
-            yield make_result(State.OK, infotext)
+            yield Result(state=State.OK, summary=infotext)
             yield Metric(field, value)
             continue
 
@@ -314,7 +313,7 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
                 state = State.CRIT
                 hints[-1] += " (!!)"
 
-        if field == "Command_Timeout":
+        if field == "Command_Timeout_Counter":
             rate = get_rate(get_value_store(), "cmd_timeout", time.time(), value)
             state = State.OK if rate < MAX_COMMAND_TIMEOUTS_PER_HOUR / (60 * 60) else State.CRIT
             hints = (
@@ -328,6 +327,29 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
 
         yield make_result(state, infotext + " (%s)" % ", ".join(hints) if hints else infotext)
         yield Metric(field, value)
+
+
+def _display_attribute_name(attribute: str) -> str:
+    if (
+        lookup_translation := {
+            # Can't automatically translate/maintain the upper case abbreviations.
+            "CRC_Errors": "CRC errors",
+            "UDMA_CRC_Errors": "UDMA CRC errors",
+            # "Power_On_Hours" also comes on nvme devices.
+            # Since we decided to display "Powered On", we can't translate this automatically.
+            "Power_On_Hours": "Powered on",
+        }.get(attribute)
+    ) is not None:
+        return lookup_translation
+
+    match attribute.split("_", maxsplit=1):
+        case [first, rest]:
+            return f"{first} {rest.lower().replace('_', ' ')}"
+        case [only_one]:
+            return only_one
+        case _:
+            # cannot happen
+            raise NotImplementedError
 
 
 register.check_plugin(

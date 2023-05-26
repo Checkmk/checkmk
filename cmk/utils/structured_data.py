@@ -510,6 +510,13 @@ class ImmutableTree:
     def __init__(self, tree: StructuredDataNode | None = None) -> None:
         self.tree: Final = StructuredDataNode() if tree is None else tree
 
+    @classmethod
+    def deserialize(cls, raw_tree: SDRawTree) -> ImmutableTree:
+        return cls(StructuredDataNode.deserialize(raw_tree))
+
+    def serialize(self) -> SDRawTree:
+        return self.tree.serialize()
+
     def __bool__(self) -> bool:
         return not self.tree.is_empty()
 
@@ -619,6 +626,13 @@ class ImmutableDeltaTree:
             table=DeltaTable(path=tuple(), key_columns=[], rows=[]),
             _nodes={},
         )
+
+    @classmethod
+    def deserialize(cls, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
+        return cls(DeltaStructuredDataNode.deserialize(raw_tree))
+
+    def serialize(self) -> SDRawDeltaTree:
+        return self.tree.serialize()
 
     def __bool__(self) -> bool:
         return not self.tree.is_empty()

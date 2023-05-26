@@ -29,6 +29,7 @@ from cmk.utils.structured_data import (
     SDKeyColumns,
     SDPath,
     SDRawDeltaTree,
+    SDRawTree,
     SDRow,
     SDValue,
     StructuredDataNode,
@@ -216,22 +217,14 @@ class PainterInventoryTree(Painter):
 
         return "invtree", code
 
-    def export_for_python(self, row: Row, cell: Cell) -> dict | None:
-        return (
-            tree.serialize()
-            if isinstance(tree := self._compute_data(row, cell), StructuredDataNode)
-            else None
-        )
+    def export_for_python(self, row: Row, cell: Cell) -> SDRawTree:
+        return ImmutableTree(self._compute_data(row, cell)).serialize()
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> dict | None:
-        return (
-            tree.serialize()
-            if isinstance(tree := self._compute_data(row, cell), StructuredDataNode)
-            else None
-        )
+    def export_for_json(self, row: Row, cell: Cell) -> SDRawTree:
+        return ImmutableTree(self._compute_data(row, cell)).serialize()
 
 
 class ABCRowTable(RowTable):
@@ -1982,22 +1975,14 @@ class PainterInvhistDelta(Painter):
 
         return "invtree", code
 
-    def export_for_python(self, row: Row, cell: Cell) -> SDRawDeltaTree | None:
-        return (
-            tree.serialize()
-            if isinstance(tree := self._compute_data(row, cell), DeltaStructuredDataNode)
-            else None
-        )
+    def export_for_python(self, row: Row, cell: Cell) -> SDRawDeltaTree:
+        return ImmutableDeltaTree(self._compute_data(row, cell)).serialize()
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> SDRawDeltaTree | None:
-        return (
-            tree.serialize()
-            if isinstance(tree := self._compute_data(row, cell), DeltaStructuredDataNode)
-            else None
-        )
+    def export_for_json(self, row: Row, cell: Cell) -> SDRawDeltaTree:
+        return ImmutableDeltaTree(self._compute_data(row, cell)).serialize()
 
 
 def _paint_invhist_count(row: Row, what: str) -> CellSpec:

@@ -26,7 +26,6 @@ import cmk.utils.regex
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.structured_data import (
-    DeltaStructuredDataNode,
     ImmutableDeltaTree,
     ImmutableTree,
     load_tree,
@@ -36,7 +35,6 @@ from cmk.utils.structured_data import (
     SDFilterFunc,
     SDKey,
     SDPath,
-    StructuredDataNode,
 )
 from cmk.utils.type_defs import HostName
 
@@ -150,8 +148,8 @@ def load_filtered_and_merged_tree(row: Row) -> ImmutableTree | None:
     inventory_tree = _load_tree_from_file(tree_type="inventory", host_name=host_name)
     status_data_tree: ImmutableTree | None
     if raw_status_data_tree := row.get("host_structured_status"):
-        status_data_tree = ImmutableTree(
-            StructuredDataNode.deserialize(ast.literal_eval(raw_status_data_tree.decode("utf-8")))
+        status_data_tree = ImmutableTree.deserialize(
+            ast.literal_eval(raw_status_data_tree.decode("utf-8"))
         )
     else:
         status_data_tree = _load_tree_from_file(tree_type="status_data", host_name=host_name)
@@ -491,7 +489,7 @@ class _CachedDeltaTreeLoader:
             new,
             changed,
             removed,
-            ImmutableDeltaTree(DeltaStructuredDataNode.deserialize(raw_delta_tree)),
+            ImmutableDeltaTree.deserialize(raw_delta_tree),
         )
 
     def get_calculated_or_store_entry(
@@ -507,7 +505,7 @@ class _CachedDeltaTreeLoader:
         if new or changed or removed:
             store.save_text_to_file(
                 self._path,
-                repr((new, changed, removed, delta_tree.tree.serialize())),
+                repr((new, changed, removed, delta_tree.serialize())),
             )
             return self._make_history_entry(new, changed, removed, delta_tree)
         return None
@@ -729,11 +727,9 @@ def inventory_of_host(host_name: HostName, api_request):  # type: ignore[no-unty
         return {}
 
     if "paths" in api_request:
-        return tree.filter(
-            _make_filters_from_api_request_paths(api_request["paths"])
-        ).tree.serialize()
+        return tree.filter(_make_filters_from_api_request_paths(api_request["paths"])).serialize()
 
-    return tree.tree.serialize()
+    return tree.serialize()
 
 
 def verify_permission(host_name: HostName, site: livestatus.SiteId | None) -> None:

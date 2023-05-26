@@ -685,7 +685,7 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             raise DiagnosticsElementError(
                 "No HW/SW inventory node 'Software > Applications > Checkmk'"
             )
-        return node.tree.serialize()
+        return node.serialize()
 
 
 #   ---collect exiting files------------------------------------------------

@@ -395,6 +395,8 @@ def test_release_lock_already_closed(test_file: Path, path_type: type[str] | typ
 
 
 _Files = Generator[Path, None, None]
+
+
 @pytest.fixture(name="few_files")
 def fixture_few_files(tmp_path: Path) -> _Files:
     files = (tmp_path / name for name in ("locked_file1", "locked_file2"))
@@ -404,9 +406,7 @@ def fixture_few_files(tmp_path: Path) -> _Files:
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_release_all_locks(
-    few_files: _Files, path_type: type[str] | type[Path]
-) -> None:
+def test_release_all_locks(few_files: _Files, path_type: type[str] | type[Path]) -> None:
     files = (path_type(f) for f in few_files)
 
     assert all(store.acquire_lock(f) for f in files)

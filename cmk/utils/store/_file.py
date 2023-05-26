@@ -27,6 +27,7 @@ __all__ = [
     "TextSerializer",
     "RealIo",
     "FileIo",
+    "Serializer",
 ]
 
 TObject = TypeVar("TObject")

@@ -22,6 +22,7 @@ from cmk.utils.store._file import (
     DimSerializer,
     ObjectStore,
     PickleSerializer,
+    Serializer,
     TextSerializer,
 )
 from cmk.utils.store._locks import acquire_lock, cleanup_locks, configuration_lockfile, have_lock
@@ -41,6 +42,7 @@ __all__ = [
     "DimSerializer",
     "ObjectStore",
     "PickleSerializer",
+    "Serializer",
     "TextSerializer",
     "acquire_lock",
     "cleanup_locks",
@@ -202,47 +204,31 @@ def load_bytes_from_file(path: Path | str, default: bytes = b"", lock: bool = Fa
         return ObjectStore(Path(path), serializer=BytesSerializer()).read_obj(default=default)
 
 
-# A simple wrapper for cases where you want to store a python data
-# structure that is then read by load_data_from_file() again
 def save_object_to_file(path: Path | str, data: Any, pretty: bool = False) -> None:
-    serializer = DimSerializer(pretty=pretty)
-    # Normally the file is already locked (when data has been loaded before with lock=True),
-    # but lock it just to be sure we have the lock on the file.
-    #
-    # NOTE:
-    #  * this creates the file with 0 bytes in case it is missing
-    #  * this will leave the file behind unlocked, regardless of it being locked before or
-    #    not!
-    with locked(path):
-        ObjectStore(Path(path), serializer=serializer).write_obj(data)
+    _write(Path(path), DimSerializer(pretty=pretty), data)
 
 
 def save_text_to_file(path: Path | str, content: str) -> None:
     if not isinstance(content, str):
         raise TypeError("content argument must be Text, not bytes")
-    # Normally the file is already locked (when data has been loaded before with lock=True),
-    # but lock it just to be sure we have the lock on the file.
-    #
-    # NOTE:
-    #  * this creates the file with 0 bytes in case it is missing
-    #  * this will leave the file behind unlocked, regardless of it being locked before or
-    #    not!
-    with locked(path):
-        ObjectStore(Path(path), serializer=TextSerializer()).write_obj(content)
+    _write(Path(path), TextSerializer(), content)
 
 
 def save_bytes_to_file(path: Path | str, content: bytes) -> None:
     if not isinstance(content, bytes):
         raise TypeError("content argument must be bytes, not Text")
+    _write(Path(path), BytesSerializer(), content)
+
+
+def _write(path: Path, serializer: Serializer, content: Any) -> None:
+    store = ObjectStore(Path(path), serializer=serializer)
     # Normally the file is already locked (when data has been loaded before with lock=True),
     # but lock it just to be sure we have the lock on the file.
     #
     # NOTE:
     #  * this creates the file with 0 bytes in case it is missing
-    #  * this will leave the file behind unlocked, regardless of it being locked before or
-    #    not!
-    with locked(path):
-        ObjectStore(Path(path), serializer=BytesSerializer()).write_obj(content)
+    with store.locked():
+        store.write_obj(content)
 
 
 def _pickled_files_base_dir() -> Path:

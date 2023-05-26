@@ -5,28 +5,16 @@
 
 #include "Store.h"
 
+#include <utility>
+
 #include "livestatus/ICore.h"
-#include "livestatus/Logger.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Query.h"
 
 #ifdef CMC
-#include <utility>
-
 #include "livestatus/ChronoUtils.h"
+#include "livestatus/Logger.h"
 class Object;
-#else
-#include <filesystem>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
-
-#include "livestatus/CrashReport.h"
-#include "livestatus/EventConsoleConnection.h"
-#include "livestatus/Interface.h"
-#include "livestatus/StringUtils.h"
-#include "livestatus/mk_logwatch.h"
-#include "nagios.h"
 #endif
 
 Store::Store(ICore *mc, std::optional<std::chrono::seconds> cache_horizon,
@@ -195,113 +183,6 @@ void Store::addFlappingToStatehistCache(
     if (cache_horizon) {
         _table_cached_statehist.registerFlapping(object, started);
     }
-}
-
-#else
-
-Store::ExternalCommand::ExternalCommand(const std::string &str) {
-    constexpr int timestamp_len = 10;
-    constexpr int prefix_len = timestamp_len + 3;
-    if (str.size() <= prefix_len || str[0] != '[' ||
-        str[prefix_len - 2] != ']' || str[prefix_len - 1] != ' ') {
-        throw std::invalid_argument("malformed timestamp in command '" + str +
-                                    "'");
-    }
-    auto semi = str.find(';', prefix_len);
-    _prefix = str.substr(0, prefix_len);
-    _name = str.substr(prefix_len, semi - prefix_len);
-    _arguments = semi == std::string::npos ? "" : str.substr(semi);
-}
-
-Store::ExternalCommand Store::ExternalCommand::withName(
-    const std::string &name) const {
-    return {_prefix, name, _arguments};
-}
-
-std::string Store::ExternalCommand::str() const {
-    return _prefix + _name + _arguments;
-}
-
-std::vector<std::string> Store::ExternalCommand::args() const {
-    if (_arguments.empty()) {
-        return {};
-    }
-    return mk::split(_arguments.substr(1), ';');
-}
-
-void Store::answerCommandRequest(const ExternalCommand &command) {
-    if (command.name() == "MK_LOGWATCH_ACKNOWLEDGE") {
-        answerCommandMkLogwatchAcknowledge(command);
-        return;
-    }
-    if (command.name() == "DEL_CRASH_REPORT") {
-        answerCommandDelCrashReport(command);
-        return;
-    }
-    if (mk::starts_with(command.name(), "EC_")) {
-        answerCommandEventConsole("COMMAND " + command.name().substr(3) +
-                                  command.arguments());
-        return;
-    }
-    // Nagios doesn't have a LOG command, so we map it to the custom command
-    // _LOG, which we implement for ourselves.
-    answerCommandNagios(command.name() == "LOG" ? command.withName("_LOG")
-                                                : command);
-}
-
-void Store::answerCommandMkLogwatchAcknowledge(const ExternalCommand &command) {
-    // COMMAND [1462191638] MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog
-    auto args = command.args();
-    if (args.size() != 2) {
-        Warning(logger()) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
-        return;
-    }
-    mk_logwatch_acknowledge(logger(), _mc->paths()->logwatch_directory(),
-                            args[0], args[1]);
-}
-
-void Store::answerCommandDelCrashReport(const ExternalCommand &command) {
-    auto args = command.args();
-    if (args.size() != 1) {
-        Warning(logger()) << "DEL_CRASH_REPORT expects 1 argument";
-        return;
-    }
-    mk::crash_report::delete_id(_mc->paths()->crash_reports_directory(),
-                                args[0], logger());
-}
-
-namespace {
-class ECTableConnection : public EventConsoleConnection {
-public:
-    ECTableConnection(Logger *logger, std::string path, std::string command)
-        : EventConsoleConnection(logger, std::move(path))
-        , command_(std::move(command)) {}
-
-private:
-    void sendRequest(std::ostream &os) override { os << command_; }
-    void receiveReply(std::istream & /*is*/) override {}
-    std::string command_;
-};
-}  // namespace
-
-void Store::answerCommandEventConsole(const std::string &command) {
-    if (!_mc->mkeventdEnabled()) {
-        Notice(logger()) << "event console disabled, ignoring command '"
-                         << command << "'";
-        return;
-    }
-    try {
-        ECTableConnection(_mc->loggerLivestatus(),
-                          _mc->paths()->event_console_status_socket(), command)
-            .run();
-    } catch (const std::runtime_error &err) {
-        Alert(logger()) << err.what();
-    }
-}
-
-void Store::answerCommandNagios(const ExternalCommand &command) {
-    const std::lock_guard<std::mutex> lg(_command_mutex);
-    nagios_compat_submit_external_command(command.str().c_str());
 }
 
 #endif

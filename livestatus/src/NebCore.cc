@@ -28,11 +28,14 @@
 #include "NebTimeperiod.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Average.h"
+#include "livestatus/CrashReport.h"
+#include "livestatus/EventConsoleConnection.h"
 #include "livestatus/InputBuffer.h"
 #include "livestatus/Logger.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/mk_logwatch.h"
 #include "pnp4nagios.h"
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -51,6 +54,35 @@ extern int g_livestatus_threads;
 extern int g_num_queued_connections;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern std::atomic_int32_t g_livestatus_active_connections;
+
+ExternalCommand::ExternalCommand(const std::string &str) {
+    constexpr int timestamp_len = 10;
+    constexpr int prefix_len = timestamp_len + 3;
+    if (str.size() <= prefix_len || str[0] != '[' ||
+        str[prefix_len - 2] != ']' || str[prefix_len - 1] != ' ') {
+        throw std::invalid_argument("malformed timestamp in command '" + str +
+                                    "'");
+    }
+    auto semi = str.find(';', prefix_len);
+    _prefix = str.substr(0, prefix_len);
+    _name = str.substr(prefix_len, semi - prefix_len);
+    _arguments = semi == std::string::npos ? "" : str.substr(semi);
+}
+
+ExternalCommand ExternalCommand::withName(const std::string &name) const {
+    return {_prefix, name, _arguments};
+}
+
+std::string ExternalCommand::str() const {
+    return _prefix + _name + _arguments;
+}
+
+std::vector<std::string> ExternalCommand::args() const {
+    if (_arguments.empty()) {
+        return {};
+    }
+    return mk::split(_arguments.substr(1), ';');
+}
 
 NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
                  std::map<unsigned long, std::unique_ptr<Comment>> &comments,
@@ -619,8 +651,7 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     if (mk::starts_with(line, "COMMAND ")) {
         logRequest(_logger_livestatus, line, {});
         try {
-            _store.answerCommandRequest(
-                Store::ExternalCommand(mk::lstrip(line.substr(8))));
+            answerCommandRequest(ExternalCommand(mk::lstrip(line.substr(8))));
         } catch (const std::invalid_argument &err) {
             Warning(_logger_livestatus) << err.what();
         }
@@ -642,4 +673,81 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     output.setError(OutputBuffer::ResponseCode::invalid_request,
                     "Invalid request method");
     return false;
+}
+
+void NebCore::answerCommandRequest(const ExternalCommand &command) {
+    if (command.name() == "MK_LOGWATCH_ACKNOWLEDGE") {
+        answerCommandMkLogwatchAcknowledge(command);
+        return;
+    }
+    if (command.name() == "DEL_CRASH_REPORT") {
+        answerCommandDelCrashReport(command);
+        return;
+    }
+    if (mk::starts_with(command.name(), "EC_")) {
+        answerCommandEventConsole("COMMAND " + command.name().substr(3) +
+                                  command.arguments());
+        return;
+    }
+    // Nagios doesn't have a LOG command, so we map it to the custom command
+    // _LOG, which we implement for ourselves.
+    answerCommandNagios(command.name() == "LOG" ? command.withName("_LOG")
+                                                : command);
+}
+
+void NebCore::answerCommandMkLogwatchAcknowledge(
+    const ExternalCommand &command) {
+    // COMMAND [1462191638] MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog
+    auto args = command.args();
+    if (args.size() != 2) {
+        Warning(_logger_livestatus)
+            << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
+        return;
+    }
+    mk_logwatch_acknowledge(_logger_livestatus, _paths.logwatch_directory,
+                            args[0], args[1]);
+}
+
+void NebCore::answerCommandDelCrashReport(const ExternalCommand &command) {
+    auto args = command.args();
+    if (args.size() != 1) {
+        Warning(_logger_livestatus) << "DEL_CRASH_REPORT expects 1 argument";
+        return;
+    }
+    mk::crash_report::delete_id(_paths.crash_reports_directory, args[0],
+                                _logger_livestatus);
+}
+
+namespace {
+class ECTableConnection : public EventConsoleConnection {
+public:
+    ECTableConnection(Logger *logger, std::string path, std::string command)
+        : EventConsoleConnection(logger, std::move(path))
+        , command_(std::move(command)) {}
+
+private:
+    void sendRequest(std::ostream &os) override { os << command_; }
+    void receiveReply(std::istream & /*is*/) override {}
+    std::string command_;
+};
+}  // namespace
+
+void NebCore::answerCommandEventConsole(const std::string &command) {
+    if (!mkeventdEnabled()) {
+        Notice(_logger_livestatus)
+            << "event console disabled, ignoring command '" << command << "'";
+        return;
+    }
+    try {
+        ECTableConnection(loggerLivestatus(),
+                          _paths.event_console_status_socket, command)
+            .run();
+    } catch (const std::runtime_error &err) {
+        Alert(_logger_livestatus) << err.what();
+    }
+}
+
+void NebCore::answerCommandNagios(const ExternalCommand &command) {
+    const std::lock_guard<std::mutex> lg(_command_mutex);
+    nagios_compat_submit_external_command(command.str().c_str());
 }

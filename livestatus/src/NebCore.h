@@ -15,9 +15,11 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "Downtime.h"  // IWYU pragma: keep
@@ -61,6 +63,26 @@ struct NagiosPathConfig {
     std::filesystem::path history_archive_directory;
     std::filesystem::path rrd_multiple_directory;
     std::filesystem::path rrdcached_socket;
+};
+
+class ExternalCommand {
+public:
+    explicit ExternalCommand(const std::string &str);
+    [[nodiscard]] ExternalCommand withName(const std::string &name) const;
+    [[nodiscard]] std::string name() const { return _name; }
+    [[nodiscard]] std::string arguments() const { return _arguments; }
+    [[nodiscard]] std::string str() const;
+    [[nodiscard]] std::vector<std::string> args() const;
+
+private:
+    std::string _prefix;  // including brackets and space
+    std::string _name;
+    std::string _arguments;
+
+    ExternalCommand(std::string prefix, std::string name, std::string arguments)
+        : _prefix(std::move(prefix))
+        , _name(std::move(name))
+        , _arguments(std::move(arguments)) {}
 };
 
 class NebCore : public ICore {
@@ -240,7 +262,17 @@ private:
         icontactgroups_;
     Triggers _triggers;
 
+    // Nagios is not thread-safe, so this mutex protects calls to
+    // process_external_command1 / submit_external_command.
+    std::mutex _command_mutex;
+
     void *implInternal() const override { return const_cast<NebCore *>(this); }
+
+    void answerCommandRequest(const ExternalCommand &command);
+    void answerCommandMkLogwatchAcknowledge(const ExternalCommand &command);
+    void answerCommandDelCrashReport(const ExternalCommand &command);
+    void answerCommandEventConsole(const std::string &command);
+    void answerCommandNagios(const ExternalCommand &command);
 };
 
 Attributes CustomAttributes(const customvariablesmember *first,

@@ -16,7 +16,6 @@
 #include <string>
 
 #include "livestatus/LogCache.h"
-#include "livestatus/Table.h"
 #include "livestatus/TableColumns.h"
 #include "livestatus/TableCommands.h"
 #include "livestatus/TableComments.h"
@@ -24,6 +23,7 @@
 #include "livestatus/TableContacts.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/TableDowntimes.h"
+#include "livestatus/TableDummy.h"
 #include "livestatus/TableEventConsoleEvents.h"
 #include "livestatus/TableEventConsoleHistory.h"
 #include "livestatus/TableEventConsoleReplication.h"
@@ -44,8 +44,7 @@
 class ICore;
 class Logger;
 class OutputBuffer;
-class Query;
-class User;
+class Table;
 
 #ifdef CMC
 #include "TableCachedStatehist.h"
@@ -69,15 +68,6 @@ public:
                           OutputBuffer &output, const std::string &tablename);
 
 private:
-    struct TableDummy : public Table {
-        explicit TableDummy(ICore *mc) : Table(mc) {}
-        [[nodiscard]] std::string name() const override { return "dummy"; }
-        [[nodiscard]] std::string namePrefix() const override {
-            return "dummy_";
-        }
-        void answerQuery(Query & /*unused*/, const User & /*user*/) override {}
-    };
-
     ICore *_mc;
     LogCache _log_cache;
 

@@ -85,6 +85,7 @@ set(livestatus_headers
     ${header_location}/TableContacts.h
     ${header_location}/TableCrashReports.h
     ${header_location}/TableDowntimes.h
+    ${header_location}/TableDummy.h
     ${header_location}/TableEventConsole.h
     ${header_location}/TableEventConsoleEvents.h
     ${header_location}/TableEventConsoleHistory.h

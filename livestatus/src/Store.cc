@@ -10,6 +10,7 @@
 #include "livestatus/ICore.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Query.h"
+#include "livestatus/Table.h"
 
 #ifdef CMC
 #include "livestatus/ChronoUtils.h"

@@ -92,6 +92,7 @@ class NotificationHandler(abc.ABC):
 
 class RemainingTrialTime(NamedTuple):
     days: int
+    hours: int
     perc: float
 
 

@@ -116,8 +116,7 @@ void LogEntry::assign(Param par, std::string_view field) {
     }
 };
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::vector<LogEntry::LogDef> LogEntry::log_definitions{
+const std::vector<LogEntry::LogDef> LogEntry::log_definitions{
     LogDef{"INITIAL HOST STATE",
            Class::state,
            LogEntryKind::state_host_initial,

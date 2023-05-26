@@ -98,7 +98,7 @@ def parse_address_and_port(address_and_port, ssl_ports):
         server_address = "127.0.0.1"
     elif server_address == "::":
         server_address = "[::1]"
-    elif ":" in server_address:
+    elif ":" in server_address and server_address[0] != "[":
         server_address = "[%s]" % server_address
 
     # Switch protocol if port is SSL port. In case you use SSL on another

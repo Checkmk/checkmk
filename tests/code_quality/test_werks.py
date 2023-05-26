@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import functools
 import os
 import re
 import subprocess
@@ -13,7 +14,6 @@ import pytest
 
 import tests.testlib as testlib
 
-import cmk.utils.memoize
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
 
@@ -136,7 +136,7 @@ def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
     )
 
 
-@cmk.utils.memoize.MemoizeCache
+@functools.lru_cache
 def _git_tag_exists(tag: str) -> bool:
     return (
         subprocess.Popen(
@@ -160,7 +160,7 @@ def _tags_containing_werk(werk_id: int) -> list[str]:
 _werk_to_git_tag = defaultdict(list)
 
 
-@cmk.utils.memoize.MemoizeCache
+@functools.lru_cache
 def _werks_in_git_tag(tag: str) -> list[str]:
     werks_in_tag = (
         subprocess.check_output(

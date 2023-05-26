@@ -45,13 +45,13 @@ def macro_mapping_from_context(
     return macro_mapping
 
 
-def render_title_with_macros_string(  # type: ignore[no-untyped-def]
+def render_title_with_macros_string(
     context: VisualContext,
     single_infos: SingleInfos,
     title: str,
     default_title: str,
     **additional_macros: str,
-):
+) -> str:
     return replace_macros_in_str(
         _u(title),
         macro_mapping_from_context(

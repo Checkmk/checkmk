@@ -7,9 +7,10 @@
 import sys
 
 import pytest
+from _pytest.capture import CaptureFixture
 
 
-def test_import_module(capfd) -> None:  # type: ignore[no-untyped-def]
+def test_import_module(capfd: CaptureFixture) -> None:
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         if sys.version_info[0] == 2:
             import agents.plugins.plesk_domains_2  # pylint: disable=syntax-error,unused-import  # noqa: F401

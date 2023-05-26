@@ -33,9 +33,7 @@ class ServiceStateFormatter(StateFormatter):
         self.message_template = message_template
 
 
-def state_map(  # type: ignore[no-untyped-def]
-    conf: tuple[str, str] | None, row: Row, formatter: StateFormatter
-):
+def state_map(conf: tuple[str, str] | None, row: Row, formatter: StateFormatter) -> dict[str, str]:
     style = dict(zip(("paint", "status"), conf)) if isinstance(conf, tuple) else {}
     state, status_name = formatter.state_names(row)
     return {

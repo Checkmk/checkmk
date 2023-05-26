@@ -29,9 +29,7 @@ def test_command_reload(site: Site, ec) -> None:  # type: ignore[no-untyped-def]
 
 @pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_status_table_via_core(  # type: ignore[no-untyped-def]
-    site: Site, ec, via_core: bool
-) -> None:
+def test_status_table_via_core(site: Site, ec, via_core: bool) -> None:  # type: ignore[no-untyped-def]
     live = site.live if via_core else ec.status
     prefix = "eventconsole" if via_core else ""
     result = live.query_table_assoc("GET %sstatus\n" % prefix)
@@ -79,9 +77,7 @@ def test_status_table_via_core(  # type: ignore[no-untyped-def]
 
 @pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_rules_table_via_core(  # type: ignore[no-untyped-def]
-    site: Site, ec, via_core: bool
-) -> None:
+def test_rules_table_via_core(site: Site, ec, via_core: bool) -> None:  # type: ignore[no-untyped-def]
     live = site.live if via_core else ec.status
     prefix = "eventconsole" if via_core else ""
     result = live.query_table_assoc("GET %srules\n" % prefix)

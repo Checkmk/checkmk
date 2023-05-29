@@ -16,6 +16,9 @@ from collections.abc import Sequence
 from typing import Any
 from xml.dom import minidom
 
+# TODO: minicompat include internal impl details. But NodeList is only defined there for <3.11
+from xml.dom.minicompat import NodeList
+
 import dateutil.parser
 import requests
 import urllib3
@@ -1797,17 +1800,27 @@ def get_section_datastores(datastores):
     return section_lines
 
 
+def _get_text(node: NodeList[minidom.Element]) -> str:
+    first = node.item(0)
+    if first is None:
+        raise ValueError("Node has no item")
+    child = first.firstChild
+    if child is None or not isinstance(child, minidom.Text):
+        raise ValueError("Node has no text")
+    return child.data
+
+
 def get_section_licenses(connection):
     section_lines = ["<<<esx_vsphere_licenses:sep(9)>>>"]
     licenses_response = connection.query_server("licensesused")
     root_node = minidom.parseString(licenses_response)
     licenses_node = root_node.getElementsByTagName("LicenseManagerLicenseInfo")
     for license_node in licenses_node:
-        total = license_node.getElementsByTagName("total")[0].firstChild.data
+        total = _get_text(license_node.getElementsByTagName("total"))
         if total == "0":
             continue
-        name = license_node.getElementsByTagName("name")[0].firstChild.data
-        used = license_node.getElementsByTagName("used")[0].firstChild.data
+        name = _get_text(license_node.getElementsByTagName("name"))
+        used = _get_text(license_node.getElementsByTagName("used"))
         section_lines.append(f"{name}\t{used} {total}")
     return section_lines
 

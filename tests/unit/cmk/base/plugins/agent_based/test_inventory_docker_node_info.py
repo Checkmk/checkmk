@@ -9,7 +9,8 @@ from tests.unit.conftest import FixRegister
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.docker_node_info import inventory_docker_node_info, Section
+from cmk.base.plugins.agent_based.docker_node_info import inventory_docker_node_info
+from cmk.base.plugins.agent_based.utils.docker import NodeInfoSection as Section
 
 from .utils_inventory import sort_inventory_result
 

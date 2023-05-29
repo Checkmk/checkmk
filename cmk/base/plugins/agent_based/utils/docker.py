@@ -10,6 +10,8 @@ from .memory import SectionMemUsed
 
 INVENTORY_BASE_PATH = ["software", "applications", "docker"]
 
+NodeInfoSection = dict
+
 
 class AgentOutputMalformatted(Exception):
     DEFAULT_MESSAGE = (

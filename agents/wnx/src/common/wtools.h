@@ -564,14 +564,8 @@ inline std::string ToUtf8(const std::wstring_view src) noexcept {
     }
 
     std::string str;
-    try {
-        str.resize(out_len);
-    } catch (const std::exception &e) {
-        xlog::l(XLOG_FUNC + "memory lacks %s", e.what());
-        return {};
-    }
+    str.resize(out_len);
 
-    // convert
     ::WideCharToMultiByte(CP_UTF8, 0, src.data(), -1, str.data(), out_len,
                           nullptr, nullptr);
     return str;
@@ -1068,6 +1062,8 @@ public:
         : data_{::SysAllocString(str.data())} {}
     ~Bstr() { ::SysFreeString(data_); }
     [[nodiscard]] BSTR bstr() const noexcept { return data_; }
+
+private:
     BSTR data_;
 };
 
@@ -1095,15 +1091,9 @@ std::filesystem::path ExecuteCommandsAsync(
 std::filesystem::path ExecuteCommandsSync(
     std::wstring_view name, const std::vector<std::wstring> &commands);
 
-/// \brief Changes Access Rights in Windows crazy manner
+/// Changes Access Rights in Windows crazy manner
 ///
-/// Example of usage is
-#if 0
-ChangeAccessRights( L"c:\\txt", SE_FILE_OBJECT,        // what
-                    L"a1", TRUSTEE_IS_NAME,            // who
-                    STANDARD_RIGHTS_ALL | GENERIC_ALL, // how
-                    GRANT_ACCESS, OBJECT_INHERIT_ACE);
-#endif
+///
 bool ChangeAccessRights(
     const wchar_t *object_name,   // name of object
     SE_OBJECT_TYPE object_type,   // type of object
@@ -1113,6 +1103,18 @@ bool ChangeAccessRights(
     ACCESS_MODE access_mode,      // type of ACE
     DWORD inheritance             // inheritance flags for new ACE ???
 );
+
+inline bool ChangeAccessRights(
+    std::filesystem::path file,      // name of file
+    std::wstring_view trustee_name,  // user for new ACE
+    DWORD access_rights,             // access mask for new ACE
+    ACCESS_MODE access_mode,         // type of ACE
+    DWORD inheritance                // inheritance flags for new ACE ???
+) {
+    return ChangeAccessRights(file.wstring().c_str(), SE_FILE_OBJECT,
+                              trustee_name.data(), TRUSTEE_IS_NAME,
+                              access_rights, access_mode, inheritance);
+}
 
 std::wstring ExpandStringWithEnvironment(std::wstring_view str);
 

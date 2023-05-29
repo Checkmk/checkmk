@@ -13,9 +13,10 @@
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
-namespace wtools::runas {  // to become friendly for cma::cfg classes
+namespace wtools::runas {
 
-static bool WaitForExit(uint32_t pid) {
+namespace {
+bool WaitForExit(uint32_t pid) {
     for (int i = 0; i < 100; i++) {
         auto [code, error] = GetProcessExitCode(pid);
         if (code == 0) {
@@ -27,19 +28,24 @@ static bool WaitForExit(uint32_t pid) {
     return false;
 }
 
-static std::string ReadFromHandle(HANDLE h) {
+std::string ReadFromHandle(HANDLE h) {
     HANDLE handles[] = {h};
-    auto ready_ret = ::WaitForMultipleObjects(1, handles, FALSE, 500);
+    const auto ready_ret = ::WaitForMultipleObjects(1, handles, FALSE, 500);
 
-    if (ready_ret != WAIT_OBJECT_0) return {};
+    if (ready_ret != WAIT_OBJECT_0) {
+        return {};
+    }
 
     auto buf = wtools::ReadFromHandle(handles[0]);
     EXPECT_TRUE(!buf.empty());
-    if (buf.empty()) return {};
+    if (buf.empty()) {
+        return {};
+    }
 
     buf.emplace_back(0);
     return buf.data();
 }
+}  // namespace
 
 TEST(WtoolsRunAs, NoUser_Component) {
     auto temp_fs = tst::TempCfgFs::Create();
@@ -51,11 +57,9 @@ TEST(WtoolsRunAs, NoUser_Component) {
                         "@powershell  Start-Sleep -Milliseconds 150\n"
                         "@echo marker %1");
     wtools::AppRunner ar;
-    auto ret = ar.goExecAsJob((in / "runc.cmd 1").wstring());
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(ar.goExecAsJob((in / "runc.cmd 1").wstring()));
     ASSERT_TRUE(WaitForExit(ar.processId()));
     auto data = ReadFromHandle(ar.getStdioRead());
-    ASSERT_TRUE(!data.empty());
     EXPECT_EQ(cma::tools::win::GetEnv("USERNAME"s) + "\r\nmarker 1\r\n", data);
 }
 
@@ -84,10 +88,9 @@ TEST(WtoolsRunAs, TestUser_ComponentExt) {
     // Allow Users to use the file
     // Must be done for testing. Plugin Engine must use own method to allow
     // execution
-    EXPECT_TRUE(wtools::ChangeAccessRights(
-        (in / "runc.cmd").wstring().c_str(), SE_FILE_OBJECT, user.c_str(),
-        TRUSTEE_IS_NAME, STANDARD_RIGHTS_ALL | GENERIC_ALL, GRANT_ACCESS,
-        OBJECT_INHERIT_ACE));
+    EXPECT_TRUE(wtools::ChangeAccessRights(in / "runc.cmd", user,
+                                           STANDARD_RIGHTS_ALL | GENERIC_ALL,
+                                           GRANT_ACCESS, OBJECT_INHERIT_ACE));
 
     wtools::AppRunner ar;
 
@@ -103,7 +106,6 @@ TEST(WtoolsRunAs, TestUser_ComponentExt) {
     }
     ASSERT_TRUE(b);
     auto data = ReadFromHandle(ar.getStdioRead());
-    ASSERT_TRUE(!data.empty());
     EXPECT_EQ("a1"s + fmt::format("_{}", ::GetCurrentProcessId()) +
                   "\r\nmarker 1\r\n",
               data);

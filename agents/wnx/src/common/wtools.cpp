@@ -47,7 +47,9 @@ bool ChangeAccessRights(
     PACL old_dacl = nullptr;
     PSECURITY_DESCRIPTOR sd = nullptr;
 
-    if (nullptr == object_name) return false;
+    if (object_name == nullptr) {
+        return false;
+    }
 
     // Get a pointer to the existing DACL.
     auto result = ::GetNamedSecurityInfo(object_name, object_type,

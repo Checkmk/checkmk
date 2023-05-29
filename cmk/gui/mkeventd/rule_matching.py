@@ -118,7 +118,9 @@ def check_timeperiod(tpname: str) -> str | None:
         return _("Cannot update timeperiod information for %s: %s") % (tpname, e)
 
 
-def match(pattern: ec.TextPattern, text: str, complete: bool = True) -> bool | ec.TextMatchResult:
+def match(
+    pattern: ec.TextPattern | None, text: str, complete: bool = True
+) -> bool | ec.TextMatchResult:
     if pattern is None:
         return True
     assert not isinstance(pattern, re.Pattern)  # Hmmm...

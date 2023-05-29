@@ -21,7 +21,6 @@ import itertools
 import json
 import os
 import pprint
-import re
 import select
 import signal
 import socket
@@ -55,7 +54,7 @@ from cmk.utils.translations import translate_hostname
 from cmk.utils.type_defs import HostAddress, HostName, TimeperiodName, Timestamp
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
-from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule, TextPattern
+from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_line, Event
@@ -72,7 +71,7 @@ from .history import (
 from .host_config import HostConfig
 from .perfcounters import Perfcounters
 from .query import filter_operator_in, MKClientError, Query, QueryCOMMAND, QueryGET, QueryREPLICATE
-from .rule_matcher import match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
+from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings
 from .settings import settings as create_settings
@@ -1268,36 +1267,7 @@ class EventServer(ECServerThread):
                     self._rules.append(rule)
                     self._rule_by_id[rule["id"]] = rule
                     try:
-                        for key in [
-                            "match",
-                            "match_ok",
-                            "match_host",
-                            "match_application",
-                            "cancel_application",
-                        ]:
-                            if key in rule:
-                                value = self._compile_matching_value(key, rule[key])
-                                if value is None:
-                                    del rule[key]
-                                    continue
-
-                                rule[key] = value
-
-                        if (
-                            "state" in rule
-                            and isinstance(rule["state"], tuple)
-                            and rule["state"][0] == "text_pattern"
-                        ):
-                            for key in ["2", "1", "0"]:
-                                if key in rule["state"][1]:
-                                    value = self._compile_matching_value(
-                                        "state", rule["state"][1][key]
-                                    )
-                                    if value is None:
-                                        del rule["state"][1][key]
-                                    else:
-                                        rule["state"][1][key] = value
-
+                        compile_rule(rule)
                     except Exception:
                         if self.settings.options.debug:
                             raise
@@ -1335,20 +1305,6 @@ class EventServer(ECServerThread):
                     for prio, entries in self._rule_hash[facility].items():
                         stats.append(f"{SyslogPriority(prio)}({len(entries)})")
                     self._logger.info(" %-12s: %s", SyslogFacility(facility), " ".join(stats))
-
-    @staticmethod
-    def _compile_matching_value(key: str, val: str) -> TextPattern:
-        value = val.strip()
-        # Remove leading .* from regex. This is redundant and
-        # dramatically destroys performance when doing an infix search.
-        if key in ["match", "match_ok"]:
-            while value.startswith(".*") and not value.startswith(".*?"):
-                value = value[2:]
-        if not value:
-            return None
-        if cmk.utils.regex.is_regex(value):
-            return re.compile(value, re.IGNORECASE)
-        return val.lower()
 
     def hash_rule(self, rule: Rule) -> None:
         """Construct rule hash for faster execution."""

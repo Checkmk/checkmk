@@ -2086,22 +2086,22 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
     def _filter_mkeventd_rule_packs(
         self, search_expression: str, rule_packs: Iterable[ec.ECRulePack]
-    ) -> dict[str, list[ec.ECRuleSpec]]:
-        found_packs: dict[str, list[ec.ECRuleSpec]] = {}
-        for rule_pack in rule_packs:
+    ) -> dict[str, list[ec.Rule]]:
+        found_packs: dict[str, list[ec.Rule]] = {}
+        for rule_pack_ in rule_packs:
+            rule_pack = cast(ec.ECRulePackSpec, rule_pack_)
             if (
                 search_expression in rule_pack["id"].lower()
                 or search_expression in rule_pack["title"].lower()
             ):
                 found_packs.setdefault(rule_pack["id"], [])
             for rule in rule_pack.get("rules", []):
+                match = rule.get("match", "")
+                if not isinstance(match, str):  # TODO: Remove when we have CompiledRule
+                    raise ValueError(f"attribute match of rule {rule['id']} already compiled")
                 if any(
                     search_expression in searchable_rule_item.lower()
-                    for searchable_rule_item in (
-                        rule["id"],
-                        rule.get("description", ""),
-                        rule.get("match", ""),
-                    )
+                    for searchable_rule_item in (rule["id"], rule.get("description", ""), match)
                 ):
                     found_rules = found_packs.setdefault(rule_pack["id"], [])
                     found_rules.append(rule)
@@ -2495,9 +2495,17 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             if (
                 search_expression in rule["id"].lower()
                 or search_expression in rule.get("description", "").lower()
-                or search_expression in rule.get("match", "").lower()
+                or search_expression in _get_match(rule).lower()
             )
         ]
+
+
+# TODO: Remove when we have CompiledRule
+def _get_match(rule: ec.Rule) -> str:
+    value = rule.get("match", "")
+    if not isinstance(value, str):  # TODO: Remove when we have CompiledRule
+        raise ValueError(f"attribute match of rule {rule['id']} already compiled")
+    return value
 
 
 class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
@@ -5158,7 +5166,7 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
         return mkp_rule_pack
 
     @staticmethod
-    def _rule_to_match_item(rule: ec.ECRuleSpec, url: str) -> MatchItem:
+    def _rule_to_match_item(rule: ec.Rule, url: str) -> MatchItem:
         id_ = rule["id"]
         description = rule.get("description")
         return MatchItem(

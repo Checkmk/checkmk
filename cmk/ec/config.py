@@ -19,7 +19,7 @@ from cmk.utils.exceptions import MKException
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import Seconds
 
-TextPattern = str | Pattern[str] | None
+TextPattern = str | Pattern[str]
 TextMatchResult = Literal[False] | Sequence[str]
 
 
@@ -126,9 +126,9 @@ class ServiceLevel(TypedDict):
 StatePatterns = TypedDict(
     "StatePatterns",
     {
-        "0": str,
-        "1": str,
-        "2": str,
+        "0": TextPattern,
+        "1": TextPattern,
+        "2": TextPattern,
     },
     total=False,
 )
@@ -157,10 +157,13 @@ class Rule(TypedDict, total=False):
     autodelete: bool
     cancel_actions: Iterable[str]
     cancel_action_phases: str
-    cancel_application: str
+    cancel_application: TextPattern
     cancel_priority: tuple[int, int]
+    comment: str
     contact_groups: ContactGroups
     count: Count
+    description: str
+    docu_url: str
     disabled: bool
     expect: Expect
     event_limit: EventLimit
@@ -169,9 +172,9 @@ class Rule(TypedDict, total=False):
     invert_matching: bool
     livetime: tuple[Seconds, Iterable[Literal["open", "ack"]]]
     match: TextPattern
-    match_application: str
+    match_application: TextPattern
     match_facility: int
-    match_host: str
+    match_host: TextPattern
     match_ipaddress: str
     match_ok: TextPattern
     match_priority: tuple[int, int]
@@ -192,7 +195,7 @@ class ECRulePackSpec(TypedDict, total=False):
     id: str
     title: str
     disabled: bool
-    rules: Collection[Any]  # TODO: This should actually be Collection[Rule]
+    rules: Collection[Rule]
     customer: str  # TODO: This is a GUI-only feature, which doesn't belong here at all.
 
 

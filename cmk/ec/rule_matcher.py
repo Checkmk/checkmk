@@ -6,16 +6,18 @@
 from __future__ import annotations
 
 import ipaddress
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from logging import Logger
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 from livestatus import SiteId
 
+import cmk.utils.regex
 from cmk.utils.type_defs import TimeperiodName
 
-from .config import MatchGroups, Rule, TextMatchResult, TextPattern
+from .config import MatchGroups, Rule, StatePatterns, TextMatchResult, TextPattern
 from .event import Event
 
 
@@ -38,7 +40,66 @@ class MatchSuccess:
 MatchResult = MatchFailure | MatchSuccess
 
 
-def match(pattern: TextPattern, text: str, complete: bool) -> TextMatchResult:
+def compile_matching_value(key: str, val: str) -> TextPattern | None:
+    value = val.strip()
+    # Remove leading .* from regex. This is redundant and
+    # dramatically destroys performance when doing an infix search.
+    if key in ["match", "match_ok"]:
+        while value.startswith(".*") and not value.startswith(".*?"):
+            value = value[2:]
+    if not value:
+        return None
+    if cmk.utils.regex.is_regex(value):
+        return re.compile(value, re.IGNORECASE)
+    return val.lower()
+
+
+def compile_rule_attribute(
+    rule: Rule,
+    key: Literal["match", "match_ok", "match_host", "match_application", "cancel_application"],
+) -> None:
+    if key not in rule:
+        return
+    value = rule[key]
+    if not isinstance(value, str):  # TODO: Remove when we have CompiledRule
+        raise ValueError(f"attribute {key} of rule {rule['id']} already compiled")
+    compiled_value = compile_matching_value(key, value)
+    if compiled_value is None:
+        del rule[key]
+    else:
+        rule[key] = compiled_value
+
+
+def compile_state_pattern(state_patterns: StatePatterns, key: Literal["0", "1", "2"]) -> None:
+    if key not in state_patterns:
+        return
+    value = state_patterns[key]
+    if not isinstance(value, str):  # TODO: Remove when we have CompiledRule
+        raise ValueError(f"state pattern {key} already compiled")
+    compiled_value = compile_matching_value("state", value)
+    if compiled_value is None:
+        del state_patterns[key]
+    else:
+        state_patterns[key] = compiled_value
+
+
+def compile_rule(rule: Rule) -> None:
+    """
+    Tries to convert strings to compiled regex patterns.
+    """
+    compile_rule_attribute(rule, "match")
+    compile_rule_attribute(rule, "match_ok")
+    compile_rule_attribute(rule, "match_host")
+    compile_rule_attribute(rule, "match_application")
+    compile_rule_attribute(rule, "cancel_application")
+    if "state" in rule and isinstance(rule["state"], tuple) and rule["state"][0] == "text_pattern":
+        state_patterns: StatePatterns = rule["state"][1]
+        compile_state_pattern(state_patterns, "2")
+        compile_state_pattern(state_patterns, "1")
+        compile_state_pattern(state_patterns, "0")
+
+
+def match(pattern: TextPattern | None, text: str, complete: bool) -> TextMatchResult:
     """Performs an EC style matching test of pattern on text
 
     Returns False in case of no match or a tuple with the match groups.
@@ -52,7 +113,7 @@ def match(pattern: TextPattern, text: str, complete: bool) -> TextMatchResult:
     return m.groups("") if m else False
 
 
-def format_pattern(pattern: TextPattern) -> str:
+def format_pattern(pattern: TextPattern | None) -> str:
     if pattern is None:
         return str(pattern)
     if isinstance(pattern, str):

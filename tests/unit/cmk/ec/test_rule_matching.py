@@ -7,8 +7,9 @@ import pytest
 
 from livestatus import SiteId
 
-from cmk.ec.main import Event, EventServer, MatchGroups
+from cmk.ec.main import Event, MatchGroups
 from cmk.ec.rule_matcher import (
+    compile_matching_value,
     MatchFailure,
     MatchPriority,
     MatchResult,
@@ -138,12 +139,13 @@ def test_match_message(
     cancel_groups: bool | None,
 ) -> None:
     m = RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
-    rule: Rule = {
-        "match": EventServer._compile_matching_value("match", match_message),
-    }
+    compiled_match = compile_matching_value("match", match_message)
+    rule = Rule() if compiled_match is None else Rule(match=compiled_match)
 
     if cancel_message is not None:
-        rule["match_ok"] = EventServer._compile_matching_value("match_ok", cancel_message)
+        compiled_match_ok = compile_matching_value("match_ok", cancel_message)
+        assert compiled_match_ok is not None
+        rule["match_ok"] = compiled_match_ok
 
     event: Event = {"text": message}
 
@@ -328,7 +330,7 @@ def test_match_host(result: MatchResult, rule: Rule, event: Event) -> None:
     if "match_host" in rule:
         rule = {
             **rule,  # type: ignore[misc] # mypy bug https://github.com/python/mypy/issues/4122
-            "match_host": EventServer._compile_matching_value("match_host", rule["match_host"]),
+            "match_host": compile_matching_value("match_host", rule["match_host"]),
         }
 
     assert m.event_rule_matches_host(rule, event) == result

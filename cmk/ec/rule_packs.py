@@ -31,8 +31,6 @@ from .defaults import default_config, default_rule_pack
 from .settings import Settings
 from .settings import settings as create_settings
 
-ECRuleSpec = dict[str, Any]
-
 
 class RulePackType(Enum):  # pylint: disable=too-few-public-methods
     """

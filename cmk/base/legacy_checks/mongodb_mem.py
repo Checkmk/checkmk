@@ -15,13 +15,12 @@
 # heap_usage_bytes 65501032
 
 
-from cmk.base.check_api import (
-    check_levels,
-    discover_single,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from collections.abc import Iterable, Mapping
+
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+
+Section = Mapping[str, str | int]
 
 
 def parse_mongodb_mem(info):
@@ -33,6 +32,11 @@ def parse_mongodb_mem(info):
         except ValueError:
             parsed[key] = value
     return parsed
+
+
+def discover_mongodb_mem(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_mongodb_mem(_no_item, params, parsed):
@@ -59,7 +63,7 @@ def check_mongodb_mem(_no_item, params, parsed):
 
 check_info["mongodb_mem"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_mem,
-    discovery_function=discover_single,
+    discovery_function=discover_mongodb_mem,
     check_function=check_mongodb_mem,
     service_name="Memory used MongoDB",
     check_ruleset_name="mongodb_mem",

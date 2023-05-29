@@ -15,15 +15,17 @@
 
 
 import json
+from collections.abc import Iterable, Mapping
 
 from cmk.base.check_api import (
-    discover_single,
     get_age_human_readable,
     get_bytes_human_readable,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
+
+Section = Mapping
 
 
 def parse_mongodb_replication_info(info):
@@ -34,6 +36,11 @@ def parse_mongodb_replication_info(info):
     if info:
         return json.loads(str(info[0][0]))
     return {}
+
+
+def discover_mongodb_replication_info(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_mongodb_replication_info(item, params, info_dict):
@@ -138,7 +145,7 @@ def _get_as_int(data, key):
 
 check_info["mongodb_replication_info"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_replication_info,
-    discovery_function=discover_single,
+    discovery_function=discover_mongodb_replication_info,
     check_function=check_mongodb_replication_info,
     service_name="MongoDB Replication Info",
     check_ruleset_name="mongodb_replication_info",

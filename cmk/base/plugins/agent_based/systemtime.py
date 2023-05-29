@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import register, type_defs
 
+Section = Mapping[str, float]
 
-def parse_systemtime(string_table: type_defs.StringTable) -> Dict[str, float]:
+
+def parse_systemtime(string_table: type_defs.StringTable) -> Section:
     """
     >>> parse_systemtime([['12345']])
     {'foreign_systemtime': 12345.0}

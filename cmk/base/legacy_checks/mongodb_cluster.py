@@ -10,9 +10,12 @@
 # mypy: disable-error-code="var-annotated,arg-type"
 
 import json
+from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import discover_single, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+
+Section = Mapping
 
 
 def parse_mongodb_cluster(info):
@@ -494,6 +497,11 @@ check_info["mongodb_cluster.collections"] = LegacyCheckDefinition(
 # .
 
 
+def discover_mongodb_cluster_balancer(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
+
+
 def check_mongodb_cluster_balancer(_item, _params, databases_dict):
     if "balancer" not in databases_dict:
         return
@@ -505,7 +513,7 @@ def check_mongodb_cluster_balancer(_item, _params, databases_dict):
 
 
 check_info["mongodb_cluster.balancer"] = LegacyCheckDefinition(
-    discovery_function=discover_single,
+    discovery_function=discover_mongodb_cluster_balancer,
     check_function=check_mongodb_cluster_balancer,
     service_name="MongoDB Balancer",
 )

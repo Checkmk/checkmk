@@ -10,20 +10,23 @@ see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
 
 
 import collections
+from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import (
-    check_levels,
-    discover_single,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
+Section = Mapping
 
-def parse_cisco_prime_wifi_access_points(string_table: StringTable) -> dict:
+
+def parse_cisco_prime_wifi_access_points(string_table: StringTable) -> Section:
     return parse_cisco_prime("accessPointsDTO", string_table)
+
+
+def discover_cisco_prime_wifi_access_points(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_cisco_prime_wifi_access_points(item, params, parsed):
@@ -45,7 +48,7 @@ def check_cisco_prime_wifi_access_points(item, params, parsed):
 
 check_info["cisco_prime_wifi_access_points"] = LegacyCheckDefinition(
     parse_function=parse_cisco_prime_wifi_access_points,
-    discovery_function=discover_single,
+    discovery_function=discover_cisco_prime_wifi_access_points,
     check_function=check_cisco_prime_wifi_access_points,
     service_name="Cisco Prime WiFi Access Points",
     check_ruleset_name="cisco_prime_wifi_access_points",

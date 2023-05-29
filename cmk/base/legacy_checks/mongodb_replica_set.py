@@ -11,10 +11,10 @@ import datetime
 import enum
 import json
 import time
+from collections.abc import Iterable, Mapping
 
 from cmk.base.check_api import (
     check_levels,
-    discover_single,
     get_age_human_readable,
     get_item_state,
     get_timestamp_human_readable,
@@ -25,6 +25,8 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.mongodb import parse_date
 
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
+
+Section = Mapping
 
 
 def parse_mongodb_replica_set(info):
@@ -51,6 +53,11 @@ def parse_mongodb_replica_set(info):
 class ReplicaState(enum.IntEnum):
     PRIMARY = 1
     ARBITER = 7
+
+
+def discover_mongodb_replica_set(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_mongodb_replica_set_lag(_item, params, status_dict):
@@ -197,7 +204,7 @@ def _calculate_replication_lag(start_operation_time, secondary_operation_time):
 
 check_info["mongodb_replica_set"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_replica_set,
-    discovery_function=discover_single,
+    discovery_function=discover_mongodb_replica_set,
     check_function=check_mongodb_replica_set_lag,
     service_name="MongoDB Replication Lag",
     check_ruleset_name="mongodb_replica_set",
@@ -289,7 +296,7 @@ def _get_primary_election_time(primary):
 
 
 check_info["mongodb_replica_set.election"] = LegacyCheckDefinition(
-    discovery_function=discover_single,
+    discovery_function=discover_mongodb_replica_set,
     check_function=check_mongodb_primary_election,
     service_name="MongoDB Replica Set Primary Election",
     check_ruleset_name="mongodb_replica_set",

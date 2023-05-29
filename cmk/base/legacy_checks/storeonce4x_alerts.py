@@ -5,9 +5,14 @@
 
 
 import json
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any, Literal
 
-from cmk.base.check_api import discover_single, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+Section = Mapping[Literal["alerts"], Sequence[Mapping[str, Any]]]
+
 
 STATUS_MAP = {"CRITICAL": 2, "WARNING": 1, "OK": 0, "UNKNOWN": 3, "DISABLED": 3}
 
@@ -24,6 +29,11 @@ def parse_storeonce4x_alerts(info):
             for alert in json.loads(info[0][0])["members"]
         ]
     }
+
+
+def discover_storeonce4x_alerts(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_storeonce4x_alerts(_item, _param, parsed):
@@ -47,7 +57,7 @@ def check_storeonce4x_alerts(_item, _param, parsed):
 
 check_info["storeonce4x_alerts"] = LegacyCheckDefinition(
     parse_function=parse_storeonce4x_alerts,
-    discovery_function=discover_single,
+    discovery_function=discover_storeonce4x_alerts,
     check_function=check_storeonce4x_alerts,
     service_name="Alerts",
 )

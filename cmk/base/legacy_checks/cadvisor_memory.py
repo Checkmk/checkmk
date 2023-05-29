@@ -5,10 +5,13 @@
 
 
 import json
+from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import discover_single, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
+
+Section = Mapping[str, float]
 
 
 def parse_cadvisor_memory(info):
@@ -31,6 +34,11 @@ def _output_single_memory_stat(memory_value, output_text, metric_name=None):
     else:
         perfdata = []
     return 0, infotext, perfdata
+
+
+def discover_cadvisor_memory(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_cadvisor_memory(_item, _params, parsed):
@@ -65,7 +73,7 @@ def check_cadvisor_memory(_item, _params, parsed):
 
 check_info["cadvisor_memory"] = LegacyCheckDefinition(
     parse_function=parse_cadvisor_memory,
-    discovery_function=discover_single,
+    discovery_function=discover_cadvisor_memory,
     check_function=check_cadvisor_memory,
     service_name="Memory",
 )

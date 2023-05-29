@@ -6,13 +6,9 @@
 
 import collections
 import time
+from collections.abc import Iterable
 
-from cmk.base.check_api import (
-    check_levels,
-    discover_single,
-    get_age_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
@@ -20,6 +16,10 @@ from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 # .1.3.6.1.4.1.25597.11.5.1.5.0 456.180 --> FE-FIREEYE-MIB::feSecurityContentVersion.0
 # .1.3.6.1.4.1.25597.11.5.1.6.0 1 --> FE-FIREEYE-MIB::feLastContentUpdatePassed.0
 # .1.3.6.1.4.1.25597.11.5.1.7.0 2016/02/26 15:42:06 --> FE-FIREEYE-MIB::feLastContentUpdateTime.0
+
+SecurityContent = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "SecurityContent", "version update_status update_time_str update_time_seconds"
+)
 
 
 def parse_fireeye_content(info):
@@ -38,10 +38,12 @@ def parse_fireeye_content(info):
     except ValueError:
         update_time_seconds = None
 
-    SecurityContent = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
-        "SecurityContent", "version update_status update_time_str update_time_seconds"
-    )
     return SecurityContent(version, update_status, update_time_str, update_time_seconds)
+
+
+def discover_fireeye_content(section: SecurityContent) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_fireeye_content(_no_item, params, parsed):
@@ -67,7 +69,7 @@ def check_fireeye_content(_no_item, params, parsed):
 check_info["fireeye_content"] = LegacyCheckDefinition(
     detect=DETECT,
     parse_function=parse_fireeye_content,
-    discovery_function=discover_single,
+    discovery_function=discover_fireeye_content,
     check_function=check_fireeye_content,
     service_name="Security content",
     fetch=SNMPTree(

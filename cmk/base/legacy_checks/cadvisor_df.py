@@ -5,10 +5,14 @@
 
 
 import json
+from collections.abc import Iterable, Mapping
+from typing import Any
 
-from cmk.base.check_api import discover_single, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
+
+Section = Mapping[str, Any]
 
 
 def parse_cadvisor_df(info):
@@ -24,6 +28,11 @@ def parse_cadvisor_df(info):
     return parsed
 
 
+def discover_cadvisor_df(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
+
+
 def check_cadvisor_df(item, _params, parsed):
     size_mb = parsed["df_size"] / 1024**2
     avail_mb = size_mb - (parsed["df_used"] / 1024**2)
@@ -37,7 +46,7 @@ def check_cadvisor_df(item, _params, parsed):
 
 check_info["cadvisor_df"] = LegacyCheckDefinition(
     parse_function=parse_cadvisor_df,
-    discovery_function=discover_single,
+    discovery_function=discover_cadvisor_df,
     check_function=check_cadvisor_df,
     service_name="Filesystem",
 )

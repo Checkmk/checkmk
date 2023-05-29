@@ -4,18 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="name-defined"
-
 import time
+from collections.abc import Iterable
 
 from cmk.base.check_api import (
     check_levels,
-    discover_single,
     get_age_human_readable,
     get_agent_data_time,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.systemtime import Section
+
+
+def discover_systemtime(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_systemtime(item, params, parsed):
@@ -44,7 +48,7 @@ def check_systemtime(item, params, parsed):
 
 check_info["systemtime"] = LegacyCheckDefinition(
     check_function=check_systemtime,
-    discovery_function=discover_single,
+    discovery_function=discover_systemtime,
     service_name="System Time",
     check_ruleset_name="systemtime",
     check_default_parameters={"levels": (30, 60)},

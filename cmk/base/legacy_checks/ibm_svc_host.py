@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover_single, LegacyCheckDefinition
+from collections.abc import Iterable, Mapping
+
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -14,6 +16,8 @@ from cmk.base.config import check_info
 # 1:host206:2:2:online
 # 2:host105:2:2:online
 # 3:host106:2:2:online
+
+Section = Mapping
 
 
 def parse_ibm_svc_host(info):
@@ -29,6 +33,11 @@ def parse_ibm_svc_host(info):
         "host_cluster_name",
     ]
     return parse_ibm_svc_with_header(info, dflt_header)
+
+
+def discover_ibm_svc_host(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branches
@@ -104,7 +113,7 @@ def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branch
 check_info["ibm_svc_host"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_host,
     check_function=check_ibm_svc_host,
-    discovery_function=discover_single,
+    discovery_function=discover_ibm_svc_host,
     service_name="Hosts",
     check_ruleset_name="ibm_svc_host",
 )

@@ -6,16 +6,18 @@
 # Device Manual: https://www.hopf.com/downloads/manuals/8030hepta-gps_v0400_en.pdf
 
 
+import struct
 import time
+from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import discover_single, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
+Section = Mapping[str, str]
+
 
 def get_time(timefromdevice):
-    import struct
-
     length = len(timefromdevice)
     DateAndTime = dict({8: ">HBBBBBB", 11: ">HBBBBBBcBB"})
     if length in {8, 11}:
@@ -61,6 +63,11 @@ def parse_hepta(info):
     }
 
 
+def discover_hepta(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
+
+
 def check_hepta(item, params, parsed):
     yield (
         0,
@@ -79,7 +86,7 @@ def check_hepta(item, params, parsed):
 check_info["hepta"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12527"),
     parse_function=parse_hepta,
-    discovery_function=discover_single,
+    discovery_function=discover_hepta,
     check_function=check_hepta,
     service_name="HPF Info",
     fetch=[

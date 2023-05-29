@@ -5,13 +5,22 @@
 
 
 import json
+from collections.abc import Iterable, Mapping
+from typing import Any
 
-from cmk.base.check_api import discover_single, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+Section = Mapping[str, Any]
 
 
 def parse_storeonce4x_d2d_services(info):
     return json.loads(info[0][0])["services"]
+
+
+def discover_storeonce4x_d2d_services(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_storeonce4x_d2d_services(_item, _params, parsed):
@@ -30,7 +39,7 @@ def check_storeonce4x_d2d_services(_item, _params, parsed):
 
 check_info["storeonce4x_d2d_services"] = LegacyCheckDefinition(
     parse_function=parse_storeonce4x_d2d_services,
-    discovery_function=discover_single,
+    discovery_function=discover_storeonce4x_d2d_services,
     check_function=check_storeonce4x_d2d_services,
     service_name="D2D Services",
 )

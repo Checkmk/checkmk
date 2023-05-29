@@ -5,14 +5,12 @@
 
 
 import json
+from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import (
-    check_levels,
-    discover_single,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+
+Section = Mapping[str, float]
 
 
 def parse_cadvisor_cpu(info):
@@ -26,6 +24,11 @@ def parse_cadvisor_cpu(info):
         except KeyError:
             continue
     return parsed
+
+
+def discover_cadvisor_cpu(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_cadvisor_cpu(_item, params, parsed):
@@ -55,7 +58,7 @@ def check_cadvisor_cpu(_item, params, parsed):
 
 check_info["cadvisor_cpu"] = LegacyCheckDefinition(
     parse_function=parse_cadvisor_cpu,
-    discovery_function=discover_single,
+    discovery_function=discover_cadvisor_cpu,
     check_function=check_cadvisor_cpu,
     service_name="CPU utilization",
     check_ruleset_name="cpu_utilization",

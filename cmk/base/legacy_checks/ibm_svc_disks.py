@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover_single, LegacyCheckDefinition
+from collections.abc import Iterable, Sequence
+
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.filerdisks import (
     check_filer_disks,
     FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
@@ -39,6 +41,8 @@ from cmk.base.config import check_info
 # 0:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:4:1:24:::inactive
 # 1:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:3:1:23:::inactive
 
+Section = Sequence
+
 
 def parse_ibm_svc_disks(info):
     dflt_header = [
@@ -60,6 +64,11 @@ def parse_ibm_svc_disks(info):
     for rows in parse_ibm_svc_with_header(info, dflt_header).values():
         parsed.extend(rows)
     return parsed
+
+
+def discover_ibm_svc_disks(section: Section) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_ibm_svc_disks(_no_item, params, parsed):
@@ -98,7 +107,7 @@ def check_ibm_svc_disks(_no_item, params, parsed):
 check_info["ibm_svc_disks"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_disks,
     check_function=check_ibm_svc_disks,
-    discovery_function=discover_single,
+    discovery_function=discover_ibm_svc_disks,
     service_name="Disk Summary",
     check_ruleset_name="netapp_disks",
     check_default_parameters=FILER_DISKS_CHECK_DEFAULT_PARAMETERS,

@@ -247,17 +247,17 @@ public:
     void cleanConfig();
 
     // TODO (sk): move to tests
-    /// \brief Used in tests only( to prevent the tree from changing )
+    /// Used in tests only( to prevent the tree from changing )
     bool pushFolders(const std::filesystem::path &root,
                      const std::filesystem::path &data);
 
     // TODO (sk): move to tests
-    /// \brief Used in tests only( to prevent the tree from changing )
+    /// Used in tests only( to prevent the tree from changing )
     bool pushFoldersNoIo(const std::filesystem::path &root,
                          const std::filesystem::path &data);
 
     // TODO (sk): move to tests only( to prevent the tree from changing )
-    /// \brief Used in tests only to prevent context
+    /// Used in tests only to prevent context
     bool popFolders();
 
     // not so heavy operation, use free

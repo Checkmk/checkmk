@@ -491,7 +491,7 @@ TEST(FileInfoTest, MakeFileInfoMissing) {
 }
 
 namespace {
-/// \brief - returns Unix time of the file
+/// - returns Unix time of the file
 ///
 /// function which was valid in 1.6 and still valid
 /// because experimental is deprecated we can't it use anymore, but we can test

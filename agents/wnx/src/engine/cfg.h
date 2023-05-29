@@ -1060,7 +1060,7 @@ constexpr std::string_view kIniFromInstallMarker =
 
 enum class InstallationType { packaged, wato, unknown };
 
-/// \brief returns the type of installation
+/// returns the type of installation
 ///
 /// possible values wato or packaged, where packaged returned only if the
 /// check_mk.install.yml exists and ["global"]["install"] == "no"

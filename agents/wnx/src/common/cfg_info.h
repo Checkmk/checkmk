@@ -63,7 +63,7 @@ enum class LogLevel {
     kLogAll = 2,
 };
 
-/// \brief  If true, than modules will be moved to %temp% for later usage
+///  If true, than modules will be moved to %temp% for later usage
 constexpr bool g_quick_module_reinstall_allowed{true};
 
 constexpr int kLogFileMaxCount = 5;

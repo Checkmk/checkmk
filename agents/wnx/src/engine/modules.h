@@ -137,7 +137,7 @@ public:
 
     [[nodiscard]] static std::vector<StringViewPair> GetSystemExtensions();
 
-    /// \brief Returns path in the %temp% where content of module will be moved
+    /// Returns path in the %temp% where content of module will be moved
     static std::filesystem::path GetMoveLocation(
         const std::filesystem::path &module_file);
 

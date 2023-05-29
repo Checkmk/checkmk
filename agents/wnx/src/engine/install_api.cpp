@@ -282,7 +282,7 @@ bool NeedInstall(const fs::path &incoming_file,
     return src_time > target_time;
 }
 
-/// \brief - checks we have newer file than installed
+/// - checks we have newer file than installed
 ///
 /// In the case of any problems returns true
 /// No unit tests
@@ -430,7 +430,7 @@ void ExecuteUpdate::prepare(const fs::path &exe, const fs::path &msi,
 }
 
 namespace {
-/// \brief - returns the recovery file path which may not exist
+/// - returns the recovery file path which may not exist
 ///
 /// Name is based on the msi to be installed with special extension.
 /// The file content will be find in the windows install base
@@ -459,7 +459,7 @@ fs::path CreateRecoveryFile(const fs::path &msi_to_install) {
     return recover_file;
 }
 
-/// \brief - delivers msi to be installed in temp
+/// - delivers msi to be installed in temp
 ///
 /// Move MSI to be installed into temp
 /// May fail. On fail caller should stop installation.
@@ -556,7 +556,7 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
     return {{}, false};
 }
 
-/// \brief - checks that post install flag is set by MSI
+/// - checks that post install flag is set by MSI
 ///
 /// Must be called by any executable to check that installation is finalized
 bool IsPostInstallRequired() {
@@ -566,7 +566,7 @@ bool IsPostInstallRequired() {
                                     registry::kMsiPostInstallDefault);
 }
 
-/// \brief - cleans post install flag
+/// - cleans post install flag
 ///
 /// Normally called only by service after installation Python module
 void ClearPostInstallFlag() {
@@ -575,7 +575,7 @@ void ClearPostInstallFlag() {
                              registry::kMsiPostInstallDefault);
 }
 
-/// \brief - checks that migration flag is set by MSI
+/// - checks that migration flag is set by MSI
 ///
 /// Normally called only by service during upgrade config
 bool IsMigrationRequired() {

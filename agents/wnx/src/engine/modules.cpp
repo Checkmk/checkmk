@@ -133,7 +133,7 @@ bool Module::prepareToWork(const fs::path &backup_dir,
 }
 
 namespace {
-/// \brief extracts usual extension and unusual, e.g. ".checkmk.py"
+/// extracts usual extension and unusual, e.g. ".checkmk.py"
 std::string ExtractExtension(const fs::path &script) {
     if (!script.has_extension()) {
         return std::string{kNoExtension};

@@ -40,7 +40,7 @@ TEST(CapTest, InstallFileAsCopyNoThrow) {
     EXPECT_FALSE(res);
 }
 
-/// \brief Keeps temporary folder and pair of file names and dirs
+/// Keeps temporary folder and pair of file names and dirs
 class CapTestFixture : public ::testing::Test {
 public:
     static constexpr std::string_view name() { return "a.txt"; }
@@ -124,7 +124,7 @@ static bool ValidateInstallYml(const std::filesystem::path &file) {
     }
 }
 
-/// \brief Keeps temporary folder and pair of file names and dirs
+/// Keeps temporary folder and pair of file names and dirs
 class CapTestYamlFixture : public ::testing::Test {
 public:
     static constexpr std::string_view name() { return files::kInstallYmlFileA; }

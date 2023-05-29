@@ -64,7 +64,7 @@ void FilterPathByExtension(PathVector &paths,
                            const std::vector<std::string> &exts);
 void RemoveDuplicatedNames(PathVector &paths);
 
-/// \brief remove all forbidden files
+/// remove all forbidden files
 ///
 /// Normally deletes only cmk-update-agent.exe
 void RemoveForbiddenNames(PathVector &paths);

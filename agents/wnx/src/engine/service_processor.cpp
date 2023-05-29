@@ -494,7 +494,7 @@ int ServiceProcessor::startProviders(AnswerId answer_id,
     return static_cast<int>(vf_.size()) + (started_sync ? 1 : 0);
 }
 
-/// \brief To be used, when no real connection, i.e. test
+/// To be used, when no real connection, i.e. test
 void ServiceProcessor::sendDebugData() {
     XLOG::l.i("Started without IO. Debug mode");
 
@@ -510,7 +510,7 @@ void ServiceProcessor::sendDebugData() {
     }
 }
 
-/// \brief called before every answer to execute routine tasks
+/// called before every answer to execute routine tasks
 void ServiceProcessor::prepareAnswer(const std::string &ip_from,
                                      rt::Device &rt_device) {
     const auto value = tools::win::GetEnv(env::auto_reload);
@@ -702,7 +702,7 @@ world::ExternalPort::IoParam AsIoParam(
 
 }  // namespace
 
-/// \brief <HOSTING THREAD>
+/// <HOSTING THREAD>
 /// ex_port may be nullptr(command line test, for example)
 /// cap_installed is signaled from the service thread about cap_installation
 /// makes a mail slot + starts IO on TCP
@@ -942,7 +942,7 @@ bool TheMiniProcess::start(const std::wstring &exe_name) {
     return true;
 }
 
-/// \brief - stops process
+/// - stops process
 /// returns true if killing occurs
 bool TheMiniProcess::stop() {
     std::unique_lock lk(lock_);

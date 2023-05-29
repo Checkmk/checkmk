@@ -1067,25 +1067,25 @@ private:
     BSTR data_;
 };
 
-/// \brief Add command to set correct access rights for the path
+/// Add command to set correct access rights for the path
 void ProtectPathFromUserWrite(const std::filesystem::path &path,
                               std::vector<std::wstring> &commands);
 
-/// \brief Add command to remove user write to the path
+/// Add command to remove user write to the path
 void ProtectFileFromUserWrite(const std::filesystem::path &path,
                               std::vector<std::wstring> &commands);
 
-/// \brief Add command to remove user access to the path
+/// Add command to remove user access to the path
 void ProtectPathFromUserAccess(const std::filesystem::path &entry,
                                std::vector<std::wstring> &commands);
 
-/// \brief Create cmd file in %Temp% and run it.
+/// Create cmd file in %Temp% and run it.
 ///
 /// Returns script name path to be executed
 std::filesystem::path ExecuteCommandsAsync(
     std::wstring_view name, const std::vector<std::wstring> &commands);
 
-/// \brief Create cmd file in %Temp% and run it.
+/// Create cmd file in %Temp% and run it.
 ///
 /// Returns script name path to be executed
 std::filesystem::path ExecuteCommandsSync(
@@ -1124,7 +1124,7 @@ std::wstring SidToName(std::wstring_view sid, const SID_NAME_USE &sid_type);
 
 std::vector<char> ReadFromHandle(HANDLE handle);
 
-/// \brief Calls any command and return back output
+/// Calls any command and return back output
 ///
 /// Wraps AppRunner
 std::string RunCommand(std::wstring_view cmd);

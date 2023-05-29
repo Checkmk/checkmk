@@ -199,7 +199,7 @@ private:
 std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name);
 std::wstring GenerateRandomFileName() noexcept;
 
-/// \brief RAII class to change folder structure in the config
+/// RAII class to change folder structure in the config
 class TempCfgFs {
 public:
     using ptr = std::unique_ptr<TempCfgFs>;

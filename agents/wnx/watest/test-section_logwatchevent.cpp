@@ -78,7 +78,7 @@ TEST(LogWatchEventTest, GetLastPos) {
     }
 }
 
-/// \brief Keeps temporary folder and pair of file names and dirs
+/// Keeps temporary folder and pair of file names and dirs
 class LogWatchEventFixture : public ::testing::Test {
 public:
     cma::evl::EventLogDebug event_log{tst::SimpleLogData()};

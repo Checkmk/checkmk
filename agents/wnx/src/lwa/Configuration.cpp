@@ -1035,7 +1035,7 @@ YAML::Node Parser::emitYaml() noexcept {
 
 }  // namespace cma::cfg::cvt
 
-/// \brief - memmove replacer for SimpleIni.h
+/// - memmove replacer for SimpleIni.h
 ///
 /// asan  gives false positive when MSVC optimizer which replaces memmove with
 /// memcpy we don't want either to disable optimization or disable asan

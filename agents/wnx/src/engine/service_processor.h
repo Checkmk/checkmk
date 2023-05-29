@@ -411,7 +411,7 @@ private:
         return section.generateContent();
     }
 
-    /// \brief wraps resulting data with CheckMk and SystemTime sections
+    /// wraps resulting data with CheckMk and SystemTime sections
     ///
     /// Answer must be build in specific order:
     /// pre sections[s] - usually Check_MK
@@ -464,7 +464,7 @@ private:
                   answer_.getStopWatch().getUsCount() / 1000);
     }
 
-    /// \brief wait for all answers from all providers
+    /// wait for all answers from all providers
     /// The call is *blocking*
     AsyncAnswer::DataBlock getAnswer(int count) {
         XLOG::t.i("waiting futures(only start)");

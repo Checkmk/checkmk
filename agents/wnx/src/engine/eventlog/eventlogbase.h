@@ -96,10 +96,10 @@ public:
 };
 
 // Official CheckMK Event Log API
-/// \brief - open event log using one of available mode
+/// - open event log using one of available mode
 std::unique_ptr<EventLogBase> OpenEvl(const std::wstring &name, bool vista_api);
 
-/// \brief - scan existing event log
+/// - scan existing event log
 std::pair<uint64_t, cfg::EventLevels> ScanEventLog(EventLogBase &log,
                                                    uint64_t pos,
                                                    cfg::EventLevels level);

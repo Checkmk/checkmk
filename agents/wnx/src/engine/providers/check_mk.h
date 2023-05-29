@@ -15,7 +15,7 @@
 
 namespace cma::provider {
 
-/// \brief Converts address entry from config file into
+/// Converts address entry from config file into
 ///
 /// Expected by check_mk check(only_from) representation.
 /// Carefully tested to be maximally compatible with legacy

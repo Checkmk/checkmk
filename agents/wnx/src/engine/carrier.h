@@ -50,7 +50,7 @@ struct CarrierDataHeader {
     using ptr = std::unique_ptr<CarrierDataHeader,
                                 std::function<void(CarrierDataHeader *)>>;
 
-    /// \brief returns unique ptr with custom deleter
+    /// returns unique ptr with custom deleter
     static ptr createPtr(const char *provider_name,  // unique name of provider
                          uint64_t answer_id,  // timestamp of the answer to fill
                          DataType data_type,  // DataType::
@@ -99,7 +99,7 @@ struct CarrierDataHeader {
     }
 
 private:
-    /// \brief - requires ON_OUT_OF SCOPE
+    /// - requires ON_OUT_OF SCOPE
     static CarrierDataHeader *createRaw(
         const char *provider_name,  // unique name of provider
         uint64_t answer_id,         // timestamp of the answer

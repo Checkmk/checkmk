@@ -1708,7 +1708,11 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
                             title=_("Grouping expression"),
                             help=_(
                                 "This regular expression is used to match the services to be put "
-                                "into this group. This is a prefix match regular expression."
+                                "into this group. You can use prefix match "
+                                "regular expressions here. In the regular "
+                                "expressions, you can use match groups. Matched "
+                                "services with the same match groups will be put "
+                                "in the same group."
                             ),
                             mode=RegExp.prefix,
                         ),

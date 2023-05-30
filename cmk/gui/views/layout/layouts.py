@@ -401,6 +401,9 @@ def try_to_match_group(row: Row) -> GroupSpec | None:
         if row.get("service_description") and re.match(
             group_spec["pattern"], row["service_description"]
         ):
+            group_spec["title"] = re.sub(
+                group_spec["pattern"], group_spec["title"], row["service_description"]
+            )
             return group_spec
 
     return None

@@ -47,7 +47,7 @@ from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
     disk_or_search_base_folder_from_request,
-    folder_from_request,
+    disk_or_search_folder_from_request,
     folder_tree,
 )
 
@@ -96,7 +96,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         )
 
     def _back_url(self):
-        return folder_from_request().url()
+        return disk_or_search_folder_from_request().url()
 
     def do_execute(
         self,
@@ -384,6 +384,7 @@ class ModeParentScan(WatoMode):
             ping_probes=request.get_integer_input_mandatory("ping_probes", 5),
         )
         self._job = ParentScanBackgroundJob()
+        self._folder = disk_or_search_folder_from_request()
 
     def action(self) -> ActionResult:
         try:
@@ -413,7 +414,7 @@ class ModeParentScan(WatoMode):
     def _get_current_folder_host_tasks(self) -> list[ParentScanTask]:
         """only scan checked hosts in current folder, no recursion"""
         tasks = []
-        for host in get_hosts_from_checkboxes(folder_from_request()):
+        for host in get_hosts_from_checkboxes(self._folder):
             if self._include_host(host, self._settings.select):
                 tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
         return tasks
@@ -422,7 +423,7 @@ class ModeParentScan(WatoMode):
         """all host in this folder, probably recursively"""
         tasks = []
         for host in self._recurse_hosts(
-            folder_from_request(), self._settings.recurse, self._settings.select
+            self._folder, self._settings.recurse, self._settings.select
         ):
             tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
         return tasks
@@ -466,7 +467,7 @@ class ModeParentScan(WatoMode):
 
         # Mode of action
         if not self._complete_folder:
-            num_selected = len(get_hosts_from_checkboxes(folder_from_request()))
+            num_selected = len(get_hosts_from_checkboxes(self._folder))
             html.icon("toggle_details")
             html.write_text(_("You have selected <b>%d</b> hosts for parent scan. ") % num_selected)
         html.help(

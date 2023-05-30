@@ -297,7 +297,7 @@ class ModeFolder(WatoMode):
                 item=make_simple_link(self._folder.url([("mode", "bulk_rename_host")])),
             )
 
-        if user.may("wato.manage_hosts"):
+        if user.may("wato.manage_hosts") and not isinstance(self._folder, SearchFolder):
             yield PageMenuEntry(
                 title=_("Remove TLS registration"),
                 icon_name={"icon": "tls", "emblem": "remove"},
@@ -429,7 +429,7 @@ class ModeFolder(WatoMode):
                     is_enabled=is_enabled,
                 )
 
-        if user.may("wato.manage_hosts"):
+        if user.may("wato.manage_hosts") and not isinstance(self._folder, SearchFolder):
             yield PageMenuEntry(
                 title=_("Remove TLS registration"),
                 icon_name={"icon": "tls", "emblem": "remove"},

@@ -45,9 +45,8 @@ from cmk.gui.plugins.metrics.utils import (
     translate_metrics,
     TranslatedMetrics,
     unit_info,
-    UnitInfo,
 )
-from cmk.gui.type_defs import CombinedGraphSpec, MetricExpression, PerfometerSpec
+from cmk.gui.type_defs import CombinedGraphSpec, MetricExpression, PerfometerSpec, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = str | int | float
@@ -454,7 +453,7 @@ class MetricometerRenderer(abc.ABC):
             if isinstance(expr, int | float):
                 value = unit.get("conversion", lambda v: v)(expr)
 
-            return unit["render"](value)
+            return self._render_value(unit, value)
 
         return self._get_type_label()
 
@@ -468,6 +467,10 @@ class MetricometerRenderer(abc.ABC):
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
         raise NotImplementedError()
+
+    @staticmethod
+    def _render_value(unit: UnitInfo, value: float) -> str:
+        return unit.get("perfometer_render", unit["render"])(value)
 
 
 class MetricometerRendererRegistry(cmk.utils.plugin_registry.Registry[type[MetricometerRenderer]]):
@@ -515,7 +518,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
 
     def _get_type_label(self) -> str:
         value, unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
-        return unit["render"](value)
+        return self._render_value(unit, value)
 
     def get_sort_value(self) -> float:
         """Returns the number to sort this perfometer with compared to the other
@@ -623,7 +626,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
         return unit
 
     def _get_type_label(self) -> str:
-        return self._unit()["render"](self._get_summed_values())
+        return self._render_value(self._unit(), self._get_summed_values())
 
     def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""

@@ -595,6 +595,7 @@ class UnitInfo(TypedDict):
     description: NotRequired[str]
     valuespec: NotRequired[Any]  # TODO: better typing
     conversion: NotRequired[Callable[[float], float]]
+    perfometer_render: NotRequired[UnitRenderFunc]
 
 
 class _TranslatedMetricRequired(TypedDict):

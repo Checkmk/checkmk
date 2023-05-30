@@ -75,6 +75,11 @@ unit_info["%"] = {
     "render": lambda v: cmk.utils.render.percent(v, scientific_notation=True),
     "js_render": "v => cmk.number_format.percent(v, true)",
     "valuespec": Percentage,
+    "perfometer_render": lambda v: "0%"
+    if v == 0
+    else "<0.01%"
+    if v < 0.01
+    else cmk.utils.render.percent(v),
 }
 
 unit_info["s"] = {

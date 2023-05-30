@@ -324,6 +324,7 @@ class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
     graph_unit: Callable[[List[Union[int, float]]], Tuple[str, List[str]]]
     description: str
     valuespec: Any  # TODO: better typing
+    perfometer_render: Callable[[float], str]
 
 
 class _TranslatedMetricRequired(TypedDict):

@@ -77,7 +77,7 @@ from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unus
     TranslatedMetrics,
     unit_info,
 )
-from cmk.gui.type_defs import PerfometerSpec
+from cmk.gui.type_defs import PerfometerSpec, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = Union[str, int, float]
@@ -483,7 +483,7 @@ class MetricometerRenderer(abc.ABC):
             value, unit, _color = evaluate(expr, self._translated_metrics)
             if unit_name:
                 unit = unit_info[unit_name]
-            return unit["render"](value)
+            return self._render_value(unit, value)
 
         return self._get_type_label()
 
@@ -497,6 +497,10 @@ class MetricometerRenderer(abc.ABC):
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
         raise NotImplementedError()
+
+    @staticmethod
+    def _render_value(unit: UnitInfo, value: float) -> str:
+        return unit.get("perfometer_render", unit["render"])(value)
 
 
 class MetricometerRendererRegistry(cmk.utils.plugin_registry.Registry[Type[MetricometerRenderer]]):
@@ -537,7 +541,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
 
     def _get_type_label(self) -> str:
         value, unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
-        return unit["render"](value)
+        return self._render_value(unit, value)
 
     def get_sort_value(self) -> float:
         """Returns the number to sort this perfometer with compared to the other
@@ -599,7 +603,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
         # Use unit of first metrics for output of sum. We assume that all
         # stackes metrics have the same unit anyway
         _value, unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
-        return unit["render"](self._get_summed_values())
+        return self._render_value(unit, self._get_summed_values())
 
     def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""

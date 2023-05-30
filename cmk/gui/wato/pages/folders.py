@@ -74,16 +74,18 @@ from cmk.gui.watolib.hosts_and_folders import (
     BaseFolder,
     check_wato_foldername,
     CREFolder,
+    disk_or_search_folder_from_request,
     Folder,
     folder_from_request,
     folder_preserving_link,
     folder_tree,
     Host,
     make_action_link,
+    SearchFolder,
 )
 
 
-def make_folder_breadcrumb(folder: CREFolder) -> Breadcrumb:
+def make_folder_breadcrumb(folder: CREFolder | SearchFolder) -> Breadcrumb:
     return (
         Breadcrumb(
             [
@@ -109,7 +111,7 @@ class ModeFolder(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._folder = folder_from_request()
+        self._folder = disk_or_search_folder_from_request()
 
         if request.has_var("_show_host_tags"):
             user.wato_folders_show_tags = request.get_ascii_input("_show_host_tags") == "1"
@@ -454,6 +456,9 @@ class ModeFolder(WatoMode):
             )
 
     def _page_menu_entries_this_folder(self) -> Iterator[PageMenuEntry]:
+        if isinstance(self._folder, SearchFolder):
+            return
+
         if self._folder.may("read"):
             yield PageMenuEntry(
                 title=_("Properties"),
@@ -471,7 +476,7 @@ class ModeFolder(WatoMode):
                     is_suggested=True,
                 )
 
-        yield make_folder_status_link(folder_from_request(), view_name="allhosts")
+        yield make_folder_status_link(self._folder, view_name="allhosts")
 
         if user.may("wato.rulesets") or user.may("wato.seeall"):
             yield PageMenuEntry(
@@ -482,7 +487,7 @@ class ModeFolder(WatoMode):
                         [
                             ("mode", "rule_search"),
                             ("filled_in", "rule_search"),
-                            ("folder", folder_from_request().path()),
+                            ("folder", self._folder.path()),
                             ("search_p_ruleset_used", DropdownChoice.option_id(True)),
                             ("search_p_ruleset_used_USE", "on"),
                         ]
@@ -551,11 +556,15 @@ class ModeFolder(WatoMode):
         # Operations on SUBFOLDERS
 
         if request.var("_delete_folder"):
+            if isinstance(self._folder, SearchFolder):
+                raise MKUserError(None, _("This action can not be performed on search results"))
             if transactions.check_transaction():
                 self._folder.delete_subfolder(request.var("_delete_folder"))
             return redirect(folder_url)
 
         if request.has_var("_move_folder_to"):
+            if isinstance(self._folder, SearchFolder):
+                raise MKUserError(None, _("This action can not be performed on search results"))
             if transactions.check_transaction():
                 var_ident = mandatory_parameter("_ident", request.var("_ident"))
                 tree = folder_tree()
@@ -563,12 +572,14 @@ class ModeFolder(WatoMode):
                 target_folder = tree.folder(
                     mandatory_parameter("_move_folder_to", request.var("_move_folder_to"))
                 )
-                folder_from_request().move_subfolder_to(what_folder, target_folder)
+                self._folder.move_subfolder_to(what_folder, target_folder)
             return redirect(folder_url)
 
         # Operations on current FOLDER
 
         if request.has_var("_remove_tls_registration_from_folder"):
+            if isinstance(self._folder, SearchFolder):
+                raise MKUserError(None, _("This action can not be performed on search results"))
             remove_tls_registration(self._folder.get_hosts_by_site(list(self._folder.hosts())))
             return None
 
@@ -579,17 +590,15 @@ class ModeFolder(WatoMode):
         if delname is not None:
             delname = HostName(delname)
 
-        if delname and folder_from_request().has_host(delname):
-            folder_from_request().delete_hosts([delname], automation=delete_hosts)
+        if delname and self._folder.has_host(delname):
+            self._folder.delete_hosts([delname], automation=delete_hosts)
             return redirect(folder_url)
 
         # Move single hosts to other folders
         if (target_folder_str := request.var("_move_host_to")) is not None:
-            hostname = request.var("_ident")
-            if hostname and folder_from_request().has_host(hostname):
-                folder_from_request().move_hosts(
-                    [hostname], folder_tree().folder(target_folder_str)
-                )
+            hostname = HostName(request.get_ascii_input_mandatory("_ident"))
+            if self._folder.has_host(hostname):
+                self._folder.move_hosts([hostname], folder_tree().folder(target_folder_str))
                 return redirect(folder_url)
 
         # bulk operation on hosts
@@ -613,7 +622,7 @@ class ModeFolder(WatoMode):
             if target_folder_path is None:
                 raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
             target_folder = folder_tree().folder(target_folder_path)
-            folder_from_request().move_hosts(selected_host_names, target_folder)
+            self._folder.move_hosts(selected_host_names, target_folder)
             flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
             return redirect(folder_url)
 
@@ -645,6 +654,8 @@ class ModeFolder(WatoMode):
                 )
 
         if request.var("_remove_tls_registration_from_selection"):
+            if isinstance(self._folder, SearchFolder):
+                raise MKUserError(None, _("This action can not be performed on search results"))
             remove_tls_registration(self._folder.get_hosts_by_site(selected_host_names))
 
         return None

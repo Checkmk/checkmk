@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import math
-from collections.abc import Mapping
 from typing import Any
 
 import pytest
@@ -55,23 +54,6 @@ def test_validate_filter() -> None:
         check_api.validate_filter("nothing")
 
     assert check_api.validate_filter(None)(1, 4) == 1
-
-
-@pytest.mark.parametrize(
-    "parsed, result",
-    [
-        (None, None),
-        ([], None),
-        ({}, None),
-        ([["enabled"]], [(None, {})]),
-        ({"first": "enabled"}, [(None, {})]),
-    ],
-)
-def test_discover_single(
-    parsed: list[object] | dict[object, object] | None,
-    result: list[tuple[None, Mapping[object, object]]] | None,
-) -> None:
-    assert check_api.discover_single(parsed) == result
 
 
 @pytest.mark.parametrize(

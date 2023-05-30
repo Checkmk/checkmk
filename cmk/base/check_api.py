@@ -27,7 +27,7 @@ import functools
 import re  # noqa: F401 # pylint: disable=unused-import
 import socket
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable
 from contextlib import suppress
 from typing import Any, Literal, Union
 
@@ -536,15 +536,6 @@ def get_parsed_item_data(check_function: Callable) -> Callable:
         return check_function(item, params, parsed[item])
 
     return wrapped_check_function
-
-
-def discover_single(
-    info: list[object] | dict[object, object] | None
-) -> list[tuple[None, Mapping[object, object]]] | None:
-    """Return a discovered item in case there is info text or parsed"""
-    if info:
-        return [(None, {})]
-    return None
 
 
 def validate_filter(filter_function: Any) -> Callable:

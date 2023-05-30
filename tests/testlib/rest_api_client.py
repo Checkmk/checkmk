@@ -984,3 +984,63 @@ class DowntimeTestClient(RestApiClient):
         return self.request(
             "post", url="/domain-types/downtime/collections/service", body=body, expect_ok=expect_ok
         )
+
+
+class PasswordClient(RestApiClient):
+    domain: Literal["password"] = "password"
+
+    def create(
+        self,
+        ident: str,
+        title: str,
+        owner: str,
+        password: str,
+        shared: Sequence[str],
+        customer: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body = {
+            "ident": ident,
+            "title": title,
+            "owner": owner,
+            "password": password,
+            "shared": shared,
+            "customer": "provider" if customer is None else customer,
+        }
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def get(self, ident: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{ident}",
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        ident: str,
+        title: str,
+        owner: str,
+        password: str,
+        shared: Sequence[str],
+        customer: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body = {
+            "title": title,
+            "owner": owner,
+            "password": password,
+            "shared": shared,
+            "customer": "provider" if customer is None else customer,
+        }
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{ident}",
+            body=body,
+            expect_ok=expect_ok,
+        )

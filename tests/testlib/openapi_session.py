@@ -159,7 +159,6 @@ class CMKOpenApiSession(requests.Session):
     ) -> bool:
         with self._wait_for_completion(timeout):
             return self.activate_changes(sites, force_foreign_changes)
-        return True
 
     def create_user(
         self, username: str, fullname: str, password: str, email: str, contactgroups: list[str]

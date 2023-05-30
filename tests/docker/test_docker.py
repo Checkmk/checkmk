@@ -320,6 +320,12 @@ def test_start_simple(
     assert exit_code == 0
 
 
+def test_needed_packages(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:
+    """Ensure that important tools can be executed in the container"""
+    c = _start(request, client)
+    assert _exec_run(c, ["logrotate", "--version"])[0] == 0
+
+
 def test_start_cmkadmin_passsword(
     request: pytest.FixtureRequest, client: docker.DockerClient
 ) -> None:

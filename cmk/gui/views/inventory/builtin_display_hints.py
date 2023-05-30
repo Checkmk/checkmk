@@ -628,7 +628,25 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.check_mk.host_labels:*.plugin_name": {
             "title": _l("Discovered by plugin"),
         },
-        ".software.applications.checkmk-agent.": {"title": _l("Checkmk Agent")},
+        ".software.applications.checkmk-agent.": {
+            "title": _l("Checkmk Agent"),
+            "keyorder": [
+                "version",
+                "agentdirectory",
+                "datadirectory",
+                "spooldirectory",
+                "pluginsdirectory",
+                "localdirectory",
+                "agentcontroller",
+            ],
+        },
+        ".software.applications.checkmk-agent.version": {"title": _l("Version")},
+        ".software.applications.checkmk-agent.agentdirectory": {"title": _l("Agent directory")},
+        ".software.applications.checkmk-agent.datadirectory": {"title": _l("Data directory")},
+        ".software.applications.checkmk-agent.spooldirectory": {"title": _l("Spool directory")},
+        ".software.applications.checkmk-agent.pluginsdirectory": {"title": _l("Plugins directory")},
+        ".software.applications.checkmk-agent.localdirectory": {"title": _l("Local directory")},
+        ".software.applications.checkmk-agent.agentcontroller": {"title": _l("Agent Controller")},
         ".software.applications.checkmk-agent.plugins:": {
             "title": _l("Agent plugins"),
             "keyorder": ["name", "version", "cache_interval"],

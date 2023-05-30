@@ -277,7 +277,7 @@ def _filter_table(table: Table, filter_func: SDFilterFunc) -> Table:
 
 
 def _filter_node(node: StructuredDataNode, filters: Iterable[SDFilter]) -> StructuredDataNode:
-    filtered = StructuredDataNode(name=node.name, path=node.path)
+    filtered = StructuredDataNode(path=node.path)
 
     for f in filters:
         # First check if node exists
@@ -352,7 +352,7 @@ def _merge_tables(table_lhs: Table, table_rhs: Table) -> Table:
 
 
 def _merge_nodes(node_lhs: StructuredDataNode, node_rhs: StructuredDataNode) -> StructuredDataNode:
-    node = StructuredDataNode(name=node_lhs.name, path=node_lhs.path)
+    node = StructuredDataNode(path=node_lhs.path)
     node.add_attributes(_merge_attributes(node_lhs.attributes, node_rhs.attributes))
     node.add_table(_merge_tables(node_lhs.table, node_rhs.table))
 
@@ -758,9 +758,7 @@ class TreeOrArchiveStore(TreeStore):
 
 
 class StructuredDataNode:
-    def __init__(self, *, name: SDNodeName = "", path: SDPath | None = None) -> None:
-        # Only root node has no name or path
-        self.name = name
+    def __init__(self, *, path: SDPath | None = None) -> None:
         self.path = path if path else tuple()
         self.attributes = Attributes(path=path)
         self.table = Table(path=path)
@@ -817,7 +815,7 @@ class StructuredDataNode:
             return self
 
         name = path[0]
-        node = self._nodes.setdefault(name, StructuredDataNode(name=name, path=self.path + (name,)))
+        node = self._nodes.setdefault(name, StructuredDataNode(path=self.path + (name,)))
         return node.setdefault_node(path[1:])
 
     def add_node(self, path: SDPath, node: StructuredDataNode) -> None:
@@ -877,18 +875,17 @@ class StructuredDataNode:
     @classmethod
     def deserialize(cls, raw_tree: SDRawTree) -> StructuredDataNode:
         if all(key in raw_tree for key in (ATTRIBUTES_KEY, TABLE_KEY, _NODES_KEY)):
-            return cls._deserialize(name="", path=tuple(), raw_tree=raw_tree)
-        return cls._deserialize_legacy(name="", path=tuple(), raw_tree=raw_tree)
+            return cls._deserialize(path=tuple(), raw_tree=raw_tree)
+        return cls._deserialize_legacy(path=tuple(), raw_tree=raw_tree)
 
     @classmethod
     def _deserialize(
         cls,
         *,
-        name: SDNodeName,
         path: SDPath,
         raw_tree: SDRawTree,
     ) -> StructuredDataNode:
-        node = cls(name=name, path=path)
+        node = cls(path=path)
 
         node.add_attributes(Attributes.deserialize(path=path, raw_pairs=raw_tree[ATTRIBUTES_KEY]))
         node.add_table(Table.deserialize(path=path, raw_rows=raw_tree[TABLE_KEY]))
@@ -897,7 +894,6 @@ class StructuredDataNode:
             node.add_node(
                 (raw_name,),
                 cls._deserialize(
-                    name=raw_name,
                     path=path + (raw_name,),
                     raw_tree=raw_node,
                 ),
@@ -909,11 +905,10 @@ class StructuredDataNode:
     def _deserialize_legacy(
         cls,
         *,
-        name: SDNodeName,
         path: SDPath,
         raw_tree: SDRawTree,
     ) -> StructuredDataNode:
-        node = cls(name=name, path=path)
+        node = cls(path=path)
         raw_pairs: SDPairs = {}
 
         for key, value in raw_tree.items():
@@ -921,9 +916,7 @@ class StructuredDataNode:
             if isinstance(value, dict):
                 if not value:
                     continue
-                node.add_node(
-                    (key,), cls._deserialize_legacy(name=key, path=the_path, raw_tree=value)
-                )
+                node.add_node((key,), cls._deserialize_legacy(path=the_path, raw_tree=value))
 
             elif isinstance(value, list):
                 if not value:
@@ -938,7 +931,6 @@ class StructuredDataNode:
                     inst.add_node(
                         (str(idx),),
                         cls._deserialize_legacy(
-                            name=str(idx),
                             path=the_path + (str(idx),),
                             raw_tree=entry,
                         ),
@@ -1417,11 +1409,11 @@ class DeltaStructuredDataNode:
                 encode_as=encode_as,
             ),
             _nodes={
-                child.name: cls.make_from_node(
+                name: cls.make_from_node(
                     node=child,
                     encode_as=encode_as,
                 )
-                for child in node.nodes
+                for name, child in node.nodes_by_name.items()
             },
         )
 

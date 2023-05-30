@@ -132,7 +132,7 @@ def test_set_path_sub_nodes() -> None:
     root = _create_empty_tree().tree
     nta = root.get_node(("path", "to", "nta"))
 
-    sub_node = StructuredDataNode(name="node")
+    sub_node = StructuredDataNode()
     sub_node.setdefault_node(("sub-path-to", "sub-node"))
 
     assert nta is not None
@@ -238,7 +238,7 @@ def test_not_empty() -> None:
 def test_add_node() -> None:
     root = _create_filled_tree().tree
 
-    orig_node = StructuredDataNode(name="node")
+    orig_node = StructuredDataNode()
     orig_node.attributes.add_pairs({"sn0": "SN 0", "sn1": "SN 1"})
     orig_node.table.add_key_columns(["sn0"])
     orig_node.table.add_rows(
@@ -1434,7 +1434,7 @@ def test_add_attributes() -> None:
     path = ("path-to", "node")
     retentions = {"key": RetentionIntervals(1, 2, 3)}
 
-    node = StructuredDataNode(name="node", path=path)
+    node = StructuredDataNode(path=path)
     attributes = Attributes(retentions=retentions)
     node.add_attributes(attributes)
 
@@ -1449,7 +1449,7 @@ def test_add_table() -> None:
         ("Value 0",): {"key-1": RetentionIntervals(1, 2, 3)},
     }
 
-    node = StructuredDataNode(name="node", path=path)
+    node = StructuredDataNode(path=path)
     table = Table(
         key_columns=key_columns,
         retentions=retentions,

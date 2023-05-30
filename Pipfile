@@ -18,7 +18,7 @@ freezegun = "*"  # used by various unit tests
 isort = "*"  # used as a plugin for editors
 mock = "*"  # used in checktestlib in unit tests
 pylint = "*"  # used by test/Makefile's test-pylint target
-hypothesis = "*"    # used by unit tests
+hypothesis = "==6.72.4"    # used by unit tests, pinned see: https://jira.lan.tribe29.com/browse/CMK-13574
 mypy = "*"  # used by test/static/Makefile's test-mypy target
 twine = "*" # used to upload packages to internal PyPi mirror
 playwright = "*"  # used for in-browser testing

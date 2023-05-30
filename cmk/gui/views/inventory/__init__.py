@@ -2138,7 +2138,7 @@ class ABCNodeRenderer(abc.ABC):
         if not node.table.is_empty():
             self._show_table(node.table, hints)
 
-        for child in sorted(node.nodes, key=lambda n: n.name):
+        for _name, child in sorted(node.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(child, (StructuredDataNode, DeltaStructuredDataNode)):
                 # sorted tries to find the common base class, which is object :(
                 self._show_node(child)

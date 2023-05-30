@@ -28,7 +28,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
-from cmk.gui.watolib.hosts_and_folders import folder_from_request
+from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request
 
 
 @mode_registry.register
@@ -45,6 +45,9 @@ class ModeBulkEdit(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
+    def _from_vars(self) -> None:
+        self._folder = disk_or_search_folder_from_request()
+
     def title(self) -> str:
         return _("Bulk edit hosts")
 
@@ -60,20 +63,20 @@ class ModeBulkEdit(WatoMode):
         user.need_permission("wato.edit_hosts")
 
         changed_attributes = collect_attributes("bulk", new=False)
-        host_names = get_hostnames_from_checkboxes()
+        host_names = get_hostnames_from_checkboxes(self._folder)
         for host_name in host_names:
-            host = folder_from_request().load_host(host_name)
+            host = self._folder.load_host(host_name)
             host.update_attributes(changed_attributes)
             # call_hook_hosts_changed() is called too often.
             # Either offer API in class Host for bulk change or
             # delay saving until end somehow
 
         flash(_("Edited %d hosts") % len(host_names))
-        return redirect(folder_from_request().url())
+        return redirect(self._folder.url())
 
     def page(self) -> None:
-        host_names = get_hostnames_from_checkboxes()
-        hosts = {host_name: folder_from_request().host(host_name) for host_name in host_names}
+        host_names = get_hostnames_from_checkboxes(self._folder)
+        hosts = {host_name: self._folder.host(host_name) for host_name in host_names}
         current_host_hash = sha256(repr(hosts).encode()).hexdigest()
 
         # When bulk edit has been made with some hosts, then other hosts have been selected
@@ -108,7 +111,7 @@ class ModeBulkEdit(WatoMode):
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
         html.hidden_field("host_hash", current_host_hash)
-        configure_attributes(False, hosts, "bulk", parent=folder_from_request())
+        configure_attributes(False, hosts, "bulk", parent=self._folder)
         forms.end()
         html.hidden_fields()
         html.end_form()
@@ -128,14 +131,14 @@ class ModeBulkCleanup(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def _from_vars(self):
-        self._folder = folder_from_request()
+    def _from_vars(self) -> None:
+        self._folder = disk_or_search_folder_from_request()
 
     def title(self) -> str:
         return _("Bulk removal of explicit attributes")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        hosts = get_hosts_from_checkboxes()
+        hosts = get_hosts_from_checkboxes(self._folder)
 
         return make_simple_form_page_menu(
             _("Attributes"),
@@ -154,7 +157,7 @@ class ModeBulkCleanup(WatoMode):
         if "contactgroups" in to_clean:
             self._folder.need_permission("write")
 
-        hosts = get_hosts_from_checkboxes()
+        hosts = get_hosts_from_checkboxes(self._folder)
 
         # Check all permissions before doing any edit
         for host in hosts:
@@ -174,7 +177,7 @@ class ModeBulkCleanup(WatoMode):
         return to_clean
 
     def page(self) -> None:
-        hosts = get_hosts_from_checkboxes()
+        hosts = get_hosts_from_checkboxes(self._folder)
 
         html.p(
             _(

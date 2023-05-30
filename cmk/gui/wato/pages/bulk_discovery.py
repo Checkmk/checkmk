@@ -193,7 +193,7 @@ class ModeBulkDiscovery(WatoMode):
         folder = folder_from_request()
         if not self._all:
             for host_name in get_hostnames_from_checkboxes(
-                (lambda host: host.discovery_failed()) if self._only_failed else None
+                folder, (lambda host: host.discovery_failed()) if self._only_failed else None
             ):
                 if restrict_to_hosts and host_name not in restrict_to_hosts:
                     continue

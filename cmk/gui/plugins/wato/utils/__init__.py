@@ -164,7 +164,13 @@ from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=un
     HostAttributeTopicMetaData,
     HostAttributeTopicNetworkScan,
 )
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_from_request, folder_tree
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    CREHost,
+    folder_from_request,
+    folder_tree,
+    SearchFolder,
+)
 from cmk.gui.watolib.password_store import PasswordStore, passwordstore_choices
 from cmk.gui.watolib.rulespec_groups import (  # noqa: F401 # pylint: disable=unused-import
     RulespecGroupAgentSNMP,
@@ -2392,11 +2398,12 @@ def get_search_expression() -> None | str:
 
 
 def get_hostnames_from_checkboxes(
-    filterfunc: Callable | None = None, deflt: bool = False
+    folder: CREFolder | SearchFolder,
+    filterfunc: Callable[[CREHost], bool] | None = None,
+    deflt: bool = False,
 ) -> Sequence[HostName]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    folder = folder_from_request()
     selected = user.get_rowselection(weblib.selection_id(), "wato-folder-/" + folder.path())
     search_text = request.var("search")
 
@@ -2429,11 +2436,15 @@ def _search_text_matches(
     return False
 
 
-def get_hosts_from_checkboxes(filterfunc=None):
+def get_hosts_from_checkboxes(
+    folder: CREFolder | SearchFolder, filterfunc: Callable[[CREHost], bool] | None = None
+) -> list[CREHost]:
     """Create list of all host objects that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    folder = folder_from_request()
-    return [folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc)]
+    return [
+        folder.load_host(host_name)
+        for host_name in get_hostnames_from_checkboxes(folder, filterfunc)
+    ]
 
 
 class FullPathFolderChoice(DropdownChoice):

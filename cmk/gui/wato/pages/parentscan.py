@@ -413,7 +413,7 @@ class ModeParentScan(WatoMode):
     def _get_current_folder_host_tasks(self) -> list[ParentScanTask]:
         """only scan checked hosts in current folder, no recursion"""
         tasks = []
-        for host in get_hosts_from_checkboxes():
+        for host in get_hosts_from_checkboxes(folder_from_request()):
             if self._include_host(host, self._settings.select):
                 tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
         return tasks
@@ -466,7 +466,7 @@ class ModeParentScan(WatoMode):
 
         # Mode of action
         if not self._complete_folder:
-            num_selected = len(get_hosts_from_checkboxes())
+            num_selected = len(get_hosts_from_checkboxes(folder_from_request()))
             html.icon("toggle_details")
             html.write_text(_("You have selected <b>%d</b> hosts for parent scan. ") % num_selected)
         html.help(

@@ -6,7 +6,7 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-astroid = "*"  # used by testlib.pylint_checker_localization
+astroid = "==2.15.4"  # used by testlib.pylint_checker_localization, pinned see:https://jira.lan.tribe29.com/browse/CMK-13574 
 bandit = "*"  # used by test/Makefile's test-bandit target
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
 bson = "*"  # used by test_mk_mongodb unit test

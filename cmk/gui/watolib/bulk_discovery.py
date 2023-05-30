@@ -25,7 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
-from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
 
 DiscoveryMode = NewType("DiscoveryMode", str)
 DoFullScan = NewType("DoFullScan", bool)
@@ -127,7 +127,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         )
 
     def _back_url(self):
-        return folder_from_request().url()
+        return disk_or_search_folder_from_request().url()
 
     def do_execute(
         self,

@@ -9,6 +9,8 @@ import copy
 from collections.abc import Collection
 from typing import cast
 
+from cmk.utils.type_defs import HostName
+
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
@@ -34,7 +36,11 @@ from cmk.gui.watolib.bulk_discovery import (
     start_bulk_discovery,
     vs_bulk_discovery,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_from_request
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    disk_or_search_folder_from_request,
+    SearchFolder,
+)
 
 
 @mode_registry.register
@@ -57,6 +63,7 @@ class ModeBulkDiscovery(WatoMode):
         self._just_started = False
         self._get_bulk_discovery_params()
         self._job = BulkDiscoveryBackgroundJob()
+        self._folder = disk_or_search_folder_from_request()
 
     def _get_bulk_discovery_params(self):
         self._bulk_discovery_params = copy.deepcopy(active_config.bulk_discovery_default_settings)
@@ -190,16 +197,15 @@ class ModeBulkDiscovery(WatoMode):
         # 'all' not set -> only inventorize checked hosts
         hosts_to_discover = []
 
-        folder = folder_from_request()
         if not self._all:
             for host_name in get_hostnames_from_checkboxes(
-                folder, (lambda host: host.discovery_failed()) if self._only_failed else None
+                self._folder, (lambda host: host.discovery_failed()) if self._only_failed else None
             ):
                 if restrict_to_hosts and host_name not in restrict_to_hosts:
                     continue
                 if host_name in skip_hosts:
                     continue
-                host = folder.load_host(host_name)
+                host = self._folder.load_host(host_name)
                 host.need_permission("write")
                 hosts_to_discover.append(
                     DiscoveryHost(host.site_id(), host.folder().path(), host_name)
@@ -209,7 +215,7 @@ class ModeBulkDiscovery(WatoMode):
             # all host in this folder, maybe recursively. New: we always group
             # a bunch of subsequent hosts of the same folder into one item.
             # That saves automation calls and speeds up mass inventories.
-            entries = self._recurse_hosts(folder)
+            entries = self._recurse_hosts(self._folder)
             for host_name, folder in entries:
                 if restrict_to_hosts is not None and host_name not in restrict_to_hosts:
                     continue
@@ -223,7 +229,9 @@ class ModeBulkDiscovery(WatoMode):
 
         return hosts_to_discover
 
-    def _recurse_hosts(self, folder):
+    def _recurse_hosts(
+        self, folder: CREFolder | SearchFolder
+    ) -> list[tuple[HostName, CREFolder | SearchFolder]]:
         entries = []
         for host_name, host in folder.hosts().items():
             if not self._only_failed or host.discovery_failed():

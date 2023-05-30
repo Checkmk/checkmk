@@ -602,6 +602,7 @@ class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
     description: str
     valuespec: Any  # TODO: better typing
     conversion: Callable[[float], float]
+    perfometer_render: UnitRenderFunc
 
 
 class _TranslatedMetricRequired(TypedDict):

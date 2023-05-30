@@ -38,7 +38,7 @@ webtest = "*"  # used by WSGI based tests
 pre-commit = "*"  # used to fix / find issues before committing changes
 flake8 = "*"
 autoflake = "*"  # used to remove unused import statements
-sphinx = "*"  # used for the plugin API documentation
+sphinx = "==5.3.0"  # used for the plugin API documentation, pinned for now, because 6.0.0 doesn't work well with other tools ("AttributeError: module 'docutils.nodes' has no attribute 'meta')
 sphinx-autodoc-typehints = "*"  # used for the plugin API documentation
 sphinx-rtd-theme = "*"  # used for the plugin API documentation
 sphinxcontrib-plantuml = "*"  # used for the API and architecture

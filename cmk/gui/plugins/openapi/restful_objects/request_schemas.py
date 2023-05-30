@@ -808,6 +808,7 @@ class InputPassword(BaseSchema):
         required=True,
         example="password",
         description="The password string",
+        minLength=1,
     )
 
     owner = gui_fields.PasswordOwner(
@@ -859,6 +860,7 @@ class UpdatePassword(BaseSchema):
         required=False,
         example="password",
         description="The password string",
+        minLength=1,
     )
 
     owner = gui_fields.PasswordOwner(

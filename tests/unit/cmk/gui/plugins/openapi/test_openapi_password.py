@@ -258,3 +258,40 @@ def test_password_with_newlines(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Non
     password_store.load()  # see if it loads correctly
     stored_credentials = password_store.extract("gcp")
     assert stored_credentials == credentials_with_newlines.replace("\n", "")
+
+
+@managedtest
+def test_password_min_length_create(clients: ClientRegistry) -> None:
+    resp = clients.Password.create(
+        ident="so_secret",
+        title="so_secret",
+        owner="admin",
+        password="",
+        shared=["all"],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert resp.json["fields"] == {"password": ["string '' is too short. The minimum length is 1."]}
+
+
+@managedtest
+def test_password_min_length_update(clients: ClientRegistry) -> None:
+    clients.Password.create(
+        ident="so_secret",
+        title="so_secret",
+        owner="admin",
+        password="no_one_can_know",
+        shared=["all"],
+    )
+    resp = clients.Password.edit(
+        ident="so_secret",
+        title="so_secret",
+        owner="admin",
+        password="",
+        shared=["all"],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert resp.json["fields"] == {"password": ["string '' is too short. The minimum length is 1."]}

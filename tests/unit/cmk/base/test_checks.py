@@ -7,7 +7,11 @@ import tests.testlib as testlib
 
 
 def test_check_plugin_header() -> None:
-    for plugin in (testlib.repo_path() / "cmk/base/legacy_checks").iterdir():
+    for plugin in (
+        p
+        for p in (testlib.repo_path() / "cmk/base/legacy_checks").iterdir()
+        if p.name != "__pycache__"
+    ):
         with plugin.open() as handle:
             shebang = handle.readline().strip()
 

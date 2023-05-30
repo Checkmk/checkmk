@@ -181,10 +181,7 @@ def inventory_hp_proliant_da_phydrv(section: Section) -> InventoryResult:
             path=["hardware", "storage", "disks"],
             key_columns={
                 "controller": physical_drive.controller_index,
-                # TODO In the legacy inventory plugin the 'drive_index' is not used
-                # but in the related check, the item consists of 'controller_index/drive_index'.
-                # Fix this one day.
-                # "index": physical_drive.drive_index,
+                "drive_index": physical_drive.drive_index,
             },
             inventory_columns={
                 "bus": physical_drive.bus_number,

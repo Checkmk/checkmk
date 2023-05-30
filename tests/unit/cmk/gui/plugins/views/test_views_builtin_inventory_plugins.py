@@ -15,6 +15,7 @@ def test_display_hint_titles() -> None:
 _IGNORED_KEYS_BY_PATH = {
     ("hardware", "system"): ["serial_number", "model_name"],
     ("hardware", "storage", "disks"): [
+        "drive_index",
         "bus",
         "serial",
         "local",

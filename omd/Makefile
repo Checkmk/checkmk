@@ -59,9 +59,6 @@ PACKAGES := \
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise
 endif
-ifeq ($(EDITION),free)
-PACKAGES += enterprise
-endif
 ifeq ($(EDITION),managed)
 PACKAGES += enterprise
 PACKAGES += managed

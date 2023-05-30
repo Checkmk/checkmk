@@ -2088,6 +2088,7 @@ def test_registered_display_hints() -> None:
         ".hardware.storage.disks:*.",
         ".hardware.storage.disks:*.bus",
         ".hardware.storage.disks:*.controller",
+        ".hardware.storage.disks:*.drive_index",
         ".hardware.storage.disks:*.fsnode",
         ".hardware.storage.disks:*.local",
         ".hardware.storage.disks:*.product",

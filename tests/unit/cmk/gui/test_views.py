@@ -2665,6 +2665,7 @@ def test_registered_display_hints():
     '.hardware.storage.disks:*.bus',
     '.hardware.storage.disks:*.fsnode',
     '.hardware.storage.disks:*.controller',
+    '.hardware.storage.disks:*.drive_index',
     '.hardware.storage.disks:*.local',
     '.hardware.storage.disks:*.product',
     '.hardware.storage.disks:*.serial',

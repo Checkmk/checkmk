@@ -425,6 +425,7 @@ inventory_displayhints.update({
     ".hardware.storage.disks:*.": {"title": _l("Block Device %d")},
     ".hardware.storage.disks:*.fsnode": {"title": _l("Filesystem Node")},
     ".hardware.storage.disks:*.controller": {"title": _l("Controller")},
+    ".hardware.storage.disks:*.drive_index": {"title": _l("Drive")},
     ".hardware.storage.disks:*.signature": {"title": _l("Disk ID")},
     ".hardware.storage.disks:*.vendor": {"title": _l("Vendor")},
     ".hardware.storage.disks:*.local": {"title": _l("Local")},

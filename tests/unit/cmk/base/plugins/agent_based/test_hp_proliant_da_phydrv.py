@@ -1054,6 +1054,7 @@ def test_check_hp_proliant_da_phydrv(string_table, item, expected_result):
                     path=["hardware", "storage", "disks"],
                     key_columns={
                         "controller": "3",
+                        "drive_index": "8",
                     },
                     inventory_columns={
                         "bay": "1",

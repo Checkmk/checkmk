@@ -228,7 +228,7 @@ OUTPUT_FIELDS: Tuple[Tuple[Callable[[State, str], Result], str, str, Callable], 
     (_summary, "Command_Timeout", "Command timeout counter", str),
     (_summary, "End-to-End_Error", "End-to-End errors", str),
     (_summary, "UDMA_CRC_Error_Count", "UDMA CRC errors", str),
-    (_summary, "CRC_Error_Count", "UDMA CRC errors", str),
+    (_summary, "CRC_Error_Count", "CRC errors", str),
     # nvme
     (_summary, "Power_Cycles", "Power cycles", str),
     (_summary, "Critical_Warning", "Critical warning", str),

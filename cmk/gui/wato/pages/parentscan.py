@@ -46,7 +46,7 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
-    disk_folder_from_request,
+    disk_or_search_base_folder_from_request,
     folder_from_request,
     folder_tree,
 )
@@ -270,10 +270,10 @@ class ParentScanBackgroundJob(BackgroundJob):
 
     def _determine_gateway_folder(self, where: str, folder: CREFolder) -> CREFolder:
         if where == "here":  # directly in current folder
-            return disk_folder_from_request()
+            return disk_or_search_base_folder_from_request()
 
         if where == "subfolder":
-            current = disk_folder_from_request()
+            current = disk_or_search_base_folder_from_request()
 
             # Put new gateways in subfolder "Parents" of current
             # folder. Does this folder already exist?
@@ -586,7 +586,7 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Create gateway hosts in"))
         html.open_ul()
 
-        disk_folder = disk_folder_from_request()
+        disk_folder = disk_or_search_base_folder_from_request()
         html.radiobutton(
             "where",
             "subfolder",

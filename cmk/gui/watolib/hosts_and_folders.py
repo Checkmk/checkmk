@@ -1175,25 +1175,9 @@ def folder_lookup_cache() -> FolderLookupCache:
     return g.folder_lookup_cache
 
 
-# TODO: Fix typing: -> CREFolder | SearchFolder:
+@request_memoize()
 def folder_from_request() -> CREFolder:
-    """Return `Folder` that is specified by the current URL
-
-    This is either by a folder
-    path in the variable "folder" or by a host name in the variable "host". In the
-    latter case we need to load all hosts in all folders and actively search the host.
-    Another case is the host search which has the "host_search" variable set. To handle
-    the later case we call search_folder_from_request() to let it decide whether
-    this is a host search. This method has to return a folder in all cases.
-    """
-    if "wato_current_folder" in g:
-        return g.wato_current_folder
-
-    search_folder = search_folder_from_request()
-    if search_folder:
-        g.wato_current_folder = search_folder
-        return search_folder
-
+    """Return `CREFolder` that is specified by the current URL"""
     if (var_folder := request.var("folder")) is not None:
         try:
             folder = folder_tree().folder(var_folder)
@@ -1208,12 +1192,28 @@ def folder_from_request() -> CREFolder:
             if host:
                 folder = host.folder()
 
-    g.wato_current_folder = folder
     return folder
 
 
-# TODO: Add the return type -> SearchFolder | None:
-def search_folder_from_request():
+@request_memoize()
+def disk_or_search_folder_from_request() -> CREFolder | SearchFolder:
+    """Return `Folder` that is specified by the current URL
+
+    This is either by a folder
+    path in the variable "folder" or by a host name in the variable "host". In the
+    latter case we need to load all hosts in all folders and actively search the host.
+    Another case is the host search which has the "host_search" variable set. To handle
+    the later case we call search_folder_from_request() to let it decide whether
+    this is a host search. This method has to return a folder in all cases.
+    """
+    search_folder = _search_folder_from_request()
+    if search_folder:
+        return search_folder
+
+    return folder_from_request()
+
+
+def _search_folder_from_request() -> SearchFolder | None:
     if request.has_var("host_search"):
         base_folder = folder_tree().folder(request.get_str_input_mandatory("folder", ""))
         search_criteria = {".name": request.var("host_search_host")}
@@ -1226,8 +1226,8 @@ def search_folder_from_request():
     return None
 
 
-def disk_folder_from_request() -> CREFolder:
-    folder = folder_from_request()
+def disk_or_search_base_folder_from_request() -> CREFolder:
+    folder = disk_or_search_folder_from_request()
     while not folder.is_disk_folder():
         folder = folder.parent()
     assert isinstance(folder, CREFolder)

@@ -10,7 +10,6 @@
 #include <cstddef>
 #include <string>
 #include <string_view>
-#include <vector>
 
 #include "livestatus/Interface.h"
 #include "livestatus/StringUtils.h"
@@ -62,6 +61,24 @@ enum class LogEntryKind {
     log_initial_states,
     acknowledge_alert_host,
     acknowledge_alert_service
+};
+
+enum class LogEntryParam {
+    HostName,
+    ServiceDescription,
+    CommandName,
+    CommandNameWithWorkaround,
+    ContactName,
+    HostState,
+    ServiceState,
+    ExitCode,
+    State,
+    StateType,
+    Attempt,
+    Comment,
+    PluginOutput,
+    LongPluginOutput,
+    Ignore
 };
 
 class LogEntry {
@@ -143,34 +160,7 @@ private:
     std::string_view plugin_output_;
     std::string_view long_plugin_output_;
 
-    enum class Param {
-        HostName,
-        ServiceDescription,
-        CommandName,
-        CommandNameWithWorkaround,
-        ContactName,
-        HostState,
-        ServiceState,
-        ExitCode,
-        State,
-        StateType,
-        Attempt,
-        Comment,
-        PluginOutput,
-        LongPluginOutput,
-        Ignore
-    };
-
-    struct LogDef {
-        std::string prefix;
-        Class log_class;
-        LogEntryKind log_type;
-        std::vector<Param> params;
-    };
-
-    static const std::vector<LogDef> log_definitions;
-
-    void assign(Param par, std::string_view field);
+    void assign(LogEntryParam par, std::string_view field);
     void classifyLogMessage();
     [[nodiscard]] bool textStartsWith(const std::string &what) const;
     [[nodiscard]] bool textContains(const std::string &what) const;

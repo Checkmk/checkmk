@@ -292,7 +292,7 @@ def _filter_node(node: StructuredDataNode, filters: Iterable[SDFilter]) -> Struc
         for name, sub_node in child.nodes_by_name.items():
             # From GUI::permitted_paths: We always get a list of strs.
             if f.filter_nodes(str(name)):
-                filtered_node.add_node(sub_node)
+                filtered_node.add_node((str(name),), sub_node)
 
     return filtered
 
@@ -331,9 +331,16 @@ def _merge_tables(table_lhs: Table, table_rhs: Table) -> Table:
         return table
 
     # Legacy tables
+    if table_lhs.key_columns and not table_rhs.key_columns:
+        key_columns = table_lhs.key_columns
+    elif not table_lhs.key_columns and table_rhs.key_columns:
+        key_columns = table_rhs.key_columns
+    else:
+        key_columns = sorted(set(table_lhs.key_columns).intersection(table_rhs.key_columns))
+
     table = Table(
         path=table_lhs.path,
-        key_columns=sorted(set(table_lhs.key_columns).intersection(table_rhs.key_columns)),
+        key_columns=key_columns,
         retentions={**table_lhs.retentions, **table_rhs.retentions},
     )
 
@@ -354,15 +361,18 @@ def _merge_nodes(node_lhs: StructuredDataNode, node_rhs: StructuredDataNode) -> 
     )
 
     for key in compared_keys.only_old:
-        node.add_node(node_rhs.nodes_by_name[key])
+        node.add_node((key,), node_rhs.nodes_by_name[key])
 
     for key in compared_keys.both:
         node.add_node(
-            _merge_nodes(node_lhs=node_lhs.nodes_by_name[key], node_rhs=node_rhs.nodes_by_name[key])
+            (key,),
+            _merge_nodes(
+                node_lhs=node_lhs.nodes_by_name[key], node_rhs=node_rhs.nodes_by_name[key]
+            ),
         )
 
     for key in compared_keys.only_new:
-        node.add_node(node_lhs.nodes_by_name[key])
+        node.add_node((key,), node_lhs.nodes_by_name[key])
 
     return node
 
@@ -756,11 +766,6 @@ class StructuredDataNode:
         self.table = Table(path=path)
         self._nodes: dict[SDNodeName, StructuredDataNode] = {}
 
-    def set_path(self, path: SDPath) -> None:
-        self.path = path
-        self.attributes.set_path(path)
-        self.table.set_path(path)
-
     @property
     def nodes(self) -> Iterator[StructuredDataNode]:
         yield from self._nodes.values()
@@ -815,25 +820,23 @@ class StructuredDataNode:
         node = self._nodes.setdefault(name, StructuredDataNode(name=name, path=self.path + (name,)))
         return node.setdefault_node(path[1:])
 
-    def add_node(self, node: StructuredDataNode) -> StructuredDataNode:
-        if not node.name:
-            raise ValueError("Root cannot be added.")
+    def add_node(self, path: SDPath, node: StructuredDataNode) -> None:
+        if not path:
+            return
 
-        path = self.path + (node.name,)
-        if node.name in self._nodes:
-            the_node = self._nodes[node.name]
-            the_node.set_path(path)
-        else:
-            dflt_node = StructuredDataNode(name=node.name, path=path)
-            the_node = self._nodes.setdefault(node.name, dflt_node)
+        node_name = path[0]
+        node_path = self.path + (path[0],)
+        if len(path) == 1:
+            if node_name in self._nodes:
+                merge_node = self._nodes[node_name]
+            else:
+                merge_node = StructuredDataNode(path=node_path)
+            self._nodes[node_name] = _merge_nodes(merge_node, node)
+            return
 
-        the_node.add_attributes(node.attributes)
-        the_node.add_table(node.table)
-
-        for sub_node in node._nodes.values():
-            the_node.add_node(sub_node)
-
-        return the_node
+        self._nodes.setdefault(node_name, StructuredDataNode(path=node_path)).add_node(
+            path[1:], node
+        )
 
     def add_attributes(self, attributes: Attributes) -> None:
         self.attributes.set_retentions(attributes.retentions)
@@ -842,7 +845,7 @@ class StructuredDataNode:
     def add_table(self, table: Table) -> None:
         self.table.set_retentions(table.retentions)
         self.table.add_key_columns(table.key_columns)
-        for ident, row in table._rows.items():
+        for ident, row in table.rows_by_ident.items():
             self.table.add_row(ident, row)
 
     def get_node(self, path: SDPath) -> StructuredDataNode | None:
@@ -892,11 +895,12 @@ class StructuredDataNode:
 
         for raw_name, raw_node in raw_tree[_NODES_KEY].items():
             node.add_node(
+                (raw_name,),
                 cls._deserialize(
                     name=raw_name,
                     path=path + (raw_name,),
                     raw_tree=raw_node,
-                )
+                ),
             )
 
         return node
@@ -917,7 +921,9 @@ class StructuredDataNode:
             if isinstance(value, dict):
                 if not value:
                     continue
-                node.add_node(cls._deserialize_legacy(name=key, path=the_path, raw_tree=value))
+                node.add_node(
+                    (key,), cls._deserialize_legacy(name=key, path=the_path, raw_tree=value)
+                )
 
             elif isinstance(value, list):
                 if not value:
@@ -930,11 +936,12 @@ class StructuredDataNode:
 
                 for idx, entry in enumerate(value):
                     inst.add_node(
+                        (str(idx),),
                         cls._deserialize_legacy(
                             name=str(idx),
                             path=the_path + (str(idx),),
                             raw_tree=entry,
-                        )
+                        ),
                     )
 
             else:
@@ -977,12 +984,10 @@ class Table:
         self.retentions = retentions if retentions else {}
         self._rows: SDRows = {}
 
-    def set_path(self, path: SDPath) -> None:
-        self.path = path
-
     def add_key_columns(self, key_columns: SDKeyColumns) -> None:
-        if not self.key_columns:
-            self.key_columns = key_columns
+        for key in key_columns:
+            if key not in self.key_columns:
+                self.key_columns.append(key)
 
     @property
     def rows(self) -> list[SDRow]:
@@ -1023,13 +1028,8 @@ class Table:
         return tuple(row[k] for k in self.key_columns if k in row)
 
     def add_row(self, ident: SDRowIdent, row: Mapping[str, int | float | str | None]) -> None:
-        if not self.key_columns:
-            raise ValueError("Cannot add row due to missing key_columns")
-
-        if not row:
-            return
-
-        self._rows.setdefault(ident, {}).update(row)
+        if row:
+            self._rows.setdefault(ident, {}).update(row)
 
     def get_row(self, row: SDRow) -> SDRow:
         ident = self._make_row_ident(row)
@@ -1198,9 +1198,6 @@ class Attributes:
         self.path = path if path else tuple()
         self.retentions = retentions if retentions else {}
         self.pairs: SDPairs = {}
-
-    def set_path(self, path: SDPath) -> None:
-        self.path = path
 
     #   ---common methods-------------------------------------------------------
 
@@ -1444,21 +1441,19 @@ class DeltaStructuredDataNode:
         node_name = path[0]
         node_path = self.path + (path[0],)
         if len(path) == 1:
-            self._nodes[node_name] = _merge_delta_nodes(
-                self._nodes.get(
-                    node_name,
-                    DeltaStructuredDataNode(
-                        path=node_path,
-                        attributes=DeltaAttributes(path=node_path, pairs={}),
-                        table=DeltaTable(path=node_path, key_columns=[], rows=[]),
-                        _nodes={},
-                    ),
-                ),
-                node,
-            )
+            if node_name in self._nodes:
+                merge_node = self._nodes[node_name]
+            else:
+                merge_node = DeltaStructuredDataNode(
+                    path=node_path,
+                    attributes=DeltaAttributes(path=node_path, pairs={}),
+                    table=DeltaTable(path=node_path, key_columns=[], rows=[]),
+                    _nodes={},
+                )
+            self._nodes[node_name] = _merge_delta_nodes(merge_node, node)
             return
 
-        child = self._nodes.setdefault(
+        self._nodes.setdefault(
             node_name,
             DeltaStructuredDataNode(
                 path=node_path,
@@ -1466,8 +1461,7 @@ class DeltaStructuredDataNode:
                 table=DeltaTable(path=node_path, key_columns=[], rows=[]),
                 _nodes={},
             ),
-        )
-        child.add_node(path[1:], node)
+        ).add_node(path[1:], node)
 
     def get_node(self, path: SDPath) -> DeltaStructuredDataNode | None:
         if not path:

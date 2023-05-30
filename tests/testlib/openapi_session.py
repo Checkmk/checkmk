@@ -12,7 +12,6 @@ from typing import Any, AnyStr, NamedTuple, NoReturn, Optional
 import requests
 
 from tests.testlib.rest_api_client import RequestHandler, Response
-from tests.testlib.version import CMKVersion, version_gte
 
 logger = logging.getLogger("rest-session")
 
@@ -287,55 +286,10 @@ class CMKOpenApiSession(requests.Session):
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
         raise UnexpectedResponse.from_response(response)
 
-    def _discover_services_and_wait_for_completion_v2p1(self, hostname: str, timeout: int) -> None:
-        """Perform service discovery and wait for completion via API requests.
-
-        To be used for 2.1.0p10 <= CMK version < 2.2.0p0.
-        This method has been restored from the 2.1 branch to test updates 2.1 -> daily."""
-        start = time.time()
-        try:
-            self.discover_services(hostname, mode="refresh")
-        except Redirect as redirect:
-            redirect_url = redirect.redirect_url
-            while redirect_url:
-                if time.time() > (start + timeout):
-                    raise TimeoutError("wait for completion on service discovery timed out")
-
-                response = self.get(redirect_url)
-                if response.status_code != 200:
-                    raise UnexpectedResponse.from_response(response)
-
-                body = response.json()
-                if body["extensions"]["active"]:
-                    time.sleep(0.5)
-                    continue  # Job is still running, wait for the result
-
-                if body["extensions"]["state"] == "finished":
-                    break  # Finished as intended
-
-                raise RuntimeError("Unhandled state: %r" % body)
-
-        response = self.post(
-            "/domain-types/service_discovery_run/actions/start/invoke",
-            json={"host_name": hostname, "mode": "fix_all"},
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    def discover_services_and_wait_for_completion(
-        self, hostname: str, cmk_version: str = CMKVersion.DEFAULT
-    ) -> None:
+    def discover_services_and_wait_for_completion(self, hostname: str) -> None:
         timeout = 60
-        if cmk_version == CMKVersion.DEFAULT or version_gte(cmk_version, "2.2.0p0"):
-            with self._wait_for_completion(timeout):
-                self.discover_services(hostname)
-        elif version_gte(cmk_version, "2.1.0p10"):
-            self._discover_services_and_wait_for_completion_v2p1(hostname, timeout)
-        else:
-            raise Exception(
-                f"Service-Discovery API request for CMK version {cmk_version} not implemented "
-                f"in this branch"
-            )
+        with self._wait_for_completion(timeout):
+            self.discover_services(hostname)
 
     @contextmanager
     def _wait_for_completion(self, timeout: int) -> Iterator[None]:

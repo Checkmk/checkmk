@@ -22,7 +22,6 @@ from .conftest import (
     get_site_status,
     update_config,
     update_site,
-    version_supported,
 )
 
 logger = logging.getLogger(__name__)
@@ -54,9 +53,7 @@ def test_update(test_site: Site, tmp_path: Path) -> None:
         agent_controller_daemon(agent_ctl_path),
     ):
         logger.info("Discovering services and waiting for completion...")
-        test_site.openapi.discover_services_and_wait_for_completion(
-            hostname, cmk_version=base_version.version
-        )
+        test_site.openapi.discover_services_and_wait_for_completion(hostname)
         test_site.openapi.activate_changes_and_wait_for_completion()
 
         # get baseline monitoring data
@@ -98,15 +95,8 @@ def test_update(test_site: Site, tmp_path: Path) -> None:
 
     # Triggering cmk config update
     update_config_result = update_config(target_site)
-    if version_supported(base_version.version):
-        assert update_config_result == 0, "Updating the configuration failed unexpectedly!"
-    else:
-        assert (
-            update_config_result != 0
-        ), "Updating the configuration succeeded for an unsupported release!"
-        assert (
-            update_config_result != 2
-        ), "Trying to update the config resulted in an unexpected error!"
+
+    assert update_config_result == 0, "Updating the configuration failed unexpectedly!"
 
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"

@@ -19,7 +19,7 @@ import pytest
 from tests.testlib import CMKWebSession
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import current_base_branch_name, PExpectDialog, spawn_expect_process
-from tests.testlib.version import CMKVersion, version_gte
+from tests.testlib.version import CMKVersion
 
 from cmk.utils.version import Edition
 
@@ -30,8 +30,6 @@ logger = logging.getLogger(__name__)
 class BaseVersions:
     """Get all base versions used for the test."""
 
-    # minimal version supported for an update that can merge the configuration
-    MIN_VERSION = os.getenv("MIN_VERSION", "2.1.0p20")
     BASE_VERSIONS_STR = [
         "2.2.0",
     ]
@@ -280,11 +278,6 @@ def _get_site(
     ), "Edition mismatch during %s!" % ("update" if update else "installation")
 
     return site
-
-
-def version_supported(version: str) -> bool:
-    """Check if the given version is supported for updating."""
-    return version_gte(version, BaseVersions.MIN_VERSION)
 
 
 @pytest.fixture(name="test_site", params=BaseVersions.BASE_VERSIONS, ids=BaseVersions.IDS)

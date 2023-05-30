@@ -4,19 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    discover_single,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
-from cmk.base.check_legacy_includes.graylog import parse_graylog_agent_data
+from collections.abc import Iterable
+
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.graylog import deserialize_and_merge_json, GraylogSection
 
 # <<<graylog_jvm>>>
 # {"jvm.memory.heap.init": 1073741824, "jvm.memory.heap.used": 357154208,
 # "jvm.memory.heap.max": 1020067840, "jvm.memory.heap.committed": 1020067840,
 # "jvm.memory.heap.usage": 0.35012789737592354}
+
+
+def discover_graylog_jvm(section: GraylogSection) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_graylog_jvm(_no_item, params, parsed):
@@ -45,9 +47,9 @@ def check_graylog_jvm(_no_item, params, parsed):
 
 
 check_info["graylog_jvm"] = LegacyCheckDefinition(
-    parse_function=parse_graylog_agent_data,
+    parse_function=deserialize_and_merge_json,
     check_function=check_graylog_jvm,
-    discovery_function=discover_single,
+    discovery_function=discover_graylog_jvm,
     service_name="Graylog JVM",
     check_ruleset_name="graylog_jvm",
 )

@@ -6,16 +6,16 @@
 
 import calendar
 import time
+from collections.abc import Iterable
 
 from cmk.base.check_api import (
     check_levels,
-    discover_single,
     get_bytes_human_readable,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
 )
-from cmk.base.check_legacy_includes.graylog import parse_graylog_agent_data
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.graylog import deserialize_and_merge_json, GraylogSection
 
 # <<<graylog_cluster_traffic>>>
 # {"to": "2019-09-20T12:00:00.000Z", "output": {"2019-09-17T03:00:00.000Z":
@@ -31,6 +31,11 @@ from cmk.base.config import check_info
 # 178435781, "2019-09-15T02:00:00.000Z": 5913174, "2019-09-18T12:00:00.000Z":
 # 180571316, "2019-09-17T09:00:00.000Z": 17555409, "2019-09-16T09:00:00.000Z":
 # 15022425, "2019-09-10T21:00:00.000Z": 7688443}}
+
+
+def discover_graylog_cluster_traffic(section: GraylogSection) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
 
 
 def check_graylog_cluster_traffic(_no_item, params, parsed):
@@ -60,9 +65,9 @@ def check_graylog_cluster_traffic(_no_item, params, parsed):
 
 
 check_info["graylog_cluster_traffic"] = LegacyCheckDefinition(
-    parse_function=parse_graylog_agent_data,
+    parse_function=deserialize_and_merge_json,
     check_function=check_graylog_cluster_traffic,
-    discovery_function=discover_single,
+    discovery_function=discover_graylog_cluster_traffic,
     service_name="Graylog Cluster Traffic",
     check_ruleset_name="graylog_cluster_traffic",
 )

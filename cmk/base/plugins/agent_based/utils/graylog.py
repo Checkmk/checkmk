@@ -7,8 +7,10 @@ import json
 
 from ..agent_based_api.v1.type_defs import StringTable
 
+GraylogSection = dict
 
-def deserialize_and_merge_json(string_table: StringTable) -> dict:
+
+def deserialize_and_merge_json(string_table: StringTable) -> GraylogSection:
     """
     >>> deserialize_and_merge_json([['{"a": 1, "b": 2}'], ['{"b": 3, "c": 4}']])
     {'a': 1, 'b': 3, 'c': 4}

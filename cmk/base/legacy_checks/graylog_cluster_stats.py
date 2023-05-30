@@ -6,14 +6,11 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import (
-    check_levels,
-    discover_single,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
-from cmk.base.check_legacy_includes.graylog import parse_graylog_agent_data
+from collections.abc import Iterable
+
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.utils.graylog import deserialize_and_merge_json, GraylogSection
 
 # <<<graylog_cluster_stats>>>
 # [[u'{"stream_rule_count": 7, "input_count_by_type":
@@ -55,6 +52,11 @@ from cmk.base.config import check_info
 # "alarmcallback_count_by_type": {}}}']]
 
 
+def discover_graylog_cluster_stats(section: GraylogSection) -> Iterable[tuple[None, dict]]:
+    if section:
+        yield None, {}
+
+
 def check_graylog_cluster_stats(_no_item, params, parsed):
     if not parsed:
         return
@@ -77,9 +79,9 @@ def check_graylog_cluster_stats(_no_item, params, parsed):
 
 
 check_info["graylog_cluster_stats"] = LegacyCheckDefinition(
-    parse_function=parse_graylog_agent_data,
+    parse_function=deserialize_and_merge_json,
     check_function=check_graylog_cluster_stats,
-    discovery_function=discover_single,
+    discovery_function=discover_graylog_cluster_stats,
     service_name="Graylog Cluster Stats",
     check_ruleset_name="graylog_cluster_stats",
 )

@@ -1086,6 +1086,22 @@ def _ip_address_family_element():
     )
 
 
+def _ip_address_family_http():
+    return (
+        "address_family",
+        DropdownChoice(
+            title=_("IP address family"),
+            choices=[
+                (None, _("Primary address family")),
+                ("ipv4", _("Use any network address")),
+                ("ipv4_enforced", _("Enforce IPv4")),
+                ("ipv6", _("Enforce IPv6")),
+            ],
+            default_value=None,
+        ),
+    )
+
+
 def _transform_add_address_family(v):
     v.setdefault("address_family", None)
     return v
@@ -1130,7 +1146,7 @@ def _active_checks_http_hostspec():
         elements=[
             ("address", TextInput(title=_("Hostname / IP address"), allow_empty=False, size=45)),
             ("port", _active_checks_http_portspec(443)),
-            _ip_address_family_element(),
+            _ip_address_family_http(),
             (
                 "virthost",
                 TextInput(

@@ -60,7 +60,8 @@ def _get_host(params):
 
     address = host.get("address")
     if address is None:
-        address = "$_HOSTADDRESS_%s$" % family[-1]
+        suffix = "6" if family == "ipv6" else "4"
+        address = "$_HOSTADDRESS_%s$" % suffix
 
     HostSettings = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
         "HostSettings", ("address", "port", "family", "virtual")
@@ -207,6 +208,9 @@ def _common_args(host, proxy, params):
 
     if host.family == "ipv6":
         args.append("-6")
+    if host.family == "ipv4_enforced":
+        args.append("-4")
+
     if not params.get("disable_sni"):
         args.append("--sni")
     if proxy and proxy.auth:

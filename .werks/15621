@@ -1,0 +1,14 @@
+Title: <tt>check_http</tt>: Fix Option <tt>Enforce IPv4</tt>
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1685515561
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p2
+
+The option <tt>Enforce IPv4</tt> of the rule <tt>Check HTTP service</tt> did not enforce IPv4.
+With this Werk, <tt>Enforce IPv4</tt> adds the option '-4' to the service check command.
+Existing rules are migrated to the new option <tt>Use any network address</tt>.
+Thus, their behaviour does not change.

@@ -51,7 +51,23 @@ def ip_address_family_element():
             title=_("IP address family"),
             choices=[
                 (None, _("Primary address family")),
-                ("ipv4", _("Enforce IPv4")),
+                ("ipv4", _("Use any network address")),
+                ("ipv6", _("Enforce IPv6")),
+            ],
+            default_value=None,
+        ),
+    )
+
+
+def ip_address_family_http():
+    return (
+        "address_family",
+        DropdownChoice(
+            title=_("IP address family"),
+            choices=[
+                (None, _("Primary address family")),
+                ("ipv4", _("Use any network address")),
+                ("ipv4_enforced", _("Enforce IPv4")),
                 ("ipv6", _("Enforce IPv6")),
             ],
             default_value=None,

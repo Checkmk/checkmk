@@ -131,9 +131,7 @@ from cmk.gui.watolib.attributes import (  # noqa: F401 # pylint: disable=unused-
     IPMIParameters,
     SNMPCredentials,
 )
-from cmk.gui.watolib.check_mk_automations import (
-    get_check_information as get_check_information_automation,
-)
+from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 from cmk.gui.watolib.check_mk_automations import (
     get_section_information as get_section_information_automation,
 )
@@ -1050,7 +1048,7 @@ class _CheckTypeHostSelection(DualListChoice):
         super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
-        checks = get_check_information()
+        checks = get_check_information_cached()
         return [
             (str(cn), (str(cn) + " - " + c["title"])[:60])
             for (cn, c) in checks.items()
@@ -1064,7 +1062,7 @@ class _CheckTypeMgmtSelection(DualListChoice):
         super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
-        checks = get_check_information()
+        checks = get_check_information_cached()
         return [
             (str(cn.create_basic_name()), (str(cn) + " - " + c["title"])[:60])
             for (cn, c) in checks.items()
@@ -2459,12 +2457,6 @@ class FolderChoice(DropdownChoice):
         kwargs["choices"] = folder_tree().folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
-
-
-@request_memoize()
-def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
-    raw_check_dict = get_check_information_automation().plugin_infos
-    return {CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())}
 
 
 @request_memoize()

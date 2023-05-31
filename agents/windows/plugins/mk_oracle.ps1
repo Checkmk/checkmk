@@ -164,8 +164,6 @@ if ($ORACLE_HOME) {
 # setting the output error language to be English
 $env:NLS_LANG = "AMERICAN_AMERICA.AL32UTF8"
 
-$ASYNC_PROC_PATH = "$MK_TEMPDIR\async_proc.txt"
-
 #.
 #   .--SQL Queries---------------------------------------------------------.
 #   |        ____   ___  _        ___                  _                   |
@@ -205,13 +203,13 @@ Function get_dbversion_database ($ORACLE_HOME) {
 }
 
 
-function is_async_running ($fullPath) {
-     if (-not(Test-Path -path "$ASYNC_PROC_PATH")) {
+function is_async_running ($async_proc_path, $fullPath) {
+     if (-not(Test-Path -path "$async_proc_path")) {
           # no file, no running process
           return $false
      }
 
-     $proc_pid = (Get-Content ${ASYNC_PROC_PATH})
+     $proc_pid = (Get-Content ${async_proc_path})
 
      # Check if the process with `$proc_pid` is still running AND if its commandline contains `$fullPath`.
      # Our async process always contains `$fullPath` in their own command line.
@@ -222,7 +220,7 @@ function is_async_running ($fullPath) {
      }
 
      # The process to the PID cannot be found, so remove also the proc file
-     rm $ASYNC_PROC_PATH
+     rm $async_proc_path
      return $false
 }
 
@@ -509,8 +507,9 @@ Function sqlcall {
                #####################################################
                # now we ensure that the async SQL Calls have up-to-date SQL outputs, running this job asynchronously...
                #####################################################
+               $async_proc_path = "$MK_TEMPDIR\async_proc.$sqlsid.txt"
                debug_echo "about to call bg task $sql_message"
-               if (-not(is_async_running($fullPath))) {
+               if (-not(is_async_running($async_proc_path, $fullPath))) {
 
                     $command = {
                         param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
@@ -529,7 +528,7 @@ Function sqlcall {
                     # variable to the script block
                     $escaped_sql = $THE_SQL.replace("'", "''")
                     $async_proc = Start-Process -PassThru powershell -windowstyle hidden -ArgumentList "-command invoke-command -scriptblock {$command} -argumentlist '$SQL_CONNECT', '$escaped_sql', '$fullpath', '$sqlsid'"
-                    $async_proc.id | set-content $ASYNC_PROC_PATH
+                    $async_proc.id | set-content $async_proc_path
                     debug_echo "should be run here $run_async"
                }
           }

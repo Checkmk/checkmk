@@ -36,7 +36,7 @@ def build(Map args) {
             (args.TARGET == "agent_with_sign") ? [
                 "agents/wnx",
                 "call run.cmd --all --sign tribe29.pfx ${args.PASSWORD}",
-                "cmk-agent-ctl.exe,check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe,unit_tests_results.zip,OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe"] :
+                "cmk-agent-ctl.exe,check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe,unit_tests_results.zip,OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe,windows_files_hashes.txt"] :
             (args.TARGET == "agent_no_sign") ? [
                  "agents/wnx",
                  "call run.cmd --all",

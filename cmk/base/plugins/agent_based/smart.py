@@ -246,11 +246,14 @@ register.agent_section(
 
 def discover_smart_stats(section: Section) -> DiscoveryResult:
     for disk_name, disk in section.items():
+        if not disk:
+            continue
+
         captured = {
             f.name: disk[f.name] for f in DiskAttribute if f.capture_on_discovery and f.name in disk
         }
-        if captured:
-            yield Service(item=disk_name, parameters=captured)
+
+        yield Service(item=disk_name, parameters=captured)
 
 
 def check_smart_stats(item: str, params: Mapping[str, int], section: Section) -> CheckResult:

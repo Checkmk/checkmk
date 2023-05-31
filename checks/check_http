@@ -13,10 +13,15 @@ class Mode(Enum):
     CERT = "cert"
 
 
+class Family(Enum):
+    enforce_v6 = "ipv6"  # -6
+    allow_either = "ipv4"  # no argument
+
+
 @dataclass(frozen=True)
 class HostSettings:
     port: int | None
-    family: str
+    family: Family
     virtual: str | None
 
     @classmethod
@@ -25,13 +30,14 @@ class HostSettings:
             family = "ipv6" if is_ipv6_primary(HostName(host_name())) else "ipv4"
         return cls(
             port=params.get("port"),
-            family=family,
+            family=Family(family),
             virtual=params.get("virthost"),
         )
 
     @property
     def fallback_address(self) -> str:
-        return "$_HOSTADDRESS_%s$" % self.family[-1]
+        suffix = "6" if self.family is Family.enforce_v6 else "4"
+        return "$_HOSTADDRESS_%s$" % suffix
 
 
 @dataclass(frozen=True)
@@ -230,8 +236,9 @@ def _common_args(
 ) -> list[object]:
     args: list[object] = []
 
-    if host.settings.family == "ipv6":
+    if host.settings.family is Family.enforce_v6:
         args.append("-6")
+
     if not params.get("disable_sni"):
         args.append("--sni")
     if isinstance(host, ProxyHost) and (proxy_auth := host.proxy.auth):

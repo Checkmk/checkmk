@@ -24,6 +24,13 @@ def pytest_addoption(parser):
         help="Store checks-output files to be used as static references",
     )
 
+    parser.addoption(
+        "--skip-cleanup",
+        action="store_true",
+        default=False,
+        help="Skip cleanup process after tests' execution",
+    )
+
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "update_checks: run test marked as update_checks")
@@ -75,7 +82,7 @@ def get_site() -> Generator:
 
 
 @pytest.fixture(scope="session")
-def setup(test_site: Site) -> Generator:
+def setup(test_site: Site, request: pytest.FixtureRequest) -> Generator:
     """Setup test-site and perform cleanup after test execution."""
 
     agent_output_path = test_site.path("var/check_mk/agent_output")
@@ -142,7 +149,7 @@ def setup(test_site: Site) -> Generator:
 
     yield
 
-    if os.getenv("CLEANUP") != "0":
+    if not request.config.getoption("--skip-cleanup"):
         # cleanup existing agent-output folder in the test site
         LOGGER.info('Removing folder "%s"...', agent_output_path)
         rc = test_site.execute(["rm", "-rf", agent_output_path]).wait()

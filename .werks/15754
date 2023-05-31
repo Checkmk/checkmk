@@ -1,7 +1,7 @@
 Title: Enable AES-192 and AES-256 privacy protocols for SNMP
 Class: feature
 Compatible: compat
-Component: inline-snmp
+Component: core
 Date: 1684999599
 Edition: cre
 Knowledge: undoc
@@ -10,4 +10,3 @@ Version: 2.3.0b1
 
 This werk enables the AES-192 and AES-256 privacy protocols
 to be used in SNMP monitoring.
-

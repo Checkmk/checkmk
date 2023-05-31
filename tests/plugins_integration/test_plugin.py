@@ -41,7 +41,6 @@ def test_plugin(
 def test_store_update_checks(
     test_site: Site, setup: Generator, tmp_path_factory: pytest.TempPathFactory
 ) -> None:
-    # dump_section_output() TODO: improve section-output  dump function
     assert update_check_output(
         test_site, tmp_path_factory.mktemp("check_output")
     ), "Failed to update check output!"

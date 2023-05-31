@@ -263,83 +263,92 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
         return
 
     for attribute in DiskAttribute:
-        if attribute is DiskAttribute.TEMPERATURE:
-            # Currently handled by separate check
-            continue
-
         value = disk.get(attribute.name)
         if value is None:
             continue
 
-        if attribute is DiskAttribute.AVAILABLE_SPARE:
-            if value < (threshold := disk["Available_Spare_Threshold"]):
-                yield from _result_and_metric(
-                    attribute,
-                    value,
-                    State.CRIT,
-                    f"during discovery: {threshold} (!!)",
-                )
+        ref_value = params.get(attribute.name)
+
+        match (attribute, ref_value):
+            case (DiskAttribute.TEMPERATURE, _):
+                # Currently handled in a seperate check plugin
                 continue
 
-            yield from _default_check_results(
-                attribute,
-                value,
-            )
-            continue
+            case (DiskAttribute.AVAILABLE_SPARE, _):
+                # AVAILABLE_SPARE uses another ref value
+                yield from _check_available_spare(disk, value)
 
-        if (ref_value := params.get(attribute.name)) is None:
-            yield from _default_check_results(
-                attribute,
-                value,
-            )
-            continue
-
-        if attribute is DiskAttribute.COMMAND_TIMEOUT_COUNTER:
-            rate = get_rate(get_value_store(), "cmd_timeout", time.time(), value)
-            if rate >= MAX_COMMAND_TIMEOUTS_PER_HOUR / (60 * 60):
-                yield from _result_and_metric(
-                    attribute,
-                    value,
-                    State.CRIT,
-                    f"counter increased more than {MAX_COMMAND_TIMEOUTS_PER_HOUR} counts / h (!!). "
-                    f"Value during discovery was: {ref_value}",
-                )
-                continue
-
-            yield from _default_check_results(
-                attribute,
-                value,
-            )
-            continue
-
-        state = State.CRIT if value > ref_value else State.OK
-        hints = [] if state == State.OK else ["during discovery: %d (!!)" % ref_value]
-
-        # For reallocated event counts we experienced to many reported errors for disks
-        # which still seem to be OK. The raw value increased by a small amount but the
-        # aggregated value remained at it's initial/ok state. So we use the aggregated
-        # value now. Only for this field.
-        if attribute is DiskAttribute.REALLOCATED_EVENTS:
-            try:
-                norm_value = disk[f"_normalized_value_{attribute.name}"]
-                norm_threshold = disk[f"_normalized_threshold_{attribute.name}"]
-            except KeyError:
+            case (_, None):
+                # No further checking if there's no captured value
                 yield from _default_check_results(
                     attribute,
                     value,
                 )
-                continue
-            hints.append("normalized value: %d" % norm_value)
-            if norm_value <= norm_threshold:
-                state = State.CRIT
-                hints[-1] += " (!!)"
 
-        yield from _result_and_metric(
-            attribute,
+            case (DiskAttribute.COMMAND_TIMEOUT_COUNTER, int(ref)):
+                yield from _check_command_timeout_counter(value, ref)
+
+            case (_, int(ref)):
+                state = State.CRIT if value > ref else State.OK
+                hints = [] if state == State.OK else ["during discovery: %d (!!)" % ref]
+
+                # For reallocated event counts we experienced to many reported errors for disks
+                # which still seem to be OK. The raw value increased by a small amount but the
+                # aggregated value remained at it's initial/ok state. So we use the aggregated
+                # value now. Only for this field.
+                if attribute is DiskAttribute.REALLOCATED_EVENTS:
+                    try:
+                        norm_value = disk[f"_normalized_value_{attribute.name}"]
+                        norm_threshold = disk[f"_normalized_threshold_{attribute.name}"]
+                    except KeyError:
+                        yield from _default_check_results(
+                            attribute,
+                            value,
+                        )
+                        continue
+                    hints.append("normalized value: %d" % norm_value)
+                    if norm_value <= norm_threshold:
+                        state = State.CRIT
+                        hints[-1] += " (!!)"
+
+                yield from _result_and_metric(
+                    attribute,
+                    value,
+                    state,
+                    ", ".join(hints) if hints else None,
+                )
+
+
+def _check_available_spare(disk: Mapping[str, int], value: int) -> CheckResult:
+    if value < (threshold := disk["Available_Spare_Threshold"]):
+        return _result_and_metric(
+            DiskAttribute.AVAILABLE_SPARE,
             value,
-            state,
-            ", ".join(hints) if hints else None,
+            State.CRIT,
+            f"during discovery: {threshold} (!!)",
         )
+
+    return _default_check_results(
+        DiskAttribute.AVAILABLE_SPARE,
+        value,
+    )
+
+
+def _check_command_timeout_counter(value: int, ref_value: int) -> CheckResult:
+    rate = get_rate(get_value_store(), "cmd_timeout", time.time(), value)
+    if rate >= MAX_COMMAND_TIMEOUTS_PER_HOUR / (60 * 60):
+        return _result_and_metric(
+            DiskAttribute.COMMAND_TIMEOUT_COUNTER,
+            value,
+            State.CRIT,
+            f"counter increased more than {MAX_COMMAND_TIMEOUTS_PER_HOUR} counts / h (!!). "
+            f"Value during discovery was: {ref_value}",
+        )
+
+    return _default_check_results(
+        DiskAttribute.COMMAND_TIMEOUT_COUNTER,
+        value,
+    )
 
 
 def _result_and_metric(

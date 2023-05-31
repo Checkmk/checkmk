@@ -270,24 +270,28 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
         value = disk.get(attribute.name)
         if value is None:
             continue
-        assert isinstance(value, int)
 
         infotext = "%s: %s" % (_display_attribute_name(attribute), attribute.renderer(value))
 
-        ref_value = params.get(attribute.name)
-
         if attribute is DiskAttribute.AVAILABLE_SPARE:
-            ref_value = disk["Available_Spare_Threshold"]
+            if value < (threshold := disk["Available_Spare_Threshold"]):
+                yield Result(
+                    state=State.CRIT, summary=f"{infotext} (during discovery: {threshold} (!!))"
+                )
+            else:
+                yield Result(
+                    state=State.OK,
+                    summary=infotext,
+                )
+            yield Metric(attribute.name, value)
+            continue
 
-        if ref_value is None:
+        if (ref_value := params.get(attribute.name)) is None:
             yield Result(state=State.OK, summary=infotext)
             yield Metric(attribute.name, value)
             continue
 
-        if attribute is DiskAttribute.AVAILABLE_SPARE:
-            state = State.CRIT if value < ref_value else State.OK
-        else:
-            state = State.CRIT if value > ref_value else State.OK
+        state = State.CRIT if value > ref_value else State.OK
         hints = [] if state == State.OK else ["during discovery: %d (!!)" % ref_value]
 
         # For reallocated event counts we experienced to many reported errors for disks

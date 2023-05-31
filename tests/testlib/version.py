@@ -84,7 +84,7 @@ def version_from_env(
     return CMKVersion(
         version_spec_from_env(fallback_version_spec),
         edition_from_env(fallback_edition),
-        branch_from_env(fallback_branch),
+        branch_from_env(env_var="BRANCH", fallback=fallback_branch),
     )
 
 

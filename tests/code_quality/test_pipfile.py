@@ -19,7 +19,7 @@ import pytest
 from pipfile import Pipfile  # type: ignore[import]
 
 from tests.testlib import repo_path
-from tests.testlib.utils import is_enterprise_repo
+from tests.testlib.utils import branch_from_env, current_base_branch_name, is_enterprise_repo
 
 IGNORED_LIBS = {"cmk", "livestatus", "mk_jolokia", "cmc_proto"}  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
@@ -37,6 +37,10 @@ def load_pipfile() -> Pipfile:
     return Pipfile.load(filename=str(repo_path() / "Pipfile"))
 
 
+@pytest.mark.skipif(
+    branch_from_env(env_var="GERRIT_BRANCH", fallback=current_base_branch_name) == "master",
+    reason="pinning is only enforced in release branches",
+)
 def test_all_deployment_packages_pinned(loaded_pipfile: Pipfile) -> None:
     unpinned_packages = [f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*"]
     assert not unpinned_packages, (

@@ -197,7 +197,7 @@ def site_id() -> str:
     if site_id is not None:
         return site_id
 
-    branch_name = branch_from_env(current_branch_name)
+    branch_name = branch_from_env(env_var="BRANCH", fallback=current_branch_name)
 
     # Split by / and get last element, remove unwanted chars
     branch_part = re.sub("[^a-zA-Z0-9_]", "", branch_name.split("/")[-1])
@@ -245,12 +245,12 @@ def edition_from_env(fallback: Edition | None = None) -> Edition:
     raise RuntimeError("EDITION environment variable, e.g. cre or enterprise, is missing")
 
 
-def branch_from_env(fallback: str | Callable[[], str] | None = None) -> str:
-    if branch := os.environ.get("BRANCH"):
+def branch_from_env(*, env_var: str, fallback: str | Callable[[], str] | None = None) -> str:
+    if branch := os.environ.get(env_var):
         return branch
     if fallback:
-        return fallback if isinstance(fallback, str) else fallback()
-    raise RuntimeError("BRANCH environment variable, e.g. master, is missing")
+        return fallback() if callable(fallback) else fallback
+    raise RuntimeError(f"{env_var} environment variable, e.g. master, is missing")
 
 
 def spawn_expect_process(

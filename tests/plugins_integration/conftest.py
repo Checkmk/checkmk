@@ -152,5 +152,4 @@ def setup(test_site: Site, request: pytest.FixtureRequest) -> Generator:
     if not request.config.getoption("--skip-cleanup"):
         # cleanup existing agent-output folder in the test site
         LOGGER.info('Removing folder "%s"...', agent_output_path)
-        rc = test_site.execute(["rm", "-rf", agent_output_path]).wait()
-        assert rc == 0
+        assert execute(["sudo", "rm", "-rf", agent_output_path]).returncode == 0

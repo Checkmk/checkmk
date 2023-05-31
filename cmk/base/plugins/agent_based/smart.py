@@ -281,18 +281,16 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
                 )
                 continue
 
-            yield from _result_and_metric(
+            yield from _default_check_results(
                 attribute,
                 value,
-                State.OK,
             )
             continue
 
         if (ref_value := params.get(attribute.name)) is None:
-            yield from _result_and_metric(
+            yield from _default_check_results(
                 attribute,
                 value,
-                State.OK,
             )
             continue
 
@@ -308,10 +306,9 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
                 )
                 continue
 
-            yield from _result_and_metric(
+            yield from _default_check_results(
                 attribute,
                 value,
-                State.OK,
             )
             continue
 
@@ -327,10 +324,9 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
                 norm_value = disk[f"_normalized_value_{attribute.name}"]
                 norm_threshold = disk[f"_normalized_threshold_{attribute.name}"]
             except KeyError:
-                yield from _result_and_metric(
+                yield from _default_check_results(
                     attribute,
                     value,
-                    State.OK,
                 )
                 continue
             hints.append("normalized value: %d" % norm_value)
@@ -360,6 +356,17 @@ def _result_and_metric(
             summary=summary,
         ),
         Metric(attribute.name, value),
+    )
+
+
+def _default_check_results(
+    attribute: DiskAttribute,
+    value: int,
+) -> CheckResult:
+    return _result_and_metric(
+        attribute,
+        value,
+        State.OK,
     )
 
 

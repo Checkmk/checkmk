@@ -146,10 +146,7 @@ export class TopologyNode extends AbstractGUINode {
                 const nodevis_node =
                     this._world.nodes_layer.get_nodevis_node_by_id(node_id);
                 if (!nodevis_node) return;
-                if (!_toggle_root_node(nodevis_node))
-                    new SearchFilters().remove_hosts_from_host_regex(
-                        new Set([nodevis_node.data.name])
-                    );
+                _toggle_root_node(nodevis_node);
                 this._world.update_data();
             },
         });
@@ -162,9 +159,6 @@ export class TopologyNode extends AbstractGUINode {
                     this._world.nodes_layer.get_nodevis_node_by_id(node_id);
                 if (!nodevis_node) return;
                 _set_root_node(nodevis_node, this._world);
-                new SearchFilters().set_host_regex_filter(
-                    nodevis_node.data.name
-                );
                 this._world.update_data();
             },
         });
@@ -187,30 +181,31 @@ export class TopologyNode extends AbstractGUINode {
     }
 }
 
-function _toggle_root_node(nodevis_node: NodevisNode): boolean {
+function _toggle_root_node(nodevis_node: NodevisNode) {
     nodevis_node.data.growth_root = !nodevis_node.data.growth_root;
-    return nodevis_node.data.growth_root;
+    if (!nodevis_node.data.growth_root)
+        new SearchFilters().remove_hosts_from_host_regex(
+            new Set([nodevis_node.data.name])
+        );
 }
 
-function _set_root_node(nodevis_node: NodevisNode, world: NodevisWorld): void {
+function _set_root_node(nodevis_node: NodevisNode, world: NodevisWorld) {
     world.viewport.get_all_nodes().forEach(node => {
         node.data.growth_root = false;
     });
     nodevis_node.data.growth_root = true;
 }
 
-function _toggle_growth_continue(nodevis_node: NodevisNode): boolean {
+function _toggle_growth_continue(nodevis_node: NodevisNode) {
     nodevis_node.data.growth_continue = !nodevis_node.data.growth_continue;
     if (nodevis_node.data.growth_continue)
         nodevis_node.data.growth_forbidden = false;
-    return nodevis_node.data.growth_continue;
 }
 
-function _toggle_stop_growth(nodevis_node: NodevisNode): boolean {
+function _toggle_stop_growth(nodevis_node: NodevisNode) {
     nodevis_node.data.growth_forbidden = !nodevis_node.data.growth_forbidden;
     if (nodevis_node.data.growth_forbidden)
         nodevis_node.data.growth_continue = false;
-    return nodevis_node.data.growth_forbidden;
 }
 
 export class TopologyCentralNode extends TopologyNode {

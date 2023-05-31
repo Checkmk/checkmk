@@ -10,7 +10,7 @@ from typing import Any
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import (
-    ip_address_family_element,
+    ip_address_family_http,
     RulespecGroupActiveChecks,
 )
 from cmk.gui.plugins.wato.utils import (
@@ -108,7 +108,7 @@ def _active_checks_http_hostspec() -> Dictionary:
                 "port",
                 _active_checks_http_portspec(443),
             ),
-            ip_address_family_element(),
+            ip_address_family_http(),
             (
                 "virthost",
                 TextInput(

@@ -20,6 +20,7 @@ class Mode(Enum):
 
 
 class Family(Enum):
+    enforce_v4 = "enforce_v4"  # -4
     enforce_v6 = "ipv6"  # -6
     allow_either = "ipv4"  # no argument
 
@@ -244,6 +245,8 @@ def _common_args(
 
     if host.settings.family is Family.enforce_v6:
         args.append("-6")
+    if host.settings.family == Family.enforce_v4:
+        args.append("-4")
 
     if not params.get("disable_sni"):
         args.append("--sni")

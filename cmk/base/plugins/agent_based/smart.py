@@ -256,7 +256,9 @@ def discover_smart_stats(section: Section) -> DiscoveryResult:
         yield Service(item=disk_name, parameters=captured)
 
 
-def check_smart_stats(item: str, params: Mapping[str, int], section: Section) -> CheckResult:
+def check_smart_stats(  # pylint: disable=too-many-branches
+    item: str, params: Mapping[str, int], section: Section
+) -> CheckResult:
     # params is a snapshot of all counters at the point of time of inventory
     disk = section.get(item)
     if disk is None:
@@ -291,6 +293,23 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
             yield Metric(attribute.name, value)
             continue
 
+        if attribute is DiskAttribute.COMMAND_TIMEOUT_COUNTER:
+            rate = get_rate(get_value_store(), "cmd_timeout", time.time(), value)
+            if rate >= MAX_COMMAND_TIMEOUTS_PER_HOUR / (60 * 60):
+                yield Result(
+                    state=State.CRIT,
+                    summary=f"{infotext} (counter increased more than "
+                    f"{MAX_COMMAND_TIMEOUTS_PER_HOUR} counts / h (!!). "
+                    f"Value during discovery was: {ref_value})",
+                )
+            else:
+                yield Result(
+                    state=State.OK,
+                    summary=infotext,
+                )
+            yield Metric(attribute.name, value)
+            continue
+
         state = State.CRIT if value > ref_value else State.OK
         hints = [] if state == State.OK else ["during discovery: %d (!!)" % ref_value]
 
@@ -310,18 +329,6 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
             if norm_value <= norm_threshold:
                 state = State.CRIT
                 hints[-1] += " (!!)"
-
-        if attribute is DiskAttribute.COMMAND_TIMEOUT_COUNTER:
-            rate = get_rate(get_value_store(), "cmd_timeout", time.time(), value)
-            state = State.OK if rate < MAX_COMMAND_TIMEOUTS_PER_HOUR / (60 * 60) else State.CRIT
-            hints = (
-                []
-                if state == State.OK
-                else [
-                    f"counter increased more than {MAX_COMMAND_TIMEOUTS_PER_HOUR} counts / h (!!). "
-                    f"Value during discovery was: {ref_value}"
-                ]
-            )
 
         yield Result(
             state=state, summary=infotext + " (%s)" % ", ".join(hints) if hints else infotext

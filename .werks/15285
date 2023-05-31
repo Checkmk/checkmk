@@ -1,0 +1,15 @@
+Title: mk_oracle.ps1: add systemparameter section
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1685516525
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p29
+
+The agent bakery default values add the section "System Parameters" with "Run
+synchronously". This works with linux agent, but the windows agent plugin could
+not handle this section.
+
+This werk adds the section to the windows agent plugin.

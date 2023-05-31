@@ -59,7 +59,7 @@ $run_async = $null
 
 
 # Sections that run fast and are not run with caching
-$SYNC_SECTIONS = @("instance", "sessions", "logswitches", "undostat", "recovery_area", "processes", "recovery_status", "longactivesessions", "dataguard_stats", "performance")
+$SYNC_SECTIONS = @("instance", "sessions", "logswitches", "undostat", "recovery_area", "processes", "recovery_status", "longactivesessions", "dataguard_stats", "performance", "systemparameter")
 
 # Set debug to 1 to turn it on, set to zero to turn it off
 # if debug is on, debug messages are shown on the screen
@@ -1637,6 +1637,24 @@ Function sql_version {
 
 '@
      echo $query_version
+}
+
+
+
+################################################################################
+# SQL for Oracle system parameters
+################################################################################
+Function sql_systemparameter {
+     $query_systemparameter = @'
+     prompt <<<oracle_systemparameter:sep(124)>>>;
+     select upper(i.instance_name)
+             || '|' || NAME
+             || '|' || DISPLAY_VALUE
+             || '|' || ISDEFAULT
+        from v$system_parameter, v$instance i
+        where name not like '!_%' ESCAPE '!';
+'@
+ echo $query_systemparameter
 }
 
 

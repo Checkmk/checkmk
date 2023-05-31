@@ -256,9 +256,7 @@ def discover_smart_stats(section: Section) -> DiscoveryResult:
         yield Service(item=disk_name, parameters=captured)
 
 
-def check_smart_stats(  # pylint: disable=too-many-branches
-    item: str, params: Mapping[str, int], section: Section
-) -> CheckResult:
+def check_smart_stats(item: str, params: Mapping[str, int], section: Section) -> CheckResult:
     # params is a snapshot of all counters at the point of time of inventory
     disk = section.get(item)
     if disk is None:
@@ -273,41 +271,48 @@ def check_smart_stats(  # pylint: disable=too-many-branches
         if value is None:
             continue
 
-        infotext = "%s: %s" % (_display_attribute_name(attribute), attribute.renderer(value))
-
         if attribute is DiskAttribute.AVAILABLE_SPARE:
             if value < (threshold := disk["Available_Spare_Threshold"]):
-                yield Result(
-                    state=State.CRIT, summary=f"{infotext} (during discovery: {threshold} (!!))"
+                yield from _result_and_metric(
+                    attribute,
+                    value,
+                    State.CRIT,
+                    f"during discovery: {threshold} (!!)",
                 )
-            else:
-                yield Result(
-                    state=State.OK,
-                    summary=infotext,
-                )
-            yield Metric(attribute.name, value)
+                continue
+
+            yield from _result_and_metric(
+                attribute,
+                value,
+                State.OK,
+            )
             continue
 
         if (ref_value := params.get(attribute.name)) is None:
-            yield Result(state=State.OK, summary=infotext)
-            yield Metric(attribute.name, value)
+            yield from _result_and_metric(
+                attribute,
+                value,
+                State.OK,
+            )
             continue
 
         if attribute is DiskAttribute.COMMAND_TIMEOUT_COUNTER:
             rate = get_rate(get_value_store(), "cmd_timeout", time.time(), value)
             if rate >= MAX_COMMAND_TIMEOUTS_PER_HOUR / (60 * 60):
-                yield Result(
-                    state=State.CRIT,
-                    summary=f"{infotext} (counter increased more than "
-                    f"{MAX_COMMAND_TIMEOUTS_PER_HOUR} counts / h (!!). "
-                    f"Value during discovery was: {ref_value})",
+                yield from _result_and_metric(
+                    attribute,
+                    value,
+                    State.CRIT,
+                    f"counter increased more than {MAX_COMMAND_TIMEOUTS_PER_HOUR} counts / h (!!). "
+                    f"Value during discovery was: {ref_value}",
                 )
-            else:
-                yield Result(
-                    state=State.OK,
-                    summary=infotext,
-                )
-            yield Metric(attribute.name, value)
+                continue
+
+            yield from _result_and_metric(
+                attribute,
+                value,
+                State.OK,
+            )
             continue
 
         state = State.CRIT if value > ref_value else State.OK
@@ -322,18 +327,40 @@ def check_smart_stats(  # pylint: disable=too-many-branches
                 norm_value = disk[f"_normalized_value_{attribute.name}"]
                 norm_threshold = disk[f"_normalized_threshold_{attribute.name}"]
             except KeyError:
-                yield Result(state=State.OK, summary=infotext)
-                yield Metric(attribute.name, value)
+                yield from _result_and_metric(
+                    attribute,
+                    value,
+                    State.OK,
+                )
                 continue
             hints.append("normalized value: %d" % norm_value)
             if norm_value <= norm_threshold:
                 state = State.CRIT
                 hints[-1] += " (!!)"
 
-        yield Result(
-            state=state, summary=infotext + " (%s)" % ", ".join(hints) if hints else infotext
+        yield from _result_and_metric(
+            attribute,
+            value,
+            state,
+            ", ".join(hints) if hints else None,
         )
-        yield Metric(attribute.name, value)
+
+
+def _result_and_metric(
+    attribute: DiskAttribute,
+    value: int,
+    state: State,
+    hint: str | None = None,
+) -> CheckResult:
+    infotext = f"{_display_attribute_name(attribute)}: {attribute.renderer(value)}"
+    summary = f"{infotext} ({hint})" if hint else infotext
+    return (
+        Result(
+            state=state,
+            summary=summary,
+        ),
+        Metric(attribute.name, value),
+    )
 
 
 def _display_attribute_name(attribute: DiskAttribute) -> str:

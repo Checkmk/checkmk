@@ -1,0 +1,18 @@
+Title: Handle the missing state pattern in EC rules correctly
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1685540589
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p3
+
+Previously you had to fill in all 3 state patterns
+in Event Console rules (CRIT/WARN/OK) for the rule to work correctly.
+Now any combination of patterns is is fine.
+This fixes the regression introduced in 2.1.
+
+
+

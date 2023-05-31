@@ -370,6 +370,20 @@ class LicensingClient(RestApiClient):
 class ActivateChangesClient(RestApiClient):
     domain: API_DOMAIN = "activation_run"
 
+    def get_activation(self, activation_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{activation_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_running_activations(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/running",
+            expect_ok=expect_ok,
+        )
+
     def activate_changes(
         self,
         sites: list[str] | None = None,

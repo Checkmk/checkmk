@@ -21,7 +21,7 @@
 
 @Echo Off & Setlocal DisableDelayedExpansion
 ::: do not need this
-::: mode 170,40 
+::: mode 170,40
 
 ::: { Creates variable /AE = Ascii-27 escape code.
 ::: - %/AE% can be used  with and without DelayedExpansion.
@@ -54,7 +54,7 @@
 
 if "%3" == "" (
 %Print%{255;0;0}Invalid parameters\n
-%Print%{0;255;0}Usage: 
+%Print%{0;255;0}Usage:
 %Print%{255;255;255}sign_windows_exe.cmd pfx_file password exe_file\n
 exit /b 1
 )
@@ -65,13 +65,20 @@ set loc_1="C:\Program Files (x86)\Microsoft SDKs\ClickOnce\SignTool\signtool.exe
 set loc_2="C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe"
 if exist %loc_1%  (
 copy %3 %3.%ext%
-%loc_1% sign /tr http://timestamp.digicert.com /fd sha256 /td sha256 /f %1 /p %2 %3 
+%loc_1% sign /tr http://timestamp.digicert.com /fd sha256 /td sha256 /f %1 /p %2 %3
 ) else (
 if exist %loc_2% (
 copy %3 %3.%ext%
-%loc_2% sign /tr http://timestamp.digicert.com /fd sha256 /td sha256 /f %1 /p %2 %3 
+%loc_2% sign /tr http://timestamp.digicert.com /fd sha256 /td sha256 /f %1 /p %2 %3
 ) else (
 %Print%{255;0;0}Not found signtool.exe\n
 )
 )
+:: Create hash
+if "%4" == "" (
+%Print%{255;255;255}Hashing is not required\n
+) else (
+powershell -File .\scripts\add_hash_line.ps1 %1 %4
+)
+
 exit /b 0

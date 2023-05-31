@@ -351,6 +351,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "DictHostTagCondition",
         "flash",
         "FullPathFolderChoice",
+        "get_check_information",
         "get_hostnames_from_checkboxes",
         "get_hosts_from_checkboxes",
         "get_search_expression",

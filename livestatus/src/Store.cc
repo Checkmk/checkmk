@@ -17,8 +17,7 @@
 #include "livestatus/Logger.h"
 #endif
 
-Store::Store(ICore *mc, std::optional<std::chrono::seconds> cache_horizon,
-             Logger *logger)
+Store::Store(ICore *mc)
     : _mc(mc)
     , _log_cache(mc)
 #ifdef CMC
@@ -56,30 +55,23 @@ Store::Store(ICore *mc, std::optional<std::chrono::seconds> cache_horizon,
     addTable(_table_contacts);
     addTable(_table_crash_reports);
     addTable(_table_downtimes);
+    addTable(_table_eventconsoleevents);
+    addTable(_table_eventconsolehistory);
+    addTable(_table_eventconsolereplication);
+    addTable(_table_eventconsolerules);
+    addTable(_table_eventconsolestatus);
     addTable(_table_hostgroups);
-    addTable(_table_hostsbygroup);
     addTable(_table_hosts);
+    addTable(_table_hostsbygroup);
     addTable(_table_labels);
     addTable(_table_log);
     addTable(_table_servicegroups);
+    addTable(_table_services);
     addTable(_table_servicesbygroup);
     addTable(_table_servicesbyhostgroup);
-    addTable(_table_services);
+    addTable(_table_statehistory);
     addTable(_table_status);
     addTable(_table_timeperiods);
-    addTable(_table_eventconsoleevents);
-    addTable(_table_eventconsolehistory);
-    addTable(_table_eventconsolestatus);
-    addTable(_table_eventconsolereplication);
-    addTable(_table_eventconsolerules);
-
-#ifdef CMC
-    switchStatehistTable(cache_horizon, logger);
-#else
-    (void)cache_horizon;
-    (void)logger;
-    addTable(_table_statehistory);
-#endif
 }
 
 Logger *Store::logger() const { return _mc->loggerLivestatus(); }

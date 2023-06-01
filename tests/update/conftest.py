@@ -451,3 +451,22 @@ def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
         yield
     finally:
         _clear_controller_connections(ctl_path)
+
+
+def reschedule_services(site: Site, hostname: str, max_count: int = 10) -> None:
+    """Reschedule services in the test-site for a given host until no pending services are found."""
+
+    count = 0
+    base_data_host = get_host_data(site, hostname)
+
+    # reschedule services
+    site.schedule_check(hostname, "Check_MK", 0)
+
+    while len(get_services_with_status(base_data_host, "PEND")) > 0 and count < max_count:
+        logger.info(
+            "The following services were found with pending status: %s. Rescheduling checks...",
+            get_services_with_status(base_data_host, "PEND"),
+        )
+        site.schedule_check(hostname, "Check_MK", 0)
+        base_data_host = get_host_data(site, hostname)
+        count += 1

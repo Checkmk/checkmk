@@ -81,7 +81,7 @@ Store::Store(MonitoringCore *mc)
 }
 
 void Store::addTable(Table &table) {
-    _tables.emplace(table.name(), &table);
+    _tables[table.name()] = &table;
     _table_columns.addTable(table);
 }
 

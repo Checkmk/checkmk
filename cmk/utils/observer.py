@@ -93,7 +93,8 @@ class AbstractMemoryObserver(ABCResourceObserver):
         # This is OK performance-wise: ~7 microseconds per observation.
         new_memory_usage = self._vm_size()
         if self._num_check_cycles == self._steady_cycle_num:
-            self._print_global_memory_usage()
+            if self._verbose_output_enabled():
+                self._print_global_memory_usage()
             self._memory_usage = new_memory_usage
             return True
 
@@ -105,8 +106,6 @@ class AbstractMemoryObserver(ABCResourceObserver):
             return int(f.read().split()[0]) * 4096
 
     def _print_global_memory_usage(self) -> None:
-        if not self._verbose_output_enabled():
-            return
         globals_sizes = {
             varname: cmk.utils.misc.total_size(value) for (varname, value) in globals().items()
         }
@@ -136,6 +135,7 @@ class FetcherMemoryObserver(AbstractMemoryObserver):
         self._register_check(hint)
 
         if not self._validate_size():
+            self._print_global_memory_usage()
             self._error(
                 "memory usage increased from %s to %s, exiting"
                 % (

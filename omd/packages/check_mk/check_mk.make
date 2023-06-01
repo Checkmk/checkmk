@@ -144,6 +144,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    windows/check_mk.user.yml \
 	    windows/OpenHardwareMonitorLib.dll \
 	    windows/OpenHardwareMonitorCLI.exe \
+	    windows/windows_files_hashes.txt \
 	    windows/mrpe \
 	    windows/plugins \
 	    | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents/

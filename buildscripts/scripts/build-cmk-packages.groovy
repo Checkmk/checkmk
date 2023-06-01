@@ -441,7 +441,8 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def patch_script = "create_unsign_msi_patch.sh"
         def patch_file = "unsign-msi.patch"
         def ohm_files = "OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe"
-        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab,${ohm_files}"
+	    def hashes_file = "windows_files_hashes.txt"
+        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab,${ohm_files},${hashes_file}"
         if (params.FAKE_WINDOWS_ARTIFACTS) {
             sh "mkdir -p ${agents_dir}"
             if(EDITION != 'raw') {

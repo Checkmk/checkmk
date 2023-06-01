@@ -25,6 +25,7 @@ touch_only=(
     "${REPO_PATH}/agents/windows/python-3.4.cab"
     "${REPO_PATH}/agents/windows/unsign-msi.patch"
     "${REPO_PATH}/agents/windows/OpenHardwareMonitorLib.dll"
+    "${REPO_PATH}/agents/windows/windows_files_hashes.patch"
 )
 
 for f in "${touch_and_executable[@]}"; do

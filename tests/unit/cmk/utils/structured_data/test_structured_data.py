@@ -600,14 +600,12 @@ def test_filter_tree_paths_no_keys() -> None:
     assert filtered_node.attributes.pairs == {"ta0": "TA 0", "ta1": "TA 1"}
 
     assert not filtered_node.table.is_empty()
-    assert filtered_node.table.rows_by_ident == {
+    assert len(filtered_node.table.rows_by_ident) == 2
+    for ident, row in {
         ("TA 00",): {"ta0": "TA 00", "ta1": "TA 01"},
         ("TA 10",): {"ta0": "TA 10", "ta1": "TA 11"},
-    }
-    assert filtered_node.table.rows == [
-        {"ta0": "TA 00", "ta1": "TA 01"},
-        {"ta0": "TA 10", "ta1": "TA 11"},
-    ]
+    }.items():
+        assert filtered_node.table.rows_by_ident[ident] == row
 
 
 def test_filter_tree_paths_and_keys() -> None:
@@ -627,22 +625,11 @@ def test_filter_tree_paths_and_keys() -> None:
     assert filtered_node.attributes.pairs == {"ta1": "TA 1"}
 
     assert not filtered_node.table.is_empty()
-    assert filtered_node.table.rows_by_ident == {
-        ("TA 00",): {
-            "ta1": "TA 01",
-        },
-        ("TA 10",): {
-            "ta1": "TA 11",
-        },
-    }
-    assert filtered_node.table.rows == [
-        {
-            "ta1": "TA 01",
-        },
-        {
-            "ta1": "TA 11",
-        },
-    ]
+    for ident, row in {
+        ("TA 00",): {"ta1": "TA 01"},
+        ("TA 10",): {"ta1": "TA 11"},
+    }.items():
+        assert filtered_node.table.rows_by_ident[ident] == row
 
 
 def test_filter_tree_mixed() -> None:

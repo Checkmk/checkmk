@@ -284,15 +284,17 @@ def _filter_node(node: StructuredDataNode, filters: Iterable[SDFilter]) -> Struc
         if (child := node.get_node(f.path)) is None:
             continue
 
-        filtered_node = filtered.setdefault_node(f.path)
-
-        filtered_node.add_attributes(_filter_attributes(child.attributes, f.filter_attributes))
-        filtered_node.add_table(_filter_table(child.table, f.filter_columns))
-
+        filtered_node = StructuredDataNode(
+            path=f.path,
+            attributes=_filter_attributes(child.attributes, f.filter_attributes),
+            table=_filter_table(child.table, f.filter_columns),
+        )
         for name, sub_node in child.nodes_by_name.items():
             # From GUI::permitted_paths: We always get a list of strs.
             if f.filter_nodes(str(name)):
                 filtered_node.add_node((str(name),), sub_node)
+
+        filtered.add_node(f.path, filtered_node)
 
     return filtered
 
@@ -304,52 +306,54 @@ def _merge_attributes(left: Attributes, right: Attributes) -> Attributes:
     return attributes
 
 
-def _merge_tables(left: Table, right: Table) -> Table:
-    if left.key_columns == right.key_columns:
-        table = Table(
-            key_columns=left.key_columns,
-            retentions={**left.retentions, **right.retentions},
-        )
-
-        compared_keys = _compare_dict_keys(
-            old_dict=right.rows_by_ident, new_dict=left.rows_by_ident
-        )
-
-        for key in compared_keys.only_old:
-            table.add_row(key, right.rows_by_ident[key])
-
-        for key in compared_keys.both:
-            table.add_row(key, {**left.rows_by_ident[key], **right.rows_by_ident[key]})
-
-        for key in compared_keys.only_new:
-            table.add_row(key, left.rows_by_ident[key])
-
-        return table
-
-    # Legacy tables
-    if left.key_columns and not right.key_columns:
-        key_columns = left.key_columns
-    elif not left.key_columns and right.key_columns:
-        key_columns = right.key_columns
-    else:
-        key_columns = sorted(set(left.key_columns).intersection(right.key_columns))
-
+def _merge_tables_by_same_or_empty_key_columns(
+    key_columns: SDKeyColumns, left: Table, right: Table
+) -> Table:
     table = Table(
         key_columns=key_columns,
         retentions={**left.retentions, **right.retentions},
     )
 
-    # Re-calculates row identifiers
-    table.add_rows(list(left.rows_by_ident.values()))
-    table.add_rows(list(right.rows_by_ident.values()))
+    compared_keys = _compare_dict_keys(old_dict=right.rows_by_ident, new_dict=left.rows_by_ident)
+
+    for key in compared_keys.only_old:
+        table.add_row(key, right.rows_by_ident[key])
+
+    for key in compared_keys.both:
+        table.add_row(key, {**left.rows_by_ident[key], **right.rows_by_ident[key]})
+
+    for key in compared_keys.only_new:
+        table.add_row(key, left.rows_by_ident[key])
 
     return table
 
 
+def _merge_tables(left: Table, right: Table) -> Table:
+    if left.key_columns and not right.key_columns:
+        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
+
+    if not left.key_columns and right.key_columns:
+        return _merge_tables_by_same_or_empty_key_columns(right.key_columns, left, right)
+
+    if left.key_columns == right.key_columns:
+        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
+
+    # Re-calculate row identifiers for legacy tables or inventory and status tables
+    table = Table(
+        key_columns=sorted(set(left.key_columns).intersection(right.key_columns)),
+        retentions={**left.retentions, **right.retentions},
+    )
+    table.add_rows(list(left.rows_by_ident.values()))
+    table.add_rows(list(right.rows_by_ident.values()))
+    return table
+
+
 def _merge_nodes(left: StructuredDataNode, right: StructuredDataNode) -> StructuredDataNode:
-    node = StructuredDataNode(path=left.path)
-    node.add_attributes(_merge_attributes(left.attributes, right.attributes))
-    node.add_table(_merge_tables(left.table, right.table))
+    node = StructuredDataNode(
+        path=left.path,
+        attributes=_merge_attributes(left.attributes, right.attributes),
+        table=_merge_tables(left.table, right.table),
+    )
 
     compared_keys = _compare_dict_keys(old_dict=right.nodes_by_name, new_dict=left.nodes_by_name)
 
@@ -740,10 +744,16 @@ class TreeOrArchiveStore(TreeStore):
 
 
 class StructuredDataNode:
-    def __init__(self, *, path: SDPath | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        path: SDPath | None = None,
+        attributes: Attributes | None = None,
+        table: Table | None = None,
+    ) -> None:
         self.path = path if path else tuple()
-        self.attributes = Attributes()
-        self.table = Table()
+        self.attributes = attributes or Attributes()
+        self.table = table or Table()
         self._nodes: dict[SDNodeName, StructuredDataNode] = {}
 
     @property
@@ -867,10 +877,11 @@ class StructuredDataNode:
         path: SDPath,
         raw_tree: SDRawTree,
     ) -> StructuredDataNode:
-        node = cls(path=path)
-
-        node.add_attributes(Attributes.deserialize(raw_pairs=raw_tree[ATTRIBUTES_KEY]))
-        node.add_table(Table.deserialize(raw_rows=raw_tree[TABLE_KEY]))
+        node = cls(
+            path=path,
+            attributes=Attributes.deserialize(raw_pairs=raw_tree[ATTRIBUTES_KEY]),
+            table=Table.deserialize(raw_rows=raw_tree[TABLE_KEY]),
+        )
 
         for raw_name, raw_node in raw_tree[_NODES_KEY].items():
             node.add_node(

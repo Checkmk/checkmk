@@ -6,9 +6,10 @@
 import pytest
 
 from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
+from cmk.bi.searcher import BISearcher
 
 
-def test_empty_search(bi_searcher) -> None:  # type: ignore[no-untyped-def]
+def test_empty_search(bi_searcher: BISearcher) -> None:
     schema_config = BIEmptySearch.schema()().dump({})
     search = BIEmptySearch(schema_config)
     results = search.execute({}, bi_searcher)
@@ -84,8 +85,9 @@ def test_host_folder_search(
         BIServiceSearch,
     ],
 )
-def test_host_search(  # type: ignore[no-untyped-def]
-    search_class, bi_searcher_with_sample_config
+def test_host_search(
+    search_class: type[BIHostSearch] | type[BIServiceSearch],
+    bi_searcher_with_sample_config: BISearcher,
 ) -> None:
     schema_config = search_class.schema()().dump({})
     search = search_class(schema_config)

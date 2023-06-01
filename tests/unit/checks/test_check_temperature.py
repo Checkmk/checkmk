@@ -6,14 +6,22 @@
 # coding=utf-8
 # fmt: off
 import datetime as dt
-from collections.abc import Mapping
+from collections.abc import Iterable
 from typing import Any, NamedTuple
 
 import freezegun
 import pytest
 
-from cmk.base.check_legacy_includes.temperature import check_temperature, check_temperature_trend
-from cmk.base.plugins.agent_based.utils.temperature import TempParamDict
+from cmk.base.check_legacy_includes.temperature import (
+    check_temperature,
+    check_temperature_trend,
+    Number,
+)
+from cmk.base.plugins.agent_based.utils.temperature import (
+    TempParamDict,
+    TempParamType,
+    TrendComputeDict,
+)
 
 from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 
@@ -165,7 +173,7 @@ from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
          (2, '5 \xb0C (device warn/crit below 6/6 \xb0C)', [('temp', 5, None, None)])),
     ],
 )
-def test_check_temperature(params, kwargs, expected) -> None:   # type: ignore[no-untyped-def]
+def test_check_temperature(params:tuple[Number,TempParamType,str|None], kwargs, expected:Iterable[object] |CheckResult |None) -> None: # type: ignore[no-untyped-def]
     result = check_temperature(*params, **kwargs)
     assertCheckResultsEqual(CheckResult(result), CheckResult(expected))
 
@@ -178,10 +186,10 @@ class Entry(NamedTuple):
     reading:float
     growth:float
     seconds_elapsed:float
-    wato_dict: Mapping[str,Any]
+    wato_dict: TrendComputeDict
     expected:Any
 
-_WATO_DICT = {
+_WATO_DICT:TrendComputeDict = {
     'period': 5,
     'trend_levels': (5, 10),
     'trend_levels_lower': (5, 10),
@@ -268,7 +276,7 @@ def test_check_temperature_trend(test_case:Entry) -> None:
         ),
     ]
 )
-def test_check_temperature_called(test_case) -> None:   # type: ignore[no-untyped-def]
+def test_check_temperature_called(test_case:Entry) -> None:
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
     state = {

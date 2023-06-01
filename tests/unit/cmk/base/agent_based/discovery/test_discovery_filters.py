@@ -36,8 +36,8 @@ from cmk.checkengine.discovery import filters as _filters
         },
     ],
 )
-def test__get_service_filter_func_no_lists(  # type: ignore[no-untyped-def]
-    parameters_rediscovery,
+def test__get_service_filter_func_no_lists(
+    parameters_rediscovery: dict[str, Sequence[object]],
 ) -> None:
     service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)
     assert service_filters.new is _filters._accept_all_services

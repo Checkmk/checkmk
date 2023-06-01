@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from tests.unit.conftest import FixRegister
+
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 
 
-def test_check_netapp_api_temp_missing_value(fix_register) -> None:  # type: ignore[no-untyped-def]
+def test_check_netapp_api_temp_missing_value(fix_register: FixRegister) -> None:
     result = list(
         fix_register.check_plugins[CheckPluginName("netapp_api_temp")].check_function(
             item="Ambient Shelf 70",

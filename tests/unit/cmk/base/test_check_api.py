@@ -4,9 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import math
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
+
+from cmk.utils.type_defs import ServiceDetails, ServiceState
 
 import cmk.base.config as config
 from cmk.base import check_api
@@ -151,12 +155,12 @@ def test_validate_filter() -> None:
         ),
     ],
 )
-def test_discover_inputs_and_filters(  # type: ignore[no-untyped-def]
-    parsed, selector, result
+def test_discover_inputs_and_filters(
+    parsed: Mapping[str, object], selector: Callable | None, result: Sequence[object] | None
 ) -> None:
     items = list(check_api.discover(selector)(parsed))
     for item in items:
-        assert item in result
+        assert result is not None and item in result
 
     if result is not None:
         assert len(items) == len(result)
@@ -256,8 +260,12 @@ def test_discover_exceptions(parsed, selector, error) -> None:  # type: ignore[n
         (-1, (3, 6, 1, 0), int, "", (2, " (warn/crit below 1/0)")),
     ],
 )
-def test_boundaries(  # type: ignore[no-untyped-def]
-    value, levels, representation, unit, result
+def test_boundaries(
+    value: float,
+    levels: check_api.Levels,
+    representation: Callable,
+    unit: str,
+    result: tuple[ServiceState, ServiceDetails],
 ) -> None:
     assert check_api._do_check_levels(value, levels, representation, unit) == result
 
@@ -310,11 +318,17 @@ def test_boundaries(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_levels(value, dsname, params, kwargs, result) -> None:  # type: ignore[no-untyped-def]
+def test_check_levels(  # type: ignore[no-untyped-def]
+    value: float,
+    dsname: check_api.MetricName | None,
+    params: None | tuple[float, ...],
+    kwargs,
+    result: check_api.ServiceCheckResult,
+) -> None:
     assert check_api.check_levels(value, dsname, params, **kwargs) == result
 
 
-def test_http_proxy(mocker) -> None:  # type: ignore[no-untyped-def]
+def test_http_proxy(mocker: Mock) -> None:
     proxy_patch = mocker.patch.object(config, "get_http_proxy")
     check_api.get_http_proxy(("url", "http://xy:123"))
     assert proxy_patch.called_once()

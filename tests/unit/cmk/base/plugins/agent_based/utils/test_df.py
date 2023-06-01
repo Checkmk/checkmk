@@ -329,8 +329,11 @@ def test_df_check_filesystem_single(
     ],
     ids=["unique", "duplicates"],
 )
-def test_mountpoints_in_group(  # type: ignore[no-untyped-def]
-    mplist, patterns_include, patterns_exclude, expected
+def test_mountpoints_in_group(
+    mplist: Iterable[str],
+    patterns_include: Sequence[str],
+    patterns_exclude: Sequence[str],
+    expected: Sequence[str],
 ) -> None:
     """Returns list of mountpoints without duplicates."""
 

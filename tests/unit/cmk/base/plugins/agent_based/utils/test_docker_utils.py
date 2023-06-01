@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
+
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.docker import (
     cleanup_oci_error_message,
     MemorySection,
@@ -40,7 +43,7 @@ def test_parse_strict() -> None:
         ([["@docker_version_info", "{}"], ["1"], ["2"]], 1),  # 2 should not be there
     ],
 )
-def test_parse_strict_violation(data, expected) -> None:  # type: ignore[no-untyped-def]
+def test_parse_strict_violation(data: StringTable, expected: Mapping[str, object]) -> None:
     with pytest.raises(ValueError):
         parse(data)
     assert parse(data, strict=False).data == expected
@@ -98,7 +101,7 @@ def test_parse_multiline() -> None:
         ),
     ],
 )
-def test_parse_remove_error_message(data_in, data_out) -> None:  # type: ignore[no-untyped-def]
+def test_parse_remove_error_message(data_in: StringTable, data_out: StringTable) -> None:
     cleaned_up = cleanup_oci_error_message(data_in)
     assert cleaned_up == data_out
 

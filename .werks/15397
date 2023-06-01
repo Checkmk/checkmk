@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0p1
+Version: 2.2.0p2
 
 During inventory plugin migration the following fields and the related view columns were thrown away:
 <ul>

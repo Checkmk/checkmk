@@ -258,13 +258,11 @@ def discover_smart_stats(section: Section) -> DiscoveryResult:
 
 def check_smart_stats(item: str, params: Mapping[str, int], section: Section) -> CheckResult:
     # params is a snapshot of all counters at the point of time of inventory
-    disk = section.get(item)
-    if disk is None:
+    if (disk := section.get(item)) is None:
         return
 
     for attribute in DiskAttribute:
-        value = disk.get(attribute.name)
-        if value is None:
+        if (value := disk.get(attribute.name)) is None:
             continue
 
         ref_value = params.get(attribute.name)
@@ -288,34 +286,18 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
             case (DiskAttribute.COMMAND_TIMEOUT_COUNTER, int(ref)):
                 yield from _check_command_timeout_counter(value, ref)
 
-            case (_, int(ref)):
-                state = State.CRIT if value > ref else State.OK
-                hints = [] if state == State.OK else ["during discovery: %d (!!)" % ref]
-
-                # For reallocated event counts we experienced to many reported errors for disks
+            case (DiskAttribute.REALLOCATED_EVENTS, int(ref)):
+                # For reallocated event counts we experienced too many reported errors for disks
                 # which still seem to be OK. The raw value increased by a small amount but the
                 # aggregated value remained at it's initial/ok state. So we use the aggregated
                 # value now. Only for this field.
-                if attribute is DiskAttribute.REALLOCATED_EVENTS:
-                    try:
-                        norm_value = disk[f"_normalized_value_{attribute.name}"]
-                        norm_threshold = disk[f"_normalized_threshold_{attribute.name}"]
-                    except KeyError:
-                        yield from _default_check_results(
-                            attribute,
-                            value,
-                        )
-                        continue
-                    hints.append("normalized value: %d" % norm_value)
-                    if norm_value <= norm_threshold:
-                        state = State.CRIT
-                        hints[-1] += " (!!)"
+                yield from _check_reallocated_events(disk, value, ref)
 
-                yield from _result_and_metric(
+            case (_, int(ref)):
+                yield from _check_generic_attribute(
                     attribute,
                     value,
-                    state,
-                    ", ".join(hints) if hints else None,
+                    ref,
                 )
 
 
@@ -347,6 +329,50 @@ def _check_command_timeout_counter(value: int, ref_value: int) -> CheckResult:
 
     return _default_check_results(
         DiskAttribute.COMMAND_TIMEOUT_COUNTER,
+        value,
+    )
+
+
+def _check_reallocated_events(disk: Mapping[str, int], value: int, ref_value: int) -> CheckResult:
+    try:
+        norm_value = disk[f"_normalized_value_{DiskAttribute.REALLOCATED_EVENTS.name}"]
+        norm_threshold = disk[f"_normalized_threshold_{DiskAttribute.REALLOCATED_EVENTS.name}"]
+    except KeyError:
+        return _default_check_results(
+            DiskAttribute.REALLOCATED_EVENTS,
+            value,
+        )
+
+    normalized_value_text = f"normalized value: {norm_value}"
+
+    state = State.CRIT if value > ref_value or norm_value <= norm_threshold else State.OK
+    hint = (
+        f"during discovery: {ref_value} (!!), {normalized_value_text}"
+        if value > ref_value
+        else normalized_value_text
+    )
+    if norm_value <= norm_threshold:
+        hint += " (!!)"
+
+    return _result_and_metric(
+        DiskAttribute.REALLOCATED_EVENTS,
+        value,
+        state,
+        hint,
+    )
+
+
+def _check_generic_attribute(attribute: DiskAttribute, value: int, ref_value: int) -> CheckResult:
+    if value > ref_value:
+        return _result_and_metric(
+            attribute,
+            value,
+            State.CRIT,
+            "during discovery: {ref} (!!)",
+        )
+
+    return _default_check_results(
+        attribute,
         value,
     )
 

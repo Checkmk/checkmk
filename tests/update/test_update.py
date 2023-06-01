@@ -20,6 +20,7 @@ from .conftest import (
     get_host_data,
     get_services_with_status,
     get_site_status,
+    reschedule_services,
     update_config,
     update_site,
     version_supported,
@@ -58,18 +59,10 @@ def test_update(test_site: Site, tmp_path: Path) -> None:
             hostname, cmk_version=base_version.version
         )
         test_site.openapi.activate_changes_and_wait_for_completion()
+        reschedule_services(test_site, hostname)
 
         # get baseline monitoring data
         base_data_host = get_host_data(test_site, hostname)
-
-        # force reschedule pending services
-        while len(get_services_with_status(base_data_host, "PEND")) > 0:
-            logger.info(
-                "The following services were found with pending status: %s. Rescheduling checks...",
-                get_services_with_status(base_data_host, "PEND"),
-            )
-            test_site.schedule_check(hostname, "Check_MK", 0)
-            base_data_host = get_host_data(test_site, hostname)
 
     base_ok_services = get_services_with_status(base_data_host, "OK")
     base_pend_services = get_services_with_status(base_data_host, "PEND")
@@ -120,18 +113,10 @@ def test_update(test_site: Site, tmp_path: Path) -> None:
         logger.info("Discovering services and waiting for completion...")
         target_site.openapi.discover_services_and_wait_for_completion(hostname)
         target_site.openapi.activate_changes_and_wait_for_completion()
+        reschedule_services(target_site, hostname)
 
         # get update monitoring data
         target_data_host = get_host_data(target_site, hostname)
-
-        # force reschedule pending services
-        while len(get_services_with_status(target_data_host, "PEND")) > 0:
-            logger.info(
-                "The following services were found with pending status: %s. Rescheduling checks...",
-                get_services_with_status(target_data_host, "PEND"),
-            )
-            target_site.schedule_check(hostname, "Check_MK", 0)
-            target_data_host = get_host_data(target_site, hostname)
 
     target_ok_services = get_services_with_status(target_data_host, "OK")
     target_pend_services = get_services_with_status(target_data_host, "PEND")

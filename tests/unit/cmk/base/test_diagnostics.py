@@ -485,7 +485,9 @@ def test_diagnostics_element_checkmk_overview_content(
         },
     ]
 
-    assert content["Nodes"]["versions"]["Table"]["Rows"] == [
+    rows = content["Nodes"]["versions"]["Table"]["Rows"]
+    assert len(rows) == 2
+    for row in [
         {
             "demo": False,
             "edition": "cee",
@@ -500,7 +502,8 @@ def test_diagnostics_element_checkmk_overview_content(
             "number": "2020.06.09",
             "version": "2020.06.09.cee",
         },
-    ]
+    ]:
+        assert row in rows
 
     shutil.rmtree(str(inventory_dir))
 

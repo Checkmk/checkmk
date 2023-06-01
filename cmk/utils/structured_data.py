@@ -828,16 +828,6 @@ class StructuredDataNode:
             path[1:], node
         )
 
-    def add_attributes(self, attributes: Attributes) -> None:
-        self.attributes.set_retentions(attributes.retentions)
-        self.attributes.add_pairs(attributes.pairs)
-
-    def add_table(self, table: Table) -> None:
-        self.table.set_retentions(table.retentions)
-        self.table.add_key_columns(table.key_columns)
-        for ident, row in table.rows_by_ident.items():
-            self.table.add_row(ident, row)
-
     def get_node(self, path: SDPath) -> StructuredDataNode | None:
         if not path:
             return self
@@ -901,54 +891,58 @@ class StructuredDataNode:
         path: SDPath,
         raw_tree: SDRawTree,
     ) -> StructuredDataNode:
-        node = cls(path=path)
         raw_pairs: SDPairs = {}
+        raw_tables: dict[tuple[str, ...], Any] = {}
+        raw_nodes: SDRawTree = {}
 
         for key, value in raw_tree.items():
-            the_path = path + (key,)
             if isinstance(value, dict):
                 if not value:
                     continue
-                node.add_node((key,), cls._deserialize_legacy(path=the_path, raw_tree=value))
+                raw_nodes.setdefault((str(key),), value)
 
             elif isinstance(value, list):
                 if not value:
                     continue
 
-                inst = node.setdefault_node((key,))
-                if node._is_table(value):
-                    inst.add_table(Table._deserialize_legacy(legacy_rows=value))
+                if all(not isinstance(v, (list, dict)) for row in value for v in row.values()):
+                    # Either we get:
+                    #   [
+                    #       {"column1": "value 11", "column2": "value 12",...},
+                    #       {"column1": "value 11", "column2": "value 12",...},
+                    #       ...
+                    #   ]
+                    # Or:
+                    #   [
+                    #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
+                    #       ...
+                    #   ]
+                    raw_tables.setdefault((str(key),), value)
                     continue
 
                 for idx, entry in enumerate(value):
-                    inst.add_node(
-                        (str(idx),),
-                        cls._deserialize_legacy(
-                            path=the_path + (str(idx),),
-                            raw_tree=entry,
-                        ),
-                    )
+                    raw_nodes.setdefault((str(key), str(idx)), entry)
 
             else:
                 raw_pairs.setdefault(key, value)
 
-        node.add_attributes(Attributes._deserialize_legacy(legacy_pairs=raw_pairs))
-        return node
+        node = cls(
+            path=path,
+            attributes=Attributes._deserialize_legacy(legacy_pairs=raw_pairs),
+        )
 
-    @staticmethod
-    def _is_table(entries: list) -> bool:
-        # Either we get:
-        #   [
-        #       {"column1": "value 11", "column2": "value 12",...},
-        #       {"column1": "value 11", "column2": "value 12",...},
-        #       ...
-        #   ]
-        # Or:
-        #   [
-        #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
-        #       ...
-        #   ]
-        return all(not isinstance(v, (list, dict)) for row in entries for v in row.values())
+        for child_path, raw_table in raw_tables.items():
+            node.add_node(
+                child_path,
+                cls(table=Table._deserialize_legacy(legacy_rows=raw_table)),
+            )
+
+        for child_path, raw_node in raw_nodes.items():
+            node.add_node(
+                child_path, cls._deserialize_legacy(path=path + child_path, raw_tree=raw_node)
+            )
+
+        return node
 
 
 # TODO Table: {IDENT: Attributes}?

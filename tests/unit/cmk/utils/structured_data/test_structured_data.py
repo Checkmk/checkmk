@@ -26,7 +26,6 @@ from cmk.utils.structured_data import (
     SDPath,
     StructuredDataNode,
     Table,
-    TableRetentions,
     TreeStore,
 )
 from cmk.utils.type_defs import HostName
@@ -1386,35 +1385,6 @@ def test__is_table() -> None:
     assert table_node.attributes.pairs == {}
     assert table_node.table.rows_by_ident == {("value",): {"col": "value"}}
     assert table_node.table.rows == [{"col": "value"}]
-
-
-def test_add_attributes() -> None:
-    path = ("path-to", "node")
-    retentions = {"key": RetentionIntervals(1, 2, 3)}
-
-    node = StructuredDataNode(path=path)
-    attributes = Attributes(retentions=retentions)
-    node.add_attributes(attributes)
-
-    assert node.attributes.retentions == retentions
-
-
-def test_add_table() -> None:
-    path = ("path-to", "node")
-    key_columns = ["key-0"]
-    retentions: TableRetentions = {
-        ("Value 0",): {"key-1": RetentionIntervals(1, 2, 3)},
-    }
-
-    node = StructuredDataNode(path=path)
-    table = Table(
-        key_columns=key_columns,
-        retentions=retentions,
-    )
-    node.add_table(table)
-
-    assert node.table.key_columns == key_columns
-    assert node.table.retentions == retentions
 
 
 def test_table_update_from_previous() -> None:

@@ -8,9 +8,11 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <chrono>
 #include <cstddef>
 #include <list>
 #include <map>
+#include <optional>
 #include <string>
 
 #include "livestatus/LogCache.h"
@@ -45,15 +47,13 @@ class OutputBuffer;
 class Table;
 
 #ifdef CMC
-#include <chrono>
-#include <optional>
-
 #include "TableCachedStatehist.h"
 #endif
 
 class Store {
 public:
-    explicit Store(ICore *mc);
+    Store(ICore *mc, std::optional<std::chrono::seconds> cache_horizon,
+          Logger *logger);
 #ifdef CMC
     void switchStatehistTable(std::optional<std::chrono::seconds> cache_horizon,
                               Logger *logger);

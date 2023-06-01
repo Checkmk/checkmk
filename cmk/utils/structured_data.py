@@ -297,77 +297,73 @@ def _filter_node(node: StructuredDataNode, filters: Iterable[SDFilter]) -> Struc
     return filtered
 
 
-def _merge_attributes(attributes_lhs: Attributes, attributes_rhs: Attributes) -> Attributes:
-    attributes = Attributes(retentions={**attributes_lhs.retentions, **attributes_rhs.retentions})
-    attributes.add_pairs(attributes_lhs.pairs)
-    attributes.add_pairs(attributes_rhs.pairs)
+def _merge_attributes(left: Attributes, right: Attributes) -> Attributes:
+    attributes = Attributes(retentions={**left.retentions, **right.retentions})
+    attributes.add_pairs(left.pairs)
+    attributes.add_pairs(right.pairs)
     return attributes
 
 
-def _merge_tables(table_lhs: Table, table_rhs: Table) -> Table:
-    if table_lhs.key_columns == table_rhs.key_columns:
+def _merge_tables(left: Table, right: Table) -> Table:
+    if left.key_columns == right.key_columns:
         table = Table(
-            key_columns=table_lhs.key_columns,
-            retentions={**table_lhs.retentions, **table_rhs.retentions},
+            key_columns=left.key_columns,
+            retentions={**left.retentions, **right.retentions},
         )
 
         compared_keys = _compare_dict_keys(
-            old_dict=table_rhs.rows_by_ident, new_dict=table_lhs.rows_by_ident
+            old_dict=right.rows_by_ident, new_dict=left.rows_by_ident
         )
 
         for key in compared_keys.only_old:
-            table.add_row(key, table_rhs.rows_by_ident[key])
+            table.add_row(key, right.rows_by_ident[key])
 
         for key in compared_keys.both:
-            table.add_row(key, {**table_lhs.rows_by_ident[key], **table_rhs.rows_by_ident[key]})
+            table.add_row(key, {**left.rows_by_ident[key], **right.rows_by_ident[key]})
 
         for key in compared_keys.only_new:
-            table.add_row(key, table_lhs.rows_by_ident[key])
+            table.add_row(key, left.rows_by_ident[key])
 
         return table
 
     # Legacy tables
-    if table_lhs.key_columns and not table_rhs.key_columns:
-        key_columns = table_lhs.key_columns
-    elif not table_lhs.key_columns and table_rhs.key_columns:
-        key_columns = table_rhs.key_columns
+    if left.key_columns and not right.key_columns:
+        key_columns = left.key_columns
+    elif not left.key_columns and right.key_columns:
+        key_columns = right.key_columns
     else:
-        key_columns = sorted(set(table_lhs.key_columns).intersection(table_rhs.key_columns))
+        key_columns = sorted(set(left.key_columns).intersection(right.key_columns))
 
     table = Table(
         key_columns=key_columns,
-        retentions={**table_lhs.retentions, **table_rhs.retentions},
+        retentions={**left.retentions, **right.retentions},
     )
 
     # Re-calculates row identifiers
-    table.add_rows(list(table_lhs.rows_by_ident.values()))
-    table.add_rows(list(table_rhs.rows_by_ident.values()))
+    table.add_rows(list(left.rows_by_ident.values()))
+    table.add_rows(list(right.rows_by_ident.values()))
 
     return table
 
 
-def _merge_nodes(node_lhs: StructuredDataNode, node_rhs: StructuredDataNode) -> StructuredDataNode:
-    node = StructuredDataNode(path=node_lhs.path)
-    node.add_attributes(_merge_attributes(node_lhs.attributes, node_rhs.attributes))
-    node.add_table(_merge_tables(node_lhs.table, node_rhs.table))
+def _merge_nodes(left: StructuredDataNode, right: StructuredDataNode) -> StructuredDataNode:
+    node = StructuredDataNode(path=left.path)
+    node.add_attributes(_merge_attributes(left.attributes, right.attributes))
+    node.add_table(_merge_tables(left.table, right.table))
 
-    compared_keys = _compare_dict_keys(
-        old_dict=node_rhs.nodes_by_name, new_dict=node_lhs.nodes_by_name
-    )
+    compared_keys = _compare_dict_keys(old_dict=right.nodes_by_name, new_dict=left.nodes_by_name)
 
     for key in compared_keys.only_old:
-        node.add_node((key,), node_rhs.nodes_by_name[key])
+        node.add_node((key,), right.nodes_by_name[key])
 
     for key in compared_keys.both:
         node.add_node(
             (key,),
-            _merge_nodes(
-                node_lhs=node_lhs.nodes_by_name[key], node_rhs=node_rhs.nodes_by_name[key]
-            ),
+            _merge_nodes(left=left.nodes_by_name[key], right=right.nodes_by_name[key]),
         )
 
     for key in compared_keys.only_new:
-        node.add_node((key,), node_lhs.nodes_by_name[key])
+        node.add_node((key,), left.nodes_by_name[key])
 
     return node
 
@@ -423,24 +419,24 @@ def _compare_dicts(
     )
 
 
-def _compare_attributes(attributes_lhs: Attributes, attributes_rhs: Attributes) -> DeltaAttributes:
+def _compare_attributes(left: Attributes, right: Attributes) -> DeltaAttributes:
     return DeltaAttributes(
         pairs=_compare_dicts(
-            old_dict=attributes_rhs.pairs,
-            new_dict=attributes_lhs.pairs,
+            old_dict=right.pairs,
+            new_dict=left.pairs,
             keep_identical=False,
         ).result_dict,
     )
 
 
-def _compare_tables(table_lhs: Table, table_rhs: Table) -> DeltaTable:
-    key_columns = sorted(set(table_lhs.key_columns).union(table_rhs.key_columns))
-    compared_keys = _compare_dict_keys(old_dict=table_rhs._rows, new_dict=table_lhs._rows)
+def _compare_tables(left: Table, right: Table) -> DeltaTable:
+    key_columns = sorted(set(left.key_columns).union(right.key_columns))
+    compared_keys = _compare_dict_keys(old_dict=right._rows, new_dict=left._rows)
 
     delta_rows: list[dict[SDKey, tuple[SDValue | None, SDValue | None]]] = []
 
     for key in compared_keys.only_old:
-        delta_rows.append({k: _removed_delta_tree_node(v) for k, v in table_rhs._rows[key].items()})
+        delta_rows.append({k: _removed_delta_tree_node(v) for k, v in right._rows[key].items()})
 
     for key in compared_keys.both:
         # Note: Rows which have at least one change also provide all table fields.
@@ -449,15 +445,15 @@ def _compare_tables(table_lhs: Table, table_rhs: Table) -> DeltaTable:
         # then it would be very annoying if the rest of the row is not shown.
         if (
             compared_dict_result := _compare_dicts(
-                old_dict=table_rhs._rows[key],
-                new_dict=table_lhs._rows[key],
+                old_dict=right._rows[key],
+                new_dict=left._rows[key],
                 keep_identical=True,
             )
         ).has_changes:
             delta_rows.append(compared_dict_result.result_dict)
 
     for key in compared_keys.only_new:
-        delta_rows.append({k: _new_delta_tree_node(v) for k, v in table_lhs._rows[key].items()})
+        delta_rows.append({k: _new_delta_tree_node(v) for k, v in left._rows[key].items()})
 
     return DeltaTable(
         key_columns=key_columns,
@@ -465,45 +461,41 @@ def _compare_tables(table_lhs: Table, table_rhs: Table) -> DeltaTable:
     )
 
 
-def _compare_nodes(
-    node_lhs: StructuredDataNode, node_rhs: StructuredDataNode
-) -> DeltaStructuredDataNode:
+def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> DeltaStructuredDataNode:
     delta_nodes: dict[SDNodeName, DeltaStructuredDataNode] = {}
 
-    compared_keys = _compare_dict_keys(
-        old_dict=node_rhs.nodes_by_name, new_dict=node_lhs.nodes_by_name
-    )
+    compared_keys = _compare_dict_keys(old_dict=right.nodes_by_name, new_dict=left.nodes_by_name)
 
     for key in compared_keys.only_new:
-        child_lhs = node_lhs.nodes_by_name[key]
-        if child_lhs.count_entries():
+        child_left = left.nodes_by_name[key]
+        if child_left.count_entries():
             delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
-                node=child_lhs,
+                node=child_left,
                 encode_as=_new_delta_tree_node,
             )
 
     for key in compared_keys.both:
-        child_lhs = node_lhs.nodes_by_name[key]
-        child_rhs = node_rhs.nodes_by_name[key]
-        if child_lhs.is_equal(child_rhs):
+        child_left = left.nodes_by_name[key]
+        child_right = right.nodes_by_name[key]
+        if child_left.is_equal(child_right):
             continue
 
-        delta_node_result = _compare_nodes(child_lhs, child_rhs)
+        delta_node_result = _compare_nodes(child_left, child_right)
         if delta_node_result.count_entries():
             delta_nodes[key] = delta_node_result
 
     for key in compared_keys.only_old:
-        child_rhs = node_rhs.nodes_by_name[key]
-        if child_rhs.count_entries():
+        child_right = right.nodes_by_name[key]
+        if child_right.count_entries():
             delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
-                node=child_rhs,
+                node=child_right,
                 encode_as=_removed_delta_tree_node,
             )
 
     return DeltaStructuredDataNode(
-        path=node_lhs.path,
-        attributes=_compare_attributes(node_lhs.attributes, node_rhs.attributes),
-        table=_compare_tables(node_lhs.table, node_rhs.table),
+        path=left.path,
+        attributes=_compare_attributes(left.attributes, right.attributes),
+        table=_compare_tables(left.table, right.table),
         _nodes=delta_nodes,
     )
 
@@ -1289,26 +1281,24 @@ _SDEncodeAs = Callable[[SDValue], tuple[SDValue | None, SDValue | None]]
 _SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 
 
-def _merge_delta_attributes(
-    delta_attributes_lhs: DeltaAttributes, delta_attributes_rhs: DeltaAttributes
-) -> DeltaAttributes:
-    return DeltaAttributes(pairs={**delta_attributes_lhs.pairs, **delta_attributes_rhs.pairs})
+def _merge_delta_attributes(left: DeltaAttributes, right: DeltaAttributes) -> DeltaAttributes:
+    return DeltaAttributes(pairs={**left.pairs, **right.pairs})
 
 
-def _merge_delta_table(delta_table_lhs: DeltaTable, delta_table_rhs: DeltaTable) -> DeltaTable:
+def _merge_delta_table(left: DeltaTable, right: DeltaTable) -> DeltaTable:
     delta_key_columns = []
-    for key_column in delta_table_lhs.key_columns:
+    for key_column in left.key_columns:
         if key_column not in delta_key_columns:
             delta_key_columns.append(key_column)
-    for key_column in delta_table_rhs.key_columns:
+    for key_column in right.key_columns:
         if key_column not in delta_key_columns:
             delta_key_columns.append(key_column)
 
     delta_rows = []
-    for row in delta_table_lhs.rows:
+    for row in left.rows:
         if row not in delta_rows:
             delta_rows.append(row)
-    for row in delta_table_rhs.rows:
+    for row in right.rows:
         if row not in delta_rows:
             delta_rows.append(row)
 
@@ -1316,31 +1306,31 @@ def _merge_delta_table(delta_table_lhs: DeltaTable, delta_table_rhs: DeltaTable)
 
 
 def _merge_delta_nodes(
-    delta_node_lhs: DeltaStructuredDataNode, delta_node_rhs: DeltaStructuredDataNode
+    left: DeltaStructuredDataNode, right: DeltaStructuredDataNode
 ) -> DeltaStructuredDataNode:
     delta_nodes = {}
 
     compared_keys = _compare_dict_keys(
-        old_dict=delta_node_lhs.nodes_by_name,
-        new_dict=delta_node_rhs.nodes_by_name,
+        old_dict=left.nodes_by_name,
+        new_dict=right.nodes_by_name,
     )
 
     for key in compared_keys.only_old:
-        delta_nodes[key] = delta_node_lhs.nodes_by_name[key]
+        delta_nodes[key] = left.nodes_by_name[key]
 
     for key in compared_keys.both:
         delta_nodes[key] = _merge_delta_nodes(
-            delta_node_lhs.nodes_by_name[key],
-            delta_node_rhs.nodes_by_name[key],
+            left.nodes_by_name[key],
+            right.nodes_by_name[key],
         )
 
     for key in compared_keys.only_new:
-        delta_nodes[key] = delta_node_rhs.nodes_by_name[key]
+        delta_nodes[key] = right.nodes_by_name[key]
 
     return DeltaStructuredDataNode(
-        path=delta_node_lhs.path,
-        attributes=_merge_delta_attributes(delta_node_lhs.attributes, delta_node_rhs.attributes),
-        table=_merge_delta_table(delta_node_lhs.table, delta_node_rhs.table),
+        path=left.path,
+        attributes=_merge_delta_attributes(left.attributes, right.attributes),
+        table=_merge_delta_table(left.table, right.table),
         _nodes=delta_nodes,
     )
 

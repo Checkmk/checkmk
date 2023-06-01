@@ -308,6 +308,18 @@ from tests.testlib import ActiveCheck
                 "virtual.host",
             ],
         ),
+        (
+            {
+                "name": "irrelevant",
+                "mode": ("url", {}),
+                "host": {"address_family": None},
+            },
+            [
+                "--sni",
+                "-I",
+                "$_HOSTADDRESS_4$",
+            ],
+        ),
         pytest.param(
             {
                 "name": "irrelevant",

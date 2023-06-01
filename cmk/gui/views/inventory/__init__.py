@@ -2130,10 +2130,10 @@ class ABCNodeRenderer(abc.ABC):
         self._show_internal_tree_paths = show_internal_tree_paths
 
     def show(self, node: StructuredDataNode | DeltaStructuredDataNode, hints: DisplayHints) -> None:
-        if not node.attributes.is_empty():
+        if node.attributes:
             self._show_attributes(node.attributes, hints)
 
-        if not node.table.is_empty():
+        if node.table:
             self._show_table(node.table, hints)
 
         for _name, child in sorted(node.nodes_by_name.items(), key=lambda t: t[0]):

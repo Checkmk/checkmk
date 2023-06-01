@@ -23,7 +23,6 @@ from cmk.utils.type_defs import HostName
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO
-# - is_empty -> __bool__
 # - is_equal -> __eq__/__ne__
 # - merge_with -> __add__
 # - count_entries -> __len__?
@@ -205,7 +204,7 @@ class MutableTree:
         self.tree: Final = StructuredDataNode() if tree is None else tree
 
     def __bool__(self) -> bool:
-        return not self.tree.is_empty()
+        return bool(self.tree)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, (MutableTree, ImmutableTree)):
@@ -244,6 +243,9 @@ class MutableTree:
 
     def get_tree(self, path: SDPath) -> MutableTree:
         return MutableTree(self.tree.get_node(path))
+
+    def has_table(self, path: SDPath) -> bool:
+        return bool(self.tree.get_table(path))
 
 
 # .
@@ -516,7 +518,7 @@ class ImmutableTree:
         return self.tree.serialize()
 
     def __bool__(self) -> bool:
-        return not self.tree.is_empty()
+        return bool(self.tree)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, (MutableTree, ImmutableTree)):
@@ -631,7 +633,7 @@ class ImmutableDeltaTree:
         return self.tree.serialize()
 
     def __bool__(self) -> bool:
-        return not self.tree.is_empty()
+        return bool(self.tree)
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(_filter_delta_node(self.tree, filters))
@@ -766,14 +768,15 @@ class StructuredDataNode:
 
     #   ---common methods-------------------------------------------------------
 
-    def is_empty(self) -> bool:
-        if not (self.attributes.is_empty() and self.table.is_empty()):
-            return False
+    def __bool__(self) -> bool:
+        if self.attributes or self.table:
+            return True
 
         for node in self._nodes.values():
-            if not node.is_empty():
-                return False
-        return True
+            if node:
+                return True
+
+        return False
 
     def is_equal(self, other: object) -> bool:
         if not isinstance(other, StructuredDataNode):
@@ -976,8 +979,8 @@ class Table:
 
     #   ---common methods-------------------------------------------------------
 
-    def is_empty(self) -> bool:
-        return not self._rows
+    def __bool__(self) -> bool:
+        return bool(self._rows)
 
     def is_equal(self, other: object) -> bool:
         if not isinstance(other, Table):
@@ -1173,8 +1176,8 @@ class Attributes:
 
     #   ---common methods-------------------------------------------------------
 
-    def is_empty(self) -> bool:
-        return not self.pairs
+    def __bool__(self) -> bool:
+        return bool(self.pairs)
 
     def is_equal(self, other: object) -> bool:
         if not isinstance(other, Attributes):
@@ -1383,14 +1386,15 @@ class DeltaStructuredDataNode:
             },
         )
 
-    def is_empty(self) -> bool:
-        if not (self.attributes.is_empty() and self.table.is_empty()):
-            return False
+    def __bool__(self) -> bool:
+        if self.attributes or self.table:
+            return True
 
         for node in self._nodes.values():
-            if not node.is_empty():
-                return False
-        return True
+            if node:
+                return True
+
+        return False
 
     def add_node(self, path: SDPath, node: DeltaStructuredDataNode) -> None:
         if not path:
@@ -1486,8 +1490,8 @@ class DeltaTable:
             rows=[{key: encode_as(value) for key, value in row.items()} for row in table.rows],
         )
 
-    def is_empty(self) -> bool:
-        return not self.rows
+    def __bool__(self) -> bool:
+        return bool(self.rows)
 
     def serialize(self) -> SDRawDeltaTree:
         return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
@@ -1518,8 +1522,8 @@ class DeltaAttributes:
     ) -> DeltaAttributes:
         return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
 
-    def is_empty(self) -> bool:
-        return not self.pairs
+    def __bool__(self) -> bool:
+        return bool(self.pairs)
 
     def serialize(self) -> SDRawDeltaTree:
         return {"Pairs": self.pairs} if self.pairs else {}

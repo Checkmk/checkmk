@@ -720,8 +720,8 @@ def test__inventorize_real_host_no_items(
         previous_tree=previous_node,
     )
 
-    assert mutable_trees.inventory.tree.is_empty()
-    assert mutable_trees.status_data.tree.is_empty()
+    assert not mutable_trees.inventory
+    assert not mutable_trees.status_data
 
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
@@ -802,7 +802,7 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
         ],
         previous_tree=previous_tree,
     )
-    assert mutable_trees.inventory.tree.is_empty()
+    assert not mutable_trees.inventory
 
     previous_node = previous_tree.tree.get_node(("path-to", "node-with-attrs"))
     assert isinstance(previous_node, StructuredDataNode)
@@ -900,7 +900,7 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
         ],
         previous_tree=previous_tree,
     )
-    assert mutable_trees.inventory.tree.is_empty()
+    assert not mutable_trees.inventory
 
     previous_node = previous_tree.tree.get_node(("path-to", "node-with-table"))
     assert isinstance(previous_node, StructuredDataNode)

@@ -269,7 +269,7 @@ def inside_inventory(inventory_path: inventory.InventoryPath) -> Callable[[bool,
 
 
 def has_inventory(on: bool, row: Row) -> bool:
-    return row["host_inventory"].is_empty() is not on
+    return bool(row["host_inventory"]) is on
 
 
 # Filter Time

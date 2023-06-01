@@ -146,27 +146,18 @@ def test_empty_but_different_structure() -> None:
     ta = root.get_node(("path", "to", "nta", "ta"))
 
     assert nt is not None
-    assert nt.attributes.pairs == {}
-    assert nt.attributes.is_empty()
-    assert nt.table.rows_by_ident == {}
-    assert nt.table.rows == []
-    assert nt.table.is_empty()
+    assert not nt.attributes
+    assert not nt.table
 
     assert na is not None
-    assert na.attributes.pairs == {}
-    assert na.attributes.is_empty()
-    assert na.table.rows_by_ident == {}
-    assert na.table.rows == []
-    assert na.table.is_empty()
+    assert not na.attributes
+    assert not na.table
 
     assert ta is not None
-    assert ta.attributes.pairs == {}
-    assert ta.attributes.is_empty()
-    assert ta.table.rows_by_ident == {}
-    assert ta.table.rows == []
-    assert ta.table.is_empty()
+    assert not ta.attributes
+    assert not ta.table
 
-    assert root.is_empty()
+    assert not root
     assert root.count_entries() == 0
     assert not root.is_equal(StructuredDataNode())
 
@@ -179,8 +170,7 @@ def test_not_empty() -> None:
     ta = root.get_node(("path", "to", "nta", "ta"))
 
     assert nt is not None
-    assert nt.attributes.pairs == {}
-    assert nt.attributes.is_empty()
+    assert not nt.attributes
     assert nt.table.rows_by_ident == {
         ("NT 00",): {"nt0": "NT 00", "nt1": "NT 01"},
         ("NT 10",): {"nt0": "NT 10", "nt1": "NT 11"},
@@ -189,18 +179,14 @@ def test_not_empty() -> None:
         {"nt0": "NT 00", "nt1": "NT 01"},
         {"nt0": "NT 10", "nt1": "NT 11"},
     ]
-    assert not nt.table.is_empty()
+    assert nt.table
 
     assert na is not None
     assert na.attributes.pairs == {"na0": "NA 0", "na1": "NA 1"}
-    assert not na.attributes.is_empty()
-    assert na.table.rows_by_ident == {}
-    assert na.table.rows == []
-    assert na.table.is_empty()
+    assert not na.table
 
     assert ta is not None
     assert ta.attributes.pairs == {"ta0": "TA 0", "ta1": "TA 1"}
-    assert not ta.attributes.is_empty()
     assert ta.table.rows_by_ident == {
         ("TA 00",): {"ta0": "TA 00", "ta1": "TA 01"},
         ("TA 10",): {"ta0": "TA 10", "ta1": "TA 11"},
@@ -209,9 +195,9 @@ def test_not_empty() -> None:
         {"ta0": "TA 00", "ta1": "TA 01"},
         {"ta0": "TA 10", "ta1": "TA 11"},
     ]
-    assert not ta.table.is_empty()
+    assert ta.table
 
-    assert not root.is_empty()
+    assert root
     assert root.count_entries() == 12
 
 
@@ -238,7 +224,7 @@ def test_add_node() -> None:
     assert node.table.key_columns == ["sn0"]
     assert node.path == ("path", "to", "nta", "node")
 
-    assert not root.is_empty()
+    assert root
     assert root.count_entries() == 18
 
 
@@ -249,7 +235,7 @@ def test_compare_trees_self_1() -> None:
     assert delta_result0["new"] == 0
     assert delta_result0["changed"] == 0
     assert delta_result0["removed"] == 0
-    assert delta_tree0.is_empty()
+    assert not delta_tree0
 
     filled_root = _create_filled_tree()
     delta_tree1 = filled_root.difference(filled_root).tree
@@ -257,7 +243,7 @@ def test_compare_trees_self_1() -> None:
     assert delta_result1["new"] == 0
     assert delta_result1["changed"] == 0
     assert delta_result1["removed"] == 0
-    assert delta_tree1.is_empty()
+    assert not delta_tree1
 
 
 def test_compare_trees_1() -> None:
@@ -277,7 +263,7 @@ def test_compare_trees_1() -> None:
     assert delta_result1["changed"] == 0
     assert delta_result1["removed"] == 0
 
-    assert ImmutableDeltaTree(delta_tree1).filter([]).tree.is_empty()
+    assert not ImmutableDeltaTree(delta_tree1).filter([])
 
 
 def test_filter_delta_tree_nt() -> None:
@@ -526,9 +512,9 @@ def test__compare_tables(
 
     delta_table = _compare_tables(new_table, old_table)
     if any(result):
-        assert not delta_table.is_empty()
+        assert delta_table
     else:
-        assert delta_table.is_empty()
+        assert not delta_table
 
     delta_result = delta_table.count_entries()
     assert (
@@ -564,7 +550,7 @@ def test__compare_tables_row_keys(
 
 def test_filter_tree_no_paths() -> None:
     filled_root = _create_filled_tree()
-    assert filled_root.filter([]).tree.is_empty()
+    assert not filled_root.filter([])
 
 
 def test_filter_tree_wrong_node() -> None:
@@ -595,10 +581,10 @@ def test_filter_tree_paths_no_keys() -> None:
     filtered_node = filled_root.filter(filters).tree.get_node(("path", "to", "nta", "ta"))
     assert filtered_node is not None
 
-    assert not filtered_node.attributes.is_empty()
+    assert filtered_node.attributes
     assert filtered_node.attributes.pairs == {"ta0": "TA 0", "ta1": "TA 1"}
 
-    assert not filtered_node.table.is_empty()
+    assert bool(filtered_node.table)
     assert len(filtered_node.table.rows_by_ident) == 2
     for ident, row in {
         ("TA 00",): {"ta0": "TA 00", "ta1": "TA 01"},
@@ -620,10 +606,10 @@ def test_filter_tree_paths_and_keys() -> None:
     filtered_node = filled_root.filter(filters).tree.get_node(("path", "to", "nta", "ta"))
     assert filtered_node is not None
 
-    assert not filtered_node.attributes.is_empty()
+    assert filtered_node.attributes
     assert filtered_node.attributes.pairs == {"ta1": "TA 1"}
 
-    assert not filtered_node.table.is_empty()
+    assert bool(filtered_node.table)
     for ident, row in {
         ("TA 00",): {"ta1": "TA 01"},
         ("TA 10",): {"ta1": "TA 11"},
@@ -729,10 +715,6 @@ def test_real_save_gzip(tmp_path: Path) -> None:
         f.read()
 
 
-def test_real_is_empty() -> None:
-    assert StructuredDataNode().is_empty() is True
-
-
 @pytest.mark.parametrize(
     "tree_name",
     [
@@ -751,7 +733,7 @@ def test_real_is_empty() -> None:
     ],
 )
 def test_real_is_empty_trees(tree_name: HostName) -> None:
-    assert not _get_tree_store().load(host_name=tree_name).tree.is_empty()
+    assert _get_tree_store().load(host_name=tree_name)
 
 
 @pytest.mark.parametrize(
@@ -1270,12 +1252,6 @@ def test_delta_structured_data_tree_serialization(
     assert isinstance(delta_raw_tree, dict)
 
     DeltaStructuredDataNode.deserialize(delta_raw_tree)
-
-
-# Test filters
-
-
-# Test helper
 
 
 @pytest.mark.parametrize(

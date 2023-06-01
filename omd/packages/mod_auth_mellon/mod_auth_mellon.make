@@ -34,11 +34,9 @@ endif
 $(MOD_AUTH_MELLON_INSTALL): $(MOD_AUTH_MELLON_BUILD)
 ifeq ($(filter sles%,$(DISTRO_CODE)),)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
-	cp $(MOD_AUTH_MELLON_BUILD_DIR)/.libs/mod_auth_mellon.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
-	chmod 644 $(DESTDIR)$(OMD_ROOT)/lib/apache/modules/mod_auth_mellon.so
+	install -m 644 $(MOD_AUTH_MELLON_BUILD_DIR)/.libs/mod_auth_mellon.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
-	cp $(MOD_AUTH_MELLON_BUILD_DIR)/mellon_create_metadata.sh $(DESTDIR)$(OMD_ROOT)/bin/mellon_create_metadata
-	chmod 744 $(DESTDIR)$(OMD_ROOT)/bin/mellon_create_metadata
+	install -m 755 $(MOD_AUTH_MELLON_BUILD_DIR)/mellon_create_metadata.sh $(DESTDIR)$(OMD_ROOT)/bin/mellon_create_metadata
 endif
 	$(TOUCH) $@
 

@@ -5,7 +5,6 @@
 
 #include "livestatus/TableColumns.h"
 
-#include <map>
 #include <memory>
 
 #include "livestatus/Column.h"
@@ -37,10 +36,12 @@ std::string TableColumns::name() const { return "columns"; }
 
 std::string TableColumns::namePrefix() const { return "column_"; }
 
-void TableColumns::addTable(const Table &table) { _tables.push_back(&table); }
+void TableColumns::addTable(const Table &table) {
+    tables_[table.name()] = &table;
+}
 
 void TableColumns::answerQuery(Query &query, const User & /*user*/) {
-    for (const auto *const table : _tables) {
+    for (const auto &[name, table] : tables_) {
         table->any_column(
             [&](const auto &c) { return !query.processDataset(Row{c.get()}); });
     }
@@ -64,7 +65,7 @@ std::string TableColumns::getValue(const Column &column, Type colcol) const {
 }
 
 std::string TableColumns::tableNameOf(const Column &column) const {
-    for (const auto *const table : _tables) {
+    for (const auto &[name, table] : tables_) {
         if (table->any_column(
                 [&](const auto &c) { return c.get() == &column; })) {
             return table->name();

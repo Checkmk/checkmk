@@ -101,7 +101,7 @@ bool Store::answerGetRequest(const std::list<std::string> &lines,
 }
 
 void Store::addTable(Table &table) {
-    _tables.emplace(table.name(), &table);
+    _tables[table.name()] = &table;
     _table_columns.addTable(table);
 }
 

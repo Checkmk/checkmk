@@ -6,8 +6,8 @@
 #ifndef TableColumns_h
 #define TableColumns_h
 
+#include <map>
 #include <string>
-#include <vector>
 
 #include "livestatus/Table.h"
 class Column;
@@ -30,7 +30,7 @@ public:
     [[nodiscard]] std::string tableNameOf(const Column &column) const;
 
 private:
-    std::vector<const Table *> _tables;
+    std::map<std::string, const Table *> tables_;
 };
 
 #endif  // TableColumns_h

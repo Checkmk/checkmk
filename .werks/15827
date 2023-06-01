@@ -6,7 +6,7 @@ Date: 1684486233
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0p1
+Version: 2.2.0p2
 
 We erroneously rejected any metrics without performance data
 directed to the InfluxDB backend thus preventing also the logging

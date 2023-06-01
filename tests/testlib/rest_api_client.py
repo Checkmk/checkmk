@@ -1026,8 +1026,10 @@ class PasswordClient(RestApiClient):
             "owner": owner,
             "password": password,
             "shared": shared,
-            "customer": "provider" if customer is None else customer,
         }
+        if version.is_managed_edition():
+            body["customer"] = "provider" if customer is None else customer
+
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",

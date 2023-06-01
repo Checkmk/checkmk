@@ -29,7 +29,6 @@ def test_openapi_password(
         owner="admin",
         password="tt",
         shared=["all"],
-        customer="global",
         expect_ok=False,
     ).assert_status_code(400)
 
@@ -39,7 +38,6 @@ def test_openapi_password(
         owner="admin",
         password="tt",
         shared=["all"],
-        customer="global",
         expect_ok=False,
     ).assert_status_code(400)
 
@@ -49,7 +47,6 @@ def test_openapi_password(
         owner="admin",
         password="tt",
         shared=["all"],
-        customer="global",
     )
 
     _resp = aut_user_auth_wsgi_app.call_method(
@@ -76,13 +73,16 @@ def test_openapi_password(
         headers={"Accept": "application/json"},
         status=200,
     )
-    assert resp.json["extensions"] == {
+
+    result = {
         "comment": "Something but nothing random",
         "documentation_url": "",
         "owned_by": "admin",
         "shared": ["all"],
-        "customer": "global",
     }
+    if version.is_managed_edition():
+        result["customer"] = "provider"
+    assert resp.json["extensions"] == result
 
 
 @managedtest

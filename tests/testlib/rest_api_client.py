@@ -452,6 +452,13 @@ class ActivateChangesClient(RestApiClient):
 
         return result
 
+    def list_pending_changes(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/pending_changes",
+            expect_ok=expect_ok,
+        )
+
 
 @register_client
 class UserClient(RestApiClient):

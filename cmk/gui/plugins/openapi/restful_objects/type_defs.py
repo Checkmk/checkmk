@@ -102,6 +102,7 @@ CmkEndpointName = Literal[
     "cmk/get_bi_aggregation_state",
     "cmk/get_bi_pack",
     "cmk/get_bi_packs",
+    "cmk/pending-activation-changes",
     "cmk/put_bi_pack",
     "cmk/post_bi_pack",
     "cmk/wait-for-completion",

@@ -4,7 +4,6 @@
 // source code package.
 
 #include <algorithm>
-#include <chrono>
 #include <cstdlib>
 #include <functional>
 #include <iterator>
@@ -16,7 +15,6 @@
 #include "Store.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
-#include "livestatus/Logger.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "nagios.h"
@@ -35,7 +33,7 @@ TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
     // knot between NebCore and Store.
     ASSERT_EXIT(  // NOLINT
         {
-            Store(nullptr, {}, Logger::getLogger("test"));
+            Store(nullptr);
             exit(0);
         },
         ::testing::ExitedWithCode(0), "");

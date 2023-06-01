@@ -33,11 +33,6 @@ SDKey = str
 # TODO be more specific (None, str, float, int, DeltaValue:Tuple of previous)
 SDValue = Any  # needs only to support __eq__
 
-SDPairs = dict[SDKey, SDValue]
-# TODO merge with cmk.base.api.agent_based.inventory_classes.py::AttrDict
-SDPairsFromPlugins = Mapping[SDKey, SDValue]
-LegacyPairs = dict[SDKey, SDValue]
-
 # TODO SDRows and LegacyRows are the same for now, but SDRows will change in the future
 # adapt werk 12389 if inner table structure changes from list[SDRow] to dict[SDRowIdent, SDRow]
 SDKeyColumns = list[SDKey]
@@ -892,7 +887,7 @@ class StructuredDataNode:
         path: SDPath,
         raw_tree: SDRawTree,
     ) -> StructuredDataNode:
-        raw_pairs: SDPairs = {}
+        raw_pairs: dict[SDKey, SDValue] = {}
         raw_tables: dict[tuple[str, ...], Any] = {}
         raw_nodes: SDRawTree = {}
 
@@ -1174,7 +1169,11 @@ class Attributes:
         retentions: RetentionIntervalsByKeys | None = None,
     ) -> None:
         self.retentions = retentions if retentions else {}
-        self.pairs: SDPairs = {}
+        self._pairs: dict[SDKey, SDValue] = {}
+
+    @property
+    def pairs(self) -> Mapping[SDKey, SDValue]:
+        return self._pairs
 
     #   ---common methods-------------------------------------------------------
 
@@ -1194,8 +1193,8 @@ class Attributes:
 
     #   ---attributes methods---------------------------------------------------
 
-    def add_pairs(self, pairs: SDPairs | SDPairsFromPlugins) -> None:
-        self.pairs.update(pairs)
+    def add_pairs(self, pairs: Mapping[SDKey, SDValue]) -> None:
+        self._pairs.update(pairs)
 
     #   ---retentions-----------------------------------------------------------
 
@@ -1222,7 +1221,7 @@ class Attributes:
             new_dict=_get_filtered_dict(self.pairs, filter_func),
         )
 
-        pairs: SDPairs = {}
+        pairs: dict[SDKey, SDValue] = {}
         retentions: RetentionIntervalsByKeys = {}
         for key in compared_filtered_keys.only_old:
             pairs.setdefault(key, other.pairs[key])
@@ -1258,8 +1257,8 @@ class Attributes:
 
     def serialize(self) -> SDRawTree:
         raw_attributes = {}
-        if self.pairs:
-            raw_attributes[_PAIRS_KEY] = self.pairs
+        if self._pairs:
+            raw_attributes[_PAIRS_KEY] = self._pairs
 
         if self.retentions:
             raw_attributes[_RETENTIONS_KEY] = _serialize_retentions(self.retentions)
@@ -1272,7 +1271,7 @@ class Attributes:
         return attributes
 
     @classmethod
-    def deserialize_legacy(cls, *, raw_pairs: LegacyPairs) -> Attributes:
+    def deserialize_legacy(cls, *, raw_pairs: Mapping[SDKey, SDValue]) -> Attributes:
         attributes = cls()
         attributes.add_pairs(raw_pairs)
         return attributes
@@ -1347,7 +1346,7 @@ def _merge_delta_nodes(
     )
 
 
-def _count_dict_entries(dict_: dict[SDKey, tuple[SDValue, SDValue]]) -> _SDDeltaCounter:
+def _count_dict_entries(dict_: Mapping[SDKey, tuple[SDValue, SDValue]]) -> _SDDeltaCounter:
     counter: _SDDeltaCounter = Counter()
     for value0, value1 in dict_.values():
         match [value0 is None, value1 is None]:
@@ -1518,7 +1517,7 @@ class DeltaTable:
 
 @dataclass(frozen=True)
 class DeltaAttributes:
-    pairs: dict[SDKey, tuple[SDValue, SDValue]]
+    pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
 
     @classmethod
     def make_from_attributes(
@@ -1588,7 +1587,7 @@ def _make_retentions_filter_func(
     )
 
 
-def _get_filtered_dict(dict_: dict, filter_func: SDFilterFunc) -> dict:
+def _get_filtered_dict(dict_: Mapping, filter_func: SDFilterFunc) -> dict:
     return {k: v for k, v in dict_.items() if filter_func(k)}
 
 

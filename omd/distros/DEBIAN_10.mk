@@ -19,6 +19,7 @@ OS_PACKAGES      += libpango1.0-0
 OS_PACKAGES      += libperl5.28
 OS_PACKAGES      += libreadline7
 OS_PACKAGES      += libuuid1
+OS_PACKAGES      += logrotate
 OS_PACKAGES      += binutils # Needed by Checkmk Agent Bakery
 OS_PACKAGES      += rpm
 OS_PACKAGES      += php

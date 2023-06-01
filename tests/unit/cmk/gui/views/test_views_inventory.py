@@ -14,7 +14,6 @@ from cmk.utils.structured_data import (
     ImmutableTree,
     SDKey,
     SDPath,
-    SDRow,
     SDValue,
     StructuredDataNode,
 )
@@ -491,7 +490,9 @@ def test_make_node_displayhint_from_hint(
         ),
     ],
 )
-def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[SDRow]) -> None:
+def test_sort_table_rows_displayhint(
+    rows: Sequence[Mapping[SDKey, SDValue]], expected: Sequence[Mapping[SDKey, SDValue]]
+) -> None:
     raw_path = ".software.applications.oracle.dataguard_stats:"
     path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
     hints = DISPLAY_HINTS.get_hints(path)

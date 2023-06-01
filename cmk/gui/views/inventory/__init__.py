@@ -26,11 +26,9 @@ from cmk.utils.structured_data import (
     ImmutableTree,
     RetentionIntervals,
     SDKey,
-    SDKeyColumns,
     SDPath,
     SDRawDeltaTree,
     SDRawTree,
-    SDRow,
     SDValue,
     StructuredDataNode,
     Table,
@@ -1090,14 +1088,18 @@ class DisplayHints:
             return self.attribute_hints[key]
         return AttributeDisplayHint.from_raw(self.abc_path, key, {})
 
-    def make_columns(self, rows: Sequence[SDRow], key_columns: SDKeyColumns) -> Sequence[_Column]:
+    def make_columns(
+        self, rows: Sequence[Mapping[SDKey, SDValue]], key_columns: Sequence[SDKey]
+    ) -> Sequence[_Column]:
         sorting_keys = list(self.table_hint.key_order) + sorted(
             {k for r in rows for k in r} - set(self.table_hint.key_order)
         )
         return [_Column(self.get_column_hint(k), k, k in key_columns) for k in sorting_keys]
 
     @staticmethod
-    def sort_rows(rows: Sequence[SDRow], columns: Sequence[_Column]) -> Sequence[SDRow]:
+    def sort_rows(
+        rows: Sequence[Mapping[SDKey, SDValue]], columns: Sequence[_Column]
+    ) -> Sequence[Mapping[SDKey, SDValue]]:
         # The sorting of rows is overly complicated here, because of the type SDValue = Any and
         # because the given values can be from both an inventory tree or from a delta tree.
         # Therefore, values may also be tuples of old and new value (delta tree), see _compare_dicts
@@ -1446,7 +1448,7 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(self, hostrow: Row) -> Sequence[SDRow]:
+    def _get_inv_data(self, hostrow: Row) -> Sequence[Mapping[SDKey, SDValue]]:
         try:
             tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -1464,7 +1466,7 @@ class RowTableInventory(ABCRowTable):
 
         return tree.get_rows(self._inventory_path.path)
 
-    def _prepare_rows(self, inv_data: Sequence[SDRow]) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: Sequence[Mapping[SDKey, SDValue]]) -> Iterable[Row]:
         return (
             [{info_name + "_" + key: value for key, value in row.items()} for row in inv_data]
             if self._info_names and (info_name := self._info_names[0])

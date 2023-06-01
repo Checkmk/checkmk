@@ -5,10 +5,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import NamedTuple
 
-from cmk.utils.structured_data import ImmutableTree, SDPath, SDRow
+from cmk.utils.structured_data import ImmutableTree, SDKey, SDPath, SDValue
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -69,7 +69,7 @@ def _is_inventory_data_needed(view: View, all_active_filters: Sequence[Filter]) 
     return False
 
 
-def _get_view_macros(view_spec: ViewSpec) -> list[tuple[str, str]] | None:
+def _get_view_macros(view_spec: ViewSpec) -> Sequence[tuple[str, str]] | None:
     return view_spec.get("inventory_join_macros", {}).get("macros")
 
 
@@ -106,7 +106,7 @@ def _add_inventory_data(rows: Rows) -> None:
 
 def _join_inventory_rows(
     *,
-    view_macros: list[tuple[str, str]] | None,
+    view_macros: Sequence[tuple[str, str]] | None,
     view_join_cells: Sequence[JoinCell],
     view_datasource_ident: str,
     rows: Rows,
@@ -142,7 +142,7 @@ def _join_inventory_rows(
 
 def _extract_table_rows(
     join_cells: Sequence[JoinCell], rows: Rows
-) -> dict[_MasterKey, list[_FoundTableRow]]:
+) -> Mapping[_MasterKey, Sequence[_FoundTableRow]]:
     painter_macros_by_path_and_ident: dict[tuple[SDPath, str], list[tuple[str, str]]] = {}
     for join_cell in join_cells:
         if (
@@ -183,9 +183,9 @@ class _MasterKey(NamedTuple):
 class _FoundTableRow(NamedTuple):
     ident: str
     column_value: str | int | float
-    macros: dict[str, str | int | float]
+    macros: Mapping[str, str | int | float]
 
-    def matches(self, row_values_by_macro: dict[str, str | int | float]) -> bool:
+    def matches(self, row_values_by_macro: Mapping[str, str | int | float]) -> bool:
         return any(
             self.macros.get(macro) == row_value for macro, row_value in row_values_by_macro.items()
         )
@@ -193,10 +193,12 @@ class _FoundTableRow(NamedTuple):
 
 def _find_table_rows(
     ident: str,
-    painter_macros: list[tuple[str, str]],
-    table_rows: list[SDRow],
+    painter_macros: Sequence[tuple[str, str]],
+    table_rows: Sequence[Mapping[SDKey, SDValue]],
 ) -> Iterator[_FoundTableRow]:
-    def _find_column_value_of_ident(ident: str, table_row: SDRow) -> str | int | float | None:
+    def _find_column_value_of_ident(
+        ident: str, table_row: Mapping[SDKey, SDValue]
+    ) -> str | int | float | None:
         for key, value in table_row.items():
             if ident.endswith(key):
                 return value

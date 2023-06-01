@@ -32,14 +32,7 @@ SDPath = tuple[SDNodeName, ...]
 SDKey = str
 # TODO be more specific (None, str, float, int, DeltaValue:Tuple of previous)
 SDValue = Any  # needs only to support __eq__
-
-# TODO SDRows and LegacyRows are the same for now, but SDRows will change in the future
-# adapt werk 12389 if inner table structure changes from list[SDRow] to dict[SDRowIdent, SDRow]
-SDKeyColumns = list[SDKey]
 SDRowIdent = tuple[SDValue, ...]
-SDRow = dict[SDKey, SDValue]
-SDRows = dict[SDRowIdent, SDRow]
-LegacyRows = list[SDRow]
 
 # Used for de/serialization and retentions
 ATTRIBUTES_KEY = "Attributes"
@@ -298,10 +291,10 @@ def _merge_attributes(left: Attributes, right: Attributes) -> Attributes:
 
 
 def _merge_tables_by_same_or_empty_key_columns(
-    key_columns: SDKeyColumns, left: Table, right: Table
+    key_columns: Sequence[SDKey], left: Table, right: Table
 ) -> Table:
     table = Table(
-        key_columns=key_columns,
+        key_columns=list(key_columns),
         retentions={**left.retentions, **right.retentions},
     )
 
@@ -531,7 +524,7 @@ class ImmutableTree:
             None if (node := self.tree.get_node(path)) is None else node.attributes.pairs.get(key)
         )
 
-    def get_rows(self, path: SDPath) -> Sequence[SDRow]:
+    def get_rows(self, path: SDPath) -> Sequence[Mapping[SDKey, SDValue]]:
         return [] if (node := self.tree.get_node(path)) is None else node.table.rows
 
     def get_tree(self, path: SDPath) -> ImmutableTree:
@@ -950,24 +943,24 @@ class Table:
     def __init__(
         self,
         *,
-        key_columns: SDKeyColumns | None = None,
+        key_columns: list[SDKey] | None = None,
         retentions: TableRetentions | None = None,
     ) -> None:
         self.key_columns = key_columns if key_columns else []
         self.retentions = retentions if retentions else {}
-        self._rows: SDRows = {}
+        self._rows: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
 
-    def add_key_columns(self, key_columns: SDKeyColumns) -> None:
+    def add_key_columns(self, key_columns: Sequence[SDKey]) -> None:
         for key in key_columns:
             if key not in self.key_columns:
                 self.key_columns.append(key)
 
     @property
-    def rows(self) -> list[SDRow]:
+    def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
         return list(self._rows.values())
 
     @property
-    def rows_by_ident(self) -> Mapping[SDRowIdent, SDRow]:
+    def rows_by_ident(self) -> Mapping[SDRowIdent, Mapping[SDKey, SDValue]]:
         return self._rows
 
     #   ---common methods-------------------------------------------------------
@@ -1007,12 +1000,6 @@ class Table:
     def add_row(self, ident: SDRowIdent, row: Mapping[str, int | float | str | None]) -> None:
         if row:
             self._rows.setdefault(ident, {}).update(row)
-
-    def get_row(self, row: SDRow) -> SDRow:
-        ident = self._make_row_ident(row)
-        if ident in self.retentions:
-            return {k: row[k] for k in self.retentions[ident] if k in row}
-        return row
 
     #   ---retentions-----------------------------------------------------------
 
@@ -1056,7 +1043,7 @@ class Table:
         retentions: TableRetentions = {}
         update_result = UpdateResult()
         for ident in compared_filtered_idents.only_old:
-            old_row: SDRow = {}
+            old_row: dict[SDKey, SDValue] = {}
             for key, value in old_filtered_rows[ident].items():
                 old_row.setdefault(key, value)
                 retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
@@ -1072,7 +1059,7 @@ class Table:
                 old_dict=old_filtered_rows[ident],
                 new_dict=self_filtered_rows[ident],
             )
-            row: SDRow = {}
+            row: dict[SDKey, SDValue] = {}
             for key in compared_filtered_keys.only_old:
                 row.setdefault(key, other._rows[ident][key])
                 retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
@@ -1105,7 +1092,9 @@ class Table:
     def set_retentions(self, table_retentions: TableRetentions) -> None:
         self.retentions = table_retentions
 
-    def get_retention_intervals(self, key: SDKey, row: SDRow) -> RetentionIntervals | None:
+    def get_retention_intervals(
+        self, key: SDKey, row: Mapping[SDKey, SDValue]
+    ) -> RetentionIntervals | None:
         return self.retentions.get(self._make_row_ident(row), {}).get(key)
 
     #   ---representation-------------------------------------------------------
@@ -1152,13 +1141,13 @@ class Table:
         return table
 
     @classmethod
-    def deserialize_legacy(cls, *, raw_rows: LegacyRows) -> Table:
-        table = cls(key_columns=cls._get_default_key_columns(raw_rows))
+    def deserialize_legacy(cls, *, raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> Table:
+        table = cls(key_columns=list(cls._get_default_key_columns(raw_rows)))
         table.add_rows(raw_rows)
         return table
 
     @staticmethod
-    def _get_default_key_columns(rows: list[SDRow]) -> SDKeyColumns:
+    def _get_default_key_columns(rows: Sequence[Mapping[SDKey, SDValue]]) -> Sequence[SDKey]:
         return sorted({k for r in rows for k in r})
 
 

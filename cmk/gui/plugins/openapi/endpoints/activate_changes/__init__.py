@@ -26,6 +26,7 @@ from cmk.gui.plugins.openapi.endpoints.activate_changes.request_schemas import A
 from cmk.gui.plugins.openapi.endpoints.activate_changes.response_schemas import (
     ActivationRunCollection,
     ActivationRunResponse,
+    PendingChangesCollection,
 )
 from cmk.gui.plugins.openapi.endpoints.utils import may_fail
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
@@ -35,6 +36,7 @@ from cmk.gui.watolib.activate_changes import (
     activate_changes_start,
     ActivationRestAPIResponseExtensions,
     get_activation_ids,
+    get_pending_changes,
     get_restapi_response_for_activation_id,
     load_activate_change_manager_with_id,
     MKLicensingError,
@@ -245,3 +247,31 @@ def list_activations(params: Mapping[str, Any]) -> Response:
             ],
         )
     )
+
+
+@Endpoint(
+    constructors.collection_href("activation_run", "pending_changes"),
+    "cmk/pending-activation-changes",
+    method="get",
+    permissions_required=RO_PERMISSIONS,
+    response_schema=PendingChangesCollection,
+)
+def list_pending_changes(params: Mapping[str, Any]) -> Response:
+    """Show all pending changes"""
+
+    pending_changes = get_pending_changes()
+    response = serve_json(
+        {
+            "id": "activation_run",
+            "domainType": "activation_run",
+            "links": [
+                constructors.link_endpoint(
+                    module_name="cmk.gui.plugins.openapi.endpoints.activate_changes",
+                    rel="cmk/activate",
+                    parameters={},
+                )
+            ],
+            "value": [asdict(change) for change in pending_changes.values()],
+        }
+    )
+    return response

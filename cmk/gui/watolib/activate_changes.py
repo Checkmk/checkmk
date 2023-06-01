@@ -2124,6 +2124,21 @@ def get_number_of_pending_changes() -> int:
     return len(changes.grouped_changes())
 
 
+def get_pending_changes() -> dict[str, ActivationChange]:
+    changes = ActivateChanges()
+    changes.load()
+    return {
+        change_id: ActivationChange(
+            id=ac["id"],
+            user_id=ac["user_id"],
+            action_name=ac["action_name"],
+            text=ac["text"],
+            time=ac["time"],
+        )
+        for change_id, ac in changes.grouped_changes()
+    }
+
+
 def _need_to_update_mkps_after_sync() -> bool:
     if not (central_version := _request.headers.get("x-checkmk-version")):
         raise ValueError("Request header x-checkmk-version is missing")

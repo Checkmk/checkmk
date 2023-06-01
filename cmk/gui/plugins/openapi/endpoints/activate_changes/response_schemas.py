@@ -132,3 +132,33 @@ class ActivationRunCollection(Linkable):
     extensions = fields.Dict(
         description="Additional attributes alongside the collection.",
     )
+
+
+class PendingChangesCollection(Linkable):
+    domainType = fields.Constant(
+        "activation_run",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(ChangesFields),
+        description="The changes that are pending",
+        example=[
+            {
+                "id": "da5430a5-6d0a-48ae-9efd-0563482a3b36",
+                "action_name": "create-host",
+                "text": "Created new host foobar.",
+                "user_id": "cmkadmin",
+                "time": "2023-01-20T16:31:51.362057+00:00",
+            },
+            {
+                "id": "4ba28393-567e-4a9a-9368-e600d28c2a7e",
+                "action_name": "edit-host",
+                "text": "Modified host foobar.",
+                "user_id": "cmkadmin",
+                "time": "2023-01-20T16:32:12.362057+00:00",
+            },
+        ],
+    )
+    extensions = fields.Dict(
+        description="Additional attributes alongside the collection.",
+    )

@@ -14,6 +14,7 @@ OS_PACKAGES    += libevent-2_1-8
 OS_PACKAGES    += libltdl7
 OS_PACKAGES    += libreadline7
 OS_PACKAGES    += libuuid1
+OS_PACKAGES    += logrotate
 OS_PACKAGES    += pango
 OS_PACKAGES    += php7-fastcgi
 OS_PACKAGES    += php7-gd

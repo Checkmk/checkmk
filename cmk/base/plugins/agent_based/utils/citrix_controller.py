@@ -11,9 +11,14 @@ from ..agent_based_api.v1.type_defs import StringTable
 Version = NewType("Version", str)
 
 
+class Error:
+    pass
+
+
 @dataclasses.dataclass
 class Section:
     version: None | Version = None
+    state: str | Error | None = None
 
 
 def parse_citrix_controller(string_table: StringTable) -> Section:
@@ -21,4 +26,6 @@ def parse_citrix_controller(string_table: StringTable) -> Section:
     for line in string_table:
         if line[0] == "ControllerVersion" and len(line) > 1:
             section.version = Version(line[1])
+        if line[0] == "ControllerState":
+            section.state = line[1] if len(line) > 1 else Error()
     return section

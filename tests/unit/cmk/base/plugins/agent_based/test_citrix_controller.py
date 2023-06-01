@@ -6,18 +6,20 @@
 import pytest
 
 from cmk.base.legacy_checks.citrix_controller import (
-    check_citrix_controller,
     check_citrix_controller_licensing,
     check_citrix_controller_registered,
     check_citrix_controller_services,
     check_citrix_controller_sessions,
-    inventory_citrix_controller,
     inventory_citrix_controller_licensing,
     inventory_citrix_controller_registered,
     inventory_citrix_controller_services,
     inventory_citrix_controller_sessions,
 )
 from cmk.base.plugins.agent_based.agent_based_api import v1
+from cmk.base.plugins.agent_based.citrix_controller import (
+    check_citrix_controller,
+    discovery_citrix_controller,
+)
 from cmk.base.plugins.agent_based.utils.citrix_controller import parse_citrix_controller, Section
 
 STRING_TABLE = [
@@ -105,31 +107,36 @@ STRING_TABLE_3 = [
 ]
 
 
+@pytest.fixture(name="string_table", params=[STRING_TABLE, STRING_TABLE_2, STRING_TABLE_3])
+def fixture_string_table(request: pytest.FixtureRequest) -> v1.type_defs.StringTable:
+    return request.param
+
+
 @pytest.fixture(name="section", params=[STRING_TABLE, STRING_TABLE_2, STRING_TABLE_3])
 def fixture_section(request: pytest.FixtureRequest) -> Section:
     section = parse_citrix_controller(request.param)
     assert section is not None
-    return request.param
+    return section
 
 
 def test_discovery_controller(section: Section) -> None:
-    assert list(inventory_citrix_controller(section))
+    assert list(discovery_citrix_controller(section))
 
 
-def test_discovery_controller_licensing(section: Section) -> None:
-    assert list(inventory_citrix_controller_licensing(section))
+def test_discovery_controller_licensing(string_table: v1.type_defs.StringTable) -> None:
+    assert list(inventory_citrix_controller_licensing(string_table))
 
 
-def test_discovery_controller_registered(section: Section) -> None:
-    assert list(inventory_citrix_controller_registered(section))
+def test_discovery_controller_registered(string_table: v1.type_defs.StringTable) -> None:
+    assert list(inventory_citrix_controller_registered(string_table))
 
 
-def test_discovery_controller_services(section: Section) -> None:
-    assert list(inventory_citrix_controller_services(section))
+def test_discovery_controller_services(string_table: v1.type_defs.StringTable) -> None:
+    assert list(inventory_citrix_controller_services(string_table))
 
 
-def test_discovery_controller_sessions(section: Section) -> None:
-    assert list(inventory_citrix_controller_sessions(section))
+def test_discovery_controller_sessions(string_table: v1.type_defs.StringTable) -> None:
+    assert list(inventory_citrix_controller_sessions(string_table))
 
 
 @pytest.mark.parametrize(
@@ -144,7 +151,7 @@ def test_check_controller(
 ) -> None:
     section = parse_citrix_controller(string_table)
     assert section is not None
-    assert list(check_citrix_controller(None, {}, string_table)) == expected
+    assert list(check_citrix_controller(section)) == expected
 
 
 @pytest.mark.parametrize(

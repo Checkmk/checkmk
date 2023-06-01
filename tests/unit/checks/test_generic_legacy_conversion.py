@@ -386,7 +386,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "citrix_controller.registered",
         "citrix_controller.sessions",
         "citrix_controller.licensing",
-        "citrix_controller",
         "citrix_hostsystem.vms",
         "citrix_hostsystem",
         "citrix_licenses",

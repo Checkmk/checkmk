@@ -32,7 +32,7 @@ docker_tag() {
     log "Erstelle \"${VERSION}\" tag..."
     docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${TARGET_VERSION}"
 
-    if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
+    if [ "$SET_BRANCH_LATEST_TAG" = "true" ]; then
         log "Erstelle \"{$BRANCH}-latest\" tag..."
         docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
     else
@@ -40,7 +40,7 @@ docker_tag() {
         docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-daily"
     fi
 
-    if [ "$SET_LATEST_TAG" = "yes" ]; then
+    if [ "$SET_LATEST_TAG" = "true" ]; then
         log "Erstelle \"latest\" tag..."
         docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
     fi
@@ -63,13 +63,13 @@ docker_push() {
     docker login "${REGISTRY}" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSPHRASE}"
     DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${RELEASE_VERSION}"
 
-    if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
+    if [ "$SET_BRANCH_LATEST_TAG" = "true" ]; then
         DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
     else
         DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-daily"
     fi
 
-    if [ "$SET_LATEST_TAG" = "yes" ]; then
+    if [ "$SET_LATEST_TAG" = "true" ]; then
         DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
     fi
 }
@@ -96,7 +96,7 @@ push_image() {
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ] || [ "$6" = "" ] || [ "$7" = "" ]; then
     echo "Aufrufen: build-cmk-container.sh [BRANCH] [EDITION] [VERSION] [SOURCE_PATH] [SET_LATEST_TAG] [SET_BRANCH_LATEST_TAG] [ACTION]"
-    echo "          build-cmk-container.sh 2.2.0 enterprise 2.2.0p1 /foo/bar/2.1.0p1-rc1 no no push"
+    echo "          build-cmk-container.sh 2.2.0 enterprise 2.2.0p1 /foo/bar/2.1.0p1-rc1 false false push"
     echo
     exit 1
 fi

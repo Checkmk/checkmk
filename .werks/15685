@@ -5,7 +5,7 @@ Component: ntopng_integration
 Date: 1685510749
 Edition: cee
 Knowledge: doc
-Level: 1
+Level: 2
 Version: 2.3.0b1
 
 Due to changes in development of the ntopng API, the

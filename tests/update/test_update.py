@@ -14,9 +14,6 @@ from tests.testlib.version import CMKVersion, version_from_env
 from cmk.utils.version import Edition
 
 from .conftest import (
-    agent_controller_daemon,
-    clean_agent_controller,
-    download_and_install_agent_package,
     get_host_data,
     get_services_with_status,
     get_site_status,
@@ -29,7 +26,7 @@ from .conftest import (
 logger = logging.getLogger(__name__)
 
 
-def test_update(test_site: Site, tmp_path: Path) -> None:
+def test_update(test_site: Site, agent_ctl: Path) -> None:
     # TODO: set config - see CMK-13493
 
     # get version data
@@ -48,21 +45,16 @@ def test_update(test_site: Site, tmp_path: Path) -> None:
         bake_agent=True,
     )
     test_site.activate_changes_and_wait_for_core_reload()
-    agent_ctl_path = download_and_install_agent_package(test_site, tmp_path)
 
-    with (
-        clean_agent_controller(agent_ctl_path),
-        agent_controller_daemon(agent_ctl_path),
-    ):
-        logger.info("Discovering services and waiting for completion...")
-        test_site.openapi.discover_services_and_wait_for_completion(
-            hostname, cmk_version=base_version.version
-        )
-        test_site.openapi.activate_changes_and_wait_for_completion()
-        reschedule_services(test_site, hostname)
+    logger.info("Discovering services and waiting for completion...")
+    test_site.openapi.discover_services_and_wait_for_completion(
+        hostname, cmk_version=base_version.version
+    )
+    test_site.openapi.activate_changes_and_wait_for_completion()
+    reschedule_services(test_site, hostname)
 
-        # get baseline monitoring data
-        base_data_host = get_host_data(test_site, hostname)
+    # get baseline monitoring data
+    base_data_host = get_host_data(test_site, hostname)
 
     base_ok_services = get_services_with_status(base_data_host, "OK")
     base_pend_services = get_services_with_status(base_data_host, "PEND")
@@ -106,17 +98,13 @@ def test_update(test_site: Site, tmp_path: Path) -> None:
 
     logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
 
-    with (
-        clean_agent_controller(agent_ctl_path),
-        agent_controller_daemon(agent_ctl_path),
-    ):
-        logger.info("Discovering services and waiting for completion...")
-        target_site.openapi.discover_services_and_wait_for_completion(hostname)
-        target_site.openapi.activate_changes_and_wait_for_completion()
-        reschedule_services(target_site, hostname)
+    logger.info("Discovering services and waiting for completion...")
+    target_site.openapi.discover_services_and_wait_for_completion(hostname)
+    target_site.openapi.activate_changes_and_wait_for_completion()
+    reschedule_services(target_site, hostname)
 
-        # get update monitoring data
-        target_data_host = get_host_data(target_site, hostname)
+    # get update monitoring data
+    target_data_host = get_host_data(target_site, hostname)
 
     target_ok_services = get_services_with_status(target_data_host, "OK")
     target_pend_services = get_services_with_status(target_data_host, "PEND")

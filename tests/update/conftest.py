@@ -291,7 +291,9 @@ def version_supported(version: str) -> bool:
     return version_gte(version, BaseVersions.MIN_VERSION)
 
 
-@pytest.fixture(name="test_site", params=BaseVersions.BASE_VERSIONS, ids=BaseVersions.IDS)
+@pytest.fixture(
+    name="test_site", params=BaseVersions.BASE_VERSIONS, ids=BaseVersions.IDS, scope="module"
+)
 def get_site(request: pytest.FixtureRequest) -> Site:
     """Install the test site with the base version."""
     base_version = request.param
@@ -350,7 +352,7 @@ def _install_agent_package(package_path: Path) -> Path:
     )
 
 
-def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
+def _download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
     agent_download_resp = site.openapi.get(
         "domain-types/agent/actions/download_by_host/invoke",
         params={
@@ -481,3 +483,17 @@ def reschedule_services(site: Site, hostname: str, max_count: int = 10) -> None:
         site.schedule_check(hostname, "Check_MK", 0)
         base_data_host = get_host_data(site, hostname)
         count += 1
+
+
+@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
+def _installed_agent_ctl_in_unknown_state(test_site: Site, tmp_path: Path) -> Path:
+    return _download_and_install_agent_package(test_site, tmp_path)
+
+
+@pytest.fixture(name="agent_ctl", scope="function")
+def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
+    with (
+        clean_agent_controller(installed_agent_ctl_in_unknown_state),
+        agent_controller_daemon(installed_agent_ctl_in_unknown_state),
+    ):
+        yield installed_agent_ctl_in_unknown_state

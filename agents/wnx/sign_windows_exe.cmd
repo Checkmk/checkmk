@@ -78,7 +78,8 @@ copy %3 %3.%ext%
 if "%4" == "" (
 %Print%{255;255;255}Hashing is not required\n
 ) else (
-powershell -File .\scripts\add_hash_line.ps1 %1 %4
+echo Saving hash of %3 into %4
+powershell -File .\scripts\add_hash_line.ps1 %3 %4
 )
 
 exit /b 0

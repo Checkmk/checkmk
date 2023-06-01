@@ -264,19 +264,19 @@ goto :eof
 
 :sign_binaries
 if not "%arg_sign%" == "1" powershell Write-Host "Signing binaries skipped" -Foreground Yellow & goto :eof
+del /Q %hash_file% 2>nul
 powershell Write-Host "Signing Executables" -Foreground White
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %hash_file%
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %hash_file%
-@call sign_windows_exe c:\common\store\%1 %2 %arte%\cmk-agent-ctl.exe %hash_file%
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\ohm\OpenHardwareMonitorLib.dll %hash_file%
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\ohm\OpenHardwareMonitorCLI.exe %hash_file%
+@call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %hash_file%
+@call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %hash_file%
+@call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %arte%\cmk-agent-ctl.exe %hash_file%
+@call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %build_dir%\ohm\OpenHardwareMonitorLib.dll %hash_file%
+@call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %build_dir%\ohm\OpenHardwareMonitorCLI.exe %hash_file%
 goto :eof
 
 
 :: Deploy Phase: post processing/build special modules using make
 :deploy_to_artifacts
 if not "%arg_msi%" == "1" goto :eof
-del %hash_file% 2>nul
 copy %build_dir%\install\Release\check_mk_service.msi %arte%\check_mk_agent.msi /y || powershell Write-Host "Failed to copy msi" -Foreground Red && exit /b 33
 copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %arte%\check_mk_agent-64.exe /Y || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 34
 copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %arte%\check_mk_agent.exe /Y || powershell Write-Host "Failed to create 32 bit agent" -Foreground Red && exit /b 35
@@ -301,7 +301,7 @@ powershell Write-Host "Signing MSI" -Foreground White
 @call sign_windows_exe c:\common\store\%arg_sign_file% %arg_sign_secret% %arte%\check_mk_agent.msi  %hash_file%
 call scripts\call_signing_tests.cmd 
 if errorlevel 1 call powershell Write-Host "Failed MSI signing test %errorlevel%" -Foreground Red & :halt 41
-@py -3 scripts\check_hashes.py
+@py -3 scripts\check_hashes.py %hash_file%
 if errorlevel 1 call powershell Write-Host "Failed hashing test %errorlevel%" -Foreground Red & :halt 42
 powershell Write-Host "MSI signing succeeded" -Foreground Green
 goto :eof

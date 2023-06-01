@@ -12,11 +12,6 @@
 #include "livestatus/Query.h"
 #include "livestatus/Table.h"
 
-#ifdef CMC
-#include "livestatus/ChronoUtils.h"
-#include "livestatus/Logger.h"
-#endif
-
 Store::Store(ICore *mc)
     : _mc(mc)
     , _log_cache(mc)
@@ -113,23 +108,3 @@ Table &Store::findTable(OutputBuffer &output, const std::string &name) {
     }
     return *it->second;
 }
-
-#ifdef CMC
-
-// Depending on wether the state history cache is enabled or not a different
-// implementation of the statehist table is being used. This can be switched
-// dynamically.
-void Store::switchStatehistTable(
-    std::optional<std::chrono::seconds> cache_horizon, Logger *logger) {
-    if (cache_horizon) {
-        addTable(_table_cached_statehist);
-        Notice(logger) << "using state history cache with a horizon of "
-                       << (mk::ticks<std::chrono::hours>(*cache_horizon) / 24)
-                       << " days";
-    } else {
-        addTable(_table_statehistory);
-        Notice(logger) << "state history cache will not be used";
-    }
-}
-
-#endif

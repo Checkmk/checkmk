@@ -45,9 +45,6 @@ class OutputBuffer;
 class Table;
 
 #ifdef CMC
-#include <chrono>
-#include <optional>
-
 #include "TableCachedStatehist.h"
 #endif
 
@@ -55,8 +52,6 @@ class Store {
 public:
     explicit Store(ICore *mc);
 #ifdef CMC
-    void switchStatehistTable(std::optional<std::chrono::seconds> cache_horizon,
-                              Logger *logger);
     // NOTE: This is a cruel but temporary hack...
     TableCachedStatehist &getTableCachedStatehist() {
         return _table_cached_statehist;
@@ -66,6 +61,10 @@ public:
     size_t numCachedLogMessages();
     bool answerGetRequest(const std::list<std::string> &lines,
                           OutputBuffer &output, const std::string &tablename);
+    void addTable(Table &table);
+
+    // NOTE: This is a cruel but temporary hack...
+    TableStateHistory &getTableStateHistory() { return _table_statehistory; }
 
 private:
     ICore *_mc;
@@ -102,7 +101,6 @@ private:
 
     std::map<std::string, Table *> _tables;
 
-    void addTable(Table &table);
     Table &findTable(OutputBuffer &output, const std::string &name);
 };
 

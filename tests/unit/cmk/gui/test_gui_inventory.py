@@ -340,22 +340,30 @@ def test__make_filters_from_api_request_paths(
 @pytest.mark.parametrize(
     "hostname, row, expected_tree",
     [
-        (None, {}, StructuredDataNode.deserialize({"loaded": "tree"})),
-        (HostName("hostname"), {}, StructuredDataNode.deserialize({"loaded": "tree"})),
+        (
+            None,
+            {},
+            ImmutableTree(StructuredDataNode.deserialize({"loaded": "tree"})),
+        ),
+        (
+            HostName("hostname"),
+            {},
+            ImmutableTree(StructuredDataNode.deserialize({"loaded": "tree"})),
+        ),
         (
             HostName("hostname"),
             {"host_structured_status": b""},
-            StructuredDataNode.deserialize({"loaded": "tree"}),
+            ImmutableTree(StructuredDataNode.deserialize({"loaded": "tree"})),
         ),
         (
             HostName("hostname"),
             {"host_structured_status": b"{'deserialized': 'tree'}"},
-            StructuredDataNode.deserialize({"deserialized": "tree"}),
+            ImmutableTree(StructuredDataNode.deserialize({"deserialized": "tree"})),
         ),
     ],
 )
 def test_load_filtered_and_merged_tree(
-    monkeypatch: MonkeyPatch, hostname: HostName | None, row: Row, expected_tree: StructuredDataNode
+    monkeypatch: MonkeyPatch, hostname: HostName | None, row: Row, expected_tree: ImmutableTree
 ) -> None:
     monkeypatch.setattr(
         cmk.gui.inventory,
@@ -369,7 +377,7 @@ def test_load_filtered_and_merged_tree(
     row.update({"host_name": hostname})
     tree = cmk.gui.inventory.load_filtered_and_merged_tree(row)
     assert tree is not None
-    assert tree.tree.is_equal(expected_tree)
+    assert tree == expected_tree
 
 
 _InvTree = StructuredDataNode.deserialize({"inv": "node"})

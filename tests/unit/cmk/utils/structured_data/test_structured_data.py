@@ -159,7 +159,7 @@ def test_empty_but_different_structure() -> None:
 
     assert not root
     assert root.count_entries() == 0
-    assert not root.is_equal(StructuredDataNode())
+    assert root != StructuredDataNode()
 
 
 def test_not_empty() -> None:
@@ -776,18 +776,16 @@ def test_real_is_equal(tree_name_x: HostName, tree_name_y: HostName) -> None:
     tree_y = tree_store.load(host_name=tree_name_y)
 
     if tree_name_x == tree_name_y:
-        assert tree_x.tree.is_equal(tree_y.tree)
+        assert tree_x == tree_y
     else:
-        assert not tree_x.tree.is_equal(tree_y.tree)
+        assert tree_x != tree_y
 
 
 def test_real_equal_tables() -> None:
     tree_store = _get_tree_store()
     tree_ordered = tree_store.load(host_name=HostName("tree_addresses_ordered"))
     tree_unordered = tree_store.load(host_name=HostName("tree_addresses_unordered"))
-
-    assert tree_ordered.tree.is_equal(tree_unordered.tree)
-    assert tree_unordered.tree.is_equal(tree_ordered.tree)
+    assert tree_ordered == tree_unordered
 
 
 @pytest.mark.parametrize(
@@ -813,7 +811,7 @@ def test_real_is_equal_save_and_load(tree_name: HostName, tmp_path: Path) -> Non
     try:
         tree_store.save(host_name=HostName("foo"), tree=orig_tree.tree)
         loaded_tree = tree_store.load(host_name=HostName("foo"))
-        assert orig_tree.tree.is_equal(loaded_tree.tree)
+        assert orig_tree == loaded_tree
     finally:
         shutil.rmtree(str(tmp_path))
 
@@ -1027,7 +1025,6 @@ def test_merge_trees_1(
     )
 
     assert id(tree) == id(tree)
-    assert tree.is_equal(tree)
     for edge in edges:
         assert tree.get_node((edge,)) is not None
 
@@ -1084,7 +1081,7 @@ def test_real_filtered_tree(
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
     filtered = tree.filter(filters)
     assert id(tree) != id(filtered)
-    assert not tree.tree.is_equal(filtered.tree)
+    assert tree != filtered
     for path in unavail:
         assert filtered.tree.get_node(path) is None
 

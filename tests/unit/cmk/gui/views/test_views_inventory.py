@@ -11,6 +11,7 @@ import pytest
 from cmk.utils.structured_data import (
     DeltaStructuredDataNode,
     ImmutableDeltaTree,
+    ImmutableTree,
     SDKey,
     SDPairs,
     SDPath,
@@ -1087,10 +1088,6 @@ def test_row_post_processor() -> None:
         assert row["invorainstance_sid"] == expected_row["invorainstance_sid"]
         assert row["invorainstance_version"] == expected_row["invorainstance_version"]
         assert row["JOIN"] == expected_row["JOIN"]
-
-        tree = row["host_inventory"]
-        expected_tree = expected_row["host_inventory"]
-
-        assert isinstance(tree, StructuredDataNode)
-        assert isinstance(expected_tree, StructuredDataNode)
-        assert tree.is_equal(expected_tree)
+        assert isinstance(tree := row["host_inventory"], StructuredDataNode)
+        assert isinstance(expected_tree := expected_row["host_inventory"], StructuredDataNode)
+        assert ImmutableTree(tree) == ImmutableTree(expected_tree)

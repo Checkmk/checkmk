@@ -22,12 +22,6 @@ from cmk.utils import store
 from cmk.utils.type_defs import HostName
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
-# TODO
-# - is_equal -> __eq__/__ne__
-# - merge_with -> __add__
-# - count_entries -> __len__?
-# TODO Improve/clarify adding Attributes/Table while deserialization/filtering/merging/...
-
 # TODO improve this
 SDRawTree = dict
 SDRawDeltaTree = dict
@@ -209,7 +203,7 @@ class MutableTree:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, (MutableTree, ImmutableTree)):
             raise TypeError(type(other))
-        return self.tree.is_equal(other.tree)
+        return self.tree == other.tree
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
@@ -483,7 +477,7 @@ def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Delta
     for key in compared_keys.both:
         child_left = left.nodes_by_name[key]
         child_right = right.nodes_by_name[key]
-        if child_left.is_equal(child_right):
+        if child_left == child_right:
             continue
 
         delta_node_result = _compare_nodes(child_left, child_right)
@@ -523,7 +517,7 @@ class ImmutableTree:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, (MutableTree, ImmutableTree)):
             raise TypeError(type(other))
-        return self.tree.is_equal(other.tree)
+        return self.tree == other.tree
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
@@ -778,11 +772,11 @@ class StructuredDataNode:
 
         return False
 
-    def is_equal(self, other: object) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, StructuredDataNode):
-            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
+            raise TypeError(type(other))
 
-        if not (self.attributes.is_equal(other.attributes) and self.table.is_equal(other.table)):
+        if self.attributes != other.attributes or self.table != other.table:
             return False
 
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
@@ -790,9 +784,13 @@ class StructuredDataNode:
             return False
 
         for key in compared_keys.both:
-            if not self._nodes[key].is_equal(other._nodes[key]):
+            if self._nodes[key] != other._nodes[key]:
                 return False
+
         return True
+
+    def __ne__(self, other: object) -> bool:
+        return not self.__eq__(other)
 
     def count_entries(self) -> int:
         return sum(
@@ -982,9 +980,9 @@ class Table:
     def __bool__(self) -> bool:
         return bool(self._rows)
 
-    def is_equal(self, other: object) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Table):
-            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
+            raise TypeError(type(other))
 
         compared_keys = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
         if compared_keys.only_old or compared_keys.only_new:
@@ -993,7 +991,11 @@ class Table:
         for key in compared_keys.both:
             if self._rows[key] != other._rows[key]:
                 return False
+
         return True
+
+    def __ne__(self, other: object) -> bool:
+        return not self.__eq__(other)
 
     def count_entries(self) -> int:
         return sum(map(len, self._rows.values()))
@@ -1179,11 +1181,13 @@ class Attributes:
     def __bool__(self) -> bool:
         return bool(self.pairs)
 
-    def is_equal(self, other: object) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Attributes):
-            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
-
+            raise TypeError(type(other))
         return self.pairs == other.pairs
+
+    def __ne__(self, other: object) -> bool:
+        return not self.__eq__(other)
 
     def count_entries(self) -> int:
         return len(self.pairs)

@@ -169,10 +169,6 @@ class FolderMetaData:
         return self._num_hosts_recursively
 
 
-# Names:
-# folder_path: Path of the folders directory relative to etc/check_mk/conf.d/wato
-#              The root folder is "". No trailing / is allowed here.
-
 # Terms:
 # create, delete   mean actual filesystem operations
 # add, remove      mean just modifications in the data structures
@@ -217,8 +213,7 @@ def _get_permitted_groups_of_all_folders(
     def _compute_tokens(folder_path: PathWithoutSlash) -> tuple[PathWithoutSlash, ...]:
         """Create tokens for each folder. The main folder requires some special treatment
         since it is not '/' but just an empty string"""
-        if folder_path == "":
-            # Main folder
+        if _is_main_folder_path(folder_path):
             return (folder_path,)
         # Some subfolder, prefix root dir
         return tuple([""] + folder_path.split("/"))
@@ -334,7 +329,7 @@ class _RedisHelper:
 
         # Folder sanity checks. A folder cannot be moved into its subfolders
         if move_type == _MoveType.Folder:
-            if path != "":
+            if not _is_main_folder_path(path):
                 # Remove move into parent (folder is already there)
                 del path_to_title[f"{os.path.dirname(path)}/"]
 
@@ -2718,6 +2713,10 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             html.show_message(lock_message)
 
 
+def _is_main_folder_path(folder_path: str) -> bool:
+    return folder_path == ""
+
+
 class FolderLookupCache:
     """Helps to find hosts faster in the folder hierarchy"""
 
@@ -2838,7 +2837,7 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, CREFolder]):
 
     def _create_folder(self, folder_path: PathWithoutSlash) -> CREFolder:
         parent_folder = None
-        if folder_path != "":
+        if not _is_main_folder_path(folder_path):
             parent_folder = self[str(Path(folder_path).parent).lstrip(".")]
 
         return Folder(

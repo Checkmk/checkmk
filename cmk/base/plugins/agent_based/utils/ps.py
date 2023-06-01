@@ -443,6 +443,8 @@ class ProcessAggregator:
             if pcpu_text == "-":  # Solaris defunct
                 pcpu_text = 0.0
             pcpu = float(pcpu_text) * self.core_weight(is_win=False)
+            if (pid := process_info.process_id) is not None:
+                process.append(("pid", (pid, "")))
 
         self.percent_cpu += pcpu
         process.append(("cpu usage", (pcpu, "%")))

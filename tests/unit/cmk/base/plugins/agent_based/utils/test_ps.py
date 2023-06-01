@@ -427,6 +427,49 @@ def test_memory_perc_check_cluster() -> None:
             ],
             id="exclude_usernames",
         ),
+        pytest.param(
+            [
+                (
+                    None,
+                    ps.PsInfo(
+                        user="root",
+                        virtual=12856,
+                        physical=16160,
+                        cputime="0.0",
+                        process_id="1234",
+                        pagefile=None,
+                        usermode_time=None,
+                        kernelmode_time=None,
+                        handles=None,
+                        threads=None,
+                        uptime=None,
+                        cgroup=None,
+                    ),
+                    [
+                        "/usr/lib/firefox/firefox",
+                        "-contentproc",
+                        "-childID",
+                        "31",
+                        "-isForBrowser",
+                        "-prefsLen",
+                        "9681",
+                    ],
+                )
+            ],
+            {"process_info_arguments": 15},
+            [
+                [
+                    ("name", ("/usr/lib/firefox/firefox", "")),
+                    ("user", ("root", "")),
+                    ("virtual size", (12856, "kB")),
+                    ("resident size", (16160, "kB")),
+                    ("pid", ("1234", "")),
+                    ("cpu usage", (0.0, "%")),
+                    ("args", ("-contentproc -c", "")),
+                ]
+            ],
+            id="solaris_BSD_aix_pid",
+        ),
     ],
 )
 def test_process_capture(

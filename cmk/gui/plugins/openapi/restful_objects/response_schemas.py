@@ -804,7 +804,10 @@ class UserObject(DomainObject):
         "user_config",
         description="The domain type of the object.",
     )
-    extensions = user_attributes_field(description="The attributes of the user")
+    extensions = user_attributes_field(
+        description="The attributes of the user",
+        example={"fullname": "John Doe"},
+    )
 
 
 class UserCollection(DomainObjectCollection):

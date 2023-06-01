@@ -1090,9 +1090,7 @@ class DisplayHints:
             return self.attribute_hints[key]
         return AttributeDisplayHint.from_raw(self.abc_path, key, {})
 
-    def make_columns(
-        self, rows: Sequence[SDRow], key_columns: SDKeyColumns, path: SDPath
-    ) -> Sequence[_Column]:
+    def make_columns(self, rows: Sequence[SDRow], key_columns: SDKeyColumns) -> Sequence[_Column]:
         sorting_keys = list(self.table_hint.key_order) + sorted(
             {k for r in rows for k in r} - set(self.table_hint.key_order)
         )
@@ -2197,7 +2195,7 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        columns = hints.make_columns(table.rows, table.key_columns, table.path)
+        columns = hints.make_columns(table.rows, table.key_columns)
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")

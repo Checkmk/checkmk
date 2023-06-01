@@ -264,13 +264,13 @@ class MutableTree:
 
 
 def _filter_attributes(attributes: Attributes, filter_func: SDFilterFunc) -> Attributes:
-    filtered = Attributes(path=attributes.path, retentions=attributes.retentions)
+    filtered = Attributes(retentions=attributes.retentions)
     filtered.add_pairs(_get_filtered_dict(attributes.pairs, filter_func))
     return filtered
 
 
 def _filter_table(table: Table, filter_func: SDFilterFunc) -> Table:
-    filtered = Table(path=table.path, key_columns=table.key_columns, retentions=table.retentions)
+    filtered = Table(key_columns=table.key_columns, retentions=table.retentions)
     for ident, row in table.rows_by_ident.items():
         filtered.add_row(ident, _get_filtered_dict(row, filter_func))
     return filtered
@@ -298,10 +298,7 @@ def _filter_node(node: StructuredDataNode, filters: Iterable[SDFilter]) -> Struc
 
 
 def _merge_attributes(attributes_lhs: Attributes, attributes_rhs: Attributes) -> Attributes:
-    attributes = Attributes(
-        path=attributes_lhs.path,
-        retentions={**attributes_lhs.retentions, **attributes_rhs.retentions},
-    )
+    attributes = Attributes(retentions={**attributes_lhs.retentions, **attributes_rhs.retentions})
     attributes.add_pairs(attributes_lhs.pairs)
     attributes.add_pairs(attributes_rhs.pairs)
     return attributes
@@ -310,7 +307,6 @@ def _merge_attributes(attributes_lhs: Attributes, attributes_rhs: Attributes) ->
 def _merge_tables(table_lhs: Table, table_rhs: Table) -> Table:
     if table_lhs.key_columns == table_rhs.key_columns:
         table = Table(
-            path=table_lhs.path,
             key_columns=table_lhs.key_columns,
             retentions={**table_lhs.retentions, **table_rhs.retentions},
         )
@@ -339,7 +335,6 @@ def _merge_tables(table_lhs: Table, table_rhs: Table) -> Table:
         key_columns = sorted(set(table_lhs.key_columns).intersection(table_rhs.key_columns))
 
     table = Table(
-        path=table_lhs.path,
         key_columns=key_columns,
         retentions={**table_lhs.retentions, **table_rhs.retentions},
     )
@@ -430,7 +425,6 @@ def _compare_dicts(
 
 def _compare_attributes(attributes_lhs: Attributes, attributes_rhs: Attributes) -> DeltaAttributes:
     return DeltaAttributes(
-        path=attributes_lhs.path,
         pairs=_compare_dicts(
             old_dict=attributes_rhs.pairs,
             new_dict=attributes_lhs.pairs,
@@ -466,7 +460,6 @@ def _compare_tables(table_lhs: Table, table_rhs: Table) -> DeltaTable:
         delta_rows.append({k: _new_delta_tree_node(v) for k, v in table_lhs._rows[key].items()})
 
     return DeltaTable(
-        path=table_lhs.path,
         key_columns=key_columns,
         rows=delta_rows,
     )
@@ -578,14 +571,11 @@ class ImmutableTree:
 def _filter_delta_attributes(
     delta_attributes: DeltaAttributes, filter_func: SDFilterFunc
 ) -> DeltaAttributes:
-    return DeltaAttributes(
-        path=delta_attributes.path, pairs=_get_filtered_dict(delta_attributes.pairs, filter_func)
-    )
+    return DeltaAttributes(pairs=_get_filtered_dict(delta_attributes.pairs, filter_func))
 
 
 def _filter_delta_table(delta_table: DeltaTable, filter_func: SDFilterFunc) -> DeltaTable:
     return DeltaTable(
-        path=delta_table.path,
         key_columns=delta_table.key_columns,
         rows=[
             filtered_row
@@ -600,8 +590,8 @@ def _filter_delta_node(
 ) -> DeltaStructuredDataNode:
     filtered = DeltaStructuredDataNode(
         path=delta_tree.path,
-        attributes=DeltaAttributes(path=delta_tree.path, pairs={}),
-        table=DeltaTable(path=delta_tree.path, key_columns=[], rows=[]),
+        attributes=DeltaAttributes(pairs={}),
+        table=DeltaTable(key_columns=[], rows=[]),
         _nodes={},
     )
 
@@ -632,8 +622,8 @@ class ImmutableDeltaTree:
     def __init__(self, tree: DeltaStructuredDataNode | None = None) -> None:
         self.tree: Final = tree or DeltaStructuredDataNode(
             path=tuple(),
-            attributes=DeltaAttributes(path=tuple(), pairs={}),
-            table=DeltaTable(path=tuple(), key_columns=[], rows=[]),
+            attributes=DeltaAttributes(pairs={}),
+            table=DeltaTable(key_columns=[], rows=[]),
             _nodes={},
         )
 
@@ -760,8 +750,8 @@ class TreeOrArchiveStore(TreeStore):
 class StructuredDataNode:
     def __init__(self, *, path: SDPath | None = None) -> None:
         self.path = path if path else tuple()
-        self.attributes = Attributes(path=path)
-        self.table = Table(path=path)
+        self.attributes = Attributes()
+        self.table = Table()
         self._nodes: dict[SDNodeName, StructuredDataNode] = {}
 
     @property
@@ -887,8 +877,8 @@ class StructuredDataNode:
     ) -> StructuredDataNode:
         node = cls(path=path)
 
-        node.add_attributes(Attributes.deserialize(path=path, raw_pairs=raw_tree[ATTRIBUTES_KEY]))
-        node.add_table(Table.deserialize(path=path, raw_rows=raw_tree[TABLE_KEY]))
+        node.add_attributes(Attributes.deserialize(raw_pairs=raw_tree[ATTRIBUTES_KEY]))
+        node.add_table(Table.deserialize(raw_rows=raw_tree[TABLE_KEY]))
 
         for raw_name, raw_node in raw_tree[_NODES_KEY].items():
             node.add_node(
@@ -924,7 +914,7 @@ class StructuredDataNode:
 
                 inst = node.setdefault_node((key,))
                 if node._is_table(value):
-                    inst.add_table(Table._deserialize_legacy(path=the_path, legacy_rows=value))
+                    inst.add_table(Table._deserialize_legacy(legacy_rows=value))
                     continue
 
                 for idx, entry in enumerate(value):
@@ -939,7 +929,7 @@ class StructuredDataNode:
             else:
                 raw_pairs.setdefault(key, value)
 
-        node.add_attributes(Attributes._deserialize_legacy(path=path, legacy_pairs=raw_pairs))
+        node.add_attributes(Attributes._deserialize_legacy(legacy_pairs=raw_pairs))
         return node
 
     @staticmethod
@@ -967,11 +957,9 @@ class Table:
     def __init__(
         self,
         *,
-        path: SDPath | None = None,
         key_columns: SDKeyColumns | None = None,
         retentions: TableRetentions | None = None,
     ) -> None:
-        self.path = path if path else tuple()
         self.key_columns = key_columns if key_columns else []
         self.retentions = retentions if retentions else {}
         self._rows: SDRows = {}
@@ -1037,6 +1025,7 @@ class Table:
         other: object,
         filter_func: SDFilterFunc,
         inv_intervals: RetentionIntervals,
+        path: SDPath,
     ) -> UpdateResult:
         if not isinstance(other, Table):
             raise TypeError(f"Cannot update {type(self)} from {type(other)}")
@@ -1079,7 +1068,7 @@ class Table:
                 # Update row with key column entries
                 old_row.update({k: other._rows[ident][k] for k in other.key_columns})
                 self.add_row(ident, old_row)
-                update_result.add_row_reason(self.path, ident, "row", old_row)
+                update_result.add_row_reason(path, ident, "row", old_row)
 
         for ident in compared_filtered_idents.both:
             compared_filtered_keys = _compare_dict_keys(
@@ -1103,7 +1092,7 @@ class Table:
                     }
                 )
                 self.add_row(ident, row)
-                update_result.add_row_reason(self.path, ident, "row", row)
+                update_result.add_row_reason(path, ident, "row", row)
 
         for ident in compared_filtered_idents.only_new:
             for key in self_filtered_rows[ident]:
@@ -1112,7 +1101,7 @@ class Table:
         if retentions:
             self.set_retentions(retentions)
             for ident, intervals in retentions.items():
-                update_result.add_row_reason(self.path, ident, "intervals", intervals)
+                update_result.add_row_reason(path, ident, "intervals", intervals)
 
         return update_result
 
@@ -1148,7 +1137,7 @@ class Table:
         return raw_table
 
     @classmethod
-    def deserialize(cls, *, path: SDPath, raw_rows: SDRawTree) -> Table:
+    def deserialize(cls, *, raw_rows: SDRawTree) -> Table:
         rows = raw_rows.get(_ROWS_KEY, [])
         if _KEY_COLUMNS_KEY in raw_rows:
             key_columns = raw_rows[_KEY_COLUMNS_KEY]
@@ -1156,7 +1145,6 @@ class Table:
             key_columns = cls._get_default_key_columns(rows)
 
         table = cls(
-            path=path,
             key_columns=key_columns,
             retentions={
                 ident: _deserialize_retentions(raw_intervals)
@@ -1167,11 +1155,8 @@ class Table:
         return table
 
     @classmethod
-    def _deserialize_legacy(cls, *, path: SDPath, legacy_rows: LegacyRows) -> Table:
-        table = cls(
-            path=path,
-            key_columns=cls._get_default_key_columns(legacy_rows),
-        )
+    def _deserialize_legacy(cls, *, legacy_rows: LegacyRows) -> Table:
+        table = cls(key_columns=cls._get_default_key_columns(legacy_rows))
         table.add_rows(legacy_rows)
         return table
 
@@ -1184,10 +1169,8 @@ class Attributes:
     def __init__(
         self,
         *,
-        path: SDPath | None = None,
         retentions: RetentionIntervalsByKeys | None = None,
     ) -> None:
-        self.path = path if path else tuple()
         self.retentions = retentions if retentions else {}
         self.pairs: SDPairs = {}
 
@@ -1218,6 +1201,7 @@ class Attributes:
         other: object,
         filter_func: SDFilterFunc,
         inv_intervals: RetentionIntervals,
+        path: SDPath,
     ) -> UpdateResult:
         if not isinstance(other, Attributes):
             raise TypeError(f"Cannot update {type(self)} from {type(other)}")
@@ -1246,11 +1230,11 @@ class Attributes:
         update_result = UpdateResult()
         if pairs:
             self.add_pairs(pairs)
-            update_result.add_attr_reason(self.path, "pairs", pairs)
+            update_result.add_attr_reason(path, "pairs", pairs)
 
         if retentions:
             self.set_retentions(retentions)
-            update_result.add_attr_reason(self.path, "intervals", retentions)
+            update_result.add_attr_reason(path, "intervals", retentions)
 
         return update_result
 
@@ -1278,17 +1262,14 @@ class Attributes:
         return raw_attributes
 
     @classmethod
-    def deserialize(cls, *, path: SDPath, raw_pairs: SDRawTree) -> Attributes:
-        attributes = cls(
-            path=path,
-            retentions=_deserialize_retentions(raw_pairs.get(_RETENTIONS_KEY)),
-        )
+    def deserialize(cls, *, raw_pairs: SDRawTree) -> Attributes:
+        attributes = cls(retentions=_deserialize_retentions(raw_pairs.get(_RETENTIONS_KEY)))
         attributes.add_pairs(raw_pairs.get(_PAIRS_KEY, {}))
         return attributes
 
     @classmethod
-    def _deserialize_legacy(cls, *, path: SDPath, legacy_pairs: LegacyPairs) -> Attributes:
-        attributes = cls(path=path)
+    def _deserialize_legacy(cls, *, legacy_pairs: LegacyPairs) -> Attributes:
+        attributes = cls()
         attributes.add_pairs(legacy_pairs)
         return attributes
 
@@ -1311,13 +1292,7 @@ _SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 def _merge_delta_attributes(
     delta_attributes_lhs: DeltaAttributes, delta_attributes_rhs: DeltaAttributes
 ) -> DeltaAttributes:
-    return DeltaAttributes(
-        path=delta_attributes_lhs.path,
-        pairs={
-            **delta_attributes_lhs.pairs,
-            **delta_attributes_rhs.pairs,
-        },
-    )
+    return DeltaAttributes(pairs={**delta_attributes_lhs.pairs, **delta_attributes_rhs.pairs})
 
 
 def _merge_delta_table(delta_table_lhs: DeltaTable, delta_table_rhs: DeltaTable) -> DeltaTable:
@@ -1337,11 +1312,7 @@ def _merge_delta_table(delta_table_lhs: DeltaTable, delta_table_rhs: DeltaTable)
         if row not in delta_rows:
             delta_rows.append(row)
 
-    return DeltaTable(
-        path=delta_table_lhs.path,
-        key_columns=delta_key_columns,
-        rows=delta_rows,
-    )
+    return DeltaTable(key_columns=delta_key_columns, rows=delta_rows)
 
 
 def _merge_delta_nodes(
@@ -1438,8 +1409,8 @@ class DeltaStructuredDataNode:
             else:
                 merge_node = DeltaStructuredDataNode(
                     path=node_path,
-                    attributes=DeltaAttributes(path=node_path, pairs={}),
-                    table=DeltaTable(path=node_path, key_columns=[], rows=[]),
+                    attributes=DeltaAttributes(pairs={}),
+                    table=DeltaTable(key_columns=[], rows=[]),
                     _nodes={},
                 )
             self._nodes[node_name] = _merge_delta_nodes(merge_node, node)
@@ -1449,8 +1420,8 @@ class DeltaStructuredDataNode:
             node_name,
             DeltaStructuredDataNode(
                 path=node_path,
-                attributes=DeltaAttributes(path=node_path, pairs={}),
-                table=DeltaTable(path=node_path, key_columns=[], rows=[]),
+                attributes=DeltaAttributes(pairs={}),
+                table=DeltaTable(key_columns=[], rows=[]),
                 _nodes={},
             ),
         ).add_node(path[1:], node)
@@ -1487,13 +1458,9 @@ class DeltaStructuredDataNode:
         return cls(
             path=path,
             attributes=DeltaAttributes.deserialize(
-                path=path,
-                raw_delta_attributes=raw_delta_tree.get("Attributes", {}),
+                raw_delta_attributes=raw_delta_tree.get("Attributes", {})
             ),
-            table=DeltaTable.deserialize(
-                path=path,
-                raw_delta_table=raw_delta_tree.get("Table", {}),
-            ),
+            table=DeltaTable.deserialize(raw_delta_table=raw_delta_tree.get("Table", {})),
             _nodes={
                 raw_node_name: cls._deserialize(
                     path=path + (raw_node_name,),
@@ -1514,14 +1481,12 @@ class DeltaStructuredDataNode:
 
 @dataclass(frozen=True)
 class DeltaTable:
-    path: SDPath
     key_columns: list[SDKey]
     rows: list[dict[SDKey, tuple[SDValue, SDValue]]]
 
     @classmethod
     def make_from_table(cls, *, table: Table, encode_as: _SDEncodeAs) -> DeltaTable:
         return cls(
-            path=table.path,
             key_columns=table.key_columns,
             rows=[{key: encode_as(value) for key, value in row.items()} for row in table.rows],
         )
@@ -1533,11 +1498,10 @@ class DeltaTable:
         return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
 
     @classmethod
-    def deserialize(cls, *, path: SDPath, raw_delta_table: object) -> DeltaTable:
+    def deserialize(cls, *, raw_delta_table: object) -> DeltaTable:
         if not isinstance(raw_delta_table, dict):
             raise TypeError()
         return cls(
-            path=path,
             key_columns=raw_delta_table.get("KeyColumns", []),
             rows=raw_delta_table.get("Rows", []),
         )
@@ -1551,17 +1515,13 @@ class DeltaTable:
 
 @dataclass(frozen=True)
 class DeltaAttributes:
-    path: SDPath
     pairs: dict[SDKey, tuple[SDValue, SDValue]]
 
     @classmethod
     def make_from_attributes(
         cls, *, attributes: Attributes, encode_as: _SDEncodeAs
     ) -> DeltaAttributes:
-        return cls(
-            path=attributes.path,
-            pairs={key: encode_as(value) for key, value in attributes.pairs.items()},
-        )
+        return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
 
     def is_empty(self) -> bool:
         return not self.pairs
@@ -1570,13 +1530,10 @@ class DeltaAttributes:
         return {"Pairs": self.pairs} if self.pairs else {}
 
     @classmethod
-    def deserialize(cls, *, path: SDPath, raw_delta_attributes: object) -> DeltaAttributes:
+    def deserialize(cls, *, raw_delta_attributes: object) -> DeltaAttributes:
         if not isinstance(raw_delta_attributes, dict):
             raise TypeError()
-        return cls(
-            path=path,
-            pairs=raw_delta_attributes.get("Pairs", {}),
-        )
+        return cls(pairs=raw_delta_attributes.get("Pairs", {}))
 
     def count_entries(self) -> _SDDeltaCounter:
         return _count_dict_entries(self.pairs)

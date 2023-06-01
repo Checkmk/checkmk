@@ -495,13 +495,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
     raw_path = ".software.applications.oracle.dataguard_stats:"
     path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
     hints = DISPLAY_HINTS.get_hints(path)
-    assert (
-        hints.sort_rows(
-            rows,
-            hints.make_columns(rows, ["sid"], path),
-        )
-        == expected
-    )
+    assert hints.sort_rows(rows, hints.make_columns(rows, ["sid"])) == expected
 
 
 @pytest.mark.parametrize(

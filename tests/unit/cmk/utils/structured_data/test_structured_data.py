@@ -108,23 +108,15 @@ def test_set_path() -> None:
     ta = root.get_node(("path", "to", "nta", "ta"))
 
     assert nta is not None
-    assert nta.attributes.path == ("path", "to", "nta")
-    assert nta.table.path == ("path", "to", "nta")
     assert nta.path == ("path", "to", "nta")
 
     assert nt is not None
-    assert nt.attributes.path == ("path", "to", "nta", "nt")
-    assert nt.table.path == ("path", "to", "nta", "nt")
     assert nt.path == ("path", "to", "nta", "nt")
 
     assert na is not None
-    assert na.attributes.path == ("path", "to", "nta", "na")
-    assert na.table.path == ("path", "to", "nta", "na")
     assert na.path == ("path", "to", "nta", "na")
 
     assert ta is not None
-    assert ta.attributes.path == ("path", "to", "nta", "ta")
-    assert ta.table.path == ("path", "to", "nta", "ta")
     assert ta.path == ("path", "to", "nta", "ta")
 
 
@@ -140,21 +132,10 @@ def test_set_path_sub_nodes() -> None:
 
     path_to_node = root.get_node(("path", "to", "nta", "node", "sub-path-to"))
     assert path_to_node is not None
-    assert path_to_node.attributes.path == ("path", "to", "nta", "node", "sub-path-to")
-    assert path_to_node.table.path == ("path", "to", "nta", "node", "sub-path-to")
     assert path_to_node.path == ("path", "to", "nta", "node", "sub-path-to")
 
     path_to_sub_node = root.get_node(("path", "to", "nta", "node", "sub-path-to", "sub-node"))
     assert path_to_sub_node is not None
-    assert path_to_sub_node.attributes.path == (
-        "path",
-        "to",
-        "nta",
-        "node",
-        "sub-path-to",
-        "sub-node",
-    )
-    assert path_to_sub_node.table.path == ("path", "to", "nta", "node", "sub-path-to", "sub-node")
     assert path_to_sub_node.path == ("path", "to", "nta", "node", "sub-path-to", "sub-node")
 
 
@@ -253,13 +234,9 @@ def test_add_node() -> None:
     assert node is not None
 
     # Do not modify orig node.
-    assert orig_node.attributes.path == tuple()
-    assert orig_node.table.path == tuple()
     assert orig_node.path == tuple()
 
-    assert node.attributes.path == ("path", "to", "nta", "node")
     assert node.table.key_columns == ["sn0"]
-    assert node.table.path == ("path", "to", "nta", "node")
     assert node.path == ("path", "to", "nta", "node")
 
     assert not root.is_empty()
@@ -326,8 +303,6 @@ def test_filter_delta_tree_nt() -> None:
     filtered_child = filtered.get_node(("path", "to", "nta", "nt"))
     assert filtered_child is not None
     assert filtered_child.path == ("path", "to", "nta", "nt")
-    assert filtered_child.attributes.path == ("path", "to", "nta", "nt")
-    assert filtered_child.table.path == ("path", "to", "nta", "nt")
     assert filtered_child.attributes.pairs == {}
     assert len(filtered_child.table.rows) == 2
     for row in (
@@ -359,8 +334,6 @@ def test_filter_delta_tree_na() -> None:
     filtered_child = filtered.get_node(("path", "to", "nta", "na"))
     assert filtered_child is not None
     assert filtered_child.path == ("path", "to", "nta", "na")
-    assert filtered_child.attributes.path == ("path", "to", "nta", "na")
-    assert filtered_child.table.path == ("path", "to", "nta", "na")
     assert filtered_child.attributes.pairs == {"na1": (None, "NA 1")}
     assert filtered_child.table.rows == []
 
@@ -388,8 +361,6 @@ def test_filter_delta_tree_ta() -> None:
     filtered_child = filtered.get_node(("path", "to", "nta", "ta"))
     assert filtered_child is not None
     assert filtered_child.path == ("path", "to", "nta", "ta")
-    assert filtered_child.attributes.path == ("path", "to", "nta", "ta")
-    assert filtered_child.table.path == ("path", "to", "nta", "ta")
     assert filtered_child.attributes.pairs == {"ta1": (None, "TA 1")}
     assert len(filtered_child.table.rows) == 2
     for row in (
@@ -1438,7 +1409,6 @@ def test_add_attributes() -> None:
     attributes = Attributes(retentions=retentions)
     node.add_attributes(attributes)
 
-    assert node.attributes.path == path
     assert node.attributes.retentions == retentions
 
 
@@ -1456,7 +1426,6 @@ def test_add_table() -> None:
     )
     node.add_table(table)
 
-    assert node.table.path == path
     assert node.table.key_columns == key_columns
     assert node.table.retentions == retentions
 
@@ -1481,6 +1450,7 @@ def test_table_update_from_previous() -> None:
         previous_table,
         lambda k: True,
         RetentionIntervals(4, 5, 6),
+        ("any", "path"),
     )
 
     assert current_table.key_columns == ["kc"]
@@ -1515,6 +1485,7 @@ def test_table_update_from_previous_filtered() -> None:
         previous_table,
         lambda k: k in ["c2", "c3"],
         RetentionIntervals(4, 5, 6),
+        ("any", "path"),
     )
     assert current_table.key_columns == ["kc"]
     assert current_table.retentions == {

@@ -471,6 +471,7 @@ def _may_update(
                         cache_interval=raw_cache_info[1],
                         retention_interval=entry["interval"],
                     ),
+                    node_path,
                 )
             )
 
@@ -486,6 +487,7 @@ def _may_update(
                         cache_interval=raw_cache_info[1],
                         retention_interval=entry["interval"],
                     ),
+                    node_path,
                 )
             )
 

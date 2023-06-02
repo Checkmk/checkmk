@@ -49,6 +49,20 @@ Section = Dict[str, Disk]
 # See CMK-7684
 MAX_COMMAND_TIMEOUTS_PER_HOUR = 100
 
+ATA_ID_TO_DISK_ATTRIBUTE: Final[Mapping[int, str]] = {
+    5: "Reallocated_Sector_Ct",
+    9: "Power_On_Hours",
+    10: "Spin_Retry_Count",
+    12: "Power_Cycle_Count",
+    184: "End-to-End_Error",
+    187: "Uncorrectable_Error_Cnt",
+    188: "Command_Timeout",
+    194: "Temperature",
+    196: "Reallocated_Event_Count",
+    197: "Current_Pending_Sector",
+    199: "CRC_Error_Count",
+}
+
 
 def _set_int_or_zero(disk: Disk, key: str, value: Any) -> None:
     try:
@@ -57,7 +71,7 @@ def _set_int_or_zero(disk: Disk, key: str, value: Any) -> None:
         disk[key] = 0
 
 
-def parse_raw_values(string_table: StringTable) -> Section:
+def parse_raw_values(string_table: StringTable) -> Section:  # pylint: disable=too-many-branches
     """
     >>> from pprint import pprint
     >>> pprint(parse_raw_values([
@@ -103,7 +117,7 @@ def parse_raw_values(string_table: StringTable) -> Section:
                   'Seek_Error_Rate': 0,
                   'Spin_Retry_Count': 0,
                   'Spin_Up_Time': 0,
-                  'Temperature_Celsius': 40}}
+                  'Temperature': 40}}
 
     """
     disks: Section = {}
@@ -112,12 +126,22 @@ def parse_raw_values(string_table: StringTable) -> Section:
         if len(line) >= 13:
             disk = disks.setdefault(line[0], {})
 
+            ID = line[3]
             field = line[4]
+
             if field == "Unknown_Attribute":
                 continue
-            _set_int_or_zero(disk, field, line[12])
 
-            if field == "Reallocated_Event_Count":  # special case, see check function
+            if (lookup_field := ATA_ID_TO_DISK_ATTRIBUTE.get(int(ID))) is None:
+                if field in disk:
+                    # Don't override already set attributes
+                    continue
+                _set_int_or_zero(disk, field, line[12])
+                continue
+
+            _set_int_or_zero(disk, lookup_field, line[12])
+
+            if lookup_field == "Reallocated_Event_Count":  # special case, see check function
                 try:
                     disk["_normalized_value_Reallocated_Event_Count"] = int(line[6])
                     disk["_normalized_threshold_Reallocated_Event_Count"] = int(line[8])

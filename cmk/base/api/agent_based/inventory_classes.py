@@ -10,9 +10,9 @@ from typing import get_args, NamedTuple, NoReturn, Union
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.structured_data import MutableTree, SDKey, SDValue
+from cmk.utils.structured_data import SDKey, SDValue
 
-from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.inventory import InventoryPluginName, ItemDataCollection
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 # get allowed value types back as a tuple to guarantee consistency
@@ -102,13 +102,11 @@ class Attributes(
             status_attributes=status_attributes,
         )
 
-    def populate_inventory_tree(self, tree: MutableTree) -> None:
+    def collect(self, collection: ItemDataCollection) -> None:
         if self.inventory_attributes:
-            tree.add_pairs(path=tuple(self.path), pairs=self.inventory_attributes)
-
-    def populate_status_data_tree(self, tree: MutableTree) -> None:
+            collection.inventory_pairs.append(self.inventory_attributes)
         if self.status_attributes:
-            tree.add_pairs(path=tuple(self.path), pairs=self.status_attributes)
+            collection.status_data_pairs.append(self.status_attributes)
 
 
 class TableRow(
@@ -172,21 +170,14 @@ class TableRow(
             status_columns=status_columns,
         )
 
-    def populate_inventory_tree(self, tree: MutableTree) -> None:
-        # No guard: always set key columns.
-        tree.add_rows(
-            path=tuple(self.path),
-            key_columns=list(self.key_columns),
-            rows=[{**self.key_columns, **self.inventory_columns}],
-        )
-
-    def populate_status_data_tree(self, tree: MutableTree) -> None:
+    def collect(self, collection: ItemDataCollection) -> None:
+        # TableRow provides:
+        #   - key_columns: {"kc": "kc-val", ...}
+        #   - rows: [{"c": "c-val", ...}, ...]
+        collection.key_columns.extend(self.key_columns)
+        collection.inventory_rows.append({**self.key_columns, **self.inventory_columns})
         if self.status_columns:
-            tree.add_rows(
-                path=tuple(self.path),
-                key_columns=list(self.key_columns),
-                rows=[{**self.key_columns, **self.status_columns}],
-            )
+            collection.status_data_rows.append({**self.key_columns, **self.status_columns})
 
 
 InventoryResult = Iterable[Union[Attributes, TableRow]]

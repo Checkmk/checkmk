@@ -9,7 +9,7 @@ import contextlib
 import itertools
 import time
 from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
@@ -27,6 +27,9 @@ from cmk.utils.structured_data import (
     parse_visible_raw_path,
     RawIntervalFromConfig,
     RetentionInterval,
+    SDKey,
+    SDPath,
+    SDValue,
     UpdateResult,
 )
 from cmk.utils.validatedstr import ValidatedString
@@ -67,10 +70,7 @@ class PInventoryResult(Protocol):
     def path(self) -> Sequence[str]:
         ...
 
-    def populate_inventory_tree(self, tree: MutableTree) -> None:
-        ...
-
-    def populate_status_data_tree(self, tree: MutableTree) -> None:
+    def collect(self, collection: ItemDataCollection) -> None:
         ...
 
 
@@ -210,7 +210,7 @@ def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
     tree = MutableTree()
     tree.add_pairs(
         path=("software", "applications", "check_mk", "cluster"),
-        pairs={"is_cluster": True},
+        pairs=[{"is_cluster": True}],
     )
     tree.add_rows(
         path=("software", "applications", "check_mk", "cluster", "nodes"),
@@ -262,7 +262,7 @@ def _inventorize_real_host(
     if trees.inventory:
         trees.inventory.add_pairs(
             path=("software", "applications", "check_mk", "cluster"),
-            pairs={"is_cluster": False},
+            pairs=[{"is_cluster": False}],
         )
 
     return trees, update_result
@@ -382,6 +382,15 @@ def _parse_inventory_plugin_item(
 
 
 @dataclass(frozen=True)
+class ItemDataCollection:
+    inventory_pairs: list[Mapping[SDKey, SDValue]] = field(default_factory=list)
+    status_data_pairs: list[Mapping[SDKey, SDValue]] = field(default_factory=list)
+    key_columns: list[SDKey] = field(default_factory=list)
+    inventory_rows: list[Mapping[SDKey, SDValue]] = field(default_factory=list)
+    status_data_rows: list[Mapping[SDKey, SDValue]] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
 class MutableTrees:
     inventory: MutableTree
     status_data: MutableTree
@@ -390,12 +399,29 @@ class MutableTrees:
 def _create_trees_from_inventory_plugin_items(
     items_of_inventory_plugins: Iterable[ItemsOfInventoryPlugin],
 ) -> MutableTrees:
-    inventory_tree = MutableTree()
-    status_data_tree = MutableTree()
+    collection_by_path: dict[SDPath, ItemDataCollection] = {}
     for items_of_inventory_plugin in items_of_inventory_plugins:
         for item in items_of_inventory_plugin.items:
-            item.populate_inventory_tree(inventory_tree)
-            item.populate_status_data_tree(status_data_tree)
+            item.collect(collection_by_path.setdefault(tuple(item.path), ItemDataCollection()))
+
+    inventory_tree = MutableTree()
+    status_data_tree = MutableTree()
+    for path, collection in collection_by_path.items():
+        inventory_tree.add_pairs(path=path, pairs=collection.inventory_pairs)
+        status_data_tree.add_pairs(path=path, pairs=collection.status_data_pairs)
+
+        key_columns = sorted(set(collection.key_columns))
+        inventory_tree.add_rows(
+            path=path,
+            key_columns=key_columns,
+            rows=collection.inventory_rows,
+        )
+        status_data_tree.add_rows(
+            path=path,
+            key_columns=key_columns,
+            rows=collection.status_data_rows,
+        )
+
     return MutableTrees(inventory_tree, status_data_tree)
 
 

@@ -71,7 +71,7 @@
     "passive_check_period": "24X7",
     "pending_flex_downtime": 0,
     "percent_state_change": 0,
-    "plugin_output": "Services: all up to date, Host labels: all up to date",
+    "plugin_output": "All services up to date, All host labels up to date",
     "pnpgraph_present": 0,
     "process_performance_data": 0,
     "retry_interval": 120,

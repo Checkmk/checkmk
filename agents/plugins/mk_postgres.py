@@ -43,6 +43,11 @@ IS_LINUX = OS == "Linux"
 IS_WINDOWS = OS == "Windows"
 LOGGER = logging.getLogger(__name__)
 
+if sys.version_info[0] >= 3:
+    UTF_8_NEWLINE_CHARS = re.compile(r"[\n\r\u2028\u000B\u0085\u2028\u2029]+")
+else:
+    UTF_8_NEWLINE_CHARS = re.compile(u"[\u000A\u000D\u2028\u000B\u0085\u2028\u2029]+")  # fmt: skip
+
 
 class OSNotImplementedError(NotImplementedError):
     def __str__(self):
@@ -201,7 +206,7 @@ class PostgresBase:
                 "SELECT datname, datid, usename, client_addr, state AS state, "
                 "COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
                 "AS seconds, pid, "
-                "regexp_replace(query, E'[\\n\\r\\u2028]+', ' ', 'g' ) "
+                "query "
                 "AS current_query FROM pg_stat_activity "
                 "WHERE (query_start IS NOT NULL AND "
                 "(state NOT LIKE 'idle%' OR state IS NULL)) "
@@ -212,8 +217,7 @@ class PostgresBase:
             querytime_sql_cmd = (
                 "SELECT datname, datid, usename, client_addr, '' AS state,"
                 " COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
-                "AS seconds, procpid as pid, regexp_replace(current_query, "
-                "E'[\\n\\r\\u2028]+', ' ', 'g' ) AS current_query "
+                "AS seconds, procpid as pid, query AS current_query "
                 "FROM pg_stat_activity WHERE "
                 "(query_start IS NOT NULL AND current_query NOT LIKE '<IDLE>%') "
                 "ORDER BY query_start, procpid DESC;"
@@ -345,6 +349,24 @@ class PostgresBase:
             sys.stdout.write("%s\n" % out)
 
 
+def _sanitize_sql_query(out):
+    # type: (bytes) -> str
+    utf_8_out = ensure_str(out)
+    # The sql queries may contain any char in `UTF_8_NEWLINE_CHARS`. However,
+    # Checkmk only knows how to handle `\n`. Furthermore, `\n` is always
+    # interpreted as a record break by Checkmk (see `parse_dbs`). This means
+    # that we have to remove all newline chars, before printing the section. We
+    # solve the issue in three steps.
+    # - Make Postgres return the NULL byte (instead of newlines). This achieved
+    #   by using the flag `-0`.
+    # - Remove all newlines from whatever Postgres returns. This is safe,
+    #   because of the first step.
+    # - Finally, turn the NULL bytes into linebreaks, so Checkmk interprets
+    #   them as record breaks.
+    utf_8_out_no_new_lines = UTF_8_NEWLINE_CHARS.sub(" ", utf_8_out)
+    return utf_8_out_no_new_lines.replace("\x00", "\n").rstrip()
+
+
 class PostgresWin(PostgresBase):
     def run_sql_as_db_user(
         self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
@@ -361,7 +383,7 @@ class PostgresWin(PostgresBase):
             extra_args += " -t"
 
         if mixed_cmd:
-            cmd_str = 'cmd /c echo %s | cmd /c ""%s" -X %s -A -F"%s" -U %s"' % (
+            cmd_str = 'cmd /c echo %s | cmd /c ""%s" -X %s -A -0 -F"%s" -U %s"' % (
                 sql_cmd,
                 self.psql_binary_path,
                 extra_args,
@@ -370,7 +392,7 @@ class PostgresWin(PostgresBase):
             )
 
         else:
-            cmd_str = 'cmd /c ""%s" -X %s -A -F"%s" -U %s -c "%s"" ' % (
+            cmd_str = 'cmd /c ""%s" -X %s -A -0 -F"%s" -U %s -c "%s"" ' % (
                 self.psql_binary_path,
                 extra_args,
                 field_sep,
@@ -383,8 +405,8 @@ class PostgresWin(PostgresBase):
             env=self.my_env,
             stdout=subprocess.PIPE,
         )
-        out = ensure_str(proc.communicate()[0])
-        return out.rstrip()
+        out = proc.communicate()[0]
+        return _sanitize_sql_query(out)
 
     @staticmethod
     def _call_wmic_logicaldisk():
@@ -686,7 +708,7 @@ class PostgresLinux(PostgresBase):
         self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
     ):
         # type: (str, str, str, bool, bool, bool) -> str
-        base_cmd_list = ["su", "-", self.db_user, "-c", r"""PGPASSFILE=%s %s -X %s -A -F'%s'%s"""]
+        base_cmd_list = ["su", "-", self.db_user, "-c", r"""PGPASSFILE=%s %s -X %s -A0 -F'%s'%s"""]
         extra_args += " -U %s" % self.pg_user
         extra_args += " -d %s" % self.pg_database
         extra_args += " -p %s" % self.pg_port
@@ -711,11 +733,9 @@ class PostgresLinux(PostgresBase):
                 "",
             )
 
-            receiving_pipe = subprocess.Popen(  # pylint:disable=consider-using-with
+            proc = subprocess.Popen(  # pylint:disable=consider-using-with
                 base_cmd_list, stdin=cmd_to_pipe.stdout, stdout=subprocess.PIPE, env=self.my_env
             )
-            out = ensure_str(receiving_pipe.communicate()[0])
-
         else:
             base_cmd_list[-1] = base_cmd_list[-1] % (
                 self.pg_passfile,
@@ -726,10 +746,9 @@ class PostgresLinux(PostgresBase):
             )
             proc = subprocess.Popen(  # pylint:disable=consider-using-with
                 base_cmd_list, env=self.my_env, stdout=subprocess.PIPE
-            )  # pylint:disable=consider-using-with
-            out = ensure_str(proc.communicate()[0])
-
-        return out.rstrip()
+            )
+        out = proc.communicate()[0]
+        return _sanitize_sql_query(out)
 
     def get_psql_binary_path(self):
         # type: () -> str
@@ -829,8 +848,7 @@ class PostgresLinux(PostgresBase):
                 "SELECT datname, datid, usename, client_addr, state AS state, "
                 "COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
                 "AS seconds, pid, "
-                "regexp_replace(query, E'[\\n\\r\\u2028]+', ' ', 'g' ) AS "
-                "current_query FROM pg_stat_activity "
+                "query AS current_query FROM pg_stat_activity "
                 "WHERE (query_start IS NOT NULL AND "
                 "(state NOT LIKE 'idle%' OR state IS NULL)) "
                 "ORDER BY query_start, pid DESC;"
@@ -841,7 +859,7 @@ class PostgresLinux(PostgresBase):
                 "SELECT datname, datid, usename, client_addr, '' AS state, "
                 "COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
                 "AS seconds, procpid as pid, "
-                "regexp_replace(current_query, E'[\\n\\r\\u2028]+', ' ', 'g' ) "
+                "query "
                 "AS current_query FROM pg_stat_activity WHERE "
                 "(query_start IS NOT NULL AND current_query NOT LIKE '<IDLE>%') "
                 "ORDER BY query_start, procpid DESC;"

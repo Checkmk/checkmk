@@ -145,7 +145,7 @@ class TestLinux:
         attrs = {
             "communicate.side_effect": [
                 ("/usr/lib/postgres/psql", None),
-                ("postgres\ndb1", None),
+                ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3", None),
             ]
         }
@@ -188,7 +188,7 @@ class TestLinux:
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [
-                ("postgres\ndb1", None),
+                ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3.6", None),
             ]
         }
@@ -226,7 +226,7 @@ class TestLinux:
         attrs = {
             "communicate.side_effect": [
                 ("/usr/lib/postgres/psql", None),
-                ("postgres\ndb1", None),
+                ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3.6", None),
             ]
         }
@@ -366,7 +366,12 @@ class TestWindows:
     @patch("subprocess.Popen")
     def test_factory_without_instance(self, mock_Popen, mock_isfile, mk_postgres):
         process_mock = Mock()
-        attrs = {"communicate.side_effect": [(b"postgres\ndb1", b"ok"), (b"12.1", b"ok")]}
+        attrs = {
+            "communicate.side_effect": [
+                ("postgres\x00db1\x00".encode("utf-8"), b"ok"),
+                (b"12.1", b"ok"),
+            ]
+        }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
         instance = {
@@ -406,7 +411,12 @@ class TestWindows:
             "pg_version": "12.1",
         }
         process_mock = Mock()
-        attrs = {"communicate.side_effect": [(b"postgres\ndb1", b"ok"), (b"12.1.5", b"ok")]}
+        attrs = {
+            "communicate.side_effect": [
+                (b"postgres\x00db1\x00", b"ok"),
+                (b"12.1.5\x00", b"ok"),
+            ]
+        }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
 

@@ -81,8 +81,6 @@ MAX_COMMAND_TIMEOUTS_PER_HOUR = 100
 
 CRC_ERRORS_ID: Final = 199
 
-# This mapping also limits the used ATA attributes.
-# All ATA attributes not listed here will be discarded when parsing the raw agent section
 ATA_ID_TO_DISK_ATTRIBUTE: Final[Mapping[int, DiskAttribute]] = {
     5: DiskAttribute.REALLOCATED_SECTORS,
     9: DiskAttribute.POWER_ON_HOURS,

@@ -30,6 +30,8 @@ with suppress(ModuleNotFoundError):
     import cmk.gui.cme.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
 with suppress(ModuleNotFoundError):
     import cmk.gui.cce.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+with suppress(ModuleNotFoundError):
+    import cmk.gui.cse.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
 
 
 def _imports() -> Iterator[str]:
@@ -108,6 +110,9 @@ def _plugin_package_names(main_module_name: str) -> Iterator[str]:
     if cmk_version.is_cloud_edition():
         yield f"cmk.gui.cce.plugins.{main_module_name}"
 
+    if cmk_version.is_saas_edition():
+        yield f"cmk.gui.cse.plugins.{main_module_name}"
+
 
 def _is_plugin_namespace(plugin_package_name: str) -> bool:
     # TODO: We should know this somehow by declarations without need to try this out
@@ -168,6 +173,8 @@ def _cmk_gui_top_level_modules() -> list[ModuleType]:
             or name.startswith("cmk.gui.cme.")
             and len(name.split(".")) == 4
             or name.startswith("cmk.gui.cce.")
+            and len(name.split(".")) == 4
+            or name.startswith("cmk.gui.cse.")
             and len(name.split(".")) == 4
         )
     ]

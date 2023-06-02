@@ -332,6 +332,7 @@ class ConnectorType:
     SAML2 = "saml2"
     LDAP = "ldap"
     HTPASSWD = "htpasswd"
+    OAUTH2 = "oauth2"
 
 
 class UserConnector(abc.ABC):

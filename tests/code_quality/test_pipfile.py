@@ -268,7 +268,6 @@ CEE_UNUSED_PACKAGES = [
     "psycopg2-binary",
     "pyasn1-modules",
     "pycparser",
-    "pyjwt",
     "pykerberos",
     "pymssql",
     "pymysql",

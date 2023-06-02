@@ -224,6 +224,8 @@ def test_registered_pages() -> None:
             "noauth:saml_acs",
             "noauth:saml_metadata",
             "noauth:saml_sso",
+            "noauth:cognito_sso",
+            "noauth:cognito_callback",
         ]
 
     # TODO: Depending on how we call the test (single test or whole package) we

@@ -50,6 +50,8 @@ Section = Dict[str, Disk]
 # See CMK-7684
 MAX_COMMAND_TIMEOUTS_PER_HOUR = 100
 
+CRC_ERRORS_ID = 199
+
 ATA_ID_TO_DISK_ATTRIBUTE: Final[Mapping[int, str]] = {
     5: "Reallocated_Sector_Ct",
     9: "Power_On_Hours",
@@ -61,7 +63,7 @@ ATA_ID_TO_DISK_ATTRIBUTE: Final[Mapping[int, str]] = {
     194: "Temperature",
     196: "Reallocated_Event_Count",
     197: "Current_Pending_Sector",
-    199: "CRC_Error_Count",
+    CRC_ERRORS_ID: "CRC_Error_Count",
 }
 
 
@@ -131,6 +133,14 @@ def parse_raw_values(string_table: StringTable) -> Section:
             field = line[4]
 
             if field == "Unknown_Attribute":
+                continue
+
+            if int(ID) == CRC_ERRORS_ID and field == "UDMA_CRC_Error_Count":
+                # UDMA_CRC_Error_Count and CRC_Error_Count share the same attribute ID (199).
+                # Since we explicitly distinguish between the two, we choose "UDMA_CRC_Error_Count"
+                # whenever the ID 199 comes with this textual information.
+                # Otherwise, we default to CRC_Error_Count.
+                _set_int_or_zero(disk, "UDMA_CRC_Error_Count", line[12])
                 continue
 
             if (lookup_field := ATA_ID_TO_DISK_ATTRIBUTE.get(int(ID))) is None:
@@ -223,7 +233,7 @@ OUTPUT_FIELDS: Tuple[Tuple[Callable[[State, str], Result], str, str, Callable], 
     (_summary, "Command_Timeout", "Command timeout counter", str),
     (_summary, "End-to-End_Error", "End-to-End errors", str),
     (_summary, "UDMA_CRC_Error_Count", "UDMA CRC errors", str),
-    (_summary, "CRC_Error_Count", "UDMA CRC errors", str),
+    (_summary, "CRC_Error_Count", "CRC errors", str),
     # nvme
     (_summary, "Power_Cycles", "Power cycles", str),
     (_summary, "Critical_Warning", "Critical warning", str),

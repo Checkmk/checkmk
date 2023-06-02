@@ -74,7 +74,7 @@ PERMISSIONS = permissions.AllPerm(
     "cmk/activate",
     method="post",
     status_descriptions={
-        200: "The activation has been completed.",
+        200: "Activation has been started, but not completed (if you need to wait for completion, see documentation for this endpoint).",
         302: (
             "The activation has been started and is still running. Redirecting to the "
             "'Wait for completion' endpoint."
@@ -102,7 +102,10 @@ PERMISSIONS = permissions.AllPerm(
 def activate_changes(params: Mapping[str, Any]) -> Response:
     """Activate pending changes
 
-    If redirect is set to True a link to the wait-for-completion resource for the activation job is included.
+    This endpoint will start an asynchronous background job activating the changes and
+    will return immediately with a response containing an ID for the just triggered activation run.
+    Use the 'wait-for-completion' endpoint with that ID to wait for the pending changes to activate.
+    Setting the 'redirect' flag to 'true' will redirect you to this endpoint.
     """
     user.need_permission("wato.activate")
     body = params["body"]

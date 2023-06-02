@@ -169,8 +169,8 @@ def _paint_host_inventory_tree(
             # In host views like "Switch port statistics" the value is rendered as a single
             # attribute and not within a table.
             if len(attributes := list(child.pairs.items())) == 1:
-                key, value = attributes[-1]
-                tree_renderer.show_attribute(value, _get_display_hint("%s.%s" % (invpath, key)))
+                _key, value = attributes[-1]
+                tree_renderer.show_attribute(value, _get_display_hint(invpath))
         else:
             child.show(tree_renderer)
 

@@ -1,0 +1,12 @@
+Title: HW/SW Inventory: Fix rendering single attributes
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1685686319
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p29
+
+Single attributes like {{Hardware > Processor > Maximum Speed}} were not
+rendered user-friendly, ie. as a bare number without any unit.

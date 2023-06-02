@@ -24,6 +24,8 @@ from cmk.utils.type_defs import HostName
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO improve this
 SDRawTree = dict
+
+
 SDRawDeltaTree = dict
 
 SDNodeName = str
@@ -37,12 +39,27 @@ SDRowIdent = tuple[SDValue, ...]
 # Used for de/serialization and retentions
 ATTRIBUTES_KEY = "Attributes"
 TABLE_KEY = "Table"
-
-_PAIRS_KEY = "Pairs"
-_KEY_COLUMNS_KEY = "KeyColumns"
-_ROWS_KEY = "Rows"
 _NODES_KEY = "Nodes"
-_RETENTIONS_KEY = "Retentions"
+
+
+class SDRawAttributes(TypedDict, total=False):
+    Pairs: Mapping[SDKey, SDValue]
+    Retentions: Mapping[SDKey, tuple[int, int, int]]
+
+
+class SDRawTable(TypedDict, total=False):
+    KeyColumns: Sequence[SDKey]
+    Rows: Sequence[Mapping[SDKey, SDValue]]
+    Retentions: Mapping[SDRowIdent, Mapping[SDKey, tuple[int, int, int]]]
+
+
+class SDRawDeltaAttributes(TypedDict, total=False):
+    Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
+
+
+class SDRawDeltaTable(TypedDict, total=False):
+    KeyColumns: Sequence[SDKey]
+    Rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
 
 
 class _RawIntervalFromConfigMandatory(TypedDict):
@@ -79,7 +96,6 @@ class RetentionIntervals(NamedTuple):
         return cls(*raw_intervals)
 
 
-RawRetentionIntervalsByKeys = dict[SDKey, tuple[int, int, int]]
 RetentionIntervalsByKeys = dict[SDKey, RetentionIntervals]
 
 
@@ -1105,36 +1121,36 @@ class Table:
 
     #   ---de/serializing-------------------------------------------------------
 
-    def serialize(self) -> SDRawTree:
-        raw_table = {}
+    def serialize(self) -> SDRawTable:
+        raw_table: SDRawTable = {}
         if self._rows:
             raw_table.update(
                 {
-                    _KEY_COLUMNS_KEY: self.key_columns,
-                    _ROWS_KEY: list(self._rows.values()),
+                    "KeyColumns": self.key_columns,
+                    "Rows": list(self._rows.values()),
                 }
             )
 
         if self.retentions:
-            raw_table[_RETENTIONS_KEY] = {
+            raw_table["Retentions"] = {
                 ident: _serialize_retentions(intervals)
                 for ident, intervals in self.retentions.items()
             }
         return raw_table
 
     @classmethod
-    def deserialize(cls, *, raw_table: SDRawTree) -> Table:
-        rows = raw_table.get(_ROWS_KEY, [])
-        if _KEY_COLUMNS_KEY in raw_table:
-            key_columns = raw_table[_KEY_COLUMNS_KEY]
+    def deserialize(cls, *, raw_table: SDRawTable) -> Table:
+        rows = raw_table.get("Rows", [])
+        if "KeyColumns" in raw_table:
+            key_columns = raw_table["KeyColumns"]
         else:
             key_columns = cls._get_default_key_columns(rows)
 
         table = cls(
-            key_columns=key_columns,
+            key_columns=list(key_columns),
             retentions={
                 ident: _deserialize_retentions(raw_intervals)
-                for ident, raw_intervals in raw_table.get(_RETENTIONS_KEY, {}).items()
+                for ident, raw_intervals in raw_table.get("Retentions", {}).items()
             },
         )
         table.add_rows(rows)
@@ -1244,19 +1260,19 @@ class Attributes:
 
     #   ---de/serializing-------------------------------------------------------
 
-    def serialize(self) -> SDRawTree:
-        raw_attributes = {}
+    def serialize(self) -> SDRawAttributes:
+        raw_attributes: SDRawAttributes = {}
         if self._pairs:
-            raw_attributes[_PAIRS_KEY] = self._pairs
+            raw_attributes["Pairs"] = self._pairs
 
         if self.retentions:
-            raw_attributes[_RETENTIONS_KEY] = _serialize_retentions(self.retentions)
+            raw_attributes["Retentions"] = _serialize_retentions(self.retentions)
         return raw_attributes
 
     @classmethod
-    def deserialize(cls, *, raw_attributes: SDRawTree) -> Attributes:
-        attributes = cls(retentions=_deserialize_retentions(raw_attributes.get(_RETENTIONS_KEY)))
-        attributes.add_pairs(raw_attributes.get(_PAIRS_KEY, {}))
+    def deserialize(cls, *, raw_attributes: SDRawAttributes) -> Attributes:
+        attributes = cls(retentions=_deserialize_retentions(raw_attributes.get("Retentions")))
+        attributes.add_pairs(raw_attributes.get("Pairs", {}))
         return attributes
 
     @classmethod
@@ -1472,8 +1488,8 @@ class DeltaStructuredDataNode:
 
 @dataclass(frozen=True)
 class DeltaTable:
-    key_columns: list[SDKey]
-    rows: list[dict[SDKey, tuple[SDValue, SDValue]]]
+    key_columns: Sequence[SDKey]
+    rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
 
     @classmethod
     def make_from_table(cls, *, table: Table, encode_as: _SDEncodeAs) -> DeltaTable:
@@ -1485,13 +1501,11 @@ class DeltaTable:
     def __bool__(self) -> bool:
         return bool(self.rows)
 
-    def serialize(self) -> SDRawDeltaTree:
+    def serialize(self) -> SDRawDeltaTable:
         return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
 
     @classmethod
-    def deserialize(cls, *, raw_delta_table: object) -> DeltaTable:
-        if not isinstance(raw_delta_table, dict):
-            raise TypeError()
+    def deserialize(cls, *, raw_delta_table: SDRawDeltaTable) -> DeltaTable:
         return cls(
             key_columns=raw_delta_table.get("KeyColumns", []),
             rows=raw_delta_table.get("Rows", []),
@@ -1517,13 +1531,11 @@ class DeltaAttributes:
     def __bool__(self) -> bool:
         return bool(self.pairs)
 
-    def serialize(self) -> SDRawDeltaTree:
+    def serialize(self) -> SDRawDeltaAttributes:
         return {"Pairs": self.pairs} if self.pairs else {}
 
     @classmethod
-    def deserialize(cls, *, raw_delta_attributes: object) -> DeltaAttributes:
-        if not isinstance(raw_delta_attributes, dict):
-            raise TypeError()
+    def deserialize(cls, *, raw_delta_attributes: SDRawDeltaAttributes) -> DeltaAttributes:
         return cls(pairs=raw_delta_attributes.get("Pairs", {}))
 
     def count_entries(self) -> _SDDeltaCounter:
@@ -1582,12 +1594,12 @@ def _get_filtered_dict(dict_: Mapping, filter_func: SDFilterFunc) -> dict:
 
 def _serialize_retentions(
     intervals_by_keys: RetentionIntervalsByKeys,
-) -> RawRetentionIntervalsByKeys:
+) -> Mapping[SDKey, tuple[int, int, int]]:
     return {key: intervals.serialize() for key, intervals in intervals_by_keys.items()}
 
 
 def _deserialize_retentions(
-    raw_intervals_by_keys: RawRetentionIntervalsByKeys | None,
+    raw_intervals_by_keys: Mapping[SDKey, tuple[int, int, int]] | None,
 ) -> RetentionIntervalsByKeys:
     if not raw_intervals_by_keys:
         return {}

@@ -6,11 +6,9 @@
 import pytest
 
 from cmk.base.legacy_checks.citrix_controller import (
-    check_citrix_controller_licensing,
     check_citrix_controller_registered,
     check_citrix_controller_services,
     check_citrix_controller_sessions,
-    inventory_citrix_controller_licensing,
     inventory_citrix_controller_registered,
     inventory_citrix_controller_services,
     inventory_citrix_controller_sessions,
@@ -18,7 +16,9 @@ from cmk.base.legacy_checks.citrix_controller import (
 from cmk.base.plugins.agent_based.agent_based_api import v1
 from cmk.base.plugins.agent_based.citrix_controller import (
     check_citrix_controller,
+    check_citrix_controller_licensing,
     discovery_citrix_controller,
+    discovery_citrix_controller_licensing,
 )
 from cmk.base.plugins.agent_based.utils.citrix_controller import parse_citrix_controller, Section
 
@@ -123,8 +123,8 @@ def test_discovery_controller(section: Section) -> None:
     assert list(discovery_citrix_controller(section))
 
 
-def test_discovery_controller_licensing(string_table: v1.type_defs.StringTable) -> None:
-    assert list(inventory_citrix_controller_licensing(string_table))
+def test_discovery_controller_licensing(section: Section) -> None:
+    assert list(discovery_citrix_controller_licensing(section))
 
 
 def test_discovery_controller_registered(string_table: v1.type_defs.StringTable) -> None:
@@ -182,7 +182,7 @@ def test_check_controller_licensing(
 ) -> None:
     section = parse_citrix_controller(string_table)
     assert section is not None
-    assert list(check_citrix_controller_licensing(None, {}, string_table)) == expected
+    assert list(check_citrix_controller_licensing(section)) == expected
 
 
 @pytest.mark.parametrize(

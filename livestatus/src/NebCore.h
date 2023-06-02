@@ -23,11 +23,10 @@
 #include <vector>
 
 #include "Downtime.h"  // IWYU pragma: keep
-#include "Store.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Metric.h"
-#include "livestatus/Renderer.h"
+#include "livestatus/Store.h"
 #include "livestatus/Triggers.h"
 #include "livestatus/User.h"
 #include "nagios.h"

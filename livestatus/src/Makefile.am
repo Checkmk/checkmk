@@ -83,7 +83,6 @@ liblivestatusneb_a_SOURCES = \
         NebCore.cc \
         NebHost.cc \
         NebService.cc \
-        Store.cc \
         TimeperiodsCache.cc \
         module.cc
 $(liblivestatusneb_a_SOURCES): $(ASIO_INCLUDE)

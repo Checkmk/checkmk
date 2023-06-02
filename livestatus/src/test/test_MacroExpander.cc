@@ -12,10 +12,10 @@
 
 #include "Comment.h"  // IWYU pragma: keep
 #include "MacroExpander.h"
-#include "Store.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
+#include "livestatus/Store.h"
 #include "livestatus/StringColumn.h"
 #include "nagios.h"
 #include "test_utilities.h"

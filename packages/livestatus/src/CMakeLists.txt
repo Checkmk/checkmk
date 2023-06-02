@@ -73,6 +73,7 @@ set(livestatus_headers
     ${header_location}/ServiceListRenderer.h
     ${header_location}/ServiceListState.h
     ${header_location}/StatsColumn.h
+    ${header_location}/Store.h
     ${header_location}/StringColumn.h
     ${header_location}/StringFilter.h
     ${header_location}/StringUtils.h
@@ -161,6 +162,7 @@ set(livestatus_sources
     ServiceListRenderer.cc
     ServiceListState.cc
     StatsColumn.cc
+    Store.cc
     StringFilter.cc
     StringUtils.cc
     strutil.cc

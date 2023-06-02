@@ -6,8 +6,6 @@
 #ifndef Store_h
 #define Store_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <cstddef>
 #include <list>
 #include <map>

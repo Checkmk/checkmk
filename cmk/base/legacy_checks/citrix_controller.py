@@ -31,20 +31,21 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api import v1
 
 
 def inventory_citrix_controller_services(info):
     for line in info:
         if line[0] == "ActiveSiteServices":
-            return [(None, None)]
-    return []
+            yield v1.Service()
+            return
 
 
 def check_citrix_controller_services(_no_item, _no_params, info):
     for line in info:
         if line[0] == "ActiveSiteServices":
-            return 0, " ".join(line[1:])
-    return None
+            yield v1.Result(state=v1.State.OK, summary=" ".join(line[1:]) or "No services")
+            return
 
 
 check_info["citrix_controller.services"] = LegacyCheckDefinition(
@@ -73,7 +74,7 @@ check_info["citrix_controller.services"] = LegacyCheckDefinition(
 def inventory_citrix_controller_registered(info):
     for line in info:
         if line[0] == "DesktopsRegistered":
-            return [(None, None)]
+            yield v1.Service()
     return []
 
 
@@ -84,14 +85,20 @@ def check_citrix_controller_registered(_no_item, params, info):
                 count_desktops = int(line[1])
             except (IndexError, ValueError):
                 # Is UNKNOWN right behaviour?
-                return 3, "No desktops registered"
+                yield v1.Result(state=v1.State.UNKNOWN, summary="No desktops registered")
+                return
 
             levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
 
-            return check_levels(
+            state, message, metrics = check_levels(
                 count_desktops, "registered_desktops", levels, human_readable_func=int
             )
-    return None
+            metric = metrics[0]
+            yield v1.Result(state=v1.State(state), summary=message)
+            yield v1.Metric(
+                value=metric[1], name=metric[0], levels=params.get("levels", (None, None))
+            )
+            return
 
 
 check_info["citrix_controller.registered"] = LegacyCheckDefinition(
@@ -118,8 +125,7 @@ def inventory_citrix_controller_sessions(info):
         inv = inv or ("sessions" in line[0].lower())
 
     if inv:
-        return [(None, {})]
-    return []
+        yield v1.Service()
 
 
 def check_citrix_controller_sessions(_no_item, params, info):
@@ -153,7 +159,9 @@ def check_citrix_controller_sessions(_no_item, params, info):
         else:
             messages.append("%s: %s" % (what, session[what]))
 
-    return state, ", ".join(messages), perf
+    for message, p in zip(messages, perf):
+        yield v1.Result(state=v1.State(state), summary=message)
+        yield v1.Metric(value=p[1], name=p[0], levels=(warn, crit))
 
 
 check_info["citrix_controller.sessions"] = LegacyCheckDefinition(
@@ -176,8 +184,7 @@ check_info["citrix_controller.sessions"] = LegacyCheckDefinition(
 
 def inventory_citrix_controller_licensing(info):
     if info:
-        return [(None, None)]
-    return []
+        yield v1.Service()
 
 
 def check_citrix_controller_licensing(_no_item, _no_params, info):
@@ -218,7 +225,7 @@ def check_citrix_controller_licensing(_no_item, _no_params, info):
             except IndexError:
                 continue
             state, state_readable = states.get(raw_state, (3, "unknown[%s]" % raw_state))
-            yield state, "%s: %s" % (title, state_readable)
+            yield v1.Result(state=v1.State(state), summary="%s: %s" % (title, state_readable))
 
 
 check_info["citrix_controller.licensing"] = LegacyCheckDefinition(
@@ -247,8 +254,7 @@ check_info["citrix_controller.licensing"] = LegacyCheckDefinition(
 def inventory_citrix_controller(info):
     for line in info:
         if line[0] == "ControllerState":
-            return [(None, None)]
-    return []
+            yield v1.Service()
 
 
 def check_citrix_controller(_no_item, _no_params, info):
@@ -258,11 +264,11 @@ def check_citrix_controller(_no_item, _no_params, info):
             try:
                 raw_state = line[1]
             except IndexError:
-                return 3, "unknown"
-            if raw_state != "Active":
+                state = 3
+                raw_state = "unknown"
+            if raw_state not in ("Active", "unknown"):
                 state = 2
-            return state, raw_state
-    return None
+            yield v1.Result(state=v1.State(state), summary=raw_state)
 
 
 check_info["citrix_controller"] = LegacyCheckDefinition(

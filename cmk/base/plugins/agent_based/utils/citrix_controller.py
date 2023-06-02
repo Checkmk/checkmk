@@ -19,6 +19,6 @@ class Section:
 def parse_citrix_controller(string_table: StringTable) -> Section:
     section = Section()
     for line in string_table:
-        if line[0] == "ControllerVersion":
+        if line[0] == "ControllerVersion" and len(line) > 1:
             section.version = Version(line[1])
     return section

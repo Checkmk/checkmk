@@ -36,6 +36,8 @@ def _edition_short_from_pkg_path(package_path: str) -> str:
         return "cfe"
     if file_name.startswith("check-mk-cloud-"):
         return "cce"
+    if file_name.startswith("check-mk-saas-"):
+        return "cse"
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
 
 
@@ -251,6 +253,7 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
     enterprise_files = []
     managed_files = []
     cloud_files = []
+    saas_files = []
 
     for line in subprocess.check_output(
         ["tar", "tvf", package_path], encoding="utf-8"
@@ -262,10 +265,13 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
             managed_files.append(path)
         if path != "%s/cloud/" % prefix and path.startswith("%s/cloud/" % prefix):
             cloud_files.append(path)
+        if path != "%s/saas/" % prefix and path.startswith("%s/saas/" % prefix):
+            saas_files.append(path)
 
     assert not enterprise_files
     assert not managed_files
     assert not cloud_files
+    assert not saas_files
 
 
 def test_demo_modifications(package_path: str, cmk_version: str) -> None:

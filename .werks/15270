@@ -1,0 +1,13 @@
+Title: Enforced service CPU load: Correct outdated checks in rule during update
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1685690761
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p29
+
+A number of cpu load checks available to be configured for the enforced service rule "CPU load (not utilization!)" in v2.0 were replaced by the more general "CPU Load" check and can as such no longer be selected.
+During update, this leads to the error message "WARNING: Invalid rule configuration detected (Ruleset : static_checks:cpu_load ...)".
+The outdated checks will now be updated during <tt>cmk-update-config</tt>.

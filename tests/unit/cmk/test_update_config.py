@@ -247,6 +247,37 @@ def test__transform_wato_ruleset_fileinfo_groups(
     assert transformed_rule.value[2]["group_patterns"] == expected_group_patterns
 
 
+@pytest.mark.parametrize(
+    "replaced_check_name",
+    [
+        "ucd_cpu_load",
+        "hpux_cpu",
+        "mcafee_emailgateway_cpuload",
+        "statgrab_load",
+        "arbor_peakflow_sp_cpu_load",
+        "arbor_peakflow_tms_cpu_load",
+        "arbor_pravail_cpu_load",
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test___transform_wato_ruleset_enforced_service_cpu_load(
+    uc: update_config.UpdateConfig, replaced_check_name: str
+) -> None:
+    rulesets = RulesetCollection()
+    ruleset_spec = [
+        {"condition": {}, "value": (replaced_check_name, None, {"levels": (10.0, 20.0)})},
+    ]
+    ruleset = Ruleset("static_checks:cpu_load", {})
+    ruleset.from_config(Folder(""), ruleset_spec)
+    rulesets.set("static_checks:cpu_load", ruleset)
+
+    uc._transform_wato_ruleset_enforced_service_cpu_load(rulesets)
+
+    _folder, _idx, transformed_rule = rulesets.get("static_checks:cpu_load").get_rules()[0]
+    replacement_check_name = "cpu_loads"
+    assert transformed_rule.value[0] == replacement_check_name
+
+
 @pytest.mark.usefixtures("request_context")
 def test__transform_wato_ruleset_fileinfo_groups_duplicate_group(
     uc: update_config.UpdateConfig, mocker: MockerFixture

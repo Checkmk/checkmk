@@ -718,6 +718,7 @@ class UpdateConfig:
         self._extract_disabled_snmp_sections_from_ignored_checks(all_rulesets)
         self._extract_checkmk_agent_rule_from_check_mk_config(all_rulesets)
         self._extract_checkmk_agent_rule_from_exit_spec(all_rulesets)
+        self._transform_wato_ruleset_enforced_service_cpu_load(all_rulesets)
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_wato_ruleset_fileinfo_groups(all_rulesets)
@@ -996,6 +997,22 @@ class UpdateConfig:
             f"Transform fileinfo_groups: adding patterns to group '{fileinfo_group_name}'"
         )
         check_rule_settings["group_patterns"] = [regex_values]
+
+    def _transform_wato_ruleset_enforced_service_cpu_load(
+        self, all_rulesets: RulesetCollection
+    ) -> None:
+        rulesets_map = all_rulesets.get_rulesets()
+        ruleset = rulesets_map.get("static_checks:cpu_load")
+
+        if ruleset is None:
+            return
+
+        for _, _, rule in ruleset.get_rules():
+            if not isinstance(rule.value, tuple):
+                continue
+            plugin_name = CheckPluginName(rule.value[0])
+            if plugin_name in REMOVED_CHECK_PLUGIN_MAP:
+                rule.value = (str(REMOVED_CHECK_PLUGIN_MAP.get(plugin_name)),) + rule.value[1:]
 
     def _transform_discovery_disabled_services(
         self,

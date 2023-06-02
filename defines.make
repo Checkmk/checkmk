@@ -33,6 +33,14 @@ else
 CLOUD              := no
 endif
 
+ifneq (,$(wildcard $(REPO_PATH)/saas))
+SAAS               := yes
+EDITION            := saas
+EDITION_SHORT      := cse
+else
+SAAS              := no
+endif
+
 VERSION            := 2.3.0b1
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name

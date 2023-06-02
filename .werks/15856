@@ -1,0 +1,18 @@
+Title: <tt>mk_oracle</tt>: Support for only remote instances without piggyback hosts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1685707499
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p30
+
+Before this werk, the Oracle agent plugin did not support the following setup:
+
+LI: The target host had no Oracle databases.
+LI: There are however configured remote istances <i>without</i> piggyback hosts.
+
+Before this werk, the agent plugin did not produce any output in this particular setup.
+

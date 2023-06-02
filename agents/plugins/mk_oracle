@@ -2982,23 +2982,19 @@ main_queries() {
         "ONLY_SIDS          : ${ONLY_SIDS}" \
         "SKIP_SIDS          : ${SKIP_SIDS}"
 
-    if [ "$PIGGYBACK_HOSTS" ]; then
-        if [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
-            touch "$MK_VARDIR/mk_oracle.found"
-        fi
+    # From now on we expect databases on this system (for ever)
+    if [ -n "$SIDS" ]; then
+        touch "$MK_VARDIR/mk_oracle.found"
     fi
 
     # If we do not have found any running database instance, then either
     # no ORACLE is present on this system or it's just currently not running.
     # In the later case we ouput empty agent sections so that Checkmk will be
     # happy and execute the actual check functions.
-    if [ -z "$SIDS" ] && [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
-        logging -c -e "[preliminaries]" "No SIDs and \$MK_VARDIR/mk_oracle.found not found"
+    if [ ! -e "$MK_VARDIR/mk_oracle.found" ] && [ -z "$REMOTE_INSTANCES" ]; then
+        logging -c -e "[preliminaries]" "\$MK_VARDIR/mk_oracle.found not found and no remote instances configured"
         exit 1
     fi
-
-    # From now on we expect databases on this system (for ever)
-    touch "$MK_VARDIR/mk_oracle.found"
 
     # Make sure that always all sections are present, even
     # in case of an error. Note: the section <<<oracle_instance>>>

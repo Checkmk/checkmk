@@ -15,9 +15,6 @@
 Store::Store(ICore *mc)
     : _mc(mc)
     , _log_cache(mc)
-#ifdef CMC
-    , _table_cached_statehist(mc)
-#endif
     , _table_columns(mc)
     , _table_commands(mc)
     , _table_comments(mc)

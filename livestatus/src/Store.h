@@ -44,19 +44,9 @@ class Logger;
 class OutputBuffer;
 class Table;
 
-#ifdef CMC
-#include "TableCachedStatehist.h"
-#endif
-
 class Store {
 public:
     explicit Store(ICore *mc);
-#ifdef CMC
-    // NOTE: This is a cruel but temporary hack...
-    TableCachedStatehist &getTableCachedStatehist() {
-        return _table_cached_statehist;
-    }
-#endif
     [[nodiscard]] Logger *logger() const;
     size_t numCachedLogMessages();
     bool answerGetRequest(const std::list<std::string> &lines,
@@ -70,9 +60,6 @@ private:
     ICore *_mc;
     LogCache _log_cache;
 
-#ifdef CMC
-    TableCachedStatehist _table_cached_statehist;
-#endif
     TableColumns _table_columns;
     TableCommands _table_commands;
     TableComments _table_comments;

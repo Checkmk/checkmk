@@ -1049,7 +1049,9 @@ class Site:
         r = web.get("user_profile.py")
         assert "Edit profile" in r.text, "Body: %s" % r.text
 
-        user_spec, etag = self.openapi.get_user("cmkadmin")
+        if (user := self.openapi.get_user("cmkadmin")) is None:
+            raise Exception("User cmkadmin not found!")
+        user_spec, etag = user
         user_spec["language"] = "en"
         user_spec.pop("enforce_password_change", None)
         self.openapi.edit_user("cmkadmin", user_spec, etag)

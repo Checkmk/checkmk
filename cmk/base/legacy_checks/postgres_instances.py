@@ -25,27 +25,8 @@ from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_postgres_instances(info):
-    parsed = {}
-    is_single = False
-    for line in info:
-        if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            db_id = line[0][3:-3]
-            is_single = True
-            parsed.setdefault(db_id.upper(), {})
-        elif len(line) >= 4:
-            if not is_single:
-                db_id = line[3].split("/")[-1]
-            try:
-                parsed.setdefault(db_id.upper(), {}).update(pid=int(line[0]))
-            except ValueError:
-                pass
-
-    return parsed
-
-
 def check_postgres_instances(item, _no_params, parsed):
-    pid = parsed.get(item, {}).get("pid")
+    pid = parsed.get(item)
     if pid is not None:
         return 0, "Status: running with PID %s" % pid
     return (
@@ -56,7 +37,6 @@ def check_postgres_instances(item, _no_params, parsed):
 
 
 check_info["postgres_instances"] = LegacyCheckDefinition(
-    parse_function=parse_postgres_instances,
     discovery_function=discover(),
     check_function=check_postgres_instances,
     service_name="PostgreSQL Instance %s",

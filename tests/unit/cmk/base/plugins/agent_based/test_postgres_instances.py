@@ -9,13 +9,13 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.legacy_checks.postgres_instances import parse_postgres_instances
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     StringTable,
 )
+from cmk.base.plugins.agent_based.postgres_instances import parse_postgres_instances
 
 
 @pytest.mark.parametrize(

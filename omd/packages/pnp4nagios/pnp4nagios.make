@@ -75,6 +75,7 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 
 	# We don't use the GUI anymore - remove it.
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios
+	rm -rf $(DESTDIR)$(OMD_ROOT)/lib/kohana
 
 	# Install Hooks
 	install -m 755 $(PACKAGE_DIR)/$(PNP4NAGIOS)/PNP4NAGIOS $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/

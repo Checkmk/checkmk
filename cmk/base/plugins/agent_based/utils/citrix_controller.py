@@ -16,17 +16,25 @@ class Error:
 
 
 @dataclasses.dataclass
+class Session:
+    active: int = 0
+    inactive: int = 0
+
+
+@dataclasses.dataclass
 class Section:
     version: None | Version = None
     state: str | Error | None = None
     licensing_grace_state: str | None = None
     licensing_server_state: str | None = None
+    session: Session | None = None
 
 
 def parse_citrix_controller(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
     section = Section()
+    session = Session()
     # piggy back data might deliver double data
     detected_states = []
     for line in string_table:
@@ -48,4 +56,10 @@ def parse_citrix_controller(string_table: StringTable) -> Section | None:
         ):
             detected_states.append(line[0])
             section.licensing_server_state = line[1]
+        if line[0] == "TotalFarmActiveSessions":
+            session.active = int(line[1])
+            section.session = session
+        elif line[0] == "TotalFarmInactiveSessions":
+            session.inactive = int(line[1])
+            section.session = session
     return section

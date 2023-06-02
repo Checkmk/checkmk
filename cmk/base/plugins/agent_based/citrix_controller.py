@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
+
 from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.utils.citrix_controller import Error, Section
+from cmk.base.plugins.agent_based.utils.citrix_controller import Error, Section, Session
 
 
 def discovery_citrix_controller(section: Section) -> v1.type_defs.DiscoveryResult:
@@ -69,4 +71,53 @@ v1.register.check_plugin(
     discovery_function=discovery_citrix_controller_licensing,
     check_function=check_citrix_controller_licensing,
     service_name="Citrix Controller Licensing",
+)
+
+
+class SessionParams(typing.TypedDict, total=False):
+    total: tuple[int, int]
+    active: tuple[int, int]
+    inactive: tuple[int, int]
+
+
+def discovery_citrix_controller_sessions(section: Section) -> v1.type_defs.DiscoveryResult:
+    if section.session is not None:
+        yield v1.Service()
+
+
+def check_citrix_controller_sessions(
+    params: SessionParams, section: Section
+) -> v1.type_defs.CheckResult:
+    session = Session() if section.session is None else section.session
+    yield from v1.check_levels(
+        session.active + session.inactive,
+        levels_upper=params.get("total"),
+        metric_name="total_sessions",
+        label="total",
+        render_func=str,
+    )
+    yield from v1.check_levels(
+        session.active,
+        levels_upper=params.get("active"),
+        metric_name="active_sessions",
+        label="active",
+        render_func=str,
+    )
+    yield from v1.check_levels(
+        session.inactive,
+        levels_upper=params.get("inactive"),
+        metric_name="inactive_sessions",
+        label="inactive",
+        render_func=str,
+    )
+
+
+v1.register.check_plugin(
+    name="citrix_controller_sessions",
+    sections=["citrix_controller"],
+    discovery_function=discovery_citrix_controller_sessions,
+    check_function=check_citrix_controller_sessions,
+    service_name="Citrix Total Sessions",
+    check_ruleset_name="citrix_sessions",
+    check_default_parameters=SessionParams(),
 )

@@ -54,6 +54,10 @@ pipfile = "*" # for generating import names during int tests
 networkx = "*" # needed for py-import-cycles
 py-import-cycles = "*"  # used in tests/Makefile
 telnetlib3 = "*"  # used by Windows Agent tests
+# schemathesis is currently pinned due to the combination of these two issues, we can unpin as soon
+# as one of them is solved
+# https://github.com/schemathesis/schemathesis/issues/1745
+# https://github.com/pylint-dev/astroid/issues/2191
 schemathesis = "==3.19.0"  # used for openapi tests
 httpx = "*"  # used by agent receiver tests
 ruff = "*"

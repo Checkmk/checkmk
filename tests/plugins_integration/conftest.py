@@ -1,16 +1,17 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import logging
-from collections.abc import Generator
-from pathlib import Path
+import os
+from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.openapi_session import UnexpectedResponse
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.utils import execute
+
+from tests.plugins_integration import constants
+from tests.plugins_integration.checks import get_host_names
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,99 +32,101 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
-    config.addinivalue_line("markers", "update_checks: run test marked as update_checks")
-
-
-def pytest_collection_modifyitems(config, items):
-    skip_update_checks = pytest.mark.skip(
-        reason="Test used to store checks output. Selectable with --update-checks"
-    )
-    skip_check_tests = pytest.mark.skip(
-        reason="Only tests marked as 'update_checks' have been selected"
-    )
-    for item in items:
-        if ("update_checks" in item.keywords) == config.getoption("--update-checks"):
-            continue
-        item.add_marker(
-            skip_update_checks if "update_checks" in item.keywords else skip_check_tests
-        )
-
-
 @pytest.fixture(name="test_site", scope="session")
-def get_site() -> Generator[Site, None, None]:
-    yield from get_site_factory(prefix="plugins_").get_test_site()
+def get_site() -> Iterator[Site]:
+    yield from get_site_factory(prefix="plugins_", update_from_git=False).get_test_site()
 
 
 @pytest.fixture(scope="session")
-def setup(test_site: Site, request: pytest.FixtureRequest) -> Generator:
+def setup(test_site: Site, request: pytest.FixtureRequest) -> Iterator:
     """Setup test-site and perform cleanup after test execution."""
+    dump_path = test_site.path(f"var/check_mk/{constants.DUMP_DIR}")
 
-    agent_output_path = test_site.path("var/check_mk/agent_output")
-
-    # create agent-output folders in the test site
-    LOGGER.info('Creating folder "%s"...', agent_output_path)
-    rc = test_site.execute(["mkdir", "-p", agent_output_path]).wait()
+    # create dump folder in the test site
+    LOGGER.info('Creating folder "%s"...', dump_path)
+    rc = test_site.execute(["mkdir", "-p", dump_path]).wait()
     assert rc == 0
 
-    injected_output = str(Path(__file__).parent.resolve() / "agent_output")
-    host_folder = "/agents"
-
     LOGGER.info("Injecting agent-output...")
-    assert execute(["sudo", "cp", "-r", f"{injected_output}/.", agent_output_path]).returncode == 0
+    assert execute(["sudo", "cp", "-r", f"{constants.DUMP_DIR_PATH}/.", dump_path]).returncode == 0
 
-    try:
-        test_site.openapi.get_folder(host_folder)
-    except UnexpectedResponse as e:
-        if not str(e).startswith("[404]"):
-            raise e
-        test_site.openapi.create_folder(host_folder)
-    test_site.openapi.create_rule(
-        ruleset_name="datasource_programs",
-        value=f"cat {agent_output_path}/<HOST>",
-        folder=host_folder,
-    )
-    hosts = [
-        _
-        for _ in test_site.check_output(["ls", "-1", agent_output_path]).split("\n")
-        if _ and not _.startswith(".")
-    ]
-    for host in hosts:
-        try:
-            test_site.openapi.get_host(host)
-        except UnexpectedResponse as e:
-            if not str(e).startswith("[404]"):
-                raise e
-            test_site.openapi.create_host(
-                host,
-                folder=host_folder,
-                attributes={"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"},
-                bake_agent=False,
-            )
-        test_site.openapi.discover_services_and_wait_for_completion(host)
+    for dump_type in constants.DUMP_TYPES:
+        host_folder = f"/{dump_type}"
+        if test_site.openapi.get_folder(host_folder):
+            LOGGER.info('Host folder "%s" already exists!', host_folder)
+        else:
+            LOGGER.info('Creating host folder "%s"...', host_folder)
+            test_site.openapi.create_folder(host_folder)
+        ruleset_name = "usewalk_hosts" if dump_type == "snmp" else "datasource_programs"
+        LOGGER.info('Creating rule "%s"...', ruleset_name)
+        test_site.openapi.create_rule(
+            ruleset_name=ruleset_name,
+            value=(True if dump_type == "snmp" else f"cat {dump_path}/<HOST>"),
+            folder=host_folder,
+        )
+        LOGGER.info('Rule "%s" created!', ruleset_name)
+        LOGGER.info("Getting host names...")
+        host_names = [_ for _ in get_host_names() if ("snmp" in _) == (dump_type == "snmp")]
+        LOGGER.info("Creating hosts...")
+        host_attributes = {
+            "ipaddress": "127.0.0.1",
+            "tag_agent": ("cmk-agent" if dump_type == "agent" else "no-agent"),
+        }
+        if dump_type == "snmp":
+            host_attributes["tag_snmp_ds"] = "snmpv2"
+        test_site.openapi.bulk_create_hosts(
+            [
+                {
+                    "host_name": host_name,
+                    "folder": host_folder,
+                    "attributes": host_attributes,
+                }
+                for host_name in host_names
+            ],
+            bake_agent=False,
+            ignore_existing=True,
+        )
+
+    LOGGER.info("Activating changes & reloading core...")
     test_site.activate_changes_and_wait_for_core_reload()
 
-    for host in hosts:
-        LOGGER.info("Checking for pending services on host %s...", host)
-        pending_checks = test_site.openapi.get_host_services(host, pending=True)
-        while len(pending_checks) > 0:
-            LOGGER.info(
-                "The following pending services were found on host %s: %s. Rescheduling checks...",
-                host,
-                ",".join([_.get("extensions", {}).get("description") for _ in pending_checks]),
-            )
-            for check in pending_checks:
-                try:
-                    test_site.schedule_check(
-                        host, check.get("extensions", {}).get("description"), 0
-                    )
-                except AssertionError:
-                    pass
-            pending_checks = test_site.openapi.get_host_services(host, pending=True)
+    LOGGER.info("Running update-config...")
+    assert test_site.execute(["cmk-update-config"]).wait() == 0
+
+    LOGGER.info("Running service discovery...")
+    if os.getenv("CMK_SERVICE_DISCOVERY") == "1":
+        assert test_site.execute(["cmk", "-vI"]).wait() == 0
+    else:
+        test_site.openapi.bulk_discover_services(host_names, bulk_size=10, wait_for_completion=True)
+
+    LOGGER.info("Activating changes & reloading core...")
+    test_site.activate_changes_and_wait_for_core_reload()
+
+    LOGGER.info("Checking for pending services...")
+    pending_checks = {_: test_site.openapi.get_host_services(_, pending=True) for _ in host_names}
+    num_tries = 3
+    for _ in range(num_tries):
+        for host_name in list(pending_checks.keys())[:]:
+            test_site.schedule_check(host_name, "Check_MK", 0, 60)
+            pending_checks[host_name] = test_site.openapi.get_host_services(host_name, pending=True)
+            if len(pending_checks[host_name]) == 0:
+                pending_checks.pop(host_name, None)
+                continue
+
+    for host_name in pending_checks:
+        LOGGER.info(
+            '%s pending service(s) found on host "%s": %s',
+            len(pending_checks[host_name]),
+            host_name,
+            ",".join(
+                _.get("extensions", {}).get("description", _.get("id"))
+                for _ in pending_checks[host_name]
+            ),
+        )
 
     yield
 
     if not request.config.getoption("--skip-cleanup"):
         # cleanup existing agent-output folder in the test site
-        LOGGER.info('Removing folder "%s"...', agent_output_path)
-        assert execute(["sudo", "rm", "-rf", agent_output_path]).returncode == 0
+        LOGGER.info('Removing folder "%s"...', dump_path)
+        assert execute(["sudo", "rm", "-rf", dump_path]).returncode == 0

@@ -4,11 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 
-AGENT_OUTPUT_DIR = f"{os.path.dirname(__file__)}/agent_output"
-EXPECTED_OUTPUT_DIR = f"{os.path.dirname(__file__)}/check_output"
+DUMP_DIR = "dumps"
+DUMP_DIR_PATH = f"{os.path.dirname(__file__)}/{DUMP_DIR}"
+RESPONSE_DIR = "responses"
+RESPONSE_DIR_PATH = f"{os.path.dirname(__file__)}/{RESPONSE_DIR}"
+
 SECTION_NAMES = [_ for _ in os.getenv("SECTION_NAMES", "").split(",") if _]
 HOST_NAMES = [_ for _ in os.getenv("HOST_NAMES", "").split(",") if _]
 CHECK_NAMES = [_ for _ in os.getenv("CHECK_NAMES", "").split(",") if _]
+# TODO: Finish SNMP tests and enable them by default
+DUMP_TYPES = [_ for _ in os.getenv("DUMP_TYPES", "agent").split(",") if _]
 
 API_SERVICES_COLS = [
     "host_name",

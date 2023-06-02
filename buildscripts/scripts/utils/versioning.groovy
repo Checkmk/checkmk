@@ -170,6 +170,7 @@ def patch_themes(EDITION) {
             }
             break
         case 'cloud':
+        case 'saas':
         case 'enterprise':
         case 'free':
             // Workaround since scss does not support conditional includes

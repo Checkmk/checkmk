@@ -28,6 +28,8 @@ class Section:
     licensing_grace_state: str | None = None
     licensing_server_state: str | None = None
     session: Session | None = None
+    desktop_count: int | Error | None = None
+    active_site_services: str | None = None
 
 
 def parse_citrix_controller(string_table: StringTable) -> Section | None:
@@ -62,4 +64,11 @@ def parse_citrix_controller(string_table: StringTable) -> Section | None:
         elif line[0] == "TotalFarmInactiveSessions":
             session.inactive = int(line[1])
             section.session = session
+        if line[0] == "DesktopsRegistered":
+            try:
+                section.desktop_count = int(line[1])
+            except (IndexError, ValueError):
+                section.desktop_count = Error()
+        if line[0] == "ActiveSiteServices":
+            section.active_site_services = " ".join(line[1:])
     return section

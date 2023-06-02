@@ -121,3 +121,58 @@ v1.register.check_plugin(
     check_ruleset_name="citrix_sessions",
     check_default_parameters=SessionParams(),
 )
+
+
+class DesktopParams(typing.TypedDict, total=False):
+    levels: tuple[int, int]
+    levels_lower: tuple[int, int]
+
+
+def discovery_citrix_controller_registered(section: Section) -> v1.type_defs.DiscoveryResult:
+    if section.desktop_count is not None:
+        yield v1.Service()
+
+
+def check_citrix_controller_registered(
+    params: DesktopParams, section: Section
+) -> v1.type_defs.CheckResult:
+    if isinstance(section.desktop_count, Error) or section.desktop_count is None:
+        yield v1.Result(state=v1.State.UNKNOWN, summary="No desktops registered")
+    else:
+        yield from v1.check_levels(
+            section.desktop_count,
+            metric_name="registered_desktops",
+            levels_upper=params.get("levels"),
+            levels_lower=params.get("levels_lower"),
+            render_func=str,
+        )
+
+
+v1.register.check_plugin(
+    name="citrix_controller_registered",
+    sections=["citrix_controller"],
+    discovery_function=discovery_citrix_controller_registered,
+    check_function=check_citrix_controller_registered,
+    service_name="Citrix Desktops Registered",
+    check_ruleset_name="citrix_desktops_registered",
+    check_default_parameters=DesktopParams(),
+)
+
+
+def discovery_citrix_controller_services(section: Section) -> v1.type_defs.DiscoveryResult:
+    if section.active_site_services is not None:
+        yield v1.Service()
+
+
+def check_citrix_controller_services(section: Section) -> v1.type_defs.CheckResult:
+    if section.active_site_services is not None:
+        yield v1.Result(state=v1.State.OK, summary=section.active_site_services or "No services")
+
+
+v1.register.check_plugin(
+    name="citrix_controller_services",
+    sections=["citrix_controller"],
+    discovery_function=discovery_citrix_controller_services,
+    check_function=check_citrix_controller_services,
+    service_name="Citrix Active Site Services",
+)

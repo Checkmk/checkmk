@@ -382,8 +382,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "cisco_ucs_temp_mem",
         "cisco_vpn_sessions",
         "cisco_vss",
-        "citrix_controller.services",
-        "citrix_controller.registered",
         "citrix_hostsystem.vms",
         "citrix_hostsystem",
         "citrix_licenses",

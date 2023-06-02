@@ -14,16 +14,18 @@ from livestatus import SiteId
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.agent_registration import get_uuid_link_manager
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import HostName
 
-from cmk.gui import userdb
-from cmk.gui.background_job import BackgroundProcessInterface
+from cmk.gui import background_job, userdb
+from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, job_registry
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
@@ -394,3 +396,39 @@ class AutomationRenameHostsUUIDLink(AutomationCommand):
 
     def get_request(self) -> _RenameHostsUUIDLinkRequest:
         return _RenameHostsUUIDLinkRequest(renamings=json.loads(request.get_request()["renamings"]))
+
+
+@job_registry.register
+class RenameHostsBackgroundJob(BackgroundJob):
+    job_prefix = "rename-hosts"
+
+    @classmethod
+    def gui_title(cls) -> str:
+        return _("Host renaming")
+
+    def __init__(self, title: str | None = None) -> None:
+        super().__init__(
+            self.job_prefix,
+            background_job.InitialStatusArgs(
+                title=title or self.gui_title(),
+                lock_wato=True,
+                stoppable=False,
+                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
+            ),
+        )
+
+        if self.is_active():
+            raise MKGeneralException(_("Another renaming operation is currently in progress"))
+
+    def _back_url(self) -> str:
+        return makeuri(request, [])
+
+
+@job_registry.register
+class RenameHostBackgroundJob(RenameHostsBackgroundJob):
+    def __init__(self, host, title=None) -> None:  # type: ignore[no-untyped-def]
+        super().__init__(title)
+        self._host = host
+
+    def _back_url(self):
+        return self._host.folder().url()

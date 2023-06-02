@@ -38,3 +38,7 @@ editions:
         release: [*common]
         daily: *daily_reduced
         testbuild: []
+    saas:
+        release: ["ubuntu-22.04"]
+        daily: ["ubuntu-22.04"]
+        testbuild: []

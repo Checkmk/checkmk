@@ -47,14 +47,14 @@ def main() {
     ];
 
     // TODO we should take this list from a single source of truth
-    assert edition in ["enterprise", "raw", "managed", "cloud"] : (
+    assert edition in ["enterprise", "raw", "managed", "cloud", "saas"] : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}")
 
     def build_image = true;
     def build_cloud_images = edition == "cloud";
 
-    def run_integration_tests = true;
-    def run_image_tests = true;
+    def run_integration_tests = edition != "saas";
+    def run_image_tests = edition != "saas";
 
     print(
         """

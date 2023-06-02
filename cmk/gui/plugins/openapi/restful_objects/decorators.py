@@ -538,7 +538,7 @@ class Endpoint:
 
             if request.environ.get("paste.testing"):
                 raise RestAPIPermissionException(
-                    title="Required permissions not declared for this endpoint.",
+                    title=f"Required permissions ({pname}) not declared for this endpoint.",
                     detail=f"Endpoint: {self}\n"
                     f"Permission: {pname}\n"
                     f"Used permission: {self._used_permissions}\n"

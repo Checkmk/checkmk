@@ -48,9 +48,10 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui import fields as gui_fields
+from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.http import Response
+from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -64,9 +65,10 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import EXT, problem, ProblemException, serve_json
 from cmk.gui.valuespec import Hostname
+from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.host_rename import perform_rename_hosts
+from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
 from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree, Host
 
 from cmk import fields
@@ -487,25 +489,29 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     method="put",
     path_params=[HOST_NAME],
     etag="both",
-    additional_status_codes=[409, 422],
+    additional_status_codes=[302, 409, 422],
     status_descriptions={
-        409: "There are pending changes not yet activated.",
+        302: "The host rename process is still running. Redirecting to the 'Wait for completion' endpoint",
+        409: "There are pending changes not yet activated or a rename background job is already running.",
         422: "The host could not be renamed.",
     },
-    request_schema=request_schemas.RenameHost,
-    response_schema=response_schemas.HostConfigSchema,
     permissions_required=permissions.AllPerm(
         [
-            *PERMISSIONS.perms,
             permissions.Perm("wato.edit_hosts"),
             permissions.Perm("wato.rename_hosts"),
-            permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
+            permissions.Perm("wato.see_all_folders"),
         ]
     ),
+    request_schema=request_schemas.RenameHost,
+    response_schema=response_schemas.HostConfigSchema,
 )
 def rename_host(params: Mapping[str, Any]) -> Response:
-    """Rename a host"""
-    user.need_permission("wato.edit")
+    """Rename a host
+
+    This endpoint will start a background job to rename the host. Only one rename background job
+    can run at a time.
+    """
+    user.need_permission("wato.edit_hosts")
     user.need_permission("wato.rename_hosts")
     if has_pending_changes():
         return problem(
@@ -516,14 +522,59 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     host_name = params["host_name"]
     host: CREHost = Host.load_host(host_name)
     new_name = params["body"]["new_name"]
-    _, auth_problems = perform_rename_hosts([(host.folder(), host_name, new_name)])
-    if auth_problems:
-        return problem(
-            status=422,
-            title="Rename process failed",
-            detail=f"It was not possible to rename the host {host_name} to {new_name}",
+
+    try:
+        background_job = RenameHostBackgroundJob(host)
+        background_job.start(
+            lambda job_interface: rename_hosts_background_job(
+                [(host.folder(), host_name, new_name)], job_interface
+            )
         )
-    return _serve_host(host, effective_attributes=False)
+    except BackgroundJobAlreadyRunning:
+        return problem(
+            status=409,
+            title="A host rename process is already running",
+        )
+
+    response = Response(status=302)
+    response.location = constructors.link_endpoint(
+        "cmk.gui.plugins.openapi.endpoints.host_config", "cmk/wait-for-completion", parameters={}
+    )["href"]
+    return response
+
+
+@Endpoint(
+    constructors.domain_type_action_href("host_config", "wait-for-completion"),
+    "cmk/wait-for-completion",
+    method="post",
+    status_descriptions={
+        204: "The renaming job has been completed.",
+        302: (
+            "The renaming job is still running. Redirecting to the "
+            "'Wait for completion' endpoint."
+        ),
+        404: "There is no running renaming job",
+    },
+    additional_status_codes=[302, 404],
+    output_empty=True,
+)
+def renaming_job_wait_for_completion(params: Mapping[str, Any]) -> Response:
+    """Wait for renaming process completion
+
+    This endpoint will redirect on itself to prevent timeouts.
+    """
+    job_exists, job_is_active = RenameHostsBackgroundJob.status_checks()
+    if not job_exists:
+        return problem(
+            status=404,
+            title="No running renaming job was found",
+        )
+
+    if job_is_active:
+        response = Response(status=302)
+        response.location = request.url
+        return response
+    return Response(status=204)
 
 
 @Endpoint(

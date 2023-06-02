@@ -410,6 +410,20 @@ class RenameHostsBackgroundJob(BackgroundJob):
     def gui_title(cls) -> str:
         return _("Host renaming")
 
+    @classmethod
+    def status_checks(cls, title: str | None = None) -> tuple[bool, bool]:
+        instance = cls.__new__(cls)
+        super(RenameHostsBackgroundJob, instance).__init__(
+            instance.job_prefix,
+            background_job.InitialStatusArgs(
+                title=title or instance.gui_title(),
+                lock_wato=True,
+                stoppable=False,
+                estimated_duration=BackgroundJob(instance.job_prefix).get_status().duration,
+            ),
+        )
+        return instance.exists(), instance.is_active()
+
     def __init__(self, title: str | None = None) -> None:
         super().__init__(
             self.job_prefix,

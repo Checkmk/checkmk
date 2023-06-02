@@ -792,20 +792,18 @@ def test_openapi_host_rename(
         headers={"Accept": "application/json"},
     )
 
-    _resp = aut_user_auth_wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_config/foobar/actions/rename/invoke",
         params='{"new_name": "foobaz"}',
         content_type="application/json",
-        status=200,
+        status=302,
         headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
     )
 
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobaz",
-        status=200,
-        headers={"Accept": "application/json"},
+    assert (
+        resp.location
+        == "http://localhost/NO_SITE/check_mk/api/1.0/domain-types/host_config/actions/wait-for-completion/invoke"
     )
 
 

@@ -2,10 +2,10 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import * as utils from "utils";
 import * as ajax from "ajax";
 import * as quicksearch from "quicksearch";
 import {CMKAjaxReponse} from "types";
+import * as utils from "utils";
 
 let g_content_loc: null | string = null;
 let g_scrollbar: SimpleBar | null | undefined = null;

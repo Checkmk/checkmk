@@ -2,11 +2,12 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import * as utils from "utils";
 import "element-closest-polyfill";
+
 import * as foldable_container from "foldable_container";
-import * as popup_menu from "popup_menu";
 import * as forms from "forms";
+import * as popup_menu from "popup_menu";
+import * as utils from "utils";
 
 // Closes the active page menu dropdown
 export function close_active_dropdown() {

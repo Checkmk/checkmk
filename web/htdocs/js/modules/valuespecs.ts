@@ -2,16 +2,17 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import {set} from "lodash";
-import $ from "jquery";
-import * as utils from "utils";
-import * as popup_menu from "popup_menu";
-import * as ajax from "ajax";
-import * as forms from "forms";
-import * as colorpicker from "colorpicker";
 import "select2";
-import {QueryOptions} from "select2";
+
+import * as ajax from "ajax";
+import * as colorpicker from "colorpicker";
 import * as d3 from "d3";
+import * as forms from "forms";
+import $ from "jquery";
+import {set} from "lodash";
+import * as popup_menu from "popup_menu";
+import {QueryOptions} from "select2";
+import * as utils from "utils";
 
 //#   +--------------------------------------------------------------------+
 //#   | Functions needed by HTML code from ValueSpec (valuespec.py)        |

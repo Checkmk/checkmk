@@ -2,8 +2,19 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import "nodevis/layout";
+
 import * as d3 from "d3";
 import {ZoomTransform} from "d3";
+import {
+    AbstractLayer,
+    FixLayer,
+    layer_class_registry,
+    LayerSelections,
+    OverlayConfig,
+    ToggleableLayer,
+} from "nodevis/layer_utils";
+import {LayeredNodesLayer} from "nodevis/layers";
 import {
     BackendChunkResponse,
     Coords,
@@ -18,17 +29,7 @@ import {
     RectangleWithCoords,
     SerializedNodeChunk,
 } from "nodevis/type_defs";
-import {
-    AbstractLayer,
-    FixLayer,
-    layer_class_registry,
-    LayerSelections,
-    OverlayConfig,
-    ToggleableLayer,
-} from "nodevis/layer_utils";
 import {DefaultTransition} from "nodevis/utils";
-import "nodevis/layout";
-import {LayeredNodesLayer} from "nodevis/layers";
 
 //#.
 //#   .-Layered Viewport---------------------------------------------------.

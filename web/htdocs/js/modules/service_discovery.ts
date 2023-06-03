@@ -2,9 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import * as utils from "utils";
 import * as ajax from "ajax";
 import * as async_progress from "async_progress";
+import * as utils from "utils";
 
 //#   +--------------------------------------------------------------------+
 //#   | Handling of the asynchronous service discovery dialog              |

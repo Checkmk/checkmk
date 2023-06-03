@@ -3,8 +3,8 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import $ from "jquery";
-import * as utils from "utils";
 import Swal from "sweetalert2";
+import * as utils from "utils";
 
 // ----------------------------------------------------------------------------
 // General functions for WATO

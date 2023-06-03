@@ -2,20 +2,19 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import * as d3 from "d3";
+import {ForceOptions, SimulationForce} from "nodevis/force_simulation";
 import {
     ContextMenuElement,
     d3SelectionG,
     NodevisNode,
     NodevisWorld,
 } from "nodevis/type_defs";
-import * as d3 from "d3";
-
 import {
     AbstractClassRegistry,
     DefaultTransition,
     TypeWithName,
 } from "nodevis/utils";
-import {ForceOptions, SimulationForce} from "nodevis/force_simulation";
 
 type d3SelectionQuickinfo = d3.Selection<
     HTMLDivElement,

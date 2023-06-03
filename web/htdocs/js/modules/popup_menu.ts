@@ -6,8 +6,8 @@
 //#   | Floating popup menus with content fetched via AJAX calls           |
 //#   '--------------------------------------------------------------------'
 
-import * as utils from "utils";
 import * as ajax from "ajax";
+import * as utils from "utils";
 import * as valuespecs from "valuespecs";
 
 interface PopUpSpec {

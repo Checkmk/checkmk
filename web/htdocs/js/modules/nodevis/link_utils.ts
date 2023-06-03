@@ -1,3 +1,4 @@
+import {LineConfig} from "nodevis/layout_utils";
 import {
     d3SelectionG,
     NodevisLink,
@@ -5,7 +6,6 @@ import {
     NodevisWorld,
 } from "nodevis/type_defs";
 import {AbstractClassRegistry, DefaultTransition} from "nodevis/utils";
-import {LineConfig} from "nodevis/layout_utils";
 
 export function compute_link_id(link_data: NodevisLink): string {
     return link_data.source.data.id + "#@#" + link_data.target.data.id;

@@ -1,9 +1,9 @@
 /* eslint-disable indent */
 
-import * as d3 from "d3";
-import * as dc from "dc";
 import * as cmk_figures from "cmk_figures";
 import crossfilter from "crossfilter2";
+import * as d3 from "d3";
+import * as dc from "dc";
 import {PieChart} from "dc";
 
 export interface Cell<Config = PieChartData | NtopTalkerData> {

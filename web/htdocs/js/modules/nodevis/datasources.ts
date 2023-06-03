@@ -20,6 +20,7 @@
 
 import * as d3 from "d3";
 import {DatasourceCallback} from "nodevis/type_defs";
+
 import * as utils from "../utils";
 
 // Takes care of all available datasources

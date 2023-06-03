@@ -1,7 +1,8 @@
-import * as d3 from "d3";
 import crossfilter from "crossfilter2";
-import * as utils from "../utils";
+import * as d3 from "d3";
 import {CMKAjaxReponse} from "types";
+
+import * as utils from "../utils";
 
 export interface ElementSize {
     width: number;

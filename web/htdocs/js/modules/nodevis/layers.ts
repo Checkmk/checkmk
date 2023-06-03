@@ -2,6 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import "nodevis/node_types";
+import "nodevis/link_types";
+
 import * as d3 from "d3";
 import {
     FixLayer,
@@ -9,6 +12,12 @@ import {
     LayerSelections,
     ToggleableLayer,
 } from "nodevis/layer_utils";
+import {
+    AbstractLink,
+    compute_link_id,
+    link_type_class_registry,
+} from "nodevis/link_utils";
+import {AbstractGUINode, node_type_class_registry} from "nodevis/node_utils";
 import {
     ContextMenuElement,
     Coords,
@@ -20,14 +29,6 @@ import {
     RectangleWithCoords,
 } from "nodevis/type_defs";
 import {DefaultTransition} from "nodevis/utils";
-import {AbstractGUINode, node_type_class_registry} from "nodevis/node_utils";
-import {
-    AbstractLink,
-    compute_link_id,
-    link_type_class_registry,
-} from "nodevis/link_utils";
-import "nodevis/node_types";
-import "nodevis/link_types";
 
 export class LayeredDebugLayer extends ToggleableLayer {
     static class_name = "debug_layer";

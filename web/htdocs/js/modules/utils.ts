@@ -2,10 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import SimpleBar from "simplebar";
-
 import * as ajax from "ajax";
 import * as selection from "selection";
+import SimpleBar from "simplebar";
 
 export type Nullable<T> = null | T;
 let g_content_scrollbar: SimpleBar | null | undefined = null;

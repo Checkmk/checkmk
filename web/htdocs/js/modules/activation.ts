@@ -4,9 +4,9 @@
 
 import * as ajax from "ajax";
 import * as async_progress from "async_progress";
-import * as utils from "utils";
 import * as page_menu from "page_menu";
 import {CMKAjaxReponse} from "types";
+import * as utils from "utils";
 
 //#.
 //#   .-Activation---------------------------------------------------------.

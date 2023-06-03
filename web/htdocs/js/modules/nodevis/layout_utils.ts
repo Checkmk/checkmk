@@ -2,6 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import * as d3 from "d3";
+import {ForceOptions} from "nodevis/force_simulation";
+import {compute_node_positions_from_list_of_nodes} from "nodevis/layout";
 import {
     Coords,
     d3SelectionDiv,
@@ -16,9 +19,6 @@ import {
     get_bounding_rect,
     log,
 } from "nodevis/utils";
-import {compute_node_positions_from_list_of_nodes} from "nodevis/layout";
-import * as d3 from "d3";
-import {ForceOptions} from "nodevis/force_simulation";
 
 export class LineConfig {
     style: "straight" | "elbow" | "round" = "round";

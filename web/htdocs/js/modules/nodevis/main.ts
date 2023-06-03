@@ -4,36 +4,36 @@
 
 import * as d3 from "d3";
 import {
-    BackendChunkResponse,
-    d3SelectionDiv,
-    NodevisWorld,
-    Rectangle,
-} from "nodevis/type_defs";
-import {InfoBox} from "nodevis/infobox";
-import {
     AggregationsDatasource,
     DatasourceManager,
     TopologyDatasource,
 } from "nodevis/datasources";
-import {Toolbar} from "nodevis/toolbar";
-import {LayeredViewport} from "nodevis/viewport";
+import {LayoutStyleExampleGenerator} from "nodevis/example_generator";
 import {
     BIForceConfig,
     ForceConfig,
     ForceOptions,
     ForceSimulation,
 } from "nodevis/force_simulation";
+import {InfoBox} from "nodevis/infobox";
+import {layer_class_registry, OverlayConfig} from "nodevis/layer_utils";
+import {LayeredNodesLayer} from "nodevis/layers";
+import {LayoutManagerLayer} from "nodevis/layout";
 import {
     layout_style_class_registry,
     LineConfig,
     StyleConfig,
 } from "nodevis/layout_utils";
 import {node_type_class_registry} from "nodevis/node_utils";
-import {layer_class_registry, OverlayConfig} from "nodevis/layer_utils";
-import {LayeredNodesLayer} from "nodevis/layers";
-import {LayoutManagerLayer} from "nodevis/layout";
+import {Toolbar} from "nodevis/toolbar";
+import {
+    BackendChunkResponse,
+    d3SelectionDiv,
+    NodevisWorld,
+    Rectangle,
+} from "nodevis/type_defs";
 import {LiveSearch, SearchFilters} from "nodevis/utils";
-import {LayoutStyleExampleGenerator} from "nodevis/example_generator";
+import {LayeredViewport} from "nodevis/viewport";
 
 //
 //  .--MainInstance--------------------------------------------------------.

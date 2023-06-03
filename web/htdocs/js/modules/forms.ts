@@ -2,16 +2,16 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import $ from "jquery";
 import "select2";
-import Tagify, {EditTagsRuntimeSettings} from "@yaireo/tagify";
 import "element-closest-polyfill";
-import Swal from "sweetalert2";
 
-import * as utils from "utils";
+import Tagify, {EditTagsRuntimeSettings} from "@yaireo/tagify";
 import * as ajax from "ajax";
-import {initialize_autocompleters, toggle_label_row_opacity} from "valuespecs";
+import $ from "jquery";
+import Swal from "sweetalert2";
 import {CMKAjaxReponse} from "types";
+import * as utils from "utils";
+import {initialize_autocompleters, toggle_label_row_opacity} from "valuespecs";
 
 interface TagifyState {
     inputText: string;

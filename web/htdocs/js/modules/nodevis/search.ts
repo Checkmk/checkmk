@@ -7,6 +7,7 @@ import {
     SearchResultEntry,
     SearchResults,
 } from "nodevis/type_defs";
+
 import {ToolbarPluginBase} from "./toolbar_utils";
 
 export class SearchAggregationsPlugin extends ToolbarPluginBase {

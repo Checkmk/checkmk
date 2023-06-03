@@ -1,19 +1,19 @@
 import * as d3 from "d3";
 import {HierarchyNode} from "d3";
-import {InfoBox} from "nodevis/infobox";
 import {DatasourceManager} from "nodevis/datasources";
-import {Toolbar} from "nodevis/toolbar";
-import {LayeredViewport} from "nodevis/viewport";
+import {ForceOptions, ForceSimulation} from "nodevis/force_simulation";
+import {InfoBox} from "nodevis/infobox";
+import {LayeredNodesLayer} from "nodevis/layers";
+import {LayoutManagerLayer} from "nodevis/layout";
 import {
     AbstractLayoutStyle,
     LineConfig,
     NodeVisualizationLayout,
     StyleConfig,
 } from "nodevis/layout_utils";
-import {ForceOptions, ForceSimulation} from "nodevis/force_simulation";
-import {LayoutManagerLayer} from "nodevis/layout";
-import {LayeredNodesLayer} from "nodevis/layers";
 import {NodeVisualization} from "nodevis/main";
+import {Toolbar} from "nodevis/toolbar";
+import {LayeredViewport} from "nodevis/viewport";
 
 export type d3SelectionDiv = d3.Selection<
     HTMLDivElement,

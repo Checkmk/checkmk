@@ -11,9 +11,9 @@
 //   |                                                                    |
 //   +--------------------------------------------------------------------+
 
-import {d3SelectionDiv, NodevisWorld} from "nodevis/type_defs";
-import {ToolbarPluginBase} from "nodevis/toolbar_utils";
 import {SearchAggregationsPlugin} from "nodevis/search";
+import {ToolbarPluginBase} from "nodevis/toolbar_utils";
+import {d3SelectionDiv, NodevisWorld} from "nodevis/type_defs";
 
 export class Toolbar {
     _world: NodevisWorld;

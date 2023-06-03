@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import * as d3 from "d3";
+import {StyleMatcherConditions} from "nodevis/layout_utils";
 import {
     BoundingRect,
     Coords,
@@ -9,8 +11,6 @@ import {
     NodeChunk,
     NodevisNode,
 } from "nodevis/type_defs";
-import {StyleMatcherConditions} from "nodevis/layout_utils";
-import * as d3 from "d3";
 
 // TODO: remove or fix logging
 export function log(level, ...args) {

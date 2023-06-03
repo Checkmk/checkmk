@@ -1,10 +1,10 @@
 import * as d3 from "d3";
-import {ContextMenuElement, NodevisNode, NodevisWorld} from "nodevis/type_defs";
 import {
     AbstractGUINode,
     BasicQuickinfo,
     node_type_class_registry,
 } from "nodevis/node_utils";
+import {ContextMenuElement, NodevisNode, NodevisWorld} from "nodevis/type_defs";
 import {SearchFilters, TypeWithName} from "nodevis/utils";
 
 export class TopologyNode extends AbstractGUINode {

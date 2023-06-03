@@ -5,21 +5,12 @@
 import * as ajax from "ajax";
 import * as d3 from "d3";
 import {
-    ContextMenuElement,
-    Coords,
-    d3SelectionDiv,
-    d3SelectionG,
-    NodeChunk,
-    NodevisNode,
-    NodevisWorld,
-} from "nodevis/type_defs";
-import {
     FixLayer,
     layer_class_registry,
     LayerSelections,
     ToggleableLayer,
 } from "nodevis/layer_utils";
-import {ToolbarPluginBase} from "nodevis/toolbar_utils";
+import {LayoutStyleFixed} from "nodevis/layout_styles";
 import {
     AbstractLayoutStyle,
     compute_style_id,
@@ -35,7 +26,16 @@ import {
     StyleOptionSpec,
     StyleOptionValues,
 } from "nodevis/layout_utils";
-import {LayoutStyleFixed} from "nodevis/layout_styles";
+import {ToolbarPluginBase} from "nodevis/toolbar_utils";
+import {
+    ContextMenuElement,
+    Coords,
+    d3SelectionDiv,
+    d3SelectionG,
+    NodeChunk,
+    NodevisNode,
+    NodevisWorld,
+} from "nodevis/type_defs";
 import {
     DefaultTransition,
     get_bounding_rect,

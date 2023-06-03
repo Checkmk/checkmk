@@ -1,8 +1,8 @@
-import {NodevisLink, NodevisNode, NodevisWorld} from "nodevis/type_defs";
 import * as d3 from "d3";
 import {Simulation} from "d3";
 import {compute_node_positions_from_list_of_nodes} from "nodevis/layout";
 import {StyleOptionSpecRange, StyleOptionValues} from "nodevis/layout_utils";
+import {NodevisLink, NodevisNode, NodevisWorld} from "nodevis/type_defs";
 
 export type SimulationForce =
     | "charge"

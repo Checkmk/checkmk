@@ -4,7 +4,10 @@
 
 import * as d3 from "d3";
 import * as d3_flextree from "d3-flextree";
-import {Coords, NodevisNode, RectangleWithCoords} from "nodevis/type_defs";
+import {
+    compute_node_position,
+    compute_node_positions_from_list_of_nodes,
+} from "nodevis/layout";
 import {
     AbstractLayoutStyle,
     layout_style_class_registry,
@@ -12,11 +15,8 @@ import {
     StyleOptionSpec,
     StyleOptionSpecCheckbox,
 } from "nodevis/layout_utils";
+import {Coords, NodevisNode, RectangleWithCoords} from "nodevis/type_defs";
 import {get_bounding_rect_of_rotated_vertices, log} from "nodevis/utils";
-import {
-    compute_node_position,
-    compute_node_positions_from_list_of_nodes,
-} from "nodevis/layout";
 
 //#.
 //#   .-Hierarchy----------------------------------------------------------.

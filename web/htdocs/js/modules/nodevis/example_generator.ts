@@ -6,6 +6,19 @@
 // It uses way too much fake objects to render some simple styles
 
 import * as d3 from "d3";
+import {compute_node_position, LayoutManagerLayer} from "nodevis/layout";
+import {
+    LayoutStyleBlock,
+    LayoutStyleHierarchy,
+    LayoutStyleRadial,
+} from "nodevis/layout_styles";
+import {
+    AbstractLayoutStyle,
+    render_style_options,
+    StyleConfig,
+    StyleOptionSpec,
+    StyleOptionValues,
+} from "nodevis/layout_utils";
 import {
     d3SelectionDiv,
     d3SelectionG,
@@ -15,19 +28,6 @@ import {
     NodevisNode,
     NodevisWorld,
 } from "nodevis/type_defs";
-import {
-    AbstractLayoutStyle,
-    render_style_options,
-    StyleConfig,
-    StyleOptionSpec,
-    StyleOptionValues,
-} from "nodevis/layout_utils";
-import {compute_node_position, LayoutManagerLayer} from "nodevis/layout";
-import {
-    LayoutStyleBlock,
-    LayoutStyleHierarchy,
-    LayoutStyleRadial,
-} from "nodevis/layout_styles";
 import {get_bounding_rect} from "nodevis/utils";
 
 export class LayoutStyleExampleGenerator {

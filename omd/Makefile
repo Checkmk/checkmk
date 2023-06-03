@@ -67,6 +67,11 @@ ifeq ($(EDITION),cloud)
 PACKAGES += enterprise
 PACKAGES += cloud
 endif
+ifeq ($(EDITION),saas)
+PACKAGES += enterprise
+PACKAGES += cloud
+PACKAGES += saas
+endif
 
 PIPENV := ../scripts/run-pipenv
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
@@ -89,7 +94,7 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	$(RM) $@
 	for P in $(PACKAGES); do \
 	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \
-	  if [[ $$P == 'enterprise' || $$P == 'free' || $$P == 'managed' || $$P == 'cloud' ]] ; then \
+	  if [[ $$P == 'enterprise' || $$P == 'free' || $$P == 'managed' || $$P == 'cloud' || $$P == 'saas']] ; then \
 	    inc_path=$(REPO_PATH)/$$P/$$P.make; \
 	  fi ; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \

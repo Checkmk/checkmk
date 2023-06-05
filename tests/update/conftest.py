@@ -2,21 +2,23 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import contextlib
 import dataclasses
 import json
 import logging
 import os
-import socketserver
 import subprocess
-from collections.abc import Iterator, Sequence
-from multiprocessing import Process
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Optional
 
 import pytest
 
 from tests.testlib import CMKWebSession
+from tests.testlib.agent import (
+    agent_controller_daemon,
+    clean_agent_controller,
+    download_and_install_agent_package,
+)
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import current_base_branch_name, PExpectDialog, spawn_expect_process
 from tests.testlib.version import CMKVersion, version_gte
@@ -306,166 +308,6 @@ def update_site(site: Site, target_version: CMKVersion, interactive: bool = True
     return _get_site(target_version, base_site=site, interactive=interactive)
 
 
-def _execute(command: Sequence[str]) -> subprocess.CompletedProcess:
-    try:
-        proc = subprocess.run(
-            command,
-            encoding="utf-8",
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            close_fds=True,
-            check=True,
-        )
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            f"Subprocess terminated non-successfully. Stdout:\n{e.stdout}\nStderr:\n{e.stderr}"
-        ) from e
-    return proc
-
-
-def _get_package_type() -> str:
-    if os.path.exists("/var/lib/dpkg/status"):
-        return "deb"
-    if (
-        os.path.exists("/var/lib/rpm")
-        and os.path.exists("/bin/rpm")
-        or os.path.exists("/usr/bin/rpm")
-    ):
-        return "rpm"
-    raise NotImplementedError(
-        "package_type recognition for the current environment is not supported yet. Please"
-        " implement it if needed"
-    )
-
-
-def _install_agent_package(package_path: Path) -> Path:
-    package_type = "linux_" + _get_package_type()
-    installed_ctl_path = Path("/usr/bin/cmk-agent-ctl")
-    if package_type == "linux_deb":
-        _execute(["sudo", "dpkg", "-i", package_path.as_posix()])
-        return installed_ctl_path
-    if package_type == "linux_rpm":
-        _execute(["sudo", "rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()])
-        return installed_ctl_path
-    raise NotImplementedError(
-        f"Installation of package type {package_type} is not supported yet, please implement it"
-    )
-
-
-def _download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
-    agent_download_resp = site.openapi.get(
-        "domain-types/agent/actions/download_by_host/invoke",
-        params={
-            "agent_type": "generic",
-            "os_type": "linux_" + _get_package_type(),
-        },
-        headers={"Accept": "application/octet-stream"},
-    )
-    assert agent_download_resp.ok
-
-    path_agent_package = tmp_dir / ("agent." + _get_package_type())
-    with path_agent_package.open(mode="wb") as tmp_agent_package:
-        for chunk in agent_download_resp.iter_content(chunk_size=None):
-            tmp_agent_package.write(chunk)
-
-    return _install_agent_package(path_agent_package)
-
-
-def _is_containerized() -> bool:
-    return (
-        os.path.exists("/.dockerenv")
-        or os.path.exists("/run/.containerenv")
-        or os.environ.get("CMK_CONTAINERIZED") == "TRUE"
-    )
-
-
-class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
-    def handle(self) -> None:
-        self.request.sendall(
-            subprocess.run(
-                ["check_mk_agent"],
-                input=self.request.recv(1024),
-                capture_output=True,
-                close_fds=True,
-                check=True,
-            ).stdout
-        )
-
-
-@contextlib.contextmanager
-def _provide_agent_unix_socket() -> Iterator[None]:
-    socket_address = Path("/run/check-mk-agent.socket")
-    socket_address.unlink(missing_ok=True)
-    proc = Process(
-        target=socketserver.UnixStreamServer(
-            server_address=str(socket_address),
-            RequestHandlerClass=_CMKAgentSocketHandler,
-        ).serve_forever
-    )
-    proc.start()
-    socket_address.chmod(0o777)
-    try:
-        yield
-    finally:
-        proc.kill()
-        socket_address.unlink(missing_ok=True)
-
-
-@contextlib.contextmanager
-def _run_controller_daemon(ctl_path: Path) -> Iterator[None]:
-    # Note:
-    # We are deliberately not using Popen as a context manager here. In case we run into an
-    # exception while we are inside a Popen context manager, we end up in Popen.__exit__, which
-    # waits for the child process to finish. Our child process is not supposed to ever finish.
-    proc = subprocess.Popen(
-        [
-            ctl_path.as_posix(),
-            "daemon",
-        ],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        close_fds=True,
-        encoding="utf-8",
-    )
-
-    try:
-        yield
-    finally:
-        exit_code = proc.poll()
-        proc.kill()
-
-        stdout, stderr = proc.communicate()
-        logger.info("Stdout from controller daemon process:\n%s", stdout)
-        logger.info("Stderr from controller daemon process:\n%s", stderr)
-
-        if exit_code is not None:
-            logger.error("Controller daemon exited with code %s, which is unexpected.", exit_code)
-
-
-@contextlib.contextmanager
-def agent_controller_daemon(ctl_path: Path) -> Iterator[None]:
-    """Manually take over systemds job if we are in a container (where we have no systemd)."""
-    if not _is_containerized():
-        yield
-        return
-
-    with _provide_agent_unix_socket(), _run_controller_daemon(ctl_path):
-        yield
-
-
-def _clear_controller_connections(ctl_path: Path) -> None:
-    _execute(["sudo", ctl_path.as_posix(), "delete-all"])
-
-
-@contextlib.contextmanager
-def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
-    _clear_controller_connections(ctl_path)
-    try:
-        yield
-    finally:
-        _clear_controller_connections(ctl_path)
-
-
 def reschedule_services(site: Site, hostname: str, max_count: int = 10) -> None:
     """Reschedule services in the test-site for a given host until no pending services are found."""
 
@@ -487,7 +329,7 @@ def reschedule_services(site: Site, hostname: str, max_count: int = 10) -> None:
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
 def _installed_agent_ctl_in_unknown_state(test_site: Site, tmp_path: Path) -> Path:
-    return _download_and_install_agent_package(test_site, tmp_path)
+    return download_and_install_agent_package(test_site, tmp_path)
 
 
 @pytest.fixture(name="agent_ctl", scope="function")

@@ -29,7 +29,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import PhaseOneResult, UserId
+from cmk.utils.type_defs import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
@@ -57,6 +57,7 @@ from cmk.gui.utils.compatibility import (
 )
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
 
 auto_logger = logger.getChild("automations")

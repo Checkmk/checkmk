@@ -39,6 +39,19 @@ load_config() {
     fi
 }
 
+run_command() {
+    input_command="$1"
+
+    if test -n "$EXEC_USER" && test "$EXEC_USER" = "MQM"; then
+        # Variable is defined and not empty
+        concatenated_command="su mqm -c \"$input_command\""
+        eval "$concatenated_command"
+    else
+        # Variable is not defined or empty
+        eval "$input_command"
+    fi
+}
+
 # Returns true (0) if list ($1) contains a value ($2).
 contains() {
     for x in $1; do
@@ -90,13 +103,13 @@ dspmq -n | while read -r dspmqline; do
     if is_qm_monitored "$QM"; then
         echo '<<<ibm_mq_channels:sep(10)>>>'
         echo "$dspmqline NOW($now)"
-        runmqsc -e "$QM" <<EOF
+        run_command "runmqsc -e \"$QM\"" <<EOF
 display channel(*) xmitq
 display chstatus(*) monitor
 EOF
         echo '<<<ibm_mq_queues:sep(10)>>>'
         echo "$dspmqline NOW($now)"
-        runmqsc -e "$QM" <<EOF
+        run_command "runmqsc -e \"$QM\"" <<EOF
 display qlocal(*) maxdepth maxmsgl crdate crtime altdate alttime monq
 display qstatus(*) monitor ipprocs opprocs
 EOF
@@ -104,4 +117,4 @@ EOF
 done
 
 echo "<<<ibm_mq_managers:sep(10)>>>"
-dspmq -o all -x -n
+run_command "dspmq -o all -x -n"

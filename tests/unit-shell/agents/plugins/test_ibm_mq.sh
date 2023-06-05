@@ -19,11 +19,13 @@ test_load_config() {
     cat <<EOF >"${MK_CONFDIR}/ibm_mq.cfg"
 ONLY_QM="FOO BAR"
 SKIP_QM="FAULTY TOWER"
+EXEC_USER="MQM"
 EOF
     load_config
     assertEquals "FOO BAR" "$ONLY_QM"
     assertEquals "FAULTY TOWER" "$SKIP_QM"
-    unset ONLY_QM SKIP_QM
+    assertEquals "MQM" "$EXEC_USER"
+    unset ONLY_QM SKIP_QM EXEC_USER
     rm "${MK_CONFDIR}/ibm_mq.cfg"
 }
 

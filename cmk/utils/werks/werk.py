@@ -22,6 +22,7 @@ class Edition(Enum):
     # would love to use cmk.utils.version.Edition
     # but pydantic does not understand it.
     CRE = "cre"
+    CSE = "cse"
     CEE = "cee"
     CCE = "cce"
     CME = "cme"

@@ -47,8 +47,7 @@ def serve_group(group, serializer):
     response.set_data(json.dumps(serializer(group)))
     if response.status_code != 204:
         response.set_content_type("application/json")
-    response.headers.add("ETag", constructors.etag_of_dict(group).to_header())
-    return response
+    return constructors.response_with_etag_created_from_dict(response, group)
 
 
 def serialize_group_list(

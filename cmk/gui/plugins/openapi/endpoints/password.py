@@ -183,8 +183,7 @@ def list_passwords(params: Mapping[str, Any]) -> Response:
 
 def _serve_password(ident, password_details):
     response = serve_json(serialize_password(ident, complement_customer(password_details)))
-    response.headers.add("ETag", constructors.etag_of_dict(password_details).to_header())
-    return response
+    return constructors.response_with_etag_created_from_dict(response, password_details)
 
 
 def serialize_password(ident, details):

@@ -273,4 +273,4 @@ def list_pending_changes(params: Mapping[str, Any]) -> Response:
             "value": [asdict(change) for change in pending_changes.values()],
         }
     )
-    return response
+    return constructors.response_with_etag_created_from_dict(response, pending_changes)

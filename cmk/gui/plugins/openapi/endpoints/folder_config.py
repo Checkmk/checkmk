@@ -147,7 +147,7 @@ def update(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_folders")
     folder = params["folder"]
-    constructors.require_etag(etag_of_folder(folder))
+    constructors.require_etag(hash_of_folder(folder))
 
     post_body = params["body"]
     if "title" in post_body:
@@ -288,7 +288,7 @@ def move(params: Mapping[str, Any]) -> Response:
     folder: CREFolder = params["folder"]
     folder_id = folder.id()
 
-    constructors.require_etag(etag_of_folder(folder))
+    constructors.require_etag(hash_of_folder(folder))
 
     dest_folder: CREFolder = params["body"]["destination"]
 
@@ -421,7 +421,7 @@ def _serve_folder(
 ):
     folder_json = _serialize_folder(folder, show_hosts)
     response = serve_json(folder_json, profile=profile)
-    response.headers.add("ETag", etag_of_folder(folder).to_header())
+    response.headers.add("ETag", ETags(strong_etags=[hash_of_folder(folder)]).to_header())
     return response
 
 
@@ -468,8 +468,8 @@ def _serialize_folder(folder: CREFolder, show_hosts):  # type: ignore[no-untyped
     return rv
 
 
-def etag_of_folder(folder: CREFolder) -> ETags:
-    return constructors.etag_of_dict(
+def hash_of_folder(folder: CREFolder) -> constructors.ETagHash:
+    return constructors.hash_of_dict(
         {
             "path": folder.path(),
             "attributes": folder.attributes(),

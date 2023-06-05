@@ -6,7 +6,7 @@ import contextlib
 import hashlib
 import re
 from http import HTTPStatus
-from typing import Any
+from typing import Any, NewType
 from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
@@ -15,7 +15,7 @@ from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HTTPMethod
 
 from cmk.gui.config import active_config
-from cmk.gui.http import request
+from cmk.gui.http import request, Response
 from cmk.gui.livestatus_utils.testing import mock_site
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
@@ -30,6 +30,8 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     ResultType,
 )
 from cmk.gui.plugins.openapi.utils import EXT, ProblemException
+
+ETagHash = NewType("ETagHash", str)
 
 
 @contextlib.contextmanager
@@ -192,10 +194,11 @@ def expand_rel(
 
 
 def require_etag(
-    etag: ETags,
+    etag: ETagHash,
     error_details: EXT | None = None,
 ) -> None:
-    """Ensure the current request matches the given ETag.
+    """Ensure current request 'If-Match' header matches the expected ETag or is a *
+
 
     Args:
         etag: An Werkzeug ETag instance to compare the global request instance to.
@@ -207,10 +210,10 @@ def require_etag(
     Raises:
         ProblemException: When If-Match missing or ETag doesn't match.
     """
-    etags_required = active_config.rest_api_etag_locking
+    if not active_config.rest_api_etag_locking:
+        return
+
     if not request.if_match:
-        if not etags_required:
-            return
         raise ProblemException(
             HTTPStatus.PRECONDITION_REQUIRED,
             "Precondition required",
@@ -218,13 +221,15 @@ def require_etag(
             ext=error_details,
         )
 
-    if request.if_match.as_set() != etag.as_set():
-        raise ProblemException(
-            HTTPStatus.PRECONDITION_FAILED,
-            "Precondition failed",
-            f"ETag didn't match. Expected {etag}. Probable cause: Object changed by another user.",
-            ext=error_details,
-        )
+    if request.if_match.contains(etag):
+        return
+
+    raise ProblemException(
+        HTTPStatus.PRECONDITION_FAILED,
+        "Precondition failed",
+        f"ETag didn't match. Expected {etag}. Probable cause: Object changed by another user.",
+        ext=error_details,
+    )
 
 
 def object_action(name: str, parameters: dict, base: str) -> dict[str, Any]:
@@ -889,29 +894,20 @@ def action_parameter(action, parameter, friendly_name, optional, pattern):
     )
 
 
-def etag_of_dict(dict_: dict[str, Any]) -> ETags:
+def hash_of_dict(dict_: dict[str, Any]) -> ETagHash:
     """Build a sha256 hash over a dictionary's content.
 
     Keys are sorted first to ensure a stable hash.
 
     Examples:
-        >>> etag_of_dict({'a': 'b', 'c': 'd'})
-        <ETags '"88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"'>
-
-        >>> etag_of_dict({'c': 'd', 'a': 'b'})
-        <ETags '"88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"'>
-
-        >>> etag_of_dict({'a': 'b', 'c': {'d': {'e': 'f'}}})
-        <ETags '"bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721"'>
-
-        >>> etag_of_dict({'a': [{'b': 1, 'd': 2}, {'d': 2, 'b': 3}]})
-        <ETags '"6ea899bec9b061d54f1f8fcdb7405363126c0e96d198d09792eff0996590ee3e"'>
+        >>> hash_of_dict({'a': 'b', 'c': 'd'})
+        '88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589'
 
     Args:
         dict_ (dict): A dictionary.
 
     Returns:
-        str: The hex-digest of the built hash.
+        ETagHash
 
     """
 
@@ -934,4 +930,41 @@ def etag_of_dict(dict_: dict[str, Any]) -> ETags:
 
     _hash = hashlib.sha256()
     _update(_hash, dict_)
-    return ETags(strong_etags=[_hash.hexdigest()])
+    return ETagHash(_hash.hexdigest())
+
+
+def etag_of_dict(dict_: dict[str, Any]) -> ETags:
+    """Build a sha256 hash over a dictionary's content.
+
+    Keys are sorted first to ensure a stable hash.
+
+    Examples:
+        >>> etag_of_dict({'a': 'b', 'c': 'd'})
+        <ETags '"88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"'>
+
+        >>> etag_of_dict({'c': 'd', 'a': 'b'})
+        <ETags '"88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"'>
+
+        >>> etag_of_dict({'a': 'b', 'c': {'d': {'e': 'f'}}})
+        <ETags '"bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721"'>
+
+        >>> etag_of_dict({'a': [{'b': 1, 'd': 2}, {'d': 2, 'b': 3}]})
+        <ETags '"6ea899bec9b061d54f1f8fcdb7405363126c0e96d198d09792eff0996590ee3e"'>
+
+    Args:
+        dict_ (dict): A dictionary.
+
+    Returns:
+        ETags instance.
+
+    """
+
+    return ETags(strong_etags=[hash_of_dict(dict_)])
+
+
+def response_with_etag_created_from_dict(response: Response, dict_: dict[str, Any]) -> Response:
+    """Add an ETag header to the response and return the updated response.
+    The ETag header is an ETagHash generated from the dict passed in.
+    """
+    response.headers.add("ETag", etag_of_dict(dict_).to_header())
+    return response

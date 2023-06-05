@@ -5,8 +5,8 @@
 
 from collections.abc import Mapping
 
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 _InstancesSection = Mapping[str, int | None]
 
@@ -34,4 +34,29 @@ def parse_postgres_instances(string_table: StringTable) -> _InstancesSection:
 register.agent_section(
     name="postgres_instances",
     parse_function=parse_postgres_instances,
+)
+
+
+def discover_postgres_instances(section: _InstancesSection) -> DiscoveryResult:
+    yield from (Service(item=name) for name in section)
+
+
+def check_postgres_instances(item: str, section: _InstancesSection) -> CheckResult:
+    if (pid := section.get(item)) is not None:
+        yield Result(state=State.OK, summary=f"Status: running with PID {pid}")
+    else:
+        yield Result(
+            state=State.CRIT,
+            summary=(
+                f"Instance {item} not running or postgres DATADIR name is not identical with "
+                "instance name."
+            ),
+        )
+
+
+register.check_plugin(
+    name="postgres_instances",
+    service_name="PostgreSQL Instance %s",
+    discovery_function=discover_postgres_instances,
+    check_function=check_postgres_instances,
 )

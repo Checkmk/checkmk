@@ -1323,7 +1323,30 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         if self._path_existing_folder is not None:
             # Existing folder
             self._hosts = None
-            self.load_instance()
+
+            wato_info = self.wato_info_storage_manager().read(Path(self.wato_info_path()))
+
+            if "__id" in wato_info:
+                self._id = wato_info["__id"]
+            else:
+                # Cleanup this compatibility code by adding a cmk-update-config action
+                self._id = uuid.uuid4().hex
+
+            self._title = wato_info.get("title", self._fallback_title())
+            self._attributes = dict(wato_info.get("attributes", {}))
+            # Can either be set to True or a string (which will be used as host lock message)
+            self._locked = wato_info.get("lock", False)
+            # Can either be set to True or a string (which will be used as host lock message)
+            self._locked_subfolders = wato_info.get("lock_subfolders", False)
+
+            if "num_hosts" in wato_info:
+                self._num_hosts = wato_info.get("num_hosts", 0)
+            else:
+                # We don't want to trigger any state modifying methods on loading, as this leads to
+                # very unpredictable behaviour. We dictate that `hosts()` will only ever be called
+                # intentionally.
+                self._num_hosts = len(self._hosts or {})
+
         else:
             # New folder
             self._id = uuid.uuid4().hex
@@ -1557,22 +1580,6 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             }
         return {}
 
-    def deserialize(self, wato_info: WATOFolderInfo) -> None:
-        self._title = wato_info.get("title", self._fallback_title())
-        self._attributes = dict(wato_info.get("attributes", {}))
-        # Can either be set to True or a string (which will be used as host lock message)
-        self._locked = wato_info.get("lock", False)
-        # Can either be set to True or a string (which will be used as host lock message)
-        self._locked_subfolders = wato_info.get("lock_subfolders", False)
-
-        if "num_hosts" in wato_info:
-            self._num_hosts = wato_info.get("num_hosts", 0)
-        else:
-            # We don't want to trigger any state modifying methods on loading, as this leads to
-            # very unpredictable behaviour. We dictate that `hosts()` will only ever be called
-            # intentionally.
-            self._num_hosts = len(self._hosts or {})
-
     def save(self) -> None:
         self.persist_instance()
         folder_tree().invalidate_caches()
@@ -1672,14 +1679,6 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         Returns:
             The loaded data.
         """
-        data = self.wato_info_storage_manager().read(Path(self.wato_info_path()))
-
-        if "__id" in data:
-            self._id = data["__id"]
-        else:
-            # Cleanup this compatibility code by adding a cmk-update-config action
-            self._id = uuid.uuid4().hex
-        self.deserialize(data)
 
     # .-----------------------------------------------------------------------.
     # | ELEMENT ACCESS                                                        |

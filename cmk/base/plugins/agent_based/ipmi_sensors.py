@@ -71,16 +71,18 @@ def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
                 sensor.crit_low = _na_float(lower)
                 sensor.crit_high = _na_float(upper)
 
-            case [_type, value, unit]:
+            case [type_, value, unit]:
                 sensor.value = _na_float(value)
                 sensor.unit = _na_str(unit)
+                sensor.type_ = type_
 
-            case [_type, status, value, unit]:
+            case [type_, status, value, unit]:
                 sensor.state = ipmi_utils.Sensor.parse_state(status)
                 sensor.value = _na_float(value)
                 sensor.unit = _na_str(unit)
+                sensor.type_ = type_
 
-            case [_type, status, value, unit, _, lower_c, lower_nc, upper_nc, upper_c, _]:
+            case [type_, status, value, unit, _, lower_c, lower_nc, upper_nc, upper_c, _]:
                 sensor.value = _na_float(value)
                 sensor.unit = _na_str(unit)
                 sensor.state = ipmi_utils.Sensor.parse_state(status)
@@ -88,6 +90,7 @@ def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
                 sensor.warn_low = _na_float(lower_nc)
                 sensor.warn_high = _na_float(upper_nc)
                 sensor.crit_high = _na_float(upper_c)
+                sensor.type_ = type_
 
     return section
 

@@ -33,6 +33,7 @@ class Sensor:
     warn_low: Optional[float] = None
     warn_high: Optional[float] = None
     crit_high: Optional[float] = None
+    type_: str | None = None
 
     @property
     def is_present(self) -> bool:
@@ -207,7 +208,7 @@ def _check_ipmi_detailed(
 
     # Do not save performance data for FANs. This produces a lot of data and is - in my
     # opinion - useless.
-    elif "temperature" in item.lower() or "temp" in item.lower() or sensor.unit == "C":
+    elif "temp" in item.lower() or "temp" in (sensor.type_ or "").lower() or sensor.unit == "C":
         metric = Metric(
             "value",
             sensor.value,

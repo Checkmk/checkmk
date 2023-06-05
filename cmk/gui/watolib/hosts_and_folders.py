@@ -1239,9 +1239,11 @@ def _search_folder_from_request() -> SearchFolder | None:
 
 
 def disk_or_search_base_folder_from_request() -> CREFolder:
-    folder = disk_or_search_folder_from_request()
-    while not folder.is_disk_folder():
-        folder = folder.parent()
+    disk_or_search_folder = disk_or_search_folder_from_request()
+    if isinstance(disk_or_search_folder, CREFolder):
+        return disk_or_search_folder
+
+    folder = disk_or_search_folder.parent()
     assert isinstance(folder, CREFolder)
     return folder
 
@@ -1256,12 +1258,12 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def __init__(
         self,
         *,
-        tree,
-        name,
-        folder_path=None,
-        parent_folder=None,
-        title=None,
-        attributes=None,
+        tree: FolderTree,
+        name: str,
+        folder_path: str | None = None,
+        parent_folder: CREFolder | None = None,
+        title: str | None = None,
+        attributes: dict[str, Any] | None = None,
     ):
         super().__init__()
         self.tree = tree
@@ -1277,7 +1279,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
         attributes.setdefault("meta_data", {})
 
-        self._choices_for_moving_host = None
+        self._choices_for_moving_host: Choices | None = None
 
         self._hosts: dict[HostName, CREHost] | None
         if self._path_existing_folder is not None:
@@ -1304,13 +1306,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def __repr__(self) -> str:
         return f"Folder({self.path()!r}, {self._title!r})"
 
-    def parent(self) -> CREFolder:
-        """Give the parent instance.
-
-        Returns:
-             CREFolder: The parent folder instance.
-
-        """
+    def parent(self) -> CREFolder | None:
         return self._parent
 
     def is_disk_folder(self) -> bool:
@@ -1674,8 +1670,8 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         if may_use_redis() and self._path_existing_folder is not None:
             return self._path_existing_folder
 
-        if self.parent() and not self.parent().is_root() and not self.is_root():
-            return _ensure_trailing_slash(self.parent().path()) + self.name()
+        if (parent := self.parent()) and not parent.is_root() and not self.is_root():
+            return _ensure_trailing_slash(parent.path()) + self.name()
 
         return self.name()
 
@@ -1888,7 +1884,9 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         if "site" in self._attributes:
             return self._attributes["site"]
         if self.has_parent():
-            return self.parent().site_id()
+            parent = self.parent()
+            assert parent is not None
+            return parent.site_id()
         if not is_wato_slave_site():
             return omd_site()
 
@@ -1963,6 +1961,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         if cgconf["use"]:
             host_contact_groups.update(cgconf["groups"])
 
+        parent: CREFolder | None
         if host:
             parent = self
         else:
@@ -2078,7 +2077,9 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def edit_url(self, backfolder: CREFolder | None = None) -> str:
         if backfolder is None:
             if self.has_parent():
-                backfolder = self.parent()
+                parent = self.parent()
+                assert parent is not None
+                backfolder = parent
             else:
                 backfolder = self
         return urls.makeuri_contextless(
@@ -2355,7 +2356,9 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             _validate_contact_group_modification(old_cgconf["groups"], new_cgconf["groups"])
 
             if self.has_parent():
-                if not self.parent().may("write"):
+                parent = self.parent()
+                assert parent is not None
+                if not parent.may("write"):
                     raise MKAuthException(
                         _(
                             "Sorry. In order to change the permissions of a folder you need write "

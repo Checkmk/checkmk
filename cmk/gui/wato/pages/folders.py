@@ -1262,7 +1262,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def _init_folder(self):
         # TODO: Needed to make pylint know the correct type of the return value.
         # Will be cleaned up in future when typing is established
-        return Folder(tree=folder_tree(), name=None)
+        return Folder(tree=folder_tree(), name="")
 
     @abc.abstractmethod
     def _save(self, title, attributes):
@@ -1346,7 +1346,9 @@ class ABCFolderMode(WatoMode, abc.ABC):
             parent = folder
             myself = None
         else:
-            parent = folder.parent()
+            this_parent = folder.parent()
+            assert this_parent is not None
+            parent = this_parent
             myself = folder
 
         configure_attributes(
@@ -1394,7 +1396,7 @@ class ModeCreateFolder(ABCFolderMode):
         return ["hosts", "manage_folders"]
 
     def _init_folder(self):
-        return Folder(tree=folder_tree(), name=None)
+        return Folder(tree=folder_tree(), name="")
 
     def title(self) -> str:
         return _("Add folder")

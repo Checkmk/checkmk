@@ -293,7 +293,9 @@ def move(params: Mapping[str, Any]) -> Response:
     dest_folder: CREFolder = params["body"]["destination"]
 
     try:
-        folder.parent().move_subfolder_to(folder, dest_folder)
+        parent = folder.parent()
+        assert parent is not None
+        parent.move_subfolder_to(folder, dest_folder)
     except MKUserError as exc:
         raise ProblemException(
             title="Problem moving folder.",

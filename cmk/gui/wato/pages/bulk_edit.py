@@ -28,7 +28,11 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
-from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    disk_or_search_folder_from_request,
+    SearchFolder,
+)
 
 
 @mode_registry.register
@@ -240,7 +244,7 @@ class ModeBulkCleanup(WatoMode):
 
             # If the attribute is mandatory and no value is inherited
             # by file or folder, the attribute cannot be cleaned.
-            container = self._folder
+            container: CREFolder | SearchFolder | None = self._folder
             is_inherited = False
             while container:
                 if container.has_explicit_attribute(attrname):

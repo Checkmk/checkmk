@@ -763,7 +763,7 @@ def test_openapi_host_collection_effective_attributes(
 
 
 def test_openapi_host_rename(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
@@ -774,111 +774,65 @@ def test_openapi_host_rename(
         lambda *args, **kwargs: RenameHostsResult({}),
     )
 
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    clients.HostConfig.create(
+        host_name="foobar",
+        folder="/",
     )
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar",
-        status=200,
-        headers={"Accept": "application/json"},
+    clients.HostConfig.get("foobar")
+    resp = clients.HostConfig.rename(
+        host_name="foobar",
+        new_name="foobaz",
+        follow_redirects=False,
     )
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/foobar/actions/rename/invoke",
-        params='{"new_name": "foobaz"}',
-        content_type="application/json",
-        status=302,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-    )
-
     assert (
-        resp.location
+        resp.headers["Location"]
         == "http://localhost/NO_SITE/check_mk/api/1.0/domain-types/host_config/actions/wait-for-completion/invoke"
     )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_error_on_not_existing_host(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.endpoints.host_config.has_pending_changes", lambda: False
     )
 
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    clients.HostConfig.create(
+        host_name="foobar",
+        folder="/",
     )
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/fooba/actions/rename/invoke",
-        params='{"new_name": "foobaz"}',
-        content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        status=404,
+    resp = clients.HostConfig.get("foobar")
+    clients.HostConfig.rename(
+        host_name="fooba",
+        new_name="foobaz",
+        etag=resp.headers["ETag"],
+        follow_redirects=False,
+        expect_ok=False,
     )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_on_invalid_hostname(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.endpoints.host_config.has_pending_changes", lambda: False
     )
 
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    clients.HostConfig.create(
+        host_name="foobar",
+        folder="/",
     )
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/foobar/actions/rename/invoke",
-        params='{"new_name": "foobar"}',
-        content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        status=400,
-    )
+    clients.HostConfig.get("foobar")
+    clients.HostConfig.rename(
+        host_name="foobar",
+        new_name="foobar",
+        follow_redirects=False,
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

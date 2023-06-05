@@ -707,6 +707,33 @@ class HostConfigClient(RestApiClient):
             headers={"IF-Match": etag, "Accept": "application/json"},
         )
 
+    def rename(
+        self,
+        host_name: str,
+        new_name: str,
+        etag: str | None = None,
+        expect_ok: bool = True,
+        follow_redirects: bool = True,
+    ) -> Response:
+        if etag is None:
+            etag = self.get(host_name).headers["ETag"]
+
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{host_name}/actions/rename/invoke",
+            body={"new_name": new_name},
+            expect_ok=expect_ok,
+            follow_redirects=follow_redirects,
+            headers={"IF-Match": etag, "Accept": "application/json"},
+        )
+
+    def rename_wait_for_completion(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/wait-for-completion/invoke",
+            expect_ok=expect_ok,
+        )
+
 
 @register_client
 class FolderClient(RestApiClient):

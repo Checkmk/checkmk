@@ -10,13 +10,13 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.akcp_sensor import (
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, not_exists, SNMPTree, startswith
+from cmk.base.plugins.agent_based.utils.akcp_sensor import (
     AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
     check_akcp_sensor_temp,
     inventory_akcp_sensor_temp,
 )
-from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, not_exists, SNMPTree, startswith
 
 check_info["akcp_sensor_temp"] = LegacyCheckDefinition(
     detect=all_of(

@@ -3,8 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .humidity import check_humidity
-from .temperature import check_temperature
+from cmk.base.check_legacy_includes.humidity import (  # pylint: disable=cmk-module-layer-violation
+    check_humidity,
+)
+from cmk.base.check_legacy_includes.temperature import (  # pylint: disable=cmk-module-layer-violation
+    check_temperature,
+)
 
 #   .--General-------------------------------------------------------------.
 #   |                                                  _                   |

@@ -1324,7 +1324,13 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             # Existing folder
             self._hosts = None
 
-            wato_info = self.wato_info_storage_manager().read(Path(self.wato_info_path()))
+            wato_info = self.wato_info_storage_manager().read(
+                Path(
+                    _folder_wato_info_path(
+                        _folder_filesystem_path(tree.get_root_dir(), self._path_existing_folder)
+                    )
+                )
+            )
 
             if "__id" in wato_info:
                 self._id = wato_info["__id"]
@@ -1332,7 +1338,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
                 # Cleanup this compatibility code by adding a cmk-update-config action
                 self._id = uuid.uuid4().hex
 
-            self._title = wato_info.get("title", self._fallback_title())
+            self._title = wato_info.get("title", _fallback_title(self._path_existing_folder))
             self._attributes = dict(wato_info.get("attributes", {}))
             # Can either be set to True or a string (which will be used as host lock message)
             self._locked = wato_info.get("lock", False)
@@ -1352,7 +1358,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             self._id = uuid.uuid4().hex
             self._hosts = {}
             self._num_hosts = 0
-            self._title = title or self._fallback_title()
+            self._title = title or _fallback_title(self.path())
             self._attributes = update_metadata(attributes)
             self._locked = False
             self._locked_hosts = False
@@ -1594,11 +1600,6 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             "lock_subfolders": self._locked_subfolders,
         }
 
-    def _fallback_title(self) -> str:
-        if self.is_root():
-            return _("Main")
-        return self.name()
-
     def _load_subfolders(self) -> dict[PathWithoutSlash, CREFolder]:
         loaded_subfolders: dict[str, CREFolder] = {}
 
@@ -1619,7 +1620,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         return loaded_subfolders
 
     def wato_info_path(self) -> str:
-        return self.filesystem_path() + "/.wato"
+        return _folder_wato_info_path(self.filesystem_path())
 
     def hosts_file_path(self) -> str:
         return self.hosts_file_path_without_extension() + ".mk"
@@ -1691,7 +1692,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         return self._title
 
     def filesystem_path(self) -> PathWithoutSlash:
-        return (self.tree.get_root_dir() + self.path()).rstrip("/")
+        return _folder_filesystem_path(self.tree.get_root_dir(), self.path())
 
     def ident(self) -> str:
         return self.path()
@@ -2748,6 +2749,20 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
 def _is_main_folder_path(folder_path: str) -> bool:
     return folder_path == ""
+
+
+def _fallback_title(folder_path: str) -> str:
+    if _is_main_folder_path(folder_path):
+        return _("Main")
+    return os.path.basename(folder_path)
+
+
+def _folder_wato_info_path(base_dir: str) -> str:
+    return base_dir + "/.wato"
+
+
+def _folder_filesystem_path(root_dir: str, folder_path: str) -> PathWithoutSlash:
+    return (root_dir + folder_path).rstrip("/")
 
 
 class FolderLookupCache:

@@ -23,8 +23,9 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     PodStatusFactory,
 )
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.agent_kube import aggregate_resources
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import aggregate_resources
 from cmk.special_agents.utils_kubernetes.api_server import LOWEST_FUNCTIONING_VERSION
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
@@ -122,7 +123,9 @@ def test_pod_resources_from_api_pods(pods_count: int) -> None:
         for i in range(pods_count)
     ]
 
-    pod_resources = agent._pod_resources_from_api_pods(pods)
+    pod_resources = (
+        cmk.special_agents.utils_kubernetes.agent_handlers.common.pod_resources_from_api_pods(pods)
+    )
 
     assert pod_resources == section.PodResources(
         running=[str(i) for i in range(pods_count)],
@@ -136,8 +139,10 @@ def test_pod_name() -> None:
         metadata=MetaDataFactory.build(name=name, namespace=namespace, factory_use_construct=True)
     )
 
-    pod_name = agent.pod_name(pod)
-    pod_namespaced_name = agent.pod_name(pod, prepend_namespace=True)
+    pod_name = cmk.special_agents.utils_kubernetes.agent_handlers.common.pod_name(pod)
+    pod_namespaced_name = cmk.special_agents.utils_kubernetes.agent_handlers.common.pod_name(
+        pod, prepend_namespace=True
+    )
 
     assert pod_name == name
     assert pod_namespaced_name == f"{namespace}_{name}"
@@ -213,8 +218,12 @@ def test_collect_workload_resources_from_api_pods(pods_count: int) -> None:
         for _ in range(pods_count)
     ]
 
-    memory_resources = agent._collect_memory_resources_from_api_pods(pods)
-    cpu_resources = agent._collect_cpu_resources_from_api_pods(pods)
+    memory_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_memory_resources_from_api_pods(
+        pods
+    )
+    cpu_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_cpu_resources_from_api_pods(
+        pods
+    )
 
     assert memory_resources == section.Resources(
         request=pods_count * ONE_MiB,
@@ -252,8 +261,12 @@ def test_collect_workload_resources_from_agent_pods(pods_count: int) -> None:
         for _ in range(pods_count)
     ]
 
-    memory_resources = agent._collect_memory_resources_from_api_pods(pods)
-    cpu_resources = agent._collect_cpu_resources_from_api_pods(pods)
+    memory_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_memory_resources_from_api_pods(
+        pods
+    )
+    cpu_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_cpu_resources_from_api_pods(
+        pods
+    )
 
     assert memory_resources == section.Resources(
         request=pods_count * ONE_MiB,
@@ -275,8 +288,12 @@ def test_collect_workload_resources_from_agent_pods(pods_count: int) -> None:
 
 
 def test_collect_workload_resources_from_agent_pods_no_pods_in_cluster() -> None:
-    memory_resources = agent._collect_memory_resources_from_api_pods([])
-    cpu_resources = agent._collect_cpu_resources_from_api_pods([])
+    memory_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_memory_resources_from_api_pods(
+        []
+    )
+    cpu_resources = cmk.special_agents.utils_kubernetes.agent_handlers.common.collect_cpu_resources_from_api_pods(
+        []
+    )
     empty_section = section.Resources(
         request=0.0,
         limit=0.0,

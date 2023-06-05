@@ -18,6 +18,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     NodeStatusFactory,
 )
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
@@ -82,7 +83,7 @@ def test_write_nodes_api_sections_registers_sections_to_be_written(
         agent.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
-            annotation_key_pattern=agent.AnnotationNonPatternOption.ignore_all,
+            annotation_key_pattern=cmk.special_agents.utils_kubernetes.agent_handlers.common.AnnotationNonPatternOption.ignore_all,
         ),
         Mock(),
     )
@@ -98,7 +99,7 @@ def test_write_nodes_api_sections_maps_section_names_to_callables(
         agent.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
-            annotation_key_pattern=agent.AnnotationNonPatternOption.ignore_all,
+            annotation_key_pattern=cmk.special_agents.utils_kubernetes.agent_handlers.common.AnnotationNonPatternOption.ignore_all,
         ),
         Mock(),
     )
@@ -117,7 +118,7 @@ def test_write_nodes_api_sections_calls_write_sections_for_each_node(
         agent.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
-            annotation_key_pattern=agent.AnnotationNonPatternOption.ignore_all,
+            annotation_key_pattern=cmk.special_agents.utils_kubernetes.agent_handlers.common.AnnotationNonPatternOption.ignore_all,
         ),
         Mock(),
     )
@@ -205,7 +206,11 @@ def test_conditions_with_status_conditions_none() -> None:
 
 def test_node_info_section() -> None:
     node = api_to_agent_node(APINodeFactory.build())
-    info = node.info("cluster", "host", agent.AnnotationNonPatternOption.ignore_all)
+    info = node.info(
+        "cluster",
+        "host",
+        cmk.special_agents.utils_kubernetes.agent_handlers.common.AnnotationNonPatternOption.ignore_all,
+    )
     assert info.name == node.metadata.name
     assert info.labels == node.metadata.labels
     assert isinstance(info.creation_timestamp, float)

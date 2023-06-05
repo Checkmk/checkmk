@@ -14,6 +14,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     PodStatusFactory,
 )
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube
 
 
@@ -38,7 +39,7 @@ def test_write_statefulsets_api_sections_registers_sections_to_be_written(
         agent_kube.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
-            annotation_key_pattern=agent_kube.AnnotationNonPatternOption.ignore_all,
+            annotation_key_pattern=cmk.special_agents.utils_kubernetes.agent_handlers.common.AnnotationNonPatternOption.ignore_all,
         ),
         "statefulset",
     )

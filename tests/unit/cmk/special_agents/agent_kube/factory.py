@@ -21,6 +21,7 @@ from collections.abc import Iterator, Sequence
 import pydantic
 from pydantic_factories import ModelFactory, Use
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.deployment
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_api
 from cmk.special_agents.utils_kubernetes.api_server import APIData
@@ -132,8 +133,8 @@ class APIDeploymentFactory(ModelFactory):
 
 def api_to_agent_deployment(
     api_deployment: api.Deployment, pods: Sequence[api.Pod] = ()
-) -> agent.Deployment:
-    return agent.Deployment(
+) -> cmk.special_agents.utils_kubernetes.agent_handlers.deployment.Deployment:
+    return cmk.special_agents.utils_kubernetes.agent_handlers.deployment.Deployment(
         metadata=api_deployment.metadata,
         spec=api_deployment.spec,
         status=api_deployment.status,

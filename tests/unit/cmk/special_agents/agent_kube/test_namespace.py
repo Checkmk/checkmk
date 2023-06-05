@@ -2,7 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package
-
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     APINamespaceFactory,
     APIPodFactory,
@@ -12,6 +11,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     PodStatusFactory,
 )
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api
 
@@ -24,7 +24,7 @@ def test_namespace_create_api_sections() -> None:
         agent.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
-            annotation_key_pattern=agent.AnnotationNonPatternOption.ignore_all,
+            annotation_key_pattern=cmk.special_agents.utils_kubernetes.agent_handlers.common.AnnotationNonPatternOption.ignore_all,
         ),
         "namespace",
     )

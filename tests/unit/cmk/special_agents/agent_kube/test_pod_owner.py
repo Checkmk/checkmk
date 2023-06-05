@@ -14,7 +14,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     PodStatusFactory,
 )
 
-from cmk.special_agents.agent_kube import PodOwner
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import PodOwner
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 

@@ -21,7 +21,7 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout
-from cmk.utils.type_defs import HostName, HostsToUpdate, TimeperiodName
+from cmk.utils.type_defs import HostName, TimeperiodName
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -53,7 +53,7 @@ class CoreAction(enum.Enum):
 
 def do_reload(
     core: MonitoringCore,
-    hosts_to_update: HostsToUpdate = None,
+    hosts_to_update: set[HostName] | None = None,
     *,
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
@@ -70,7 +70,7 @@ def do_reload(
 def do_restart(
     core: MonitoringCore,
     action: CoreAction = CoreAction.RESTART,
-    hosts_to_update: HostsToUpdate = None,
+    hosts_to_update: set[HostName] | None = None,
     *,
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],

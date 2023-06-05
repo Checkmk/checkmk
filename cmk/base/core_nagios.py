@@ -34,7 +34,6 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostgroupName,
     HostName,
-    HostsToUpdate,
     ServicegroupName,
     ServiceName,
     TimeperiodName,
@@ -79,7 +78,7 @@ class NagiosCore(core_config.MonitoringCore):
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
         licensing_handler: LicensingHandler,
-        hosts_to_update: HostsToUpdate = None,
+        hosts_to_update: set[HostName] | None = None,
     ) -> None:
         self._create_core_config(config_path, licensing_handler)
         self._precompile_hostchecks(config_path)

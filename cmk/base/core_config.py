@@ -26,7 +26,7 @@ from cmk.utils.licensing.helper import get_licensed_state_file_path, write_licen
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.store import load_object_from_file, lock_checkmk_configuration, save_object_to_file
-from cmk.utils.type_defs import HostAddress, HostName, HostsToUpdate, Item, ServiceName
+from cmk.utils.type_defs import HostAddress, HostName, Item, ServiceName
 
 from cmk.checkengine.check_table import ConfiguredService, ServiceID
 from cmk.checkengine.checking import CheckPluginName
@@ -65,7 +65,7 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
-        hosts_to_update: HostsToUpdate = None,
+        hosts_to_update: set[HostName] | None = None,
     ) -> None:
         licensing_handler = self._licensing_handler_type.make()
         self._persist_licensed_state(licensing_handler.state)
@@ -77,7 +77,7 @@ class MonitoringCore(abc.ABC):
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
         licensing_handler: LicensingHandler,
-        hosts_to_update: HostsToUpdate = None,
+        hosts_to_update: set[HostName] | None = None,
     ) -> None:
         raise NotImplementedError
 
@@ -248,7 +248,7 @@ def check_icmp_arguments_of(
 def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
-    hosts_to_update: HostsToUpdate = None,
+    hosts_to_update: set[HostName] | None = None,
     *,
     duplicates: Sequence[HostName],
     skip_config_locking_for_bakery: bool = False,
@@ -335,7 +335,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 def _create_core_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
-    hosts_to_update: HostsToUpdate = None,
+    hosts_to_update: set[HostName] | None = None,
     *,
     duplicates: Sequence[HostName],
 ) -> None:

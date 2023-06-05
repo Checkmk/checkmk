@@ -45,7 +45,6 @@ __all__ = [
     "HostOrServiceConditionsNegated",
     "HostOrServiceConditionsSimple",
     "HostState",
-    "HostsToUpdate",
     "HostTagAgentOrSpecialAgentType",
     "HostTagAgentType",
     "HostTagCheckMkAgentType",
@@ -174,7 +173,6 @@ from ._misc import (  # TODO(ML): We should clean this up some day.
     Timestamp,
 )
 from .automations import PhaseOneResult
-from .core_config import HostsToUpdate
 from .host import HostAddress, HostAgentConnectionMode, HostgroupName, HostName, HostState
 from .ip_lookup import UpdateDNSCacheResult
 from .mrpe_config import ensure_mrpe_configs, MrpeConfig, MrpeConfigDeprecated

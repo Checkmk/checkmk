@@ -459,37 +459,8 @@ public:
     }
 
 protected:
-    //
-    //   FUNCTION: ServiceController::setServiceStatus(DWORD, DWORD, DWORD)
-    //
-    //   PURPOSE: The function sets the service status and reports the
-    //   status to the SCM.
-    //
-    //   PARAMETERS:
-    //   * CurrentState - the state of the service
-    //   * Win32ExitCode - error code to report
-    //   * WaitHint - estimated time for pending operation, in milliseconds
-    //
     void setServiceStatus(DWORD current_state, DWORD win32_exit_code,
-                          DWORD wait_hint) {
-        static DWORD check_point = 1;
-
-        // Fill in the SERVICE_STATUS structure of the service.
-        status_.dwCurrentState = current_state;
-        status_.dwWin32ExitCode = win32_exit_code;
-        status_.dwWaitHint = wait_hint;
-
-        status_.dwCheckPoint =
-            current_state == SERVICE_RUNNING || current_state == SERVICE_STOPPED
-                ? 0
-                : check_point++;
-
-        // Report the status of the service to the SCM.
-        const auto ret = ::SetServiceStatus(status_handle_, &status_);
-        xlog::l("Setting state %d result %d", current_state,
-                ret != 0 ? 0 : GetLastError())
-            .print();
-    }
+                          DWORD wait_hint);
     void setServiceStatus(DWORD current_state) {
         return setServiceStatus(current_state, NO_ERROR, 0);
     }

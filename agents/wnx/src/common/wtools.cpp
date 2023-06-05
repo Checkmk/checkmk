@@ -551,6 +551,35 @@ bool UninstallService(const wchar_t *service_name,
     return true;
 }
 
+//
+//   FUNCTION: ServiceController::setServiceStatus(DWORD, DWORD, DWORD)
+//
+//   PURPOSE: The function sets the service status and reports the
+//   status to the SCM.
+//
+//   PARAMETERS:
+//   * CurrentState - the state of the service
+//   * Win32ExitCode - error code to report
+//   * WaitHint - estimated time for pending operation, in milliseconds
+//
+void ServiceController::setServiceStatus(DWORD current_state,
+                                         DWORD win32_exit_code,
+                                         DWORD wait_hint) {
+    static DWORD check_point = 1;
+    status_.dwCurrentState = current_state;
+    status_.dwWin32ExitCode = win32_exit_code;
+    status_.dwWaitHint = wait_hint;
+
+    status_.dwCheckPoint =
+        current_state == SERVICE_RUNNING || current_state == SERVICE_STOPPED
+            ? 0
+            : check_point++;
+
+    const auto ret = ::SetServiceStatus(status_handle_, &status_);
+    XLOG::l("Setting state {} result {}", current_state,
+            ret != 0 ? 0 : GetLastError());
+}
+
 void ServiceController::initStatus(bool can_stop, bool can_shutdown,
                                    bool can_pause_continue) {
     status_.dwServiceType = SERVICE_WIN32_OWN_PROCESS;

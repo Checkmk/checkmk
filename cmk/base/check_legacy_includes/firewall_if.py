@@ -6,10 +6,9 @@
 import time
 from typing import Any
 
-from cmk.base.check_api import check_levels, get_average, get_parsed_item_data, get_rate, RAISE
+from cmk.base.check_api import check_levels, get_average, get_rate, RAISE
 
 
-@get_parsed_item_data
 def check_firewall_if(item, params, data):
     infotext_names = {
         "ip4_in_blocked": "Incoming IPv4 packets blocked: ",

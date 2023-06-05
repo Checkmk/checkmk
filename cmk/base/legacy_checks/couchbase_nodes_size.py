@@ -8,7 +8,6 @@ from cmk.base.check_api import (
     check_levels,
     discover,
     get_bytes_human_readable,
-    get_parsed_item_data,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
@@ -20,8 +19,9 @@ check_info["couchbase_nodes_size"] = LegacyCheckDefinition(
 
 
 def get_couchbase_check_by_keys(key_disk, key_size):
-    @get_parsed_item_data
-    def check_couchbase_nodes_size(_item, params, data):
+    def check_couchbase_nodes_size(item, params, parsed):
+        if not (data := parsed.get(item)):
+            return
         on_disk = data.get(key_disk)
         if on_disk is not None:
             yield check_levels(

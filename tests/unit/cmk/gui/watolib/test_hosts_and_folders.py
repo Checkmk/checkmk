@@ -426,100 +426,58 @@ def test_mgmt_inherit_protocol(
     assert data[base_variable]["mgmt-host"] == folder_credentials
 
 
-@pytest.fixture(name="make_folder")
-def fixture_make_folder(mocker: MagicMock) -> Callable:
-    """
-    Returns a function to create patched folders for tests. Note that the global setting
-    "Hide folders without read permissions" will currently always be set during setup.
-    """
-
+@pytest.fixture(name="patch_may")
+def fixture_patch_may(mocker: MagicMock) -> None:
     def prefixed_title(self_: hosts_and_folders.CREFolder, current_depth: int, pretty: bool) -> str:
         return "_" * current_depth + self_.title()
 
     mocker.patch.object(hosts_and_folders.Folder, "_prefixed_title", prefixed_title)
 
     def may(self_, _permission):
-        return self_._may_see
+        return getattr(self_, "_may_see", True)
 
     mocker.patch.object(hosts_and_folders.Folder, "may", may)
 
-    # convenience method NOT present in Folder
-    def add_subfolders(self_, folders):
-        self_._loaded_subfolders = {}
-        for folder in folders:
-            self_._loaded_subfolders[folder.name()] = folder
-            folder._parent = self_
-        return self_
 
-    mocker.patch.object(hosts_and_folders.Folder, "add_subfolders", add_subfolders, create=True)
-
-    def f(
-        name: str,
-        title: str,
-        parent_folder: hosts_and_folders.CREFolder | None = None,
-        may_see: bool = True,
-    ) -> hosts_and_folders.CREFolder:
-        folder = hosts_and_folders.Folder.new(
-            tree=folder_tree(),
-            name=name,
-            parent_folder=parent_folder,
-            title=title,
-        )
-        # Attribute only used for testing
-        folder._may_see = may_see  # type: ignore[attr-defined]
-        return folder
-
-    return f
-
-
-def only_root(folder: Callable) -> hosts_and_folders.CREFolder:
-    root_folder = folder("", title="Main")
+def only_root() -> hosts_and_folders.CREFolder:
+    root_folder = folder_tree().root_folder()
     root_folder._loaded_subfolders = {}
     return root_folder
 
 
-def three_levels(folder: Callable) -> hosts_and_folders.CREFolder:
-    return folder("", title="Main").add_subfolders(
-        [
-            folder("a", title="A").add_subfolders(
-                [
-                    folder("c", title="C"),
-                    folder("d", title="D"),
-                ]
-            ),
-            folder("b", title="B").add_subfolders(
-                [
-                    folder("e", title="E").add_subfolders(
-                        [
-                            folder("f", title="F"),
-                        ]
-                    ),
-                ]
-            ),
-        ]
-    )
+def three_levels() -> hosts_and_folders.CREFolder:
+    main = folder_tree().root_folder()
+
+    a = main.create_subfolder("a", title="A", attributes={})
+    a.create_subfolder("c", title="C", attributes={})
+    a.create_subfolder("d", title="D", attributes={})
+
+    b = main.create_subfolder("b", title="B", attributes={})
+    e = b.create_subfolder("e", title="E", attributes={})
+    e.create_subfolder("f", title="F", attributes={})
+
+    return main
 
 
-def three_levels_leaf_permissions(folder: Callable) -> hosts_and_folders.CREFolder:
-    return folder("", title="Main", may_see=False).add_subfolders(
-        [
-            folder("a", title="A", may_see=False).add_subfolders(
-                [
-                    folder("c", title="C", may_see=False),
-                    folder("d", title="D"),
-                ]
-            ),
-            folder("b", title="B", may_see=False).add_subfolders(
-                [
-                    folder("e", title="E", may_see=False).add_subfolders(
-                        [
-                            folder("f", title="F"),
-                        ]
-                    ),
-                ]
-            ),
-        ]
-    )
+def three_levels_leaf_permissions() -> hosts_and_folders.CREFolder:
+    main = folder_tree().root_folder()
+
+    # Attribute only used for testing
+    main._may_see = False  # type: ignore[attr-defined]
+
+    a = main.create_subfolder("a", title="A", attributes={})
+    a._may_see = False  # type: ignore[attr-defined]
+    c = a.create_subfolder("c", title="C", attributes={})
+    c._may_see = False  # type: ignore[attr-defined]
+    a.create_subfolder("d", title="D", attributes={})
+
+    b = main.create_subfolder("b", title="B", attributes={})
+    b._may_see = False  # type: ignore[attr-defined]
+    e = b.create_subfolder("e", title="E", attributes={})
+    e._may_see = False  # type: ignore[attr-defined]
+    e.create_subfolder("f", title="F", attributes={})
+
+    return main
 
 
 @pytest.mark.parametrize(
@@ -551,21 +509,22 @@ def three_levels_leaf_permissions(folder: Callable) -> hosts_and_folders.CREFold
         ),
     ],
 )
+@pytest.mark.usefixtures("patch_may")
 def test_recursive_subfolder_choices(
     monkeypatch: MonkeyPatch,
-    make_folder: Callable,
-    actual_builder: Callable[[Callable], hosts_and_folders.CREFolder],
+    actual_builder: Callable[[], hosts_and_folders.CREFolder],
     expected: list[tuple[str, str]],
 ) -> None:
     with monkeypatch.context() as m:
         m.setattr(
             hosts_and_folders.active_config, "wato_hide_folders_without_read_permissions", True
         )
-        assert actual_builder(make_folder).recursive_subfolder_choices() == expected
+        assert actual_builder().recursive_subfolder_choices() == expected
 
 
+@pytest.mark.usefixtures("patch_may")
 def test_recursive_subfolder_choices_function_calls(
-    monkeypatch: MonkeyPatch, mocker: MagicMock, make_folder: Callable
+    monkeypatch: MonkeyPatch, mocker: MagicMock
 ) -> None:
     """Every folder should only be visited once"""
     with monkeypatch.context() as m:
@@ -573,7 +532,7 @@ def test_recursive_subfolder_choices_function_calls(
             hosts_and_folders.active_config, "wato_hide_folders_without_read_permissions", True
         )
         spy = mocker.spy(hosts_and_folders.Folder, "_walk_tree")
-        tree = three_levels_leaf_permissions(make_folder)
+        tree = three_levels_leaf_permissions()
         tree.recursive_subfolder_choices()
         assert spy.call_count == 7
 

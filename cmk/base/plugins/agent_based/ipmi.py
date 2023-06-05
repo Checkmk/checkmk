@@ -137,7 +137,8 @@ def parse_ipmi(string_table: type_defs.StringTable) -> ipmi.Section:
                        crit_low=1.0,
                        warn_low=6.0,
                        warn_high=37.0,
-                       crit_high=42.0),
+                       crit_high=42.0,
+                       type_=None),
      'CPU': Sensor(status_txt='ok',
                    unit='degrees_C',
                    state=None,
@@ -145,7 +146,8 @@ def parse_ipmi(string_table: type_defs.StringTable) -> ipmi.Section:
                    crit_low=None,
                    warn_low=None,
                    warn_high=95.0,
-                   crit_high=99.0)}
+                   crit_high=99.0,
+                   type_=None)}
     >>> pprint(parse_ipmi([
     ... ['CMOS Battery     ', ' 10h ', ' ok  ', '  7.1 ', ''],
     ... ]))
@@ -156,7 +158,8 @@ def parse_ipmi(string_table: type_defs.StringTable) -> ipmi.Section:
                             crit_low=None,
                             warn_low=None,
                             warn_high=None,
-                            crit_high=None)}
+                            crit_high=None,
+                            type_=None)}
     """
     parsed: ipmi.Section = {}
     for line in string_table:

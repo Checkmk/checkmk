@@ -149,7 +149,10 @@ result_parse = [
                 "--log-target=syslog",
             ],
             [("on", 1050360, 303252, "00:14:59/1-03:59:39", "9902"), "emacs"],
-            [("on", 2924232, 472252, "00:12:05/07:24:15", "7912"), "/usr/lib/firefox/firefox"],
+            [
+                ("on", 2924232, 472252, "00:12:05/07:24:15", "7912"),
+                "/usr/lib/firefox/firefox",
+            ],
             [
                 ("heute", 11180, 1144, "00:00:00/03:54:10", "10884"),
                 "/omd/sites/heute/lib/cmc/checkhelper",
@@ -170,7 +173,10 @@ result_parse = [
     (
         1,
         [
-            [("SYSTEM", 0, 0, "0", "0", "0", "0", "0", "0", "1", "0"), "System Idle Process"],
+            [
+                ("SYSTEM", 0, 0, "0", "0", "0", "0", "0", "0", "1", "0"),
+                "System Idle Process",
+            ],
             [
                 (
                     "\\NT AUTHORITY\\SYSTEM",
@@ -442,8 +448,11 @@ input_ids = [
     ids=input_ids,
 )
 def test_parse_ps(capture, result):
-    cpu_core, lines = ps_section.parse_ps(copy.deepcopy(capture))
+    now = 1540375342
+    cpu_core, lines, ps_time = ps_section._parse_ps(now, copy.deepcopy(capture))
     assert cpu_core == result[0]  # cpu_cores
+
+    assert now == ps_time
 
     for (ps_info_item, cmd_line), ref in itertools.zip_longest(lines, result[1]):
         assert ps_info_item == ps.PsInfo(*ref[0])
@@ -492,6 +501,7 @@ def test_parse_ps(capture, result):
                         ["/sbin/init", "--ladida"],
                     )
                 ],
+                1540375342,
             ),
             id="standard_case",
         ),
@@ -560,8 +570,47 @@ def test_parse_ps(capture, result):
                         ["[node]", "<defunct>"],
                     ),
                 ],
+                1540375342,
             ),
             id="with_deleted_cgroup",
+        ),
+        pytest.param(
+            [
+                ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+                [
+                    "12:pids:/system.slice/srcmstr.service,5:devices:/system.slice/srcmstr.service,1:name=systemd:/system.slice/srcmstr.service",
+                    "root",
+                    "96112",
+                    "3448",
+                    "00:00:00",
+                    "1-05:33:16",
+                    "4515",
+                ],
+            ],
+            (
+                1,
+                [
+                    (
+                        ps.PsInfo(
+                            user="root",
+                            virtual=96112,
+                            physical=3448,
+                            cputime="00:00:00/1-05:33:16",
+                            process_id="4515",
+                            pagefile=None,
+                            usermode_time=None,
+                            kernelmode_time=None,
+                            handles=None,
+                            threads=None,
+                            uptime=None,
+                            cgroup="12:pids:/system.slice/srcmstr.service,5:devices:/system.slice/srcmstr.service,1:name=systemd:/system.slice/srcmstr.service",
+                        ),
+                        [],
+                    ),
+                ],
+                1540375342,
+            ),
+            id="empty command line (SUP-13009)",
         ),
     ],
 )
@@ -569,4 +618,5 @@ def test_parse_ps_lnx(
     string_table: StringTable,
     expected_result: ps.Section,
 ) -> None:
-    assert ps_section.parse_ps_lnx(string_table) == expected_result
+    now = 1540375342
+    assert ps_section._parse_ps_lnx(now, string_table) == expected_result

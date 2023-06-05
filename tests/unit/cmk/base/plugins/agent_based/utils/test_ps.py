@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+from collections.abc import Iterable, Mapping, Sequence
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, Result, State
@@ -21,6 +24,7 @@ def test_host_labels_ps_no_match_attr():
                 ["/usr/lib/ssh/sshd"],
             ),
         ],
+        int(time.time()),
     )
     params = [
         {
@@ -44,6 +48,7 @@ def test_host_labels_ps_no_match_pattern():
                 ["/usr/lib/ssh/sshd"],
             ),
         ],
+        int(time.time()),
     )
     params = [
         {
@@ -66,6 +71,7 @@ def test_host_labels_ps_match():
                 ["/usr/lib/ssh/sshd"],
             ),
         ],
+        1540375342,
     )
     params = [
         {
@@ -359,7 +365,8 @@ def test_memory_perc_check_cluster():
                         "-prefsLen",
                         "9681",
                     ],
-                )
+                    1540375342,
+                ),
             ],
             {"process_info_arguments": 15},
             [
@@ -401,7 +408,8 @@ def test_memory_perc_check_cluster():
                         "-prefsLen",
                         "9681",
                     ],
-                )
+                    1540375342,
+                ),
             ],
             {"process_info_arguments": 15},
             [
@@ -419,6 +427,10 @@ def test_memory_perc_check_cluster():
         ),
     ],
 )
-def test_process_capture(process_lines, params, expected_processes):
+def test_process_capture(
+    process_lines: Iterable[ps.ProcessLine],
+    params: Mapping[str, int],
+    expected_processes: Sequence[ps._Process],
+) -> None:
     process_aggregator = ps.process_capture(process_lines, params, 1, {})
     assert process_aggregator.processes == expected_processes

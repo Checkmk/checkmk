@@ -94,7 +94,7 @@ class PsInfo:
         )
 
 
-Section = Tuple[int, Sequence[Tuple[PsInfo, Sequence[str]]]]
+Section = Tuple[int, Sequence[Tuple[PsInfo, Sequence[str]]], int]
 
 _InventorySpec = Tuple[
     str,
@@ -104,6 +104,9 @@ _InventorySpec = Tuple[
     Mapping[str, str],
     Mapping[str, Any],
 ]
+
+# process_lines: (Node, PsInfo, cmd_line, time)
+ProcessLine = Tuple[Optional[str], PsInfo, Sequence[str], int]
 
 
 def get_discovery_specs(params: Sequence[Mapping[str, Any]]) -> Sequence[_InventorySpec]:
@@ -370,7 +373,7 @@ class ProcessAggregator:
         # Use default of division
         return 1.0 / self.cpu_cores
 
-    def lifetimes(self, process_info, process: _Process):
+    def lifetimes(self, process_info, process: _Process, ps_time: int):
         # process_info.cputime contains the used CPU time and possibly,
         # separated by /, also the total elapsed time since the birth of the
         # process.
@@ -390,8 +393,7 @@ class ProcessAggregator:
             self.min_elapsed = minn(self.min_elapsed or elapsed, elapsed)
             self.max_elapsed = maxx(self.max_elapsed, elapsed)
 
-            now = time.time()
-            creation_time_unix = int(now - elapsed)
+            creation_time_unix = int(ps_time - elapsed)
             if creation_time_unix != 0:
                 process.append(
                     (
@@ -400,16 +402,13 @@ class ProcessAggregator:
                     )
                 )
 
-    def cpu_usage(self, value_store, process_info, process: _Process):
-
-        now = time.time()
-
+    def cpu_usage(self, value_store, process_info, process: _Process, ps_time: int):
         pcpu_text = process_info.cputime.split("/")[0]
 
         if ":" in pcpu_text:  # In linux is a time
             total_seconds = parse_ps_time(pcpu_text)
             pid = process_info.process_id
-            cputime = cpu_rate(value_store, "stat.pcpu.%s" % pid, now, total_seconds)
+            cputime = cpu_rate(value_store, "stat.pcpu.%s" % pid, ps_time, total_seconds)
 
             pcpu = cputime * 100 * self.core_weight(is_win=False)
             process.append(("pid", (pid, "")))
@@ -419,10 +418,10 @@ class ProcessAggregator:
             pid = process_info.process_id
 
             user_per_sec = cpu_rate(
-                value_store, "user.%s" % pid, now, int(process_info.usermode_time)
+                value_store, "user.%s" % pid, ps_time, int(process_info.usermode_time)
             )
             kernel_per_sec = cpu_rate(
-                value_store, "kernel.%s" % pid, now, int(process_info.kernelmode_time)
+                value_store, "kernel.%s" % pid, ps_time, int(process_info.kernelmode_time)
             )
 
             if not all([user_per_sec, kernel_per_sec]):
@@ -456,8 +455,7 @@ class ProcessAggregator:
 
 
 def process_capture(
-    # process_lines: (Node, PsInfo, cmd_line)
-    process_lines: Iterable[Tuple[Optional[str], PsInfo, Sequence[str]]],
+    process_lines: Iterable[ProcessLine],
     params: Mapping[str, Any],
     cpu_cores: int,
     value_store: MutableMapping[str, Any],
@@ -468,8 +466,7 @@ def process_capture(
     userspec = params.get("user")
     cgroupspec = params.get("cgroup", (None, False))
 
-    for node_name, process_info, command_line in process_lines:
-
+    for node_name, process_info, command_line, ps_time in process_lines:
         if not process_attributes_match(process_info, userspec, cgroupspec):
             continue
 
@@ -498,8 +495,8 @@ def process_capture(
             ps_aggregator.virtual_size += process_info.virtual  # kB
             ps_aggregator.resident_size += process_info.physical  # kB
 
-            ps_aggregator.lifetimes(process_info, process)
-            ps_aggregator.cpu_usage(value_store, process_info, process)
+            ps_aggregator.lifetimes(process_info, process, ps_time)
+            ps_aggregator.cpu_usage(value_store, process_info, process, ps_time)
 
         include_args = params.get("process_info_arguments", 0)
         if include_args:
@@ -583,7 +580,7 @@ def check_ps_common(
     label: str,
     item: str,
     params: Mapping[str, Any],
-    process_lines: Iterable[Tuple[Optional[str], PsInfo, Sequence[str]]],
+    process_lines: Iterable[ProcessLine],
     cpu_cores: int,
     total_ram_map: Mapping[str, float],
 ) -> CheckResult:

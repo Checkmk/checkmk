@@ -4,14 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
 import itertools
+import time
 from typing import Any, Dict, List, NamedTuple, Optional
 
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib import on_time
+from tests.testlib import set_timezone
 
 from cmk.base.plugins.agent_based import ps_check, ps_section
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
@@ -320,7 +320,7 @@ def test_inventory_common():
             s.item: s
             for s in ps_utils.discover_ps(  # type: ignore[attr-defined]
                 PS_DISCOVERY_WATO_RULES,  # type: ignore[arg-type]
-                ps_section.parse_ps(info),
+                ps_section._parse_ps(int(time.time()), info),
                 None,
                 None,
                 None,
@@ -533,14 +533,16 @@ check_results = [
     ids=[s.item for s in PS_DISCOVERED_ITEMS],
 )
 def test_check_ps_common(inv_item, reference):
-    parsed: List = []
-    for info in generate_inputs():
-        _cpu_cores, data = ps_section.parse_ps(info)
-        parsed.extend((None, ps_info, cmd_line) for (ps_info, cmd_line) in data)
+    parsed: list = []
 
-    with on_time(1540375342, "CET"):
-        factory_defaults = {"levels": (1, 1, 99999, 99999)}
-        factory_defaults.update(inv_item.parameters)
+    now = 1540375342
+    for info in generate_inputs():
+        _cpu_cores, data, _ = ps_section._parse_ps(now, info)
+        parsed.extend((None, ps_info, cmd_line, now) for (ps_info, cmd_line) in data)
+
+    factory_defaults = {"levels": (1, 1, 99999, 99999)}
+    factory_defaults.update(inv_item.parameters)
+    with set_timezone("CET"):  # needed for comparison of displayed times, which is in localtime
         test_result = list(
             ps_utils.check_ps_common(
                 label="Processes",
@@ -551,7 +553,7 @@ def test_check_ps_common(inv_item, reference):
                 total_ram_map={"": 1024**3} if "emacs" in inv_item.item else {},
             )
         )
-        assert test_result == reference
+    assert test_result == reference
 
 
 class cpu_config(NamedTuple):
@@ -653,22 +655,23 @@ cpu_util_data = [
 @pytest.mark.parametrize("data", cpu_util_data, ids=[a.name for a in cpu_util_data])
 def test_check_ps_common_cpu(data):
     def time_info(service, agent_info, check_time, cputime, cpu_cores):
-        with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
-            _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
-            lines_with_node_name = [
-                (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines
-            ]
+        _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(
+            check_time, splitter(agent_info.format(cputime))
+        )
+        lines_with_node_name = [
+            (None, ps_info, cmd_line, ps_time) for (ps_info, cmd_line) in parsed_lines
+        ]
 
-            return list(
-                ps_utils.check_ps_common(
-                    label="Processes",
-                    item=service.item,
-                    params=service.parameters,  # type: ignore[arg-type]
-                    process_lines=lines_with_node_name,
-                    cpu_cores=cpu_cores,
-                    total_ram_map={},
-                )
+        return list(
+            ps_utils.check_ps_common(
+                label="Processes",
+                item=service.item,
+                params=service.parameters,  # type: ignore[arg-type]
+                process_lines=lines_with_node_name,
+                cpu_cores=cpu_cores,
+                total_ram_map={},
             )
+        )
 
     rescale_params = (
         {"cpu_rescale_max": data.cpu_rescale_max} if data.cpu_rescale_max is not None else {}
@@ -721,10 +724,12 @@ def test_check_ps_common_cpu(data):
     ],
 )
 def test_check_ps_common_count(levels, reference):
-    _cpu_info, parsed_lines = ps_section.parse_ps(
-        splitter("(on,105,30,00:00:{:02}/03:59:39,902) single")
+    _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(
+        int(time.time()), splitter("(on,105,30,00:00:{:02}/03:59:39,902) single")
     )
-    lines_with_node_name = [(None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
+    lines_with_node_name = [
+        (None, ps_info, cmd_line, ps_time) for (ps_info, cmd_line) in parsed_lines
+    ]
 
     params = {
         "process": "~test",
@@ -747,13 +752,14 @@ def test_check_ps_common_count(levels, reference):
 
 def test_subset_patterns():
 
-    section_ps = ps_section.parse_ps(
+    section_ps = ps_section._parse_ps(
+        int(time.time()),
         splitter(
             """(user,0,0,0.5) main
 (user,0,0,0.4) main_dev
 (user,0,0,0.1) main_dev
 (user,0,0,0.5) main_test"""
-        )
+        ),
     )
 
     # Boundary in match is necessary otherwise main instance accumulates all
@@ -809,6 +815,7 @@ def test_subset_patterns():
         s.item: s for s in discovered
     }  # type: ignore[attr-defined]
 
+    _, data, ps_time = section_ps
     for service, count in zip(discovered, [1, 2, 1]):
         assert isinstance(service.item, str)
         output = list(
@@ -816,7 +823,7 @@ def test_subset_patterns():
                 label="Processes",
                 item=service.item,
                 params=service.parameters,  # type: ignore[arg-type]
-                process_lines=[(None, psi, cmd_line) for (psi, cmd_line) in section_ps[1]],
+                process_lines=[(None, psi, cmd_line, ps_time) for (psi, cmd_line) in data],
                 cpu_cores=1,
                 total_ram_map={},
             )
@@ -839,16 +846,18 @@ def test_cpu_util_single_process_levels(cpu_cores):
     }
 
     def run_check_ps_common_with_elapsed_time(check_time, cputime):
-        with on_time(check_time, "CET"):
-            agent_info = """(on,2275004,434008,00:00:49/26:58,25576) firefox
+        agent_info = """(on,2275004,434008,00:00:49/26:58,25576) firefox
 (on,1869920,359836,00:01:23/6:57,25664) firefox
 (on,7962644,229660,00:00:10/26:56,25758) firefox
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
-            _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
-            lines_with_node_name = [
-                (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines
-            ]
+        _cpu_info, parsed_lines, ps_time = ps_section._parse_ps(
+            check_time, splitter(agent_info.format(cputime))
+        )
+        lines_with_node_name = [
+            (None, ps_info, cmd_line, ps_time) for (ps_info, cmd_line) in parsed_lines
+        ]
 
+        with set_timezone("CET"):  # needed for comparison of displayed times, which is in localtime
             return list(
                 ps_utils.check_ps_common(
                     label="Processes",
@@ -912,11 +921,12 @@ def test_cpu_util_single_process_levels(cpu_cores):
 
 
 def test_parse_ps_windows(mocker: MockerFixture):
-    section_ps = ps_section.parse_ps(
+    section_ps = ps_section._parse_ps(
+        int(time.time()),
         splitter(
             """(\\LS\0Checkmk,150364,40016,0,2080,1,387119531250,2225698437500,111,2,263652)	CPUSTRES64.EXE""",
             "\t",
-        )
+        ),
     )
 
     section_mem = None

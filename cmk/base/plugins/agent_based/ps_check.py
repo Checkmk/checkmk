@@ -22,7 +22,7 @@ def check_ps(
     if not section_ps:
         return
 
-    cpu_cores, lines = section_ps
+    cpu_cores, lines, ps_time = section_ps
     if section_cpu:
         cpu_cores = section_cpu.num_cpus or cpu_cores
 
@@ -33,7 +33,7 @@ def check_ps(
         item=item,
         params=params,
         # no cluster in this function -> Node name is None:
-        process_lines=[(None, ps_info, cmd_line) for ps_info, cmd_line in lines],
+        process_lines=[(None, ps_info, cmd_line, ps_time) for ps_info, cmd_line in lines],
         cpu_cores=cpu_cores,
         total_ram_map={} if total_ram is None else {"": total_ram},
     )
@@ -47,11 +47,17 @@ def cluster_check_ps(
     section_mem_used: Mapping[str, Optional[memory.SectionMem]],
     section_cpu: Mapping[str, Optional[cpu.Section]],  # unused
 ) -> CheckResult:
+    iter_non_trivial_sections = (
+        (node_name, node_section)
+        for node_name, node_section in section_ps.items()
+        if node_section is not None
+    )
+
     # introduce node name
     process_lines = [
-        (node_name, ps_info, cmd_line)
-        for node_name, node_section in section_ps.items()
-        for (ps_info, cmd_line) in (node_section[1] if node_section else ())
+        (node_name, ps_info, cmd_line, node_section[2])
+        for node_name, node_section in iter_non_trivial_sections
+        for (ps_info, cmd_line) in (node_section[1])
     ]
 
     core_counts = set(

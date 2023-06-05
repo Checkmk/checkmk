@@ -143,15 +143,15 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
             "/usr/share/man/$",
             "/usr/share/man/man8/$",
             "/usr/share/doc/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/changelog.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/COPYING.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/TEAM$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/copyright$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/README.md$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/changelog.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/COPYING.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/TEAM$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/copyright$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/README.md$",
             "/etc/$",
             "/etc/init.d/$",
-            "/etc/init.d/check-mk-(raw|free|enterprise|managed|cloud)-.*$",
+            "/etc/init.d/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*$",
         ] + version_allowed_patterns
 
         paths = []

@@ -34,6 +34,8 @@ pytest_plugins = ("tests.testlib.playwright.plugin",)
 
 import tests.testlib as testlib
 
+# Exclude openapi tests from global collection
+collect_ignore = ["openapi"]
 # TODO Hack: Exclude cee tests in cre repo
 if not Path(testlib.utils.cmc_path()).exists():
     collect_ignore_glob = ["*/cee/*"]

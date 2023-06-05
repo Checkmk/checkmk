@@ -4,26 +4,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.akcp import DETECT_AKCP_EXP
-from cmk.base.plugins.agent_based.utils.akcp_sensor import (
+from .agent_based_api.v1 import register, SNMPTree
+from .utils.akcp import DETECT_AKCP_EXP
+from .utils.akcp_sensor import (
     check_akcp_sensor_relay,
     inventory_akcp_sensor_no_params,
+    parse_akcp_sensor,
 )
 
 # Example for contents of info
 #           description              state   online
 # ["Port 1 Wassermelder BE Lager",    "2",    "1"]
 
-check_info["akcp_exp_water"] = LegacyCheckDefinition(
+
+register.snmp_section(
+    name="akcp_exp_water",
+    parse_function=parse_akcp_sensor,
     detect=DETECT_AKCP_EXP,
-    check_function=check_akcp_sensor_relay,
-    discovery_function=inventory_akcp_sensor_no_params,
-    service_name="Water %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.2.3.9.1",
         oids=["2", "6", "8"],
     ),
+)
+
+
+register.check_plugin(
+    name="akcp_exp_water",
+    service_name="Water %s",
+    check_function=check_akcp_sensor_relay,
+    discovery_function=inventory_akcp_sensor_no_params,
 )

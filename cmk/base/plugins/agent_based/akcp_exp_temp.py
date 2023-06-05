@@ -3,30 +3,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.akcp import DETECT_AKCP_EXP
-from cmk.base.plugins.agent_based.utils.akcp_sensor import (
+
+from .agent_based_api.v1 import register, SNMPTree
+from .utils.akcp import DETECT_AKCP_EXP
+from .utils.akcp_sensor import (
     AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
     check_akcp_sensor_temp,
     inventory_akcp_sensor_temp,
+    parse_akcp_sensor,
 )
 
 # Example for contents of info
 #           description         degree unit status low_crit low_warn high_warn high_crit degreeraw online
 # ["Port 8 Temperatur CL Lager", "20", "C",   "5",   "10",    "20",    "30",     "40",      "0",     1]
 
-
-check_info["akcp_exp_temp"] = LegacyCheckDefinition(
+register.snmp_section(
+    name="akcp_exp_temp",
+    parse_function=parse_akcp_sensor,
     detect=DETECT_AKCP_EXP,
-    check_function=check_akcp_sensor_temp,
-    discovery_function=inventory_akcp_sensor_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.2.3.2.1",
         oids=["2", "4", "5", "6", "9", "10", "11", "12", "19", "8"],
     ),
+)
+
+
+register.check_plugin(
+    name="akcp_exp_temp",
+    service_name="Temperature %s",
+    check_function=check_akcp_sensor_temp,
+    discovery_function=inventory_akcp_sensor_temp,
     check_ruleset_name="temperature",
     check_default_parameters=AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
 )

@@ -1,0 +1,12 @@
+Title: <tt>mk_logwatch.py</tt>: Overflow Options are Case-Insensitive
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1686115557
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p37
+
+Specifying <tt>overflow=c</tt> is no longer invalid and is equivalent to <tt>overflow=C</tt>.

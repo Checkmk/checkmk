@@ -13,7 +13,6 @@ import uuid
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -167,19 +166,16 @@ def test_host_is_ping_host(attributes: dict[str, str], result: bool) -> None:
         }
     ],
 )
-def test_write_and_read_host_attributes(
-    tmp_path: Path, attributes: dict[str, str | list[str]]
-) -> None:
-    folder_path = str(tmp_path)
+def test_write_and_read_host_attributes(attributes: dict[str, str | list[str]]) -> None:
     tree = folder_tree()
     # Used to write the data
     write_data_folder = hosts_and_folders.Folder.load(
-        tree=tree, name="testfolder", folder_path=folder_path, parent_folder=None
+        tree=tree, name="testfolder", parent_folder=tree.root_folder()
     )
 
     # Used to read the previously written data
     read_data_folder = hosts_and_folders.Folder.load(
-        tree=tree, name="testfolder", folder_path=folder_path, parent_folder=None
+        tree=tree, name="testfolder", parent_folder=tree.root_folder()
     )
 
     # Write data
@@ -228,9 +224,7 @@ def test_eq_operation(request_context: None) -> None:
         folder1 = hosts_and_folders.Folder.new(tree=tree, name="folder1", parent_folder=root)
         folder1.persist_instance()
 
-        folder1_new = hosts_and_folders.Folder.load(
-            tree=tree, name="folder1", folder_path="folder1"
-        )
+        folder1_new = hosts_and_folders.Folder.load(tree=tree, name="folder1", parent_folder=root)
         folder1_new.load_instance()
 
         assert folder1 == folder1_new
@@ -1052,8 +1046,8 @@ def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
         folder1.persist_instance()
         tree.invalidate_caches()
 
-    folder = Folder.load(tree=tree, name="bla", folder_path="/folder1")
-    assert folder.name() == "bla"
+    folder = Folder.load(tree=tree, name="folder1", parent_folder=tree.root_folder())
+    assert folder.name() == "folder1"
     assert folder.id() == "c6bda767ae5c47038f73d8906fb91bb4"
     assert folder.title() == "folder1"
     assert folder.attributes() == {
@@ -1118,7 +1112,7 @@ def test_folder_times() -> None:
     with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()
         Folder.new(tree=tree, name="test", parent_folder=root).save()
-        folder = Folder.load(tree=tree, name="test", folder_path="")
+        folder = Folder.load(tree=tree, name="test", parent_folder=root)
         folder.save()
 
     meta_data = folder.attributes()["meta_data"]

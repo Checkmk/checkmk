@@ -657,7 +657,7 @@ class _RedisHelper:
 
 def _get_fully_loaded_wato_folders(tree: FolderTree) -> Mapping[PathWithoutSlash, CREFolder]:
     wato_folders: dict[PathWithoutSlash, CREFolder] = {}
-    Folder.load(tree=tree, name="", folder_path="").add_to_dictionary(wato_folders)
+    Folder.load(tree=tree, name="", parent_folder=None).add_to_dictionary(wato_folders)
     return wato_folders
 
 
@@ -1282,13 +1282,12 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         *,
         tree: FolderTree,
         name: str,
-        folder_path: str | None = None,
-        parent_folder: CREFolder | None = None,
+        parent_folder: CREFolder | None,
     ) -> CREFolder:
         return cls(
             tree=tree,
             name=name,
-            folder_path=folder_path,
+            folder_path=os.path.join(parent_folder.path(), name) if parent_folder else name,
             parent_folder=parent_folder,
             title=None,
             attributes=None,
@@ -1604,16 +1603,9 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         for entry in os.listdir(dir_path):
             subfolder_dir = os.path.join(dir_path, entry)
             if os.path.isdir(subfolder_dir):
-                if self.path():
-                    subfolder_path = os.path.join(self.path(), entry)
-                else:
-                    # Main directory
-                    subfolder_path = entry
-
                 loaded_subfolders[entry] = Folder.load(
                     tree=self.tree,
                     name=entry,
-                    folder_path=subfolder_path,
                     parent_folder=self,
                 )
 
@@ -2885,7 +2877,6 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, CREFolder]):
         return Folder.load(
             tree=self.tree,
             name=os.path.basename(folder_path),
-            folder_path=folder_path,
             parent_folder=parent_folder,
         )
 

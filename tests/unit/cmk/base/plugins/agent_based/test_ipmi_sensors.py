@@ -224,6 +224,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Temperature",
         ),
         "CPU_Utilization": ipmi_utils.Sensor(
             status_txt="OK",
@@ -233,6 +234,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Processor",
         ),
         "Fan_FAN1_F_Speed": ipmi_utils.Sensor(
             status_txt="OK",
@@ -242,6 +244,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_=None,
         ),
         "Intrusion": ipmi_utils.Sensor(
             status_txt="OK",
@@ -251,6 +254,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Physical Security",
         ),
         "M2_Temp0(PCIe1)_(Temperature)": ipmi_utils.Sensor(
             status_txt="OK",
@@ -269,6 +273,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Battery",
         ),
         "Memory_Status": ipmi_utils.Sensor(
             status_txt="OK",
@@ -278,6 +283,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Memory",
         ),
         "Power_Meter": ipmi_utils.Sensor(
             status_txt="OK",
@@ -287,6 +293,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Other",
         ),
         "Power_Supply_PS_Status": ipmi_utils.Sensor(
             status_txt="Presence detected",
@@ -296,6 +303,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_=None,
         ),
         "Power_Unit_PSU": ipmi_utils.Sensor(
             status_txt="Redundancy Lost",
@@ -305,6 +313,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_=None,
         ),
         "SysHealth_Stat": ipmi_utils.Sensor(
             status_txt="OK",
@@ -314,6 +323,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Chassis",
         ),
         "Temperature_Ambient": ipmi_utils.Sensor(
             status_txt="nc",
@@ -323,6 +333,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=42.0,
+            type_=None,
         ),
         "Temperature_Inlet_Temp": ipmi_utils.Sensor(
             status_txt="OK",
@@ -332,6 +343,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=48.0,
+            type_=None,
         ),
         "UID": ipmi_utils.Sensor(
             status_txt="no state reported",
@@ -341,6 +353,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="UNKNOWN type 192",
         ),
     },
 ]

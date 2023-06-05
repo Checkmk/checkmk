@@ -282,6 +282,31 @@ from cmk.base.plugins.agent_based.utils import ipmi
                 Metric('PCH_1.05V', 1.04, levels=(None, 1.13)),
             ],
         ),
+        (
+            "01-Inlet_Ambient",
+            {},
+            ipmi.Sensor(
+                status_txt="OK",
+                unit="C",
+                value=24.0,
+                crit_low=None,
+                warn_low=None,
+                warn_high=None,
+                crit_high=None,
+                type_="Temperature",
+            ),
+            True,
+            lambda txt: State.OK,
+            [
+                Result(
+                    state=State.OK,
+                    summary="Status: OK",
+                    details="Status: OK (service state derived from sensor events)",
+                ),
+                Result(state=State.OK, summary="24.00 C"),
+                Metric(name="value", value=24.0),
+            ],
+        ),
     ])
 def test_check_ipmi_detailed(
     item: str,

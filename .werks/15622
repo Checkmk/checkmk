@@ -1,0 +1,14 @@
+Title: <tt>ipmi_sensors</tt>: Add Temperature Performance Data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1685966232
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p37
+
+Previously, the check <tt>ipmi_sensors</tt> would only provide temperature performance data, if the
+service name contained <tt>temp</tt>. With this Werk, the data will also be provided, if the data
+type is available via the agent and the type contains `temp` (case-insensitive).

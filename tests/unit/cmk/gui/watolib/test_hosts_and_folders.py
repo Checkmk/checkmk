@@ -582,13 +582,18 @@ class _TreeStructure:
 def make_monkeyfree_folder(
     tree_structure: _TreeStructure, parent: hosts_and_folders.CREFolder | None = None
 ) -> hosts_and_folders.CREFolder:
-    new_folder = hosts_and_folders.CREFolder.new(
-        tree=hosts_and_folders.folder_tree(),
-        name=tree_structure.path,
-        parent_folder=parent,
-        title=f"Title of {tree_structure.path}",
-        attributes=tree_structure.attributes,
-    )
+    tree = hosts_and_folders.folder_tree()
+    if parent is None:
+        new_folder = tree.root_folder()
+        new_folder._attributes = tree_structure.attributes
+    else:
+        new_folder = hosts_and_folders.CREFolder.new(
+            tree=tree,
+            name=tree_structure.path,
+            parent_folder=parent,
+            title=f"Title of {tree_structure.path}",
+            attributes=tree_structure.attributes,
+        )
 
     # Small monkeys :(
     new_folder._num_hosts = tree_structure.num_hosts
@@ -1022,6 +1027,7 @@ def test_new_empty_folder(monkeypatch: pytest.MonkeyPatch) -> None:
             name="bla",
             title="Bla",
             attributes={},
+            parent_folder=tree.root_folder(),
         )
     assert folder.name() == "bla"
     assert folder.id() == "a8098c1af86e11dabd1a00112444be1e"
@@ -1076,8 +1082,10 @@ def test_next_network_scan_at(
     last_end: float | None,
     next_time: float,
 ) -> None:
+    tree = folder_tree()
     folder = Folder.new(
-        tree=folder_tree(),
+        tree=tree,
+        parent_folder=tree.root_folder(),
         name="bla",
         title="Bla",
         attributes={

@@ -1180,7 +1180,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "postgres_bloat",
         "postgres_conn_time",
         "postgres_connections",
-        "postgres_instances",
         "postgres_locks",
         "postgres_sessions",
         "postgres_stat_database",

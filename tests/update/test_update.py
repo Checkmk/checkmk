@@ -11,6 +11,11 @@ from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name
 from tests.testlib.version import CMKVersion, version_from_env
 
+from tests.composition.controller_site_interactions.common import (
+    register_controller,
+    wait_until_host_receives_data,
+)
+
 from cmk.utils.version import Edition
 
 from .conftest import (
@@ -45,6 +50,9 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
         bake_agent=True,
     )
     test_site.activate_changes_and_wait_for_core_reload()
+
+    register_controller(agent_ctl, test_site, hostname)
+    wait_until_host_receives_data(test_site, hostname)
 
     logger.info("Discovering services and waiting for completion...")
     test_site.openapi.discover_services_and_wait_for_completion(

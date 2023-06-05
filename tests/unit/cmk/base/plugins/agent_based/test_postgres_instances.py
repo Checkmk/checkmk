@@ -5,17 +5,17 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.postgres_instances import parse_postgres_instances
+from cmk.base.plugins.agent_based.postgres_instances import (
+    check_postgres_instances,
+    discover_postgres_instances,
+    parse_postgres_instances,
+)
 
 
 @pytest.mark.parametrize(
@@ -76,15 +76,10 @@ from cmk.base.plugins.agent_based.postgres_instances import parse_postgres_insta
     ],
 )
 def test_discover_postgres_instances(
-    fix_register: FixRegister, string_table: StringTable, expected_result: DiscoveryResult
+    string_table: StringTable, expected_result: DiscoveryResult
 ) -> None:
     assert (
-        list(
-            fix_register.check_plugins[CheckPluginName("postgres_instances")].discovery_function(
-                parse_postgres_instances(string_table)
-            )
-        )
-        == expected_result
+        list(discover_postgres_instances(parse_postgres_instances(string_table))) == expected_result
     )
 
 
@@ -161,16 +156,14 @@ def test_discover_postgres_instances(
     ],
 )
 def test_check_postgres_instances(
-    fix_register: FixRegister,
     item: str,
     string_table: StringTable,
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            fix_register.check_plugins[CheckPluginName("postgres_instances")].check_function(
+            check_postgres_instances(
                 item=item,
-                params={},
                 section=parse_postgres_instances(string_table),
             )
         )

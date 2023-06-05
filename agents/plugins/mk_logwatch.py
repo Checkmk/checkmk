@@ -861,6 +861,11 @@ class PatternConfigBlock(object):  # pylint: disable=useless-object-inheritance
         super(PatternConfigBlock, self).__init__()
         self.files = files
         self.patterns = patterns
+        # First read all the options like 'maxlines=100' or 'maxtime=10'
+        self.options = Options()
+        for item in self.files:
+            if "=" in item:
+                self.options.set_opt(item)
 
 
 class ClusterConfigBlock(object):  # pylint: disable=useless-object-inheritance
@@ -976,25 +981,18 @@ def parse_sections(logfiles_config):
     non_matching_patterns = []
 
     for cfg in logfiles_config:
-
-        # First read all the options like 'maxlines=100' or 'maxtime=10'
-        opt = Options()
-        for item in cfg.files:
-            if '=' in item:
-                opt.set_opt(item)
-
         # Then handle the file patterns
         # The thing here is that the same file could match different patterns.
         for glob_pattern in (f for f in cfg.files if '=' not in f):
             logfile_refs = find_matching_logfiles(glob_pattern)
-            if opt.regex is not None:
-                logfile_refs = [ref for ref in logfile_refs if opt.regex.search(ref[1])]
+            if cfg.options.regex is not None:
+                logfile_refs = [ref for ref in logfile_refs if cfg.options.regex.search(ref[1])]
             if not logfile_refs:
                 non_matching_patterns.append(glob_pattern)
             for logfile_ref in logfile_refs:
                 section = found_sections.setdefault(logfile_ref[0], LogfileSection(logfile_ref))
                 section.patterns.extend(cfg.patterns)
-                section.options.update(opt)
+                section.options.update(cfg.options)
 
     logfile_sections = [found_sections[k] for k in sorted(found_sections)]
 

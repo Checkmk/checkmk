@@ -1,0 +1,21 @@
+Title: <tt>mk_logwatch.py</tt>: Do Not Crash Upon Entering Invalid Option
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1686036654
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p37
+
+Previously, if the user entered an invalid option into a configuration file for
+<tt>mk_logwatch.py</tt>, the plugin would crash with the traceback:
+
+C+:
+ValueError: Invalid overflow: 'c' (choose from dict_keys(['C', 'W', 'I', 'O']))
+C-:
+
+or similar. This would cause the output to be assigned to the wrong service, since no section
+header was produced. With this Werk, the traceback will only be shown, if the option
+<tt>--debug</tt> is used. This is analogous to what happens if the configuration file is missing.

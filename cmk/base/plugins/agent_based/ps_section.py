@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import time
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from .agent_based_api.v1 import register
@@ -181,9 +181,12 @@ def _consolidate_lines(string_table: StringTable) -> StringTable:
     return consolidated_lines
 
 
-def parse_ps(
-    string_table: StringTable,
-) -> ps.Section:
+def parse_ps(string_table: StringTable) -> ps.Section:
+    now = int(time.time())
+    return _parse_ps(now, string_table)
+
+
+def _parse_ps(now: int, string_table: StringTable) -> ps.Section:
     # Produces a list of Tuples where each sub list is built as follows:
     # [
     #     [(u'root', u'35156', u'4372', u'00:00:05/2-14:14:49', u'1'), u'/sbin/init'],
@@ -192,7 +195,7 @@ def parse_ps(
     # second element:  The process command line
     cpu_cores, info = _merge_wmic_info(_consolidate_lines(string_table))
     parsed = parse_process_entries(info)
-    return cpu_cores, parsed
+    return cpu_cores, parsed, now
 
 
 register.agent_section(
@@ -228,9 +231,12 @@ def _handle_deleted_cgroup(attrs: Iterable[str], line: Sequence[str]) -> Sequenc
     return line
 
 
-def parse_ps_lnx(
-    string_table: StringTable,
-) -> Optional[ps.Section]:
+def parse_ps_lnx(string_table: StringTable) -> Optional[ps.Section]:
+    now = int(time.time())
+    return _parse_ps_lnx(now, string_table)
+
+
+def _parse_ps_lnx(now: int, string_table: StringTable) -> Optional[ps.Section]:
     data = []
     # info[0]: $Node [header] user ... pid command
     # we rely on the command being the last one!
@@ -257,7 +263,7 @@ def parse_ps_lnx(
         data.append((ps_info_obj, line[cmd_idx:]))
 
     # cpu_cores for compatibility!
-    return 1, data
+    return 1, data, now
 
 
 register.agent_section(

@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import time
 
 import pytest
 
@@ -47,6 +48,7 @@ SECTION_DOMINO_TASKS_DATA = (
         (ps.PsInfo(), ["Replicator"]),
         (ps.PsInfo(), ["Event Monitor"]),
     ],
+    int(time.time()),
 )
 
 

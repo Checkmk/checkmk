@@ -140,6 +140,7 @@ class CMKOpenApiSession(requests.Session):
                 "sites": sites or [],
                 "force_foreign_changes": force_foreign_changes,
             },
+            headers={"If-Match": "*"},
             # We want to get the redirect response and handle that below. So don't let requests
             # handle that for us.
             allow_redirects=False,

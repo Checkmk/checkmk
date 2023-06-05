@@ -21,6 +21,7 @@ from cmk.utils.type_defs.rest_api_types.site_connection import SiteConfig
 
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
+IF_MATCH_HEADER_OPTIONS = Literal["valid_etag", "invalid_etag", "star"] | None
 
 
 API_DOMAIN = Literal[
@@ -46,6 +47,21 @@ API_DOMAIN = Literal[
 
 def _only_set_keys(body: dict[str, Any | None]) -> dict[str, Any]:
     return {k: v for k, v in body.items() if v is not None}
+
+
+def set_if_match_header(
+    if_match: IF_MATCH_HEADER_OPTIONS,
+    resp: Response,
+) -> Mapping[str, str] | None:
+    match if_match:
+        case "star":
+            return {"If-Match": "*"}
+        case "valid_etag":
+            return {"If-Match": resp.headers["ETag"]}
+        case "invalid_etag":
+            return {"If-Match": "asdf"}
+        case _:
+            return None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -390,6 +406,7 @@ class ActivateChangesClient(RestApiClient):
         redirect: bool = False,
         force_foreign_changes: bool = False,
         expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
         if sites is None:
             sites = []
@@ -401,6 +418,7 @@ class ActivateChangesClient(RestApiClient):
                 "sites": sites,
                 "force_foreign_changes": force_foreign_changes,
             },
+            headers=set_if_match_header(etag, self.list_pending_changes()),
             expect_ok=expect_ok,
         )
 
@@ -409,6 +427,7 @@ class ActivateChangesClient(RestApiClient):
         sites: list[str] | None = None,
         force_foreign_changes: bool = False,
         timeout_seconds: int = 60,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response | NoReturn:
         if sites is None:
             sites = []
@@ -421,6 +440,7 @@ class ActivateChangesClient(RestApiClient):
                 "force_foreign_changes": force_foreign_changes,
             },
             expect_ok=False,
+            headers=set_if_match_header(etag, self.list_pending_changes()),
             follow_redirects=False,
         )
 

@@ -1,0 +1,17 @@
+Title: activate_changes: If-Match header now required on the activate changes endpoint
+Class: feature
+Compatible: incomp
+Component: rest-api
+Date: 1685634008
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0p3
+
+The werk introduces the etag If-Match policy on the activate changes endpoint.
+The user can locate the ETag in the response headers of the "list pending changes"
+endpoint. In cases where clients don't want to first call this endpoint,
+the option to send If-Match: * is also possible.
+
+

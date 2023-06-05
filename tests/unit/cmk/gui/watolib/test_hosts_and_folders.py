@@ -171,12 +171,12 @@ def test_write_and_read_host_attributes(
     folder_path = str(tmp_path)
     tree = folder_tree()
     # Used to write the data
-    write_data_folder = hosts_and_folders.Folder(
+    write_data_folder = hosts_and_folders.Folder.load(
         tree=tree, name="testfolder", folder_path=folder_path, parent_folder=None
     )
 
     # Used to read the previously written data
-    read_data_folder = hosts_and_folders.Folder(
+    read_data_folder = hosts_and_folders.Folder.load(
         tree=tree, name="testfolder", folder_path=folder_path, parent_folder=None
     )
 
@@ -210,10 +210,10 @@ def test_create_nested_folders(request_context: None) -> None:
         tree = folder_tree()
         root = tree.root_folder()
 
-        folder1 = hosts_and_folders.Folder(tree=tree, name="folder1", parent_folder=root)
+        folder1 = hosts_and_folders.Folder.new(tree=tree, name="folder1", parent_folder=root)
         folder1.persist_instance()
 
-        folder2 = hosts_and_folders.Folder(tree=tree, name="folder2", parent_folder=folder1)
+        folder2 = hosts_and_folders.Folder.new(tree=tree, name="folder2", parent_folder=folder1)
         folder2.persist_instance()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
@@ -223,17 +223,19 @@ def test_eq_operation(request_context: None) -> None:
     with in_chdir("/"):
         tree = folder_tree()
         root = tree.root_folder()
-        folder1 = hosts_and_folders.Folder(tree=tree, name="folder1", parent_folder=root)
+        folder1 = hosts_and_folders.Folder.new(tree=tree, name="folder1", parent_folder=root)
         folder1.persist_instance()
 
-        folder1_new = hosts_and_folders.Folder(tree=tree, name="folder1", folder_path="folder1")
+        folder1_new = hosts_and_folders.Folder.load(
+            tree=tree, name="folder1", folder_path="folder1"
+        )
         folder1_new.load_instance()
 
         assert folder1 == folder1_new
         assert id(folder1) != id(folder1_new)
         assert folder1 in [folder1_new]
 
-        folder2 = hosts_and_folders.Folder(tree=tree, name="folder2", parent_folder=folder1)
+        folder2 = hosts_and_folders.Folder.new(tree=tree, name="folder2", parent_folder=folder1)
         folder2.persist_instance()
 
         assert folder1 not in [folder2]
@@ -457,10 +459,9 @@ def fixture_make_folder(mocker: MagicMock) -> Callable:
         parent_folder: hosts_and_folders.CREFolder | None = None,
         may_see: bool = True,
     ) -> hosts_and_folders.CREFolder:
-        folder = hosts_and_folders.Folder(
+        folder = hosts_and_folders.Folder.new(
             tree=folder_tree(),
             name=name,
-            folder_path=None,
             parent_folder=parent_folder,
             title=title,
         )
@@ -622,7 +623,7 @@ class _TreeStructure:
 def make_monkeyfree_folder(
     tree_structure: _TreeStructure, parent: hosts_and_folders.CREFolder | None = None
 ) -> hosts_and_folders.CREFolder:
-    new_folder = hosts_and_folders.CREFolder(
+    new_folder = hosts_and_folders.CREFolder.new(
         tree=hosts_and_folders.folder_tree(),
         name=tree_structure.path,
         parent_folder=parent,
@@ -1057,7 +1058,7 @@ def test_new_empty_folder(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(uuid, "uuid4", lambda: uuid.UUID("a8098c1a-f86e-11da-bd1a-00112444be1e"))
     tree = folder_tree()
     with on_time("2018-01-10 02:00:00", "CET"):
-        folder = Folder(
+        folder = Folder.new(
             tree=tree,
             name="bla",
             title="Bla",
@@ -1080,11 +1081,11 @@ def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
 
     tree = folder_tree()
     with on_time("2018-01-10 02:00:00", "CET"):
-        folder1 = Folder(tree=tree, name="folder1", parent_folder=tree.root_folder())
+        folder1 = Folder.new(tree=tree, name="folder1", parent_folder=tree.root_folder())
         folder1.persist_instance()
         tree.invalidate_caches()
 
-    folder = Folder(tree=tree, name="bla", folder_path="/folder1")
+    folder = Folder.load(tree=tree, name="bla", folder_path="/folder1")
     assert folder.name() == "bla"
     assert folder.id() == "c6bda767ae5c47038f73d8906fb91bb4"
     assert folder.title() == "folder1"
@@ -1116,7 +1117,7 @@ def test_next_network_scan_at(
     last_end: float | None,
     next_time: float,
 ) -> None:
-    folder = Folder(
+    folder = Folder.new(
         tree=folder_tree(),
         name="bla",
         title="Bla",
@@ -1147,8 +1148,8 @@ def test_folder_times() -> None:
 
     with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()
-        Folder(tree=tree, name="test", parent_folder=root).save()
-        folder = Folder(tree=tree, name="test", folder_path="")
+        Folder.new(tree=tree, name="test", parent_folder=root).save()
+        folder = Folder.load(tree=tree, name="test", folder_path="")
         folder.save()
 
     meta_data = folder.attributes()["meta_data"]

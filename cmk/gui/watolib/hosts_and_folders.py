@@ -656,7 +656,7 @@ class _RedisHelper:
 
 def _get_fully_loaded_wato_folders(tree: FolderTree) -> Mapping[PathWithoutSlash, CREFolder]:
     wato_folders: dict[PathWithoutSlash, CREFolder] = {}
-    Folder(tree=tree, name="", folder_path="").add_to_dictionary(wato_folders)
+    Folder.load(tree=tree, name="", folder_path="").add_to_dictionary(wato_folders)
     return wato_folders
 
 
@@ -1255,6 +1255,48 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def parent_folder_chain(self) -> list[CREFolder]:  # pylint: disable=useless-super-delegation
         return super().parent_folder_chain()
 
+    # Arguments will be cleaned up in follow-up commits
+    @classmethod
+    def new(
+        cls,
+        *,
+        tree: FolderTree,
+        name: str,
+        folder_path: str | None = None,
+        parent_folder: CREFolder | None = None,
+        title: str | None = None,
+        attributes: dict[str, Any] | None = None,
+    ) -> CREFolder:
+        return cls(
+            tree=tree,
+            name=name,
+            folder_path=folder_path,
+            parent_folder=parent_folder,
+            title=title,
+            attributes=attributes,
+        )
+
+    # Arguments will be cleaned up in follow-up commits
+    @classmethod
+    def load(
+        cls,
+        *,
+        tree: FolderTree,
+        name: str,
+        folder_path: str | None = None,
+        parent_folder: CREFolder | None = None,
+        title: str | None = None,
+        attributes: dict[str, Any] | None = None,
+    ) -> CREFolder:
+        return cls(
+            tree=tree,
+            name=name,
+            folder_path=folder_path,
+            parent_folder=parent_folder,
+            title=title,
+            attributes=attributes,
+        )
+
     def __init__(
         self,
         *,
@@ -1571,7 +1613,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
                     # Main directory
                     subfolder_path = entry
 
-                loaded_subfolders[entry] = Folder(
+                loaded_subfolders[entry] = Folder.load(
                     tree=self.tree,
                     name=entry,
                     folder_path=subfolder_path,
@@ -2217,7 +2259,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         attributes = update_metadata(attributes, created_by=user.id)
 
         # 2. Actual modification
-        new_subfolder = Folder(
+        new_subfolder = Folder.new(
             tree=self.tree, name=name, parent_folder=self, title=title, attributes=attributes
         )
         self._subfolders[name] = new_subfolder
@@ -2843,7 +2885,7 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, CREFolder]):
         if not _is_main_folder_path(folder_path):
             parent_folder = self[str(Path(folder_path).parent).lstrip(".")]
 
-        return Folder(
+        return Folder.load(
             tree=self.tree,
             name=os.path.basename(folder_path),
             folder_path=folder_path,

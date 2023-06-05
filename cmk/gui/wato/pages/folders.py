@@ -75,7 +75,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     check_wato_foldername,
     CREFolder,
     disk_or_search_folder_from_request,
-    Folder,
     folder_from_request,
     folder_preserving_link,
     folder_tree,
@@ -1262,7 +1261,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def _init_folder(self):
         # TODO: Needed to make pylint know the correct type of the return value.
         # Will be cleaned up in future when typing is established
-        return Folder(tree=folder_tree(), name="")
+        return folder_tree().root_folder()
 
     @abc.abstractmethod
     def _save(self, title, attributes):
@@ -1396,7 +1395,7 @@ class ModeCreateFolder(ABCFolderMode):
         return ["hosts", "manage_folders"]
 
     def _init_folder(self):
-        return Folder(tree=folder_tree(), name="")
+        return folder_tree().root_folder()
 
     def title(self) -> str:
         return _("Add folder")

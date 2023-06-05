@@ -1168,7 +1168,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "postgres_sessions",
         "postgres_stat_database",
         "postgres_stat_database.size",
-        "postgres_version",
         "printer_supply_ricoh",
         "prometheus_custom",
         "pse_poe",

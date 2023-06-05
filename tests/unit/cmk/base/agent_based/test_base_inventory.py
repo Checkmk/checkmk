@@ -759,9 +759,6 @@ def test_updater_merge_previous_attributes(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.tree.get_node(("path-to", "node-with-attrs"))
-    assert previous_node is not None
-
     if expected_retentions:
         assert update_result.save_tree
         assert update_result.reasons_by_path
@@ -769,12 +766,11 @@ def test_updater_merge_previous_attributes(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = trees.inventory.tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
-    assert inv_node.attributes.retentions == expected_retentions
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
+    assert inv_node.tree.attributes.retentions == expected_retentions
 
     if expected_retentions:
-        assert "old" in inv_node.attributes.pairs
+        assert "old" in inv_node.tree.attributes.pairs
 
 
 @pytest.mark.parametrize(
@@ -804,15 +800,11 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
     )
     assert not trees.inventory
 
-    previous_node = previous_tree.tree.get_node(("path-to", "node-with-attrs"))
-    assert isinstance(previous_node, StructuredDataNode)
-
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
 
-    inv_node = trees.inventory.tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
-    assert inv_node.attributes.retentions == {}
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
+    assert inv_node.tree.attributes.retentions == {}
 
 
 @pytest.mark.parametrize(
@@ -853,9 +845,6 @@ def test_updater_merge_previous_tables(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.tree.get_node(("path-to", "node-with-table"))
-    assert isinstance(previous_node, StructuredDataNode)
-
     if expected_retentions:
         assert update_result.save_tree
         assert update_result.reasons_by_path
@@ -863,12 +852,11 @@ def test_updater_merge_previous_tables(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = trees.inventory.tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
-    assert inv_node.table.retentions == expected_retentions
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
+    assert inv_node.tree.table.retentions == expected_retentions
 
     if expected_retentions:
-        for row in inv_node.table.rows:
+        for row in inv_node.tree.table.rows:
             assert "old" in row
 
 
@@ -900,17 +888,13 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
         ],
         previous_tree=previous_tree,
     )
+
     assert not trees.inventory
-
-    previous_node = previous_tree.tree.get_node(("path-to", "node-with-table"))
-    assert isinstance(previous_node, StructuredDataNode)
-
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
 
-    inv_node = trees.inventory.tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
-    assert inv_node.table.retentions == {}
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
+    assert inv_node.tree.table.retentions == {}
 
 
 @pytest.mark.parametrize(
@@ -952,11 +936,7 @@ def test_updater_merge_attributes(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.tree.get_node(("path-to", "node-with-attrs"))
-    assert previous_node is not None
-
-    inv_node = trees.inventory.tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
 
     if expected_retentions:
         assert update_result.save_tree
@@ -965,11 +945,11 @@ def test_updater_merge_attributes(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    assert inv_node.attributes.retentions == expected_retentions
+    assert inv_node.tree.attributes.retentions == expected_retentions
 
     if expected_retentions:
-        assert "old" in inv_node.attributes.pairs
-        assert inv_node.attributes.pairs.get("keys") == "New Keys"
+        assert "old" in inv_node.tree.attributes.pairs
+        assert inv_node.tree.attributes.pairs.get("keys") == "New Keys"
 
 
 @pytest.mark.parametrize(
@@ -1010,11 +990,7 @@ def test_updater_merge_attributes_outdated(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.tree.get_node(("path-to", "node-with-attrs"))
-    assert previous_node is not None
-
-    inv_node = trees.inventory.tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
 
     if expected_retentions:
         assert update_result.save_tree
@@ -1023,7 +999,7 @@ def test_updater_merge_attributes_outdated(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    assert inv_node.attributes.retentions == expected_retentions
+    assert inv_node.tree.attributes.retentions == expected_retentions
 
 
 @pytest.mark.parametrize(
@@ -1081,11 +1057,7 @@ def test_updater_merge_tables(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.tree.get_node(("path-to", "node-with-table"))
-    assert previous_node is not None
-
-    inv_node = trees.inventory.tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
 
     if expected_retentions:
         assert update_result.save_tree
@@ -1094,10 +1066,10 @@ def test_updater_merge_tables(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    assert inv_node.table.retentions == expected_retentions
+    assert inv_node.tree.table.retentions == expected_retentions
 
     if expected_retentions:
-        for row in inv_node.table.rows:
+        for row in inv_node.tree.table.rows:
             assert "old" in row
             assert row["keys"].startswith("New Keys")
 
@@ -1149,11 +1121,7 @@ def test_updater_merge_tables_outdated(
         previous_tree=previous_tree,
     )
 
-    previous_node = previous_tree.tree.get_node(("path-to", "node-with-table"))
-    assert previous_node is not None
-
-    inv_node = trees.inventory.tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
 
     if expected_retentions:
         assert update_result.save_tree
@@ -1162,7 +1130,7 @@ def test_updater_merge_tables_outdated(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    assert inv_node.table.retentions == expected_retentions
+    assert inv_node.tree.table.retentions == expected_retentions
 
 
 @pytest.mark.parametrize(

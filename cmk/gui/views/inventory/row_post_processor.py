@@ -163,12 +163,10 @@ def _extract_table_rows(
             continue
 
         for (path, ident), painter_macros in painter_macros_by_path_and_ident.items():
-            if not (node := row["host_inventory"].get_node(path)):
-                continue
-
-            table_rows_by_master_key.setdefault(master_key, []).extend(
-                list(_find_table_rows(ident, painter_macros, node.table.rows))
-            )
+            if tree := ImmutableTree(row["host_inventory"]).get_tree(path):
+                table_rows_by_master_key.setdefault(master_key, []).extend(
+                    list(_find_table_rows(ident, painter_macros, tree.tree.table.rows))
+                )
 
     return table_rows_by_master_key
 

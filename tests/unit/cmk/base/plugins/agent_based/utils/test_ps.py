@@ -2,8 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
+import time
 from collections.abc import Iterable, Mapping, Sequence
 
 import pytest
@@ -23,6 +22,7 @@ def test_host_labels_ps_no_match_attr() -> None:
                 ["/usr/lib/ssh/sshd"],
             ),
         ],
+        int(time.time()),
     )
     params = [
         {
@@ -46,6 +46,7 @@ def test_host_labels_ps_no_match_pattern() -> None:
                 ["/usr/lib/ssh/sshd"],
             ),
         ],
+        int(time.time()),
     )
     params = [
         {
@@ -68,6 +69,7 @@ def test_host_labels_ps_match() -> None:
                 ["/usr/lib/ssh/sshd"],
             ),
         ],
+        1540375342,
     )
     params = [
         {
@@ -379,7 +381,8 @@ def test_memory_perc_check_cluster() -> None:
                         "-prefsLen",
                         "9681",
                     ],
-                )
+                    1540375342,
+                ),
             ],
             {"process_info_arguments": 15},
             [
@@ -421,7 +424,8 @@ def test_memory_perc_check_cluster() -> None:
                         "-prefsLen",
                         "9681",
                     ],
-                )
+                    1540375342,
+                ),
             ],
             {"process_info_arguments": 15},
             [
@@ -440,7 +444,7 @@ def test_memory_perc_check_cluster() -> None:
     ],
 )
 def test_process_capture(
-    process_lines: Iterable[tuple[str | None, ps.PsInfo, Sequence[str]]],
+    process_lines: Iterable[ps.ProcessLine],
     params: Mapping[str, int],
     expected_processes: Sequence[ps._Process],
 ) -> None:

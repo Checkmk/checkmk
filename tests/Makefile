@@ -47,7 +47,8 @@ SYSTEM_TESTS := \
     test-update \
     test-gui-crawl \
     test-xss-crawl \
-    test-gui-e2e
+    test-gui-e2e \
+    test-extension-compatibility
 PYTEST_SYSTEM_TEST_ARGS := -p "no:cov"
 
 # Since the unit tests (that are written for Python 3) are executed with Python
@@ -263,6 +264,9 @@ test-integration:
 
 test-composition:
 	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
+
+test-extension-compatibility:
+	$(PYTEST) -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update:
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py)

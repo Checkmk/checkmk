@@ -66,6 +66,7 @@ test_types = [
     "update",
     "openapi",
     "plugins_integration",
+    "extension_compatibility",
 ]
 
 

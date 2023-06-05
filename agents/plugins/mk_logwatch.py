@@ -818,7 +818,7 @@ def process_logfile(section, filestate, debug):  # pylint: disable=too-many-bran
 class Options:
     """Options w.r.t. logfile patterns (not w.r.t. cluster mapping)."""
 
-    MAP_OVERFLOW = {"C": 2, "W": 1, "I": 0, "O": 0}
+    MAP_OVERFLOW = {"C": 2, "W": 1, "I": 0, "O": 0}  # case-insensitive, see set_opt
     MAP_BOOL = {"true": True, "false": False, "1": True, "0": False, "yes": True, "no": False}
     DEFAULTS = {
         "encoding": None,
@@ -911,7 +911,7 @@ class Options:
             elif key in ("maxtime",):
                 self.values[key] = float(value)
             elif key == "overflow":
-                if value not in Options.MAP_OVERFLOW:
+                if value.upper() not in Options.MAP_OVERFLOW:
                     raise ValueError(
                         "Invalid overflow: %r (choose from %r)"
                         % (
@@ -919,7 +919,7 @@ class Options:
                             Options.MAP_OVERFLOW.keys(),
                         )
                     )
-                self.values["overflow"] = value
+                self.values["overflow"] = value.upper()
             elif key in ("regex", "iregex"):
                 flags = (re.IGNORECASE if key.startswith("i") else 0) | re.UNICODE
                 self.values["regex"] = re.compile(value, flags)

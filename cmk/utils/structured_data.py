@@ -870,8 +870,8 @@ class StructuredDataNode:
     ) -> StructuredDataNode:
         node = cls(
             path=path,
-            attributes=Attributes.deserialize(raw_pairs=raw_tree[ATTRIBUTES_KEY]),
-            table=Table.deserialize(raw_rows=raw_tree[TABLE_KEY]),
+            attributes=Attributes.deserialize(raw_attributes=raw_tree[ATTRIBUTES_KEY]),
+            table=Table.deserialize(raw_table=raw_tree[TABLE_KEY]),
         )
 
         for raw_name, raw_node in raw_tree[_NODES_KEY].items():
@@ -929,13 +929,13 @@ class StructuredDataNode:
 
         node = cls(
             path=path,
-            attributes=Attributes._deserialize_legacy(legacy_pairs=raw_pairs),
+            attributes=Attributes.deserialize_legacy(raw_pairs=raw_pairs),
         )
 
         for child_path, raw_table in raw_tables.items():
             node.add_node(
                 child_path,
-                cls(table=Table._deserialize_legacy(legacy_rows=raw_table)),
+                cls(table=Table.deserialize_legacy(raw_rows=raw_table)),
             )
 
         for child_path, raw_node in raw_nodes.items():
@@ -1139,10 +1139,10 @@ class Table:
         return raw_table
 
     @classmethod
-    def deserialize(cls, *, raw_rows: SDRawTree) -> Table:
-        rows = raw_rows.get(_ROWS_KEY, [])
-        if _KEY_COLUMNS_KEY in raw_rows:
-            key_columns = raw_rows[_KEY_COLUMNS_KEY]
+    def deserialize(cls, *, raw_table: SDRawTree) -> Table:
+        rows = raw_table.get(_ROWS_KEY, [])
+        if _KEY_COLUMNS_KEY in raw_table:
+            key_columns = raw_table[_KEY_COLUMNS_KEY]
         else:
             key_columns = cls._get_default_key_columns(rows)
 
@@ -1150,16 +1150,16 @@ class Table:
             key_columns=key_columns,
             retentions={
                 ident: _deserialize_retentions(raw_intervals)
-                for ident, raw_intervals in raw_rows.get(_RETENTIONS_KEY, {}).items()
+                for ident, raw_intervals in raw_table.get(_RETENTIONS_KEY, {}).items()
             },
         )
         table.add_rows(rows)
         return table
 
     @classmethod
-    def _deserialize_legacy(cls, *, legacy_rows: LegacyRows) -> Table:
-        table = cls(key_columns=cls._get_default_key_columns(legacy_rows))
-        table.add_rows(legacy_rows)
+    def deserialize_legacy(cls, *, raw_rows: LegacyRows) -> Table:
+        table = cls(key_columns=cls._get_default_key_columns(raw_rows))
+        table.add_rows(raw_rows)
         return table
 
     @staticmethod
@@ -1266,15 +1266,15 @@ class Attributes:
         return raw_attributes
 
     @classmethod
-    def deserialize(cls, *, raw_pairs: SDRawTree) -> Attributes:
-        attributes = cls(retentions=_deserialize_retentions(raw_pairs.get(_RETENTIONS_KEY)))
-        attributes.add_pairs(raw_pairs.get(_PAIRS_KEY, {}))
+    def deserialize(cls, *, raw_attributes: SDRawTree) -> Attributes:
+        attributes = cls(retentions=_deserialize_retentions(raw_attributes.get(_RETENTIONS_KEY)))
+        attributes.add_pairs(raw_attributes.get(_PAIRS_KEY, {}))
         return attributes
 
     @classmethod
-    def _deserialize_legacy(cls, *, legacy_pairs: LegacyPairs) -> Attributes:
+    def deserialize_legacy(cls, *, raw_pairs: LegacyPairs) -> Attributes:
         attributes = cls()
-        attributes.add_pairs(legacy_pairs)
+        attributes.add_pairs(raw_pairs)
         return attributes
 
 

@@ -106,6 +106,11 @@ RUN /opt/install-openssl.sh
 RUN /opt/install-python.sh
 RUN /opt/install-freetds.sh
 
+# Exclusively for this distro at the moment, because it is used by several CI
+# jobs for special tasks (checking out git, "make dist", orchestrating other
+# containers, ...). Scripts should be usable with other Ubuntu versions.
+RUN /opt/install-rust-cargo.sh
+
 # Now shrink all the binaries and libraries we produced to build a small image
 # in the next step
 RUN /opt/strip_binaries /opt

@@ -83,3 +83,43 @@ def test_list_pending_changes(clients: ClientRegistry) -> None:
     resp = clients.ActivateChanges.list_pending_changes()
     assert set(resp.json["value"][0]) == {"id", "user_id", "action_name", "text", "time"}
     assert "actions/activate-changes/invoke" in resp.json["links"][0]["href"]
+
+
+def test_list_activate_changes_invalid_etag(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="foobar", folder="/")
+    resp = clients.ActivateChanges.activate_changes(
+        etag="invalid_etag",
+        expect_ok=False,
+    )
+    resp.assert_status_code(412)
+    assert resp.json["title"] == "Precondition failed"
+
+
+def test_list_activate_changes_no_if_match_header(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="foobar", folder="/")
+    resp = clients.ActivateChanges.activate_changes(
+        etag=None,
+        expect_ok=False,
+    )
+    resp.assert_status_code(428)
+    assert resp.json["title"] == "Precondition required"
+
+
+def test_list_activate_changes_star_etag(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    clients.HostConfig.create(host_name="foobar", folder="/")
+
+    with mock_livestatus(expect_status_query=True):
+        clients.ActivateChanges.activate_changes(etag="star")
+
+
+def test_list_activate_changes_valid_etag(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    clients.HostConfig.create(host_name="foobar", folder="/")
+
+    with mock_livestatus(expect_status_query=True):
+        clients.ActivateChanges.activate_changes(etag="valid_etag")

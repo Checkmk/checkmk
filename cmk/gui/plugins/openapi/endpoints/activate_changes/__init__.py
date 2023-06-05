@@ -91,6 +91,7 @@ PERMISSIONS = permissions.AllPerm(
         423: "There is already an activation running.",
     },
     additional_status_codes=[302, 401, 403, 409, 422, 423],
+    etag="input",
     request_schema=ActivateChanges,
     response_schema=ActivationRunResponse,
     permissions_required=permissions.AllPerm(
@@ -112,6 +113,7 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.activate")
     body = params["body"]
     sites = body["sites"]
+    constructors.require_etag(constructors.hash_of_dict(get_pending_changes()))
     with may_fail(MKUserError), may_fail(MKAuthException, status=401), may_fail(
         MKLicensingError, status=403
     ):

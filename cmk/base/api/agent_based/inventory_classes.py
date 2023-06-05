@@ -105,13 +105,13 @@ class Attributes(
             status_attributes=status_attributes,
         )
 
-    def populate_inventory_tree(self, mutable_tree: MutableTree) -> None:
+    def populate_inventory_tree(self, tree: MutableTree) -> None:
         if self.inventory_attributes:
-            mutable_tree.add_pairs(path=self.path, pairs=self.inventory_attributes)
+            tree.add_pairs(path=self.path, pairs=self.inventory_attributes)
 
-    def populate_status_data_tree(self, mutable_tree: MutableTree) -> None:
+    def populate_status_data_tree(self, tree: MutableTree) -> None:
         if self.status_attributes:
-            mutable_tree.add_pairs(path=self.path, pairs=self.status_attributes)
+            tree.add_pairs(path=self.path, pairs=self.status_attributes)
 
 
 class TableRow(
@@ -175,17 +175,17 @@ class TableRow(
             status_columns=status_columns,
         )
 
-    def populate_inventory_tree(self, mutable_tree: MutableTree) -> None:
+    def populate_inventory_tree(self, tree: MutableTree) -> None:
         # No guard: always set key columns.
-        mutable_tree.add_rows(
+        tree.add_rows(
             path=self.path,
             key_columns=list(self.key_columns),
             rows=[{**self.key_columns, **self.inventory_columns}],
         )
 
-    def populate_status_data_tree(self, mutable_tree: MutableTree) -> None:
+    def populate_status_data_tree(self, tree: MutableTree) -> None:
         if self.status_columns:
-            mutable_tree.add_rows(
+            tree.add_rows(
                 path=self.path,
                 key_columns=list(self.key_columns),
                 rows=[{**self.key_columns, **self.status_columns}],

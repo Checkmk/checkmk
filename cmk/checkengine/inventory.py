@@ -70,10 +70,10 @@ class PInventoryResult(Protocol):
     def path(self) -> Sequence[str]:
         ...
 
-    def populate_inventory_tree(self, mutable_tree: MutableTree) -> None:
+    def populate_inventory_tree(self, tree: MutableTree) -> None:
         ...
 
-    def populate_status_data_tree(self, mutable_tree: MutableTree) -> None:
+    def populate_status_data_tree(self, tree: MutableTree) -> None:
         ...
 
 
@@ -137,7 +137,7 @@ def inventorize_host(
 
     providers = make_providers(host_sections_no_error, section_plugins)
 
-    mutable_trees, update_result = _inventorize_real_host(
+    trees, update_result = _inventorize_real_host(
         now=int(time.time()),
         items_of_inventory_plugins=list(
             _collect_inventory_plugin_items(
@@ -171,8 +171,8 @@ def inventorize_host(
             *itertools.chain(
                 _check_fetched_data_or_trees(
                     parameters=parameters,
-                    inventory_tree=mutable_trees.inventory,
-                    status_data_tree=mutable_trees.status_data,
+                    inventory_tree=trees.inventory,
+                    status_data_tree=trees.status_data,
                     previous_tree=previous_tree,
                     processing_failed=processing_failed,
                     no_data_or_files=no_data_or_files,
@@ -181,7 +181,7 @@ def inventorize_host(
                 check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
             )
         ),
-        inventory_tree=mutable_trees.inventory,
+        inventory_tree=trees.inventory,
         update_result=update_result,
     )
 
@@ -210,17 +210,17 @@ def inventorize_cluster(
 
 
 def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
-    mutable_tree = MutableTree()
-    mutable_tree.add_pairs(
+    tree = MutableTree()
+    tree.add_pairs(
         path=["software", "applications", "check_mk", "cluster"],
         pairs={"is_cluster": True},
     )
-    mutable_tree.add_rows(
+    tree.add_rows(
         path=["software", "applications", "check_mk", "cluster", "nodes"],
         key_columns=["name"],
         rows=[{"name": name} for name in nodes],
     )
-    return mutable_tree
+    return tree
 
 
 def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]) -> bool:
@@ -250,7 +250,7 @@ def _inventorize_real_host(
 ) -> tuple[MutableTrees, UpdateResult]:
     section.section_step("Create inventory or status data tree")
 
-    mutable_trees = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins)
+    trees = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins)
 
     section.section_step("May update inventory tree")
 
@@ -258,17 +258,17 @@ def _inventorize_real_host(
         now=now,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=raw_intervals_from_config,
-        inventory_tree=mutable_trees.inventory,
+        inventory_tree=trees.inventory,
         previous_tree=previous_tree,
     )
 
-    if mutable_trees.inventory:
-        mutable_trees.inventory.add_pairs(
+    if trees.inventory:
+        trees.inventory.add_pairs(
             path=["software", "applications", "check_mk", "cluster"],
             pairs={"is_cluster": False},
         )
 
-    return mutable_trees, update_result
+    return trees, update_result
 
 
 def inventorize_status_data_of_real_host(

@@ -648,9 +648,7 @@ def show_host(params: Mapping[str, Any]) -> Response:
 
 def _serve_host(host: CREHost, effective_attributes: bool = False) -> Response:
     response = serve_json(serialize_host(host, effective_attributes))
-    etag = constructors.etag_of_dict(_host_etag_values(host))
-    response.headers.add("ETag", etag.to_header())
-    return response
+    return constructors.response_with_etag_created_from_dict(response, _host_etag_values(host))
 
 
 def serialize_host(host: CREHost, effective_attributes: bool) -> dict[str, Any]:
@@ -715,7 +713,7 @@ def _except_keys(dict_: dict[str, Any], exclude_keys: list[str]) -> dict[str, An
 def _require_host_etag(host):
     etag_values = _host_etag_values(host)
     constructors.require_etag(
-        constructors.etag_of_dict(etag_values),
+        constructors.hash_of_dict(etag_values),
         error_details=EXT(etag_values),
     )
 

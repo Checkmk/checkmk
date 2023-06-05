@@ -239,7 +239,7 @@ def update(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.users")
     name = params["name"]
     group = fetch_group(name, "contact")
-    constructors.require_etag(constructors.etag_of_dict(group))
+    constructors.require_etag(constructors.hash_of_dict(group))
     edit_group(name, "contact", updated_group_details(name, "contact", params["body"]))
     group = fetch_group(name, "contact")
     return serve_group(group, serialize_group("contact_group_config"))

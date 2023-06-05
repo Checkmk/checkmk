@@ -202,8 +202,7 @@ def serve_user(user_id):
     user_attributes_internal = _load_user(user_id)
     user_attributes = _internal_to_api_format(user_attributes_internal)
     response = serve_json(serialize_user(user_id, complement_customer(user_attributes)))
-    response.headers.add("ETag", constructors.etag_of_dict(user_attributes).to_header())
-    return response
+    return constructors.response_with_etag_created_from_dict(response, user_attributes)
 
 
 def serialize_user(user_id, attributes):

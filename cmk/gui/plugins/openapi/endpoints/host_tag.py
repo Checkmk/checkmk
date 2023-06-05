@@ -258,8 +258,7 @@ def _retrieve_group(ident: str) -> TagGroup:
 
 def _serve_host_tag_group(tag_details: TaggroupSpec) -> Response:
     response = serve_json(serialize_host_tag_group(tag_details))
-    response.headers.add("ETag", constructors.etag_of_dict(dict(tag_details)).to_header())
-    return response
+    return constructors.response_with_etag_created_from_dict(response, dict(tag_details))
 
 
 def serialize_host_tag_group(details: TaggroupSpec) -> dict[str, Any]:

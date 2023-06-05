@@ -218,8 +218,7 @@ def list_time_periods(params: Mapping[str, Any]) -> Response:
 
 def _serve_time_period(time_period: DomainObject) -> Response:
     response = serve_json(time_period)
-    response.headers.add("ETag", constructors.etag_of_dict(time_period).to_header())
-    return response
+    return constructors.response_with_etag_created_from_dict(response, time_period)
 
 
 def _to_api_format(  # type:ignore[no-untyped-def]

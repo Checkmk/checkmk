@@ -62,6 +62,12 @@ ifeq ($(filter $(EDITION),cloud free),)
 	    --exclude "cce" \
 	    --exclude "cce.py"
 endif
+ifeq ($(filter $(EDITION),saas),)
+	EDITION_EXCLUDE += \
+	    --exclude "saas" \
+	    --exclude "cse" \
+	    --exclude "cse.py"
+endif
 
 $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks

@@ -476,7 +476,7 @@ TEST(Wtools, AppRunnerRunAndSTop) {
 #endif
 
 TEST(Wtools, SimplePipeBase) {
-    SimplePipe pipe;
+    DirectPipe pipe;
     EXPECT_EQ(pipe.getRead(), nullptr);
     EXPECT_EQ(pipe.getWrite(), nullptr);
 
@@ -660,7 +660,7 @@ TEST(Wtools, ToCanonical) {
 }
 
 TEST(PlayerTest, Pipe) {
-    const auto p = std::make_unique<SimplePipe>();
+    const auto p = std::make_unique<DirectPipe>();
     EXPECT_EQ(p->getRead(), nullptr);
     EXPECT_EQ(p->getWrite(), nullptr);
     p->create();

@@ -192,20 +192,20 @@ public:
 };
 
 // keeps two handles
-class SimplePipe {
+class DirectPipe {
 public:
-    SimplePipe() noexcept {
+    DirectPipe() noexcept {
         sa_.lpSecurityDescriptor = &sd_;
         sa_.nLength = sizeof(SECURITY_ATTRIBUTES);
         sa_.bInheritHandle = TRUE;  // allow handle inherit for child process
     }
 
-    SimplePipe(const SimplePipe &) = delete;
-    SimplePipe &operator=(const SimplePipe &) = delete;
-    SimplePipe(SimplePipe &&rhs) = delete;
-    SimplePipe &operator=(SimplePipe &&rhs) = delete;
+    DirectPipe(const DirectPipe &) = delete;
+    DirectPipe &operator=(const DirectPipe &) = delete;
+    DirectPipe(DirectPipe &&rhs) = delete;
+    DirectPipe &operator=(DirectPipe &&rhs) = delete;
 
-    ~SimplePipe() { shutdown(); }
+    ~DirectPipe() { shutdown(); }
 
     bool create() {
         // protected by lock
@@ -418,8 +418,8 @@ private:
     std::atomic<uint32_t> process_id_{0};
     HANDLE job_handle_{nullptr};
     HANDLE process_handle_{nullptr};
-    SimplePipe stdio_;
-    SimplePipe stderr_;
+    DirectPipe stdio_;
+    DirectPipe stderr_;
 
     // output
     std::vector<char> data_;

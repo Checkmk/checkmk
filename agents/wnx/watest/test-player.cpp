@@ -20,14 +20,14 @@
 
 namespace cma::player {  // to become friendly for wtools classes
 TEST(PlayerTest, Pipe) {
-    auto p = new wtools::SimplePipe();
+    auto p = new wtools::DirectPipe();
     EXPECT_TRUE(p->getRead() == nullptr);
     EXPECT_TRUE(p->getWrite() == nullptr);
     p->create();
     EXPECT_TRUE(p->getRead() != nullptr);
     EXPECT_TRUE(p->getWrite() != nullptr);
 
-    auto p2 = new wtools::SimplePipe();
+    auto p2 = new wtools::DirectPipe();
     EXPECT_TRUE(p2->getRead() == nullptr);
     EXPECT_TRUE(p2->getWrite() == nullptr);
     p2->create();

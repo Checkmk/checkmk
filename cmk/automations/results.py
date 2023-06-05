@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass
-from typing import Any, TypedDict, TypeVar
+from typing import Any, TypeAlias, TypedDict, TypeVar
 
 from cmk.utils import version as cmk_version
 from cmk.utils.config_warnings import ConfigurationWarnings
@@ -20,7 +20,7 @@ from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
 from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.utils.type_defs import (
-    Gateways,
+    HostAddress,
     HostName,
     Item,
     LegacyCheckParameters,
@@ -34,6 +34,9 @@ from cmk.utils.type_defs import (
 )
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
+Gateway: TypeAlias = tuple[
+    tuple[HostName | None, HostAddress, HostName | None] | None, str, int, str
+]
 
 
 class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
@@ -426,7 +429,7 @@ result_type_registry.register(GetSectionInformationResult)
 
 @dataclass
 class ScanParentsResult(ABCAutomationResult):
-    gateways: Gateways
+    gateways: Sequence[Gateway]
 
     @staticmethod
     def automation_call() -> str:

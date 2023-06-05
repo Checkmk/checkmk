@@ -13,6 +13,8 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
+from cmk.automations.results import Gateway
+
 import cmk.gui.forms as forms
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui.background_job import (
@@ -152,7 +154,9 @@ class ParentScanBackgroundJob(BackgroundJob):
             else:
                 self._logger.exception(msg)
 
-    def _execute_parent_scan(self, task: ParentScanTask, settings: ParentScanSettings) -> list:
+    def _execute_parent_scan(
+        self, task: ParentScanTask, settings: ParentScanSettings
+    ) -> Sequence[Gateway]:
         return scan_parents(
             task.site_id,
             task.host_name,
@@ -168,7 +172,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         ).gateways
 
     def _process_parent_scan_results(
-        self, task: ParentScanTask, settings: ParentScanSettings, gateways: list
+        self, task: ParentScanTask, settings: ParentScanSettings, gateways: Sequence
     ) -> None:
         gateway = ParentScanResult(*gateways[0][0]) if gateways[0][0] else None
         state, skipped_gateways, error = gateways[0][1:]

@@ -31,7 +31,6 @@ __all__ = [
     "ExitSpec",
     "ensure_mrpe_configs",
     "FromOrToType",
-    "Gateways",
     "GroupbyType",
     "HandlerName",
     "HandlerParameters",
@@ -250,7 +249,6 @@ from .notify import (
     UUIDs,
     WebHookUrl,
 )
-from .parent_scan import Gateways
 from .pluginname import ParsedSectionName, RuleSetName, SectionName, ValidatedString
 from .protocol import Deserializer, Serializer
 from .user_id import UserId

@@ -9,6 +9,7 @@ import socket
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Iterable
 
@@ -18,7 +19,9 @@ import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import Gateways, HostAddress, HostName
+from cmk.utils.type_defs import HostAddress, HostName
+
+from cmk.automations.results import Gateway
 
 import cmk.base.config as config
 import cmk.base.obsolete_output as out
@@ -129,7 +132,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
     hosts: Iterable[HostName],
     silent: bool = False,
     settings: dict[str, int] | None = None,
-) -> Gateways:
+) -> Sequence[Gateway]:
     if settings is None:
         settings = {}
 
@@ -187,7 +190,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
 
     # Now all run and we begin to read the answers. For each host
     # we add a triple to gateways: the gateway, a scan state  and a diagnostic output
-    gateways: Gateways = []
+    gateways: list[Gateway] = []
     for host, ip, proc_or_error in procs:
         if isinstance(proc_or_error, str):
             lines = [proc_or_error]

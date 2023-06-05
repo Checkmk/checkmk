@@ -318,7 +318,7 @@ node_modules/.bin/prettier: .ran-npm
 $(JAVASCRIPT_MINI): .ran-webpack
 $(THEME_CSS_FILES): .ran-webpack
 .ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) PLUS=$(PLUS) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) CLOUD=$(CLOUD) SAAS=$(SAAS) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 	touch $(JAVASCRIPT_MINI) $(THEME_CSS_FILES)
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff

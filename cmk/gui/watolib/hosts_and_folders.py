@@ -1284,16 +1284,14 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         name: str,
         folder_path: str | None = None,
         parent_folder: CREFolder | None = None,
-        title: str | None = None,
-        attributes: dict[str, Any] | None = None,
     ) -> CREFolder:
         return cls(
             tree=tree,
             name=name,
             folder_path=folder_path,
             parent_folder=parent_folder,
-            title=title,
-            attributes=attributes,
+            title=None,
+            attributes=None,
         )
 
     def __init__(

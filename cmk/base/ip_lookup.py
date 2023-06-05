@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import enum
 import socket
-from collections.abc import Iterable, Iterator, Mapping, MutableMapping
+from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -18,7 +18,7 @@ import cmk.utils.store as store
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostName, UpdateDNSCacheResult
+from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
@@ -365,7 +365,7 @@ def update_dns_cache(
     # will just clear the cache.
     simulation_mode: bool,
     override_dns: HostAddress | None,
-) -> UpdateDNSCacheResult:
+) -> tuple[int, Sequence[HostName]]:
     failed = []
 
     ip_lookup_cache = _get_ip_lookup_cache()

@@ -124,7 +124,6 @@ __all__ = [
     "TimeperiodSpecs",
     "TimeRange",
     "Timestamp",
-    "UpdateDNSCacheResult",
     "UserId",
     "URLPrefix",
     "UUIDs",
@@ -171,7 +170,6 @@ from ._misc import (  # TODO(ML): We should clean this up some day.
     Timestamp,
 )
 from .host import HostAddress, HostAgentConnectionMode, HostgroupName, HostName, HostState
-from .ip_lookup import UpdateDNSCacheResult
 from .mrpe_config import ensure_mrpe_configs, MrpeConfig, MrpeConfigDeprecated
 from .notify import (
     BuiltInPluginNames,

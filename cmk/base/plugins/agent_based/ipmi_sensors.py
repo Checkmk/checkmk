@@ -74,21 +74,23 @@ def parse_ipmi_sensors(  # pylint: disable=too-many-branches
             sensor.crit_high = _na_float(upper)
 
         elif len(stripped_line) == 6:
-            _sid, _name, _sensortype, reading_str, unit = stripped_line[:-1]
+            _sid, _name, type_, reading_str, unit = stripped_line[:-1]
             sensor.value = _na_float(reading_str)
             sensor.unit = _na_str(unit)
+            sensor.type_ = type_
 
         elif len(stripped_line) == 7:
-            _sid, _name, _sensortype, sensorstatus, reading_str, unit = stripped_line[:-1]
+            _sid, _name, type_, sensorstatus, reading_str, unit = stripped_line[:-1]
             sensor.state = ipmi_utils.Sensor.parse_state(sensorstatus)
             sensor.value = _na_float(reading_str)
             sensor.unit = _na_str(unit)
+            sensor.type_ = type_
 
         elif len(stripped_line) == 13:
             (
                 _sid,
                 _name,
-                _stype,
+                type_,
                 sensorstatus,
                 reading_str,
                 unit,
@@ -106,6 +108,7 @@ def parse_ipmi_sensors(  # pylint: disable=too-many-branches
             sensor.warn_low = _na_float(lower_nc)
             sensor.warn_high = _na_float(upper_nc)
             sensor.crit_high = _na_float(upper_c)
+            sensor.type_ = type_
 
     return section
 

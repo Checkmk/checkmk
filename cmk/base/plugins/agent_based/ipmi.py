@@ -131,12 +131,12 @@ def parse_ipmi(string_table: type_defs.StringTable) -> ipmi.Section:
     ... ['Ambient', '18.500', 'degrees_C', 'ok', 'na', '1.000', '6.000', '37.000', '42.000', 'na'],
     ... ['CPU', '33.000', 'degrees_C', 'ok', 'na', 'na', 'na', '95.000', '99.000', 'na'],
     ... ]))
-    {'Ambient': Sensor(status_txt='ok', unit='degrees_C', state=None, value=18.5, crit_low=1.0, warn_low=6.0, warn_high=37.0, crit_high=42.0),
-     'CPU': Sensor(status_txt='ok', unit='degrees_C', state=None, value=33.0, crit_low=None, warn_low=None, warn_high=95.0, crit_high=99.0)}
+    {'Ambient': Sensor(status_txt='ok', unit='degrees_C', state=None, value=18.5, crit_low=1.0, warn_low=6.0, warn_high=37.0, crit_high=42.0, type_=None),
+     'CPU': Sensor(status_txt='ok', unit='degrees_C', state=None, value=33.0, crit_low=None, warn_low=None, warn_high=95.0, crit_high=99.0, type_=None)}
     >>> pprint(parse_ipmi([
     ... ['CMOS Battery     ', ' 10h ', ' ok  ', '  7.1 ', ''],
     ... ]))
-    {'CMOS_Battery': Sensor(status_txt='ok', unit='', state=None, value=None, crit_low=None, warn_low=None, warn_high=None, crit_high=None)}
+    {'CMOS_Battery': Sensor(status_txt='ok', unit='', state=None, value=None, crit_low=None, warn_low=None, warn_high=None, crit_high=None, type_=None)}
     """
     parsed: ipmi.Section = {}
     for line in string_table:

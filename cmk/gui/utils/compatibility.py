@@ -72,6 +72,9 @@ def is_distributed_setup_compatible_for_licensing(
     remote_edition: cmk_version.Edition,
     remote_license_state: LicenseState | None,
 ) -> LicensingCompatibility:
+    if central_edition is cmk_version.Edition.CSE:
+        return EditionsIncompatible(_("CSE is not allowed in distributed monitoring."))
+
     if remote_license_state is LicenseState.FREE:
         return LicenseStateIncompatible(
             "Remote site in license state %s is not allowed" % remote_license_state.readable
@@ -99,6 +102,8 @@ def is_distributed_monitoring_compatible_for_licensing(
     central_license_state: LicenseState | None,
     remote_edition: cmk_version.Edition,
 ) -> LicensingCompatibility:
+    if central_edition is cmk_version.Edition.CSE:
+        return EditionsIncompatible(_("CSE is not allowed in distributed monitoring."))
     if not isinstance(
         compatibility := _common_is_compatible_for_licensing(
             central_edition,

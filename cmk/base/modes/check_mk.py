@@ -12,6 +12,8 @@ from functools import partial
 from pathlib import Path
 from typing import Final, Literal, NamedTuple, overload, Protocol, TypedDict, TypeVar, Union
 
+import livestatus
+
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -20,7 +22,7 @@ import cmk.utils.piggyback as piggyback
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
-from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
+from cmk.utils.auto_queue import AutoQueue, TimeLimitFilter
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
@@ -2471,7 +2473,13 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         return
 
     console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:\n")
-    process_hosts = EVERYTHING if (up_hosts := get_up_hosts()) is None else up_hosts
+    try:
+        response = livestatus.LocalConnection().query("GET hosts\nColumns: name state")
+        process_hosts: Container[HostName] = {
+            HostName(name) for name, state in response if state == 0
+        }
+    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
+        process_hosts = EVERYTHING
 
     section_plugins = SectionPluginMapper()
     inventory_plugins = InventoryPluginMapper()

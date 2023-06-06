@@ -5,14 +5,16 @@
 
 
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Container, Iterable, Mapping
 from typing import assert_never, Literal, TypeVar, Union
+
+import livestatus
 
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
+from cmk.utils.auto_queue import AutoQueue, TimeLimitFilter
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
@@ -322,8 +324,14 @@ def autodiscovery(
         return {}, False
 
     console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:\n")
+    try:
+        response = livestatus.LocalConnection().query("GET hosts\nColumns: name state")
+        process_hosts: Container[HostName] = {
+            HostName(name) for name, state in response if state == 0
+        }
+    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
+        process_hosts = EVERYTHING
 
-    process_hosts = EVERYTHING if (up_hosts := get_up_hosts()) is None else up_hosts
     activation_required = False
     rediscovery_reference_time = time.time()
 

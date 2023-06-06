@@ -11,8 +11,6 @@ from pathlib import Path
 from types import FrameType, TracebackType
 from typing import Final, NoReturn, TypeVar
 
-import livestatus
-
 from cmk.utils.exceptions import MKException
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostName
@@ -112,13 +110,3 @@ class AutoQueue:
         for host_name in (hn for f in self._ls() if (hn := self._host_name(f)) not in valid_hosts):
             logger(f"  Removing mark '{host_name}' (host not configured)\n")
             self.remove(host_name)
-
-
-def get_up_hosts() -> set[HostName] | None:
-    query = "GET hosts\nColumns: name state"
-    try:
-        response = livestatus.LocalConnection().query(query)
-        return {HostName(name) for name, state in response if state == 0}
-    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
-        pass
-    return None

@@ -6,7 +6,6 @@
 import signal
 import time
 from collections.abc import Callable, Container, Iterable, Sequence
-from contextlib import suppress
 from pathlib import Path
 from types import FrameType, TracebackType
 from typing import Final, NoReturn, TypeVar
@@ -72,9 +71,6 @@ class AutoQueue:
     def _host_name(file_path: Path) -> HostName:
         return HostName(file_path.name)
 
-    def _file_path(self, host_name: HostName) -> Path:
-        return self._dir / str(host_name)
-
     def __init__(self, directory: Path | str) -> None:
         self._dir = Path(directory)
 
@@ -95,16 +91,8 @@ class AutoQueue:
     def queued_hosts(self) -> Iterable[HostName]:
         return (self._host_name(f) for f in self._ls())
 
-    def add(self, host_name: HostName) -> None:
-        self._dir.mkdir(parents=True, exist_ok=True)
-
-        file_path = self._file_path(host_name)
-        if not file_path.exists():
-            file_path.touch()
-
     def remove(self, host_name: HostName) -> None:
-        with suppress(FileNotFoundError):
-            self._file_path(host_name).unlink()
+        (self._dir / str(host_name)).unlink(missing_ok=True)
 
     def cleanup(self, *, valid_hosts: Container[HostName], logger: Callable[[str], None]) -> None:
         for host_name in (hn for f in self._ls() if (hn := self._host_name(f)) not in valid_hosts):

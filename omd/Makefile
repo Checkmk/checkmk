@@ -295,6 +295,8 @@ debian/control: debian/control.in
 # b) drop the "clean" argument for newer distros
 # c) remove the dh_prep from debian/rules
 deb: debian/changelog debian/control
+	echo "echo in make"
+	rustup show
 	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
 	    TARGET="-us -uc -B" ; \
 	else \

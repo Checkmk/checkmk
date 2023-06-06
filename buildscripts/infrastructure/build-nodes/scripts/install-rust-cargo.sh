@@ -60,4 +60,9 @@ build_package() {
 if [ "$1" != "link-only" ]; then
     cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
 fi
+
 ln -sf "${CARGO_HOME}/bin/"* /usr/bin/
+
+# Test the installations
+rustup --version || exit $?
+rustc --version || exit $?

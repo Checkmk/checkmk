@@ -379,6 +379,9 @@ section_zfs_arc_cache() {
 section_ps() {
     # Processes
     echo '<<<ps>>>'
+    echo "[time]"
+    get_epoch
+    echo "[processes]"
     # The default solaris ps command strips the command lines of the processes. But for good process
     # matching on the server we really need to whole command line. On linux there are arguments to
     # make ps output the whole command line, but on solaris this seems to be missing. We use the ucb

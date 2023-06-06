@@ -26,6 +26,7 @@ types-six = "==1.16.21.4"  # used for type checking
 types-requests = "==2.28.11.12"  # used for type checking
 types-PyYAML = "==6.0.12.4"  # used for type checking
 types-freezegun = "==1.1.10"  # used for type checking
+types-markdown = "*"  # used for type checking
 types-mock = "==5.0.0.2"  # used for type checking
 types-python-dateutil = "==2.8.19.6"  # used for type checking
 types-simplejson = "==3.18.0.0"  # used for type checking
@@ -187,6 +188,7 @@ feedparser = "==6.0.10"  # used by special agent Microsoft Azure Status
 pysaml2 = "==7.2.1"  # used by SSO via SAML2.0
 azure-storage-blob = "==12.14.1"  # used for backups to Azure Blob Storage
 azure-identity = "==1.12.0"  # used for backups to Azure Blob Storage
+markdown = "==3.4.1"  # used for werk parsing
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

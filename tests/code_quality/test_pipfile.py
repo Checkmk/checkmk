@@ -240,7 +240,6 @@ def get_undeclared_dependencies() -> Iterable[ImportName]:
 CEE_UNUSED_PACKAGES = [
     "Cython",
     "PyMySQL",
-    "PyNaCl",
     "attrs",
     "bcrypt",
     "cachetools",

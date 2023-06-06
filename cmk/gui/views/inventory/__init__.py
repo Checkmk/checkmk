@@ -190,16 +190,16 @@ class PainterInventoryTree(Painter):
     def load_inv(self):
         return True
 
-    def _compute_data(self, row: Row, cell: Cell) -> StructuredDataNode | None:
+    def _compute_data(self, row: Row, cell: Cell) -> ImmutableTree:
         try:
             _validate_inventory_tree_uniqueness(row)
         except MultipleInventoryTreesError:
-            return None
+            return ImmutableTree()
 
-        return row.get("host_inventory")
+        return ImmutableTree(row.get("host_inventory"))
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        if not isinstance(tree := self._compute_data(row, cell), StructuredDataNode):
+        if not (tree := self._compute_data(row, cell)):
             return "", ""
 
         painter_options = PainterOptions.get_instance()
@@ -210,19 +210,19 @@ class PainterInventoryTree(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, DISPLAY_HINTS.get_hints(tree.path))
+            tree_renderer.show(tree.tree, DISPLAY_HINTS.get_hints(tree.tree.path))
             code = HTML(output_funnel.drain())
 
         return "invtree", code
 
     def export_for_python(self, row: Row, cell: Cell) -> SDRawTree:
-        return ImmutableTree(self._compute_data(row, cell)).serialize()
+        return self._compute_data(row, cell).serialize()
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> SDRawTree:
-        return ImmutableTree(self._compute_data(row, cell)).serialize()
+        return self._compute_data(row, cell).serialize()
 
 
 class ABCRowTable(RowTable):
@@ -1345,16 +1345,13 @@ def _compute_attribute_painter_data(row: Row, path: SDPath, key: str) -> str | i
     except MultipleInventoryTreesError:
         return None
 
-    if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
-        return None
-
-    return ImmutableTree(tree).get_attribute(path, key)
+    return ImmutableTree(row.get("host_inventory")).get_attribute(path, key)
 
 
 def _paint_host_inventory_attribute(
     row: Row, path: SDPath, key: str, hint: AttributeDisplayHint
 ) -> CellSpec:
-    if (attribute_data := _compute_attribute_painter_data(row, path, key)) is None:
+    if (attribute := _compute_attribute_painter_data(row, path, key)) is None:
         return "", ""
 
     painter_options = PainterOptions.get_instance()
@@ -1365,7 +1362,7 @@ def _paint_host_inventory_attribute(
     )
 
     with output_funnel.plugged():
-        tree_renderer.show_attribute(attribute_data, hint)
+        tree_renderer.show_attribute(attribute, hint)
         code = HTML(output_funnel.drain())
 
     return "", code
@@ -1944,16 +1941,16 @@ class PainterInvhistDelta(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_delta", "invhist_time"]
 
-    def _compute_data(self, row: Row, cell: Cell) -> DeltaStructuredDataNode | None:
+    def _compute_data(self, row: Row, cell: Cell) -> ImmutableDeltaTree:
         try:
             _validate_inventory_tree_uniqueness(row)
         except MultipleInventoryTreesError:
-            return None
+            return ImmutableDeltaTree()
 
-        return row.get("invhist_delta")
+        return ImmutableDeltaTree(row.get("invhist_delta"))
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        if not isinstance(tree := self._compute_data(row, cell), DeltaStructuredDataNode):
+        if not (tree := self._compute_data(row, cell)):
             return "", ""
 
         tree_renderer = DeltaNodeRenderer(
@@ -1963,19 +1960,19 @@ class PainterInvhistDelta(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, DISPLAY_HINTS.get_hints(tree.path))
+            tree_renderer.show(tree.tree, DISPLAY_HINTS.get_hints(tree.tree.path))
             code = HTML(output_funnel.drain())
 
         return "invtree", code
 
     def export_for_python(self, row: Row, cell: Cell) -> SDRawDeltaTree:
-        return ImmutableDeltaTree(self._compute_data(row, cell)).serialize()
+        return self._compute_data(row, cell).serialize()
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> SDRawDeltaTree:
-        return ImmutableDeltaTree(self._compute_data(row, cell)).serialize()
+        return self._compute_data(row, cell).serialize()
 
 
 def _paint_invhist_count(row: Row, what: str) -> CellSpec:

@@ -99,11 +99,11 @@ def config_no_wmi_fixture(default_yaml_config: YamlDict) -> YamlDict:
     return default_yaml_config
 
 
-def test_check_mk_no_wmi(  # type: ignore[no-untyped-def]
+def test_check_mk_no_wmi(
     main_exe: Path,
     config_no_wmi: YamlDict,
     data_dir: Path,
-):
+) -> None:
     output = obtain_agent_data(
         config_no_wmi,
         main_exe=main_exe,

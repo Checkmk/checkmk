@@ -33,10 +33,10 @@ def copy_cmk_updater(source_dir: Path, target_dir: Path) -> None:
     shutil.copy(source_dir / CMK_UPDATER_PY, target_dir / CMK_UPDATER_CHECKMK_PY)
 
 
-def test_python_module(  # type: ignore[no-untyped-def]
+def test_python_module(
     main_exe: Path,
     default_yaml_config: YamlDict,
-    unpack,
+    unpack: object,
     module_dir: Path,
     data_dir: Path,
     git_dir: Path,

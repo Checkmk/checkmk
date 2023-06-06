@@ -7,6 +7,7 @@ import os
 import platform
 import re
 import shutil
+from typing import Optional, Sequence
 
 import pytest
 
@@ -148,7 +149,7 @@ def use_testfiles():
 
 @pytest.mark.usefixtures("use_testfiles")
 def test_section_fileinfo(  # type: ignore[no-untyped-def]
-    request, testconfig, expected_output, actual_output, testfile
+    request, testconfig, expected_output: Optional[Sequence[str]], actual_output, testfile
 ) -> None:
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

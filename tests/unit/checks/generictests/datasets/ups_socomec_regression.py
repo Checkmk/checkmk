@@ -13,14 +13,14 @@ checkname = "ups_socomec_in_voltage"
 info = [["1", "2300"]]
 
 
-discovery = {"": [("1", (210, 180))]}
+discovery = {"": [("1", {})]}
 
 
 checks = {
     "": [
         (
             "1",
-            (210, 180),
+            {"levels_lower": (210, 180)},
             [
                 (
                     0,

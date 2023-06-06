@@ -10,12 +10,10 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ups_socomec import DETECT_SOCOMEC
 
-ups_out_voltage_default_levels = (210, 180)  # warning / critical
-
 
 def inventory_socomec_ups_out_voltage(info):
     if len(info) > 0:
-        return [(x[0], ups_out_voltage_default_levels) for x in info if int(x[1]) > 0]
+        return [(x[0], {}) for x in info if int(x[1]) > 0]
     return []
 
 
@@ -28,12 +26,15 @@ def check_socomec_ups_out_voltage(item, params, info):
 
 check_info["ups_socomec_out_voltage"] = LegacyCheckDefinition(
     detect=DETECT_SOCOMEC,
-    discovery_function=inventory_socomec_ups_out_voltage,
-    check_function=check_socomec_ups_out_voltage,
-    service_name="OUT voltage phase %s",
-    check_ruleset_name="evolt",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.4.4.1",
         oids=["1", "2"],
     ),
+    service_name="OUT voltage phase %s",
+    discovery_function=inventory_socomec_ups_out_voltage,
+    check_function=check_socomec_ups_out_voltage,
+    check_ruleset_name="evolt",
+    check_default_parameters={
+        "levels_lower": (210.0, 180.0),
+    },
 )

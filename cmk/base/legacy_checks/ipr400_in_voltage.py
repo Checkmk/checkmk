@@ -8,18 +8,14 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
-ipr400_in_voltage_default_levels = (12, 11)  # 11.5-13.8V is the operational voltage according
-
-# to the manual
-
 
 def inventory_ipr400_in_voltage(info):
     if len(info) > 0:
-        yield "1", ipr400_in_voltage_default_levels
+        yield "1", {}
 
 
 def check_ipr400_in_voltage(item, params, info):
-    warn, crit = params
+    warn, crit = params["levels_lower"]
     power = int(info[0][0]) / 1000.0  # appears to be in mV
     perfdata = [("in_voltage", power, warn, crit)]
     infotext = "in voltage: %.1fV" % power
@@ -34,12 +30,17 @@ def check_ipr400_in_voltage(item, params, info):
 
 check_info["ipr400_in_voltage"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.1.0", "ipr voip device ipr400"),
-    check_function=check_ipr400_in_voltage,
-    discovery_function=inventory_ipr400_in_voltage,
-    service_name="IN Voltage %s",
-    check_ruleset_name="evolt",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.27053.1.4.5.10",
         oids=["0"],
     ),
+    service_name="IN Voltage %s",
+    discovery_function=inventory_ipr400_in_voltage,
+    check_function=check_ipr400_in_voltage,
+    check_ruleset_name="evolt",
+    check_default_parameters={
+        # 11.5-13.8V is the operational voltage according
+        # to the manual
+        "levels_lower": (12.0, 11.0),
+    },
 )

@@ -7,7 +7,7 @@
 
 
 def check_ups_in_voltage(item, params, info):
-    warn, crit = params
+    warn, crit = params["levels_lower"]
     for line in info:
         if line[0] == item:
             power = int(line[1])

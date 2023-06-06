@@ -8,9 +8,9 @@
 
 #include <algorithm>
 
-#include "TimeperiodsCache.h"
 #include "livestatus/Interface.h"
-#include "nagios.h"
+#include "neb/TimeperiodsCache.h"
+#include "neb/nagios.h"
 
 class NebContact : public IContact {
 public:

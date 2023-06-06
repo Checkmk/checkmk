@@ -8,8 +8,6 @@
 #include <sstream>
 #include <string>
 
-#include "Comment.h"  // IWYU pragma: keep
-#include "NebHost.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/DictColumn.h"
@@ -19,6 +17,8 @@
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
 #include "livestatus/opids.h"
+#include "neb/Comment.h"  // IWYU pragma: keep
+#include "neb/NebHost.h"
 #include "test_utilities.h"
 
 namespace {

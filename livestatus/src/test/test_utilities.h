@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "livestatus/Interface.h"
-#include "nagios.h"
+#include "neb/nagios.h"
 
 // Nagios and const-correctness: A Tale of Two Worlds...
 char *cc(const char *str);

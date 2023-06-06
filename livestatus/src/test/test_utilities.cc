@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "nagios.h"
+#include "neb/nagios.h"
 
 char *cc(const char *str) { return const_cast<char *>(str); }
 

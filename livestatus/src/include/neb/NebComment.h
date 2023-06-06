@@ -6,10 +6,10 @@
 #ifndef NebComment_h
 #define NebComment_h
 
-#include "Comment.h"
-#include "NebHost.h"
-#include "NebService.h"
 #include "livestatus/Interface.h"
+#include "neb/Comment.h"
+#include "neb/NebHost.h"
+#include "neb/NebService.h"
 
 class NebComment : public IComment {
 public:

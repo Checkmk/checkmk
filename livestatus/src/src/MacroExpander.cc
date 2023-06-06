@@ -3,17 +3,17 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "MacroExpander.h"
+#include "neb/MacroExpander.h"
 
 #include <cstdlib>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
 
-#include "NebCore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/RegExp.h"
 #include "livestatus/StringUtils.h"
+#include "neb/NebCore.h"
 
 // static
 std::optional<std::string> MacroExpander::from_ptr(const char *str) {

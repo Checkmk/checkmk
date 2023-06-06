@@ -29,6 +29,7 @@ GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 .PHONY: unit-test tidy iwyu documentation documentation-quick
 
 AM_CPPFLAGS = \
+    -Iinclude \
     -I.. \
     -I$(LIBLIVESTATUS_INCLUDE) \
     -isystem $(ASIO_INCLUDE) \
@@ -128,7 +129,7 @@ livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)
 # Note: libstdc++fs is only available as a static library, so we are lucky.
 	$(CXXLINK) -shared $^ -lpthread $(AM_LDFLAGS) $(LIBLIVESTATUS_SO)
 # To make sure we can dlopen() our NEB later
-	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -I. -I../.. -I.. -c NagiosMockup.cc -o NagiosMockup.o
+	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -Iinclude -I. -I../.. -I.. -c NagiosMockup.cc -o NagiosMockup.o
 	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatusneb_a_LD_FLAGS) $(LIBLIVESTATUS_SO)
 	$(RM) NagiosMockup
 

@@ -2249,7 +2249,7 @@ def _execute_active_check_inventory(
         if save_tree_actions.do_archive:
             tree_or_archive_store.archive(host_name=host_name)
         if save_tree_actions.do_save:
-            tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree.tree)
+            tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree)
 
     return result.check_result
 

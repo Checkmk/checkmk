@@ -182,7 +182,7 @@ def _do_inventory_actions_during_checking_for(
     )
 
     if status_data_tree:
-        tree_store.save(host_name=host_name, tree=status_data_tree.tree)
+        tree_store.save(host_name=host_name, tree=status_data_tree)
 
 
 def _timing_results(

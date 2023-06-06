@@ -201,6 +201,9 @@ class MutableTree:
     def __init__(self, tree: StructuredDataNode | None = None) -> None:
         self.tree: Final = StructuredDataNode() if tree is None else tree
 
+    def serialize(self) -> SDRawTree:
+        return self.tree.serialize()
+
     def __bool__(self) -> bool:
         return bool(self.tree)
 
@@ -675,7 +678,7 @@ class TreeStore:
     def load(self, *, host_name: HostName) -> ImmutableTree:
         return load_tree(self._tree_file(host_name))
 
-    def save(self, *, host_name: HostName, tree: StructuredDataNode, pretty: bool = False) -> None:
+    def save(self, *, host_name: HostName, tree: MutableTree, pretty: bool = False) -> None:
         self._tree_dir.mkdir(parents=True, exist_ok=True)
 
         tree_file = self._tree_file(host_name)

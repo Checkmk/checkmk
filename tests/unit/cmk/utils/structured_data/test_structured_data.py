@@ -19,6 +19,7 @@ from cmk.utils.structured_data import (
     DeltaStructuredDataNode,
     ImmutableDeltaTree,
     ImmutableTree,
+    MutableTree,
     parse_visible_raw_path,
     RetentionIntervals,
     SDFilter,
@@ -696,13 +697,7 @@ def test_structured_data_StructuredDataTree_load_from(tree_name: HostName) -> No
 def test_real_save_gzip(tmp_path: Path) -> None:
     host_name = HostName("heute")
     target = tmp_path / "inventory" / str(host_name)
-    raw_tree = {
-        "node": {
-            "foo": 1,
-            "bär": 2,
-        },
-    }
-    tree = StructuredDataNode.deserialize(raw_tree)
+    tree = MutableTree(StructuredDataNode.deserialize({"node": {"foo": 1, "bär": 2}}))
     tree_store = TreeStore(tmp_path / "inventory")
     tree_store.save(host_name=host_name, tree=tree)
 
@@ -809,7 +804,7 @@ def test_real_is_equal_save_and_load(tree_name: HostName, tmp_path: Path) -> Non
     orig_tree = _get_tree_store().load(host_name=tree_name)
     tree_store = TreeStore(tmp_path / "inventory")
     try:
-        tree_store.save(host_name=HostName("foo"), tree=orig_tree.tree)
+        tree_store.save(host_name=HostName("foo"), tree=MutableTree(orig_tree.tree))
         loaded_tree = tree_store.load(host_name=HostName("foo"))
         assert orig_tree == loaded_tree
     finally:

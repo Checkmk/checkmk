@@ -2490,7 +2490,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
     inventory_plugins = InventoryPluginMapper()
 
     with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
-        for host_name in time_limited(queue.queued_hosts()):
+        for host_name in time_limited(queue):
             if host_name in process_hosts:
                 _execute_active_check_inventory(
                     host_name,

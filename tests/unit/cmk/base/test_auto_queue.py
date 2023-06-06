@@ -56,17 +56,17 @@ class TestAutoQueue:
 
     def test_queued_empty(self, tmpdir: Path, auto_queue: AutoQueue) -> None:
         auto_queue = AutoQueue(tmpdir / "dir2")
-        assert not list(auto_queue.queued_hosts())
+        assert not auto_queue
 
     def test_queued_populated(self, auto_queue: AutoQueue) -> None:
-        assert set(auto_queue.queued_hosts()) == {HostName("most"), HostName("lost")}
+        assert set(auto_queue) == {HostName("most"), HostName("lost")}
 
     def test_remove(self, auto_queue: AutoQueue) -> None:
         auto_queue.remove(HostName("lost"))
-        assert list(auto_queue.queued_hosts()) == [HostName("most")]
+        assert list(auto_queue) == [HostName("most")]
 
     def test_cleanup(self, auto_queue: AutoQueue) -> None:
         auto_queue.cleanup(
             valid_hosts={HostName("lost"), HostName("rost")}, logger=lambda *args, **kw: None
         )
-        assert list(auto_queue.queued_hosts()) == ["lost"]
+        assert list(auto_queue) == ["lost"]

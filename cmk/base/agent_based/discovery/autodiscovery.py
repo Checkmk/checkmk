@@ -339,7 +339,7 @@ def autodiscovery(
     discovery_results = {}
 
     with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
-        for host_name in time_limited(autodiscovery_queue.queued_hosts()):
+        for host_name in time_limited(autodiscovery_queue):
             if host_name not in process_hosts:
                 continue
             hosts_processed.add(host_name)

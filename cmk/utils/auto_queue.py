@@ -5,7 +5,7 @@
 
 import signal
 import time
-from collections.abc import Callable, Container, Iterable, Sequence
+from collections.abc import Callable, Container, Iterable, Iterator, Sequence
 from pathlib import Path
 from types import FrameType, TracebackType
 from typing import Final, NoReturn, TypeVar
@@ -66,7 +66,7 @@ class TimeLimitFilter:
                 raise _Timeout()
 
 
-class AutoQueue:
+class AutoQueue(Iterable[HostName]):
     @staticmethod
     def _host_name(file_path: Path) -> HostName:
         return HostName(file_path.name)
@@ -80,16 +80,16 @@ class AutoQueue:
             # the FileNotFoundError gets raised *here*.
             return list(self._dir.iterdir())
         except FileNotFoundError:
-            return []
+            return ()
 
     def __len__(self) -> int:
         return len(self._ls())
 
+    def __iter__(self) -> Iterator[HostName]:
+        return (self._host_name(f) for f in self._ls()).__iter__()
+
     def oldest(self) -> float | None:
         return min((f.stat().st_mtime for f in self._ls()), default=None)
-
-    def queued_hosts(self) -> Iterable[HostName]:
-        return (self._host_name(f) for f in self._ls())
 
     def remove(self, host_name: HostName) -> None:
         (self._dir / str(host_name)).unlink(missing_ok=True)

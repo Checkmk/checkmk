@@ -305,6 +305,7 @@ deb: debian/changelog debian/control
 	    --preserve-envvar="BAZEL_*" \
 	    --preserve-envvar="MAKE" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
+	    --preserve-envvar="RUSTUP_HOME" \
 	    --prepend-path $$HOME/.cargo/bin \
 	    --prepend-path=/usr/local/bin \
 	    --set-envvar EDITION=$(EDITION) \

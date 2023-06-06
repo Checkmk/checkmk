@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
 //types from: cmk/gui/cee/plugins/dashboard/site_overview.py a
 //TODO: this is kind of code duplication, since the types are defined twice
 // in python and typescript, so maybe in the future it would be better to have

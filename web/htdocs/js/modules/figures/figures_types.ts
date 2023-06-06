@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
 /* eslint  @typescript-eslint/no-unused-vars: 0, @typescript-eslint/no-empty-interface: 0 */
 /*
 In cmk_figures there is an attribute called _dashlet_spec which is

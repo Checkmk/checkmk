@@ -545,7 +545,7 @@ class Certificate:
             sans = self._cert.extensions.get_extension_for_oid(
                 x509.oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME
             ).value.get_values_for_type(x509.DNSName)
-        except x509.ExtensionNotFound:
+        except x509.extensions.ExtensionNotFound:
             return []
 
         assert all(isinstance(x, str) for x in sans)

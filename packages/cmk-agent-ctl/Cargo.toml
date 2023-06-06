@@ -23,7 +23,7 @@ serde_json = { version = "1.0" }
 serde_with = { version = "1.13" }
 uuid = { version = "1.0", features = ["v4"] }
 openssl = { version = "0.10", features = ["vendored"] }
-rustls = { version = "0.20" }
+rustls = { version = "0.20", features = ["dangerous_configuration"] }
 rustls-pemfile = { version = "1.0" }
 log = { version = "0.4" }
 flexi_logger = { version = "0.24", default-features = false }

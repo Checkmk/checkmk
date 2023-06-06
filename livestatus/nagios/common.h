@@ -477,22 +477,24 @@
 
 
 /************************* MODIFIED ATTRIBUTES **************************/
-/* Corresponds to the values in State.h: enum State::Enable */
-#define MODATTR_NONE 0
-#define MODATTR_NOTIFICATIONS_ENABLED 1        // Enable::notifications = 0
-#define MODATTR_ACTIVE_CHECKS_ENABLED 2        // Enable::active_checks = 1
-#define MODATTR_PASSIVE_CHECKS_ENABLED 4       // Enable::passive_checks = 2
-#define MODATTR_EVENT_HANDLER_ENABLED 8        // 3 - not used
-#define MODATTR_FLAP_DETECTION_ENABLED 16      // Enable::flap_detection = 4
-#define MODATTR_FAILURE_PREDICTION_ENABLED 32  // 5- not used
-#define MODATTR_PERFORMANCE_DATA_ENABLED 64    // Enable::performance_data = 6
-#define MODATTR_OBSESSIVE_HANDLER_ENABLED 128  // 7 - not used
-#define MODATTR_EVENT_HANDLER_COMMAND 256      // 8 - not used
-#define MODATTR_CHECK_COMMAND 512              // 9 - not used
-#define MODATTR_NORMAL_CHECK_INTERVAL 1024     // 10 - not used
-#define MODATTR_RETRY_CHECK_INTERVAL 2048      // 11 - not used
-#define MODATTR_MAX_CHECK_ATTEMPTS 4096        // 12 - not used
-#define MODATTR_FRESHNESS_CHECKS_ENABLED 8192  // Enable::freshness_check = 13
-#define MODATTR_CHECK_TIMEPERIOD 16384         // 14 - not used
-#define MODATTR_CUSTOM_VARIABLE 32768          // 15 - not used
-#define MODATTR_NOTIFICATION_TIMEPERIOD 65536  // 16 - not used
+
+#define MODATTR_NONE                            0
+#define MODATTR_NOTIFICATIONS_ENABLED           1
+#define MODATTR_ACTIVE_CHECKS_ENABLED           2
+#define MODATTR_PASSIVE_CHECKS_ENABLED          4
+#define MODATTR_EVENT_HANDLER_ENABLED           8
+#define MODATTR_FLAP_DETECTION_ENABLED          16
+#define MODATTR_FAILURE_PREDICTION_ENABLED      32
+#define MODATTR_PERFORMANCE_DATA_ENABLED        64
+#define MODATTR_OBSESSIVE_HANDLER_ENABLED       128
+#define MODATTR_EVENT_HANDLER_COMMAND           256
+#define MODATTR_CHECK_COMMAND                   512
+#define MODATTR_NORMAL_CHECK_INTERVAL           1024
+#define MODATTR_RETRY_CHECK_INTERVAL            2048
+#define MODATTR_MAX_CHECK_ATTEMPTS              4096
+#define MODATTR_FRESHNESS_CHECKS_ENABLED        8192
+#define MODATTR_CHECK_TIMEPERIOD                16384
+#define MODATTR_CUSTOM_VARIABLE                 32768
+#define MODATTR_NOTIFICATION_TIMEPERIOD         65536
+
+	

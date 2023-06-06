@@ -1527,3 +1527,121 @@ def test_move_host_different_contact_group(clients: ClientRegistry) -> None:
         resp.json["detail"]
         == "The user doesn't belong to the required contact groups of the following objects to perform this action: Host('TestHost1')"
     )
+
+
+@pytest.mark.usefixtures("custom_host_attribute")
+def test_openapi_host_config_effective_attributes_includes_custom_attributes_regression(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostConfig.create(host_name="test_host", attributes={"foo": "blub"})
+
+    resp = clients.HostConfig.get("test_host", effective_attributes=True)
+    assert resp.json["extensions"]["effective_attributes"]["foo"] == "blub"
+
+
+def test_openapi_host_config_effective_attributes_includes_tags_regression(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostTagGroup.create(ident="foo", title="foo", tags=[{"ident": "bar", "title": "bar"}])
+    clients.HostConfig.create(host_name="test_host", attributes={"tag_foo": "bar"})
+
+    resp = clients.HostConfig.get("test_host", effective_attributes=True)
+    assert resp.json["extensions"]["effective_attributes"]["tag_foo"] == "bar"
+
+
+@freeze_time("2022-11-05")
+def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
+    clients: ClientRegistry, with_admin: Tuple[str, str]
+) -> None:
+    username, password = with_admin
+    clients.HostConfig.set_credentials(username, password)
+
+    clients.HostConfig.create(host_name="heute")
+    resp = clients.HostConfig.get(host_name="heute", effective_attributes=True)
+
+    # all keys in 'attributes' have to be present in 'effective_attributes' as well
+    assert set(resp.json["extensions"]["attributes"]) <= set(
+        resp.json["extensions"]["effective_attributes"]
+    )
+
+    assert (
+        resp.json["extensions"]["effective_attributes"]
+        == {
+            "additional_ipv4addresses": [],
+            "additional_ipv6addresses": [],
+            "alias": "",
+            "bake_agent_package": False,
+            "cmk_agent_connection": "pull-agent",
+            "contactgroups": {},
+            "inventory_failed": False,
+            "ipaddress": "",
+            "ipv6address": "",
+            "labels": {},
+            "locked_attributes": [],
+            "locked_by": {"instance_id": "", "program_id": "", "site_id": "NO_SITE"},
+            "management_address": "",
+            "management_ipmi_credentials": None,
+            "management_protocol": "none",
+            "management_snmp_community": None,
+            "meta_data": {
+                "created_at": "2022-11-05T00:00:00+00:00",
+                "created_by": username,
+                "updated_at": "2022-11-05T00:00:00+00:00",
+            },
+            "network_scan": {
+                "addresses": [],
+                "exclude_addresses": [],
+                "run_as": username,
+                "scan_interval": 86400,
+                "set_ip_address": True,
+                "time_allowed": [{"end": "23:59:59", "start": "00:00:00"}],
+            },
+            "network_scan_result": {"end": None, "output": "", "start": None, "state": "running"},
+            "parents": [],
+            "site": "NO_SITE",
+            "snmp_community": None,
+            "tag_address_family": "ip-v4-only",
+            "tag_agent": "cmk-agent",
+            "tag_piggyback": "auto-piggyback",
+            "tag_snmp_ds": "no-snmp",
+        }
+        != {
+            "additional_ipv4addresses": [],
+            "additional_ipv6addresses": [],
+            "alias": "",
+            "bake_agent_package": False,
+            "cmk_agent_connection": "pull-agent",
+            "contactgroups": {},
+            "inventory_failed": False,
+            "ipaddress": "",
+            "ipv6address": "",
+            "labels": {},
+            "locked_attributes": [],
+            "locked_by": {"instance_id": "", "program_id": "", "site_id": "NO_SITE"},
+            "management_address": "",
+            "management_ipmi_credentials": None,
+            "management_protocol": "none",
+            "management_snmp_community": None,
+            "meta_data": {
+                "created_at": "2022-11-05T10:01:41.212124+00:00",
+                "created_by": username,
+                "updated_at": "2023-06-09T10:01:41.259554+00:00",
+            },
+            "network_scan": {
+                "addresses": [],
+                "exclude_addresses": [],
+                "run_as": username,
+                "scan_interval": 86400,
+                "set_ip_address": True,
+                "time_allowed": [{"end": "23:59:59", "start": "00:00:00"}],
+            },
+            "network_scan_result": {"end": None, "output": "", "start": None, "state": "running"},
+            "parents": [],
+            "site": "NO_SITE",
+            "snmp_community": None,
+            "tag_address_family": "ip-v4-only",
+            "tag_agent": "cmk-agent",
+            "tag_piggyback": "auto-piggyback",
+            "tag_snmp_ds": "no-snmp",
+        }
+    )

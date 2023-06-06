@@ -7,6 +7,7 @@ import datetime as dt
 import logging
 from typing import Any
 
+import marshmallow
 from marshmallow import fields as _fields
 from marshmallow import post_load, Schema
 from marshmallow_oneofschema import OneOfSchema
@@ -306,6 +307,17 @@ class DomainObject(Linkable):
     )
 
 
+class HostExtensionsEffectiveAttributesSchema(attr_openapi_schema("host", "view")):  # type: ignore
+    @marshmallow.post_dump(pass_original=True)
+    def add_tags_and_custom_attributes_back(
+        self, dump_data: dict[str, Any], original_data: dict[str, Any], **_kwargs: Any
+    ) -> dict[str, Any]:
+        # Custom attributes and tags are thrown away during validation as they have no field in the schema.
+        # So we dump them back in here.
+        original_data.update(dump_data)
+        return original_data
+
+
 class HostExtensions(BaseSchema):
     folder = gui_fields.FolderField(
         description="The folder, in which this host resides.",
@@ -318,7 +330,7 @@ class HostExtensions(BaseSchema):
         example={"ipaddress": "192.168.0.123"},
     )
     effective_attributes = fields.Nested(
-        attr_openapi_schema("host", "view")(),
+        HostExtensionsEffectiveAttributesSchema(),
         required=False,
         description="All attributes of this host and all parent folders.",
         example={"tag_snmp_ds": None},

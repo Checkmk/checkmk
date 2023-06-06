@@ -1579,7 +1579,9 @@ class AutomationActiveCheck(Automation):
                 if entry["service_description"] != item:
                     continue
 
-                command_line = self._replace_core_macros(hostname, entry.get("command_line", ""))
+                command_line = self._replace_macros(
+                    hostname, entry["service_description"], entry.get("command_line", "")
+                )
                 if command_line:
                     cmd = core_config.autodetect_plugin(command_line)
                     return automation_results.ActiveCheckResult(*self._execute_check_plugin(cmd))
@@ -1609,8 +1611,10 @@ class AutomationActiveCheck(Automation):
                     if description != item:
                         continue
 
-                    command_line = self._replace_core_macros(
-                        hostname, act_info["command_line"].replace("$ARG1$", command_args)
+                    command_line = self._replace_macros(
+                        hostname,
+                        description,
+                        act_info["command_line"].replace("$ARG1$", command_args),
                     )
                     cmd = core_config.autodetect_plugin(command_line)
                     return automation_results.ActiveCheckResult(*self._execute_check_plugin(cmd))
@@ -1632,17 +1636,20 @@ class AutomationActiveCheck(Automation):
             if cmk.utils.debug.enabled():
                 raise
 
-    # Simulate replacing some of the more important macros of hosts. We
+    # Simulate replacing some of the more important macros of host and service. We
     # cannot use dynamic macros, of course. Note: this will not work
     # without OMD, since we do not know the value of $USER1$ and $USER2$
     # here. We could read the Nagios resource.cfg file, but we do not
     # know for sure the place of that either.
-    def _replace_core_macros(self, hostname: HostName, commandline: str) -> str:
+    def _replace_macros(self, hostname: HostName, service_desc: str, commandline: str) -> str:
         config_cache = config.get_config_cache()
         macros = core_config.get_host_macros_from_attributes(
             hostname, core_config.get_host_attributes(hostname, config_cache)
         )
+        service_attrs = core_config.get_service_attributes(hostname, service_desc, config_cache)
+        macros.update(core_config.get_service_macros_from_attributes(service_attrs))
         self._load_resource_file(macros)
+
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in macros.items()})
 
     def _execute_check_plugin(self, commandline: str) -> Tuple[ServiceState, ServiceDetails]:

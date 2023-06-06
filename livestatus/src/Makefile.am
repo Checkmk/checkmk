@@ -79,12 +79,12 @@ liblivestatusneb_a_CXXFLAGS = -fPIC
 liblivestatusneb_a_CPPFLAGS = $(AM_CPPFLAGS)
 liblivestatusneb_a_LD_FLAGS = $(AM_LDFLAGS)
 liblivestatusneb_a_SOURCES = \
-        MacroExpander.cc \
-        NebCore.cc \
-        NebHost.cc \
-        NebService.cc \
-        TimeperiodsCache.cc \
-        module.cc
+	src/MacroExpander.cc \
+	src/NebCore.cc \
+	src/NebHost.cc \
+	src/NebService.cc \
+	src/TimeperiodsCache.cc \
+	src/module.cc
 $(liblivestatusneb_a_SOURCES): $(ASIO_INCLUDE)
 
 # Called during packaging. Copied from Makefile.am "all-am" to exclude noinst* targets

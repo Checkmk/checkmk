@@ -38,6 +38,7 @@ FILES_TO_FORMAT_LINUX := \
                       $(filter-out %.pb.cc %.pb.h, \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
+                      $(wildcard livestatus/src/src/*.cc) \
                       $(wildcard $(addprefix livestatus/src/test/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/,*.cc *.h)) \

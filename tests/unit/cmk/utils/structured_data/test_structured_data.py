@@ -1372,10 +1372,10 @@ def test_table_update_from_previous() -> None:
 
     current_table.update_from_previous(
         0,
+        ("any", "path"),
         previous_table,
         lambda k: True,
         RetentionIntervals(4, 5, 6),
-        ("any", "path"),
     )
 
     assert current_table.key_columns == ["kc"]
@@ -1407,10 +1407,10 @@ def test_table_update_from_previous_filtered() -> None:
     current_table.add_rows([{"kc": "KC", "c3": "C3: only cur"}])
     current_table.update_from_previous(
         0,
+        ("any", "path"),
         previous_table,
         lambda k: k in ["c2", "c3"],
         RetentionIntervals(4, 5, 6),
-        ("any", "path"),
     )
     assert current_table.key_columns == ["kc"]
     assert current_table.retentions == {

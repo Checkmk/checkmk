@@ -236,6 +236,38 @@ class MutableTree:
         node.table.add_key_columns(sorted(key_columns))
         node.table.add_rows(rows)
 
+    def update_pairs(
+        self,
+        now: int,
+        path: SDPath,
+        tree: ImmutableTree,
+        filter_func: SDFilterFunc,
+        inv_intervals: RetentionIntervals,
+    ) -> UpdateResult:
+        return self.tree.setdefault_node(path).attributes.update_from_previous(
+            now,
+            path,
+            tree.get_tree(path).tree.attributes,
+            filter_func,
+            inv_intervals,
+        )
+
+    def update_rows(
+        self,
+        now: int,
+        path: SDPath,
+        tree: ImmutableTree,
+        filter_func: SDFilterFunc,
+        inv_intervals: RetentionIntervals,
+    ) -> UpdateResult:
+        return self.tree.setdefault_node(path).table.update_from_previous(
+            now,
+            path,
+            tree.get_tree(path).tree.table,
+            filter_func,
+            inv_intervals,
+        )
+
     def count_entries(self) -> int:
         return self.tree.count_entries()
 
@@ -1051,14 +1083,11 @@ class Table:
     def update_from_previous(  # pylint: disable=too-many-branches
         self,
         now: int,
-        other: object,
+        path: SDPath,
+        other: Table,
         filter_func: SDFilterFunc,
         inv_intervals: RetentionIntervals,
-        path: SDPath,
     ) -> UpdateResult:
-        if not isinstance(other, Table):
-            raise TypeError(f"Cannot update {type(self)} from {type(other)}")
-
         self.add_key_columns(other.key_columns)
 
         old_filtered_rows = {
@@ -1225,14 +1254,11 @@ class Attributes:
     def update_from_previous(
         self,
         now: int,
-        other: object,
+        path: SDPath,
+        other: Attributes,
         filter_func: SDFilterFunc,
         inv_intervals: RetentionIntervals,
-        path: SDPath,
     ) -> UpdateResult:
-        if not isinstance(other, Attributes):
-            raise TypeError(f"Cannot update {type(self)} from {type(other)}")
-
         compared_filtered_keys = _compare_dict_keys(
             old_dict=_get_filtered_dict(
                 other.pairs,

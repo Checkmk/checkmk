@@ -457,37 +457,35 @@ def _may_update(
     for entry in raw_intervals_from_config:
         node_path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
 
-        previous_node = previous_tree.get_tree(node_path)
-
         if choices_for_attributes := entry.get("attributes"):
             raw_cache_info = _get_raw_cache_info((node_path, "Attributes"))
             results.append(
-                inventory_tree.tree.setdefault_node(node_path).attributes.update_from_previous(
+                inventory_tree.update_pairs(
                     now,
-                    previous_node.tree.attributes,
+                    node_path,
+                    previous_tree,
                     make_filter_from_choice(choices_for_attributes),
                     RetentionIntervals(
                         cached_at=raw_cache_info[0],
                         cache_interval=raw_cache_info[1],
                         retention_interval=entry["interval"],
                     ),
-                    node_path,
                 )
             )
 
         elif choices_for_table := entry.get("columns"):
             raw_cache_info = _get_raw_cache_info((node_path, "TableRow"))
             results.append(
-                inventory_tree.tree.setdefault_node(node_path).table.update_from_previous(
+                inventory_tree.update_rows(
                     now,
-                    previous_node.tree.table,
+                    node_path,
+                    previous_tree,
                     make_filter_from_choice(choices_for_table),
                     RetentionIntervals(
                         cached_at=raw_cache_info[0],
                         cache_interval=raw_cache_info[1],
                         retention_interval=entry["interval"],
                     ),
-                    node_path,
                 )
             )
 

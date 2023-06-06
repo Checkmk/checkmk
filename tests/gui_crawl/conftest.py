@@ -16,7 +16,7 @@ from tests.testlib.utils import current_base_branch_name
 logger = logging.getLogger()
 
 
-@pytest.fixture(name="test_site", scope="session", autouse=True)
+@pytest.fixture(name="test_site", scope="session")
 def get_site() -> Site:
     reuse = os.environ.get("REUSE")
     # if REUSE is undefined, a site will neither be reused nor be dropped
@@ -42,7 +42,7 @@ def get_site() -> Site:
     return site
 
 
-@pytest.fixture(name="test_crawler", scope="session", autouse=True)
+@pytest.fixture(name="test_crawler", scope="session")
 def crawler(test_site: Site) -> Generator[Crawler, None, None]:
     xss_crawl = os.environ.get("XSS_CRAWL", "0") == "1"
     crawler_type = XssCrawler if xss_crawl else Crawler

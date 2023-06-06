@@ -187,15 +187,16 @@ def parse_ps(string_table: StringTable) -> ps.Section:
 
 
 def _parse_ps(now: int, string_table: StringTable) -> ps.Section:
+    ps_time, ps_string_table = _separate_sub_string_table(now, string_table)
     # Produces a list of Tuples where each sub list is built as follows:
     # [
     #     [(u'root', u'35156', u'4372', u'00:00:05/2-14:14:49', u'1'), u'/sbin/init'],
     # ]
     # First element: The process info tuple (see ps.include: check_ps_common() for details on the elements)
     # second element:  The process command line
-    cpu_cores, info = _merge_wmic_info(_consolidate_lines(string_table))
+    cpu_cores, info = _merge_wmic_info(_consolidate_lines(ps_string_table))
     parsed = parse_process_entries(info)
-    return cpu_cores, parsed, now
+    return cpu_cores, parsed, ps_time
 
 
 register.agent_section(

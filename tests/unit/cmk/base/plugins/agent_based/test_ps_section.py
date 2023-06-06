@@ -125,6 +125,15 @@ WSOPREKPFS01,85,126562500,csrss.exe,1176,744,8,468750,44486656,569344
 """,
             "\t",
         ),
+        # solaris, aix with time info
+        splitter(
+            """
+[time]
+1540375343
+[processes]
+(db2prtl,17176,17540,0.0) /usr/lib/ssh/sshd
+"""
+        ),
     ]
 
 
@@ -161,6 +170,7 @@ result_parse = [
                 "/omd/sites/twelve/lib/cmc/checkhelper",
             ],
         ],
+        1540375342,
     ),
     (
         1,
@@ -168,6 +178,7 @@ result_parse = [
             [("root", 4056, 1512, "0.0/52-04:56:05", "5689"), "/usr/lib/ssh/sshd"],
             [("zombie", 0, 0, "-/-", "1952"), "<defunct>"],
         ],
+        1540375342,
     ),
     (
         1,
@@ -241,14 +252,16 @@ result_parse = [
                 "NOTEPAD.EXE",
             ],
         ],
+        1540375342,
     ),
-    (1, [[("db2prtl", 17176, 17540, "0.0"), "/usr/lib/ssh/sshd"]]),
+    (1, [[("db2prtl", 17176, 17540, "0.0"), "/usr/lib/ssh/sshd"]], 1540375342),
     (
         1,
         [
             [("oracle", 9588, 298788, "0.0"), "ora_dmon_uc4prd"],
             [("oracle", 11448, 300648, "0.0"), "oraclemetroprd", "(LOCAL=NO)"],
         ],
+        1540375342,
     ),
     (
         2,
@@ -270,6 +283,7 @@ result_parse = [
                 "NOTEPAD.EXE",
             ],
         ],
+        1540375342,
     ),
     (
         24,
@@ -308,6 +322,7 @@ result_parse = [
                 "csrss.exe",
             ],
         ],
+        1540375342,
     ),
     (
         1,
@@ -322,6 +337,7 @@ result_parse = [
                 "-inetd_ipv6",
             ]
         ],
+        1540375342,
     ),
     (
         1,
@@ -336,6 +352,7 @@ result_parse = [
                 "-inetd_ipv6",
             ]
         ],
+        1540375342,
     ),
     (
         1,
@@ -421,7 +438,9 @@ result_parse = [
                 "svchost.exe",
             ],
         ],
+        1540375342,
     ),
+    (1, [[("db2prtl", 17176, 17540, "0.0"), "/usr/lib/ssh/sshd"]], 1540375343),
 ]
 
 
@@ -436,6 +455,7 @@ input_ids = [
     "Second Generation user info only",
     "First Generation process only",
     "windows agent with newline in description",
+    "solaris, aix with time info",
 ]
 
 
@@ -447,13 +467,13 @@ input_ids = [
     ids=input_ids,
 )
 def test_parse_ps(
-    capture: StringTable, result: tuple[int, Sequence[Sequence[Sequence[object] | str]]]
+    capture: StringTable, result: tuple[int, Sequence[Sequence[Sequence[object] | str]], int]
 ) -> None:
     now = 1540375342
     cpu_core, lines, ps_time = ps_section._parse_ps(now, copy.deepcopy(capture))
     assert cpu_core == result[0]  # cpu_cores
 
-    assert now == ps_time
+    assert ps_time == result[2]
 
     for (ps_info_item, cmd_line), ref in itertools.zip_longest(lines, result[1]):
         assert ps_info_item == ps.PsInfo(*ref[0])

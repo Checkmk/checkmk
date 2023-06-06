@@ -403,6 +403,9 @@ section_nfs_mounts() {
 
 section_ps() {
     echo '<<<ps>>>'
+    echo "[time]"
+    get_epoch
+    echo "[processes]"
     ps -ef -F user,vszsize,rssize,pcpu,etime,pid,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
 }
 

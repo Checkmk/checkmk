@@ -468,6 +468,9 @@ def test_parse_ps(
     [
         pytest.param(
             [
+                ["[time]"],
+                [1540375341],
+                ["[processes]"],
                 ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
                 [
                     "1:name=systemd:/init.scope,",
@@ -502,12 +505,15 @@ def test_parse_ps(
                         ["/sbin/init", "--ladida"],
                     )
                 ],
-                1540375342,
+                1540375341,
             ),
             id="standard_case",
         ),
         pytest.param(
             [
+                ["[time]"],
+                [1540375341],
+                ["[processes]"],
                 ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
                 [
                     "9:pids:/system.slice/check-mk-agent-async.service,8:memory:/system.slice/check-mk-agent-async.service,7:devices:/system.slice/check-mk-agent-async.service,6:blkio:/system.slice/check-mk-agent-async.service,5:cpu,cpuacct:/system.slice/check-mk-agent-async.service,1:name=systemd:/system.slice/check-mk-agent-async.service,0::/system.slice/check-mk-agent-async.service",
@@ -571,9 +577,50 @@ def test_parse_ps(
                         ["[node]", "<defunct>"],
                     ),
                 ],
-                1540375342,
+                1540375341,
             ),
             id="with_deleted_cgroup",
+        ),
+        pytest.param(
+            [
+                ["[time]"],
+                [1540375341],
+                ["[processes]"],
+                ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+                [
+                    "12:pids:/system.slice/srcmstr.service,5:devices:/system.slice/srcmstr.service,1:name=systemd:/system.slice/srcmstr.service",
+                    "root",
+                    "96112",
+                    "3448",
+                    "00:00:00",
+                    "1-05:33:16",
+                    "4515",
+                ],
+            ],
+            (
+                1,
+                [
+                    (
+                        ps.PsInfo(
+                            user="root",
+                            virtual=96112,
+                            physical=3448,
+                            cputime="00:00:00/1-05:33:16",
+                            process_id="4515",
+                            pagefile=None,
+                            usermode_time=None,
+                            kernelmode_time=None,
+                            handles=None,
+                            threads=None,
+                            uptime=None,
+                            cgroup="12:pids:/system.slice/srcmstr.service,5:devices:/system.slice/srcmstr.service,1:name=systemd:/system.slice/srcmstr.service",
+                        ),
+                        [],
+                    ),
+                ],
+                1540375341,
+            ),
+            id="empty command line (SUP-13009)",
         ),
         pytest.param(
             [
@@ -611,7 +658,7 @@ def test_parse_ps(
                 ],
                 1540375342,
             ),
-            id="empty command line (SUP-13009)",
+            id="no_time_in_agent_output",
         ),
     ],
 )

@@ -651,6 +651,9 @@ section_ps() {
     if inpath ps; then
         # processes including username, without kernel processes
         echo '<<<ps_lnx>>>'
+        echo "[time]"
+        get_epoch
+        echo "[processes]"
         CGROUP=""
         if [ -e /sys/fs/cgroup ]; then
             CGROUP="cgroup:512,"

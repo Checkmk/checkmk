@@ -38,30 +38,33 @@ def discovery_citrix_controller_licensing(section: Section) -> v1.type_defs.Disc
     yield v1.Service()
 
 
+SERVER_STATES: typing.Final = {
+    "ServerNotSpecified": (v1.State.CRIT, "server not specified"),
+    "NotConnected": (v1.State.WARN, "not connected"),
+    "OK": (v1.State.OK, "OK"),
+    "LicenseNotInstalled": (v1.State.CRIT, "license not installed"),
+    "LicenseExpired": (v1.State.CRIT, "licenese expired"),
+    "Incompatible": (v1.State.CRIT, "incompatible"),
+    "Failed": (v1.State.CRIT, "failed"),
+}
+
+GRACE_STATES: typing.Final = {
+    "NotActive": (v1.State.OK, "not active"),
+    "Active": (v1.State.CRIT, "active"),
+    "InOutOfBoxGracePeriod": (v1.State.WARN, "in-out-of-box grace period"),
+    "InSupplementalGracePeriod": (v1.State.WARN, "in-supplemental grace period"),
+    "InEmergencyGracePeriod": (v1.State.CRIT, "in-emergency grace period"),
+    "GracePeriodExpired": (v1.State.CRIT, "grace period expired"),
+    "Expired": (v1.State.CRIT, "expired"),
+}
+
+
 def check_citrix_controller_licensing(section: Section) -> v1.type_defs.CheckResult:
-    server_states = {
-        "ServerNotSpecified": (v1.State.CRIT, "server not specified"),
-        "NotConnected": (v1.State.WARN, "not connected"),
-        "OK": (v1.State.OK, "OK"),
-        "LicenseNotInstalled": (v1.State.CRIT, "license not installed"),
-        "LicenseExpired": (v1.State.CRIT, "licenese expired"),
-        "Incompatible": (v1.State.CRIT, "incompatible"),
-        "Failed": (v1.State.CRIT, "failed"),
-    }
-    grace_states = {
-        "NotActive": (v1.State.OK, "not active"),
-        "Active": (v1.State.CRIT, "active"),
-        "InOutOfBoxGracePeriod": (v1.State.WARN, "in-out-of-box grace period"),
-        "InSupplementalGracePeriod": (v1.State.WARN, "in-supplemental grace period"),
-        "InEmergencyGracePeriod": (v1.State.CRIT, "in-emergency grace period"),
-        "GracePeriodExpired": (v1.State.CRIT, "grace period expired"),
-        "Expired": (v1.State.CRIT, "expired"),
-    }
     if (raw_state := section.licensing_server_state) is not None:
-        state, text = server_states.get(raw_state, (v1.State.UNKNOWN, f"unknown[{raw_state}]"))
+        state, text = SERVER_STATES.get(raw_state, (v1.State.UNKNOWN, f"unknown[{raw_state}]"))
         yield v1.Result(state=state, summary=f"Licensing Server State: {text}")
     if (raw_state := section.licensing_grace_state) is not None:
-        state, text = grace_states.get(raw_state, (v1.State.UNKNOWN, f"unknown[{raw_state}]"))
+        state, text = GRACE_STATES.get(raw_state, (v1.State.UNKNOWN, f"unknown[{raw_state}]"))
         yield v1.Result(state=state, summary=f"Licensing Grace State: {text}")
 
 

@@ -23,7 +23,7 @@ class Session:
 
 @dataclasses.dataclass
 class Section:
-    version: None | Version = None
+    version: Version | None = None
     state: str | Error | None = None
     licensing_grace_state: str | None = None
     licensing_server_state: str | None = None

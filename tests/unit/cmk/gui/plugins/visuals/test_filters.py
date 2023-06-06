@@ -1158,11 +1158,11 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
                 ("is_has_inv", "0"),
             ],
             rows=[
-                {"host_inventory": ImmutableTree.deserialize({}).tree},
-                {"host_inventory": ImmutableTree.deserialize({"a": "b"}).tree},
+                {"host_inventory": ImmutableTree.deserialize({})},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
             ],
             expected_rows=[
-                {"host_inventory": ImmutableTree.deserialize({}).tree},
+                {"host_inventory": ImmutableTree.deserialize({})},
             ],
         ),
         # Filter out empty trees (is_has_inv == 1)
@@ -1173,10 +1173,10 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
             ],
             rows=[
                 {"host_inventory": ImmutableTree.deserialize({}).tree},
-                {"host_inventory": ImmutableTree.deserialize({"a": "b"}).tree},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
             ],
             expected_rows=[
-                {"host_inventory": ImmutableTree.deserialize({"a": "b"}).tree},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
             ],
         ),
         # Do not apply filter (is_has_inv == -1)
@@ -1187,11 +1187,11 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
             ],
             rows=[
                 {"host_inventory": ImmutableTree.deserialize({}).tree},
-                {"host_inventory": ImmutableTree.deserialize({"a": "b"}).tree},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
             ],
             expected_rows=[
                 {"host_inventory": ImmutableTree.deserialize({}).tree},
-                {"host_inventory": ImmutableTree.deserialize({"a": "b"}).tree},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
             ],
         ),
         # Testing base class FilterInvText
@@ -1204,39 +1204,39 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
                 {
                     "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "bla"}}}
-                    ).tree
+                    )
                 },
                 {
                     "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "blabla"}}}
-                    ).tree
+                    )
                 },
                 {
                     "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "ag blabla"}}}
-                    ).tree
+                    )
                 },
                 {
                     "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "blu"}}}
-                    ).tree
+                    )
                 },
             ],
             expected_rows=[
                 {
                     "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "bla"}}}
-                    ).tree
+                    )
                 },
                 {
                     "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "blabla"}}}
-                    ).tree
+                    )
                 },
                 {
                     "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "ag blabla"}}}
-                    ).tree
+                    )
                 },
             ],
         ),
@@ -1251,24 +1251,24 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
                 {
                     "host_inventory": ImmutableTree.deserialize(
                         {"hardware": {"cpu": {"bus_speed": 1000000}}}
-                    ).tree
+                    )
                 },
                 {
                     "host_inventory": ImmutableTree.deserialize(
                         {"hardware": {"cpu": {"bus_speed": 15000000}}}
-                    ).tree
+                    )
                 },
                 {
                     "host_inventory": ImmutableTree.deserialize(
                         {"hardware": {"cpu": {"bus_speed": 21000000}}}
-                    ).tree
+                    )
                 },
             ],
             expected_rows=[
                 {
                     "host_inventory": ImmutableTree.deserialize(
                         {"hardware": {"cpu": {"bus_speed": 15000000}}}
-                    ).tree
+                    )
                 },
             ],
         ),
@@ -1285,9 +1285,7 @@ def test_filters_filter_inv_table(test: FilterTableTest) -> None:
             )
             assert len(rows) == len(test.expected_rows)
             for row, expected_row in zip(rows, test.expected_rows):
-                assert ImmutableTree(row["host_inventory"]) == ImmutableTree(
-                    expected_row["host_inventory"]
-                )
+                assert row["host_inventory"] == expected_row["host_inventory"]
 
 
 # Filter form is not really checked. Only checking that no exception occurs

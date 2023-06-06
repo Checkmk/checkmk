@@ -5,7 +5,7 @@
 
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import ImmutableTree
 
 from cmk.gui.type_defs import Rows
 from cmk.gui.view import View
@@ -43,7 +43,7 @@ def test_post_process_rows_adds_inventory_data(mock_livestatus: MockLiveStatusCo
     with mock_livestatus():
         post_process_rows(inv_view, [], rows)
     assert rows == [host_row]
-    assert isinstance(host_row["host_inventory"], StructuredDataNode)
+    assert isinstance(host_row["host_inventory"], ImmutableTree)
 
 
 def inventory_view() -> View:

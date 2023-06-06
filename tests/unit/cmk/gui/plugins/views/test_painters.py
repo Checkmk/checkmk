@@ -1389,7 +1389,7 @@ def _service_row():
                     }
                 },
             }
-        ).tree,
+        ),
         "host_is_flapping": 0,
         "host_label_sources": {"cmk/check_mk_server": "discovered", "cmk/os_family": "discovered"},
         "host_labels": {"cmk/check_mk_server": "yes", "cmk/os_family": "linux"},

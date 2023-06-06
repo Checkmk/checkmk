@@ -8,14 +8,7 @@ from collections.abc import Mapping, Sequence
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import (
-    ImmutableDeltaTree,
-    ImmutableTree,
-    SDKey,
-    SDPath,
-    SDValue,
-    StructuredDataNode,
-)
+from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDKey, SDPath, SDValue
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -899,7 +892,7 @@ def test_row_post_processor() -> None:
                     },
                     "Table": {},
                 }
-            ).tree,
+            ),
         },
     ]
 
@@ -1066,7 +1059,7 @@ def test_row_post_processor() -> None:
                         },
                         "Table": {},
                     }
-                ).tree,
+                ),
                 "JOIN": {
                     "invoradataguardstats_db_unique": {"invoradataguardstats_db_unique": "name1"},
                     "invoraversions_edition": {"invoraversions_edition": "edition1"},
@@ -1081,6 +1074,4 @@ def test_row_post_processor() -> None:
         assert row["invorainstance_sid"] == expected_row["invorainstance_sid"]
         assert row["invorainstance_version"] == expected_row["invorainstance_version"]
         assert row["JOIN"] == expected_row["JOIN"]
-        assert isinstance(tree := row["host_inventory"], StructuredDataNode)
-        assert isinstance(expected_tree := expected_row["host_inventory"], StructuredDataNode)
-        assert ImmutableTree(tree) == ImmutableTree(expected_tree)
+        assert row["host_inventory"] == expected_row["host_inventory"]

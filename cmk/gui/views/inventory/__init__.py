@@ -196,7 +196,7 @@ class PainterInventoryTree(Painter):
         except MultipleInventoryTreesError:
             return ImmutableTree()
 
-        return ImmutableTree(row.get("host_inventory"))
+        return row.get("host_inventory", ImmutableTree())
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if not (tree := self._compute_data(row, cell)):
@@ -1244,7 +1244,7 @@ def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
     except MultipleInventoryTreesError:
         return ImmutableTree()
 
-    return ImmutableTree(row.get("host_inventory")).get_tree(path)
+    return row.get("host_inventory", ImmutableTree()).get_tree(path)
 
 
 def _paint_host_inventory_tree(row: Row, hints: DisplayHints) -> CellSpec:
@@ -1330,7 +1330,7 @@ def _register_attribute_column(
         load_inv=True,
         columns=["host_inventory", "host_structured_status"],
         hint=hint,
-        value_extractor=lambda row: ImmutableTree(row["host_inventory"]).get_attribute(
+        value_extractor=lambda row: row["host_inventory"].get_attribute(
             inventory_path.path, inventory_path.key or ""
         ),
     )
@@ -1345,7 +1345,7 @@ def _compute_attribute_painter_data(row: Row, path: SDPath, key: str) -> str | i
     except MultipleInventoryTreesError:
         return None
 
-    return ImmutableTree(row.get("host_inventory")).get_attribute(path, key)
+    return row.get("host_inventory", ImmutableTree()).get_attribute(path, key)
 
 
 def _paint_host_inventory_attribute(

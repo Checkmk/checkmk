@@ -376,10 +376,7 @@ class _FilterInvHasSoftwarePackage(Filter):
 
         new_rows = []
         for row in rows:
-            packages_table = row["host_inventory"].get_table(["software", "packages"])
-            if packages_table is None:
-                continue
-            packages = packages_table.rows
+            packages = row["host_inventory"].get_rows(("software", "packages"))
             is_in = self.find_package(packages, name, from_version, to_version)
             if is_in != negate:
                 new_rows.append(row)

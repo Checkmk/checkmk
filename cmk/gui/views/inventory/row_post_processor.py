@@ -81,15 +81,13 @@ def _add_inventory_data(rows: Rows) -> None:
 
         try:
             row["host_inventory"] = (
-                ImmutableTree().tree
-                if (tree := load_filtered_and_merged_tree(row)) is None
-                else tree.tree
+                ImmutableTree() if (tree := load_filtered_and_merged_tree(row)) is None else tree
             )
         except LoadStructuredDataError:
             # The inventory row may be joined with other rows (perf-o-meter, ...).
             # Therefore we initialize the corrupt inventory tree with an empty tree
             # in order to display all other rows.
-            row["host_inventory"] = ImmutableTree().tree
+            row["host_inventory"] = ImmutableTree()
             corrupted_inventory_files.append(str(get_short_inventory_filepath(row["host_name"])))
 
             if corrupted_inventory_files:
@@ -163,7 +161,7 @@ def _extract_table_rows(
             continue
 
         for (path, ident), painter_macros in painter_macros_by_path_and_ident.items():
-            if tree := ImmutableTree(row["host_inventory"]).get_tree(path):
+            if tree := row["host_inventory"].get_tree(path):
                 table_rows_by_master_key.setdefault(master_key, []).extend(
                     list(_find_table_rows(ident, painter_macros, tree.tree.table.rows))
                 )

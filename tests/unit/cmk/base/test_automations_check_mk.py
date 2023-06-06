@@ -19,6 +19,7 @@ from cmk.fetchers import PiggybackFetcher
 
 import cmk.base.automations.check_mk as check_mk
 import cmk.base.config as config
+import cmk.base.core_config as core_config
 from cmk.base.config import ConfigCache
 
 
@@ -72,7 +73,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, host_attrs, active_check_args, expected_result",
+    "active_checks, active_check_info, host_attrs, service_attrs, active_check_args, expected_result",
     [
         pytest.param(
             [
@@ -92,6 +93,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {},
             ["my_host", "my_active_check", "Active check of my_host"],
             automation_results.ActiveCheckResult(
                 state=0, output="--arg1 arument1 --host_alias my_host_alias"
@@ -116,6 +118,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {},
             ["my_host", "my_active_check", "Some other item"],
             automation_results.ActiveCheckResult(
                 state=None, output="Failed to compute check result"
@@ -146,6 +149,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {},
             ["my_host", "my_active_check", "Active check of my_host"],
             automation_results.ActiveCheckResult(
                 state=0, output="--arg1 arument1 --host_alias my_host_alias"
@@ -179,11 +183,35 @@ def mock_service_description(params: Mapping[str, str]) -> str:
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
+            {},
             ["my_host", "http", "HTTP my special HTTP"],
             automation_results.ActiveCheckResult(
                 state=0, output="--arg1 arument1 --host_alias my_host_alias"
             ),
             id="arguments_list",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "echo $ARG1$",
+                    "argument_function": lambda _: ["echo", "$_SERVICEFOO$"],
+                    "service_description": mock_service_description,
+                }
+            },
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "display_name": "my_host",
+            },
+            {"_FOO": "BAR"},
+            ["my_host", "my_active_check", "Active check of my_host"],
+            automation_results.ActiveCheckResult(state=0, output="echo BAR"),
+            id="custom_service_attribute",
         ),
     ],
 )
@@ -191,12 +219,14 @@ def test_automation_active_check(  # type:ignore[no-untyped-def]
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
     host_attrs: Mapping[str, str],
+    service_attrs: Mapping[str, str],
     active_check_args: list[str],
     expected_result: automation_results.ActiveCheckResult,
     monkeypatch,
 ):
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *_: host_attrs)
+    monkeypatch.setattr(core_config, "get_service_attributes", lambda *_: service_attrs)
     monkeypatch.setattr(check_mk.AutomationActiveCheck, "_load_resource_file", lambda *_: None)
 
     config_cache = config.get_config_cache()

@@ -10,18 +10,16 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib.agent import (
+    agent_controller_daemon,
+    clean_agent_controller,
+    install_agent_package,
+)
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import current_branch_name, execute
 from tests.testlib.version import CMKVersion, version_from_env
 
-from tests.composition.utils import (
-    agent_controller_daemon,
-    bake_agent,
-    clean_agent_controller,
-    get_cre_agent_path,
-    install_agent_package,
-    is_containerized,
-)
+from tests.composition.utils import bake_agent, get_cre_agent_path, is_containerized
 
 from cmk.utils.version import Edition
 

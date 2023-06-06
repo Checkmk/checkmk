@@ -3,30 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
-from collections.abc import Generator, Iterator
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from cmk.utils.auto_queue import AutoQueue, TimeLimitFilter
+from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.type_defs import HostName
-
-
-def test_time_limit_filter_iterates() -> None:
-    with TimeLimitFilter(limit=42, grace=0) as limiter:
-        test_list = list(limiter(iter(range(3))))
-    assert test_list == [0, 1, 2]
-
-
-def test_time_limit_filter_stops() -> None:
-    def test_generator() -> Generator:
-        time.sleep(10)
-        yield
-
-    # sorry for for wasting one second of your time
-    with TimeLimitFilter(limit=1, grace=0) as limiter:
-        assert not list(limiter(test_generator()))
 
 
 @pytest.fixture(name="auto_queue")

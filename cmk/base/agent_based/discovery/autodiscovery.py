@@ -14,10 +14,11 @@ import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.auto_queue import AutoQueue, TimeLimitFilter
+from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
+from cmk.utils.timeout import Timeout
 from cmk.utils.type_defs import (
     DiscoveryResult,
     EVERYTHING,
@@ -338,36 +339,46 @@ def autodiscovery(
     hosts_processed = set()
     discovery_results = {}
 
-    with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
-        for host_name in time_limited(autodiscovery_queue):
-            if host_name not in process_hosts:
-                continue
-            hosts_processed.add(host_name)
+    start = time.monotonic()
+    limit = 120
+    message = f"  Timeout of {limit} seconds reached. Let's do the remaining hosts next time."
 
-            discovery_result, activate_host = _autodiscovery(
-                host_name,
-                config_cache=config_cache,
-                parser=parser,
-                fetcher=fetcher,
-                summarizer=ConfiguredSummarizer(
-                    config_cache,
+    try:
+        with Timeout(limit + 10, message=message):
+            for host_name in autodiscovery_queue:
+                if time.monotonic() > start + limit:
+                    raise TimeoutError(message)
+
+                if host_name not in process_hosts:
+                    continue
+
+                hosts_processed.add(host_name)
+                discovery_result, activate_host = _autodiscovery(
                     host_name,
-                    override_non_ok_state=None,
-                ),
-                section_plugins=section_plugins,
-                host_label_plugins=host_label_plugins,
-                plugins=plugins,
-                get_service_description=get_service_description,
-                schedule_discovery_check=schedule_discovery_check,
-                autodiscovery_queue=autodiscovery_queue,
-                reference_time=rediscovery_reference_time,
-                oldest_queued=oldest_queued,
-                on_error=on_error,
-            )
+                    config_cache=config_cache,
+                    parser=parser,
+                    fetcher=fetcher,
+                    summarizer=ConfiguredSummarizer(
+                        config_cache,
+                        host_name,
+                        override_non_ok_state=None,
+                    ),
+                    section_plugins=section_plugins,
+                    host_label_plugins=host_label_plugins,
+                    plugins=plugins,
+                    get_service_description=get_service_description,
+                    schedule_discovery_check=schedule_discovery_check,
+                    autodiscovery_queue=autodiscovery_queue,
+                    reference_time=rediscovery_reference_time,
+                    oldest_queued=oldest_queued,
+                    on_error=on_error,
+                )
+                if discovery_result:
+                    discovery_results[host_name] = discovery_result
+                    activation_required |= activate_host
 
-            if discovery_result:
-                discovery_results[host_name] = discovery_result
-                activation_required |= activate_host
+    except (MKTimeout, TimeoutError) as exc:
+        console.verbose(str(exc))
 
     return discovery_results, activation_required
 

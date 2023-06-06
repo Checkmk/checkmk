@@ -3,67 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import signal
-import time
 from collections.abc import Callable, Container, Iterable, Iterator, Sequence
 from pathlib import Path
-from types import FrameType, TracebackType
-from typing import Final, NoReturn, TypeVar
 
-from cmk.utils.exceptions import MKException
-from cmk.utils.log import console
 from cmk.utils.type_defs import HostName
-
-_T = TypeVar("_T")
-
-
-class _Timeout(MKException):
-    pass
-
-
-class TimeLimitFilter:
-    @classmethod
-    def _raise_timeout(cls, signum: int, stack_frame: FrameType | None) -> NoReturn:
-        raise _Timeout()
-
-    def __init__(
-        self,
-        *,
-        limit: int,
-        grace: int,
-        label: str = "elements",
-    ) -> None:
-        self._start = int(time.monotonic())
-        self._end = self._start + limit
-        self.limit: Final = limit
-        self.label: Final = label
-
-        signal.signal(signal.SIGALRM, TimeLimitFilter._raise_timeout)
-        signal.alarm(self.limit + grace)
-
-    def __enter__(self) -> "TimeLimitFilter":
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> bool:
-        signal.alarm(0)
-        if isinstance(exc_val, _Timeout):
-            console.verbose(
-                f"  Timeout of {self.limit} seconds reached. "
-                f"Let's do the remaining {self.label} next time."
-            )
-            return True
-        return False
-
-    def __call__(self, iterable: Iterable[_T]) -> Iterable[_T]:
-        for element in iterable:
-            yield element
-            if time.monotonic() > self._end:
-                raise _Timeout()
 
 
 class AutoQueue(Iterable[HostName]):

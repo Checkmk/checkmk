@@ -6,6 +6,7 @@
 import logging
 import os
 import sys
+import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
@@ -22,7 +23,7 @@ import cmk.utils.piggyback as piggyback
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
-from cmk.utils.auto_queue import AutoQueue, TimeLimitFilter
+from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
@@ -33,7 +34,7 @@ from cmk.utils.diagnostics import (
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
 )
-from cmk.utils.exceptions import MKBailOut, MKGeneralException, OnError
+from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console, section
 from cmk.utils.structured_data import (
     ImmutableTree,
@@ -44,6 +45,7 @@ from cmk.utils.structured_data import (
     UpdateResult,
 )
 from cmk.utils.tags import TagID
+from cmk.utils.timeout import Timeout
 from cmk.utils.type_defs import (
     EVERYTHING,
     HostAddress,
@@ -2489,9 +2491,19 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
     section_plugins = SectionPluginMapper()
     inventory_plugins = InventoryPluginMapper()
 
-    with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
-        for host_name in time_limited(queue):
-            if host_name in process_hosts:
+    start = time.monotonic()
+    limit = 120
+    message = f"  Timeout of {limit} seconds reached. Let's do the remaining hosts next time."
+
+    try:
+        with Timeout(limit + 10, message=message):
+            for host_name in queue:
+                if time.monotonic() > start + limit:
+                    raise TimeoutError(message)
+
+                if host_name not in process_hosts:
+                    continue
+
                 _execute_active_check_inventory(
                     host_name,
                     config_cache=config_cache,
@@ -2504,6 +2516,8 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
                     parameters=config_cache.hwsw_inventory_parameters(host_name),
                     raw_intervals_from_config=config_cache.inv_retention_intervals(host_name),
                 )
+    except (MKTimeout, TimeoutError) as exc:
+        console.verbose(str(exc))
 
 
 modes.register(

@@ -236,19 +236,26 @@ def parse_ps_lnx(string_table: StringTable) -> Optional[ps.Section]:
     return _parse_ps_lnx(now, string_table)
 
 
+def _separate_sub_string_table(now: int, string_table: StringTable) -> tuple[int, StringTable]:
+    if string_table[0][0].startswith("[time]") and string_table[2][0].startswith("[processes]"):
+        return int(string_table[1][0]), string_table[3:]
+    return now, string_table
+
+
 def _parse_ps_lnx(now: int, string_table: StringTable) -> Optional[ps.Section]:
+    ps_time, ps_string_table = _separate_sub_string_table(now, string_table)
     data = []
     # info[0]: $Node [header] user ... pid command
     # we rely on the command being the last one!
-    attrs = tuple(word.lower() for word in string_table[0][1:-1])
 
+    attrs = tuple(word.lower() for word in ps_string_table[0][1:-1])
     # busybox' ps seems to not provide the columns we need so we abort
     if not all(att in attrs for att in ("user", "vsz", "rss", "time", "elapsed", "pid")):
         return None
 
     cmd_idx = len(attrs)
 
-    for line in (_handle_deleted_cgroup(attrs, l) for l in string_table[1:]):
+    for line in (_handle_deleted_cgroup(attrs, l) for l in ps_string_table[1:]):
         # read all but 'command' into dict
         ps_raw = dict(zip(attrs, line))
         ps_info_obj = ps.PsInfo(
@@ -263,7 +270,7 @@ def _parse_ps_lnx(now: int, string_table: StringTable) -> Optional[ps.Section]:
         data.append((ps_info_obj, line[cmd_idx:]))
 
     # cpu_cores for compatibility!
-    return 1, data, now
+    return 1, data, ps_time
 
 
 register.agent_section(

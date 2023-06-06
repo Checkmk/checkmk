@@ -14,7 +14,7 @@ from tests.testlib import on_time
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import ImmutableTree
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import sites
@@ -959,7 +959,7 @@ def _service_row():
         "host_in_check_period": 1,
         "host_in_notification_period": 1,
         "host_in_service_period": 1,
-        "host_inventory": StructuredDataNode.deserialize(
+        "host_inventory": ImmutableTree.deserialize(
             {
                 "hardware": {
                     "memory": {
@@ -1389,7 +1389,7 @@ def _service_row():
                     }
                 },
             }
-        ),
+        ).tree,
         "host_is_flapping": 0,
         "host_label_sources": {"cmk/check_mk_server": "discovered", "cmk/os_family": "discovered"},
         "host_labels": {"cmk/check_mk_server": "yes", "cmk/os_family": "linux"},

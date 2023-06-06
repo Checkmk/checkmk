@@ -584,49 +584,47 @@ def _make_tree_or_items(
     previous_table_retentions: dict,
     raw_cache_info: tuple[int, int] | None,
 ) -> tuple[ImmutableTree, list[ItemsOfInventoryPlugin]]:
-    previous_tree = ImmutableTree(
-        StructuredDataNode.deserialize(
-            {
-                "Attributes": {},
-                "Table": {},
-                "Nodes": {
-                    "path-to": {
-                        "Attributes": {},
-                        "Table": {},
-                        "Nodes": {
-                            "node-with-attrs": {
-                                "Attributes": {
-                                    "Pairs": {"old": "Key", "keys": "Previous Keys"},
-                                    "Retentions": previous_attributes_retentions,
-                                },
-                                "Nodes": {},
-                                "Table": {},
+    previous_tree = ImmutableTree.deserialize(
+        {
+            "Attributes": {},
+            "Table": {},
+            "Nodes": {
+                "path-to": {
+                    "Attributes": {},
+                    "Table": {},
+                    "Nodes": {
+                        "node-with-attrs": {
+                            "Attributes": {
+                                "Pairs": {"old": "Key", "keys": "Previous Keys"},
+                                "Retentions": previous_attributes_retentions,
                             },
-                            "node-with-table": {
-                                "Attributes": {},
-                                "Nodes": {},
-                                "Table": {
-                                    "KeyColumns": ["ident"],
-                                    "Rows": [
-                                        {
-                                            "ident": "Ident 1",
-                                            "old": "Key 1",
-                                            "keys": "Previous Keys 1",
-                                        },
-                                        {
-                                            "ident": "Ident 2",
-                                            "old": "Key 2",
-                                            "keys": "Previous Keys 2",
-                                        },
-                                    ],
-                                    "Retentions": previous_table_retentions,
-                                },
+                            "Nodes": {},
+                            "Table": {},
+                        },
+                        "node-with-table": {
+                            "Attributes": {},
+                            "Nodes": {},
+                            "Table": {
+                                "KeyColumns": ["ident"],
+                                "Rows": [
+                                    {
+                                        "ident": "Ident 1",
+                                        "old": "Key 1",
+                                        "keys": "Previous Keys 1",
+                                    },
+                                    {
+                                        "ident": "Ident 2",
+                                        "old": "Key 2",
+                                        "keys": "Previous Keys 2",
+                                    },
+                                ],
+                                "Retentions": previous_table_retentions,
                             },
                         },
-                    }
-                },
-            }
-        )
+                    },
+                }
+            },
+        }
     )
     items_of_inventory_plugins = [
         ItemsOfInventoryPlugin(
@@ -1227,6 +1225,12 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
     assert check_result.summary == "No data yet, please be patient"
 
 
+def _create_cluster_tree(pairs: Mapping[str, int | float | str | None]) -> MutableTree:
+    tree = MutableTree()
+    tree.add_pairs(path=["software", "applications", "check_mk", "cluster"], pairs=pairs)
+    return tree
+
+
 @pytest.mark.parametrize(
     "inventory_tree, active_check_results",
     [
@@ -1243,44 +1247,7 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
             ],
         ),
         (
-            MutableTree(
-                StructuredDataNode.deserialize(
-                    {
-                        "Attributes": {},
-                        "Table": {},
-                        "Nodes": {
-                            "software": {
-                                "Attributes": {},
-                                "Table": {},
-                                "Nodes": {
-                                    "applications": {
-                                        "Attributes": {},
-                                        "Table": {},
-                                        "Nodes": {
-                                            "check_mk": {
-                                                "Attributes": {},
-                                                "Table": {},
-                                                "Nodes": {
-                                                    "cluster": {
-                                                        "Attributes": {
-                                                            "Pairs": {
-                                                                "is_cluster": True,
-                                                                "foo": "bar",
-                                                            }
-                                                        },
-                                                        "Table": {},
-                                                        "Nodes": {},
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            }
-                        },
-                    }
-                )
-            ),
+            _create_cluster_tree({"is_cluster": True, "foo": "bar"}),
             [
                 ActiveCheckResult(
                     state=1,
@@ -1295,41 +1262,7 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
             ],
         ),
         (
-            MutableTree(
-                StructuredDataNode.deserialize(
-                    {
-                        "Attributes": {},
-                        "Table": {},
-                        "Nodes": {
-                            "software": {
-                                "Attributes": {},
-                                "Table": {},
-                                "Nodes": {
-                                    "applications": {
-                                        "Attributes": {},
-                                        "Table": {},
-                                        "Nodes": {
-                                            "check_mk": {
-                                                "Attributes": {},
-                                                "Table": {},
-                                                "Nodes": {
-                                                    "cluster": {
-                                                        "Attributes": {
-                                                            "Pairs": {"is_cluster": True}
-                                                        },
-                                                        "Table": {},
-                                                        "Nodes": {},
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            }
-                        },
-                    }
-                )
-            ),
+            _create_cluster_tree({"is_cluster": True}),
             [
                 ActiveCheckResult(
                     state=0, summary="No further data for tree update", details=(), metrics=()
@@ -1341,41 +1274,7 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
             ],
         ),
         (
-            MutableTree(
-                StructuredDataNode.deserialize(
-                    {
-                        "Attributes": {},
-                        "Table": {},
-                        "Nodes": {
-                            "software": {
-                                "Attributes": {},
-                                "Table": {},
-                                "Nodes": {
-                                    "applications": {
-                                        "Attributes": {},
-                                        "Table": {},
-                                        "Nodes": {
-                                            "check_mk": {
-                                                "Attributes": {},
-                                                "Table": {},
-                                                "Nodes": {
-                                                    "cluster": {
-                                                        "Attributes": {
-                                                            "Pairs": {"is_cluster": False}
-                                                        },
-                                                        "Table": {},
-                                                        "Nodes": {},
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            }
-                        },
-                    }
-                )
-            ),
+            _create_cluster_tree({"is_cluster": False}),
             [
                 ActiveCheckResult(
                     state=0, summary="No further data for tree update", details=(), metrics=()
@@ -1406,14 +1305,18 @@ def test__check_fetched_data_or_trees_only_cluster_property(
     )
 
 
+def _create_root_tree(pairs: Mapping[str, int | float | str | None]) -> MutableTree:
+    tree = MutableTree()
+    tree.add_pairs(path=[], pairs=pairs)
+    return tree
+
+
 @pytest.mark.parametrize(
     "previous_tree, inventory_tree, update_result, expected_save_tree_actions",
     [
         (
-            ImmutableTree(
-                StructuredDataNode.deserialize(
-                    {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
-                )
+            ImmutableTree.deserialize(
+                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
             ),
             # No further impact, may not be realistic here
             MutableTree(),
@@ -1423,69 +1326,41 @@ def test__check_fetched_data_or_trees_only_cluster_property(
         ),
         (
             ImmutableTree(),
-            MutableTree(
-                StructuredDataNode.deserialize(
-                    {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
-                )
-            ),
+            _create_root_tree({"key": "new value"}),
             # Content of path does not matter here
             UpdateResult(reasons_by_path={("path-to", "node"): []}),
             _SaveTreeActions(do_archive=False, do_save=True),
         ),
         (
-            ImmutableTree(
-                StructuredDataNode.deserialize(
-                    {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
-                )
+            ImmutableTree.deserialize(
+                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
             ),
-            MutableTree(
-                StructuredDataNode.deserialize(
-                    {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
-                )
-            ),
+            _create_root_tree({"key": "new value"}),
             # Content of path does not matter here
             UpdateResult(reasons_by_path={("path-to", "node"): []}),
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
-            ImmutableTree(
-                StructuredDataNode.deserialize(
-                    {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
-                )
+            ImmutableTree.deserialize(
+                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
             ),
-            MutableTree(
-                StructuredDataNode.deserialize(
-                    {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
-                )
-            ),
+            _create_root_tree({"key": "new value"}),
             UpdateResult(),
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
-            ImmutableTree(
-                StructuredDataNode.deserialize(
-                    {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
-                )
+            ImmutableTree.deserialize(
+                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
             ),
-            MutableTree(
-                StructuredDataNode.deserialize(
-                    {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
-                )
-            ),
+            _create_root_tree({"key": "value"}),
             UpdateResult(),
             _SaveTreeActions(do_archive=False, do_save=False),
         ),
         (
-            ImmutableTree(
-                StructuredDataNode.deserialize(
-                    {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
-                )
+            ImmutableTree.deserialize(
+                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
             ),
-            MutableTree(
-                StructuredDataNode.deserialize(
-                    {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
-                )
-            ),
+            _create_root_tree({"key": "value"}),
             # Content of path does not matter here
             UpdateResult(reasons_by_path={("path-to", "node"): []}),
             _SaveTreeActions(do_archive=False, do_save=True),

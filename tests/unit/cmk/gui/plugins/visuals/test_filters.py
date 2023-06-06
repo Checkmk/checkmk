@@ -16,7 +16,7 @@ from tests.unit.cmk.gui.conftest import SetConfig
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.structured_data import ImmutableTree, StructuredDataNode
+from cmk.utils.structured_data import ImmutableTree
 
 import cmk.gui.inventory
 import cmk.gui.plugins.visuals
@@ -1158,11 +1158,11 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
                 ("is_has_inv", "0"),
             ],
             rows=[
-                {"host_inventory": StructuredDataNode.deserialize({})},
-                {"host_inventory": StructuredDataNode.deserialize({"a": "b"})},
+                {"host_inventory": ImmutableTree.deserialize({}).tree},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"}).tree},
             ],
             expected_rows=[
-                {"host_inventory": StructuredDataNode.deserialize({})},
+                {"host_inventory": ImmutableTree.deserialize({}).tree},
             ],
         ),
         # Filter out empty trees (is_has_inv == 1)
@@ -1172,11 +1172,11 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
                 ("is_has_inv", "1"),
             ],
             rows=[
-                {"host_inventory": StructuredDataNode.deserialize({})},
-                {"host_inventory": StructuredDataNode.deserialize({"a": "b"})},
+                {"host_inventory": ImmutableTree.deserialize({}).tree},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"}).tree},
             ],
             expected_rows=[
-                {"host_inventory": StructuredDataNode.deserialize({"a": "b"})},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"}).tree},
             ],
         ),
         # Do not apply filter (is_has_inv == -1)
@@ -1186,12 +1186,12 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
                 ("is_has_inv", "-1"),
             ],
             rows=[
-                {"host_inventory": StructuredDataNode.deserialize({})},
-                {"host_inventory": StructuredDataNode.deserialize({"a": "b"})},
+                {"host_inventory": ImmutableTree.deserialize({}).tree},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"}).tree},
             ],
             expected_rows=[
-                {"host_inventory": StructuredDataNode.deserialize({})},
-                {"host_inventory": StructuredDataNode.deserialize({"a": "b"})},
+                {"host_inventory": ImmutableTree.deserialize({}).tree},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"}).tree},
             ],
         ),
         # Testing base class FilterInvText
@@ -1202,41 +1202,41 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
             ],
             rows=[
                 {
-                    "host_inventory": StructuredDataNode.deserialize(
+                    "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "bla"}}}
-                    )
+                    ).tree
                 },
                 {
-                    "host_inventory": StructuredDataNode.deserialize(
+                    "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "blabla"}}}
-                    )
+                    ).tree
                 },
                 {
-                    "host_inventory": StructuredDataNode.deserialize(
+                    "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "ag blabla"}}}
-                    )
+                    ).tree
                 },
                 {
-                    "host_inventory": StructuredDataNode.deserialize(
+                    "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "blu"}}}
-                    )
+                    ).tree
                 },
             ],
             expected_rows=[
                 {
-                    "host_inventory": StructuredDataNode.deserialize(
+                    "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "bla"}}}
-                    )
+                    ).tree
                 },
                 {
-                    "host_inventory": StructuredDataNode.deserialize(
+                    "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "blabla"}}}
-                    )
+                    ).tree
                 },
                 {
-                    "host_inventory": StructuredDataNode.deserialize(
+                    "host_inventory": ImmutableTree.deserialize(
                         {"software": {"os": {"vendor": "ag blabla"}}}
-                    )
+                    ).tree
                 },
             ],
         ),
@@ -1249,26 +1249,26 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
             ],
             rows=[
                 {
-                    "host_inventory": StructuredDataNode.deserialize(
+                    "host_inventory": ImmutableTree.deserialize(
                         {"hardware": {"cpu": {"bus_speed": 1000000}}}
-                    )
+                    ).tree
                 },
                 {
-                    "host_inventory": StructuredDataNode.deserialize(
+                    "host_inventory": ImmutableTree.deserialize(
                         {"hardware": {"cpu": {"bus_speed": 15000000}}}
-                    )
+                    ).tree
                 },
                 {
-                    "host_inventory": StructuredDataNode.deserialize(
+                    "host_inventory": ImmutableTree.deserialize(
                         {"hardware": {"cpu": {"bus_speed": 21000000}}}
-                    )
+                    ).tree
                 },
             ],
             expected_rows=[
                 {
-                    "host_inventory": StructuredDataNode.deserialize(
+                    "host_inventory": ImmutableTree.deserialize(
                         {"hardware": {"cpu": {"bus_speed": 15000000}}}
-                    )
+                    ).tree
                 },
             ],
         ),

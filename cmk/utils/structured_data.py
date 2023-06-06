@@ -266,6 +266,78 @@ class MutableTree:
 #   '----------------------------------------------------------------------'
 
 
+def _deserialize_legacy_attributes(raw_pairs: Mapping[SDKey, SDValue]) -> Attributes:
+    attributes = Attributes()
+    attributes.add_pairs(raw_pairs)
+    return attributes
+
+
+def _get_default_key_columns(rows: Sequence[Mapping[SDKey, SDValue]]) -> Sequence[SDKey]:
+    return sorted({k for r in rows for k in r})
+
+
+def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> Table:
+    table = Table(key_columns=list(_get_default_key_columns(raw_rows)))
+    table.add_rows(raw_rows)
+    return table
+
+
+def _deserialize_legacy_node(path: SDPath, raw_tree: SDRawTree) -> StructuredDataNode:
+    raw_pairs: dict[SDKey, SDValue] = {}
+    raw_tables: dict[tuple[str, ...], Any] = {}
+    raw_nodes: SDRawTree = {}
+
+    for key, value in raw_tree.items():
+        if isinstance(value, dict):
+            if not value:
+                continue
+            raw_nodes.setdefault((str(key),), value)
+
+        elif isinstance(value, list):
+            if not value:
+                continue
+
+            if all(not isinstance(v, (list, dict)) for row in value for v in row.values()):
+                # Either we get:
+                #   [
+                #       {"column1": "value 11", "column2": "value 12",...},
+                #       {"column1": "value 11", "column2": "value 12",...},
+                #       ...
+                #   ]
+                # Or:
+                #   [
+                #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
+                #       ...
+                #   ]
+                raw_tables.setdefault((str(key),), value)
+                continue
+
+            for idx, entry in enumerate(value):
+                raw_nodes.setdefault((str(key), str(idx)), entry)
+
+        else:
+            raw_pairs.setdefault(key, value)
+
+    node = StructuredDataNode(
+        path=path,
+        attributes=_deserialize_legacy_attributes(raw_pairs),
+    )
+
+    for child_path, raw_rows in raw_tables.items():
+        node.add_node(
+            child_path,
+            StructuredDataNode(table=_deserialize_legacy_table(raw_rows)),
+        )
+
+    for child_path, raw_node in raw_nodes.items():
+        node.add_node(
+            child_path,
+            _deserialize_legacy_node(path + child_path, raw_node),
+        )
+
+    return node
+
+
 def _filter_attributes(attributes: Attributes, filter_func: SDFilterFunc) -> Attributes:
     filtered = Attributes(retentions=attributes.retentions)
     filtered.add_pairs(_get_filtered_dict(attributes.pairs, filter_func))
@@ -513,7 +585,11 @@ class ImmutableTree:
 
     @classmethod
     def deserialize(cls, raw_tree: SDRawTree) -> ImmutableTree:
-        return cls(StructuredDataNode.deserialize(raw_tree))
+        if all(key in raw_tree for key in (ATTRIBUTES_KEY, TABLE_KEY, _NODES_KEY)):
+            tree = StructuredDataNode.deserialize(path=tuple(), raw_tree=raw_tree)
+        else:
+            tree = _deserialize_legacy_node(path=tuple(), raw_tree=raw_tree)
+        return cls(tree)
 
     def serialize(self) -> SDRawTree:
         return self.tree.serialize()
@@ -628,7 +704,7 @@ class ImmutableDeltaTree:
 
     @classmethod
     def deserialize(cls, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-        return cls(DeltaStructuredDataNode.deserialize(raw_tree))
+        return cls(DeltaStructuredDataNode.deserialize(path=tuple(), raw_tree=raw_tree))
 
     def serialize(self) -> SDRawDeltaTree:
         return self.tree.serialize()
@@ -666,7 +742,7 @@ class ImmutableDeltaTree:
 
 def load_tree(filepath: Path) -> ImmutableTree:
     if raw_tree := store.load_object_from_file(filepath, default=None):
-        return ImmutableTree(StructuredDataNode.deserialize(raw_tree))
+        return ImmutableTree.deserialize(raw_tree)
     return ImmutableTree()
 
 
@@ -863,91 +939,17 @@ class StructuredDataNode:
         }
 
     @classmethod
-    def deserialize(cls, raw_tree: SDRawTree) -> StructuredDataNode:
-        if all(key in raw_tree for key in (ATTRIBUTES_KEY, TABLE_KEY, _NODES_KEY)):
-            return cls._deserialize(path=tuple(), raw_tree=raw_tree)
-        return cls._deserialize_legacy(path=tuple(), raw_tree=raw_tree)
-
-    @classmethod
-    def _deserialize(
-        cls,
-        *,
-        path: SDPath,
-        raw_tree: SDRawTree,
-    ) -> StructuredDataNode:
+    def deserialize(cls, *, path: SDPath, raw_tree: SDRawTree) -> StructuredDataNode:
         node = cls(
             path=path,
-            attributes=Attributes.deserialize(raw_attributes=raw_tree[ATTRIBUTES_KEY]),
-            table=Table.deserialize(raw_table=raw_tree[TABLE_KEY]),
+            attributes=Attributes.deserialize(raw_tree[ATTRIBUTES_KEY]),
+            table=Table.deserialize(raw_tree[TABLE_KEY]),
         )
 
         for raw_name, raw_node in raw_tree[_NODES_KEY].items():
             node.add_node(
                 (raw_name,),
-                cls._deserialize(
-                    path=path + (raw_name,),
-                    raw_tree=raw_node,
-                ),
-            )
-
-        return node
-
-    @classmethod
-    def _deserialize_legacy(
-        cls,
-        *,
-        path: SDPath,
-        raw_tree: SDRawTree,
-    ) -> StructuredDataNode:
-        raw_pairs: dict[SDKey, SDValue] = {}
-        raw_tables: dict[tuple[str, ...], Any] = {}
-        raw_nodes: SDRawTree = {}
-
-        for key, value in raw_tree.items():
-            if isinstance(value, dict):
-                if not value:
-                    continue
-                raw_nodes.setdefault((str(key),), value)
-
-            elif isinstance(value, list):
-                if not value:
-                    continue
-
-                if all(not isinstance(v, (list, dict)) for row in value for v in row.values()):
-                    # Either we get:
-                    #   [
-                    #       {"column1": "value 11", "column2": "value 12",...},
-                    #       {"column1": "value 11", "column2": "value 12",...},
-                    #       ...
-                    #   ]
-                    # Or:
-                    #   [
-                    #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
-                    #       ...
-                    #   ]
-                    raw_tables.setdefault((str(key),), value)
-                    continue
-
-                for idx, entry in enumerate(value):
-                    raw_nodes.setdefault((str(key), str(idx)), entry)
-
-            else:
-                raw_pairs.setdefault(key, value)
-
-        node = cls(
-            path=path,
-            attributes=Attributes.deserialize_legacy(raw_pairs=raw_pairs),
-        )
-
-        for child_path, raw_table in raw_tables.items():
-            node.add_node(
-                child_path,
-                cls(table=Table.deserialize_legacy(raw_rows=raw_table)),
-            )
-
-        for child_path, raw_node in raw_nodes.items():
-            node.add_node(
-                child_path, cls._deserialize_legacy(path=path + child_path, raw_tree=raw_node)
+                cls.deserialize(path=path + (raw_name,), raw_tree=raw_node),
             )
 
         return node
@@ -1142,12 +1144,12 @@ class Table:
         return raw_table
 
     @classmethod
-    def deserialize(cls, *, raw_table: SDRawTable) -> Table:
+    def deserialize(cls, raw_table: SDRawTable) -> Table:
         rows = raw_table.get("Rows", [])
         if "KeyColumns" in raw_table:
             key_columns = raw_table["KeyColumns"]
         else:
-            key_columns = cls._get_default_key_columns(rows)
+            key_columns = _get_default_key_columns(rows)
 
         table = cls(
             key_columns=list(key_columns),
@@ -1158,16 +1160,6 @@ class Table:
         )
         table.add_rows(rows)
         return table
-
-    @classmethod
-    def deserialize_legacy(cls, *, raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> Table:
-        table = cls(key_columns=list(cls._get_default_key_columns(raw_rows)))
-        table.add_rows(raw_rows)
-        return table
-
-    @staticmethod
-    def _get_default_key_columns(rows: Sequence[Mapping[SDKey, SDValue]]) -> Sequence[SDKey]:
-        return sorted({k for r in rows for k in r})
 
 
 class Attributes:
@@ -1273,15 +1265,9 @@ class Attributes:
         return raw_attributes
 
     @classmethod
-    def deserialize(cls, *, raw_attributes: SDRawAttributes) -> Attributes:
+    def deserialize(cls, raw_attributes: SDRawAttributes) -> Attributes:
         attributes = cls(retentions=_deserialize_retentions(raw_attributes.get("Retentions")))
         attributes.add_pairs(raw_attributes.get("Pairs", {}))
-        return attributes
-
-    @classmethod
-    def deserialize_legacy(cls, *, raw_pairs: Mapping[SDKey, SDValue]) -> Attributes:
-        attributes = cls()
-        attributes.add_pairs(raw_pairs)
         return attributes
 
 
@@ -1458,25 +1444,14 @@ class DeltaStructuredDataNode:
         }
 
     @classmethod
-    def deserialize(cls, raw_delta_tree: object) -> DeltaStructuredDataNode:
-        return cls._deserialize(path=tuple(), raw_delta_tree=raw_delta_tree)
-
-    @classmethod
-    def _deserialize(cls, *, path: SDPath, raw_delta_tree: object) -> DeltaStructuredDataNode:
-        if not isinstance(raw_delta_tree, dict):
-            raise TypeError()
+    def deserialize(cls, *, path: SDPath, raw_tree: dict) -> DeltaStructuredDataNode:
         return cls(
             path=path,
-            attributes=DeltaAttributes.deserialize(
-                raw_delta_attributes=raw_delta_tree.get("Attributes", {})
-            ),
-            table=DeltaTable.deserialize(raw_delta_table=raw_delta_tree.get("Table", {})),
+            attributes=DeltaAttributes.deserialize(raw_tree.get("Attributes", {})),
+            table=DeltaTable.deserialize(raw_tree.get("Table", {})),
             _nodes={
-                raw_node_name: cls._deserialize(
-                    path=path + (raw_node_name,),
-                    raw_delta_tree=raw_node,
-                )
-                for raw_node_name, raw_node in raw_delta_tree.get("Nodes", {}).items()
+                raw_node_name: cls.deserialize(path=path + (raw_node_name,), raw_tree=raw_node)
+                for raw_node_name, raw_node in raw_tree.get("Nodes", {}).items()
             },
         )
 
@@ -1508,11 +1483,8 @@ class DeltaTable:
         return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
 
     @classmethod
-    def deserialize(cls, *, raw_delta_table: SDRawDeltaTable) -> DeltaTable:
-        return cls(
-            key_columns=raw_delta_table.get("KeyColumns", []),
-            rows=raw_delta_table.get("Rows", []),
-        )
+    def deserialize(cls, raw_table: SDRawDeltaTable) -> DeltaTable:
+        return cls(key_columns=raw_table.get("KeyColumns", []), rows=raw_table.get("Rows", []))
 
     def count_entries(self) -> _SDDeltaCounter:
         counter: _SDDeltaCounter = Counter()
@@ -1538,8 +1510,8 @@ class DeltaAttributes:
         return {"Pairs": self.pairs} if self.pairs else {}
 
     @classmethod
-    def deserialize(cls, *, raw_delta_attributes: SDRawDeltaAttributes) -> DeltaAttributes:
-        return cls(pairs=raw_delta_attributes.get("Pairs", {}))
+    def deserialize(cls, raw_attributes: SDRawDeltaAttributes) -> DeltaAttributes:
+        return cls(pairs=raw_attributes.get("Pairs", {}))
 
     def count_entries(self) -> _SDDeltaCounter:
         return _count_dict_entries(self.pairs)

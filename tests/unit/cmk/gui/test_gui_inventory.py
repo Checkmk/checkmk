@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 
 import cmk.utils
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.structured_data import ImmutableTree, SDPath, StructuredDataNode
+from cmk.utils.structured_data import ImmutableTree, SDPath
 
 import cmk.gui.inventory
 from cmk.gui.inventory import (
@@ -343,22 +343,22 @@ def test__make_filters_from_api_request_paths(
         (
             None,
             {},
-            ImmutableTree(StructuredDataNode.deserialize({"loaded": "tree"})),
+            ImmutableTree.deserialize({"loaded": "tree"}),
         ),
         (
             HostName("hostname"),
             {},
-            ImmutableTree(StructuredDataNode.deserialize({"loaded": "tree"})),
+            ImmutableTree.deserialize({"loaded": "tree"}),
         ),
         (
             HostName("hostname"),
             {"host_structured_status": b""},
-            ImmutableTree(StructuredDataNode.deserialize({"loaded": "tree"})),
+            ImmutableTree.deserialize({"loaded": "tree"}),
         ),
         (
             HostName("hostname"),
             {"host_structured_status": b"{'deserialized': 'tree'}"},
-            ImmutableTree(StructuredDataNode.deserialize({"deserialized": "tree"})),
+            ImmutableTree.deserialize({"deserialized": "tree"}),
         ),
     ],
 )
@@ -369,7 +369,7 @@ def test_load_filtered_and_merged_tree(
         cmk.gui.inventory,
         "_load_tree_from_file",
         (
-            lambda *args, **kw: ImmutableTree(StructuredDataNode.deserialize({"loaded": "tree"}))
+            lambda *args, **kw: ImmutableTree.deserialize({"loaded": "tree"})
             if kw["tree_type"] == "status_data"
             else None
         ),
@@ -378,11 +378,6 @@ def test_load_filtered_and_merged_tree(
     tree = cmk.gui.inventory.load_filtered_and_merged_tree(row)
     assert tree is not None
     assert tree == expected_tree
-
-
-_InvTree = StructuredDataNode.deserialize({"inv": "node"})
-_StatusDataTree = StructuredDataNode.deserialize({"status": "node"})
-_MergedTree = StructuredDataNode.deserialize({"inv": "node", "status": "node"})
 
 
 def test_get_history_empty() -> None:
@@ -402,7 +397,7 @@ def test_get_history_archive_but_no_inv_tree() -> None:
     # history
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )
 
     history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
@@ -418,24 +413,24 @@ def _create_inventory_history() -> None:
     # history
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "1"),
-        StructuredDataNode.deserialize({"inv": "attr-1"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-1"}).serialize(),
     )
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "2"),
-        StructuredDataNode.deserialize({"inv-2": "attr"}).serialize(),
+        ImmutableTree.deserialize({"inv-2": "attr"}).serialize(),
     )
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "3"),
-        StructuredDataNode.deserialize({"inv": "attr-3"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-3"}).serialize(),
     )
     # current tree
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
-        StructuredDataNode.deserialize({"inv": "attr"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr"}).serialize(),
     )
 
 
@@ -544,7 +539,7 @@ def test_load_latest_delta_tree_no_archive_and_inv_tree() -> None:
     # current tree
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
-        StructuredDataNode.deserialize({"inv": "attr"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr"}).serialize(),
     )
 
     delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)
@@ -558,13 +553,13 @@ def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:
     # history
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )
 
     # current tree
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
-        StructuredDataNode.deserialize({"inv": "attr"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr"}).serialize(),
     )
 
     delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)
@@ -578,7 +573,7 @@ def test_load_latest_delta_tree_one_archive_and_no_inv_tree() -> None:
     # history
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )
 
     delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)

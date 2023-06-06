@@ -9,7 +9,6 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.utils.structured_data import (
-    DeltaStructuredDataNode,
     ImmutableDeltaTree,
     ImmutableTree,
     SDKey,
@@ -66,15 +65,9 @@ EXPECTED_INV_KEYS = [
 ]
 
 INV_HIST_ROWS = [
-    cmk.gui.inventory.HistoryEntry(
-        123, 1, 2, 3, ImmutableDeltaTree(DeltaStructuredDataNode.deserialize({}))
-    ),
-    cmk.gui.inventory.HistoryEntry(
-        456, 4, 5, 6, ImmutableDeltaTree(DeltaStructuredDataNode.deserialize({}))
-    ),
-    cmk.gui.inventory.HistoryEntry(
-        789, 7, 8, 9, ImmutableDeltaTree(DeltaStructuredDataNode.deserialize({}))
-    ),
+    cmk.gui.inventory.HistoryEntry(123, 1, 2, 3, ImmutableDeltaTree.deserialize({})),
+    cmk.gui.inventory.HistoryEntry(456, 4, 5, 6, ImmutableDeltaTree.deserialize({})),
+    cmk.gui.inventory.HistoryEntry(789, 7, 8, 9, ImmutableDeltaTree.deserialize({})),
 ]
 
 EXPECTED_INV_HIST_KEYS = [
@@ -838,7 +831,7 @@ def test_row_post_processor() -> None:
             "invorainstance_sid": "sid1",
             "invorainstance_version": "version1",
             "invorainstance_bar": "bar",
-            "host_inventory": StructuredDataNode.deserialize(
+            "host_inventory": ImmutableTree.deserialize(
                 {
                     "Attributes": {},
                     "Nodes": {
@@ -906,7 +899,7 @@ def test_row_post_processor() -> None:
                     },
                     "Table": {},
                 }
-            ),
+            ).tree,
         },
     ]
 
@@ -1005,7 +998,7 @@ def test_row_post_processor() -> None:
                 "invorainstance_sid": "sid1",
                 "invorainstance_version": "version1",
                 "invorainstance_bar": "bar",
-                "host_inventory": StructuredDataNode.deserialize(
+                "host_inventory": ImmutableTree.deserialize(
                     {
                         "Attributes": {},
                         "Nodes": {
@@ -1073,7 +1066,7 @@ def test_row_post_processor() -> None:
                         },
                         "Table": {},
                     }
-                ),
+                ).tree,
                 "JOIN": {
                     "invoradataguardstats_db_unique": {"invoradataguardstats_db_unique": "name1"},
                     "invoraversions_edition": {"invoraversions_edition": "edition1"},

@@ -16,7 +16,6 @@ from cmk.utils.structured_data import (
     _compare_attributes,
     _compare_tables,
     Attributes,
-    DeltaStructuredDataNode,
     ImmutableDeltaTree,
     ImmutableTree,
     MutableTree,
@@ -697,7 +696,8 @@ def test_structured_data_StructuredDataTree_load_from(tree_name: HostName) -> No
 def test_real_save_gzip(tmp_path: Path) -> None:
     host_name = HostName("heute")
     target = tmp_path / "inventory" / str(host_name)
-    tree = MutableTree(StructuredDataNode.deserialize({"node": {"foo": 1, "bär": 2}}))
+    tree = MutableTree()
+    tree.add_pairs(path=["path-to", "node"], pairs={"foo": 1, "bär": 2})
     tree_store = TreeStore(tmp_path / "inventory")
     tree_store.save(host_name=host_name, tree=tree)
 
@@ -1243,7 +1243,7 @@ def test_delta_structured_data_tree_serialization(
     delta_raw_tree = delta_tree.serialize()
     assert isinstance(delta_raw_tree, dict)
 
-    DeltaStructuredDataNode.deserialize(delta_raw_tree)
+    ImmutableDeltaTree.deserialize(delta_raw_tree)
 
 
 @pytest.mark.parametrize(
@@ -1314,7 +1314,7 @@ def test__is_table() -> None:
     #     }
     # }
 
-    tree = StructuredDataNode.deserialize(raw_tree)
+    tree = ImmutableTree.deserialize(raw_tree).tree
 
     idx_node_attr = tree.get_node(("path-to", "idx-node", "0"))
     assert idx_node_attr is not None

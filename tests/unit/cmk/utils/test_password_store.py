@@ -6,6 +6,7 @@
 from pathlib import Path
 
 import pytest
+from cryptography.exceptions import InvalidTag
 
 import cmk.utils.paths
 from cmk.utils import password_store
@@ -111,7 +112,7 @@ def test_obfuscate_with_own_secret() -> None:
     cmk.utils.paths.password_store_secret_file.write_bytes(b"this_will_be_pretty_secure_now.not.")
 
     # Old should not be decryptable anymore
-    with pytest.raises(ValueError, match="MAC check failed"):
+    with pytest.raises(InvalidTag):
         assert password_store._deobfuscate(obfuscated)
 
     # Test encryption and decryption with new key

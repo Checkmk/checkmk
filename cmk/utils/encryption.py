@@ -16,7 +16,7 @@ import re
 import socket
 from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 from Cryptodome.Cipher import AES
 from Cryptodome.Hash import SHA256
@@ -28,6 +28,7 @@ from cryptography.x509.oid import ExtensionOID, NameOID
 from OpenSSL import crypto, SSL
 
 from cmk.utils.crypto.secrets import EncrypterSecret
+from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 from cmk.utils.exceptions import MKGeneralException
 
 OPENSSL_SALTED_MARKER = "Salted__"
@@ -291,23 +292,21 @@ class Encrypter:
     # TODO: This shares almost all the code with PasswordStore, except for the version bytes that
     # are prepended by the store.
 
-    @staticmethod
-    def _cipher(salt: bytes, nonce: bytes) -> Any:  # 'CbcMode', but Cryptodome doesn't expose this
-        key = EncrypterSecret().derive_secret_key(salt)
-        return AES.new(key, AES.MODE_GCM, nonce=nonce)
+    SALT_LENGTH: int = 16
+    NONCE_LENGTH: int = 16
 
     @staticmethod
     def encrypt(value: str) -> bytes:
-        salt = os.urandom(AES.block_size)
-        nonce = os.urandom(AES.block_size)
-        cipher = Encrypter._cipher(salt, nonce)
-        encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
-        return salt + nonce + tag + encrypted
+        salt = os.urandom(Encrypter.SALT_LENGTH)
+        nonce = os.urandom(Encrypter.NONCE_LENGTH)
+        key = EncrypterSecret().derive_secret_key(salt)
+        encrypted = aes_gcm_encrypt(key, nonce, value)
+        return salt + nonce + encrypted.tag + encrypted.ciphertext
 
     @staticmethod
     def decrypt(raw: bytes) -> str:
-        salt, rest = raw[: AES.block_size], raw[AES.block_size :]
-        nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
-        tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
-
-        return Encrypter._cipher(salt, nonce).decrypt_and_verify(encrypted, tag).decode("utf-8")
+        salt, rest = raw[: Encrypter.SALT_LENGTH], raw[Encrypter.SALT_LENGTH :]
+        nonce, rest = rest[: Encrypter.NONCE_LENGTH], rest[Encrypter.NONCE_LENGTH :]
+        tag, encrypted = rest[: TaggedCiphertext.TAG_LENGTH], rest[TaggedCiphertext.TAG_LENGTH :]
+        key = EncrypterSecret().derive_secret_key(salt)
+        return aes_gcm_decrypt(key, nonce, TaggedCiphertext(ciphertext=encrypted, tag=tag))

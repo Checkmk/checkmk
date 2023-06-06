@@ -44,14 +44,13 @@ import sys
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Any, Literal, NoReturn, TypedDict, Union
-
-from Cryptodome.Cipher import AES
+from typing import Literal, NoReturn, TypedDict, Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.crypto.secrets import PasswordStoreSecret
+from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 from cmk.utils.exceptions import MKGeneralException
 
 PasswordLookupType = Literal["password", "store"]
@@ -222,23 +221,21 @@ class PasswordStore:
     VERSION = 0
     VERSION_BYTE_LENGTH = 2
 
-    @staticmethod
-    def _cipher(salt: bytes, nonce: bytes) -> Any:  # 'CbcMode', but Cryptodome doesn't expose this
-        key = PasswordStoreSecret().derive_secret_key(salt)
-        return AES.new(key, AES.MODE_GCM, nonce=nonce)
+    SALT_LENGTH: int = 16
+    NONCE_LENGTH: int = 16
 
     @staticmethod
     def encrypt(value: str) -> bytes:
-        salt = os.urandom(AES.block_size)
-        nonce = os.urandom(AES.block_size)
-        cipher = PasswordStore._cipher(salt, nonce)
-        encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
+        salt = os.urandom(PasswordStore.SALT_LENGTH)
+        nonce = os.urandom(PasswordStore.NONCE_LENGTH)
+        key = PasswordStoreSecret().derive_secret_key(salt)
+        encrypted = aes_gcm_encrypt(key, nonce, value)
         return (
             PasswordStore.VERSION.to_bytes(PasswordStore.VERSION_BYTE_LENGTH, byteorder="big")
             + salt
             + nonce
-            + tag
-            + encrypted
+            + encrypted.tag
+            + encrypted.ciphertext
         )
 
     @staticmethod
@@ -247,11 +244,11 @@ class PasswordStore:
             raw[: PasswordStore.VERSION_BYTE_LENGTH],
             raw[PasswordStore.VERSION_BYTE_LENGTH :],
         )
-        salt, rest = rest[: AES.block_size], rest[AES.block_size :]
-        nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
-        tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
-
-        return PasswordStore._cipher(salt, nonce).decrypt_and_verify(encrypted, tag).decode("utf-8")
+        salt, rest = rest[: PasswordStore.SALT_LENGTH], rest[PasswordStore.SALT_LENGTH :]
+        nonce, rest = rest[: PasswordStore.NONCE_LENGTH], rest[PasswordStore.NONCE_LENGTH :]
+        tag, encrypted = rest[: TaggedCiphertext.TAG_LENGTH], rest[TaggedCiphertext.TAG_LENGTH :]
+        key = PasswordStoreSecret().derive_secret_key(salt)
+        return aes_gcm_decrypt(key, nonce, TaggedCiphertext(ciphertext=encrypted, tag=tag))
 
 
 _obfuscate = PasswordStore.encrypt

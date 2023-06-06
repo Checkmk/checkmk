@@ -139,6 +139,7 @@ RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-freetds.sh link-only
 RUN /opt/install-bazel.sh link-only
+RUN /opt/install-rust-cargo.sh link-only
 
 # Install non cached dependencies
 RUN /opt/install-pipenv.sh

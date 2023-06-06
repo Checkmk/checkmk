@@ -146,6 +146,7 @@ RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-rust-cargo.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
 # in the next step
@@ -171,6 +172,7 @@ RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-freetds.sh link-only
 RUN /opt/install-bazel.sh link-only
+RUN /opt/install-rust-cargo.sh link-only
 
 # Install non cached dependencies
 RUN /opt/install-pipenv.sh

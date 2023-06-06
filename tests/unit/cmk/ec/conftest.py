@@ -12,13 +12,14 @@ import pytest
 import cmk.utils.paths
 
 import cmk.ec.export as ec
-from cmk.ec.config import Config, ConfigFromWATO
+from cmk.ec.config import Config
 from cmk.ec.history import History
 from cmk.ec.main import (
     default_slave_status_master,
     ECLock,
     EventServer,
     EventStatus,
+    make_config,
     Perfcounters,
     SlaveStatus,
     StatusServer,
@@ -49,8 +50,8 @@ def fixture_slave_status() -> SlaveStatus:
 
 
 @pytest.fixture(name="config")
-def fixture_config() -> ConfigFromWATO:
-    return ec.default_config()
+def fixture_config() -> Config:
+    return make_config(ec.default_config())
 
 
 @pytest.fixture(name="history")

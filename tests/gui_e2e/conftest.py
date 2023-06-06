@@ -21,7 +21,7 @@ username = "cmkadmin"
 password = "cmk"
 
 
-@pytest.fixture(name="test_site", scope="session", autouse=True)
+@pytest.fixture(name="test_site", scope="session")
 def site() -> Generator:
     logger.info("Setting up testsite")
     reuse = os.environ.get("REUSE")

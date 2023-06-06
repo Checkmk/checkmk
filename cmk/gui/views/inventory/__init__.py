@@ -1228,30 +1228,23 @@ def _register_node_painter(name: str, hints: DisplayHints) -> None:
             "sorter": name,
             "paint": lambda row: _paint_host_inventory_tree(row, hints),
             "export_for_python": lambda row, cell: (
-                node.serialize()
-                if (node := _compute_node_painter_data(row, hints.abc_path))
-                else {}
+                _compute_node_painter_data(row, hints.abc_path).serialize()
             ),
             "export_for_csv": lambda row, cell: _export_node_for_csv(),
             "export_for_json": lambda row, cell: (
-                node.serialize()
-                if (node := _compute_node_painter_data(row, hints.abc_path))
-                else {}
+                _compute_node_painter_data(row, hints.abc_path).serialize()
             ),
         },
     )
 
 
-def _compute_node_painter_data(row: Row, path: SDPath) -> StructuredDataNode | None:
+def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
-        return None
+        return ImmutableTree()
 
-    if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
-        return None
-
-    return ImmutableTree(tree).get_tree(path).tree
+    return ImmutableTree(row.get("host_inventory")).get_tree(path)
 
 
 def _paint_host_inventory_tree(row: Row, hints: DisplayHints) -> CellSpec:
@@ -1266,7 +1259,7 @@ def _paint_host_inventory_tree(row: Row, hints: DisplayHints) -> CellSpec:
     )
 
     with output_funnel.plugged():
-        tree_renderer.show(node, hints)
+        tree_renderer.show(node.tree, hints)
         code = HTML(output_funnel.drain())
 
     return "invtree", code

@@ -65,9 +65,9 @@ EXPECTED_INV_KEYS = [
 ]
 
 INV_HIST_ROWS = [
-    cmk.gui.inventory.HistoryEntry(123, 1, 2, 3, ImmutableDeltaTree.deserialize({})),
-    cmk.gui.inventory.HistoryEntry(456, 4, 5, 6, ImmutableDeltaTree.deserialize({})),
-    cmk.gui.inventory.HistoryEntry(789, 7, 8, 9, ImmutableDeltaTree.deserialize({})),
+    cmk.gui.inventory.HistoryEntry(123, 1, 2, 3, ImmutableDeltaTree()),
+    cmk.gui.inventory.HistoryEntry(456, 4, 5, 6, ImmutableDeltaTree()),
+    cmk.gui.inventory.HistoryEntry(789, 7, 8, 9, ImmutableDeltaTree()),
 ]
 
 EXPECTED_INV_HIST_KEYS = [

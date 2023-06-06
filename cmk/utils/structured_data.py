@@ -22,11 +22,6 @@ from cmk.utils import store
 from cmk.utils.type_defs import HostName
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
-# TODO improve this
-SDRawTree = dict
-
-
-SDRawDeltaTree = dict
 
 SDNodeName = str
 SDPath = tuple[SDNodeName, ...]
@@ -35,11 +30,6 @@ SDKey = str
 # TODO be more specific (None, str, float, int, DeltaValue:Tuple of previous)
 SDValue = Any  # needs only to support __eq__
 SDRowIdent = tuple[SDValue, ...]
-
-# Used for de/serialization and retentions
-ATTRIBUTES_KEY = "Attributes"
-TABLE_KEY = "Table"
-_NODES_KEY = "Nodes"
 
 
 class SDRawAttributes(TypedDict, total=False):
@@ -53,6 +43,12 @@ class SDRawTable(TypedDict, total=False):
     Retentions: Mapping[SDRowIdent, Mapping[SDKey, tuple[int, int, int]]]
 
 
+class SDRawTree(TypedDict):
+    Attributes: SDRawAttributes
+    Table: SDRawTable
+    Nodes: Mapping[SDNodeName, SDRawTree]
+
+
 class SDRawDeltaAttributes(TypedDict, total=False):
     Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
 
@@ -60,6 +56,12 @@ class SDRawDeltaAttributes(TypedDict, total=False):
 class SDRawDeltaTable(TypedDict, total=False):
     KeyColumns: Sequence[SDKey]
     Rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
+
+
+class SDRawDeltaTree(TypedDict):
+    Attributes: SDRawDeltaAttributes
+    Table: SDRawDeltaTable
+    Nodes: Mapping[SDNodeName, SDRawDeltaTree]
 
 
 class _RawIntervalFromConfigMandatory(TypedDict):
@@ -282,10 +284,10 @@ def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> Ta
     return table
 
 
-def _deserialize_legacy_node(path: SDPath, raw_tree: SDRawTree) -> StructuredDataNode:
+def _deserialize_legacy_node(path: SDPath, raw_tree: Mapping[str, object]) -> StructuredDataNode:
     raw_pairs: dict[SDKey, SDValue] = {}
-    raw_tables: dict[tuple[str, ...], Any] = {}
-    raw_nodes: SDRawTree = {}
+    raw_tables: dict[SDPath, list[dict]] = {}
+    raw_nodes: dict[SDPath, dict] = {}
 
     for key, value in raw_tree.items():
         if isinstance(value, dict):
@@ -584,12 +586,22 @@ class ImmutableTree:
         self.tree: Final = StructuredDataNode() if tree is None else tree
 
     @classmethod
-    def deserialize(cls, raw_tree: SDRawTree) -> ImmutableTree:
-        if all(key in raw_tree for key in (ATTRIBUTES_KEY, TABLE_KEY, _NODES_KEY)):
-            tree = StructuredDataNode.deserialize(path=tuple(), raw_tree=raw_tree)
-        else:
-            tree = _deserialize_legacy_node(path=tuple(), raw_tree=raw_tree)
-        return cls(tree)
+    def deserialize(cls, raw_tree: Mapping) -> ImmutableTree:
+        try:
+            raw_attributes = raw_tree["Attributes"]
+            raw_table = raw_tree["Table"]
+            raw_nodes = raw_tree["Nodes"]
+        except KeyError:
+            return cls(_deserialize_legacy_node(path=tuple(), raw_tree=raw_tree))
+
+        return cls(
+            tree=StructuredDataNode.deserialize(
+                path=tuple(),
+                raw_attributes=raw_attributes,
+                raw_table=raw_table,
+                raw_nodes=raw_nodes,
+            )
+        )
 
     def serialize(self) -> SDRawTree:
         return self.tree.serialize()
@@ -933,23 +945,35 @@ class StructuredDataNode:
 
     def serialize(self) -> SDRawTree:
         return {
-            ATTRIBUTES_KEY: self.attributes.serialize(),
-            TABLE_KEY: self.table.serialize(),
-            _NODES_KEY: {name: node.serialize() for name, node in self._nodes.items()},
+            "Attributes": self.attributes.serialize(),
+            "Table": self.table.serialize(),
+            "Nodes": {name: node.serialize() for name, node in self._nodes.items()},
         }
 
     @classmethod
-    def deserialize(cls, *, path: SDPath, raw_tree: SDRawTree) -> StructuredDataNode:
+    def deserialize(
+        cls,
+        *,
+        path: SDPath,
+        raw_attributes: SDRawAttributes,
+        raw_table: SDRawTable,
+        raw_nodes: Mapping[SDNodeName, SDRawTree],
+    ) -> StructuredDataNode:
         node = cls(
             path=path,
-            attributes=Attributes.deserialize(raw_tree[ATTRIBUTES_KEY]),
-            table=Table.deserialize(raw_tree[TABLE_KEY]),
+            attributes=Attributes.deserialize(raw_attributes),
+            table=Table.deserialize(raw_table),
         )
 
-        for raw_name, raw_node in raw_tree[_NODES_KEY].items():
+        for raw_name, raw_node in raw_nodes.items():
             node.add_node(
                 (raw_name,),
-                cls.deserialize(path=path + (raw_name,), raw_tree=raw_node),
+                cls.deserialize(
+                    path=path + (raw_name,),
+                    raw_attributes=raw_node["Attributes"],
+                    raw_table=raw_node["Table"],
+                    raw_nodes=raw_node["Nodes"],
+                ),
             )
 
         return node
@@ -1444,14 +1468,17 @@ class DeltaStructuredDataNode:
         }
 
     @classmethod
-    def deserialize(cls, *, path: SDPath, raw_tree: dict) -> DeltaStructuredDataNode:
+    def deserialize(cls, *, path: SDPath, raw_tree: SDRawDeltaTree) -> DeltaStructuredDataNode:
         return cls(
             path=path,
-            attributes=DeltaAttributes.deserialize(raw_tree.get("Attributes", {})),
-            table=DeltaTable.deserialize(raw_tree.get("Table", {})),
+            attributes=DeltaAttributes.deserialize(raw_attributes=raw_tree["Attributes"]),
+            table=DeltaTable.deserialize(raw_table=raw_tree["Table"]),
             _nodes={
-                raw_node_name: cls.deserialize(path=path + (raw_node_name,), raw_tree=raw_node)
-                for raw_node_name, raw_node in raw_tree.get("Nodes", {}).items()
+                raw_node_name: cls.deserialize(
+                    path=path + (raw_node_name,),
+                    raw_tree=raw_node,
+                )
+                for raw_node_name, raw_node in raw_tree["Nodes"].items()
             },
         )
 

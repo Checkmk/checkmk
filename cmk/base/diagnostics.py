@@ -58,7 +58,7 @@ from cmk.utils.i18n import _
 from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.log import console, section
 from cmk.utils.site import omd_site
-from cmk.utils.structured_data import load_tree
+from cmk.utils.structured_data import load_tree, SDRawTree
 from cmk.utils.type_defs import HostName, UserId
 
 if cmk_version.is_enterprise_edition():
@@ -695,7 +695,7 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "(Agent plugin mk_inventory needs to be installed)"
         )
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self) -> SDRawTree:
         checkmk_server_name = get_checkmk_server_name()
         if checkmk_server_name is None:
             raise DiagnosticsElementError("No Checkmk server found")

@@ -96,8 +96,10 @@ call :clean
 call :set_wnx_version
 if "%arg_build%" == "1" call %cur_dir%\scripts\clean_artifacts.cmd
 if "%arg_build%" == "1" call scripts\unpack_packs.cmd
-if "%arg_build%" == "1" make install_extlibs
+if "%arg_build%" == "1" make install_extlibs || ( powershell Write-Host "Failed to install packages" -Foreground Red & call :halt 33 )
 call :build_windows_agent
+
+
 
 :: arg_test
 call :unit_test

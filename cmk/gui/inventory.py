@@ -11,7 +11,7 @@ import os
 import shutil
 import time
 import xml.dom.minidom
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import auto, Enum
 from pathlib import Path
@@ -35,6 +35,7 @@ from cmk.utils.structured_data import (
     SDFilterFunc,
     SDKey,
     SDPath,
+    SDRawTree,
 )
 from cmk.utils.type_defs import HostName
 
@@ -141,24 +142,17 @@ def _make_filters_from_permitted_paths(
     return [_make_filter(entry) for entry in permitted_paths if entry]
 
 
-def load_filtered_and_merged_tree(row: Row) -> ImmutableTree | None:
+def load_filtered_and_merged_tree(row: Row) -> ImmutableTree:
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
     host_name = row.get("host_name")
     inventory_tree = _load_tree_from_file(tree_type="inventory", host_name=host_name)
-    status_data_tree: ImmutableTree | None
     if raw_status_data_tree := row.get("host_structured_status"):
         status_data_tree = ImmutableTree.deserialize(
             ast.literal_eval(raw_status_data_tree.decode("utf-8"))
         )
     else:
         status_data_tree = _load_tree_from_file(tree_type="status_data", host_name=host_name)
-
-    if inventory_tree is None:
-        return status_data_tree
-
-    if status_data_tree is None:
-        return inventory_tree
 
     merged_tree = inventory_tree.merge(status_data_tree)
     if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
@@ -264,7 +258,7 @@ class FilterInventoryHistoryPathsError(Exception):
     pass
 
 
-def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree | None:
+def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
     def _get_latest_timestamps(
         tree_paths: Sequence[InventoryHistoryPath],
     ) -> FilteredInventoryHistoryPaths:
@@ -281,15 +275,13 @@ def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree | None:
         hostname,
         filter_tree_paths=_get_latest_timestamps,
     )
-    if not delta_history:
-        return None
-    return delta_history[0].delta_tree
+    return delta_history[0].delta_tree if delta_history else ImmutableDeltaTree()
 
 
 def load_delta_tree(
     hostname: HostName,
     timestamp: int,
-) -> tuple[ImmutableDeltaTree | None, Sequence[str]]:
+) -> tuple[ImmutableDeltaTree, Sequence[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
@@ -320,9 +312,11 @@ def load_delta_tree(
             filter_tree_paths, timestamp
         ),
     )
-    if not delta_history:
-        return None, []
-    return delta_history[0].delta_tree, corrupted_history_files
+    return (
+        (delta_history[0].delta_tree, corrupted_history_files)
+        if delta_history
+        else (ImmutableDeltaTree(), [])
+    )
 
 
 def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
@@ -547,14 +541,14 @@ class LoadStructuredDataError(MKException):
 @request_memoize(maxsize=None)
 def _load_tree_from_file(
     *, tree_type: Literal["inventory", "status_data"], host_name: HostName | None
-) -> ImmutableTree | None:
+) -> ImmutableTree:
     """Load data of a host, cache it in the current HTTP request"""
     if not host_name:
-        return None
+        return ImmutableTree()
 
     if "/" in host_name:
         # just for security reasons
-        return None
+        return ImmutableTree()
 
     try:
         return load_tree(
@@ -638,33 +632,25 @@ def check_for_valid_hostname(hostname: HostName) -> None:
     )
 
 
+class _HostInvAPIResponse(TypedDict):
+    result_code: Literal[0, 1]
+    result: str | Mapping[str, SDRawTree]
+
+
 @cmk.gui.pages.register("host_inv_api")
 def page_host_inv_api() -> None:
-    # The response is always a top level dict with two elements:
-    # a) result_code - This is 0 for expected processing and 1 for an error
-    # b) result      - In case of an error this is the error message, a UTF-8 encoded string.
-    #                  In case of success this is a dictionary containing the host inventory.
+    resp: _HostInvAPIResponse
     try:
         api_request = request.get_request()
-        # The user can either specify a single host or provide a list of host names. In case
-        # multiple hosts are handled, there is a top level dict added with "host > invdict" pairs
-        hosts = api_request.get("hosts")
-        if hosts:
-            result = {}
-            for a_host_name in hosts:
-                check_for_valid_hostname(a_host_name)
-                result[a_host_name] = inventory_of_host(a_host_name, api_request)
-
-        else:
-            host_name = api_request.get("host")
-            if host_name is None:
+        if not (hosts := api_request.get("hosts")):
+            if (host_name := api_request.get("host")) is None:
                 raise MKUserError("host", _('You need to provide a "host".'))
-            check_for_valid_hostname(host_name)
+            hosts = [host_name]
 
-            result = inventory_of_host(host_name, api_request)
-
-            if not result and not has_inventory(host_name):
-                raise MKGeneralException(_("Found no inventory data for this host."))
+        result: dict[str, SDRawTree] = {}
+        for a_host_name in hosts:
+            check_for_valid_hostname(a_host_name)
+            result[a_host_name] = inventory_of_host(a_host_name, api_request)
 
         resp = {"result_code": 0, "result": result}
 
@@ -717,15 +703,12 @@ def _make_filters_from_api_request_paths(api_request_paths: Sequence[str]) -> Se
     ]
 
 
-def inventory_of_host(host_name: HostName, api_request):  # type: ignore[no-untyped-def]
+def inventory_of_host(host_name: HostName, api_request) -> SDRawTree:  # type: ignore[no-untyped-def]
     raw_site = api_request.get("site")
     site = livestatus.SiteId(raw_site) if raw_site is not None else None
     verify_permission(host_name, site)
 
-    row = get_status_data_via_livestatus(site, host_name)
-    if (tree := load_filtered_and_merged_tree(row)) is None:
-        return {}
-
+    tree = load_filtered_and_merged_tree(get_status_data_via_livestatus(site, host_name))
     if "paths" in api_request:
         return tree.filter(_make_filters_from_api_request_paths(api_request["paths"])).serialize()
 

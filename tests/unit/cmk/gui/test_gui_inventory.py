@@ -371,13 +371,11 @@ def test_load_filtered_and_merged_tree(
         (
             lambda *args, **kw: ImmutableTree.deserialize({"loaded": "tree"})
             if kw["tree_type"] == "status_data"
-            else None
+            else ImmutableTree()
         ),
     )
     row.update({"host_name": hostname})
-    tree = cmk.gui.inventory.load_filtered_and_merged_tree(row)
-    assert tree is not None
-    assert tree == expected_tree
+    assert cmk.gui.inventory.load_filtered_and_merged_tree(row) == expected_tree
 
 
 def test_get_history_empty() -> None:
@@ -542,9 +540,7 @@ def test_load_latest_delta_tree_no_archive_and_inv_tree() -> None:
         ImmutableTree.deserialize({"inv": "attr"}).serialize(),
     )
 
-    delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)
-
-    assert delta_tree is None
+    assert not cmk.gui.inventory.load_latest_delta_tree(hostname)
 
 
 def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:

@@ -1440,7 +1440,9 @@ class RowTableInventory(ABCRowTable):
 
     def _get_inv_data(self, hostrow: Row) -> Sequence[Mapping[SDKey, SDValue]]:
         try:
-            tree = inventory.load_filtered_and_merged_tree(hostrow)
+            return inventory.load_filtered_and_merged_tree(hostrow).get_rows(
+                self._inventory_path.path
+            )
         except inventory.LoadStructuredDataError:
             user_errors.add(
                 MKUserError(
@@ -1450,11 +1452,6 @@ class RowTableInventory(ABCRowTable):
                 )
             )
             return []
-
-        if tree is None:
-            return []
-
-        return tree.get_rows(self._inventory_path.path)
 
     def _prepare_rows(self, inv_data: Sequence[Mapping[SDKey, SDValue]]) -> Iterable[Row]:
         return (
@@ -2384,7 +2381,7 @@ def ajax_inv_render_tree() -> None:
     tree_id = request.get_ascii_input("tree_id", "")
     show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
 
-    tree: ImmutableTree | ImmutableDeltaTree | None
+    tree: ImmutableTree | ImmutableDeltaTree
     if tree_id:
         tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id[1:]))
         if corrupted_history_files:
@@ -2423,15 +2420,9 @@ def ajax_inv_render_tree() -> None:
             show_internal_tree_paths=show_internal_tree_paths,
         )
 
-    if tree is None:
-        html.show_error(_("No such inventory tree."))
-        return
-
     inventory_path = inventory.InventoryPath.parse(raw_path or "")
     if not (node := tree.get_tree(inventory_path.path)):
-        html.show_error(
-            _("Invalid path in inventory tree: '%s' >> %s") % (raw_path, repr(inventory_path.path))
-        )
+        html.show_error(_("No such tree below %r") % inventory_path.path)
         return
 
     tree_renderer.show(node.tree, DISPLAY_HINTS.get_hints(node.tree.path))

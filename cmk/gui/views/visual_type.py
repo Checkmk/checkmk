@@ -136,22 +136,22 @@ def _has_inventory_tree(
     except LoadStructuredDataError:
         return False
 
-    return inventory_tree is not None and bool(inventory_tree.get_tree(path))
+    return bool(inventory_tree.get_tree(path))
 
 
 def _get_inventory_tree(
     is_history: bool, hostname: HostName, site_id: SiteId
-) -> ImmutableTree | ImmutableDeltaTree | None:
-    inventory_tree_cache = g.setdefault("inventory_tree_cache", {})
-    cache_id = (is_history, hostname, site_id)
-    if cache_id in inventory_tree_cache:
-        return inventory_tree_cache[cache_id]
+) -> ImmutableTree | ImmutableDeltaTree:
+    tree_cache = g.setdefault("inventory_tree_cache", {})
 
-    inventory_tree = (
+    cache_id = (is_history, hostname, site_id)
+    if cache_id in tree_cache:
+        return tree_cache[cache_id]
+
+    tree: ImmutableTree | ImmutableDeltaTree = (
         load_latest_delta_tree(hostname)
         if is_history
         else load_filtered_and_merged_tree(get_status_data_via_livestatus(site_id, hostname))
     )
-
-    inventory_tree_cache[cache_id] = inventory_tree
-    return inventory_tree
+    tree_cache[cache_id] = tree
+    return tree

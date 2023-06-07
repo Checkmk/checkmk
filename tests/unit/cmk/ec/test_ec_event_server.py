@@ -16,21 +16,21 @@ from cmk.ec.defaults import default_rule_pack
 from cmk.ec.main import Event, EventServer
 from cmk.ec.rule_matcher import Rule
 
-RULE: Rule = {
-    "actions": [],
-    "actions_in_downtime": True,
-    "autodelete": False,
-    "cancel_action_phases": "always",
-    "cancel_actions": [],
-    "comment": "",
-    "description": "",
-    "disabled": False,
-    "docu_url": "",
-    "id": "patterns",
-    "invert_matching": False,
-    "sl": ServiceLevel(precedence="message", value=0),
-    "state": ("text_pattern", {"1": "supercrit", "2": "superwarn"}),
-}
+RULE = Rule(
+    actions=[],
+    actions_in_downtime=True,
+    autodelete=False,
+    cancel_action_phases="always",
+    cancel_actions=[],
+    comment="",
+    description="",
+    disabled=False,
+    docu_url="",
+    id="patterns",
+    invert_matching=False,
+    sl=ServiceLevel(precedence="message", value=0),
+    state=("text_pattern", {"1": "supercrit", "2": "superwarn"}),
+)
 
 
 @pytest.fixture

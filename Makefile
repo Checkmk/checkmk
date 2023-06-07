@@ -30,14 +30,21 @@ CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
 CONFIG_DEPS        := ar-lib compile config.guess config.sub install-sh missing depcomp configure
 DIST_DEPS          := $(CONFIG_DEPS)
 
-LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
-                      api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
-                      src/{Makefile.am,{,test/}*.{cc,h}} src/livestatus standalone/config_files.m4
+LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
+                      api/c++/{Makefile,*.{h,cc}} \
+                      api/perl/* \
+                      api/python/{README,*.py} \
+                      {nagios,nagios4}/{README,*.h} \
+                      src/Makefile.am \
+                      src/*.{cc,h} \
+                      src/src/*.cc \
+                      src/test/*.{cc,h}
 
 FILES_TO_FORMAT_LINUX := \
                       $(filter-out %.pb.cc %.pb.h, \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
+                      $(wildcard livestatus/src/src/*.cc) \
                       $(wildcard $(addprefix livestatus/src/test/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/,*.cc *.h)) \
@@ -205,13 +212,14 @@ $(CHECK_MK_ANNOUNCE_TAR): $(CHECK_MK_ANNOUNCE_TXT) $(CHECK_MK_ANNOUNCE_MD)
 packages:
 	$(MAKE) -C agents packages
 
+
 # NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
 # so we do things in a slightly complicated way.
 $(LIVESTATUS_INTERMEDIATE_ARCHIVE):
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
-	tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
-	tar chf - $(TAROPTS) --exclude=build packages/livestatus third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
+	set -o pipefail; tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
+	set -o pipefail; tar chf - $(TAROPTS) --exclude=build packages/livestatus third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac defines.make m4 mk-livestatus-$(VERSION)
 	cd mk-livestatus-$(VERSION) && \
 	    autoreconf --install --include=m4 && \

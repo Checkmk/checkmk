@@ -37,7 +37,7 @@ def run_make_targets(Map args) {
                     // TODO preprocess values in top level scripts
                     def versioning = load "${checkout_dir}/buildscripts/scripts/utils/versioning.groovy"
                     def artifacts_helper = load "${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy"
-                    def image_version = args.VERSION == "git" ? "${build_date}" : args.cmk_version;
+                    def image_version = args.VERSION == "git" ? "${args.BRANCH}:${build_date}" : args.cmk_version;
 
                     // TODO make independent from WORKSPACE
                     sh("rm -rf \"${WORKSPACE}/packages\"")

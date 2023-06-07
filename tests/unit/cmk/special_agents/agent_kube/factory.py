@@ -23,6 +23,7 @@ from pydantic_factories import ModelFactory, Use
 
 import cmk.special_agents.utils_kubernetes.agent_handlers.daemonset
 import cmk.special_agents.utils_kubernetes.agent_handlers.deployment
+import cmk.special_agents.utils_kubernetes.agent_handlers.statefulset
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_api
 from cmk.special_agents.utils_kubernetes.api_server import APIData
@@ -174,8 +175,8 @@ class APIStatefulSetFactory(ModelFactory):
 
 def api_to_agent_statefulset(
     api_statefulset: api.StatefulSet, pods: Sequence[api.Pod] = ()
-) -> agent.StatefulSet:
-    return agent.StatefulSet(
+) -> cmk.special_agents.utils_kubernetes.agent_handlers.statefulset.StatefulSet:
+    return cmk.special_agents.utils_kubernetes.agent_handlers.statefulset.StatefulSet(
         metadata=api_statefulset.metadata,
         spec=api_statefulset.spec,
         status=api_statefulset.status,

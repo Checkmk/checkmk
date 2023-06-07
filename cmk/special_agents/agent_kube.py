@@ -40,7 +40,7 @@ import cmk.utils.profile
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
-from cmk.special_agents.utils_kubernetes.agent_handlers import daemonset, deployment
+from cmk.special_agents.utils_kubernetes.agent_handlers import daemonset, deployment, statefulset
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationNonPatternOption,
     AnnotationOption,
@@ -50,10 +50,10 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     pod_name,
     pod_resources_from_api_pods,
     PodOwner,
-    thin_containers,
 )
 from cmk.special_agents.utils_kubernetes.agent_handlers.daemonset import DaemonSet
 from cmk.special_agents.utils_kubernetes.agent_handlers.deployment import Deployment
+from cmk.special_agents.utils_kubernetes.agent_handlers.statefulset import StatefulSet
 from cmk.special_agents.utils_kubernetes.api_server import APIData, from_kubernetes
 from cmk.special_agents.utils_kubernetes.common import (
     LOGGER,
@@ -309,44 +309,6 @@ def controller_strategy(controller: Deployment | DaemonSet | StatefulSet) -> sec
 
 def controller_spec(controller: Deployment | DaemonSet | StatefulSet) -> section.ControllerSpec:
     return section.ControllerSpec(min_ready_seconds=controller.spec.min_ready_seconds)
-
-
-@dataclass(frozen=True)
-class StatefulSet(PodOwner):
-    metadata: api.MetaData
-    spec: api.StatefulSetSpec
-    status: api.StatefulSetStatus
-    type_: str = "statefulset"
-
-
-def statefulset_replicas(statefulset: StatefulSet) -> section.StatefulSetReplicas:
-    return section.StatefulSetReplicas(
-        desired=statefulset.spec.replicas,
-        ready=statefulset.status.ready_replicas,
-        updated=statefulset.status.updated_replicas,
-        available=statefulset.status.available_replicas,
-    )
-
-
-def statefulset_info(
-    statefulset: StatefulSet,
-    cluster_name: str,
-    kubernetes_cluster_hostname: str,
-    annotation_key_pattern: AnnotationOption,
-) -> section.StatefulSetInfo:
-    return section.StatefulSetInfo(
-        name=statefulset.metadata.name,
-        namespace=statefulset.metadata.namespace,
-        creation_timestamp=statefulset.metadata.creation_timestamp,
-        labels=statefulset.metadata.labels,
-        annotations=filter_annotations_by_key_pattern(
-            statefulset.metadata.annotations, annotation_key_pattern
-        ),
-        selector=statefulset.spec.selector,
-        containers=thin_containers(statefulset.pods),
-        cluster=cluster_name,
-        kubernetes_cluster_hostname=kubernetes_cluster_hostname,
-    )
 
 
 @dataclass(frozen=True)
@@ -1353,7 +1315,7 @@ def create_statefulset_api_sections(
         WriteableSection(
             piggyback_name=piggyback_name,
             section_name=SectionName("kube_statefulset_info_v1"),
-            section=statefulset_info(
+            section=statefulset.info(
                 api_statefulset,
                 host_settings.cluster_name,
                 host_settings.kubernetes_cluster_hostname,
@@ -1373,7 +1335,7 @@ def create_statefulset_api_sections(
         WriteableSection(
             piggyback_name=piggyback_name,
             section_name=SectionName("kube_statefulset_replicas_v1"),
-            section=statefulset_replicas(api_statefulset),
+            section=statefulset.replicas(api_statefulset),
         ),
     )
 
@@ -2101,22 +2063,24 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
 
             if MonitoredObject.statefulsets in arguments.monitored_objects:
                 LOGGER.info("Write StatefulSets sections based on API data")
-                for statefulset in kube_objects_from_namespaces(
+                for api_statefulset in kube_objects_from_namespaces(
                     composed_entities.statefulsets, monitored_namespace_names
                 ):
-                    statefulset_piggyback_name = piggyback_formatter(statefulset)
+                    statefulset_piggyback_name = piggyback_formatter(api_statefulset)
                     statefulset_sections = create_statefulset_api_sections(
-                        statefulset,
+                        api_statefulset,
                         host_settings=checkmk_host_settings,
                         piggyback_name=statefulset_piggyback_name,
                     )
                     if MonitoredObject.pvcs in arguments.monitored_objects:
-                        statefulset_namespace = kube_object_namespace_name(statefulset)
+                        statefulset_namespace = kube_object_namespace_name(api_statefulset)
                         statefulset_sections = chain(
                             statefulset_sections,
                             create_pvc_sections(
                                 piggyback_name=statefulset_piggyback_name,
-                                attached_pvc_names=attached_pvc_names_from_pods(statefulset.pods),
+                                attached_pvc_names=attached_pvc_names_from_pods(
+                                    api_statefulset.pods
+                                ),
                                 api_pvcs=namespace_grouped_api_pvcs.get(statefulset_namespace, {}),
                                 api_pvs=api_persistent_volumes,
                                 attached_volumes=namespaced_grouped_attached_volumes.get(

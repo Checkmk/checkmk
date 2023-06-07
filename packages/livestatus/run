@@ -187,7 +187,7 @@ run_build() {
     # collect all (re-)compiled sources for later, could use readarray/mapfile with bash >=4.0
     while IFS= read -r line; do
         COMPILED_SOURCES+=("$line")
-    done < <(find build/src -name "*.o" -newer build/.run-build-stamp |
+    done < <(find build/src/CMakeFiles -name "*.o" -newer build/.run-build-stamp |
         sed 's,^build/src/CMakeFiles/livestatus.dir/\(.*\)\.o$,src/\1,' |
         sort)
 }
@@ -199,7 +199,7 @@ run_build_unit_tests() {
     # collect all (re-)compiled sources for later, could use readarray/mapfile with bash >=4.0
     while IFS= read -r line; do
         COMPILED_SOURCES+=("$line")
-    done < <(find build/test -name "*.o" -newer build/.run-build-unit-tests-stamp |
+    done < <(find build/test/CMakeFiles -name "*.o" -newer build/.run-build-unit-tests-stamp |
         sed 's,^build/test/CMakeFiles/test.dir/\(.*\)\.o,test/\1,' |
         sort)
 }

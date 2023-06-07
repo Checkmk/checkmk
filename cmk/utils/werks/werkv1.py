@@ -79,6 +79,9 @@ def load_werk_v1(content: str, werk_id: int) -> RawWerkV1:
         else:
             werk["description"].append(line)
 
+    while werk["description"] and werk["description"][-1] == "":
+        werk["description"].pop()
+
     # TODO: Check if all fields have an allowed value, see .werks/config.
     try:
         return RawWerkV1.parse_obj(werk)

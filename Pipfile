@@ -210,6 +210,7 @@ azure-storage-blob = "==12.15.0"  # used for backups to Azure Blob Storage
 azure-identity = "==1.12.0"  # used for backups to Azure Blob Storage
 markdown = "==3.4.3"  # used for werk parsing
 pyjwt = {version = "*", extras = ["crypto"]}  # used for SSO via OAUTH2
+GitPython = "==3.1.31"  # used for werk collecting
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

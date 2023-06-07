@@ -14,6 +14,7 @@ from . import (
     write_precompiled_werks,
 )
 from .announce import main as main_announce
+from .collect import main as collect
 from .werk import Edition
 
 
@@ -38,6 +39,10 @@ def main_precompile(args: argparse.Namespace) -> None:
     }
 
     write_precompiled_werks(args.destination, werks)
+
+
+def main_collect(args: argparse.Namespace) -> None:
+    collect(args.flavor, args.path)
 
 
 def path_dir(value: str) -> Path:
@@ -75,6 +80,15 @@ def parse_arguments() -> argparse.Namespace:
     parser_announce.add_argument("--format", choices=("txt", "md"), default="txt")
     parser_announce.add_argument("--feedback-mail", default="feedback@checkmk.com")
     parser_announce.set_defaults(func=main_announce)
+
+    parser_collect = subparsers.add_parser(
+        "collect", help="Collect werks from all branches, print json to stdout"
+    )
+    # if you want to compile the complete database of all werks, you have to go
+    # through all branches and look at all .werks folders there.
+    parser_collect.add_argument("flavor", choices=["cma", "cmk", "checkmk_kube_agent"])
+    parser_collect.add_argument("path", help="path to git repo to read werks from", type=path_dir)
+    parser_collect.set_defaults(func=main_collect)
 
     return parser.parse_args()
 

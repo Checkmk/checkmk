@@ -799,19 +799,6 @@ def kube_object_namespace_name(kube_object: KubeNamespacedObj) -> NamespaceName:
     return kube_object.metadata.namespace
 
 
-def cron_job_namespaced_name(cron_job: api.CronJob) -> str:
-    """The name of the cron job appended to the namespace
-    >>> metadata = api.MetaData.parse_obj({"name": "foo", "namespace": "bar", "creation_timestamp": "2021-05-04T09:01:13Z", "labels": {}, "annotations": {}})
-    >>> cron_job_namespaced_name(api.CronJob(uid="cron_job_uid", job_uids=[], metadata=metadata, pod_uids=[], spec=api.CronJobSpec(concurrency_policy=api.ConcurrencyPolicy.Forbid, schedule="0 0 0 0 0", suspend=False, successful_jobs_history_limit=0, failed_jobs_history_limit=0), status=api.CronJobStatus(active=None, last_schedule_time=None, last_successful_time=None)))
-    'bar_foo'
-    """
-    return f"{cron_job.metadata.namespace}_{cron_job.metadata.name}"
-
-
-def controller_namespaced_name(controller: api.Controller) -> str:
-    return f"{controller.namespace}_{controller.name}"
-
-
 def _write_sections(sections: Mapping[str, Callable[[], section.Section | None]]) -> None:
     for section_name, section_call in sections.items():
         if section_output := section_call():

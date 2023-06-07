@@ -21,6 +21,7 @@ from typing import Any, Final, Literal, NamedTuple, TypedDict
 from cmk.utils import store
 from cmk.utils.type_defs import HostName
 
+# TODO key_columns should be a tuple[SDKey, ...]
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 
 SDNodeName = str
@@ -609,7 +610,7 @@ def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Delta
         path=left.path,
         attributes=_compare_attributes(left.attributes, right.attributes),
         table=_compare_tables(left.table, right.table),
-        _nodes=delta_nodes,
+        nodes=delta_nodes,
     )
 
 
@@ -707,12 +708,7 @@ def _filter_delta_table(delta_table: DeltaTable, filter_func: SDFilterFunc) -> D
 def _filter_delta_node(
     delta_tree: DeltaStructuredDataNode, filters: Iterable[SDFilter]
 ) -> DeltaStructuredDataNode:
-    filtered = DeltaStructuredDataNode(
-        path=delta_tree.path,
-        attributes=DeltaAttributes(pairs={}),
-        table=DeltaTable(key_columns=[], rows=[]),
-        _nodes={},
-    )
+    filtered = DeltaStructuredDataNode(path=delta_tree.path)
 
     for f in filters:
         # First check if node exists
@@ -726,7 +722,7 @@ def _filter_delta_node(
                 path=node.path,
                 attributes=_filter_delta_attributes(node.attributes, f.filter_attributes),
                 table=_filter_delta_table(node.table, f.filter_columns),
-                _nodes={
+                nodes={
                     name: child
                     for name, child in node.nodes_by_name.items()
                     if f.filter_nodes(name)
@@ -739,12 +735,7 @@ def _filter_delta_node(
 
 class ImmutableDeltaTree:
     def __init__(self, tree: DeltaStructuredDataNode | None = None) -> None:
-        self.tree: Final = tree or DeltaStructuredDataNode(
-            path=tuple(),
-            attributes=DeltaAttributes(pairs={}),
-            table=DeltaTable(key_columns=[], rows=[]),
-            _nodes={},
-        )
+        self.tree: Final = tree or DeltaStructuredDataNode()
 
     @classmethod
     def deserialize(cls, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
@@ -1386,7 +1377,7 @@ def _merge_delta_nodes(
         path=left.path,
         attributes=_merge_delta_attributes(left.attributes, right.attributes),
         table=_merge_delta_table(left.table, right.table),
-        _nodes=delta_nodes,
+        nodes=delta_nodes,
     )
 
 
@@ -1403,124 +1394,34 @@ def _count_dict_entries(dict_: Mapping[SDKey, tuple[SDValue, SDValue]]) -> _SDDe
     return counter
 
 
-@dataclass(frozen=True)
-class DeltaStructuredDataNode:
-    path: SDPath
-    attributes: DeltaAttributes
-    table: DeltaTable
-    _nodes: dict[SDNodeName, DeltaStructuredDataNode]
+@dataclass(frozen=True, kw_only=True)
+class DeltaAttributes:
+    pairs: Mapping[SDKey, tuple[SDValue, SDValue]] = field(default_factory=dict)
 
     @classmethod
-    def make_from_node(
-        cls, *, node: StructuredDataNode, encode_as: _SDEncodeAs
-    ) -> DeltaStructuredDataNode:
-        return cls(
-            path=node.path,
-            attributes=DeltaAttributes.make_from_attributes(
-                attributes=node.attributes,
-                encode_as=encode_as,
-            ),
-            table=DeltaTable.make_from_table(
-                table=node.table,
-                encode_as=encode_as,
-            ),
-            _nodes={
-                name: cls.make_from_node(
-                    node=child,
-                    encode_as=encode_as,
-                )
-                for name, child in node.nodes_by_name.items()
-            },
-        )
+    def make_from_attributes(
+        cls, *, attributes: Attributes, encode_as: _SDEncodeAs
+    ) -> DeltaAttributes:
+        return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
 
     def __bool__(self) -> bool:
-        if self.attributes or self.table:
-            return True
+        return bool(self.pairs)
 
-        for node in self._nodes.values():
-            if node:
-                return True
-
-        return False
-
-    def add_node(self, path: SDPath, node: DeltaStructuredDataNode) -> None:
-        if not path:
-            return
-
-        node_name = path[0]
-        node_path = self.path + (path[0],)
-        if len(path) == 1:
-            if node_name in self._nodes:
-                merge_node = self._nodes[node_name]
-            else:
-                merge_node = DeltaStructuredDataNode(
-                    path=node_path,
-                    attributes=DeltaAttributes(pairs={}),
-                    table=DeltaTable(key_columns=[], rows=[]),
-                    _nodes={},
-                )
-            self._nodes[node_name] = _merge_delta_nodes(merge_node, node)
-            return
-
-        self._nodes.setdefault(
-            node_name,
-            DeltaStructuredDataNode(
-                path=node_path,
-                attributes=DeltaAttributes(pairs={}),
-                table=DeltaTable(key_columns=[], rows=[]),
-                _nodes={},
-            ),
-        ).add_node(path[1:], node)
-
-    def get_node(self, path: SDPath) -> DeltaStructuredDataNode | None:
-        if not path:
-            return self
-        node = self._nodes.get(path[0])
-        return None if node is None else node.get_node(path[1:])
-
-    @property
-    def nodes(self) -> Iterator[DeltaStructuredDataNode]:
-        yield from self._nodes.values()
-
-    @property
-    def nodes_by_name(self) -> Mapping[SDNodeName, DeltaStructuredDataNode]:
-        return self._nodes
-
-    def serialize(self) -> SDRawDeltaTree:
-        return {
-            "Attributes": self.attributes.serialize(),
-            "Table": self.table.serialize(),
-            "Nodes": {edge: node.serialize() for edge, node in self._nodes.items()},
-        }
+    def serialize(self) -> SDRawDeltaAttributes:
+        return {"Pairs": self.pairs} if self.pairs else {}
 
     @classmethod
-    def deserialize(cls, *, path: SDPath, raw_tree: SDRawDeltaTree) -> DeltaStructuredDataNode:
-        return cls(
-            path=path,
-            attributes=DeltaAttributes.deserialize(raw_attributes=raw_tree["Attributes"]),
-            table=DeltaTable.deserialize(raw_table=raw_tree["Table"]),
-            _nodes={
-                raw_node_name: cls.deserialize(
-                    path=path + (raw_node_name,),
-                    raw_tree=raw_node,
-                )
-                for raw_node_name, raw_node in raw_tree["Nodes"].items()
-            },
-        )
+    def deserialize(cls, raw_attributes: SDRawDeltaAttributes) -> DeltaAttributes:
+        return cls(pairs=raw_attributes.get("Pairs", {}))
 
     def count_entries(self) -> _SDDeltaCounter:
-        counter: _SDDeltaCounter = Counter()
-        counter.update(self.attributes.count_entries())
-        counter.update(self.table.count_entries())
-        for node in self._nodes.values():
-            counter.update(node.count_entries())
-        return counter
+        return _count_dict_entries(self.pairs)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class DeltaTable:
-    key_columns: Sequence[SDKey]
-    rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
+    key_columns: Sequence[SDKey] = field(default_factory=list)
+    rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]] = field(default_factory=list)
 
     @classmethod
     def make_from_table(cls, *, table: Table, encode_as: _SDEncodeAs) -> DeltaTable:
@@ -1546,28 +1447,104 @@ class DeltaTable:
         return counter
 
 
-@dataclass(frozen=True)
-class DeltaAttributes:
-    pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
+@dataclass(frozen=True, kw_only=True)
+class DeltaStructuredDataNode:
+    path: SDPath = ()
+    attributes: DeltaAttributes = DeltaAttributes()
+    table: DeltaTable = DeltaTable()
+    # TODO Make nodes immutable
+    nodes: dict[SDNodeName, DeltaStructuredDataNode] = field(default_factory=dict)
 
     @classmethod
-    def make_from_attributes(
-        cls, *, attributes: Attributes, encode_as: _SDEncodeAs
-    ) -> DeltaAttributes:
-        return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
+    def make_from_node(
+        cls, *, node: StructuredDataNode, encode_as: _SDEncodeAs
+    ) -> DeltaStructuredDataNode:
+        return cls(
+            path=node.path,
+            attributes=DeltaAttributes.make_from_attributes(
+                attributes=node.attributes,
+                encode_as=encode_as,
+            ),
+            table=DeltaTable.make_from_table(
+                table=node.table,
+                encode_as=encode_as,
+            ),
+            nodes={
+                name: cls.make_from_node(
+                    node=child,
+                    encode_as=encode_as,
+                )
+                for name, child in node.nodes_by_name.items()
+            },
+        )
 
     def __bool__(self) -> bool:
-        return bool(self.pairs)
+        if self.attributes or self.table:
+            return True
 
-    def serialize(self) -> SDRawDeltaAttributes:
-        return {"Pairs": self.pairs} if self.pairs else {}
+        for node in self.nodes.values():
+            if node:
+                return True
+
+        return False
+
+    def add_node(self, path: SDPath, node: DeltaStructuredDataNode) -> None:
+        if not path:
+            return
+
+        node_name = path[0]
+        node_path = self.path + (path[0],)
+        if len(path) == 1:
+            if node_name in self.nodes:
+                merge_node = self.nodes[node_name]
+            else:
+                merge_node = DeltaStructuredDataNode(path=node_path)
+            self.nodes[node_name] = _merge_delta_nodes(merge_node, node)
+            return
+
+        self.nodes.setdefault(node_name, DeltaStructuredDataNode(path=node_path)).add_node(
+            path[1:], node
+        )
+
+    def get_node(self, path: SDPath) -> DeltaStructuredDataNode | None:
+        if not path:
+            return self
+        node = self.nodes.get(path[0])
+        return None if node is None else node.get_node(path[1:])
+
+    @property
+    def nodes_by_name(self) -> Mapping[SDNodeName, DeltaStructuredDataNode]:
+        return self.nodes
+
+    def serialize(self) -> SDRawDeltaTree:
+        return {
+            "Attributes": self.attributes.serialize(),
+            "Table": self.table.serialize(),
+            "Nodes": {edge: node.serialize() for edge, node in self.nodes.items()},
+        }
 
     @classmethod
-    def deserialize(cls, raw_attributes: SDRawDeltaAttributes) -> DeltaAttributes:
-        return cls(pairs=raw_attributes.get("Pairs", {}))
+    def deserialize(cls, *, path: SDPath, raw_tree: SDRawDeltaTree) -> DeltaStructuredDataNode:
+        return cls(
+            path=path,
+            attributes=DeltaAttributes.deserialize(raw_attributes=raw_tree["Attributes"]),
+            table=DeltaTable.deserialize(raw_table=raw_tree["Table"]),
+            nodes={
+                raw_node_name: cls.deserialize(
+                    path=path + (raw_node_name,),
+                    raw_tree=raw_node,
+                )
+                for raw_node_name, raw_node in raw_tree["Nodes"].items()
+            },
+        )
 
     def count_entries(self) -> _SDDeltaCounter:
-        return _count_dict_entries(self.pairs)
+        counter: _SDDeltaCounter = Counter()
+        counter.update(self.attributes.count_entries())
+        counter.update(self.table.count_entries())
+        for node in self.nodes.values():
+            counter.update(node.count_entries())
+        return counter
 
 
 # .

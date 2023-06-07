@@ -11,23 +11,22 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from typing import Literal
 
-# suppress "Cannot find module" error from mypy
-import livestatus
-
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
-from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout
-from cmk.utils.type_defs import HostName, TimeperiodName
+from cmk.utils.exceptions import MKBailOut, MKGeneralException
+from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 import cmk.base.obsolete_output as out
 from cmk.base.core_config import MonitoringCore
+
+# suppress "Cannot find module" error from mypy
+
 
 # .
 #   .--Control-------------------------------------------------------------.
@@ -151,70 +150,3 @@ def do_core_action(
         )
     if not quiet:
         out.output(tty.ok + "\n")
-
-
-# .
-#   .--Timeperiods---------------------------------------------------------.
-#   |      _____ _                                _           _            |
-#   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |
-#   |       | | | | '_ ` _ \ / _ \ '_ \ / _ \ '__| |/ _ \ / _` / __|       |
-#   |       | | | | | | | | |  __/ |_) |  __/ |  | | (_) | (_| \__ \       |
-#   |       |_| |_|_| |_| |_|\___| .__/ \___|_|  |_|\___/ \__,_|___/       |
-#   |                            |_|                                       |
-#   +----------------------------------------------------------------------+
-#   | Fetching time periods from the core                                   |
-#   '----------------------------------------------------------------------'
-
-
-def check_timeperiod(timeperiod: TimeperiodName) -> bool:
-    """Check if a time period is currently active. We have no other way than
-    doing a Livestatus query. This is not really nice, but if you have a better
-    idea, please tell me..."""
-    # Let exceptions happen, they will be handled upstream.
-    try:
-        update_timeperiods_cache()
-    except MKTimeout:
-        raise
-
-    except Exception:
-        if cmk.utils.debug.enabled():
-            raise
-
-        # If the query is not successful better skip this check then fail
-        return True
-
-    # Note: This also returns True when the time period is unknown
-    #       The following function time period_active handles this differently
-    return _config_cache.get("timeperiods_cache").get(timeperiod, True)
-
-
-def timeperiod_active(timeperiod: TimeperiodName) -> bool | None:
-    """Returns
-    True : active
-    False: inactive
-    None : unknown timeperiod
-
-    Raises an exception if e.g. a timeout or connection error appears.
-    This way errors can be handled upstream."""
-    update_timeperiods_cache()
-    return _config_cache.get("timeperiods_cache").get(timeperiod)
-
-
-def update_timeperiods_cache() -> None:
-    # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
-    # The value is store within the config cache since we need a fresh start on reload
-    tp_cache = _config_cache.get("timeperiods_cache")
-
-    if not tp_cache:
-        connection = livestatus.LocalConnection()
-        connection.set_timeout(2)
-        response = connection.query("GET timeperiods\nColumns: name in")
-        for tp_name, tp_active in response:
-            tp_cache[tp_name] = bool(tp_active)
-
-
-def cleanup_timeperiod_caches() -> None:
-    _config_cache.get("timeperiods_cache").clear()
-
-
-cmk.utils.cleanup.register_cleanup(cleanup_timeperiod_caches)

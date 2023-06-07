@@ -19,7 +19,7 @@ from typing import Any
 from marshmallow.utils import from_iso_time
 
 import cmk.utils.defines as defines
-from cmk.utils.type_defs import TimeperiodSpec
+from cmk.utils.timeperiod import TimeperiodSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user

@@ -49,17 +49,13 @@ __all__ = [
     "ServiceState",
     "SNMPDetectBaseType",
     "state_markers",
-    "TimeperiodName",
-    "TimeperiodSpec",
-    "timeperiod_spec_alias",
-    "TimeperiodSpecs",
     "TimeRange",
     "Timestamp",
     "UserId",
 ]
 
 
-from ._misc import (  # TODO(ML): We should clean this up some day.
+from ._misc import (
     ActiveCheckPluginName,
     AgentRawData,
     AgentTargetVersion,
@@ -90,10 +86,6 @@ from ._misc import (  # TODO(ML): We should clean this up some day.
     ServiceState,
     SNMPDetectBaseType,
     state_markers,
-    timeperiod_spec_alias,
-    TimeperiodName,
-    TimeperiodSpec,
-    TimeperiodSpecs,
     TimeRange,
     Timestamp,
 )

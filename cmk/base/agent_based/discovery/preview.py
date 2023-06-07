@@ -8,12 +8,10 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
-import cmk.utils.cleanup
-import cmk.utils.debug
-import cmk.utils.paths
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
+from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.type_defs import HostName, Item, SectionName, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
@@ -46,7 +44,6 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
-import cmk.base.core
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache
 
@@ -236,7 +233,7 @@ def _check_preview_table_row(
         ruleset_name=ruleset_name,
         item=service.item,
         discovered_parameters=service.discovered_parameters,
-        effective_parameters=service.parameters.preview(cmk.base.core.timeperiod_active),
+        effective_parameters=service.parameters.preview(timeperiod_active),
         description=service.description,
         state=result.state,
         output=make_output(),

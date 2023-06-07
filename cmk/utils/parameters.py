@@ -10,7 +10,8 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Final, TypedDict, TypeVar
 
 import cmk.utils.debug
-from cmk.utils.type_defs import LegacyCheckParameters, TimeperiodName
+from cmk.utils.timeperiod import TimeperiodName
+from cmk.utils.type_defs import LegacyCheckParameters
 
 _IsTimeperiodActiveCallback = Callable[[TimeperiodName], bool | None]
 

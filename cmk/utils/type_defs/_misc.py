@@ -14,7 +14,6 @@ __all__ = [
     "ServiceName",
     "ServicegroupName",
     "ContactgroupName",
-    "TimeperiodName",
     "AgentTargetVersion",
     "AgentRawData",
     "HostOrServiceConditionRegex",
@@ -37,9 +36,6 @@ __all__ = [
     "ParametersTypeAlias",
     "DiscoveryResult",
     "SNMPDetectBaseType",
-    "TimeperiodSpec",
-    "TimeperiodSpecs",
-    "timeperiod_spec_alias",
     "EvalableFloat",
     "EVERYTHING",
     "state_markers",
@@ -51,7 +47,6 @@ __all__ = [
 ServiceName = str
 ServicegroupName = str
 ContactgroupName = str
-TimeperiodName = str
 
 # We still need "Union" because of https://github.com/python/mypy/issues/11098
 AgentTargetVersion = Union[None, str, tuple[str, str], tuple[str, dict[str, str]]]
@@ -133,20 +128,6 @@ class DiscoveryResult:
 # This def is used to keep the API-exposed object in sync with our
 # implementation.
 SNMPDetectBaseType = list[list[tuple[str, str, bool]]]
-
-# TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
-# can easily transform back and forth for serialization.
-TimeperiodSpec = dict[str, str | list[str] | list[tuple[str, str]]]
-TimeperiodSpecs = dict[TimeperiodName, TimeperiodSpec]
-
-
-# TODO: We should really parse our configuration file and use a
-# class/NamedTuple, see above.
-def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = "") -> str:
-    alias = timeperiod_spec.get("alias", default)
-    if isinstance(alias, str):
-        return alias
-    raise Exception(f"invalid timeperiod alias {alias!r}")
 
 
 class EvalableFloat(float):

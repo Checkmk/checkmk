@@ -69,6 +69,7 @@ from cmk.utils.notify_types import (
 )
 from cmk.utils.regex import regex
 from cmk.utils.timeout import MKTimeout, Timeout
+from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.type_defs import ContactgroupName
 
 import cmk.base.config as config
@@ -784,7 +785,7 @@ def rbn_get_bulk_params(rule: EventRule) -> NotifyBulkParameters | None:
 
     if method == "timeperiod":
         try:
-            active = cmk.base.core.timeperiod_active(params["timeperiod"])
+            active = timeperiod_active(params["timeperiod"])
         except Exception:
             if cmk.utils.debug.enabled():
                 raise
@@ -1686,7 +1687,7 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
                     bulks.append((bulk_dir, age, interval, "n.a.", count, uuids))
                 else:
                     try:
-                        active = cmk.base.core.timeperiod_active(str(timeperiod))
+                        active = timeperiod_active(str(timeperiod))
                     except Exception:
                         # This prevents sending bulk notifications if a
                         # livestatus connection error appears. It also implies

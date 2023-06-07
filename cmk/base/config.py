@@ -85,6 +85,7 @@ from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.structured_data import RawIntervalsFromConfig
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
+from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
     AgentTargetVersion,
@@ -102,7 +103,6 @@ from cmk.utils.type_defs import (
     SectionName,
     ServicegroupName,
     ServiceName,
-    TimeperiodName,
 )
 
 from cmk.automations.results import CheckPreviewEntry

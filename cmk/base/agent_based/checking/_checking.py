@@ -19,6 +19,7 @@ from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.regex import regex
 from cmk.utils.structured_data import TreeStore
+from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
 from cmk.utils.type_defs import (
     AgentRawData,
     EVERYTHING,
@@ -29,7 +30,6 @@ from cmk.utils.type_defs import (
     SectionName,
     ServiceName,
     state_markers,
-    TimeperiodName,
 )
 from cmk.utils.type_defs.result import Result
 
@@ -357,7 +357,7 @@ def _filter_services_to_check(
 def service_outside_check_period(description: ServiceName, period: TimeperiodName | None) -> bool:
     if period is None:
         return False
-    if cmk.base.core.check_timeperiod(period):
+    if check_timeperiod(period):
         console.vverbose("Service %s: time period %s is currently active.\n", description, period)
         return False
     console.verbose("Skipping service %s: currently not in time period %s.\n", description, period)
@@ -560,7 +560,7 @@ def _final_read_only_check_parameters(
     entries: TimespecificParameters | LegacyCheckParameters,
 ) -> Parameters:
     raw_parameters = (
-        entries.evaluate(cmk.base.core.timeperiod_active)
+        entries.evaluate(timeperiod_active)
         if isinstance(entries, TimespecificParameters)
         else entries
     )

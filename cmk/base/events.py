@@ -24,6 +24,7 @@ from cmk.utils.notify_types import EventContext, EventRule
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
 from cmk.utils.tags import TagID
+from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
 from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.base.config as config
@@ -63,7 +64,7 @@ def event_keepalive(  # pylint: disable=too-many-branches
     while True:
         try:
             # Invalidate timeperiod caches
-            cmk.base.core.cleanup_timeperiod_caches()
+            cleanup_timeperiod_caches()
 
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next event arrives. We must
@@ -832,7 +833,7 @@ def event_match_checktype(rule: EventRule, context: EventContext) -> str | None:
 def event_match_timeperiod(rule: EventRule, _context: EventContext) -> str | None:
     if "match_timeperiod" in rule:
         timeperiod = rule["match_timeperiod"]
-        if timeperiod != "24X7" and not cmk.base.core.check_timeperiod(timeperiod):
+        if timeperiod != "24X7" and not check_timeperiod(timeperiod):
             return "The timeperiod '%s' is currently not active." % timeperiod
     return None
 

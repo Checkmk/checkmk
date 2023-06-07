@@ -15,7 +15,7 @@ from typing import Literal, NamedTuple
 from livestatus import SiteId
 
 import cmk.utils.regex
-from cmk.utils.type_defs import TimeperiodName
+from cmk.utils.timeperiod import TimeperiodName
 
 from .config import MatchGroups, Rule, StatePatterns, TextMatchResult, TextPattern
 from .event import Event

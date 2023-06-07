@@ -9,7 +9,7 @@ from collections.abc import Collection
 from typing import Any
 
 import cmk.utils.defines as defines
-from cmk.utils.type_defs import timeperiod_spec_alias
+from cmk.utils.timeperiod import timeperiod_spec_alias
 
 import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils

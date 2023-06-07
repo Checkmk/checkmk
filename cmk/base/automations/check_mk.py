@@ -53,6 +53,7 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
+from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.utils.type_defs import HostAddress, HostName, ServiceDetails, ServiceState
@@ -994,7 +995,7 @@ class AutomationAnalyseServices(Automation):
                     "checkgroup": checkgroup_name,
                     "checktype": str(service.check_plugin_name),
                     "item": service.item,
-                    "parameters": service.parameters.preview(cmk.base.core.timeperiod_active),
+                    "parameters": service.parameters.preview(timeperiod_active),
                 }
 
         # 2. Load all autochecks of the host in question and try to find
@@ -1078,7 +1079,7 @@ class AutomationAnalyseServices(Automation):
                 "inv_parameters": service.discovered_parameters,
                 "factory_settings": plugin.check_default_parameters,
                 # effective parameters:
-                "parameters": service.parameters.preview(cmk.base.core.timeperiod_active),
+                "parameters": service.parameters.preview(timeperiod_active),
             }
 
         return None

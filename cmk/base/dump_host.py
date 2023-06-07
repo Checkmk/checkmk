@@ -10,6 +10,7 @@ import cmk.utils.render
 import cmk.utils.tty as tty
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import tmp_dir
+from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
@@ -226,10 +227,10 @@ def _evaluate_params(params: LegacyCheckParameters | TimespecificParameters) -> 
         return repr(params)
 
     if params.is_constant():
-        return repr(params.evaluate(cmk.base.core.timeperiod_active))
+        return repr(params.evaluate(timeperiod_active))
     return "Timespecific parameters at {}: {!r}".format(
         cmk.utils.render.date_and_time(time.time()),
-        params.evaluate(cmk.base.core.timeperiod_active),
+        params.evaluate(timeperiod_active),
     )
 
 

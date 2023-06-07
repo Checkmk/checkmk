@@ -28,6 +28,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
     ContactgroupName,
@@ -36,7 +37,6 @@ from cmk.utils.type_defs import (
     HostName,
     ServicegroupName,
     ServiceName,
-    TimeperiodName,
 )
 
 from cmk.checkengine import plugin_contexts

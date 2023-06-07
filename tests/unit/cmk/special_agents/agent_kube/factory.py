@@ -21,6 +21,7 @@ from collections.abc import Iterator, Sequence
 import pydantic
 from pydantic_factories import ModelFactory, Use
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.daemonset
 import cmk.special_agents.utils_kubernetes.agent_handlers.deployment
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_api
@@ -153,8 +154,8 @@ class APIDaemonSetFactory(ModelFactory):
 
 def api_to_agent_daemonset(
     api_daemonset: api.DaemonSet, pods: Sequence[api.Pod] = ()
-) -> agent.DaemonSet:
-    return agent.DaemonSet(
+) -> cmk.special_agents.utils_kubernetes.agent_handlers.daemonset.DaemonSet:
+    return cmk.special_agents.utils_kubernetes.agent_handlers.daemonset.DaemonSet(
         metadata=api_daemonset.metadata,
         spec=api_daemonset.spec,
         status=api_daemonset.status,

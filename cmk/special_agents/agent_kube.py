@@ -40,7 +40,7 @@ import cmk.utils.profile
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
-from cmk.special_agents.utils_kubernetes.agent_handlers import deployment
+from cmk.special_agents.utils_kubernetes.agent_handlers import daemonset, deployment
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationNonPatternOption,
     AnnotationOption,
@@ -52,6 +52,7 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     PodOwner,
     thin_containers,
 )
+from cmk.special_agents.utils_kubernetes.agent_handlers.daemonset import DaemonSet
 from cmk.special_agents.utils_kubernetes.agent_handlers.deployment import Deployment
 from cmk.special_agents.utils_kubernetes.api_server import APIData, from_kubernetes
 from cmk.special_agents.utils_kubernetes.common import (
@@ -311,47 +312,6 @@ def controller_spec(controller: Deployment | DaemonSet | StatefulSet) -> section
 
 
 @dataclass(frozen=True)
-class DaemonSet(PodOwner):
-    metadata: api.MetaData
-    spec: api.DaemonSetSpec
-    status: api.DaemonSetStatus
-    type_: str = "daemonset"
-
-
-def daemonset_replicas(
-    daemonset: DaemonSet,
-) -> section.DaemonSetReplicas:
-    return section.DaemonSetReplicas(
-        available=daemonset.status.number_available,
-        desired=daemonset.status.desired_number_scheduled,
-        updated=daemonset.status.updated_number_scheduled,
-        misscheduled=daemonset.status.number_misscheduled,
-        ready=daemonset.status.number_ready,
-    )
-
-
-def daemonset_info(
-    daemonset: DaemonSet,
-    cluster_name: str,
-    kubernetes_cluster_hostname: str,
-    annotation_key_pattern: AnnotationOption,
-) -> section.DaemonSetInfo:
-    return section.DaemonSetInfo(
-        name=daemonset.metadata.name,
-        namespace=daemonset.metadata.namespace,
-        creation_timestamp=daemonset.metadata.creation_timestamp,
-        labels=daemonset.metadata.labels,
-        annotations=filter_annotations_by_key_pattern(
-            daemonset.metadata.annotations, annotation_key_pattern
-        ),
-        selector=daemonset.spec.selector,
-        containers=thin_containers(daemonset.pods),
-        cluster=cluster_name,
-        kubernetes_cluster_hostname=kubernetes_cluster_hostname,
-    )
-
-
-@dataclass(frozen=True)
 class StatefulSet(PodOwner):
     metadata: api.MetaData
     spec: api.StatefulSetSpec
@@ -587,13 +547,15 @@ class Cluster:
         return _node_collector_daemons(self.daemonsets)
 
 
-def _node_collector_daemons(daemonsets: Iterable[api.DaemonSet]) -> section.CollectorDaemons:
+def _node_collector_daemons(api_daemonsets: Iterable[api.DaemonSet]) -> section.CollectorDaemons:
     # Extract DaemonSets with label key `node-collector`
     collector_daemons = defaultdict(list)
-    for daemonset in daemonsets:
-        if (label := daemonset.metadata.labels.get(api.LabelName("node-collector"))) is not None:
+    for api_daemonset in api_daemonsets:
+        if (
+            label := api_daemonset.metadata.labels.get(api.LabelName("node-collector"))
+        ) is not None:
             collector_type = label.value
-            collector_daemons[collector_type].append(daemonset.status)
+            collector_daemons[collector_type].append(api_daemonset.status)
     collector_daemons.default_factory = None
 
     # Only leave unknown collectors inside of `collector_daemons`
@@ -1342,7 +1304,7 @@ def create_daemon_set_api_sections(
         WriteableSection(
             piggyback_name=piggyback_name,
             section_name=SectionName("kube_daemonset_info_v1"),
-            section=daemonset_info(
+            section=daemonset.info(
                 api_daemonset,
                 host_settings.cluster_name,
                 host_settings.kubernetes_cluster_hostname,
@@ -1357,7 +1319,7 @@ def create_daemon_set_api_sections(
         WriteableSection(
             piggyback_name=piggyback_name,
             section_name=SectionName("kube_daemonset_replicas_v1"),
-            section=daemonset_replicas(api_daemonset),
+            section=daemonset.replicas(api_daemonset),
         ),
         WriteableSection(
             piggyback_name=piggyback_name,
@@ -2112,22 +2074,22 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
 
             if MonitoredObject.daemonsets in arguments.monitored_objects:
                 LOGGER.info("Write daemon sets sections based on API data")
-                for daemonset in kube_objects_from_namespaces(
+                for api_daemonset in kube_objects_from_namespaces(
                     composed_entities.daemonsets, monitored_namespace_names
                 ):
-                    daemonset_piggyback_name = piggyback_formatter(daemonset)
+                    daemonset_piggyback_name = piggyback_formatter(api_daemonset)
                     daemonset_sections = create_daemon_set_api_sections(
-                        daemonset,
+                        api_daemonset,
                         host_settings=checkmk_host_settings,
                         piggyback_name=daemonset_piggyback_name,
                     )
                     if MonitoredObject.pvcs in arguments.monitored_objects:
-                        daemonset_namespace = kube_object_namespace_name(daemonset)
+                        daemonset_namespace = kube_object_namespace_name(api_daemonset)
                         daemonset_sections = chain(
                             daemonset_sections,
                             create_pvc_sections(
                                 piggyback_name=daemonset_piggyback_name,
-                                attached_pvc_names=attached_pvc_names_from_pods(daemonset.pods),
+                                attached_pvc_names=attached_pvc_names_from_pods(api_daemonset.pods),
                                 api_pvcs=namespace_grouped_api_pvcs.get(daemonset_namespace, {}),
                                 api_pvs=api_persistent_volumes,
                                 attached_volumes=namespaced_grouped_attached_volumes.get(

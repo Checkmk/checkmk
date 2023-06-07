@@ -56,8 +56,6 @@ PYTEST_SYSTEM_TEST_ARGS := -p "no:cov"
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-BROWSER_ENGINES = "chromium"
-
 .PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
@@ -177,10 +175,8 @@ prepare-protobuf-files:
 	$(MAKE) -C .. protobuf-files
 
 prepare-playwright:
-	@for browser_engine in $(BROWSER_ENGINES); do \
-		../scripts/run-pipenv run playwright install-deps $$browser_engine; \
-		../scripts/run-pipenv run playwright install $$browser_engine; \
-	done
+	../scripts/run-pipenv run playwright install-deps "chromium";
+	../scripts/run-pipenv run playwright install "chromium";
 
 test-docker-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \

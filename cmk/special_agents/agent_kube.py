@@ -44,6 +44,7 @@ from cmk.special_agents.utils_kubernetes.agent_handlers import (
     cronjob,
     daemonset,
     deployment,
+    namespace,
     statefulset,
 )
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
@@ -52,6 +53,7 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     collect_cpu_resources_from_api_pods,
     collect_memory_resources_from_api_pods,
     filter_annotations_by_key_pattern,
+    namespace_name,
     pod_lifecycle_phase,
     pod_name,
     pod_resources_from_api_pods,
@@ -59,6 +61,10 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
 )
 from cmk.special_agents.utils_kubernetes.agent_handlers.daemonset import DaemonSet
 from cmk.special_agents.utils_kubernetes.agent_handlers.deployment import Deployment
+from cmk.special_agents.utils_kubernetes.agent_handlers.namespace import (
+    filter_matching_namespace_resource_quota,
+    filter_pods_by_resource_quota_criteria,
+)
 from cmk.special_agents.utils_kubernetes.agent_handlers.statefulset import StatefulSet
 from cmk.special_agents.utils_kubernetes.api_server import APIData, from_kubernetes
 from cmk.special_agents.utils_kubernetes.common import (
@@ -645,151 +651,6 @@ class ComposedEntities:
         )
 
 
-# Namespace & Resource Quota specific
-
-
-def namespace_info(
-    namespace: api.Namespace,
-    cluster_name: str,
-    annotation_key_pattern: AnnotationOption,
-    kubernetes_cluster_hostname: str,
-) -> section.NamespaceInfo:
-    return section.NamespaceInfo(
-        name=namespace_name(namespace),
-        creation_timestamp=namespace.metadata.creation_timestamp,
-        labels=namespace.metadata.labels,
-        annotations=filter_annotations_by_key_pattern(
-            namespace.metadata.annotations, annotation_key_pattern
-        ),
-        cluster=cluster_name,
-        kubernetes_cluster_hostname=kubernetes_cluster_hostname,
-    )
-
-
-def filter_matching_namespace_resource_quota(
-    namespace: api.NamespaceName, resource_quotas: Sequence[api.ResourceQuota]
-) -> api.ResourceQuota | None:
-    for resource_quota in resource_quotas:
-        if resource_quota.metadata.namespace == namespace:
-            return resource_quota
-    return None
-
-
-def filter_pods_by_resource_quota_criteria(
-    pods: Sequence[api.Pod], resource_quota: api.ResourceQuota
-) -> Sequence[api.Pod]:
-    resource_quota_pods = filter_pods_by_resource_quota_scopes(
-        pods, resource_quota.spec.scopes or ()
-    )
-    return filter_pods_by_resource_quota_scope_selector(
-        resource_quota_pods, resource_quota.spec.scope_selector
-    )
-
-
-def filter_pods_by_resource_quota_scope_selector(
-    pods: Sequence[api.Pod], scope_selector: api.ScopeSelector | None
-) -> Sequence[api.Pod]:
-    if scope_selector is None:
-        return pods
-
-    return [
-        pod
-        for pod in pods
-        if all(
-            _matches_scope_selector_match_expression(pod, match_expression)
-            for match_expression in scope_selector.match_expressions
-        )
-    ]
-
-
-def _matches_scope_selector_match_expression(
-    pod: api.Pod, match_expression: api.ScopedResourceMatchExpression
-) -> bool:
-    # TODO: add support for CrossNamespacePodAffinity
-    if match_expression.scope_name in [
-        api.QuotaScope.BestEffort,
-        api.QuotaScope.NotBestEffort,
-        api.QuotaScope.Terminating,
-        api.QuotaScope.NotTerminating,
-    ]:
-        return _matches_quota_scope(pod, match_expression.scope_name)
-
-    if match_expression.scope_name != api.QuotaScope.PriorityClass:
-        raise NotImplementedError(
-            f"The resource quota scope name {match_expression.scope_name} "
-            "is currently not supported"
-        )
-
-    # XNOR case for priority class
-    # if the pod has a priority class and the operator is Exists then the pod is included
-    # if the pod has no priority class and the operator is DoesNotExist then the pod is included
-    if match_expression.operator in (api.ScopeOperator.Exists, api.ScopeOperator.DoesNotExist):
-        return not (
-            (pod.spec.priority_class_name is not None)
-            ^ (match_expression.operator == api.ScopeOperator.Exists)
-        )
-
-    # XNOR case for priority class value
-    # if operator is In and the priority class value is in the list of values then the pod is
-    # included
-    # if operator is NotIn and the priority class value is not in the list of values then the pod
-    # is included
-    if match_expression.operator in (api.ScopeOperator.In, api.ScopeOperator.NotIn):
-        return not (
-            (pod.spec.priority_class_name in match_expression.values)
-            ^ (match_expression.operator == api.ScopeOperator.In)
-        )
-
-    raise NotImplementedError("Unsupported match expression operator")
-
-
-def filter_pods_by_resource_quota_scopes(
-    api_pods: Sequence[api.Pod], scopes: Sequence[api.QuotaScope] = ()
-) -> Sequence[api.Pod]:
-    """Filter pods based on selected scopes"""
-    return [pod for pod in api_pods if all(_matches_quota_scope(pod, scope) for scope in scopes)]
-
-
-def _matches_quota_scope(pod: api.Pod, scope: api.QuotaScope) -> bool:
-    """Verifies if the pod scopes matches the scope criteria
-
-    Reminder:
-    * the Quota scope is rather ResourceQuota specific rather than Pod specific
-    * the Quota scope encompasses multiple Pod concepts (see api.Pod model)
-    * a Pod can have all multiple scopes (e.g PrioritClass, Terminating and BestEffort)
-    """
-
-    def pod_terminating_scope(
-        pod: api.Pod,
-    ) -> api.QuotaScope:
-        return (
-            api.QuotaScope.Terminating
-            if (pod.spec.active_deadline_seconds is not None)
-            else api.QuotaScope.NotTerminating
-        )
-
-    def pod_effort_scope(
-        pod: api.Pod,
-    ) -> api.QuotaScope:
-        # TODO: change qos_class from Literal to Enum
-        return (
-            api.QuotaScope.BestEffort
-            if (pod.status.qos_class == "besteffort")
-            else api.QuotaScope.NotBestEffort
-        )
-
-    if scope == api.QuotaScope.PriorityClass:
-        return pod.spec.priority_class_name is not None
-
-    if scope in [api.QuotaScope.Terminating, api.QuotaScope.NotTerminating]:
-        return pod_terminating_scope(pod) == scope
-
-    if scope in [api.QuotaScope.BestEffort, api.QuotaScope.NotBestEffort]:
-        return pod_effort_scope(pod) == scope
-
-    raise NotImplementedError(f"Unsupported quota scope {scope}")
-
-
 def pod_attached_persistent_volume_claim_names(pod: api.Pod) -> Iterator[str]:
     if (volumes := pod.spec.volumes) is None:
         return
@@ -827,7 +688,7 @@ def serialize_attached_volumes_from_kubelet_metrics(
     def pvc_unique(v: api.KubeletVolumeMetricSample) -> tuple[str, str]:
         return v.labels.namespace, v.labels.persistentvolumeclaim
 
-    for (namespace, pvc), samples in itertools.groupby(
+    for (api_namespace, pvc), samples in itertools.groupby(
         sorted(volume_metric_samples, key=pvc_unique), key=pvc_unique
     ):
         volume_details = {sample.metric_name.value: sample.value for sample in samples}
@@ -835,7 +696,7 @@ def serialize_attached_volumes_from_kubelet_metrics(
             capacity=volume_details["kubelet_volume_stats_capacity_bytes"],
             free=volume_details["kubelet_volume_stats_available_bytes"],
             persistent_volume_claim=pvc,
-            namespace=NamespaceName(namespace),
+            namespace=NamespaceName(api_namespace),
         )
 
 
@@ -916,9 +777,9 @@ def create_pvc_sections(
 
 
 def filter_pods_by_namespace(
-    pods: Sequence[api.Pod], namespace: api.NamespaceName
+    pods: Sequence[api.Pod], api_namespace: api.NamespaceName
 ) -> Sequence[api.Pod]:
-    return [pod for pod in pods if pod_namespace(pod) == namespace]
+    return [pod for pod in pods if pod_namespace(pod) == api_namespace]
 
 
 def filter_pods_by_cron_job(pods: Sequence[api.Pod], cron_job: api.CronJob) -> Sequence[api.Pod]:
@@ -931,17 +792,6 @@ def filter_pods_by_phase(pods: Iterable[api.Pod], phase: api.Phase) -> Sequence[
 
 def pod_namespace(pod: api.Pod) -> api.NamespaceName:
     return pod.metadata.namespace
-
-
-def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
-    """The name of the namespace
-    Examples:
-        >>> metadata = api.NamespaceMetaData.parse_obj({"name": "foo", "creation_timestamp": "2021-05-04T09:01:13Z", "labels": {}, "annotations": {}})
-        >>> namespace = api.Namespace(metadata=metadata)
-        >>> namespace_name(namespace)
-        'foo'
-    """
-    return namespace.metadata.name
 
 
 def kube_object_namespace_name(kube_object: KubeNamespacedObj) -> NamespaceName:
@@ -1043,7 +893,7 @@ def create_namespace_api_sections(
         WriteableSection(
             piggyback_name=piggyback_name,
             section_name=SectionName("kube_namespace_info_v1"),
-            section=namespace_info(
+            section=namespace.info(
                 api_namespace,
                 host_settings.cluster_name,
                 host_settings.annotation_key_pattern,

@@ -2,7 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIJobFactory,
     APIPodFactory,
@@ -10,7 +9,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     JobStatusFactory,
 )
 
-from cmk.special_agents import agent_kube as agent
+from cmk.special_agents.utils_kubernetes.agent_handlers import cronjob
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
@@ -27,7 +26,7 @@ def test_cron_job_status_section() -> None:
         last_successful_time=api.Timestamp(2.0),
     )
 
-    cron_job_status = agent.cron_job_status(api_cron_job_status, [api_job])
+    cron_job_status = cronjob.status(api_cron_job_status, [api_job])
 
     assert cron_job_status == section.CronJobStatus(
         active_jobs_count=1,
@@ -49,7 +48,7 @@ def test_cron_job_latest_job_section() -> None:
         pod_uids=[pod.uid for pod in api_pods],
     )
 
-    latest_job = agent.cron_job_latest_job(api_job, {pod.uid: pod for pod in api_pods})
+    latest_job = cronjob.latest_job(api_job, {pod.uid: pod for pod in api_pods})
 
     assert len(latest_job.pods) == pod_number
     assert latest_job.status == section.JobStatus(

@@ -2,8 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIControllerFactory,
     APIPodFactory,
@@ -13,6 +11,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 )
 
 from cmk.special_agents import agent_kube as agent
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import pod_lifecycle_phase
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
@@ -127,7 +126,7 @@ def test_pod_start_time_with_start_time_present() -> None:
 
 def test_pod_lifecycle_phase() -> None:
     pod = APIPodFactory.build(status=PodStatusFactory.build(phase=api.Phase.RUNNING))
-    section_pod_lifecycle_phase = agent.pod_lifecycle_phase(pod.status)
+    section_pod_lifecycle_phase = pod_lifecycle_phase(pod.status)
 
     assert isinstance(section_pod_lifecycle_phase, section.PodLifeCycle)
     assert section_pod_lifecycle_phase == section.PodLifeCycle(phase=api.Phase.RUNNING)

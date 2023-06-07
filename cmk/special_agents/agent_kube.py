@@ -40,13 +40,19 @@ import cmk.utils.profile
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
-from cmk.special_agents.utils_kubernetes.agent_handlers import daemonset, deployment, statefulset
+from cmk.special_agents.utils_kubernetes.agent_handlers import (
+    cronjob,
+    daemonset,
+    deployment,
+    statefulset,
+)
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationNonPatternOption,
     AnnotationOption,
     collect_cpu_resources_from_api_pods,
     collect_memory_resources_from_api_pods,
     filter_annotations_by_key_pattern,
+    pod_lifecycle_phase,
     pod_name,
     pod_resources_from_api_pods,
     PodOwner,
@@ -660,79 +666,6 @@ def namespace_info(
     )
 
 
-def cron_job_info(
-    cron_job: api.CronJob,
-    cluster_name: str,
-    kubernetes_cluster_hostname: str,
-    annotation_key_pattern: AnnotationOption,
-) -> section.CronJobInfo:
-    return section.CronJobInfo(
-        name=cron_job.metadata.name,
-        namespace=cron_job.metadata.namespace,
-        creation_timestamp=cron_job.metadata.creation_timestamp,
-        labels=cron_job.metadata.labels,
-        annotations=filter_annotations_by_key_pattern(
-            cron_job.metadata.annotations, annotation_key_pattern
-        ),
-        schedule=cron_job.spec.schedule,
-        concurrency_policy=cron_job.spec.concurrency_policy,
-        failed_jobs_history_limit=cron_job.spec.failed_jobs_history_limit,
-        successful_jobs_history_limit=cron_job.spec.successful_jobs_history_limit,
-        suspend=cron_job.spec.suspend,
-        cluster=cluster_name,
-        kubernetes_cluster_hostname=kubernetes_cluster_hostname,
-    )
-
-
-def cron_job_status(
-    status: api.CronJobStatus,
-    timestamp_sorted_jobs: Sequence[api.Job],
-) -> section.CronJobStatus:
-    return section.CronJobStatus(
-        active_jobs_count=len(status.active) if status.active else None,
-        last_duration=_calculate_job_duration(last_completed_job)
-        if (last_completed_job := _retrieve_last_completed_job(timestamp_sorted_jobs)) is not None
-        else None,
-        last_successful_time=status.last_successful_time,
-        last_schedule_time=status.last_schedule_time,
-    )
-
-
-def _retrieve_last_completed_job(jobs: Sequence[api.Job]) -> api.Job | None:
-    for job in jobs:
-        if job.status.completion_time is not None:
-            return job
-    return None
-
-
-def _calculate_job_duration(job: api.Job) -> float | None:
-    if job.status.completion_time is None or job.status.start_time is None:
-        return None
-
-    return job.status.completion_time - job.status.start_time
-
-
-def cron_job_latest_job(
-    job: api.Job, pods: Mapping[api.PodUID, api.Pod]
-) -> section.CronJobLatestJob:
-    return section.CronJobLatestJob(
-        status=section.JobStatus(
-            conditions=job.status.conditions or [],
-            start_time=job.status.start_time,
-            completion_time=job.status.completion_time,
-        ),
-        pods=[
-            section.JobPod(
-                init_containers=pod.init_containers,
-                containers=pod.containers,
-                lifecycle=pod_lifecycle_phase(pod.status),
-            )
-            for pod_uid in job.pod_uids
-            if (pod := pods.get(pod_uid)) is not None
-        ],
-    )
-
-
 def filter_matching_namespace_resource_quota(
     namespace: api.NamespaceName, resource_quotas: Sequence[api.ResourceQuota]
 ) -> api.ResourceQuota | None:
@@ -1070,16 +1003,16 @@ def write_cronjobs_api_sections(
         jobs = [api_jobs[uid] for uid in cron_job.job_uids]
         timestamp_sorted_jobs = sorted(jobs, key=lambda job: job.metadata.creation_timestamp)
         sections = {
-            "kube_cron_job_info_v1": lambda: cron_job_info(
+            "kube_cron_job_info_v1": lambda: cronjob.info(
                 cron_job,
                 host_settings.cluster_name,
                 host_settings.kubernetes_cluster_hostname,
                 host_settings.annotation_key_pattern,
             ),
-            "kube_cron_job_status_v1": lambda: cron_job_status(
+            "kube_cron_job_status_v1": lambda: cronjob.status(
                 cron_job.status, timestamp_sorted_jobs
             ),
-            "kube_cron_job_latest_job_v1": lambda: cron_job_latest_job(
+            "kube_cron_job_latest_job_v1": lambda: cronjob.latest_job(
                 timestamp_sorted_jobs[-1], {pod.uid: pod for pod in cron_job_pods}
             )
             if len(timestamp_sorted_jobs) > 0
@@ -1740,10 +1673,6 @@ def pod_start_time(pod_status: api.PodStatus) -> section.StartTime | None:
         return None
 
     return section.StartTime(start_time=pod_status.start_time)
-
-
-def pod_lifecycle_phase(pod_status: api.PodStatus) -> section.PodLifeCycle:
-    return section.PodLifeCycle(phase=pod_status.phase)
 
 
 def pod_info(

@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from cmk.special_agents.utils_kubernetes.agent_handlers.common import PodOwner, AnnotationOption, \
-    filter_annotations_by_key_pattern, thin_containers
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
+    AnnotationOption,
+    filter_annotations_by_key_pattern,
+    PodOwner,
+    thin_containers,
+)
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 

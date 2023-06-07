@@ -2,6 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 import enum
 import re
@@ -121,3 +122,7 @@ def filter_annotations_by_key_pattern(
     return section.FilteredAnnotations(
         {key: value for key, value in annotations.items() if re.search(annotation_key_pattern, key)}
     )
+
+
+def pod_lifecycle_phase(pod_status: api.PodStatus) -> section.PodLifeCycle:
+    return section.PodLifeCycle(phase=pod_status.phase)

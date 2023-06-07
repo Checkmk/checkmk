@@ -36,14 +36,16 @@ LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
                       api/python/{README,*.py} \
                       {nagios,nagios4}/{README,*.h} \
                       src/Makefile.am \
-                      src/*.{cc,h} \
+                      src/*.cc \
+                      src/include/neb/*.h \
                       src/src/*.cc \
                       src/test/*.{cc,h}
 
 FILES_TO_FORMAT_LINUX := \
                       $(filter-out %.pb.cc %.pb.h, \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
-                      $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
+                      $(wildcard livestatus/src/*.cc) \
+                      $(wildcard livestatus/src/include/neb/*.h) \
                       $(wildcard livestatus/src/src/*.cc) \
                       $(wildcard $(addprefix livestatus/src/test/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h)) \

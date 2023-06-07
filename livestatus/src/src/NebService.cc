@@ -3,10 +3,10 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "NebService.h"
+#include "neb/NebService.h"
 
-#include "NebContactGroup.h"
-#include "NebServiceGroup.h"
+#include "neb/NebContactGroup.h"
+#include "neb/NebServiceGroup.h"
 
 bool NebService::all_of_service_groups(
     std::function<bool(const IServiceGroup &)> pred) const {

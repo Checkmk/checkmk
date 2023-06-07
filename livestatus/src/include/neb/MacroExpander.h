@@ -12,7 +12,7 @@
 #include <optional>
 #include <string>
 
-#include "nagios.h"
+#include "neb/nagios.h"
 
 class MacroExpander {
 public:

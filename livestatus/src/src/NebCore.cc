@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "NebCore.h"
+#include "neb/NebCore.h"
 
 #include <algorithm>
 #include <atomic>
@@ -14,18 +14,6 @@
 #include <stdexcept>
 #include <system_error>
 
-#include "Comment.h"
-#include "NebComment.h"
-#include "NebContact.h"
-#include "NebContactGroup.h"
-#include "NebDowntime.h"
-#include "NebGlobalFlags.h"
-#include "NebHost.h"
-#include "NebHostGroup.h"
-#include "NebPaths.h"
-#include "NebService.h"
-#include "NebServiceGroup.h"
-#include "NebTimeperiod.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Average.h"
 #include "livestatus/CrashReport.h"
@@ -36,6 +24,18 @@
 #include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/mk_logwatch.h"
+#include "neb/Comment.h"
+#include "neb/NebComment.h"
+#include "neb/NebContact.h"
+#include "neb/NebContactGroup.h"
+#include "neb/NebDowntime.h"
+#include "neb/NebGlobalFlags.h"
+#include "neb/NebHost.h"
+#include "neb/NebHostGroup.h"
+#include "neb/NebPaths.h"
+#include "neb/NebService.h"
+#include "neb/NebServiceGroup.h"
+#include "neb/NebTimeperiod.h"
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int g_num_hosts;

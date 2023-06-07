@@ -12,7 +12,7 @@
 #include <string>
 
 #include "livestatus/Interface.h"
-#include "nagios.h"
+#include "neb/nagios.h"
 
 class Comment {
 public:

@@ -13,7 +13,7 @@
 #include <mutex>
 #include <string>
 
-#include "nagios.h"
+#include "neb/nagios.h"
 class Logger;
 
 class TimeperiodsCache {

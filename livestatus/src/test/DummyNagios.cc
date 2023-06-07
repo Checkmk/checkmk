@@ -5,7 +5,7 @@
 
 #include <ctime>
 
-#include "nagios.h"
+#include "neb/nagios.h"
 
 extern "C" {
 // official exports ------------------------------------------------------------

@@ -19,13 +19,13 @@
 #include <utility>
 #include <vector>
 
-#include "MacroExpander.h"
-#include "NebCore.h"
-#include "NebHost.h"
-#include "TimeperiodsCache.h"
 #include "livestatus/Interface.h"
 #include "livestatus/StringUtils.h"
-#include "nagios.h"
+#include "neb/MacroExpander.h"
+#include "neb/NebCore.h"
+#include "neb/NebHost.h"
+#include "neb/TimeperiodsCache.h"
+#include "neb/nagios.h"
 
 class NebService : public IService {
 public:

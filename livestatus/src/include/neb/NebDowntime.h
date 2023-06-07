@@ -6,10 +6,10 @@
 #ifndef NebDowntime_h
 #define NebDowntime_h
 
-#include "Downtime.h"
-#include "NebHost.h"
-#include "NebService.h"
 #include "livestatus/Interface.h"
+#include "neb/Downtime.h"
+#include "neb/NebHost.h"
+#include "neb/NebService.h"
 
 class NebDowntime : public IDowntime {
 public:

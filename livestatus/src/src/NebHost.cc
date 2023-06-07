@@ -3,15 +3,15 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "NebHost.h"
+#include "neb/NebHost.h"
 
 #include <algorithm>
 #include <unordered_map>
 #include <utility>
 
-#include "NebContactGroup.h"
-#include "NebHostGroup.h"
-#include "NebService.h"
+#include "neb/NebContactGroup.h"
+#include "neb/NebHostGroup.h"
+#include "neb/NebService.h"
 
 using namespace std::string_literals;
 

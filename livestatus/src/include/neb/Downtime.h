@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <string>
 
-#include "nagios.h"
+#include "neb/nagios.h"
 
 class Downtime {
 public:

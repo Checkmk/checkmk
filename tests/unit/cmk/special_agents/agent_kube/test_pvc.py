@@ -6,6 +6,7 @@ from pydantic_factories import ModelFactory
 
 from tests.unit.cmk.special_agents.agent_kube import factory
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.persistent_volume_claim
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
@@ -29,7 +30,9 @@ class AttachedVolumeFactory(ModelFactory):
 def test_group_serialized_volumes_by_namespace():
     namespace_name = api.NamespaceName("ns1")
     volumes = AttachedVolumeFactory.batch(size=3, namespace=namespace_name)
-    namespaced_grouped_volumes = agent.group_serialized_volumes_by_namespace(iter(volumes))
+    namespaced_grouped_volumes = cmk.special_agents.utils_kubernetes.agent_handlers.persistent_volume_claim.group_serialized_volumes_by_namespace(
+        iter(volumes)
+    )
 
     assert namespaced_grouped_volumes == {
         namespace_name: {v.persistent_volume_claim: v for v in volumes}
@@ -41,7 +44,9 @@ def test_group_parsed_pvcs_by_namespace():
     api_pvc = factory.PersistentVolumeClaimFactory.build(
         metadata=factory.MetaDataFactory.build(namespace=namespace_name, factory_use_construct=True)
     )
-    grouped_pvc = agent.group_parsed_pvcs_by_namespace([api_pvc])
+    grouped_pvc = cmk.special_agents.utils_kubernetes.agent_handlers.persistent_volume_claim.group_parsed_pvcs_by_namespace(
+        [api_pvc]
+    )
     assert len(grouped_pvc) == 1
     assert (namespace_group := grouped_pvc.get(namespace_name)) is not None
     assert len(namespace_group) == 1

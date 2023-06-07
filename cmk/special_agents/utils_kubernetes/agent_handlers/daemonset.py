@@ -5,23 +5,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,
+    DaemonSet,
     filter_annotations_by_key_pattern,
-    PodOwner,
     thin_containers,
 )
-from cmk.special_agents.utils_kubernetes.schemata import api, section
-
-
-@dataclass(frozen=True)
-class DaemonSet(PodOwner):
-    metadata: api.MetaData
-    spec: api.DaemonSetSpec
-    status: api.DaemonSetStatus
-    type_: str = "daemonset"
+from cmk.special_agents.utils_kubernetes.schemata import section
 
 
 def replicas(

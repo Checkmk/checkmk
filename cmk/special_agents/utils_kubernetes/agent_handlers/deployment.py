@@ -3,24 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
-
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,
+    Deployment,
     filter_annotations_by_key_pattern,
-    PodOwner,
     thin_containers,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
-
 # TODO: addition of test framework for output sections
-@dataclass(frozen=True)
-class Deployment(PodOwner):
-    metadata: api.MetaData
-    spec: api.DeploymentSpec
-    status: api.DeploymentStatus
-    type_: str = "deployment"
 
 
 def replicas(deployment: Deployment) -> section.DeploymentReplicas:

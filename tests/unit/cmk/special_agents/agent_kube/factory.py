@@ -136,8 +136,8 @@ class APIDeploymentFactory(ModelFactory):
 
 def api_to_agent_deployment(
     api_deployment: api.Deployment, pods: Sequence[api.Pod] = ()
-) -> cmk.special_agents.utils_kubernetes.agent_handlers.deployment.Deployment:
-    return cmk.special_agents.utils_kubernetes.agent_handlers.deployment.Deployment(
+) -> cmk.special_agents.utils_kubernetes.agent_handlers.common.Deployment:
+    return cmk.special_agents.utils_kubernetes.agent_handlers.common.Deployment(
         metadata=api_deployment.metadata,
         spec=api_deployment.spec,
         status=api_deployment.status,
@@ -156,8 +156,8 @@ class APIDaemonSetFactory(ModelFactory):
 
 def api_to_agent_daemonset(
     api_daemonset: api.DaemonSet, pods: Sequence[api.Pod] = ()
-) -> cmk.special_agents.utils_kubernetes.agent_handlers.daemonset.DaemonSet:
-    return cmk.special_agents.utils_kubernetes.agent_handlers.daemonset.DaemonSet(
+) -> cmk.special_agents.utils_kubernetes.agent_handlers.common.DaemonSet:
+    return cmk.special_agents.utils_kubernetes.agent_handlers.common.DaemonSet(
         metadata=api_daemonset.metadata,
         spec=api_daemonset.spec,
         status=api_daemonset.status,
@@ -176,8 +176,8 @@ class APIStatefulSetFactory(ModelFactory):
 
 def api_to_agent_statefulset(
     api_statefulset: api.StatefulSet, pods: Sequence[api.Pod] = ()
-) -> cmk.special_agents.utils_kubernetes.agent_handlers.statefulset.StatefulSet:
-    return cmk.special_agents.utils_kubernetes.agent_handlers.statefulset.StatefulSet(
+) -> cmk.special_agents.utils_kubernetes.agent_handlers.common.StatefulSet:
+    return cmk.special_agents.utils_kubernetes.agent_handlers.common.StatefulSet(
         metadata=api_statefulset.metadata,
         spec=api_statefulset.spec,
         status=api_statefulset.status,

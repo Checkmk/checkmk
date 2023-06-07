@@ -1,22 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,
     filter_annotations_by_key_pattern,
-    PodOwner,
+    StatefulSet,
     thin_containers,
 )
-from cmk.special_agents.utils_kubernetes.schemata import api, section
-
-
-@dataclass(frozen=True)
-class StatefulSet(PodOwner):
-    metadata: api.MetaData
-    spec: api.StatefulSetSpec
-    status: api.StatefulSetStatus
-    type_: str = "statefulset"
+from cmk.special_agents.utils_kubernetes.schemata import section
 
 
 def replicas(statefulset: StatefulSet) -> section.StatefulSetReplicas:

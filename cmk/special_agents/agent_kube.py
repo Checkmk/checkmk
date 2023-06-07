@@ -52,15 +52,18 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     Cluster,
     collect_cpu_resources_from_api_pods,
     collect_memory_resources_from_api_pods,
+    DaemonSet,
+    Deployment,
     filter_annotations_by_key_pattern,
     namespace_name,
     Node,
+    PB_KUBE_OBJECT,
+    PiggybackFormatter,
     pod_lifecycle_phase,
     pod_name,
     pod_resources_from_api_pods,
+    StatefulSet,
 )
-from cmk.special_agents.utils_kubernetes.agent_handlers.daemonset import DaemonSet
-from cmk.special_agents.utils_kubernetes.agent_handlers.deployment import Deployment
 from cmk.special_agents.utils_kubernetes.agent_handlers.namespace import (
     filter_matching_namespace_resource_quota,
     filter_pods_by_resource_quota_criteria,
@@ -73,7 +76,6 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.persistent_volume_claim 
     pod_attached_persistent_volume_claim_names,
     serialize_attached_volumes_from_kubelet_metrics,
 )
-from cmk.special_agents.utils_kubernetes.agent_handlers.statefulset import StatefulSet
 from cmk.special_agents.utils_kubernetes.api_server import APIData, from_kubernetes
 from cmk.special_agents.utils_kubernetes.common import (
     LOGGER,
@@ -321,12 +323,6 @@ def controller_strategy(controller: Deployment | DaemonSet | StatefulSet) -> sec
 
 def controller_spec(controller: Deployment | DaemonSet | StatefulSet) -> section.ControllerSpec:
     return section.ControllerSpec(min_ready_seconds=controller.spec.min_ready_seconds)
-
-
-PB_KUBE_OBJECT = (
-    Cluster | api.CronJob | Deployment | DaemonSet | api.Namespace | Node | api.Pod | StatefulSet
-)
-PiggybackFormatter = Callable[[PB_KUBE_OBJECT], str]
 
 
 @dataclass(frozen=True)

@@ -14,12 +14,16 @@ from livestatus import SiteId
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.agent_registration import get_uuid_link_manager
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import HostName
 
 from cmk.gui import background_job, userdb
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, job_registry
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundJobAlreadyRunning,
+    BackgroundProcessInterface,
+    job_registry,
+)
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
@@ -418,7 +422,9 @@ class RenameHostsBackgroundJob(BackgroundJob):
         )
 
         if self.is_active():
-            raise MKGeneralException(_("Another renaming operation is currently in progress"))
+            raise BackgroundJobAlreadyRunning(
+                _("Another renaming operation is currently in progress")
+            )
 
     def _back_url(self) -> str:
         return makeuri(request, [])

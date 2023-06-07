@@ -2470,10 +2470,10 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
             override_non_ok_state=config_cache.hwsw_inventory_parameters(host_name).fail_status,
         )
 
-    queue.cleanup(
-        valid_hosts=config_cache.all_configured_hosts(),
-        logger=console.verbose,
-    )
+    for host_name in queue:
+        if host_name not in config_cache.all_configured_hosts():
+            console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
+            (queue.path / str(host_name)).unlink(missing_ok=True)
 
     if queue.oldest() is None:
         console.verbose("Autoinventory: No hosts marked by inventory check\n")

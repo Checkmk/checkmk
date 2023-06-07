@@ -13,12 +13,10 @@ from cmk.utils.type_defs import HostName
 
 
 @pytest.fixture(name="auto_queue")
-def _mocked_queue(tmpdir: Path) -> Iterator[AutoQueue]:
-    adq = AutoQueue(tmpdir / "dir1")
-    mockdir = Path(tmpdir)
-    (mockdir / HostName("most")).touch()
-    (mockdir / HostName("lost")).touch()
-    adq._dir = mockdir
+def auto_queue_fixture(tmpdir: Path) -> Iterator[AutoQueue]:
+    adq = AutoQueue(tmpdir)
+    (adq.path / HostName("most")).touch()
+    (adq.path / HostName("lost")).touch()
     yield adq
 
 
@@ -43,13 +41,3 @@ class TestAutoQueue:
 
     def test_queued_populated(self, auto_queue: AutoQueue) -> None:
         assert set(auto_queue) == {HostName("most"), HostName("lost")}
-
-    def test_remove(self, auto_queue: AutoQueue) -> None:
-        auto_queue.remove(HostName("lost"))
-        assert list(auto_queue) == [HostName("most")]
-
-    def test_cleanup(self, auto_queue: AutoQueue) -> None:
-        auto_queue.cleanup(
-            valid_hosts={HostName("lost"), HostName("rost")}, logger=lambda *args, **kw: None
-        )
-        assert list(auto_queue) == ["lost"]

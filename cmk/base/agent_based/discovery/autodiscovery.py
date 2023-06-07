@@ -315,10 +315,10 @@ def autodiscovery(
     on_error: OnError,
 ) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     """Autodiscovery"""
-    autodiscovery_queue.cleanup(
-        valid_hosts=config_cache.all_configured_hosts(),
-        logger=console.verbose,
-    )
+    for host_name in autodiscovery_queue:
+        if host_name not in config_cache.all_configured_hosts():
+            console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
+            (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
 
     if (oldest_queued := autodiscovery_queue.oldest()) is None:
         console.verbose("Autodiscovery: No hosts marked by discovery check\n")
@@ -438,7 +438,7 @@ def _autodiscovery(
         console.verbose(f"  failed: {result.error_text or 'host is offline'}\n")
         # delete the file even in error case, otherwise we might be causing the same error
         # every time the cron job runs
-        autodiscovery_queue.remove(host_name)
+        (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
         return None, False
 
     something_changed = (
@@ -472,7 +472,7 @@ def _autodiscovery(
         # Now ensure that the discovery service is updated right after the changes
         schedule_discovery_check(host_name)
 
-    autodiscovery_queue.remove(host_name)
+    (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
 
     return (result, activation_required) if something_changed else (None, False)
 

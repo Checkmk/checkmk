@@ -806,6 +806,8 @@ class Site:
             )
 
     def rm(self, site_id: str | None = None) -> None:
+        # Wait a bit to avoid unnecessarily stress testing the site.
+        time.sleep(1)
         completed_process = subprocess.run(
             [
                 "/usr/bin/sudo",

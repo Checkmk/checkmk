@@ -27,7 +27,7 @@ from urllib.request import urlopen
 
 import cmk.utils.site as site
 from cmk.utils.exceptions import MKException
-from cmk.utils.mail import default_from_address, send_mail_sendmail, set_mail_headers
+from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 
 from cmk.notification_plugins import utils
 
@@ -546,11 +546,13 @@ def multipart_mail(
         part.add_header("Content-Disposition", how, filename=name)
         m.attach(part)
 
-    return set_mail_headers(target, subject, from_address, reply_to, m)
+    return set_mail_headers(
+        MailString(target), MailString(subject), MailString(from_address), MailString(reply_to), m
+    )
 
 
 def send_mail_smtp(  # pylint: disable=too-many-branches
-    message: Message, target: str, from_address: str, context: dict[str, str]
+    message: Message, target: MailString, from_address: MailString, context: dict[str, str]
 ) -> int:
     import smtplib  # pylint: disable=import-outside-toplevel
 
@@ -567,7 +569,7 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
 
         smarthost = context[host_var]
         try:
-            send_mail_smtp_impl(message, target, smarthost, from_address, context)
+            send_mail_smtp_impl(message, target, MailString(smarthost), from_address, context)
             success = True
         except socket.timeout as e:
             sys.stderr.write(f'timeout connecting to "{smarthost}": {str(e)}\n')
@@ -624,7 +626,11 @@ def _ensure_str_error_message(message: bytes | str) -> str:
 
 
 def send_mail_smtp_impl(
-    message: Message, target: str, smarthost: str, from_address: str, context: dict[str, str]
+    message: Message,
+    target: MailString,
+    smarthost: MailString,
+    from_address: MailString,
+    context: dict[str, str],
 ) -> None:
     import smtplib  # pylint: disable=import-outside-toplevel
     import types  # pylint: disable=import-outside-toplevel
@@ -674,8 +680,8 @@ def send_mail_smtp_impl(
 # TODO: Use EmailContent parameter.
 def send_mail(message: Message, target: str, from_address: str, context: dict[str, str]) -> int:
     if "PARAMETER_SMTP_PORT" in context:
-        return send_mail_smtp(message, target, from_address, context)
-    send_mail_sendmail(message, target, from_address)
+        return send_mail_smtp(message, MailString(target), MailString(from_address), context)
+    send_mail_sendmail(message, MailString(target), MailString(from_address))
     sys.stdout.write("Spooled mail to local mail transmission agent\n")
     return 0
 

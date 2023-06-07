@@ -29,18 +29,18 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId
-from cmk.utils.type_defs.notification_plugin_api_types import (
-    get_plugin_from_api_request,
-    get_plugin_from_mk_file,
-    NotificationPlugin,
-)
-from cmk.utils.type_defs.notify import (
+from cmk.utils.notify_types import (
     BuiltInPluginNames,
     EventRule,
     NotificationRuleID,
     NotifyBulkType,
     NotifyPlugin,
+)
+from cmk.utils.type_defs import UserId
+from cmk.utils.type_defs.notification_plugin_api_types import (
+    get_plugin_from_api_request,
+    get_plugin_from_mk_file,
+    NotificationPlugin,
 )
 from cmk.utils.type_defs.rule_notification_api_types import (
     APIConditions,

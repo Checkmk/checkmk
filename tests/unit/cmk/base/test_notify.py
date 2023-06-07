@@ -11,8 +11,13 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import ContactgroupName, ContactName
-from cmk.utils.type_defs.notify import EventContext, NotificationContext, NotifyPluginParams
+from cmk.utils.notify_types import (
+    ContactName,
+    EventContext,
+    NotificationContext,
+    NotifyPluginParams,
+)
+from cmk.utils.type_defs import ContactgroupName
 
 from cmk.base import notify
 

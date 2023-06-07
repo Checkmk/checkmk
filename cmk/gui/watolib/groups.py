@@ -10,8 +10,9 @@ from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.notify_types import EventRule
 from cmk.utils.regex import GROUP_NAME_PATTERN
-from cmk.utils.type_defs import EventRule, timeperiod_spec_alias
+from cmk.utils.type_defs import timeperiod_spec_alias
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation

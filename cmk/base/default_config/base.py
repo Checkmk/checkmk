@@ -6,6 +6,7 @@
 from typing import Any, Final, Literal
 
 from cmk.utils.labels import Labels
+from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
 from cmk.utils.store.host_storage import FolderAttributesForBase
@@ -13,9 +14,7 @@ from cmk.utils.tags import TagConfigSpec
 from cmk.utils.translations import TranslationOptionsSpec
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
-    Contact,
     ContactgroupName,
-    ContactName,
     HostAddress,
     HostgroupName,
     HostName,

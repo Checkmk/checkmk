@@ -5,13 +5,8 @@
 
 import cmk.utils.store as store
 from cmk.utils import version
-from cmk.utils.type_defs import (
-    EventRule,
-    timeperiod_spec_alias,
-    TimeperiodSpec,
-    TimeperiodSpecs,
-    UserId,
-)
+from cmk.utils.notify_types import EventRule
+from cmk.utils.type_defs import timeperiod_spec_alias, TimeperiodSpec, TimeperiodSpecs, UserId
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 

@@ -20,10 +20,11 @@ import livestatus
 
 import cmk.utils.daemon
 import cmk.utils.debug
+from cmk.utils.notify_types import EventContext, EventRule
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
 from cmk.utils.tags import TagID
-from cmk.utils.type_defs import EventContext, EventRule, HostName, ServiceName
+from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.base.config as config
 import cmk.base.core

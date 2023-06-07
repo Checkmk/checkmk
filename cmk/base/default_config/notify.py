@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import EventRule, NotificationPluginNameStr, NotifyPluginParamsDict
+from cmk.utils.notify_types import EventRule, NotificationPluginNameStr, NotifyPluginParamsDict
 
 # Log level of notifications
 # 0, 1, 2 -> deprecated (transformed to 20, 20, and 10)

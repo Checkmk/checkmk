@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Any, NamedTuple, overload
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import EventRule
+from cmk.utils.notify_types import EventRule
 
 import cmk.gui.forms as forms
 import cmk.gui.permissions as permissions

@@ -14,6 +14,7 @@ from typing import Any, TypeAlias, TypedDict, TypeVar
 from cmk.utils import version as cmk_version
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels
+from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
@@ -25,8 +26,6 @@ from cmk.utils.type_defs import (
     Item,
     LegacyCheckParameters,
     MetricTuple,
-    NotifyAnalysisInfo,
-    NotifyBulks,
     ParametersTypeAlias,
     ServiceDetails,
     ServiceName,

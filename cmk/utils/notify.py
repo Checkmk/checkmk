@@ -18,7 +18,7 @@ import cmk.utils.defines
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.type_defs import EventContext, NotificationContext
+from cmk.utils.notify_types import EventContext, NotificationContext
 
 logger = logging.getLogger("cmk.utils.notify")
 

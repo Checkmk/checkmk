@@ -47,11 +47,8 @@ from cmk.utils.notify import (
     NotificationResultCode,
     NotificationViaPlugin,
 )
-from cmk.utils.regex import regex
-from cmk.utils.timeout import MKTimeout, Timeout
-from cmk.utils.type_defs import (
+from cmk.utils.notify_types import (
     Contact,
-    ContactgroupName,
     ContactName,
     EventContext,
     EventRule,
@@ -70,6 +67,9 @@ from cmk.utils.type_defs import (
     ServiceEventType,
     UUIDs,
 )
+from cmk.utils.regex import regex
+from cmk.utils.timeout import MKTimeout, Timeout
+from cmk.utils.type_defs import ContactgroupName
 
 import cmk.base.config as config
 import cmk.base.core

@@ -12,9 +12,9 @@ from uuid import uuid4
 from cmk.utils import store
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
+from cmk.utils.notify_types import EventRule, NotificationRuleID
 from cmk.utils.paths import site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
-from cmk.utils.type_defs import EventRule, NotificationRuleID
 
 from cmk.gui.groups import AllGroupSpecs, GroupName
 from cmk.gui.log import logger

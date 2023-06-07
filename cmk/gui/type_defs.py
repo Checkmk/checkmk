@@ -27,16 +27,9 @@ from cmk.utils.crypto.certificate import (
 )
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.labels import Labels
+from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
 from cmk.utils.structured_data import SDPath
-from cmk.utils.type_defs import (
-    ContactgroupName,
-    DisabledNotificationsOptions,
-    EventRule,
-    HostName,
-    MetricName,
-    ServiceName,
-    UserId,
-)
+from cmk.utils.type_defs import ContactgroupName, HostName, MetricName, ServiceName, UserId
 
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString

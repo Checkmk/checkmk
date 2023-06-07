@@ -20,7 +20,7 @@ from cmk.utils.escaping import escape, escape_permissive
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.misc import typeshed_issue_7724
 from cmk.utils.notify import find_wato_folder, NotificationContext
-from cmk.utils.type_defs import PluginNotificationContext
+from cmk.utils.notify_types import PluginNotificationContext
 
 from cmk.utils.html import (  # noqa: F401  # pylint: disable=unused-import  # isort:skip
     replace_state_markers as format_plugin_output,

@@ -9,7 +9,7 @@ from typing import NoReturn
 
 import requests
 
-from cmk.utils.type_defs import PluginNotificationContext
+from cmk.utils.notify_types import PluginNotificationContext
 
 from cmk.notification_plugins.utils import (
     collect_context,

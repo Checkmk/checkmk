@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, cast, Iterator, Literal, Mapping, Optional, Sequence, TypedDict
 
-from cmk.utils.type_defs import (
+from cmk.utils.notify_types import (
     BulkOutsideTimePeriodType,
     ConditionEventConsoleAlertsType,
     EmailBodyElementsType,
@@ -37,6 +37,7 @@ from cmk.utils.type_defs import (
     OpsGeniePriorityPValueType,
     OpsGeniePriorityStrType,
     PasswordType,
+    PluginOption,
     ProxyUrl,
     PushOverPriorityNumType,
     PushOverPriorityStringType,
@@ -55,7 +56,6 @@ from cmk.utils.type_defs import (
     URLPrefix,
     WebHookUrl,
 )
-from cmk.utils.type_defs.notify import PluginOption
 
 from cmk.ec.export import (  # pylint:disable=cmk-module-layer-violation
     SyslogFacility,

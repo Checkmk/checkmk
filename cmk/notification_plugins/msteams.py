@@ -11,7 +11,7 @@ from cmk.utils.ms_teams_constants import (
     ms_teams_tmpl_svc_summary,
     ms_teams_tmpl_svc_title,
 )
-from cmk.utils.type_defs import PluginNotificationContext
+from cmk.utils.notify_types import PluginNotificationContext
 
 from cmk.notification_plugins.utils import (
     host_url_from_context,

@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import cast, ClassVar, Literal, Protocol, Type
 
-from cmk.utils.type_defs import (
+from cmk.utils.notify_types import (
     CustomPluginName,
     NotificationPluginNameStr,
     NotifyPluginParams,

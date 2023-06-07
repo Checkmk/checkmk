@@ -23,19 +23,19 @@ PACKAGE_ASIO 	:= $(TOP_SRC_DIR)\third_party\asio
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
 ASIO_VERSION 	:= asio-1.24.0-patched
 
-PACKAGE_FMT     := $(TOP_SRC_DIR)\omd\packages\fmt
+PACKAGE_FMT     := $(TOP_SRC_DIR)\third_party\fmt
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
 FMT_VERSION    := fmt-9.0.0
 
-PACKAGE_OHM     := $(TOP_SRC_DIR)\omd\packages\openhardwaremonitor
+PACKAGE_OHM     := $(TOP_SRC_DIR)\third_party\openhardwaremonitor
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
 OHM_VERSION    := openhardwaremonitor-0.9.6
 
-PACKAGE_SIMPLEINI     := $(TOP_SRC_DIR)\omd\packages\simpleini
+PACKAGE_SIMPLEINI     := $(TOP_SRC_DIR)\third_party\simpleini
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
 SIMPLEINI_VERSION     := simpleini-2af65fc
 
-PACKAGE_YAML   := $(TOP_SRC_DIR)\omd\packages\yaml-cpp
+PACKAGE_YAML   := $(TOP_SRC_DIR)\third_party\yaml-cpp
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
 YAML_VERSION   := yaml-cpp.9a362420
 

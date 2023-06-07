@@ -15,8 +15,8 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.base import item_state
-from cmk.base.legacy_checks import mcafee_webgateway
+from cmk.base.plugins.agent_based import mcafee_webgateway
+from cmk.base.plugins.agent_based.agent_based_api import v1
 
 WALK = """
 .1.3.6.1.2.1.1.1.0 McAfee Web Gateway 7
@@ -55,10 +55,10 @@ def test_discovery(
     assert section is not None
 
     # Act
-    services = list(mcafee_webgateway.inventory_mcafee_gateway_generic(section))
+    services = list(mcafee_webgateway.discover_mcafee_gateway(section))
 
     # Assert
-    assert services == [(None, {})]
+    assert services == [v1.Service()]
 
 
 @freezegun.freeze_time("2019-05-27T05:30:07")
@@ -69,16 +69,10 @@ def test_discovery(
             WALK,
             {},
             [
-                (
-                    0,
-                    "Infections: 8.0/s",
-                    [("infections_rate", 8.0, None, None)],
-                ),
-                (
-                    0,
-                    "Connections blocked: 18.0/s",
-                    [("connections_blocked_rate", 18.0, None, None)],
-                ),
+                v1.Result(state=v1.State.OK, summary="Infections: 8.0/s"),
+                v1.Metric(name="infections_rate", value=8.0),
+                v1.Result(state=v1.State.OK, summary="Connections blocked: 18.0/s"),
+                v1.Metric(name="connections_blocked_rate", value=18.0),
             ],
             id="No levels",
         ),
@@ -86,16 +80,16 @@ def test_discovery(
             WALK,
             {"infections": (5, 10), "connections_blocked": (10, 15)},
             [
-                (
-                    1,
-                    "Infections: 8.0/s (warn/crit at 5.0/s/10.0/s)",
-                    [("infections_rate", 8.0, 5.0, 10.0)],
+                v1.Result(
+                    state=v1.State.WARN,
+                    summary="Infections: 8.0/s (warn/crit at 5.0/s/10.0/s)",
                 ),
-                (
-                    2,
-                    "Connections blocked: 18.0/s (warn/crit at 10.0/s/15.0/s)",
-                    [("connections_blocked_rate", 18.0, 10.0, 15.0)],
+                v1.Metric(name="infections_rate", value=8.0, levels=(5.0, 10.0)),
+                v1.Result(
+                    state=v1.State.CRIT,
+                    summary="Connections blocked: 18.0/s (warn/crit at 10.0/s/15.0/s)",
                 ),
+                v1.Metric(name="connections_blocked_rate", value=18.0, levels=(10.0, 15.0)),
             ],
             id="Warn and Crit",
         ),
@@ -103,11 +97,8 @@ def test_discovery(
             WALK_2,
             {},
             [
-                (
-                    0,
-                    "Connections blocked: 18.0/s",
-                    [("connections_blocked_rate", 18.0, None, None)],
-                ),
+                v1.Result(state=v1.State.OK, summary="Connections blocked: 18.0/s"),
+                v1.Metric(name="connections_blocked_rate", value=18.0),
             ],
             id="One missing",
         ),
@@ -130,8 +121,8 @@ def test_check_results(
         "check_mcafee_webgateway.connections_blocked": (1558935006.0, 2),
     }
     # Act
-    monkeypatch.setattr(item_state, "get_value_store", lambda: value_store)
-    results = list(mcafee_webgateway.check_mcafee_webgateway(None, params, section))
+    monkeypatch.setattr(v1, "get_value_store", lambda: value_store)
+    results = list(mcafee_webgateway.check_mcafee_webgateway(params, section))
 
     # Assert
     assert results == expected_results

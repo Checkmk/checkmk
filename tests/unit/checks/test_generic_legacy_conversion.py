@@ -986,7 +986,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "mcafee_emailgateway_entities",
         "mcafee_emailgateway_smtp",
         "mcafee_emailgateway_spam_mcafee",
-        "mcafee_webgateway",
         "mcafee_webgateway_info",
         "md",
         "megaraid_bbu",

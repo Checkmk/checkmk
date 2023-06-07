@@ -773,8 +773,8 @@ class Site:
             )
 
     def rm(self, site_id: Optional[str] = None) -> None:
-        # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
-        # assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
+        # Wait a bit to avoid unnecessarily stress testing the site.
+        time.sleep(1)
         subprocess.run(
             [
                 "/usr/bin/sudo",

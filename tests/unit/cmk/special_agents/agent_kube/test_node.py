@@ -130,10 +130,12 @@ def test_conditions_returns_all_native_conditions() -> None:
     conditions = node.conditions()
     assert conditions is not None
     conditions_dict = conditions.dict()
-    assert len(conditions_dict) == len(agent.NATIVE_NODE_CONDITION_TYPES)
+    assert len(conditions_dict) == len(
+        cmk.special_agents.utils_kubernetes.agent_handlers.common.NATIVE_NODE_CONDITION_TYPES
+    )
     assert all(
         condition_type.lower() in conditions_dict
-        for condition_type in agent.NATIVE_NODE_CONDITION_TYPES
+        for condition_type in cmk.special_agents.utils_kubernetes.agent_handlers.common.NATIVE_NODE_CONDITION_TYPES
     )
 
 
@@ -143,7 +145,10 @@ def test_conditions_respects_status_conditions() -> None:
     assert status.conditions is not None
 
     native_conditions = [
-        cond for cond in status.conditions if cond.type_ in agent.NATIVE_NODE_CONDITION_TYPES
+        cond
+        for cond in status.conditions
+        if cond.type_
+        in cmk.special_agents.utils_kubernetes.agent_handlers.common.NATIVE_NODE_CONDITION_TYPES
     ]
 
     conditions = node.conditions()
@@ -164,7 +169,8 @@ def test_custom_conditions_respects_status_conditions() -> None:
     npd_conditions_status = [
         cond.status
         for cond in sorted(status.conditions, key=lambda cond: cond.type_)
-        if cond.type_ not in agent.NATIVE_NODE_CONDITION_TYPES
+        if cond.type_
+        not in cmk.special_agents.utils_kubernetes.agent_handlers.common.NATIVE_NODE_CONDITION_TYPES
     ]
 
     node_custom_conditions = node.custom_conditions()

@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
@@ -60,7 +61,9 @@ def test_cluster_resources(cluster_pods: int) -> None:
         )
         for _ in range(cluster_pods)
     ]
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(pods=pods))
+    cluster = cmk.special_agents.utils_kubernetes.agent_handlers.common.Cluster.from_api_resources(
+        (), APIDataFactory.build(pods=pods)
+    )
     assert cluster.memory_resources().count_total == cluster_pods * pod_containers_count
     assert cluster.cpu_resources().count_total == cluster_pods * pod_containers_count
     assert sum(len(pods) for _phase, pods in cluster.pod_resources()) == cluster_pods
@@ -73,7 +76,9 @@ def test_cluster_allocatable_memory_resource() -> None:
         allocatable=NodeResourcesFactory.build(memory=memory, factory_use_construct=True)
     )
     nodes = APINodeFactory.batch(size=number_nodes, status=status)
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
+    cluster = cmk.special_agents.utils_kubernetes.agent_handlers.common.Cluster.from_api_resources(
+        (), APIDataFactory.build(nodes=nodes)
+    )
 
     expected = section.AllocatableResource(context="cluster", value=memory * number_nodes)
     actual = cluster.allocatable_memory_resource()
@@ -87,7 +92,9 @@ def test_cluster_allocatable_cpu_resource():
         allocatable=NodeResourcesFactory.build(cpu=cpu, factory_use_construct=True)
     )
     nodes = APINodeFactory.batch(size=number_nodes, status=status)
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
+    cluster = cmk.special_agents.utils_kubernetes.agent_handlers.common.Cluster.from_api_resources(
+        (), APIDataFactory.build(nodes=nodes)
+    )
 
     expected = section.AllocatableResource(context="cluster", value=cpu * number_nodes)
     actual = cluster.allocatable_cpu_resource()
@@ -97,7 +104,9 @@ def test_cluster_allocatable_cpu_resource():
 def test_write_cluster_api_sections_registers_sections_to_be_written(
     write_sections_mock: MagicMock,
 ) -> None:
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build())
+    cluster = cmk.special_agents.utils_kubernetes.agent_handlers.common.Cluster.from_api_resources(
+        (), APIDataFactory.build()
+    )
     agent.write_cluster_api_sections("cluster", cluster)
     assert list(write_sections_mock.call_args[0][0]) == cluster_api_sections()
 
@@ -105,7 +114,9 @@ def test_write_cluster_api_sections_registers_sections_to_be_written(
 def test_write_cluster_api_sections_maps_section_names_to_callables(
     write_sections_mock: MagicMock,
 ) -> None:
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build())
+    cluster = cmk.special_agents.utils_kubernetes.agent_handlers.common.Cluster.from_api_resources(
+        (), APIDataFactory.build()
+    )
     agent.write_cluster_api_sections("cluster", cluster)
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
@@ -116,19 +127,25 @@ def test_write_cluster_api_sections_maps_section_names_to_callables(
 @pytest.mark.parametrize("node_count", [0, 10, 20])
 def test_node_count(node_count: int) -> None:
     nodes = APINodeFactory.batch(size=node_count)
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
+    cluster = cmk.special_agents.utils_kubernetes.agent_handlers.common.Cluster.from_api_resources(
+        (), APIDataFactory.build(nodes=nodes)
+    )
     section_node_count = cluster.node_count()
     assert len(section_node_count.nodes) == node_count
 
 
 def test__node_is_ready_with_ready_node() -> None:
     api_node = APINodeFactory.build(status=node_status(api.NodeConditionStatus.TRUE))
-    assert agent._node_is_ready(api_node) is True
+    assert (
+        cmk.special_agents.utils_kubernetes.agent_handlers.common._node_is_ready(api_node) is True
+    )
 
 
 def test__node_is_ready_with_unready_node() -> None:
     api_node = APINodeFactory.build(status=node_status(api.NodeConditionStatus.FALSE))
-    assert agent._node_is_ready(api_node) is False
+    assert (
+        cmk.special_agents.utils_kubernetes.agent_handlers.common._node_is_ready(api_node) is False
+    )
 
 
 @pytest.mark.parametrize("cluster_daemon_sets", [0, 10, 20])
@@ -184,7 +201,7 @@ def test_cluster_allocatable_memory_resource_exclude_roles(
         else cluster_nodes
     )
     expected = section.AllocatableResource(context="cluster", value=memory * counted_nodes)
-    cluster = agent.Cluster.from_api_resources(
+    cluster = cmk.special_agents.utils_kubernetes.agent_handlers.common.Cluster.from_api_resources(
         excluded_node_roles=excluded_node_roles,
         api_data=APIDataFactory.build(
             nodes=[
@@ -239,7 +256,7 @@ def test_cluster_allocatable_cpu_resource_cluster(
         else cluster_nodes
     )
     expected = section.AllocatableResource(context="cluster", value=6.0 * counted_nodes)
-    cluster = agent.Cluster.from_api_resources(
+    cluster = cmk.special_agents.utils_kubernetes.agent_handlers.common.Cluster.from_api_resources(
         excluded_node_roles=excluded_node_roles,
         api_data=APIDataFactory.build(
             nodes=[
@@ -296,7 +313,7 @@ def test_cluster_usage_resources(
         )
         for node, _, roles in node_podcount_roles
     ]
-    cluster = agent.Cluster.from_api_resources(
+    cluster = cmk.special_agents.utils_kubernetes.agent_handlers.common.Cluster.from_api_resources(
         [excluded_node_role],
         APIDataFactory.build(pods=pods, nodes=nodes),
     )
@@ -351,7 +368,7 @@ def test_cluster_allocatable_pods(
         )
         for node, _, roles in node_podcount_roles
     ]
-    cluster = agent.Cluster.from_api_resources(
+    cluster = cmk.special_agents.utils_kubernetes.agent_handlers.common.Cluster.from_api_resources(
         [excluded_node_role],
         APIDataFactory.build(pods=pods, nodes=nodes),
     )
@@ -522,7 +539,11 @@ def test__node_collector_daemons_error_handling(
         )
         for labels in labels_per_daemonset
     ]
-    collector_daemons = agent._node_collector_daemons(daemonsets)
+    collector_daemons = (
+        cmk.special_agents.utils_kubernetes.agent_handlers.common._node_collector_daemons(
+            daemonsets
+        )
+    )
 
     assert collector_daemons.errors == expected_error
     if expected_error.duplicate_container_collector:
@@ -567,7 +588,11 @@ DAEMONSET_NOT_A_COLLECTOR = APIDaemonSetFactory.build(
 def test__node_collector_daemons_identify_container_collector(
     daemonsets: Iterable[api.DaemonSet],
 ) -> None:
-    collector_daemons = agent._node_collector_daemons(daemonsets)
+    collector_daemons = (
+        cmk.special_agents.utils_kubernetes.agent_handlers.common._node_collector_daemons(
+            daemonsets
+        )
+    )
 
     assert collector_daemons.errors == section.IdentificationError(
         duplicate_machine_collector=False,
@@ -600,7 +625,11 @@ def test__node_collector_daemons_identify_container_collector(
 def test__node_collector_daemons_identify_machine_collector(
     daemonsets: Iterable[api.DaemonSet],
 ) -> None:
-    collector_daemons = agent._node_collector_daemons(daemonsets)
+    collector_daemons = (
+        cmk.special_agents.utils_kubernetes.agent_handlers.common._node_collector_daemons(
+            daemonsets
+        )
+    )
 
     assert collector_daemons.errors == section.IdentificationError(
         duplicate_machine_collector=False,
@@ -628,7 +657,11 @@ def test__node_collector_daemons_identify_machine_collector(
 def test__node_collector_daemons_missing_container_collector(
     daemonsets: Sequence[api.DaemonSet],
 ) -> None:
-    collector_daemons = agent._node_collector_daemons(daemonsets)
+    collector_daemons = (
+        cmk.special_agents.utils_kubernetes.agent_handlers.common._node_collector_daemons(
+            daemonsets
+        )
+    )
 
     assert not collector_daemons.errors.duplicate_container_collector
     assert collector_daemons.container is None
@@ -647,14 +680,20 @@ def test__node_collector_daemons_missing_container_collector(
 def test__node_collector_daemons_missing_machine_collector(
     daemonsets: Sequence[api.DaemonSet],
 ) -> None:
-    collector_daemons = agent._node_collector_daemons(daemonsets)
+    collector_daemons = (
+        cmk.special_agents.utils_kubernetes.agent_handlers.common._node_collector_daemons(
+            daemonsets
+        )
+    )
 
     assert not collector_daemons.errors.duplicate_machine_collector
     assert collector_daemons.machine is None
 
 
 def test__node_collector_daemons_no_daemonsets() -> None:
-    collector_daemons = agent._node_collector_daemons([])
+    collector_daemons = (
+        cmk.special_agents.utils_kubernetes.agent_handlers.common._node_collector_daemons([])
+    )
 
     assert not collector_daemons.errors.duplicate_machine_collector
     assert collector_daemons.machine is None

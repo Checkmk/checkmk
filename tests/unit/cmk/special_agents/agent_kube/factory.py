@@ -21,6 +21,7 @@ from collections.abc import Iterator, Sequence
 import pydantic
 from pydantic_factories import ModelFactory, Use
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.common
 import cmk.special_agents.utils_kubernetes.agent_handlers.daemonset
 import cmk.special_agents.utils_kubernetes.agent_handlers.deployment
 import cmk.special_agents.utils_kubernetes.agent_handlers.statefulset
@@ -295,7 +296,10 @@ class NodeStatusFactory(ModelFactory):
 
     conditions = Use(
         NodeConditionFactory.batch,
-        size=len(agent.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
+        size=len(
+            cmk.special_agents.utils_kubernetes.agent_handlers.common.NATIVE_NODE_CONDITION_TYPES
+        )
+        + len(NPD_NODE_CONDITION_TYPES),
         factory_use_construct=True,
     )
     allocatable = Use(NodeResourcesFactory.build, factory_use_construct=True)
@@ -310,7 +314,8 @@ def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatu
                 status=node_condition_status,
                 factory_use_construct=True,
             )
-            for type_ in agent.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES
+            for type_ in cmk.special_agents.utils_kubernetes.agent_handlers.common.NATIVE_NODE_CONDITION_TYPES
+            + NPD_NODE_CONDITION_TYPES
         ],
     )
 
@@ -322,8 +327,10 @@ class APINodeFactory(ModelFactory):
     metadata = Use(NodeMetaDataFactory.build, factory_use_construct=True)
 
 
-def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent.Node:
-    return agent.Node(
+def api_to_agent_node(
+    node: api.Node, pods: Sequence[api.Pod] = ()
+) -> cmk.special_agents.utils_kubernetes.agent_handlers.common.Node:
+    return cmk.special_agents.utils_kubernetes.agent_handlers.common.Node(
         metadata=node.metadata,
         status=node.status,
         kubelet_health=node.kubelet_health,

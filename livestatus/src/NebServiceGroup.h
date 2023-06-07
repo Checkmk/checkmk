@@ -8,9 +8,9 @@
 
 #include <functional>
 
+#include "NebService.h"
 #include "livestatus/Interface.h"
-#include "neb/NebService.h"
-#include "neb/nagios.h"
+#include "nagios.h"
 
 class NebServiceGroup : public IServiceGroup {
 public:

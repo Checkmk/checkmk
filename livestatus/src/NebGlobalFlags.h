@@ -7,7 +7,7 @@
 #define NebGlobalFlags_h
 
 #include "livestatus/Interface.h"
-#include "neb/nagios.h"
+#include "nagios.h"
 
 class NebGlobalFlags : public IGlobalFlags {
 public:

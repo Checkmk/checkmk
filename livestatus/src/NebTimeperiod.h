@@ -6,9 +6,9 @@
 #ifndef NebTimeperiod_h
 #define NebTimeperiod_h
 
+#include "TimeperiodsCache.h"
 #include "livestatus/Interface.h"
-#include "neb/TimeperiodsCache.h"
-#include "neb/nagios.h"
+#include "nagios.h"
 
 class NebTimeperiod : public ITimeperiod {
 public:

@@ -35,6 +35,10 @@
 #include <utility>
 #include <vector>
 
+#include "Comment.h"
+#include "Downtime.h"
+#include "NebCore.h"
+#include "TimeperiodsCache.h"
 #include "livestatus/Average.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/InputBuffer.h"
@@ -50,11 +54,7 @@
 #include "livestatus/data_encoding.h"
 #include "livestatus/global_counters.h"
 #include "livestatus/strutil.h"
-#include "neb/Comment.h"
-#include "neb/Downtime.h"
-#include "neb/NebCore.h"
-#include "neb/TimeperiodsCache.h"
-#include "neb/nagios.h"
+#include "nagios.h"
 
 using namespace std::chrono_literals;
 

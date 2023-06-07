@@ -8,9 +8,9 @@
 
 #include <functional>
 
+#include "NebHost.h"
 #include "livestatus/Interface.h"
-#include "neb/NebHost.h"
-#include "neb/nagios.h"
+#include "nagios.h"
 
 class NebHostGroup : public IHostGroup {
 public:

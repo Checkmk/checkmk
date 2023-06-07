@@ -10,14 +10,14 @@
 #include <memory>
 #include <string>
 
+#include "Comment.h"  // IWYU pragma: keep
+#include "MacroExpander.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
 #include "livestatus/Store.h"
 #include "livestatus/StringColumn.h"
-#include "neb/Comment.h"  // IWYU pragma: keep
-#include "neb/MacroExpander.h"
-#include "neb/nagios.h"
+#include "nagios.h"
 #include "test_utilities.h"
 
 // TODO(sp) Move this to a better place.

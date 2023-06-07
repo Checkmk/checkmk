@@ -11,6 +11,9 @@
 #include <random>
 #include <string>
 
+#include "Comment.h"   // IWYU pragma: keep
+#include "Downtime.h"  // IWYU pragma: keep
+#include "NebCore.h"
 #include "TableQueryHelper.h"
 #include "gtest/gtest.h"
 #include "livestatus/CrashReport.h"
@@ -18,9 +21,6 @@
 #include "livestatus/Logger.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/data_encoding.h"
-#include "neb/Comment.h"   // IWYU pragma: keep
-#include "neb/Downtime.h"  // IWYU pragma: keep
-#include "neb/NebCore.h"
 
 namespace fs = std::filesystem;
 

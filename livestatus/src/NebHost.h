@@ -15,11 +15,11 @@
 #include <unordered_set>
 #include <vector>
 
+#include "MacroExpander.h"
+#include "NebCore.h"
+#include "TimeperiodsCache.h"
 #include "livestatus/Interface.h"
-#include "neb/MacroExpander.h"
-#include "neb/NebCore.h"
-#include "neb/TimeperiodsCache.h"
-#include "neb/nagios.h"
+#include "nagios.h"
 
 class NebHost : public IHost {
 public:

@@ -18,12 +18,12 @@ import urllib.parse
 from collections.abc import Callable, Iterator, Mapping, MutableMapping
 from contextlib import contextmanager, suppress
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Generator, Literal
 
 import pytest
 
 from tests.testlib.openapi_session import CMKOpenApiSession
-from tests.testlib.utils import cmc_path, cme_path, cmk_path, is_containerized
+from tests.testlib.utils import cmc_path, cme_path, cmk_path, execute, is_containerized
 from tests.testlib.version import CMKVersion, version_from_env
 from tests.testlib.web_session import CMKWebSession
 
@@ -1182,7 +1182,7 @@ class SiteFactory:
         update_conflict_mode: str = "install",
         enforce_english_gui: bool = True,
     ) -> None:
-        self._version = version
+        self.version = version
         self._base_ident = prefix or "s_%s_" % version.branch[:6]
         self._sites: MutableMapping[str, Site] = {}
         self._index = 1
@@ -1211,6 +1211,53 @@ class SiteFactory:
             return self._sites[name]
         return self._existing_site(name)
 
+    def get_test_site(
+        self,
+        name: str = "central",
+        description: str = "",
+        auto_cleanup: bool = True,
+        auto_restart_httpd: bool = False,
+    ) -> Generator[Site, None, None]:
+        """Return a fully setup test site (for use in site fixtures)."""
+        reuse = os.environ.get("REUSE")
+        # if REUSE is undefined, a site will neither be reused nor be dropped
+        reuse_site = reuse == "1"
+        drop_site = reuse == "0"
+        site_to_return = self.get_existing_site(name)
+        if site_to_return.exists() and reuse_site:
+            logger.info('Reusing existing site "%s" (REUSE=1)', site_to_return.id)
+        else:
+            if site_to_return.exists() and drop_site:
+                logger.info('Dropping existing site "%s" (REUSE=0)', site_to_return.id)
+                site_to_return.rm()
+            logger.info('Creating new site "%s"', site_to_return.id)
+            site_to_return = self.get_site(name)
+
+        if auto_restart_httpd:
+            # When executed locally and undockerized, the DISTRO may not be set
+            if os.environ.get("DISTRO") in {"centos-7", "centos-8", "almalinux-9"}:
+                # On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually
+                # restart httpd after creating a new site. Otherwise, the REST API won't be
+                # reachable via port 80, preventing e.g. the controller from querying the
+                # agent receiver port.
+                # Note: the mere presence of httpd is not enough to determine
+                # whether we have to restart or not, see eg. sles-15sp4.
+                execute(["sudo", "httpd", "-k", "restart"])
+        logger.info(
+            'Site "%s" is ready!%s',
+            site_to_return.id,
+            f" [{description}]" if description else "",
+        )
+
+        try:
+            yield site_to_return
+        finally:
+            # teardown: saving results and removing site
+            site_to_return.save_results()
+            if auto_cleanup and os.environ.get("REUSE") == "0":
+                logger.info("Dropping existing site (REUSE=0)")
+                site_to_return.rm()
+
     def remove_site(self, name: str) -> None:
         if f"{self._base_ident}{name}" in self._sites:
             site_id = f"{self._base_ident}{name}"
@@ -1231,7 +1278,7 @@ class SiteFactory:
     def _site_obj(self, name: str) -> Site:
         site_id = f"{self._base_ident}{name}"
         return Site(
-            version=self._version,
+            version=self.version,
             site_id=site_id,
             reuse=False,
             update_from_git=self._update_from_git,
@@ -1284,8 +1331,6 @@ def get_site_factory(
     version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
         fallback_edition=Edition.CEE,
-        # Note: we cannot specify a fallback branch here by querying git we because we might not be
-        # inside a git repository (integration tests run as site user)
         fallback_branch=fallback_branch,
     )
     logger.info(

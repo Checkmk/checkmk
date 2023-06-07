@@ -3,7 +3,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import os
 from collections.abc import Generator
 from pathlib import Path
 
@@ -11,7 +10,7 @@ import pytest
 
 from tests.testlib.openapi_session import UnexpectedResponse
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import current_base_branch_name, execute
+from tests.testlib.utils import execute
 
 LOGGER = logging.getLogger(__name__)
 
@@ -52,33 +51,8 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(name="test_site", scope="session")
-def get_site() -> Generator:
-    LOGGER.info("Setting up testsite")
-    reuse = os.environ.get("REUSE")
-    # if REUSE is undefined, a site will neither be reused nor be dropped
-    reuse_site = reuse == "1"
-    drop_site = reuse == "0"
-    sf = get_site_factory(
-        prefix="plugins_",
-        fallback_branch=current_base_branch_name,
-    )
-
-    site_to_return = sf.get_existing_site("central")
-    if site_to_return.exists() and reuse_site:
-        LOGGER.info("Reuse existing site (REUSE=1)")
-    else:
-        if site_to_return.exists() and drop_site:
-            LOGGER.info("Dropping existing site (REUSE=0)")
-            site_to_return.rm()
-        LOGGER.info("Creating new site")
-        site_to_return = sf.get_site("central")
-    LOGGER.info("Testsite %s is up", site_to_return.id)
-
-    try:
-        yield site_to_return
-    finally:
-        # teardown: saving results
-        site_to_return.save_results()
+def get_site() -> Generator[Site, None, None]:
+    yield from get_site_factory(prefix="plugins_").get_test_site()
 
 
 @pytest.fixture(scope="session")

@@ -11,35 +11,13 @@ import pytest
 
 from tests.testlib.crawler import Crawler, XssCrawler
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import current_base_branch_name
 
 logger = logging.getLogger()
 
 
 @pytest.fixture(name="test_site", scope="session")
-def get_site() -> Site:
-    reuse = os.environ.get("REUSE")
-    # if REUSE is undefined, a site will neither be reused nor be dropped
-    reuse_site = reuse == "1"
-    drop_site = reuse == "0"
-    sf = get_site_factory(
-        prefix="crawl_",
-        fallback_branch=current_base_branch_name,
-    )
-
-    site = sf.get_existing_site("central")
-    if site.exists() and reuse_site:
-        logger.info("Reuse existing site (REUSE=1)")
-        site = sf.get_existing_site("central")
-    else:
-        if site.exists() and drop_site:
-            logger.info("Dropping existing site (REUSE=0)")
-            site.rm()
-        logger.info("Creating new site")
-        site = sf.get_site("central")
-    logger.info("Site %s is ready!", site.id)
-
-    return site
+def get_site() -> Generator[Site, None, None]:
+    yield from get_site_factory(prefix="crawl_").get_test_site()
 
 
 @pytest.fixture(name="test_crawler", scope="session")

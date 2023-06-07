@@ -10,7 +10,12 @@ import time
 from collections.abc import Callable
 from typing import Final
 
-from tests.testlib.utils import branch_from_env, edition_from_env, version_spec_from_env
+from tests.testlib.utils import (
+    branch_from_env,
+    current_base_branch_name,
+    edition_from_env,
+    version_spec_from_env,
+)
 
 from cmk.utils.version import Edition
 
@@ -82,9 +87,9 @@ def version_from_env(
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> CMKVersion:
     return CMKVersion(
-        version_spec_from_env(fallback_version_spec),
-        edition_from_env(fallback_edition),
-        branch_from_env(env_var="BRANCH", fallback=fallback_branch),
+        version_spec_from_env(fallback_version_spec or CMKVersion.DAILY),
+        edition_from_env(fallback_edition or Edition.CEE),
+        branch_from_env(env_var="BRANCH", fallback=fallback_branch or current_base_branch_name),
     )
 
 

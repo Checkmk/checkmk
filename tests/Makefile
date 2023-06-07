@@ -56,7 +56,7 @@ PYTEST_SYSTEM_TEST_ARGS := -p "no:cov"
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-.PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
+.PHONY: clean format-shell help prepare-protobuf-files bandit.ini \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker test-format-python test-format-python-docker \
@@ -174,10 +174,6 @@ test-bandit-nosec-markers:
 prepare-protobuf-files:
 	$(MAKE) -C .. protobuf-files
 
-prepare-playwright:
-	../scripts/run-pipenv run playwright install-deps "chromium";
-	../scripts/run-pipenv run playwright install "chromium";
-
 test-docker-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
 	    ../scripts/run-in-docker.sh make --quiet test-docker
@@ -246,13 +242,13 @@ test-format-bazel:
 test-format-bazel-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-bazel
 
-test-gui-crawl: prepare-playwright
+test-gui-crawl:
 	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
-test-xss-crawl: prepare-playwright
+test-xss-crawl:
 	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
-test-gui-e2e: prepare-playwright
+test-gui-e2e:
 	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
 
 test-integration:

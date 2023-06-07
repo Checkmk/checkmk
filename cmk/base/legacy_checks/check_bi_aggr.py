@@ -56,4 +56,5 @@ active_check_info["bi_aggr"] = {
     "service_description": lambda params: "Aggr %s" % params[1]
     if isinstance(params, tuple)
     else params["aggregation_name"],
+    "has_perfdata": True,
 }

@@ -34,10 +34,10 @@ def run_make_targets(Map args) {
             dir("${checkout_dir}") {
                 withEnv(["WORKSPACE=${WORKSPACE}"]) {
 
-                    // TODO preprocess values in top level scripts
+                    // TODO or DO NOT REMOVE: this versioning load is needed in order for uplaod_artifacts to have
+                    // versioning.groovy available.... holy moly
                     def versioning = load "${checkout_dir}/buildscripts/scripts/utils/versioning.groovy"
                     def artifacts_helper = load "${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy"
-                    def image_version = args.VERSION == "git" ? "${build_date}" : args.cmk_version;
 
                     // TODO make independent from WORKSPACE
                     sh("rm -rf \"${WORKSPACE}/packages\"")
@@ -45,8 +45,8 @@ def run_make_targets(Map args) {
                         artifacts_helper.download_deb(
                             INTERNAL_DEPLOY_DEST,
                             INTERNAL_DEPLOY_PORT,
-                            image_version,
-                            "${WORKSPACE}/packages/${image_version}",
+                            args.cmk_version,
+                            "${WORKSPACE}/packages/${args.cmk_version}",
                             args.EDITION,
                             "focal",
                         );
@@ -58,8 +58,8 @@ def run_make_targets(Map args) {
                         artifacts_helper.download_version_dir(
                             INTERNAL_DEPLOY_DEST,
                             INTERNAL_DEPLOY_PORT,
-                            image_version,
-                            "${WORKSPACE}/packages/${image_version}",
+                            args.cmk_version,
+                            "${WORKSPACE}/packages/${args.cmk_version}",
                         );
                     }
 
@@ -71,6 +71,10 @@ def run_make_targets(Map args) {
                     sh("make .venv")
 
                     // Then execute the tests
+
+                    // TODO: We still need here the VERSION/git semantic for the make targets:
+                    // * case VERSION="git" -> use daily build but patch it using f12
+                    // * case VERSION="2.2.0-2023.06.07" -> use daily build of date as-is
                     try {
                         args.DISTRO_LIST.each { DISTRO ->
                             DOCKER_BUILDS[DISTRO] = {
@@ -79,7 +83,7 @@ def run_make_targets(Map args) {
                                         sh("""RESULT_PATH='${WORKSPACE}/test-results/${DISTRO}' \
                                         EDITION='${args.EDITION}' \
                                         DOCKER_TAG='${args.DOCKER_TAG}' \
-                                        VERSION='${args.cmk_version}' \
+                                        VERSION='${args.VERSION == "git" ? args.VERSION : args.cmk_version}' \
                                         DISTRO='$DISTRO' \
                                         BRANCH='${args.BRANCH}' \
                                         make ${args.MAKE_TARGET}""");

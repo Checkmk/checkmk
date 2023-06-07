@@ -12,7 +12,7 @@ def main() {
 
     testing_helper.run_make_targets(
         DOCKER_GROUP_ID: get_docker_group_id(),
-        DISTRO_LIST: ["ubuntu-20.04"],
+        DISTRO_LIST: ["ubuntu-20.04", "ubuntu-22.04", "debian-11", "centos-8", "sles-15sp4"],
         EDITION: "enterprise",
         VERSION: "daily",
         DOCKER_TAG: "master-latest",

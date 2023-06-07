@@ -709,7 +709,7 @@ def create_pvc_sections(
 def filter_pods_by_namespace(
     pods: Sequence[api.Pod], api_namespace: api.NamespaceName
 ) -> Sequence[api.Pod]:
-    return [pod for pod in pods if pod_namespace(pod) == api_namespace]
+    return [pod for pod in pods if kube_object_namespace_name(pod) == api_namespace]
 
 
 def filter_pods_by_cron_job(pods: Sequence[api.Pod], cron_job: api.CronJob) -> Sequence[api.Pod]:
@@ -718,10 +718,6 @@ def filter_pods_by_cron_job(pods: Sequence[api.Pod], cron_job: api.CronJob) -> S
 
 def filter_pods_by_phase(pods: Iterable[api.Pod], phase: api.Phase) -> Sequence[api.Pod]:
     return [pod for pod in pods if pod.status.phase == phase]
-
-
-def pod_namespace(pod: api.Pod) -> api.NamespaceName:
-    return pod.metadata.namespace
 
 
 def kube_object_namespace_name(kube_object: KubeNamespacedObj) -> NamespaceName:
@@ -1109,7 +1105,7 @@ def request_cluster_collector(
 
 
 def pod_lookup_from_api_pod(api_pod: api.Pod) -> PodLookupName:
-    return lookup_name(pod_namespace(api_pod), pod_name(api_pod))
+    return lookup_name(kube_object_namespace_name(api_pod), pod_name(api_pod))
 
 
 KubeNamespacedObj = TypeVar(
@@ -1449,7 +1445,7 @@ def pod_info(
     annotation_key_pattern: AnnotationOption,
 ) -> section.PodInfo:
     return section.PodInfo(
-        namespace=pod_namespace(pod),
+        namespace=kube_object_namespace_name(pod),
         name=pod_name(pod),
         creation_timestamp=pod.metadata.creation_timestamp,
         labels=pod.metadata.labels,
@@ -1698,7 +1694,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 if pod.status.phase in [api.Phase.RUNNING, api.Phase.PENDING]
             ]
             namespacenames_running_pending_pods = {
-                pod_namespace(pod) for pod in running_pending_pods
+                kube_object_namespace_name(pod) for pod in running_pending_pods
             }
             monitored_api_namespaces = namespaces_from_namespacenames(
                 api_data.namespaces,
@@ -1843,10 +1839,12 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                                 attached_pvc_names=list(
                                     pod_attached_persistent_volume_claim_names(pod)
                                 ),
-                                api_pvcs=namespace_grouped_api_pvcs.get(pod_namespace(pod), {}),
+                                api_pvcs=namespace_grouped_api_pvcs.get(
+                                    kube_object_namespace_name(pod), {}
+                                ),
                                 api_pvs=api_persistent_volumes,
                                 attached_volumes=namespaced_grouped_attached_volumes.get(
-                                    pod_namespace(pod), {}
+                                    kube_object_namespace_name(pod), {}
                                 ),
                             ),
                         )

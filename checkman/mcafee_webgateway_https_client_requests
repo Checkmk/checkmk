@@ -1,0 +1,13 @@
+title: McAfee Web Gateway: HTTPS Client Requests
+agents: snmp
+catalog: app/mcafee
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the number of HTTPS request per second of McAfee Web
+ Gateway devices which support the MCAFEE-MWG MIB.
+
+ No default levels are set. Upper levels are configurable.
+
+discovery:
+ One service is created (provided the data is available).

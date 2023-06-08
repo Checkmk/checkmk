@@ -20,6 +20,9 @@ class MiscParams(typing.TypedDict, total=True):
     network_sockets: typing.Optional[typing.Tuple[int, int]]
     time_to_resolve_dns: typing.Optional[typing.Tuple[int, int]]
     time_consumed_by_rule_engine: typing.Optional[typing.Tuple[int, int]]
+    client_requests_http: tuple[int, int] | None
+    client_requests_httpv2: tuple[int, int] | None
+    client_requests_https: tuple[int, int] | None
 
 
 MISC_DEFAULT_PARAMS = MiscParams(
@@ -27,6 +30,9 @@ MISC_DEFAULT_PARAMS = MiscParams(
     network_sockets=None,
     time_to_resolve_dns=(1500, 2000),
     time_consumed_by_rule_engine=(1500, 2000),
+    client_requests_http=None,
+    client_requests_httpv2=None,
+    client_requests_https=None,
 )
 
 

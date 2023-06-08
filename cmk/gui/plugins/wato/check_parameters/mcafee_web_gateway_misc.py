@@ -54,6 +54,36 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
                     unit=_("ms"),
                 ),
             ),
+            (
+                "client_requests_http",
+                SimpleLevels(
+                    Integer,
+                    title=_("Upper levels for the number of http request per second"),
+                    default_levels=(1500, 2000),
+                    default_value=(1500, 2000),
+                    unit="/s",
+                ),
+            ),
+            (
+                "client_requests_https",
+                SimpleLevels(
+                    Integer,
+                    title=_("Upper levels for the number of https request per second"),
+                    default_levels=(1500, 2000),
+                    default_value=(1500, 2000),
+                    unit="/s",
+                ),
+            ),
+            (
+                "client_requests_httpv2",
+                SimpleLevels(
+                    Integer,
+                    title=_("Upper levels for the number of httpv2 request per second"),
+                    default_levels=(1500, 2000),
+                    default_value=(1500, 2000),
+                    unit="/s",
+                ),
+            ),
         ],
     )
 

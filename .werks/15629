@@ -1,0 +1,17 @@
+Title: McAfee Web Gateway: New Plugins for HTTP Client Requests
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1686726698
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+There are three new plugins
+
+LI: <tt>mcafee_webgateway_http_client_requests</tt>
+LI: <tt>mcafee_webgateway_https_client_requests</tt>
+LI: <tt>mcafee_webgateway_httpv2_client_requests</tt>
+
+which monitor the client request rate for HTTP, HTTPS and HTTPv2, respectively.

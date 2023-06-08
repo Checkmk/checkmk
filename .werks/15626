@@ -1,0 +1,13 @@
+Title: KUBE: Addition of CronJob Inventory
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1686249924
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0p3
+
+This feature extends the Kubernetes monitoring. The inventory of a CronJob host now features the
+'Metadata' path, which is already available for other piggybacked hosts.

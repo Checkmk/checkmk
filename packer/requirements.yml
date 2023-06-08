@@ -1,4 +1,4 @@
 ---
 collections:
-  - name: tribe29.checkmk
+  - name: checkmk.general
   - name: community.general

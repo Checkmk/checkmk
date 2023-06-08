@@ -55,7 +55,6 @@ from typing import (
     Union,
 )
 
-from Cryptodome.PublicKey import RSA
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
 from OpenSSL import crypto
@@ -7783,10 +7782,12 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
 
     @staticmethod
     def _generate_ssh_key() -> SSHKeyPairValue:
-        key = RSA.generate(4096)
-        private_key = key.exportKey("PEM").decode("ascii")
-        pubkey = key.publickey()
-        public_key = pubkey.exportKey("OpenSSH").decode("ascii")
+        # TODO: This method is the only reason we have to offer dump_legacy_pkcs1. Can we use
+        # dump_pem instead? The only difference is "-----BEGIN RSA PRIVATE KEY-----" (pkcs1) vs
+        # "-----BEGIN PRIVATE KEY-----".
+        key = certificate.RsaPrivateKey.generate(4096)
+        private_key = key.dump_legacy_pkcs1().str
+        public_key = key.public_key.dump_openssh()
         return (private_key, public_key)
 
     @classmethod

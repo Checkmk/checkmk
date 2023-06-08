@@ -121,13 +121,13 @@ def test_serialize_rsa_key(tmp_path: Path) -> None:
     key = RsaPrivateKey.generate(512)
 
     pem_plain = key.dump_pem(None)
-    assert pem_plain.bytes.startswith(b"-----BEGIN PRIVATE KEY-----")
+    assert pem_plain.str.startswith("-----BEGIN PRIVATE KEY-----")
 
     loaded_plain = RsaPrivateKey.load_pem(pem_plain)
     assert loaded_plain._key.private_numbers() == key._key.private_numbers()  # type: ignore[attr-defined]
 
     pem_enc = key.dump_pem(Password("verysecure"))
-    assert pem_enc.bytes.startswith(b"-----BEGIN ENCRYPTED PRIVATE KEY-----")
+    assert pem_enc.str.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----")
 
     with pytest.raises((WrongPasswordError, InvalidPEMError)):
         # This should really be a WrongPasswordError, but for some reason we see an InvalidPEMError
@@ -137,6 +137,15 @@ def test_serialize_rsa_key(tmp_path: Path) -> None:
 
     loaded_enc = RsaPrivateKey.load_pem(pem_enc, Password("verysecure"))
     assert loaded_enc._key.private_numbers() == key._key.private_numbers()  # type: ignore[attr-defined]
+
+    pem_pkcs1 = key.dump_legacy_pkcs1()
+    assert pem_pkcs1.str.startswith("-----BEGIN RSA PRIVATE KEY-----")
+
+    pubkey_pem = key.public_key.dump_pem()
+    assert pubkey_pem.str.startswith("-----BEGIN RSA PUBLIC KEY-----")
+
+    pubkey_openssh = key.public_key.dump_openssh()
+    assert pubkey_openssh.startswith("ssh-rsa ")
 
 
 @pytest.mark.parametrize("data", [b"", b"test", b"\0\0\0", "sign here: 📝".encode()])

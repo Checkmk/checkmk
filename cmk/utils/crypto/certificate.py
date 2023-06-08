@@ -671,6 +671,19 @@ class RsaPrivateKey:
             return PlaintextPrivateKeyPEM(bytes_)
         return EncryptedPrivateKeyPEM(bytes_)
 
+    def dump_legacy_pkcs1(self) -> PlaintextPrivateKeyPEM:
+        """Deprecated. Do not use.
+
+        Encode the private key without encryption in PKCS#1 / OpenSSL format
+        (i.e. '-----BEGIN RSA PRIVATE KEY-----...').
+        """
+        bytes_ = self._key.private_bytes(  # type: ignore[attr-defined]
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        return PlaintextPrivateKeyPEM(bytes_)
+
     @property
     def public_key(self) -> RsaPublicKey:
         return RsaPublicKey(self._key.public_key())
@@ -690,12 +703,21 @@ class RsaPublicKey:
         return RsaPublicKey(serialization.load_pem_public_key(pem_data.bytes))
 
     def dump_pem(self) -> PublicKeyPEM:
+        # TODO: Use SubjectPublicKeyInfo format rather than PKCS1. PKCS1 doesn't include an
+        # algorithm identifier.
         return PublicKeyPEM(
             self._key.public_bytes(
                 serialization.Encoding.PEM,
                 serialization.PublicFormat.PKCS1,
             )
         )
+
+    def dump_openssh(self) -> str:
+        """Encode the public key in OpenSSH format (ssh-rsa AAAA...)"""
+        return self._key.public_bytes(
+            serialization.Encoding.OpenSSH,
+            serialization.PublicFormat.OpenSSH,
+        ).decode("utf-8")
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, RsaPublicKey):

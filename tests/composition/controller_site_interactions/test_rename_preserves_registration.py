@@ -6,13 +6,11 @@
 import time
 from pathlib import Path
 
-from tests.testlib.agent import register_controller
+from tests.testlib.agent import controller_status_json, register_controller
 from tests.testlib.openapi_session import UnexpectedResponse
 from tests.testlib.site import Site
 
 from cmk.utils.type_defs import HostName
-
-from .common import controller_status_json
 
 
 def _activate_changes_and_wait_for_completion_with_retries(site: Site) -> None:

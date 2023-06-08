@@ -114,7 +114,6 @@ bcrypt = "==3.2.2"  # needed by paramiko. NOTE: rust is needed for version >=4.0
 paramiko = "==2.10.3"
 pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes
-pycryptodomex = "==3.9.3"  # needed by pysnmp
 ply = "==3.11"  # needed by pysmi, python-active-directory
 pysmi = "==0.3.4"  # needed by pysnmp
 pysnmp = "==4.4.12"  # needed by Event Console

@@ -18,15 +18,13 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import NamedTuple
 
-from Cryptodome.Cipher import AES
-from Cryptodome.Hash import SHA256
-from Cryptodome.Protocol.KDF import PBKDF2
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.x509.oid import ExtensionOID, NameOID
 from OpenSSL import crypto, SSL
 
+from cmk.utils.crypto.deprecated import AesCbcCipher
 from cmk.utils.crypto.secrets import EncrypterSecret
 from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 from cmk.utils.exceptions import MKGeneralException
@@ -92,16 +90,19 @@ def _decrypt_aes_256_cbc_pbkdf2(
     IV_LENGTH = 16
     PBKDF2_CYCLES = 10_000
 
-    salt = ciphertext[:SALT_LENGTH]
-    raw_key = PBKDF2(
-        password, salt, KEY_LENGTH + IV_LENGTH, count=PBKDF2_CYCLES, hmac_hash_module=SHA256
+    key_iv = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        ciphertext[:SALT_LENGTH],
+        PBKDF2_CYCLES,
+        KEY_LENGTH + IV_LENGTH,
     )
-    key, iv = raw_key[:KEY_LENGTH], raw_key[KEY_LENGTH:]
+    key, iv = key_iv[:KEY_LENGTH], key_iv[KEY_LENGTH:]
 
-    decryption_suite = AES.new(key, AES.MODE_CBC, iv)
-    decrypted_pkg = decryption_suite.decrypt(ciphertext[SALT_LENGTH:])
+    cipher = AesCbcCipher("decrypt", key, iv)
+    decrypted = cipher.update(ciphertext[SALT_LENGTH:]) + cipher.finalize()
 
-    return _strip_fill_bytes(decrypted_pkg)
+    return AesCbcCipher.unpad_block(decrypted)
 
 
 def _decrypt_aes_256_cbc_legacy(
@@ -114,12 +115,15 @@ def _decrypt_aes_256_cbc_legacy(
     Salted: no
     Key derivation: Simple OpenSSL Key derivation
     """
-    key, iv = _derive_openssl_key_and_iv(password.encode("utf-8"), digest, 32, AES.block_size)
+    KEY_LENGTH = 32
+    IV_LENGTH = 16
 
-    decryption_suite = AES.new(key, AES.MODE_CBC, iv)
-    decrypted_pkg = decryption_suite.decrypt(ciphertext)
+    key, iv = _derive_openssl_key_and_iv(password.encode("utf-8"), digest, KEY_LENGTH, IV_LENGTH)
 
-    return _strip_fill_bytes(decrypted_pkg)
+    cipher = AesCbcCipher("decrypt", key, iv)
+    decrypted = cipher.update(ciphertext) + cipher.finalize()
+
+    return AesCbcCipher.unpad_block(decrypted)
 
 
 def _derive_openssl_key_and_iv(
@@ -128,16 +132,12 @@ def _derive_openssl_key_and_iv(
     key_length: int,
     iv_length: int,
 ) -> tuple[bytes, bytes]:
-    """Simple OpenSSL Key derivation function"""
+    """Simple and completely insecure OpenSSL Key derivation function"""
     d = d_i = b""
     while len(d) < key_length + iv_length:
         d_i = digest(d_i + password).digest()
         d += d_i
     return d[:key_length], d[key_length : key_length + iv_length]
-
-
-def _strip_fill_bytes(content: bytes) -> bytes:
-    return content[0 : -content[-1]]
 
 
 _PEM_RE = re.compile(

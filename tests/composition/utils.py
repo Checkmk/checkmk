@@ -5,13 +5,11 @@
 
 import glob
 import logging
-import os
 import time
 from pathlib import Path
 
 from tests.testlib.agent import get_package_type
 from tests.testlib.site import Site
-from tests.testlib.utils import is_containerized
 
 from tests.composition.constants import TEST_HOST_1
 
@@ -85,7 +83,3 @@ def get_cre_agent_path(site: Site) -> Path:
             f"Can't find '{package_extension}' agent to install in folder '{agent_folder}'"
         )
     return Path(agent_results[0])
-
-
-def should_skip_because_uncontainerized() -> bool:
-    return not (is_containerized() or os.environ.get("OVERRIDE_UNCONTAINERIZED_SKIP"))

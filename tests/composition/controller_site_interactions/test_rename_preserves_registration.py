@@ -8,6 +8,7 @@ from pathlib import Path
 
 from tests.testlib.agent import controller_status_json, register_controller
 from tests.testlib.openapi_session import UnexpectedResponse
+from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostName
@@ -68,6 +69,7 @@ def _test_rename_preserves_registration(
         ) from e
 
 
+@skip_if_not_containerized
 def test_rename_preserves_registration_central(
     central_site: Site,
     agent_ctl: Path,
@@ -80,6 +82,7 @@ def test_rename_preserves_registration_central(
     )
 
 
+@skip_if_not_containerized
 def test_rename_preserves_registration_remote(
     central_site: Site,
     remote_site: Site,

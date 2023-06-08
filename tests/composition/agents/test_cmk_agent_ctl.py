@@ -5,24 +5,17 @@
 
 from pathlib import Path
 
-import pytest
-
+from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.utils import execute
 
-from tests.composition.utils import should_skip_because_uncontainerized
 
-# Skip all agent controller tests if we are not in a container to avoid messing up your machine
-pytestmark = pytest.mark.skipif(
-    should_skip_because_uncontainerized(),
-    reason=("tests might mess up your local environment, eg. by installing an actual agent"),
-)
-
-
+@skip_if_not_containerized
 def test_agent_controller_installed(agent_ctl: Path) -> None:
     res = execute([agent_ctl.as_posix(), "--help"])
     assert "Checkmk agent controller.\n\nUsage:" in res.stdout
 
 
+@skip_if_not_containerized
 def test_dump(agent_ctl: Path) -> None:
     res = execute(["sudo", agent_ctl.as_posix(), "dump"])
     assert res.stdout.startswith("<<<check_mk>>>")

@@ -15,8 +15,9 @@ from tests.testlib.agent import (
     install_agent_package,
 )
 from tests.testlib.site import get_site_factory, Site
+from tests.testlib.utils import is_containerized
 
-from tests.composition.utils import bake_agent, get_cre_agent_path, is_containerized
+from tests.composition.utils import bake_agent, get_cre_agent_path
 
 site_factory = get_site_factory(prefix="comp_", update_from_git=False)
 

@@ -1,0 +1,21 @@
+Title: systemtime (windows): no longer account for fetcher/checker delay
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1686237291
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This Werk only affects users that have strict levels on the offset monitored by the plugin <i>"Synchronization of Operating System Time"</i> (<tt>systemtime</tt>) on <b>Windows</b>.
+
+Affected users may have to increase their levels a bit, as they might observe an increase of the measured "offset".
+
+The plugin used to (try to) account for the time that passed between receiving the agent data and processing it.
+This is no longer done as it has been unreliable, and is no longer supported by the new API for check plugins.
+
+Note that this should not increase the offset too much (well below a minute!).
+If this results in a big increase of the measured offset for you, it might point to a different problem:
+Your check helpers can not keep up with your fetchers.
+

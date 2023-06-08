@@ -1,21 +1,19 @@
 title: Synchronization of Operating System Time
-agents: windows, vsphere
+agents: windows, vsphere, netapp
 catalog: os/misc
 license: GPLv2
 distribution: check_mk
 description:
- This check is a simple check of the correct setting of the current
- system time of the target host. It simply compares the local time
- on the monitoring server with that measured by the agent on the
- target host. It is not very accurate since it does not account for
- the systematic time delay between the output of the time by the agent
- and the actual processing of that data by Checkmk.
+ This check monitors the system time of the monitored host.
+ It computes the difference between the time measured on the monitored host and the time of the Checkmk server when the data is processed.
+ The resulting difference is refered to as "offset" here (this is also the metrics name).
+ By default the service is always OK, but levels can be configured for the measured offset.
 
- Its advantage however, is that it works on any Windows or ESX host
- - regardless of the method used to synchronize the time.
+ As the offset includes the systematic time delay between querying the host and querying the reference time, it is never expected to be zero.
 
- Levels can be set for making the check warn/crit if the time difference
- exceeds the configured limits.
+ This service is created for hosts monitored by the special agent for NetApp, the special agent for vSphere or the Windows agent.
+ For the special agents the local time is measured during the agent run, so the offset should be smaller than the execution time of the agent.
+ For Windows the offset also includes the time that passes between the receiving of the data and processing it.
 
 discovery:
- One service is created for each host supporting this check.
+ One service is created.

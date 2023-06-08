@@ -7,12 +7,7 @@
 import time
 from collections.abc import Iterable
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_agent_data_time,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.systemtime import Section
 
@@ -30,10 +25,6 @@ def check_systemtime(item, params, parsed):
     if "our_systemtime" in parsed:
         offset = systemtime - parsed["our_systemtime"]
     else:
-        try:
-            systemtime += get_agent_data_time()
-        except (NameError, TypeError):
-            pass
         offset = systemtime - time.time()
 
     warn, crit = params if isinstance(params, tuple) else params["levels"]

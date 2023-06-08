@@ -6,7 +6,6 @@
 import typing
 from pathlib import Path
 
-import freezegun
 import pytest
 
 from tests.testlib.snmp import get_parsed_snmp_section, snmp_is_detected
@@ -61,7 +60,6 @@ def test_discovery(
     assert services == [v1.Service()]
 
 
-@freezegun.freeze_time("2019-05-27T05:30:07")
 @pytest.mark.parametrize(
     "walk, params, expected_results",
     [
@@ -106,23 +104,22 @@ def test_discovery(
 )
 def test_check_results(
     walk: str,
-    monkeypatch: pytest.MonkeyPatch,
     fix_register: FixRegister,
-    params: dict[str, object],
-    expected_results: list[typing.Any],
+    params: mcafee_webgateway.Params,
+    expected_results: list[object],
     as_path: typing.Callable[[str], Path],
 ) -> None:
     # Assemble
     section = get_parsed_snmp_section(SectionName("mcafee_webgateway"), as_path(walk))
     assert section is not None
-
+    now = 2.0
     value_store = {
-        "check_mcafee_webgateway.infections": (1558935006.0, 2),
-        "check_mcafee_webgateway.connections_blocked": (1558935006.0, 2),
+        "check_mcafee_webgateway.infections": (now - 1.0, 2),
+        "check_mcafee_webgateway.connections_blocked": (now - 1.0, 2),
     }
+
     # Act
-    monkeypatch.setattr(v1, "get_value_store", lambda: value_store)
-    results = list(mcafee_webgateway.check_mcafee_webgateway(params, section))
+    results = list(mcafee_webgateway._check_mcafee_webgateway(now, value_store, params, section))
 
     # Assert
     assert results == expected_results

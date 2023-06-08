@@ -12,6 +12,8 @@ from cmk.base.plugins.agent_based.agent_based_api import v1
 DETECT_EMAIL_GATEWAY = v1.contains(".1.3.6.1.2.1.1.1.0", "mcafee email gateway")
 DETECT_WEB_GATEWAY = v1.contains(".1.3.6.1.2.1.1.1.0", "mcafee web gateway")
 
+ValueStore = typing.MutableMapping[str, typing.Any]
+
 
 class MiscParams(typing.TypedDict, total=True):
     clients: typing.Optional[typing.Tuple[int, int]]
@@ -47,3 +49,28 @@ def _get_param_in_seconds(param: tuple[int, int] | None) -> tuple[float, float] 
     if param is None:
         return None
     return param[0] / 1000, param[1] / 1000
+
+
+def compute_rate(
+    now: float,
+    value_store: ValueStore,
+    value: int | None,
+    metric_name: str,
+    levels_upper: tuple[float, float] | None,
+    key: str,
+    label: str | None = None,
+) -> v1.type_defs.CheckResult:
+    if value is None:
+        return
+    try:
+        rate = v1.get_rate(value_store, key, now, value)
+    except v1.GetRateError:
+        yield v1.Result(state=v1.State.OK, summary="Can't compute rate.")
+        return
+    yield from v1.check_levels(
+        rate,
+        metric_name=metric_name,
+        levels_upper=levels_upper,
+        render_func=lambda f: "%.1f/s" % f,
+        label=label,
+    )

@@ -7,14 +7,10 @@ from pathlib import Path
 
 from faker import Faker
 
+from tests.testlib.agent import register_controller, wait_until_host_receives_data
 from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name
 from tests.testlib.version import CMKVersion, version_from_env
-
-from tests.composition.controller_site_interactions.common import (
-    register_controller,
-    wait_until_host_receives_data,
-)
 
 from cmk.utils.type_defs import HostName
 from cmk.utils.version import Edition

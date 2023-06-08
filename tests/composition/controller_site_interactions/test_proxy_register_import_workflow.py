@@ -6,13 +6,14 @@
 import subprocess
 from pathlib import Path
 
+from tests.testlib.agent import wait_until_host_receives_data
 from tests.testlib.site import Site
 from tests.testlib.utils import execute
 
 from cmk.utils.type_defs import HostName
 
 from ..utils import LOGGER
-from .common import wait_until_host_has_services, wait_until_host_receives_data
+from .common import wait_until_host_has_services
 
 
 def test_proxy_register_import_workflow(

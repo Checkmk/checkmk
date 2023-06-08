@@ -8,12 +8,13 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib.agent import register_controller, wait_until_host_receives_data
 from tests.testlib.site import Site
 
 from cmk.utils.type_defs import HostAgentConnectionMode, HostName
 
 from ..utils import LOGGER
-from .common import register_controller, wait_until_host_has_services, wait_until_host_receives_data
+from .common import wait_until_host_has_services
 
 
 def _test_register_workflow(

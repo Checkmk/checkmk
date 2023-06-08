@@ -12,8 +12,11 @@ from collections.abc import Iterator
 from multiprocessing import Process
 from pathlib import Path
 
+from tests.testlib import wait_until
 from tests.testlib.site import Site
 from tests.testlib.utils import execute
+
+from cmk.utils.type_defs import HostName
 
 logger = logging.getLogger(__name__)
 
@@ -159,3 +162,42 @@ def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
         yield
     finally:
         _clear_controller_connections(ctl_path)
+
+
+def register_controller(
+    contoller_path: Path,
+    site: Site,
+    hostname: HostName,
+) -> None:
+    execute(
+        [
+            "sudo",
+            contoller_path.as_posix(),
+            "register",
+            "--server",
+            site.http_address,
+            "--site",
+            site.id,
+            "--hostname",
+            hostname,
+            "--user",
+            "cmkadmin",
+            "--password",
+            site.admin_password,
+            "--trust-cert",
+        ]
+    )
+
+
+def wait_until_host_receives_data(
+    site: Site,
+    hostname: HostName,
+    *,
+    timeout: int = 120,
+    interval: int = 20,
+) -> None:
+    wait_until(
+        lambda: not site.execute(["cmk", "-d", hostname]).wait(),
+        timeout=timeout,
+        interval=interval,
+    )

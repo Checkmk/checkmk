@@ -15,31 +15,6 @@ from tests.testlib.utils import execute
 from cmk.utils.type_defs import HostName
 
 
-def register_controller(
-    contoller_path: Path,
-    site: Site,
-    hostname: HostName,
-) -> None:
-    execute(
-        [
-            "sudo",
-            contoller_path.as_posix(),
-            "register",
-            "--server",
-            site.http_address,
-            "--site",
-            site.id,
-            "--hostname",
-            hostname,
-            "--user",
-            "cmkadmin",
-            "--password",
-            site.admin_password,
-            "--trust-cert",
-        ]
-    )
-
-
 def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:
     return json.loads(
         execute(
@@ -50,20 +25,6 @@ def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:
                 "--json",
             ]
         ).stdout
-    )
-
-
-def wait_until_host_receives_data(
-    site: Site,
-    hostname: HostName,
-    *,
-    timeout: int = 120,
-    interval: int = 20,
-) -> None:
-    wait_until(
-        lambda: not site.execute(["cmk", "-d", hostname]).wait(),
-        timeout=timeout,
-        interval=interval,
     )
 
 

@@ -9,13 +9,12 @@ from typing import Any
 
 import pytest
 
+from tests.testlib.agent import register_controller
 from tests.testlib.site import Site
 
 from tests.composition.controller_site_interactions.common import controller_status_json
 
 from cmk.utils.type_defs import HostAgentConnectionMode, HostName
-
-from .common import register_controller
 
 
 def _get_status_output_json(

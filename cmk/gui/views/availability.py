@@ -614,7 +614,8 @@ def _render_availability_timeline(
 
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:
                 table.cell(
-                    _("Last known summary"), format_plugin_output(row.get("log_output", ""), row)
+                    _("Summary at last status change"),
+                    format_plugin_output(row.get("log_output", ""), row),
                 )
 
             if "timeline_long_output" in avoptions["labelling"]:

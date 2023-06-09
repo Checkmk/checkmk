@@ -41,7 +41,7 @@ def confirm_with_preview(
         mobile = is_mobile(request, response)
         if mobile:
             html.open_center()
-        html.open_div(class_="really " + " ".join(class_) if class_ is not None else "")
+        html.open_div(class_="really " + (" ".join(class_) if class_ is not None else ""))
         html.write_text(msg)
         html.begin_form("confirm", method=method, add_transid=False)
         html.hidden_fields(add_action_vars=True)

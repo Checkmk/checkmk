@@ -226,8 +226,8 @@ run_iwyu() {
     # shellcheck disable=SC2086 # Yes, we want splitting for IWYU_EXTRA_ARGS.
     python3 "$(command -v iwyu_tool.py)" \
         --jobs="${JOBS}" \
+        -p=build \
         --output-format=clang \
-        -p build \
         "${FILES_TO_USE[@]}" -- \
         -Xiwyu --error \
         -Xiwyu "--mapping_file=$(realpath .iwyu/check_mk.imp)" \
@@ -239,9 +239,9 @@ run_clang_tidy() {
     update_cmake_artifacts
     # shellcheck disable=SC2046,SC2086 # Yes, we want splitting for CLANG_TIDY_EXTRA_ARGS
     python3 "$(command -v run-clang-tidy-${CLANG_VERSION}.py)" \
-        -quiet \
         -j "${JOBS}" \
         -p=build \
+        -quiet \
         ${CLANG_TIDY_EXTRA_ARGS} \
         "${FILES_TO_USE[@]}" # NOTE: args are regexes, we pass (full) filenames
 }

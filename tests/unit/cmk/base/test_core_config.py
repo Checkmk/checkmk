@@ -19,13 +19,13 @@ import cmk.utils.version as cmk_version
 from cmk.utils import password_store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.labels import Labels
-from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.checkengine.check_table import ConfiguredService
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config

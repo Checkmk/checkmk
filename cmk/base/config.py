@@ -72,7 +72,6 @@ from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTT
 from cmk.utils.labels import Labels
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import (
     LabelManager,
@@ -139,6 +138,7 @@ from cmk.checkengine.check_table import (
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckServiceWithNodes
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 import cmk.base._autochecks as autochecks

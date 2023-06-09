@@ -8,7 +8,6 @@ import time
 
 import cmk.utils.render
 import cmk.utils.tty as tty
-from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import tmp_dir
 from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.type_defs import HostAddress, HostName
@@ -20,6 +19,7 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine import Source, SourceType
 from cmk.checkengine.check_table import LegacyCheckParameters
+from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.config as config
 import cmk.base.core

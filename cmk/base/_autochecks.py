@@ -12,12 +12,12 @@ Note:
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
 from cmk.utils.labels import ServiceLabel
-from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import HostName, Item, ServiceName
 
 from cmk.checkengine.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
+from cmk.checkengine.parameters import TimespecificParameters
 
 ComputeCheckParameters = Callable[
     [HostName, CheckPluginName, Item, LegacyCheckParameters],

@@ -11,7 +11,6 @@ from typing import Literal
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
-from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.type_defs import HostAddress, HostName, Item, SectionName, ServiceName
 
@@ -36,6 +35,7 @@ from cmk.checkengine.discovery import (
     HostLabelPlugin,
     QualifiedDiscovery,
 )
+from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import (
     filter_out_errors,
     make_providers,

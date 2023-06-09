@@ -5,12 +5,10 @@
 
 from collections.abc import Sequence
 
-from cmk.utils.parameters import (
-    boil_down_parameters,
-    TimespecificParameters,
-    TimespecificParameterSet,
-)
+from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.type_defs import LegacyCheckParameters
+
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 
 def _default() -> LegacyCheckParameters:

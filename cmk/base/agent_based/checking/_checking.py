@@ -16,7 +16,6 @@ from cmk.utils.check_utils import wrap_parameters
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.log import console
-from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.regex import regex
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
@@ -58,6 +57,7 @@ from cmk.checkengine.inventory import (
     InventoryPlugin,
     InventoryPluginName,
 )
+from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import (
     filter_out_errors,
     make_providers,

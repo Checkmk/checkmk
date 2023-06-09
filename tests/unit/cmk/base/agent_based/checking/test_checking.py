@@ -12,11 +12,11 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.type_defs import HostName, LegacyCheckParameters
 
 from cmk.checkengine import HostKey, SourceType
 from cmk.checkengine.checkresults import ServiceCheckResult
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 import cmk.base.agent_based.checking._checking as checking
 import cmk.base.config as config

@@ -21,7 +21,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils import password_store
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import HostName, RuleSetName, SectionName
@@ -34,6 +33,7 @@ from cmk.checkengine.check_table import ConfiguredService, ServiceID
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 from cmk.checkengine.inventory import InventoryPlugin
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

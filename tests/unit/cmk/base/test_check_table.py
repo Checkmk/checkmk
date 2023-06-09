@@ -12,13 +12,13 @@ from pytest import MonkeyPatch
 # No stub file
 from tests.testlib.base import Scenario
 
-from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import HostName, LegacyCheckParameters, RuleSetName
 
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config

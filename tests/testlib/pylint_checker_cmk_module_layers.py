@@ -266,6 +266,7 @@ _COMPONENTS = (
     (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.checkengine"), _allow_default_plus_fetchers_checkers_and_snmplib),
+    (Component("cmk.automations"), _allow_default_plus_checkers),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui"), _allow_default_plus_fetchers_checkers_bakery),
     (Component("cmk.ec"), _is_default_allowed_import),

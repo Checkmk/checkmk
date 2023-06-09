@@ -486,59 +486,6 @@ def write_cluster_api_sections(cluster_name: str, api_cluster: Cluster) -> None:
     _write_sections(sections)
 
 
-def create_cronjob_api_sections(
-    api_cronjob: api.CronJob,
-    cronjob_pods: Sequence[api.Pod],
-    timestamp_sorted_jobs: Sequence[api.Job],
-    host_settings: CheckmkHostSettings,
-    piggyback_name: str,
-) -> Iterator[WriteableSection]:
-    yield from (
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cron_job_info_v1"),
-            section=cronjob.info(
-                api_cronjob,
-                host_settings.cluster_name,
-                host_settings.kubernetes_cluster_hostname,
-                host_settings.annotation_key_pattern,
-            ),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cron_job_status_v1"),
-            section=cronjob.status(
-                api_cronjob.status,
-                timestamp_sorted_jobs,
-            ),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_pod_resources_v1"),
-            section=pod_resources_from_api_pods(cronjob_pods),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cron_job_pods_v1"),
-            section=collect_memory_resources_from_api_pods(cronjob_pods),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cpu_resources_v1"),
-            section=collect_cpu_resources_from_api_pods(cronjob_pods),
-        ),
-    )
-
-    if len(timestamp_sorted_jobs):
-        yield WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cron_job_latest_job_v1"),
-            section=cronjob.latest_job(
-                timestamp_sorted_jobs[-1], {pod.uid: pod for pod in cronjob_pods}
-            ),
-        )
-
-
 def create_namespace_api_sections(
     api_namespace: api.Namespace,
     namespace_api_pods: Sequence[api.Pod],
@@ -1436,7 +1383,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 for api_cron_job in kube_objects_from_namespaces(
                     api_data.cron_jobs, monitored_namespace_names
                 ):
-                    sections = create_cronjob_api_sections(
+                    sections = cronjob.create_api_sections(
                         api_cron_job,
                         filter_pods_by_cron_job(api_cron_job_pods, api_cron_job),
                         sorted(

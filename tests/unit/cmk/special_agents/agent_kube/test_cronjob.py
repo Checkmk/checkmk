@@ -26,7 +26,7 @@ def test_cron_job_status_section() -> None:
         last_successful_time=api.Timestamp(2.0),
     )
 
-    cron_job_status = cronjob.status(api_cron_job_status, [api_job])
+    cron_job_status = cronjob._status(api_cron_job_status, [api_job])
 
     assert cron_job_status == section.CronJobStatus(
         active_jobs_count=1,
@@ -48,7 +48,7 @@ def test_cron_job_latest_job_section() -> None:
         pod_uids=[pod.uid for pod in api_pods],
     )
 
-    latest_job = cronjob.latest_job(api_job, {pod.uid: pod for pod in api_pods})
+    latest_job = cronjob._latest_job(api_job, {pod.uid: pod for pod in api_pods})
 
     assert len(latest_job.pods) == pod_number
     assert latest_job.status == section.JobStatus(

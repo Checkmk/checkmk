@@ -2,18 +2,75 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
-from typing import Mapping, Sequence
+from typing import Iterator, Mapping, Sequence
 
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,
+    CheckmkHostSettings,
+    collect_cpu_resources_from_api_pods,
+    collect_memory_resources_from_api_pods,
     filter_annotations_by_key_pattern,
     pod_lifecycle_phase,
+    pod_resources_from_api_pods,
 )
+from cmk.special_agents.utils_kubernetes.common import SectionName, WriteableSection
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
-def info(
+def create_api_sections(
+    api_cronjob: api.CronJob,
+    cronjob_pods: Sequence[api.Pod],
+    timestamp_sorted_jobs: Sequence[api.Job],
+    host_settings: CheckmkHostSettings,
+    piggyback_name: str,
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cron_job_info_v1"),
+            section=_info(
+                api_cronjob,
+                host_settings.cluster_name,
+                host_settings.kubernetes_cluster_hostname,
+                host_settings.annotation_key_pattern,
+            ),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cron_job_status_v1"),
+            section=_status(
+                api_cronjob.status,
+                timestamp_sorted_jobs,
+            ),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=pod_resources_from_api_pods(cronjob_pods),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cron_job_pods_v1"),
+            section=collect_memory_resources_from_api_pods(cronjob_pods),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=collect_cpu_resources_from_api_pods(cronjob_pods),
+        ),
+    )
+
+    if len(timestamp_sorted_jobs):
+        yield WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cron_job_latest_job_v1"),
+            section=_latest_job(timestamp_sorted_jobs[-1], {pod.uid: pod for pod in cronjob_pods}),
+        )
+
+
+def _info(
     cron_job: api.CronJob,
     cluster_name: str,
     kubernetes_cluster_hostname: str,
@@ -37,7 +94,7 @@ def info(
     )
 
 
-def status(
+def _status(
     cronjob_status: api.CronJobStatus,
     timestamp_sorted_jobs: Sequence[api.Job],
 ) -> section.CronJobStatus:
@@ -51,7 +108,7 @@ def status(
     )
 
 
-def latest_job(job: api.Job, pods: Mapping[api.PodUID, api.Pod]) -> section.CronJobLatestJob:
+def _latest_job(job: api.Job, pods: Mapping[api.PodUID, api.Pod]) -> section.CronJobLatestJob:
     return section.CronJobLatestJob(
         status=section.JobStatus(
             conditions=job.status.conditions or [],

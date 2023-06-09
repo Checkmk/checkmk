@@ -1351,8 +1351,8 @@ def test_check_single_interface_group(
 ) -> None:
     group_members: interfaces.GroupMembers = {
         None: [
-            {"name": "vboxnet0", "oper_status_name": "up"},
-            {"name": "wlp2s0", "oper_status_name": "up"},
+            interfaces.MemberInfo(name="vboxnet0", oper_status_name="up"),
+            interfaces.MemberInfo(name="wlp2s0", oper_status_name="up"),
         ]
     }
     assert list(
@@ -1377,8 +1377,10 @@ def test_check_single_interface_group_admin_status(
 ) -> None:
     group_members: interfaces.GroupMembers = {
         None: [
-            {"name": "vboxnet0", "oper_status_name": "up", "admin_status_name": "down"},
-            {"name": "wlp2s0", "oper_status_name": "up", "admin_status_name": "testing"},
+            interfaces.MemberInfo(name="vboxnet0", oper_status_name="up", admin_status_name="down"),
+            interfaces.MemberInfo(
+                name="wlp2s0", oper_status_name="up", admin_status_name="testing"
+            ),
         ]
     }
     assert list(
@@ -1428,12 +1430,12 @@ def test_check_single_interface_group_w_nodes(
 ) -> None:
     group_members: interfaces.GroupMembers = {
         "node1": [
-            {"name": "vboxnet0", "oper_status_name": "up"},
-            {"name": "wlp2s0", "oper_status_name": "up"},
+            interfaces.MemberInfo(name="vboxnet0", oper_status_name="up"),
+            interfaces.MemberInfo(name="wlp2s0", oper_status_name="up"),
         ],
         "node2": [
-            {"name": "vboxnet0", "oper_status_name": "up"},
-            {"name": "wlp2s0", "oper_status_name": "up"},
+            interfaces.MemberInfo(name="vboxnet0", oper_status_name="up"),
+            interfaces.MemberInfo(name="wlp2s0", oper_status_name="up"),
         ],
     }
     assert list(

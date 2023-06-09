@@ -94,6 +94,21 @@ CHECK_DEFAULT_PARAMETERS = {
 }
 
 
+@dataclass(frozen=True)
+class MemberInfo:
+    name: str
+    oper_status_name: str
+    admin_status_name: str | None = None
+
+    def __str__(self) -> str:
+        status_info = (
+            f"({self.oper_status_name})"
+            if self.admin_status_name is None
+            else f"(op. state: {self.oper_status_name}, admin state: {self.admin_status_name})"
+        )
+        return f"{self.name} {status_info}"
+
+
 @dataclass
 class Attributes:
     index: str
@@ -1024,7 +1039,7 @@ def discover_interfaces(  # pylint: disable=too-many-branches
         )
 
 
-GroupMembers = dict[str | None, list[dict[str, str]]]
+GroupMembers = dict[str | None, list[MemberInfo]]
 
 
 def _check_ungrouped_ifs(
@@ -1190,8 +1205,8 @@ def _group_members(
     group_members: GroupMembers = {}
     for attributes in matching_attributes:
         groups_node = group_members.setdefault(attributes.node, [])
-        member_info = {
-            "name": _compute_item(
+        member_info = MemberInfo(
+            name=_compute_item(
                 group_config.get(
                     "member_appearance",
                     # This happens when someones upgrades from v1.6 to v2,0, where the structure of the
@@ -1210,10 +1225,11 @@ def _group_members(
                 section,
                 item[0] == "0",
             ),
-            "oper_status_name": attributes.oper_status_name,
-        }
-        if attributes.admin_status is not None:
-            member_info["admin_status_name"] = statename(attributes.admin_status)
+            oper_status_name=attributes.oper_status_name,
+            admin_status_name=None
+            if attributes.admin_status is None
+            else statename(attributes.admin_status),
+        )
         groups_node.append(member_info)
     return group_members
 
@@ -1307,15 +1323,6 @@ def _get_map_states(defined_mapping: Iterable[tuple[Iterable[str], int]]) -> Map
         for st in states:
             map_states[st] = State(mon_state)
     return map_states
-
-
-def _render_status_info_group_members(
-    oper_status_name: str,
-    admin_status_name: str | None,
-) -> str:
-    if admin_status_name is None:
-        return "(%s)" % oper_status_name
-    return "(op. state: %s, admin state: %s)" % (oper_status_name, admin_status_name)
 
 
 def _check_status(
@@ -1737,16 +1744,7 @@ def _output_group_members(
     for group_node, members in group_members.items():
         member_info = []
         for member in members:
-            member_info.append(
-                "%s %s"
-                % (
-                    member["name"],
-                    _render_status_info_group_members(
-                        member["oper_status_name"],
-                        member.get("admin_status_name"),
-                    ),
-                )
-            )
+            member_info.append(str(member))
 
         nodeinfo = ""
         if group_node is not None and len(group_members) > 1:

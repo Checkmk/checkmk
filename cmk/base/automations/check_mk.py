@@ -20,7 +20,7 @@ from collections.abc import Container, Iterable, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout, suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import livestatus
 
@@ -61,16 +61,7 @@ from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
-from cmk.utils.type_defs import (
-    EVERYTHING,
-    HostAddress,
-    HostName,
-    Item,
-    SectionName,
-    ServiceDetails,
-    ServiceName,
-    ServiceState,
-)
+from cmk.utils.type_defs import EVERYTHING, HostAddress, HostName, ServiceDetails, ServiceState
 
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -112,23 +103,9 @@ from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFet
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
-from cmk.checkengine import (
-    DiscoveryPlugin,
-    FetcherFunction,
-    parse_raw_data,
-    ParserFunction,
-    plugin_contexts,
-    SectionPlugin,
-    SourceType,
-    SummarizerFunction,
-)
+from cmk.checkengine import parse_raw_data, plugin_contexts, SourceType
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import (
-    AutocheckEntry,
-    AutocheckServiceWithNodes,
-    DiscoveryMode,
-    HostLabelPlugin,
-)
+from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes, DiscoveryMode
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.type_defs import NO_SELECTION
 
@@ -436,22 +413,39 @@ class AutomationAutodiscovery(DiscoveryAutomation):
 automations.register(AutomationAutodiscovery())
 
 
-def _autodiscovery(
-    # TODO: Inline in caller
-    autodiscovery_queue: AutoQueue,
-    *,
-    config_cache: ConfigCache,
-    parser: ParserFunction,
-    fetcher: FetcherFunction,
-    summarizer: Callable[[HostName], SummarizerFunction],
-    section_plugins: Mapping[SectionName, SectionPlugin],
-    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
-    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
-    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-    schedule_discovery_check_: Callable[[HostName], object],
-    on_error: OnError,
-) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
-    """Autodiscovery"""
+def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
+    # pylint: disable=too-many-branches
+    file_cache_options = FileCacheOptions(use_outdated=True)
+
+    if not (autodiscovery_queue := AutoQueue(autodiscovery_dir)):
+        return {}, False
+
+    config.load()
+    config_cache = config.get_config_cache()
+    parser = CMKParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.discovery"),
+    )
+    fetcher = CMKFetcher(
+        config_cache,
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=False,
+        mode=Mode.DISCOVERY,
+        on_error=OnError.IGNORE,
+        selected_sections=NO_SELECTION,
+        simulation_mode=config.simulation_mode,
+        # autodiscovery is run every 5 minutes
+        # make sure we may use the file the active discovery check left behind:
+        max_cachefile_age=config.max_cachefile_age(discovery=600),
+    )
+    section_plugins = SectionPluginMapper()
+    host_label_plugins = HostLabelPluginMapper(config_cache=config_cache)
+    plugins = DiscoveryPluginMapper(config_cache=config_cache)
+    get_service_description = config.service_description
+    on_error = OnError.IGNORE
+
     for host_name in autodiscovery_queue:
         if host_name not in config_cache.all_configured_hosts():
             console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
@@ -495,12 +489,12 @@ def _autodiscovery(
                     config_cache=config_cache,
                     parser=parser,
                     fetcher=fetcher,
-                    summarizer=summarizer(host_name),
+                    summarizer=CMKSummarizer(config_cache, host_name, override_non_ok_state=None),
                     section_plugins=section_plugins,
                     host_label_plugins=host_label_plugins,
                     plugins=plugins,
                     get_service_description=get_service_description,
-                    schedule_discovery_check=schedule_discovery_check_,
+                    schedule_discovery_check=schedule_discovery_check,
                     autodiscovery_queue=autodiscovery_queue,
                     reference_time=rediscovery_reference_time,
                     oldest_queued=oldest_queued,
@@ -512,51 +506,6 @@ def _autodiscovery(
 
     except (MKTimeout, TimeoutError) as exc:
         console.verbose(str(exc))
-
-    return discovery_results, activation_required
-
-
-def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
-    file_cache_options = FileCacheOptions(use_outdated=True)
-
-    if not (queue := AutoQueue(autodiscovery_dir)):
-        return {}, False
-
-    config.load()
-    config_cache = config.get_config_cache()
-    parser = CMKParser(
-        config_cache,
-        selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.discovery"),
-    )
-    fetcher = CMKFetcher(
-        config_cache,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        mode=Mode.DISCOVERY,
-        on_error=OnError.IGNORE,
-        selected_sections=NO_SELECTION,
-        simulation_mode=config.simulation_mode,
-        # autodiscovery is run every 5 minutes
-        # make sure we may use the file the active discovery check left behind:
-        max_cachefile_age=config.max_cachefile_age(discovery=600),
-    )
-    discovery_results, activation_required = _autodiscovery(
-        queue,
-        config_cache=config_cache,
-        parser=parser,
-        fetcher=fetcher,
-        summarizer=lambda host_name: CMKSummarizer(
-            config_cache, host_name, override_non_ok_state=None
-        ),
-        section_plugins=SectionPluginMapper(),
-        host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-        plugins=DiscoveryPluginMapper(config_cache=config_cache),
-        get_service_description=config.service_description,
-        schedule_discovery_check_=schedule_discovery_check,
-        on_error=OnError.IGNORE,
-    )
 
     if not activation_required:
         return discovery_results, False

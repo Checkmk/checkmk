@@ -57,6 +57,7 @@ export interface SingleMetricDataPlotDefinitions {
 
 export interface SingleMetricData
     extends FigureData<SingleMetricDataData, SingleMetricDataPlotDefinitions> {
+    data: SingleMetricDataData[];
     title: string;
     title_url: string;
 }

@@ -128,10 +128,10 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)
 # Note: libstdc++fs is only available as a static library, so we are lucky.
 	$(CXXLINK) -shared $^ -lpthread $(AM_LDFLAGS) $(LIBLIVESTATUS_SO)
-# To make sure we can dlopen() our NEB later
-	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -Iinclude -I. -I../.. -I.. -c NagiosMockup.cc -o NagiosMockup.o
-	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatusneb_a_LD_FLAGS) $(LIBLIVESTATUS_SO)
-	$(RM) NagiosMockup
+# To make sure we can dlopen() our NEB later. TODO: This should be part of the tests.
+	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -Iinclude -I. -I../.. -I.. -c test/NagiosMockup.cc -o test/NagiosMockup.o
+	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) test/NagiosMockup.o $@ -o test/NagiosMockup $(liblivestatusneb_a_LD_FLAGS) $(LIBLIVESTATUS_SO)
+	$(RM) test/NagiosMockup
 
 # NOTE: Using make's -B flag destroys all dependencies via the am--depfiles
 # target, so we use a cruel sed hack below. :-P

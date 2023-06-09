@@ -33,7 +33,6 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
-import cmk.base.core
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services

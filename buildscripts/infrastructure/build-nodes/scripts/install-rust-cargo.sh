@@ -16,7 +16,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # define toolchain version explicitly
 # 'stable' is allowed only for main(master) branch
-TOOLCHAIN_VERSION="stable"
+# https://github.com/rust-lang/rust/issues/112286 for the reason of pinning the version
+TOOLCHAIN_VERSION="1.69"
 
 DEFAULT_TOOLCHAIN="${TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
 DIR_NAME="rust"
@@ -28,7 +29,7 @@ RUSTUP_HOME="$TARGET_DIR/$DIR_NAME/rustup"
 export RUSTUP_HOME
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=8
+BUILD_ID=9
 
 build_package() {
     WORK_DIR=$(mktemp -d)
@@ -49,9 +50,9 @@ build_package() {
     mirrored_download "rustup-init.sh" "https://sh.rustup.rs"
     chmod +x rustup-init.sh
     ./rustup-init.sh -y --no-modify-path --default-toolchain "$DEFAULT_TOOLCHAIN"
+    ${CARGO_HOME}/bin/rustup update
     ${CARGO_HOME}/bin/rustup target add x86_64-unknown-linux-musl
     ${CARGO_HOME}/bin/rustup default $TOOLCHAIN_VERSION
-    ${CARGO_HOME}/bin/rustup update
     # saves space
     rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/doc/"
 }

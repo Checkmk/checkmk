@@ -13,9 +13,6 @@ import pytest
 from tests.testlib import cmk_path
 
 from cmk.utils.structured_data import (
-    _compare_attributes,
-    _compare_tables,
-    Attributes,
     ImmutableDeltaTree,
     ImmutableTree,
     MutableTree,
@@ -548,7 +545,7 @@ def test_filter_delta_tree_nta_ta() -> None:
 
 
 @pytest.mark.parametrize(
-    "old_attributes_data, new_attributes_data, result",
+    "previous_pairs, current_pairs, result",
     [
         ({}, {}, (0, 0, 0)),
         ({"k0": "v0"}, {"k0": "v0"}, (0, 0, 0)),
@@ -584,18 +581,20 @@ def test_filter_delta_tree_nta_ta() -> None:
         ),
     ],
 )
-def test__compare_attributes(
-    old_attributes_data: Mapping[str, str],
-    new_attributes_data: Mapping[str, str],
+def test_difference_pairs(
+    previous_pairs: Mapping[str, str],
+    current_pairs: Mapping[str, str],
     result: tuple[int, int, int],
 ) -> None:
-    old_attributes = Attributes()
-    old_attributes.add_pairs(old_attributes_data)
+    previous_tree = MutableTree()
+    previous_tree.add_pairs(path=[], pairs=previous_pairs)
 
-    new_attributes = Attributes()
-    new_attributes.add_pairs(new_attributes_data)
+    current_tree = MutableTree()
+    current_tree.add_pairs(path=[], pairs=current_pairs)
 
-    delta_result = _compare_attributes(new_attributes, old_attributes).count_entries()
+    delta_result = (
+        ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree)).get_stats()
+    )
     assert (
         delta_result["new"],
         delta_result["changed"],
@@ -604,7 +603,7 @@ def test__compare_attributes(
 
 
 @pytest.mark.parametrize(
-    "old_table_data, new_table_data, result",
+    "previous_rows, current_rows, result",
     [
         ([], [], (0, 0, 0)),
         ([{"id": "1", "val": 0}], [], (0, 0, 2)),
@@ -652,23 +651,24 @@ def test__compare_attributes(
         ),
     ],
 )
-def test__compare_tables(
-    old_table_data: Sequence[Mapping[str, str | int]],
-    new_table_data: Sequence[Mapping[str, str | int]],
+def test_difference_rows(
+    previous_rows: Sequence[Mapping[str, str | int]],
+    current_rows: Sequence[Mapping[str, str | int]],
     result: tuple[int, int, int],
 ) -> None:
-    old_table = Table(key_columns=["id"])
-    old_table.add_rows(old_table_data)
-    new_table = Table(key_columns=["id"])
-    new_table.add_rows(new_table_data)
+    previous_tree = MutableTree()
+    previous_tree.add_rows(path=[], key_columns=["id"], rows=previous_rows)
 
-    delta_table = _compare_tables(new_table, old_table)
+    current_tree = MutableTree()
+    current_tree.add_rows(path=[], key_columns=["id"], rows=current_rows)
+
+    delta_tree = ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree))
     if any(result):
-        assert delta_table
+        assert delta_tree
     else:
-        assert not delta_table
+        assert not delta_tree
 
-    delta_result = delta_table.count_entries()
+    delta_result = delta_tree.get_stats()
     assert (
         delta_result["new"],
         delta_result["changed"],
@@ -677,7 +677,7 @@ def test__compare_tables(
 
 
 @pytest.mark.parametrize(
-    "old_row, new_row, expected_keys",
+    "previous_row, current_row, expected_keys",
     [
         ({}, {}, set()),
         ({"id": "id", "val": "val"}, {"id": "id", "val": "val"}, set()),
@@ -686,18 +686,19 @@ def test__compare_tables(
         ({"id": "id1", "val": "val"}, {"id": "id2", "val": "val"}, {"id", "val"}),
     ],
 )
-def test__compare_tables_row_keys(
-    old_row: dict[str, str],
-    new_row: dict[str, str],
+def test_difference_rows_keys(
+    previous_row: dict[str, str],
+    current_row: dict[str, str],
     expected_keys: set[str],
 ) -> None:
-    old_table = Table(key_columns=["id"])
-    old_table.add_rows([old_row])
-    new_table = Table(key_columns=["id"])
-    new_table.add_rows([new_row])
+    previous_tree = MutableTree()
+    previous_tree.add_rows(path=[], key_columns=["id"], rows=[previous_row])
 
-    delta_table = _compare_tables(new_table, old_table)
-    assert {k for r in delta_table.rows for k in r} == expected_keys
+    current_tree = MutableTree()
+    current_tree.add_rows(path=[], key_columns=["id"], rows=[current_row])
+
+    delta_tree = ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree))
+    assert {k for r in delta_tree.tree.table.rows for k in r} == expected_keys
 
 
 def test_filter_tree_no_paths() -> None:

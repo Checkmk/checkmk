@@ -11,8 +11,9 @@ from typing import Literal
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.timeperiod import timeperiod_active
-from cmk.utils.type_defs import HostName, Item, SectionName, ServiceName
+from cmk.utils.type_defs import HostAddress, HostName, Item, SectionName, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 
@@ -30,6 +31,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkengine.discovery import (
     analyse_cluster_labels,
+    AutocheckEntry,
     discover_host_labels,
     HostLabelPlugin,
     QualifiedDiscovery,
@@ -43,7 +45,6 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 import cmk.base.agent_based.checking as checking
-import cmk.base.config as config
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache
 
@@ -65,6 +66,7 @@ class CheckPreview:
 
 def get_check_preview(
     host_name: HostName,
+    ip_address: HostAddress | None,
     *,
     config_cache: ConfigCache,
     parser: ParserFunction,
@@ -75,18 +77,11 @@ def get_check_preview(
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
     on_error: OnError,
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
-    ip_address = (
-        None
-        if config_cache.is_cluster(host_name)
-        # We *must* do the lookup *before* calling `get_host_attributes()`
-        # because...  I don't know... global variables I guess.  In any case,
-        # doing it the other way around breaks one integration test.
-        else config.lookup_ip_address(config_cache, host_name)
-    )
 
     fetched = fetcher(host_name, ip_address=ip_address)
     parsed = parser((f[0], f[1]) for f in fetched)
@@ -150,12 +145,7 @@ def get_check_preview(
                     check_plugin_name=entry.check_plugin_name,
                     item=entry.item,
                     description=find_service_description(host_name, *entry.id()),
-                    parameters=config.compute_check_parameters(
-                        host_name,
-                        entry.check_plugin_name,
-                        entry.item,
-                        entry.parameters,
-                    ),
+                    parameters=compute_check_parameters(host_name, entry),
                     discovered_parameters=entry.parameters,
                     service_labels={n: ServiceLabel(n, v) for n, v in entry.service_labels.items()},
                     is_enforced=True,

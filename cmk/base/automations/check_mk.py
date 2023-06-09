@@ -369,8 +369,17 @@ def _execute_discovery(
         simulation_mode=config.simulation_mode,
         max_cachefile_age=config.max_cachefile_age(),
     )
+    ip_address = (
+        None
+        if config_cache.is_cluster(host_name)
+        # We *must* do the lookup *before* calling `get_host_attributes()`
+        # because...  I don't know... global variables I guess.  In any case,
+        # doing it the other way around breaks one integration test.
+        else config.lookup_ip_address(config_cache, host_name)
+    )
     passive_check_preview = discovery.get_check_preview(
         host_name,
+        ip_address,
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
@@ -382,6 +391,14 @@ def _execute_discovery(
         section_plugins=SectionPluginMapper(),
         host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
         check_plugins=CheckPluginMapper(),
+        compute_check_parameters=(
+            lambda host_name, entry: config.compute_check_parameters(
+                host_name,
+                entry.check_plugin_name,
+                entry.item,
+                entry.parameters,
+            )
+        ),
         discovery_plugins=DiscoveryPluginMapper(config_cache=config_cache),
         find_service_description=config.service_description,
         on_error=on_error,

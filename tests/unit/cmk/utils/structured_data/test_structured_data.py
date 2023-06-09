@@ -80,6 +80,233 @@ def _create_filled_imm_tree() -> ImmutableTree:
     return ImmutableTree(_create_filled_mut_tree().tree)
 
 
+def test_serialize_empty_mut_tree() -> None:
+    assert _create_empty_mut_tree().serialize() == {"Attributes": {}, "Table": {}, "Nodes": {}}
+
+
+def test_serialize_filled_mut_tree() -> None:
+    raw_tree = _create_filled_mut_tree().serialize()
+    assert raw_tree["Attributes"] == {}
+    assert raw_tree["Table"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Attributes"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Table"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Attributes"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Table"] == {}
+
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["na"]["Attributes"]["Pairs"] == {
+        "na0": "NA 0",
+        "na1": "NA 1",
+    }
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["na"]["Table"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["na"]["Nodes"] == {}
+
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["nt"]["Attributes"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["nt"]["Table"]["KeyColumns"] == [
+        "nt0"
+    ]
+    nt_rows = raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["nt"]["Table"]["Rows"]
+    assert len(nt_rows) == 2
+    for row in [
+        {"nt0": "NT 00", "nt1": "NT 01"},
+        {"nt0": "NT 10", "nt1": "NT 11"},
+    ]:
+        assert row in nt_rows
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["nt"]["Nodes"] == {}
+
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["ta"]["Attributes"]["Pairs"] == {
+        "ta0": "TA 0",
+        "ta1": "TA 1",
+    }
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["ta"]["Table"]["KeyColumns"] == [
+        "ta0"
+    ]
+    ta_rows = raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["ta"]["Table"]["Rows"]
+    assert len(ta_rows) == 2
+    for row in [
+        {"ta0": "TA 00", "ta1": "TA 01"},
+        {"ta0": "TA 10", "ta1": "TA 11"},
+    ]:
+        assert row in ta_rows
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["ta"]["Nodes"] == {}
+
+
+def test_deserialize_empty_imm_tree() -> None:
+    assert ImmutableTree.deserialize({}) == MutableTree()
+    assert ImmutableTree.deserialize({}) == ImmutableTree()
+
+
+def test_deserialize_filled_imm_tree() -> None:
+    tree = ImmutableTree.deserialize(
+        {
+            "Attributes": {},
+            "Table": {},
+            "Nodes": {
+                "path-to": {
+                    "Attributes": {},
+                    "Nodes": {
+                        "nta": {
+                            "Attributes": {},
+                            "Nodes": {
+                                "na": {
+                                    "Attributes": {"Pairs": {"na0": "NA 0", "na1": "NA 1"}},
+                                    "Nodes": {},
+                                    "Table": {},
+                                },
+                                "nt": {
+                                    "Attributes": {},
+                                    "Nodes": {},
+                                    "Table": {
+                                        "KeyColumns": ["nt0"],
+                                        "Rows": [
+                                            {"nt0": "NT 00", "nt1": "NT 01"},
+                                            {"nt0": "NT 10", "nt1": "NT 11"},
+                                        ],
+                                    },
+                                },
+                                "ta": {
+                                    "Attributes": {"Pairs": {"ta0": "TA 0", "ta1": "TA 1"}},
+                                    "Nodes": {},
+                                    "Table": {
+                                        "KeyColumns": ["ta0"],
+                                        "Rows": [
+                                            {"ta0": "TA 00", "ta1": "TA 01"},
+                                            {"ta0": "TA 10", "ta1": "TA 11"},
+                                        ],
+                                    },
+                                },
+                            },
+                            "Table": {},
+                        }
+                    },
+                    "Table": {},
+                }
+            },
+        }
+    )
+    assert tree == _create_filled_mut_tree()
+    assert tree == _create_filled_imm_tree()
+
+
+def test_serialize_empty_delta_tree() -> None:
+    assert _create_empty_imm_tree().difference(_create_empty_imm_tree()).serialize() == {
+        "Attributes": {},
+        "Table": {},
+        "Nodes": {},
+    }
+
+
+def test_serialize_filled_delta_tree() -> None:
+    raw_tree = _create_empty_imm_tree().difference(_create_filled_imm_tree()).serialize()
+    assert raw_tree["Attributes"] == {}
+    assert raw_tree["Table"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Attributes"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Table"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Attributes"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Table"] == {}
+
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["na"]["Attributes"]["Pairs"] == {
+        "na0": ("NA 0", None),
+        "na1": ("NA 1", None),
+    }
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["na"]["Table"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["na"]["Nodes"] == {}
+
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["nt"]["Attributes"] == {}
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["nt"]["Table"]["KeyColumns"] == [
+        "nt0"
+    ]
+    nt_rows = raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["nt"]["Table"]["Rows"]
+    assert len(nt_rows) == 2
+    for row in [
+        {"nt0": ("NT 00", None), "nt1": ("NT 01", None)},
+        {"nt0": ("NT 10", None), "nt1": ("NT 11", None)},
+    ]:
+        assert row in nt_rows
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["nt"]["Nodes"] == {}
+
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["ta"]["Attributes"]["Pairs"] == {
+        "ta0": ("TA 0", None),
+        "ta1": ("TA 1", None),
+    }
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["ta"]["Table"]["KeyColumns"] == [
+        "ta0"
+    ]
+    ta_rows = raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["ta"]["Table"]["Rows"]
+    assert len(ta_rows) == 2
+    for row in [
+        {"ta0": ("TA 00", None), "ta1": ("TA 01", None)},
+        {"ta0": ("TA 10", None), "ta1": ("TA 11", None)},
+    ]:
+        assert row in ta_rows
+    assert raw_tree["Nodes"]["path-to"]["Nodes"]["nta"]["Nodes"]["ta"]["Nodes"] == {}
+
+
+def test_deserialize_empty_delta_tree() -> None:
+    assert not ImmutableDeltaTree.deserialize(
+        {
+            "Attributes": {},
+            "Table": {},
+            "Nodes": {},
+        }
+    )
+
+
+def test_deserialize_filled_delta_tree() -> None:
+    assert bool(
+        ImmutableDeltaTree.deserialize(
+            {
+                "Attributes": {},
+                "Nodes": {
+                    "path-to": {
+                        "Attributes": {},
+                        "Nodes": {
+                            "nta": {
+                                "Attributes": {},
+                                "Nodes": {
+                                    "na": {
+                                        "Attributes": {
+                                            "Pairs": {"na0": ("NA 0", None), "na1": ("NA 1", None)}
+                                        },
+                                        "Nodes": {},
+                                        "Table": {},
+                                    },
+                                    "nt": {
+                                        "Attributes": {},
+                                        "Nodes": {},
+                                        "Table": {
+                                            "KeyColumns": ["nt0"],
+                                            "Rows": [
+                                                {"nt0": ("NT 00", None), "nt1": ("NT 01", None)},
+                                                {"nt0": ("NT 10", None), "nt1": ("NT 11", None)},
+                                            ],
+                                        },
+                                    },
+                                    "ta": {
+                                        "Attributes": {
+                                            "Pairs": {"ta0": ("TA 0", None), "ta1": ("TA 1", None)}
+                                        },
+                                        "Nodes": {},
+                                        "Table": {
+                                            "KeyColumns": ["ta0"],
+                                            "Rows": [
+                                                {"ta0": ("TA 00", None), "ta1": ("TA 01", None)},
+                                                {"ta0": ("TA 10", None), "ta1": ("TA 11", None)},
+                                            ],
+                                        },
+                                    },
+                                },
+                                "Table": {},
+                            }
+                        },
+                        "Table": {},
+                    }
+                },
+                "Table": {},
+            }
+        )
+    )
+
+
 def test_get_tree_empty() -> None:
     root = _create_empty_imm_tree()
     nta = root.get_tree(("path-to", "nta"))
@@ -1123,51 +1350,6 @@ def test_real_filtered_tree_networking(
         )
         assert interfaces is not None
         assert interfaces.count_entries() == amount_if_entries
-
-
-@pytest.mark.parametrize(
-    "tree_name_old, tree_name_new",
-    [
-        (
-            HostName("tree_old_addresses_arrays_memory"),
-            HostName("tree_new_addresses_arrays_memory"),
-        ),
-        (
-            HostName("tree_old_addresses"),
-            HostName("tree_new_addresses"),
-        ),
-        (
-            HostName("tree_old_arrays"),
-            HostName("tree_new_arrays"),
-        ),
-        (
-            HostName("tree_old_interfaces"),
-            HostName("tree_new_interfaces"),
-        ),
-        (
-            HostName("tree_old_memory"),
-            HostName("tree_new_memory"),
-        ),
-        (
-            HostName("tree_old_heute"),
-            HostName("tree_new_heute"),
-        ),
-    ],
-)
-def test_delta_structured_data_tree_serialization(
-    tree_name_old: HostName,
-    tree_name_new: HostName,
-) -> None:
-    tree_store = _get_tree_store()
-
-    previous_tree = tree_store.load(host_name=tree_name_old)
-    inventory_tree = tree_store.load(host_name=tree_name_new)
-    delta_tree = previous_tree.difference(inventory_tree).tree
-
-    delta_raw_tree = delta_tree.serialize()
-    assert isinstance(delta_raw_tree, dict)
-
-    ImmutableDeltaTree.deserialize(delta_raw_tree)
 
 
 @pytest.mark.parametrize(

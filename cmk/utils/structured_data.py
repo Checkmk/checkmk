@@ -970,7 +970,7 @@ class StructuredDataNode:
         return {
             "Attributes": self.attributes.serialize(),
             "Table": self.table.serialize(),
-            "Nodes": {name: node.serialize() for name, node in self._nodes.items()},
+            "Nodes": {name: node.serialize() for name, node in self._nodes.items() if node},
         }
 
     @classmethod
@@ -1520,7 +1520,7 @@ class DeltaStructuredDataNode:
         return {
             "Attributes": self.attributes.serialize(),
             "Table": self.table.serialize(),
-            "Nodes": {edge: node.serialize() for edge, node in self.nodes.items()},
+            "Nodes": {edge: node.serialize() for edge, node in self.nodes.items() if node},
         }
 
     @classmethod

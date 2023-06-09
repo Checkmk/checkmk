@@ -53,16 +53,11 @@ def _test_rename_preserves_registration(
     )
 
     new_hostname = HostName(f"{hostname}-renamed")
-    response_rename = central_site.openapi.put(
-        f"objects/host_config/{hostname}/actions/rename/invoke",
-        headers={
-            "If-Match": f'{response_create.headers["ETag"]}',
-            "Content-Type": "application/json",
-        },
-        json={"new_name": new_hostname},
+    central_site.openapi.rename_host_and_wait_for_completion(
+        hostname_old=hostname,
+        hostname_new=new_hostname,
+        etag=response_create.headers["ETag"],
     )
-    if not response_rename.ok:
-        raise UnexpectedResponse.from_response(response_rename)
     _activate_changes_and_wait_for_completion_with_retries(central_site)
 
     controller_status = controller_status_json(agent_ctl)

@@ -13,6 +13,8 @@ import requests
 
 from tests.testlib.rest_api_client import RequestHandler, Response
 
+from cmk.utils.type_defs import HTTPMethod
+
 logger = logging.getLogger("rest-session")
 
 
@@ -22,7 +24,7 @@ class RequestSessionRequestHandler(RequestHandler):
 
     def request(
         self,
-        method: str,
+        method: HTTPMethod,
         url: str,
         query_params: Mapping[str, str] | None = None,
         body: AnyStr | None = None,
@@ -158,7 +160,7 @@ class CMKOpenApiSession(requests.Session):
         force_foreign_changes: bool = False,
         timeout: int = 60,
     ) -> bool:
-        with self._wait_for_completion(timeout):
+        with self._wait_for_completion(timeout, "get"):
             return self.activate_changes(sites, force_foreign_changes)
 
     def create_user(
@@ -274,6 +276,32 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
+    def rename_host(self, *, hostname_old: str, hostname_new: str, etag: str) -> None:
+        response = self.put(
+            f"/objects/host_config/{hostname_old}/actions/rename/invoke",
+            headers={
+                "If-Match": etag,
+                "Content-Type": "application/json",
+            },
+            json={"new_name": hostname_new},
+            allow_redirects=False,
+        )
+        if response.status_code == 302:
+            raise Redirect(redirect_url=response.headers["Location"])
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def rename_host_and_wait_for_completion(
+        self,
+        *,
+        hostname_old: str,
+        hostname_new: str,
+        etag: str,
+        timeout: int = 60,
+    ) -> None:
+        with self._wait_for_completion(timeout, "post"):
+            self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
+
     def discover_services(self, hostname: str, mode: str = "tabula_rasa") -> NoReturn:
         response = self.post(
             "/domain-types/service_discovery_run/actions/start/invoke",
@@ -288,11 +316,15 @@ class CMKOpenApiSession(requests.Session):
 
     def discover_services_and_wait_for_completion(self, hostname: str) -> None:
         timeout = 60
-        with self._wait_for_completion(timeout):
+        with self._wait_for_completion(timeout, "get"):
             self.discover_services(hostname)
 
     @contextmanager
-    def _wait_for_completion(self, timeout: int) -> Iterator[None]:
+    def _wait_for_completion(
+        self,
+        timeout: int,
+        http_method_for_redirection: HTTPMethod,
+    ) -> Iterator[None]:
         start = time.time()
         try:
             yield None
@@ -302,7 +334,11 @@ class CMKOpenApiSession(requests.Session):
                 if time.time() > (start + timeout):
                     raise TimeoutError("wait for completion timed out")
 
-                response = self.get(redirect_url, allow_redirects=False)
+                response = self.request(
+                    method=http_method_for_redirection,
+                    url=redirect_url,
+                    allow_redirects=False,
+                )
                 if response.status_code == 204:  # job has finished
                     break
 

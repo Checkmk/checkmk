@@ -156,11 +156,9 @@ def main() {
 def registry_credentials_id(edition) {
    switch(edition) {
        case "raw":
-           return "11fb3d5f-e44e-4f33-a651-274227cc48ab"
        case "cloud":
            return "11fb3d5f-e44e-4f33-a651-274227cc48ab"
        case "enterprise":
-           return "registry.checkmk.com"
        case "managed":
            return "registry.checkmk.com"
        case "saas":

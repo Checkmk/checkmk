@@ -594,9 +594,9 @@ def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Delta
         if child_left == child_right:
             continue
 
-        delta_node_result = _compare_nodes(child_left, child_right)
-        if delta_node_result.count_entries():
-            delta_nodes[key] = delta_node_result
+        delta_node = _compare_nodes(child_left, child_right)
+        if delta_node.get_stats():
+            delta_nodes[key] = delta_node
 
     for key in compared_keys.only_old:
         child_right = right.nodes_by_name[key]
@@ -751,7 +751,7 @@ class ImmutableDeltaTree:
         return ImmutableDeltaTree(_filter_delta_node(self.tree, filters))
 
     def get_stats(self) -> _SDDeltaCounter:
-        return self.tree.count_entries()
+        return self.tree.get_stats()
 
     def get_tree(self, path: SDPath) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(self.tree.get_node(path))
@@ -1414,7 +1414,7 @@ class DeltaAttributes:
     def deserialize(cls, raw_attributes: SDRawDeltaAttributes) -> DeltaAttributes:
         return cls(pairs=raw_attributes.get("Pairs", {}))
 
-    def count_entries(self) -> _SDDeltaCounter:
+    def get_stats(self) -> _SDDeltaCounter:
         return _count_dict_entries(self.pairs)
 
 
@@ -1440,7 +1440,7 @@ class DeltaTable:
     def deserialize(cls, raw_table: SDRawDeltaTable) -> DeltaTable:
         return cls(key_columns=raw_table.get("KeyColumns", []), rows=raw_table.get("Rows", []))
 
-    def count_entries(self) -> _SDDeltaCounter:
+    def get_stats(self) -> _SDDeltaCounter:
         counter: _SDDeltaCounter = Counter()
         for row in self.rows:
             counter.update(_count_dict_entries(row))
@@ -1538,12 +1538,12 @@ class DeltaStructuredDataNode:
             },
         )
 
-    def count_entries(self) -> _SDDeltaCounter:
+    def get_stats(self) -> _SDDeltaCounter:
         counter: _SDDeltaCounter = Counter()
-        counter.update(self.attributes.count_entries())
-        counter.update(self.table.count_entries())
+        counter.update(self.attributes.get_stats())
+        counter.update(self.table.get_stats())
         for node in self.nodes.values():
-            counter.update(node.count_entries())
+            counter.update(node.get_stats())
         return counter
 
 

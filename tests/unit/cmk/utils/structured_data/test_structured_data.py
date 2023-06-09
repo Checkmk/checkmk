@@ -979,7 +979,7 @@ def test_real_count_entries(tree_name: HostName, result: int) -> None:
 )
 def test_compare_trees_self_2(tree_name: HostName) -> None:
     tree = _get_tree_store().load(host_name=tree_name)
-    delta_result = tree.difference(tree).tree.count_entries()
+    delta_result = tree.difference(tree).tree.get_stats()
     assert (
         delta_result["new"],
         delta_result["changed"],
@@ -1028,7 +1028,7 @@ def test_compare_trees_2(
     tree_store = _get_tree_store()
     old_tree = tree_store.load(host_name=tree_name_old)
     new_tree = tree_store.load(host_name=tree_name_new)
-    delta_result = new_tree.difference(old_tree).tree.count_entries()
+    delta_result = new_tree.difference(old_tree).tree.get_stats()
     assert (
         delta_result["new"],
         delta_result["changed"],

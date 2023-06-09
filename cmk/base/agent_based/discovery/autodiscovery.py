@@ -46,6 +46,7 @@ from cmk.checkengine.discovery import (
     HostLabelPlugin,
     QualifiedDiscovery,
 )
+from cmk.checkengine.discovery.filters import ServiceFilters as _ServiceFilters
 from cmk.checkengine.sectionparser import (
     filter_out_errors,
     make_providers,
@@ -57,7 +58,6 @@ from cmk.base.checkers import CMKSummarizer
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
-from ._filters import ServiceFilters as _ServiceFilters
 
 __all__ = ["get_host_services"]
 

@@ -32,6 +32,8 @@ from cmk.checkengine.discovery import (
     HostLabelPlugin,
     QualifiedDiscovery,
 )
+from cmk.checkengine.discovery.filters import ServiceFilter as _ServiceFilter
+from cmk.checkengine.discovery.filters import ServiceFilters as _ServiceFilters
 from cmk.checkengine.sectionparser import (
     filter_out_errors,
     make_providers,
@@ -41,8 +43,6 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
-from ._filters import ServiceFilter as _ServiceFilter
-from ._filters import ServiceFilters as _ServiceFilters
 from .autodiscovery import AutocheckServiceWithNodes, get_host_services, ServicesByTransition
 
 __all__ = ["execute_check_discovery"]

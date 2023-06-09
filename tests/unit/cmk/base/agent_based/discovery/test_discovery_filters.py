@@ -9,7 +9,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.agent_based.discovery import _filters
+from cmk.checkengine.discovery import filters as _filters
 
 
 @pytest.mark.parametrize(

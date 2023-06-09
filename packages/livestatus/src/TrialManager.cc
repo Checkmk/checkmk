@@ -86,7 +86,7 @@ std::chrono::system_clock::time_point state_file_created(
 }
 
 bool is_licensed(const std::filesystem::path &licensed_state_file) {
-    char state{'0'};
+    char state{'1'};
     if (std::ifstream ifs{licensed_state_file, std::ios::binary}) {
         ifs.read(&state, sizeof(state));
     };

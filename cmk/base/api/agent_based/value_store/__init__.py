@@ -25,7 +25,7 @@ Check API
 .. autofunction:: get_value_store
 
 
-.. autoclass:: cmk.checkengine.value_store._utils._ValueStore
+.. autoclass:: cmk.base.api.agent_based.value_store._utils._ValueStore
 
 
 Backend

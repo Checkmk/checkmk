@@ -12,9 +12,11 @@ from cmk.utils.type_defs import HostName
 
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.value_store._global_state import load_host_value_store
 
-from cmk.base.api.agent_based.value_store import get_value_store
+from cmk.base.api.agent_based.value_store._global_state import (
+    get_value_store,
+    load_host_value_store,
+)
 
 _TEST_KEY = ("check", "item", "user-key")
 

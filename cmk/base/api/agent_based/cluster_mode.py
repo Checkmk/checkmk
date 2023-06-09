@@ -13,7 +13,6 @@ from cmk.utils.type_defs import ClusterMode, HostName, state_markers
 
 from cmk.checkengine import CheckPlugin
 from cmk.checkengine.check_table import ServiceID
-from cmk.checkengine.value_store import ValueStoreManager
 
 from cmk.base.api.agent_based.checking_classes import (
     CheckResult,
@@ -23,6 +22,7 @@ from cmk.base.api.agent_based.checking_classes import (
     Result,
     State,
 )
+from cmk.base.api.agent_based.value_store import ValueStoreManager
 
 _Kwargs = Mapping[str, Any]
 

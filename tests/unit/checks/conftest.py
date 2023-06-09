@@ -52,7 +52,7 @@ class _MockVSManager(typing.NamedTuple):
 def initialised_item_state():
     mock_vs = _MockVSManager({})
     with mock.patch(
-        "cmk.checkengine.value_store._global_state._active_host_value_store",
+        "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
         mock_vs,
     ):
         yield

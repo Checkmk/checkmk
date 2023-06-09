@@ -23,6 +23,8 @@ from typing import Any, assert_never, Literal
 from typing import Mapping as TypingMapping
 from typing import ParamSpec, TypedDict, TypeVar
 
+import pydantic
+
 from ..agent_based_api.v1 import (
     check_levels,
     check_levels_predictive,
@@ -92,6 +94,18 @@ CHECK_DEFAULT_PARAMETERS = {
         "both": ("perc", (0.01, 0.1)),
     },
 }
+
+
+class IndependentMapping(pydantic.BaseModel, frozen=True):
+    map_operstates: Sequence[tuple[Sequence[str], Literal[0, 1, 2, 3]]] = []
+    map_admin_states: Sequence[tuple[Sequence[str], Literal[0, 1, 2, 3]]] = []
+
+
+class CombinedMapping(list[tuple[str, str, Literal[0, 1, 2, 3]]]):
+    pass
+
+
+StateMappings = IndependentMapping | CombinedMapping
 
 
 class _MissingOperStatus:
@@ -1603,6 +1617,17 @@ def _interface_mac(attributes: Attributes) -> Iterable[Result]:
         )
 
 
+def _parse_params(
+    state_mappings: tuple[Literal["independent_mappings", "combined_mappings"], Any]
+) -> StateMappings:
+    match state_mappings:
+        case "independent_mappings", mapping:
+            return IndependentMapping.parse_obj(mapping)
+        case "combined_mappings", mapping:
+            return CombinedMapping(mapping)
+    raise ValueError(f"Unknown state_mappings: {state_mappings}")
+
+
 def _interface_status(
     *,
     params: Mapping[str, Any],
@@ -1616,16 +1641,13 @@ def _interface_status(
         target_oper_states = params.get("state")
         target_admin_states = params.get("admin_state")
 
-    state_mapping_type, state_mappings = params.get(
-        "state_mappings",
-        (
-            "independent_mappings",
-            {},
-        ),
+    state_mappings = (
+        _parse_params(params["state_mappings"])
+        if "state_mappings" in params
+        else IndependentMapping()
     )
     yield from _check_oper_and_admin_state(
         attributes,
-        state_mapping_type=state_mapping_type,
         state_mappings=state_mappings,
         target_oper_states=target_oper_states,
         target_admin_states=target_admin_states,
@@ -1634,57 +1656,44 @@ def _interface_status(
 
 def _check_oper_and_admin_state(
     attributes: Attributes,
-    state_mapping_type: Literal["independent_mappings", "combined_mappings"],
-    state_mappings: Iterable[tuple[str, str, int]]
-    | Mapping[str, Iterable[tuple[Iterable[str], int]]],
+    state_mappings: StateMappings,
     target_oper_states: Container[str] | None,
     target_admin_states: Container[str] | None,
 ) -> Iterable[Result]:
     if combined_mon_state := _check_oper_and_admin_state_combined(
         attributes,
-        state_mapping_type,
         state_mappings,
     ):
         yield combined_mon_state
         return
 
-    map_oper_states, map_admin_states = _get_oper_and_admin_states_maps_independent(
-        state_mapping_type,
-        state_mappings,
-    )
-
     yield from _check_oper_and_admin_state_independent(
         attributes,
         target_oper_states=target_oper_states,
         target_admin_states=target_admin_states,
-        map_oper_states=map_oper_states,
-        map_admin_states=map_admin_states,
+        mapping=_get_oper_and_admin_states_maps_independent(state_mappings),
     )
 
 
 def _get_oper_and_admin_states_maps_independent(
-    state_mapping_type: Literal["combined_mappings", "independent_mappings"],
-    state_mappings: Iterable[tuple[str, str, int]]
-    | Mapping[str, Iterable[tuple[Iterable[str], int]]],
-) -> tuple[Iterable[tuple[Iterable[str], int]], Iterable[tuple[Iterable[str], int]]]:
-    if state_mapping_type == "independent_mappings":
-        assert isinstance(state_mappings, Mapping)
-        return state_mappings.get("map_operstates", []), state_mappings.get("map_admin_states", [])
-    return [], []
+    state_mappings: StateMappings,
+) -> IndependentMapping:
+    if isinstance(state_mappings, IndependentMapping):
+        return state_mappings
+    return IndependentMapping()
 
 
 def _check_oper_and_admin_state_independent(
     attributes: Attributes,
     target_oper_states: Container[str] | None,
     target_admin_states: Container[str] | None,
-    map_oper_states: Iterable[tuple[Iterable[str], int]],
-    map_admin_states: Iterable[tuple[Iterable[str], int]],
+    mapping: IndependentMapping,
 ) -> Iterable[Result]:
     yield Result(
         state=_check_status(
             attributes.oper_status,
             target_oper_states,
-            _get_map_states(map_oper_states),
+            _get_map_states(mapping.map_operstates),
         ),
         summary=f"({attributes.oper_status_name})",
         details=f"Operational state: {attributes.oper_status_name}",
@@ -1697,14 +1706,14 @@ def _check_oper_and_admin_state_independent(
         state=_check_status(
             str(attributes.admin_status),
             target_admin_states,
-            _get_map_states(map_admin_states),
+            _get_map_states(mapping.map_admin_states),
         ),
         summary=f"Admin state: {statename(attributes.admin_status)}",
     )
 
 
 def __oper_and_admin_state_combined(
-    attributes: Attributes, state_mappings: Iterable[tuple[str, str, int]]
+    attributes: Attributes, state_mappings: CombinedMapping
 ) -> State | None:
     for oper_state, admin_state, mon_state in state_mappings:
         if attributes.oper_status == oper_state and attributes.admin_status == admin_state:
@@ -1713,16 +1722,12 @@ def __oper_and_admin_state_combined(
 
 
 def _check_oper_and_admin_state_combined(
-    attributes: Attributes,
-    state_mapping_type: Literal["combined_mappings", "independent_mappings"],
-    state_mappings: Iterable[tuple[str, str, int]]
-    | Mapping[str, Iterable[tuple[Iterable[str], int]]],
+    attributes: Attributes, state_mappings: StateMappings
 ) -> Result | None:
     if attributes.admin_status is None:
         return None
-    if state_mapping_type == "independent_mappings":
+    if isinstance(state_mappings, IndependentMapping):
         return None
-    assert not isinstance(state_mappings, Mapping)
     combined_mon_state = __oper_and_admin_state_combined(attributes, state_mappings)
     if combined_mon_state is None:
         return None

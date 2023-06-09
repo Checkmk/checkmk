@@ -2006,7 +2006,7 @@ bool PatchRelativePath(YAML::Node yaml_config, std::string_view group_name,
 // wmic product get name,version /format:csv
 //      to get name and version
 // Run
-// wmic product where name="Check MK Agent 2.0" call uninstall /nointeractive
+// wmic product where name="Checkmk Agent 2.3" call uninstall /nointeractive
 //      to remove the product
 // Oprations ARE VERY LONG
 constexpr std::string_view g_wmic_uninstall_command =

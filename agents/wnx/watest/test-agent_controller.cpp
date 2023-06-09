@@ -262,7 +262,7 @@ void CleanArtifacts() {
 constexpr auto marker_new = "Checkmk monitoring agent service - 2.2, 64-bit";
 // keep value below as is
 constexpr auto marker_old =
-    "Check MK monitoring and management Service, 64-bit";  // old marker
+    "Check MK monitoring and management Service, 64-bit";  // keep!
 }  // namespace
 
 TEST(AgentController, CreateLegacyPullFile) {

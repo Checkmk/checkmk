@@ -293,4 +293,4 @@ $msiUtilType = Add-Type `
 $msiUtil = New-Object -TypeName "Win32Native.MsiUtil";
  
 # Print the pubished or installed products.
-$msiUtil.Products | ? {$_.ProductName -match "Check MK Agent 2.0"} | ? { Write-Host $_.localpackage }
+$msiUtil.Products | ? {$_.ProductName -match "Checkmk Agent 2.2"} | ? { Write-Host $_.localpackage }

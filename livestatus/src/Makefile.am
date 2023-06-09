@@ -10,7 +10,6 @@ BUILD_HOSTNAME = "$(shell uname -n)"
 
 JOBS ?= 6
 DOXYGEN ?= doxygen
-PLANTUTML_VERSION ?= 1.2022.12
 VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet --num-callers=30 --error-exitcode=42")
 INCLUDES_DIR := includes
 LIBS_DIR := libs

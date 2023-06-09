@@ -77,8 +77,7 @@ wtools::WinService::StartMode GetServiceStartModeFromCfg(std::string_view text);
 
 // NAMES
 constexpr const wchar_t *kServiceName = L"CheckMkService";
-constexpr const wchar_t *kServiceDisplayName =
-    L"Check MK windows agent service";
+constexpr const wchar_t *kServiceDisplayName = L"Checkmk windows agent service";
 
 // PARAMETERS
 constexpr int kServiceStartType = SERVICE_DEMAND_START;  //  SERVICE_AUTO_START;

@@ -7,7 +7,7 @@ import pytest
 
 from tests.testlib import Check
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 pytestmark = pytest.mark.checks
 
@@ -91,7 +91,7 @@ def test_cluster_mode_check_function(
     monkeypatch.setattr("time.time", lambda: 0)
     try:
         check.run_check("clu1-01", params, result_parsed_over_time[0])
-    except MKCounterWrapped:
+    except IgnoreResultsError:
         pass
     monkeypatch.setattr("time.time", lambda: 60)
     result = check.run_check("clu1-01", params, result_parsed_over_time[1])

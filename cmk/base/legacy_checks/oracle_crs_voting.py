@@ -9,8 +9,9 @@
 # 1. ONLINE   0a6884c063904f50bf7ef4516b728a2d (/dev/oracleasm/disks/DATA1) [DATA1]
 
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
 def inventory_oracle_crs_voting(info):
@@ -38,7 +39,7 @@ def check_oracle_crs_voting(_no_item, _no_params, info):
         return state, infotext
     if votecount == 0:
         # cssd could not start without an existing voting disk!
-        raise MKCounterWrapped("No Voting Disk(s) found. Maybe the cssd/crsd is not running!")
+        raise IgnoreResultsError("No Voting Disk(s) found. Maybe the cssd/crsd is not running!")
 
     state = 2
     infotext = "missing Voting Disks (!!). %d Votes found %s" % (votecount, votedisk)

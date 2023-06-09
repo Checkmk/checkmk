@@ -11,10 +11,10 @@ from cmk.base.check_api import (
     get_bytes_human_readable,
     get_percent_human_readable,
     LegacyCheckDefinition,
-    MKCounterWrapped,
 )
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # No used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
@@ -55,7 +55,7 @@ def check_db2_tablespaces(item, params, parsed):
 
     db = parsed[1].get(instance)
     if not db:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     db_tables = {x[0]: x[1:] for x in db[1:]}
     tablespace = db_tables.get(tbsname)

@@ -9,13 +9,13 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_percent_human_readable,
     LegacyCheckDefinition,
-    MKCounterWrapped,
 )
 from cmk.base.check_legacy_includes.aws import (
     aws_get_float_human_readable,
     inventory_aws_generic_single,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
@@ -93,7 +93,7 @@ def _check_aws_dynamodb_capacity(params, parsed, capacity_units_to_check):
     metric_val_avg = parsed.get(metric_id_avg)
 
     if metric_val_avg is None:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
     metric_name, unit = _capacity_metric_id_to_name_and_unit(metric_id_avg)
 
@@ -173,7 +173,7 @@ def check_aws_dynamodb_latency(item, params, parsed):
                 )
 
     if go_stale:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
 
 check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(

@@ -13,9 +13,9 @@ from cmk.base.check_api import (
     get_average,
     get_item_state,
     get_percent_human_readable,
-    MKCounterWrapped,
     set_item_state,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # Common file for all (modern) checks that check CPU utilization (not load!)
 
@@ -135,7 +135,7 @@ def check_cpu_util_unix(  # type: ignore[no-untyped-def]
         diff_values = util_counter(values, this_time)
         sum_jiffies = diff_values.total_sum
         if sum_jiffies == 0:
-            raise MKCounterWrapped("Too short time difference since last check")
+            raise IgnoreResultsError("Too short time difference since last check")
         (
             user_perc,
             system_perc,

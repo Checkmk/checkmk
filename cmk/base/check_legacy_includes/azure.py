@@ -12,9 +12,8 @@ from cmk.base.check_api import (
     get_bytes_human_readable,
     get_percent_human_readable,
     get_rate,
-    MKCounterWrapped,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils.azure import (  # pylint: disable=unused-import  # noqa: F401
     AZURE_AGENT_SEPARATOR,
     iter_resource_attributes,
@@ -42,7 +41,7 @@ def get_data_or_go_stale(check_function):
         if not isinstance(parsed, dict):
             return 3, "Wrong usage of decorator: parsed is not a dict"
         if item not in parsed or not parsed[item]:
-            raise MKCounterWrapped("Data not present at the moment")
+            raise IgnoreResultsError("Data not present at the moment")
         return check_function(item, params, parsed[item])
 
     return wrapped_check_function

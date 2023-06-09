@@ -53,8 +53,9 @@
 import time
 from typing import Any
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
 def parse_mknotifyd(info):  # pylint: disable=too-many-branches
@@ -253,7 +254,7 @@ def check_mknotifyd_connection(item, _no_params, parsed):
     site_name, connection_name = item.split("-", 1)
 
     if site_name not in parsed["sites"]:
-        raise MKCounterWrapped("No status information about spooler available")
+        raise IgnoreResultsError("No status information about spooler available")
 
     states = {
         "established": (0, "Alive"),

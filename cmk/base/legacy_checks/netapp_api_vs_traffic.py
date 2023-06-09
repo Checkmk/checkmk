@@ -8,16 +8,10 @@
 
 import time
 
-from cmk.base.check_api import (
-    get_bytes_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-    RAISE,
-)
+from cmk.base.check_api import get_bytes_human_readable, get_rate, LegacyCheckDefinition, RAISE
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
 # <<<netapp_api_vs_traffic:sep(9)>>>
 # lif:vserver        instance_uuid 4294967295        instance_name sb1        sent_errors 0        recv_errors 0 ...
@@ -224,7 +218,7 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
                     f"{protoname} {perftext}: {format_func(rate)}",  # pylint: disable=not-callable
                     [(perfname, rate)],
                 )
-            except MKCounterWrapped:
+            except IgnoreResultsError:
                 yield (0, f"{protoname} {perftext}: -")
 
 

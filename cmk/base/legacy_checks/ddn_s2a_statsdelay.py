@@ -6,14 +6,10 @@
 
 # mypy: disable-error-code="no-untyped-def,list-item"
 
-from cmk.base.check_api import (
-    get_item_state,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-    set_item_state,
-)
+from cmk.base.check_api import get_item_state, LegacyCheckDefinition, set_item_state
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
 def parse_ddn_s2a_statsdelay(info):
@@ -107,16 +103,16 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
     set_item_state("writes", writes)
 
     if old_intervals is None:
-        raise MKCounterWrapped("Initializing")
+        raise IgnoreResultsError("Initializing")
     if old_intervals != time_intervals:
-        raise MKCounterWrapped(
+        raise IgnoreResultsError(
             "Histograms not comparable - Time intervals have changed. Reinitializing."
         )
 
     reads_since_last_check = subtract_histograms(reads, old_reads)
     writes_since_last_check = subtract_histograms(writes, old_writes)
     if is_zero(reads_since_last_check) and is_zero(writes_since_last_check):
-        raise MKCounterWrapped("No writes or reads since last check")
+        raise IgnoreResultsError("No writes or reads since last check")
 
     if not is_zero(reads_since_last_check):
         read_min = histogram_min(time_intervals, reads_since_last_check)

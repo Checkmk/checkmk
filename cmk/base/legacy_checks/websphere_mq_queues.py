@@ -43,9 +43,9 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_percent_human_readable,
     LegacyCheckDefinition,
-    MKCounterWrapped,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 websphere_mq_queues_default_levels = {
     "message_count": (1000, 1200),
@@ -94,7 +94,7 @@ def inventory_websphere_mq_queues(parsed):
 def check_websphere_mq_queues(item, params, parsed):
     data = parsed.get(item)
     if data is None:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     if isinstance(params, tuple):
         params = {

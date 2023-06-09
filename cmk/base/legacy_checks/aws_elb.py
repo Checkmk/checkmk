@@ -9,7 +9,6 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_percent_human_readable,
     LegacyCheckDefinition,
-    MKCounterWrapped,
 )
 from cmk.base.check_legacy_includes.aws import (
     aws_get_counts_rate_human_readable,
@@ -18,6 +17,7 @@ from cmk.base.check_legacy_includes.aws import (
     inventory_aws_generic_single,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
@@ -216,7 +216,7 @@ def check_aws_elb_healthy_hosts(item, params, parsed):
         unhealthy_hosts = None
 
     if go_stale:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
     if healthy_hosts is not None:
         yield 0, "Healthy hosts: %s" % healthy_hosts

@@ -5,7 +5,7 @@
 
 import re
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
 def is_ibm_mq_service_vanished(item, parsed) -> bool:  # type: ignore[no-untyped-def]
@@ -24,7 +24,7 @@ def is_ibm_mq_service_vanished(item, parsed) -> bool:  # type: ignore[no-untyped
 
     if qmgr_status == "RUNNING":
         return True
-    raise MKCounterWrapped("Stale because queue manager %s" % qmgr_status)
+    raise IgnoreResultsError("Stale because queue manager %s" % qmgr_status)
 
 
 def ibm_mq_check_version(actual_version, params, label):

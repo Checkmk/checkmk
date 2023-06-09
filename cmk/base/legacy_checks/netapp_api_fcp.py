@@ -11,7 +11,6 @@ from cmk.base.check_api import (
     get_nic_speed_human_readable,
     get_rate,
     LegacyCheckDefinition,
-    MKCounterWrapped,
     RAISE,
 )
 from cmk.base.check_legacy_includes.netapp_api import (
@@ -19,7 +18,7 @@ from cmk.base.check_legacy_includes.netapp_api import (
     netapp_api_parse_lines,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils.interfaces import (
     bandwidth_levels,
     BandwidthUnit,
@@ -178,7 +177,7 @@ def _latency_results(item, params, fcp_if):
             # According to NetApp's "Performance Management Design Guide",
             # the latency is a function of `total_ops`.
             value = get_rate("%s.%s" % (item, what), total_ops, fcp_if.get(what), onwrap=RAISE)
-        except MKCounterWrapped:
+        except IgnoreResultsError:
             continue
 
         yield _notice_only_fy(

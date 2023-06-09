@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.oracle import oracle_handle_ora_errors
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # <<<oracle_locks>>>
 # TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL
@@ -72,7 +73,7 @@ def check_oracle_locks(item, params, info):  # pylint: disable=too-many-branches
                 object_name = ""
 
             else:
-                raise MKCounterWrapped("Unknow number of items in agent output")
+                raise IgnoreResultsError("Unknow number of items in agent output")
 
             ctime = int(ctime)
 
@@ -124,7 +125,7 @@ def check_oracle_locks(item, params, info):  # pylint: disable=too-many-branches
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("Login into database failed")
+    raise IgnoreResultsError("Login into database failed")
 
 
 check_info["oracle_locks"] = LegacyCheckDefinition(

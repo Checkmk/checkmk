@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import discover, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_parsed_item_data,
     check_aws_error_rate,
     check_aws_request_rate,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
@@ -23,7 +24,7 @@ def parse_aws_elbv2_target_groups_lambda(info):
 def check_aws_application_elb_target_groups_lambda(item, params, data):
     request_rate = data.get("RequestCount")
     if request_rate is None:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
     yield check_aws_request_rate(request_rate)
 

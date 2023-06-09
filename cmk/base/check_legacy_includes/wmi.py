@@ -11,8 +11,8 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_percent_human_readable,
     get_rate,
-    MKCounterWrapped,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 from cmk.base.plugins.agent_based.utils.wmi import get_wmi_time
 from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table as parse_wmi_table_migrated
 from cmk.base.plugins.agent_based.utils.wmi import (
@@ -58,7 +58,7 @@ class WMITableLegacy(WMITable):
         silently_skip_timed_out=False,
     ) -> str | None:
         if not silently_skip_timed_out and self.timed_out:
-            raise MKCounterWrapped("WMI query timed out")
+            raise IgnoreResultsError("WMI query timed out")
         return self._get_row_col_value(row, column)
 
 

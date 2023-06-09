@@ -6,9 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import parse_aws
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 #'TargetGroups': [
 #        {
@@ -55,7 +56,7 @@ def parse_aws_elbv2_target_groups(info):
 
 def check_aws_elbv2_target_groups(item, params, target_groups):
     if len(target_groups) == 0:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
     target_groups_by_state = {}
     for target_group in target_groups:

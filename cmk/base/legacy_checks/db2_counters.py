@@ -37,8 +37,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, MKCounterWrapped, RAISE
+from cmk.base.check_api import get_rate, LegacyCheckDefinition, RAISE
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 db2_counters_map = {
     "deadlocks": "Deadlocks",
@@ -86,7 +87,7 @@ def check_db2_counters(item, params, parsed):
     default_timestamp = parsed[0]
     db = parsed[1].get(item)
     if not db:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     wrapped = False
     timestamp = db.get("TIMESTAMP", default_timestamp)
@@ -99,7 +100,7 @@ def check_db2_counters(item, params, parsed):
 
         try:
             rate = get_rate("db2_counters.%s.%s" % (item, counter), timestamp, value, onwrap=RAISE)
-        except MKCounterWrapped:
+        except IgnoreResultsError:
             wrapped = True
             continue
 
@@ -113,7 +114,7 @@ def check_db2_counters(item, params, parsed):
             yield 0, "%s: %.1f/s" % (label, rate), perfdata
 
     if wrapped:
-        raise MKCounterWrapped("Some counter(s) wrapped, no data this time")
+        raise IgnoreResultsError("Some counter(s) wrapped, no data this time")
 
 
 check_info["db2_counters"] = LegacyCheckDefinition(

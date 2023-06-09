@@ -37,13 +37,9 @@
 import difflib
 import hashlib
 
-from cmk.base.check_api import (
-    get_item_state,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-    set_item_state,
-)
+from cmk.base.check_api import get_item_state, LegacyCheckDefinition, set_item_state
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
 def iptables_hash(config):
@@ -65,7 +61,7 @@ def check_iptables(_no_item, params, parsed):
 
     if not item_state:
         set_item_state("iptables.config", {"config": parsed, "hash": iptables_hash(parsed)})
-        raise MKCounterWrapped(
+        raise IgnoreResultsError(
             "Initial configuration has been saved. The next check interval will contain a valid state."
         )
 

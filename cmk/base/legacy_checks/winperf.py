@@ -9,9 +9,9 @@ from cmk.base.check_api import (
     get_percent_human_readable,
     get_rate,
     LegacyCheckDefinition,
-    MKCounterWrapped,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
 def inventory_win_cpuusage(info):
@@ -97,7 +97,7 @@ def check_win_diskstat(item, params, info):
     try:
         read_per_sec = get_rate("diskstat.read", this_time, read_bytes_ctr)
         write_per_sec = get_rate("diskstat.write", this_time, write_bytes_ctr)
-    except MKCounterWrapped as e:
+    except IgnoreResultsError as e:
         # make sure that inital check does not need three cycles for all counters
         # to be initialized
         get_rate("diskstat.write", this_time, write_bytes_ctr)

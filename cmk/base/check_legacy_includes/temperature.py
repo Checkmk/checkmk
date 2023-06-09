@@ -6,7 +6,8 @@
 import time
 from typing import AnyStr, Union
 
-from cmk.base.check_api import check_levels, get_average, get_rate, MKCounterWrapped, state_markers
+from cmk.base.check_api import check_levels, get_average, get_rate, state_markers
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 from cmk.base.plugins.agent_based.utils.temperature import (  # pylint: disable=unused-import  # noqa: F401  # reimported from checks!; See warning below
     _migrate_params,
     fahrenheit_to_celsius,
@@ -239,7 +240,7 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
                     combiner(2, "%s until temp limit reached(!!)" % format_minutes(minutes_left))
                 elif minutes_left <= warn:
                     combiner(1, "%s until temp limit reached(!)" % format_minutes(minutes_left))
-    except MKCounterWrapped:
+    except IgnoreResultsError:
         pass
     return combiner.status, combiner.infotext  # type: ignore[attr-defined]
 

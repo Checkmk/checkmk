@@ -6,9 +6,10 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # <<<db2_backup>>>
 # [[[db2taddm:CMDBS1]]]
@@ -25,7 +26,7 @@ def inventory_db2_backup(parsed):
 def check_db2_backup(item, params, parsed):
     db = parsed[1].get(item)
     if not db:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     try:
         last_backup = time.mktime(time.strptime(db[0][0][:19], "%Y-%m-%d-%H.%M.%S"))

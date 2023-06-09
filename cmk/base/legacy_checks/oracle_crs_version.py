@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
 def inventory_oracle_crs_version(info):
@@ -19,7 +20,7 @@ def check_oracle_crs_version(_no_item, _no_params, info):
 
     # In case of missing information we assume that the clusterware
     # is not running and we simple skip the result
-    raise MKCounterWrapped("No version details found. Maybe the cssd is not running")
+    raise IgnoreResultsError("No version details found. Maybe the cssd is not running")
 
 
 check_info["oracle_crs_version"] = LegacyCheckDefinition(

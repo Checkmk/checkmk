@@ -6,9 +6,10 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -56,10 +57,10 @@ def inventory_esx_vsphere_counters_uptime(parsed):
 
 def check_esx_vsphere_counters_uptime(_no_item, params, parsed):
     if "sys.uptime" not in parsed:
-        raise MKCounterWrapped("Counter data is missing")
+        raise IgnoreResultsError("Counter data is missing")
     uptime = int(parsed["sys.uptime"][""][0][0][-1])
     if uptime < 0:
-        raise MKCounterWrapped("Counter data is corrupt")
+        raise IgnoreResultsError("Counter data is corrupt")
     return check_uptime_seconds(params, uptime)
 
 

@@ -12,11 +12,10 @@ from cmk.base.check_api import (
     check_levels,
     get_number_with_precision,
     get_percent_human_readable,
-    MKCounterWrapped,
     ServiceCheckResult,
     state_markers,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils import aws
 
 AWSRegions = dict(agent_aws_types.AWSRegions)
@@ -176,7 +175,7 @@ def check_aws_http_errors(
 ):
     request_rate = parsed.get(key_all_requests)
     if request_rate is None:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
     yield check_aws_request_rate(request_rate)
 
@@ -212,7 +211,7 @@ def check_aws_metrics(
         )
 
     if go_stale:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
 
 def aws_get_parsed_item_data(check_function: Callable) -> Callable:
@@ -230,7 +229,7 @@ def aws_get_parsed_item_data(check_function: Callable) -> Callable:
                 "not a dict",
             )
         if item not in parsed:
-            raise MKCounterWrapped("Currently no data from AWS")
+            raise IgnoreResultsError("Currently no data from AWS")
         return check_function(item, params, parsed[item])
 
     return wrapped_check_function

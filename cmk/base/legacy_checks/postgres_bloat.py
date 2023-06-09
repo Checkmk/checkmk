@@ -10,9 +10,9 @@ from cmk.base.check_api import (
     get_bytes_human_readable,
     get_percent_human_readable,
     LegacyCheckDefinition,
-    MKCounterWrapped,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 from cmk.base.plugins.agent_based.utils import postgres
 
 # <<<postgres_bloat>>>
@@ -46,7 +46,7 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     table_perc_max = None
     table_abs_max = None

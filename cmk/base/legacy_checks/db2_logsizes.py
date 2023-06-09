@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # <<<db2_logsizes>>>
 # [[[db2taddm:CMDBS1]]]
@@ -52,7 +53,7 @@ def check_db2_logsizes(item, params, parsed):
     db = parsed.get(item)
 
     if not db:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     # A DPF instance could look like
     # {'TIMESTAMP': ['1439976757'],

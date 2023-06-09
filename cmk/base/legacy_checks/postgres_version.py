@@ -22,13 +22,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import (
-    discover,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-)
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
 def parse_postgres_version(info):
@@ -45,7 +41,7 @@ def parse_postgres_version(info):
 @get_parsed_item_data
 def check_postgres_version(_no_item, _no_params, data):
     if "could not connect" in data:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
     yield 0, data
 
 

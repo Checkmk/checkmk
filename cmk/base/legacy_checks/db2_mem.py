@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 db2_mem_default_levels = (10.0, 5.0)
 
@@ -16,7 +17,7 @@ def inventory_db2_mem(info):
 
 def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
     if not info:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     warn, crit = params
 

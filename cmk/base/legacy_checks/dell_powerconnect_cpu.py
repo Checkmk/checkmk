@@ -16,9 +16,9 @@
 # Default values for parameters that can be overriden.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, IgnoreResultsError, SNMPTree
 
 dell_powerconnect_cpu_default_levels = (80, 90)
 
@@ -37,7 +37,7 @@ def check_dell_powerconnect_cpu(item, params, info):
     try:
         enabled, onesecondperc, oneminuteperc, fiveminutesperc = map(int, info[0])
     except ValueError:
-        raise MKCounterWrapped("Ignoring empty data from SNMP agent")
+        raise IgnoreResultsError("Ignoring empty data from SNMP agent")
     if int(enabled) == 1:
         cpu_util = saveint(onesecondperc)
         if cpu_util >= 0 <= 100:

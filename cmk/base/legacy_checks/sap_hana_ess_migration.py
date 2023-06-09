@@ -9,8 +9,9 @@
 import datetime
 
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # With reference to SQL sample output (see internal ticket SUP-253)
 sap_hana_ess_migration_state_map = {
@@ -50,7 +51,7 @@ def inventory_sap_hana_ess_migration(parsed):
 @get_parsed_item_data
 def check_sap_hana_ess_migration(item, params, data):
     if not data or "log" not in data or not data["log"]:
-        raise MKCounterWrapped("Login into database failed.")
+        raise IgnoreResultsError("Login into database failed.")
 
     key = None
     for ident in sap_hana_ess_migration_state_map:

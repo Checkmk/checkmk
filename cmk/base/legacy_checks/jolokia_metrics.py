@@ -8,12 +8,13 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, MKCounterWrapped, saveint
+from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.jolokia import (
     get_inventory_jolokia_metrics_apps,
     jolokia_metrics_parse,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # Example output from agent:
 # <<<jolokia_metrics>>>
@@ -60,7 +61,7 @@ def jolokia_metrics_app(info, split_item):
     inst, app = split_item
     parsed = jolokia_metrics_parse(info)
     if parsed.get(inst, "") is None:
-        raise MKCounterWrapped("No information from Jolokia agent")
+        raise IgnoreResultsError("No information from Jolokia agent")
     if inst not in parsed or app not in parsed[inst].get("apps", {}):
         return None
     return parsed[inst]["apps"][app]
@@ -131,7 +132,7 @@ def check_jolokia_metrics_serv_req(item, params, info):
         rate = get_rate("jolokia_metrics.serv_req.%s" % item, this_time, req)
         output.append("RequestRate: %0.2f" % rate)
         perfdata.append(("RequestRate", rate))
-    except MKCounterWrapped:
+    except IgnoreResultsError:
         wrapped = True
 
     if wrapped:

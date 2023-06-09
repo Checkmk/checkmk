@@ -31,8 +31,9 @@
 # QS1|DBADMIN|DATENEXPORT-FUR|COMPLETED|0|3|FALSE|22-AUG-14 01.11.00.000000 AM EUROPE/BERLIN|-|
 
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
 def inventory_oracle_jobs(info):
@@ -158,7 +159,7 @@ def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped("Login not possible for check %s" % item)
+        raise IgnoreResultsError("Login not possible for check %s" % item)
 
     if not service_found:
         # 'missingjob' was once used in the default parameters, so we still need to keep this key

@@ -34,9 +34,14 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree, startswith
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    OIDEnd,
+    SNMPTree,
+    startswith,
+)
 
 
 def inventory_hpux_snmp_cpu(info):
@@ -57,7 +62,7 @@ def check_hpux_snmp_cpu(item, _no_params, info):
         rates.append(rate)
 
     if total_rate == 0:
-        raise MKCounterWrapped("No counter counted. Time has ceased to flow.")
+        raise IgnoreResultsError("No counter counted. Time has ceased to flow.")
 
     perfdata = []
     infos = []

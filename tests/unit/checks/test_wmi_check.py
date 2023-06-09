@@ -9,8 +9,8 @@ import pytest
 
 from tests.testlib import Check
 
-from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 from .checktestlib import CheckResult
 
@@ -127,7 +127,7 @@ def test_wmi_cpu_load_no_discovery(check_name: str, info: StringTable) -> None:
 )
 def test_wmi_timeout_exceptions(check_name: str, info: StringTable) -> None:
     check = Check(check_name)
-    with pytest.raises(MKCounterWrapped):
+    with pytest.raises(IgnoreResultsError):
         CheckResult(check.run_check(None, {}, check.run_parse(info)))
 
 

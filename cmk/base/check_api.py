@@ -58,9 +58,6 @@ import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
 from cmk.base.api.agent_based import render as _render
-from cmk.base.api.agent_based.checking_classes import (  # noqa: F401 # pylint: disable=unused-import
-    IgnoreResultsError as MKCounterWrapped,
-)
 from cmk.base.api.agent_based.register.utils_legacy import (  # noqa: F401 # pylint: disable=unused-import
     LegacyCheckDefinition,
 )

@@ -13,9 +13,9 @@ from cmk.base.check_api import (
     get_bytes_human_readable,
     get_percent_human_readable,
     get_rate,
-    MKCounterWrapped,
     RAISE,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # ==================================================================================================
 # THESE FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
@@ -123,7 +123,7 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
         rate = get_rate(
             f"{check}.{item}.delta", timestamp, used_mb, allow_negative=True, onwrap=RAISE
         )
-    except MKCounterWrapped:
+    except IgnoreResultsError:
         # need more data for computing a trend
         return 0, "", []
 

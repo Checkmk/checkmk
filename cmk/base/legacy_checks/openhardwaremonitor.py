@@ -8,10 +8,11 @@ import collections
 from collections.abc import Mapping
 from typing import NotRequired, TypedDict
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped, regex
+from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # <<<openhardwaremonitor:sep(44)>>>
 # Index,Name,Parent,SensorType,Value
@@ -152,7 +153,7 @@ def check_openhardwaremonitor(sensor_type, item, params, parsed):
 
 def _check_openhardwaremonitor_wmistatus(data):
     if data.WMIstatus.lower() == "timeout":
-        raise MKCounterWrapped("WMI query timed out")
+        raise IgnoreResultsError("WMI query timed out")
 
 
 #   .--clock---------------------------------------------------------------.

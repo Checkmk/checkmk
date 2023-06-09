@@ -218,6 +218,9 @@ section_misc_sections() {
             # Speed
             SP=$(echo "$IO" | grep -E "media:.*base" | cut -d\( -f2 | cut -db -f1)
             if [ "$SP" ]; then
+                case "$SP" in
+                    *G*) SP=$((${SP%G} * 1000)) ;;
+                esac
                 printf "\tSpeed: %sMb/s\n" "${SP}"
             fi
             # Detect duplexity - in reality only available for physical devices but

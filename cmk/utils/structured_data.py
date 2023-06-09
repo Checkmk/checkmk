@@ -857,106 +857,87 @@ class TreeOrArchiveStore(TreeStore):
 #   '----------------------------------------------------------------------'
 
 
-class StructuredDataNode:
+class Attributes:
     def __init__(
         self,
         *,
-        path: SDPath | None = None,
-        attributes: Attributes | None = None,
-        table: Table | None = None,
+        retentions: RetentionIntervalsByKeys | None = None,
     ) -> None:
-        self.path = path if path else tuple()
-        self.attributes = attributes or Attributes()
-        self.table = table or Table()
-        self._nodes: dict[SDNodeName, StructuredDataNode] = {}
+        self.retentions = retentions if retentions else {}
+        self._pairs: dict[SDKey, SDValue] = {}
 
     @property
-    def nodes(self) -> Iterator[StructuredDataNode]:
-        yield from self._nodes.values()
-
-    @property
-    def nodes_by_name(self) -> Mapping[SDNodeName, StructuredDataNode]:
-        return self._nodes
+    def pairs(self) -> Mapping[SDKey, SDValue]:
+        return self._pairs
 
     #   ---common methods-------------------------------------------------------
 
     def __bool__(self) -> bool:
-        if self.attributes or self.table:
-            return True
-
-        for node in self._nodes.values():
-            if node:
-                return True
-
-        return False
+        return bool(self.pairs)
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, StructuredDataNode):
+        if not isinstance(other, Attributes):
             raise TypeError(type(other))
-
-        if self.attributes != other.attributes or self.table != other.table:
-            return False
-
-        compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
-        if compared_keys.only_old or compared_keys.only_new:
-            return False
-
-        for key in compared_keys.both:
-            if self._nodes[key] != other._nodes[key]:
-                return False
-
-        return True
+        return self.pairs == other.pairs
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def count_entries(self) -> int:
-        return sum(
-            [
-                self.attributes.count_entries(),
-                self.table.count_entries(),
-            ]
-            + [node.count_entries() for node in self._nodes.values()]
+        return len(self.pairs)
+
+    #   ---attributes methods---------------------------------------------------
+
+    def add_pairs(self, pairs: Mapping[SDKey, SDValue]) -> None:
+        self._pairs.update(pairs)
+
+    #   ---retentions-----------------------------------------------------------
+
+    def update_from_previous(
+        self,
+        now: int,
+        path: SDPath,
+        other: Attributes,
+        filter_func: SDFilterFunc,
+        inv_intervals: RetentionIntervals,
+    ) -> UpdateResult:
+        compared_filtered_keys = _compare_dict_keys(
+            old_dict=_get_filtered_dict(
+                other.pairs,
+                _make_retentions_filter_func(
+                    filter_func=filter_func,
+                    intervals_by_keys=other.retentions,
+                    now=now,
+                ),
+            ),
+            new_dict=_get_filtered_dict(self.pairs, filter_func),
         )
 
-    #   ---node methods---------------------------------------------------------
+        pairs: dict[SDKey, SDValue] = {}
+        retentions: RetentionIntervalsByKeys = {}
+        for key in compared_filtered_keys.only_old:
+            pairs.setdefault(key, other.pairs[key])
+            retentions[key] = other.retentions[key]
 
-    def setdefault_node(self, path: SDPath) -> StructuredDataNode:
-        if not path:
-            return self
+        for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
+            retentions[key] = inv_intervals
 
-        name = path[0]
-        node = self._nodes.setdefault(name, StructuredDataNode(path=self.path + (name,)))
-        return node.setdefault_node(path[1:])
+        update_result = UpdateResult()
+        if pairs:
+            self.add_pairs(pairs)
+            update_result.add_attr_reason(path, "pairs", pairs)
 
-    def add_node(self, path: SDPath, node: StructuredDataNode) -> None:
-        if not path:
-            return
+        if retentions:
+            self.set_retentions(retentions)
+            update_result.add_attr_reason(path, "intervals", retentions)
 
-        node_name = path[0]
-        node_path = self.path + (path[0],)
-        if len(path) == 1:
-            if node_name in self._nodes:
-                merge_node = self._nodes[node_name]
-            else:
-                merge_node = StructuredDataNode(path=node_path)
-            self._nodes[node_name] = _merge_nodes(merge_node, node)
-            return
+        return update_result
 
-        self._nodes.setdefault(node_name, StructuredDataNode(path=node_path)).add_node(
-            path[1:], node
-        )
+    def set_retentions(self, intervals_by_keys: RetentionIntervalsByKeys) -> None:
+        self.retentions = intervals_by_keys
 
-    def get_node(self, path: SDPath) -> StructuredDataNode | None:
-        if not path:
-            return self
-        return None if (node := self._nodes.get(path[0])) is None else node.get_node(path[1:])
-
-    def get_table(self, path: SDPath) -> Table | None:
-        return None if (node := self.get_node(path)) is None else node.table
-
-    def get_attributes(self, path: SDPath) -> Attributes | None:
-        return None if (node := self.get_node(path)) is None else node.attributes
+    def get_retention_intervals(self, key: SDKey) -> RetentionIntervals | None:
+        return self.retentions.get(key)
 
     #   ---representation-------------------------------------------------------
 
@@ -966,40 +947,20 @@ class StructuredDataNode:
 
     #   ---de/serializing-------------------------------------------------------
 
-    def serialize(self) -> SDRawTree:
-        return {
-            "Attributes": self.attributes.serialize(),
-            "Table": self.table.serialize(),
-            "Nodes": {name: node.serialize() for name, node in self._nodes.items() if node},
-        }
+    def serialize(self) -> SDRawAttributes:
+        raw_attributes: SDRawAttributes = {}
+        if self._pairs:
+            raw_attributes["Pairs"] = self._pairs
+
+        if self.retentions:
+            raw_attributes["Retentions"] = _serialize_retentions(self.retentions)
+        return raw_attributes
 
     @classmethod
-    def deserialize(
-        cls,
-        *,
-        path: SDPath,
-        raw_attributes: SDRawAttributes,
-        raw_table: SDRawTable,
-        raw_nodes: Mapping[SDNodeName, SDRawTree],
-    ) -> StructuredDataNode:
-        node = cls(
-            path=path,
-            attributes=Attributes.deserialize(raw_attributes),
-            table=Table.deserialize(raw_table),
-        )
-
-        for raw_name, raw_node in raw_nodes.items():
-            node.add_node(
-                (raw_name,),
-                cls.deserialize(
-                    path=path + (raw_name,),
-                    raw_attributes=raw_node["Attributes"],
-                    raw_table=raw_node["Table"],
-                    raw_nodes=raw_node["Nodes"],
-                ),
-            )
-
-        return node
+    def deserialize(cls, raw_attributes: SDRawAttributes) -> Attributes:
+        attributes = cls(retentions=_deserialize_retentions(raw_attributes.get("Retentions")))
+        attributes.add_pairs(raw_attributes.get("Pairs", {}))
+        return attributes
 
 
 # TODO Table: {IDENT: Attributes}?
@@ -1206,87 +1167,106 @@ class Table:
         return table
 
 
-class Attributes:
+class StructuredDataNode:
     def __init__(
         self,
         *,
-        retentions: RetentionIntervalsByKeys | None = None,
+        path: SDPath | None = None,
+        attributes: Attributes | None = None,
+        table: Table | None = None,
     ) -> None:
-        self.retentions = retentions if retentions else {}
-        self._pairs: dict[SDKey, SDValue] = {}
+        self.path = path if path else tuple()
+        self.attributes = attributes or Attributes()
+        self.table = table or Table()
+        self._nodes: dict[SDNodeName, StructuredDataNode] = {}
 
     @property
-    def pairs(self) -> Mapping[SDKey, SDValue]:
-        return self._pairs
+    def nodes(self) -> Iterator[StructuredDataNode]:
+        yield from self._nodes.values()
+
+    @property
+    def nodes_by_name(self) -> Mapping[SDNodeName, StructuredDataNode]:
+        return self._nodes
 
     #   ---common methods-------------------------------------------------------
 
     def __bool__(self) -> bool:
-        return bool(self.pairs)
+        if self.attributes or self.table:
+            return True
+
+        for node in self._nodes.values():
+            if node:
+                return True
+
+        return False
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Attributes):
+        if not isinstance(other, StructuredDataNode):
             raise TypeError(type(other))
-        return self.pairs == other.pairs
+
+        if self.attributes != other.attributes or self.table != other.table:
+            return False
+
+        compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
+        if compared_keys.only_old or compared_keys.only_new:
+            return False
+
+        for key in compared_keys.both:
+            if self._nodes[key] != other._nodes[key]:
+                return False
+
+        return True
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def count_entries(self) -> int:
-        return len(self.pairs)
-
-    #   ---attributes methods---------------------------------------------------
-
-    def add_pairs(self, pairs: Mapping[SDKey, SDValue]) -> None:
-        self._pairs.update(pairs)
-
-    #   ---retentions-----------------------------------------------------------
-
-    def update_from_previous(
-        self,
-        now: int,
-        path: SDPath,
-        other: Attributes,
-        filter_func: SDFilterFunc,
-        inv_intervals: RetentionIntervals,
-    ) -> UpdateResult:
-        compared_filtered_keys = _compare_dict_keys(
-            old_dict=_get_filtered_dict(
-                other.pairs,
-                _make_retentions_filter_func(
-                    filter_func=filter_func,
-                    intervals_by_keys=other.retentions,
-                    now=now,
-                ),
-            ),
-            new_dict=_get_filtered_dict(self.pairs, filter_func),
+        return sum(
+            [
+                self.attributes.count_entries(),
+                self.table.count_entries(),
+            ]
+            + [node.count_entries() for node in self._nodes.values()]
         )
 
-        pairs: dict[SDKey, SDValue] = {}
-        retentions: RetentionIntervalsByKeys = {}
-        for key in compared_filtered_keys.only_old:
-            pairs.setdefault(key, other.pairs[key])
-            retentions[key] = other.retentions[key]
+    #   ---node methods---------------------------------------------------------
 
-        for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
-            retentions[key] = inv_intervals
+    def setdefault_node(self, path: SDPath) -> StructuredDataNode:
+        if not path:
+            return self
 
-        update_result = UpdateResult()
-        if pairs:
-            self.add_pairs(pairs)
-            update_result.add_attr_reason(path, "pairs", pairs)
+        name = path[0]
+        node = self._nodes.setdefault(name, StructuredDataNode(path=self.path + (name,)))
+        return node.setdefault_node(path[1:])
 
-        if retentions:
-            self.set_retentions(retentions)
-            update_result.add_attr_reason(path, "intervals", retentions)
+    def add_node(self, path: SDPath, node: StructuredDataNode) -> None:
+        if not path:
+            return
 
-        return update_result
+        node_name = path[0]
+        node_path = self.path + (path[0],)
+        if len(path) == 1:
+            if node_name in self._nodes:
+                merge_node = self._nodes[node_name]
+            else:
+                merge_node = StructuredDataNode(path=node_path)
+            self._nodes[node_name] = _merge_nodes(merge_node, node)
+            return
 
-    def set_retentions(self, intervals_by_keys: RetentionIntervalsByKeys) -> None:
-        self.retentions = intervals_by_keys
+        self._nodes.setdefault(node_name, StructuredDataNode(path=node_path)).add_node(
+            path[1:], node
+        )
 
-    def get_retention_intervals(self, key: SDKey) -> RetentionIntervals | None:
-        return self.retentions.get(key)
+    def get_node(self, path: SDPath) -> StructuredDataNode | None:
+        if not path:
+            return self
+        return None if (node := self._nodes.get(path[0])) is None else node.get_node(path[1:])
+
+    def get_table(self, path: SDPath) -> Table | None:
+        return None if (node := self.get_node(path)) is None else node.table
+
+    def get_attributes(self, path: SDPath) -> Attributes | None:
+        return None if (node := self.get_node(path)) is None else node.attributes
 
     #   ---representation-------------------------------------------------------
 
@@ -1296,20 +1276,40 @@ class Attributes:
 
     #   ---de/serializing-------------------------------------------------------
 
-    def serialize(self) -> SDRawAttributes:
-        raw_attributes: SDRawAttributes = {}
-        if self._pairs:
-            raw_attributes["Pairs"] = self._pairs
-
-        if self.retentions:
-            raw_attributes["Retentions"] = _serialize_retentions(self.retentions)
-        return raw_attributes
+    def serialize(self) -> SDRawTree:
+        return {
+            "Attributes": self.attributes.serialize(),
+            "Table": self.table.serialize(),
+            "Nodes": {name: node.serialize() for name, node in self._nodes.items() if node},
+        }
 
     @classmethod
-    def deserialize(cls, raw_attributes: SDRawAttributes) -> Attributes:
-        attributes = cls(retentions=_deserialize_retentions(raw_attributes.get("Retentions")))
-        attributes.add_pairs(raw_attributes.get("Pairs", {}))
-        return attributes
+    def deserialize(
+        cls,
+        *,
+        path: SDPath,
+        raw_attributes: SDRawAttributes,
+        raw_table: SDRawTable,
+        raw_nodes: Mapping[SDNodeName, SDRawTree],
+    ) -> StructuredDataNode:
+        node = cls(
+            path=path,
+            attributes=Attributes.deserialize(raw_attributes),
+            table=Table.deserialize(raw_table),
+        )
+
+        for raw_name, raw_node in raw_nodes.items():
+            node.add_node(
+                (raw_name,),
+                cls.deserialize(
+                    path=path + (raw_name,),
+                    raw_attributes=raw_node["Attributes"],
+                    raw_table=raw_node["Table"],
+                    raw_nodes=raw_node["Nodes"],
+                ),
+            )
+
+        return node
 
 
 # .

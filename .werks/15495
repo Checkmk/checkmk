@@ -1,0 +1,13 @@
+Title: Fix generation of report preview in background job
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1686304746
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p30
+
+If you used "Generate report preview in background job" on the report scheduler
+page, the background job failed with an error like "Exception: content argument
+must be Text, not bytes".

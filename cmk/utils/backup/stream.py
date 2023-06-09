@@ -9,11 +9,11 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any, IO
 
-from Cryptodome.Cipher import AES, PKCS1_OAEP
-from Cryptodome.Cipher._mode_cbc import CbcMode
+from Cryptodome.Cipher import PKCS1_OAEP
 from Cryptodome.PublicKey import RSA
 from OpenSSL import crypto
 
+from cmk.utils.crypto.deprecated import AesCbcCipher
 from cmk.utils.exceptions import MKGeneralException
 
 
@@ -27,35 +27,36 @@ from cmk.utils.exceptions import MKGeneralException
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
 class MKBackupStream:
     def __init__(
-        self,
-        stream: IO[bytes],
-        is_alive: Callable[[], bool],
-        key_ident: str | None,
-        debug: bool,
+        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None, debug: bool
     ) -> None:
         self._stream = stream
         self._is_alive = is_alive
-        self._cipher: CbcMode | None = None
+        self._cipher: AesCbcCipher | None = None
         self._key_ident = key_ident
-        self._next_chunk: bytes | None = None
         self.debug = debug
 
         # The iv is an initialization vector for the CBC mode of operation. It
         # needs to be unique per key per message. Normally, it's sent alongside
         # the data in cleartext. Here, since the key is only ever used once,
         # you can use a known IV.
-        self._iv = b"\x00" * AES.block_size
+        self._iv = b"\x00" * AesCbcCipher.BLOCK_SIZE
 
     def process(self) -> Iterator[bytes]:
-        head = self._init_processing()
-        if head is not None:
+        if (head := self._init_processing()) is not None:
             yield head
 
-        while True:
-            chunk, finished = self._read_chunk()
-            yield self._process_chunk(chunk)
-            if finished and not self._is_alive():
-                break  # end of stream reached
+        finished = False
+        while not finished or self._is_alive():
+            chunk, finished = (
+                self._get_plaintext_chunk()
+                if self._key_ident is None
+                else self._get_encrypted_chunk()
+            )
+            yield chunk
+
+        assert (
+            not self._cipher or self._cipher.finalize() == b""
+        ), "Cipher didn't finish processing all input"
 
     def _init_processing(self) -> bytes | None:
         raise NotImplementedError()
@@ -68,10 +69,11 @@ class MKBackupStream:
                 return b""  # handle EOF transparently
             raise
 
-    def _read_chunk(self) -> tuple[bytes, bool]:
-        raise NotImplementedError()
+    def _get_plaintext_chunk(self) -> tuple[bytes, bool]:
+        chunk = self._read_from_stream(1024 * 1024)
+        return chunk, chunk == b""
 
-    def _process_chunk(self, chunk: bytes) -> bytes:
+    def _get_encrypted_chunk(self) -> tuple[bytes, bool]:
         raise NotImplementedError()
 
     def _get_key_spec(self, key_id: bytes) -> dict[str, bytes]:
@@ -103,9 +105,7 @@ class BackupStream(MKBackupStream):
         secret_key, encrypted_secret_key = self._derive_key(
             self._get_encryption_public_key(self._key_ident.encode("utf-8")), 32
         )
-        cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
-        assert isinstance(cipher, CbcMode)
-        self._cipher = cipher
+        self._cipher = AesCbcCipher("encrypt", secret_key, self._iv)
 
         # Write out a file version marker and  the encrypted secret key, preceded by
         # a length indication. All separated by \0.
@@ -114,28 +114,16 @@ class BackupStream(MKBackupStream):
         # Version 2: Use PKCS1_OAEP for encrypting the encrypted_secret_key.
         return b"%d\0%d\0%s\0" % (2, len(encrypted_secret_key), encrypted_secret_key)
 
-    def _read_chunk(self) -> tuple[bytes, bool]:
-        finished = False
-        if self._key_ident is not None:
-            chunk = self._read_from_stream(1024 * AES.block_size)
+    def _get_encrypted_chunk(self) -> tuple[bytes, bool]:
+        assert self._cipher is not None
 
-            # Detect end of file and add padding to fill up to block size
-            if chunk == b"" or len(chunk) % AES.block_size != 0:
-                padding_length = (AES.block_size - len(chunk) % AES.block_size) or AES.block_size
-                chunk += padding_length * bytes((padding_length,))
-                finished = True
-        else:
-            chunk = self._read_from_stream(1024 * 1024)
-            if chunk == b"":
-                finished = True
+        chunk = self._read_from_stream(1024 * AesCbcCipher.BLOCK_SIZE)
+        was_last_chunk = chunk == b"" or len(chunk) % AesCbcCipher.BLOCK_SIZE != 0
 
-        return chunk, finished
+        if was_last_chunk:
+            chunk = self._cipher.pad_block(chunk)
 
-    def _process_chunk(self, chunk: bytes) -> bytes:
-        if self._key_ident is not None:
-            assert self._cipher is not None
-            return self._cipher.encrypt(chunk)
-        return chunk
+        return self._cipher.update(chunk), was_last_chunk
 
     def _get_encryption_public_key(self, key_id: bytes) -> RSA.RsaKey:
         key = self._get_key_spec(key_id)
@@ -161,8 +149,17 @@ class BackupStream(MKBackupStream):
 
 
 class RestoreStream(MKBackupStream):
+    def __init__(
+        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None, debug: bool
+    ) -> None:
+        super().__init__(stream, is_alive, key_ident, debug)
+
+        # If encryption is used, stream cannot return the chunks it reads directly. Because the
+        # final chunk contains padding, it first needs to see if it will read another chunk and
+        # remove the padding if not.
+        self._previous_chunk: bytes | None = None
+
     def _init_processing(self) -> bytes | None:
-        self._next_chunk = None
         if self._key_ident is None:
             return None
 
@@ -170,38 +167,27 @@ class RestoreStream(MKBackupStream):
         secret_key = self._decrypt_secret_key(
             file_version, encrypted_secret_key, self._key_ident.encode("utf-8")
         )
-        cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
-        assert isinstance(cipher, CbcMode)
-        self._cipher = cipher
+        self._cipher = AesCbcCipher("decrypt", secret_key, self._iv)
         return None
 
-    def _read_chunk(self) -> tuple[bytes, bool]:
-        if self._key_ident is None:
-            # process unencrypted backup
-            chunk = self._read_from_stream(1024 * 1024)
-            return chunk, chunk == b""
-
+    def _get_encrypted_chunk(self) -> tuple[bytes, bool]:
         assert self._cipher is not None
-        this_chunk = self._cipher.decrypt(self._read_from_stream(1024 * AES.block_size))
 
-        if self._next_chunk is None:
-            # First chunk. Only store for next loop
-            self._next_chunk = this_chunk
+        this_chunk = self._cipher.update(self._read_from_stream(1024 * AesCbcCipher.BLOCK_SIZE))
+
+        if self._previous_chunk is None:
+            # First chunk. Only store for next loop.
+            self._previous_chunk = this_chunk
             return b"", False
 
         if len(this_chunk) == 0:
-            # Processing last chunk. Stip off padding.
-            pad = self._next_chunk[-1]
-            chunk = self._next_chunk[:-pad]
-            return chunk, True
+            # The previous was the last chunk. Stip off PKCS#7 padding and return it.
+            return self._cipher.unpad_block(self._previous_chunk), True
 
-        # Processing regular chunk
-        chunk = self._next_chunk
-        self._next_chunk = this_chunk
+        # Processing regular chunk. Store it and return previous.
+        chunk = self._previous_chunk
+        self._previous_chunk = this_chunk
         return chunk, False
-
-    def _process_chunk(self, chunk: bytes) -> bytes:
-        return chunk
 
     def _read_encrypted_secret_key(self) -> tuple[bytes, bytes]:
         def read_field() -> bytes:

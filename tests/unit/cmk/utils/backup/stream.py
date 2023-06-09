@@ -9,6 +9,8 @@ import io
 from typing import Type
 from unittest import mock
 
+import pytest
+
 from cmk.utils.backup.stream import BackupStream, MKBackupStream, RestoreStream
 
 BACKUP_KEYS = {
@@ -72,8 +74,6 @@ NcilHP9yv0aXGu8kZ77cd0K18w==
 MKBACKUP_PASSPHRASE = "lala"
 KEY_IDENT = "C0:4E:D4:4B:B4:AB:8B:3F:B4:09:32:CE:7D:A6:CF:76"
 
-BACKUP_DATA = b"We are stuck with technology when what we really want is just stuff that works."
-
 
 @mock.patch(
     "cmk.utils.backup.stream.MKBackupStream._load_backup_keys",
@@ -85,13 +85,21 @@ def _run_stream(Stream: Type[MKBackupStream], data: bytes) -> bytes:
     return b"".join(s.process())
 
 
-def test_roundtrip() -> None:
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param(b"", id="empty string"),
+        pytest.param(16 * b"A", id="full block of padding"),
+        pytest.param((16 * 1024 + 5) * b"b", id="read from stream multiple times"),
+    ],
+)
+def test_roundtrip(data: bytes) -> None:
     """Check if we can encrypt something and decrypt it again"""
-    encrypted = _run_stream(BackupStream, BACKUP_DATA)
+    encrypted = _run_stream(BackupStream, data)
     assert encrypted.startswith(b"2\x00256\x00")  # version marker and key length
 
     restored = _run_stream(RestoreStream, encrypted)
-    assert restored == BACKUP_DATA
+    assert restored == data
 
 
 def test_restore_existing() -> None:
@@ -111,4 +119,7 @@ def test_restore_existing() -> None:
         b"84e4b2ed4beb7c9c9e1f067ae3c6617c6589a1732fe15b24149b91169995e7659662d4"
     )
     restored = _run_stream(RestoreStream, encrypted)
-    assert restored == BACKUP_DATA
+    assert (
+        restored
+        == b"We are stuck with technology when what we really want is just stuff that works."
+    )

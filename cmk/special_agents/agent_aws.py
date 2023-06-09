@@ -14,7 +14,7 @@ import json
 import logging
 import sys
 from collections import Counter, defaultdict
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
@@ -890,6 +890,15 @@ class AWSSectionLimits(AWSSection):
             for piggyback_hostname, limits in self._limits.items()
         ]
 
+    def _iter_service_quotas(self, service_code: str) -> Iterator[Quota]:
+        if self._quota_client is None:
+            return
+
+        paginator = self._quota_client.get_paginator("list_service_quotas")
+        for page in paginator.paginate(ServiceCode=service_code):
+            for quota in self._get_response_content(page, "Quotas"):
+                yield Quota(**quota)
+
 
 class AWSSectionLabels(AWSSection):
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
@@ -1062,13 +1071,8 @@ class EC2Limits(AWSSectionLimits):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-        quotas = (
-            self._get_response_content(
-                self._quota_client.list_service_quotas(ServiceCode="ec2"), "Quotas"
-            )
-            if self._quota_client is not None
-            else None
-        )
+        quota_list = list(self._iter_service_quotas("ec2"))
+        quota_dicts = [q.dict() for q in quota_list]
 
         response = self._client.describe_instances()
         reservations = self._get_response_content(response, "Reservations")
@@ -1099,7 +1103,7 @@ class EC2Limits(AWSSectionLimits):
             interfaces,
             spot_inst_requests,
             spot_fleet_requests,
-            quotas,
+            quota_dicts,
         )
 
     def _compute_content(
@@ -5678,14 +5682,8 @@ class ECSLimits(AWSSectionLimits):
     def get_live_data(
         self, *args: AWSColleagueContents
     ) -> tuple[Sequence[object], Sequence[object]]:
-        quota_list = (
-            self._get_response_content(
-                self._quota_client.list_service_quotas(ServiceCode="ecs"), "Quotas"
-            )
-            if self._quota_client is not None
-            else []
-        )
-        quota_dicts = [Quota(**q).dict() for q in quota_list]
+        quota_list = list(self._iter_service_quotas("ecs"))
+        quota_dicts = [q.dict() for q in quota_list]
 
         cluster_ids = list(get_ecs_cluster_arns(self._client))
         cluster_dicts = [c.dict() for c in get_ecs_clusters(self._client, cluster_ids)]
@@ -5970,14 +5968,8 @@ class ElastiCacheLimits(AWSSectionLimits):
         int,
         int,
     ]:
-        quota_list = (
-            self._get_response_content(
-                self._quota_client.list_service_quotas(ServiceCode="elasticache"), "Quotas"
-            )
-            if self._quota_client is not None
-            else []
-        )
-        quota_dicts = [Quota(**q).dict() for q in quota_list]
+        quota_list = list(self._iter_service_quotas("elasticache"))
+        quota_dicts = [q.dict() for q in quota_list]
 
         cluster_dicts = [
             c.dict()

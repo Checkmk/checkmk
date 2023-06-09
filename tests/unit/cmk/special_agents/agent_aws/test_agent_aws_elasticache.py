@@ -25,7 +25,7 @@ from cmk.special_agents.agent_aws import (
     ResultDistributor,
 )
 
-from .agent_aws_fake_clients import FakeCloudwatchClient
+from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
 
 GetSectionsCallable = Callable[
     [Sequence[str] | None, OverallTags], tuple[ElastiCacheLimits, ElastiCacheSummary, ElastiCache]
@@ -311,37 +311,6 @@ class FakeElastiCacheClient:
         return Paginator(function, self.cluster_response)
 
 
-class FakeQuotaClient:
-    def list_service_quotas(self, ServiceCode: str) -> object:
-        return {
-            "Quotas": [
-                {
-                    "ServiceCode": "elasticache",
-                    "ServiceName": "Amazon ElastiCache",
-                    "QuotaArn": "arn:aws:servicequotas:us-east-1:710145618630:elasticache/L-85EED4F7",
-                    "QuotaCode": "L-85EED4F7",
-                    "QuotaName": "Nodes per cluster per instance type (Redis cluster mode enabled)",
-                    "Value": 5,
-                    "Unit": "None",
-                    "Adjustable": True,
-                    "GlobalQuota": False,
-                }
-            ],
-            "ResponseMetadata": {
-                "RequestId": "3158f3b7-9788-4394-8d8c-ede95a113476",
-                "HTTPStatusCode": 200,
-                "HTTPHeaders": {
-                    "date": "Thu, 20 Oct 2022 08:10:44 GMT",
-                    "content-type": "application/x-amz-json-1.1",
-                    "content-length": "13",
-                    "connection": "keep-alive",
-                    "x-amzn-requestid": "3158f3b7-9788-4394-8d8c-ede95a113476",
-                },
-                "RetryAttempts": 0,
-            },
-        }
-
-
 class TaggingPaginator:
     def paginate(self, *args, **kwargs):
         yield {
@@ -379,7 +348,7 @@ def get_elasticache_sections() -> GetSectionsCallable:
         fake_elasticache_client1 = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
         fake_elasticache_client2 = FakeElastiCacheClient(CLUSTERS_RESPONSE2)
         fake_cloudwatch_client = FakeCloudwatchClient()
-        fake_quota_client = FakeQuotaClient()
+        fake_quota_client = FakeServiceQuotasClient()
         fake_tagging_client = FakeTaggingClient()
 
         distributor = ResultDistributor()

@@ -94,10 +94,15 @@ CHECK_DEFAULT_PARAMETERS = {
 }
 
 
+class _MissingOperStatus:
+    def __str__(self) -> str:
+        return "Not available"
+
+
 @dataclass(frozen=True)
 class MemberInfo:
     name: str
-    oper_status_name: str
+    oper_status_name: str | _MissingOperStatus
     admin_status_name: str | None = None
 
     def __str__(self) -> str:
@@ -119,7 +124,7 @@ class Attributes:
     oper_status: str = ""
     out_qlen: float | None = None
     phys_address: Iterable[int] | str = ""
-    oper_status_name: str = ""
+    oper_status_name: str | _MissingOperStatus = ""
     speed_as_text: str = ""
     group: str | None = None
     node: str | None = None

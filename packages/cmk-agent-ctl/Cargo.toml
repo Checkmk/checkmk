@@ -29,9 +29,9 @@ rand = { version = "0.8" }
 # ideally, we would just use "rustls-tls-native-roots" instead of "native-tls" and "rustls-tls-manual-roots
 # however, in SUP-10832, native-tls was ok with the custom CA of the customer, while rustls complained
 # unfortunately, we couldn't find out why, so for now, we have to keep native-tls
-reqwest = { version = "=0.11.17", features = ["blocking", "json", "multipart", "native-tls", "rustls-tls-manual-roots"] }
+reqwest = { version = "0.11", features = ["blocking", "json", "multipart", "native-tls", "rustls-tls-manual-roots"] }
 rpassword = { version = "6.0" }
-rustls = { version = "0.20", features = ["dangerous_configuration"] }
+rustls = { version = "0.21", features = ["dangerous_configuration"] }
 rustls-pemfile = { version = "1.0" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
@@ -39,7 +39,7 @@ serde_with = { version = "1.13" }
 socket2 = { version = "0.4" }
 string_enum = { version = "0.3" }
 tokio = { version = "1.18", features = ["full"] }
-tokio-rustls = { version = "0.23" }
+tokio-rustls = { version = "0.24" }
 toml = { version = "0.5" }
 uuid = { version = "1.0", features = ["v4"] }
 x509-parser = { version = "0.13" }

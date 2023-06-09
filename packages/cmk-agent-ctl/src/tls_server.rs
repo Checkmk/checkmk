@@ -41,7 +41,7 @@ struct CNNoUUIDVerifier {
 impl CNNoUUIDVerifier {
     pub fn from_roots(roots: RootCertStore) -> Arc<dyn ClientCertVerifier> {
         Arc::new(Self {
-            verifier: AllowAnyAuthenticatedClient::new(roots),
+            verifier: AllowAnyAuthenticatedClient::new(roots).boxed(),
         })
     }
 }
@@ -49,7 +49,7 @@ impl CNNoUUIDVerifier {
 impl ClientCertVerifier for CNNoUUIDVerifier {
     fn client_auth_root_subjects(
         &self,
-    ) -> Option<tokio_rustls::rustls::internal::msgs::handshake::DistinguishedNames> {
+    ) -> &[tokio_rustls::rustls::internal::msgs::handshake::DistinguishedName] {
         self.verifier.client_auth_root_subjects()
     }
 

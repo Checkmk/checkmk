@@ -12,8 +12,8 @@ use openssl::x509::{X509Name, X509Req};
 use reqwest::blocking::{Client, ClientBuilder};
 use rustls::{
     client::ServerCertVerified, client::ServerCertVerifier, client::ServerName,
-    client::WebPkiVerifier, Certificate, Certificate as RustlsCertificate, Error as RusttlsError,
-    PrivateKey as RustlsPrivateKey, RootCertStore,
+    client::WebPkiVerifier, Certificate, Certificate as RustlsCertificate, CertificateError,
+    Error as RusttlsError, PrivateKey as RustlsPrivateKey, RootCertStore,
 };
 use rustls_pemfile::Item;
 use std::net::TcpStream;
@@ -70,16 +70,12 @@ impl std::convert::TryFrom<&Certificate> for CNCheckerUUID {
     type Error = RusttlsError;
 
     fn try_from(certificate: &Certificate) -> Result<Self, RusttlsError> {
-        let (_rem, cert) = x509_parser::certificate::X509Certificate::from_der(
-            certificate.as_ref(),
-        )
-        .map_err(|e| {
-            RusttlsError::InvalidCertificateData(format!("Certificate parsing failed: {e}"))
-        })?;
+        let (_rem, cert) =
+            x509_parser::certificate::X509Certificate::from_der(certificate.as_ref())
+                .map_err(|_e| RusttlsError::InvalidCertificate(CertificateError::BadEncoding))?;
 
-        let common_names = common_names(cert.subject()).map_err(|e| {
-            RusttlsError::InvalidCertificateData(format!("Certificate parsing failed: {e}"))
-        })?;
+        let common_names =
+            common_names(cert.subject()).map_err(|e| RusttlsError::General(e.to_string()))?;
 
         if common_names.len() != 1 {
             return Err(RusttlsError::General(format!(

@@ -35,7 +35,7 @@ Status LdapControl::userAdd(std::wstring_view user_name,
     wchar_t user_home_dir[] = L"";
     user_info.usri1_home_dir = user_home_dir;
 
-    wchar_t user_comment[] = L"Temporary Check MK User";
+    wchar_t user_comment[] = L"Temporary Checkmk User";
     user_info.usri1_comment = user_comment;
 
     user_info.usri1_flags = UF_SCRIPT;

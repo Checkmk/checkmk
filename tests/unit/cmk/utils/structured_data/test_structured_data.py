@@ -37,13 +37,10 @@ def _create_empty_tree() -> ImmutableTree:
     # nt: has StructuredDataNode, Table
     # na: has StructuredDataNode, Attributes
     # ta: has Table, Attributes
-
     root = StructuredDataNode()
-
-    root.setdefault_node(("path", "to", "nta", "nt"))
-    root.setdefault_node(("path", "to", "nta", "na"))
-    root.setdefault_node(("path", "to", "nta", "ta"))
-
+    root.setdefault_node(("path-to", "nta", "nt"))
+    root.setdefault_node(("path-to", "nta", "na"))
+    root.setdefault_node(("path-to", "nta", "ta"))
     return ImmutableTree(root)
 
 
@@ -53,12 +50,10 @@ def _create_filled_tree() -> ImmutableTree:
     # nt: has StructuredDataNode, Table
     # na: has StructuredDataNode, Attributes
     # ta: has Table, Attributes
-
     root = StructuredDataNode()
-
-    nt = root.setdefault_node(("path", "to", "nta", "nt"))
-    na = root.setdefault_node(("path", "to", "nta", "na"))
-    ta = root.setdefault_node(("path", "to", "nta", "ta"))
+    nt = root.setdefault_node(("path-to", "nta", "nt"))
+    na = root.setdefault_node(("path-to", "nta", "na"))
+    ta = root.setdefault_node(("path-to", "nta", "ta"))
 
     nt.table.add_key_columns(["nt0"])
     nt.table.add_rows(
@@ -78,50 +73,49 @@ def _create_filled_tree() -> ImmutableTree:
         ]
     )
     ta.attributes.add_pairs({"ta0": "TA 0", "ta1": "TA 1"})
-
     return ImmutableTree(root)
 
 
 def test_get_node() -> None:
     root = _create_empty_tree().tree
 
-    nta = root.get_node(("path", "to", "nta"))
-    nt = root.get_node(("path", "to", "nta", "nt"))
-    na = root.get_node(("path", "to", "nta", "na"))
-    ta = root.get_node(("path", "to", "nta", "ta"))
+    nta = root.get_node(("path-to", "nta"))
+    nt = root.get_node(("path-to", "nta", "nt"))
+    na = root.get_node(("path-to", "nta", "na"))
+    ta = root.get_node(("path-to", "nta", "ta"))
 
     assert nta is not None
     assert nt is not None
     assert na is not None
     assert ta is not None
 
-    assert root.get_node(("path", "to", "unknown")) is None
+    assert root.get_node(("path-to", "unknown")) is None
 
 
 def test_set_path() -> None:
     root = _create_empty_tree().tree
 
-    nta = root.get_node(("path", "to", "nta"))
-    nt = root.get_node(("path", "to", "nta", "nt"))
-    na = root.get_node(("path", "to", "nta", "na"))
-    ta = root.get_node(("path", "to", "nta", "ta"))
+    nta = root.get_node(("path-to", "nta"))
+    nt = root.get_node(("path-to", "nta", "nt"))
+    na = root.get_node(("path-to", "nta", "na"))
+    ta = root.get_node(("path-to", "nta", "ta"))
 
     assert nta is not None
-    assert nta.path == ("path", "to", "nta")
+    assert nta.path == ("path-to", "nta")
 
     assert nt is not None
-    assert nt.path == ("path", "to", "nta", "nt")
+    assert nt.path == ("path-to", "nta", "nt")
 
     assert na is not None
-    assert na.path == ("path", "to", "nta", "na")
+    assert na.path == ("path-to", "nta", "na")
 
     assert ta is not None
-    assert ta.path == ("path", "to", "nta", "ta")
+    assert ta.path == ("path-to", "nta", "ta")
 
 
 def test_set_path_sub_nodes() -> None:
     root = _create_empty_tree().tree
-    nta = root.get_node(("path", "to", "nta"))
+    nta = root.get_node(("path-to", "nta"))
 
     sub_node = StructuredDataNode()
     sub_node.setdefault_node(("sub-path-to", "sub-node"))
@@ -129,21 +123,21 @@ def test_set_path_sub_nodes() -> None:
     assert nta is not None
     nta.add_node(("node",), sub_node)
 
-    path_to_node = root.get_node(("path", "to", "nta", "node", "sub-path-to"))
+    path_to_node = root.get_node(("path-to", "nta", "node", "sub-path-to"))
     assert path_to_node is not None
-    assert path_to_node.path == ("path", "to", "nta", "node", "sub-path-to")
+    assert path_to_node.path == ("path-to", "nta", "node", "sub-path-to")
 
-    path_to_sub_node = root.get_node(("path", "to", "nta", "node", "sub-path-to", "sub-node"))
+    path_to_sub_node = root.get_node(("path-to", "nta", "node", "sub-path-to", "sub-node"))
     assert path_to_sub_node is not None
-    assert path_to_sub_node.path == ("path", "to", "nta", "node", "sub-path-to", "sub-node")
+    assert path_to_sub_node.path == ("path-to", "nta", "node", "sub-path-to", "sub-node")
 
 
 def test_empty_but_different_structure() -> None:
     root = _create_empty_tree().tree
 
-    nt = root.get_node(("path", "to", "nta", "nt"))
-    na = root.get_node(("path", "to", "nta", "na"))
-    ta = root.get_node(("path", "to", "nta", "ta"))
+    nt = root.get_node(("path-to", "nta", "nt"))
+    na = root.get_node(("path-to", "nta", "na"))
+    ta = root.get_node(("path-to", "nta", "ta"))
 
     assert nt is not None
     assert not nt.attributes
@@ -165,9 +159,9 @@ def test_empty_but_different_structure() -> None:
 def test_not_empty() -> None:
     root = _create_filled_tree().tree
 
-    nt = root.get_node(("path", "to", "nta", "nt"))
-    na = root.get_node(("path", "to", "nta", "na"))
-    ta = root.get_node(("path", "to", "nta", "ta"))
+    nt = root.get_node(("path-to", "nta", "nt"))
+    na = root.get_node(("path-to", "nta", "na"))
+    ta = root.get_node(("path-to", "nta", "ta"))
 
     assert nt is not None
     assert not nt.attributes
@@ -214,15 +208,15 @@ def test_add_node() -> None:
         ]
     )
 
-    root.add_node(("path", "to", "nta", "node"), orig_node)
-    node = root.get_node(("path", "to", "nta", "node"))
+    root.add_node(("path-to", "nta", "node"), orig_node)
+    node = root.get_node(("path-to", "nta", "node"))
     assert node is not None
 
     # Do not modify orig node.
     assert orig_node.path == tuple()
 
     assert node.table.key_columns == ["sn0"]
-    assert node.path == ("path", "to", "nta", "node")
+    assert node.path == ("path-to", "nta", "node")
 
     assert root
     assert root.count_entries() == 18
@@ -273,7 +267,7 @@ def test_filter_delta_tree_nt() -> None:
         .filter(
             [
                 SDFilter(
-                    path=("path", "to", "nta", "nt"),
+                    path=("path-to", "nta", "nt"),
                     filter_nodes=lambda n: False,
                     filter_attributes=lambda k: k in ["nt1"],
                     filter_columns=lambda k: k in ["nt1"],
@@ -282,12 +276,12 @@ def test_filter_delta_tree_nt() -> None:
         )
     ).tree
 
-    assert filtered.get_node(("path", "to", "nta", "na")) is None
-    assert filtered.get_node(("path", "to", "nta", "ta")) is None
+    assert filtered.get_node(("path-to", "nta", "na")) is None
+    assert filtered.get_node(("path-to", "nta", "ta")) is None
 
-    filtered_child = filtered.get_node(("path", "to", "nta", "nt"))
+    filtered_child = filtered.get_node(("path-to", "nta", "nt"))
     assert filtered_child is not None
-    assert filtered_child.path == ("path", "to", "nta", "nt")
+    assert filtered_child.path == ("path-to", "nta", "nt")
     assert filtered_child.attributes.pairs == {}
     assert len(filtered_child.table.rows) == 2
     for row in (
@@ -304,7 +298,7 @@ def test_filter_delta_tree_na() -> None:
         .filter(
             [
                 SDFilter(
-                    path=("path", "to", "nta", "na"),
+                    path=("path-to", "nta", "na"),
                     filter_nodes=lambda n: False,
                     filter_attributes=lambda k: k in ["na1"],
                     filter_columns=lambda k: k in ["na1"],
@@ -313,12 +307,12 @@ def test_filter_delta_tree_na() -> None:
         )
     ).tree
 
-    assert filtered.get_node(("path", "to", "nta", "nt")) is None
-    assert filtered.get_node(("path", "to", "nta", "ta")) is None
+    assert filtered.get_node(("path-to", "nta", "nt")) is None
+    assert filtered.get_node(("path-to", "nta", "ta")) is None
 
-    filtered_child = filtered.get_node(("path", "to", "nta", "na"))
+    filtered_child = filtered.get_node(("path-to", "nta", "na"))
     assert filtered_child is not None
-    assert filtered_child.path == ("path", "to", "nta", "na")
+    assert filtered_child.path == ("path-to", "nta", "na")
     assert filtered_child.attributes.pairs == {"na1": (None, "NA 1")}
     assert filtered_child.table.rows == []
 
@@ -330,7 +324,7 @@ def test_filter_delta_tree_ta() -> None:
         .filter(
             [
                 SDFilter(
-                    path=("path", "to", "nta", "ta"),
+                    path=("path-to", "nta", "ta"),
                     filter_nodes=lambda n: False,
                     filter_attributes=lambda k: k in ["ta1"],
                     filter_columns=lambda k: k in ["ta1"],
@@ -340,12 +334,12 @@ def test_filter_delta_tree_ta() -> None:
         .tree
     )
 
-    assert filtered.get_node(("path", "to", "nta", "nt")) is None
-    assert filtered.get_node(("path", "to", "nta", "na")) is None
+    assert filtered.get_node(("path-to", "nta", "nt")) is None
+    assert filtered.get_node(("path-to", "nta", "na")) is None
 
-    filtered_child = filtered.get_node(("path", "to", "nta", "ta"))
+    filtered_child = filtered.get_node(("path-to", "nta", "ta"))
     assert filtered_child is not None
-    assert filtered_child.path == ("path", "to", "nta", "ta")
+    assert filtered_child.path == ("path-to", "nta", "ta")
     assert filtered_child.attributes.pairs == {"ta1": (None, "TA 1")}
     assert len(filtered_child.table.rows) == 2
     for row in (
@@ -362,13 +356,13 @@ def test_filter_delta_tree_nta_ta() -> None:
         .filter(
             [
                 SDFilter(
-                    path=("path", "to", "nta", "ta"),
+                    path=("path-to", "nta", "ta"),
                     filter_nodes=lambda n: False,
                     filter_attributes=lambda k: k in ["ta0"],
                     filter_columns=lambda k: k in ["ta0"],
                 ),
                 SDFilter(
-                    path=("path", "to", "nta", "ta"),
+                    path=("path-to", "nta", "ta"),
                     filter_nodes=lambda n: False,
                     filter_attributes=lambda k: k in ["ta1"],
                     filter_columns=lambda k: k in ["ta1"],
@@ -378,11 +372,11 @@ def test_filter_delta_tree_nta_ta() -> None:
         .tree
     )
 
-    assert filtered.get_node(("path", "to", "nta", "nt")) is None
-    assert filtered.get_node(("path", "to", "nta", "na")) is None
-    assert filtered.get_node(("path", "to", "nta", "ta")) is not None
+    assert filtered.get_node(("path-to", "nta", "nt")) is None
+    assert filtered.get_node(("path-to", "nta", "na")) is None
+    assert filtered.get_node(("path-to", "nta", "ta")) is not None
 
-    filtered_ta = filtered.get_node(("path", "to", "nta", "ta"))
+    filtered_ta = filtered.get_node(("path-to", "nta", "ta"))
     assert filtered_ta is not None
     assert filtered_ta.attributes.pairs == {"ta0": (None, "TA 0"), "ta1": (None, "TA 1")}
     assert len(filtered_ta.table.rows) == 4
@@ -557,28 +551,28 @@ def test_filter_tree_wrong_node() -> None:
     filled_root = _create_filled_tree()
     filters = [
         SDFilter(
-            path=("path", "to", "nta", "ta"),
+            path=("path-to", "nta", "ta"),
             filter_nodes=lambda k: True,
             filter_attributes=lambda k: True,
             filter_columns=lambda k: True,
         ),
     ]
     filtered = filled_root.filter(filters).tree
-    assert filtered.get_node(("path", "to", "nta", "na")) is None
-    assert filtered.get_node(("path", "to", "nta", "nt")) is None
+    assert filtered.get_node(("path-to", "nta", "na")) is None
+    assert filtered.get_node(("path-to", "nta", "nt")) is None
 
 
 def test_filter_tree_paths_no_keys() -> None:
     filled_root = _create_filled_tree()
     filters = [
         SDFilter(
-            path=("path", "to", "nta", "ta"),
+            path=("path-to", "nta", "ta"),
             filter_nodes=lambda k: True,
             filter_attributes=lambda k: True,
             filter_columns=lambda k: True,
         ),
     ]
-    filtered_node = filled_root.filter(filters).tree.get_node(("path", "to", "nta", "ta"))
+    filtered_node = filled_root.filter(filters).tree.get_node(("path-to", "nta", "ta"))
     assert filtered_node is not None
 
     assert filtered_node.attributes
@@ -597,13 +591,13 @@ def test_filter_tree_paths_and_keys() -> None:
     filled_root = _create_filled_tree()
     filters = [
         SDFilter(
-            path=("path", "to", "nta", "ta"),
+            path=("path-to", "nta", "ta"),
             filter_nodes=lambda k: True,
             filter_attributes=lambda k: k in ["ta1"],
             filter_columns=lambda k: k in ["ta1"],
         ),
     ]
-    filtered_node = filled_root.filter(filters).tree.get_node(("path", "to", "nta", "ta"))
+    filtered_node = filled_root.filter(filters).tree.get_node(("path-to", "nta", "ta"))
     assert filtered_node is not None
 
     assert filtered_node.attributes
@@ -619,10 +613,10 @@ def test_filter_tree_paths_and_keys() -> None:
 
 def test_filter_tree_mixed() -> None:
     filled_root = _create_filled_tree().tree
-    another_node1 = filled_root.setdefault_node(("path", "to", "another", "node1"))
+    another_node1 = filled_root.setdefault_node(("path-to", "another", "node1"))
     another_node1.attributes.add_pairs({"ak11": "Another value 11", "ak12": "Another value 12"})
 
-    another_node2 = filled_root.setdefault_node(("path", "to", "another", "node2"))
+    another_node2 = filled_root.setdefault_node(("path-to", "another", "node2"))
     another_node2.table.add_key_columns(["ak21"])
     another_node2.table.add_rows(
         [
@@ -639,13 +633,13 @@ def test_filter_tree_mixed() -> None:
 
     filters = [
         SDFilter(
-            path=("path", "to", "another"),
+            path=("path-to", "another"),
             filter_nodes=lambda k: True,
             filter_attributes=lambda k: True,
             filter_columns=lambda k: True,
         ),
         SDFilter(
-            path=("path", "to", "nta", "ta"),
+            path=("path-to", "nta", "ta"),
             filter_nodes=lambda k: True,
             filter_attributes=lambda k: k in ["ta0"],
             filter_columns=lambda k: k in ["ta0"],
@@ -658,11 +652,11 @@ def test_filter_tree_mixed() -> None:
     # below same node.
     assert filtered_node.count_entries() == 9
 
-    assert filtered_node.get_node(("path", "to", "nta", "nt")) is None
-    assert filtered_node.get_node(("path", "to", "nta", "na")) is None
+    assert filtered_node.get_node(("path-to", "nta", "nt")) is None
+    assert filtered_node.get_node(("path-to", "nta", "na")) is None
 
-    assert filtered_node.get_node(("path", "to", "another", "node1")) is not None
-    assert filtered_node.get_node(("path", "to", "another", "node2")) is not None
+    assert filtered_node.get_node(("path-to", "another", "node1")) is not None
+    assert filtered_node.get_node(("path-to", "another", "node2")) is not None
 
 
 # Tests with real host data
@@ -1250,7 +1244,7 @@ def test_delta_structured_data_tree_serialization(
     "raw_path, expected_path",
     [
         ("", tuple()),
-        ("path.to.node_1", ("path", "to", "node_1")),
+        ("path-to.node_1", ("path-to", "node_1")),
     ],
 )
 def test_parse_visible_tree_path(raw_path: str, expected_path: SDPath) -> None:

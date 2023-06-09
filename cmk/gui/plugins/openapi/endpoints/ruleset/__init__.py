@@ -48,11 +48,12 @@ def list_rulesets(param):
         return options
 
     if search_options := _get_search_options(param):
-        rulesets: (
-            RulesetCollection_ | FilteredRulesetCollection
-        ) = FilteredRulesetCollection.filter(
-            all_sets.get_rulesets(),
-            key=lambda ruleset: ruleset.matches_search_with_rules(search_options),
+        rulesets: (RulesetCollection_ | FilteredRulesetCollection) = FilteredRulesetCollection(
+            {
+                name: ruleset
+                for name, ruleset in all_sets.get_rulesets().items()
+                if ruleset.matches_search_with_rules(search_options)
+            }
         )
     else:
         rulesets = all_sets

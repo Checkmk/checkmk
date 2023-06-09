@@ -116,11 +116,12 @@ class ModePredefinedConditions(SimpleListMode):
         return _("Predefined conditions")
 
     def _validate_deletion(self, ident, entry):
-        matched_rulesets = FilteredRulesetCollection.filter(
-            AllRulesets.load_all_rulesets().get_rulesets(),
-            key=lambda ruleset: ruleset.matches_search_with_rules(
-                {"rule_predefined_condition": ident}
-            ),
+        matched_rulesets = FilteredRulesetCollection(
+            {
+                name: ruleset
+                for name, ruleset in AllRulesets.load_all_rulesets().get_rulesets().items()
+                if ruleset.matches_search_with_rules({"rule_predefined_condition": ident})
+            }
         ).get_rulesets()
 
         if matched_rulesets:

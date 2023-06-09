@@ -550,15 +550,6 @@ class FilteredRulesetCollection:
     def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
         return self._rulesets
 
-    @classmethod
-    def filter(
-        cls,
-        origin: Mapping[RulesetName, Ruleset],
-        *,
-        key: Callable[[Ruleset], bool],
-    ) -> FilteredRulesetCollection:
-        return cls({name: ruleset for name, ruleset in origin.items() if key(ruleset)})
-
 
 class Ruleset:
     # These constants are used to give a name to positions within the ruleset.

@@ -243,11 +243,12 @@ class ABCRulesetMode(WatoMode):
 
         # In case the user has filled in the search form, filter the rulesets by the given query
         if self._search_options:
-            rulesets: (
-                FilteredRulesetCollection | RulesetCollection
-            ) = FilteredRulesetCollection.filter(
-                self._rulesets().get_rulesets(),
-                key=lambda ruleset: ruleset.matches_search_with_rules(self._search_options),
+            rulesets: (FilteredRulesetCollection | RulesetCollection) = FilteredRulesetCollection(
+                {
+                    name: ruleset
+                    for name, ruleset in self._rulesets().get_rulesets().items()
+                    if ruleset.matches_search_with_rules(self._search_options)
+                }
             )
         else:
             rulesets = self._rulesets()
@@ -352,9 +353,12 @@ class ModeRuleSearch(ABCRulesetMode):
     def _rulesets(self) -> RulesetCollection | FilteredRulesetCollection:
         all_rulesets = AllRulesets.load_all_rulesets()
         if self._group_name == "static":
-            return FilteredRulesetCollection.filter(
-                all_rulesets.get_rulesets(),
-                key=lambda ruleset: ruleset.rulespec.main_group_name == "static",
+            return FilteredRulesetCollection(
+                {
+                    name: ruleset
+                    for name, ruleset in all_rulesets.get_rulesets().items()
+                    if ruleset.rulespec.main_group_name == "static"
+                }
             )
         return all_rulesets
 
@@ -598,9 +602,12 @@ class ModeRulesetGroup(ABCRulesetMode):
     def _rulesets(self) -> RulesetCollection | FilteredRulesetCollection:
         all_rulesets = AllRulesets.load_all_rulesets()
         if self._group_name == "static":
-            return FilteredRulesetCollection.filter(
-                all_rulesets.get_rulesets(),
-                key=lambda ruleset: ruleset.rulespec.main_group_name == "static",
+            return FilteredRulesetCollection(
+                {
+                    name: ruleset
+                    for name, ruleset in all_rulesets.get_rulesets().items()
+                    if ruleset.rulespec.main_group_name == "static"
+                }
             )
         return all_rulesets
 

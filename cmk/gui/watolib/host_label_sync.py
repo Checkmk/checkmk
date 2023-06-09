@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import ast
+import os
 from dataclasses import asdict, dataclass
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
@@ -14,14 +15,10 @@ from typing import Any
 
 from livestatus import SiteConfiguration, SiteId
 
+import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.labels import (
-    get_host_labels_entry_of_host,
-    get_updated_host_label_files,
-    save_updated_host_label_files,
-    UpdatedHostLabelsEntry,
-)
+from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.log as log
@@ -42,6 +39,8 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.paths import wato_var_dir
+
+UpdatedHostLabelsEntry = tuple[str, float, str]
 
 
 @dataclass
@@ -262,6 +261,34 @@ def _execute_site_sync(
             error=str(e),
             updated_host_labels=[],
         )
+
+
+def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry:
+    """Returns the host labels entry of the given host"""
+    path = DiscoveredHostLabelsStore(host_name).file_path
+    with path.open() as f:
+        return (path.name, path.stat().st_mtime, f.read())
+
+
+def save_updated_host_label_files(updated_host_labels: list[UpdatedHostLabelsEntry]) -> None:
+    """Persists the data previously read by get_updated_host_label_files()"""
+    for file_name, mtime, content in updated_host_labels:
+        file_path = cmk.utils.paths.discovered_host_labels_dir / file_name
+        store.save_text_to_file(file_path, content)
+        os.utime(file_path, (mtime, mtime))
+
+
+def get_updated_host_label_files(newer_than: float) -> list[UpdatedHostLabelsEntry]:
+    """Returns the host label file content + meta data which are newer than the given timestamp"""
+    updated_host_labels = []
+    for path in sorted(cmk.utils.paths.discovered_host_labels_dir.glob("*.mk")):
+        mtime = path.stat().st_mtime
+        if path.stat().st_mtime <= newer_than:
+            continue  # Already known to central site
+
+        with path.open() as f:
+            updated_host_labels.append((path.name, mtime, f.read()))
+    return updated_host_labels
 
 
 @automation_command_registry.register

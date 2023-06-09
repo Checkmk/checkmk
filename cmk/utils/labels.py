@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-import os
 from ast import literal_eval
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Final, Self, TypedDict
@@ -18,7 +17,6 @@ from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName, SectionName
 
 Labels = Mapping[str, str]
-UpdatedHostLabelsEntry = tuple[str, float, str]
 
 
 class HostLabelValueDict(TypedDict):
@@ -189,31 +187,3 @@ class BuiltinHostLabelsStore:
         return {
             "cmk/site": {"value": omd_site(), "plugin_name": "builtin"},
         }
-
-
-def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry:
-    """Returns the host labels entry of the given host"""
-    path = DiscoveredHostLabelsStore(host_name).file_path
-    with path.open() as f:
-        return (path.name, path.stat().st_mtime, f.read())
-
-
-def get_updated_host_label_files(newer_than: float) -> list[UpdatedHostLabelsEntry]:
-    """Returns the host label file content + meta data which are newer than the given timestamp"""
-    updated_host_labels = []
-    for path in sorted(cmk.utils.paths.discovered_host_labels_dir.glob("*.mk")):
-        mtime = path.stat().st_mtime
-        if path.stat().st_mtime <= newer_than:
-            continue  # Already known to central site
-
-        with path.open() as f:
-            updated_host_labels.append((path.name, mtime, f.read()))
-    return updated_host_labels
-
-
-def save_updated_host_label_files(updated_host_labels: list[UpdatedHostLabelsEntry]) -> None:
-    """Persists the data previously read by get_updated_host_label_files()"""
-    for file_name, mtime, content in updated_host_labels:
-        file_path = cmk.utils.paths.discovered_host_labels_dir / file_name
-        store.save_text_to_file(file_path, content)
-        os.utime(file_path, (mtime, mtime))

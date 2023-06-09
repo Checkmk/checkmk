@@ -37,11 +37,12 @@ def _create_empty_tree() -> ImmutableTree:
     # nt: has StructuredDataNode, Table
     # na: has StructuredDataNode, Attributes
     # ta: has Table, Attributes
-    root = StructuredDataNode()
-    root.setdefault_node(("path-to", "nta", "nt"))
-    root.setdefault_node(("path-to", "nta", "na"))
-    root.setdefault_node(("path-to", "nta", "ta"))
-    return ImmutableTree(root)
+    root = MutableTree()
+    root.add_rows(path=["path-to", "nta", "nt"], key_columns=[], rows=[])
+    root.add_pairs(path=["path-to", "nta", "na"], pairs={})
+    root.add_pairs(path=["path-to", "nta", "ta"], pairs={})
+    root.add_rows(path=["path-to", "nta", "ta"], key_columns=[], rows=[])
+    return ImmutableTree(root.tree)
 
 
 def _create_filled_tree() -> ImmutableTree:
@@ -50,30 +51,26 @@ def _create_filled_tree() -> ImmutableTree:
     # nt: has StructuredDataNode, Table
     # na: has StructuredDataNode, Attributes
     # ta: has Table, Attributes
-    root = StructuredDataNode()
-    nt = root.setdefault_node(("path-to", "nta", "nt"))
-    na = root.setdefault_node(("path-to", "nta", "na"))
-    ta = root.setdefault_node(("path-to", "nta", "ta"))
-
-    nt.table.add_key_columns(["nt0"])
-    nt.table.add_rows(
-        [
+    root = MutableTree()
+    root.add_rows(
+        path=["path-to", "nta", "nt"],
+        key_columns=["nt0"],
+        rows=[
             {"nt0": "NT 00", "nt1": "NT 01"},
             {"nt0": "NT 10", "nt1": "NT 11"},
-        ]
+        ],
     )
-
-    na.attributes.add_pairs({"na0": "NA 0", "na1": "NA 1"})
-
-    ta.table.add_key_columns(["ta0"])
-    ta.table.add_rows(
-        [
+    root.add_pairs(path=["path-to", "nta", "na"], pairs={"na0": "NA 0", "na1": "NA 1"})
+    root.add_pairs(path=["path-to", "nta", "ta"], pairs={"ta0": "TA 0", "ta1": "TA 1"})
+    root.add_rows(
+        path=["path-to", "nta", "ta"],
+        key_columns=["ta0"],
+        rows=[
             {"ta0": "TA 00", "ta1": "TA 01"},
             {"ta0": "TA 10", "ta1": "TA 11"},
-        ]
+        ],
     )
-    ta.attributes.add_pairs({"ta0": "TA 0", "ta1": "TA 1"})
-    return ImmutableTree(root)
+    return ImmutableTree(root.tree)
 
 
 def test_get_node() -> None:

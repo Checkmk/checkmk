@@ -5,10 +5,8 @@
 
 
 import time
-from collections.abc import Callable, Container, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from typing import assert_never, Literal, TypeVar, Union
-
-import livestatus
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -18,7 +16,6 @@ from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
-from cmk.utils.timeout import Timeout
 from cmk.utils.type_defs import (
     DiscoveryResult,
     EVERYTHING,
@@ -301,85 +298,6 @@ def _make_diff(
 
 
 def autodiscovery(
-    autodiscovery_queue: AutoQueue,
-    *,
-    config_cache: ConfigCache,
-    parser: ParserFunction,
-    fetcher: FetcherFunction,
-    summarizer: Callable[[HostName], SummarizerFunction],
-    section_plugins: Mapping[SectionName, SectionPlugin],
-    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
-    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
-    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-    schedule_discovery_check: Callable[[HostName], object],
-    on_error: OnError,
-) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
-    """Autodiscovery"""
-    for host_name in autodiscovery_queue:
-        if host_name not in config_cache.all_configured_hosts():
-            console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
-            (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
-
-    if (oldest_queued := autodiscovery_queue.oldest()) is None:
-        console.verbose("Autodiscovery: No hosts marked by discovery check\n")
-        return {}, False
-
-    console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:\n")
-    try:
-        response = livestatus.LocalConnection().query("GET hosts\nColumns: name state")
-        process_hosts: Container[HostName] = {
-            HostName(name) for name, state in response if state == 0
-        }
-    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
-        process_hosts = EVERYTHING
-
-    activation_required = False
-    rediscovery_reference_time = time.time()
-
-    hosts_processed = set()
-    discovery_results = {}
-
-    start = time.monotonic()
-    limit = 120
-    message = f"  Timeout of {limit} seconds reached. Let's do the remaining hosts next time."
-
-    try:
-        with Timeout(limit + 10, message=message):
-            for host_name in autodiscovery_queue:
-                if time.monotonic() > start + limit:
-                    raise TimeoutError(message)
-
-                if host_name not in process_hosts:
-                    continue
-
-                hosts_processed.add(host_name)
-                discovery_result, activate_host = _autodiscovery(
-                    host_name,
-                    config_cache=config_cache,
-                    parser=parser,
-                    fetcher=fetcher,
-                    summarizer=summarizer(host_name),
-                    section_plugins=section_plugins,
-                    host_label_plugins=host_label_plugins,
-                    plugins=plugins,
-                    get_service_description=get_service_description,
-                    schedule_discovery_check=schedule_discovery_check,
-                    autodiscovery_queue=autodiscovery_queue,
-                    reference_time=rediscovery_reference_time,
-                    oldest_queued=oldest_queued,
-                    on_error=on_error,
-                )
-                if discovery_result:
-                    discovery_results[host_name] = discovery_result
-                    activation_required |= activate_host
-
-    except (MKTimeout, TimeoutError) as exc:
-        console.verbose(str(exc))
-
-    return discovery_results, activation_required
-
-
-def _autodiscovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,

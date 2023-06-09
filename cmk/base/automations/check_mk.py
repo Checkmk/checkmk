@@ -15,11 +15,14 @@ import shutil
 import socket
 import subprocess
 import sys
-from collections.abc import Iterable, Mapping, Sequence
+import time
+from collections.abc import Container, Iterable, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout, suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Callable, cast
+
+import livestatus
 
 import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
@@ -30,8 +33,9 @@ from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, OnError
+from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import (
     autochecks_dir,
@@ -53,10 +57,20 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
+from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
-from cmk.utils.type_defs import HostAddress, HostName, ServiceDetails, ServiceState
+from cmk.utils.type_defs import (
+    EVERYTHING,
+    HostAddress,
+    HostName,
+    Item,
+    SectionName,
+    ServiceDetails,
+    ServiceName,
+    ServiceState,
+)
 
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -98,9 +112,23 @@ from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFet
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
-from cmk.checkengine import parse_raw_data, plugin_contexts, SourceType
+from cmk.checkengine import (
+    DiscoveryPlugin,
+    FetcherFunction,
+    parse_raw_data,
+    ParserFunction,
+    plugin_contexts,
+    SectionPlugin,
+    SourceType,
+    SummarizerFunction,
+)
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes, DiscoveryMode
+from cmk.checkengine.discovery import (
+    AutocheckEntry,
+    AutocheckServiceWithNodes,
+    DiscoveryMode,
+    HostLabelPlugin,
+)
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.type_defs import NO_SELECTION
 
@@ -408,6 +436,86 @@ class AutomationAutodiscovery(DiscoveryAutomation):
 automations.register(AutomationAutodiscovery())
 
 
+def _autodiscovery(
+    # TODO: Inline in caller
+    autodiscovery_queue: AutoQueue,
+    *,
+    config_cache: ConfigCache,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
+    summarizer: Callable[[HostName], SummarizerFunction],
+    section_plugins: Mapping[SectionName, SectionPlugin],
+    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
+    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    schedule_discovery_check_: Callable[[HostName], object],
+    on_error: OnError,
+) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
+    """Autodiscovery"""
+    for host_name in autodiscovery_queue:
+        if host_name not in config_cache.all_configured_hosts():
+            console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
+            (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
+
+    if (oldest_queued := autodiscovery_queue.oldest()) is None:
+        console.verbose("Autodiscovery: No hosts marked by discovery check\n")
+        return {}, False
+
+    console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:\n")
+    try:
+        response = livestatus.LocalConnection().query("GET hosts\nColumns: name state")
+        process_hosts: Container[HostName] = {
+            HostName(name) for name, state in response if state == 0
+        }
+    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
+        process_hosts = EVERYTHING
+
+    activation_required = False
+    rediscovery_reference_time = time.time()
+
+    hosts_processed = set()
+    discovery_results = {}
+
+    start = time.monotonic()
+    limit = 120
+    message = f"  Timeout of {limit} seconds reached. Let's do the remaining hosts next time."
+
+    try:
+        with Timeout(limit + 10, message=message):
+            for host_name in autodiscovery_queue:
+                if time.monotonic() > start + limit:
+                    raise TimeoutError(message)
+
+                if host_name not in process_hosts:
+                    continue
+
+                hosts_processed.add(host_name)
+                discovery_result, activate_host = discovery.autodiscovery(
+                    host_name,
+                    config_cache=config_cache,
+                    parser=parser,
+                    fetcher=fetcher,
+                    summarizer=summarizer(host_name),
+                    section_plugins=section_plugins,
+                    host_label_plugins=host_label_plugins,
+                    plugins=plugins,
+                    get_service_description=get_service_description,
+                    schedule_discovery_check=schedule_discovery_check_,
+                    autodiscovery_queue=autodiscovery_queue,
+                    reference_time=rediscovery_reference_time,
+                    oldest_queued=oldest_queued,
+                    on_error=on_error,
+                )
+                if discovery_result:
+                    discovery_results[host_name] = discovery_result
+                    activation_required |= activate_host
+
+    except (MKTimeout, TimeoutError) as exc:
+        console.verbose(str(exc))
+
+    return discovery_results, activation_required
+
+
 def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     file_cache_options = FileCacheOptions(use_outdated=True)
 
@@ -434,7 +542,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         # make sure we may use the file the active discovery check left behind:
         max_cachefile_age=config.max_cachefile_age(discovery=600),
     )
-    discovery_results, activation_required = discovery.autodiscovery(
+    discovery_results, activation_required = _autodiscovery(
         queue,
         config_cache=config_cache,
         parser=parser,
@@ -446,7 +554,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
         plugins=DiscoveryPluginMapper(config_cache=config_cache),
         get_service_description=config.service_description,
-        schedule_discovery_check=schedule_discovery_check,
+        schedule_discovery_check_=schedule_discovery_check,
         on_error=OnError.IGNORE,
     )
 

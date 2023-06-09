@@ -106,7 +106,7 @@ just to signal that real build script was not called -->
         </Upgrade>
 
 
-        <Feature Id="ProductFeature" Title="Check MK Agent" Level="1">
+        <Feature Id="ProductFeature" Title="Checkmk Agent" Level="1">
             <ComponentGroupRef Id="ProductComponents" />
         </Feature>
         <Feature Id="plugins" Title="Plugins Folder" Level="1">

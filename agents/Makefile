@@ -81,7 +81,8 @@ setversion:
 		$(SPECIAL_AGENTS_DIR)/agent_netapp.py \
 		$(SPECIAL_AGENTS_DIR)/agent_jolokia.py
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
-	sed -i 's/define ProductName = "Check MK Agent [^"]*"/define ProductName = "Check MK Agent $(NEW_VERSION_MAJOR)"/' wnx/install/version.wxi
+	sed -i 's/std::wstring_view kAgentProductName.*;/std::wstring_view kAgentProductName{L"Checkmk Agent $(NEW_VERSION_MAJOR)"};/' wnx/src/engine/install_api.h
+	sed -i 's/define ProductName = "Checkmk Agent [^"]*"/define ProductName = "Checkmk Agent $(NEW_VERSION_MAJOR)"/' wnx/install/version.wxi
 	sed -i 's/define ServiceDescription = "Checkmk monitoring agent service - [^"]*"/define ServiceDescription = "Checkmk monitoring agent service - $(NEW_VERSION_MAJOR)"/' wnx/install/Product.wxs
 	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(AGENT_CTL_DIR)/src/constants.rs
 

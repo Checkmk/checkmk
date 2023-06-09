@@ -91,7 +91,8 @@ import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
-from cmk.base.agent_based.confcheckers import (
+from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
+from cmk.base.checkers import (
     CheckPluginMapper,
     ConfiguredFetcher,
     ConfiguredParser,
@@ -101,7 +102,6 @@ from cmk.base.agent_based.confcheckers import (
     InventoryPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.modes import keepalive_option, Mode, modes, Option

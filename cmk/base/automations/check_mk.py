@@ -115,7 +115,10 @@ import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.sources as sources
-from cmk.base.agent_based.confcheckers import (
+from cmk.base.agent_based.discovery.autodiscovery import DiscoveryResult
+from cmk.base.agent_based.discovery.livestatus import schedule_discovery_check
+from cmk.base.automations import Automation, automations, MKAutomationError
+from cmk.base.checkers import (
     CheckPluginMapper,
     ConfiguredFetcher,
     ConfiguredParser,
@@ -124,9 +127,6 @@ from cmk.base.agent_based.confcheckers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.agent_based.discovery.autodiscovery import DiscoveryResult
-from cmk.base.agent_based.discovery.livestatus import schedule_discovery_check
-from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.config import ConfigCache
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core

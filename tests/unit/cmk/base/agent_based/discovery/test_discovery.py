@@ -56,13 +56,6 @@ from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-from cmk.base.agent_based.confcheckers import (
-    ConfiguredFetcher,
-    ConfiguredParser,
-    DiscoveryPluginMapper,
-    HostLabelPluginMapper,
-    SectionPluginMapper,
-)
 from cmk.base.agent_based.discovery import _discovered_services
 from cmk.base.agent_based.discovery._discovery import _check_host_labels, _check_service_lists
 from cmk.base.agent_based.discovery.autodiscovery import (
@@ -76,6 +69,13 @@ from cmk.base.agent_based.discovery.autodiscovery import (
     ServicesTable,
 )
 from cmk.base.api.agent_based.type_defs import SectionPlugin as SectionPluginAPI
+from cmk.base.checkers import (
+    ConfiguredFetcher,
+    ConfiguredParser,
+    DiscoveryPluginMapper,
+    HostLabelPluginMapper,
+    SectionPluginMapper,
+)
 from cmk.base.config import ConfigCache
 
 

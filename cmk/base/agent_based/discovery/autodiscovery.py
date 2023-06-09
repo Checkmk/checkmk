@@ -53,7 +53,7 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 
-from cmk.base.agent_based.confcheckers import ConfiguredSummarizer
+from cmk.base.checkers import ConfiguredSummarizer
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services

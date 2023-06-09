@@ -67,7 +67,7 @@ void PrintSelfCheck() {
             "\t{2:<{0}} - check test\n"
             "\t\t{3:<{0}} - main thread test\n"
             "\t\t{4:<{0}} - simple self test of internal and external transport\n"
-            "\t\t{5:<{0}} - simulates periodical connection from Check MK Site, for example '{1} {2} {5} 13'\n",
+            "\t\t{5:<{0}} - simulates periodical connection from Checkmk Site, for example '{1} {2} {5} 13'\n",
             kParamShift, kServiceExeName, kCheckParam, kCheckParamMt,
             kCheckParamIo, kCheckParamSelf);
     });

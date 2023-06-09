@@ -53,8 +53,8 @@ def main() {
     def build_image = true;
     def build_cloud_images = edition == "cloud";
 
-    def run_integration_tests = edition != "saas";
-    def run_image_tests = edition != "saas";
+    def run_integration_tests = true;
+    def run_image_tests = true;
 
     print(
         """

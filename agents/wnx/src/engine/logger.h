@@ -664,7 +664,7 @@ private:
 
 // Global Log Engines
 
-extern XLOG::Emitter l;      // Standard log from Check MK
+extern XLOG::Emitter l;      // Standard log from Checkmk
 extern XLOG::Emitter d;      // this is GLOBAL
 extern XLOG::Emitter t;      // temporary log!
 extern XLOG::Emitter stdio;  // only print

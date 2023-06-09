@@ -4,7 +4,7 @@
 
 
 #
-# Default Check MK configuration file
+# Default Checkmk configuration file
 #
 
 # $CUSTOM_PLUGINS_PATH$  -> is ProgramData/checkmk/agent/plugins

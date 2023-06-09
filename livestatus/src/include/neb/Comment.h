@@ -6,8 +6,6 @@
 #ifndef Comment_h
 #define Comment_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <string>
 

@@ -7,8 +7,6 @@
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define _XOPEN_SOURCE 500
 
-#include "config.h"
-
 #include <pthread.h>
 #include <sys/socket.h>
 #include <sys/stat.h>

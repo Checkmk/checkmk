@@ -6,8 +6,6 @@
 #ifndef TimeperiodsCache_h
 #define TimeperiodsCache_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <map>
 #include <mutex>

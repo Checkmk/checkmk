@@ -6,8 +6,6 @@
 #ifndef MacroExpander_h
 #define MacroExpander_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <memory>
 #include <optional>
 #include <string>

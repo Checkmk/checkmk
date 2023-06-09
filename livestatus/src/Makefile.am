@@ -4,6 +4,10 @@
 
 include $(abs_top_srcdir)/defines.make
 
+BUILD_CXX ="$(shell $(CXX) --version | head --lines=1)"
+BUILD_DATE = "$(shell date -R)"
+BUILD_HOSTNAME = "$(shell uname -n)"
+
 DOXYGEN ?= doxygen
 PLANTUTML_VERSION ?= 1.2022.12
 RUN_CLANG_TIDY ?= python3 $(shell command -v run-clang-tidy-$(CLANG_VERSION).py)
@@ -33,7 +37,11 @@ AM_CPPFLAGS = \
     -I$(LIBLIVESTATUS_INCLUDE) \
     -isystem $(ASIO_INCLUDE) \
     -DASIO_DISABLE_CONCEPTS \
-    -DHAVE_RE2
+    -DHAVE_RE2 \
+    -DVERSION=\"$(VERSION)\" \
+    -DBUILD_CXX=\"$(BUILD_CXX)\" \
+    -DBUILD_DATE=\"$(BUILD_DATE)\" \
+    -DBUILD_HOSTNAME=\"$(BUILD_HOSTNAME)\"
 
 AM_LDFLAGS = \
     -static-libstdc++
@@ -128,7 +136,7 @@ livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)
 # Note: libstdc++fs is only available as a static library, so we are lucky.
 	$(CXXLINK) -shared $^ -lpthread $(AM_LDFLAGS) $(LIBLIVESTATUS_SO)
 # To make sure we can dlopen() our NEB later. TODO: This should be part of the tests.
-	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -Iinclude -I. -I../.. -I.. -c test/NagiosMockup.cc -o test/NagiosMockup.o
+	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -Iinclude -I. -I.. -c test/NagiosMockup.cc -o test/NagiosMockup.o
 	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) test/NagiosMockup.o $@ -o test/NagiosMockup $(liblivestatusneb_a_LD_FLAGS) $(LIBLIVESTATUS_SO)
 	$(RM) test/NagiosMockup
 

@@ -6,8 +6,6 @@
 #ifndef NebCore_h
 #define NebCore_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <cstddef>
 #include <cstdint>

@@ -1172,13 +1172,12 @@ CLANG_ADD_INC_PATHS    = YES
 # This tag requires that the tag CLANG_ASSISTED_PARSING is set to YES.
 
 CLANG_OPTIONS          = -std=c++17 \
-                         -DHAVE_CONFIG_H \
                          -I. \
-                         -I../.. \
                          -I.. \
                          -isystem \
                          includes/asio \
                          -DASIO_DISABLE_CONCEPTS \
+                         -DVERSION="2.3.0b1" \
                          -I../../omd/packages/re2/destdir/include \
                          -Iincludes/googletest \
                          -I../../omd/build/package_build/rrdtool-1.7.2/src

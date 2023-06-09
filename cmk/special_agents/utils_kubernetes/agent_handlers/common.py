@@ -8,7 +8,7 @@ import enum
 import re
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Callable, Collection, Literal, Sequence
+from typing import Callable, Collection, Literal, NamedTuple, Sequence
 
 from cmk.special_agents.utils_kubernetes.api_server import APIData
 from cmk.special_agents.utils_kubernetes.schemata import api, section
@@ -249,3 +249,29 @@ def _node_collector_replicas(
         available=status.number_available,
         desired=status.desired_number_scheduled,
     )
+
+
+class CheckmkHostSettings(NamedTuple):
+    """
+    The listed settings apply to all Kubernetes generated piggyback hosts
+
+        cluster:
+            the given Kubernetes cluster name is prefixed to all piggyback host names
+        kubernetes_cluster_hostname:
+            the name of the Checkmk host which represents the cluster will be made available as
+            Checkmk label
+        annotation_key_pattern:
+            decides what annotations of the k8 object will be translated to Checkmk labels
+    """
+
+    cluster_name: str
+    kubernetes_cluster_hostname: str
+    annotation_key_pattern: AnnotationOption
+
+
+def controller_strategy(controller: Deployment | DaemonSet | StatefulSet) -> section.UpdateStrategy:
+    return section.UpdateStrategy.parse_obj(controller.spec)
+
+
+def controller_spec(controller: Deployment | DaemonSet | StatefulSet) -> section.ControllerSpec:
+    return section.ControllerSpec(min_ready_seconds=controller.spec.min_ready_seconds)

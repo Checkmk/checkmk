@@ -33,7 +33,7 @@ def test_write_daemon_sets_api_sections_registers_sections_to_be_written(
     daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build(), pods=[APIPodFactory.build()])
     sections = agent_kube.create_daemon_set_api_sections(
         daemon_set,
-        agent_kube.CheckmkHostSettings(
+        cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
             annotation_key_pattern=cmk.special_agents.utils_kubernetes.agent_handlers.common.AnnotationNonPatternOption.ignore_all,

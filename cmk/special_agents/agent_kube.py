@@ -25,7 +25,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
-from typing import NamedTuple, TypeVar
+from typing import TypeVar
 
 import requests
 import urllib3
@@ -51,9 +51,12 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationNonPatternOption,
     AnnotationOption,
     any_match_from_list_of_infix_patterns,
+    CheckmkHostSettings,
     Cluster,
     collect_cpu_resources_from_api_pods,
     collect_memory_resources_from_api_pods,
+    controller_spec,
+    controller_strategy,
     DaemonSet,
     Deployment,
     filter_annotations_by_key_pattern,
@@ -91,24 +94,6 @@ from cmk.special_agents.utils_kubernetes.common import (
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.schemata.api import NamespaceName
-
-
-class CheckmkHostSettings(NamedTuple):
-    """
-    The listed settings apply to all Kubernetes generated piggyback hosts
-
-        cluster:
-            the given Kubernetes cluster name is prefixed to all piggyback host names
-        kubernetes_cluster_hostname:
-            the name of the Checkmk host which represents the cluster will be made available as
-            Checkmk label
-        annotation_key_pattern:
-            decides what annotations of the k8 object will be translated to Checkmk labels
-    """
-
-    cluster_name: str
-    kubernetes_cluster_hostname: str
-    annotation_key_pattern: AnnotationOption
 
 
 class MonitoredObject(enum.Enum):
@@ -317,14 +302,6 @@ def setup_logging(verbosity: int) -> None:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
     logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
-
-
-def controller_strategy(controller: Deployment | DaemonSet | StatefulSet) -> section.UpdateStrategy:
-    return section.UpdateStrategy.parse_obj(controller.spec)
-
-
-def controller_spec(controller: Deployment | DaemonSet | StatefulSet) -> section.ControllerSpec:
-    return section.ControllerSpec(min_ready_seconds=controller.spec.min_ready_seconds)
 
 
 @dataclass(frozen=True)
@@ -640,60 +617,6 @@ def write_nodes_api_sections(
     for api_node in api_nodes:
         with ConditionalPiggybackSection(piggyback_formatter(api_node)):
             output_sections(api_node)
-
-
-def create_deployment_api_sections(
-    api_deployment: Deployment, host_settings: CheckmkHostSettings, piggyback_name: str
-) -> Iterator[WriteableSection]:
-    yield from (
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_deployment_info_v1"),
-            section=deployment.info(
-                api_deployment,
-                host_settings.cluster_name,
-                host_settings.kubernetes_cluster_hostname,
-                host_settings.annotation_key_pattern,
-            ),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_pod_resources_v1"),
-            section=api_deployment.pod_resources(),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_memory_resources_v1"),
-            section=api_deployment.memory_resources(),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cpu_resources_v1"),
-            section=api_deployment.cpu_resources(),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_update_strategy_v1"),
-            section=controller_strategy(api_deployment),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_controller_spec_v1"),
-            section=controller_spec(api_deployment),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_deployment_replicas_v1"),
-            section=deployment.replicas(api_deployment),
-        ),
-    )
-
-    if (section_conditions := deployment.conditions(api_deployment.status)) is not None:
-        yield WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_deployment_conditions_v1"),
-            section=section_conditions,
-        )
 
 
 def namespaced_name_from_metadata(metadata: api.MetaData) -> str:
@@ -1421,7 +1344,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     composed_entities.deployments, monitored_namespace_names
                 ):
                     deployment_piggyback_name = piggyback_formatter(api_deployment)
-                    sections = create_deployment_api_sections(
+                    sections = deployment.create_api_sections(
                         api_deployment,
                         host_settings=checkmk_host_settings,
                         piggyback_name=deployment_piggyback_name,

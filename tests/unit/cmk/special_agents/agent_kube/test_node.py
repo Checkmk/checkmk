@@ -18,6 +18,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     NodeStatusFactory,
 )
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import AnnotationNonPatternOption
 from cmk.special_agents.utils_kubernetes.agent_handlers.node import (
@@ -90,7 +91,7 @@ def test_write_api_nodes_api_sections_registers_sections_to_be_written(
     api_node = api_to_agent_node(APINodeFactory.build())
     agent.write_nodes_api_sections(
         [api_node],
-        agent.CheckmkHostSettings(
+        cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
             annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
@@ -106,7 +107,7 @@ def test_write_api_nodes_api_sections_maps_section_names_to_callables(
     api_node = api_to_agent_node(APINodeFactory.build())
     agent.write_nodes_api_sections(
         [api_node],
-        agent.CheckmkHostSettings(
+        cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
             annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
@@ -125,7 +126,7 @@ def test_write_api_nodes_api_sections_calls_write_sections_for_each_api_node(
     cluster_api_nodes = 3
     agent.write_nodes_api_sections(
         [api_to_agent_node(APINodeFactory.build()) for _ in range(cluster_api_nodes)],
-        agent.CheckmkHostSettings(
+        cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
             annotation_key_pattern=AnnotationNonPatternOption.ignore_all,

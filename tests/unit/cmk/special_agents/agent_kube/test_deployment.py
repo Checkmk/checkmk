@@ -56,7 +56,7 @@ def test_deployment_conditions() -> None:
             for condition in ["available", "progressing", "replicafailure"]
         }
     )
-    conditions = cmk.special_agents.utils_kubernetes.agent_handlers.deployment.conditions(
+    conditions = cmk.special_agents.utils_kubernetes.agent_handlers.deployment._conditions(
         api_deployment_status
     )
     assert conditions is not None
@@ -67,9 +67,9 @@ def test_write_deployments_api_sections_registers_sections_to_be_written(
     write_writeable_sections_mock: MagicMock,
 ) -> None:
     deployment = api_to_agent_deployment(APIDeploymentFactory.build(), pods=[APIPodFactory.build()])
-    deployment_sections = agent.create_deployment_api_sections(
+    deployment_sections = cmk.special_agents.utils_kubernetes.agent_handlers.deployment.create_api_sections(
         deployment,
-        agent.CheckmkHostSettings(
+        cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
             annotation_key_pattern=cmk.special_agents.utils_kubernetes.agent_handlers.common.AnnotationNonPatternOption.ignore_all,

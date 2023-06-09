@@ -11,6 +11,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     PodStatusFactory,
 )
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import AnnotationNonPatternOption
 from cmk.special_agents.utils_kubernetes.agent_handlers.namespace import (
@@ -26,7 +27,7 @@ def test_namespace_create_api_sections() -> None:
     sections = agent.create_namespace_api_sections(
         namespace,
         APIPodFactory.batch(1),
-        agent.CheckmkHostSettings(
+        cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
             annotation_key_pattern=AnnotationNonPatternOption.ignore_all,

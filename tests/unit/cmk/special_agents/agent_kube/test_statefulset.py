@@ -36,7 +36,7 @@ def test_write_statefulsets_api_sections_registers_sections_to_be_written(
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
     sections = agent_kube.create_statefulset_api_sections(
         statefulset,
-        agent_kube.CheckmkHostSettings(
+        cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
             annotation_key_pattern=cmk.special_agents.utils_kubernetes.agent_handlers.common.AnnotationNonPatternOption.ignore_all,

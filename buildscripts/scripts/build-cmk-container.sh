@@ -131,6 +131,10 @@ elif [ "$EDITION" = cloud ]; then
     SUFFIX=.cce
     REGISTRY=""
     NAMESPACE="checkmk"
+elif [ "$EDITION" = saas ]; then
+    SUFFIX=.cse
+    REGISTRY="artifacts.lan.tribe29.com:4000"
+    NAMESPACE=""
 else
     die "FEHLER: Unbekannte Edition '$EDITION'"
 fi

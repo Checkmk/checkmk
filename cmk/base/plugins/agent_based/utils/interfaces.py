@@ -1703,6 +1703,15 @@ def _check_oper_and_admin_state_independent(
     )
 
 
+def __oper_and_admin_state_combined(
+    attributes: Attributes, state_mappings: Iterable[tuple[str, str, int]]
+) -> State | None:
+    for oper_state, admin_state, mon_state in state_mappings:
+        if attributes.oper_status == oper_state and attributes.admin_status == admin_state:
+            return State(mon_state)
+    return None
+
+
 def _check_oper_and_admin_state_combined(
     attributes: Attributes,
     state_mapping_type: Literal["combined_mappings", "independent_mappings"],
@@ -1714,22 +1723,8 @@ def _check_oper_and_admin_state_combined(
     if state_mapping_type == "independent_mappings":
         return None
     assert not isinstance(state_mappings, Mapping)
-    if (
-        combined_mon_state := {
-            (
-                oper_state,
-                admin_state,
-            ): State(
-                mon_state
-            )  #
-            for oper_state, admin_state, mon_state in state_mappings
-        }.get(
-            (
-                attributes.oper_status,
-                attributes.admin_status,
-            )
-        )
-    ) is None:
+    combined_mon_state = __oper_and_admin_state_combined(attributes, state_mappings)
+    if combined_mon_state is None:
         return None
     return Result(
         state=combined_mon_state,

@@ -486,48 +486,57 @@ def write_cluster_api_sections(cluster_name: str, api_cluster: Cluster) -> None:
     _write_sections(sections)
 
 
-def write_cronjobs_api_sections(
-    api_cron_jobs: Sequence[api.CronJob],
-    api_cron_job_pods: Sequence[api.Pod],
-    api_jobs: Mapping[api.JobUID, api.Job],
+def create_cronjob_api_sections(
+    api_cronjob: api.CronJob,
+    cronjob_pods: Sequence[api.Pod],
+    timestamp_sorted_jobs: Sequence[api.Job],
     host_settings: CheckmkHostSettings,
-    piggyback_formatter: PiggybackFormatter,
-) -> None:
-    def output_cronjob_sections(
-        cron_job: api.CronJob,
-        cron_job_pods: Sequence[api.Pod],
-    ) -> None:
-        jobs = [api_jobs[uid] for uid in cron_job.job_uids]
-        timestamp_sorted_jobs = sorted(jobs, key=lambda job: job.metadata.creation_timestamp)
-        sections = {
-            "kube_cron_job_info_v1": lambda: cronjob.info(
-                cron_job,
+    piggyback_name: str,
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cron_job_info_v1"),
+            section=cronjob.info(
+                api_cronjob,
                 host_settings.cluster_name,
                 host_settings.kubernetes_cluster_hostname,
                 host_settings.annotation_key_pattern,
             ),
-            "kube_cron_job_status_v1": lambda: cronjob.status(
-                cron_job.status, timestamp_sorted_jobs
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cron_job_status_v1"),
+            section=cronjob.status(
+                api_cronjob.status,
+                timestamp_sorted_jobs,
             ),
-            "kube_cron_job_latest_job_v1": lambda: cronjob.latest_job(
-                timestamp_sorted_jobs[-1], {pod.uid: pod for pod in cron_job_pods}
-            )
-            if len(timestamp_sorted_jobs) > 0
-            else None,
-            "kube_pod_resources_v1": lambda: pod_resources_from_api_pods(cron_job_pods),
-            "kube_memory_resources_v1": lambda: collect_memory_resources_from_api_pods(
-                cron_job_pods
-            ),
-            "kube_cpu_resources_v1": lambda: collect_cpu_resources_from_api_pods(cron_job_pods),
-        }
-        _write_sections(sections)
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=pod_resources_from_api_pods(cronjob_pods),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cron_job_pods_v1"),
+            section=collect_memory_resources_from_api_pods(cronjob_pods),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=collect_cpu_resources_from_api_pods(cronjob_pods),
+        ),
+    )
 
-    for api_cron_job in api_cron_jobs:
-        with ConditionalPiggybackSection(piggyback_formatter(api_cron_job)):
-            output_cronjob_sections(
-                api_cron_job,
-                filter_pods_by_cron_job(api_cron_job_pods, api_cron_job),
-            )
+    if len(timestamp_sorted_jobs):
+        yield WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cron_job_latest_job_v1"),
+            section=cronjob.latest_job(
+                timestamp_sorted_jobs[-1], {pod.uid: pod for pod in cronjob_pods}
+            ),
+        )
 
 
 def create_namespace_api_sections(
@@ -1423,13 +1432,21 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 if api_pod.uid in cron_job.pod_uids
             ]
             if MonitoredObject.cronjobs in arguments.monitored_objects:
-                write_cronjobs_api_sections(
-                    kube_objects_from_namespaces(api_data.cron_jobs, monitored_namespace_names),
-                    api_cron_job_pods,
-                    {job.uid: job for job in api_data.jobs},
-                    host_settings=checkmk_host_settings,
-                    piggyback_formatter=piggyback_formatter,
-                )
+                api_jobs = {job.uid: job for job in api_data.jobs}
+                for api_cron_job in kube_objects_from_namespaces(
+                    api_data.cron_jobs, monitored_namespace_names
+                ):
+                    sections = create_cronjob_api_sections(
+                        api_cron_job,
+                        filter_pods_by_cron_job(api_cron_job_pods, api_cron_job),
+                        sorted(
+                            [api_jobs[uid] for uid in api_cron_job.job_uids],
+                            key=lambda job: job.metadata.creation_timestamp,
+                        ),
+                        host_settings=checkmk_host_settings,
+                        piggyback_name=piggyback_formatter(api_cron_job),
+                    )
+                    common.write_sections(sections)
 
             if MonitoredObject.pods in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")

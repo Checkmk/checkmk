@@ -55,8 +55,6 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     Cluster,
     collect_cpu_resources_from_api_pods,
     collect_memory_resources_from_api_pods,
-    controller_spec,
-    controller_strategy,
     DaemonSet,
     Deployment,
     filter_annotations_by_key_pattern,
@@ -516,53 +514,6 @@ def write_nodes_api_sections(
 
 def namespaced_name_from_metadata(metadata: api.MetaData) -> str:
     return api.namespaced_name(metadata.namespace, metadata.name)
-
-
-def create_daemon_set_api_sections(
-    api_daemonset: DaemonSet, host_settings: CheckmkHostSettings, piggyback_name: str
-) -> Iterator[WriteableSection]:
-    yield from (
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_pod_resources_v1"),
-            section=api_daemonset.pod_resources(),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_memory_resources_v1"),
-            section=api_daemonset.memory_resources(),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cpu_resources_v1"),
-            section=api_daemonset.cpu_resources(),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_daemonset_info_v1"),
-            section=daemonset.info(
-                api_daemonset,
-                host_settings.cluster_name,
-                host_settings.kubernetes_cluster_hostname,
-                host_settings.annotation_key_pattern,
-            ),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_update_strategy_v1"),
-            section=controller_strategy(api_daemonset),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_daemonset_replicas_v1"),
-            section=daemonset.replicas(api_daemonset),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_controller_spec_v1"),
-            section=controller_spec(api_daemonset),
-        ),
-    )
 
 
 def write_machine_sections(
@@ -1261,7 +1212,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     composed_entities.daemonsets, monitored_namespace_names
                 ):
                     daemonset_piggyback_name = piggyback_formatter(api_daemonset)
-                    daemonset_sections = create_daemon_set_api_sections(
+                    daemonset_sections = daemonset.create_api_sections(
                         api_daemonset,
                         host_settings=checkmk_host_settings,
                         piggyback_name=daemonset_piggyback_name,

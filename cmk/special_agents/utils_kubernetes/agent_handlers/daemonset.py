@@ -5,16 +5,69 @@
 
 from __future__ import annotations
 
+from typing import Iterator
+
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,
+    CheckmkHostSettings,
+    controller_spec,
+    controller_strategy,
     DaemonSet,
     filter_annotations_by_key_pattern,
     thin_containers,
 )
+from cmk.special_agents.utils_kubernetes.common import SectionName, WriteableSection
 from cmk.special_agents.utils_kubernetes.schemata import section
 
 
-def replicas(
+def create_api_sections(
+    api_daemonset: DaemonSet, host_settings: CheckmkHostSettings, piggyback_name: str
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=api_daemonset.pod_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_memory_resources_v1"),
+            section=api_daemonset.memory_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=api_daemonset.cpu_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_daemonset_info_v1"),
+            section=_info(
+                api_daemonset,
+                host_settings.cluster_name,
+                host_settings.kubernetes_cluster_hostname,
+                host_settings.annotation_key_pattern,
+            ),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_update_strategy_v1"),
+            section=controller_strategy(api_daemonset),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_daemonset_replicas_v1"),
+            section=_replicas(api_daemonset),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_controller_spec_v1"),
+            section=controller_spec(api_daemonset),
+        ),
+    )
+
+
+def _replicas(
     daemonset: DaemonSet,
 ) -> section.DaemonSetReplicas:
     return section.DaemonSetReplicas(
@@ -26,7 +79,7 @@ def replicas(
     )
 
 
-def info(
+def _info(
     daemonset: DaemonSet,
     cluster_name: str,
     kubernetes_cluster_hostname: str,

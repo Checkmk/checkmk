@@ -6,7 +6,7 @@ Date: 1686122565
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0p29
+Version: 2.1.0p30
 
 Previously, BI aggregation service didn't send state changes 
 to the backend as Carbon or InfluxDb. With this release the 

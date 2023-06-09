@@ -38,7 +38,6 @@ class Perfcounters:
 
     # TODO: Why aren't self._times / self._rates / ... not initialized with their defaults?
     def __init__(self, logger: Logger) -> None:
-        super().__init__()
         self._lock = ECLock(logger)
 
         # Initialize counters

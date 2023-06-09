@@ -150,7 +150,6 @@ class RuleMatcher:
         omd_site_id: SiteId,
         is_active_time_period: Callable[[TimeperiodName], bool],
     ) -> None:
-        super().__init__()
         self._logger = logger
         self._omd_site = omd_site_id
         self._is_active_time_period = is_active_time_period

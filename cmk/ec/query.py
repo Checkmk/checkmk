@@ -36,7 +36,6 @@ class Query:
         raise MKClientError(f"Invalid method {method} (allowed are GET, REPLICATE, COMMAND)")
 
     def __init__(self, status_server: _StatusServer, raw_query: list[str], logger: Logger) -> None:
-        super().__init__()
         self.output_format = "python"
         parts = raw_query[0].split(None, 1)
         if len(parts) != 2:

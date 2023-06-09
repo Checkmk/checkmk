@@ -54,7 +54,6 @@ class History:
         event_columns: Columns,
         history_columns: Columns,
     ) -> None:
-        super().__init__()
         self._settings = settings
         self._config = config
         self._logger = logger
@@ -121,7 +120,6 @@ except ImportError:
 
 class MongoDB:
     def __init__(self) -> None:
-        super().__init__()
         self.connection: Connection = None
         self.db: Any = None
 
@@ -377,7 +375,6 @@ def quote_tab(col: Any) -> bytes:
 
 class ActiveHistoryPeriod:
     def __init__(self) -> None:
-        super().__init__()
         self.value: int | None = None
 
 

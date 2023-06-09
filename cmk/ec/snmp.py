@@ -46,7 +46,6 @@ class SNMPTrapEngine:
         logger: Logger,
         callback: Callable[[Iterable[tuple[str, str]], str], None],
     ) -> None:
-        super().__init__()
         self._logger = logger
         if settings.options.snmptrap_udp is None:
             return

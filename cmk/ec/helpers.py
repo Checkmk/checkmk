@@ -12,7 +12,6 @@ from typing import Literal
 
 class ECLock:
     def __init__(self, logger: Logger) -> None:
-        super().__init__()
         self._logger = logger
         self._lock = threading.Lock()
 

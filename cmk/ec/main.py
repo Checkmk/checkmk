@@ -113,7 +113,6 @@ class SyslogPriority:
     }
 
     def __init__(self, value: int) -> None:
-        super().__init__()
         self.value = value
 
     def __repr__(self) -> str:
@@ -157,7 +156,6 @@ class SyslogFacility:
     }
 
     def __init__(self, value: int) -> None:
-        super().__init__()
         if value not in self.NAMES:
             raise ValueError(
                 f"Value must be one of the following {', '.join(str(key) for key in self.NAMES)}"
@@ -371,7 +369,6 @@ class TimePeriods:
     """Time Periods are used in rule conditions"""
 
     def __init__(self, logger: Logger) -> None:
-        super().__init__()
         self._logger = logger
         self._active: Mapping[TimeperiodName, bool] = {}
         self._cache_timestamp: Timestamp | None = None
@@ -1907,7 +1904,6 @@ class Queries:
     """Parsing and processing of status queries."""
 
     def __init__(self, status_server: StatusServer, sock: socket.socket, logger: Logger) -> None:
-        super().__init__()
         self._status_server = status_server
         self._socket = sock
         self._logger = logger
@@ -1984,7 +1980,6 @@ class StatusTable:
         raise NotImplementedError()
 
     def __init__(self, logger: Logger) -> None:
-        super().__init__()
         self._logger = logger.getChild(f"status_table.{self.prefix}")
         self.column_defaults = dict(self.columns)
         self.column_names = [name for name, _def_val in self.columns]

@@ -11,3 +11,11 @@ Reference only:
 
 1. determine_encod.cmdm needs crlf python
 2. update_product_version.cmd needs wirunsql vbs
+
+Some file tools:
+
+* clean_files.bat    - removes all files after uninstallation
+* lwa_enable.cmd     - switches ON Legacy agent and OFF New one
+* wnx_enable.cmd     - switches ON New agent and OFF Legacy one
+* openfirewall.cmd   - opens firewall for the agent
+* closefirewall.cmd  - closes firewall back

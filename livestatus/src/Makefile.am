@@ -8,9 +8,9 @@ BUILD_CXX ="$(shell $(CXX) --version | head --lines=1)"
 BUILD_DATE = "$(shell date -R)"
 BUILD_HOSTNAME = "$(shell uname -n)"
 
+JOBS ?= 6
 DOXYGEN ?= doxygen
 PLANTUTML_VERSION ?= 1.2022.12
-RUN_CLANG_TIDY ?= python3 $(shell command -v run-clang-tidy-$(CLANG_VERSION).py)
 VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet --num-callers=30 --error-exitcode=42")
 INCLUDES_DIR := includes
 LIBS_DIR := libs
@@ -146,18 +146,18 @@ compile_commands.json: Makefile $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblive
 	@$(MAKE) -nwk $$(echo " $^" | sed 's/ / -W /g') | $(top_srcdir)/scripts/run-pipenv run compiledb
 
 tidy: compile_commands.json
-	@echo clang-tidy-$(CLANG_VERSION) information start ===========================================
-	@which clang-tidy-$(CLANG_VERSION)
-	@clang-tidy-$(CLANG_VERSION) $(CLANG_TIDY_EXTRA_ARGS) --version
-	@clang-tidy-$(CLANG_VERSION) $(CLANG_TIDY_EXTRA_ARGS) --extra-arg=-v dummy.cc 1> /dev/null || true
-	@echo clang-tidy-$(CLANG_VERSION) information end =============================================
-	$(RUN_CLANG_TIDY) $(CLANG_TIDY_EXTRA_ARGS) -quiet -j6 $(FILES_TO_CHECK)
+	@python3 "$(shell command -v run-clang-tidy-$(CLANG_VERSION).py)" \
+            -j "$(JOBS)" \
+            -p=. \
+            -quiet \
+            $(CLANG_TIDY_EXTRA_ARGS) \
+            $(FILES_TO_CHECK)
 
 iwyu: compile_commands.json
-	python3 "$(shell command -v iwyu_tool.py)" \
-            --jobs=4 \
+	@python3 "$(shell command -v iwyu_tool.py)" \
+            --jobs="$(JOBS)" \
+            -p=. \
             --output-format=clang \
-            -p . \
             $(FILES_TO_CHECK) -- \
             -Xiwyu --error \
             -Xiwyu "--mapping_file=$(realpath .iwyu/check_mk.imp)" \

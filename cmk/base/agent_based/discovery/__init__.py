@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from . import livestatus
 from ._discovery import execute_check_discovery
 from .autodiscovery import autodiscovery, automation_discovery, get_host_services
 from .commandline import commandline_discovery
@@ -17,5 +16,4 @@ __all__ = [
     "execute_check_discovery",
     "get_check_preview",
     "get_host_services",
-    "livestatus",
 ]

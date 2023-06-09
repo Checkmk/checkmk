@@ -121,7 +121,6 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.sources as sources
 from cmk.base.agent_based.discovery.autodiscovery import DiscoveryResult
-from cmk.base.agent_based.discovery.livestatus import schedule_discovery_check
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -142,6 +141,26 @@ HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
 
 
+def _schedule_discovery_check(host_name: HostName) -> None:
+    now = int(time.time())
+    service = (
+        "Check_MK Discovery"
+        if "cmk_inventory" in config.use_new_descriptions_for
+        else "Check_MK inventory"
+    )
+    # Ignore missing check and avoid warning in cmc.log
+    cmc_try = ";TRY" if config.monitoring_core == "cmc" else ""
+    command = f"SCHEDULE_FORCED_SVC_CHECK;{host_name};{service};{now}{cmc_try}"
+
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(cmk.utils.paths.livestatus_unix_socket)
+        s.send(f"COMMAND [{now}] {command}\n".encode())
+    except Exception:
+        if cmk.utils.debug.enabled():
+            raise
+
+
 class DiscoveryAutomation(Automation):
     def _trigger_discovery_check(self, config_cache: ConfigCache, host_name: HostName) -> None:
         """if required, schedule the "Check_MK Discovery" check"""
@@ -154,7 +173,7 @@ class DiscoveryAutomation(Automation):
         if config_cache.is_cluster(host_name):
             return
 
-        discovery.livestatus.schedule_discovery_check(host_name)
+        _schedule_discovery_check(host_name)
 
 
 def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]]:
@@ -511,7 +530,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     host_label_plugins=host_label_plugins,
                     plugins=plugins,
                     get_service_description=get_service_description,
-                    schedule_discovery_check=schedule_discovery_check,
+                    schedule_discovery_check=_schedule_discovery_check,
                     autodiscovery_queue=autodiscovery_queue,
                     reference_time=rediscovery_reference_time,
                     oldest_queued=oldest_queued,

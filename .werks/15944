@@ -1,0 +1,14 @@
+Title: Add support for >10Gbps network cards on OpenBSD
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1686555873
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The openbsd agent now correctly identifiers network cards with a speed of 10Gbps or more.
+
+Previously the agent wrongly reported a speed of 10GMb/s.
+

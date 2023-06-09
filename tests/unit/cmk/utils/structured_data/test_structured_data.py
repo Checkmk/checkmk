@@ -21,7 +21,6 @@ from cmk.utils.structured_data import (
     SDFilter,
     SDNodeName,
     SDPath,
-    Table,
     TreeStore,
 )
 from cmk.utils.type_defs import HostName
@@ -1439,30 +1438,42 @@ def test__is_table() -> None:
 
 
 def test_table_update_from_previous() -> None:
-    previous_table = Table(
-        key_columns=["kc"],
-        retentions={
-            ("KC",): {
-                "c1": RetentionIntervals(1, 2, 3),
-                "c2": RetentionIntervals(1, 2, 3),
-            }
-        },
+    previous_tree = ImmutableTree.deserialize(
+        {
+            "Attributes": {},
+            "Table": {
+                "KeyColumns": ["kc"],
+                "Rows": [
+                    {"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"},
+                ],
+                "Retentions": {
+                    ("KC",): {
+                        "c1": (1, 2, 3),
+                        "c2": (1, 2, 3),
+                    }
+                },
+            },
+            "Nodes": {},
+        }
     )
-    previous_table.add_rows([{"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"}])
-
-    current_table = Table(key_columns=["kc"])
-    current_table.add_rows([{"kc": "KC", "c1": "C1: cur", "c3": "C3: only cur"}])
-
-    current_table.update_from_previous(
-        0,
-        ("any", "path"),
-        previous_table,
-        lambda k: True,
+    current_tree = MutableTree()
+    current_tree.add_rows(
+        path=[],
+        key_columns=["kc"],
+        rows=[
+            {"kc": "KC", "c1": "C1: cur", "c3": "C3: only cur"},
+        ],
+    )
+    current_tree.update_rows(
+        0,  # now
+        (),  # path
+        previous_tree,
+        lambda k: True,  # filter func
         RetentionIntervals(4, 5, 6),
     )
 
-    assert current_table.key_columns == ["kc"]
-    assert current_table.retentions == {
+    assert current_tree.tree.table.key_columns == ["kc"]
+    assert current_tree.tree.table.retentions == {
         ("KC",): {
             "c1": RetentionIntervals(4, 5, 6),
             "c2": RetentionIntervals(1, 2, 3),
@@ -1470,36 +1481,52 @@ def test_table_update_from_previous() -> None:
             "kc": RetentionIntervals(4, 5, 6),
         }
     }
-    assert current_table.rows == [
+    assert ImmutableTree(current_tree.tree).get_rows(()) == [
         {"c1": "C1: cur", "c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}
     ]
 
 
 def test_table_update_from_previous_filtered() -> None:
-    previous_table = Table(
-        key_columns=["kc"],
-        retentions={
-            ("KC",): {
-                "c1": RetentionIntervals(1, 2, 3),
-                "c2": RetentionIntervals(1, 2, 3),
-            }
-        },
+    previous_tree = ImmutableTree.deserialize(
+        {
+            "Attributes": {},
+            "Table": {
+                "KeyColumns": ["kc"],
+                "Rows": [
+                    {"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"},
+                ],
+                "Retentions": {
+                    ("KC",): {
+                        "c1": (1, 2, 3),
+                        "c2": (1, 2, 3),
+                    }
+                },
+            },
+            "Nodes": {},
+        }
     )
-    previous_table.add_rows([{"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"}])
-    current_table = Table(key_columns=["kc"])
-    current_table.add_rows([{"kc": "KC", "c3": "C3: only cur"}])
-    current_table.update_from_previous(
-        0,
-        ("any", "path"),
-        previous_table,
-        lambda k: k in ["c2", "c3"],
+    current_tree = MutableTree()
+    current_tree.add_rows(
+        path=[],
+        key_columns=["kc"],
+        rows=[
+            {"kc": "KC", "c3": "C3: only cur"},
+        ],
+    )
+    current_tree.update_rows(
+        0,  # now
+        (),  # path
+        previous_tree,
+        lambda k: k in ["c2", "c3"],  # filter func
         RetentionIntervals(4, 5, 6),
     )
-    assert current_table.key_columns == ["kc"]
-    assert current_table.retentions == {
+    assert current_tree.tree.table.key_columns == ["kc"]
+    assert current_tree.tree.table.retentions == {
         ("KC",): {
             "c2": RetentionIntervals(1, 2, 3),
             "c3": RetentionIntervals(4, 5, 6),
         }
     }
-    assert current_table.rows == [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}]
+    assert ImmutableTree(current_tree.tree).get_rows(()) == [
+        {"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}
+    ]

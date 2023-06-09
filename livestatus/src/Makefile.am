@@ -6,7 +6,6 @@ include $(abs_top_srcdir)/defines.make
 
 DOXYGEN ?= doxygen
 PLANTUTML_VERSION ?= 1.2022.12
-IWYU_TOOL ?= python3 $(shell command -v iwyu_tool.py)
 RUN_CLANG_TIDY ?= python3 $(shell command -v run-clang-tidy-$(CLANG_VERSION).py)
 VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet --num-callers=30 --error-exitcode=42")
 INCLUDES_DIR := includes
@@ -147,13 +146,14 @@ tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) $(CLANG_TIDY_EXTRA_ARGS) -quiet -j6 $(FILES_TO_CHECK)
 
 iwyu: compile_commands.json
-	@echo include-what-you-use information start ====================================
-	@which include-what-you-use
-	@include-what-you-use $(IWYU_EXTRA_ARGS) --version
-	@include-what-you-use $(IWYU_EXTRA_ARGS) -v 2>&1 | grep -v "error: unable to handle compilation" || true
-	@echo include-what-you-use information end ======================================
-	$(IWYU_TOOL) -j4 --output-format=clang -p . $(FILES_TO_CHECK) -- $(IWYU_EXTRA_ARGS) -Xiwyu --error -Xiwyu --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
-
+	python3 "$(shell command -v iwyu_tool.py)" \
+            --jobs=4 \
+            --output-format=clang \
+            -p . \
+            $(FILES_TO_CHECK) -- \
+            -Xiwyu --error \
+            -Xiwyu "--mapping_file=$(realpath .iwyu/check_mk.imp)" \
+            $(IWYU_EXTRA_ARGS)
 
 documentation: compile_commands.json
 	PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(DOXYGEN) doc/Doxyfile

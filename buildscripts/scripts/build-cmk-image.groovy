@@ -154,10 +154,16 @@ def main() {
 }
 
 def registry_credentials_id(edition) {
-    if (!["enterprise", "raw", "free", "managed", "cloud"].contains(edition)) {
-        throw new Exception("Cannot provide registry credentials id for edition '${edition}'")
+    switch(edition) {
+        case "raw":
+        case "cloud":
+            return "11fb3d5f-e44e-4f33-a651-274227cc48ab"
+        case "enterprise":
+        case "managed":
+            return "registry.checkmk.com"
+        default:
+            throw new Exception("Cannot provide registry credentials id for edition '${edition}'")
     }
-    return edition in ["raw", "free", "cloud"] ? '11fb3d5f-e44e-4f33-a651-274227cc48ab' : "registry.checkmk.com"
 }
 
 return this;

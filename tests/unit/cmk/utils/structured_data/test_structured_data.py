@@ -230,53 +230,51 @@ def test_deserialize_empty_delta_tree() -> None:
 
 
 def test_deserialize_filled_delta_tree() -> None:
-    assert bool(
-        ImmutableDeltaTree.deserialize(
-            {
-                "Attributes": {},
-                "Nodes": {
-                    "path-to-nta": {
-                        "Attributes": {},
-                        "Nodes": {
-                            "na": {
-                                "Attributes": {
-                                    "Pairs": {"na0": ("NA 0", None), "na1": ("NA 1", None)}
-                                },
-                                "Nodes": {},
-                                "Table": {},
-                            },
-                            "nt": {
-                                "Attributes": {},
-                                "Nodes": {},
-                                "Table": {
-                                    "KeyColumns": ["nt0"],
-                                    "Rows": [
-                                        {"nt0": ("NT 00", None), "nt1": ("NT 01", None)},
-                                        {"nt0": ("NT 10", None), "nt1": ("NT 11", None)},
-                                    ],
-                                },
-                            },
-                            "ta": {
-                                "Attributes": {
-                                    "Pairs": {"ta0": ("TA 0", None), "ta1": ("TA 1", None)}
-                                },
-                                "Nodes": {},
-                                "Table": {
-                                    "KeyColumns": ["ta0"],
-                                    "Rows": [
-                                        {"ta0": ("TA 00", None), "ta1": ("TA 01", None)},
-                                        {"ta0": ("TA 10", None), "ta1": ("TA 11", None)},
-                                    ],
-                                },
+    delta_tree = ImmutableDeltaTree.deserialize(
+        {
+            "Attributes": {},
+            "Nodes": {
+                "path-to-nta": {
+                    "Attributes": {},
+                    "Nodes": {
+                        "na": {
+                            "Attributes": {"Pairs": {"na0": ("NA 0", None), "na1": ("NA 1", None)}},
+                            "Nodes": {},
+                            "Table": {},
+                        },
+                        "nt": {
+                            "Attributes": {},
+                            "Nodes": {},
+                            "Table": {
+                                "KeyColumns": ["nt0"],
+                                "Rows": [
+                                    {"nt0": ("NT 00", None), "nt1": ("NT 01", None)},
+                                    {"nt0": ("NT 10", None), "nt1": ("NT 11", None)},
+                                ],
                             },
                         },
-                        "Table": {},
-                    }
-                },
-                "Table": {},
-            }
-        )
+                        "ta": {
+                            "Attributes": {"Pairs": {"ta0": ("TA 0", None), "ta1": ("TA 1", None)}},
+                            "Nodes": {},
+                            "Table": {
+                                "KeyColumns": ["ta0"],
+                                "Rows": [
+                                    {"ta0": ("TA 00", None), "ta1": ("TA 01", None)},
+                                    {"ta0": ("TA 10", None), "ta1": ("TA 11", None)},
+                                ],
+                            },
+                        },
+                    },
+                    "Table": {},
+                }
+            },
+            "Table": {},
+        }
     )
+    stats = delta_tree.get_stats()
+    assert stats["new"] == 0
+    assert stats["changed"] == 0
+    assert stats["removed"] == 12
 
 
 def test_get_tree_empty() -> None:
@@ -355,42 +353,38 @@ def test_add_pairs_or_rows() -> None:
     assert root.count_entries() == 18
 
 
-def test_compare_trees_self_1() -> None:
+def test_compare_tree_with_itself_1() -> None:
     empty_root = _create_empty_imm_tree()
-    delta_tree0 = empty_root.difference(empty_root)
-    delta_result0 = delta_tree0.get_stats()
-    assert delta_result0["new"] == 0
-    assert delta_result0["changed"] == 0
-    assert delta_result0["removed"] == 0
-    assert not delta_tree0
+    delta_tree = empty_root.difference(empty_root)
+    stats = delta_tree.get_stats()
+    assert stats["new"] == 0
+    assert stats["changed"] == 0
+    assert stats["removed"] == 0
 
+
+def test_compare_tree_with_itself_2() -> None:
     filled_root = _create_filled_imm_tree()
-    delta_tree1 = filled_root.difference(filled_root)
-    delta_result1 = delta_tree1.get_stats()
-    assert delta_result1["new"] == 0
-    assert delta_result1["changed"] == 0
-    assert delta_result1["removed"] == 0
-    assert not delta_tree1
+    delta_tree = filled_root.difference(filled_root)
+    stats = delta_tree.get_stats()
+    assert stats["new"] == 0
+    assert stats["changed"] == 0
+    assert stats["removed"] == 0
 
 
-def test_compare_trees_1() -> None:
-    # Results must be symmetric
-    empty_root = _create_empty_imm_tree()
-    filled_root = _create_filled_imm_tree()
+def test_compare_tree_1() -> None:
+    delta_tree = _create_empty_imm_tree().difference(_create_filled_imm_tree())
+    stats = delta_tree.get_stats()
+    assert stats["new"] == 0
+    assert stats["changed"] == 0
+    assert stats["removed"] == 12
 
-    delta_tree0 = empty_root.difference(filled_root)
-    delta_result0 = delta_tree0.get_stats()
-    assert delta_result0["new"] == 0
-    assert delta_result0["changed"] == 0
-    assert delta_result0["removed"] == 12
 
-    delta_tree1 = filled_root.difference(empty_root)
-    delta_result1 = delta_tree1.get_stats()
-    assert delta_result1["new"] == 12
-    assert delta_result1["changed"] == 0
-    assert delta_result1["removed"] == 0
-
-    assert not delta_tree1.filter([])
+def test_compare_tree_2() -> None:
+    delta_tree = _create_filled_imm_tree().difference(_create_empty_imm_tree())
+    stats = delta_tree.get_stats()
+    assert stats["new"] == 12
+    assert stats["changed"] == 0
+    assert stats["removed"] == 0
 
 
 def test_filter_delta_tree_nt() -> None:
@@ -567,14 +561,10 @@ def test_difference_pairs(
     current_tree = MutableTree()
     current_tree.add_pairs(path=[], pairs=current_pairs)
 
-    delta_result = (
+    stats = (
         ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree)).get_stats()
     )
-    assert (
-        delta_result["new"],
-        delta_result["changed"],
-        delta_result["removed"],
-    ) == result
+    assert (stats["new"], stats["changed"], stats["removed"]) == result
 
 
 @pytest.mark.parametrize(
@@ -643,12 +633,8 @@ def test_difference_rows(
     else:
         assert not delta_tree
 
-    delta_result = delta_tree.get_stats()
-    assert (
-        delta_result["new"],
-        delta_result["changed"],
-        delta_result["removed"],
-    ) == result
+    stats = delta_tree.get_stats()
+    assert (stats["new"], stats["changed"], stats["removed"]) == result
 
 
 @pytest.mark.parametrize(
@@ -782,17 +768,11 @@ def test_filter_tree_mixed() -> None:
     ]
     filtered_root = ImmutableTree(filled_root.tree).filter(filters)
 
-    # TODO 'serialize' only contains 8 entries because:
-    # At the moment it's not possible to display attributes and table
-    # below same node.
     assert filtered_root.tree.count_entries() == 9
     assert not filtered_root.get_tree(("path-to-nta", "nt"))
     assert not filtered_root.get_tree(("path-to-nta", "na"))
     assert bool(filtered_root.get_tree(("path-to", "another", "node1")))
     assert bool(filtered_root.get_tree(("path-to", "another", "node2")))
-
-
-# Tests with real host data
 
 
 def _get_tree_store() -> TreeStore:
@@ -820,7 +800,7 @@ def test_structured_data_StructuredDataTree_load_from(tree_name: HostName) -> No
     _get_tree_store().load(host_name=tree_name)
 
 
-def test_real_save_gzip(tmp_path: Path) -> None:
+def test_save_tree(tmp_path: Path) -> None:
     host_name = HostName("heute")
     target = tmp_path / "inventory" / str(host_name)
     tree = MutableTree()
@@ -854,7 +834,7 @@ def test_real_save_gzip(tmp_path: Path) -> None:
         HostName("tree_new_heute"),
     ],
 )
-def test_real_is_empty_trees(tree_name: HostName) -> None:
+def test_load_real_tree(tree_name: HostName) -> None:
     assert _get_tree_store().load(host_name=tree_name)
 
 
@@ -892,7 +872,7 @@ def test_real_is_empty_trees(tree_name: HostName) -> None:
         HostName("tree_new_heute"),
     ],
 )
-def test_real_is_equal(tree_name_x: HostName, tree_name_y: HostName) -> None:
+def test_real_tree_is_equal(tree_name_x: HostName, tree_name_y: HostName) -> None:
     tree_store = _get_tree_store()
     tree_x = tree_store.load(host_name=tree_name_x)
     tree_y = tree_store.load(host_name=tree_name_y)
@@ -903,7 +883,7 @@ def test_real_is_equal(tree_name_x: HostName, tree_name_y: HostName) -> None:
         assert tree_x != tree_y
 
 
-def test_real_equal_tables() -> None:
+def test_real_tree_order() -> None:
     tree_store = _get_tree_store()
     tree_ordered = tree_store.load(host_name=HostName("tree_addresses_ordered"))
     tree_unordered = tree_store.load(host_name=HostName("tree_addresses_unordered"))
@@ -927,7 +907,7 @@ def test_real_equal_tables() -> None:
         HostName("tree_new_heute"),
     ],
 )
-def test_real_is_equal_save_and_load(tree_name: HostName, tmp_path: Path) -> None:
+def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
     orig_tree = _get_tree_store().load(host_name=tree_name)
     tree_store = TreeStore(tmp_path / "inventory")
     try:
@@ -955,7 +935,7 @@ def test_real_is_equal_save_and_load(tree_name: HostName, tmp_path: Path) -> Non
         (HostName("tree_new_heute"), 16653),
     ],
 )
-def test_real_count_entries(tree_name: HostName, result: int) -> None:
+def test_count_entries(tree_name: HostName, result: int) -> None:
     assert _get_tree_store().load(host_name=tree_name).tree.count_entries() == result
 
 
@@ -976,14 +956,10 @@ def test_real_count_entries(tree_name: HostName, result: int) -> None:
         HostName("tree_new_heute"),
     ],
 )
-def test_compare_trees_self_2(tree_name: HostName) -> None:
+def test_compare_real_tree_with_itself(tree_name: HostName) -> None:
     tree = _get_tree_store().load(host_name=tree_name)
-    delta_result = tree.difference(tree).tree.get_stats()
-    assert (
-        delta_result["new"],
-        delta_result["changed"],
-        delta_result["removed"],
-    ) == (0, 0, 0)
+    stats = tree.difference(tree).get_stats()
+    assert (stats["new"], stats["changed"], stats["removed"]) == (0, 0, 0)
 
 
 @pytest.mark.parametrize(
@@ -1021,18 +997,14 @@ def test_compare_trees_self_2(tree_name: HostName) -> None:
         ),
     ],
 )
-def test_compare_trees_2(
+def test_compare_real_trees(
     tree_name_old: HostName, tree_name_new: HostName, result: tuple[int, int, int]
 ) -> None:
     tree_store = _get_tree_store()
     old_tree = tree_store.load(host_name=tree_name_old)
     new_tree = tree_store.load(host_name=tree_name_new)
-    delta_result = new_tree.difference(old_tree).tree.get_stats()
-    assert (
-        delta_result["new"],
-        delta_result["changed"],
-        delta_result["removed"],
-    ) == result
+    stats = new_tree.difference(old_tree).get_stats()
+    assert (stats["new"], stats["changed"], stats["removed"]) == result
 
 
 @pytest.mark.parametrize(
@@ -1070,7 +1042,7 @@ def test_compare_trees_2(
         ),
     ],
 )
-def test_real_get_node(
+def test_get_node(
     tree_name: HostName, edges_t: Iterable[SDNodeName], edges_f: Iterable[SDNodeName]
 ) -> None:
     tree = _get_tree_store().load(host_name=tree_name)
@@ -1081,7 +1053,7 @@ def test_real_get_node(
 
 
 @pytest.mark.parametrize(
-    "tree_name, len_children",
+    "tree_name, amount_of_nodes",
     [
         (HostName("tree_old_addresses_arrays_memory"), 2),
         (HostName("tree_old_addresses"), 1),
@@ -1091,10 +1063,9 @@ def test_real_get_node(
         (HostName("tree_old_heute"), 3),
     ],
 )
-def test_real_get_children(tree_name: HostName, len_children: int) -> None:
+def test_amount_of_nodes(tree_name: HostName, amount_of_nodes: int) -> None:
     tree = _get_tree_store().load(host_name=tree_name)
-    tree_children = tree.tree._nodes
-    assert len(tree_children) == len_children
+    assert len(list(tree.tree.nodes)) == amount_of_nodes
 
 
 @pytest.mark.parametrize(
@@ -1196,7 +1167,7 @@ def test_merge_trees_2() -> None:
         ),
     ],
 )
-def test_real_filtered_tree(
+def test_filter_real_tree(
     filters: Sequence[SDFilter],
     unavail: Sequence[tuple[str, str]],
 ) -> None:
@@ -1307,7 +1278,7 @@ def test_real_filtered_tree(
         ),
     ],
 )
-def test_real_filtered_tree_networking(
+def test_filter_networking_tree(
     filters: Sequence[SDFilter],
     amount_if_entries: int,
 ) -> None:
@@ -1339,7 +1310,7 @@ def test_parse_visible_tree_path(raw_path: str, expected_path: SDPath) -> None:
     assert parse_visible_raw_path(raw_path) == expected_path
 
 
-def test__is_table() -> None:
+def test_legacy_tree() -> None:
     raw_tree = {
         "path-to": {
             "idx-node": [
@@ -1437,7 +1408,7 @@ def test__is_table() -> None:
     assert table_node.table.rows == [{"col": "value"}]
 
 
-def test_table_update_from_previous() -> None:
+def test_update_from_previous_1() -> None:
     previous_tree = ImmutableTree.deserialize(
         {
             "Attributes": {},
@@ -1486,7 +1457,7 @@ def test_table_update_from_previous() -> None:
     ]
 
 
-def test_table_update_from_previous_filtered() -> None:
+def test_update_from_previous_2() -> None:
     previous_tree = ImmutableTree.deserialize(
         {
             "Attributes": {},

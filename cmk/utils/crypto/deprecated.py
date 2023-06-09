@@ -7,7 +7,12 @@
 
 from typing import Literal
 
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import algorithms, Cipher, modes
+
+import cmk.utils.crypto.certificate as certificate
+from cmk.utils.crypto import HashAlgorithm
 
 
 class AesCbcCipher:
@@ -44,3 +49,35 @@ class AesCbcCipher:
     def unpad_block(block: bytes) -> bytes:
         """Strip PKCS#7 padding from the block."""
         return block[: -block[-1]]
+
+
+def encrypt_for_rsa_key(recipient_key: certificate.RsaPublicKey, data: bytes) -> bytes:
+    """Deprecated. Do not use."""
+    return recipient_key._key.encrypt(
+        data,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA1()),
+            algorithm=hashes.SHA1(),
+            label=None,
+        ),
+    )
+
+
+def decrypt_with_rsa_key(recipient_key: certificate.RsaPrivateKey, data: bytes) -> bytes:
+    """Deprecated. Do not use."""
+    return recipient_key._key.decrypt(
+        data,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA1()),
+            algorithm=hashes.SHA1(),
+            label=None,
+        ),
+    )
+
+
+def certificate_md5_digest(cert: certificate.Certificate) -> str:
+    """Deprecated. Do not use.
+
+    Calculates a digest that corresponds to pyOpenSSL certificate's `.digest("md5")` method.
+    """
+    return cert.fingerprint(HashAlgorithm.MD5).hex(":").upper()

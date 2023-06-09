@@ -12,6 +12,8 @@ from unittest import mock
 import pytest
 
 from cmk.utils.backup.stream import BackupStream, MKBackupStream, RestoreStream
+from cmk.utils.crypto.certificate import Certificate, CertificatePEM
+from cmk.utils.crypto.deprecated import certificate_md5_digest
 
 BACKUP_KEYS = {
     1: {
@@ -123,3 +125,9 @@ def test_restore_existing() -> None:
         restored
         == b"We are stuck with technology when what we really want is just stuff that works."
     )
+
+
+def test_calculate_digest() -> None:
+    """Test the MD5 certificate digest calculation that we don't use outside of backup"""
+    pem = CertificatePEM(BACKUP_KEYS[1]["certificate"])  # type: ignore[arg-type]
+    assert certificate_md5_digest(Certificate.load_pem(pem)) == KEY_IDENT

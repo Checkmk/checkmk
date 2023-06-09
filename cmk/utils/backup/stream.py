@@ -9,12 +9,21 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any, IO
 
-from Cryptodome.Cipher import PKCS1_OAEP
-from Cryptodome.PublicKey import RSA
-from OpenSSL import crypto
-
-from cmk.utils.crypto.deprecated import AesCbcCipher
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.crypto.certificate import (
+    Certificate,
+    CertificatePEM,
+    EncryptedPrivateKeyPEM,
+    RsaPrivateKey,
+    RsaPublicKey,
+)
+from cmk.utils.crypto.deprecated import (
+    AesCbcCipher,
+    certificate_md5_digest,
+    decrypt_with_rsa_key,
+    encrypt_for_rsa_key,
+)
+from cmk.utils.crypto.password import Password
+from cmk.utils.exceptions import MKException, MKGeneralException
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
@@ -80,8 +89,10 @@ class MKBackupStream:
         keys = self._load_backup_keys()
 
         for key in keys.values():
-            digest: bytes = load_certificate_pem(key["certificate"]).digest("md5")
-            if key_id == digest:
+            digest = certificate_md5_digest(
+                Certificate.load_pem(CertificatePEM(key["certificate"]))
+            )
+            if key_id == digest.encode("utf-8"):
                 return key
 
         raise MKGeneralException("Failed to load the configured backup key: %s" % key_id.decode())
@@ -125,27 +136,14 @@ class BackupStream(MKBackupStream):
 
         return self._cipher.update(chunk), was_last_chunk
 
-    def _get_encryption_public_key(self, key_id: bytes) -> RSA.RsaKey:
+    def _get_encryption_public_key(self, key_id: bytes) -> RsaPublicKey:
         key = self._get_key_spec(key_id)
-
-        # First extract the public key part from the certificate
-        cert = load_certificate_pem(key["certificate"])
-        pub: crypto.PKey = cert.get_pubkey()
-        pub_pem = dump_publickey_pem(pub)
-
-        # Now construct the public key object
-        return RSA.importKey(pub_pem)
+        return Certificate.load_pem(CertificatePEM(key["certificate"])).public_key
 
     # logic from http://stackoverflow.com/questions/6309958/encrypting-a-file-with-rsa-in-python
-    # Since our packages moved from PyCrypto to PyCryptodome we need to change this to use PKCS1_OAEP.
-    def _derive_key(self, pubkey, key_length):
+    def _derive_key(self, pubkey: RsaPublicKey, key_length: int) -> tuple[bytes, bytes]:
         secret_key = os.urandom(key_length)
-
-        # Encrypt the secret key with the RSA public key
-        cipher_rsa = PKCS1_OAEP.new(pubkey)
-        encrypted_secret_key = cipher_rsa.encrypt(secret_key)
-
-        return secret_key, encrypted_secret_key
+        return secret_key, encrypt_for_rsa_key(pubkey, secret_key)
 
 
 class RestoreStream(MKBackupStream):
@@ -217,7 +215,7 @@ class RestoreStream(MKBackupStream):
 
         return file_version, encrypted_secret_key
 
-    def _get_encryption_private_key(self, key_id: bytes) -> RSA.RsaKey:
+    def _get_encryption_private_key(self, key_id: bytes) -> RsaPrivateKey:
         key = self._get_key_spec(key_id)
 
         try:
@@ -229,14 +227,11 @@ class RestoreStream(MKBackupStream):
                 '"MKBACKUP_PASSPHRASE".'
             )
 
-        # First decrypt the private key using PyOpenSSL (was unable to archieve
-        # this with RSA.importKey(). :-(
-        pkey = load_privatekey_pem(key["private_key"], passphrase.encode("utf-8"))
-        priv_pem = dump_privatekey_pem(pkey)
-
         try:
-            return RSA.importKey(priv_pem)
-        except (ValueError, IndexError, TypeError):
+            return RsaPrivateKey.load_pem(
+                EncryptedPrivateKeyPEM(key["private_key"]), Password(passphrase)
+            )
+        except (ValueError, IndexError, TypeError, MKException):
             if self.debug:
                 raise
             raise MKGeneralException("Failed to load private key (wrong passphrase?)")
@@ -244,8 +239,6 @@ class RestoreStream(MKBackupStream):
     def _decrypt_secret_key(
         self, file_version: bytes, encrypted_secret_key: bytes, key_id: bytes
     ) -> bytes:
-        private_key = self._get_encryption_private_key(key_id)
-
         if file_version == b"1":
             raise MKGeneralException(
                 "You can not restore this backup using your current Check_MK "
@@ -253,25 +246,5 @@ class RestoreStream(MKBackupStream):
                 "been released before 2017-03-24. The last compatible "
                 "release is 1.4.0b4."
             )
-        cipher_rsa = PKCS1_OAEP.new(private_key)
-        return cipher_rsa.decrypt(encrypted_secret_key)
 
-
-# Some typed wrappers around OpenSSL.crypto, there are only Python 2 interface
-# files available... :-/
-
-
-def load_certificate_pem(buf: bytes) -> crypto.X509:
-    return crypto.load_certificate(crypto.FILETYPE_PEM, buf)
-
-
-def dump_publickey_pem(pkey: crypto.PKey) -> bytes:
-    return crypto.dump_publickey(crypto.FILETYPE_PEM, pkey)
-
-
-def load_privatekey_pem(buf: bytes, passphrase: bytes) -> crypto.PKey:
-    return crypto.load_privatekey(crypto.FILETYPE_PEM, buf, passphrase)
-
-
-def dump_privatekey_pem(pkey: crypto.PKey) -> bytes:
-    return crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey)
+        return decrypt_with_rsa_key(self._get_encryption_private_key(key_id), encrypted_secret_key)

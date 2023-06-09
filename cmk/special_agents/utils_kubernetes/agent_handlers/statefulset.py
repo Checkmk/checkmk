@@ -1,15 +1,70 @@
 from __future__ import annotations
 
+from typing import Iterator
+
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,
+    CheckmkHostSettings,
+    controller_spec,
+    controller_strategy,
     filter_annotations_by_key_pattern,
     StatefulSet,
     thin_containers,
 )
+from cmk.special_agents.utils_kubernetes.common import SectionName, WriteableSection
 from cmk.special_agents.utils_kubernetes.schemata import section
 
 
-def replicas(statefulset: StatefulSet) -> section.StatefulSetReplicas:
+def create_api_sections(
+    api_statefulset: StatefulSet,
+    host_settings: CheckmkHostSettings,
+    piggyback_name: str,
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=api_statefulset.pod_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_memory_resources_v1"),
+            section=api_statefulset.memory_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=api_statefulset.cpu_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_statefulset_info_v1"),
+            section=_info(
+                api_statefulset,
+                host_settings.cluster_name,
+                host_settings.kubernetes_cluster_hostname,
+                host_settings.annotation_key_pattern,
+            ),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_update_strategy_v1"),
+            section=controller_strategy(api_statefulset),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_controller_spec_v1"),
+            section=controller_spec(api_statefulset),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_statefulset_replicas_v1"),
+            section=_replicas(api_statefulset),
+        ),
+    )
+
+
+def _replicas(statefulset: StatefulSet) -> section.StatefulSetReplicas:
     return section.StatefulSetReplicas(
         desired=statefulset.spec.replicas,
         ready=statefulset.status.ready_replicas,
@@ -18,7 +73,7 @@ def replicas(statefulset: StatefulSet) -> section.StatefulSetReplicas:
     )
 
 
-def info(
+def _info(
     statefulset: StatefulSet,
     cluster_name: str,
     kubernetes_cluster_hostname: str,

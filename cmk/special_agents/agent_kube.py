@@ -670,55 +670,6 @@ def create_daemon_set_api_sections(
     )
 
 
-def create_statefulset_api_sections(
-    api_statefulset: StatefulSet,
-    host_settings: CheckmkHostSettings,
-    piggyback_name: str,
-) -> Iterator[WriteableSection]:
-    yield from (
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_pod_resources_v1"),
-            section=api_statefulset.pod_resources(),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_memory_resources_v1"),
-            section=api_statefulset.memory_resources(),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cpu_resources_v1"),
-            section=api_statefulset.cpu_resources(),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_statefulset_info_v1"),
-            section=statefulset.info(
-                api_statefulset,
-                host_settings.cluster_name,
-                host_settings.kubernetes_cluster_hostname,
-                host_settings.annotation_key_pattern,
-            ),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_update_strategy_v1"),
-            section=controller_strategy(api_statefulset),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_controller_spec_v1"),
-            section=controller_spec(api_statefulset),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_statefulset_replicas_v1"),
-            section=statefulset.replicas(api_statefulset),
-        ),
-    )
-
-
 def write_machine_sections(
     composed_entities: ComposedEntities,
     machine_sections: Mapping[str, str],
@@ -1442,7 +1393,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     composed_entities.statefulsets, monitored_namespace_names
                 ):
                     statefulset_piggyback_name = piggyback_formatter(api_statefulset)
-                    statefulset_sections = create_statefulset_api_sections(
+                    statefulset_sections = statefulset.create_api_sections(
                         api_statefulset,
                         host_settings=checkmk_host_settings,
                         piggyback_name=statefulset_piggyback_name,

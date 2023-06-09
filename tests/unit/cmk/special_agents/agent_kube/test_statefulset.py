@@ -16,6 +16,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 
 import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube
+from cmk.special_agents.utils_kubernetes.agent_handlers.statefulset import create_api_sections
 
 
 def statefulsets_api_sections() -> set[str]:
@@ -34,7 +35,7 @@ def test_write_statefulsets_api_sections_registers_sections_to_be_written(
     write_writeable_sections_mock: MagicMock,
 ) -> None:
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
-    sections = agent_kube.create_statefulset_api_sections(
+    sections = create_api_sections(
         statefulset,
         cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
             cluster_name="cluster",

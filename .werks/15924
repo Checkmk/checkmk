@@ -1,0 +1,14 @@
+Title: Fix link of host hexagons in alert overview dashlet
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1686308989
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p3
+
+The alert overview dashlet linked to a service event view, even for host
+hexagons.
+

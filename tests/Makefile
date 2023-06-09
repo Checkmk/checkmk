@@ -42,7 +42,9 @@ AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defi
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-.PHONY: clean sync-legacy-checks format-shell help prepare-protobuf-files  bandit.ini \
+BROWSER_ENGINES = "chromium"
+
+.PHONY: clean sync-legacy-checks format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker test-composition test-composition-docker \
 	test-composition-docker-debug test-docker test-docker-docker test-format-python test-format-python-docker \
@@ -175,6 +177,12 @@ test-bandit-nosec-markers:
 prepare-protobuf-files:
 	$(MAKE) -C .. protobuf-files
 
+prepare-playwright:
+	@for browser_engine in $(BROWSER_ENGINES); do \
+		../scripts/run-pipenv run playwright install-deps $$browser_engine; \
+		../scripts/run-pipenv run playwright install $$browser_engine; \
+	done
+
 test-integration-docker-debug test-composition-docker-debug:
 	$(PIPENV) run scripts/run-dockerized.py debug
 
@@ -240,13 +248,13 @@ test-format-css:
 test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css
 
-test-gui-crawl:
+test-gui-crawl: prepare-playwright
 	$(PYTEST) -T gui_crawl --log-cli-level=INFO $(realpath gui_crawl/test_gui_crawl.py)
 
 test-gui-crawl-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-gui-crawl"
 
-test-xss-crawl:
+test-xss-crawl: prepare-playwright
 	XSS_CRAWL=1 $(PYTEST) -T gui_crawl --log-cli-level=INFO $(realpath gui_crawl/test_gui_crawl.py)
 
 test-xss-crawl-docker:
@@ -255,7 +263,7 @@ test-xss-crawl-docker:
 test-integration:
 	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
 
-test-gui-e2e:
+test-gui-e2e: prepare-playwright
 	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" --log-cli-level=INFO $(realpath gui_e2e/)  --numprocesses=1
 
 test-gui-e2e-docker:

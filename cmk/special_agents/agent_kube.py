@@ -39,6 +39,7 @@ from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
 from cmk.special_agents.utils_kubernetes.agent_handlers import (
+    cluster,
     cronjob,
     daemonset,
     deployment,
@@ -486,22 +487,24 @@ def _write_sections(sections: Mapping[str, Callable[[], section.Section | None]]
                 writer.append(section_output.json())
 
 
-def write_cluster_api_sections(cluster_name: str, cluster: Cluster) -> None:
+def write_cluster_api_sections(cluster_name: str, api_cluster: Cluster) -> None:
     sections = {
-        "kube_pod_resources_v1": cluster.pod_resources,
-        "kube_allocatable_pods_v1": cluster.allocatable_pods,
-        "kube_node_count_v1": cluster.node_count,
+        "kube_pod_resources_v1": lambda: cluster.pod_resources(api_cluster),
+        "kube_allocatable_pods_v1": lambda: cluster.allocatable_pods(api_cluster),
+        "kube_node_count_v1": lambda: cluster.node_count(api_cluster),
         "kube_cluster_details_v1": lambda: section.ClusterDetails.parse_obj(
-            cluster.cluster_details
+            api_cluster.cluster_details
         ),
-        "kube_memory_resources_v1": cluster.memory_resources,
-        "kube_cpu_resources_v1": cluster.cpu_resources,
-        "kube_allocatable_memory_resource_v1": cluster.allocatable_memory_resource,
-        "kube_allocatable_cpu_resource_v1": cluster.allocatable_cpu_resource,
+        "kube_memory_resources_v1": lambda: cluster.memory_resources(api_cluster),
+        "kube_cpu_resources_v1": lambda: cluster.cpu_resources(api_cluster),
+        "kube_allocatable_memory_resource_v1": lambda: cluster.allocatable_memory_resource(
+            api_cluster
+        ),
+        "kube_allocatable_cpu_resource_v1": lambda: cluster.allocatable_cpu_resource(api_cluster),
         "kube_cluster_info_v1": lambda: section.ClusterInfo(
-            name=cluster_name, version=cluster.version()
+            name=cluster_name, version=cluster.version(api_cluster)
         ),
-        "kube_collector_daemons_v1": cluster.node_collector_daemons,
+        "kube_collector_daemons_v1": lambda: cluster.node_collector_daemons(api_cluster),
     }
     _write_sections(sections)
 

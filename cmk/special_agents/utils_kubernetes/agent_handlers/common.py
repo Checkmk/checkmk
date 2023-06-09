@@ -8,7 +8,7 @@ import enum
 import re
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Callable, Collection, Iterable, Literal, Sequence
+from typing import Callable, Collection, Literal, Sequence
 
 from cmk.special_agents.utils_kubernetes.api_server import APIData
 from cmk.special_agents.utils_kubernetes.schemata import api, section
@@ -103,50 +103,6 @@ class Cluster:
             aggregation_pods=aggregation_pods,
         )
         return cluster
-
-    def pod_resources(self) -> section.PodResources:
-        return pod_resources_from_api_pods(self.aggregation_pods)
-
-    def allocatable_pods(self) -> section.AllocatablePods:
-        return section.AllocatablePods(
-            capacity=sum(node.status.capacity.pods for node in self.aggregation_nodes),
-            allocatable=sum(node.status.allocatable.pods for node in self.aggregation_nodes),
-        )
-
-    def node_count(self) -> section.NodeCount:
-        return section.NodeCount(
-            nodes=[
-                section.CountableNode(
-                    ready=_node_is_ready(node),
-                    roles=node.roles(),
-                )
-                for node in self.nodes
-            ]
-        )
-
-    def memory_resources(self) -> section.Resources:
-        return collect_memory_resources_from_api_pods(self.aggregation_pods)
-
-    def cpu_resources(self) -> section.Resources:
-        return collect_cpu_resources_from_api_pods(self.aggregation_pods)
-
-    def allocatable_memory_resource(self) -> section.AllocatableResource:
-        return section.AllocatableResource(
-            context="cluster",
-            value=sum(node.status.allocatable.memory for node in self.aggregation_nodes),
-        )
-
-    def allocatable_cpu_resource(self) -> section.AllocatableResource:
-        return section.AllocatableResource(
-            context="cluster",
-            value=sum(node.status.allocatable.cpu for node in self.aggregation_nodes),
-        )
-
-    def version(self) -> api.GitVersion:
-        return self.cluster_details.version
-
-    def node_collector_daemons(self) -> section.CollectorDaemons:
-        return _node_collector_daemons(self.daemonsets)
 
 
 PB_KUBE_OBJECT = (
@@ -281,39 +237,6 @@ def any_match_from_list_of_infix_patterns(infix_patterns: Sequence[str], string:
     False
     """
     return any(re.search(pattern, string) for pattern in infix_patterns)
-
-
-def _node_is_ready(node: api.Node) -> bool:
-    for condition in node.status.conditions or []:
-        if condition.type_.lower() == "ready":
-            return condition.status == api.NodeConditionStatus.TRUE
-    return False
-
-
-def _node_collector_daemons(api_daemonsets: Iterable[api.DaemonSet]) -> section.CollectorDaemons:
-    # Extract DaemonSets with label key `node-collector`
-    collector_daemons = defaultdict(list)
-    for api_daemonset in api_daemonsets:
-        if (
-            label := api_daemonset.metadata.labels.get(api.LabelName("node-collector"))
-        ) is not None:
-            collector_type = label.value
-            collector_daemons[collector_type].append(api_daemonset.status)
-    collector_daemons.default_factory = None
-
-    # Only leave unknown collectors inside of `collector_daemons`
-    machine_status = collector_daemons.pop(api.LabelValue("machine-sections"), [])
-    container_status = collector_daemons.pop(api.LabelValue("container-metrics"), [])
-
-    return section.CollectorDaemons(
-        machine=_node_collector_replicas(machine_status),
-        container=_node_collector_replicas(container_status),
-        errors=section.IdentificationError(
-            duplicate_machine_collector=len(machine_status) > 1,
-            duplicate_container_collector=len(container_status) > 1,
-            unknown_collector=len(collector_daemons) > 0,
-        ),
-    )
 
 
 def _node_collector_replicas(

@@ -439,6 +439,9 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
+        summarizer=lambda host_name: CMKSummarizer(
+            config_cache, host_name, override_non_ok_state=None
+        ),
         section_plugins=SectionPluginMapper(),
         host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
         plugins=DiscoveryPluginMapper(config_cache=config_cache),

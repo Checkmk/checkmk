@@ -54,7 +54,6 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 
-from cmk.base.checkers import CMKSummarizer
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
@@ -307,6 +306,7 @@ def autodiscovery(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
+    summarizer: Callable[[HostName], SummarizerFunction],
     section_plugins: Mapping[SectionName, SectionPlugin],
     host_label_plugins: Mapping[SectionName, HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
@@ -358,11 +358,7 @@ def autodiscovery(
                     config_cache=config_cache,
                     parser=parser,
                     fetcher=fetcher,
-                    summarizer=CMKSummarizer(
-                        config_cache,
-                        host_name,
-                        override_non_ok_state=None,
-                    ),
+                    summarizer=summarizer(host_name),
                     section_plugins=section_plugins,
                     host_label_plugins=host_label_plugins,
                     plugins=plugins,

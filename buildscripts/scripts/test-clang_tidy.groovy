@@ -3,23 +3,16 @@
 /// file: test-clang_tidy.groovy
 
 def main() {
-    dir("${checkout_dir}") {
-        stage("Execute Test") {
-            sh("make -C tests test-tidy-docker");
-        }
+    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
-        stage("Analyse Issues") {
-            publishIssues(
-                issues: [scanForIssues(tool: clang())],
-                trendChartType: 'TOOLS_ONLY',
-                qualityGates: [[
-                    threshold: 1,
-                    type: 'TOTAL',
-                    unstable: false,
-                ]],
-            );
-        }
+    dir("${checkout_dir}") {
+        test_jenkins_helper.execute_test([
+            name: "test-tidy-docker",
+            cmd: "make -C tests test-tidy-docker",
+        ]);
+
+        test_jenkins_helper.analyse_issues("CLANG", "");
     }
 }
-return this;
 
+return this;

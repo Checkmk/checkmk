@@ -24,6 +24,7 @@ from pydantic_factories import ModelFactory, Use
 import cmk.special_agents.utils_kubernetes.agent_handlers.common
 import cmk.special_agents.utils_kubernetes.agent_handlers.daemonset
 import cmk.special_agents.utils_kubernetes.agent_handlers.deployment
+import cmk.special_agents.utils_kubernetes.agent_handlers.node
 import cmk.special_agents.utils_kubernetes.agent_handlers.statefulset
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_api
@@ -297,7 +298,7 @@ class NodeStatusFactory(ModelFactory):
     conditions = Use(
         NodeConditionFactory.batch,
         size=len(
-            cmk.special_agents.utils_kubernetes.agent_handlers.common.NATIVE_NODE_CONDITION_TYPES
+            cmk.special_agents.utils_kubernetes.agent_handlers.node.NATIVE_NODE_CONDITION_TYPES
         )
         + len(NPD_NODE_CONDITION_TYPES),
         factory_use_construct=True,
@@ -314,7 +315,7 @@ def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatu
                 status=node_condition_status,
                 factory_use_construct=True,
             )
-            for type_ in cmk.special_agents.utils_kubernetes.agent_handlers.common.NATIVE_NODE_CONDITION_TYPES
+            for type_ in cmk.special_agents.utils_kubernetes.agent_handlers.node.NATIVE_NODE_CONDITION_TYPES
             + NPD_NODE_CONDITION_TYPES
         ],
     )

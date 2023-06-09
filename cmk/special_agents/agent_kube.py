@@ -43,6 +43,7 @@ from cmk.special_agents.utils_kubernetes.agent_handlers import (
     daemonset,
     deployment,
     namespace,
+    node,
     statefulset,
 )
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
@@ -612,27 +613,30 @@ def write_nodes_api_sections(
 ) -> None:
     def output_sections(cluster_node: Node) -> None:
         sections = {
-            "kube_node_container_count_v1": cluster_node.container_count,
-            "kube_node_kubelet_v1": cluster_node.kubelet,
+            "kube_node_container_count_v1": lambda: node.container_count(cluster_node),
+            "kube_node_kubelet_v1": lambda: node.kubelet(cluster_node),
             "kube_pod_resources_v1": cluster_node.pod_resources,
-            "kube_allocatable_pods_v1": cluster_node.allocatable_pods,
-            "kube_node_info_v1": lambda: cluster_node.info(
+            "kube_allocatable_pods_v1": lambda: node.allocatable_pods(cluster_node),
+            "kube_node_info_v1": lambda: node.info(
+                cluster_node,
                 host_settings.cluster_name,
                 host_settings.kubernetes_cluster_hostname,
                 host_settings.annotation_key_pattern,
             ),
             "kube_cpu_resources_v1": cluster_node.cpu_resources,
             "kube_memory_resources_v1": cluster_node.memory_resources,
-            "kube_allocatable_cpu_resource_v1": cluster_node.allocatable_cpu_resource,
-            "kube_allocatable_memory_resource_v1": cluster_node.allocatable_memory_resource,
-            "kube_node_conditions_v1": cluster_node.conditions,
-            "kube_node_custom_conditions_v1": cluster_node.custom_conditions,
+            "kube_allocatable_cpu_resource_v1": lambda: node.allocatable_cpu_resource(cluster_node),
+            "kube_allocatable_memory_resource_v1": lambda: node.allocatable_memory_resource(
+                cluster_node
+            ),
+            "kube_node_conditions_v1": lambda: node.conditions(cluster_node),
+            "kube_node_custom_conditions_v1": lambda: node.custom_conditions(cluster_node),
         }
         _write_sections(sections)
 
-    for node in api_nodes:
-        with ConditionalPiggybackSection(piggyback_formatter(node)):
-            output_sections(node)
+    for api_node in api_nodes:
+        with ConditionalPiggybackSection(piggyback_formatter(api_node)):
+            output_sections(api_node)
 
 
 def create_deployment_api_sections(
@@ -795,9 +799,9 @@ def write_machine_sections(
     piggyback_formatter: PiggybackFormatter,
 ) -> None:
     # make sure we only print sections for nodes currently visible via Kubernetes api:
-    for node in composed_entities.nodes:
-        if sections := machine_sections.get(str(node.metadata.name)):
-            with ConditionalPiggybackSection(piggyback_formatter(node)):
+    for api_node in composed_entities.nodes:
+        if sections := machine_sections.get(str(api_node.metadata.name)):
+            with ConditionalPiggybackSection(piggyback_formatter(api_node)):
                 sys.stdout.write(sections)
 
 
@@ -1069,17 +1073,17 @@ def _identify_unsupported_node_collector_components(
     nodes: Sequence[section.NodeMetadata], supported_max_major_version: int
 ) -> Sequence[str]:
     invalid_nodes = []
-    for node in nodes:
+    for api_node in nodes:
         unsupported_components = [
             f"{component.collector_type.value}: {component.checkmk_kube_agent.project_version}"
-            for component in node.components.values()
+            for component in api_node.components.values()
             if not _supported_cluster_collector_major_version(
                 component.checkmk_kube_agent.project_version,
                 supported_max_major_version=supported_max_major_version,
             )
         ]
         if unsupported_components:
-            invalid_nodes.append(f"{node.name} ({', '.join(unsupported_components)})")
+            invalid_nodes.append(f"{api_node.name} ({', '.join(unsupported_components)})")
     return invalid_nodes
 
 

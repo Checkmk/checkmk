@@ -130,7 +130,7 @@ wtools::perf::DataSequence LoadWinPerfData(const std::wstring &key,
     return result;
 }
 
-// build Check MK formatted list of counters
+// build Checkmk formatted list of counters
 // Instance less support too
 // Empty string on error
 std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE *perf_object,

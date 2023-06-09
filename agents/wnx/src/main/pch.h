@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// THIS is pre-compiled header for Check MK Service
+// THIS is pre-compiled header for Checkmk Service
 //
 #pragma once
 #ifndef PCH_H

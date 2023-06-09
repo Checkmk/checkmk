@@ -276,7 +276,7 @@ private:
         // #TODO change access right to the owner of the process
         // below we have code from the winagent, which grants any access to
         // the object this is quite dangerous
-        // NOW THIS IS BY DESIGN of Check MK
+        // NOW THIS IS BY DESIGN of Checkmk
         // https://docs.microsoft.com/de-at/windows/desktop/SecAuthZ/creating-a-security-descriptor-for-a-new-object-in-c--
         // ******************************************************
         ret = ::SetSecurityDescriptorDacl(&sd_, 1, nullptr, 0);  // NOLINT

@@ -260,9 +260,9 @@ void CleanArtifacts() {
     fs::remove(ac::ControllerFlagFile(), ec);
 }
 constexpr auto marker_new = "Checkmk monitoring agent service - 2.2, 64-bit";
+// keep value below as is
 constexpr auto marker_old =
-    "Check MK monitoring and management Service, 64-bit";
-
+    "Check MK monitoring and management Service, 64-bit";  // old marker
 }  // namespace
 
 TEST(AgentController, CreateLegacyPullFile) {

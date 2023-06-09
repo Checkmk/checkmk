@@ -1660,13 +1660,15 @@ def _check_oper_and_admin_state(
     target_oper_states: Container[str] | None,
     target_admin_states: Container[str] | None,
 ) -> Iterable[Result]:
-    if combined_mon_state := _check_oper_and_admin_state_combined(
-        attributes,
-        state_mappings,
-    ):
-        yield combined_mon_state
-        return
-
+    if isinstance(state_mappings, CombinedMapping):
+        combined_mon_state = __oper_and_admin_state_combined(attributes, state_mappings)
+        if combined_mon_state is not None and attributes.admin_status is not None:
+            yield Result(
+                state=combined_mon_state,
+                summary=f"(op. state: {attributes.oper_status_name}, admin state: {statename(attributes.admin_status)})",
+                details=f"Operational state: {attributes.oper_status_name}, Admin state: {statename(attributes.admin_status)}",
+            )
+            return
     yield from _check_oper_and_admin_state_independent(
         attributes,
         target_oper_states=target_oper_states,
@@ -1719,23 +1721,6 @@ def __oper_and_admin_state_combined(
         if attributes.oper_status == oper_state and attributes.admin_status == admin_state:
             return State(mon_state)
     return None
-
-
-def _check_oper_and_admin_state_combined(
-    attributes: Attributes, state_mappings: StateMappings
-) -> Result | None:
-    if attributes.admin_status is None:
-        return None
-    if isinstance(state_mappings, IndependentMapping):
-        return None
-    combined_mon_state = __oper_and_admin_state_combined(attributes, state_mappings)
-    if combined_mon_state is None:
-        return None
-    return Result(
-        state=combined_mon_state,
-        summary=f"(op. state: {attributes.oper_status_name}, admin state: {statename(attributes.admin_status)})",
-        details=f"Operational state: {attributes.oper_status_name}, Admin state: {statename(attributes.admin_status)}",
-    )
 
 
 def _output_group_members(

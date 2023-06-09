@@ -5,17 +5,78 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Iterator, Sequence
 
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,
+    CheckmkHostSettings,
+    collect_cpu_resources_from_api_pods,
+    collect_memory_resources_from_api_pods,
     filter_annotations_by_key_pattern,
     namespace_name,
+    pod_resources_from_api_pods,
 )
+from cmk.special_agents.utils_kubernetes.common import SectionName, WriteableSection
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
-def info(
+def create_namespace_api_sections(
+    api_namespace: api.Namespace,
+    namespace_api_pods: Sequence[api.Pod],
+    host_settings: CheckmkHostSettings,
+    piggyback_name: str,
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_namespace_info_v1"),
+            section=_info(
+                api_namespace,
+                host_settings.cluster_name,
+                host_settings.annotation_key_pattern,
+                host_settings.kubernetes_cluster_hostname,
+            ),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=pod_resources_from_api_pods(namespace_api_pods),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_memory_resources_v1"),
+            section=collect_memory_resources_from_api_pods(namespace_api_pods),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=collect_cpu_resources_from_api_pods(namespace_api_pods),
+        ),
+    )
+
+
+def create_resource_quota_api_sections(
+    resource_quota: api.ResourceQuota, piggyback_name: str
+) -> Iterator[WriteableSection]:
+    if (hard := resource_quota.spec.hard) is None:
+        return
+
+    if hard.memory is not None:
+        yield WriteableSection(
+            section_name=SectionName("kube_resource_quota_memory_resources_v1"),
+            section=section.HardResourceRequirement.parse_obj(hard.memory),
+            piggyback_name=piggyback_name,
+        )
+
+    if hard.cpu is not None:
+        yield WriteableSection(
+            section_name=SectionName("kube_resource_quota_cpu_resources_v1"),
+            section=section.HardResourceRequirement.parse_obj(hard.cpu),
+            piggyback_name=piggyback_name,
+        )
+
+
+def _info(
     namespace: api.Namespace,
     cluster_name: str,
     annotation_key_pattern: AnnotationOption,

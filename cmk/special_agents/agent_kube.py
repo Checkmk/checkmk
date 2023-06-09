@@ -66,12 +66,7 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     PiggybackFormatter,
     pod_lifecycle_phase,
     pod_name,
-    pod_resources_from_api_pods,
     StatefulSet,
-)
-from cmk.special_agents.utils_kubernetes.agent_handlers.namespace import (
-    filter_matching_namespace_resource_quota,
-    filter_pods_by_resource_quota_criteria,
 )
 from cmk.special_agents.utils_kubernetes.agent_handlers.persistent_volume_claim import (
     attached_pvc_names_from_pods,
@@ -486,62 +481,6 @@ def write_cluster_api_sections(cluster_name: str, api_cluster: Cluster) -> None:
     _write_sections(sections)
 
 
-def create_namespace_api_sections(
-    api_namespace: api.Namespace,
-    namespace_api_pods: Sequence[api.Pod],
-    host_settings: CheckmkHostSettings,
-    piggyback_name: str,
-) -> Iterator[WriteableSection]:
-    yield from (
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_namespace_info_v1"),
-            section=namespace.info(
-                api_namespace,
-                host_settings.cluster_name,
-                host_settings.annotation_key_pattern,
-                host_settings.kubernetes_cluster_hostname,
-            ),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_pod_resources_v1"),
-            section=pod_resources_from_api_pods(namespace_api_pods),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_memory_resources_v1"),
-            section=collect_memory_resources_from_api_pods(namespace_api_pods),
-        ),
-        WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cpu_resources_v1"),
-            section=collect_cpu_resources_from_api_pods(namespace_api_pods),
-        ),
-    )
-
-
-def create_resource_quota_api_sections(
-    resource_quota: api.ResourceQuota, piggyback_name: str
-) -> Iterator[WriteableSection]:
-    if (hard := resource_quota.spec.hard) is None:
-        return
-
-    if hard.memory is not None:
-        yield WriteableSection(
-            section_name=SectionName("kube_resource_quota_memory_resources_v1"),
-            section=section.HardResourceRequirement.parse_obj(hard.memory),
-            piggyback_name=piggyback_name,
-        )
-
-    if hard.cpu is not None:
-        yield WriteableSection(
-            section_name=SectionName("kube_resource_quota_cpu_resources_v1"),
-            section=section.HardResourceRequirement.parse_obj(hard.cpu),
-            piggyback_name=piggyback_name,
-        )
-
-
 def write_nodes_api_sections(
     api_nodes: Sequence[Node],
     host_settings: CheckmkHostSettings,
@@ -798,13 +737,13 @@ def determine_pods_to_host(
                 filter_pods_by_namespace(api_pods, namespace_name(api_namespace)),
                 api.Phase.RUNNING,
             )
-            resource_quota = filter_matching_namespace_resource_quota(
+            resource_quota = namespace.filter_matching_namespace_resource_quota(
                 namespace_name(api_namespace), resource_quotas
             )
             if resource_quota is not None:
                 resource_quota_pod_names = [
                     pod_lookup_from_api_pod(pod)
-                    for pod in filter_pods_by_resource_quota_criteria(
+                    for pod in namespace.filter_pods_by_resource_quota_criteria(
                         namespace_api_pods, resource_quota
                     )
                 ]
@@ -1297,20 +1236,20 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     api_pods_from_namespace = filter_pods_by_namespace(
                         api_data.pods, namespace_name(api_namespace)
                     )
-                    namespace_sections = create_namespace_api_sections(
+                    namespace_sections = namespace.create_namespace_api_sections(
                         api_namespace,
                         api_pods_from_namespace,
                         host_settings=checkmk_host_settings,
                         piggyback_name=namespace_piggyback_name,
                     )
                     if (
-                        api_resource_quota := filter_matching_namespace_resource_quota(
+                        api_resource_quota := namespace.filter_matching_namespace_resource_quota(
                             namespace_name(api_namespace), resource_quotas
                         )
                     ) is not None:
                         namespace_sections = chain(
                             namespace_sections,
-                            create_resource_quota_api_sections(
+                            namespace.create_resource_quota_api_sections(
                                 api_resource_quota, piggyback_name=namespace_piggyback_name
                             ),
                         )

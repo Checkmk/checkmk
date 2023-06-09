@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
 from cmk.bi.actions import BIStateOfServiceAction
 from cmk.bi.data_fetcher import BIStatusFetcher
 from cmk.bi.packs import BIAggregationPacks

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
 import pytest
 
 from tests.testlib import CMKEventConsole
@@ -33,8 +31,8 @@ RULE = Rule(
 )
 
 
-@pytest.fixture
-def config_with_host_patterns(config: Config) -> Config:
+@pytest.fixture(name="config_with_host_patterns")
+def fixture_config_with_host_patterns(config: Config) -> Config:
     """Return a config with a rule with specific host patterns inside the default rule_pack."""
     with_host_patterns: Config = config.copy()
     with_host_patterns["rule_packs"] = [default_rule_pack([RULE])]

@@ -7,7 +7,6 @@ from ast import literal_eval
 from pathlib import Path
 from unittest.mock import Mock
 
-# pylint: disable=protected-access
 import pytest
 
 from cmk.utils import store

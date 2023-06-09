@@ -57,9 +57,9 @@ from cmk.base.sources import make_parser, make_sources
 
 __all__ = [
     "CheckPluginMapper",
-    "ConfiguredFetcher",
-    "ConfiguredParser",
-    "ConfiguredSummarizer",
+    "CMKFetcher",
+    "CMKParser",
+    "CMKSummarizer",
     "DiscoveryPluginMapper",
     "HostLabelPluginMapper",
     "InventoryPluginMapper",
@@ -95,7 +95,7 @@ def _do_fetch(
     return source_info, raw_data, tracker.duration
 
 
-class ConfiguredParser:
+class CMKParser:
     def __init__(
         self,
         config_cache: ConfigCache,
@@ -136,7 +136,7 @@ class ConfiguredParser:
         return output
 
 
-class ConfiguredSummarizer:
+class CMKSummarizer:
     def __init__(
         self,
         config_cache: ConfigCache,
@@ -201,7 +201,7 @@ def _summarize_host_sections(
     )
 
 
-class ConfiguredFetcher:
+class CMKFetcher:
     def __init__(
         self,
         config_cache: ConfigCache,

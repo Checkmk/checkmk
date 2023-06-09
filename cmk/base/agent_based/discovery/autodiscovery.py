@@ -53,7 +53,7 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 
-from cmk.base.checkers import ConfiguredSummarizer
+from cmk.base.checkers import CMKSummarizer
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
@@ -358,7 +358,7 @@ def autodiscovery(
                     config_cache=config_cache,
                     parser=parser,
                     fetcher=fetcher,
-                    summarizer=ConfiguredSummarizer(
+                    summarizer=CMKSummarizer(
                         config_cache,
                         host_name,
                         override_non_ok_state=None,

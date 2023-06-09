@@ -120,9 +120,9 @@ from cmk.base.agent_based.discovery.livestatus import schedule_discovery_check
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
     CheckPluginMapper,
-    ConfiguredFetcher,
-    ConfiguredParser,
-    ConfiguredSummarizer,
+    CMKFetcher,
+    CMKParser,
+    CMKSummarizer,
     DiscoveryPluginMapper,
     HostLabelPluginMapper,
     SectionPluginMapper,
@@ -196,13 +196,13 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         results: dict[HostName, SingleHostDiscoveryResult] = {}
 
-        parser = ConfiguredParser(
+        parser = CMKParser(
             config_cache,
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("cmk.base.discovery"),
         )
-        fetcher = ConfiguredFetcher(
+        fetcher = CMKFetcher(
             config_cache,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
@@ -218,7 +218,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 config_cache=config_cache,
                 parser=parser,
                 fetcher=fetcher,
-                summarizer=ConfiguredSummarizer(
+                summarizer=CMKSummarizer(
                     config_cache,
                     hostname,
                     override_non_ok_state=None,
@@ -348,13 +348,13 @@ def _execute_discovery(
     )
 
     config_cache = config.get_config_cache()
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=perform_scan,
@@ -369,7 +369,7 @@ def _execute_discovery(
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
-        summarizer=ConfiguredSummarizer(
+        summarizer=CMKSummarizer(
             config_cache,
             host_name,
             override_non_ok_state=None,
@@ -416,13 +416,13 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
 
     config.load()
     config_cache = config.get_config_cache()
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,

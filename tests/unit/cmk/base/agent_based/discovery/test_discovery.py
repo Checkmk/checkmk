@@ -70,8 +70,8 @@ from cmk.base.agent_based.discovery.autodiscovery import (
 )
 from cmk.base.api.agent_based.type_defs import SectionPlugin as SectionPluginAPI
 from cmk.base.checkers import (
-    ConfiguredFetcher,
-    ConfiguredParser,
+    CMKFetcher,
+    CMKParser,
     DiscoveryPluginMapper,
     HostLabelPluginMapper,
     SectionPluginMapper,
@@ -970,13 +970,13 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     ts.fake_standard_linux_agent_output(testhost)
     config_cache = ts.apply(monkeypatch)
     file_cache_options = FileCacheOptions()
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("tests"),
     )
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,

@@ -94,9 +94,9 @@ import cmk.base.sources as sources
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.checkers import (
     CheckPluginMapper,
-    ConfiguredFetcher,
-    ConfiguredParser,
-    ConfiguredSummarizer,
+    CMKFetcher,
+    CMKParser,
+    CMKSummarizer,
     DiscoveryPluginMapper,
     HostLabelPluginMapper,
     InventoryPluginMapper,
@@ -1522,7 +1522,7 @@ def mode_check_discovery(
     discovery_file_cache_max_age = None if file_cache_options.use_outdated else 0
     config_cache = config.get_config_cache()
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1532,13 +1532,13 @@ def mode_check_discovery(
         simulation_mode=config.simulation_mode,
         max_cachefile_age=config.max_cachefile_age(discovery=discovery_file_cache_max_age),
     )
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
-    summarizer = ConfiguredSummarizer(
+    summarizer = CMKSummarizer(
         config_cache,
         hostname,
         override_non_ok_state=None,
@@ -1784,13 +1784,13 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     config_cache = config.get_config_cache()
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1925,7 +1925,7 @@ def mode_check(
     config_cache = config.get_config_cache()
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1934,13 +1934,13 @@ def mode_check(
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
     )
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.checking"),
     )
-    summarizer = ConfiguredSummarizer(
+    summarizer = CMKSummarizer(
         config_cache,
         hostname,
         override_non_ok_state=None,
@@ -2093,7 +2093,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         file_cache_options = file_cache_options._replace(keep_outdated=True)
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2102,7 +2102,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
     )
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2118,7 +2118,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     for hostname in hostnames:
         parameters = config_cache.hwsw_inventory_parameters(hostname)
         raw_intervals_from_config = config_cache.inv_retention_intervals(hostname)
-        summarizer = ConfiguredSummarizer(
+        summarizer = CMKSummarizer(
             config_cache,
             hostname,
             override_non_ok_state=parameters.fail_status,
@@ -2307,7 +2307,7 @@ def mode_inventory_as_check(
     file_cache_options = _handle_fetcher_options(options)
     parameters = HWSWInventoryParameters.from_raw(options)
 
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2316,13 +2316,13 @@ def mode_inventory_as_check(
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
     )
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
     )
-    summarizer = ConfiguredSummarizer(
+    summarizer = CMKSummarizer(
         config_cache,
         hostname,
         override_non_ok_state=parameters.fail_status,
@@ -2447,13 +2447,13 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
 
     config.load()
     config_cache = config.get_config_cache()
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
     )
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2463,8 +2463,8 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         simulation_mode=config.simulation_mode,
     )
 
-    def summarizer(host_name: HostName) -> ConfiguredSummarizer:
-        return ConfiguredSummarizer(
+    def summarizer(host_name: HostName) -> CMKSummarizer:
+        return CMKSummarizer(
             config_cache,
             host_name,
             override_non_ok_state=config_cache.hwsw_inventory_parameters(host_name).fail_status,

@@ -255,7 +255,6 @@ _COMPONENTS = (
     # Namespaces below cmk.base.api.agent_based are not really components,
     # but they (almost) adhere to the same import restrictions,
     # and we want to encourage that
-    (Component("cmk.base.api.agent_based.value_store"), _allow_default_plus_checkers),
     (Component("cmk.base.api.agent_based"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.base.plugins.agent_based.agent_based_api"), _is_allowed_for_agent_based_api),
     (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),

@@ -423,7 +423,7 @@ def mock_item_state(mock_state):
 
     See for example 'test_statgrab_cpu_check.py'.
     """
-    target = "cmk.base.api.agent_based.value_store._global_state._active_host_value_store"
+    target = "cmk.checkengine.value_store._global_state._active_host_value_store"
 
     getter = (  #
         mock_state.get

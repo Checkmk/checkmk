@@ -9,8 +9,9 @@ import pytest
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
+from cmk.checkengine import value_store
+
 from cmk.base import item_state
-from cmk.base.api.agent_based import value_store
 
 _TEST_KEY = ("check", "item", "user-key")
 

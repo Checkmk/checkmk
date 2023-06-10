@@ -5,16 +5,23 @@
 
 
 import time
+from collections.abc import Callable, Iterable, Mapping
+from typing import Literal
 
-from cmk.base.check_api import check_levels, discover, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import jolokia_basic_split
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+Section = Mapping[str, Mapping[str, float | str]]
+
+DiscoveryResult = Iterable[tuple[str, dict]]
 
 
-def parse_jolokia_generic(info):
+def parse_jolokia_generic(string_table: StringTable) -> Section:
     value: str | float
     parsed = {}
-    for line in info:
+    for line in string_table:
         try:
             instance, mbean, value, type_ = jolokia_basic_split(line, 4)
             if type_ in ("rate", "number"):
@@ -25,6 +32,15 @@ def parse_jolokia_generic(info):
         parsed[item] = {"value": value, "type": type_}
 
     return parsed
+
+
+def discover_type(
+    type_: Literal["string", "rate", "number"]
+) -> Callable[[Section], DiscoveryResult]:
+    def _discover_bound_type(section: Section) -> DiscoveryResult:
+        yield from ((item, {}) for item, data in section.items() if data.get("type") == type_)
+
+    return _discover_bound_type
 
 
 # .
@@ -53,7 +69,7 @@ def check_jolokia_generic_string(item, params, parsed):
 
 
 check_info["jolokia_generic.string"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda key, data: data.get("type") == "string"),
+    discovery_function=discover_type("string"),
     check_function=check_jolokia_generic_string,
     service_name="JVM %s",
     check_ruleset_name="generic_string",
@@ -79,7 +95,7 @@ def check_jolokia_generic_rate(item, params, parsed):
 
 
 check_info["jolokia_generic.rate"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda key, data: data.get("type") == "rate"),
+    discovery_function=discover_type("rate"),
     check_function=check_jolokia_generic_rate,
     service_name="JVM %s",
     check_ruleset_name="generic_rate",
@@ -105,7 +121,7 @@ def check_jolokia_generic(item, params, parsed):
 
 
 check_info["jolokia_generic"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda key, data: data.get("type") == "number"),
+    discovery_function=discover_type("number"),
     check_function=check_jolokia_generic,
     parse_function=parse_jolokia_generic,
     service_name="JVM %s",

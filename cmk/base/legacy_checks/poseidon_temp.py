@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
@@ -46,11 +46,15 @@ def check_poseidon_temp(item, params, parsed):
         yield 3, "No data for Sensor %s found" % item
 
 
+def discover_poseidon_temp(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["poseidon_temp"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21796.3"),
     parse_function=parse_poseidon_temp,
     check_function=check_poseidon_temp,
-    discovery_function=discover(),
+    discovery_function=discover_poseidon_temp,
     service_name="Temperatur: %s",
     check_ruleset_name="temperature",
     fetch=SNMPTree(

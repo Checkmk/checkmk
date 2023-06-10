@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -26,10 +26,14 @@ def check_pulse_secure_temp(item, params, parsed):
     return check_temperature(parsed[item], params, "pulse_secure_ive_temperature")
 
 
+def discover_pulse_secure_temp(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["pulse_secure_temp"] = LegacyCheckDefinition(
     detect=pulse_secure.DETECT_PULSE_SECURE,
     parse_function=parse_pulse_secure_temp,
-    discovery_function=discover(),
+    discovery_function=discover_pulse_secure_temp,
     check_function=check_pulse_secure_temp,
     service_name="Pulse Secure %s Temperature",
     fetch=SNMPTree(

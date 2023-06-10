@@ -4,17 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
+
+def discover_couchbase_nodes_size(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["couchbase_nodes_size"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
+    discovery_function=discover_couchbase_nodes_size,
 )
 
 
@@ -45,8 +46,12 @@ def get_couchbase_check_by_keys(key_disk, key_size):
     return check_couchbase_nodes_size
 
 
+def discover_couchbase_nodes_size_docs(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["couchbase_nodes_size.docs"] = LegacyCheckDefinition(
-    discovery_function=discover(),
+    discovery_function=discover_couchbase_nodes_size_docs,
     check_function=get_couchbase_check_by_keys(
         "couch_docs_actual_disk_size",
         "couch_docs_data_size",
@@ -55,8 +60,13 @@ check_info["couchbase_nodes_size.docs"] = LegacyCheckDefinition(
     check_ruleset_name="couchbase_size_docs",
 )
 
+
+def discover_couchbase_nodes_size_spacial_views(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["couchbase_nodes_size.spacial_views"] = LegacyCheckDefinition(
-    discovery_function=discover(),
+    discovery_function=discover_couchbase_nodes_size_spacial_views,
     check_function=get_couchbase_check_by_keys(
         "couch_spatial_disk_size",
         "couch_spatial_data_size",
@@ -65,8 +75,13 @@ check_info["couchbase_nodes_size.spacial_views"] = LegacyCheckDefinition(
     check_ruleset_name="couchbase_size_spacial",
 )
 
+
+def discover_couchbase_nodes_size_couch_views(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["couchbase_nodes_size.couch_views"] = LegacyCheckDefinition(
-    discovery_function=discover(),
+    discovery_function=discover_couchbase_nodes_size_couch_views,
     check_function=get_couchbase_check_by_keys(
         "couch_views_actual_disk_size",
         "couch_views_data_size",

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
@@ -54,9 +54,13 @@ def check_fortigate_sslvpn(item, params, parsed):
     )
 
 
+def discover_fortigate_sslvpn(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["fortigate_sslvpn"] = LegacyCheckDefinition(
     detect=DETECT_FORTIGATE,
-    discovery_function=discover(),
+    discovery_function=discover_fortigate_sslvpn,
     check_function=check_fortigate_sslvpn,
     parse_function=parse_fortigate_sslvpn,
     service_name="VPN SSL %s",

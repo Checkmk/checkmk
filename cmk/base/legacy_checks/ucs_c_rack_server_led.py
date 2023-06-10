@@ -6,7 +6,7 @@
 
 from typing import Iterable
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -25,8 +25,12 @@ def check_ucs_c_rack_server_led(
         yield state, "%s: %s" % (k, v)
 
 
+def discover_ucs_c_rack_server_led(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["ucs_c_rack_server_led"] = LegacyCheckDefinition(
-    discovery_function=discover(),
+    discovery_function=discover_ucs_c_rack_server_led,
     check_function=check_ucs_c_rack_server_led,
     service_name="LED %s",
     check_ruleset_name="ucs_c_rack_server_led",

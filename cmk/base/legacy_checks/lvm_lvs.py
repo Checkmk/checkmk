@@ -8,12 +8,7 @@
 
 import collections
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 LvmLvsEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
@@ -57,9 +52,13 @@ def check_lvm_lvs(item, params, parsed):
     )
 
 
+def discover_lvm_lvs(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["lvm_lvs"] = LegacyCheckDefinition(
     parse_function=parse_lvm_lvs,
-    discovery_function=discover(),
+    discovery_function=discover_lvm_lvs,
     check_function=check_lvm_lvs,
     service_name="LVM LV Pool %s",
     check_ruleset_name="lvm_lvs_pools",

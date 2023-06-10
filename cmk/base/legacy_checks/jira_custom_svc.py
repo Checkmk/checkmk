@@ -16,7 +16,6 @@ import time
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_age_human_readable,
     get_item_state,
     LegacyCheckDefinition,
@@ -123,10 +122,14 @@ def _get_value_diff(diff_name, svc_value, timespan):
     return diff_val
 
 
+def discover_jira_custom_svc(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["jira_custom_svc"] = LegacyCheckDefinition(
     parse_function=parse_jira_custom_svc,
     check_function=check_jira_custom_svc,
-    discovery_function=discover(),
+    discovery_function=discover_jira_custom_svc,
     service_name="Jira %s",
     check_ruleset_name="jira_custom_svc",
 )

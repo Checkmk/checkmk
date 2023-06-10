@@ -37,12 +37,7 @@
 
 import json
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -134,10 +129,14 @@ def check_rabbitmq_queues(item, params, parsed):
         )
 
 
+def discover_rabbitmq_queues(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["rabbitmq_queues"] = LegacyCheckDefinition(
     parse_function=parse_rabbitmq_queues,
     check_function=check_rabbitmq_queues,
-    discovery_function=discover(),
+    discovery_function=discover_rabbitmq_queues,
     service_name="RabbitMQ Queue %s",
     check_ruleset_name="rabbitmq_queues",
 )

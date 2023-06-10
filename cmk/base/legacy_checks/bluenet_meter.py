@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
@@ -25,10 +25,14 @@ def parse_bluenet_meter(info):
     return parsed
 
 
+def discover_bluenet_meter(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["bluenet_meter"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
     parse_function=parse_bluenet_meter,
-    discovery_function=discover(),
+    discovery_function=discover_bluenet_meter,
     check_function=check_elphase,
     service_name="Powermeter %s",
     check_ruleset_name="ups_outphase",

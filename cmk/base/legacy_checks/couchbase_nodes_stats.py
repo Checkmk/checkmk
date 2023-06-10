@@ -4,14 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element, MEMORY_DEFAULT_LEVELS
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
+
+def discover_couchbase_nodes_stats(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["couchbase_nodes_stats"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
+    discovery_function=discover_couchbase_nodes_stats,
 )
 
 
@@ -25,8 +31,12 @@ def check_couchbase_nodes_cpu_util(item, params, parsed):
         return
 
 
+def discover_couchbase_nodes_stats_cpu_util(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["couchbase_nodes_stats.cpu_util"] = LegacyCheckDefinition(
-    discovery_function=discover(),
+    discovery_function=discover_couchbase_nodes_stats_cpu_util,
     check_function=check_couchbase_nodes_cpu_util,
     service_name="Couchbase %s CPU utilization",
     check_ruleset_name="cpu_utilization_multiitem",
@@ -64,8 +74,12 @@ def check_couchbase_nodes_mem(item, params, parsed):
     )
 
 
+def discover_couchbase_nodes_stats_mem(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["couchbase_nodes_stats.mem"] = LegacyCheckDefinition(
-    discovery_function=discover(),
+    discovery_function=discover_couchbase_nodes_stats_mem,
     check_function=check_couchbase_nodes_mem,
     service_name="Couchbase %s Memory",
     check_ruleset_name="memory_multiitem",

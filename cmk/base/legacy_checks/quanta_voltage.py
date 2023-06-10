@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.quanta import parse_quanta
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -51,9 +51,13 @@ def check_quanta_voltage(item, params, parsed):
     )
 
 
+def discover_quanta_voltage(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["quanta_voltage"] = LegacyCheckDefinition(
     detect=DETECT_QUANTA,
-    discovery_function=discover(),
+    discovery_function=discover_quanta_voltage,
     parse_function=parse_quanta,
     check_function=check_quanta_voltage,
     service_name="Voltage %s",

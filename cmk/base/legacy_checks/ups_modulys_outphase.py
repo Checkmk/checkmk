@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -41,10 +41,14 @@ def parse_ups_modulys_outphase(info):
     return parsed
 
 
+def discover_ups_modulys_outphase(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["ups_modulys_outphase"] = LegacyCheckDefinition(
     detect=DETECT_UPS_MODULYS,
     parse_function=parse_ups_modulys_outphase,
-    discovery_function=discover(),
+    discovery_function=discover_ups_modulys_outphase,
     check_function=check_elphase,
     service_name="Output %s",
     check_ruleset_name="ups_outphase",

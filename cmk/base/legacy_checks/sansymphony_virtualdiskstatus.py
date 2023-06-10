@@ -10,7 +10,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -28,9 +28,13 @@ def check_sansymphony_virtualdiskstatus(item, _no_params, parsed):
     yield state, "Volume state is: %s" % data
 
 
+def discover_sansymphony_virtualdiskstatus(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["sansymphony_virtualdiskstatus"] = LegacyCheckDefinition(
     parse_function=parse_sansymphony_virtualdiskstatus,
-    discovery_function=discover(),
+    discovery_function=discover_sansymphony_virtualdiskstatus,
     check_function=check_sansymphony_virtualdiskstatus,
     service_name="sansymphony Virtual Disk %s",
 )

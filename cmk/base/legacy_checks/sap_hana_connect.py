@@ -8,7 +8,7 @@ import re
 from collections.abc import Callable, Mapping
 
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 _SAP_HANA_CONNECT_STATE_MAP: Mapping[str, tuple[int, Callable[[str], bool]]] = {
@@ -65,9 +65,13 @@ def check_sap_hana_connect(item, params, parsed):
     yield state, message
 
 
+def discover_sap_hana_connect(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["sap_hana_connect"] = LegacyCheckDefinition(
     parse_function=parse_sap_hana_connect,
-    discovery_function=discover(),
+    discovery_function=discover_sap_hana_connect,
     check_function=check_sap_hana_connect,
     service_name="SAP HANA CONNECT %s",
 )

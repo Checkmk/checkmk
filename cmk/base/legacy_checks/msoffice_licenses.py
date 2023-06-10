@@ -20,12 +20,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -98,9 +93,13 @@ def check_msoffice_licenses(item, params, parsed):
         yield 0, " Warning units: %s" % lcs_warning_units
 
 
+def discover_msoffice_licenses(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["msoffice_licenses"] = LegacyCheckDefinition(
     parse_function=parse_msoffice_licenses,
-    discovery_function=discover(),
+    discovery_function=discover_msoffice_licenses,
     check_function=check_msoffice_licenses,
     service_name="MS Office Licenses %s",
     check_ruleset_name="msoffice_licenses",

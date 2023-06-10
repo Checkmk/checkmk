@@ -8,7 +8,7 @@
 # equipmentFan<TAB>dn sys/rack-unit-1/fan-module-1-1/fan-1<TAB>id 1<TAB>model <TAB>operability operable
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -50,9 +50,13 @@ def check_ucs_c_rack_server_fans(item, _no_params, parsed):
     yield status, status_readable
 
 
+def discover_ucs_c_rack_server_fans(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["ucs_c_rack_server_fans"] = LegacyCheckDefinition(
     parse_function=parse_ucs_c_rack_server_fans,
-    discovery_function=discover(),
+    discovery_function=discover_ucs_c_rack_server_fans,
     check_function=check_ucs_c_rack_server_fans,
     service_name="Fan %s",
 )

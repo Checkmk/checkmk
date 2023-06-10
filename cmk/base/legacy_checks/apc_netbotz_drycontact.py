@@ -41,7 +41,7 @@
 # .1.3.6.1.4.1.318.1.1.10.4.3.2.1.8.2.6 2
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.apc import DETECT
@@ -78,10 +78,14 @@ def check_apc_netbotz_drycontact(item, params, parsed):
     yield state, "%sState: %s" % (loc_info, state_readable)
 
 
+def discover_apc_netbotz_drycontact(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["apc_netbotz_drycontact"] = LegacyCheckDefinition(
     detect=DETECT,
     parse_function=parse_apc_netbotz_drycontact,
-    discovery_function=discover(),
+    discovery_function=discover_apc_netbotz_drycontact,
     check_function=check_apc_netbotz_drycontact,
     service_name="DryContact %s",
     fetch=SNMPTree(

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.huawei_switch import parse_huawei_physical_entity_values
 from cmk.base.config import check_info
@@ -26,10 +26,14 @@ def check_huawei_switch_cpu(item, params, parsed):
     yield from check_cpu_util(util, params, cores=[("core1", util)])
 
 
+def discover_huawei_switch_cpu(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["huawei_switch_cpu"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_SWITCH,
     parse_function=parse_huawei_switch_cpu,
-    discovery_function=discover(),
+    discovery_function=discover_huawei_switch_cpu,
     check_function=check_huawei_switch_cpu,
     service_name="CPU utilization %s",
     fetch=[

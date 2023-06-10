@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.domino import DETECT
@@ -40,10 +40,14 @@ def check_domino_mailqueues(item, params, parsed):
     )
 
 
+def discover_domino_mailqueues(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["domino_mailqueues"] = LegacyCheckDefinition(
     detect=DETECT,
     parse_function=parse_domino_mailqueues,
-    discovery_function=discover(),
+    discovery_function=discover_domino_mailqueues,
     check_function=check_domino_mailqueues,
     service_name="Domino Queue %s",
     fetch=SNMPTree(

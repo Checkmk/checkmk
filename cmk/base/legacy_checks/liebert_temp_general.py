@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.liebert import check_temp_unit
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -36,10 +36,14 @@ def check_liebert_temp_general(item, params, parsed):
     yield check_temperature(value, params, "check_liebert_fluid_temp.%s" % item)
 
 
+def discover_liebert_temp_general(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["liebert_temp_general"] = LegacyCheckDefinition(
     detect=DETECT_LIEBERT,
     parse_function=parse_liebert_float,
-    discovery_function=discover(),
+    discovery_function=discover_liebert_temp_general,
     check_function=check_liebert_temp_general,
     service_name="%s",
     fetch=SNMPTree(

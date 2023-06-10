@@ -6,7 +6,7 @@
 
 import cmk.utils.aws_constants as aws_types
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
 from cmk.base.config import check_info
 
@@ -45,9 +45,13 @@ def check_aws_ec2_limits(item, params, parsed):
     yield from check_aws_limits("ec2", params, region_data)
 
 
+def discover_aws_ec2_limits(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["aws_ec2_limits"] = LegacyCheckDefinition(
     parse_function=parse_aws_limits_generic,
-    discovery_function=discover(),
+    discovery_function=discover_aws_ec2_limits,
     check_function=check_aws_ec2_limits,
     service_name="AWS/EC2 Limits %s",
     check_ruleset_name="aws_ec2_limits",

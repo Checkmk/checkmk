@@ -6,7 +6,7 @@
 
 from itertools import cycle
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
@@ -48,10 +48,14 @@ def parse_apc_sts_inputs(info):
     }
 
 
+def discover_apc_sts_inputs(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["apc_sts_inputs"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.2.2"),
     parse_function=parse_apc_sts_inputs,
-    discovery_function=discover(),
+    discovery_function=discover_apc_sts_inputs,
     check_function=check_elphase,
     service_name="Input %s",
     check_ruleset_name="el_inphase",

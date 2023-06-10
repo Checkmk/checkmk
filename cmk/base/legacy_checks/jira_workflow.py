@@ -11,7 +11,7 @@
 
 import json
 
-from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -64,10 +64,14 @@ def check_jira_workflow(item, params, parsed):
         )
 
 
+def discover_jira_workflow(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["jira_workflow"] = LegacyCheckDefinition(
     parse_function=parse_jira_workflow,
     check_function=check_jira_workflow,
-    discovery_function=discover(),
+    discovery_function=discover_jira_workflow,
     service_name="Jira Workflow %s",
     check_ruleset_name="jira_workflow",
 )

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, SNMPTree
 from cmk.base.plugins.agent_based.utils.ip_format import clean_v4_address, clean_v6_address
@@ -73,11 +73,15 @@ def check_juniper_bgp_state(item, _no_params, parsed):
     yield op_status, "operational status: %s" % operational_state
 
 
+def discover_juniper_bgp_state(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["juniper_bgp_state"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER,
     parse_function=parse_juniper_bgp_state,
     check_function=check_juniper_bgp_state,
-    discovery_function=discover(),
+    discovery_function=discover_juniper_bgp_state,
     service_name="BGP Status Peer %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.5.1.1.2.1.1.1",

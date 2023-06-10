@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -51,10 +51,14 @@ def parse_netextreme_psu_out(info):
     return parsed
 
 
+def discover_netextreme_psu_out(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["netextreme_psu_out"] = LegacyCheckDefinition(
     detect=DETECT_NETEXTREME,
     parse_function=parse_netextreme_psu_out,
-    discovery_function=discover(),
+    discovery_function=discover_netextreme_psu_out,
     check_function=check_elphase,
     service_name="Power Supply %s",
     fetch=SNMPTree(

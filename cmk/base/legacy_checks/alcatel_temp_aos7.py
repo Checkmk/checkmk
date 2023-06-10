@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.alcatel import ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -51,10 +51,14 @@ def check_alcatel_aos7_temp(item, params, parsed):
     yield check_temperature(data, params, "alcatel_temp_aos7%s" % item)
 
 
+def discover_alcatel_temp_aos7(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["alcatel_temp_aos7"] = LegacyCheckDefinition(
     detect=DETECT_ALCATEL_AOS7,
     parse_function=parse_alcatel_aos7_temp,
-    discovery_function=discover(),
+    discovery_function=discover_alcatel_temp_aos7,
     check_function=check_alcatel_aos7_temp,
     service_name="Temperature Board %s",
     check_ruleset_name="temperature",

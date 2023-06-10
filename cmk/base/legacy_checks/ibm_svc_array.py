@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -65,9 +65,13 @@ def check_ibm_svc_array(item, _no_params, parsed):
     yield status, message
 
 
+def discover_ibm_svc_array(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["ibm_svc_array"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_array,
     check_function=check_ibm_svc_array,
-    discovery_function=discover(),
+    discovery_function=discover_ibm_svc_array,
     service_name="RAID Array %s",
 )

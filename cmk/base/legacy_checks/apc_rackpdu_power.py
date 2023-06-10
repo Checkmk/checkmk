@@ -4,13 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 
+
+def discover_apc_rackpdu_power(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["apc_rackpdu_power"] = LegacyCheckDefinition(
-    # section already migrated
-    discovery_function=discover(),
+    discovery_function=discover_apc_rackpdu_power,
     check_function=check_elphase,
     service_name="PDU %s",
     check_ruleset_name="el_inphase",

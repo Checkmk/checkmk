@@ -8,7 +8,7 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import get_data_or_go_stale, parse_resources
 from cmk.base.config import check_info
 
@@ -46,9 +46,13 @@ def check_azure_usagedetails(_no_item, params, data):
     yield 0, "Subscription: %s" % data["subscription_id"]
 
 
+def discover_azure_usagedetails(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["azure_usagedetails"] = LegacyCheckDefinition(
     parse_function=parse_azure_usagedetails,
-    discovery_function=discover(),
+    discovery_function=discover_azure_usagedetails,
     check_function=check_azure_usagedetails,
     service_name="Costs %s",
     check_ruleset_name="azure_usagedetails",

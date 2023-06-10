@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -37,6 +37,10 @@ def check_fast_lta_volumes(item, params, parsed):
     yield df_check_filesystem_list(item, params, data)
 
 
+def discover_fast_lta_volumes(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["fast_lta_volumes"] = LegacyCheckDefinition(
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
@@ -44,7 +48,7 @@ check_info["fast_lta_volumes"] = LegacyCheckDefinition(
     ),
     parse_function=parse_fast_lta_volumes,
     check_function=check_fast_lta_volumes,
-    discovery_function=discover(),
+    discovery_function=discover_fast_lta_volumes,
     service_name="Fast LTA Volume %s",
     check_ruleset_name="filesystem",
     fetch=SNMPTree(

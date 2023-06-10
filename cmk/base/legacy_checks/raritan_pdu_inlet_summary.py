@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.raritan import raritan_map_state, raritan_map_type
 from cmk.base.config import check_info
@@ -28,10 +28,14 @@ def parse_raritan_pdu_inlet_summary(info):
     return {"Summary": summary}
 
 
+def discover_raritan_pdu_inlet_summary(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["raritan_pdu_inlet_summary"] = LegacyCheckDefinition(
     detect=DETECT_RARITAN,
     parse_function=parse_raritan_pdu_inlet_summary,
-    discovery_function=discover(),
+    discovery_function=discover_raritan_pdu_inlet_summary,
     check_function=check_elphase,
     service_name="Input %s",
     check_ruleset_name="el_inphase",

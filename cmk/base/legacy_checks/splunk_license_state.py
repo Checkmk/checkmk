@@ -17,7 +17,6 @@ import collections
 import time
 
 from cmk.base.check_api import (
-    discover,
     get_age_human_readable,
     get_bytes_human_readable,
     get_timestamp_human_readable,
@@ -101,10 +100,14 @@ def check_splunk_license_state(item, params, parsed):
     )
 
 
+def discover_splunk_license_state(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["splunk_license_state"] = LegacyCheckDefinition(
     parse_function=parse_splunk_license_state,
     check_function=check_splunk_license_state,
-    discovery_function=discover(),
+    discovery_function=discover_splunk_license_state,
     service_name="Splunk License %s",
     check_ruleset_name="splunk_license_state",
     check_default_parameters={

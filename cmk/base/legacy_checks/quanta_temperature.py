@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.quanta import parse_quanta
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -54,9 +54,13 @@ def check_quanta_temperature(item, params, parsed):
     )
 
 
+def discover_quanta_temperature(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["quanta_temperature"] = LegacyCheckDefinition(
     detect=DETECT_QUANTA,
-    discovery_function=discover(),
+    discovery_function=discover_quanta_temperature,
     parse_function=parse_quanta,
     check_function=check_quanta_temperature,
     service_name="Temperature %s",

@@ -6,7 +6,7 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
@@ -84,11 +84,15 @@ def check_tcw241_analog(item, params, parsed):
     )
 
 
+def discover_teracom_tcw241_analog(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["teracom_tcw241_analog"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "Teracom"),
     parse_function=parse_tcw241_analog,
     check_function=check_tcw241_analog,
-    discovery_function=discover(),
+    discovery_function=discover_teracom_tcw241_analog,
     service_name="Analog Sensor %s",
     fetch=[
         *(

@@ -4,12 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.huawei_switch import parse_huawei_physical_entity_values
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -37,10 +32,14 @@ def check_huawei_switch_mem(item, params, parsed):
     )
 
 
+def discover_huawei_switch_mem(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["huawei_switch_mem"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_SWITCH,
     parse_function=parse_huawei_switch_mem,
-    discovery_function=discover(),
+    discovery_function=discover_huawei_switch_mem,
     check_function=check_huawei_switch_mem,
     service_name="Memory %s",
     fetch=[

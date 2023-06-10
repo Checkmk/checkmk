@@ -10,7 +10,6 @@ import time
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_age_human_readable,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
@@ -159,10 +158,14 @@ def _handle_collector_states(collector_state, params):
     return 3
 
 
+def discover_graylog_sidecars(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["graylog_sidecars"] = LegacyCheckDefinition(
     parse_function=parse_graylog_sidecars,
     check_function=check_graylog_sidecars,
-    discovery_function=discover(),
+    discovery_function=discover_graylog_sidecars,
     service_name="Graylog Sidecar %s",
     check_ruleset_name="graylog_sidecars",
     check_default_parameters={

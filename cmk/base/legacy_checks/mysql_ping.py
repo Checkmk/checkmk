@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -36,9 +36,13 @@ def check_mysql_ping(item, _no_params, parsed):
         yield 2, message
 
 
+def discover_mysql_ping(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["mysql_ping"] = LegacyCheckDefinition(
     parse_function=parse_mysql_ping,
-    discovery_function=discover(),
+    discovery_function=discover_mysql_ping,
     check_function=check_mysql_ping,
     service_name="MySQL Instance %s",
 )

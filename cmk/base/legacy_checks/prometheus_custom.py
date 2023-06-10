@@ -6,13 +6,7 @@
 
 import json
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_item_state,
-    LegacyCheckDefinition,
-    set_item_state,
-)
+from cmk.base.check_api import check_levels, get_item_state, LegacyCheckDefinition, set_item_state
 from cmk.base.config import check_info
 
 ERROR_DETAILS = {
@@ -140,10 +134,14 @@ def check_prometheus_custom(item, params, parsed):
         )
 
 
+def discover_prometheus_custom(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["prometheus_custom"] = LegacyCheckDefinition(
     parse_function=parse_prometheus_custom,
     check_function=check_prometheus_custom,
-    discovery_function=discover(),
+    discovery_function=discover_prometheus_custom,
     service_name="%s",
     check_ruleset_name="prometheus_custom",
 )

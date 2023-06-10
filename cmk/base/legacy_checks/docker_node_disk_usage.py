@@ -7,12 +7,7 @@
 # mypy: disable-error-code="arg-type"
 
 import cmk.base.plugins.agent_based.utils.docker as docker
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -41,9 +36,13 @@ def check_docker_node_disk_usage(item, params, parsed):
         )
 
 
+def discover_docker_node_disk_usage(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["docker_node_disk_usage"] = LegacyCheckDefinition(
     parse_function=parse_docker_node_disk_usage,
-    discovery_function=discover(),
+    discovery_function=discover_docker_node_disk_usage,
     check_function=check_docker_node_disk_usage,
     service_name="Docker disk usage - %s",
     check_ruleset_name="docker_node_disk_usage",

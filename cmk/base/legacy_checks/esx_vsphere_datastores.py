@@ -8,7 +8,6 @@
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_bytes_human_readable,
     get_percent_human_readable,
     LegacyCheckDefinition,
@@ -98,9 +97,13 @@ def check_esx_vsphere_datastores(item, params, parsed):
         yield 0, "", [("overprovisioned", prov_bytes / mib)]  # fixed: true-division
 
 
+def discover_esx_vsphere_datastores(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["esx_vsphere_datastores"] = LegacyCheckDefinition(
     parse_function=parse_esx_vsphere_datastores,
-    discovery_function=discover(),
+    discovery_function=discover_esx_vsphere_datastores,
     check_function=check_esx_vsphere_datastores,
     service_name="Filesystem %s",
     check_ruleset_name="esx_vsphere_datastores",

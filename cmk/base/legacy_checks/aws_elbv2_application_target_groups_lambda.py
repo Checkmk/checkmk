@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_parsed_item_data,
     check_aws_error_rate,
@@ -18,6 +18,10 @@ from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels
 def parse_aws_elbv2_target_groups_lambda(info):
     metrics = extract_aws_metrics_by_labels(["RequestCount", "LambdaUserError"], parse_aws(info))
     return metrics
+
+
+def discover_aws_elbv2_target_groups_lambda(section):
+    yield from ((item, {}) for item, data in section.items() if "RequestCount" in data)
 
 
 @aws_get_parsed_item_data
@@ -45,7 +49,7 @@ def check_aws_application_elb_target_groups_lambda(item, params, data):
 
 check_info["aws_elbv2_application_target_groups_lambda"] = LegacyCheckDefinition(
     parse_function=parse_aws_elbv2_target_groups_lambda,
-    discovery_function=discover(lambda k, v: "RequestCount" in v),
+    discovery_function=discover_aws_elbv2_target_groups_lambda,
     check_function=check_aws_application_elb_target_groups_lambda,
     service_name="AWS/ApplicationELB Lambda %s",
     check_ruleset_name="aws_elbv2_target_errors",

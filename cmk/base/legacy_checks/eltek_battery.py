@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -117,13 +117,18 @@ check_info["eltek_battery.temp"] = LegacyCheckDefinition(
 #   |                    |_|                                               |
 #   '----------------------------------------------------------------------'
 
-# suggested by customer
+
+def discover_eltek_battery_supply(section):
+    yield from ((item, {}) for item in section["supply"])
+
+
 check_info["eltek_battery.supply"] = LegacyCheckDefinition(
-    discovery_function=lambda parsed: discover()(parsed["supply"]),
+    discovery_function=discover_eltek_battery_supply,
     check_function=lambda item, params, parsed: check_elphase(item, params, parsed["supply"]),
     service_name="Battery %s",
     check_ruleset_name="el_inphase",
     check_default_parameters={
+        # suggested by customer
         "voltage": (52, 48),
         "current": (50, 76),
     },

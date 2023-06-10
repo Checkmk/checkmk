@@ -4,15 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Iterable
+
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_bytes_human_readable,
     get_percent_human_readable,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
+from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
+
+DiscoveryResult = Iterable[tuple[str, dict]]
+
+
+def discover_couchbase_buckets_vbuckets(section: Section) -> DiscoveryResult:
+    yield from (
+        (item, {}) for item, data in section.items() if "vb_active_resident_items_ratio" in data
+    )
 
 
 def check_couchbase_buckets_vbuckets(item, params, parsed):
@@ -75,7 +84,7 @@ def check_couchbase_buckets_vbuckets_replica(item, params, parsed):
 
 check_info["couchbase_buckets_vbuckets"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
-    discovery_function=discover(lambda _k, v: "vb_active_resident_items_ratio" in v),
+    discovery_function=discover_couchbase_buckets_vbuckets,
     check_function=check_couchbase_buckets_vbuckets,
     service_name="Couchbase Bucket %s active vBuckets",
     check_ruleset_name="couchbase_vbuckets",
@@ -83,7 +92,7 @@ check_info["couchbase_buckets_vbuckets"] = LegacyCheckDefinition(
 
 check_info["couchbase_buckets_vbuckets.replica"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
-    discovery_function=discover(lambda _k, v: "vb_active_resident_items_ratio" in v),
+    discovery_function=discover_couchbase_buckets_vbuckets,
     check_function=check_couchbase_buckets_vbuckets_replica,
     service_name="Couchbase Bucket %s replica vBuckets",
     check_ruleset_name="couchbase_vbuckets",

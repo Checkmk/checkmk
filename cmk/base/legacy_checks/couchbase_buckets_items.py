@@ -4,9 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
+from collections.abc import Iterable
+
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
+from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
+
+DiscoveryResult = Iterable[tuple[str, dict]]
+
+
+def discover_couchbase_buckets_items(section: Section) -> DiscoveryResult:
+    yield from ((item, {}) for item, data in section.items() if "curr_items_tot" in data)
 
 
 def check_couchbase_buckets_items(item, params, parsed):
@@ -65,7 +73,7 @@ def check_couchbase_buckets_items(item, params, parsed):
 
 check_info["couchbase_buckets_items"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
-    discovery_function=discover(lambda _k, v: "curr_items_tot" in v),
+    discovery_function=discover_couchbase_buckets_items,
     check_function=check_couchbase_buckets_items,
     service_name="Couchbase Bucket %s Items",
     check_ruleset_name="couchbase_items",

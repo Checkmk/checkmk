@@ -5,16 +5,26 @@
 
 
 import time
+from collections.abc import Iterable
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_percent_human_readable,
     get_rate,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
+from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
+
+DiscoveryResult = Iterable[tuple[str, dict]]
+
+
+def discover_couchbase_nodes_cache(section: Section) -> DiscoveryResult:
+    yield from (
+        (item, {})
+        for item, data in section.items()
+        if "get_hits" in data and "ep_bg_fetched" in data
+    )
 
 
 def check_couchbase_nodes_cache(item, params, parsed):
@@ -49,7 +59,7 @@ def check_couchbase_nodes_cache(item, params, parsed):
 
 check_info["couchbase_nodes_cache"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
-    discovery_function=discover(lambda k, v: "get_hits" in v and "ep_bg_fetched" in v),
+    discovery_function=discover_couchbase_nodes_cache,
     check_function=check_couchbase_nodes_cache,
     service_name="Couchbase %s Cache",
     check_ruleset_name="couchbase_cache",

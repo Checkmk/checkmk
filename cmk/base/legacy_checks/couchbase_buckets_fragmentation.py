@@ -4,14 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from collections.abc import Iterable
+
+from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
+from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
+
+DiscoveryResult = Iterable[tuple[str, dict]]
+
+
+def discover_couchbase_buckets_fragmentation(section: Section) -> DiscoveryResult:
+    yield from ((item, {}) for item, data in section.items() if "couch_docs_fragmentation" in data)
 
 
 def check_couchbase_buckets_fragmentation(item, params, parsed):
@@ -40,7 +43,7 @@ def check_couchbase_buckets_fragmentation(item, params, parsed):
 
 check_info["couchbase_buckets_fragmentation"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
-    discovery_function=discover(lambda _k, v: "couch_docs_fragmentation" in v),
+    discovery_function=discover_couchbase_buckets_fragmentation,
     check_function=check_couchbase_buckets_fragmentation,
     service_name="Couchbase Bucket %s Fragmentation",
     check_ruleset_name="couchbase_fragmentation",

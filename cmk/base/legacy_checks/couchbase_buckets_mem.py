@@ -4,15 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from collections.abc import Iterable
+
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
+from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
+
+DiscoveryResult = Iterable[tuple[str, dict]]
+
+
+def discover_couchbase_buckets_mem(section: Section) -> DiscoveryResult:
+    yield from (
+        (item, {}) for item, data in section.items() if "mem_total" in data and "mem_free" in data
+    )
 
 
 def check_couchbase_bucket_mem(item, params, parsed):
@@ -54,7 +59,7 @@ def check_couchbase_bucket_mem(item, params, parsed):
 
 check_info["couchbase_buckets_mem"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
-    discovery_function=discover(lambda _k, v: "mem_total" in v and "mem_free" in v),
+    discovery_function=discover_couchbase_buckets_mem,
     check_function=check_couchbase_bucket_mem,
     service_name="Couchbase Bucket %s Memory",
     check_ruleset_name="memory_multiitem",

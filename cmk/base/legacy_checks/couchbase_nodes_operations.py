@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="index"
 
-from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -25,6 +25,14 @@ def parse_couchbase_nodes_operations(info):
     return parsed
 
 
+def discover_couchbase_buckets_nodes_operations(section):
+    yield from ((item, {}) for item in section if item is not None)
+
+
+def discover_couchbase_buckets_nodes_operations_total(section):
+    yield from ((item, {}) for item in section if item is None)
+
+
 # We deliberately do not use @get_parsed_item_data here to also account for the case where the
 # Couchbase server does 0 operations / sec. This case would result in "UNKN - Item not found in
 # agent output" because parsed[item] would evaluate to False in get_parsed_item_data
@@ -36,14 +44,14 @@ def check_couchbase_nodes_operations(item, params, parsed):
 
 check_info["couchbase_nodes_operations"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_nodes_operations,
-    discovery_function=discover(lambda k, _v: k is not None),
+    discovery_function=discover_couchbase_buckets_nodes_operations,
     check_function=check_couchbase_nodes_operations,
     service_name="Couchbase %s Operations",
     check_ruleset_name="couchbase_ops",
 )
 
 check_info["couchbase_nodes_operations.total"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda k, _v: k is None),
+    discovery_function=discover_couchbase_buckets_nodes_operations_total,
     check_function=check_couchbase_nodes_operations,
     service_name="Couchbase Total Operations",
     check_ruleset_name="couchbase_ops_nodes",

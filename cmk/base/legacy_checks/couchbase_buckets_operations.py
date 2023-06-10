@@ -8,7 +8,7 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
@@ -21,6 +21,10 @@ def parse_couchbase_buckets_operations(info):
     except TypeError:
         pass
     return parsed
+
+
+def discover_couchbase_buckets_operations(section):
+    yield from ((item, {}) for item, data in section.items() if "ops" in data)
 
 
 def check_couchbase_buckets_operations(item, params, parsed):
@@ -89,7 +93,7 @@ def check_couchbase_buckets_operations(item, params, parsed):
 
 check_info["couchbase_buckets_operations"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_buckets_operations,
-    discovery_function=discover(lambda k, v: k is not None and "ops" in v),
+    discovery_function=discover_couchbase_buckets_operations,
     check_function=check_couchbase_buckets_operations,
     service_name="Couchbase Bucket %s Operations",
     check_ruleset_name="couchbase_ops",
@@ -97,7 +101,7 @@ check_info["couchbase_buckets_operations"] = LegacyCheckDefinition(
 
 check_info["couchbase_buckets_operations.total"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_buckets_operations,
-    discovery_function=discover(lambda k, v: k is None and "ops" in v),
+    discovery_function=discover_couchbase_buckets_operations,
     check_function=check_couchbase_buckets_operations,
     service_name="Couchbase Bucket Operations",
     check_ruleset_name="couchbase_ops_buckets",

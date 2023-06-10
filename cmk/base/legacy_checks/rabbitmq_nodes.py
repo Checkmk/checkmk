@@ -25,11 +25,10 @@
 
 
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_bytes_human_readable,
     get_percent_human_readable,
     LegacyCheckDefinition,
@@ -56,6 +55,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 # []}
 
 _ItemData = dict
+
+Section = Mapping[str, _ItemData]
+
+
+def discover_key(key: str) -> Callable[[Section], Iterable[tuple[str, dict]]]:
+    def _discover_bound_key(section: Section) -> Iterable[tuple[str, dict]]:
+        yield from ((item, {}) for item, data in section.items() if key in data)
+
+    return _discover_bound_key
 
 
 def parse_rabbitmq_nodes(info):
@@ -122,6 +130,10 @@ def parse_rabbitmq_nodes(info):
     return parsed
 
 
+def discover_rabbitmq_nodes(section: Section) -> Iterable[tuple[str, dict]]:
+    yield from ((item, {}) for item in section)
+
+
 def check_rabbitmq_nodes(item, params, parsed):
     if not (data := parsed.get(item)):
         return
@@ -160,7 +172,7 @@ def check_rabbitmq_nodes(item, params, parsed):
 check_info["rabbitmq_nodes"] = LegacyCheckDefinition(
     parse_function=parse_rabbitmq_nodes,
     check_function=check_rabbitmq_nodes,
-    discovery_function=discover(),
+    discovery_function=discover_rabbitmq_nodes,
     service_name="RabbitMQ Node %s",
     check_ruleset_name="rabbitmq_nodes",
     check_default_parameters={
@@ -215,7 +227,7 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
 
 check_info["rabbitmq_nodes.filedesc"] = LegacyCheckDefinition(
     check_function=check_rabbitmq_nodes_filedesc,
-    discovery_function=discover(lambda k, values: "fd" in values),
+    discovery_function=discover_key("fd"),
     service_name="RabbitMQ Node %s Filedesc",
     check_ruleset_name="rabbitmq_nodes_filedesc",
 )
@@ -239,7 +251,7 @@ def check_rabbitmq_nodes_sockets(item, params, parsed):
 
 check_info["rabbitmq_nodes.sockets"] = LegacyCheckDefinition(
     check_function=check_rabbitmq_nodes_sockets,
-    discovery_function=discover(lambda k, values: "sockets" in values),
+    discovery_function=discover_key("sockets"),
     service_name="RabbitMQ Node %s Sockets",
     check_ruleset_name="rabbitmq_nodes_sockets",
 )
@@ -263,7 +275,7 @@ def check_rabbitmq_nodes_proc(item, params, parsed):
 
 check_info["rabbitmq_nodes.proc"] = LegacyCheckDefinition(
     check_function=check_rabbitmq_nodes_proc,
-    discovery_function=discover(lambda k, values: "proc" in values),
+    discovery_function=discover_key("proc"),
     service_name="RabbitMQ Node %s Processes",
     check_ruleset_name="rabbitmq_nodes_proc",
 )
@@ -297,7 +309,7 @@ def check_rabbitmq_nodes_mem(item, params, parsed):
 
 check_info["rabbitmq_nodes.mem"] = LegacyCheckDefinition(
     check_function=check_rabbitmq_nodes_mem,
-    discovery_function=discover(lambda k, values: "mem" in values),
+    discovery_function=discover_key("mem"),
     service_name="RabbitMQ Node %s Memory",
     check_ruleset_name="memory_multiitem",
 )
@@ -351,7 +363,7 @@ def check_rabbitmq_nodes_uptime(item, params, parsed):
 
 check_info["rabbitmq_nodes.uptime"] = LegacyCheckDefinition(
     check_function=check_rabbitmq_nodes_uptime,
-    discovery_function=discover(lambda k, values: "uptime" in values),
+    discovery_function=discover_key("uptime"),
     service_name="RabbitMQ Node %s Uptime",
     check_ruleset_name="rabbitmq_nodes_uptime",
 )
@@ -402,7 +414,7 @@ def _handle_output(params, value, total, info_text, perf_key):
 
 check_info["rabbitmq_nodes.gc"] = LegacyCheckDefinition(
     check_function=check_rabbitmq_nodes_gc,
-    discovery_function=discover(lambda k, values: "gc" in values),
+    discovery_function=discover_key("gc"),
     service_name="RabbitMQ Node %s GC",
     check_ruleset_name="rabbitmq_nodes_gc",
 )

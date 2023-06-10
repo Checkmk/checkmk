@@ -11,7 +11,7 @@
 # cdefs1v  running
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -25,6 +25,10 @@ def parse_netapp_api_vs_status(info):
         else:
             parsed[line[0]] = dict(zip(line[1::2], line[2::2]))
     return parsed
+
+
+def discover_netapp_api_vs_status(section):
+    yield from ((item, {}) for item, data in section.items() if "state" in data)
 
 
 def check_netapp_api_vs_status(item, _no_params, parsed):
@@ -47,7 +51,7 @@ def check_netapp_api_vs_status(item, _no_params, parsed):
 
 check_info["netapp_api_vs_status"] = LegacyCheckDefinition(
     parse_function=parse_netapp_api_vs_status,
-    discovery_function=discover(lambda k, values: "state" in values),
+    discovery_function=discover_netapp_api_vs_status,
     check_function=check_netapp_api_vs_status,
     service_name="vServer Status %s",
 )

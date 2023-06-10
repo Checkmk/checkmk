@@ -6,7 +6,6 @@
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_age_human_readable,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
@@ -74,6 +73,10 @@ from cmk.base.config import check_info
 # config_file: The path to the config file
 
 
+def discover_redis_info(section):
+    yield from ((item, {}) for item in section)
+
+
 def check_redis_info(item, params, parsed):
     if not (item_data := parsed.get(item)):
         return
@@ -119,7 +122,7 @@ def check_redis_info(item, params, parsed):
 check_info["redis_info"] = LegacyCheckDefinition(
     parse_function=parse_redis_info,
     check_function=check_redis_info,
-    discovery_function=discover(),
+    discovery_function=discover_redis_info,
     service_name="Redis %s Server Info",
     check_ruleset_name="redis_info",
 )
@@ -173,6 +176,10 @@ check_info["redis_info"] = LegacyCheckDefinition(
 # aof_last_cow_size - The size in bytes of copy-on-write allocations during the last AOF rewrite operation
 
 
+def discover_redis_info_persistence(section):
+    yield from ((item, {}) for item, data in section.items() if "Persistence" in data)
+
+
 def check_redis_info_persistence(item, params, item_data):
     persistence_data = item_data.get(item, {}).get("Persistence")
     if not persistence_data or persistence_data is None:
@@ -213,7 +220,7 @@ def check_redis_info_persistence(item, params, item_data):
 
 check_info["redis_info.persistence"] = LegacyCheckDefinition(
     check_function=check_redis_info_persistence,
-    discovery_function=discover(lambda k, values: "Persistence" in values),
+    discovery_function=discover_redis_info_persistence,
     service_name="Redis %s Persistence",
     check_ruleset_name="redis_info_persistence",
     check_default_parameters={
@@ -247,6 +254,10 @@ check_info["redis_info.persistence"] = LegacyCheckDefinition(
 # blocked_clients - Number of clients pending on a blocking call (BLPOP, BRPOP, BRPOPLPUSH)
 
 
+def discover_redis_info_clients(section):
+    yield from ((item, {}) for item, data in section.items() if "Clients" in data)
+
+
 def check_redis_info_clients(item, params, item_data):
     clients_data = item_data.get(item, {}).get("Clients")
     if not clients_data or clients_data is None:
@@ -276,7 +287,7 @@ def check_redis_info_clients(item, params, item_data):
 
 check_info["redis_info.clients"] = LegacyCheckDefinition(
     check_function=check_redis_info_clients,
-    discovery_function=discover(lambda k, values: "Clients" in values),
+    discovery_function=discover_redis_info_clients,
     service_name="Redis %s Clients",
     check_ruleset_name="redis_info_clients",
 )

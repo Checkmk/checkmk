@@ -7,7 +7,6 @@
 # mypy: disable-error-code="arg-type"
 
 from cmk.base.check_api import (
-    discover,
     get_age_human_readable,
     get_bytes_human_readable,
     LegacyCheckDefinition,
@@ -33,6 +32,10 @@ def parse_mysql_slave(info):
             data[key] = {"Yes": True, "No": False, "None": None}.get(val, val)
 
     return data
+
+
+def discover_mysql_slave(section):
+    yield from ((item, {}) for item, data in section.items() if data)
 
 
 def check_mysql_slave(item, params, parsed):
@@ -80,7 +83,7 @@ def check_mysql_slave(item, params, parsed):
 
 check_info["mysql_slave"] = LegacyCheckDefinition(
     parse_function=parse_mysql_slave,
-    discovery_function=discover(lambda k, v: bool(v)),
+    discovery_function=discover_mysql_slave,
     check_function=check_mysql_slave,
     service_name="MySQL DB Slave %s",
     check_ruleset_name="mysql_slave",

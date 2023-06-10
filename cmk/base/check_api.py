@@ -23,11 +23,10 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 # TODO: Move imports directly to checks?
 import collections  # noqa: F401 # pylint: disable=unused-import
 import enum  # noqa: F401 # pylint: disable=unused-import
-import functools
 import re  # noqa: F401 # pylint: disable=unused-import
 import socket
 import time
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from contextlib import suppress
 from typing import Any, Literal, Union
 
@@ -495,130 +494,6 @@ def _agent_cache_file_age(
         return _cmk_utils.cachefile_age(cachefile)
 
     return None
-
-
-def validate_filter(filter_function: Any) -> Callable:
-    """Validate function argument is a callable and return it"""
-    if callable(filter_function):
-        return filter_function
-    if filter_function is None:
-        return lambda *entry: entry[0]
-    raise ValueError(
-        f"Filtering function is not a callable, a {type(filter_function)} has been given."
-    )
-
-
-def discover(
-    selector: Callable | None = None, default_params: None | dict[Any, Any] | str = None
-) -> Callable:
-    """Helper function to assist with service discoveries
-
-    The discovery function is in many cases just a boilerplate function to
-    recognize services listed in your parsed dictionary or the info
-    list. It in general looks like
-
-        def inventory_check(parsed):
-            for key, value in parsed.items():
-                if some_condition_based_on(key, value):
-                    yield key, parameters
-
-
-    The idea of this helper is to allow you only to worry about the logic
-    function that decides if an entry is a service to be discovered or not.
-
-
-    Keyword Arguments:
-    selector       -- Filtering function (default lambda entry: entry[0])
-        Default: Uses the key or first item of info variable
-    default_params -- Default parameters for discovered items (default {})
-
-    Possible uses:
-
-        If your discovery function recognizes every entry of your parsed
-        dictionary or every row of the info list as a service, then you
-        just need to call discover().
-
-            check_info["chk"] = {'inventory_function': discover()}
-
-        In case you want to have a simple filter function when dealing with
-        the info list, you can directly give a lambda function. If this
-        function returns a Boolean the first item of every entry is taken
-        as the service name, if the function returns a string that will be
-        taken as the service name. For this example we discover as services
-        entries where item3 is positive and name the service according to
-        item2.
-
-            check_info["chk"] = {'inventory_function': discover(selector=lambda line: line[2] if line[3]>0 else False)}
-
-        In case you have a more complicated selector condition and also
-        want to include default parameters you may use a decorator.
-
-        Please note: that this discovery function does not work with the
-        whole parsed/info data but only implements the logic for selecting
-        each individual entry as a service.
-
-        In the next example, we will process each entry of the parsed data
-        dictionary. Use as service name the capitalized key when the
-        corresponding value has certain keywords.
-
-            @discover(default_params="the_check_default_levels")
-            def inventory_thecheck(key, value):
-                required_entries = ["used", "ready", "total", "uptime"]
-                if all(data in value for data in required_entries):
-                    return key.upper()
-
-            check_info["chk"] = {'inventory_function': inventory_thecheck}
-    """
-
-    def _discovery(filter_function: Callable) -> Callable:
-        @functools.wraps(filter_function)
-        def discoverer(
-            parsed: dict[Any, Any] | list[Any] | tuple
-        ) -> Iterable[tuple[str, dict[Any, Any] | str]]:
-            params = default_params if isinstance(default_params, (str, dict)) else {}
-            if isinstance(parsed, dict):
-                filterer = validate_filter(filter_function)
-                for key, value in parsed.items():
-                    for n in _get_discovery_iter(
-                        filterer(key, value),
-                        lambda: key,  # pylint: disable=cell-var-from-loop
-                    ):
-                        yield (n, params)
-            elif isinstance(parsed, (list, tuple)):
-                filterer = validate_filter(filter_function)
-                for entry in parsed:
-                    for n in _get_discovery_iter(
-                        filterer(entry),
-                        lambda: entry[0],  # pylint: disable=cell-var-from-loop
-                    ):
-                        yield (n, params)
-            else:
-                raise ValueError(
-                    "Discovery function only works with dictionaries, lists, and tuples you gave a {}".format(
-                        type(parsed)
-                    )
-                )
-
-        return discoverer
-
-    if callable(selector):
-        return _discovery(selector)
-
-    if selector is None and default_params is None:
-        return _discovery(lambda *args: args[0])
-
-    return _discovery
-
-
-def _get_discovery_iter(name: Any, get_name: Callable[[], str]) -> Iterable[str]:
-    if isinstance(name, str):
-        return iter((name,))
-    if name is True:
-        return iter((get_name(),))
-    try:
-        return iter(name)
-    except TypeError:
-        return iter(())
 
 
 # NOTE: Currently this is not really needed, it is just here to keep any start

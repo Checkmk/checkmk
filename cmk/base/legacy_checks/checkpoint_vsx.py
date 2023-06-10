@@ -7,10 +7,10 @@
 # mypy: disable-error-code="var-annotated"
 
 import time
+from collections.abc import Callable
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_percent_human_readable,
     get_rate,
     LegacyCheckDefinition,
@@ -105,6 +105,13 @@ def parse_checkpoint_vsx(info):
     return parsed
 
 
+def discover_key(key: str) -> Callable:
+    def discover_bound_keys(section):
+        yield from ((item, {}) for item, data in section.items() if key in data)
+
+    return discover_bound_keys
+
+
 #   .--info----------------------------------------------------------------.
 #   |                          _        __                                 |
 #   |                         (_)_ __  / _| ___                            |
@@ -135,7 +142,7 @@ def check_checkpoint_vsx(item, _no_params, parsed):
 check_info["checkpoint_vsx"] = LegacyCheckDefinition(
     detect=DETECT_NEVER,
     parse_function=parse_checkpoint_vsx,
-    discovery_function=discover(lambda k, values: "vs_name" in values),
+    discovery_function=discover_key("vs_name"),
     check_function=check_checkpoint_vsx,
     service_name="VS %s Info",
     fetch=[
@@ -193,7 +200,7 @@ def check_checkpoint_vsx_connections(item, params, parsed):
 
 
 check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda k, values: "conn_num" in values),
+    discovery_function=discover_key("conn_num"),
     check_function=check_checkpoint_vsx_connections,
     service_name="VS %s Connections",
     check_ruleset_name="checkpoint_vsx_connections",
@@ -243,7 +250,7 @@ def check_checkpoint_vsx_packets(item, params, parsed):
 
 
 check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda k, values: "packets" in values),
+    discovery_function=discover_key("packets"),
     check_function=check_checkpoint_vsx_packets,
     service_name="VS %s Packets",
     check_ruleset_name="checkpoint_vsx_packets",
@@ -287,7 +294,7 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
 
 
 check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda k, values: "bytes_accepted" in values),
+    discovery_function=discover_key("bytes_accepted"),
     check_function=check_checkpoint_vsx_traffic,
     service_name="VS %s Traffic",
     check_ruleset_name="checkpoint_vsx_traffic",
@@ -340,7 +347,7 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
 
 
 check_info["checkpoint_vsx.status"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda k, values: "vs_ha_status" in values),
+    discovery_function=discover_key("vs_ha_status"),
     check_function=check_checkpoint_vsx_status,
     service_name="VS %s Status",
     check_ruleset_name="checkpoint_vsx_traffic_status",

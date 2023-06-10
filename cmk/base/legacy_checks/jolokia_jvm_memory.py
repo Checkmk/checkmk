@@ -8,7 +8,6 @@
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_bytes_human_readable,
     get_percent_human_readable,
     LegacyCheckDefinition,
@@ -55,9 +54,8 @@ def _jolokia_check_abs_and_perc(mem_type, value, value_max, params):
     )
 
 
-@discover
-def discover_jolokia_jvm_memory(_instance, data):
-    return bool(data.get("Memory"))
+def discover_jolokia_jvm_memory(section):
+    yield from ((item, {}) for item, data in section.items() if data.get("Memory"))
 
 
 def _iter_type_value_max(mem_data):

@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="index,attr-defined"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
@@ -114,12 +114,17 @@ check_info["orion_system.charging"] = LegacyCheckDefinition(
 )
 
 
+def discover_orion_system_electrical(parsed):
+    for entity in parsed["electrical"]:
+        yield entity, {}
+
+
 def check_orion_system_electrical(item, params, parsed):
     return check_elphase(item, params, parsed["electrical"])
 
 
 check_info["orion_system.dc"] = LegacyCheckDefinition(
-    discovery_function=lambda parsed: discover()(parsed["electrical"]),
+    discovery_function=discover_orion_system_electrical,
     check_function=check_orion_system_electrical,
     service_name="Direct Current %s",
     check_ruleset_name="ups_outphase",

@@ -5,7 +5,7 @@
 
 import collections
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL_AOS7
@@ -49,11 +49,14 @@ def parse_alcatel_power_aos7(info):
     }
 
 
-@discover
-def inventory_alcatel_power_aos7(_oidend, device):
-    return (
-        device.power_supply_type != alcatel_power_aos7_no_power_supply
-        and device.status_readable != "not present"
+def discover_alcatel_power_aos7(section):
+    yield from (
+        (item, {})
+        for item, device in section.items()
+        if (
+            device.power_supply_type != alcatel_power_aos7_no_power_supply
+            and device.status_readable != "not present"
+        )
     )
 
 
@@ -71,7 +74,7 @@ check_info["alcatel_power_aos7"] = LegacyCheckDefinition(
     detect=DETECT_ALCATEL_AOS7,
     parse_function=parse_alcatel_power_aos7,
     check_function=check_alcatel_power_aos7,
-    discovery_function=inventory_alcatel_power_aos7,
+    discovery_function=discover_alcatel_power_aos7,
     service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.801.1.1.1.1.1.1.1",

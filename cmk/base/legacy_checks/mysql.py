@@ -7,10 +7,11 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import time
+from collections.abc import Iterable, Mapping
+from typing import Any, Protocol
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_percent_human_readable,
     get_rate,
     LegacyCheckDefinition,
@@ -44,6 +45,16 @@ from cmk.base.config import check_info
 #   '----------------------------------------------------------------------'
 
 
+Section = Mapping[str, Mapping[str, Any]]
+
+Service = tuple[str, dict]
+
+
+class DiscoveryFunction(Protocol):
+    def __call__(self, section: Section) -> Iterable[Service]:
+        ...
+
+
 @mysql_parse_per_item
 def parse_mysql(info):
     data = {}
@@ -57,6 +68,13 @@ def parse_mysql(info):
     return data
 
 
+def _discover_keys(keys: set[str]) -> DiscoveryFunction:
+    def discover(section: Section) -> Iterable[Service]:
+        yield from ((instance, {}) for instance, data in section.items() if keys <= set(data))
+
+    return discover
+
+
 def check_mysql_version(item, _no_params, parsed):
     if not (data := parsed.get(item)):
         return
@@ -67,7 +85,7 @@ def check_mysql_version(item, _no_params, parsed):
 
 check_info["mysql"] = LegacyCheckDefinition(
     parse_function=parse_mysql,
-    discovery_function=discover(lambda k, values: "version" in values),
+    discovery_function=_discover_keys({"version"}),
     check_function=check_mysql_version,
     service_name="MySQL Version %s",
 )
@@ -81,6 +99,11 @@ check_info["mysql"] = LegacyCheckDefinition(
 #   |               |____/ \___||___/___/_|\___/|_| |_|___/                |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+def discover_mysql_sessions(section: Section) -> Iterable[Service]:
+    yield from ((instance, {}) for instance, data in section.items() if len(data) > 200)
+
 
 # params:
 # { "running" : (20, 40),
@@ -118,7 +141,7 @@ def check_mysql_sessions(item, params, parsed):
 
 
 check_info["mysql.sessions"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda k, values: len(values) > 200),
+    discovery_function=discover_mysql_sessions,
     check_function=check_mysql_sessions,
     service_name="MySQL Sessions %s",
     check_ruleset_name="mysql_sessions",
@@ -146,7 +169,7 @@ def check_mysql_iostat(item, params, parsed):
 
 
 check_info["mysql.innodb_io"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda k, values: "Innodb_data_read" in values),
+    discovery_function=_discover_keys({"Innodb_data_read"}),
     check_function=check_mysql_iostat,
     service_name="MySQL InnoDB IO %s",
     check_ruleset_name="mysql_innodb_io",
@@ -224,15 +247,10 @@ def check_mysql_connections(item, params, parsed):
     )
 
 
-@discover
-def mysql_connections(instance, values):
-    return all(
-        x in values for x in ["Max_used_connections", "max_connections", "Threads_connected"]
-    )
-
-
 check_info["mysql.connections"] = LegacyCheckDefinition(
-    discovery_function=mysql_connections,
+    discovery_function=_discover_keys(
+        {"Max_used_connections", "max_connections", "Threads_connected"}
+    ),
     check_function=check_mysql_connections,
     service_name="MySQL Connections %s",
     check_ruleset_name="mysql_connections",

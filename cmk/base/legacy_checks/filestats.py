@@ -11,7 +11,6 @@ import re
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_age_human_readable,
     get_bytes_human_readable,
     LegacyCheckDefinition,
@@ -291,14 +290,12 @@ def check_filestats_single(item, params, parsed):
         )
 
 
-@discover
-def discover_filestats(key, data):
-    return data[0] != "single_file"
+def discover_filestats(section):
+    yield from ((item, {}) for item, data in section.items() if data[0] != "single_file")
 
 
-@discover
-def discover_filestats_single(key, data):
-    return data[0] == "single_file"
+def discover_filestats_single(section):
+    yield from ((item, {}) for item, data in section.items() if data[0] == "single_file")
 
 
 check_info["filestats.single"] = LegacyCheckDefinition(

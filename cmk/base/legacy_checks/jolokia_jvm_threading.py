@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels, discover, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
@@ -32,9 +32,8 @@ def parse_jolokia_jvm_threading(info):
     return parsed
 
 
-@discover
-def discover_jolokia_jvm_threading(_instance, data):
-    return bool(data.get("Threading"))
+def discover_jolokia_jvm_threading(section):
+    yield from ((instance, {}) for instance, data in section.items() if data.get("Threading"))
 
 
 def check_jolokia_jvm_threading(item, params, parsed):

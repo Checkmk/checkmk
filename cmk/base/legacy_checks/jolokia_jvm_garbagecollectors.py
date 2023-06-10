@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels, discover, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
 from cmk.base.config import check_info
 
@@ -26,9 +26,12 @@ def parse_jolokia_jvm_garbagecollectors(info):
     return parsed
 
 
-@discover
-def discover_jolokia_jvm_garbagecollectors(_item, data):
-    return -1 not in (data.get("CollectionCount", -1), data.get("CollectionTime", -1))
+def discover_jolokia_jvm_garbagecollectors(section):
+    yield from (
+        (item, {})
+        for item, data in section.items()
+        if -1 not in (data.get("CollectionCount", -1), data.get("CollectionTime", -1))
+    )
 
 
 def transform_units(params):

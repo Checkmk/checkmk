@@ -16,7 +16,7 @@ from typing import (
     Tuple,
 )
 
-from .agent_based_api.v1 import register, Result, State
+from .agent_based_api.v1 import get_value_store, register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
 from .utils import interfaces
 from .utils.inventory_interfaces import Interface as InterfaceInv
@@ -98,9 +98,9 @@ def _parse_counters(
                     alias=name,
                     type="loopback" in name.lower() and "24" or "6",
                     speed=counters["10"],
-                    oper_status="1",
+                    oper_status=None,
                     out_qlen=counters["34"],
-                    oper_status_name="Connected",
+                    oper_status_name=interfaces.MISSING_OPER_STATUS,
                 ),
                 interfaces.Counters(
                     in_octets=counters["-246"],
@@ -499,6 +499,26 @@ def check_winperf_if(
     section_winperf_if_extended: Optional[SectionExtended],
     section_winperf_if_dhcp: Optional[SectionDHPC],
 ) -> CheckResult:
+    yield from _check_winperf_if(
+        item,
+        params,
+        section_winperf_if,
+        section_winperf_if_teaming,
+        section_winperf_if_extended,
+        section_winperf_if_dhcp,
+        get_value_store(),
+    )
+
+
+def _check_winperf_if(
+    item: str,
+    params: Mapping[str, Any],
+    section_winperf_if: Optional[SectionCounters],
+    section_winperf_if_teaming: Optional[SectionTeaming],
+    section_winperf_if_extended: Optional[SectionExtended],
+    section_winperf_if_dhcp: Optional[SectionDHPC],
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
     if not section_winperf_if:
         return
 
@@ -512,6 +532,7 @@ def check_winperf_if(
         ),
         group_name="Teaming",
         timestamp=section_winperf_if.timestamp,
+        value_store=value_store,
     )
     if section_winperf_if_dhcp and (
         dhcp_res := _check_dhcp(
@@ -632,7 +653,9 @@ def inventory_winperf_if(
                 alias=interface.attributes.alias,
                 type=interface.attributes.type,
                 speed=int(interface.attributes.speed),
-                oper_status=int(interface.attributes.oper_status[0]),
+                oper_status=int(interface.attributes.oper_status[0])
+                if isinstance(interface.attributes.oper_status, str)
+                else None,
                 phys_address=interfaces.render_mac_address(interface.attributes.phys_address),
             )
             for interface in sorted(

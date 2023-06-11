@@ -79,7 +79,9 @@ def inventory_statgrab_net(section: Section) -> InventoryResult:
                 alias=interface.attributes.alias,
                 type=interface.attributes.type,
                 speed=int(interface.attributes.speed),
-                oper_status=int(interface.attributes.oper_status),
+                oper_status=int(interface.attributes.oper_status)
+                if isinstance(interface.attributes.oper_status, str)
+                else None,
                 phys_address=interfaces.render_mac_address(interface.attributes.phys_address),
             )
             for interface in sorted(section, key=lambda i: i.attributes.index)

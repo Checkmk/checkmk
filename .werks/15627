@@ -1,0 +1,26 @@
+Title: <tt>winperf_if</tt>: Don't Show Connected as Operation Status
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1686554878
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This change affects the <tt>Interface</tt> service on Windows nodes.
+
+The plugin <tt>winperf_if</tt> would show the operation state 'Connected', even if no information
+about the operation state was available. Note, the Windows Agent does not always provide the
+operation state. This is the case when none of the plugins are enabled. The
+check will now show 'Not available' instead.
+
+If you see this state, we recommend that you enable the plugins to collect the necessary data. This
+can be done via the <tt>Agent Bakery</tt> rule
+<tt>Setup > Agents > Windows, Linux, Solaris, AIX > Agent rules > Network interfaces on Windows > Add rule: Network interfaces on Windows</tt>.
+
+After potentially adjusting the agent, users should do re-discovery of the interface services. This
+ensures that the discovered operation state is consistent with the current behaviour.
+
+If it impossible to use the agent plugin, existing rules <tt>Network interface and switch port discovery</tt>
+and <tt>Network interfaces and switch ports</tt> should to be adjusted instead.

@@ -22,6 +22,7 @@ def interface_oper_states() -> dict[str | int, str]:
         6: _("not present"),
         7: _("lower layer down"),
         8: _("degraded"),  # artificial, not official
+        -1: _("operational state not available"),
     }
 
 

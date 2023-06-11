@@ -77,7 +77,7 @@ DISCOVERY_DEFAULT_PARAMETERS: DiscoveryDefaultParams = {
                 "205",
                 "229",
             ],
-            "portstates": ["1"],
+            "portstates": ["1", "-1"],
         },
     ),
     "discovery_single": (
@@ -113,6 +113,9 @@ class _MissingOperStatus:
         return "Not available"
 
 
+MISSING_OPER_STATUS = _MissingOperStatus()
+
+
 @dataclass(frozen=True)
 class MemberInfo:
     name: str
@@ -135,7 +138,7 @@ class Attributes:
     alias: str
     type: str
     speed: float = 0
-    oper_status: str = ""
+    oper_status: str | None = ""
     out_qlen: float | None = None
     phys_address: Iterable[int] | str = ""
     oper_status_name: str | _MissingOperStatus = ""
@@ -149,7 +152,7 @@ class Attributes:
         self.finalize()
 
     def finalize(self) -> None:
-        if not self.oper_status_name:
+        if self.oper_status is not None and not self.oper_status_name:
             self.oper_status_name = statename(self.oper_status)
 
         # Fix bug in TP Link switches
@@ -1336,18 +1339,20 @@ def check_multiple_interfaces(
         )
 
 
-def _get_map_states(defined_mapping: Iterable[tuple[Iterable[str], int]]) -> Mapping[str, State]:
-    map_states = {}
-    for states, mon_state in defined_mapping:
-        for st in states:
-            map_states[st] = State(mon_state)
-    return map_states
+def _get_map_states(
+    defined_mapping: Iterable[tuple[Iterable[str], int]]
+) -> Mapping[str | None, State]:
+    return {
+        None if st == "-1" else st: State(mon_state)
+        for states, mon_state in defined_mapping
+        for st in states
+    }
 
 
 def _check_status(
-    interface_status: str,
+    interface_status: str | None,
     target_states: Container[str] | None,
-    states_map: Mapping[str, State],
+    states_map: Mapping[str | None, State],
 ) -> State:
     mon_state = State.OK
     if target_states is not None and interface_status not in target_states:

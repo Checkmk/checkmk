@@ -298,7 +298,7 @@ def _vs_matching_conditions():
                                 ),
                                 choices=ifaceoper.interface_oper_states(),
                                 toggle_all=True,
-                                default_value=["1"],
+                                default_value=["1", "-1"],
                             ),
                         ),
                         (

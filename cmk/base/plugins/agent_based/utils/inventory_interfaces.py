@@ -18,7 +18,7 @@ class Interface:
     alias: str
     type: str
     speed: int
-    oper_status: int
+    oper_status: int | None
     phys_address: str
     admin_status: Optional[int] = None
     last_change: Optional[float] = None

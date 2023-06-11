@@ -39,13 +39,7 @@ from setproctitle import setthreadtitle
 
 from livestatus import SiteConfiguration, SiteId
 
-import cmk.utils
-import cmk.utils.agent_registration as agent_registration
-import cmk.utils.packaging
-import cmk.utils.paths
-import cmk.utils.render as render
-import cmk.utils.store as store
-import cmk.utils.version as cmk_version
+from cmk.utils import agent_registration, packaging, paths, render, store, version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
@@ -172,14 +166,14 @@ def get_free_message(format_html: bool = False) -> str:
 
 
 # TODO: find a way to make this more obvious/transparent in code
-def add_replication_paths(paths: list[ReplicationPath]) -> None:
+def add_replication_paths(repl_paths: list[ReplicationPath]) -> None:
     """Addition of any edition-specific replication paths (i.e. config files) that need
     to be synchronised in a distributed set-up.
 
     This addition is done dynamically by the various edition plugins.
     {enterprise,managed}/cmk/gui/{cee,cme}/plugins/wato
     """
-    _replication_paths.extend(paths)
+    _replication_paths.extend(repl_paths)
 
 
 def get_replication_paths() -> list[ReplicationPath]:
@@ -188,7 +182,7 @@ def get_replication_paths() -> list[ReplicationPath]:
     NOTE: This list is enriched further by edition plugins. See
     'add_replication_paths'.
     """
-    paths: list[ReplicationPath] = [
+    repl_paths: list[ReplicationPath] = [
         ReplicationPath(
             "dir",
             "check_mk",
@@ -287,12 +281,12 @@ def get_replication_paths() -> list[ReplicationPath]:
     # status is not backed up.
     if active_config.mkeventd_enabled:
         _rule_pack_dir = str(ec.rule_pack_dir().relative_to(cmk.utils.paths.omd_root))
-        paths.append(ReplicationPath("dir", "mkeventd", _rule_pack_dir, []))
+        repl_paths.append(ReplicationPath("dir", "mkeventd", _rule_pack_dir, []))
 
         _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir().relative_to(cmk.utils.paths.omd_root))
-        paths.append(ReplicationPath("dir", "mkeventd_mkp", _mkp_rule_pack_dir, []))
+        repl_paths.append(ReplicationPath("dir", "mkeventd_mkp", _mkp_rule_pack_dir, []))
 
-    return paths + _replication_paths
+    return repl_paths + _replication_paths
 
 
 # If the site is not up-to-date, synchronize it first.
@@ -922,7 +916,7 @@ class ActivateChangesManager(ActivateChanges):
                 pass
 
             snapshot_manager = SnapshotManager.factory(
-                work_dir, site_snapshot_settings, cmk_version.edition()
+                work_dir, site_snapshot_settings, version.edition()
             )
             snapshot_manager.generate_snapshots()
             logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
@@ -1033,9 +1027,9 @@ class SnapshotManager:
     def factory(
         work_dir: str,
         site_snapshot_settings: dict[SiteId, SnapshotSettings],
-        edition: cmk_version.Edition,
+        edition: version.Edition,
     ) -> SnapshotManager:
-        if edition is cmk_version.Edition.CME:
+        if edition is version.Edition.CME:
             import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
 
             return SnapshotManager(
@@ -1460,7 +1454,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         queued_jobs: list[ActivateChangesSite] = []
 
         file_filter_func = None
-        if cmk_version.is_managed_edition():
+        if version.is_managed_edition():
             import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
 
             file_filter_func = managed_snapshots.customer_user_files_filter()
@@ -2127,15 +2121,15 @@ def get_pending_changes() -> dict[str, ActivationChange]:
 def _need_to_update_mkps_after_sync() -> bool:
     if not (central_version := _request.headers.get("x-checkmk-version")):
         raise ValueError("Request header x-checkmk-version is missing")
-    logger.debug("Local version: %s, Central version: %s", cmk_version.__version__, central_version)
-    return cmk_version.__version__ != central_version
+    logger.debug("Local version: %s, Central version: %s", version.__version__, central_version)
+    return version.__version__ != central_version
 
 
 def _need_to_update_config_after_sync() -> bool:
     if not (central_version := _request.headers.get("x-checkmk-version")):
         raise ValueError("Request header x-checkmk-version is missing")
-    return not cmk_version.is_same_major_version(
-        cmk_version.__version__,
+    return not version.is_same_major_version(
+        version.__version__,
         central_version,
     )
 
@@ -2168,41 +2162,41 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # configuration compatible with the local Checkmk version.
         if _need_to_update_mkps_after_sync():
             logger.debug("Updating active packages")
-            cmk.utils.packaging.update_active_packages(
-                cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
-                cmk.utils.packaging.PathConfig(
-                    agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
-                    agents_dir=cmk.utils.paths.local_agents_dir,
-                    alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
-                    bin_dir=cmk.utils.paths.local_bin_dir,
-                    check_manpages_dir=cmk.utils.paths.local_check_manpages_dir,
-                    checks_dir=cmk.utils.paths.local_checks_dir,
-                    doc_dir=cmk.utils.paths.local_doc_dir,
-                    gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
-                    installed_packages_dir=cmk.utils.paths.installed_packages_dir,
-                    inventory_dir=cmk.utils.paths.local_inventory_dir,
-                    lib_dir=cmk.utils.paths.local_lib_dir,
-                    locale_dir=cmk.utils.paths.local_locale_dir,
-                    local_root=cmk.utils.paths.local_root,
-                    mib_dir=cmk.utils.paths.local_mib_dir,
+            packaging.update_active_packages(
+                packaging.Installer(paths.installed_packages_dir),
+                packaging.PathConfig(
+                    agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
+                    agents_dir=paths.local_agents_dir,
+                    alert_handlers_dir=paths.local_alert_handlers_dir,
+                    bin_dir=paths.local_bin_dir,
+                    check_manpages_dir=paths.local_check_manpages_dir,
+                    checks_dir=paths.local_checks_dir,
+                    doc_dir=paths.local_doc_dir,
+                    gui_plugins_dir=paths.local_gui_plugins_dir,
+                    installed_packages_dir=paths.installed_packages_dir,
+                    inventory_dir=paths.local_inventory_dir,
+                    lib_dir=paths.local_lib_dir,
+                    locale_dir=paths.local_locale_dir,
+                    local_root=paths.local_root,
+                    mib_dir=paths.local_mib_dir,
                     mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
-                    notifications_dir=cmk.utils.paths.local_notifications_dir,
-                    packages_enabled_dir=cmk.utils.paths.local_enabled_packages_dir,
-                    packages_local_dir=cmk.utils.paths.local_optional_packages_dir,
-                    packages_shipped_dir=cmk.utils.paths.optional_packages_dir,
-                    pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
-                    tmp_dir=cmk.utils.paths.tmp_dir,
-                    web_dir=cmk.utils.paths.local_web_dir,
+                    notifications_dir=paths.local_notifications_dir,
+                    packages_enabled_dir=paths.local_enabled_packages_dir,
+                    packages_local_dir=paths.local_optional_packages_dir,
+                    packages_shipped_dir=paths.optional_packages_dir,
+                    pnp_templates_dir=paths.local_pnp_templates_dir,
+                    tmp_dir=paths.tmp_dir,
+                    web_dir=paths.local_web_dir,
                 ),
                 {
-                    cmk.utils.packaging.PackagePart.EC_RULE_PACKS: cmk.utils.packaging.PackageOperationCallbacks(
+                    packaging.PackagePart.EC_RULE_PACKS: packaging.PackageOperationCallbacks(
                         install=ec.install_packaged_rule_packs,
                         release=ec.release_packaged_rule_packs,
                         uninstall=ec.uninstall_packaged_rule_packs,
                     )
                 },
-                cmk_version.__version__,
-                cmk.utils.packaging.execute_post_package_change_actions,
+                version.__version__,
+                packaging.execute_post_package_change_actions,
             )
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")
@@ -2281,18 +2275,18 @@ def _get_replication_components(site_config: SiteConfiguration) -> list[Replicat
         particular site.
 
     """
-    paths = get_replication_paths()[:]
+    repl_paths = get_replication_paths()[:]
 
     # Remove Event Console settings, if this site does not want it (might
     # be removed in some future day)
     if not site_config.get("replicate_ec"):
-        paths = [e for e in paths if e.ident not in ["mkeventd", "mkeventd_mkp"]]
+        repl_paths = [e for e in repl_paths if e.ident not in ["mkeventd", "mkeventd_mkp"]]
 
     # Remove extensions if site does not want them
     if not site_config.get("replicate_mkps"):
-        paths = [e for e in paths if e.ident not in ["local", "mkps"]]
+        repl_paths = [e for e in repl_paths if e.ident not in ["local", "mkps"]]
 
-    return paths
+    return repl_paths
 
 
 def get_file_names_to_sync(

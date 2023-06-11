@@ -71,7 +71,7 @@ def check_cmctc_temp(item, params, section):
     )
 
 
-check_info["cmctc.temp"] = LegacyCheckDefinition(
+check_info["cmctc_temp"] = LegacyCheckDefinition(
     detect=DETECT_CMCTC,
     parse_function=parse_cmctc_temp,
     discovery_function=inventory_cmctc_temp,

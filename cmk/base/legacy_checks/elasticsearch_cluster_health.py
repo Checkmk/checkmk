@@ -159,7 +159,6 @@ def check_elasticsearch_cluster_health_shards(_no_item, params, parsed):
 
 
 check_info["elasticsearch_cluster_health.shards"] = LegacyCheckDefinition(
-    parse_function=parse_elasticsearch_cluster_health,
     check_function=check_elasticsearch_cluster_health_shards,
     discovery_function=inventory_elasticsearch_cluster_health,
     service_name="Elasticsearch Cluster Shards",
@@ -188,7 +187,6 @@ def check_elasticsearch_cluster_health_tasks(_no_item, params, parsed):
 
 
 check_info["elasticsearch_cluster_health.tasks"] = LegacyCheckDefinition(
-    parse_function=parse_elasticsearch_cluster_health,
     check_function=check_elasticsearch_cluster_health_tasks,
     discovery_function=inventory_elasticsearch_cluster_health,
     service_name="Elasticsearch Cluster Tasks",

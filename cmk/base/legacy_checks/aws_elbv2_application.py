@@ -131,7 +131,6 @@ def check_aws_elbv2_application_connections(item, params, parsed):
 
 
 check_info["aws_elbv2_application.connections"] = LegacyCheckDefinition(
-    parse_function=parse_aws_elbv2_application,
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_application_connection_types, requirement=any
     ),

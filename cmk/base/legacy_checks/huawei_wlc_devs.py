@@ -59,7 +59,6 @@ def check_huawei_wlc_devs_mem(item, params, parsed):
 
 check_info["huawei_wlc_devs.mem"] = LegacyCheckDefinition(
     discovery_function=discovery_huawei_wlc_devs_mem,
-    parse_function=parse_huawei_wlc_devs,
     check_function=check_huawei_wlc_devs_mem,
     service_name="Device %s Memory",
     check_default_parameters={"levels": (80.0, 90.0)},
@@ -84,7 +83,6 @@ def check_huawei_wlc_devs_cpu(item, params, parsed):
 
 
 check_info["huawei_wlc_devs.cpu"] = LegacyCheckDefinition(
-    parse_function=parse_huawei_wlc_devs,
     discovery_function=discovery_huawei_wlc_devs_cpu,
     check_function=check_huawei_wlc_devs_cpu,
     service_name="Device %s CPU",

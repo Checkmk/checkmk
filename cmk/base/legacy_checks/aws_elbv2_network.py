@@ -117,7 +117,6 @@ def check_aws_elbv2_network_connections(item, params, parsed):
 
 
 check_info["aws_elbv2_network.connections"] = LegacyCheckDefinition(
-    parse_function=parse_aws_elbv2_network,
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_connection_types, requirement=any
     ),

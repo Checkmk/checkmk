@@ -14,9 +14,18 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
-fast_lta_headunit_info = [
-    (".1.3.6.1.4.1.27417.2", [1, 2, 5])  # headUnitStatus  # replicationMode  # replicationRunning
-]
+check_info["fast_lta_headunit"] = LegacyCheckDefinition(
+    detect=all_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
+        any_of(exists(".1.3.6.1.4.1.27417.2.1"), exists(".1.3.6.1.4.1.27417.2.1.0")),
+    ),
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.27417.2",
+            oids=["1", "2", "5"],
+        )
+    ],
+)
 
 
 #   .--status--------------------------------------------------------------.
@@ -76,19 +85,9 @@ def check_fast_lta_headunit_status(item, _no_params, info):
 
 
 check_info["fast_lta_headunit.status"] = LegacyCheckDefinition(
-    detect=all_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
-        any_of(exists(".1.3.6.1.4.1.27417.2.1"), exists(".1.3.6.1.4.1.27417.2.1.0")),
-    ),
     check_function=check_fast_lta_headunit_status,
     discovery_function=inventory_fast_lta_headunit_status,
     service_name="Fast LTA Headunit Status",
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.27417.2",
-            oids=["1", "2", "5"],
-        )
-    ],
 )
 
 # .
@@ -136,19 +135,9 @@ def check_fast_lta_headunit_replication(item, _no_params, info):
 
 
 check_info["fast_lta_headunit.replication"] = LegacyCheckDefinition(
-    detect=all_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
-        any_of(exists(".1.3.6.1.4.1.27417.2.1"), exists(".1.3.6.1.4.1.27417.2.1.0")),
-    ),
     check_function=check_fast_lta_headunit_replication,
     discovery_function=inventory_fast_lta_headunit_replication,
     service_name="Fast LTA Replication",
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.27417.2",
-            oids=["1", "2", "5"],
-        )
-    ],
 )
 
 # .

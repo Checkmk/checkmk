@@ -151,7 +151,6 @@ check_info["netapp_api_environment.fan_faults"] = LegacyCheckDefinition(
     discovery_function=discover_api_environment(
         lambda v: _is_fan(v.get("sensor-name")) and v["sensor-name"].endswith(" Fault")
     ),
-    parse_function=_parse_netapp_api_environment,
     service_name="Fan Controller %s",
     check_ruleset_name="hw_fans",
 )
@@ -159,7 +158,6 @@ check_info["netapp_api_environment.fan_faults"] = LegacyCheckDefinition(
 check_info["netapp_api_environment.temperature"] = LegacyCheckDefinition(
     check_function=check_netapp_api_environment_threshold,
     discovery_function=discover_api_environment(lambda v: v.get("sensor-type") == "thermal"),
-    parse_function=_parse_netapp_api_environment,
     service_name="System Temperature %s",
     check_ruleset_name="temperature",
 )
@@ -167,7 +165,6 @@ check_info["netapp_api_environment.temperature"] = LegacyCheckDefinition(
 check_info["netapp_api_environment.fans"] = LegacyCheckDefinition(
     check_function=check_netapp_api_environment_threshold,
     discovery_function=discover_api_environment(lambda v: v.get("sensor-type") == "fan"),
-    parse_function=_parse_netapp_api_environment,
     service_name="System Fans %s",
     check_ruleset_name="hw_fans",
 )
@@ -177,7 +174,6 @@ check_info["netapp_api_environment.voltage"] = LegacyCheckDefinition(
     discovery_function=discover_api_environment(
         lambda v: v.get("sensor-type") == "voltage" and v.get("value-units")
     ),
-    parse_function=_parse_netapp_api_environment,
     service_name="System Voltage %s",
     check_ruleset_name="voltage",
 )
@@ -187,6 +183,5 @@ check_info["netapp_api_environment.current"] = LegacyCheckDefinition(
     discovery_function=discover_api_environment(
         lambda v: v.get("sensor-type") == "current" and v.get("value-units")
     ),
-    parse_function=_parse_netapp_api_environment,
     service_name="System Currents %s",
 )

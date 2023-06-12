@@ -617,8 +617,7 @@ class StructuredDataNode:
             if node is None:
                 continue
 
-            filtered_node = filtered.setdefault_node(f.path)
-
+            filtered_node = StructuredDataNode(name=f.path[-1] if f.path else "", path=f.path)
             filtered_node.add_attributes(
                 node.attributes.get_filtered_attributes(f.filter_attributes)
             )
@@ -628,6 +627,9 @@ class StructuredDataNode:
                 # From GUI::permitted_paths: We always get a list of strs.
                 if f.filter_nodes(str(name)):
                     filtered_node.add_node(sub_node)
+
+            if not filtered_node.is_empty():
+                filtered.setdefault_node(f.path[:-1]).add_node(filtered_node)
 
         return filtered
 
@@ -1151,16 +1153,16 @@ def filter_delta_tree(
         if node is None:
             continue
 
-        filtered.add_node(
-            node.path,
-            DeltaStructuredDataNode(
+        if not (
+            filtered_node := DeltaStructuredDataNode(
                 name=node.name,
                 path=node.path,
                 attributes=_filter_delta_attributes(node.attributes, f.filter_attributes),
                 table=_filter_delta_table(node.table, f.filter_columns),
                 _nodes={child.name: child for child in node.nodes if f.filter_nodes(child.name)},
-            ),
-        )
+            )
+        ).is_empty():
+            filtered.add_node(node.path, filtered_node)
 
     return filtered
 

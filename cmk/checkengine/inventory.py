@@ -11,7 +11,7 @@ import time
 from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, Protocol
+from typing import Protocol
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -24,7 +24,6 @@ from cmk.utils.structured_data import (
     parse_visible_raw_path,
     RawIntervalsFromConfig,
     RetentionIntervals,
-    SDPath,
     UpdateResult,
 )
 from cmk.utils.type_defs import (
@@ -440,51 +439,51 @@ def _may_update(
     if not raw_intervals_from_config:
         return UpdateResult()
 
-    raw_cache_info_by_path_and_type = {
+    # TODO do we need class name?
+    cache_info_by_path_and_type = {
         (tuple(item.path), item.__class__.__name__): items_of_inventory_plugin.raw_cache_info
         for items_of_inventory_plugin in items_of_inventory_plugins
         for item in items_of_inventory_plugin.items
     }
-
-    def _get_raw_cache_info(
-        key: tuple[SDPath, Literal["Attributes", "TableRow"]]
-    ) -> tuple[int, int]:
-        if (raw_cache_info := raw_cache_info_by_path_and_type.get(key)) is None:
-            return (now, 0)
-        return raw_cache_info
 
     results = []
     for entry in raw_intervals_from_config:
         node_path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
 
         if choices_for_attributes := entry.get("attributes"):
-            raw_cache_info = _get_raw_cache_info((node_path, "Attributes"))
             results.append(
                 inventory_tree.update_pairs(
                     now,
                     node_path,
                     previous_tree,
                     make_filter_from_choice(choices_for_attributes),
-                    RetentionIntervals(
-                        cached_at=raw_cache_info[0],
-                        cache_interval=raw_cache_info[1],
-                        retention_interval=entry["interval"],
+                    RetentionIntervals.make(
+                        (
+                            (now, 0)
+                            if (ci := cache_info_by_path_and_type.get((node_path, "Attributes")))
+                            is None
+                            else ci
+                        ),
+                        entry["interval"],
                     ),
                 )
             )
 
         elif choices_for_table := entry.get("columns"):
-            raw_cache_info = _get_raw_cache_info((node_path, "TableRow"))
             results.append(
                 inventory_tree.update_rows(
                     now,
                     node_path,
                     previous_tree,
                     make_filter_from_choice(choices_for_table),
-                    RetentionIntervals(
-                        cached_at=raw_cache_info[0],
-                        cache_interval=raw_cache_info[1],
-                        retention_interval=entry["interval"],
+                    RetentionIntervals.make(
+                        (
+                            (now, 0)
+                            if (ci := cache_info_by_path_and_type.get((node_path, "TableRow")))
+                            is None
+                            else ci
+                        ),
+                        entry["interval"],
                     ),
                 )
             )

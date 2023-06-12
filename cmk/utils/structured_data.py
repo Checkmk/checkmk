@@ -83,6 +83,10 @@ class RetentionIntervals(NamedTuple):
     cache_interval: int
     retention_interval: int
 
+    @classmethod
+    def make(cls, cache_info: tuple[int, int], interval: int) -> RetentionIntervals:
+        return cls(cache_info[0], cache_info[1], interval)
+
     @property
     def valid_until(self) -> int:
         return self.cached_at + self.cache_interval

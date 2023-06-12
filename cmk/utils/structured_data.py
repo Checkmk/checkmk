@@ -693,45 +693,85 @@ class ImmutableTree:
 #   '----------------------------------------------------------------------'
 
 
-def _filter_delta_attributes(
-    delta_attributes: DeltaAttributes, filter_func: SDFilterFunc
-) -> DeltaAttributes:
-    return DeltaAttributes(pairs=_get_filtered_dict(delta_attributes.pairs, filter_func))
+@dataclass(frozen=True, kw_only=True)
+class _FilterTree:
+    nodes: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
+    filters: list[SDFilter] = field(default_factory=list)
 
 
-def _filter_delta_table(delta_table: DeltaTable, filter_func: SDFilterFunc) -> DeltaTable:
-    return DeltaTable(
-        key_columns=delta_table.key_columns,
-        rows=[
-            filtered_row
-            for row in delta_table.rows
-            if (filtered_row := _get_filtered_dict(row, filter_func))
-        ],
-    )
-
-
-def _filter_delta_node(
-    delta_tree: DeltaStructuredDataNode, filters: Iterable[SDFilter]
-) -> DeltaStructuredDataNode:
-    filtered = DeltaStructuredDataNode(path=delta_tree.path)
-
+def _make_filter_tree(filters: Iterable[SDFilter]) -> _FilterTree:
+    filter_tree = _FilterTree()
     for f in filters:
-        # First check if node exists
-        node = delta_tree.get_node(f.path)
-        if node is None:
+        if not f.path:
+            filter_tree.filters.append(f)
             continue
 
-        if filtered_delta_node := DeltaStructuredDataNode(
-            path=node.path,
-            attributes=_filter_delta_attributes(node.attributes, f.filter_pairs),
-            table=_filter_delta_table(node.table, f.filter_columns),
-            nodes={
-                name: child for name, child in node.nodes_by_name.items() if f.filter_nodes(name)
-            },
-        ):
-            filtered.add_node(node.path, filtered_delta_node)
+        node = filter_tree.nodes.setdefault(f.path[0], _FilterTree())
+        for name in f.path[1:]:
+            node = node.nodes.setdefault(name, _FilterTree())
 
-    return filtered
+        node.filters.append(f)
+    return filter_tree
+
+
+def _filter_delta_attributes(
+    delta_attributes: DeltaAttributes, filter_funcs: Sequence[SDFilterFunc]
+) -> DeltaAttributes:
+    if not filter_funcs:
+        return DeltaAttributes(pairs=delta_attributes.pairs)
+
+    filtered_pairs: dict[SDKey, tuple[SDValue, SDValue]] = {}
+    for filter_func in filter_funcs:
+        filtered_pairs.update(_get_filtered_dict(delta_attributes.pairs, filter_func))
+    return DeltaAttributes(pairs=filtered_pairs)
+
+
+def _filter_delta_table(
+    delta_table: DeltaTable, filter_funcs: Sequence[SDFilterFunc]
+) -> DeltaTable:
+    if not filter_funcs:
+        return DeltaTable(key_columns=delta_table.key_columns, rows=delta_table.rows)
+
+    filtered_rows: list[dict[SDKey, tuple[SDValue, SDValue]]] = []
+    for row in delta_table.rows:
+        filtered_row: dict[SDKey, tuple[SDValue, SDValue]] = {}
+        for filter_func in filter_funcs:
+            filtered_row.update(_get_filtered_dict(row, filter_func))
+        if filtered_row:
+            filtered_rows.append(filtered_row)
+    return DeltaTable(key_columns=delta_table.key_columns, rows=filtered_rows)
+
+
+def _filter_delta_tree(
+    delta_tree: DeltaStructuredDataNode, filter_tree: _FilterTree
+) -> DeltaStructuredDataNode:
+    filtered_nodes: dict[SDNodeName, DeltaStructuredDataNode] = {}
+    for name in set(
+        name
+        for name in delta_tree.nodes_by_name
+        for f in filter_tree.filters
+        if f.filter_nodes(name)
+    ).union(filter_tree.nodes):
+        if filtered_node := _filter_delta_tree(
+            delta_tree.nodes_by_name.get(
+                name, DeltaStructuredDataNode(path=delta_tree.path + (name,))
+            ),
+            filter_tree.nodes.get(name, _FilterTree()),
+        ):
+            filtered_nodes.setdefault(name, filtered_node)
+
+    return DeltaStructuredDataNode(
+        path=delta_tree.path,
+        attributes=(
+            _filter_delta_attributes(
+                delta_tree.attributes, [f.filter_pairs for f in filter_tree.filters]
+            )
+        ),
+        table=_filter_delta_table(
+            delta_tree.table, [f.filter_columns for f in filter_tree.filters]
+        ),
+        nodes=filtered_nodes,
+    )
 
 
 class ImmutableDeltaTree:
@@ -749,7 +789,7 @@ class ImmutableDeltaTree:
         return bool(self.tree)
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
-        return ImmutableDeltaTree(_filter_delta_node(self.tree, filters))
+        return ImmutableDeltaTree(_filter_delta_tree(self.tree, _make_filter_tree(filters)))
 
     def get_stats(self) -> _SDDeltaCounter:
         return self.tree.get_stats()
@@ -1328,60 +1368,6 @@ _SDEncodeAs = Callable[[SDValue], tuple[SDValue | None, SDValue | None]]
 _SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 
 
-def _merge_delta_attributes(left: DeltaAttributes, right: DeltaAttributes) -> DeltaAttributes:
-    return DeltaAttributes(pairs={**left.pairs, **right.pairs})
-
-
-def _merge_delta_table(left: DeltaTable, right: DeltaTable) -> DeltaTable:
-    delta_key_columns = []
-    for key_column in left.key_columns:
-        if key_column not in delta_key_columns:
-            delta_key_columns.append(key_column)
-    for key_column in right.key_columns:
-        if key_column not in delta_key_columns:
-            delta_key_columns.append(key_column)
-
-    delta_rows = []
-    for row in left.rows:
-        if row not in delta_rows:
-            delta_rows.append(row)
-    for row in right.rows:
-        if row not in delta_rows:
-            delta_rows.append(row)
-
-    return DeltaTable(key_columns=delta_key_columns, rows=delta_rows)
-
-
-def _merge_delta_nodes(
-    left: DeltaStructuredDataNode, right: DeltaStructuredDataNode
-) -> DeltaStructuredDataNode:
-    delta_nodes = {}
-
-    compared_keys = _compare_dict_keys(
-        old_dict=left.nodes_by_name,
-        new_dict=right.nodes_by_name,
-    )
-
-    for key in compared_keys.only_old:
-        delta_nodes[key] = left.nodes_by_name[key]
-
-    for key in compared_keys.both:
-        delta_nodes[key] = _merge_delta_nodes(
-            left.nodes_by_name[key],
-            right.nodes_by_name[key],
-        )
-
-    for key in compared_keys.only_new:
-        delta_nodes[key] = right.nodes_by_name[key]
-
-    return DeltaStructuredDataNode(
-        path=left.path,
-        attributes=_merge_delta_attributes(left.attributes, right.attributes),
-        table=_merge_delta_table(left.table, right.table),
-        nodes=delta_nodes,
-    )
-
-
 def _count_dict_entries(dict_: Mapping[SDKey, tuple[SDValue, SDValue]]) -> _SDDeltaCounter:
     counter: _SDDeltaCounter = Counter()
     for value0, value1 in dict_.values():
@@ -1453,8 +1439,7 @@ class DeltaStructuredDataNode:
     path: SDPath = ()
     attributes: DeltaAttributes = DeltaAttributes()
     table: DeltaTable = DeltaTable()
-    # TODO Make nodes immutable
-    nodes: dict[SDNodeName, DeltaStructuredDataNode] = field(default_factory=dict)
+    nodes: Mapping[SDNodeName, DeltaStructuredDataNode] = field(default_factory=dict)
 
     @classmethod
     def make_from_node(
@@ -1488,24 +1473,6 @@ class DeltaStructuredDataNode:
                 return True
 
         return False
-
-    def add_node(self, path: SDPath, node: DeltaStructuredDataNode) -> None:
-        if not path:
-            return
-
-        node_name = path[0]
-        node_path = self.path + (path[0],)
-        if len(path) == 1:
-            if node_name in self.nodes:
-                merge_node = self.nodes[node_name]
-            else:
-                merge_node = DeltaStructuredDataNode(path=node_path)
-            self.nodes[node_name] = _merge_delta_nodes(merge_node, node)
-            return
-
-        self.nodes.setdefault(node_name, DeltaStructuredDataNode(path=node_path)).add_node(
-            path[1:], node
-        )
 
     def get_node(self, path: SDPath) -> DeltaStructuredDataNode | None:
         if not path:

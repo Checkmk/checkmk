@@ -489,7 +489,7 @@ def test_filter_delta_tree_nta_ta() -> None:
                 ),
                 SDFilter(
                     path=("path-to-nta", "ta"),
-                    filter_pairs=lambda k: k in ["ta1"],
+                    filter_pairs=lambda k: False,
                     filter_columns=lambda k: k in ["ta1"],
                     filter_nodes=lambda n: False,
                 ),
@@ -497,18 +497,21 @@ def test_filter_delta_tree_nta_ta() -> None:
         )
     )
 
+    nta = filtered.get_tree(("path-to-nta",))
+    assert bool(nta)
+    assert nta.tree.attributes.pairs == {}
+    assert nta.tree.table.rows == []
+
     assert not filtered.get_tree(("path-to-nta", "nt"))
     assert not filtered.get_tree(("path-to-nta", "na"))
 
     filtered_ta = filtered.get_tree(("path-to-nta", "ta"))
     assert bool(filtered_ta)
-    assert filtered_ta.tree.attributes.pairs == {"ta0": (None, "TA 0"), "ta1": (None, "TA 1")}
-    assert len(filtered_ta.tree.table.rows) == 4
+    assert filtered_ta.tree.attributes.pairs == {"ta0": (None, "TA 0")}
+    assert len(filtered_ta.tree.table.rows) == 2
     for row in (
-        {"ta0": (None, "TA 00")},
-        {"ta0": (None, "TA 10")},
-        {"ta1": (None, "TA 01")},
-        {"ta1": (None, "TA 11")},
+        {"ta0": (None, "TA 00"), "ta1": (None, "TA 01")},
+        {"ta0": (None, "TA 10"), "ta1": (None, "TA 11")},
     ):
         assert row in filtered_ta.tree.table.rows
 

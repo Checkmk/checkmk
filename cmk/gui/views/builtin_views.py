@@ -5734,7 +5734,7 @@ builtin_views["it_efficiency_servers_fs_esxi"] = {
     "datasource": "services",
     "context": {
         "host_labels": filter_http_vars_for_simple_label_group(
-            labels=["cmk/os_family:VMware ESXi"],
+            labels=["cmk/vsphere_object:server"],
             object_type="host",
         ),
         "serviceregex": {"service_regex": "^Filesystem*", "neg_service_regex": ""},

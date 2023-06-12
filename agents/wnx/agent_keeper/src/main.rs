@@ -21,6 +21,16 @@ const VERSION: &str = "2.3.0";
 
 lazy_static! {
     static ref SERVICE_STATUS_HANDLE: Mutex<Option<ServiceStatusHandle>> = Mutex::new(None);
+    static ref EXE_DIR: Mutex<String> = Mutex::new(".".to_string());
+    static ref WORK_DIR: Mutex<String> = Mutex::new(".".to_string());
+}
+
+pub fn get_exe_dir() -> String {
+    EXE_DIR.lock().unwrap().to_string()
+}
+
+pub fn get_work_dir() -> String {
+    WORK_DIR.lock().unwrap().to_string()
 }
 
 define_windows_service!(ffi_service_main, service_main);
@@ -35,12 +45,19 @@ struct Cli {
 
     #[command(subcommand)]
     mode: Option<Mode>,
+
+    #[arg(short, long, action = clap::ArgAction::Set)]
+    exe_dir: Option<String>,
+
+    #[arg(short, long, action = clap::ArgAction::Set)]
+    work_dir: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
 pub enum Mode {
     Install,
     Uninstall,
+    DryRun,
 }
 
 fn install_service(
@@ -65,7 +82,10 @@ fn install_service(
         start_type: ServiceStartType::OnDemand,
         error_control: ServiceErrorControl::Normal,
         executable_path: service_binary_path,
-        launch_arguments: vec![],
+        launch_arguments: vec!["--exe-dir", &get_exe_dir(), "--work-dir", &get_work_dir()]
+            .into_iter()
+            .map(OsString::from)
+            .collect(),
         dependencies: vec![],
         account_name: None, // run as System
         account_password: None,
@@ -186,12 +206,33 @@ fn _set_service_status(status: ServiceStatus) -> windows_service::Result<()> {
 
 fn main() -> Result<(), windows_service::Error> {
     let r = Cli::parse();
+    *EXE_DIR.lock().unwrap() = r.exe_dir.unwrap_or_else(get_default_exe_dir);
+    *WORK_DIR.lock().unwrap() = r.work_dir.unwrap_or_else(get_default_work_dir);
     match r.mode {
         None => service_dispatcher::start(SERVICE_NAME, ffi_service_main)?,
         Some(Mode::Install) => {
             install_service(SERVICE_NAME, SERVICE_DISPLAY_NAME, SERVICE_DESCRIPTION)?
         }
         Some(Mode::Uninstall) => uninstall_service(SERVICE_NAME)?,
+        Some(Mode::DryRun) => println!(
+            "Dry Run Mode, exe dir: '{}' work dir: '{}'",
+            get_exe_dir(),
+            get_work_dir()
+        ),
     }
+
     Ok(())
+}
+
+fn get_default_exe_dir() -> String {
+    let exe_path = std::env::current_exe().expect("You have no access rights for exe");
+    exe_path
+        .parent()
+        .expect("You have no access rights for exe dir")
+        .to_string_lossy()
+        .to_string()
+}
+
+fn get_default_work_dir() -> String {
+    get_default_exe_dir()
 }

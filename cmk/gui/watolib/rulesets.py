@@ -10,7 +10,7 @@ import itertools
 import os
 import pprint
 import re
-from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping
+from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
 from typing import Any, assert_never, cast, Final
@@ -288,17 +288,17 @@ class RulesetCollection:
     specific class is the FolderRulesets class which cares about all rulesets
     configured in a folder."""
 
-    def __init__(self, rulesets: dict[RulesetName, Ruleset]) -> None:
+    def __init__(self, rulesets: Mapping[RulesetName, Ruleset]) -> None:
         super().__init__()
         # A dictionary containing all ruleset objects of the collection.
         # The name of the ruleset is used as key in the dict.
-        self._rulesets = rulesets
-        self._unknown_rulesets: dict[str, dict[str, list]] = {}
+        self._rulesets = dict(rulesets)
+        self._unknown_rulesets: dict[str, dict[str, Sequence[RuleSpec[object]]]] = {}
 
     @staticmethod
     def _initialize_rulesets(
         only_varname: RulesetName | None = None,
-    ) -> dict[RulesetName, Ruleset]:
+    ) -> Mapping[RulesetName, Ruleset]:
         tag_to_group_map = ruleset_matcher.get_tag_to_group_map(active_config.tags)
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
         return {varname: Ruleset(varname, tag_to_group_map) for varname in varnames}
@@ -314,7 +314,11 @@ class RulesetCollection:
         self.replace_folder_config(
             folder,
             store.load_mk_file(
-                path, {**self._context_helpers(folder), **self._prepare_empty_rulesets()}
+                path,
+                {
+                    **RulesetCollection._context_helpers(folder),
+                    **RulesetCollection._prepare_empty_rulesets(),
+                },
             ),
             only_varname,
         )
@@ -329,35 +333,36 @@ class RulesetCollection:
         }
 
     @staticmethod
-    def _prepare_empty_rulesets() -> Mapping[str, list[object] | dict[str, object]]:
+    def _prepare_empty_rulesets() -> Mapping[str, Sequence[object] | Mapping[str, object]]:
         """Prepare empty rulesets so that rules.mk has something to append to
 
         We need to initialize all variables here, even when only loading with only_varname.
         """
-
-        def _make_dict() -> list[object] | dict[str, object]:
-            return {}
-
+        default: Callable[[], Sequence[object] | Mapping[str, object]] = dict
         return dict(
-            ((name.split(":")[0], _make_dict()) if ":" in name else (name, []))
+            ((name.split(":")[0], default()) if ":" in name else (name, []))
             for name in rulespec_registry.keys()
         )
 
-    def replace_folder_config(  # type: ignore[no-untyped-def]
-        self, folder: CREFolder, loaded_file_config, only_varname: RulesetName | None = None
+    def replace_folder_config(
+        # The Any below should most likely be RuleSpec[object] but I am not sure.
+        self,
+        folder: CREFolder,
+        loaded_file_config: Mapping[str, Any],
+        only_varname: RulesetName | None = None,
     ) -> None:
         if only_varname:
             variable_names_to_load = [only_varname]
         else:
 
-            def varnames_from_item(name: str, value: object) -> list[str]:
+            def varnames_from_item(name: str, value: object) -> Sequence[str]:
                 if isinstance(value, dict):
                     return [f"{name}:{key}" for key in value]
                 if isinstance(value, list):
                     return [name]
                 return []
 
-            helpers = self._context_helpers(folder)
+            helpers = RulesetCollection._context_helpers(folder)
             variable_names_to_load = [
                 name
                 for config_varname, value in loaded_file_config.items()
@@ -518,7 +523,7 @@ class SingleRulesetRecursively(AllRulesets):
 class FolderRulesets(RulesetCollection):
     def __init__(
         self,
-        rulesets: dict[RulesetName, Ruleset],
+        rulesets: Mapping[RulesetName, Ruleset],
         *,
         folder: CREFolder,
     ) -> None:

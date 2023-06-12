@@ -403,7 +403,8 @@ def _filter_node(node: StructuredDataNode, filters: Iterable[SDFilter]) -> Struc
             if f.filter_nodes(str(name)):
                 filtered_node.add_node((str(name),), sub_node)
 
-        filtered.add_node(f.path, filtered_node)
+        if filtered_node:
+            filtered.add_node(f.path, filtered_node)
 
     return filtered
 
@@ -715,19 +716,15 @@ def _filter_delta_node(
         if node is None:
             continue
 
-        filtered.add_node(
-            node.path,
-            DeltaStructuredDataNode(
-                path=node.path,
-                attributes=_filter_delta_attributes(node.attributes, f.filter_pairs),
-                table=_filter_delta_table(node.table, f.filter_columns),
-                nodes={
-                    name: child
-                    for name, child in node.nodes_by_name.items()
-                    if f.filter_nodes(name)
-                },
-            ),
-        )
+        if filtered_delta_node := DeltaStructuredDataNode(
+            path=node.path,
+            attributes=_filter_delta_attributes(node.attributes, f.filter_pairs),
+            table=_filter_delta_table(node.table, f.filter_columns),
+            nodes={
+                name: child for name, child in node.nodes_by_name.items() if f.filter_nodes(name)
+            },
+        ):
+            filtered.add_node(node.path, filtered_delta_node)
 
     return filtered
 

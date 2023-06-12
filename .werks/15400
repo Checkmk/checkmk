@@ -1,0 +1,12 @@
+Title: HW/SW Inventory: Do not show empty sub tree
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1686570144
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

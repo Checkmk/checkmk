@@ -1197,17 +1197,6 @@ def test_filter_real_tree(
             [
                 SDFilter(
                     path=("networking",),
-                    filter_pairs=lambda k: False,
-                    filter_columns=lambda k: False,
-                    filter_nodes=lambda k: False,
-                ),
-            ],
-            None,
-        ),
-        (
-            [
-                SDFilter(
-                    path=("networking",),
                     filter_pairs=(
                         lambda k: k
                         in ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
@@ -1297,6 +1286,23 @@ def test_filter_networking_tree(
         )
         assert interfaces is not None
         assert interfaces.count_entries() == amount_if_entries
+
+
+def test_filter_networking_tree_empty() -> None:
+    tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
+    filtered = tree.filter(
+        [
+            SDFilter(
+                path=("networking",),
+                filter_pairs=lambda k: False,
+                filter_columns=lambda k: False,
+                filter_nodes=lambda k: False,
+            ),
+        ]
+    ).tree
+    assert filtered.get_node(("networking",)) is None
+    assert filtered.get_node(("hardware",)) is None
+    assert filtered.get_node(("software",)) is None
 
 
 @pytest.mark.parametrize(

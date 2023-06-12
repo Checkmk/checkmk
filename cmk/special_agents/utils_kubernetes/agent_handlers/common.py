@@ -8,10 +8,11 @@ import enum
 import re
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Callable, Collection, Literal, NamedTuple, Sequence
+from typing import Callable, Collection, Literal, NamedTuple, Sequence, TypeVar
 
 from cmk.special_agents.utils_kubernetes.api_server import APIData
 from cmk.special_agents.utils_kubernetes.schemata import api, section
+from cmk.special_agents.utils_kubernetes.schemata.api import NamespaceName
 
 
 class AnnotationNonPatternOption(enum.Enum):
@@ -109,6 +110,16 @@ PB_KUBE_OBJECT = (
     Cluster | api.CronJob | Deployment | DaemonSet | api.Namespace | Node | api.Pod | StatefulSet
 )
 PiggybackFormatter = Callable[[PB_KUBE_OBJECT], str]
+
+
+KubeNamespacedObj = TypeVar(
+    "KubeNamespacedObj", bound=DaemonSet | Deployment | StatefulSet | api.CronJob | api.Pod
+)
+
+
+def kube_object_namespace_name(kube_object: KubeNamespacedObj) -> NamespaceName:
+    """The namespace name of the Kubernetes object"""
+    return kube_object.metadata.namespace
 
 
 def aggregate_resources(

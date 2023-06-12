@@ -16,6 +16,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 
 import cmk.special_agents.utils_kubernetes.agent_handlers.common
 import cmk.special_agents.utils_kubernetes.agent_handlers.deployment
+import cmk.special_agents.utils_kubernetes.agent_handlers.pod
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api
 
@@ -39,7 +40,7 @@ def deployments_api_sections() -> set[str]:
 
 def test_pod_deployment_controller_name() -> None:
     pod = APIPodFactory.build(controllers=[APIControllerFactory.build(name="hi", namespace="bye")])
-    pod_info = agent.pod_info(
+    pod_info = cmk.special_agents.utils_kubernetes.agent_handlers.pod._info(
         pod,
         "cluster",
         "host",

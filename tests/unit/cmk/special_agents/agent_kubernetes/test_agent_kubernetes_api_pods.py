@@ -11,7 +11,7 @@ from kubernetes import client  # type: ignore[import]
 
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
-from cmk.special_agents import agent_kube
+import cmk.special_agents.utils_kubernetes.agent_handlers.pod
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform import (
     convert_to_timestamp,
@@ -282,7 +282,7 @@ class TestPodStartUp(TestCase):
             qos_class="burstable",
         )
         self.assertEqual(
-            agent_kube.pod_conditions(api_pod_status),
+            cmk.special_agents.utils_kubernetes.agent_handlers.pod._conditions(api_pod_status),
             section.PodConditions(
                 initialized=section.PodCondition(status=True, reason=None, detail=None),
                 scheduled=section.PodCondition(status=True, reason=None, detail=None),
@@ -321,7 +321,7 @@ class TestPodStartUp(TestCase):
         )
 
         self.assertEqual(
-            agent_kube.pod_conditions(api_pod_status),
+            cmk.special_agents.utils_kubernetes.agent_handlers.pod._conditions(api_pod_status),
             section.PodConditions(
                 initialized=None,
                 scheduled=section.PodCondition(status=True, reason=None, detail=None),

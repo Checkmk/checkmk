@@ -17,17 +17,19 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     NodeStatusFactory,
 )
 
-import cmk.special_agents.utils_kubernetes.agent_handlers.common
-from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.utils_kubernetes.agent_handlers.common import AnnotationNonPatternOption
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
+    AnnotationNonPatternOption,
+    CheckmkHostSettings,
+)
 from cmk.special_agents.utils_kubernetes.agent_handlers.node import (
-    allocatable_cpu_resource,
-    allocatable_memory_resource,
-    allocatable_pods,
-    conditions,
-    container_count,
-    custom_conditions,
-    info,
+    _allocatable_cpu_resource,
+    _allocatable_memory_resource,
+    _allocatable_pods,
+    _conditions,
+    _container_count,
+    _custom_conditions,
+    _info,
+    create_api_sections,
     NATIVE_NODE_CONDITION_TYPES,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
@@ -56,7 +58,7 @@ def test_api_node_allocatable_memory_resource() -> None:
     )
     api_node = api_to_agent_node(APINodeFactory.build(status=status))
     expected = section.AllocatableResource(context="node", value=memory)
-    actual = allocatable_memory_resource(api_node)
+    actual = _allocatable_memory_resource(api_node)
     assert actual == expected
 
 
@@ -67,7 +69,7 @@ def test_api_node_allocatable_cpu_resource() -> None:
     )
     api_node = api_to_agent_node(APINodeFactory.build(status=status))
     expected = section.AllocatableResource(context="node", value=cpu)
-    actual = allocatable_cpu_resource(api_node)
+    actual = _allocatable_cpu_resource(api_node)
     assert actual == expected
 
 
@@ -80,7 +82,7 @@ def test_api_node_alloctable_pods() -> None:
     )
     api_node = api_to_agent_node(APINodeFactory.build(status=status))
     expected = section.AllocatablePods(capacity=capacity, allocatable=allocatable)
-    actual = allocatable_pods(api_node)
+    actual = _allocatable_pods(api_node)
     assert actual == expected
 
 
@@ -88,9 +90,9 @@ def test_write_api_nodes_api_sections_registers_sections_to_be_written(
     write_sections_mock: MagicMock,
 ) -> None:
     api_node = api_to_agent_node(APINodeFactory.build())
-    sections = agent.create_nodes_api_sections(
+    sections = create_api_sections(
         api_node,
-        cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
+        CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
             annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
@@ -104,7 +106,7 @@ def test_conditions_returns_all_native_conditions() -> None:
     api_node = api_to_agent_node(
         APINodeFactory.build(status=node_status(api.NodeConditionStatus.TRUE))
     )
-    node_conditions = conditions(api_node)
+    node_conditions = _conditions(api_node)
     assert node_conditions is not None
     conditions_dict = node_conditions.dict()
     assert len(conditions_dict) == len(NATIVE_NODE_CONDITION_TYPES)
@@ -122,7 +124,7 @@ def test_conditions_respects_status_conditions() -> None:
         cond for cond in status.conditions if cond.type_ in NATIVE_NODE_CONDITION_TYPES
     ]
 
-    node_conditions = conditions(api_node)
+    node_conditions = _conditions(api_node)
     assert node_conditions is not None
     conditions_dict = node_conditions.dict()
     assert len(conditions_dict) == len(native_conditions)
@@ -143,7 +145,7 @@ def test_custom_conditions_respects_status_conditions() -> None:
         if cond.type_ not in NATIVE_NODE_CONDITION_TYPES
     ]
 
-    api_node_custom_conditions = custom_conditions(api_node)
+    api_node_custom_conditions = _custom_conditions(api_node)
     assert api_node_custom_conditions is not None
     custom_conditions_status = [
         cond.status
@@ -157,7 +159,7 @@ def test_custom_conditions_respects_status_conditions() -> None:
 def test_conditions_truthy_vs_status() -> None:
     status = node_status(api.NodeConditionStatus.TRUE)
     api_node = api_to_agent_node(APINodeFactory.build(status=status))
-    node_conditions = conditions(api_node)
+    node_conditions = _conditions(api_node)
     assert node_conditions is not None
 
     truthy_conditions = [
@@ -170,7 +172,7 @@ def test_conditions_truthy_vs_status() -> None:
 def test_conditions_falsy_vs_status() -> None:
     status = node_status(api.NodeConditionStatus.TRUE)
     api_node = api_to_agent_node(APINodeFactory.build(status=status))
-    node_conditions = conditions(api_node)
+    node_conditions = _conditions(api_node)
     assert node_conditions is not None
 
     falsy_conditions = [c for _, c in node_conditions if isinstance(c, section.FalsyNodeCondition)]
@@ -182,13 +184,13 @@ def test_conditions_with_status_conditions_none() -> None:
     api_node = api_to_agent_node(
         APINodeFactory.build(status=NodeStatusFactory.build(conditions=None))
     )
-    node_conditions = conditions(api_node)
+    node_conditions = _conditions(api_node)
     assert node_conditions is None
 
 
 def test_api_node_info_section() -> None:
     api_node = api_to_agent_node(APINodeFactory.build())
-    node_info = info(
+    node_info = _info(
         api_node,
         "cluster",
         "host",
@@ -211,7 +213,7 @@ def test_api_node_container_count(
     api_node = api_to_agent_node(
         APINodeFactory.build(), pods=[APIPodFactory.build(containers=containers)]
     )
-    node_container_count = container_count(api_node)
+    node_container_count = _container_count(api_node)
     assert isinstance(node_container_count, section.ContainerCount)
     assert node_container_count.dict()[container_status_state.value] == pod_containers_count
     assert all(

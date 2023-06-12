@@ -435,79 +435,6 @@ def write_cluster_api_sections(cluster_name: str, api_cluster: Cluster) -> None:
     _write_sections(sections)
 
 
-def create_nodes_api_sections(
-    api_node: Node,
-    host_settings: CheckmkHostSettings,
-    piggyback_name: str,
-) -> Iterator[WriteableSection]:
-    yield from (
-        WriteableSection(
-            section_name=SectionName("kube_node_container_count_v1"),
-            section=node.container_count(api_node),
-            piggyback_name=piggyback_name,
-        ),
-        WriteableSection(
-            section_name=SectionName("kube_node_kubelet_v1"),
-            section=node.kubelet(api_node),
-            piggyback_name=piggyback_name,
-        ),
-        WriteableSection(
-            section_name=SectionName("kube_pod_resources_v1"),
-            section=api_node.pod_resources(),
-            piggyback_name=piggyback_name,
-        ),
-        WriteableSection(
-            section_name=SectionName("kube_allocatable_pods_v1"),
-            section=node.allocatable_pods(api_node),
-            piggyback_name=piggyback_name,
-        ),
-        WriteableSection(
-            section_name=SectionName("kube_node_info_v1"),
-            section=node.info(
-                api_node,
-                host_settings.cluster_name,
-                host_settings.kubernetes_cluster_hostname,
-                host_settings.annotation_key_pattern,
-            ),
-            piggyback_name=piggyback_name,
-        ),
-        WriteableSection(
-            section_name=SectionName("kube_cpu_resources_v1"),
-            section=api_node.cpu_resources(),
-            piggyback_name=piggyback_name,
-        ),
-        WriteableSection(
-            section_name=SectionName("kube_memory_resources_v1"),
-            section=api_node.memory_resources(),
-            piggyback_name=piggyback_name,
-        ),
-        WriteableSection(
-            section_name=SectionName("kube_allocatable_cpu_resource_v1"),
-            section=node.allocatable_cpu_resource(api_node),
-            piggyback_name=piggyback_name,
-        ),
-        WriteableSection(
-            section_name=SectionName("kube_allocatable_memory_resource_v1"),
-            section=node.allocatable_memory_resource(api_node),
-            piggyback_name=piggyback_name,
-        ),
-    )
-
-    if (node_conditions := node.conditions(api_node)) is not None:
-        yield WriteableSection(
-            section_name=SectionName("kube_node_conditions_v1"),
-            section=node_conditions,
-            piggyback_name=piggyback_name,
-        )
-
-    if (node_custom_conditions := node.custom_conditions(api_node)) is not None:
-        yield WriteableSection(
-            section_name=SectionName("kube_node_custom_conditions_v1"),
-            section=node_custom_conditions,
-            piggyback_name=piggyback_name,
-        )
-
-
 def namespaced_name_from_metadata(metadata: api.MetaData) -> str:
     return api.namespaced_name(metadata.namespace, metadata.name)
 
@@ -1126,7 +1053,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             if MonitoredObject.nodes in arguments.monitored_objects:
                 LOGGER.info("Write nodes sections based on API data")
                 for api_node in composed_entities.nodes:
-                    sections = create_nodes_api_sections(
+                    sections = node.create_api_sections(
                         api_node,
                         host_settings=checkmk_host_settings,
                         piggyback_name=piggyback_formatter(api_node),

@@ -5,12 +5,15 @@
 from __future__ import annotations
 
 from collections import Counter
+from typing import Iterator
 
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,
+    CheckmkHostSettings,
     filter_annotations_by_key_pattern,
     Node,
 )
+from cmk.special_agents.utils_kubernetes.common import SectionName, WriteableSection
 from cmk.special_agents.utils_kubernetes.schemata import section
 
 NATIVE_NODE_CONDITION_TYPES = [
@@ -22,14 +25,87 @@ NATIVE_NODE_CONDITION_TYPES = [
 ]
 
 
-def allocatable_pods(api_node: Node) -> section.AllocatablePods:
+def create_api_sections(
+    api_node: Node,
+    host_settings: CheckmkHostSettings,
+    piggyback_name: str,
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            section_name=SectionName("kube_node_container_count_v1"),
+            section=_container_count(api_node),
+            piggyback_name=piggyback_name,
+        ),
+        WriteableSection(
+            section_name=SectionName("kube_node_kubelet_v1"),
+            section=_kubelet(api_node),
+            piggyback_name=piggyback_name,
+        ),
+        WriteableSection(
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=api_node.pod_resources(),
+            piggyback_name=piggyback_name,
+        ),
+        WriteableSection(
+            section_name=SectionName("kube_allocatable_pods_v1"),
+            section=_allocatable_pods(api_node),
+            piggyback_name=piggyback_name,
+        ),
+        WriteableSection(
+            section_name=SectionName("kube_node_info_v1"),
+            section=_info(
+                api_node,
+                host_settings.cluster_name,
+                host_settings.kubernetes_cluster_hostname,
+                host_settings.annotation_key_pattern,
+            ),
+            piggyback_name=piggyback_name,
+        ),
+        WriteableSection(
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=api_node.cpu_resources(),
+            piggyback_name=piggyback_name,
+        ),
+        WriteableSection(
+            section_name=SectionName("kube_memory_resources_v1"),
+            section=api_node.memory_resources(),
+            piggyback_name=piggyback_name,
+        ),
+        WriteableSection(
+            section_name=SectionName("kube_allocatable_cpu_resource_v1"),
+            section=_allocatable_cpu_resource(api_node),
+            piggyback_name=piggyback_name,
+        ),
+        WriteableSection(
+            section_name=SectionName("kube_allocatable_memory_resource_v1"),
+            section=_allocatable_memory_resource(api_node),
+            piggyback_name=piggyback_name,
+        ),
+    )
+
+    if (node_conditions := _conditions(api_node)) is not None:
+        yield WriteableSection(
+            section_name=SectionName("kube_node_conditions_v1"),
+            section=node_conditions,
+            piggyback_name=piggyback_name,
+        )
+
+    if (node_custom_conditions := _custom_conditions(api_node)) is not None:
+        yield WriteableSection(
+            section_name=SectionName("kube_node_custom_conditions_v1"),
+            section=node_custom_conditions,
+            piggyback_name=piggyback_name,
+        )
+
+
+def _allocatable_pods(api_node: Node) -> section.AllocatablePods:
     return section.AllocatablePods(
         capacity=api_node.status.capacity.pods,
         allocatable=api_node.status.allocatable.pods,
     )
 
 
-def kubelet(api_node: Node) -> section.KubeletInfo:
+def _kubelet(api_node: Node) -> section.KubeletInfo:
     return section.KubeletInfo(
         version=api_node.status.node_info.kubelet_version,
         proxy_version=api_node.status.node_info.kube_proxy_version,
@@ -37,7 +113,7 @@ def kubelet(api_node: Node) -> section.KubeletInfo:
     )
 
 
-def info(
+def _info(
     api_node: Node,
     cluster_name: str,
     kubernetes_cluster_hostname: str,
@@ -61,28 +137,28 @@ def info(
     )
 
 
-def container_count(api_node: Node) -> section.ContainerCount:
+def _container_count(api_node: Node) -> section.ContainerCount:
     type_count = Counter(
         container.state.type.name for pod in api_node.pods for container in pod.containers.values()
     )
     return section.ContainerCount(**type_count)
 
 
-def allocatable_memory_resource(api_node: Node) -> section.AllocatableResource:
+def _allocatable_memory_resource(api_node: Node) -> section.AllocatableResource:
     return section.AllocatableResource(
         context="node",
         value=api_node.status.allocatable.memory,
     )
 
 
-def allocatable_cpu_resource(api_node: Node) -> section.AllocatableResource:
+def _allocatable_cpu_resource(api_node: Node) -> section.AllocatableResource:
     return section.AllocatableResource(
         context="node",
         value=api_node.status.allocatable.cpu,
     )
 
 
-def conditions(api_node: Node) -> section.NodeConditions | None:
+def _conditions(api_node: Node) -> section.NodeConditions | None:
     if not api_node.status.conditions:
         return None
 
@@ -95,7 +171,7 @@ def conditions(api_node: Node) -> section.NodeConditions | None:
     )
 
 
-def custom_conditions(api_node: Node) -> section.NodeCustomConditions | None:
+def _custom_conditions(api_node: Node) -> section.NodeCustomConditions | None:
     if not api_node.status.conditions:
         return None
 

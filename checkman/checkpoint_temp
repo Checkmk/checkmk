@@ -1,4 +1,4 @@
-title: Checkpoint Firewalls: Temperature
+title: Check Point Firewalls: Temperature
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPLv2

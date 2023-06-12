@@ -20,7 +20,7 @@ def _parameter_valuespec_checkpoint_connections() -> Dictionary:
                 Tuple(
                     help=_(
                         "This rule sets limits to the current number of connections through "
-                        "a Checkpoint firewall."
+                        "a Check Point firewall."
                     ),
                     title=_("Maximum number of firewall connections"),
                     elements=[
@@ -49,6 +49,6 @@ rulespec_registry.register(
         check_group_name="checkpoint_connections",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_checkpoint_connections,
-        title=lambda: _("Checkpoint Firewall Connections"),
+        title=lambda: _("Check Point Firewall Connections"),
     )
 )

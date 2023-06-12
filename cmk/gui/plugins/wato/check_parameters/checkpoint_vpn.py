@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 register_check_parameters(
     RulespecGroupCheckParametersNetworking,
     "checkpoint_packets",
-    _("Checkpoint Firewall Packet Rates"),
+    _("Check Point Firewall Packet Rates"),
     Dictionary(
         elements=[
             (
@@ -80,7 +80,7 @@ register_check_parameters(
 register_check_parameters(
     RulespecGroupCheckParametersNetworking,
     "checkpoint_tunnels",
-    _("Checkpoint Tunnel Status"),
+    _("Check Point Tunnel Status"),
     Dictionary(
         elements=[
             (

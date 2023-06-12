@@ -62,6 +62,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_checkpoint_packets,
-        title=lambda: _("Checkpoint Firewall Packet Rates"),
+        title=lambda: _("Check Point Firewall Packet Rates"),
     )
 )

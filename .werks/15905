@@ -1,0 +1,14 @@
+Title: check_disk_smb: Support SMB share hosts in networks other than the Checkmk server network
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1687187059
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+With this werk check_disk_smb now supports share hosts which are in a different network than the Checkmk server. To enable this, the corresponding ruleset now offers an option for configuring the IP address.
+Note that this option is only needed if the host is not in the same network as the Checkmk server.
+Before this werk, if the SMB share host was in a different network, the plugin crashed.
+

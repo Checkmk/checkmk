@@ -8,9 +8,11 @@ from cmk.base.config import active_check_info
 
 
 def check_disk_smb_arguments(params):
-    args = []
-    args += ["-a", "$HOSTADDRESS$"]
-    args += [params["share"]]
+    args = [
+        params["share"],
+        "-H",
+        "$HOSTADDRESS$" if params["host"] == "use_parent_host" else params["host"][1],
+    ]
 
     warn, crit = params["levels"]
     args += ["--levels", warn, crit]
@@ -25,10 +27,8 @@ def check_disk_smb_arguments(params):
         username, password = params["auth"]
         args += ["-u", username, "-p", password]
 
-    if "host" in params:
-        args += ["-H", params["host"]]
-    else:
-        args += ["-H", "$HOSTADDRESS$"]
+    if "ip_address" in params:
+        args += ["-a", params["ip_address"]]
 
     return args
 

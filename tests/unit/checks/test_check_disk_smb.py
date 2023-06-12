@@ -16,8 +16,33 @@ pytestmark = pytest.mark.checks
     "params,expected_args",
     [
         (
-            {"share": "foo", "levels": (85.0, 95.0)},
-            ["-a", "$HOSTADDRESS$", "foo", "--levels", 85.0, 95.0, "-H", "$HOSTADDRESS$"],
+            {"share": "foo", "levels": (85.0, 95.0), "host": "use_parent_host"},
+            [
+                "foo",
+                "-H",
+                "$HOSTADDRESS$",
+                "--levels",
+                85.0,
+                95.0,
+            ],
+        ),
+        (
+            {
+                "share": "foo",
+                "levels": (85.0, 95.0),
+                "host": ("define_host", "test_host"),
+                "ip_address": "100.100.10.1",
+            },
+            [
+                "foo",
+                "-H",
+                "test_host",
+                "--levels",
+                85.0,
+                95.0,
+                "-a",
+                "100.100.10.1",
+            ],
         ),
     ],
 )

@@ -310,8 +310,8 @@ class ModeEditPredefinedCondition(SimpleEditMode):
                     new_ruleset = new_rulesets.get(old_ruleset.name)
                     new_ruleset.append_rule(new_folder, rule)
 
-        new_rulesets.save()
-        old_rulesets.save()
+        new_rulesets.save_folder()
+        old_rulesets.save_folder()
 
     def _rewrite_rules_for(self, conditions: RuleConditions) -> None:
         """Apply changed predefined condition to rules
@@ -329,7 +329,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
                 if rule.predefined_condition_id() == self._ident:
                     rule.update_conditions(conditions)
 
-        rulesets.save()
+        rulesets.save_folder()
 
     def _contact_group_choices(self, only_own=False):
         contact_groups = load_contact_group_information()

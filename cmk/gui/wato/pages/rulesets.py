@@ -1056,7 +1056,7 @@ class ModeEditRuleset(WatoMode):
         elif action == "move_to":
             ruleset.move_rule_to(rule, request.get_integer_input_mandatory("_index"))
 
-        rulesets.save()
+        rulesets.save_folder()
         return redirect(back_url)
 
     def page(self) -> None:
@@ -1855,7 +1855,7 @@ class ABCEditRuleMode(WatoMode):
             self._rulesets = FolderRulesets.load_folder_rulesets(new_rule_folder)
             self._ruleset = self._rulesets.get(self._name)
             self._ruleset.append_rule(new_rule_folder, self._rule)
-            self._rulesets.save()
+            self._rulesets.save_folder()
 
             affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
             _changes.add_change(
@@ -1922,7 +1922,7 @@ class ABCEditRuleMode(WatoMode):
 
     def _remove_from_orig_folder(self) -> None:
         self._ruleset.delete_rule(self._orig_rule, create_change=False)
-        self._rulesets.save()
+        self._rulesets.save_folder()
 
     def _success_message(self) -> str:
         return _('Edited rule in ruleset "%s" in folder "%s"') % (
@@ -2716,7 +2716,7 @@ class ModeEditRule(ABCEditRuleMode):
     def _save_rule(self) -> None:
         # Just editing without moving to other folder
         self._ruleset.edit_rule(self._orig_rule, self._rule)
-        self._rulesets.save()
+        self._rulesets.save_folder()
 
 
 @mode_registry.register
@@ -2734,7 +2734,7 @@ class ModeCloneRule(ABCEditRuleMode):
 
     def _save_rule(self) -> None:
         self._ruleset.clone_rule(self._orig_rule, self._rule)
-        self._rulesets.save()
+        self._rulesets.save_folder()
 
     def _remove_from_orig_folder(self) -> None:
         pass  # Cloned rule is not yet in folder, don't try to remove
@@ -2807,7 +2807,7 @@ class ModeNewRule(ABCEditRuleMode):
 
     def _save_rule(self) -> None:
         index = self._ruleset.append_rule(self._folder, self._rule)
-        self._rulesets.save()
+        self._rulesets.save_folder()
         _changes.add_change(
             "new-rule",
             _('Created new rule #%d in ruleset "%s" in folder "%s"')

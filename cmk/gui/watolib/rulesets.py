@@ -484,12 +484,12 @@ class AllRulesets(RulesetCollection):
         self._load_rulesets_recursively(folder_tree().root_folder())
         return self
 
-    def save_folder(self, folder: CREFolder) -> None:
-        RulesetCollection._save_folder(folder, self._rulesets, self._unknown_rulesets)
-
     def save(self) -> None:
         """Save all rulesets of all folders recursively"""
         self._save_rulesets_recursively(folder_tree().root_folder())
+
+    def save_folder(self, folder: CREFolder) -> None:
+        self._save_folder(folder, self._rulesets, self._unknown_rulesets)
 
     def _save_rulesets_recursively(self, folder: CREFolder) -> None:
         for subfolder in folder.subfolders():
@@ -558,8 +558,8 @@ class FolderRulesets(RulesetCollection):
         self._load_folder_rulesets(folder)
         return self
 
-    def save(self) -> None:
-        self._save_folder(self._folder, self._rulesets, self._unknown_rulesets)
+    def save_folder(self) -> None:
+        RulesetCollection._save_folder(self._folder, self._rulesets, self._unknown_rulesets)
 
 
 class Ruleset:

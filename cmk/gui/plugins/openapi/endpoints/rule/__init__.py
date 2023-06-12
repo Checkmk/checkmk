@@ -209,7 +209,7 @@ def create_rule(param):
         value,
     )
     index = ruleset.append_rule(folder, rule)
-    rulesets.save()
+    rulesets.save_folder()
     # TODO Duplicated code is in pages/rulesets.py:2670-
     # TODO Move to
     add_change(

@@ -203,7 +203,7 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
                 object_ref=folder.object_ref(),
                 sites=folder.all_site_ids(),
             )
-            rulesets.save()
+            rulesets.save_folder()
 
         changed_rulesets.extend(changed_folder_rulesets)
 

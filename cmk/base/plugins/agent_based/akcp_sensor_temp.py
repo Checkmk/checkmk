@@ -5,6 +5,7 @@
 
 
 from .agent_based_api.v1 import all_of, not_exists, register, SNMPTree, startswith
+from .utils.akcp import DETEC_AKCP_SP2PLUS
 from .utils.akcp_sensor import (
     AKCP_TEMP_CHECK_DEFAULT_PARAMETERS,
     check_akcp_sensor_temp,
@@ -24,7 +25,40 @@ register.snmp_section(
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.1.2.2.1.16.1",
-        oids=["1", "3", "12", "4", "10", "9", "7", "8", "14", "5"],
+        oids=[
+            "1",  # hhmsSensorArrayTempDescription
+            "3",  # hhmsSensorArrayTempDegree
+            "12",  # hhmsSensorArrayTempDegreeType
+            "4",  # hhmsSensorArrayTempStatus
+            "10",  # hhmsSensorArrayTempLowCritical
+            "9",  # hhmsSensorArrayTempLowWarning
+            "7",  # hhmsSensorArrayTempHighWarning
+            "8",  # hhmsSensorArrayTempHighCritical
+            "14",  # hhmsSensorArrayTempTestStatus
+            "5",  # hhmsSensorArrayTempOnline (1: online, 2: offline)
+        ],
+    ),
+)
+
+
+register.snmp_section(
+    name="akcp_sensor2plus_temp",
+    parsed_section_name="akcp_sensor_temp",
+    detect=DETEC_AKCP_SP2PLUS,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.3854.3.5.2.1",
+        oids=[
+            "2",  # temperatureDescription
+            "4",  # temperatureDegree
+            "5",  # temperatureUnit
+            "6",  # temperatureStatus
+            "9",  # temperatureLowCritical
+            "10",  # temperatureLowWarning
+            "11",  # temperatureHighWarning
+            "12",  # temperatureHighCritical
+            "20",  # temperatureRaw
+            "8",  # temperatureGoOffline (1: online, 2: offline)
+        ],
     ),
 )
 

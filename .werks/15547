@@ -1,0 +1,20 @@
+Title: Add support for AKCP sensorProbe2+ sensors
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1686556127
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+AKCP sensorProbe2+ sensors can now be monitored via SNMP.
+
+The following sensorProbe2+ sensors are now supported:
+<ul>
+<li>Humidity
+<li>Temperature
+<li>Dry Contact
+<li>Smoke
+<li>Water
+</ul>

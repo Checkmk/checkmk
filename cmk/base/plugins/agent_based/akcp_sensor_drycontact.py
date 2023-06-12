@@ -5,6 +5,7 @@
 
 
 from .agent_based_api.v1 import all_of, not_exists, register, SNMPTree, startswith
+from .utils.akcp import DETEC_AKCP_SP2PLUS
 from .utils.akcp_sensor import (
     check_akcp_sensor_drycontact,
     inventory_akcp_sensor_no_params,
@@ -19,7 +20,26 @@ register.snmp_section(
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.1.2.2.1.18.1",
-        oids=["1", "3", "5"],
+        oids=[
+            "1",  # hhmsSensorArraySwitchDescription
+            "3",  # hhmsSensorArraySwitchStatus
+            "5",  # hhmsSensorArraySwitchGoOnline (1: online, 2: offline)
+        ],
+    ),
+)
+
+
+register.snmp_section(
+    name="akcp_sensor2plus_drycontact",
+    parsed_section_name="akcp_sensor_drycontact",
+    detect=DETEC_AKCP_SP2PLUS,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.3854.3.5.4.1",
+        oids=[
+            "2",  # drycontactDescription
+            "6",  # drycontactStatus
+            "8",  # drycontactGoOffline (1: online, 2: offline)
+        ],
     ),
 )
 

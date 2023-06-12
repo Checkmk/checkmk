@@ -10,6 +10,7 @@
 
 
 from .agent_based_api.v1 import all_of, not_exists, register, SNMPTree, startswith
+from .utils.akcp import DETEC_AKCP_SP2PLUS
 from .utils.akcp_sensor import (
     AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS,
     check_akcp_humidity,
@@ -25,7 +26,28 @@ register.snmp_section(
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.1.2.2.1.17.1",
-        oids=["1", "3", "4", "5"],
+        oids=[
+            "1",  # hhmsSensorArrayHumidityDescription
+            "3",  # hhmsSensorArrayHumidityPercent
+            "4",  # hhmsSensorArrayHumidityStatus
+            "5",  # hhmsSensorArrayHumidityOnline (1: online, 2: offline)
+        ],
+    ),
+)
+
+
+register.snmp_section(
+    name="akcp_sensor2plus_humidity",
+    parsed_section_name="akcp_sensor_humidity",
+    detect=DETEC_AKCP_SP2PLUS,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.3854.3.5.3.1",
+        oids=[
+            "2",  # humidityDescription
+            "4",  # humidityPercent
+            "6",  # humidityStatus
+            "8",  # humidityGoOffline (1: online, 2: offline)
+        ],
     ),
 )
 

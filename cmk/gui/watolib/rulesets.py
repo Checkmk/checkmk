@@ -547,15 +547,6 @@ class FolderRulesets(RulesetCollection):
         raise NotImplementedError()
 
 
-class FilteredRulesetCollection:
-    def __init__(self, rulesets: Mapping[RulesetName, Ruleset]) -> None:
-        super().__init__()
-        self._rulesets: Final = rulesets
-
-    def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
-        return self._rulesets
-
-
 class Ruleset:
     # These constants are used to give a name to positions within the ruleset.
     # mylist[-1] is the last element, mylist[0] is the first. See `move_to_folder`.

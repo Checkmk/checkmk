@@ -106,7 +106,6 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
-    FilteredRulesetCollection,
     FolderRulesets,
     Rule,
     RuleConditions,
@@ -231,7 +230,7 @@ class ABCRulesetMode(WatoMode):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _rulesets(self) -> RulesetCollection | FilteredRulesetCollection:
+    def _rulesets(self) -> RulesetCollection:
         raise NotImplementedError()
 
     def title(self) -> str:
@@ -243,7 +242,7 @@ class ABCRulesetMode(WatoMode):
 
         # In case the user has filled in the search form, filter the rulesets by the given query
         if self._search_options:
-            rulesets: (FilteredRulesetCollection | RulesetCollection) = FilteredRulesetCollection(
+            rulesets = RulesetCollection(
                 {
                     name: ruleset
                     for name, ruleset in self._rulesets().get_rulesets().items()
@@ -350,10 +349,10 @@ class ModeRuleSearch(ABCRulesetMode):
 
         return PageType.RuleSearch
 
-    def _rulesets(self) -> RulesetCollection | FilteredRulesetCollection:
+    def _rulesets(self) -> RulesetCollection:
         all_rulesets = AllRulesets.load_all_rulesets()
         if self._group_name == "static":
-            return FilteredRulesetCollection(
+            return RulesetCollection(
                 {
                     name: ruleset
                     for name, ruleset in all_rulesets.get_rulesets().items()
@@ -599,10 +598,10 @@ class ModeRulesetGroup(ABCRulesetMode):
     def _get_page_type(self, search_options: dict[str, str]) -> PageType:
         return PageType.RulesetGroup
 
-    def _rulesets(self) -> RulesetCollection | FilteredRulesetCollection:
+    def _rulesets(self) -> RulesetCollection:
         all_rulesets = AllRulesets.load_all_rulesets()
         if self._group_name == "static":
-            return FilteredRulesetCollection(
+            return RulesetCollection(
                 {
                     name: ruleset
                     for name, ruleset in all_rulesets.get_rulesets().items()

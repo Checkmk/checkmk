@@ -35,12 +35,7 @@ from cmk.gui.wato.pages.rulesets import RuleConditions, VSExplicitConditions
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.rulesets import (
-    AllRulesets,
-    FilteredRulesetCollection,
-    FolderRulesets,
-    UseHostFolder,
-)
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, UseHostFolder
 from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
 
 
@@ -116,15 +111,11 @@ class ModePredefinedConditions(SimpleListMode):
         return _("Predefined conditions")
 
     def _validate_deletion(self, ident, entry):
-        matched_rulesets = FilteredRulesetCollection(
-            {
-                name: ruleset
-                for name, ruleset in AllRulesets.load_all_rulesets().get_rulesets().items()
-                if ruleset.matches_search_with_rules({"rule_predefined_condition": ident})
-            }
-        ).get_rulesets()
-
-        if matched_rulesets:
+        if {
+            name: ruleset
+            for name, ruleset in AllRulesets.load_all_rulesets().get_rulesets().items()
+            if ruleset.matches_search_with_rules({"rule_predefined_condition": ident})
+        }:
             raise MKUserError(
                 "_delete",
                 _('You can not delete this %s because it is <a href="%s">in use</a>.')

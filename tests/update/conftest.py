@@ -18,6 +18,7 @@ from tests.testlib.agent import (
     agent_controller_daemon,
     clean_agent_controller,
     download_and_install_agent_package,
+    execute,
 )
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import current_base_branch_name, PExpectDialog, spawn_expect_process
@@ -277,6 +278,15 @@ def _get_site(
 
     assert site.is_running(), "Site is not running!"
     logger.info("Test-site %s is up", site.id)
+
+    if os.environ.get("DISTRO") in {"centos-7", "centos-8", "almalinux-9"}:
+        # TODO: copied from composition-tests. Refactor to avoid code-duplication
+        # On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd
+        # after creating a new site. Otherwise, the site's REST API won't be reachable via port 80,
+        # preventing e.g. the controller from querying the agent receiver port.
+        # Note: the mere presence of httpd is not enough to determine whether we have to restart or
+        # not, see eg. sles-15sp4.
+        execute(["sudo", "httpd", "-k", "restart"])
 
     site_version, site_edition = get_omd_version(site).rsplit(".", 1)
     assert (

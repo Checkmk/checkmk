@@ -46,7 +46,7 @@ FILES_TO_FORMAT_LINUX := \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
                       $(wildcard enterprise/core/src/src/*.cc) \
-                      $(wildcard enterprise/core/src/*.h) \
+                      $(wildcard enterprise/core/src/include/cmc/*.h) \
                       $(wildcard $(addprefix enterprise/core/src/test/,*.cc *.h)))
 
 CMAKE_FORMAT       := cmake-format

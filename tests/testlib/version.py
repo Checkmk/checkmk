@@ -67,6 +67,9 @@ class CMKVersion:
     def is_cloud_edition(self) -> bool:
         return self.edition is Edition.CCE
 
+    def is_saas_edition(self) -> bool:
+        return self.edition is Edition.CSE
+
     def version_directory(self) -> str:
         return self.omd_version()
 

@@ -2,6 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import pytest
 
 from tests.testlib import wait_until
 from tests.testlib.site import Site
@@ -9,6 +10,7 @@ from tests.testlib.site import Site
 from .utils import LOGGER
 
 
+@pytest.mark.usefixtures("skip_if_saas_edition")
 def test_automatic_host_removal(
     central_site: Site,
     remote_site: Site,

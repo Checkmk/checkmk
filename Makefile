@@ -86,7 +86,7 @@ endif
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker css dist documentation \
-        documentation-quick format format-c test-format-c format-python format-shell \
+        format format-c test-format-c format-python format-shell \
         format-js GTAGS help install iwyu mrproper mrclean optimize-images \
         packages setup setversion tidy version am--refresh skel openapi openapi-doc \
         protobuf-files
@@ -582,12 +582,6 @@ documentation: config.h
 	$(MAKE) -C livestatus/src documentation
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
-endif
-
-documentation-quick: config.h
-	$(MAKE) -C livestatus/src documentation-quick
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src documentation-quick
 endif
 
 sw-documentation-docker:

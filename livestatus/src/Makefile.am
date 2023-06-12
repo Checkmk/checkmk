@@ -28,7 +28,7 @@ PACKAGE_GOOGLETEST := $(abs_top_srcdir)/third_party/googletest
 GOOGLETEST_VERSION := googletest-71140c3ca7-patched
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
-.PHONY: unit-test tidy iwyu documentation documentation-quick
+.PHONY: unit-test tidy iwyu documentation
 
 AM_CPPFLAGS = \
     -Iinclude \
@@ -165,9 +165,6 @@ iwyu: compile_commands.json
 documentation: compile_commands.json
 	PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(DOXYGEN) doc/Doxyfile
 	$(RM) '$$depbase.Tpo'
-
-documentation-quick: compile_commands.json
-	( cat doc/Doxyfile; echo "CLANG_ASSISTED_PARSING=NO") | PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(DOXYGEN) -
 
 all-local: livestatus.o
 

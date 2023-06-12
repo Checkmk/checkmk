@@ -123,9 +123,9 @@ class _PermittedPath(TypedDict):
 
 
 class PermittedPath(_PermittedPath, total=False):
-    attributes: tuple[str, Sequence[str]] | Literal["nothing"]
-    columns: tuple[str, Sequence[str]] | Literal["nothing"]
-    nodes: tuple[str, Sequence[str]] | Literal["nothing"]
+    attributes: Literal["nothing"] | tuple[str, Sequence[str]]
+    columns: Literal["nothing"] | tuple[str, Sequence[str]]
+    nodes: Literal["nothing"] | tuple[str, Sequence[str]]
 
 
 def _make_filters_from_permitted_paths(
@@ -134,9 +134,15 @@ def _make_filters_from_permitted_paths(
     def _make_filter(entry: PermittedPath) -> SDFilter:
         return SDFilter(
             path=parse_visible_raw_path(entry["visible_raw_path"]),
-            filter_pairs=make_filter_from_choice(entry.get("attributes")),
-            filter_columns=make_filter_from_choice(entry.get("columns")),
-            filter_nodes=make_filter_from_choice(entry.get("nodes")),
+            filter_pairs=make_filter_from_choice(
+                a[-1] if isinstance(a := entry.get("attributes", "all"), tuple) else a
+            ),
+            filter_columns=make_filter_from_choice(
+                c[-1] if isinstance(c := entry.get("columns", "all"), tuple) else c
+            ),
+            filter_nodes=make_filter_from_choice(
+                n[-1] if isinstance(n := entry.get("nodes", "all"), tuple) else n
+            ),
         )
 
     return [_make_filter(entry) for entry in permitted_paths if entry]

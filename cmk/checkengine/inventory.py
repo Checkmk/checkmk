@@ -456,7 +456,9 @@ def _may_update(
                     now,
                     node_path,
                     previous_tree,
-                    make_filter_from_choice(choices_for_attributes),
+                    make_filter_from_choice(
+                        a[-1] if isinstance(a := choices_for_attributes, tuple) else a
+                    ),
                     RetentionIntervals.make(
                         (
                             (now, 0)
@@ -475,7 +477,9 @@ def _may_update(
                     now,
                     node_path,
                     previous_tree,
-                    make_filter_from_choice(choices_for_table),
+                    make_filter_from_choice(
+                        c[-1] if isinstance(c := choices_for_table, tuple) else c
+                    ),
                     RetentionIntervals.make(
                         (
                             (now, 0)

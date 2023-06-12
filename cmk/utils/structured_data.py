@@ -171,12 +171,7 @@ class SDFilter(NamedTuple):
     filter_nodes: SDFilterFunc
 
 
-def make_filter_from_choice(
-    choice: tuple[str, Sequence[str]] | Literal["nothing"] | Literal["all"] | None
-) -> SDFilterFunc:
-    def _make_choices_filter(choices: Sequence[str | int]) -> SDFilterFunc:
-        return lambda key: key in choices
-
+def make_filter_from_choice(choice: Literal["nothing", "all"] | Sequence[str]) -> SDFilterFunc:
     # TODO Improve:
     # For contact groups (via make_filter)
     #   - ('choices', ['some', 'keys'])
@@ -186,11 +181,11 @@ def make_filter_from_choice(
     #   - ('choices', ['some', 'keys'])
     #   - MISSING (see mk/base/agent_based/inventory.py::_get_intervals_from_config) -> _use_nothing
     #   - 'all' -> _use_all
-    if isinstance(choice, tuple):
-        return _make_choices_filter(choice[-1])
     if choice == "nothing":
         return lambda k: False
-    return lambda k: True
+    if choice == "all":
+        return lambda k: True
+    return lambda k: k in choice
 
 
 # .

@@ -4,38 +4,10 @@
 
 import groovy.json.JsonSlurperClassic;
 
-/// throw in a function - enables expressions like
-///    return foo() ?: raise("Something wrong!");
-raise = { msg ->
-    def exc = new Exception(msg);
-    //exc = org.codehaus.groovy.runtime.StackTraceUtils.sanitize(e)
-    //drop items with unknown source and drop first element of stacktrace
-    exc.setStackTrace(exc.getStackTrace().findAll{ it.getFileName() }.drop(1) as StackTraceElement[]);
-    throw exc;
-}
-
-
 // Runs provided command in a shell and returns the JSON parsed stdout output
 load_json = { json_file ->
     def cmd_stdout_result = cmd_output("cat ${json_file}");
     (new groovy.json.JsonSlurperClassic()).parseText(cmd_stdout_result);
-}
-
-
-onWindows = (env['OS'] ?: "").toLowerCase().contains('windows');
-
-
-cmd_output = { cmd ->
-    try {
-        return ( onWindows ?
-            /// bat() conveniently adds the command to stdout, thanks.
-            bat(script: cmd, returnStdout: true).trim().split("\n").tail().join("\n")
-            :
-            sh(script: cmd, returnStdout: true).trim());
-    } catch (Exception exc) {
-        print("WARNING: Executing ${cmd} returned non-zero: ${exc}");
-    }
-    return "";
 }
 
 

@@ -39,8 +39,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "--workgroup",
         type=str,
         metavar="WORKGROUP",
-        default="WORKGROUP",
-        help='Workgroup or Domain used (Defaults to "WORKGROUP")',
+        help="Workgroup or Domain used.",
     )
     parser.add_argument(
         "-H",
@@ -54,8 +53,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "--port",
         type=int,
         metavar="PORT",
-        default=445,
-        help="Port to be used to connect to. Some Windows boxes use 139, others 445 (Defaults to 445).",
+        help="Port to be used to connect to. Some Windows boxes use 139, others 445.",
     )
     parser.add_argument(
         "--levels",

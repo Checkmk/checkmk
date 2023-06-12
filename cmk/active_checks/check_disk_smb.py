@@ -8,11 +8,24 @@ import argparse
 import re
 import shutil
 import subprocess
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
 from cmk.utils.render import fmt_bytes, percent
+
+
+def main(
+    argv: Sequence[str] | None = None,
+    smb_share: SMBShareDiskUsageProto | None = None,
+) -> int:
+    exitcode, summary = _check_disk_usage_main(
+        argv or sys.argv[1:],
+        smb_share or _SMBShareDiskUsage(),
+    )
+    print(summary)
+    return exitcode
 
 
 class SMBShareDiskUsageProto(Protocol):
@@ -81,7 +94,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--levels",
-        type=int,
+        type=float,
         nargs=2,
         default=[85, 95],
         metavar=("WARNING", "CRITICAL"),
@@ -292,15 +305,15 @@ class _SMBShareDiskUsage:
 
 def _check_smb_share(
     smb_share: ErrorResult | SMBShare,
-    warn: int,
-    crit: int,
+    warn: float,
+    crit: float,
 ) -> tuple[int, str]:
     if isinstance(smb_share, ErrorResult):
         return (smb_share.state, smb_share.summary)
     return _check_disk_usage_threshold(smb_share, warn, crit)
 
 
-def _check_disk_usage_threshold(smb_share: SMBShare, warn: int, crit: int) -> tuple[int, str]:
+def _check_disk_usage_threshold(smb_share: SMBShare, warn: float, crit: float) -> tuple[int, str]:
     free_percentage = (smb_share.available_bytes / smb_share.total_bytes) * 100
     used_percentage = 100 - free_percentage
 

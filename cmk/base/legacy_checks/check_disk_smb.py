@@ -10,17 +10,16 @@ from cmk.base.config import active_check_info
 def check_disk_smb_arguments(params):
     args = []
     args += ["-a", "$HOSTADDRESS$"]
-    args += ["-s", params["share"]]
+    args += [params["share"]]
 
     warn, crit = params["levels"]
-    args += ["-w%d%%" % warn]
-    args += ["-c%d%%" % crit]
+    args += ["--levels", warn, crit]
 
     if "workgroup" in params:
         args += ["-W", params["workgroup"]]
 
     if "port" in params:
-        args += ["-p", params["port"]]
+        args += ["-P", params["port"]]
 
     if "auth" in params:
         username, password = params["auth"]

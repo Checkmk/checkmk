@@ -17,7 +17,7 @@ pytestmark = pytest.mark.checks
     [
         (
             {"share": "foo", "levels": (85.0, 95.0)},
-            ["-a", "$HOSTADDRESS$", "-s", "foo", "-w85%", "-c95%", "-H", "$HOSTADDRESS$"],
+            ["-a", "$HOSTADDRESS$", "foo", "--levels", 85.0, 95.0, "-H", "$HOSTADDRESS$"],
         ),
     ],
 )

@@ -75,7 +75,7 @@ def pytest_addoption(parser):
         "-T",
         action="store",
         metavar="TYPE",
-        default=None,
+        default="unit",
         help="Run tests of the given TYPE. Available types are: %s" % ", ".join(test_types),
     )
 

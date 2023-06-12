@@ -41,7 +41,7 @@ SHELL_FILES_REL := $(shell cd ..; grep -rl \
 
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 # until we have a feasible solution or we drop the support for 2.6 completly.
-PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
+PYTHON_VERSIONS := 2.7 3.4 3.5 3.6 3.7 3.8 3.9
 
 .PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
@@ -146,7 +146,7 @@ $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	    *) SUFFIX="" ;; \
 	esac ; \
 	TEST_PATH="$(realpath agent-plugin-unit)$$SUFFIX" ; \
-	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION="$$PYTHON_VERSION" -q "$(realpath agent-plugin-unit)")" && \
+	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION_MAJ_MIN="$$PYTHON_VERSION" -q "$(realpath agent-plugin-unit)")" && \
 	echo "Docker image: $$IMAGE_HASH" && \
 	docker run \
 	    --rm \

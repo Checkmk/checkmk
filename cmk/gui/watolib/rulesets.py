@@ -284,9 +284,7 @@ class RuleConditions:
 
 
 class RulesetCollection:
-    """Abstract class for holding a collection of rulesets. The most basic
-    specific class is the FolderRulesets class which cares about all rulesets
-    configured in a folder."""
+    """A collection of rulesets."""
 
     def __init__(self, rulesets: Mapping[RulesetName, Ruleset]) -> None:
         super().__init__()
@@ -390,12 +388,6 @@ class RulesetCollection:
             else:
                 self._unknown_rulesets.setdefault(folder.path(), {})[varname] = ruleset_config
 
-    def save(self) -> None:
-        raise NotImplementedError()
-
-    def save_folder(self, folder: CREFolder) -> None:
-        raise NotImplementedError()
-
     def _save_folder(self, folder: CREFolder) -> None:
         store.mkdir(folder.get_root_dir())
 
@@ -452,21 +444,17 @@ class RulesetCollection:
 
 
 class AllRulesets(RulesetCollection):
-    def _load_rulesets_recursively(
-        self, folder: CREFolder, only_varname: RulesetName | None = None
-    ) -> None:
+    def _load_rulesets_recursively(self, folder: CREFolder) -> None:
         if may_use_redis():
-            self._load_rulesets_via_redis(folder, only_varname)
+            self._load_rulesets_via_redis(folder)
             return
 
         for subfolder in folder.subfolders():
-            self._load_rulesets_recursively(subfolder, only_varname)
+            self._load_rulesets_recursively(subfolder)
 
-        self._load_folder_rulesets(folder, only_varname)
+        self._load_folder_rulesets(folder)
 
-    def _load_rulesets_via_redis(
-        self, folder: CREFolder, only_varname: RulesetName | None = None
-    ) -> None:
+    def _load_rulesets_via_redis(self, folder: CREFolder) -> None:
         # Search relevant folders with rules.mk files
         # Note: The sort order of the folders does not matter here
         #       self._load_folder_rulesets ultimately puts each folder into a dict
@@ -483,7 +471,7 @@ class AllRulesets(RulesetCollection):
 
         for folder_path_with_slash in relevant_folders:
             stripped_folder = folder_path_with_slash.strip("/")
-            self._load_folder_rulesets(folder_tree().folder(stripped_folder), only_varname)
+            self._load_folder_rulesets(folder_tree().folder(stripped_folder))
 
     @staticmethod
     def load_all_rulesets() -> AllRulesets:
@@ -507,17 +495,47 @@ class AllRulesets(RulesetCollection):
         self._save_folder(folder)
 
 
-class SingleRulesetRecursively(AllRulesets):
+class SingleRulesetRecursively(RulesetCollection):
     # Load single ruleset from all folders
+    def _load_rulesets_recursively(self, folder: CREFolder, only_varname: RulesetName) -> None:
+        # Copy/paste from AllRulesets
+
+        if may_use_redis():
+            self._load_rulesets_via_redis(folder, only_varname)
+            return
+
+        for subfolder in folder.subfolders():
+            self._load_rulesets_recursively(subfolder, only_varname)
+
+        self._load_folder_rulesets(folder, only_varname)
+
+    def _load_rulesets_via_redis(self, folder: CREFolder, only_varname: RulesetName) -> None:
+        # Copy/paste from AllRulesets
+
+        # Search relevant folders with rules.mk files
+        # Note: The sort order of the folders does not matter here
+        #       self._load_folder_rulesets ultimately puts each folder into a dict
+        #       and groups/sorts them later on with a different mechanism
+        all_folders = get_wato_redis_client().recursive_subfolders_for_path(
+            f"{folder.path()}/".lstrip("/")
+        )
+
+        root_dir = wato_root_dir()[:-1]
+        relevant_folders = []
+        for folder_path in all_folders:
+            if os.path.exists(f"{root_dir}/{folder_path}rules.mk"):
+                relevant_folders.append(folder_path)
+
+        for folder_path_with_slash in relevant_folders:
+            stripped_folder = folder_path_with_slash.strip("/")
+            self._load_folder_rulesets(folder_tree().folder(stripped_folder), only_varname)
+
     @staticmethod
     def load_single_ruleset_recursively(name: RulesetName) -> SingleRulesetRecursively:
         rulesets = RulesetCollection._initialize_rulesets(only_varname=name)
         self = SingleRulesetRecursively(rulesets)
         self._load_rulesets_recursively(folder_tree().root_folder(), only_varname=name)
         return self
-
-    def save_folder(self, folder: CREFolder) -> None:
-        raise NotImplementedError()
 
 
 class FolderRulesets(RulesetCollection):
@@ -539,12 +557,6 @@ class FolderRulesets(RulesetCollection):
 
     def save(self) -> None:
         self._save_folder(self._folder)
-
-    def save_folder(self, folder: CREFolder) -> None:
-        # TODO: Figure out what is the right thing to do here. Note that we actually instantiate
-        # FolderRulesets, and there is no other subclass providing this. Probably a broken class
-        # hierarchy?
-        raise NotImplementedError()
 
 
 class Ruleset:

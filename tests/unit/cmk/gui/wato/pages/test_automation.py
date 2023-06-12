@@ -103,7 +103,7 @@ class TestModeAutomation:
         monkeypatch.setattr(
             request,
             "headers",
-            {"x-checkmk-version": "2.1.0p25", "x-checkmk-edition": "cee"},
+            {"x-checkmk-version": "2.1.0p29", "x-checkmk-edition": "cee"},
         )
         automation.ModeAutomation()._execute_cmk_automation()
         assert response.get_data() == b"((1, 2),)"

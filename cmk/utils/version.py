@@ -589,10 +589,10 @@ def versions_compatible(
 
     Specific patch release requirements
 
-    >>> isinstance(c(Version("2.1.0p25"), Version("2.2.0i1")), VersionsCompatible)
+    >>> isinstance(c(Version("2.1.0p29"), Version("2.2.0i1")), VersionsCompatible)
     True
     >>> str(c(Version("2.1.0p4"), Version("2.2.0i1")))
-    'This target version requires at least 2.1.0p25'
+    'This target version requires at least 2.1.0p29'
     """
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
@@ -684,6 +684,7 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
         Version("2.1.0p20"),  # fixup of broken enabled_packages (Werk #15113)
         Version("2.1.0p23"),  # fixup of broken global settings migration (Werk #14304)
         Version("2.1.0p25"),  # fix Alternative.transform_value (CMK-12694)
+        Version("2.1.0p29"),  # fix update for static_checks:cpu_load (Werk #15270)
     ),
 }
 

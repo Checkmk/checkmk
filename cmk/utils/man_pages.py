@@ -118,7 +118,7 @@ CATALOG_TITLES: Final = {
     "bluecoat": "Blue Coat Systems",
     "casa": "Casa",
     "cbl": "Communication by light (CBL)",
-    "checkpoint": "Checkpoint",
+    "checkpoint": "Check Point",
     "cisco": "Cisco Systems (also IronPort)",
     "ciena": "Ciena Corporation",
     "decru": "Decru",

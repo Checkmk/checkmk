@@ -1,4 +1,4 @@
-Title: checkpoint_memory: New memory check for Checkpoint firewall appliances
+Title: checkpoint_memory: New memory check for Check Point firewall appliances
 Level: 1
 Component: checks
 Compatible: compat
@@ -6,5 +6,3 @@ Edition: cre
 Version: 1.6.0b1
 Date: 1550582446
 Class: feature
-
-

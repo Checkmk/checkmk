@@ -1,4 +1,4 @@
-Title: checkpoint_tunnels, checkpoint_packets, checkpoint_inv_tunnels: Suite of plugins for Checkpoint VPN devices
+Title: checkpoint_tunnels, checkpoint_packets, checkpoint_inv_tunnels: Suite of plugins for Check Point VPN devices
 Level: 1
 Component: checks
 Compatible: compat
@@ -6,5 +6,3 @@ Edition: cre
 Version: 1.6.0b1
 Date: 1549875319
 Class: feature
-
-

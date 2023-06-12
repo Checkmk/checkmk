@@ -1,11 +1,11 @@
-title: Checkpoint VSID: Status
+title: Check Point VSID: Status
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPLv2
 distribution: check_mk
 
 description:
- This check monitors Checkpoint virtual system IDs. The output gives
+ This check monitors Check Point virtual system IDs. The output gives
  information about the HA, SIC state and the security policy (name and type) of
  a VSID.
 

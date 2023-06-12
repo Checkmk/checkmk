@@ -1,0 +1,9 @@
+Title: checkpoint: Fix typo in name 'Check Point' in werks, catalogue and WATO rules
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1686569829
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1

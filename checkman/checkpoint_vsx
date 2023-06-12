@@ -1,11 +1,11 @@
-title: Checkpoint VSID: Info
+title: Check Point VSID: Info
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPLv2
 distribution: check_mk
 
 description:
- This check monitors Checkpoint virtual system IDs. The output gives
+ This check monitors Check Point virtual system IDs. The output gives
  information about the type and main IP of a VSID.
 
 item:

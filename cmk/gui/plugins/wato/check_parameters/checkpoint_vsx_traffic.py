@@ -53,6 +53,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         item_spec=lambda: TextInput(title=_("VSID")),
         parameter_valuespec=_parameter_valuespec_checkpoint_vsx_traffic,
-        title=lambda: _("Checkpoint VSID traffic rate"),
+        title=lambda: _("Check Point VSID traffic rate"),
     )
 )
